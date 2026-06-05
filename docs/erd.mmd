@@ -1,0 +1,77 @@
+erDiagram
+  service_lifecycles ||--o{ phases : "has many"
+  phases ||--o{ service_scenarios : "has many"
+  service_scenarios ||--o{ paths : "has many"
+  service_scenarios ||--o{ steps : "has many"
+  paths ||--o{ path_steps : "has many"
+  steps ||--o{ path_steps : "has many"
+  paths ||--o{ layers : "has many"
+  paths ||--o{ cells : "has many"
+  layers ||--o{ cells : "has many"
+  steps ||--o{ cells : "has many"
+  cells ||--o{ cell_triggers : "source"
+  cells ||--o{ cell_triggers : "target"
+
+  service_lifecycles {
+    uuid id PK
+    text name
+    text description
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  phases {
+    uuid id PK
+    uuid service_lifecycle_id FK
+    text name
+    text description
+    int order_position
+  }
+
+  service_scenarios {
+    uuid id PK
+    uuid phase_id FK
+    text name
+    text description
+    int order_position
+  }
+
+  paths {
+    uuid id PK
+    uuid service_scenario_id FK
+    text name
+    text path_type
+  }
+
+  steps {
+    uuid id PK
+    uuid service_scenario_id FK
+    text name
+  }
+
+  path_steps {
+    uuid path_id FK
+    uuid step_id FK
+    int column_position
+  }
+
+  layers {
+    uuid id PK
+    uuid path_id FK
+    text name
+    int row_position
+  }
+
+  cells {
+    uuid id PK
+    uuid path_id FK
+    uuid layer_id FK
+    uuid step_id FK
+    text content
+  }
+
+  cell_triggers {
+    uuid id PK
+    uuid source_cell_id FK
+    uuid target_cell_id FK
+  }
