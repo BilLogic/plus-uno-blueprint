@@ -1,5 +1,8 @@
 export type EditorMode = 'stack' | 'canvas'
 
+/** Toggle to expose the infinite-canvas editor mode in the UI. */
+export const CANVAS_VIEW_ENABLED = false
+
 /** How blueprint paths are laid out on a scenario slide. */
 export type SlideViewType = 'single' | 'side-by-side' | 'integrated'
 
@@ -39,7 +42,7 @@ export const FALLBACK_SLIDES: Slide[] = [
   { id: 'a0000000-0000-4000-8000-000000000101', index: 1, label: 'Application' },
   { id: 'a0000000-0000-4000-8000-000000000102', index: 2, label: 'Onboarding' },
   { id: PRE_SESSION_ID, index: 3, label: 'Pre-session' },
-  { id: IN_SESSION_ID, index: 4, label: 'in-session' },
+  { id: IN_SESSION_ID, index: 4, label: 'In-session' },
   {
     id: 'a0000000-0000-4000-8000-000000000201',
     index: 1,
@@ -82,7 +85,7 @@ export const FALLBACK_SLIDES: Slide[] = [
   {
     id: 'a0000000-0000-4000-8000-000000000105',
     index: 5,
-    label: 'post-session',
+    label: 'Post-session',
     loopToId: IN_SESSION_ID,
   },
 ]
@@ -99,7 +102,9 @@ export function isSubslide(slide: Slide): boolean {
 }
 
 export function getSlideViewType(slide: Slide): SlideViewType {
-  return slide.viewType ?? 'single'
+  if (slide.viewType) return slide.viewType
+  if (isSubslide(slide)) return 'side-by-side'
+  return 'single'
 }
 
 export function isIntegratedBlueprintSlide(slide: Slide): boolean {
@@ -128,6 +133,33 @@ export function getSlidesInNavOrder(slides: Slide[] = FALLBACK_SLIDES): Slide[] 
   return ordered
 }
 
+export type SlideSequenceNav = {
+  prev: Slide | null
+  next: Slide | null
+  index: number
+  total: number
+}
+
+/** Previous / next slide in phase + scenario sidebar order. */
+export function getSlideSequenceNav(
+  activeSlideId: string,
+  slides: Slide[] = FALLBACK_SLIDES,
+): SlideSequenceNav {
+  const ordered = getSlidesInNavOrder(slides)
+  const index = ordered.findIndex((slide) => slide.id === activeSlideId)
+
+  if (index === -1) {
+    return { prev: null, next: null, index: -1, total: ordered.length }
+  }
+
+  return {
+    prev: index > 0 ? ordered[index - 1]! : null,
+    next: index < ordered.length - 1 ? ordered[index + 1]! : null,
+    index,
+    total: ordered.length,
+  }
+}
+
 export function getSlideById(id: string, slides: Slide[] = FALLBACK_SLIDES): Slide | undefined {
   return slides.find((s) => s.id === id)
 }
@@ -138,4 +170,55 @@ export function getParentSlide(
 ): Slide | undefined {
   if (!slide.parentId) return undefined
   return getSlideById(slide.parentId, slides)
+}
+
+export const WORKSPACE_BREADCRUMB_ID = '__workspace__'
+export const WORKSPACE_BREADCRUMB_LABEL = 'PLUS Uno Blueprint'
+
+export type SlideBreadcrumb = {
+  id: string
+  label: string
+}
+
+/** Breadcrumb trail from workspace root through parent phases to the active slide. */
+export function getSlideBreadcrumbs(
+  slide: Slide,
+  slides: Slide[] = FALLBACK_SLIDES,
+): SlideBreadcrumb[] {
+  const crumbs: SlideBreadcrumb[] = [
+    { id: WORKSPACE_BREADCRUMB_ID, label: WORKSPACE_BREADCRUMB_LABEL },
+  ]
+
+  const ancestors: Slide[] = []
+  let parentId = slide.parentId
+  while (parentId) {
+    const parent = getSlideById(parentId, slides)
+    if (!parent) break
+    ancestors.unshift(parent)
+    parentId = parent.parentId
+  }
+
+  for (const ancestor of ancestors) {
+    crumbs.push({
+      id: ancestor.id,
+      label: getSlideDisplayLabel(ancestor, slides),
+    })
+  }
+
+  crumbs.push({
+    id: slide.id,
+    label: getSlideDisplayLabel(slide, slides),
+  })
+
+  return crumbs
+}
+
+/** Default navigation target when the workspace breadcrumb is selected. */
+export function getWorkspaceBreadcrumbTarget(
+  slides: Slide[] = FALLBACK_SLIDES,
+): string | undefined {
+  const application = slides.find(
+    (slide) => !slide.parentId && slide.label === 'Application',
+  )
+  return application?.id ?? getMainSlides(slides)[0]?.id
 }
