@@ -14,8 +14,16 @@ export const CANVAS_WIDTH = 16000
 export const CANVAS_HEIGHT = 6000
 export const SLIDE_ARTBOARD_WIDTH = 960
 export const SLIDE_ARTBOARD_HEIGHT = (SLIDE_ARTBOARD_WIDTH * 9) / 16
-export const SLIDE_GAP = 120
-export const SUBSLIDE_GAP = 48
+export const SLIDE_GAP = 160
+export const SUBSLIDE_GAP = 96
+/** Equal gray margin around blueprint artboards in the stack zoom viewport. */
+export const BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN = 48
+/** Space between a canvas artboard and the header card above it. */
+export const CANVAS_SLIDE_HEADER_GAP = 16
+/** Reserved vertical space for the header card above each canvas artboard. */
+export const CANVAS_SLIDE_HEADER_ESTIMATED_HEIGHT = 96
+export const CANVAS_SLIDE_HEADER_BLOCK =
+  CANVAS_SLIDE_HEADER_GAP + CANVAS_SLIDE_HEADER_ESTIMATED_HEIGHT
 
 export const DEFAULT_ARTBOARD_SIZE: ArtboardSize = {
   width: SLIDE_ARTBOARD_WIDTH,
@@ -45,17 +53,20 @@ export function computeSlideLayouts(
   const mains = getMainSlides(slides)
 
   const stackHeight =
-    mains.length * SLIDE_ARTBOARD_HEIGHT +
+    mains.length * (CANVAS_SLIDE_HEADER_BLOCK + SLIDE_ARTBOARD_HEIGHT) +
     Math.max(0, mains.length - 1) * SLIDE_GAP
   const stackTop = (CANVAS_HEIGHT - stackHeight) / 2
   const mainX = (CANVAS_WIDTH - SLIDE_ARTBOARD_WIDTH) / 2
 
-  mains.forEach((slide, index) => {
+  let mainRowY = stackTop
+  mains.forEach((slide) => {
     layouts.set(slide.id, {
       x: mainX,
-      y: stackTop + index * (SLIDE_ARTBOARD_HEIGHT + SLIDE_GAP),
+      y: mainRowY + CANVAS_SLIDE_HEADER_BLOCK,
       ...DEFAULT_ARTBOARD_SIZE,
     })
+    mainRowY +=
+      CANVAS_SLIDE_HEADER_BLOCK + SLIDE_ARTBOARD_HEIGHT + SLIDE_GAP
   })
 
   for (const main of mains) {

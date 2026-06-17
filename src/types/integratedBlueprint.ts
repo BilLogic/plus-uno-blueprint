@@ -1,4 +1,4 @@
-import type { BlueprintLayer, BlueprintStep } from '@/types/blueprint'
+import type { BlueprintLayer, BlueprintStep, CellLink } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 
 export const INTEGRATED_UNSELECTED_OPACITY = 0.18
@@ -14,6 +14,9 @@ export type IntegratedBlueprintCell = {
   path_id: string
   path_type: PathType
   content: string
+  picture: string | null
+  description: string | null
+  links: CellLink[]
   opacity: number
 }
 
@@ -27,7 +30,12 @@ export type IntegratedBlueprintTrigger = {
 }
 
 export type IntegratedBlueprintData = {
-  paths: Array<{ id: string; name: string; path_type: PathType }>
+  paths: Array<{
+    id: string
+    name: string
+    description: string | null
+    path_type: PathType
+  }>
   layers: BlueprintLayer[]
   steps: IntegratedBlueprintStep[]
   cells: IntegratedBlueprintCell[]

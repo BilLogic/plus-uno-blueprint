@@ -1,22 +1,12 @@
 import { getBlueprintFallback } from '@/data/blueprintFallbacks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
-import { normalizeBlueprint } from '@/lib/normalizeBlueprint'
+import { normalizeBlueprint, type RawPath } from '@/lib/normalizeBlueprint'
 import type { BlueprintData } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
 
 export type BlueprintSource = 'database' | 'fallback' | null
 
-type RawPath = {
-  id: string
-  name: string
-  path_type: PathType
-  layers?: BlueprintData['layers']
-  steps?: BlueprintData['steps']
-  cells?: BlueprintData['cells']
-}
-
 export function isBlueprintEmpty(data: BlueprintData): boolean {
-  return data.layers.length === 0 && data.steps.length === 0
+  return data.layers.length === 0
 }
 
 /** Add fallback triggers that are missing from the loaded path (e.g. new migrations). */
@@ -49,16 +39,17 @@ export function resolveBlueprintForScenario(
   scenarioId: string | undefined,
   rawPath: RawPath | null | undefined,
 ): { blueprint: BlueprintData | null; source: BlueprintSource } {
-  const fallback = getBlueprintFallback(scenarioId, rawPath?.id)
+  const pathId = rawPath?.id
+  const fallback = getBlueprintFallback(scenarioId, pathId)
 
   if (rawPath) {
     const fromDb = normalizeBlueprint(rawPath)
     if (!isBlueprintEmpty(fromDb)) {
       return {
         blueprint: applyBlueprintDisplayFilters(
-          mergeMissingTriggers(fromDb, scenarioId, rawPath.id),
+          mergeMissingTriggers(fromDb, scenarioId, pathId),
           scenarioId,
-          rawPath.id,
+          pathId,
         ),
         source: 'database',
       }

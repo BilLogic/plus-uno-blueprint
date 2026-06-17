@@ -1,15 +1,17 @@
 -- Warm-Up Sad Path: first four steps match Happy Path; diverges at step 5 and ends at step 6.
 -- Reuses scenario steps from warm_up_happy_path.sql via path_steps.
 
-insert into public.paths (id, service_scenario_id, name, path_type)
+insert into public.paths (id, service_scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000360',
   'a0000000-0000-4000-8000-000000000203',
   'Sad Path',
+  'Warm-up when the PLUS app fails and the tutor cannot complete student updates.',
   'unhappy'
 )
 on conflict (id) do update set
   name = excluded.name,
+  description = excluded.description,
   path_type = excluded.path_type;
 
 insert into public.path_steps (path_id, step_id, column_position)

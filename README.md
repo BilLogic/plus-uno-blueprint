@@ -1,6 +1,8 @@
-# PLUS Service Hub
+# PLUS Uno Blueprint
 
 React + Vite app using [shadcn/ui](https://ui.shadcn.com/) and [Supabase](https://supabase.com/).
+
+Blueprint editor for service scenarios: lifecycle → phase → scenario → path grid (layers × steps → cells).
 
 ## Setup
 
@@ -45,14 +47,16 @@ npm run dev
 
 ## Database
 
-Schema follows the PLUS service workflow ERD (service requests → classes → domains → paths → steps → level/goals → calls).
+Service Blueprint schema: `service_lifecycles` → `phases` → `service_scenarios` → `paths`, with per-path grids (`layers`, `steps` via `path_steps`, `cells`, `cell_triggers`).
 
 | Resource | Purpose |
 | --- | --- |
-| [docs/erd.mmd](./docs/erd.mmd) | Mermaid ERD (source diagram) |
-| [supabase/DATABASE.md](./supabase/DATABASE.md) | Tables, columns, RLS, API usage |
-| [supabase/migrations/](./supabase/migrations/) | Versioned schema (GitHub → Supabase) |
-| [supabase/seed.sql](./supabase/seed.sql) | Sample workflow + catalog seed |
+| [supabase/DATABASE.md](./supabase/DATABASE.md) | **Start here** — tables, cells, view modes, queries |
+| [docs/erd.mmd](./docs/erd.mmd) | Mermaid ERD diagram |
+| [docs/scenario-steps-design.md](./docs/scenario-steps-design.md) | Shared steps + `path_steps` ordering |
+| [supabase/schema.reference.sql](./supabase/schema.reference.sql) | Full DDL snapshot |
+| [supabase/migrations/](./supabase/migrations/) | Versioned schema |
+| [supabase/seed.sql](./supabase/seed.sql) | Sample seed data |
 | [src/types/database.ts](./src/types/database.ts) | TypeScript types |
 
 Regenerate types after schema changes: `npm run supabase:types` (hosted) or `npm run supabase:types:local` (Docker).
@@ -69,8 +73,10 @@ Theme tokens live in `src/index.css`.
 
 ## Project layout
 
+- `src/components/blueprint/` — blueprint grid, paths, triggers
+- `src/components/editor/` — canvas/slide editor shell
 - `src/components/ui/` — shadcn components
-- `src/components/AppLayout.tsx` — sidebar shell
-- `src/pages/` — Overview, Paths, Service requests, Settings
-- `src/lib/supabase.ts` — Supabase client
+- `src/hooks/` — Supabase data hooks (`useScenarioBlueprint`, `useLifecyclePhases`)
+- `src/lib/` — queries, normalization, layout helpers
+- `src/data/blueprintFallbacks.ts` — offline demo blueprints
 - `supabase/migrations/` — Postgres schema and RLS policies

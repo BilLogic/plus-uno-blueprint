@@ -1,7 +1,7 @@
-/** Split multi-value cell text (one item per line) into display items. */
+/** Split multi-value cell text (newline- or comma-separated) into display items. */
 export function parseCellContentItems(content: string): string[] {
   return content
-    .split(/\r?\n/)
+    .split(/\r?\n|,/)
     .map((line) => line.trim())
     .filter(Boolean)
 }

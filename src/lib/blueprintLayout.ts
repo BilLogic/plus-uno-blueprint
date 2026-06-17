@@ -3,17 +3,38 @@ import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
 
 /** Layers after which the standard service-blueprint interaction line is drawn. */
 /** Layers whose cells list multiple items as inline pills (newline-separated content). */
-export const PILL_CELL_LAYER_NAMES = ['Front Stage Tech'] as const
+export const PILL_CELL_LAYER_NAMES = [
+  'Front Stage Tech',
+  'Back Stage Tech',
+  'Computer Systems',
+] as const
+export const VISUAL_LAYER_NAME = 'Visual' as const
+export const VISUAL_ROW_MIN_HEIGHT = 132
+export const VISUAL_ROW_MIN_HEIGHT_COMPACT = 108
 
 export function shouldUsePillCellContent(layerName: string): boolean {
   return (PILL_CELL_LAYER_NAMES as readonly string[]).includes(layerName)
 }
 
-export const INTERACTION_LINE_AFTER_LAYER_NAMES = ['Regular Tutor'] as const
+export function shouldUseVisualContent(layerName: string): boolean {
+  return layerName === VISUAL_LAYER_NAME || layerName === 'Step Visual'
+}
+
+export const INTERACTION_LINE_AFTER_LAYER_NAMES = [
+  'Regular Tutor',
+  'Customer Actions',
+] as const
 
 /** Layers after which the visibility line is drawn (above backstage layers). */
 export const VISIBILITY_LINE_AFTER_LAYER_NAMES = [
   'Front Stage Actions',
+  'Front Stage Tech',
+  'Frontstage Actions',
+] as const
+
+/** Layers after which the internal interaction line is drawn (onboarding-style blueprints). */
+export const INTERNAL_INTERACTION_LINE_AFTER_LAYER_NAMES = [
+  'Backstage Actions',
 ] as const
 
 export function shouldShowInteractionLineAfter(layer: BlueprintLayer): boolean {
@@ -22,10 +43,47 @@ export function shouldShowInteractionLineAfter(layer: BlueprintLayer): boolean {
   )
 }
 
-export function shouldShowVisibilityLineAfter(layer: BlueprintLayer): boolean {
-  return (VISIBILITY_LINE_AFTER_LAYER_NAMES as readonly string[]).includes(
-    layer.name,
-  )
+export function shouldShowVisibilityLineAfter(
+  layer: BlueprintLayer,
+  layers?: BlueprintLayer[],
+): boolean {
+  if (
+    !(VISIBILITY_LINE_AFTER_LAYER_NAMES as readonly string[]).includes(
+      layer.name,
+    )
+  ) {
+    return false
+  }
+
+  // Application: Front Stage Actions sits above Front Stage Tech — visibility
+  // line follows Front Stage Tech, not Front Stage Actions.
+  if (layer.name === 'Front Stage Actions' && layers) {
+    const index = layers.findIndex((entry) => entry.id === layer.id)
+    const next = layers[index + 1]
+    if (next?.name === 'Front Stage Tech') {
+      return false
+    }
+  }
+
+  // Warm-Up / In-session: Front Stage Tech sits above Front Stage Actions —
+  // visibility line follows Front Stage Actions, not Front Stage Tech.
+  if (layer.name === 'Front Stage Tech' && layers) {
+    const index = layers.findIndex((entry) => entry.id === layer.id)
+    const next = layers[index + 1]
+    if (next?.name === 'Front Stage Actions') {
+      return false
+    }
+  }
+
+  return true
+}
+
+export function shouldShowInternalInteractionLineAfter(
+  layer: BlueprintLayer,
+): boolean {
+  return (
+    INTERNAL_INTERACTION_LINE_AFTER_LAYER_NAMES as readonly string[]
+  ).includes(layer.name)
 }
 
 /** Light rule between swim lanes; omitted before interaction/visibility dividers. */
@@ -36,22 +94,91 @@ export function shouldShowLaneDividerAfter(
 ): boolean {
   if (layerIndex >= layers.length - 1) return false
   if (shouldShowInteractionLineAfter(layer)) return false
-  if (shouldShowVisibilityLineAfter(layer)) return false
+  if (shouldShowVisibilityLineAfter(layer, layers)) return false
+  if (shouldShowInternalInteractionLineAfter(layer)) return false
   return true
+}
+
+/** Layer row is immediately followed by a blueprint divider band. */
+export function layerPrecedesBlueprintDivider(
+  layer: BlueprintLayer,
+  layers?: BlueprintLayer[],
+): boolean {
+  return (
+    shouldShowInteractionLineAfter(layer) ||
+    shouldShowVisibilityLineAfter(layer, layers) ||
+    shouldShowInternalInteractionLineAfter(layer)
+  )
 }
 
 export const INTERACTION_LINE_LABEL = 'INTERACTION LINE'
 export const VISIBILITY_LINE_LABEL = 'VISIBILITY LINE'
+export const INTERNAL_INTERACTION_LINE_LABEL = 'INTERNAL INTERACTION LINE'
 
 export const BLUEPRINT_DIVIDER_ROW_HEIGHT = 28
+/** Right inset so interaction / visibility lines stop before the board edge. */
+export const BLUEPRINT_DIVIDER_LINE_END_INSET = 16
 /** Transparent margin above the interaction line for the Regular Tutor loop arrow. */
 export const BLUEPRINT_WRAP_CORRIDOR_MARGIN = 36
+/** Space above the Regular Tutor row for Application discovery-rail arrows. */
+export const BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN = 36
+
+/** Application discovery triggers that span forward across Regular Tutor columns. */
+export function triggersIncludeDiscoveryRail(
+  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+): boolean {
+  return triggers.some((trigger) => {
+    const { source_cell_id: src, target_cell_id: tgt } = trigger
+    return (
+      src.includes('00000007') &&
+      src.endsWith('03') &&
+      tgt.includes('00000007') &&
+      tgt.endsWith('03') &&
+      src !== tgt
+    )
+  })
+}
+
+export function blueprintHasDiscoveryRailTriggers(
+  data: BlueprintData,
+): boolean {
+  return triggersIncludeDiscoveryRail(data.triggers)
+}
+
+export function layerHasDiscoveryRailCorridor(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  if (layer.name !== 'Regular Tutor') return false
+  if (data) {
+    const blueprints = Array.isArray(data) ? data : [data]
+    if (blueprints.some(blueprintHasDiscoveryRailTriggers)) return true
+  }
+  if (extraTriggers && triggersIncludeDiscoveryRail(extraTriggers)) {
+    return true
+  }
+  return false
+}
+
+export function countDiscoveryRailCorridorMargins(
+  layers: BlueprintLayer[],
+  data: BlueprintData,
+): number {
+  return layers.filter((layer) =>
+    layerHasDiscoveryRailCorridor(layer, data),
+  ).length
+}
 
 export function countBlueprintDividerRows(layers: BlueprintLayer[]): number {
   return layers.filter(
     (layer) =>
       shouldShowInteractionLineAfter(layer) ||
-      shouldShowVisibilityLineAfter(layer),
+      shouldShowVisibilityLineAfter(layer, layers) ||
+      shouldShowInternalInteractionLineAfter(layer),
   ).length
 }
 
@@ -84,8 +211,8 @@ export const BLUEPRINT_ROW_MIN_HEIGHT_COMPACT = 60
 export const BLUEPRINT_PADDING = 24
 export const BLUEPRINT_HEADER_HEIGHT = 48
 export const BLUEPRINT_HEADER_HEIGHT_COMPACT = 32
-/** Tailwind gap-1 between swim lanes and dividers. */
-export const BLUEPRINT_LAYER_ROW_GAP = 4
+/** Gap between swim lanes and dividers (0 — lane borders handle separation). */
+export const BLUEPRINT_LAYER_ROW_GAP = 0
 /** Padding around the grid body for arrow overlay bleed (matches ARROW_VIEWPORT_PAD). */
 export const BLUEPRINT_GRID_VIEWPORT_PAD = 13
 /** CanvasBlueprintArtboard inner wrapper (p-2). */
@@ -109,6 +236,36 @@ const PILL_ITEM_HEIGHT = 44
 const PILL_ITEM_HEIGHT_COMPACT = 34
 const PILL_STACK_GAP = 10
 const PILL_CELL_PADDING = BLUEPRINT_CELL_GUTTER * 2
+
+/** Compare / service grid cell inner width (column minus horizontal shell padding). */
+export function getBlueprintCellInnerWidth(compact = false): number {
+  const shellPadX = compact ? 24 : 28
+  return STEP_COLUMN_WIDTH - shellPadX
+}
+
+/** Line count including soft-wrap at the blueprint column width. */
+export function getEffectiveLineCount(content: string, compact = false): number {
+  const innerWidth = getBlueprintCellInnerWidth(compact)
+  const charWidth = compact ? 6.5 : 7
+  const charsPerLine = Math.max(6, Math.floor(innerWidth / charWidth))
+
+  return content.split('\n').reduce((total, line) => {
+    if (line.length === 0) return total + 1
+    return total + Math.ceil(line.length / charsPerLine)
+  }, 0)
+}
+
+function getTextBlockMinHeight(lineCount: number, compact = false): number {
+  const base = compact ? BLUEPRINT_ROW_MIN_HEIGHT : BLUEPRINT_ROW_MIN_HEIGHT - 16
+  if (lineCount <= 1) return base
+
+  const lineHeight = compact ? 14 : 20
+  const innerPadding = compact ? 20 : 24
+  const wrappedHeight =
+    BLUEPRINT_CELL_GUTTER * 2 + innerPadding + lineCount * lineHeight
+
+  return Math.max(base, wrappedHeight)
+}
 
 export function getMaxPillCountInLayer(
   data: BlueprintData,
@@ -136,14 +293,43 @@ export function getPillStackMinHeight(
   )
 }
 
-function getMaxLineCountInLayer(data: BlueprintData, layerId: string): number {
+function getMaxLineCountInLayer(
+  data: BlueprintData,
+  layerId: string,
+  compact = false,
+): number {
   let max = 1
   for (const cell of data.cells) {
     if (cell.layer_id === layerId && cell.content?.trim()) {
-      max = Math.max(max, cell.content.split('\n').length)
+      max = Math.max(max, getEffectiveLineCount(cell.content, compact))
     }
   }
   return max
+}
+
+/** Minimum inner content height for a single cell (excludes compare shell padding). */
+export function getCellContentMinHeight(
+  layer: BlueprintLayer,
+  content: string | undefined,
+  compact = false,
+): number {
+  if (shouldUseVisualContent(layer.name)) {
+    return compact
+      ? VISUAL_ROW_MIN_HEIGHT_COMPACT
+      : VISUAL_ROW_MIN_HEIGHT
+  }
+
+  if (!content?.trim()) return 0
+
+  if (shouldUsePillCellContent(layer.name)) {
+    return getPillStackMinHeight(
+      parseCellContentItems(content).length,
+      compact,
+    )
+  }
+
+  const lineCount = Math.max(1, getEffectiveLineCount(content, compact))
+  return getTextBlockMinHeight(lineCount, compact)
 }
 
 function getDefaultCellMinHeight(
@@ -152,15 +338,8 @@ function getDefaultCellMinHeight(
   compact = false,
 ): number {
   const base = compact ? BLUEPRINT_ROW_MIN_HEIGHT : BLUEPRINT_ROW_MIN_HEIGHT - 16
-  const lineCount = getMaxLineCountInLayer(data, layer.id)
-  if (lineCount <= 1) return base
-
-  const lineHeight = compact ? 14 : 20
-  const innerPadding = compact ? 20 : 24
-  const wrappedHeight =
-    BLUEPRINT_CELL_GUTTER * 2 + innerPadding + lineCount * lineHeight
-
-  return Math.max(base, wrappedHeight)
+  const lineCount = getMaxLineCountInLayer(data, layer.id, compact)
+  return Math.max(base, getTextBlockMinHeight(lineCount, compact))
 }
 
 export function getLayerRowMinHeight(
@@ -173,6 +352,12 @@ export function getLayerRowMinHeight(
   const base = fitVertically && compact
     ? BLUEPRINT_ROW_MIN_HEIGHT_COMPACT
     : getDefaultCellMinHeight(layer, data, compact)
+
+  if (shouldUseVisualContent(layer.name)) {
+    return compact
+      ? VISUAL_ROW_MIN_HEIGHT_COMPACT
+      : VISUAL_ROW_MIN_HEIGHT
+  }
 
   if (!shouldUsePillCellContent(layer.name)) return base
 
@@ -191,6 +376,9 @@ export function getBlueprintGridMinHeight(
   const wrapCorridorMargins =
     countBlueprintWrapCorridorMargins(data.layers) *
     BLUEPRINT_WRAP_CORRIDOR_MARGIN
+  const discoveryRailCorridorMargins =
+    countDiscoveryRailCorridorMargins(data.layers, data) *
+    BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
   const layerRows = data.layers.reduce(
     (sum, layer) => sum + getLayerRowMinHeight(layer, data, compact),
     0,
@@ -203,6 +391,7 @@ export function getBlueprintGridMinHeight(
     layerRows +
     dividers +
     wrapCorridorMargins +
+    discoveryRailCorridorMargins +
     rowGaps
   )
 }
@@ -250,12 +439,12 @@ export function getBlueprintCompactGridHeight(data: BlueprintData): number {
 export function getBlueprintArtboardSize(data: BlueprintData): ArtboardSize {
   const width =
     getBlueprintCompactGridWidth(data.steps.length) +
-    BLUEPRINT_CANVAS_INNER_PADDING +
+    BLUEPRINT_CANVAS_INNER_PADDING * 2 +
     BLUEPRINT_ARTBOARD_WIDTH_BUFFER
   const height = Math.max(
     480,
     getBlueprintCompactGridHeight(data) +
-      BLUEPRINT_CANVAS_INNER_PADDING +
+      BLUEPRINT_CANVAS_INNER_PADDING * 2 +
       BLUEPRINT_ARTBOARD_HEIGHT_BUFFER,
   )
   return { width, height }
@@ -315,7 +504,7 @@ export function getStackedCanvasArtboardSize(
     480,
     filterHeight +
       Math.max(...gridHeights) +
-      BLUEPRINT_CANVAS_INNER_PADDING +
+      BLUEPRINT_CANVAS_INNER_PADDING * 2 +
       BLUEPRINT_ARTBOARD_HEIGHT_BUFFER,
   )
 

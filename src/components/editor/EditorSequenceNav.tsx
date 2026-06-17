@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useEditor } from '@/contexts/EditorContext'
 import {
   getParentSlide,
@@ -11,92 +12,67 @@ import { cn } from '@/lib/utils'
 
 type SequenceNavPreviewProps = {
   direction: 'prev' | 'next'
-  slide: Slide | null
+  slide: Slide
   slides: Slide[]
-  disabled: boolean
   onClick: () => void
-  className?: string
 }
 
 function SequenceNavPreview({
   direction,
   slide,
   slides,
-  disabled,
   onClick,
-  className,
 }: SequenceNavPreviewProps) {
   const isPrev = direction === 'prev'
   const Icon = isPrev ? ChevronLeft : ChevronRight
   const actionLabel = isPrev ? 'Previous' : 'Next'
-  const title = slide ? getSlideDisplayLabel(slide, slides) : null
-  const parent = slide && isSubslide(slide) ? getParentSlide(slide, slides) : undefined
-  const subtitle = parent ? getSlideDisplayLabel(parent, slides) : slide ? 'Phase' : null
+  const title = getSlideDisplayLabel(slide, slides)
+  const parent = isSubslide(slide) ? getParentSlide(slide, slides) : undefined
+  const phaseLabel = parent ? getSlideDisplayLabel(parent, slides) : null
+  const accessibleLabel = phaseLabel ? `${phaseLabel}, ${title}` : title
+  const ariaLabel = `${actionLabel}: ${accessibleLabel}`
+
+  const label = (
+    <span
+      className={cn(
+        'flex min-w-0 flex-col leading-tight',
+        isPrev ? 'items-start text-left' : 'items-end text-right',
+      )}
+    >
+      {phaseLabel ? (
+        <span className="truncate text-[10px] font-normal text-muted-foreground">
+          {phaseLabel}
+        </span>
+      ) : null}
+      <span className="truncate text-xs font-medium">{title}</span>
+    </span>
+  )
 
   return (
-    <button
+    <Button
       type="button"
-      disabled={disabled}
+      variant="outline"
+      size="sm"
       onClick={onClick}
-      aria-label={title ? `${actionLabel}: ${title}` : `${actionLabel} (unavailable)`}
+      aria-label={ariaLabel}
       data-canvas-nav=""
       className={cn(
-        'group z-30 flex max-w-[min(11rem,28vw)] items-center gap-2 rounded-lg border border-border bg-background/95 px-2.5 py-2 shadow-sm backdrop-blur-sm transition-colors',
-        'hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-40',
-        isPrev ? 'absolute bottom-3 left-3' : 'absolute bottom-3 right-3',
-        className,
+        'pointer-events-auto absolute bottom-3 z-30 h-auto max-w-40 gap-1.5 py-1.5',
+        isPrev ? 'left-3' : 'right-3',
       )}
     >
       {isPrev ? (
         <>
-          <Icon
-            className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground"
-            aria-hidden
-          />
-          <span className="min-w-0 text-left">
-            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              {actionLabel}
-            </span>
-            {title ? (
-              <>
-                <span className="block truncate text-sm font-medium leading-tight text-foreground">
-                  {title}
-                </span>
-                {subtitle ? (
-                  <span className="block truncate text-xs leading-tight text-muted-foreground">
-                    {subtitle}
-                  </span>
-                ) : null}
-              </>
-            ) : null}
-          </span>
+          <Icon className="size-3.5 shrink-0" aria-hidden />
+          {label}
         </>
       ) : (
         <>
-          <span className="min-w-0 text-right">
-            <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              {actionLabel}
-            </span>
-            {title ? (
-              <>
-                <span className="block truncate text-sm font-medium leading-tight text-foreground">
-                  {title}
-                </span>
-                {subtitle ? (
-                  <span className="block truncate text-xs leading-tight text-muted-foreground">
-                    {subtitle}
-                  </span>
-                ) : null}
-              </>
-            ) : null}
-          </span>
-          <Icon
-            className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground"
-            aria-hidden
-          />
+          {label}
+          <Icon className="size-3.5 shrink-0" aria-hidden />
         </>
       )}
-    </button>
+    </Button>
   )
 }
 
@@ -104,22 +80,26 @@ export function EditorSequenceNav() {
   const { slides, activeSlideId, setActiveSlideId } = useEditor()
   const { prev, next } = getSlideSequenceNav(activeSlideId, slides)
 
+  if (!prev && !next) return null
+
   return (
-    <>
-      <SequenceNavPreview
-        direction="prev"
-        slide={prev}
-        slides={slides}
-        disabled={!prev}
-        onClick={() => prev && setActiveSlideId(prev.id)}
-      />
-      <SequenceNavPreview
-        direction="next"
-        slide={next}
-        slides={slides}
-        disabled={!next}
-        onClick={() => next && setActiveSlideId(next.id)}
-      />
-    </>
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-0">
+      {prev ? (
+        <SequenceNavPreview
+          direction="prev"
+          slide={prev}
+          slides={slides}
+          onClick={() => setActiveSlideId(prev.id)}
+        />
+      ) : null}
+      {next ? (
+        <SequenceNavPreview
+          direction="next"
+          slide={next}
+          slides={slides}
+          onClick={() => setActiveSlideId(next.id)}
+        />
+      ) : null}
+    </div>
   )
 }

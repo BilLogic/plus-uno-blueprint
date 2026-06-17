@@ -1,50 +1,90 @@
-import { LayoutGrid, Presentation } from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
 import { useEditor } from '@/contexts/EditorContext'
 import { CanvasModeView } from '@/components/editor/CanvasModeView'
-import { SlideModeView } from '@/components/editor/SlideModeView'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import type { EditorMode } from '@/types/slides'
+import {
+  EditorModeChrome,
+  EditorSidebarChromeSpacer,
+  EditorSidebarWorkspaceHeader,
+} from '@/components/editor/EditorModeChrome'
+import {
+  EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS,
+  EDITOR_SIDEBAR_WIDTH_CLASS,
+} from '@/components/editor/EditorSidebarRail'
+import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { SlideModeMain, SlideModeSidebarNav } from '@/components/editor/SlideModeView'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { CANVAS_VIEW_ENABLED } from '@/types/slides'
+import { cn } from '@/lib/utils'
 
 export function EditorShell() {
-  const { mode, setMode } = useEditor()
+  const { mode } = useEditor()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const isStack = !CANVAS_VIEW_ENABLED || mode === 'stack'
 
   return (
-    <div className="flex h-svh flex-col overflow-hidden bg-background">
-      <header className="flex h-12 shrink-0 items-center gap-4 border-b border-border px-4">
-        <ToggleGroup
-          value={[mode]}
-          onValueChange={(values) => {
-            const next = values[0] as EditorMode | undefined
-            if (next) setMode(next)
-          }}
-          variant="outline"
-          size="sm"
-        >
-          <ToggleGroupItem
-            value="stack"
-            aria-label="Stack"
-            className="gap-1.5 px-3"
+    <div className="relative flex h-svh overflow-hidden bg-background">
+      <aside
+        className={cn(
+          'flex shrink-0 flex-col overflow-hidden border-r border-border bg-muted/20 transition-[width,border-color,opacity] duration-300 ease-in-out dark:bg-muted/10',
+          isStack
+            ? sidebarCollapsed
+              ? EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS
+              : EDITOR_SIDEBAR_WIDTH_CLASS
+            : 'w-0 border-r-0 opacity-0',
+        )}
+        aria-hidden={!isStack}
+      >
+        <EditorSidebarChromeSpacer collapsed={sidebarCollapsed} />
+        {!sidebarCollapsed && (
+          <SidebarProvider
+            style={
+              {
+                '--sidebar-width': '15rem',
+              } as CSSProperties
+            }
+            className="flex min-h-0 min-w-0 flex-1 flex-col"
           >
-            <Presentation className="size-4" />
-            <span className="hidden sm:inline">Stack</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="canvas"
-            aria-label="Canvas"
-            className="gap-1.5 px-3"
+            <EditorSidebarWorkspaceHeader
+              sidebarCollapsed={sidebarCollapsed}
+              onToggleSidebar={() =>
+                setSidebarCollapsed((collapsed) => !collapsed)
+              }
+            />
+            <SlideModeSidebarNav />
+          </SidebarProvider>
+        )}
+      </aside>
+
+      <main className="relative min-h-0 min-w-0 flex-1">
+        <VisualWalkthroughShell>
+          <div
+            className={cn(
+              'absolute inset-0 flex min-h-0 flex-col transition-opacity duration-300 ease-in-out',
+              isStack ? 'opacity-100' : 'pointer-events-none opacity-0',
+            )}
+            aria-hidden={!isStack}
           >
-            <LayoutGrid className="size-4" />
-            <span className="hidden sm:inline">Canvas</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold tracking-tight">PLUS</span>
-          <span className="text-sm text-muted-foreground">Service Hub</span>
-        </div>
-      </header>
-      <div className="flex min-h-0 flex-1">
-        {mode === 'stack' ? <SlideModeView /> : <CanvasModeView />}
-      </div>
+            <SlideModeMain />
+          </div>
+          {CANVAS_VIEW_ENABLED && (
+            <div
+              className={cn(
+                'absolute inset-0 transition-opacity duration-300 ease-in-out',
+                isStack ? 'pointer-events-none opacity-0' : 'opacity-100',
+              )}
+              aria-hidden={isStack}
+            >
+              <CanvasModeView />
+            </div>
+          )}
+        </VisualWalkthroughShell>
+      </main>
+
+      <EditorModeChrome
+        mode={mode}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}
+      />
     </div>
   )
 }

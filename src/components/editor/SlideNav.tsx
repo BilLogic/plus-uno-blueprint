@@ -5,7 +5,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { cn } from '@/lib/utils'
+import {
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from '@/components/ui/sidebar'
 import {
   getMainSlides,
   getSlideById,
@@ -13,6 +23,7 @@ import {
   getSubslides,
   type Slide,
 } from '@/types/slides'
+import { cn } from '@/lib/utils'
 
 type SlideNavProps = {
   slides: Slide[]
@@ -20,39 +31,21 @@ type SlideNavProps = {
   onSelect: (id: string) => void
 }
 
-type SlideNavRowProps = {
-  displayLabel: string
-  isActive: boolean
-  onSelect: () => void
-  isSubslide?: boolean
-}
-
-function SlideNavRow({
-  displayLabel,
-  isActive,
-  onSelect,
-  isSubslide,
-}: SlideNavRowProps) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'w-full rounded-md px-3 py-2 text-left text-sm transition-colors',
-        'hover:bg-accent',
-        isActive && 'bg-accent font-medium text-foreground',
-        !isActive && 'text-foreground/90',
-        isSubslide && 'pl-9',
-      )}
-    >
-      <span className="truncate">{displayLabel}</span>
-    </button>
-  )
-}
-
 export function SlideNav({ slides, activeSlideId, onSelect }: SlideNavProps) {
   const mains = getMainSlides(slides)
   const [openParents, setOpenParents] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    setOpenParents((prev) => {
+      const next = new Set(prev)
+      for (const main of getMainSlides(slides)) {
+        if (getSubslides(main.id, slides).length > 0) {
+          next.add(main.id)
+        }
+      }
+      return next
+    })
+  }, [slides])
 
   useEffect(() => {
     const active = getSlideById(activeSlideId, slides)
@@ -71,81 +64,77 @@ export function SlideNav({ slides, activeSlideId, onSelect }: SlideNavProps) {
   }
 
   return (
-    <div className="flex flex-col gap-0.5">
-      {mains.map((main) => {
-        const children = getSubslides(main.id, slides)
-        const hasChildren = children.length > 0
-        const isMainActive = activeSlideId === main.id
-        const childActive = children.some((c) => c.id === activeSlideId)
-        const isOpen = openParents.has(main.id)
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {mains.map((main) => {
+            const children = getSubslides(main.id, slides)
+            const hasChildren = children.length > 0
+            const isMainActive = activeSlideId === main.id
+            const childActive = children.some((c) => c.id === activeSlideId)
+            const isOpen = openParents.has(main.id)
+            const mainLabel = getSlideDisplayLabel(main, slides)
 
-        const mainLabel = getSlideDisplayLabel(main, slides)
+            if (!hasChildren) {
+              return (
+                <SidebarMenuItem key={main.id}>
+                  <SidebarMenuButton
+                    isActive={isMainActive}
+                    onClick={() => onSelect(main.id)}
+                  >
+                    <span>{mainLabel}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            }
 
-        if (!hasChildren) {
-          return (
-            <SlideNavRow
-              key={main.id}
-              displayLabel={mainLabel}
-              isActive={isMainActive}
-              onSelect={() => onSelect(main.id)}
-            />
-          )
-        }
-
-        return (
-          <Collapsible
-            key={main.id}
-            open={isOpen}
-            onOpenChange={(open) => toggleParent(main.id, open)}
-          >
-            <div
-              className={cn(
-                'flex min-w-0 items-center rounded-md',
-                (isMainActive || childActive) && 'bg-accent/60',
-              )}
-            >
-              <button
-                type="button"
-                onClick={() => onSelect(main.id)}
-                className={cn(
-                  'min-w-0 flex-1 truncate rounded-md py-2 pl-3 text-left text-sm transition-colors',
-                  'hover:bg-accent',
-                  isMainActive && 'font-medium',
-                )}
+            return (
+              <Collapsible
+                key={main.id}
+                open={isOpen}
+                onOpenChange={(open) => toggleParent(main.id, open)}
               >
-                {mainLabel}
-              </button>
-              <CollapsibleTrigger
-                className={cn(
-                  'flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors',
-                  'hover:bg-accent hover:text-foreground',
-                )}
-                aria-label={
-                  isOpen ? `Collapse ${mainLabel}` : `Expand ${mainLabel}`
-                }
-              >
-                <ChevronRight
-                  className={cn(
-                    'size-4 transition-transform',
-                    isOpen && 'rotate-90',
-                  )}
-                />
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent className="flex flex-col gap-0.5 pb-0.5">
-              {children.map((child) => (
-                <SlideNavRow
-                  key={child.id}
-                  displayLabel={getSlideDisplayLabel(child, slides)}
-                  isActive={activeSlideId === child.id}
-                  onSelect={() => onSelect(child.id)}
-                  isSubslide
-                />
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )
-      })}
-    </div>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isMainActive || childActive}
+                    onClick={() => onSelect(main.id)}
+                  >
+                    <span>{mainLabel}</span>
+                  </SidebarMenuButton>
+                  <CollapsibleTrigger
+                    render={<SidebarMenuAction showOnHover={false} />}
+                    aria-label={
+                      isOpen ? `Collapse ${mainLabel}` : `Expand ${mainLabel}`
+                    }
+                  >
+                    <ChevronRight
+                      className={cn(
+                        'transition-transform',
+                        isOpen && 'rotate-90',
+                      )}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {children.map((child) => (
+                        <SidebarMenuSubItem key={child.id}>
+                          <SidebarMenuSubButton
+                            render={<button type="button" />}
+                            isActive={activeSlideId === child.id}
+                            onClick={() => onSelect(child.id)}
+                          >
+                            <span>{getSlideDisplayLabel(child, slides)}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   )
 }

@@ -104,6 +104,9 @@ export function mergeIntegratedBlueprint(
         path_id: blueprint.path.id,
         path_type: blueprint.path.path_type,
         content: cell.content,
+        picture: cell.picture,
+        description: cell.description,
+        links: cell.links,
         opacity: pathOpacity(blueprint.path.id, selectedPathIds),
       })
     }
@@ -135,6 +138,7 @@ export function mergeIntegratedBlueprint(
     paths: blueprints.map((blueprint) => ({
       id: blueprint.path.id,
       name: blueprint.path.name,
+      description: blueprint.path.description,
       path_type: blueprint.path.path_type,
     })),
     layers,
@@ -152,6 +156,7 @@ export function integratedBlueprintToLayoutData(
     path: {
       id: 'integrated',
       name: 'Integrated',
+      description: null,
       path_type: 'happy',
     },
     layers: data.layers,
@@ -165,6 +170,9 @@ export function integratedBlueprintToLayoutData(
       layer_id: cell.layer_id,
       step_id: cell.step_id,
       content: cell.content,
+      picture: cell.picture,
+      description: cell.description,
+      links: cell.links,
     })),
     triggers: data.triggers.map((trigger) => ({
       id: trigger.id,

@@ -1,15 +1,17 @@
 -- Warm-Up Alternate Path: omits step 3 (Ask Student to Share Screen); columns renumbered 1–7.
 -- Reuses scenario steps from warm_up_happy_path.sql via path_steps.
 
-insert into public.paths (id, service_scenario_id, name, path_type)
+insert into public.paths (id, service_scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000350',
   'a0000000-0000-4000-8000-000000000203',
   'Alternate Path',
+  'Warm-up flow that skips the screen-share step.',
   'alternative'
 )
 on conflict (id) do update set
   name = excluded.name,
+  description = excluded.description,
   path_type = excluded.path_type;
 
 -- Drop step 3 membership and any legacy cells/triggers from earlier seeds

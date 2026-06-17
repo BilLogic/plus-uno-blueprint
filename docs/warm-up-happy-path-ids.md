@@ -17,7 +17,6 @@ Hierarchy: **Pre-Session** (`…000103`) → **Warm-Up** (`…000203`) → **War
 | lead_tutor | `…000302` | Lead Tutor |
 | regular_tutor | `…000303` | Regular Tutor |
 | front_stage_tech | `…000306` | Front Stage Tech |
-| tutor_resources | `…000305` | Tutor Resources |
 | front_stage_actions | `…000304` | Front Stage Actions |
 | back_stage_actions | `…000307` | Back Stage Actions |
 | back_stage_tech | `…000308` | Back Stage Tech |

@@ -26,6 +26,7 @@ order by ss.order_position;
 select
   ss.name as scenario,
   pa.name as path,
+  pa.description,
   pa.path_type,
   (select count(*) from public.layers l where l.path_id = pa.id) as layers,
   (select count(*) from public.path_steps ps where ps.path_id = pa.id) as steps,

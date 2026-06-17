@@ -1,7 +1,33 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+} from 'react'
+import { BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN } from '@/lib/slideLayout'
 
 export const MIN_ZOOM = 0.1
 export const MAX_ZOOM = 4
+
+export const BLUEPRINT_ARTBOARD_SELECTOR = '[data-blueprint-artboard]'
+
+function getOffsetWithinAncestor(
+  element: HTMLElement,
+  ancestor: HTMLElement,
+  ancestorZoom: number,
+): { left: number; top: number; width: number; height: number } {
+  const ancestorRect = ancestor.getBoundingClientRect()
+  const elementRect = element.getBoundingClientRect()
+  const zoom = ancestorZoom > 0 ? ancestorZoom : 1
+
+  return {
+    left: (elementRect.left - ancestorRect.left) / zoom,
+    top: (elementRect.top - ancestorRect.top) / zoom,
+    width: element.offsetWidth,
+    height: element.offsetHeight,
+  }
+}
 
 export function clampZoom(value: number) {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
@@ -58,17 +84,25 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     const content = contentRef.current
     if (!el || !content) return
 
-    const padding = 32
-    const cw = Math.max(el.clientWidth - padding, 1)
-    const ch = Math.max(el.clientHeight - padding, 1)
-    const contentW = Math.max(content.offsetWidth, 1)
-    const contentH = Math.max(content.offsetHeight, 1)
-    const nextZoom = clampZoom(Math.min(cw / contentW, ch / contentH, 1))
+    const margin = BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN
+    const artboard = content.querySelector<HTMLElement>(BLUEPRINT_ARTBOARD_SELECTOR)
+    const fitTarget = artboard ?? content
+    const { zoom: currentZoom } = transformRef.current
+    const bounds = getOffsetWithinAncestor(fitTarget, content, currentZoom)
+
+    const cw = Math.max(el.clientWidth - margin * 2, 1)
+    const ch = Math.max(el.clientHeight - margin * 2, 1)
+    const nextZoom = clampZoom(
+      Math.min(cw / bounds.width, ch / bounds.height, 1),
+    )
+
+    const targetCenterX = bounds.left + bounds.width / 2
+    const targetCenterY = bounds.top + bounds.height / 2
 
     setZoom(nextZoom)
     setPan({
-      x: (el.clientWidth - contentW * nextZoom) / 2,
-      y: (el.clientHeight - contentH * nextZoom) / 2,
+      x: el.clientWidth / 2 - targetCenterX * nextZoom,
+      y: el.clientHeight / 2 - targetCenterY * nextZoom,
     })
   }, [])
 
@@ -80,12 +114,29 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   useEffect(() => {
     if (resetKey === undefined) return
     pendingFitRef.current = true
-    const frame = requestAnimationFrame(() => {
+
+    let frame1 = 0
+    let frame2 = 0
+    const runFit = () => {
+      if (!pendingFitRef.current) return
+      fitToView()
+    }
+
+    frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(runFit)
+    })
+
+    const timeout = window.setTimeout(() => {
       if (!pendingFitRef.current) return
       fitToView()
       pendingFitRef.current = false
-    })
-    return () => cancelAnimationFrame(frame)
+    }, 150)
+
+    return () => {
+      cancelAnimationFrame(frame1)
+      cancelAnimationFrame(frame2)
+      window.clearTimeout(timeout)
+    }
   }, [resetKey, fitToView])
 
   useEffect(() => {

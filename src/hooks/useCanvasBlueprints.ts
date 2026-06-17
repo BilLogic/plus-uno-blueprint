@@ -5,22 +5,16 @@ import {
 } from '@/data/blueprintFallbacks'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
+import type { RawPath } from '@/lib/normalizeBlueprint'
 import type { PathListItem } from '@/lib/pathSelection'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
 import type { BlueprintData } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
 
-type RawPath = {
-  id: string
-  name: string
-  path_type: PathType
+type CanvasRawPath = RawPath & {
   service_scenario_id: string
-  layers?: BlueprintData['layers']
-  steps?: BlueprintData['steps']
-  cells?: BlueprintData['cells']
 }
 
-function pickPathForScenario(paths: RawPath[]): RawPath | null {
+function pickPathForScenario(paths: CanvasRawPath[]): CanvasRawPath | null {
   if (paths.length === 0) return null
   return paths.find((p) => p.path_type === 'happy') ?? paths[0]
 }
@@ -68,13 +62,17 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
   const [usingFallback, setUsingFallback] = useState(false)
 
   const idsKey = scenarioIds.slice().sort().join(',')
+  const orderedScenarioIds = useMemo(
+    () => (idsKey ? idsKey.split(',') : []),
+    [idsKey],
+  )
   const staticFallbacks = useMemo(
-    () => buildFallbackMaps(scenarioIds),
-    [idsKey, scenarioIds],
+    () => buildFallbackMaps(orderedScenarioIds),
+    [idsKey, orderedScenarioIds],
   )
 
   useEffect(() => {
-    if (scenarioIds.length === 0) {
+    if (orderedScenarioIds.length === 0) {
       setBlueprintsByScenario(new Map())
       setPathsByScenario(new Map())
       setBlueprintsByPathId(new Map())
@@ -101,7 +99,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     void client
       .from('paths')
       .select(PATH_BLUEPRINT_SELECT)
-      .in('service_scenario_id', scenarioIds)
+      .in('service_scenario_id', orderedScenarioIds)
       .then(({ data, error: err }) => {
         if (cancelled) return
 
@@ -115,11 +113,11 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
           return
         }
 
-        const grouped = new Map<string, RawPath[]>()
+        const grouped = new Map<string, CanvasRawPath[]>()
         const byPathId = new Map<string, BlueprintData>()
         let anyFallback = false
 
-        for (const row of (data ?? []) as RawPath[]) {
+        for (const row of (data ?? []) as CanvasRawPath[]) {
           const list = grouped.get(row.service_scenario_id) ?? []
           list.push(row)
           grouped.set(row.service_scenario_id, list)
@@ -137,7 +135,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
         const byScenario = new Map<string, BlueprintData>()
         const pathsMap = new Map<string, PathListItem[]>()
 
-        for (const scenarioId of scenarioIds) {
+        for (const scenarioId of orderedScenarioIds) {
           const scenarioPaths = grouped.get(scenarioId) ?? []
           if (scenarioPaths.length > 0) {
             pathsMap.set(
@@ -145,6 +143,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
               scenarioPaths.map((path) => ({
                 id: path.id,
                 name: path.name,
+                description: path.description ?? null,
                 path_type: path.path_type,
               })),
             )
@@ -196,7 +195,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     return () => {
       cancelled = true
     }
-  }, [client, configured, idsKey, scenarioIds, staticFallbacks])
+  }, [client, configured, idsKey, staticFallbacks])
 
   return {
     blueprintsByScenario,

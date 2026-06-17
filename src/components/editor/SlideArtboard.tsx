@@ -25,6 +25,48 @@ export function SlideArtboard({
   const { slides } = useEditor()
   const displayLabel = getSlideDisplayLabel(slide, slides)
 
+  const sharedClassName = cn(
+    'relative flex items-center justify-center rounded-sm border bg-card text-left shadow-sm transition-[box-shadow,border-color]',
+    variant === 'viewport' && 'aspect-video w-full max-w-5xl',
+    variant === 'canvas' && 'shrink-0',
+    isActive
+      ? 'border-primary ring-2 ring-primary/25'
+      : 'border-border',
+    onSelect && 'hover:border-muted-foreground/40',
+    className,
+  )
+
+  const sharedStyle =
+    variant === 'canvas'
+      ? { width: SLIDE_ARTBOARD_WIDTH, ...style }
+      : style
+
+  const content = (
+    <div className="pointer-events-none flex flex-col items-center gap-2">
+      {isSubslide(slide) && (
+        <Badge variant="secondary" className="text-[10px] font-normal">
+          Scenario
+        </Badge>
+      )}
+      <span className="text-base font-medium text-foreground">{displayLabel}</span>
+    </div>
+  )
+
+  if (variant === 'canvas' && !onSelect) {
+    return (
+      <div
+        data-canvas-artboard
+        data-slide-id={slide.id}
+        className={sharedClassName}
+        style={sharedStyle}
+        aria-label={displayLabel}
+        aria-current={isActive ? 'true' : undefined}
+      >
+        {content}
+      </div>
+    )
+  }
+
   return (
     <button
       type="button"
@@ -34,31 +76,12 @@ export function SlideArtboard({
         e.stopPropagation()
         onSelect?.()
       }}
-      className={cn(
-        'relative flex items-center justify-center rounded-sm border bg-card text-left shadow-sm transition-[box-shadow,border-color]',
-        variant === 'viewport' && 'aspect-video w-full max-w-5xl',
-        variant === 'canvas' && 'shrink-0',
-        isActive
-          ? 'border-primary ring-2 ring-primary/25'
-          : 'border-border hover:border-muted-foreground/40',
-        className,
-      )}
-      style={
-        variant === 'canvas'
-          ? { width: SLIDE_ARTBOARD_WIDTH, ...style }
-          : style
-      }
+      className={sharedClassName}
+      style={sharedStyle}
       aria-label={displayLabel}
       aria-current={isActive ? 'true' : undefined}
     >
-      <div className="pointer-events-none flex flex-col items-center gap-2">
-        {isSubslide(slide) && (
-          <Badge variant="secondary" className="text-[10px] font-normal">
-            Scenario
-          </Badge>
-        )}
-        <span className="text-base font-medium text-foreground">{displayLabel}</span>
-      </div>
+      {content}
     </button>
   )
 }

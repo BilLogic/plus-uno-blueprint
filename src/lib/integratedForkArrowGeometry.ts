@@ -20,17 +20,17 @@ import type { PathType } from '@/types/database'
 /** Visual tokens for integrated path fork junctions. */
 export const INTEGRATED_FORK_THEME = {
   /** Shared approach line before the branch node (stroke uses path color). */
-  trunkWidth: 2.25,
-  trunkWidthDimmed: 2,
-  /** Solid branch-node disc (space gray). */
-  nodeRadius: 5.5,
-  nodeFill: '#86868B',
+  trunkWidth: 1.5,
+  trunkWidthDimmed: 1.5,
+  /** Branch-node disc — subtle, matches blueprint chrome. */
+  nodeRadius: 4,
+  nodeFill: '#AEAEB2',
   /** Canvas knock-out ring so the node reads on busy lanes. */
-  nodeHaloRadius: 8.5,
+  nodeHaloRadius: 6.5,
   nodeHaloFill: BLUEPRINT_THEME.canvas,
   /** Branch strokes. */
-  branchWidth: 2.25,
-  branchWidthDimmed: 2,
+  branchWidth: 1.5,
+  branchWidthDimmed: 1.5,
   /** Minimum clearance below skipped cells for the detour lane. */
   detourClearance: 8,
   /** Minimum vertical gap between detour and loop-back corridors. */

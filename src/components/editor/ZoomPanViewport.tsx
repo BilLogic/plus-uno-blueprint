@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
 import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
 import { EditorZoomIndicator } from '@/components/editor/EditorZoomIndicator'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
 
 type ZoomPanViewportProps = {
@@ -31,9 +32,10 @@ export function ZoomPanViewport({
       <div
         ref={containerRef}
         className={cn(
-          'absolute inset-0 overflow-hidden touch-none bg-[#e8e8e8] dark:bg-[#1a1a1a]',
-          isPanning ? 'cursor-grabbing' : 'cursor-grab',
+          'absolute inset-0 overflow-hidden touch-none dark:bg-[#1C1C1E]',
+          isPanning && 'cursor-grabbing',
         )}
+        style={{ backgroundColor: BLUEPRINT_THEME.viewportPad }}
         {...pointerHandlers}
       >
         <div
