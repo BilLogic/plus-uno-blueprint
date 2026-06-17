@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import {
   getBlueprintFallback,
   getFallbackPathsForScenario,
@@ -8,8 +8,25 @@ import { usePathSelection } from '@/hooks/usePathSelection'
 import { resolveBlueprintForScenario, type BlueprintSource } from '@/lib/resolveBlueprint'
 import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import type { PathListItem } from '@/lib/pathSelection'
+import { itemsInSelectionOrder } from '@/lib/pathSelection'
 import { PATH_BLUEPRINT_SELECT, PATH_LIST_SELECT } from '@/lib/workflowQueries'
 import type { BlueprintData } from '@/types/blueprint'
+
+function loadFallbackBlueprints(
+  serviceScenarioId: string,
+  paths: PathListItem[],
+): Record<string, BlueprintData> {
+  const next: Record<string, BlueprintData> = {}
+  for (const path of paths) {
+    const fallback = getBlueprintFallback(
+      serviceScenarioId,
+      path.id,
+      path.path_type,
+    )
+    if (fallback) next[path.id] = fallback
+  }
+  return next
+}
 
 export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
   const { client, configured } = useSupabase()
@@ -28,7 +45,7 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
     [serviceScenarioId],
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceScenarioId) {
       setPaths([])
       setBlueprintsByPathId({})
@@ -39,15 +56,22 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
     }
 
     if (!configured || !client) {
-      if (fallbackPaths.length > 0) {
-        setPaths(fallbackPaths)
-      } else {
-        setPaths([])
-        setBlueprintsByPathId({})
-        setSource(null)
-      }
+      const nextPaths =
+        fallbackPaths.length > 0 ? fallbackPaths : []
+      setPaths(nextPaths)
+      setBlueprintsByPathId(
+        nextPaths.length > 0
+          ? loadFallbackBlueprints(serviceScenarioId, nextPaths)
+          : {},
+      )
+      setSource(nextPaths.length > 0 ? 'fallback' : null)
       setLoading(false)
       setError(null)
+    }
+  }, [client, configured, fallbackPaths, serviceScenarioId])
+
+  useEffect(() => {
+    if (!serviceScenarioId || !configured || !client) {
       return
     }
 
@@ -66,6 +90,10 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
           setError(err.message)
           if (fallbackPaths.length > 0) {
             setPaths(fallbackPaths)
+            setBlueprintsByPathId(
+              loadFallbackBlueprints(serviceScenarioId, fallbackPaths),
+            )
+            setSource('fallback')
           } else {
             setPaths([])
             setBlueprintsByPathId({})
@@ -94,30 +122,25 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
   }, [client, configured, serviceScenarioId, fallbackPaths])
 
   const pathIds = useMemo(() => paths.map((path) => path.id), [paths])
+  const pathIdsKey = useMemo(() => pathIds.join('|'), [pathIds])
 
   useEffect(() => {
     if (!serviceScenarioId || pathIds.length === 0) {
-      setBlueprintsByPathId({})
       return
     }
 
     if (!configured || !client) {
-      const next: Record<string, BlueprintData> = {}
-      for (const pathId of pathIds) {
-        const fallback = getBlueprintFallback(serviceScenarioId, pathId)
-        if (fallback) next[pathId] = fallback
-      }
-      setBlueprintsByPathId(next)
-      setSource(Object.keys(next).length > 0 ? 'fallback' : null)
-      setLoading(false)
       return
     }
 
     let cancelled = false
     setLoading(true)
 
+    const pathById = new Map(paths.map((path) => [path.id, path]))
+
     void Promise.all(
       pathIds.map(async (pathId) => {
+        const path = pathById.get(pathId)
         const { data, error: err } = await client
           .from('paths')
           .select(PATH_BLUEPRINT_SELECT)
@@ -125,7 +148,11 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
           .single()
 
         if (err) {
-          const fallback = getBlueprintFallback(serviceScenarioId, pathId)
+          const fallback = getBlueprintFallback(
+            serviceScenarioId,
+            pathId,
+            path?.path_type,
+          )
           return { pathId, blueprint: fallback, source: 'fallback' as const }
         }
 
@@ -166,7 +193,7 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
     return () => {
       cancelled = true
     }
-  }, [client, configured, pathIds, serviceScenarioId])
+  }, [client, configured, pathIdsKey, pathIds, serviceScenarioId])
 
   const allBlueprints = useMemo(
     () =>
@@ -178,11 +205,8 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
 
   const blueprints = useMemo(
     () =>
-      paths
-        .filter((path) => selectedPathIds.includes(path.id))
-        .map((path) => blueprintsByPathId[path.id])
-        .filter((blueprint): blueprint is BlueprintData => blueprint !== undefined),
-    [paths, selectedPathIds, blueprintsByPathId],
+      itemsInSelectionOrder(selectedPathIds, (id) => blueprintsByPathId[id]),
+    [selectedPathIds, blueprintsByPathId],
   )
 
   const integratedBlueprint = useMemo(

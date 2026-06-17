@@ -16,6 +16,7 @@ create table public.phases (
   name text not null,
   description text,
   order_position integer not null default 0,
+  loops_to_phase_id uuid references public.phases (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -35,6 +36,7 @@ create table public.paths (
   id uuid primary key default gen_random_uuid(),
   service_scenario_id uuid not null references public.service_scenarios (id) on delete cascade,
   name text not null,
+  description text,
   path_type text not null check (path_type in ('happy', 'unhappy', 'exception', 'alternative')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -74,9 +76,13 @@ create table public.cells (
   layer_id uuid not null references public.layers (id) on delete cascade,
   step_id uuid not null references public.steps (id) on delete cascade,
   content text not null default '',
+  picture text,
+  description text,
+  links jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (layer_id, step_id)
+  unique (layer_id, step_id),
+  check (jsonb_typeof(links) = 'array')
 );
 
 create table public.cell_triggers (

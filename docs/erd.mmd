@@ -26,6 +26,7 @@ erDiagram
     text name
     text description
     int order_position
+    uuid loops_to_phase_id FK
   }
 
   service_scenarios {
@@ -34,12 +35,14 @@ erDiagram
     text name
     text description
     int order_position
+    text view_type
   }
 
   paths {
     uuid id PK
     uuid service_scenario_id FK
     text name
+    text description
     text path_type
   }
 
@@ -68,6 +71,9 @@ erDiagram
     uuid layer_id FK
     uuid step_id FK
     text content
+    text picture
+    text description
+    jsonb links
   }
 
   cell_triggers {

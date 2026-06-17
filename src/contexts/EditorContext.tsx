@@ -8,7 +8,9 @@ import {
   type ReactNode,
 } from 'react'
 import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
+import { mergeSlidesWithFallback } from '@/lib/mergeSlidesWithFallback'
 import {
+  CANVAS_VIEW_ENABLED,
   FALLBACK_SLIDES,
   getSlideViewType,
   type EditorMode,
@@ -39,12 +41,16 @@ type EditorProviderProps = {
 }
 
 export function EditorProvider({ children }: EditorProviderProps) {
-  const [mode, setMode] = useState<EditorMode>('stack')
+  const [mode, setModeState] = useState<EditorMode>('stack')
+  const setMode = useCallback((next: EditorMode) => {
+    if (!CANVAS_VIEW_ENABLED && next === 'canvas') return
+    setModeState(next)
+  }, [])
   const { slides: dbSlides, loading, error, configured } = useLifecyclePhases()
 
   const slides = useMemo(() => {
-    if (dbSlides.length > 0) return dbSlides
-    return FALLBACK_SLIDES
+    if (dbSlides.length === 0) return FALLBACK_SLIDES
+    return mergeSlidesWithFallback(dbSlides)
   }, [dbSlides])
 
   const [scenarioViewTypeOverrides, setScenarioViewTypeOverrides] = useState<

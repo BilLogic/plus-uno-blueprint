@@ -7,19 +7,20 @@ import {
   type RefObject,
 } from 'react'
 import {
-  ARROW_CHEVRON_SIZE,
-  ARROW_MARKER_PAD,
-  ARROW_MARKER_REF_X,
-  ARROW_MARKER_REF_Y,
-  ARROW_STROKE_WIDTH,
   ARROW_VIEWPORT_PAD,
+  buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
+  groupDiscoveryRailTriggers,
   isWrapTrigger,
 } from '@/lib/blueprintArrowGeometry'
-import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellTrigger } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
+import {
+  BlueprintArrowMarkerDefs,
+  blueprintArrowPathProps,
+  BLUEPRINT_ARROW_PATH_TYPES,
+} from '@/components/blueprint/BlueprintArrowMarkerDefs'
 
 type ArrowLayer = 'forward' | 'wrap'
 
@@ -44,8 +45,6 @@ type ArrowSegment = {
   pathType: PathType
   opacity: number
 }
-
-const PATH_TYPES: PathType[] = ['happy', 'unhappy', 'exception', 'alternative']
 
 function isColoredTrigger(
   trigger: BlueprintCellTrigger,
@@ -72,8 +71,28 @@ export function BlueprintTriggerArrows({
     }
 
     const next: ArrowSegment[] = []
+    const { busGroups, remaining } = groupDiscoveryRailTriggers(
+      triggers,
+      content,
+    )
 
-    for (const trigger of triggers) {
+    for (const group of busGroups) {
+      const d = buildApplicationRegularTutorRailBusPath(
+        group.sourceEls,
+        group.targetEl,
+        content,
+      )
+      if (!d) continue
+
+      next.push({
+        id: group.triggerIds.join('-'),
+        d,
+        pathType,
+        opacity: 1,
+      })
+    }
+
+    for (const trigger of remaining) {
       const sourceEl = content.querySelector<HTMLElement>(
         `[data-blueprint-cell="${trigger.source_cell_id}"]`,
       )
@@ -159,7 +178,10 @@ export function BlueprintTriggerArrows({
   const markerIds = useMemo(
     () =>
       Object.fromEntries(
-        PATH_TYPES.map((type) => [type, `${markerId}-chevron-${type}`]),
+        BLUEPRINT_ARROW_PATH_TYPES.map((type) => [
+          type,
+          `${markerId}-arrow-${type}`,
+        ]),
       ) as Record<PathType, string>,
     [markerId],
   )
@@ -174,50 +196,22 @@ export function BlueprintTriggerArrows({
       )}
       style={svgStyle}
       overflow="visible"
+      shapeRendering="geometricPrecision"
       aria-hidden
     >
       <defs>
-        {PATH_TYPES.map((type) => (
-          <marker
-            key={type}
-            id={markerIds[type]}
-            viewBox={`${-ARROW_MARKER_PAD} ${-ARROW_MARKER_PAD} ${ARROW_CHEVRON_SIZE + ARROW_MARKER_PAD * 2} ${ARROW_CHEVRON_SIZE + ARROW_MARKER_PAD * 2}`}
-            refX={ARROW_MARKER_REF_X}
-            refY={ARROW_MARKER_REF_Y}
-            markerWidth={ARROW_CHEVRON_SIZE}
-            markerHeight={ARROW_CHEVRON_SIZE}
-            orient="auto"
-            markerUnits="userSpaceOnUse"
-            overflow="visible"
-          >
-            <polyline
-              points={`0,0 ${ARROW_CHEVRON_SIZE},${ARROW_CHEVRON_SIZE / 2} 0,${ARROW_CHEVRON_SIZE}`}
-              fill="none"
-              stroke={getPathTypeArrowColor(type)}
-              strokeWidth={ARROW_STROKE_WIDTH}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </marker>
-        ))}
+        <BlueprintArrowMarkerDefs markerIds={markerIds} />
       </defs>
       <g transform={`translate(${ARROW_VIEWPORT_PAD} ${ARROW_VIEWPORT_PAD})`}>
-        {segments.map((segment) => {
-          const color = getPathTypeArrowColor(segment.pathType)
-          return (
-            <g key={segment.id} opacity={segment.opacity}>
-              <path
-                d={segment.d}
-                fill="none"
-                stroke={color}
-                strokeWidth={ARROW_STROKE_WIDTH}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                markerEnd={`url(#${markerIds[segment.pathType]})`}
-              />
-            </g>
-          )
-        })}
+        {segments.map((segment) => (
+          <g key={segment.id} opacity={segment.opacity}>
+            <path
+              d={segment.d}
+              {...blueprintArrowPathProps(segment.pathType)}
+              markerEnd={`url(#${markerIds[segment.pathType]})`}
+            />
+          </g>
+        ))}
       </g>
     </svg>
   )

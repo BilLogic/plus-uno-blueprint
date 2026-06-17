@@ -117,6 +117,18 @@
   --chart-5: oklch(0.269 0 0);
 }
 
+@layer utilities {
+  .blueprint-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .blueprint-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

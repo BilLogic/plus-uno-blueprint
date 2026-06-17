@@ -1,19 +1,47 @@
 import type { BlueprintLayer } from '@/types/blueprint'
-import { shouldShowVisibilityLineAfter } from '@/lib/blueprintLayout'
+import {
+  shouldShowInteractionLineAfter,
+  shouldShowVisibilityLineAfter,
+} from '@/lib/blueprintLayout'
 
 export const BLUEPRINT_THEME = {
-  canvas: '#FAFAF8',
-  canvasBorder: '#E8E4DF',
-  divider: '#B8B4AE',
-  dividerLabel: '#9A9690',
-  dividerBg: '#F5F4F1',
-  cellText: '#3D3A36',
-  cellEmpty: '#C4C0BA',
-  headerText: '#2C2A27',
-  /** Thin rules between swim lanes. */
-  laneDivider: '#F3F2EF',
-  /** Trigger arrows and chevron tips. */
-  arrow: '#86868B',
+  /** Blueprint content surface — path sections, cells, swim lanes. */
+  canvas: '#FFFFFF',
+  canvasDark: '#1C1C1E',
+  /** Blueprint shell — label column, panel padding, compare chrome. */
+  labelRail: '#E8E8ED',
+  labelRailDark: '#1C1C1E',
+  canvasBorder: '#D4D4DA',
+  divider: '#AEAEB2',
+  dividerLabel: '#8E8E93',
+  /** Figma-style interaction / visibility line tag. */
+  dividerTagBg: '#3A3A3C',
+  dividerLine: '#3A3A3C',
+  dividerBg: '#E8E8ED',
+  cellText: '#273036',
+  cellEmpty: '#C7C7CC',
+  headerText: '#1C1C1E',
+  /** Thin rules between swim lanes — light grey, visible on canvas and label rail. */
+  laneDivider: '#DCDCE1',
+  arrow: '#8E8E93',
+  /** Side-by-side compare path sections (Figma-style grouping). */
+  sectionFill: '#FFFFFF',
+  sectionBorder: '#D4D4DA',
+  /** Outermost slide/canvas workspace — sits behind blueprint panels. */
+  viewportPad: '#F4F4F4',
+} as const
+
+/** Layer fills — readable pastels that pair with ring-based button states. */
+export const BLUEPRINT_CELL_PALETTE = {
+  powderBlue: '#DDEEF0',
+  chartreuse: '#C9E882',
+  peach: '#F5DFD0',
+  lavender: '#EDE0F5',
+  cream: '#F8E8D4',
+  mint: '#E0F0E8',
+  blush: '#F8DDE8',
+  visual: '#F2F2F4',
+  charcoal: '#000000',
 } as const
 
 export type BlueprintLayerStyle = {
@@ -24,87 +52,150 @@ export type BlueprintLayerStyle = {
   accentMuted: string
 }
 
+/** Label column text tones — reference blueprint swimlane labels. */
+export const BLUEPRINT_LABEL_TEXT = {
+  frontstage: '#2D5A58',
+  customerFacing: '#5C4E62',
+  backstage: '#4F4B47',
+} as const
+
+export type BlueprintLabelSection =
+  | 'frontstage'
+  | 'customerFacing'
+  | 'backstage'
+
+export function getBlueprintLabelSection(
+  layer: BlueprintLayer,
+  layers: BlueprintLayer[],
+): BlueprintLabelSection {
+  if (isBackstageBlueprintLayer(layer, layers)) {
+    return 'backstage'
+  }
+
+  const layerIndex = layers.findIndex((entry) => entry.id === layer.id)
+  const interactionAfterIndex = layers.findIndex((entry) =>
+    shouldShowInteractionLineAfter(entry),
+  )
+  const visibilityAfterIndex = layers.findIndex((entry) =>
+    shouldShowVisibilityLineAfter(entry, layers),
+  )
+
+  if (
+    interactionAfterIndex !== -1 &&
+    layerIndex > interactionAfterIndex &&
+    (visibilityAfterIndex === -1 || layerIndex <= visibilityAfterIndex)
+  ) {
+    return 'customerFacing'
+  }
+
+  return 'frontstage'
+}
+
+export function getBlueprintLabelTextColor(
+  section: BlueprintLabelSection,
+): string {
+  switch (section) {
+    case 'frontstage':
+      return BLUEPRINT_LABEL_TEXT.frontstage
+    case 'customerFacing':
+      return BLUEPRINT_LABEL_TEXT.customerFacing
+    case 'backstage':
+      return BLUEPRINT_LABEL_TEXT.backstage
+  }
+}
+
+function cellStyleFromFill(
+  fill: string,
+  label: string = BLUEPRINT_LABEL_TEXT.frontstage,
+): BlueprintLayerStyle {
+  const { charcoal } = BLUEPRINT_CELL_PALETTE
+  return {
+    lane: fill,
+    laneLabel: fill,
+    label,
+    accent: charcoal,
+    accentMuted: fill,
+  }
+}
+
 const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
-  'Partner Action: Teacher': {
-    lane: '#E8F4F4',
-    laneLabel: '#DDEDED',
-    label: '#3D6666',
-    accent: '#5C8585',
-    accentMuted: '#A8CACA',
-  },
-  'Lead Tutor': {
-    lane: '#E3F0F0',
-    laneLabel: '#D6E8E8',
-    label: '#3A6161',
-    accent: '#557E7E',
-    accentMuted: '#A0C4C4',
-  },
-  'Regular Tutor': {
-    lane: '#DDEBEB',
-    laneLabel: '#D0E3E3',
-    label: '#375C5C',
-    accent: '#4F7777',
-    accentMuted: '#98BABA',
-  },
-  'Front Stage Tech': {
-    lane: '#F0EBF6',
-    laneLabel: '#E8E0F0',
-    label: '#5C4F6E',
-    accent: '#7A6A94',
-    accentMuted: '#C4B8D4',
-  },
-  'Tutor Resources': {
-    lane: '#F5F0E8',
-    laneLabel: '#EDE6DA',
-    label: '#6B5F4A',
-    accent: '#8A7A62',
-    accentMuted: '#D4C8B0',
-  },
-  'Front Stage Actions': {
-    lane: '#F5EBEB',
-    laneLabel: '#EDE0E0',
-    label: '#6E5252',
-    accent: '#946B6B',
-    accentMuted: '#D4B8B8',
-  },
-  'Back Stage Actions': {
-    lane: '#F0E5E5',
-    laneLabel: '#E8D8D8',
-    label: '#664A4A',
-    accent: '#875F5F',
-    accentMuted: '#C8AAAA',
-  },
-  'Back Stage Tech': {
-    lane: '#EBE5F2',
-    laneLabel: '#E0D8EC',
-    label: '#564D66',
-    accent: '#726682',
-    accentMuted: '#B8AEC8',
-  },
-  'Support Actions': {
-    lane: '#F2EDE3',
-    laneLabel: '#EAE2D4',
-    label: '#5F5748',
-    accent: '#7A7260',
-    accentMuted: '#C8C0B0',
-  },
+  Visual: cellStyleFromFill(BLUEPRINT_CELL_PALETTE.visual),
+  'Step Visual': cellStyleFromFill(BLUEPRINT_CELL_PALETTE.visual),
+  'Partner Action: Teacher': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.powderBlue,
+    BLUEPRINT_LABEL_TEXT.frontstage,
+  ),
+  'Lead Tutor': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.mint,
+    BLUEPRINT_LABEL_TEXT.frontstage,
+  ),
+  'Regular Tutor': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.mint,
+    BLUEPRINT_LABEL_TEXT.frontstage,
+  ),
+  'Front Stage Tech': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.lavender,
+    BLUEPRINT_LABEL_TEXT.customerFacing,
+  ),
+  'Front Stage Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.blush,
+    BLUEPRINT_LABEL_TEXT.customerFacing,
+  ),
+  'Tutor Resources': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.cream,
+    BLUEPRINT_LABEL_TEXT.customerFacing,
+  ),
+  'Back Stage Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.blush,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
+  'Back Stage Tech': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.lavender,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
+  'Support Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.cream,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
+  'Physical Evidence': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.powderBlue,
+    BLUEPRINT_LABEL_TEXT.frontstage,
+  ),
+  'Customer Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.mint,
+    BLUEPRINT_LABEL_TEXT.frontstage,
+  ),
+  'Frontstage Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.lavender,
+    BLUEPRINT_LABEL_TEXT.customerFacing,
+  ),
+  'Backstage Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.peach,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
+  'Tech Support Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.peach,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
+  'Management Actions': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.peach,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
+  'Computer Systems': cellStyleFromFill(
+    BLUEPRINT_CELL_PALETTE.mint,
+    BLUEPRINT_LABEL_TEXT.backstage,
+  ),
 }
 
-const FRONTSTAGE_FALLBACK: BlueprintLayerStyle = {
-  lane: '#E8F0F0',
-  laneLabel: '#DCE8E8',
-  label: '#3D5555',
-  accent: '#5A7575',
-  accentMuted: '#A8BFBF',
-}
+const FRONTSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill(
+  BLUEPRINT_CELL_PALETTE.cream,
+  BLUEPRINT_LABEL_TEXT.frontstage,
+)
 
-const BACKSTAGE_FALLBACK: BlueprintLayerStyle = {
-  lane: '#F0EAE8',
-  laneLabel: '#E8DED8',
-  label: '#5A4F48',
-  accent: '#7A6A62',
-  accentMuted: '#C4B4AC',
-}
+const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill(
+  BLUEPRINT_CELL_PALETTE.cream,
+  BLUEPRINT_LABEL_TEXT.backstage,
+)
 
 export type BlueprintZone = 'frontstage' | 'backstage'
 
@@ -129,7 +220,7 @@ export function isBackstageBlueprintLayer(
   layers: BlueprintLayer[],
 ): boolean {
   const visibilityAfterIndex = layers.findIndex((entry) =>
-    shouldShowVisibilityLineAfter(entry),
+    shouldShowVisibilityLineAfter(entry, layers),
   )
   if (visibilityAfterIndex === -1) return false
   const layerIndex = layers.findIndex((entry) => entry.id === layer.id)

@@ -25,6 +25,7 @@ export function phasesToSlides(phases: PhaseRow[]): Slide[] {
       id: phase.id,
       index: phaseIndex + 1,
       label: phase.name,
+      description: phase.description,
       loopToId: phase.loops_to_phase_id ?? undefined,
     })
 

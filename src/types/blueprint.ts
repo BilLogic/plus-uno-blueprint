@@ -3,6 +3,7 @@ import type { PathType } from '@/types/database'
 export type BlueprintPath = {
   id: string
   name: string
+  description: string | null
   path_type: PathType
 }
 
@@ -18,11 +19,22 @@ export type BlueprintStep = {
   column_position: number
 }
 
+/** Structured link on a cell (stored as JSONB; type is usually "url"). */
+export type CellLink = {
+  type: string
+  label: string
+  url?: string
+}
+
 export type BlueprintCell = {
   id: string
   layer_id: string
   step_id: string
+  /** Cell Label — primary text shown in the blueprint grid. */
   content: string
+  picture: string | null
+  description: string | null
+  links: CellLink[]
 }
 
 export type BlueprintCellTrigger = {

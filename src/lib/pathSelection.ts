@@ -3,6 +3,7 @@ import type { PathType } from '@/types/database'
 export type PathListItem = {
   id: string
   name: string
+  description: string | null
   path_type: PathType
 }
 
@@ -26,4 +27,14 @@ export function togglePathInSelection(
     return selected.filter((id) => id !== pathId)
   }
   return [...selected, pathId]
+}
+
+/** Preserve activation order when resolving selected paths to display items. */
+export function itemsInSelectionOrder<T>(
+  selectedPathIds: readonly string[],
+  lookup: (pathId: string) => T | undefined,
+): T[] {
+  return selectedPathIds
+    .map((id) => lookup(id))
+    .filter((item): item is T => item !== undefined)
 }

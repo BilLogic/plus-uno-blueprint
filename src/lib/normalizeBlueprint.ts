@@ -5,18 +5,22 @@ import type {
   BlueprintLayer,
   BlueprintStep,
 } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
+import type { PathType, Json } from '@/types/database'
+import { normalizeCellLinks } from '@/lib/cellMetadata'
 
 type RawOutgoingTrigger = {
   id: string
   target_cell_id: string
 }
 
-type RawCell = {
+export type RawCell = {
   id: string
   layer_id: string
   step_id: string
   content: string
+  picture?: string | null
+  description?: string | null
+  links?: Json | null
   outgoing?: RawOutgoingTrigger[] | null
 }
 
@@ -25,9 +29,10 @@ type RawPathStep = {
   steps: { id: string; name: string } | null
 }
 
-type RawPath = {
+export type RawPath = {
   id: string
   name: string
+  description?: string | null
   path_type: PathType
   layers?: BlueprintLayer[] | null
   /** @deprecated Legacy shape; use path_steps */
@@ -82,14 +87,15 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
   )
   const steps = resolveSteps(raw)
   const rawCells = raw.cells ?? []
-  const cells: BlueprintCell[] = rawCells.map(
-    ({ id, layer_id, step_id, content }) => ({
-      id,
-      layer_id,
-      step_id,
-      content,
-    }),
-  )
+  const cells: BlueprintCell[] = rawCells.map((cell) => ({
+    id: cell.id,
+    layer_id: cell.layer_id,
+    step_id: cell.step_id,
+    content: cell.content,
+    picture: cell.picture ?? null,
+    description: cell.description ?? null,
+    links: normalizeCellLinks(cell.links),
+  }))
   const triggers =
     raw.cell_triggers && raw.cell_triggers.length > 0
       ? raw.cell_triggers
@@ -99,6 +105,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     path: {
       id: raw.id,
       name: raw.name,
+      description: raw.description ?? null,
       path_type: raw.path_type,
     },
     layers,

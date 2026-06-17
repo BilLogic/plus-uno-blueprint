@@ -68,6 +68,9 @@ export type Database = {
           layer_id: string
           step_id: string
           content: string
+          picture: string | null
+          description: string | null
+          links: Json
           created_at: string
           updated_at: string
         }
@@ -77,6 +80,9 @@ export type Database = {
           layer_id: string
           step_id: string
           content?: string
+          picture?: string | null
+          description?: string | null
+          links?: Json
           created_at?: string
           updated_at?: string
         }
@@ -86,6 +92,9 @@ export type Database = {
           layer_id?: string
           step_id?: string
           content?: string
+          picture?: string | null
+          description?: string | null
+          links?: Json
           created_at?: string
           updated_at?: string
         }
@@ -192,6 +201,7 @@ export type Database = {
           id: string
           service_scenario_id: string
           name: string
+          description: string | null
           path_type: PathType
           created_at: string
           updated_at: string
@@ -200,6 +210,7 @@ export type Database = {
           id?: string
           service_scenario_id: string
           name: string
+          description?: string | null
           path_type: PathType
           created_at?: string
           updated_at?: string
@@ -208,6 +219,7 @@ export type Database = {
           id?: string
           service_scenario_id?: string
           name?: string
+          description?: string | null
           path_type?: PathType
           created_at?: string
           updated_at?: string

@@ -1,27 +1,39 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import type { CSSProperties } from 'react'
 import { useEditor } from '@/contexts/EditorContext'
+import { CanvasSlideHeader } from '@/components/editor/SlideStickyHeader'
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
-import { usePathSelection } from '@/hooks/usePathSelection'
-import { getStackedCanvasArtboardSize } from '@/lib/blueprintLayout'
+import { usePathSelectionsByScenario } from '@/hooks/usePathSelection'
+import { getStackedCanvasArtboardSize, type ArtboardSize } from '@/lib/blueprintLayout'
+import { defaultSelectedPathIds, itemsInSelectionOrder } from '@/lib/pathSelection'
+import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
+import { getIntegratedCanvasArtboardSize } from '@/lib/sideBySideCompareLayout'
 import {
-  integratedBlueprintToLayoutData,
-  mergeIntegratedBlueprint,
-} from '@/lib/mergeIntegratedBlueprint'
-import {
-  getSlideDisplayLabel,
   isSubslide,
   type EditorMode,
   type Slide,
   type SlideViewType,
 } from '@/types/slides'
 import { CanvasBlueprintArtboard } from '@/components/editor/CanvasBlueprintArtboard'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { CanvasSlideConnectors } from '@/components/editor/CanvasSlideConnectors'
+import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
+import { EditorZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { SlideArtboard } from '@/components/editor/SlideArtboard'
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  CANVAS_SLIDE_HEADER_GAP,
   DEFAULT_ARTBOARD_SIZE,
   computeSlideLayouts,
+  type SlideLayout,
 } from '@/lib/slideLayout'
 import type { BlueprintData } from '@/types/blueprint'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -35,13 +47,20 @@ function clampZoom(value: number) {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value))
 }
 
+function getCanvasHeaderStyle(layout: SlideLayout): CSSProperties {
+  return {
+    left: layout.x,
+    top: layout.y - CANVAS_SLIDE_HEADER_GAP,
+    width: layout.width,
+    transform: 'translateY(-100%)',
+  }
+}
+
 export function CanvasModeView() {
   const {
     mode,
     slides,
     activeSlideId,
-    setActiveSlideId,
-    activeSlide,
     slidesLoading,
     getScenarioDisplayViewType,
     setScenarioDisplayViewType,
@@ -56,126 +75,76 @@ export function CanvasModeView() {
     pathsByScenario,
     blueprintsByPathId,
     loading: blueprintsLoading,
-    error: blueprintsError,
   } = useCanvasBlueprints(scenarioIds)
 
-  const compareScenarioId = useMemo(() => {
-    for (const slide of slides) {
-      if (!isSubslide(slide)) continue
-      const paths = pathsByScenario.get(slide.id) ?? []
-      if (paths.length > 1) return slide.id
-    }
-    return undefined
-  }, [slides, pathsByScenario])
-
-  const comparePaths = useMemo(
-    () =>
-      compareScenarioId
-        ? pathsByScenario.get(compareScenarioId) ?? []
-        : [],
-    [compareScenarioId, pathsByScenario],
-  )
-  const { selectedPathIds, togglePathSelection } =
-    usePathSelection(comparePaths)
-
-  const compareAllBlueprints = useMemo(
-    () =>
-      compareScenarioId
-        ? comparePaths
-            .map((path) => blueprintsByPathId.get(path.id))
-            .filter(
-              (blueprint): blueprint is BlueprintData => blueprint !== undefined,
-            )
-        : [],
-    [compareScenarioId, comparePaths, blueprintsByPathId],
-  )
-
-  const compareIntegratedBlueprint = useMemo(
-    () => mergeIntegratedBlueprint(compareAllBlueprints, selectedPathIds),
-    [compareAllBlueprints, selectedPathIds],
-  )
-
-  const compareBlueprints = useMemo(
-    () =>
-      compareScenarioId
-        ? comparePaths
-            .filter((path) => selectedPathIds.includes(path.id))
-            .map((path) => blueprintsByPathId.get(path.id))
-            .filter(
-              (blueprint): blueprint is BlueprintData => blueprint !== undefined,
-            )
-        : [],
-    [compareScenarioId, comparePaths, selectedPathIds, blueprintsByPathId],
-  )
-
-  const compareSlide = useMemo(
-    () =>
-      compareScenarioId
-        ? slides.find((slide) => slide.id === compareScenarioId)
-        : undefined,
-    [compareScenarioId, slides],
-  )
-
-  const compareUsesSideBySideLayout =
-    compareSlide !== undefined &&
-    getScenarioDisplayViewType(compareSlide) === 'side-by-side'
-
-  const compareUsesIntegratedLayout =
-    compareSlide !== undefined &&
-    getScenarioDisplayViewType(compareSlide) === 'integrated'
+  const { selections, getSelectedPathIds, togglePathSelection } =
+    usePathSelectionsByScenario(pathsByScenario)
 
   const layoutOverrides = useMemo(() => {
-    if (!compareScenarioId) {
-      return new Map()
+    const overrides = new Map<string, ArtboardSize>()
+
+    for (const slide of slides) {
+      if (!isSubslide(slide)) continue
+
+      const scenarioPaths = pathsByScenario.get(slide.id) ?? []
+      if (scenarioPaths.length === 0) continue
+
+      const displayViewType = getScenarioDisplayViewType(slide)
+      const hasPathFilters = scenarioPaths.length > 1
+      const selectedPathIds = hasPathFilters ? getSelectedPathIds(slide.id) : []
+      const scenarioAllBlueprints = scenarioPaths
+        .map((path) => blueprintsByPathId.get(path.id))
+        .filter(
+          (blueprint): blueprint is BlueprintData => blueprint !== undefined,
+        )
+
+      if (scenarioAllBlueprints.length === 0) continue
+
+      if (displayViewType === 'integrated') {
+        const pathIdsForMerge =
+          selectedPathIds.length > 0
+            ? selectedPathIds
+            : defaultSelectedPathIds(scenarioPaths)
+        const integrated = mergeIntegratedBlueprint(
+          scenarioAllBlueprints,
+          pathIdsForMerge,
+        )
+        if (integrated) {
+          overrides.set(
+            slide.id,
+            getIntegratedCanvasArtboardSize(integrated, { compact: true }),
+          )
+        }
+        continue
+      }
+
+      if (displayViewType === 'side-by-side') {
+        const pathIdsForDisplay =
+          selectedPathIds.length > 0
+            ? selectedPathIds
+            : defaultSelectedPathIds(scenarioPaths)
+        const visible = itemsInSelectionOrder(pathIdsForDisplay, (id) =>
+          blueprintsByPathId.get(id),
+        )
+        if (visible.length > 0) {
+          overrides.set(
+            slide.id,
+            getStackedCanvasArtboardSize(visible, { compact: true }),
+          )
+        } else if (hasPathFilters) {
+          overrides.set(slide.id, DEFAULT_ARTBOARD_SIZE)
+        }
+      }
     }
 
-    if (compareUsesIntegratedLayout && compareIntegratedBlueprint) {
-      return new Map([
-        [
-          compareScenarioId,
-          getStackedCanvasArtboardSize(
-            [integratedBlueprintToLayoutData(compareIntegratedBlueprint)],
-            {
-              includeScenarioHeader: true,
-              compact: true,
-            },
-          ),
-        ],
-      ])
-    }
-
-    if (
-      compareBlueprints.length > 0 &&
-      compareUsesSideBySideLayout
-    ) {
-      return new Map([
-        [
-          compareScenarioId,
-          getStackedCanvasArtboardSize(compareBlueprints, {
-            includeScenarioHeader: true,
-            compact: true,
-          }),
-        ],
-      ])
-    }
-
-    if (
-      compareUsesSideBySideLayout &&
-      comparePaths.length > 0 &&
-      selectedPathIds.length === 0
-    ) {
-      return new Map([[compareScenarioId, DEFAULT_ARTBOARD_SIZE]])
-    }
-
-    return new Map()
+    return overrides
   }, [
-    compareBlueprints,
-    compareIntegratedBlueprint,
-    compareScenarioId,
-    comparePaths.length,
-    compareUsesIntegratedLayout,
-    compareUsesSideBySideLayout,
-    selectedPathIds.length,
+    slides,
+    pathsByScenario,
+    blueprintsByPathId,
+    getSelectedPathIds,
+    getScenarioDisplayViewType,
+    selections,
   ])
 
   const handleScenarioViewTypeChange = useCallback(
@@ -183,13 +152,6 @@ export function CanvasModeView() {
       setScenarioDisplayViewType(slide.id, viewType)
     },
     [setScenarioDisplayViewType],
-  )
-
-  const handleCompareTogglePath = useCallback(
-    (pathId: string) => {
-      togglePathSelection(pathId)
-    },
-    [togglePathSelection],
   )
 
   const layouts = useMemo(
@@ -285,7 +247,9 @@ export function CanvasModeView() {
       const target = e.target as HTMLElement
       if (
         target.closest('[data-canvas-artboard]') ||
-        target.closest('[data-canvas-blueprint]')
+        target.closest('[data-canvas-blueprint]') ||
+        target.closest('[data-editor-mode-toggle]') ||
+        target.closest('[data-slide-sticky-header]')
       ) {
         return
       }
@@ -319,110 +283,96 @@ export function CanvasModeView() {
 
   const gridSize = GRID_BASE * zoom
 
-  if (slidesLoading) {
-    return (
-      <div className="relative flex h-full min-h-0 flex-1 items-center justify-center bg-muted/30">
-        <Skeleton className="h-48 w-64" />
-      </div>
-    )
-  }
-
-  return (
-    <div
-      ref={containerRef}
-      className={cn(
-        'relative h-full min-h-0 flex-1 overflow-hidden bg-[#e8e8e8] touch-none dark:bg-[#1a1a1a]',
-        isPanning ? 'cursor-grabbing' : 'cursor-grab',
-      )}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
-    >
-      <div
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage: `radial-gradient(circle, var(--border) 1px, transparent 1px)`,
-          backgroundSize: `${gridSize}px ${gridSize}px`,
-          backgroundPosition: `${pan.x}px ${pan.y}px`,
-        }}
+  const canvasWorld = (
+    <>
+      <CanvasSlideConnectors
+        slides={slides}
+        blueprintsByScenario={blueprintsByScenario}
+        layoutOverrides={layoutOverrides}
       />
-      <div
-        className="absolute left-0 top-0 origin-top-left will-change-transform"
-        style={{
-          width: CANVAS_WIDTH,
-          height: CANVAS_HEIGHT,
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-        }}
-      >
-        <CanvasSlideConnectors
-          slides={slides}
-          blueprintsByScenario={blueprintsByScenario}
-          layoutOverrides={layoutOverrides}
-        />
-        {slides.map((slide) => {
-          const layout = layouts.get(slide.id)!
-          const isActive = slide.id === activeSlideId
+      {slides.map((slide) => {
+        const layout = layouts.get(slide.id)!
 
-          if (isSubslide(slide)) {
-            const scenarioPaths = pathsByScenario.get(slide.id) ?? []
-            const isCompareScenario = slide.id === compareScenarioId
-            const displayViewType = getScenarioDisplayViewType(slide)
-            const useIntegratedLayout =
-              isCompareScenario && displayViewType === 'integrated'
-            const noPathsSelected =
-              isCompareScenario &&
-              !useIntegratedLayout &&
-              scenarioPaths.length > 0 &&
-              selectedPathIds.length === 0
-            const scenarioBlueprints =
-              isCompareScenario && !noPathsSelected && !useIntegratedLayout
-                ? compareBlueprints
-                : undefined
-            const useSideBySideLayout =
-              isCompareScenario &&
-              displayViewType === 'side-by-side' &&
-              compareBlueprints.length > 0
-            const blueprint = noPathsSelected
-              ? null
-              : scenarioBlueprints?.[0] ??
-                blueprintsByScenario.get(slide.id) ??
-                null
-            const blueprintLoading =
-              blueprintsLoading &&
-              (isCompareScenario
-                ? useIntegratedLayout
-                  ? compareAllBlueprints.length < comparePaths.length
-                  : compareBlueprints.length === 0 &&
-                    selectedPathIds.length > 0
-                : blueprint === null)
+        if (isSubslide(slide)) {
+          const scenarioPaths = pathsByScenario.get(slide.id) ?? []
+          const hasPathFilters = scenarioPaths.length > 1
+          const selectedPathIds = hasPathFilters
+            ? getSelectedPathIds(slide.id)
+            : []
+          const displayViewType = getScenarioDisplayViewType(slide)
+          const useIntegratedLayout =
+            hasPathFilters && displayViewType === 'integrated'
+          const noPathsSelected =
+            hasPathFilters &&
+            !useIntegratedLayout &&
+            selectedPathIds.length === 0
+          const scenarioAllBlueprints = hasPathFilters
+            ? scenarioPaths
+                .map((path) => blueprintsByPathId.get(path.id))
+                .filter(
+                  (blueprint): blueprint is BlueprintData =>
+                    blueprint !== undefined,
+                )
+            : []
+          const integratedBlueprint = useIntegratedLayout
+            ? mergeIntegratedBlueprint(
+                scenarioAllBlueprints,
+                selectedPathIds,
+              )
+            : null
+          const scenarioBlueprints =
+            hasPathFilters && !noPathsSelected && !useIntegratedLayout
+              ? itemsInSelectionOrder(selectedPathIds, (id) =>
+                  blueprintsByPathId.get(id),
+                )
+              : undefined
+          const useSideBySideLayout =
+            hasPathFilters &&
+            displayViewType === 'side-by-side' &&
+            (scenarioBlueprints?.length ?? 0) > 0
+          const blueprint = noPathsSelected
+            ? null
+            : scenarioBlueprints?.[0] ??
+              blueprintsByScenario.get(slide.id) ??
+              null
+          const blueprintLoading =
+            blueprintsLoading &&
+            (hasPathFilters
+              ? useIntegratedLayout
+                ? scenarioAllBlueprints.length < scenarioPaths.length
+                : (scenarioBlueprints?.length ?? 0) === 0 &&
+                  selectedPathIds.length > 0
+              : blueprint === null)
 
-            return (
-              <CanvasBlueprintArtboard
-                key={slide.id}
+          return (
+            <Fragment key={slide.id}>
+              <CanvasSlideHeader
                 slide={slide}
                 slides={slides}
-                blueprint={blueprint}
-                blueprints={scenarioBlueprints}
-                integratedBlueprint={
-                  isCompareScenario ? compareIntegratedBlueprint : null
-                }
-                paths={isCompareScenario ? scenarioPaths : []}
-                selectedPathIds={
-                  isCompareScenario ? selectedPathIds : []
-                }
-                onTogglePath={
-                  isCompareScenario ? handleCompareTogglePath : undefined
-                }
                 viewType={displayViewType}
                 onViewTypeChange={(viewType) =>
                   handleScenarioViewTypeChange(slide, viewType)
                 }
+                paths={scenarioPaths}
+                selectedPathIds={selectedPathIds}
+                onTogglePath={(pathId) =>
+                  togglePathSelection(slide.id, pathId)
+                }
+                style={getCanvasHeaderStyle(layout)}
+              />
+              <CanvasBlueprintArtboard
+                slide={slide}
+                slides={slides}
+                blueprint={blueprint}
+                blueprints={scenarioBlueprints}
+                integratedBlueprint={integratedBlueprint}
+                selectedPathIds={selectedPathIds}
+                hasPathFilters={hasPathFilters}
                 useSideBySideLayout={useSideBySideLayout}
-                useIntegratedLayout={useIntegratedLayout}
+                useIntegratedLayout={
+                  useIntegratedLayout && integratedBlueprint !== null
+                }
                 blueprintLoading={blueprintLoading}
-                isActive={isActive}
-                onSelect={() => setActiveSlideId(slide.id)}
                 className="absolute"
                 style={{
                   left: layout.x,
@@ -431,16 +381,26 @@ export function CanvasModeView() {
                   height: layout.height,
                 }}
               />
-            )
-          }
+            </Fragment>
+          )
+        }
 
-          return (
+        return (
+          <Fragment key={slide.id}>
+            <CanvasSlideHeader
+              slide={slide}
+              slides={slides}
+              viewType={getScenarioDisplayViewType(slide)}
+              onViewTypeChange={(viewType) =>
+                handleScenarioViewTypeChange(slide, viewType)
+              }
+              paths={[]}
+              selectedPathIds={[]}
+              style={getCanvasHeaderStyle(layout)}
+            />
             <SlideArtboard
-              key={slide.id}
               slide={slide}
               variant="canvas"
-              isActive={isActive}
-              onSelect={() => setActiveSlideId(slide.id)}
               className="absolute"
               style={{
                 left: layout.x,
@@ -449,18 +409,58 @@ export function CanvasModeView() {
                 height: layout.height,
               }}
             />
-          )
-        })}
+          </Fragment>
+        )
+      })}
+    </>
+  )
+
+  if (slidesLoading) {
+    return (
+      <div className="relative h-full min-h-0 flex-1">
+        <div className="flex h-full items-center justify-center bg-muted/30">
+          <Skeleton className="h-48 w-64" />
+        </div>
       </div>
-      <p className="pointer-events-none absolute bottom-3 left-3 max-w-lg rounded-md bg-background/80 px-2 py-1 text-xs text-muted-foreground backdrop-blur-sm">
-        {getSlideDisplayLabel(activeSlide, slides)}
-        {blueprintsError ? ` · ${blueprintsError}` : ''}
-        {' · Pinch to zoom · Scroll to pan'}
-        {isSubslide(activeSlide) ? ' · Scroll inside blueprint to explore' : ''}
-      </p>
-      <p className="pointer-events-none absolute bottom-3 right-3 rounded-md bg-background/80 px-2 py-1 font-mono text-xs text-muted-foreground backdrop-blur-sm">
-        {Math.round(zoom * 100)}%
-      </p>
+    )
+  }
+
+  return (
+    <div className="relative h-full min-h-0 flex-1">
+      <div
+        ref={containerRef}
+        className={cn(
+          'relative h-full min-h-0 overflow-hidden touch-none dark:bg-[#1C1C1E]',
+          isPanning && 'cursor-grabbing',
+        )}
+        style={{ backgroundColor: BLUEPRINT_THEME.viewportPad }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+      >
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: `radial-gradient(circle, var(--border) 1px, transparent 1px)`,
+            backgroundSize: `${gridSize}px ${gridSize}px`,
+            backgroundPosition: `${pan.x}px ${pan.y}px`,
+          }}
+        />
+        <div
+          className="absolute left-0 top-0 origin-top-left will-change-transform"
+          style={{
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          }}
+        >
+          {canvasWorld}
+        </div>
+      </div>
+
+      <EditorSequenceNav />
+      <EditorZoomIndicator zoom={zoom} />
     </div>
   )
 }
