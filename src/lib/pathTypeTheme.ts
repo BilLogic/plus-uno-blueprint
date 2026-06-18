@@ -14,6 +14,14 @@ export const PATH_TYPE_LABELS: Record<PathType, string> = {
   alternative: 'Alternative',
 }
 
+/** Primary accent per path type — badges, section frames, and color keys. */
+export const PATH_TYPE_COLORS: Record<PathType, string> = {
+  happy: '#10B981',
+  unhappy: '#F59E0B',
+  exception: '#EF4444',
+  alternative: '#3B82F6',
+}
+
 /** Stroke color for blueprint trigger arrows — muted to complement pastel cells. */
 export const PATH_TYPE_ARROW_COLORS: Record<PathType, string> = {
   happy: '#5FA88A',
@@ -31,7 +39,7 @@ export function getPathTypeSectionBorderStyle(pathType: PathType): {
   borderWidth: number
 } {
   return {
-    borderColor: PATH_TYPE_ARROW_COLORS[pathType],
+    borderColor: PATH_TYPE_COLORS[pathType],
     borderStyle: 'solid',
     borderWidth: PATH_TYPE_SECTION_BORDER_WIDTH,
   }

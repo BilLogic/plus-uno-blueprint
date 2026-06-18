@@ -7,6 +7,17 @@ export type IntegratedBlueprintStep = BlueprintStep & {
   pathStepIds: Record<string, string>
 }
 
+/** Opacity for an integrated cell from path filter + whether the path uses this step column. */
+export function getIntegratedCellDisplayOpacity(
+  cell: IntegratedBlueprintCell,
+  integratedStep: IntegratedBlueprintStep,
+): number {
+  if (!(cell.path_id in integratedStep.pathStepIds)) {
+    return INTEGRATED_UNSELECTED_OPACITY
+  }
+  return cell.opacity
+}
+
 export type IntegratedBlueprintCell = {
   id: string
   layer_id: string

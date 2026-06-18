@@ -18,6 +18,8 @@ export const SLIDE_GAP = 160
 export const SUBSLIDE_GAP = 96
 /** Equal gray margin around blueprint artboards in the stack zoom viewport. */
 export const BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN = 48
+/** Extra top inset so fit-to-view centers below sticky menubar overlays. */
+export const BLUEPRINT_VIEWPORT_FIT_TOP_INSET = 56
 /** Space between a canvas artboard and the header card above it. */
 export const CANVAS_SLIDE_HEADER_GAP = 16
 /** Reserved vertical space for the header card above each canvas artboard. */
@@ -137,5 +139,64 @@ export function getSlideCanvasCenter(
   return {
     x: layout.x + layout.width / 2,
     y: layout.y + layout.height / 2,
+  }
+}
+
+export type OverviewBounds = {
+  minX: number
+  minY: number
+  width: number
+  height: number
+}
+
+/** Bounding box of all slide artboards including header blocks. */
+export function getOverviewBounds(
+  layouts: Map<string, SlideLayout>,
+): OverviewBounds | null {
+  if (layouts.size === 0) return null
+
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  layouts.forEach((layout) => {
+    minX = Math.min(minX, layout.x)
+    minY = Math.min(minY, layout.y - CANVAS_SLIDE_HEADER_BLOCK)
+    maxX = Math.max(maxX, layout.x + layout.width)
+    maxY = Math.max(maxY, layout.y + layout.height)
+  })
+
+  return {
+    minX,
+    minY,
+    width: maxX - minX,
+    height: maxY - minY,
+  }
+}
+
+/** Pan/zoom to fit the full service overview inside a viewport. */
+export function computeOverviewFit(
+  bounds: OverviewBounds,
+  viewportWidth: number,
+  viewportHeight: number,
+  padding = 64,
+): { pan: { x: number; y: number }; zoom: number } {
+  const availableWidth = Math.max(viewportWidth - padding * 2, 1)
+  const availableHeight = Math.max(viewportHeight - padding * 2, 1)
+  const zoom = Math.min(
+    availableWidth / bounds.width,
+    availableHeight / bounds.height,
+    1,
+  )
+  const centerX = bounds.minX + bounds.width / 2
+  const centerY = bounds.minY + bounds.height / 2
+
+  return {
+    zoom,
+    pan: {
+      x: viewportWidth / 2 - centerX * zoom,
+      y: viewportHeight / 2 - centerY * zoom,
+    },
   }
 }

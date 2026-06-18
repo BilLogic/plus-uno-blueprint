@@ -94,6 +94,11 @@ values
     'a0000000-0000-4000-8000-000000000716',
     'a0000000-0000-4000-8000-000000000121',
     'Interested in joining PLUS'
+  ),
+  (
+    'a0000000-0000-4000-8000-000000000717',
+    'a0000000-0000-4000-8000-000000000121',
+    'Not Interested in joining PLUS'
   )
 on conflict (id) do update set
   name = excluded.name,

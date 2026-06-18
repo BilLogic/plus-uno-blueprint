@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import {
+  filterPathsForScenarioUi,
   getBlueprintFallback,
   getFallbackPathsForScenario,
 } from '@/data/blueprintFallbacks'
@@ -103,7 +104,10 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
           return
         }
 
-        const list = (data ?? []) as PathListItem[]
+        const list = filterPathsForScenarioUi(
+          serviceScenarioId,
+          (data ?? []) as PathListItem[],
+        )
         if (list.length > 0) {
           setPaths(list)
         } else if (fallbackPaths.length > 0) {

@@ -1,41 +1,60 @@
-import { Fragment, useMemo } from 'react'
+import { Fragment, useId, useMemo, useRef } from 'react'
 import {
-  getScenarioBlueprintPanelHeight,
+  getScenarioSwimlaneBodyHeight,
   ScenarioBlueprintPanel,
 } from '@/components/blueprint/ScenarioBlueprintPanel'
 import { useEditor } from '@/contexts/EditorContext'
+import { useAlignedPhaseRowPanelHeight } from '@/hooks/useAlignedPhaseRowPanelHeight'
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { defaultSelectedPathIds } from '@/lib/pathSelection'
-import { COMPARE_MIN_PANEL_HEIGHT } from '@/lib/sideBySideCompareLayout'
+import type { PathListItem } from '@/lib/pathSelection'
+import { COMPARE_MIN_PANEL_HEIGHT, getPanelHeightFromSwimlaneBody } from '@/lib/sideBySideCompareLayout'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
+import { OVERVIEW_SCENARIO_GAP } from '@/lib/overviewLayout'
 import { SUBSLIDE_GAP } from '@/lib/slideLayout'
 import {
   getSlideDisplayLabel,
   getSubslides,
   type Slide,
+  type SlideViewType,
 } from '@/types/slides'
+import type { BlueprintData } from '@/types/blueprint'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const CONNECTOR_WIDTH = SUBSLIDE_GAP
+const DEFAULT_SCENARIO_GAP = SUBSLIDE_GAP
 
 type PhaseScenarioOverviewProps = {
   phase: Slide
   slides: Slide[]
   className?: string
+  /** When true, scenario panels share one row height (detail phase view). */
+  alignPanelHeights?: boolean
+  /** Service overview uses tighter gaps between scenario panels. */
+  variant?: 'default' | 'overview'
+  /** Preloaded blueprint maps (service overview). Skips per-phase fetch. */
+  pathsByScenario?: Map<string, PathListItem[]>
+  blueprintsByPathId?: Map<string, BlueprintData>
+  loading?: boolean
+  /** When set, overrides default happy-path selection (service overview filters). */
+  getSelectedPathIds?: (scenarioId: string, paths: PathListItem[]) => string[]
+  /** Phase/overview filter view type — keeps row sizing aligned across scenarios. */
+  displayViewType?: SlideViewType
 }
 
-function PhaseScenarioConnector() {
+function PhaseScenarioConnector({ width }: { width: number }) {
+  const markerId = useId().replace(/:/g, '')
+
   return (
     <div
       className="flex shrink-0 items-center justify-center self-center"
-      style={{ width: CONNECTOR_WIDTH }}
+      style={{ width }}
       aria-hidden
     >
-      <svg width={CONNECTOR_WIDTH} height={24} className="overflow-visible">
+      <svg width={width} height={24} className="overflow-visible">
         <defs>
           <marker
-            id="phase-scenario-blueprint-arrowhead"
+            id={markerId}
             viewBox="0 0 10 10"
             refX="9"
             refY="5"
@@ -48,11 +67,11 @@ function PhaseScenarioConnector() {
           </marker>
         </defs>
         <path
-          d={`M 0 12 H ${CONNECTOR_WIDTH - 8}`}
+          d={`M 0 12 H ${width - 8}`}
           fill="none"
           stroke={BLUEPRINT_THEME.arrow}
           strokeWidth={2}
-          markerEnd="url(#phase-scenario-blueprint-arrowhead)"
+          markerEnd={`url(#${markerId})`}
         />
       </svg>
     </div>
@@ -63,8 +82,23 @@ export function PhaseScenarioOverview({
   phase,
   slides,
   className,
+  alignPanelHeights = true,
+  variant = 'default',
+  pathsByScenario: pathsByScenarioProp,
+  blueprintsByPathId: blueprintsByPathIdProp,
+  loading: loadingProp,
+  getSelectedPathIds: getSelectedPathIdsProp,
+  displayViewType: displayViewTypeProp,
 }: PhaseScenarioOverviewProps) {
-  const { getScenarioDisplayViewType, setActiveSlideId } = useEditor()
+  const { getScenarioDisplayViewType, openDetail } = useEditor()
+  const isOverview = variant === 'overview'
+  const scenarioGap = isOverview ? OVERVIEW_SCENARIO_GAP : DEFAULT_SCENARIO_GAP
+
+  const renderScenarioSeparator = (index: number, total: number) => {
+    if (index >= total - 1) return null
+    return <PhaseScenarioConnector width={scenarioGap} />
+  }
+
   const scenarios = useMemo(
     () => getSubslides(phase.id, slides),
     [phase.id, slides],
@@ -73,28 +107,65 @@ export function PhaseScenarioOverview({
     () => scenarios.map((scenario) => scenario.id),
     [scenarios],
   )
-  const { pathsByScenario, blueprintsByPathId, loading } =
-    useCanvasBlueprints(scenarioIds)
+  const usePreloaded =
+    pathsByScenarioProp !== undefined && blueprintsByPathIdProp !== undefined
+  const fetched = useCanvasBlueprints(usePreloaded ? [] : scenarioIds)
+  const pathsByScenario = pathsByScenarioProp ?? fetched.pathsByScenario
+  const blueprintsByPathId =
+    blueprintsByPathIdProp ?? fetched.blueprintsByPathId
+  const loading = loadingProp ?? fetched.loading
 
-  const sharedPanelHeight = useMemo(() => {
+  const sharedSwimlaneBodyHeight = useMemo(() => {
+    if (!alignPanelHeights) return undefined
+
     const heights = scenarios.map((scenario) => {
       const paths = pathsByScenario.get(scenario.id) ?? []
-      const selectedPathIds = defaultSelectedPathIds(paths)
-      return getScenarioBlueprintPanelHeight({
-        displayViewType: getScenarioDisplayViewType(scenario),
+      const selectedPathIds = getSelectedPathIdsProp
+        ? getSelectedPathIdsProp(scenario.id, paths)
+        : defaultSelectedPathIds(paths)
+      return getScenarioSwimlaneBodyHeight({
+        displayViewType:
+          displayViewTypeProp ?? getScenarioDisplayViewType(scenario),
         paths,
         selectedPathIds,
         blueprintsByPathId,
       })
     })
 
-    return Math.max(COMPARE_MIN_PANEL_HEIGHT, ...heights)
+    return Math.max(0, ...heights)
   }, [
+    alignPanelHeights,
     scenarios,
     pathsByScenario,
     blueprintsByPathId,
     getScenarioDisplayViewType,
+    getSelectedPathIdsProp,
+    displayViewTypeProp,
   ])
+
+  const sharedPanelHeight = useMemo(() => {
+    if (!alignPanelHeights || sharedSwimlaneBodyHeight === undefined) {
+      return undefined
+    }
+
+    if (sharedSwimlaneBodyHeight === 0) {
+      return COMPARE_MIN_PANEL_HEIGHT
+    }
+
+    return Math.max(
+      COMPARE_MIN_PANEL_HEIGHT,
+      getPanelHeightFromSwimlaneBody(sharedSwimlaneBodyHeight),
+    )
+  }, [alignPanelHeights, sharedSwimlaneBodyHeight])
+
+  const rowRef = useRef<HTMLDivElement>(null)
+  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}`
+  const rowPanelHeight = useAlignedPhaseRowPanelHeight(
+    rowRef,
+    sharedPanelHeight,
+    alignPanelHeights,
+    rowMeasureKey,
+  )
 
   if (scenarios.length === 0) {
     return (
@@ -112,9 +183,11 @@ export function PhaseScenarioOverview({
   }
 
   if (loading) {
+    const skeletonHeight = sharedPanelHeight ?? COMPARE_MIN_PANEL_HEIGHT
+
     return (
       <div
-        className={cn('inline-flex items-start', className)}
+        className={cn('inline-flex items-stretch', className)}
         data-phase-scenario-overview=""
       >
         {scenarios.map((scenario, index) => (
@@ -123,10 +196,10 @@ export function PhaseScenarioOverview({
               className="shrink-0 rounded-2xl"
               style={{
                 width: 640,
-                height: COMPARE_MIN_PANEL_HEIGHT,
+                height: skeletonHeight,
               }}
             />
-            {index < scenarios.length - 1 ? <PhaseScenarioConnector /> : null}
+            {renderScenarioSeparator(index, scenarios.length)}
           </Fragment>
         ))}
       </div>
@@ -135,13 +208,16 @@ export function PhaseScenarioOverview({
 
   return (
     <div
-      className={cn('inline-flex items-start', className)}
+      ref={rowRef}
+      className={cn('inline-flex items-stretch', className)}
       data-phase-scenario-overview=""
     >
       {scenarios.map((scenario, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
         const paths = pathsByScenario.get(scenario.id) ?? []
-        const selectedPathIds = defaultSelectedPathIds(paths)
+        const selectedPathIds = getSelectedPathIdsProp
+          ? getSelectedPathIdsProp(scenario.id, paths)
+          : defaultSelectedPathIds(paths)
 
         return (
           <Fragment key={scenario.id}>
@@ -152,12 +228,14 @@ export function PhaseScenarioOverview({
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={sharedPanelHeight}
-              lockPanelHeight
-              onNavigate={() => setActiveSlideId(scenario.id)}
+              lockedPanelHeight={rowPanelHeight}
+              fixedSwimlaneBodyHeight={sharedSwimlaneBodyHeight}
+              lockPanelHeight={alignPanelHeights}
+              displayViewType={displayViewTypeProp}
+              onNavigate={() => openDetail(scenario.id)}
             />
 
-            {index < scenarios.length - 1 ? <PhaseScenarioConnector /> : null}
+            {renderScenarioSeparator(index, scenarios.length)}
           </Fragment>
         )
       })}

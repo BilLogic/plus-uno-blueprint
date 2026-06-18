@@ -18,23 +18,17 @@ import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSecti
 import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
 import {
-  BLUEPRINT_DIVIDER_ROW_HEIGHT,
   BLUEPRINT_LAYER_ROW_GAP,
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
-  INTERACTION_LINE_LABEL,
-  INTERNAL_INTERACTION_LINE_LABEL,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
-  VISIBILITY_LINE_LABEL,
   layerPrecedesBlueprintDivider,
-  shouldShowLaneDividerAfter,
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
-import { COMPARE_LAYER_COLLAPSED_HEIGHT } from '@/lib/blueprintLayerCollapse'
 import {
   getBlueprintLayerStyle,
   getBlueprintLayerZone,
@@ -43,19 +37,16 @@ import {
 import {
   COMPARE_CARD_GAP,
   COMPARE_LABEL_WIDTH,
-  COMPARE_PANEL_PADDING,
-  COMPARE_PANEL_PADDING_RIGHT,
+  getCompareBoardWrapperPadding,
   type BlueprintLabelRowSpec,
+  buildSideBySideLabelRowSpecs,
   getCanonicalLayers,
   getCompareCardWidth,
   getComparePathArrowData,
+  expandRowSpecsToSwimlaneBodyHeight,
   getCompareRowTrackCss,
-  getSharedLayerRowHeight,
-  layerHasDiscoveryRailCorridorAbove,
-  layerHasInteractionLine,
-  layerHasInternalInteractionLine,
-  layerHasVisibilityLine,
   COMPARE_PATH_SECTION_TOP_INSET,
+  COMPARE_PATH_SECTION_BOTTOM_INSET,
 } from '@/lib/sideBySideCompareLayout'
 import { cn } from '@/lib/utils'
 import {
@@ -89,9 +80,12 @@ type SideBySideCompareGridProps = {
   compact?: boolean
   scrollContainerRef?: RefObject<HTMLDivElement | null>
   scenarioName?: string
-  /** When set, replaces path badges with a scenario title on each column. */
+  /** When set, scenario title sits on the gray panel edge; path frames show path type. */
   sectionTitleLabel?: string
   sectionTitleDescription?: string | null
+  /** Shared swimlane board height for phase overview alignment. */
+  fixedSwimlaneBodyHeight?: number
+  fillSwimlaneHeight?: boolean
 }
 
 type CompareRowSpec = BlueprintLabelRowSpec
@@ -104,67 +98,34 @@ export function SideBySideCompareGrid({
   scenarioName,
   sectionTitleLabel,
   sectionTitleDescription,
+  fixedSwimlaneBodyHeight,
+  fillSwimlaneHeight = false,
 }: SideBySideCompareGridProps) {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
   const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
 
   const rows = useMemo(() => {
-    const specs: CompareRowSpec[] = []
+    const specs = buildSideBySideLabelRowSpecs(
+      blueprints,
+      compact,
+      collapsedLayerIds,
+    )
 
-    for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-      const layer = layers[layerIndex]
-      const collapsed = collapsedLayerIds.has(layer.id)
-
-      specs.push({
-        key: layer.id,
-        kind: 'layer',
-        layer,
-        label: layer.name,
-        collapsed,
-        height: collapsed
-          ? COMPARE_LAYER_COLLAPSED_HEIGHT
-          : getSharedLayerRowHeight(layer, blueprints, compact),
-        wrapCorridorAbove:
-          !collapsed &&
-          layerHasDiscoveryRailCorridorAbove(layer, blueprints),
-        wrapCorridorBelow: !collapsed && layerHasInteractionLine(layer),
-        showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
-      })
-
-      if (!collapsed && layerHasInteractionLine(layer)) {
-        specs.push({
-          key: `${layer.id}-interaction`,
-          kind: 'interaction',
-          label: INTERACTION_LINE_LABEL,
-          height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-        })
-      }
-
-      if (!collapsed && layerHasVisibilityLine(layer, layers)) {
-        specs.push({
-          key: `${layer.id}-visibility`,
-          kind: 'visibility',
-          label: VISIBILITY_LINE_LABEL,
-          height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-        })
-      }
-
-      if (!collapsed && layerHasInternalInteractionLine(layer)) {
-        specs.push({
-          key: `${layer.id}-internal-interaction`,
-          kind: 'internalInteraction',
-          label: INTERNAL_INTERACTION_LINE_LABEL,
-          height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-        })
-      }
+    if (fixedSwimlaneBodyHeight !== undefined) {
+      return expandRowSpecsToSwimlaneBodyHeight(specs, fixedSwimlaneBodyHeight)
     }
 
     return specs
-  }, [blueprints, collapsedLayerIds, compact, layers])
+  }, [blueprints, collapsedLayerIds, compact, fixedSwimlaneBodyHeight])
 
   const bodyRowTrackSizes = useMemo(
-    () => rows.map((row) => getCompareRowTrackCss(row)).join(' '),
-    [rows],
+    () =>
+      rows
+        .map((row) =>
+          getCompareRowTrackCss(row),
+        )
+        .join(' '),
+    [fillSwimlaneHeight, rows],
   )
 
   const gridTemplateColumns = useMemo(
@@ -178,6 +139,8 @@ export function SideBySideCompareGrid({
     [blueprints, compact],
   )
 
+  const showPathTypeBadge = Boolean(sectionTitleLabel)
+
   if (blueprints.length === 0) {
     return (
       <p className="p-6 text-sm text-muted-foreground">
@@ -189,12 +152,7 @@ export function SideBySideCompareGrid({
   return (
     <div
       className={cn('w-max shrink-0', className)}
-      style={{
-        paddingTop: COMPARE_PANEL_PADDING,
-        paddingBottom: COMPARE_PANEL_PADDING,
-        paddingLeft: COMPARE_PANEL_PADDING,
-        paddingRight: COMPARE_PANEL_PADDING_RIGHT,
-      }}
+      style={getCompareBoardWrapperPadding()}
     >
       <div
         className="relative grid w-max"
@@ -204,7 +162,7 @@ export function SideBySideCompareGrid({
           columnGap: COMPARE_CARD_GAP,
           rowGap: BLUEPRINT_LAYER_ROW_GAP,
           paddingTop: COMPARE_PATH_SECTION_TOP_INSET,
-          paddingBottom: COMPARE_PATH_SECTION_TOP_INSET,
+          paddingBottom: COMPARE_PATH_SECTION_BOTTOM_INSET,
         }}
       >
           <BlueprintStickyLabelBackdrop rowCount={rows.length} />
@@ -246,6 +204,8 @@ export function SideBySideCompareGrid({
               scenarioName={scenarioName}
               sectionTitleLabel={sectionTitleLabel}
               sectionTitleDescription={sectionTitleDescription}
+              showPathTypeBadge={showPathTypeBadge}
+              fillSwimlaneHeight={fillSwimlaneHeight}
             />
           ))}
       </div>
@@ -261,8 +221,8 @@ function ComparePathColumn({
   compact,
   scrollContainerRef,
   scenarioName,
-  sectionTitleLabel,
-  sectionTitleDescription,
+  showPathTypeBadge = false,
+  fillSwimlaneHeight = false,
 }: {
   blueprint: BlueprintData
   layers: BlueprintData['layers']
@@ -273,6 +233,8 @@ function ComparePathColumn({
   scenarioName?: string
   sectionTitleLabel?: string
   sectionTitleDescription?: string | null
+  showPathTypeBadge?: boolean
+  fillSwimlaneHeight?: boolean
 }) {
   const columnRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
@@ -295,8 +257,7 @@ function ComparePathColumn({
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}
-        titleLabel={sectionTitleLabel}
-        titleDescription={sectionTitleDescription}
+        showPathTypeBadge={showPathTypeBadge}
       />
       <IntegratedTriggerArrows
         layer="forward"
@@ -315,6 +276,7 @@ function ComparePathColumn({
           layers={layers}
           compact={compact}
           scenarioName={scenarioName}
+          fillSwimlaneHeight={fillSwimlaneHeight}
         />
       ))}
       <IntegratedTriggerArrows
@@ -336,6 +298,7 @@ function CompareCardRow({
   layers,
   compact,
   scenarioName,
+  fillSwimlaneHeight = false,
 }: {
   row: CompareRowSpec
   rowIndex: number
@@ -343,6 +306,7 @@ function CompareCardRow({
   layers: BlueprintData['layers']
   compact?: boolean
   scenarioName?: string
+  fillSwimlaneHeight?: boolean
 }) {
   const isDivider =
     row.kind === 'interaction' ||
@@ -401,6 +365,7 @@ function CompareCardRow({
               layers={layers}
               compact={compact}
               scenarioName={scenarioName}
+              fillSwimlaneHeight={fillSwimlaneHeight}
             />
           )
         ) : isDivider ? (
@@ -420,12 +385,14 @@ function CompareLayerRow({
   layers,
   compact,
   scenarioName,
+  fillSwimlaneHeight = false,
 }: {
   blueprint: BlueprintData
   layer: BlueprintData['layers'][number]
   layers: BlueprintData['layers']
   compact?: boolean
   scenarioName?: string
+  fillSwimlaneHeight?: boolean
 }) {
   const blueprintLayer = useMemo(
     () => resolveBlueprintLayer(layer, blueprint),
@@ -444,7 +411,10 @@ function CompareLayerRow({
 
   return (
     <div
-      className="flex shrink-0 items-stretch rounded-sm"
+      className={cn(
+        'flex items-stretch rounded-sm',
+        fillSwimlaneHeight ? 'h-full min-h-0 w-full' : 'shrink-0',
+      )}
       style={{ backgroundColor: 'transparent' }}
     >
       {blueprint.steps.map((step, stepIndex) => {

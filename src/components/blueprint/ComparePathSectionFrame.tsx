@@ -1,10 +1,11 @@
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
-import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
+import { PathTypeBadge } from '@/components/blueprint/PathTypeBadge'
 import { getPathTypeSectionBorderStyle } from '@/lib/pathTypeTheme'
-import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
+import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
 import {
   COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
+  COMPARE_PATH_SECTION_BOTTOM_INSET,
 } from '@/lib/sideBySideCompareLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -16,9 +17,8 @@ type ComparePathSectionFrameProps = {
   compact?: boolean
   /** When false, only the colored path outline is rendered (service blueprint). */
   showTitle?: boolean
-  /** When set, replaces the path-type badge with a plain scenario title badge. */
-  titleLabel?: string
-  titleDescription?: string | null
+  /** Overview mode: show path-type badge instead of path name on the frame edge. */
+  showPathTypeBadge?: boolean
   /** Compare uses extra top inset for the title badge; service uses uniform inset. */
   variant?: 'compare' | 'service'
 }
@@ -28,15 +28,13 @@ export function ComparePathSectionFrame({
   blueprint,
   compact,
   showTitle = true,
-  titleLabel,
-  titleDescription,
+  showPathTypeBadge = false,
   variant = 'compare',
 }: ComparePathSectionFrameProps) {
   const { path } = blueprint
   const pathBorder = getPathTypeSectionBorderStyle(path.path_type)
-  const borderColor = titleLabel ? 'var(--primary)' : pathBorder.borderColor
-  const { borderStyle, borderWidth } = pathBorder
-  const sectionFill = BLUEPRINT_THEME.sectionFill
+  const { borderColor, borderStyle, borderWidth } = pathBorder
+  const sectionFill = blueprintPanelSectionFillColor()
 
   const inset =
     variant === 'compare'
@@ -44,7 +42,7 @@ export function ComparePathSectionFrame({
           top: -COMPARE_PATH_SECTION_TOP_INSET,
           left: -COMPARE_PATH_SECTION_INSET,
           right: -COMPARE_PATH_SECTION_INSET,
-          bottom: -COMPARE_PATH_SECTION_INSET,
+          bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
         }
       : {
           top: -SERVICE_PATH_SECTION_INSET,
@@ -64,7 +62,7 @@ export function ComparePathSectionFrame({
     <>
       <div
         aria-hidden
-        className="pointer-events-none absolute rounded-xl"
+        className="blueprint-panel-section-frame pointer-events-none absolute rounded-xl"
         style={{
           ...inset,
           borderWidth,
@@ -74,10 +72,11 @@ export function ComparePathSectionFrame({
         }}
       />
       {showTitle ? (
-        titleLabel ? (
-          <ScenarioTitleBadge
-            name={titleLabel}
-            description={titleDescription}
+        showPathTypeBadge ? (
+          <PathTypeBadge
+            pathType={path.path_type}
+            description={path.description}
+            compact={compact}
             className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
             style={{
               top: titleTop,

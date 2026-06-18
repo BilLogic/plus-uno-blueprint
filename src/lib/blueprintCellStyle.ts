@@ -124,6 +124,7 @@ export function getBlueprintCellInteractionStyle(
 ): Record<string, string> {
   const colors = getBlueprintCellInteractionColors(fill)
   return {
+    '--blueprint-cell-bg-origin': colors.bg,
     '--blueprint-cell-bg': colors.bg,
     '--blueprint-cell-bg-hover': colors.bgHover,
     '--blueprint-cell-bg-pressed': colors.bgPressed,
@@ -166,7 +167,7 @@ export function blueprintCellButtonClassName({
   className?: string
 } = {}) {
   const shared = cn(
-    'h-auto w-full font-normal whitespace-normal shadow-none ring-offset-background',
+    'h-auto w-full font-normal whitespace-normal shadow-none ring-offset-0',
     compact ? 'text-xs' : 'text-sm',
   )
 

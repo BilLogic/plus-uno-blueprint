@@ -7,9 +7,15 @@ import {
   BlueprintDividerRow,
 } from '@/components/blueprint/BlueprintLabelRail'
 import { BlueprintTriggerArrows } from '@/components/blueprint/BlueprintTriggerArrows'
-import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSectionFrame'
+import {
+  ComparePathSectionFrame,
+  SERVICE_PATH_SECTION_INSET,
+} from '@/components/blueprint/ComparePathSectionFrame'
+import {
+  COMPARE_PATH_SECTION_BOTTOM_INSET,
+  COMPARE_PATH_SECTION_TOP_INSET,
+} from '@/lib/sideBySideCompareLayout'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
-import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import { LayerCollapseToggle } from '@/components/blueprint/LayerCollapseToggle'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
@@ -41,6 +47,9 @@ import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   BLUEPRINT_THEME,
+  blueprintPanelCanvasColor,
+  blueprintPanelDividerBgColor,
+  blueprintPanelLabelRailColor,
   getBlueprintLayerStyle,
   getBlueprintLayerZone,
   type BlueprintLayerStyle,
@@ -64,9 +73,12 @@ type ServiceBlueprintGridProps = {
   fitVertically?: boolean
   scenarioName?: string
   walkthroughBlueprints?: BlueprintData[]
-  /** When set, replaces the path badge with a plain scenario title badge. */
+  /** When set, scenario title sits on the gray panel; path frame shows path type. */
   headerTitleLabel?: string
   headerTitleDescription?: string | null
+  showPathTypeBadge?: boolean
+  fixedSwimlaneBodyHeight?: number
+  fillSwimlaneHeight?: boolean
 }
 
 export function ServiceBlueprintGrid({
@@ -77,7 +89,9 @@ export function ServiceBlueprintGrid({
   scenarioName,
   walkthroughBlueprints,
   headerTitleLabel,
-  headerTitleDescription,
+  showPathTypeBadge = false,
+  fixedSwimlaneBodyHeight,
+  fillSwimlaneHeight = false,
 }: ServiceBlueprintGridProps) {
   const { path, layers, steps, triggers } = data
   const gridBodyRef = useRef<HTMLDivElement>(null)
@@ -94,7 +108,7 @@ export function ServiceBlueprintGrid({
   }
 
   const gridMinWidth = getBlueprintGridMinWidth(steps.length)
-  const gridBodyMinHeight = useMemo(
+  const naturalGridBodyMinHeight = useMemo(
     () =>
       getBlueprintGridMinHeight(data, {
         compact,
@@ -102,6 +116,15 @@ export function ServiceBlueprintGrid({
       }),
     [data, compact],
   )
+
+  const gridBodyMinHeight = useMemo(() => {
+    if (fixedSwimlaneBodyHeight === undefined) return naturalGridBodyMinHeight
+
+    const compareInset =
+      COMPARE_PATH_SECTION_TOP_INSET + COMPARE_PATH_SECTION_BOTTOM_INSET
+    const serviceInset = SERVICE_PATH_SECTION_INSET * 2
+    return fixedSwimlaneBodyHeight - compareInset + serviceInset
+  }, [fixedSwimlaneBodyHeight, naturalGridBodyMinHeight])
 
   const scrollMinHeight =
     gridBodyMinHeight + ARROW_VIEWPORT_PAD * 2
@@ -114,56 +137,42 @@ export function ServiceBlueprintGrid({
         className,
       )}
     >
-      {!compact && (
+      {!compact && !headerTitleLabel && (
         <div
           className="mb-4 flex shrink-0 flex-wrap items-center gap-2 border-b pb-3"
           style={{ borderColor: BLUEPRINT_THEME.canvasBorder }}
         >
-          {headerTitleLabel ? (
-            <ScenarioTitleBadge
-              name={headerTitleLabel}
-              description={headerTitleDescription}
-            />
-          ) : (
-            <PathLabelBadge
-              name={path.name}
-              description={path.description}
-              pathType={path.path_type}
-              className="text-base"
-            />
-          )}
+          <PathLabelBadge
+            name={path.name}
+            description={path.description}
+            pathType={path.path_type}
+            className="text-base"
+          />
         </div>
       )}
 
-      {compact && (
+      {compact && !headerTitleLabel && (
         <div className="mb-2 flex shrink-0 items-center gap-2 px-1">
-          {headerTitleLabel ? (
-            <ScenarioTitleBadge
-              name={headerTitleLabel}
-              description={headerTitleDescription}
-            />
-          ) : (
-            <PathLabelBadge
-              name={path.name}
-              description={path.description}
-              pathType={path.path_type}
-              compact
-            />
-          )}
+          <PathLabelBadge
+            name={path.name}
+            description={path.description}
+            pathType={path.path_type}
+            compact
+          />
         </div>
       )}
 
       <div
         ref={scrollContainerRef}
         className={cn(
-          'rounded-lg blueprint-scroll',
+          'rounded-lg blueprint-scroll blueprint-panel-surface',
           fitVertically
             ? 'min-h-0 flex-1 overflow-auto'
             : 'shrink-0 overflow-x-auto',
           compact && 'rounded-md',
         )}
         style={{
-          backgroundColor: BLUEPRINT_THEME.canvas,
+          backgroundColor: blueprintPanelCanvasColor(),
           border: `1px solid ${BLUEPRINT_THEME.canvasBorder}`,
           ...(fitVertically ? {} : { minHeight: scrollMinHeight }),
         }}
@@ -177,18 +186,17 @@ export function ServiceBlueprintGrid({
         >
           <div
             ref={gridBodyRef}
-            className="relative flex shrink-0 flex-col gap-0 overflow-visible"
+            className="blueprint-panel-surface relative flex shrink-0 flex-col gap-0 overflow-visible"
             style={{
               minHeight: gridBodyMinHeight,
-              backgroundColor: BLUEPRINT_THEME.canvas,
+              backgroundColor: blueprintPanelCanvasColor(),
             }}
           >
             <ComparePathSectionFrame
               blueprint={data}
               compact={compact}
-              showTitle={false}
-              titleLabel={headerTitleLabel}
-              titleDescription={headerTitleDescription}
+              showTitle={showPathTypeBadge}
+              showPathTypeBadge={showPathTypeBadge}
               variant="service"
             />
             <div
@@ -213,7 +221,7 @@ export function ServiceBlueprintGrid({
               const rowMinHeight = collapsed
                 ? BLUEPRINT_LAYER_COLLAPSED_HEIGHT
                 : getLayerRowMinHeight(layer, data, compact, {
-                    fitVertically,
+                    fitVertically: fillSwimlaneHeight,
                   })
               const zone = getBlueprintLayerZone(layer, layers)
               const laneStyle = getBlueprintLayerStyle(layer.name, zone)
@@ -250,7 +258,7 @@ export function ServiceBlueprintGrid({
                       compact={compact}
                       steps={steps}
                       cellLookup={cellLookup}
-                      fitVertically={fitVertically}
+                      fitVertically={fillSwimlaneHeight || fitVertically}
                       showDividerBelow={showLaneDivider}
                       collapsed={collapsed}
                       flushBottom={flushBottom}
@@ -274,12 +282,14 @@ export function ServiceBlueprintGrid({
                       lineStyle="dashed"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
-                      labelRailBg={BLUEPRINT_THEME.dividerBg}
+                      labelRailBg={blueprintPanelLabelRailColor(
+                        BLUEPRINT_THEME.dividerBg,
+                      )}
                       className="relative flex w-full shrink-0"
                       style={{
                         minWidth:
                           LAYER_COLUMN_WIDTH + getStepColumnsWidth(steps.length),
-                        backgroundColor: BLUEPRINT_THEME.dividerBg,
+                        backgroundColor: blueprintPanelDividerBgColor(),
                       }}
                     />
                   )}
@@ -290,12 +300,14 @@ export function ServiceBlueprintGrid({
                       lineStyle="solid"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
-                      labelRailBg={BLUEPRINT_THEME.dividerBg}
+                      labelRailBg={blueprintPanelLabelRailColor(
+                        BLUEPRINT_THEME.dividerBg,
+                      )}
                       className="relative flex w-full shrink-0"
                       style={{
                         minWidth:
                           LAYER_COLUMN_WIDTH + getStepColumnsWidth(steps.length),
-                        backgroundColor: BLUEPRINT_THEME.dividerBg,
+                        backgroundColor: blueprintPanelDividerBgColor(),
                       }}
                     />
                   )}
@@ -306,12 +318,14 @@ export function ServiceBlueprintGrid({
                       lineStyle="solid"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
-                      labelRailBg={BLUEPRINT_THEME.dividerBg}
+                      labelRailBg={blueprintPanelLabelRailColor(
+                        BLUEPRINT_THEME.dividerBg,
+                      )}
                       className="relative flex w-full shrink-0"
                       style={{
                         minWidth:
                           LAYER_COLUMN_WIDTH + getStepColumnsWidth(steps.length),
-                        backgroundColor: BLUEPRINT_THEME.dividerBg,
+                        backgroundColor: blueprintPanelDividerBgColor(),
                       }}
                     />
                   )}
@@ -379,12 +393,12 @@ function BlueprintSwimLane({
       data-blueprint-row=""
       data-layer-id={layerId}
       className={cn(
-        'flex shrink-0 overflow-visible rounded-sm',
+        'blueprint-panel-surface flex shrink-0 overflow-visible rounded-sm',
         showDividerBelow && 'border-b',
       )}
       style={{
         minHeight: rowMinHeight,
-        backgroundColor: BLUEPRINT_THEME.canvas,
+        backgroundColor: blueprintPanelCanvasColor(),
         ...(showDividerBelow
           ? { borderColor: BLUEPRINT_THEME.laneDivider }
           : undefined),
@@ -392,14 +406,14 @@ function BlueprintSwimLane({
     >
       <div
         className={cn(
-          'sticky left-0 z-10 flex shrink-0 items-start gap-2 border-r self-start',
+          'blueprint-panel-surface blueprint-panel-label-surface sticky left-0 z-10 flex shrink-0 items-start gap-2 border-r self-start',
           compact ? 'px-3.5 pt-4 pb-4' : 'pt-5 pb-5 pl-5 pr-3',
         )}
         style={{
           width: LAYER_COLUMN_WIDTH,
           minWidth: LAYER_COLUMN_WIDTH,
           maxWidth: LAYER_COLUMN_WIDTH,
-          backgroundColor: BLUEPRINT_THEME.canvas,
+          backgroundColor: blueprintPanelLabelRailColor(BLUEPRINT_THEME.canvas),
           borderColor: BLUEPRINT_THEME.laneDivider,
         }}
       >

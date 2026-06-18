@@ -19,6 +19,7 @@ import {
 } from '@/lib/sideBySideCompareLayout'
 import {
   BLUEPRINT_THEME,
+  blueprintPanelLabelRailColor,
   getBlueprintLabelSection,
   getBlueprintLabelTextColor,
 } from '@/lib/blueprintTheme'
@@ -39,13 +40,13 @@ export function BlueprintStickyLabelBackdrop({
   return (
     <div
       aria-hidden
-      className="pointer-events-none sticky left-0 z-[35]"
+      className="pointer-events-none sticky left-0 z-[35] blueprint-panel-label-surface"
       style={{
         gridColumn: 1,
         gridRow: `${rowStart} / ${rowCount + rowStart}`,
         width: COMPARE_LABEL_WIDTH,
         alignSelf: 'stretch',
-        backgroundColor: BLUEPRINT_THEME.labelRail,
+        backgroundColor: blueprintPanelLabelRailColor(),
       }}
     />
   )
@@ -79,7 +80,7 @@ export function BlueprintDividerRow({
   lineStyle,
   compact,
   labelWidth = COMPARE_LABEL_WIDTH,
-  labelRailBg = BLUEPRINT_THEME.labelRail,
+  labelRailBg = blueprintPanelLabelRailColor(BLUEPRINT_THEME.dividerBg),
   className,
   style,
 }: {
@@ -112,7 +113,7 @@ export function BlueprintDividerRow({
     >
       <div
         aria-hidden
-        className="sticky left-0 top-0 z-0"
+        className="sticky left-0 top-0 z-0 blueprint-panel-label-surface"
         style={{
           width: labelWidth,
           height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
@@ -170,12 +171,12 @@ export function BlueprintLabelRow({
     <div
       className={cn(
         'sticky left-0 isolate flex h-full min-h-0 flex-col overflow-hidden',
-        'z-40 border-r',
+        'z-40 border-r blueprint-panel-label-surface',
       )}
       style={{
         ...style,
         width: COMPARE_LABEL_WIDTH,
-        backgroundColor: BLUEPRINT_THEME.labelRail,
+        backgroundColor: blueprintPanelLabelRailColor(),
         borderColor: BLUEPRINT_THEME.laneDivider,
       }}
     >
@@ -185,7 +186,7 @@ export function BlueprintLabelRow({
           className="shrink-0"
           style={{
             height: corridorAbove,
-            backgroundColor: BLUEPRINT_THEME.labelRail,
+            backgroundColor: blueprintPanelLabelRailColor(),
           }}
         />
       )}
@@ -231,7 +232,7 @@ export function BlueprintLabelRow({
           className="shrink-0"
           style={{
             height: corridorBelow,
-            backgroundColor: BLUEPRINT_THEME.labelRail,
+            backgroundColor: blueprintPanelLabelRailColor(),
           }}
         />
       )}

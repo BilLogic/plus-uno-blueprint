@@ -1,5 +1,7 @@
+import { remapDiscoverySadFinalStepId } from '@/lib/repairDiscoverySadPathBlueprint'
 import type { BlueprintData } from '@/types/blueprint'
 import {
+  getIntegratedCellDisplayOpacity,
   INTEGRATED_UNSELECTED_OPACITY,
   type IntegratedBlueprintCell,
   type IntegratedBlueprintData,
@@ -28,29 +30,26 @@ function mergeSteps(
   primary: BlueprintData,
 ): IntegratedBlueprintStep[] {
   const integratedSteps: IntegratedBlueprintStep[] = []
-  const seenNames = new Set<string>()
+  const integratedStepById = new Map<string, IntegratedBlueprintStep>()
 
   const appendSteps = (blueprint: BlueprintData) => {
     for (const step of [...blueprint.steps].sort(
       (a, b) => a.column_position - b.column_position,
     )) {
-      if (seenNames.has(step.name)) {
-        const existing = integratedSteps.find(
-          (integrated) => integrated.name === step.name,
-        )
-        if (existing) {
-          existing.pathStepIds[blueprint.path.id] = step.id
-        }
+      const existing = integratedStepById.get(step.id)
+      if (existing) {
+        existing.pathStepIds[blueprint.path.id] = step.id
         continue
       }
 
-      seenNames.add(step.name)
-      integratedSteps.push({
-        id: `integrated-step-${integratedSteps.length + 1}`,
+      const integrated: IntegratedBlueprintStep = {
+        id: step.id,
         name: step.name,
         column_position: integratedSteps.length + 1,
         pathStepIds: { [blueprint.path.id]: step.id },
-      })
+      }
+      integratedStepById.set(step.id, integrated)
+      integratedSteps.push(integrated)
     }
   }
 
@@ -80,27 +79,38 @@ export function mergeIntegratedBlueprint(
   const layerNameToId = new Map(layers.map((layer) => [layer.name, layer.id]))
   const steps = mergeSteps(blueprints, primary)
 
-  const stepNameToId = new Map(steps.map((step) => [step.name, step.id]))
+  const integratedStepIds = new Set(steps.map((step) => step.id))
+  const integratedStepById = new Map(steps.map((step) => [step.id, step]))
   const cells: IntegratedBlueprintCell[] = []
   const cellIdByPathCell = new Map<string, string>()
 
   for (const blueprint of blueprints) {
     for (const cell of blueprint.cells) {
       const layer = blueprint.layers.find((entry) => entry.id === cell.layer_id)
-      const step = blueprint.steps.find((entry) => entry.id === cell.step_id)
+      const resolvedStepId = remapDiscoverySadFinalStepId(
+        cell.step_id,
+        blueprint.path.id,
+      )
+      const step =
+        blueprint.steps.find((entry) => entry.id === resolvedStepId) ??
+        (integratedStepIds.has(resolvedStepId)
+          ? integratedStepById.get(resolvedStepId)
+          : undefined)
       if (!layer || !step) continue
 
       const integratedLayerId = layerNameToId.get(layer.name)
-      const integratedStepId = stepNameToId.get(step.name)
-      if (!integratedLayerId || !integratedStepId) continue
+      if (!integratedLayerId || !integratedStepIds.has(step.id)) continue
+
+      const integratedStep = integratedStepById.get(step.id)
+      if (!integratedStep) continue
 
       const integratedCellId = `integrated-cell-${blueprint.path.id}-${cell.id}`
       cellIdByPathCell.set(`${blueprint.path.id}:${cell.id}`, integratedCellId)
 
-      cells.push({
+      const mergedCell: IntegratedBlueprintCell = {
         id: integratedCellId,
         layer_id: integratedLayerId,
-        step_id: integratedStepId,
+        step_id: step.id,
         path_id: blueprint.path.id,
         path_type: blueprint.path.path_type,
         content: cell.content,
@@ -108,6 +118,11 @@ export function mergeIntegratedBlueprint(
         description: cell.description,
         links: cell.links,
         opacity: pathOpacity(blueprint.path.id, selectedPathIds),
+      }
+
+      cells.push({
+        ...mergedCell,
+        opacity: getIntegratedCellDisplayOpacity(mergedCell, integratedStep),
       })
     }
   }
@@ -146,6 +161,41 @@ export function mergeIntegratedBlueprint(
     cells,
     triggers,
   }
+}
+
+/** Per-path blueprint slices for shared compare row-height math on integrated grids. */
+export function deriveSourceBlueprintsFromIntegrated(
+  data: IntegratedBlueprintData,
+): BlueprintData[] {
+  return data.paths.map((path) => ({
+    path: {
+      id: path.id,
+      name: path.name,
+      description: path.description,
+      path_type: path.path_type,
+    },
+    layers: data.layers,
+    steps: data.steps
+      .filter((step) => path.id in step.pathStepIds)
+      .sort((a, b) => a.column_position - b.column_position)
+      .map((step) => ({
+        id: step.id,
+        name: step.name,
+        column_position: step.column_position,
+      })),
+    cells: data.cells
+      .filter((cell) => cell.path_id === path.id)
+      .map((cell) => ({
+        id: cell.id,
+        layer_id: cell.layer_id,
+        step_id: cell.step_id,
+        content: cell.content,
+        picture: cell.picture,
+        description: cell.description,
+        links: cell.links,
+      })),
+    triggers: [],
+  }))
 }
 
 /** Layout adapter for shared blueprint sizing helpers. */

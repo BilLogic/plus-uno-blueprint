@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  filterPathsForScenarioUi,
   getBlueprintFallback,
   getFallbackPathsForScenario,
 } from '@/data/blueprintFallbacks'
@@ -140,12 +141,15 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
           if (scenarioPaths.length > 0) {
             pathsMap.set(
               scenarioId,
-              scenarioPaths.map((path) => ({
-                id: path.id,
-                name: path.name,
-                description: path.description ?? null,
-                path_type: path.path_type,
-              })),
+              filterPathsForScenarioUi(
+                scenarioId,
+                scenarioPaths.map((path) => ({
+                  id: path.id,
+                  name: path.name,
+                  description: path.description ?? null,
+                  path_type: path.path_type,
+                })),
+              ),
             )
           } else {
             const fallbackPaths = getFallbackPathsForScenario(scenarioId)

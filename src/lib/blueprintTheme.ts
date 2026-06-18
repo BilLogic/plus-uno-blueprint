@@ -27,9 +27,71 @@ export const BLUEPRINT_THEME = {
   /** Side-by-side compare path sections (Figma-style grouping). */
   sectionFill: '#FFFFFF',
   sectionBorder: '#D4D4DA',
+  /** Service overview canvas phase sections — slate blue tuned for #F4F4F4 viewport. */
+  phaseSectionColor: '#B6C7D2',
+  phaseSectionFill: '#D9E4EA',
   /** Outermost slide/canvas workspace — sits behind blueprint panels. */
   viewportPad: '#F4F4F4',
+  /** Scenario title badge on gray compare panels — darker than labelRail. */
+  panelScenarioBadgeFill: '#C2C2C8',
+  panelScenarioBadgeText: '#2C2C2E',
+  /** Hover accents for interactive canvas chrome. */
+  phaseSectionFillHover: '#C5D6E0',
+  phaseSectionBorderHover: '#9AADBE',
+  phaseSectionBadgeHover: '#9AADBE',
+  panelLabelRailHover: '#DDDFE4',
+  panelBorderHover: '#BABAC4',
+  panelScenarioBadgeFillHover: '#B0B0B8',
+  panelCanvasHover: '#F4F4F7',
+  panelSectionFillHover: '#F4F4F7',
+  panelCellBlend: '#C8C8D0',
 } as const
+
+/** Set on interactive compare panels; children inherit label-rail hover. */
+export const BLUEPRINT_PANEL_LABEL_RAIL_VAR = '--blueprint-panel-label-rail'
+/** White swimlane / path section surfaces inside interactive panels. */
+export const BLUEPRINT_PANEL_CANVAS_VAR = '--blueprint-panel-canvas'
+export const BLUEPRINT_PANEL_SECTION_FILL_VAR = '--blueprint-panel-section-fill'
+/** Divider row backgrounds (interaction / visibility bands). */
+export const BLUEPRINT_PANEL_DIVIDER_BG_VAR = '--blueprint-panel-divider-bg'
+/** Cell tint strength when an interactive panel is hovered (0–1). */
+export const BLUEPRINT_PANEL_CELL_HOVER_VAR = '--blueprint-panel-cell-hover'
+export const BLUEPRINT_PANEL_CELL_BLEND_VAR = '--blueprint-panel-cell-blend'
+
+export function blueprintPanelLabelRailColor(
+  fallback: string = BLUEPRINT_THEME.labelRail,
+): string {
+  return `var(${BLUEPRINT_PANEL_LABEL_RAIL_VAR}, ${fallback})`
+}
+
+export function blueprintPanelCanvasColor(
+  fallback: string = BLUEPRINT_THEME.canvas,
+): string {
+  return `var(${BLUEPRINT_PANEL_CANVAS_VAR}, ${fallback})`
+}
+
+export function blueprintPanelSectionFillColor(
+  fallback: string = BLUEPRINT_THEME.sectionFill,
+): string {
+  return `var(${BLUEPRINT_PANEL_SECTION_FILL_VAR}, ${fallback})`
+}
+
+export function blueprintPanelDividerBgColor(
+  fallback: string = BLUEPRINT_THEME.dividerBg,
+): string {
+  return `var(${BLUEPRINT_PANEL_DIVIDER_BG_VAR}, ${fallback})`
+}
+
+export function getBlueprintPanelHoverCssVars(): Record<string, string> {
+  return {
+    [BLUEPRINT_PANEL_LABEL_RAIL_VAR]: BLUEPRINT_THEME.panelLabelRailHover,
+    [BLUEPRINT_PANEL_CANVAS_VAR]: BLUEPRINT_THEME.panelCanvasHover,
+    [BLUEPRINT_PANEL_SECTION_FILL_VAR]: BLUEPRINT_THEME.panelSectionFillHover,
+    [BLUEPRINT_PANEL_DIVIDER_BG_VAR]: BLUEPRINT_THEME.panelLabelRailHover,
+    [BLUEPRINT_PANEL_CELL_HOVER_VAR]: '1',
+    [BLUEPRINT_PANEL_CELL_BLEND_VAR]: BLUEPRINT_THEME.panelCellBlend,
+  }
+}
 
 /** Layer fills — readable pastels that pair with ring-based button states. */
 export const BLUEPRINT_CELL_PALETTE = {

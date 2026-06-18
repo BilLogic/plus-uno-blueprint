@@ -27,6 +27,54 @@ export const PARALLEL_SESSION_PARTNER_COLUMN_COUNT =
 export const PARALLEL_SESSION_LEAD_COLUMN_COUNT =
   PARALLEL_SESSION_LEAD_CONTENT.length
 
+/** Partner Action cells in warm-up, goal setting, and help request scenarios. */
+export const PARALLEL_SESSION_PARTNER_CELL_ID_PATTERN =
+  /000000(?:04|1a|1b)(\d{2})01$/
+
+export function isParallelSessionPartnerWrapTrigger(
+  sourceCellId: string,
+  targetCellId: string,
+): boolean {
+  const sourceMatch = sourceCellId.match(
+    PARALLEL_SESSION_PARTNER_CELL_ID_PATTERN,
+  )
+  const targetMatch = targetCellId.match(
+    PARALLEL_SESSION_PARTNER_CELL_ID_PATTERN,
+  )
+  if (!sourceMatch || !targetMatch) return false
+
+  const sourceStep = Number.parseInt(sourceMatch[1]!, 10)
+  const targetStep = Number.parseInt(targetMatch[1]!, 10)
+  return targetStep < sourceStep
+}
+
+/** Lead Tutor cells in warm-up, goal setting, and help request scenarios. */
+export const PARALLEL_SESSION_LEAD_CELL_ID_PATTERN =
+  /000000(?:04|1a|1b)(\d{2})02$/
+
+export function isParallelSessionLeadWrapTrigger(
+  sourceCellId: string,
+  targetCellId: string,
+): boolean {
+  const sourceMatch = sourceCellId.match(PARALLEL_SESSION_LEAD_CELL_ID_PATTERN)
+  const targetMatch = targetCellId.match(PARALLEL_SESSION_LEAD_CELL_ID_PATTERN)
+  if (!sourceMatch || !targetMatch) return false
+
+  const sourceStep = Number.parseInt(sourceMatch[1]!, 10)
+  const targetStep = Number.parseInt(targetMatch[1]!, 10)
+  return targetStep < sourceStep
+}
+
+export function isParallelSessionOverheadWrapTrigger(
+  sourceCellId: string,
+  targetCellId: string,
+): boolean {
+  return (
+    isParallelSessionPartnerWrapTrigger(sourceCellId, targetCellId) ||
+    isParallelSessionLeadWrapTrigger(sourceCellId, targetCellId)
+  )
+}
+
 type PartnerLeadLayerSuffix = '01' | '02'
 
 type BuildPartnerLeadOptions = {
@@ -135,7 +183,6 @@ export function buildParallelSessionPartnerLeadTriggers(
     trigger(options, '034', '04', '01', '04', '02'),
     trigger(options, '035', '05', '02', '05', '01'),
     trigger(options, '036', '05', '01', '05', '02'),
-    trigger(options, '040', '04', '02', '01', '02'),
     trigger(
       options,
       '041',
@@ -143,6 +190,14 @@ export function buildParallelSessionPartnerLeadTriggers(
       '01',
       '01',
       '01',
+    ),
+    trigger(
+      options,
+      '042',
+      String(PARALLEL_SESSION_LEAD_COLUMN_COUNT).padStart(2, '0'),
+      '02',
+      '01',
+      '02',
     ),
   ]
 }

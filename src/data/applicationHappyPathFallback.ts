@@ -13,7 +13,7 @@ export const INTERVIEW_SCENARIO_ID = 'a0000000-0000-4000-8000-000000000122'
 export const APPLICATION_HAPPY_PATH_ID = 'a0000000-0000-4000-8000-000000000700'
 export const APPLICATION_SAD_PATH_ID = 'a0000000-0000-4000-8000-000000000701'
 
-const STEPS = [
+const DISCOVERY_SHARED_STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000711',
     name: 'Discovers PLUS',
@@ -39,12 +39,32 @@ const STEPS = [
     name: 'Discovers PLUS',
     column_position: 5,
   },
-  {
-    id: 'a0000000-0000-4000-8000-000000000716',
-    name: 'Interested in joining PLUS',
-    column_position: 6,
-  },
 ] as const
+
+export const DISCOVERY_HAPPY_FINAL_STEP_ID =
+  'a0000000-0000-4000-8000-000000000716'
+export const DISCOVERY_SAD_FINAL_STEP_ID =
+  'a0000000-0000-4000-8000-000000000717'
+
+const DISCOVERY_HAPPY_FINAL_STEP = {
+  id: DISCOVERY_HAPPY_FINAL_STEP_ID,
+  name: 'Interested in joining PLUS',
+  column_position: 6,
+} as const
+
+const DISCOVERY_SAD_FINAL_STEP = {
+  id: DISCOVERY_SAD_FINAL_STEP_ID,
+  name: 'Not Interested in joining PLUS',
+  column_position: 6,
+} as const
+
+function getDiscoveryPathSteps(config: ApplicationDiscoveryPathConfig) {
+  const finalStep =
+    config.pathType === 'happy'
+      ? DISCOVERY_HAPPY_FINAL_STEP
+      : DISCOVERY_SAD_FINAL_STEP
+  return [...DISCOVERY_SHARED_STEPS, finalStep]
+}
 
 type ApplicationDiscoveryPathConfig = {
   pathId: string
@@ -138,6 +158,8 @@ function buildApplicationDiscoveryFallback(
   config: ApplicationDiscoveryPathConfig,
 ): BlueprintData {
   const L = config.layerIds
+  const steps = getDiscoveryPathSteps(config)
+  const finalStep = steps[steps.length - 1]!
 
   const layers = [
     { id: L.visual, name: 'Visual', row_position: 0 },
@@ -228,7 +250,7 @@ function buildApplicationDiscoveryFallback(
   ]
 
   const cells: BlueprintCell[] = [
-    ...STEPS.map((step, stepIndex) =>
+    ...steps.map((step, stepIndex) =>
       cell(
         appCell(config, String(stepIndex + 1).padStart(2, '0'), '10'),
         L.visual,
@@ -237,84 +259,84 @@ function buildApplicationDiscoveryFallback(
       ),
     ),
 
-    cell(appCell(config, '01', '03'), L.regular, STEPS[0].id, 'Discovers PLUS'),
+    cell(appCell(config, '01', '03'), L.regular, steps[0]!.id, 'Discovers PLUS'),
     cell(
       appCell(config, '01', '04'),
       L.frontStage,
-      STEPS[0].id,
+      steps[0]!.id,
       'Previous or Current PLUS Tutor might have informed about PLUS',
     ),
 
-    cell(appCell(config, '02', '03'), L.regular, STEPS[1].id, 'Discovers PLUS'),
-    cell(appCell(config, '02', '06'), L.frontStageTech, STEPS[1].id, 'Social Media'),
+    cell(appCell(config, '02', '03'), L.regular, steps[1]!.id, 'Discovers PLUS'),
+    cell(appCell(config, '02', '06'), L.frontStageTech, steps[1]!.id, 'Social Media'),
     cell(
       appCell(config, '02', '07'),
       L.backStage,
-      STEPS[1].id,
+      steps[1]!.id,
       'Marketing Team creates social media posts and manages social platforms.',
     ),
-    cell(appCell(config, '02', '08'), L.backStageTech, STEPS[1].id, 'Figma'),
-    cell(appCell(config, '02', '09'), L.support, STEPS[1].id, 'Branding Guidelines'),
+    cell(appCell(config, '02', '08'), L.backStageTech, steps[1]!.id, 'Figma'),
+    cell(appCell(config, '02', '09'), L.support, steps[1]!.id, 'Branding Guidelines'),
 
-    cell(appCell(config, '03', '03'), L.regular, STEPS[2].id, 'Discovers PLUS'),
+    cell(appCell(config, '03', '03'), L.regular, steps[2]!.id, 'Discovers PLUS'),
     cell(
       appCell(config, '03', '06'),
       L.frontStageTech,
-      STEPS[2].id,
+      steps[2]!.id,
       'Marketing Website',
     ),
     cell(
       appCell(config, '03', '07'),
       L.backStage,
-      STEPS[2].id,
+      steps[2]!.id,
       'Design Team manages content and messaging on the website. Dev Team implements website into code.',
     ),
     cell(
       appCell(config, '03', '08'),
       L.backStageTech,
-      STEPS[2].id,
+      steps[2]!.id,
       'Figma\nDev Tools',
     ),
     cell(
       appCell(config, '03', '09'),
       L.support,
-      STEPS[2].id,
+      steps[2]!.id,
       'Branding Guidelines, Design System',
     ),
 
-    cell(appCell(config, '04', '03'), L.regular, STEPS[3].id, 'Discovers PLUS'),
+    cell(appCell(config, '04', '03'), L.regular, steps[3]!.id, 'Discovers PLUS'),
     cell(
       appCell(config, '04', '04'),
       L.frontStage,
-      STEPS[3].id,
+      steps[3]!.id,
       'Tutor Supervisor team meets prospective tutors at on-campus job fair',
     ),
     cell(
       appCell(config, '04', '06'),
       L.frontStageTech,
-      STEPS[3].id,
+      steps[3]!.id,
       'Posters\nOn-campus booth',
     ),
 
-    cell(appCell(config, '05', '03'), L.regular, STEPS[4].id, 'Discovers PLUS'),
-    cell(appCell(config, '05', '06'), L.frontStageTech, STEPS[4].id, 'Handshake'),
+    cell(appCell(config, '05', '03'), L.regular, steps[4]!.id, 'Discovers PLUS'),
+    cell(appCell(config, '05', '06'), L.frontStageTech, steps[4]!.id, 'Handshake'),
     cell(
       appCell(config, '05', '07'),
       L.backStage,
-      STEPS[4].id,
+      steps[4]!.id,
       'Tutor Supervisor Team posts job openings on handshake',
     ),
     cell(
       appCell(config, '05', '08'),
       L.backStageTech,
-      STEPS[4].id,
+      steps[4]!.id,
       'Handshake Employer Profile',
     ),
 
     cell(
       appCell(config, '06', '03'),
       L.regular,
-      STEPS[5].id,
+      finalStep.id,
       config.finalRegularTutorContent,
     ),
   ]
@@ -327,7 +349,7 @@ function buildApplicationDiscoveryFallback(
       path_type: config.pathType,
     },
     layers: [...layers],
-    steps: [...STEPS],
+    steps: [...steps],
     cells,
     triggers,
   }

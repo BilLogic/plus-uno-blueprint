@@ -7,12 +7,18 @@ import { useEditor } from '@/contexts/EditorContext'
 import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
-  COMPARE_MIN_PANEL_HEIGHT,
   getComparePanelHeight,
   getComparePanelWidth,
   getIntegratedPanelHeight,
   getIntegratedPanelWidth,
+  getPanelHeightFromSwimlaneBody,
 } from '@/lib/sideBySideCompareLayout'
+
+export {
+  getScenarioBlueprintPanelHeight,
+  getScenarioSwimlaneBodyHeight,
+} from '@/lib/sideBySideCompareLayout'
+export type { ScenarioSwimlaneLayoutInput } from '@/lib/sideBySideCompareLayout'
 import {
   getSlideDisplayLabel,
   type Slide,
@@ -29,55 +35,18 @@ type ScenarioBlueprintPanelProps = {
   blueprintsByPathId: Map<string, BlueprintData>
   loading?: boolean
   scrollContainerRef?: RefObject<HTMLDivElement | null>
-  /** When set, replaces path badges with the scenario name (phase overview). */
+  /** When set, scenario title sits on the gray panel; path frames show path type. */
   sectionTitleLabel?: string
   /** Fixed panel height (phase overview uses the max across scenarios). */
   lockedPanelHeight?: number
+  /** Fixed white swimlane board height shared across a phase row. */
+  fixedSwimlaneBodyHeight?: number
   /** When true, panel height does not grow with measured content. */
   lockPanelHeight?: boolean
   /** When set, clicking the panel opens this scenario. */
   onNavigate?: () => void
-}
-
-export function getScenarioBlueprintPanelHeight(options: {
-  displayViewType: SlideViewType
-  paths: PathListItem[]
-  selectedPathIds: string[]
-  blueprintsByPathId: Map<string, BlueprintData>
-}): number {
-  const { displayViewType, paths, selectedPathIds, blueprintsByPathId } =
-    options
-
-  const allBlueprints = paths
-    .map((path) => blueprintsByPathId.get(path.id))
-    .filter((blueprint): blueprint is BlueprintData => blueprint !== undefined)
-
-  const useIntegratedLayout =
-    displayViewType === 'integrated' && paths.length > 0
-  const useSideBySideLayout =
-    displayViewType === 'side-by-side' && selectedPathIds.length > 0
-  const useSinglePathLayout =
-    displayViewType === 'single' && selectedPathIds.length > 0
-
-  if (useIntegratedLayout) {
-    const integrated = mergeIntegratedBlueprint(allBlueprints, selectedPathIds)
-    if (integrated) {
-      return getIntegratedPanelHeight(integrated.layers, integrated)
-    }
-  }
-
-  const visibleBlueprints =
-    useSideBySideLayout || useSinglePathLayout
-      ? itemsInSelectionOrder(selectedPathIds, (id) =>
-          blueprintsByPathId.get(id),
-        ).filter((blueprint): blueprint is BlueprintData => blueprint !== undefined)
-      : []
-
-  if (visibleBlueprints.length > 0) {
-    return getComparePanelHeight(visibleBlueprints)
-  }
-
-  return COMPARE_MIN_PANEL_HEIGHT
+  /** Phase/overview filter view type — keeps row sizing aligned across scenarios. */
+  displayViewType?: SlideViewType
 }
 
 export function ScenarioBlueprintPanel({
@@ -90,15 +59,18 @@ export function ScenarioBlueprintPanel({
   scrollContainerRef: scrollContainerRefProp,
   sectionTitleLabel,
   lockedPanelHeight,
+  fixedSwimlaneBodyHeight,
   lockPanelHeight = false,
   onNavigate,
+  displayViewType: displayViewTypeProp,
 }: ScenarioBlueprintPanelProps) {
   const { getScenarioDisplayViewType } = useEditor()
   const internalScrollRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = scrollContainerRefProp ?? internalScrollRef
 
   const scenarioName = getSlideDisplayLabel(slide, slides)
-  const displayViewType = getScenarioDisplayViewType(slide)
+  const displayViewType =
+    displayViewTypeProp ?? getScenarioDisplayViewType(slide)
   const useIntegratedLayout =
     displayViewType === 'integrated' && paths.length > 0
   const useSideBySideLayout =
@@ -141,28 +113,47 @@ export function ScenarioBlueprintPanel({
   const sectionTitleDescription = sectionTitleLabel
     ? slide.description
     : undefined
+  const showPathTypeBadge = Boolean(sectionTitleLabel)
 
+  const integratedPathCount = Math.max(1, selectedPathIds.length)
   const panelHeight =
     lockedPanelHeight ??
-    (showIntegratedGrid
-      ? getIntegratedPanelHeight(
-          integratedBlueprint!.layers,
-          integratedBlueprint!,
-        )
-      : getComparePanelHeight(visibleBlueprints))
+    (fixedSwimlaneBodyHeight !== undefined
+      ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight)
+      : showIntegratedGrid
+        ? getIntegratedPanelHeight(
+            integratedBlueprint!.layers,
+            integratedBlueprint!,
+            false,
+            new Set(),
+            { sourceBlueprints: allBlueprints, selectedPathIds },
+          )
+        : getComparePanelHeight(visibleBlueprints))
+
+  const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
 
   const comparePanelProps = {
     minWidth: showIntegratedGrid
-      ? getIntegratedPanelWidth(integratedBlueprint!.steps.length)
+      ? getIntegratedPanelWidth(
+          integratedBlueprint!.steps.length,
+          false,
+          integratedPathCount,
+        )
       : getComparePanelWidth(visibleBlueprints),
     minHeight: panelHeight,
     defaultWidth: showIntegratedGrid
-      ? getIntegratedPanelWidth(integratedBlueprint!.steps.length)
+      ? getIntegratedPanelWidth(
+          integratedBlueprint!.steps.length,
+          false,
+          integratedPathCount,
+        )
       : getComparePanelWidth(visibleBlueprints),
     defaultHeight: panelHeight,
     lockHeight: lockPanelHeight,
     onNavigate,
     navigateLabel: onNavigate ? `Open ${scenarioName} scenario` : undefined,
+    panelTitleLabel: sectionTitleLabel,
+    panelTitleDescription: sectionTitleDescription,
     scrollContainerRef,
   }
 
@@ -198,6 +189,9 @@ export function ScenarioBlueprintPanel({
           selectedPathIds={selectedPathIds}
           scenarioName={scenarioName}
           walkthroughBlueprints={allBlueprints}
+          fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
+          fillSwimlaneHeight={fillSwimlaneHeight}
+          showPathTypeBadge={showPathTypeBadge}
         />
       </ResizableComparePanel>
     )
@@ -215,6 +209,8 @@ export function ScenarioBlueprintPanel({
           scenarioName={scenarioName}
           sectionTitleLabel={sectionTitleLabel}
           sectionTitleDescription={sectionTitleDescription}
+          fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
+          fillSwimlaneHeight={fillSwimlaneHeight}
         />
       </ResizableComparePanel>
     )
@@ -235,6 +231,9 @@ export function ScenarioBlueprintPanel({
             walkthroughBlueprints={allBlueprints}
             headerTitleLabel={sectionTitleLabel}
             headerTitleDescription={sectionTitleDescription}
+            showPathTypeBadge={showPathTypeBadge}
+            fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
+            fillSwimlaneHeight={fillSwimlaneHeight}
           />
         ))}
       </div>

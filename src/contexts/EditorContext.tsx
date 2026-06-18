@@ -10,17 +10,18 @@ import {
 import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
 import { mergeSlidesWithFallback } from '@/lib/mergeSlidesWithFallback'
 import {
-  CANVAS_VIEW_ENABLED,
   FALLBACK_SLIDES,
   getSlideViewType,
-  type EditorMode,
+  type EditorView,
   type Slide,
   type SlideViewType,
 } from '@/types/slides'
 
 type EditorContextValue = {
-  mode: EditorMode
-  setMode: (mode: EditorMode) => void
+  view: EditorView
+  setView: (view: EditorView) => void
+  goHome: () => void
+  openDetail: (slideId: string) => void
   slides: Slide[]
   getScenarioDisplayViewType: (slide: Slide) => SlideViewType
   setScenarioDisplayViewType: (
@@ -41,11 +42,7 @@ type EditorProviderProps = {
 }
 
 export function EditorProvider({ children }: EditorProviderProps) {
-  const [mode, setModeState] = useState<EditorMode>('stack')
-  const setMode = useCallback((next: EditorMode) => {
-    if (!CANVAS_VIEW_ENABLED && next === 'canvas') return
-    setModeState(next)
-  }, [])
+  const [view, setView] = useState<EditorView>('home')
   const { slides: dbSlides, loading, error, configured } = useLifecyclePhases()
 
   const slides = useMemo(() => {
@@ -57,6 +54,15 @@ export function EditorProvider({ children }: EditorProviderProps) {
     Record<string, SlideViewType>
   >({})
   const [activeSlideId, setActiveSlideId] = useState(FALLBACK_SLIDES[0].id)
+
+  const goHome = useCallback(() => {
+    setView('home')
+  }, [])
+
+  const openDetail = useCallback((slideId: string) => {
+    setActiveSlideId(slideId)
+    setView('detail')
+  }, [])
 
   const getScenarioDisplayViewType = useCallback(
     (slide: Slide) =>
@@ -90,8 +96,10 @@ export function EditorProvider({ children }: EditorProviderProps) {
 
   const value = useMemo(
     () => ({
-      mode,
-      setMode,
+      view,
+      setView,
+      goHome,
+      openDetail,
       slides,
       getScenarioDisplayViewType,
       setScenarioDisplayViewType,
@@ -102,7 +110,9 @@ export function EditorProvider({ children }: EditorProviderProps) {
       activeSlide,
     }),
     [
-      mode,
+      view,
+      goHome,
+      openDetail,
       slides,
       getScenarioDisplayViewType,
       setScenarioDisplayViewType,

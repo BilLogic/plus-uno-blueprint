@@ -550,12 +550,6 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       description: APPLICATION_HAPPY_PATH_FALLBACK.path.description,
       path_type: APPLICATION_HAPPY_PATH_FALLBACK.path.path_type,
     },
-    {
-      id: APPLICATION_SAD_PATH_FALLBACK.path.id,
-      name: APPLICATION_SAD_PATH_FALLBACK.path.name,
-      description: APPLICATION_SAD_PATH_FALLBACK.path.description,
-      path_type: APPLICATION_SAD_PATH_FALLBACK.path.path_type,
-    },
   ],
   [INTERVIEW_SCENARIO_ID]: [
     {
@@ -701,6 +695,22 @@ export function hasBlueprintFallback(scenarioId: string | undefined): boolean {
   )
 }
 
+/** Paths hidden from pickers/grids until the scenario is ready in the UI. */
+const UI_HIDDEN_PATH_IDS_BY_SCENARIO: Record<string, readonly string[]> = {
+  [DISCOVERY_SCENARIO_ID]: [APPLICATION_SAD_PATH_ID],
+}
+
+export function filterPathsForScenarioUi<T extends { id: string }>(
+  scenarioId: string | undefined,
+  paths: readonly T[],
+): T[] {
+  if (!scenarioId) return [...paths]
+  const hidden = UI_HIDDEN_PATH_IDS_BY_SCENARIO[scenarioId]
+  if (!hidden?.length) return [...paths]
+  const hiddenIds = new Set(hidden)
+  return paths.filter((path) => !hiddenIds.has(path.id))
+}
+
 export function getFallbackPathsForScenario(
   scenarioId: string | undefined,
 ): Array<{
@@ -710,7 +720,10 @@ export function getFallbackPathsForScenario(
   path_type: BlueprintData['path']['path_type']
 }> {
   if (!scenarioId) return EMPTY_FALLBACK_PATHS
-  return FALLBACK_PATHS_BY_SCENARIO[scenarioId] ?? EMPTY_FALLBACK_PATHS
+  return filterPathsForScenarioUi(
+    scenarioId,
+    FALLBACK_PATHS_BY_SCENARIO[scenarioId] ?? EMPTY_FALLBACK_PATHS,
+  )
 }
 
 function withPathIdentity(

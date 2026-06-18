@@ -10,6 +10,9 @@ import {
   ARROW_VIEWPORT_PAD,
   buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
+  collectOverheadRailFanOutTriggerIds,
+  buildOverheadRailFanOutDropPath,
+  buildOverheadRailFanOutTrunkPath,
   groupDiscoveryRailTriggers,
   isWrapTrigger,
 } from '@/lib/blueprintArrowGeometry'
@@ -57,6 +60,7 @@ type SimpleSegment = {
   d: string
   pathType: PathType
   opacity: number
+  showMarker?: boolean
 }
 
 type ForkRenderGroup = {
@@ -82,9 +86,19 @@ export function IntegratedTriggerArrows({
   const [size, setSize] = useState({ width: 0, height: 0 })
   const markerId = useId().replace(/:/g, '')
 
+  const fanOutTriggerIds = useMemo(
+    () => collectOverheadRailFanOutTriggerIds(triggers),
+    [triggers],
+  )
+
   const { groups: forkMeta, forkTriggerIds } = useMemo(
-    () => detectIntegratedForkGroups(triggers, cells, steps),
-    [triggers, cells, steps],
+    () =>
+      detectIntegratedForkGroups(
+        triggers.filter((trigger) => !fanOutTriggerIds.has(trigger.id)),
+        cells,
+        steps,
+      ),
+    [triggers, cells, steps, fanOutTriggerIds],
   )
 
   const updateArrows = useCallback(() => {
@@ -98,30 +112,102 @@ export function IntegratedTriggerArrows({
     const nextSimple: SimpleSegment[] = []
     const nextForks: ForkRenderGroup[] = []
     const nonForkTriggers = triggers.filter((t) => !forkTriggerIds.has(t.id))
-    const { busGroups, remaining } = groupDiscoveryRailTriggers(
+    const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
       nonForkTriggers,
       content,
     )
 
-    for (const group of busGroups) {
-      const sampleTrigger = nonForkTriggers.find((t) =>
-        group.triggerIds.includes(t.id),
-      )
-      if (!sampleTrigger) continue
-
-      const d = buildApplicationRegularTutorRailBusPath(
-        group.sourceEls,
-        group.targetEl,
+    for (const group of fanOutGroups) {
+      const targetEls = group.branches.map((branch) => branch.targetEl)
+      const trunk = buildOverheadRailFanOutTrunkPath(
+        group.sourceEl,
+        targetEls,
         content,
       )
-      if (!d) continue
+      if (trunk) {
+        nextSimple.push({
+          id: `${group.sourceCellId}-trunk`,
+          d: trunk,
+          pathType: 'happy',
+          opacity: 1,
+          showMarker: false,
+        })
+      }
 
-      nextSimple.push({
-        id: group.triggerIds.join('-'),
-        d,
-        pathType: sampleTrigger.path_type,
-        opacity: sampleTrigger.opacity,
-      })
+      for (const branch of group.branches) {
+        const trigger = nonForkTriggers.find(
+          (entry) => entry.id === branch.triggerId,
+        )
+        const d = buildOverheadRailFanOutDropPath(
+          group.sourceEl,
+          branch.targetEl,
+          content,
+        )
+        if (!d) continue
+
+        nextSimple.push({
+          id: branch.triggerId,
+          d,
+          pathType: trigger?.path_type ?? 'happy',
+          opacity: trigger?.opacity ?? 1,
+        })
+      }
+    }
+
+    for (const group of busGroups) {
+      const triggersInGroup = nonForkTriggers.filter((trigger) =>
+        group.triggerIds.includes(trigger.id),
+      )
+      const byPathType = new Map<
+        PathType,
+        { sourceEls: HTMLElement[]; opacity: number; triggerIds: string[] }
+      >()
+
+      for (const trigger of triggersInGroup) {
+        const sourceEl = content.querySelector<HTMLElement>(
+          `[data-blueprint-cell="${trigger.source_cell_id}"]`,
+        )
+        if (!sourceEl) continue
+
+        const existing = byPathType.get(trigger.path_type)
+        if (existing) {
+          existing.sourceEls.push(sourceEl)
+          existing.triggerIds.push(trigger.id)
+          existing.opacity = Math.max(existing.opacity, trigger.opacity)
+        } else {
+          byPathType.set(trigger.path_type, {
+            sourceEls: [sourceEl],
+            opacity: trigger.opacity,
+            triggerIds: [trigger.id],
+          })
+        }
+      }
+
+      for (const [pathType, pathGroup] of byPathType) {
+        const targetEl =
+          triggersInGroup
+            .filter((trigger) => trigger.path_type === pathType)
+            .map((trigger) =>
+              content.querySelector<HTMLElement>(
+                `[data-blueprint-cell="${trigger.target_cell_id}"]`,
+              ),
+            )
+            .find((el): el is HTMLElement => el !== null) ?? group.targetEl
+
+        const d = buildApplicationRegularTutorRailBusPath(
+          pathGroup.sourceEls,
+          targetEl,
+          content,
+        )
+        if (!d) continue
+
+        nextSimple.push({
+          id: `${group.targetCellId}-${pathType}`,
+          d,
+          pathType,
+          opacity: pathGroup.opacity,
+        })
+      }
     }
 
     for (const group of forkMeta) {
@@ -315,7 +401,9 @@ export function IntegratedTriggerArrows({
             <path
               d={segment.d}
               {...blueprintArrowPathProps(segment.pathType)}
-              markerEnd={`url(#${markerIds[segment.pathType]})`}
+              {...(segment.showMarker === false
+                ? {}
+                : { markerEnd: `url(#${markerIds[segment.pathType]})` })}
             />
           </g>
         ))}

@@ -1,11 +1,9 @@
 import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
-import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
-import { Menubar } from '@/components/ui/menubar'
+import { PhaseMenubarHeader } from '@/components/editor/PhaseMenubarHeader'
 import {
   getSlideDisplayLabel,
-  showsBlueprintFilters,
   isSubslide,
   type Slide,
   type SlideViewType,
@@ -35,74 +33,6 @@ function resolveScenarioDescription(
   return selectedPath?.description ?? paths[0]?.description ?? null
 }
 
-function SlideStickyMenubarHeader({
-  slide,
-  slides,
-  viewType,
-  onViewTypeChange,
-  paths,
-  selectedPathIds,
-  onTogglePath,
-}: Omit<SlideHeaderContentProps, 'inlineDescription'>) {
-  const label = getSlideDisplayLabel(slide, slides)
-  const isScenario = isSubslide(slide)
-  const description = isScenario
-    ? resolveScenarioDescription(slide, paths, selectedPathIds)
-    : slide.description ??
-      paths[0]?.description ??
-      'Scenarios in this phase and how they connect.'
-  const showFilters = showsBlueprintFilters(slide) && paths.length > 0 && onTogglePath
-
-  return (
-    <div
-      className={cn(
-        'flex w-full items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card px-3 py-2 shadow-sm',
-      )}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
-          {isScenario ? <ScenarioParallelInfoTooltip slide={slide} /> : null}
-          <span className="shrink-0 text-sm font-semibold tracking-tight text-foreground">
-            {label}
-          </span>
-        </div>
-        {description ? (
-          <>
-            <span
-              className="shrink-0 text-xs text-muted-foreground/70"
-              aria-hidden
-            >
-              ·
-            </span>
-            <p className="min-w-0 truncate text-xs text-muted-foreground">
-              {description}
-            </p>
-          </>
-        ) : null}
-      </div>
-
-      {showFilters ? (
-        <Menubar
-          modal={false}
-          className="h-auto shrink-0 border-0 bg-transparent p-0 shadow-none"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <StackHeaderFilterMenu
-            viewType={viewType}
-            onViewTypeChange={onViewTypeChange}
-            paths={paths}
-            selectedPathIds={selectedPathIds}
-            onTogglePath={onTogglePath}
-          />
-        </Menubar>
-      ) : null}
-    </div>
-  )
-}
-
 function SlideHeaderContent({
   slide,
   slides,
@@ -115,7 +45,7 @@ function SlideHeaderContent({
 }: SlideHeaderContentProps) {
   if (inlineDescription) {
     return (
-      <SlideStickyMenubarHeader
+      <PhaseMenubarHeader
         slide={slide}
         slides={slides}
         viewType={viewType}
@@ -123,6 +53,7 @@ function SlideHeaderContent({
         paths={paths}
         selectedPathIds={selectedPathIds}
         onTogglePath={onTogglePath}
+        showFilters
       />
     )
   }
@@ -182,7 +113,7 @@ export function SlideStickyHeader({
       )}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto w-full">
         <SlideHeaderContent {...contentProps} inlineDescription />
       </div>
     </div>
