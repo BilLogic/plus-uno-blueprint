@@ -145,9 +145,9 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     fillCell('01', '08'),
     L.backStageTech,
     STEPS[0].id,
-    'Swift Swap Google Form Responses, Tutor Scheduling Software',
+    'Shift Swap Google Form Responses, Tutor Scheduling Software',
   ),
-  cell(fillCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Swift Swap Google Form'),
+  cell(fillCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Shift Swap Google Form'),
 
   cell(fillCell('02', '10'), L.visual, STEPS[1].id, ''),
   cell(

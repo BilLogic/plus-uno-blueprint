@@ -20,11 +20,17 @@ function mergeSlideFromFallback(slide: Slide, fallback: Slide | undefined): Slid
       ? fallback.viewType
       : slide.viewType
 
-  if (description === slide.description && viewType === slide.viewType) {
+  const loopToId = slide.loopToId ?? fallback?.loopToId
+
+  if (
+    description === slide.description &&
+    viewType === slide.viewType &&
+    loopToId === slide.loopToId
+  ) {
     return slide
   }
 
-  return { ...slide, description, viewType }
+  return { ...slide, description, viewType, loopToId }
 }
 
 /**

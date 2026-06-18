@@ -3,6 +3,7 @@ import { PhaseScenarioOverview } from '@/components/blueprint/PhaseScenarioOverv
 import { ScenarioBlueprintPanel } from '@/components/blueprint/ScenarioBlueprintPanel'
 import { ScenarioSlideHeader } from '@/components/blueprint/ScenarioSlideHeader'
 import { useEditor } from '@/contexts/EditorContext'
+import type { PhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
 import type { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,10 +23,13 @@ import type { BlueprintData } from '@/types/blueprint'
 
 type ScenarioBlueprintState = ReturnType<typeof useScenarioBlueprint>
 
+const canvasFitAttrs = { 'data-canvas-fit': '' } as const
+
 type BlueprintSlideContentProps = {
   slide: Slide
   slides: Slide[]
   scenarioBlueprint: ScenarioBlueprintState
+  phaseBlueprintFilters?: PhaseBlueprintFilters | null
   showHeader?: boolean
   showHeaderFilters?: boolean
   headerVariant?: 'default' | 'notion'
@@ -35,6 +39,7 @@ export function BlueprintSlideContent({
   slide,
   slides,
   scenarioBlueprint,
+  phaseBlueprintFilters = null,
   showHeader = true,
   showHeaderFilters = true,
   headerVariant = 'default',
@@ -69,7 +74,8 @@ export function BlueprintSlideContent({
     paths.find((path) => selectedPathIds.includes(path.id))?.description ||
     paths[0]?.description ||
     null
-  const displayViewType = getScenarioDisplayViewType(slide)
+  const displayViewType =
+    phaseBlueprintFilters?.viewType ?? getScenarioDisplayViewType(slide)
   const useIntegratedLayout =
     displayViewType === 'integrated' && paths.length > 0
   const useSideBySideLayout =
@@ -102,12 +108,21 @@ export function BlueprintSlideContent({
 
     if (phaseScenarios.length > 0) {
       const overview = (
-        <PhaseScenarioOverview phase={slide} slides={slides} />
+        <PhaseScenarioOverview
+          phase={slide}
+          slides={slides}
+          alignPanelHeights
+          displayViewType={phaseBlueprintFilters?.viewType}
+          pathsByScenario={phaseBlueprintFilters?.pathsByScenario}
+          blueprintsByPathId={phaseBlueprintFilters?.blueprintsByPathId}
+          getSelectedPathIds={phaseBlueprintFilters?.resolveSelectedPathIds}
+          loading={phaseBlueprintFilters?.loading}
+        />
       )
 
       if (!showHeader) {
         return (
-          <div className="inline-flex flex-col py-4">
+          <div className="inline-flex flex-col py-4" {...canvasFitAttrs}>
             {overview}
           </div>
         )
@@ -115,6 +130,7 @@ export function BlueprintSlideContent({
 
       return (
         <div
+          {...canvasFitAttrs}
           className="inline-flex flex-col"
           style={{
             width: SLIDE_ARTBOARD_WIDTH,
@@ -139,7 +155,10 @@ export function BlueprintSlideContent({
 
     if (!showHeader) {
       return (
-        <div className="flex min-h-[240px] items-center justify-center p-8">
+        <div
+          {...canvasFitAttrs}
+          className="flex min-h-[240px] items-center justify-center p-8"
+        >
           <p className="text-sm text-muted-foreground">
             Choose a scenario from the sidebar to open its blueprint.
           </p>
@@ -149,6 +168,7 @@ export function BlueprintSlideContent({
 
     return (
       <div
+        {...canvasFitAttrs}
         className="inline-flex flex-col"
         style={{
           width: SLIDE_ARTBOARD_WIDTH,
@@ -191,6 +211,7 @@ export function BlueprintSlideContent({
   if (noPathsSelected) {
     return (
       <div
+        {...canvasFitAttrs}
         className="inline-flex flex-col"
         style={{
           width: SLIDE_ARTBOARD_WIDTH,
@@ -204,7 +225,7 @@ export function BlueprintSlideContent({
 
   if (loading && !showIntegratedGrid && visibleBlueprints.length === 0) {
     return (
-      <div className="inline-flex w-max min-w-full flex-col">
+      <div {...canvasFitAttrs} className="inline-flex w-max min-w-full flex-col">
         {header}
         <div className="flex flex-col gap-3">
           <Skeleton className="h-8 w-64" />
@@ -216,7 +237,7 @@ export function BlueprintSlideContent({
 
   if (error && !showIntegratedGrid && visibleBlueprints.length === 0) {
     return (
-      <div className="inline-flex w-max min-w-full flex-col">
+      <div {...canvasFitAttrs} className="inline-flex w-max min-w-full flex-col">
         {header}
         <Alert variant="destructive">
           <AlertTitle>Could not load blueprint</AlertTitle>
@@ -228,7 +249,7 @@ export function BlueprintSlideContent({
 
   if (!showIntegratedGrid && visibleBlueprints.length === 0) {
     return (
-      <div className="inline-flex w-max min-w-full flex-col">
+      <div {...canvasFitAttrs} className="inline-flex w-max min-w-full flex-col">
         {header}
         <div className="flex min-h-[280px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
           <p className="text-sm text-muted-foreground">
@@ -251,7 +272,7 @@ export function BlueprintSlideContent({
   }
 
   return (
-    <div className="inline-flex w-max min-w-full flex-col">
+    <div {...canvasFitAttrs} className="inline-flex w-max min-w-full flex-col">
       {header}
       <ScenarioBlueprintPanel
         slide={slide}

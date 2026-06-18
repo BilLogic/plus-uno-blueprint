@@ -1,6 +1,14 @@
+import {
+  DISCOVERY_SCENARIO_ID,
+} from '@/data/applicationHappyPathFallback'
 import { getBlueprintFallback } from '@/data/blueprintFallbacks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
-import { normalizeBlueprint, type RawPath } from '@/lib/normalizeBlueprint'
+import { repairDiscoverySadPathBlueprint } from '@/lib/repairDiscoverySadPathBlueprint'
+import {
+  deduplicateBlueprintLayers,
+  normalizeBlueprint,
+  type RawPath,
+} from '@/lib/normalizeBlueprint'
 import type { BlueprintData } from '@/types/blueprint'
 
 export type BlueprintSource = 'database' | 'fallback' | null
@@ -9,30 +17,83 @@ export function isBlueprintEmpty(data: BlueprintData): boolean {
   return data.layers.length === 0
 }
 
-/** Add fallback triggers that are missing from the loaded path (e.g. new migrations). */
-function mergeMissingTriggers(
+/** Add fallback blueprint rows that are missing from a partially synced path. */
+function mergeMissingBlueprintContent(
   data: BlueprintData,
   scenarioId: string | undefined,
   pathId: string | undefined,
 ): BlueprintData {
   const fallback = getBlueprintFallback(scenarioId, pathId ?? data.path.id)
-  if (!fallback?.triggers.length) return data
+  if (!fallback) return data
 
-  const seen = new Set(
-    data.triggers.map((t) => `${t.source_cell_id}:${t.target_cell_id}`),
+  const layerIds = new Set(data.layers.map((layer) => layer.id))
+  const layerIdByName = new Map(
+    data.layers.map((layer) => [layer.name, layer.id]),
   )
-  const merged = [...data.triggers]
+  const fallbackLayerIdRemap = new Map<string, string>()
+  const layers = [...data.layers]
+  for (const layer of fallback.layers) {
+    if (layerIds.has(layer.id)) continue
+
+    const existingLayerId = layerIdByName.get(layer.name)
+    if (existingLayerId) {
+      fallbackLayerIdRemap.set(layer.id, existingLayerId)
+      continue
+    }
+
+    layers.push(layer)
+    layerIds.add(layer.id)
+    layerIdByName.set(layer.name, layer.id)
+  }
+  layers.sort((a, b) => a.row_position - b.row_position)
+
+  const cellIds = new Set(data.cells.map((cell) => cell.id))
+  const cells = [...data.cells]
+  for (const cell of fallback.cells) {
+    if (cellIds.has(cell.id)) continue
+
+    const layerId =
+      fallbackLayerIdRemap.get(cell.layer_id) ?? cell.layer_id
+    cells.push({ ...cell, layer_id: layerId })
+    cellIds.add(cell.id)
+  }
+
+  const stepIds = new Set(data.steps.map((step) => step.id))
+  const steps = [...data.steps]
+  for (const step of fallback.steps) {
+    if (!stepIds.has(step.id)) {
+      steps.push(step)
+    }
+  }
+  steps.sort((a, b) => a.column_position - b.column_position)
+
+  const triggerKeys = new Set(
+    data.triggers.map((trigger) => `${trigger.source_cell_id}:${trigger.target_cell_id}`),
+  )
+  const triggers = [...data.triggers]
   for (const trigger of fallback.triggers) {
     const key = `${trigger.source_cell_id}:${trigger.target_cell_id}`
-    if (!seen.has(key)) {
-      merged.push(trigger)
-      seen.add(key)
+    if (!triggerKeys.has(key)) {
+      triggers.push(trigger)
+      triggerKeys.add(key)
     }
   }
 
-  return merged.length === data.triggers.length
-    ? data
-    : { ...data, triggers: merged }
+  const changed =
+    layers.length !== data.layers.length ||
+    cells.length !== data.cells.length ||
+    steps.length !== data.steps.length ||
+    triggers.length !== data.triggers.length
+
+  const merged = changed
+    ? { ...data, layers, cells, steps, triggers }
+    : data
+
+  const deduped = deduplicateBlueprintLayers(merged)
+  if (scenarioId === DISCOVERY_SCENARIO_ID) {
+    return repairDiscoverySadPathBlueprint(deduped, fallback)
+  }
+  return deduped
 }
 
 export function resolveBlueprintForScenario(
@@ -47,7 +108,7 @@ export function resolveBlueprintForScenario(
     if (!isBlueprintEmpty(fromDb)) {
       return {
         blueprint: applyBlueprintDisplayFilters(
-          mergeMissingTriggers(fromDb, scenarioId, pathId),
+          mergeMissingBlueprintContent(fromDb, scenarioId, pathId),
           scenarioId,
           pathId,
         ),
@@ -59,7 +120,7 @@ export function resolveBlueprintForScenario(
   if (fallback) {
     return {
       blueprint: applyBlueprintDisplayFilters(
-        fallback,
+        deduplicateBlueprintLayers(fallback),
         scenarioId,
         rawPath?.id ?? fallback.path.id,
       ),

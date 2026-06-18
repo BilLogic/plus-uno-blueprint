@@ -1,9 +1,7 @@
 import { hasBlueprintFallback } from '@/data/blueprintFallbacks'
 
-export type EditorMode = 'stack' | 'canvas'
-
-/** Toggle to expose the infinite-canvas editor mode in the UI. */
-export const CANVAS_VIEW_ENABLED = false
+/** Home = birds-eye service overview; detail = single slide/scenario editor. */
+export type EditorView = 'home' | 'detail'
 
 /** How blueprint paths are laid out on a scenario slide. */
 export type SlideViewType = 'single' | 'side-by-side' | 'integrated'
@@ -40,6 +38,94 @@ const PRE_SESSION_ID = 'a0000000-0000-4000-8000-000000000103'
 const IN_SESSION_ID = 'a0000000-0000-4000-8000-000000000104'
 const POST_SESSION_ID = 'a0000000-0000-4000-8000-000000000105'
 
+export const APPLICATION_PHASE_ID = 'a0000000-0000-4000-8000-000000000101'
+export const ONBOARDING_PHASE_ID = 'a0000000-0000-4000-8000-000000000102'
+export const PRE_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000103'
+export const IN_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000104'
+export const POST_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000105'
+
+const OVERVIEW_PHASE_FLOW_TRANSITIONS: ReadonlyArray<{
+  fromId: string
+  toId: string
+  fromLabel: string
+  toLabel: string
+}> = [
+  {
+    fromId: APPLICATION_PHASE_ID,
+    toId: ONBOARDING_PHASE_ID,
+    fromLabel: 'Application',
+    toLabel: 'Onboarding',
+  },
+  {
+    fromId: ONBOARDING_PHASE_ID,
+    toId: PRE_SESSION_PHASE_ID,
+    fromLabel: 'Onboarding',
+    toLabel: 'Pre-session',
+  },
+  {
+    fromId: PRE_SESSION_PHASE_ID,
+    toId: IN_SESSION_PHASE_ID,
+    fromLabel: 'Pre-session',
+    toLabel: 'In-session',
+  },
+  {
+    fromId: IN_SESSION_PHASE_ID,
+    toId: POST_SESSION_PHASE_ID,
+    fromLabel: 'In-session',
+    toLabel: 'Post-session',
+  },
+]
+
+/** Whether the service overview canvas should draw a flow arrow between two phases. */
+export function shouldShowOverviewPhaseFlowArrow(
+  fromPhase: Slide,
+  toPhase: Slide | undefined,
+): boolean {
+  if (!toPhase) return false
+
+  return OVERVIEW_PHASE_FLOW_TRANSITIONS.some(
+    ({ fromId, toId, fromLabel, toLabel }) =>
+      (fromPhase.id === fromId && toPhase.id === toId) ||
+      (fromPhase.label === fromLabel && toPhase.label === toLabel),
+  )
+}
+
+/** Horizontal anchor for overview flow arrows (Application phase center). */
+export function isOverviewFlowArrowAnchorPhase(phase: Slide): boolean {
+  return (
+    phase.id === APPLICATION_PHASE_ID || phase.label === 'Application'
+  )
+}
+
+/** Post-session lifecycle loop back to Pre-session on the overview canvas. */
+export function shouldShowOverviewPostToPreLoopArrow(
+  phases: Slide[],
+): boolean {
+  return getOverviewPostToPreLoopTransition(phases) !== null
+}
+
+export function getOverviewPostToPreLoopTransition(
+  phases: Slide[],
+): { fromPhaseId: string; toPhaseId: string } | null {
+  const postSession = phases.find(
+    (phase) =>
+      phase.id === POST_SESSION_PHASE_ID || phase.label === 'Post-session',
+  )
+  if (!postSession?.loopToId) return null
+
+  const target = getSlideById(postSession.loopToId, phases)
+  if (!target) return null
+
+  if (
+    target.id !== PRE_SESSION_PHASE_ID &&
+    target.label !== 'Pre-session'
+  ) {
+    return null
+  }
+
+  return { fromPhaseId: postSession.id, toPhaseId: target.id }
+}
+
 /** Offline fallback matching supabase/seed.sql when Supabase is not configured. */
 export const FALLBACK_SLIDES: Slide[] = [
   {
@@ -47,7 +133,7 @@ export const FALLBACK_SLIDES: Slide[] = [
     index: 1,
     label: 'Application',
     description:
-      'Potential Tutors discover, interview and receive an offer to join the PLUS Team',
+      'Potential tutors discover, interview and receive an offer to join the PLUS Team',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000121',
@@ -134,7 +220,7 @@ export const FALLBACK_SLIDES: Slide[] = [
     index: 4,
     label: 'In-session',
     description:
-      'This is the activities the regular tutor, lead tutor, and teacher go through during live tutoring sessions.',
+      'Tutoring activities that occur during live sessions.',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000201',
@@ -241,8 +327,19 @@ export function getSlideViewType(slide: Slide): SlideViewType {
   return 'single'
 }
 
-export function showsBlueprintFilters(slide: Slide): boolean {
-  return getBlueprintScenarioId(slide) !== undefined
+export function showsBlueprintFilters(
+  slide: Slide,
+  slides: Slide[] = FALLBACK_SLIDES,
+): boolean {
+  if (getBlueprintScenarioId(slide) !== undefined) return true
+
+  if (!isSubslide(slide)) {
+    return getSubslides(slide.id, slides).some(
+      (scenario) => getBlueprintScenarioId(scenario) !== undefined,
+    )
+  }
+
+  return false
 }
 
 export function isIntegratedBlueprintSlide(slide: Slide): boolean {
@@ -278,41 +375,84 @@ export type SlideSequenceNav = {
   total: number
 }
 
-function getPhaseLoopNextSlide(
-  current: Slide,
+function getAdjacentMainPhase(
+  currentMain: Slide,
+  mains: Slide[],
   slides: Slide[],
+  direction: 'prev' | 'next',
 ): Slide | null {
-  const parent = getParentSlide(current, slides)
-  if (!parent?.loopToId) return null
+  const phaseIndex = mains.findIndex((phase) => phase.id === currentMain.id)
+  if (phaseIndex === -1) return null
 
-  const subslides = getSubslides(parent.id, slides)
-  const lastSubslide = subslides[subslides.length - 1]
-  if (!lastSubslide || lastSubslide.id !== current.id) return null
+  if (direction === 'prev') {
+    return phaseIndex > 0 ? mains[phaseIndex - 1]! : null
+  }
 
-  return getSlideById(parent.loopToId, slides) ?? null
+  if (phaseIndex < mains.length - 1) {
+    return mains[phaseIndex + 1]!
+  }
+
+  if (currentMain.loopToId) {
+    return getSlideById(currentMain.loopToId, slides) ?? null
+  }
+
+  return null
 }
 
-/** Previous / next slide in phase + scenario sidebar order. */
+/** Previous / next target for phase- and scenario-level detail navigation. */
 export function getSlideSequenceNav(
   activeSlideId: string,
   slides: Slide[] = FALLBACK_SLIDES,
 ): SlideSequenceNav {
-  const ordered = getSlidesInNavOrder(slides)
-  const index = ordered.findIndex((slide) => slide.id === activeSlideId)
+  const current = getSlideById(activeSlideId, slides)
+  const mains = getMainSlides(slides)
 
-  if (index === -1) {
-    return { prev: null, next: null, index: -1, total: ordered.length }
+  if (!current) {
+    return { prev: null, next: null, index: -1, total: mains.length }
   }
 
-  const current = ordered[index]!
-  const linearNext = index < ordered.length - 1 ? ordered[index + 1]! : null
-  const loopNext = linearNext ? null : getPhaseLoopNextSlide(current, slides)
+  if (!isSubslide(current)) {
+    const phaseIndex = mains.findIndex((phase) => phase.id === current.id)
+    if (phaseIndex === -1) {
+      return { prev: null, next: null, index: -1, total: mains.length }
+    }
+
+    return {
+      prev: getAdjacentMainPhase(current, mains, slides, 'prev'),
+      next: getAdjacentMainPhase(current, mains, slides, 'next'),
+      index: phaseIndex,
+      total: mains.length,
+    }
+  }
+
+  const parent = getParentSlide(current, slides)
+  if (!parent) {
+    return { prev: null, next: null, index: -1, total: 0 }
+  }
+
+  const scenarios = getSubslides(parent.id, slides)
+  const scenarioIndex = scenarios.findIndex((scenario) => scenario.id === current.id)
+  if (scenarioIndex === -1) {
+    return { prev: null, next: null, index: -1, total: scenarios.length }
+  }
+
+  const prev =
+    scenarioIndex > 0
+      ? scenarios[scenarioIndex - 1]!
+      : getAdjacentMainPhase(parent, mains, slides, 'prev')
+
+  let next: Slide | null
+  if (scenarioIndex < scenarios.length - 1) {
+    next = scenarios[scenarioIndex + 1]!
+  } else {
+    next = getAdjacentMainPhase(parent, mains, slides, 'next')
+  }
 
   return {
-    prev: index > 0 ? ordered[index - 1]! : null,
-    next: linearNext ?? loopNext,
-    index,
-    total: ordered.length,
+    prev,
+    next,
+    index: scenarioIndex,
+    total: scenarios.length,
   }
 }
 
@@ -329,7 +469,10 @@ export function getParentSlide(
 }
 
 export const WORKSPACE_BREADCRUMB_ID = '__workspace__'
-export const WORKSPACE_BREADCRUMB_LABEL = 'PLUS Uno Blueprint'
+export const WORKSPACE_BREADCRUMB_LABEL = 'PLUS'
+
+/** Sidebar id for the service overview (home) nav item. */
+export const SERVICE_OVERVIEW_NAV_ID = '__service_overview__'
 
 export type SlideBreadcrumb = {
   id: string

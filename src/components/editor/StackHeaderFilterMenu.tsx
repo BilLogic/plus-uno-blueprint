@@ -37,7 +37,7 @@ export function StackHeaderFilterMenu({
   onTogglePath,
 }: StackHeaderFilterMenuProps) {
   return (
-    <>
+    <div className="ml-auto flex shrink-0 items-center gap-0.5">
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
         <MenubarContent align="end">
@@ -90,6 +90,6 @@ export function StackHeaderFilterMenu({
           </MenubarGroup>
         </MenubarContent>
       </MenubarMenu>
-    </>
+    </div>
   )
 }

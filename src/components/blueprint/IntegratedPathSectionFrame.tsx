@@ -1,5 +1,6 @@
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
-import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
+import { PathTypeBadge } from '@/components/blueprint/PathTypeBadge'
+import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
 import {
   getPathTypeSectionBorderStyle,
   PATH_TYPE_SECTION_BORDER_WIDTH,
@@ -7,6 +8,7 @@ import {
 import {
   COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
+  COMPARE_PATH_SECTION_BOTTOM_INSET,
 } from '@/lib/sideBySideCompareLayout'
 import type { PathType } from '@/types/database'
 
@@ -20,26 +22,29 @@ export type IntegratedPathSectionPath = {
 type IntegratedPathSectionFrameProps = {
   paths: IntegratedPathSectionPath[]
   compact?: boolean
+  /** Overview mode: show path-type badges instead of path names. */
+  showPathTypeBadge?: boolean
 }
 
 /** Integrated blueprint outline: nested path-type borders + active path labels on the top edge. */
 export function IntegratedPathSectionFrame({
   paths,
   compact,
+  showPathTypeBadge = false,
 }: IntegratedPathSectionFrameProps) {
-  const sectionFill = BLUEPRINT_THEME.sectionFill
+  const sectionFill = blueprintPanelSectionFillColor()
   const borderW = PATH_TYPE_SECTION_BORDER_WIDTH
 
   if (paths.length === 0) {
     return (
       <div
         aria-hidden
-        className="pointer-events-none absolute rounded-xl"
+        className="blueprint-panel-section-frame pointer-events-none absolute rounded-xl"
         style={{
           top: -COMPARE_PATH_SECTION_TOP_INSET,
           left: -COMPARE_PATH_SECTION_INSET,
           right: -COMPARE_PATH_SECTION_INSET,
-          bottom: -COMPARE_PATH_SECTION_INSET,
+          bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
           backgroundColor: sectionFill,
         }}
       />
@@ -58,12 +63,12 @@ export function IntegratedPathSectionFrame({
           <div
             key={path.id}
             aria-hidden
-            className="pointer-events-none absolute rounded-xl"
+            className="blueprint-panel-section-frame pointer-events-none absolute rounded-xl"
             style={{
               top: -COMPARE_PATH_SECTION_TOP_INSET + offset,
               left: -COMPARE_PATH_SECTION_INSET + offset,
               right: -COMPARE_PATH_SECTION_INSET + offset,
-              bottom: -COMPARE_PATH_SECTION_INSET + offset,
+              bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET + offset,
               borderWidth,
               borderStyle,
               borderColor,
@@ -81,16 +86,26 @@ export function IntegratedPathSectionFrame({
           transform: 'translateY(-50%)',
         }}
       >
-        {paths.map((path) => (
-          <PathLabelBadge
-            key={path.id}
-            name={path.name}
-            description={path.description}
-            pathType={path.path_type}
-            compact={compact}
-            className="pointer-events-auto"
-          />
-        ))}
+        {paths.map((path) =>
+          showPathTypeBadge ? (
+            <PathTypeBadge
+              key={path.id}
+              pathType={path.path_type}
+              description={path.description}
+              compact={compact}
+              className="pointer-events-auto"
+            />
+          ) : (
+            <PathLabelBadge
+              key={path.id}
+              name={path.name}
+              description={path.description}
+              pathType={path.path_type}
+              compact={compact}
+              className="pointer-events-auto"
+            />
+          ),
+        )}
       </div>
     </>
   )

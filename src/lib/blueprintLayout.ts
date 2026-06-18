@@ -1,4 +1,8 @@
 import { parseCellContentItems } from '@/lib/parseCellContent'
+import {
+  isParallelSessionLeadWrapTrigger,
+  isParallelSessionPartnerWrapTrigger,
+} from '@/data/parallelSessionPartnerLead'
 import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
 
 /** Layers after which the standard service-blueprint interaction line is drawn. */
@@ -120,8 +124,12 @@ export const BLUEPRINT_DIVIDER_ROW_HEIGHT = 28
 export const BLUEPRINT_DIVIDER_LINE_END_INSET = 16
 /** Transparent margin above the interaction line for the Regular Tutor loop arrow. */
 export const BLUEPRINT_WRAP_CORRIDOR_MARGIN = 36
-/** Space above the Regular Tutor row for Application discovery-rail arrows. */
+/** Space above the Regular Tutor row for overhead-rail arrows (Discovery, Call-off, etc.). */
 export const BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN = 36
+
+/** Regular Tutor cell ids that route forward connectors on the overhead rail. */
+export const OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN =
+  /000000(?:07|72|17)(\d{2})03$/
 
 /** Application discovery triggers that span forward across Regular Tutor columns. */
 export function triggersIncludeDiscoveryRail(
@@ -130,10 +138,8 @@ export function triggersIncludeDiscoveryRail(
   return triggers.some((trigger) => {
     const { source_cell_id: src, target_cell_id: tgt } = trigger
     return (
-      src.includes('00000007') &&
-      src.endsWith('03') &&
-      tgt.includes('00000007') &&
-      tgt.endsWith('03') &&
+      OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(src) &&
+      OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(tgt) &&
       src !== tgt
     )
   })
@@ -162,6 +168,101 @@ export function layerHasDiscoveryRailCorridor(
     return true
   }
   return false
+}
+
+export const PARTNER_ACTION_LAYER_NAME = 'Partner Action: Teacher'
+
+export function triggersIncludePartnerActionOverheadWrap(
+  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+): boolean {
+  return triggers.some((trigger) =>
+    isParallelSessionPartnerWrapTrigger(
+      trigger.source_cell_id,
+      trigger.target_cell_id,
+    ),
+  )
+}
+
+export function blueprintHasPartnerActionOverheadWrapTriggers(
+  data: BlueprintData,
+): boolean {
+  return triggersIncludePartnerActionOverheadWrap(data.triggers)
+}
+
+export function layerHasPartnerActionOverheadWrapCorridor(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  if (layer.name !== PARTNER_ACTION_LAYER_NAME) return false
+  if (data) {
+    const blueprints = Array.isArray(data) ? data : [data]
+    if (blueprints.some(blueprintHasPartnerActionOverheadWrapTriggers)) {
+      return true
+    }
+  }
+  if (extraTriggers && triggersIncludePartnerActionOverheadWrap(extraTriggers)) {
+    return true
+  }
+  return false
+}
+
+export const LEAD_TUTOR_LAYER_NAME = 'Lead Tutor'
+
+export function triggersIncludeLeadTutorOverheadWrap(
+  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+): boolean {
+  return triggers.some((trigger) =>
+    isParallelSessionLeadWrapTrigger(
+      trigger.source_cell_id,
+      trigger.target_cell_id,
+    ),
+  )
+}
+
+export function blueprintHasLeadTutorOverheadWrapTriggers(
+  data: BlueprintData,
+): boolean {
+  return triggersIncludeLeadTutorOverheadWrap(data.triggers)
+}
+
+export function layerHasLeadTutorOverheadWrapCorridor(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  if (layer.name !== LEAD_TUTOR_LAYER_NAME) return false
+  if (data) {
+    const blueprints = Array.isArray(data) ? data : [data]
+    if (blueprints.some(blueprintHasLeadTutorOverheadWrapTriggers)) {
+      return true
+    }
+  }
+  if (extraTriggers && triggersIncludeLeadTutorOverheadWrap(extraTriggers)) {
+    return true
+  }
+  return false
+}
+
+export function layerHasOverheadArrowCorridor(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  return (
+    layerHasDiscoveryRailCorridor(layer, data, extraTriggers) ||
+    layerHasPartnerActionOverheadWrapCorridor(layer, data, extraTriggers) ||
+    layerHasLeadTutorOverheadWrapCorridor(layer, data, extraTriggers)
+  )
 }
 
 export function countDiscoveryRailCorridorMargins(

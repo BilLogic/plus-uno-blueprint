@@ -1,9 +1,14 @@
+import { useMemo } from 'react'
 import { BlueprintCellDetailPanel } from '@/components/blueprint/BlueprintCellDetailPanel'
 import { BlueprintSlideContent } from '@/components/blueprint/BlueprintSlideContent'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
 import { BlueprintCellDetailProvider } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
+import {
+  getPhaseScenarioIds,
+  usePhaseBlueprintFilters,
+} from '@/hooks/usePhaseBlueprintFilters'
 import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
 import { BLUEPRINT_CELL_DETAIL_UI_ENABLED } from '@/lib/blueprintDisplayFlags'
 import { SlideNav } from '@/components/editor/SlideNav'
@@ -17,13 +22,18 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
 } from '@/components/ui/sidebar'
-import { getBlueprintScenarioId, type SlideViewType } from '@/types/slides'
+import {
+  getBlueprintScenarioId,
+  isSubslide,
+  type SlideViewType,
+} from '@/types/slides'
 
 export function SlideModeSidebarNav() {
   const {
     slides,
     activeSlideId,
-    setActiveSlideId,
+    openDetail,
+    view,
     slidesLoading,
     slidesError,
   } = useEditor()
@@ -52,7 +62,8 @@ export function SlideModeSidebarNav() {
         <SlideNav
           slides={slides}
           activeSlideId={activeSlideId}
-          onSelect={setActiveSlideId}
+          onSelect={openDetail}
+          isHome={view === 'home'}
         />
       )}
     </SidebarContent>
@@ -70,12 +81,50 @@ export function SlideModeMain() {
   } = useEditor()
 
   const scenarioId = getBlueprintScenarioId(activeSlide)
-  const scenarioBlueprint = useScenarioBlueprint(scenarioId)
+  const phaseScenarioIds = useMemo(() => {
+    if (!activeSlide || isSubslide(activeSlide)) return []
+    return getPhaseScenarioIds(activeSlide, slides)
+  }, [activeSlide, slides])
+  const isPhaseDetail = phaseScenarioIds.length > 0
+
+  const phaseFilters = usePhaseBlueprintFilters({
+    scenarioIds: phaseScenarioIds,
+    slides,
+    enabled: isPhaseDetail,
+    getScenarioDisplayViewType,
+    setScenarioDisplayViewType,
+  })
+
+  const scenarioBlueprint = useScenarioBlueprint(
+    isPhaseDetail ? undefined : scenarioId,
+  )
+
+  const headerViewType = isPhaseDetail
+    ? phaseFilters.viewType
+    : getScenarioDisplayViewType(activeSlide)
 
   const handleViewTypeChange = (viewType: SlideViewType) => {
+    if (isPhaseDetail) {
+      phaseFilters.setViewType(viewType)
+      return
+    }
     if (!scenarioId) return
     setScenarioDisplayViewType(scenarioId, viewType)
   }
+
+  const headerPaths = isPhaseDetail
+    ? phaseFilters.filterPaths
+    : scenarioBlueprint.paths
+  const headerSelectedPathIds = isPhaseDetail
+    ? phaseFilters.filterSelectedPathIds
+    : scenarioBlueprint.selectedPathIds
+  const handleTogglePath = isPhaseDetail
+    ? phaseFilters.toggleFilterPath
+    : scenarioBlueprint.togglePathSelection
+
+  const viewportResetKey = isPhaseDetail
+    ? `${activeSlideId}:${phaseFilters.filterSelectedPathIds.join(',')}:${phaseFilters.viewType}:${phaseFilters.loading}`
+    : `${activeSlideId}:${scenarioBlueprint.selectedPathIds.join(',')}:${scenarioBlueprint.blueprints.length}`
 
   return (
     <BlueprintCellDetailProvider resetKey={activeSlideId}>
@@ -85,7 +134,7 @@ export function SlideModeMain() {
         ) : (
           <>
             <ZoomPanViewport
-              resetKey={`${activeSlideId}:${scenarioBlueprint.selectedPathIds.join(',')}:${scenarioBlueprint.blueprints.length}`}
+              resetKey={viewportResetKey}
               className="absolute inset-0"
               panIgnoreSelector="button, a, input, textarea, select, label, [role='button'], [data-slide-sticky-header], [data-compare-panel], [data-zoom-indicator], [data-canvas-nav], [data-path-description-trigger], [data-cell-detail-panel], [data-visual-walkthrough-modal], [data-blueprint-cell-interactive], [data-phase-scenario-overview]"
             >
@@ -94,6 +143,7 @@ export function SlideModeMain() {
                   slide={activeSlide}
                   slides={slides}
                   scenarioBlueprint={scenarioBlueprint}
+                  phaseBlueprintFilters={isPhaseDetail ? phaseFilters : null}
                   showHeader={false}
                   showHeaderFilters={false}
                 />
@@ -103,11 +153,11 @@ export function SlideModeMain() {
             <SlideStickyHeader
               slide={activeSlide}
               slides={slides}
-              viewType={getScenarioDisplayViewType(activeSlide)}
+              viewType={headerViewType}
               onViewTypeChange={handleViewTypeChange}
-              paths={scenarioBlueprint.paths}
-              selectedPathIds={scenarioBlueprint.selectedPathIds}
-              onTogglePath={scenarioBlueprint.togglePathSelection}
+              paths={headerPaths}
+              selectedPathIds={headerSelectedPathIds}
+              onTogglePath={handleTogglePath}
             />
           </>
         )}

@@ -1,8 +1,10 @@
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
+  OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN,
   STEP_COLUMN_GAP,
 } from '@/lib/blueprintLayout'
+import { isParallelSessionOverheadWrapTrigger } from '@/data/parallelSessionPartnerLead'
 
 export type Point = { x: number; y: number }
 
@@ -576,7 +578,15 @@ export function buildVerticalArrowPath(
   return `M ${source.x} ${source.y} L ${source.x} ${lineEndY}`
 }
 
-const REGULAR_TUTOR_RAIL_CELL_PATTERN = /000000\d{2}(\d{2})03$/
+const INTEGRATED_CELL_ID_PATTERN =
+  /^integrated-cell-[0-9a-f-]{36}-([0-9a-f-]{36})$/i
+
+/** Map integrated overlay cell ids back to canonical blueprint cell ids for arrow rules. */
+export function resolveArrowLogicCellId(cellId: string): string {
+  const match = INTEGRATED_CELL_ID_PATTERN.exec(cellId)
+  return match ? match[1]! : cellId
+}
+
 const IN_SESSION_COLUMN_GAP_CELL_PATTERN =
   /000000(?:04|1[89abc])\d{2}(01|02|03)$/
 
@@ -584,16 +594,22 @@ function isBeforeStudentsJoinColumnGapCell(
   cellId: string | undefined,
 ): boolean {
   if (!cellId) return false
-  return IN_SESSION_COLUMN_GAP_CELL_PATTERN.test(cellId)
+  return IN_SESSION_COLUMN_GAP_CELL_PATTERN.test(
+    resolveArrowLogicCellId(cellId),
+  )
 }
 
 function isRegularTutorRailCell(cellId: string | undefined): boolean {
   if (!cellId) return false
-  return REGULAR_TUTOR_RAIL_CELL_PATTERN.test(cellId)
+  return OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(
+    resolveArrowLogicCellId(cellId),
+  )
 }
 
 function parseRegularTutorStepFromCellId(cellId: string): number | null {
-  const match = REGULAR_TUTOR_RAIL_CELL_PATTERN.exec(cellId)
+  const match = OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.exec(
+    resolveArrowLogicCellId(cellId),
+  )
   if (!match) return null
   const step = Number.parseInt(match[1], 10)
   return Number.isFinite(step) ? step : null
@@ -623,8 +639,11 @@ export function isRegularTutorRailTrigger(
   const targetStep = parseStepIndex(targetEl)
   if (sourceStep === null || targetStep === null) return false
   if (targetStep <= sourceStep) return false
-  // Later adjacent hops use the column gap; step 1 branches use the overhead rail.
-  if (targetStep === sourceStep + 1) return sourceStep === 0
+  // Adjacent hops normally use the column gap; exceptions use the overhead rail.
+  if (targetStep === sourceStep + 1) {
+    if (sourceStep === 0 || sourceStep === 4) return true
+    return false
+  }
   return true
 }
 
@@ -739,13 +758,89 @@ export function buildApplicationRegularTutorRailBusPath(
   return [...tapPaths, mainPath].filter(Boolean).join(' ')
 }
 
+export type OverheadRailFanOutGroup = {
+  sourceCellId: string
+  sourceEl: HTMLElement
+  branches: Array<{ triggerId: string; targetEl: HTMLElement }>
+}
+
+/** Shared trunk: up from the source, then across above all branch targets. */
+export function buildOverheadRailFanOutTrunkPath(
+  sourceEl: HTMLElement,
+  targetEls: HTMLElement[],
+  root: HTMLElement,
+): string {
+  if (targetEls.length === 0) return ''
+
+  const source = getCellTopCenter(sourceEl, root)
+  const sortedTargets = [...targetEls].sort(
+    (a, b) => (parseStepIndex(a) ?? 0) - (parseStepIndex(b) ?? 0),
+  )
+  const lastTarget = sortedTargets[sortedTargets.length - 1]!
+  const railY = getDiscoveryRailY(sourceEl, lastTarget, root)
+  const rightX = Math.max(
+    ...sortedTargets.map((el) => getCellTopCenter(el, root).x),
+  )
+
+  return buildRoundedPolylinePath(
+    [source, { x: source.x, y: railY }, { x: rightX, y: railY }],
+    ARROW_CORNER_RADIUS,
+  )
+}
+
+/** Vertical drop from the overhead rail into a branch target. */
+export function buildOverheadRailFanOutDropPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const target = getCellTopCenter(targetEl, root)
+  const railY = getDiscoveryRailY(sourceEl, targetEl, root)
+  const lineEndY = target.y - ARROW_CHEVRON_SIZE
+  if (lineEndY <= railY) return ''
+  return `M ${target.x} ${railY} L ${target.x} ${lineEndY}`
+}
+
+/** Trigger ids that share a source and fan out to multiple overhead-rail targets. */
+export function collectOverheadRailFanOutTriggerIds<
+  T extends DiscoveryRailTrigger,
+>(triggers: readonly T[]): Set<string> {
+  const bySource = new Map<string, T[]>()
+
+  for (const trigger of triggers) {
+    if (
+      !isRegularTutorRailTriggerByCellId(
+        trigger.source_cell_id,
+        trigger.target_cell_id,
+      )
+    ) {
+      continue
+    }
+
+    const list = bySource.get(trigger.source_cell_id) ?? []
+    list.push(trigger)
+    bySource.set(trigger.source_cell_id, list)
+  }
+
+  const fanOutIds = new Set<string>()
+  for (const list of bySource.values()) {
+    const targetIds = new Set(list.map((trigger) => trigger.target_cell_id))
+    if (targetIds.size < 2) continue
+    for (const trigger of list) {
+      fanOutIds.add(trigger.id)
+    }
+  }
+
+  return fanOutIds
+}
+
 export type DiscoveryRailTrigger = {
   id: string
   source_cell_id: string
   target_cell_id: string
 }
 
-/** Group discovery-rail triggers by target for merged bus rendering. */
+/** Group overhead-rail triggers into merge buses and source fan-outs. */
 export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
   triggers: T[],
   content: HTMLElement,
@@ -756,13 +851,15 @@ export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
     sourceEls: HTMLElement[]
     targetEl: HTMLElement
   }[]
+  fanOutGroups: OverheadRailFanOutGroup[]
   remaining: T[]
 } {
   const remaining: T[] = []
-  const byTarget = new Map<
-    string,
-    { triggerIds: string[]; sourceEls: HTMLElement[]; targetEl: HTMLElement }
-  >()
+  const railEntries: Array<{
+    trigger: T
+    sourceEl: HTMLElement
+    targetEl: HTMLElement
+  }> = []
 
   for (const trigger of triggers) {
     if (
@@ -783,26 +880,100 @@ export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
     )
     if (!sourceEl || !targetEl) continue
 
-    const existing = byTarget.get(trigger.target_cell_id)
+    railEntries.push({ trigger, sourceEl, targetEl })
+  }
+
+  const fanOutTriggerIds = collectOverheadRailFanOutTriggerIds(
+    railEntries.map((entry) => entry.trigger),
+  )
+  const fanOutGroups: OverheadRailFanOutGroup[] = []
+  const bySource = new Map<
+    string,
+    {
+      sourceEl: HTMLElement
+      branches: Array<{ triggerId: string; targetEl: HTMLElement }>
+      targetIds: Set<string>
+    }
+  >()
+
+  for (const entry of railEntries) {
+    if (!fanOutTriggerIds.has(entry.trigger.id)) continue
+
+    const existing = bySource.get(entry.trigger.source_cell_id)
     if (existing) {
-      existing.triggerIds.push(trigger.id)
-      existing.sourceEls.push(sourceEl)
+      if (!existing.targetIds.has(entry.trigger.target_cell_id)) {
+        existing.targetIds.add(entry.trigger.target_cell_id)
+        existing.branches.push({
+          triggerId: entry.trigger.id,
+          targetEl: entry.targetEl,
+        })
+      }
     } else {
-      byTarget.set(trigger.target_cell_id, {
-        triggerIds: [trigger.id],
-        sourceEls: [sourceEl],
-        targetEl,
+      bySource.set(entry.trigger.source_cell_id, {
+        sourceEl: entry.sourceEl,
+        branches: [
+          { triggerId: entry.trigger.id, targetEl: entry.targetEl },
+        ],
+        targetIds: new Set([entry.trigger.target_cell_id]),
       })
     }
   }
 
-  return {
-    busGroups: [...byTarget.entries()].map(([targetCellId, group]) => ({
+  for (const [sourceCellId, group] of bySource) {
+    fanOutGroups.push({
+      sourceCellId,
+      sourceEl: group.sourceEl,
+      branches: [...group.branches].sort(
+        (a, b) =>
+          (parseStepIndex(a.targetEl) ?? 0) - (parseStepIndex(b.targetEl) ?? 0),
+      ),
+    })
+  }
+
+  const byTarget = new Map<
+    string,
+    { triggerIds: string[]; sourceEls: HTMLElement[]; targetEl: HTMLElement }
+  >()
+
+  for (const entry of railEntries) {
+    if (fanOutTriggerIds.has(entry.trigger.id)) continue
+
+    const existing = byTarget.get(entry.trigger.target_cell_id)
+    if (existing) {
+      existing.triggerIds.push(entry.trigger.id)
+      existing.sourceEls.push(entry.sourceEl)
+    } else {
+      byTarget.set(entry.trigger.target_cell_id, {
+        triggerIds: [entry.trigger.id],
+        sourceEls: [entry.sourceEl],
+        targetEl: entry.targetEl,
+      })
+    }
+  }
+
+  const busGroups = [...byTarget.entries()]
+    .filter(([, group]) => group.sourceEls.length >= 2)
+    .map(([targetCellId, group]) => ({
       targetCellId,
       triggerIds: group.triggerIds,
       sourceEls: group.sourceEls,
       targetEl: group.targetEl,
-    })),
+    }))
+
+  for (const entry of railEntries) {
+    if (fanOutTriggerIds.has(entry.trigger.id)) continue
+
+    const busGroup = busGroups.find((group) =>
+      group.triggerIds.includes(entry.trigger.id),
+    )
+    if (busGroup) continue
+
+    remaining.push(entry.trigger)
+  }
+
+  return {
+    busGroups,
+    fanOutGroups,
     remaining,
   }
 }
@@ -826,7 +997,10 @@ function isRegularTutorRailTriggerByCellId(
   const targetStep = parseRegularTutorStepFromCellId(targetCellId)
   if (sourceStep === null || targetStep === null) return false
   if (targetStep <= sourceStep) return false
-  if (targetStep === sourceStep + 1) return sourceStep === 1
+  if (targetStep === sourceStep + 1) {
+    if (sourceStep === 1 || sourceStep === 5) return true
+    return false
+  }
   return true
 }
 
@@ -1001,6 +1175,36 @@ export function buildRoundedPolylinePath(
 }
 
 /**
+ * Orthogonal wrap above the lane (Partner Action loop): up from source top into
+ * the corridor above the row, across, then down into the target top.
+ */
+export function buildOverheadWrapArrowPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const source = getCellTopCenter(sourceEl, root)
+  const target = getCellTopCenter(targetEl, root)
+  const railY = getDiscoveryRailY(sourceEl, targetEl, root)
+  const lineEndY = target.y - ARROW_CHEVRON_SIZE
+
+  if (lineEndY <= railY) return ''
+
+  // Wrap runs right → left; target must sit in an earlier column.
+  if (target.x >= source.x) return ''
+
+  return buildRoundedPolylinePath(
+    [
+      source,
+      { x: source.x, y: railY },
+      { x: target.x, y: railY },
+      { x: target.x, y: lineEndY },
+    ],
+    ARROW_CORNER_RADIUS,
+  )
+}
+
+/**
  * Orthogonal wrap (e.g. step 8 → step 1): down from source bottom into the space
  * above the interaction line, across, then up into the target bottom.
  */
@@ -1008,7 +1212,17 @@ export function buildWrapArrowPath(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
+  sourceCellId?: string,
+  targetCellId?: string,
 ): string {
+  if (
+    sourceCellId &&
+    targetCellId &&
+    isParallelSessionOverheadWrapTrigger(sourceCellId, targetCellId)
+  ) {
+    return buildOverheadWrapArrowPath(sourceEl, targetEl, root)
+  }
+
   const { source, target } = getWrapCellAnchors(sourceEl, targetEl, root)
   const corridorY = getWrapLoopRouteY(sourceEl, root)
 
@@ -1069,7 +1283,13 @@ export function buildArrowPath(
   }
 
   if (isWrapTrigger(sourceEl, targetEl, sourceCellId, targetCellId)) {
-    return buildWrapArrowPath(sourceEl, targetEl, root)
+    return buildWrapArrowPath(
+      sourceEl,
+      targetEl,
+      root,
+      sourceCellId,
+      targetCellId,
+    )
   }
 
   if (
@@ -1086,9 +1306,13 @@ export function buildArrowPath(
     sourceStep !== null &&
     targetStep !== null &&
     targetStep === sourceStep + 1 &&
-    sourceStep !== 0 &&
-    isRegularTutorRailCell(sourceCellId) &&
-    isRegularTutorRailCell(targetCellId)
+    getLayerRow(sourceEl) === getLayerRow(targetEl) &&
+    !isRegularTutorRailTrigger(
+      sourceEl,
+      targetEl,
+      sourceCellId,
+      targetCellId,
+    )
   ) {
     return buildAdjacentColumnGapArrowPath(sourceEl, targetEl, root)
   }

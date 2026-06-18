@@ -10,6 +10,7 @@ type BlueprintTechPillProps = {
   selectionContext: BlueprintCellSelectionContext
   stepIndex: number
   compact?: boolean
+  opacity?: number
 }
 
 export function BlueprintTechPill({
@@ -17,6 +18,7 @@ export function BlueprintTechPill({
   selectionContext,
   stepIndex,
   compact = false,
+  opacity,
 }: BlueprintTechPillProps) {
   return (
     <BlueprintCellButton
@@ -25,6 +27,7 @@ export function BlueprintTechPill({
       stepIndex={stepIndex}
       variant="pill"
       compact={compact}
+      opacity={opacity}
       className="min-w-0 shrink-0 break-words"
       data-blueprint-tech-pill={item}
     >

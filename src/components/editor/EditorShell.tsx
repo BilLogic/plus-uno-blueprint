@@ -1,11 +1,10 @@
 import { useState, type CSSProperties } from 'react'
 import { useEditor } from '@/contexts/EditorContext'
-import { CanvasModeView } from '@/components/editor/CanvasModeView'
+import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
-  EditorModeChrome,
-  EditorSidebarChromeSpacer,
+  EditorChrome,
   EditorSidebarWorkspaceHeader,
-} from '@/components/editor/EditorModeChrome'
+} from '@/components/editor/EditorChrome'
 import {
   EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS,
   EDITOR_SIDEBAR_WIDTH_CLASS,
@@ -13,28 +12,24 @@ import {
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { SlideModeMain, SlideModeSidebarNav } from '@/components/editor/SlideModeView'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { CANVAS_VIEW_ENABLED } from '@/types/slides'
 import { cn } from '@/lib/utils'
 
 export function EditorShell() {
-  const { mode } = useEditor()
+  const { view, goHome } = useEditor()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const isStack = !CANVAS_VIEW_ENABLED || mode === 'stack'
+  const isDetail = view === 'detail'
+  const isHome = view === 'home'
 
   return (
     <div className="relative flex h-svh overflow-hidden bg-background">
       <aside
         className={cn(
           'flex shrink-0 flex-col overflow-hidden border-r border-border bg-muted/20 transition-[width,border-color,opacity] duration-300 ease-in-out dark:bg-muted/10',
-          isStack
-            ? sidebarCollapsed
-              ? EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS
-              : EDITOR_SIDEBAR_WIDTH_CLASS
-            : 'w-0 border-r-0 opacity-0',
+          sidebarCollapsed
+            ? EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS
+            : EDITOR_SIDEBAR_WIDTH_CLASS,
         )}
-        aria-hidden={!isStack}
       >
-        <EditorSidebarChromeSpacer collapsed={sidebarCollapsed} />
         {!sidebarCollapsed && (
           <SidebarProvider
             style={
@@ -49,6 +44,8 @@ export function EditorShell() {
               onToggleSidebar={() =>
                 setSidebarCollapsed((collapsed) => !collapsed)
               }
+              isHome={isHome}
+              onHome={goHome}
             />
             <SlideModeSidebarNav />
           </SidebarProvider>
@@ -60,30 +57,29 @@ export function EditorShell() {
           <div
             className={cn(
               'absolute inset-0 flex min-h-0 flex-col transition-opacity duration-300 ease-in-out',
-              isStack ? 'opacity-100' : 'pointer-events-none opacity-0',
+              isDetail ? 'opacity-100' : 'pointer-events-none opacity-0',
             )}
-            aria-hidden={!isStack}
+            aria-hidden={!isDetail}
           >
             <SlideModeMain />
           </div>
-          {CANVAS_VIEW_ENABLED && (
-            <div
-              className={cn(
-                'absolute inset-0 transition-opacity duration-300 ease-in-out',
-                isStack ? 'pointer-events-none opacity-0' : 'opacity-100',
-              )}
-              aria-hidden={isStack}
-            >
-              <CanvasModeView />
-            </div>
-          )}
+          <div
+            className={cn(
+              'absolute inset-0 flex min-h-0 flex-col transition-opacity duration-300 ease-in-out',
+              isDetail ? 'pointer-events-none opacity-0' : 'opacity-100',
+            )}
+            aria-hidden={isDetail}
+          >
+            <ServiceOverviewView />
+          </div>
         </VisualWalkthroughShell>
       </main>
 
-      <EditorModeChrome
-        mode={mode}
+      <EditorChrome
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed((collapsed) => !collapsed)}
+        isHome={isHome}
+        onHome={goHome}
       />
     </div>
   )

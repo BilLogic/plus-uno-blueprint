@@ -10,6 +10,9 @@ type ZoomPanViewportProps = {
   className?: string
   resetKey?: string
   panIgnoreSelector?: string
+  fitSelector?: string
+  showSequenceNav?: boolean
+  refitOnResize?: boolean
 }
 
 export function ZoomPanViewport({
@@ -17,15 +20,22 @@ export function ZoomPanViewport({
   className,
   resetKey,
   panIgnoreSelector,
+  fitSelector,
+  showSequenceNav = true,
+  refitOnResize = true,
 }: ZoomPanViewportProps) {
   const {
     containerRef,
     contentRef,
-    pan,
     zoom,
     isPanning,
     pointerHandlers,
-  } = useZoomPanViewport({ resetKey, panIgnoreSelector })
+  } = useZoomPanViewport({
+    resetKey,
+    panIgnoreSelector,
+    fitSelector,
+    refitOnResize,
+  })
 
   return (
     <div className={cn('relative min-h-0 flex-1', className)}>
@@ -40,16 +50,14 @@ export function ZoomPanViewport({
       >
         <div
           ref={contentRef}
-          className="absolute left-0 top-0 origin-top-left will-change-transform"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          }}
+          className="absolute left-0 top-0 origin-top-left"
+          style={{ backfaceVisibility: 'hidden' }}
         >
           {children}
         </div>
       </div>
 
-      <EditorSequenceNav />
+      {showSequenceNav ? <EditorSequenceNav /> : null}
       <EditorZoomIndicator zoom={zoom} />
     </div>
   )

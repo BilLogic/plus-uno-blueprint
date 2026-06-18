@@ -131,7 +131,6 @@ const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellTrigger[] = [
   trigger('001', '01', '03', '02', '03'),
   trigger('003', '01', '03', '03', '03'),
   trigger('002', '02', '03', '02', '07'),
-  trigger('004', '02', '07', '05', '07'),
   trigger('005', '03', '03', '03', '04'),
   trigger('006', '03', '03', '04', '03'),
   trigger('007', '04', '03', '04', '04'),
@@ -150,7 +149,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     STEPS[1].id,
     "if it's 12 or more hours before session, tutor complete shift swap form.",
   ),
-  cell(callOffCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Swift Swap Google Form'),
+  cell(callOffCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Shift Swap Google Form'),
   cell(
     callOffCell('02', '07'),
     L.backStage,
@@ -161,7 +160,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     callOffCell('02', '08'),
     L.backStageTech,
     STEPS[1].id,
-    'Swift Swap Google Form Responses, Tutor Scheduling Software',
+    'Shift Swap Google Form Responses, Tutor Scheduling Software',
   ),
 
   cell(callOffCell('03', '10'), L.visual, STEPS[2].id, ''),

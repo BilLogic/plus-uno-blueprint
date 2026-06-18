@@ -29,30 +29,25 @@ type SlideNavProps = {
   slides: Slide[]
   activeSlideId: string
   onSelect: (id: string) => void
+  isHome?: boolean
 }
 
-export function SlideNav({ slides, activeSlideId, onSelect }: SlideNavProps) {
+export function SlideNav({
+  slides,
+  activeSlideId,
+  onSelect,
+  isHome = false,
+}: SlideNavProps) {
   const mains = getMainSlides(slides)
-  const [openParents, setOpenParents] = useState<Set<string>>(new Set())
+  const [openParents, setOpenParents] = useState<Set<string>>(() => new Set())
 
   useEffect(() => {
-    setOpenParents((prev) => {
-      const next = new Set(prev)
-      for (const main of getMainSlides(slides)) {
-        if (getSubslides(main.id, slides).length > 0) {
-          next.add(main.id)
-        }
-      }
-      return next
-    })
-  }, [slides])
-
-  useEffect(() => {
+    if (isHome) return
     const active = getSlideById(activeSlideId, slides)
     if (active?.parentId) {
       setOpenParents((prev) => new Set(prev).add(active.parentId!))
     }
-  }, [activeSlideId, slides])
+  }, [activeSlideId, slides, isHome])
 
   const toggleParent = (parentId: string, open: boolean) => {
     setOpenParents((prev) => {
@@ -70,8 +65,9 @@ export function SlideNav({ slides, activeSlideId, onSelect }: SlideNavProps) {
           {mains.map((main) => {
             const children = getSubslides(main.id, slides)
             const hasChildren = children.length > 0
-            const isMainActive = activeSlideId === main.id
-            const childActive = children.some((c) => c.id === activeSlideId)
+            const isMainActive = !isHome && activeSlideId === main.id
+            const childActive =
+              !isHome && children.some((c) => c.id === activeSlideId)
             const isOpen = openParents.has(main.id)
             const mainLabel = getSlideDisplayLabel(main, slides)
 
@@ -120,7 +116,7 @@ export function SlideNav({ slides, activeSlideId, onSelect }: SlideNavProps) {
                         <SidebarMenuSubItem key={child.id}>
                           <SidebarMenuSubButton
                             render={<button type="button" />}
-                            isActive={activeSlideId === child.id}
+                            isActive={!isHome && activeSlideId === child.id}
                             onClick={() => onSelect(child.id)}
                           >
                             <span>{getSlideDisplayLabel(child, slides)}</span>

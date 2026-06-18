@@ -10,6 +10,8 @@ import {
   ARROW_VIEWPORT_PAD,
   buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
+  buildOverheadRailFanOutDropPath,
+  buildOverheadRailFanOutTrunkPath,
   groupDiscoveryRailTriggers,
   isWrapTrigger,
 } from '@/lib/blueprintArrowGeometry'
@@ -44,6 +46,7 @@ type ArrowSegment = {
   d: string
   pathType: PathType
   opacity: number
+  showMarker?: boolean
 }
 
 function isColoredTrigger(
@@ -71,10 +74,44 @@ export function BlueprintTriggerArrows({
     }
 
     const next: ArrowSegment[] = []
-    const { busGroups, remaining } = groupDiscoveryRailTriggers(
+    const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
       triggers,
       content,
     )
+
+    for (const group of fanOutGroups) {
+      const targetEls = group.branches.map((branch) => branch.targetEl)
+      const trunk = buildOverheadRailFanOutTrunkPath(
+        group.sourceEl,
+        targetEls,
+        content,
+      )
+      if (trunk) {
+        next.push({
+          id: `${group.sourceCellId}-trunk`,
+          d: trunk,
+          pathType,
+          opacity: 1,
+          showMarker: false,
+        })
+      }
+
+      for (const branch of group.branches) {
+        const d = buildOverheadRailFanOutDropPath(
+          group.sourceEl,
+          branch.targetEl,
+          content,
+        )
+        if (!d) continue
+
+        next.push({
+          id: branch.triggerId,
+          d,
+          pathType,
+          opacity: 1,
+        })
+      }
+    }
 
     for (const group of busGroups) {
       const d = buildApplicationRegularTutorRailBusPath(
@@ -208,7 +245,9 @@ export function BlueprintTriggerArrows({
             <path
               d={segment.d}
               {...blueprintArrowPathProps(segment.pathType)}
-              markerEnd={`url(#${markerIds[segment.pathType]})`}
+              {...(segment.showMarker === false
+                ? {}
+                : { markerEnd: `url(#${markerIds[segment.pathType]})` })}
             />
           </g>
         ))}

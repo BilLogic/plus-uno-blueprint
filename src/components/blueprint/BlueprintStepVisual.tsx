@@ -11,6 +11,7 @@ type BlueprintStepVisualProps = {
   selection?: BlueprintCellSelection
   cellId?: string
   stepIndex?: number
+  opacity?: number
 }
 
 export function BlueprintStepVisual({
@@ -20,6 +21,7 @@ export function BlueprintStepVisual({
   selection,
   cellId,
   stepIndex,
+  opacity,
 }: BlueprintStepVisualProps) {
   return (
     <BlueprintCellButton
@@ -30,6 +32,7 @@ export function BlueprintStepVisual({
       selection={selection}
       cellId={cellId}
       stepIndex={stepIndex}
+      opacity={opacity}
       aria-label="Image placeholder"
     >
       <Camera

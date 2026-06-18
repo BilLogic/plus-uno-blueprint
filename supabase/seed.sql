@@ -27,7 +27,7 @@ values
     'a0000000-0000-4000-8000-000000000101',
     'a0000000-0000-4000-8000-000000000001',
     'Application',
-    'Potential Tutors discover, interview and receive an offer to join the PLUS Team',
+    'Potential tutors discover, interview and receive an offer to join the PLUS Team',
     1,
     null
   ),
@@ -51,7 +51,7 @@ values
     'a0000000-0000-4000-8000-000000000104',
     'a0000000-0000-4000-8000-000000000001',
     'In-session',
-    'This is the activities the regular tutor, lead tutor, and teacher go through during live tutoring sessions.',
+    'Tutoring activities that occur during live sessions.',
     4,
     null
   ),
