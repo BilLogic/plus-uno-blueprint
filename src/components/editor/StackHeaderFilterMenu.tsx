@@ -76,7 +76,7 @@ export function StackHeaderFilterMenu({
                   onCheckedChange={() => onTogglePath(path.id)}
                   onSelect={(event) => event.preventDefault()}
                 >
-                  <PathTypeColorKey type={path.path_type} />
+                  <PathTypeColorKey type={path.path_type} name={path.name} />
                   <PathDescriptionTooltip
                     description={path.description}
                     pathName={path.name}

@@ -1,9 +1,26 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadTriggers,
-  PARALLEL_SESSION_PARTNER_CONTENT,
 } from '@/data/parallelSessionPartnerLead'
+import {
+  GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
+  GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_01_PICTURE,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_02_PICTURE,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_03_PICTURE,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_04_PICTURE,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_05_PICTURE,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_06_PICTURE,
+  GOAL_SETTING_REGULAR_TUTOR_STEP_07_PICTURE,
+  GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_02_PICTURE,
+  GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_03_PICTURE,
+  GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_04_PICTURE,
+  GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_05_PICTURE,
+  GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_07_PICTURE,
+  GOAL_SETTING_HAPPY_PATH_PLUS_APP_FIGMA_URL,
+} from '@/data/goalSettingParallelSessionPictures'
 import type {
   BlueprintCell,
   BlueprintCellTrigger,
@@ -84,18 +101,18 @@ const STEPS = [
     column_position: 4,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000974',
-    name: 'Next student',
+    id: 'a0000000-0000-4000-8000-000000000984',
+    name: 'Finalize goal activity with student',
     column_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000984',
-    name: PARALLEL_SESSION_PARTNER_CONTENT[5]!,
+    id: 'a0000000-0000-4000-8000-000000000985',
+    name: 'Leave breakout room',
     column_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000985',
-    name: PARALLEL_SESSION_PARTNER_CONTENT[6]!,
+    id: 'a0000000-0000-4000-8000-000000000974',
+    name: 'Next student',
     column_position: 7,
   },
 ] as const
@@ -112,11 +129,46 @@ const L = {
   support: 'a0000000-0000-4000-8000-000000000856',
 } as const
 
+const GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS = [
+  'The tutor utilizes Zoom/Pencil to virtually connect with the student. At this stage, they enter the breakout room the student has been assigned to that they are working with.',
+  'The tutor shares their screen with the student in the breakout room for the goal setting scenario via Zoom/Pencil.',
+  'The tutor completes the goal setting activity for the session while sharing their screen on Zoom/Pencil with the student in the breakout room.',
+  'If prompted, the tutor completes the goal achievement strategy for the session while sharing their screen on Zoom/Pencil with the student in the breakout room.',
+  'The tutor saves the goal setting activity completed for the session while sharing their screen on Zoom/Pencil with the student in the breakout room.',
+  'The tutor says goodbye and leaves the breakout room with the student.',
+] as const
+
+const GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS = [
+  'The tutor shares the initial goal setting screen in the PLUS app, which is dependent on the point in the goal cycle the session is in.',
+  'The tutor fills out the update, check, or set goals modal in the PLUS app with the student, depending on the point the session is in the goal cycle.',
+  'If prompted, the tutor fills out the goal achievement strategy form in the PLUS app with the student, depending on the point the session is in the goal cycle.',
+  'The tutor saves the goal activity with the student in the PLUS app.',
+  'The tutor navigates back to the PLUS App dashboard to move on to the student on the researcher sorted list.',
+] as const
+
+export const GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION =
+  'Dev Team Builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
+
+function happyPathPlusAppLink(
+  description: string,
+  picture: string,
+): ReturnType<typeof techDescriptionLink> {
+  return techDescriptionLink(
+    'PLUS App',
+    description,
+    picture,
+    GOAL_SETTING_HAPPY_PATH_PLUS_APP_FIGMA_URL,
+  )
+}
+
 function cell(
   id: string,
   layerId: string,
   stepId: string,
   content: string,
+  metadata: Partial<
+    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+  > = {},
 ): BlueprintCell {
   return {
     id,
@@ -124,8 +176,14 @@ function cell(
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
+    ...metadata,
   }
 }
+
+export const GOAL_SETTING_HAPPY_PATH_RT_STEP_PICTURES = {
+  joinBreakoutSession: GOAL_SETTING_REGULAR_TUTOR_STEP_01_PICTURE,
+  shareScreen: GOAL_SETTING_REGULAR_TUTOR_STEP_02_PICTURE,
+} as const
 
 function gsCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001a${stepSlot}${layerSuffix}`
@@ -171,6 +229,28 @@ function rowTriggers(
   return triggers
 }
 
+function columnLaneTriggers(
+  fromLayer: string,
+  toLayer: string,
+  idStart: number,
+  stepCount: number,
+): BlueprintCellTrigger[] {
+  const triggers: BlueprintCellTrigger[] = []
+  for (let i = 0; i < stepCount; i++) {
+    const step = String(i + 1).padStart(2, '0')
+    triggers.push(
+      trigger(
+        String(idStart + i).padStart(3, '0'),
+        step,
+        fromLayer,
+        step,
+        toLayer,
+      ),
+    )
+  }
+  return triggers
+}
+
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     gsCell(stepSlot, layerSuffix),
@@ -178,12 +258,15 @@ const partnerLeadOptions = {
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
+  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
+  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
 }
 
 const GOAL_SETTING_TRIGGERS: BlueprintCellTrigger[] = [
   ...buildParallelSessionPartnerLeadTriggers(partnerLeadOptions),
-  ...rowTriggers('03', 50, 4),
-  trigger('060', '05', '03', '01', '03'),
+  ...rowTriggers('03', 50, 6),
+  ...columnLaneTriggers('03', '06', 61, 7),
+  trigger('060', '07', '03', '01', '03'),
 ]
 
 const GOAL_SETTING_CELLS: BlueprintCell[] = [
@@ -192,62 +275,125 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
-  cell(gsCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session'),
-  cell(gsCell('02', '03'), L.regular, STEPS[1].id, 'Share screen'),
+  cell(gsCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session', {
+    picture: GOAL_SETTING_HAPPY_PATH_RT_STEP_PICTURES.joinBreakoutSession,
+  }),
+  cell(gsCell('02', '03'), L.regular, STEPS[1].id, 'Share screen', {
+    picture: GOAL_SETTING_HAPPY_PATH_RT_STEP_PICTURES.shareScreen,
+  }),
   cell(
     gsCell('03', '03'),
     L.regular,
     STEPS[2].id,
-    'update, check, or set goal depending on point in goal cycle',
+    'Update, check, or set goal depending on point in the goal cycle.',
+    { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_03_PICTURE },
   ),
   cell(
     gsCell('04', '03'),
     L.regular,
     STEPS[3].id,
     'If prompted, complete goal achievement strategy with student',
+    { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
   cell(
     gsCell('05', '03'),
     L.regular,
     STEPS[4].id,
+    'Finalize goal activity with student',
+    { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_05_PICTURE },
+  ),
+  cell(gsCell('06', '03'), L.regular, STEPS[5].id, 'Leave breakout room', {
+    picture: GOAL_SETTING_REGULAR_TUTOR_STEP_06_PICTURE,
+  }),
+  cell(
+    gsCell('07', '03'),
+    L.regular,
+    STEPS[6].id,
     'Move on to the next student in sorted order set by researchers',
+    { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_07_PICTURE },
   ),
 
-  cell(gsCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil, PLUS App'),
-  cell(gsCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil, PLUS App'),
-  cell(gsCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil, PLUS App'),
-  cell(gsCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil, PLUS App'),
-  cell(gsCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil, PLUS App'),
+  cell(gsCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
+    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[0],
+  }),
+  cell(gsCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil, PLUS App', {
+    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[1],
+    links: [happyPathPlusAppLink(
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[0],
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_02_PICTURE,
+    )],
+  }),
+  cell(gsCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil, PLUS App', {
+    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[2],
+    links: [happyPathPlusAppLink(
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[1],
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_03_PICTURE,
+    )],
+  }),
+  cell(gsCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil, PLUS App', {
+    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[3],
+    links: [happyPathPlusAppLink(
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[2],
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_04_PICTURE,
+    )],
+  }),
+  cell(
+    gsCell('05', '06'),
+    L.frontStageTech,
+    STEPS[4].id,
+    'Zoom/Pencil, PLUS App',
+    {
+      description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[4],
+      links: [happyPathPlusAppLink(
+        GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[3],
+        GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_05_PICTURE,
+      )],
+    },
+  ),
+  cell(gsCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom/Pencil', {
+    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[5],
+  }),
+  cell(gsCell('07', '06'), L.frontStageTech, STEPS[6].id, 'PLUS App', {
+    links: [happyPathPlusAppLink(
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[4],
+      GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_07_PICTURE,
+    )],
+  }),
 
   cell(
     gsCell('03', '07'),
     L.backStage,
     STEPS[2].id,
-    'Graduate Researcher sets goal setting activities',
+    'Researcher sets goal setting activities',
   ),
   cell(
     gsCell('04', '07'),
     L.backStage,
     STEPS[3].id,
-    'Graduate Researcher sets goal setting activities',
+    'Researcher sets goal setting activities',
   ),
   cell(
-    gsCell('05', '07'),
+    gsCell('07', '07'),
     L.backStage,
-    STEPS[4].id,
-    'Researchers set student order',
+    STEPS[6].id,
+    'Researcher sets student order',
   ),
 
-  cell(gsCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign team'),
-  cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign team'),
-  cell(gsCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign team'),
-  cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign team'),
-  cell(
-    gsCell('05', '09'),
-    L.support,
-    STEPS[4].id,
-    'Researchers set student order\nDev Team\nDesign team',
-  ),
+  cell(gsCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(gsCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(gsCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
 ]
 
 export const GOAL_SETTING_HAPPY_PATH_FALLBACK: BlueprintData = {
@@ -255,7 +401,7 @@ export const GOAL_SETTING_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: GOAL_SETTING_HAPPY_PATH_ID,
     name: 'Happy Path',
     description:
-      'Tutors guide students through goal setting in breakout sessions.',
+      'General overview of tutors guiding students through goal-setting activities in breakout sessions. For a more detailed look at the activities, see the other paths in this scenario.',
     path_type: 'happy',
   },
   layers: [...LAYERS],

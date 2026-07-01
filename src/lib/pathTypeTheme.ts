@@ -1,4 +1,13 @@
+import {
+  getPathArrowColor as getPathIdentityArrowColor,
+  getPathSectionBorderStyle as getPathIdentitySectionBorderStyle,
+  PATH_TYPE_ARROW_COLORS,
+  PATH_TYPE_COLORS,
+  type PathColorInput,
+} from '@/lib/pathColorTheme'
 import type { PathType } from '@/types/database'
+
+export { PATH_TYPE_ARROW_COLORS, PATH_TYPE_COLORS } from '@/lib/pathColorTheme'
 
 export const PATH_TYPE_SHORT_LABELS: Record<PathType, string> = {
   happy: 'Happy',
@@ -13,31 +22,23 @@ export const PATH_TYPE_LABELS: Record<PathType, string> = {
   exception: 'Exception',
   alternative: 'Alternative',
 }
-
-/** Primary accent per path type — badges, section frames, and color keys. */
-export const PATH_TYPE_COLORS: Record<PathType, string> = {
-  happy: '#10B981',
-  unhappy: '#F59E0B',
-  exception: '#EF4444',
-  alternative: '#3B82F6',
-}
-
-/** Stroke color for blueprint trigger arrows — muted to complement pastel cells. */
-export const PATH_TYPE_ARROW_COLORS: Record<PathType, string> = {
-  happy: '#5FA88A',
-  unhappy: '#C49A5C',
-  exception: '#C97171',
-  alternative: '#6E8FC7',
-}
-
-/** Border width for path section frames (compare + service blueprint). */
 export const PATH_TYPE_SECTION_BORDER_WIDTH = 3
 
-export function getPathTypeSectionBorderStyle(pathType: PathType): {
+export function getPathTypeSectionBorderStyle(
+  pathType: PathType,
+  path?: Pick<PathColorInput, 'name'>,
+): {
   borderColor: string
   borderStyle: 'solid'
   borderWidth: number
 } {
+  if (path?.name) {
+    return getPathIdentitySectionBorderStyle({
+      path_type: pathType,
+      name: path.name,
+    })
+  }
+
   return {
     borderColor: PATH_TYPE_COLORS[pathType],
     borderStyle: 'solid',
@@ -45,7 +46,14 @@ export function getPathTypeSectionBorderStyle(pathType: PathType): {
   }
 }
 
-export function getPathTypeArrowColor(pathType: PathType): string {
+export function getPathTypeArrowColor(
+  pathType: PathType,
+  path?: Pick<PathColorInput, 'name'>,
+): string {
+  if (path?.name) {
+    return getPathIdentityArrowColor({ path_type: pathType, name: path.name })
+  }
+
   return PATH_TYPE_ARROW_COLORS[pathType]
 }
 

@@ -10,7 +10,7 @@ import {
   usePhaseBlueprintFilters,
 } from '@/hooks/usePhaseBlueprintFilters'
 import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
-import { BLUEPRINT_CELL_DETAIL_UI_ENABLED } from '@/lib/blueprintDisplayFlags'
+import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
 import { SlideNav } from '@/components/editor/SlideNav'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -126,8 +126,14 @@ export function SlideModeMain() {
     ? `${activeSlideId}:${phaseFilters.filterSelectedPathIds.join(',')}:${phaseFilters.viewType}:${phaseFilters.loading}`
     : `${activeSlideId}:${scenarioBlueprint.selectedPathIds.join(',')}:${scenarioBlueprint.blueprints.length}`
 
+  const cellDetailEnabled = isBlueprintCellDetailEnabled(scenarioId)
+
   return (
-    <BlueprintCellDetailProvider resetKey={activeSlideId}>
+    <BlueprintCellDetailProvider
+      resetKey={activeSlideId}
+      enabled={cellDetailEnabled}
+      blueprints={scenarioBlueprint.blueprints}
+    >
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         {slidesLoading ? (
           <Skeleton className="absolute inset-0 rounded-none" />
@@ -149,7 +155,7 @@ export function SlideModeMain() {
                 />
               </div>
             </ZoomPanViewport>
-            {BLUEPRINT_CELL_DETAIL_UI_ENABLED && <BlueprintCellDetailPanel />}
+            {cellDetailEnabled && <BlueprintCellDetailPanel />}
             <SlideStickyHeader
               slide={activeSlide}
               slides={slides}

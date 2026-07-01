@@ -24,6 +24,10 @@ export type CellLink = {
   type: string
   label: string
   url?: string
+  /** Long-form copy for `tech_description` links keyed by tech pill label. */
+  description?: string
+  /** Screenshot or illustration for `tech_description` links keyed by tech pill label. */
+  picture?: string
 }
 
 export type BlueprintCell = {

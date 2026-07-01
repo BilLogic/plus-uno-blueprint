@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { PathDescriptionTooltip } from '@/components/blueprint/PathDescriptionTooltip'
 import { Badge } from '@/components/ui/badge'
-import { PATH_TYPE_BADGE_CLASSES } from '@/lib/pathTypeTheme'
+import { getPathBadgeStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
 import type { PathType } from '@/types/database'
 
@@ -33,12 +33,14 @@ export function PathLabelBadge({
     >
       <Badge
         className={cn(
-          'h-auto max-w-full cursor-default gap-1.5 border-transparent px-2.5 py-1 font-semibold',
-          PATH_TYPE_BADGE_CLASSES[pathType],
+          'h-auto max-w-full cursor-default gap-1.5 border-transparent px-2.5 py-1 font-semibold text-white',
           compact ? 'text-xs' : 'text-sm',
           className,
         )}
-        style={style}
+        style={{
+          ...getPathBadgeStyle({ path_type: pathType, name }),
+          ...style,
+        }}
       >
         <span className="truncate leading-none tracking-tight">{name}</span>
       </Badge>

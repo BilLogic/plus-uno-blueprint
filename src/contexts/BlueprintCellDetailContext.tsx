@@ -8,8 +8,11 @@ import {
   type ReactNode,
 } from 'react'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
+import type { BlueprintData } from '@/types/blueprint'
 
 type BlueprintCellDetailContextValue = {
+  enabled: boolean
+  blueprints: BlueprintData[]
   selection: BlueprintCellSelection | null
   selectCell: (selection: BlueprintCellSelection) => void
   clearSelection: () => void
@@ -23,11 +26,15 @@ type BlueprintCellDetailProviderProps = {
   children: ReactNode
   /** Clears the open panel when the active scenario or slide changes. */
   resetKey?: string
+  enabled?: boolean
+  blueprints?: BlueprintData[]
 }
 
 export function BlueprintCellDetailProvider({
   children,
   resetKey,
+  enabled = false,
+  blueprints = [],
 }: BlueprintCellDetailProviderProps) {
   const [selection, setSelection] = useState<BlueprintCellSelection | null>(null)
 
@@ -45,12 +52,14 @@ export function BlueprintCellDetailProvider({
 
   const value = useMemo(
     () => ({
+      enabled,
+      blueprints,
       selection,
       selectCell,
       clearSelection,
-      isOpen: selection !== null,
+      isOpen: enabled && selection !== null,
     }),
-    [selection, selectCell, clearSelection],
+    [enabled, blueprints, selection, selectCell, clearSelection],
   )
 
   return (

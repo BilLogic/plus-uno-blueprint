@@ -1,14 +1,13 @@
 import {
   BlueprintDividerRailLabelLine,
 } from '@/components/blueprint/BlueprintDividerTag'
-import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import { LayerCollapseToggle } from '@/components/blueprint/LayerCollapseToggle'
 import {
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
   BLUEPRINT_DIVIDER_LINE_END_INSET,
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
-  shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import {
   BLUEPRINT_LAYER_COLLAPSE_ENABLED,
@@ -24,7 +23,7 @@ import {
   getBlueprintLabelTextColor,
 } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintLayer } from '@/types/blueprint'
 import type { CSSProperties } from 'react'
 
 export type { BlueprintLabelRowSpec }
@@ -138,14 +137,12 @@ export function BlueprintLabelRow({
   style,
   compact,
   onToggleLayer,
-  walkthroughBlueprints,
 }: {
   row: BlueprintLabelRowSpec
   layers: BlueprintLayer[]
   style?: CSSProperties
   compact?: boolean
   onToggleLayer?: (layerId: string) => void
-  walkthroughBlueprints?: BlueprintData[]
 }) {
   const isDivider =
     row.kind === 'interaction' ||
@@ -159,13 +156,14 @@ export function BlueprintLabelRow({
   const corridorBelow = row.wrapCorridorBelow
     ? BLUEPRINT_WRAP_CORRIDOR_MARGIN
     : 0
+  const inLaneLoopCorridorAbove = row.inLaneLoopCorridorAbove
+    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+    : 0
 
   const labelColor =
     row.layer != null
       ? getBlueprintLabelTextColor(getBlueprintLabelSection(row.layer, layers))
       : BLUEPRINT_THEME.headerText
-
-  const isVisualLayer = shouldUseVisualContent(row.label)
 
   return (
     <div
@@ -190,30 +188,28 @@ export function BlueprintLabelRow({
           }}
         />
       )}
+      {inLaneLoopCorridorAbove > 0 && (
+        <div
+          aria-hidden
+          className="shrink-0"
+          style={{
+            height: inLaneLoopCorridorAbove,
+            backgroundColor: blueprintPanelLabelRailColor(),
+          }}
+        />
+      )}
       <div
         className={cn(
           'relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-3',
           compact ? 'pt-3' : 'pt-4',
         )}
       >
-        {isVisualLayer ? (
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <BlueprintVisualPlayButton blueprints={walkthroughBlueprints} />
-            <span
-              className="min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"
-              style={{ color: labelColor }}
-            >
-              {row.label}
-            </span>
-          </div>
-        ) : (
-          <span
-            className="min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"
-            style={{ color: labelColor }}
-          >
-            {row.label}
-          </span>
-        )}
+        <span
+          className="min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"
+          style={{ color: labelColor }}
+        >
+          {row.label}
+        </span>
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
           row.kind === 'layer' &&
           row.layer &&

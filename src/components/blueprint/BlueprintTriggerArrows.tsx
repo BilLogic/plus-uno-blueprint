@@ -10,18 +10,25 @@ import {
   ARROW_VIEWPORT_PAD,
   buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
+  buildBidirectionalArrowPath,
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
+  findBidirectionalTriggerPairs,
   groupDiscoveryRailTriggers,
   isWrapTrigger,
 } from '@/lib/blueprintArrowGeometry'
+import {
+  getPathArrowColor,
+  getPathColorKey,
+  pathColorKeyToMarkerSuffix,
+} from '@/lib/pathColorTheme'
+import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellTrigger } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 import {
   BlueprintArrowMarkerDefs,
   blueprintArrowPathProps,
-  BLUEPRINT_ARROW_PATH_TYPES,
 } from '@/components/blueprint/BlueprintArrowMarkerDefs'
 
 type ArrowLayer = 'forward' | 'wrap'
@@ -39,14 +46,18 @@ type BlueprintTriggerArrowsProps = {
   layer: ArrowLayer
   /** Used when triggers do not include path_type (single-path grids). */
   pathType?: PathType
+  /** When set with pathType, arrows use the stable path identity color. */
+  pathName?: string
 }
 
 type ArrowSegment = {
   id: string
   d: string
-  pathType: PathType
+  colorKey: string
+  arrowColor: string
   opacity: number
   showMarker?: boolean
+  dualMarker?: boolean
 }
 
 function isColoredTrigger(
@@ -61,10 +72,18 @@ export function BlueprintTriggerArrows({
   scrollContainerRef,
   layer,
   pathType = 'happy',
+  pathName,
 }: BlueprintTriggerArrowsProps) {
   const [segments, setSegments] = useState<ArrowSegment[]>([])
   const [size, setSize] = useState({ width: 0, height: 0 })
   const markerId = useId().replace(/:/g, '')
+
+  const defaultColorKey = pathName
+    ? getPathColorKey({ path_type: pathType, name: pathName })
+    : pathType
+  const defaultArrowColor = pathName
+    ? getPathArrowColor({ path_type: pathType, name: pathName })
+    : getPathTypeArrowColor(pathType)
 
   const updateArrows = useCallback(() => {
     const content = contentRef.current
@@ -90,7 +109,8 @@ export function BlueprintTriggerArrows({
         next.push({
           id: `${group.sourceCellId}-trunk`,
           d: trunk,
-          pathType,
+          colorKey: defaultColorKey,
+          arrowColor: defaultArrowColor,
           opacity: 1,
           showMarker: false,
         })
@@ -107,7 +127,8 @@ export function BlueprintTriggerArrows({
         next.push({
           id: branch.triggerId,
           d,
-          pathType,
+          colorKey: defaultColorKey,
+          arrowColor: defaultArrowColor,
           opacity: 1,
         })
       }
@@ -124,12 +145,49 @@ export function BlueprintTriggerArrows({
       next.push({
         id: group.triggerIds.join('-'),
         d,
-        pathType,
+        colorKey: defaultColorKey,
+        arrowColor: defaultArrowColor,
         opacity: 1,
       })
     }
 
-    for (const trigger of remaining) {
+    const { pairs, remaining: unpaired } =
+      findBidirectionalTriggerPairs(remaining)
+
+    for (const pair of pairs) {
+      const cellAEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${pair.cellAId}"]`,
+      )
+      const cellBEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${pair.cellBId}"]`,
+      )
+      if (!cellAEl || !cellBEl) continue
+
+      const wrap = isWrapTrigger(
+        cellAEl,
+        cellBEl,
+        pair.cellAId,
+        pair.cellBId,
+      )
+      if (layer === 'forward' && wrap) continue
+      if (layer === 'wrap' && !wrap) continue
+
+      const d = buildBidirectionalArrowPath(cellAEl, cellBEl, content)
+      if (!d) continue
+
+      next.push({
+        id: `${pair.first.id}-${pair.second.id}`,
+        d,
+        colorKey: defaultColorKey,
+        arrowColor: defaultArrowColor,
+        opacity: isColoredTrigger(pair.first)
+          ? (pair.first.opacity ?? 1)
+          : 1,
+        dualMarker: true,
+      })
+    }
+
+    for (const trigger of unpaired) {
       const sourceEl = content.querySelector<HTMLElement>(
         `[data-blueprint-cell="${trigger.source_cell_id}"]`,
       )
@@ -159,7 +217,8 @@ export function BlueprintTriggerArrows({
       next.push({
         id: trigger.id,
         d,
-        pathType: isColoredTrigger(trigger) ? trigger.path_type : pathType,
+        colorKey: defaultColorKey,
+        arrowColor: defaultArrowColor,
         opacity: isColoredTrigger(trigger) ? (trigger.opacity ?? 1) : 1,
       })
     }
@@ -169,7 +228,13 @@ export function BlueprintTriggerArrows({
       width: Math.max(content.scrollWidth, content.offsetWidth, 1),
       height: Math.max(content.scrollHeight, content.offsetHeight, 1),
     })
-  }, [contentRef, layer, pathType, triggers])
+  }, [
+    contentRef,
+    defaultArrowColor,
+    defaultColorKey,
+    layer,
+    triggers,
+  ])
 
   useEffect(() => {
     updateArrows()
@@ -212,16 +277,26 @@ export function BlueprintTriggerArrows({
     [size.height, size.width],
   )
 
-  const markerIds = useMemo(
-    () =>
-      Object.fromEntries(
-        BLUEPRINT_ARROW_PATH_TYPES.map((type) => [
-          type,
-          `${markerId}-arrow-${type}`,
-        ]),
-      ) as Record<PathType, string>,
-    [markerId],
-  )
+  const { markerIds, markerColors } = useMemo(() => {
+    const keys = new Set<string>([defaultColorKey])
+    for (const segment of segments) {
+      keys.add(segment.colorKey)
+    }
+
+    const ids: Record<string, string> = {}
+    const colors: Record<string, string> = {}
+    for (const key of keys) {
+      const suffix = pathColorKeyToMarkerSuffix(key)
+      ids[key] = `${markerId}-arrow-${suffix}`
+      colors[key] =
+        key === defaultColorKey
+          ? defaultArrowColor
+          : segments.find((segment) => segment.colorKey === key)?.arrowColor ??
+            defaultArrowColor
+    }
+
+    return { markerIds: ids, markerColors: colors }
+  }, [defaultArrowColor, defaultColorKey, markerId, segments])
 
   if (segments.length === 0) return null
 
@@ -237,17 +312,25 @@ export function BlueprintTriggerArrows({
       aria-hidden
     >
       <defs>
-        <BlueprintArrowMarkerDefs markerIds={markerIds} />
+        <BlueprintArrowMarkerDefs
+          markerIds={markerIds}
+          markerColors={markerColors}
+        />
       </defs>
       <g transform={`translate(${ARROW_VIEWPORT_PAD} ${ARROW_VIEWPORT_PAD})`}>
         {segments.map((segment) => (
           <g key={segment.id} opacity={segment.opacity}>
             <path
               d={segment.d}
-              {...blueprintArrowPathProps(segment.pathType)}
+              {...blueprintArrowPathProps(segment.arrowColor)}
               {...(segment.showMarker === false
                 ? {}
-                : { markerEnd: `url(#${markerIds[segment.pathType]})` })}
+                : segment.dualMarker
+                  ? {
+                      markerStart: `url(#${markerIds[segment.colorKey]}-start)`,
+                      markerEnd: `url(#${markerIds[segment.colorKey]})`,
+                    }
+                  : { markerEnd: `url(#${markerIds[segment.colorKey]})` })}
             />
           </g>
         ))}

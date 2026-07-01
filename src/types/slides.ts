@@ -252,7 +252,7 @@ export const FALLBACK_SLIDES: Slide[] = [
   {
     id: 'a0000000-0000-4000-8000-000000000204',
     index: 4,
-    label: 'Goal-Setting Phase',
+    label: 'Goal Setting',
     parentId: IN_SESSION_ID,
     viewType: 'side-by-side',
     description:

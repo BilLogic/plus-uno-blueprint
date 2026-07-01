@@ -5,7 +5,6 @@ import {
   getBlueprintCellInteractionStyle,
 } from '@/lib/blueprintCellStyle'
 import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
-import { BLUEPRINT_CELL_DETAIL_UI_ENABLED } from '@/lib/blueprintDisplayFlags'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
@@ -15,6 +14,7 @@ type BlueprintCellButtonProps = {
   fill: string
   compact?: boolean
   className?: string
+  style?: CSSProperties
   selection?: BlueprintCellSelection
   cellId?: string
   stepIndex?: number
@@ -29,6 +29,7 @@ export function BlueprintCellButton({
   fill,
   compact = false,
   className,
+  style,
   selection,
   cellId,
   stepIndex = -1,
@@ -39,8 +40,7 @@ export function BlueprintCellButton({
   'data-blueprint-tech-pill': techPillLabel,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
-  const isInteractive =
-    BLUEPRINT_CELL_DETAIL_UI_ENABLED && Boolean(selection && detail)
+  const isInteractive = Boolean(detail?.enabled && selection && detail)
   const isActive =
     isInteractive &&
     isSameBlueprintCellSelection(detail!.selection, selection!)
@@ -54,6 +54,7 @@ export function BlueprintCellButton({
   const surfaceStyle = {
     ...getBlueprintCellInteractionStyle(fill),
     ...(opacity != null && opacity < 1 ? { opacity } : undefined),
+    ...style,
   } as CSSProperties
 
   const buttonVariant = variant === 'pill' ? 'blueprintPill' : 'blueprint'
@@ -74,7 +75,8 @@ export function BlueprintCellButton({
       className={cn(
         blueprintCellButtonClassName({ compact, variant, className }),
         variant === 'cell' && 'min-h-[80px]',
-        variant === 'visual' && (compact ? 'min-h-[5.5rem]' : 'min-h-[7rem]'),
+        variant === 'visual' &&
+          'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
       )}
       style={surfaceStyle}

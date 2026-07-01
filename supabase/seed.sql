@@ -210,7 +210,7 @@ values
   (
     'a0000000-0000-4000-8000-000000000204',
     'a0000000-0000-4000-8000-000000000104',
-    'Goal-Setting Phase',
+    'Goal Setting',
     'Tutors guide students through goal setting in breakout sessions.',
     4,
     'side-by-side'

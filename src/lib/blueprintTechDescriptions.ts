@@ -1,0 +1,135 @@
+import type { BlueprintCell, CellLink } from '@/types/blueprint'
+
+export const TECH_DESCRIPTION_LINK_TYPE = 'tech_description'
+
+export function techDescriptionLink(
+  techLabel: string,
+  description?: string,
+  picture?: string,
+  url?: string,
+): CellLink {
+  return {
+    type: TECH_DESCRIPTION_LINK_TYPE,
+    label: techLabel,
+    ...(description ? { description } : {}),
+    ...(picture ? { picture } : {}),
+    ...(url ? { url } : {}),
+  }
+}
+
+function getTechUrlFromLinks(
+  links: CellLink[],
+  techItem: string,
+): string | null {
+  for (const link of links) {
+    if (
+      link.type === TECH_DESCRIPTION_LINK_TYPE &&
+      link.label === techItem &&
+      link.url?.trim()
+    ) {
+      return link.url.trim()
+    }
+  }
+  return null
+}
+
+function getTechDescriptionFromLinks(
+  links: CellLink[],
+  techItem: string,
+): string | null {
+  for (const link of links) {
+    if (
+      link.type === TECH_DESCRIPTION_LINK_TYPE &&
+      link.label === techItem &&
+      link.description?.trim()
+    ) {
+      return link.description.trim()
+    }
+  }
+  return null
+}
+
+/** Detail panel body copy for a tech pill or single-tech cell. */
+export function resolveTechCellDetailText(
+  techItem: string | undefined,
+  cell: Pick<BlueprintCell, 'content' | 'description' | 'links'>,
+): string {
+  const content = cell.content.trim()
+
+  if (techItem) {
+    const fromLinks = getTechDescriptionFromLinks(cell.links, techItem)
+    if (fromLinks) return fromLinks
+
+    if (techItem === 'Zoom/Pencil' && cell.description?.trim()) {
+      return cell.description.trim()
+    }
+
+    return techItem
+  }
+
+  if (content === 'Zoom/Pencil' && cell.description?.trim()) {
+    return cell.description.trim()
+  }
+
+  if (content === 'PLUS App') {
+    const fromLinks = getTechDescriptionFromLinks(cell.links, 'PLUS App')
+    if (fromLinks) return fromLinks
+  }
+
+  if (cell.description?.trim()) {
+    return cell.description.trim()
+  }
+
+  return content
+}
+
+/** External design reference (e.g. Figma) for a tech pill detail panel. */
+export function resolveTechCellDetailUrl(
+  techItem: string | undefined,
+  cell: Pick<BlueprintCell, 'content' | 'links'>,
+): string | null {
+  const content = cell.content.trim()
+
+  if (techItem) {
+    return getTechUrlFromLinks(cell.links, techItem)
+  }
+
+  if (content === 'PLUS App') {
+    return getTechUrlFromLinks(cell.links, 'PLUS App')
+  }
+
+  return null
+}
+
+export function mergeTechDescriptionLinks(
+  links: CellLink[],
+  fallbackLinks: CellLink[],
+): CellLink[] {
+  const merged = links.map((link) => ({ ...link }))
+
+  for (const fallbackLink of fallbackLinks) {
+    if (fallbackLink.type !== TECH_DESCRIPTION_LINK_TYPE) continue
+
+    const existingIndex = merged.findIndex(
+      (entry) =>
+        entry.type === TECH_DESCRIPTION_LINK_TYPE &&
+        entry.label === fallbackLink.label,
+    )
+
+    if (existingIndex >= 0) {
+      const existing = merged[existingIndex]
+      merged[existingIndex] = {
+        ...existing,
+        description:
+          existing.description?.trim() || fallbackLink.description || undefined,
+        picture: existing.picture?.trim() || fallbackLink.picture || undefined,
+        url: existing.url?.trim() || fallbackLink.url || undefined,
+      }
+      continue
+    }
+
+    merged.push(fallbackLink)
+  }
+
+  return merged
+}

@@ -10,8 +10,11 @@ export type BlueprintCellSelectionContext = {
   stepIndex: number
   cellId: string
   cellContent: string
+  cellPicture?: string | null
+  cellDescription?: string | null
   pathId: string
   pathName: string
+  pathDescription?: string | null
   pathType: PathType
 }
 
@@ -29,8 +32,11 @@ export function buildBlueprintCellSelection(
         cellId: context.cellId,
         pathId: context.pathId,
         pathName: context.pathName,
+        pathDescription: context.pathDescription ?? null,
         pathType: context.pathType,
         content: context.cellContent,
+        picture: context.cellPicture ?? null,
+        description: context.cellDescription ?? null,
       },
     ],
   }
@@ -52,8 +58,10 @@ export function buildTechPillSelection(
         cellId: context.cellId,
         pathId: context.pathId,
         pathName: context.pathName,
+        pathDescription: context.pathDescription ?? null,
         pathType: context.pathType,
         content: techItem,
+        description: context.cellDescription ?? null,
       },
     ],
   }

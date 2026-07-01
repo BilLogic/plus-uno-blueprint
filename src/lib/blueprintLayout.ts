@@ -1,6 +1,6 @@
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
-  isParallelSessionLeadWrapTrigger,
+  isParallelSessionLeadBottomWrapTrigger,
   isParallelSessionPartnerWrapTrigger,
 } from '@/data/parallelSessionPartnerLead'
 import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
@@ -15,6 +15,13 @@ export const PILL_CELL_LAYER_NAMES = [
 export const VISUAL_LAYER_NAME = 'Visual' as const
 export const VISUAL_ROW_MIN_HEIGHT = 132
 export const VISUAL_ROW_MIN_HEIGHT_COMPACT = 108
+
+/** Max height for the visual cell button inside a swimlane row (excludes shell padding). */
+export function getVisualCellButtonMaxHeight(compact = false): number {
+  const rowHeight = compact ? VISUAL_ROW_MIN_HEIGHT_COMPACT : VISUAL_ROW_MIN_HEIGHT
+  const shellVerticalPad = compact ? 24 : 32
+  return rowHeight - shellVerticalPad
+}
 
 export function shouldUsePillCellContent(layerName: string): boolean {
   return (PILL_CELL_LAYER_NAMES as readonly string[]).includes(layerName)
@@ -126,6 +133,8 @@ export const BLUEPRINT_DIVIDER_LINE_END_INSET = 16
 export const BLUEPRINT_WRAP_CORRIDOR_MARGIN = 36
 /** Space above the Regular Tutor row for overhead-rail arrows (Discovery, Call-off, etc.). */
 export const BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN = 36
+/** Space at the top of the Regular Tutor row for in-lane loop-back arrows. */
+export const BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN = 32
 
 /** Regular Tutor cell ids that route forward connectors on the overhead rail. */
 export const OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN =
@@ -172,6 +181,11 @@ export function layerHasDiscoveryRailCorridor(
 
 export const PARTNER_ACTION_LAYER_NAME = 'Partner Action: Teacher'
 
+export function abbreviateConnectionLayerName(layerName: string): string {
+  if (layerName === PARTNER_ACTION_LAYER_NAME) return 'Teacher'
+  return layerName
+}
+
 export function triggersIncludePartnerActionOverheadWrap(
   triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
@@ -212,24 +226,24 @@ export function layerHasPartnerActionOverheadWrapCorridor(
 
 export const LEAD_TUTOR_LAYER_NAME = 'Lead Tutor'
 
-export function triggersIncludeLeadTutorOverheadWrap(
+export function triggersIncludeLeadTutorBottomWrap(
   triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
   return triggers.some((trigger) =>
-    isParallelSessionLeadWrapTrigger(
+    isParallelSessionLeadBottomWrapTrigger(
       trigger.source_cell_id,
       trigger.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasLeadTutorOverheadWrapTriggers(
+export function blueprintHasLeadTutorBottomWrapTriggers(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeLeadTutorOverheadWrap(data.triggers)
+  return triggersIncludeLeadTutorBottomWrap(data.triggers)
 }
 
-export function layerHasLeadTutorOverheadWrapCorridor(
+export function layerHasLeadTutorBottomWrapCorridor(
   layer: BlueprintLayer,
   data?: BlueprintData | readonly BlueprintData[],
   extraTriggers?: ReadonlyArray<{
@@ -240,14 +254,117 @@ export function layerHasLeadTutorOverheadWrapCorridor(
   if (layer.name !== LEAD_TUTOR_LAYER_NAME) return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasLeadTutorOverheadWrapTriggers)) {
+    if (blueprints.some(blueprintHasLeadTutorBottomWrapTriggers)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludeLeadTutorOverheadWrap(extraTriggers)) {
+  if (extraTriggers && triggersIncludeLeadTutorBottomWrap(extraTriggers)) {
     return true
   }
   return false
+}
+
+/** @deprecated Lead Tutor loops route below the row, not overhead. */
+export function triggersIncludeLeadTutorOverheadWrap(
+  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+): boolean {
+  return triggersIncludeLeadTutorBottomWrap(triggers)
+}
+
+/** @deprecated Lead Tutor loops route below the row, not overhead. */
+export function blueprintHasLeadTutorOverheadWrapTriggers(
+  data: BlueprintData,
+): boolean {
+  return blueprintHasLeadTutorBottomWrapTriggers(data)
+}
+
+/** @deprecated Lead Tutor loops route below the row, not overhead. */
+export function layerHasLeadTutorOverheadWrapCorridor(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  return layerHasLeadTutorBottomWrapCorridor(layer, data, extraTriggers)
+}
+
+export function layerHasWrapCorridorBelow(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  return (
+    shouldShowInteractionLineAfter(layer) ||
+    layerHasLeadTutorBottomWrapCorridor(layer, data, extraTriggers)
+  )
+}
+
+const REGULAR_TUTOR_LAYER_CELL_ID_PATTERN = /(\d{2})03$/
+
+export function isRegularTutorInLaneLoopTrigger(
+  sourceCellId: string,
+  targetCellId: string,
+): boolean {
+  const sourceMatch = sourceCellId.match(REGULAR_TUTOR_LAYER_CELL_ID_PATTERN)
+  const targetMatch = targetCellId.match(REGULAR_TUTOR_LAYER_CELL_ID_PATTERN)
+  if (!sourceMatch || !targetMatch) return false
+
+  const sourceStep = Number.parseInt(sourceMatch[1]!, 10)
+  const targetStep = Number.parseInt(targetMatch[1]!, 10)
+  return targetStep < sourceStep
+}
+
+export function triggersIncludeRegularTutorInLaneLoop(
+  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+): boolean {
+  return triggers.some((trigger) =>
+    isRegularTutorInLaneLoopTrigger(
+      trigger.source_cell_id,
+      trigger.target_cell_id,
+    ),
+  )
+}
+
+export function blueprintHasRegularTutorInLaneLoopTriggers(
+  data: BlueprintData,
+): boolean {
+  return triggersIncludeRegularTutorInLaneLoop(data.triggers)
+}
+
+export function layerHasRegularTutorInLaneLoopCorridor(
+  layer: BlueprintLayer,
+  data?: BlueprintData | readonly BlueprintData[],
+  extraTriggers?: ReadonlyArray<{
+    source_cell_id: string
+    target_cell_id: string
+  }>,
+): boolean {
+  if (layer.name !== 'Regular Tutor') return false
+  if (data) {
+    const blueprints = Array.isArray(data) ? data : [data]
+    if (blueprints.some(blueprintHasRegularTutorInLaneLoopTriggers)) {
+      return true
+    }
+  }
+  if (extraTriggers && triggersIncludeRegularTutorInLaneLoop(extraTriggers)) {
+    return true
+  }
+  return false
+}
+
+export function countRegularTutorInLaneLoopCorridorMargins(
+  layers: BlueprintLayer[],
+  data?: BlueprintData,
+): number {
+  if (!data) return 0
+  return layers.filter((layer) =>
+    layerHasRegularTutorInLaneLoopCorridor(layer, data),
+  ).length
 }
 
 export function layerHasOverheadArrowCorridor(
@@ -260,8 +377,7 @@ export function layerHasOverheadArrowCorridor(
 ): boolean {
   return (
     layerHasDiscoveryRailCorridor(layer, data, extraTriggers) ||
-    layerHasPartnerActionOverheadWrapCorridor(layer, data, extraTriggers) ||
-    layerHasLeadTutorOverheadWrapCorridor(layer, data, extraTriggers)
+    layerHasPartnerActionOverheadWrapCorridor(layer, data, extraTriggers)
   )
 }
 
@@ -283,8 +399,16 @@ export function countBlueprintDividerRows(layers: BlueprintLayer[]): number {
   ).length
 }
 
-export function countBlueprintWrapCorridorMargins(layers: BlueprintLayer[]): number {
-  return layers.filter(shouldShowInteractionLineAfter).length
+export function countBlueprintWrapCorridorMargins(
+  layers: BlueprintLayer[],
+  data?: BlueprintData,
+): number {
+  return layers.filter(
+    (layer) =>
+      shouldShowInteractionLineAfter(layer) ||
+      (data !== undefined &&
+        layerHasLeadTutorBottomWrapCorridor(layer, data)),
+  ).length
 }
 
 export const LAYER_COLUMN_WIDTH = 220
@@ -475,11 +599,14 @@ export function getBlueprintGridMinHeight(
   const dividers =
     countBlueprintDividerRows(data.layers) * BLUEPRINT_DIVIDER_ROW_HEIGHT
   const wrapCorridorMargins =
-    countBlueprintWrapCorridorMargins(data.layers) *
+    countBlueprintWrapCorridorMargins(data.layers, data) *
     BLUEPRINT_WRAP_CORRIDOR_MARGIN
   const discoveryRailCorridorMargins =
     countDiscoveryRailCorridorMargins(data.layers, data) *
     BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
+  const regularTutorLoopCorridorMargins =
+    countRegularTutorInLaneLoopCorridorMargins(data.layers, data) *
+    BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
   const layerRows = data.layers.reduce(
     (sum, layer) => sum + getLayerRowMinHeight(layer, data, compact),
     0,
@@ -493,6 +620,7 @@ export function getBlueprintGridMinHeight(
     dividers +
     wrapCorridorMargins +
     discoveryRailCorridorMargins +
+    regularTutorLoopCorridorMargins +
     rowGaps
   )
 }
