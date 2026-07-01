@@ -16,11 +16,12 @@ import {
   COMPARE_PATH_SECTION_TOP_INSET,
 } from '@/lib/sideBySideCompareLayout'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
-import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import { LayerCollapseToggle } from '@/components/blueprint/LayerCollapseToggle'
+import { VisualRowPlayOverlay } from '@/components/blueprint/VisualRowPlayOverlay'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
   BLUEPRINT_ROW_MIN_HEIGHT,
   INTERACTION_LINE_LABEL,
@@ -33,7 +34,10 @@ import {
   getBlueprintGridMinHeight,
   getBlueprintGridMinWidth,
   getLayerRowMinHeight,
+  getVisualCellButtonMaxHeight,
   layerHasDiscoveryRailCorridor,
+  layerHasRegularTutorInLaneLoopCorridor,
+  layerHasWrapCorridorBelow,
   layerPrecedesBlueprintDivider,
   shouldShowInteractionLineAfter,
   shouldShowInternalInteractionLineAfter,
@@ -64,6 +68,7 @@ import {
   getTechPillItems,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
+import { resolveVisualStepPictures } from '@/lib/visualWalkthrough'
 import type { BlueprintData } from '@/types/blueprint'
 
 type ServiceBlueprintGridProps = {
@@ -214,6 +219,7 @@ export function ServiceBlueprintGrid({
               contentRef={gridBodyRef}
               scrollContainerRef={scrollContainerRef}
               pathType={path.path_type}
+              pathName={path.name}
             />
             {layers.map((layer, layerIndex) => {
               const collapsed = isLayerCollapsed(layer.id)
@@ -234,6 +240,11 @@ export function ServiceBlueprintGrid({
               const flushBottom = layerPrecedesBlueprintDivider(layer, layers)
               const showDiscoveryCorridorAbove =
                 !collapsed && layerHasDiscoveryRailCorridor(layer, data)
+              const showWrapCorridorBelow =
+                !collapsed && layerHasWrapCorridorBelow(layer, data)
+              const showInLaneLoopCorridorAbove =
+                !collapsed &&
+                layerHasRegularTutorInLaneLoopCorridor(layer, data)
               const showInteractionDivider =
                 !collapsed && shouldShowInteractionLineAfter(layer)
 
@@ -262,14 +273,16 @@ export function ServiceBlueprintGrid({
                       showDividerBelow={showLaneDivider}
                       collapsed={collapsed}
                       flushBottom={flushBottom}
+                      showInLaneLoopCorridorAbove={showInLaneLoopCorridorAbove}
                       onToggleCollapse={() => toggleLayer(layer.id)}
                       blueprint={data}
                       scenarioName={scenarioName}
                       walkthroughBlueprints={walkthroughBlueprints}
                     />
-                    {showInteractionDivider && (
+                    {showWrapCorridorBelow && (
                       <div
                         aria-hidden
+                        data-blueprint-wrap-corridor="below"
                         className="shrink-0"
                         style={{ height: BLUEPRINT_WRAP_CORRIDOR_MARGIN }}
                       />
@@ -338,6 +351,7 @@ export function ServiceBlueprintGrid({
               contentRef={gridBodyRef}
               scrollContainerRef={scrollContainerRef}
               pathType={path.path_type}
+              pathName={path.name}
             />
           </div>
 
@@ -363,6 +377,7 @@ function BlueprintSwimLane({
   showDividerBelow,
   collapsed = false,
   flushBottom,
+  showInLaneLoopCorridorAbove = false,
   onToggleCollapse,
   blueprint,
   scenarioName,
@@ -380,12 +395,16 @@ function BlueprintSwimLane({
   showDividerBelow?: boolean
   collapsed?: boolean
   flushBottom?: boolean
+  showInLaneLoopCorridorAbove?: boolean
   onToggleCollapse?: () => void
   blueprint: BlueprintData
   scenarioName?: string
   walkthroughBlueprints?: BlueprintData[]
 }) {
   const isVisualLayer = shouldUseVisualContent(layerName)
+  const loopCorridorHeight = showInLaneLoopCorridorAbove
+    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+    : 0
 
   return (
     <div
@@ -397,7 +416,7 @@ function BlueprintSwimLane({
         showDividerBelow && 'border-b',
       )}
       style={{
-        minHeight: rowMinHeight,
+        minHeight: rowMinHeight + loopCorridorHeight,
         backgroundColor: blueprintPanelCanvasColor(),
         ...(showDividerBelow
           ? { borderColor: BLUEPRINT_THEME.laneDivider }
@@ -406,8 +425,8 @@ function BlueprintSwimLane({
     >
       <div
         className={cn(
-          'blueprint-panel-surface blueprint-panel-label-surface sticky left-0 z-10 flex shrink-0 items-start gap-2 border-r self-start',
-          compact ? 'px-3.5 pt-4 pb-4' : 'pt-5 pb-5 pl-5 pr-3',
+          'blueprint-panel-surface blueprint-panel-label-surface sticky left-0 z-10 flex shrink-0 flex-col self-start border-r',
+          compact ? 'px-3.5' : 'pl-5 pr-3',
         )}
         style={{
           width: LAYER_COLUMN_WIDTH,
@@ -417,22 +436,29 @@ function BlueprintSwimLane({
           borderColor: BLUEPRINT_THEME.laneDivider,
         }}
       >
+        {loopCorridorHeight > 0 && (
+          <div
+            aria-hidden
+            className="shrink-0"
+            style={{ height: loopCorridorHeight }}
+          />
+        )}
+        <div
+          className={cn(
+            'flex w-full items-start gap-2',
+            compact ? 'pt-3 pb-3' : 'pt-5 pb-5',
+          )}
+        >
         {isVisualLayer ? (
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <BlueprintVisualPlayButton
-              blueprint={blueprint}
-              blueprints={walkthroughBlueprints}
-            />
-            <span
-              className={cn(
-                'min-w-0 flex-1 text-left font-bold leading-snug tracking-tight whitespace-normal break-words',
-                compact ? 'text-xs' : 'text-sm',
-              )}
-              style={{ color: laneStyle.label }}
-            >
-              {layerName}
-            </span>
-          </div>
+          <span
+            className={cn(
+              'min-w-0 flex-1 text-left font-bold leading-snug tracking-tight whitespace-normal break-words',
+              compact ? 'text-xs' : 'text-sm',
+            )}
+            style={{ color: laneStyle.label }}
+          >
+            {layerName}
+          </span>
         ) : (
           <span
             className={cn(
@@ -452,10 +478,21 @@ function BlueprintSwimLane({
             className="size-6 shrink-0"
           />
         )}
+        </div>
       </div>
 
-      {!collapsed &&
-        steps.map((step, stepIndex) => {
+      {!collapsed && (
+        <div className="flex min-w-0 flex-1 flex-col">
+          {loopCorridorHeight > 0 && (
+            <div
+              aria-hidden
+              data-blueprint-loop-corridor="above"
+              className="shrink-0"
+              style={{ height: loopCorridorHeight }}
+            />
+          )}
+          <div className="flex shrink-0">
+      {steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, layerId, step.id)
         const isVisualLayer = shouldUseVisualContent(layerName)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
@@ -479,6 +516,15 @@ function BlueprintSwimLane({
                 fitVertically={fitVertically}
                 rowMinHeight={rowMinHeight}
                 flushBottom={flushBottom}
+                visualPictures={
+                  isVisualLayer
+                    ? resolveVisualStepPictures(blueprint, step.id)
+                    : undefined
+                }
+                blueprint={isVisualLayer ? blueprint : undefined}
+                walkthroughBlueprints={
+                  isVisualLayer ? walkthroughBlueprints : undefined
+                }
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer)
                     ? {
@@ -489,8 +535,11 @@ function BlueprintSwimLane({
                         stepIndex,
                         cellId: cell?.id ?? `visual-${step.id}`,
                         cellContent: cell?.content ?? '',
+                        cellPicture: cell?.picture ?? null,
+                        cellDescription: cell?.description ?? null,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
+                        pathDescription: blueprint.path.description,
                         pathType: blueprint.path.path_type,
                       }
                     : undefined
@@ -522,6 +571,9 @@ function BlueprintSwimLane({
           </Fragment>
         )
       })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -550,6 +602,9 @@ function BlueprintCellBlock({
   rowMinHeight,
   flushBottom,
   selectionContext,
+  visualPictures,
+  blueprint,
+  walkthroughBlueprints,
 }: {
   stepIndex: number
   cellId?: string
@@ -562,6 +617,9 @@ function BlueprintCellBlock({
   rowMinHeight?: number
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
+  visualPictures?: string[]
+  blueprint?: BlueprintData
+  walkthroughBlueprints?: BlueprintData[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -580,27 +638,42 @@ function BlueprintCellBlock({
         ? rowMinHeight
         : 0
       : BLUEPRINT_ROW_MIN_HEIGHT,
+    ...(variant === 'visual'
+      ? { maxHeight: rowMinHeight ?? getVisualCellButtonMaxHeight(compact) + (compact ? 24 : 32) }
+      : undefined),
   }
 
   const shellClassName = cn(
     'relative z-[1] flex shrink-0 items-stretch',
     shellPadding,
     fitVertically && (variant === 'pills' ? 'h-full' : 'h-full min-h-0'),
+    variant === 'visual' && 'min-h-0 overflow-hidden',
   )
 
   const innerContent =
     variant === 'visual' ? (
-      <BlueprintStepVisual
-        compact={compact}
-        fill={laneStyle.lane}
-        selection={
-          selectionContext
-            ? buildBlueprintCellSelection(selectionContext)
-            : undefined
-        }
-        cellId={cellId}
-        stepIndex={stepIndex}
-      />
+      <div className="relative flex h-full min-h-0 max-h-full w-full flex-1 overflow-hidden">
+        <BlueprintStepVisual
+          compact={compact}
+          fill={laneStyle.lane}
+          pictures={visualPictures}
+          selection={
+            selectionContext
+              ? buildBlueprintCellSelection(selectionContext)
+              : undefined
+          }
+          cellId={cellId}
+          stepIndex={stepIndex}
+          className="flex-1"
+        />
+        {blueprint ? (
+          <VisualRowPlayOverlay
+            stepIndex={stepIndex}
+            blueprint={blueprint}
+            walkthroughBlueprints={walkthroughBlueprints}
+          />
+        ) : null}
+      </div>
     ) : variant === 'pills' ? (
       <div
         {...(cellId ? { 'data-blueprint-cell': cellId } : {})}

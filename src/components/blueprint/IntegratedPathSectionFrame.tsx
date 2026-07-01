@@ -56,7 +56,7 @@ export function IntegratedPathSectionFrame({
       {paths.map((path, index) => {
         const offset = index * borderW
         const { borderColor, borderStyle, borderWidth } =
-          getPathTypeSectionBorderStyle(path.path_type)
+          getPathTypeSectionBorderStyle(path.path_type, path)
         const isInnermost = index === paths.length - 1
 
         return (

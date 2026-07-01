@@ -20,10 +20,12 @@ import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers
 import {
   BLUEPRINT_LAYER_ROW_GAP,
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
   layerPrecedesBlueprintDivider,
+  getVisualCellButtonMaxHeight,
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
@@ -54,6 +56,7 @@ import {
   getTechPillItems,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
+import { resolveVisualStepPictures } from '@/lib/visualWalkthrough'
 import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
 
 function resolveBlueprintLayer(
@@ -183,7 +186,6 @@ export function SideBySideCompareGrid({
                   layers={layers}
                   compact={compact}
                   onToggleLayer={toggleLayer}
-                  walkthroughBlueprints={blueprints}
                   style={{ gridColumn: 1, gridRow: rowIndex + 1 }}
                 />
                 {row.showDividerBelow ? (
@@ -264,6 +266,7 @@ function ComparePathColumn({
         triggers={arrowData.triggers}
         cells={arrowData.cells}
         steps={arrowData.steps}
+        paths={[blueprint.path]}
         contentRef={columnRef}
         scrollContainerRef={resolvedScrollRef}
       />
@@ -284,6 +287,7 @@ function ComparePathColumn({
         triggers={arrowData.triggers}
         cells={arrowData.cells}
         steps={arrowData.steps}
+        paths={[blueprint.path]}
         contentRef={columnRef}
         scrollContainerRef={resolvedScrollRef}
       />
@@ -319,6 +323,9 @@ function CompareCardRow({
   const corridorBelow = row.wrapCorridorBelow
     ? BLUEPRINT_WRAP_CORRIDOR_MARGIN
     : 0
+  const inLaneLoopCorridorAbove = row.inLaneLoopCorridorAbove
+    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+    : 0
 
   return (
     <div
@@ -352,9 +359,19 @@ function CompareCardRow({
       <div
         className={cn(
           'min-h-0',
-          isDivider ? 'flex h-full items-center overflow-hidden' : 'flex-1',
+          isDivider
+            ? 'flex h-full items-center overflow-hidden'
+            : 'flex flex-1 flex-col',
         )}
       >
+        {inLaneLoopCorridorAbove > 0 && (
+          <div
+            aria-hidden
+            data-blueprint-loop-corridor="above"
+            className="shrink-0"
+            style={{ height: inLaneLoopCorridorAbove }}
+          />
+        )}
         {row.kind === 'layer' && row.layer ? (
           row.collapsed ? (
             <div className="h-full" aria-hidden />
@@ -373,7 +390,12 @@ function CompareCardRow({
         ) : null}
       </div>
       {corridorBelow > 0 && (
-        <div aria-hidden className="shrink-0" style={{ height: corridorBelow }} />
+        <div
+          aria-hidden
+          data-blueprint-wrap-corridor="below"
+          className="shrink-0"
+          style={{ height: corridorBelow }}
+        />
       )}
     </div>
   )
@@ -438,6 +460,11 @@ function CompareLayerRow({
                 variant={variant}
                 compact={compact}
                 flushBottom={flushBottom}
+                visualPictures={
+                  isVisualLayer
+                    ? resolveVisualStepPictures(blueprint, step.id)
+                    : undefined
+                }
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer)
                     ? {
@@ -448,8 +475,11 @@ function CompareLayerRow({
                         stepIndex,
                         cellId: cell?.id ?? `visual-${step.id}`,
                         cellContent: cell?.content ?? '',
+                        cellPicture: cell?.picture ?? null,
+                        cellDescription: cell?.description ?? null,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
+                        pathDescription: blueprint.path.description,
                         pathType: blueprint.path.path_type,
                       }
                     : undefined
@@ -501,6 +531,7 @@ function CompareCellBlock({
   compact,
   flushBottom,
   selectionContext,
+  visualPictures,
 }: {
   cellId?: string
   stepIndex: number
@@ -510,6 +541,7 @@ function CompareCellBlock({
   compact?: boolean
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
+  visualPictures?: string[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -517,29 +549,39 @@ function CompareCellBlock({
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
   const width = STEP_COLUMN_WIDTH
+  const isVisual = variant === 'visual'
+  const shellVerticalPad = compact ? 24 : 32
   const shellStyle = {
     width,
     minWidth: width,
     maxWidth: width,
+    ...(isVisual
+      ? { maxHeight: getVisualCellButtonMaxHeight(compact) + shellVerticalPad }
+      : undefined),
   }
   const shellClassName = cn(
     'relative z-[1] flex shrink-0 items-stretch',
     shellPadding,
+    isVisual && 'min-h-0 overflow-hidden',
   )
 
   const innerContent =
     variant === 'visual' ? (
-      <BlueprintStepVisual
-        compact={compact}
-        fill={laneStyle.lane}
-        selection={
-          selectionContext
-            ? buildBlueprintCellSelection(selectionContext)
-            : undefined
-        }
-        cellId={cellId}
-        stepIndex={stepIndex}
-      />
+      <div className="flex h-full min-h-0 max-h-full w-full flex-1 overflow-hidden">
+        <BlueprintStepVisual
+          compact={compact}
+          fill={laneStyle.lane}
+          pictures={visualPictures}
+          selection={
+            selectionContext
+              ? buildBlueprintCellSelection(selectionContext)
+              : undefined
+          }
+          cellId={cellId}
+          stepIndex={stepIndex}
+          className="flex-1"
+        />
+      </div>
     ) : variant === 'pills' ? (
       <div
         {...(cellId ? { 'data-blueprint-cell': cellId } : {})}

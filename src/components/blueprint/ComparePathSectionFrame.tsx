@@ -32,7 +32,7 @@ export function ComparePathSectionFrame({
   variant = 'compare',
 }: ComparePathSectionFrameProps) {
   const { path } = blueprint
-  const pathBorder = getPathTypeSectionBorderStyle(path.path_type)
+  const pathBorder = getPathTypeSectionBorderStyle(path.path_type, path)
   const { borderColor, borderStyle, borderWidth } = pathBorder
   const sectionFill = blueprintPanelSectionFillColor()
 

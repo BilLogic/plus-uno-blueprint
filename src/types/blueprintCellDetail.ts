@@ -4,8 +4,11 @@ export type BlueprintCellPathEntry = {
   cellId: string
   pathId: string
   pathName: string
+  pathDescription?: string | null
   pathType: PathType
   content: string
+  picture?: string | null
+  description?: string | null
 }
 
 export type BlueprintCellSelection = {

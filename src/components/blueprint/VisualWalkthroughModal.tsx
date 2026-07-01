@@ -17,19 +17,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useVisualWalkthrough } from '@/contexts/VisualWalkthroughContext'
+import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
 import type { VisualWalkthroughLayerEntry } from '@/lib/visualWalkthrough'
+import { VISUAL_LAYER_SHORT_LABELS } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
-
-const LAYER_SHORT_LABELS: Record<string, string> = {
-  'Partner Action: Teacher': 'Partner',
-  'Lead Tutor': 'Lead Tutor',
-  'Regular Tutor': 'Regular Tutor',
-}
 
 function WalkthroughLayerPanel({ entry }: { entry: VisualWalkthroughLayerEntry }) {
   const layerStyle = getBlueprintLayerStyle(entry.layerName, 'frontstage')
-  const label = LAYER_SHORT_LABELS[entry.layerName] ?? entry.layerName
+  const label = VISUAL_LAYER_SHORT_LABELS[entry.layerName] ?? entry.layerName
 
   return (
     <div
@@ -55,20 +51,29 @@ function WalkthroughStepSlide({
   step,
 }: {
   step: {
+    pictures: string[]
     layerEntries: VisualWalkthroughLayerEntry[]
   }
 }) {
+  const entryCount = step.layerEntries.length
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-xl ring-1 ring-border/60">
-        <BlueprintStepVisual className="h-[12.5rem] min-h-[12.5rem] w-full rounded-none border-0 ring-0" />
-      </div>
+      <BlueprintStepVisual pictures={step.pictures} presentation />
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {step.layerEntries.map((entry) => (
-          <WalkthroughLayerPanel key={entry.layerName} entry={entry} />
-        ))}
-      </div>
+      {entryCount > 0 ? (
+        <div
+          className={cn(
+            'grid grid-cols-1 gap-2',
+            entryCount === 2 && 'sm:grid-cols-2',
+            entryCount >= 3 && 'sm:grid-cols-3',
+          )}
+        >
+          {step.layerEntries.map((entry) => (
+            <WalkthroughLayerPanel key={entry.layerName} entry={entry} />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -136,6 +141,8 @@ export function VisualWalkthroughModal() {
   const stepCount = session?.steps.length ?? 0
   const atFirstStep = stepIndex === 0
   const atLastStep = stepIndex >= stepCount - 1
+
+  if (!isBlueprintVisualWalkthroughEnabled()) return null
 
   return (
     <Dialog

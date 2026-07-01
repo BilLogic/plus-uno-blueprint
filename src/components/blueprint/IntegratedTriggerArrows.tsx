@@ -10,9 +10,11 @@ import {
   ARROW_VIEWPORT_PAD,
   buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
+  buildBidirectionalArrowPath,
   collectOverheadRailFanOutTriggerIds,
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
+  findBidirectionalTriggerPairs,
   groupDiscoveryRailTriggers,
   isWrapTrigger,
 } from '@/lib/blueprintArrowGeometry'
@@ -24,18 +26,22 @@ import {
   getIntegratedForkBranchStrokeWidth,
   getIntegratedForkCircleCenter,
   getIntegratedForkNodeOpacity,
-  getIntegratedForkTrunkPathType,
   getIntegratedForkTrunkStrokeWidth,
   INTEGRATED_FORK_THEME,
   pickStraightForkBranch,
   shouldUseIntegratedForkDetour,
 } from '@/lib/integratedForkArrowGeometry'
+import {
+  getPathArrowColor,
+  getPathColorKey,
+  pathColorKeyToMarkerSuffix,
+  type PathColorInput,
+} from '@/lib/pathColorTheme'
 import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
 import { cn } from '@/lib/utils'
 import {
   BlueprintArrowMarkerDefs,
   blueprintArrowPathProps,
-  BLUEPRINT_ARROW_PATH_TYPES,
 } from '@/components/blueprint/BlueprintArrowMarkerDefs'
 import type {
   IntegratedBlueprintCell,
@@ -46,10 +52,17 @@ import type { PathType } from '@/types/database'
 
 type ArrowLayer = 'forward' | 'wrap'
 
+type IntegratedPathRef = {
+  id: string
+  name: string
+  path_type: PathType
+}
+
 type IntegratedTriggerArrowsProps = {
   triggers: IntegratedBlueprintTrigger[]
   cells: IntegratedBlueprintCell[]
   steps: IntegratedBlueprintStep[]
+  paths?: IntegratedPathRef[]
   contentRef: RefObject<HTMLElement | null>
   scrollContainerRef: RefObject<HTMLElement | null>
   layer: ArrowLayer
@@ -58,25 +71,55 @@ type IntegratedTriggerArrowsProps = {
 type SimpleSegment = {
   id: string
   d: string
-  pathType: PathType
+  colorKey: string
+  arrowColor: string
   opacity: number
   showMarker?: boolean
+  dualMarker?: boolean
 }
 
 type ForkRenderGroup = {
   id: string
   trunkPath: string
-  trunkPathType: PathType
+  trunkArrowColor: string
   circle: { cx: number; cy: number }
   branches: SimpleSegment[]
 }
 
-const PATH_TYPES = BLUEPRINT_ARROW_PATH_TYPES
+function resolveSegmentStyle(
+  pathId: string,
+  pathById: Map<string, IntegratedPathRef>,
+): { colorKey: string; arrowColor: string } {
+  const path = pathById.get(pathId)
+  if (!path) {
+    return { colorKey: 'happy', arrowColor: getPathTypeArrowColor('happy') }
+  }
+
+  const input: PathColorInput = {
+    path_type: path.path_type,
+    name: path.name,
+  }
+
+  return {
+    colorKey: getPathColorKey(input),
+    arrowColor: getPathArrowColor(input),
+  }
+}
+
+function getIntegratedForkTrunkArrowColor(
+  branches: ReadonlyArray<SimpleSegment>,
+  straightBranch: SimpleSegment,
+): string {
+  const active = branches.filter((branch) => branch.opacity >= 1)
+  if (active.length === 1) return active[0].arrowColor
+  return straightBranch.arrowColor
+}
 
 export function IntegratedTriggerArrows({
   triggers,
   cells,
   steps,
+  paths = [],
   contentRef,
   scrollContainerRef,
   layer,
@@ -85,6 +128,11 @@ export function IntegratedTriggerArrows({
   const [forkGroups, setForkGroups] = useState<ForkRenderGroup[]>([])
   const [size, setSize] = useState({ width: 0, height: 0 })
   const markerId = useId().replace(/:/g, '')
+
+  const pathById = useMemo(
+    () => new Map(paths.map((path) => [path.id, path])),
+    [paths],
+  )
 
   const fanOutTriggerIds = useMemo(
     () => collectOverheadRailFanOutTriggerIds(triggers),
@@ -118,6 +166,13 @@ export function IntegratedTriggerArrows({
     )
 
     for (const group of fanOutGroups) {
+      const sampleTrigger = nonForkTriggers.find((entry) =>
+        group.branches.some((branch) => branch.triggerId === entry.id),
+      )
+      const trunkStyle = resolveSegmentStyle(
+        sampleTrigger?.path_id ?? '',
+        pathById,
+      )
       const targetEls = group.branches.map((branch) => branch.targetEl)
       const trunk = buildOverheadRailFanOutTrunkPath(
         group.sourceEl,
@@ -128,7 +183,8 @@ export function IntegratedTriggerArrows({
         nextSimple.push({
           id: `${group.sourceCellId}-trunk`,
           d: trunk,
-          pathType: 'happy',
+          colorKey: trunkStyle.colorKey,
+          arrowColor: trunkStyle.arrowColor,
           opacity: 1,
           showMarker: false,
         })
@@ -138,6 +194,7 @@ export function IntegratedTriggerArrows({
         const trigger = nonForkTriggers.find(
           (entry) => entry.id === branch.triggerId,
         )
+        const branchStyle = resolveSegmentStyle(trigger?.path_id ?? '', pathById)
         const d = buildOverheadRailFanOutDropPath(
           group.sourceEl,
           branch.targetEl,
@@ -148,7 +205,8 @@ export function IntegratedTriggerArrows({
         nextSimple.push({
           id: branch.triggerId,
           d,
-          pathType: trigger?.path_type ?? 'happy',
+          colorKey: branchStyle.colorKey,
+          arrowColor: branchStyle.arrowColor,
           opacity: trigger?.opacity ?? 1,
         })
       }
@@ -158,8 +216,8 @@ export function IntegratedTriggerArrows({
       const triggersInGroup = nonForkTriggers.filter((trigger) =>
         group.triggerIds.includes(trigger.id),
       )
-      const byPathType = new Map<
-        PathType,
+      const byPathId = new Map<
+        string,
         { sourceEls: HTMLElement[]; opacity: number; triggerIds: string[] }
       >()
 
@@ -169,13 +227,13 @@ export function IntegratedTriggerArrows({
         )
         if (!sourceEl) continue
 
-        const existing = byPathType.get(trigger.path_type)
+        const existing = byPathId.get(trigger.path_id)
         if (existing) {
           existing.sourceEls.push(sourceEl)
           existing.triggerIds.push(trigger.id)
           existing.opacity = Math.max(existing.opacity, trigger.opacity)
         } else {
-          byPathType.set(trigger.path_type, {
+          byPathId.set(trigger.path_id, {
             sourceEls: [sourceEl],
             opacity: trigger.opacity,
             triggerIds: [trigger.id],
@@ -183,10 +241,11 @@ export function IntegratedTriggerArrows({
         }
       }
 
-      for (const [pathType, pathGroup] of byPathType) {
+      for (const [pathId, pathGroup] of byPathId) {
+        const style = resolveSegmentStyle(pathId, pathById)
         const targetEl =
           triggersInGroup
-            .filter((trigger) => trigger.path_type === pathType)
+            .filter((trigger) => trigger.path_id === pathId)
             .map((trigger) =>
               content.querySelector<HTMLElement>(
                 `[data-blueprint-cell="${trigger.target_cell_id}"]`,
@@ -202,9 +261,10 @@ export function IntegratedTriggerArrows({
         if (!d) continue
 
         nextSimple.push({
-          id: `${group.targetCellId}-${pathType}`,
+          id: `${group.targetCellId}-${pathId}`,
           d,
-          pathType,
+          colorKey: style.colorKey,
+          arrowColor: style.arrowColor,
           opacity: pathGroup.opacity,
         })
       }
@@ -261,26 +321,75 @@ export function IntegratedTriggerArrows({
 
         if (!d) continue
 
+        const branchStyle = resolveSegmentStyle(branch.path_id, pathById)
         branchSegments.push({
           id: branch.id,
           d,
-          pathType: branch.path_type,
+          colorKey: branchStyle.colorKey,
+          arrowColor: branchStyle.arrowColor,
           opacity: branch.opacity,
         })
       }
 
       if (branchSegments.length === 0) continue
 
+      const straightStyle = resolveSegmentStyle(straightBranch.path_id, pathById)
+      const straightSegment: SimpleSegment = {
+        id: straightBranch.id,
+        d: '',
+        colorKey: straightStyle.colorKey,
+        arrowColor: straightStyle.arrowColor,
+        opacity: straightBranch.opacity,
+      }
+
       nextForks.push({
         id: group.id,
         trunkPath,
-        trunkPathType: straightBranch.path_type,
+        trunkArrowColor: getIntegratedForkTrunkArrowColor(
+          branchSegments,
+          straightSegment,
+        ),
         circle: { cx: circle.x, cy: circle.y },
         branches: branchSegments,
       })
     }
 
-    for (const trigger of remaining) {
+    const { pairs, remaining: unpaired } =
+      findBidirectionalTriggerPairs(remaining)
+
+    for (const pair of pairs) {
+      const cellAEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${pair.cellAId}"]`,
+      )
+      const cellBEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${pair.cellBId}"]`,
+      )
+      if (!cellAEl || !cellBEl) continue
+
+      const wrap = isWrapTrigger(
+        cellAEl,
+        cellBEl,
+        pair.cellAId,
+        pair.cellBId,
+      )
+      if (layer === 'forward' && wrap) continue
+      if (layer === 'wrap' && !wrap) continue
+
+      const d = buildBidirectionalArrowPath(cellAEl, cellBEl, content)
+      if (!d) continue
+
+      const style = resolveSegmentStyle(pair.first.path_id, pathById)
+      nextSimple.push({
+        id: `${pair.first.id}-${pair.second.id}`,
+        d,
+        colorKey: style.colorKey,
+        arrowColor: style.arrowColor,
+        opacity: pair.first.opacity ?? 1,
+        dualMarker: true,
+      })
+    }
+
+    for (const trigger of unpaired) {
       const sourceEl = content.querySelector<HTMLElement>(
         `[data-blueprint-cell="${trigger.source_cell_id}"]`,
       )
@@ -307,10 +416,12 @@ export function IntegratedTriggerArrows({
       )
       if (!d) continue
 
+      const style = resolveSegmentStyle(trigger.path_id, pathById)
       nextSimple.push({
         id: trigger.id,
         d,
-        pathType: trigger.path_type,
+        colorKey: style.colorKey,
+        arrowColor: style.arrowColor,
         opacity: trigger.opacity,
       })
     }
@@ -321,7 +432,7 @@ export function IntegratedTriggerArrows({
       width: Math.max(content.scrollWidth, content.offsetWidth, 1),
       height: Math.max(content.scrollHeight, content.offsetHeight, 1),
     })
-  }, [contentRef, forkMeta, forkTriggerIds, layer, triggers])
+  }, [contentRef, forkMeta, forkTriggerIds, layer, pathById, triggers])
 
   useEffect(() => {
     updateArrows()
@@ -364,13 +475,39 @@ export function IntegratedTriggerArrows({
     [size.height, size.width],
   )
 
-  const markerIds = useMemo(
-    () =>
-      Object.fromEntries(
-        PATH_TYPES.map((type) => [type, `${markerId}-arrow-${type}`]),
-      ) as Record<PathType, string>,
-    [markerId],
-  )
+  const { markerIds, markerColors } = useMemo(() => {
+    const keys = new Set<string>()
+    for (const segment of simpleSegments) {
+      keys.add(segment.colorKey)
+    }
+    for (const group of forkGroups) {
+      keys.add(group.trunkArrowColor)
+      for (const branch of group.branches) {
+        keys.add(branch.colorKey)
+      }
+    }
+
+    const ids: Record<string, string> = {}
+    const colors: Record<string, string> = {}
+
+    for (const segment of simpleSegments) {
+      if (!ids[segment.colorKey]) {
+        ids[segment.colorKey] = `${markerId}-arrow-${pathColorKeyToMarkerSuffix(segment.colorKey)}`
+        colors[segment.colorKey] = segment.arrowColor
+      }
+    }
+
+    for (const group of forkGroups) {
+      for (const branch of group.branches) {
+        if (!ids[branch.colorKey]) {
+          ids[branch.colorKey] = `${markerId}-arrow-${pathColorKeyToMarkerSuffix(branch.colorKey)}`
+          colors[branch.colorKey] = branch.arrowColor
+        }
+      }
+    }
+
+    return { markerIds: ids, markerColors: colors }
+  }, [forkGroups, markerId, simpleSegments])
 
   if (simpleSegments.length === 0 && forkGroups.length === 0) return null
 
@@ -393,61 +530,65 @@ export function IntegratedTriggerArrows({
       aria-hidden
     >
       <defs>
-        <BlueprintArrowMarkerDefs markerIds={markerIds} />
+        <BlueprintArrowMarkerDefs
+          markerIds={markerIds}
+          markerColors={markerColors}
+        />
       </defs>
       <g transform={`translate(${ARROW_VIEWPORT_PAD} ${ARROW_VIEWPORT_PAD})`}>
         {simpleSegments.map((segment) => (
           <g key={segment.id} opacity={segment.opacity}>
             <path
               d={segment.d}
-              {...blueprintArrowPathProps(segment.pathType)}
+              {...blueprintArrowPathProps(segment.arrowColor)}
               {...(segment.showMarker === false
                 ? {}
-                : { markerEnd: `url(#${markerIds[segment.pathType]})` })}
+                : segment.dualMarker
+                  ? {
+                      markerStart: `url(#${markerIds[segment.colorKey]}-start)`,
+                      markerEnd: `url(#${markerIds[segment.colorKey]})`,
+                    }
+                  : { markerEnd: `url(#${markerIds[segment.colorKey]})` })}
             />
           </g>
         ))}
         {forkGroups.map((group) => {
           const nodeOpacity = getIntegratedForkNodeOpacity(group.branches)
-          const trunkPathType = getIntegratedForkTrunkPathType(
-            group.branches,
-            group.trunkPathType,
-          )
 
           return (
-          <g key={group.id}>
-            {group.branches.map((branch) => (
-              <g key={branch.id} opacity={branch.opacity}>
+            <g key={group.id}>
+              {group.branches.map((branch) => (
+                <g key={branch.id} opacity={branch.opacity}>
+                  <path
+                    d={branch.d}
+                    {...blueprintArrowPathProps(branch.arrowColor)}
+                    strokeWidth={getIntegratedForkBranchStrokeWidth(branch.opacity)}
+                    markerEnd={`url(#${markerIds[branch.colorKey]})`}
+                  />
+                </g>
+              ))}
+              <g opacity={nodeOpacity}>
                 <path
-                  d={branch.d}
-                  {...blueprintArrowPathProps(branch.pathType)}
-                  strokeWidth={getIntegratedForkBranchStrokeWidth(branch.opacity)}
-                  markerEnd={`url(#${markerIds[branch.pathType]})`}
+                  d={group.trunkPath}
+                  fill="none"
+                  stroke={group.trunkArrowColor}
+                  strokeWidth={getIntegratedForkTrunkStrokeWidth(nodeOpacity)}
+                  strokeLinecap="round"
+                />
+                <circle
+                  cx={group.circle.cx}
+                  cy={group.circle.cy}
+                  r={nodeHaloRadius}
+                  fill={nodeHaloFill}
+                />
+                <circle
+                  cx={group.circle.cx}
+                  cy={group.circle.cy}
+                  r={nodeRadius}
+                  fill={nodeFill}
                 />
               </g>
-            ))}
-            <g opacity={nodeOpacity}>
-              <path
-                d={group.trunkPath}
-                fill="none"
-                stroke={getPathTypeArrowColor(trunkPathType)}
-                strokeWidth={getIntegratedForkTrunkStrokeWidth(nodeOpacity)}
-                strokeLinecap="round"
-              />
-              <circle
-                cx={group.circle.cx}
-                cy={group.circle.cy}
-                r={nodeHaloRadius}
-                fill={nodeHaloFill}
-              />
-              <circle
-                cx={group.circle.cx}
-                cy={group.circle.cy}
-                r={nodeRadius}
-                fill={nodeFill}
-              />
             </g>
-          </g>
           )
         })}
       </g>

@@ -4,6 +4,7 @@ import {
 import { getBlueprintFallback } from '@/data/blueprintFallbacks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
 import { repairDiscoverySadPathBlueprint } from '@/lib/repairDiscoverySadPathBlueprint'
+import { mergeTechDescriptionLinks } from '@/lib/blueprintTechDescriptions'
 import {
   deduplicateBlueprintLayers,
   normalizeBlueprint,
@@ -47,8 +48,39 @@ function mergeMissingBlueprintContent(
   }
   layers.sort((a, b) => a.row_position - b.row_position)
 
+  const fallbackCellById = new Map(
+    fallback.cells.map((cell) => [cell.id, cell]),
+  )
+
   const cellIds = new Set(data.cells.map((cell) => cell.id))
-  const cells = [...data.cells]
+  const cells = data.cells.map((cell) => {
+    const fallbackCell = fallbackCellById.get(cell.id)
+    if (!fallbackCell) return cell
+
+    let changed = false
+    let next = cell
+
+    if (fallbackCell.picture?.trim() && !cell.picture?.trim()) {
+      next = { ...next, picture: fallbackCell.picture }
+      changed = true
+    }
+
+    if (fallbackCell.description?.trim() && !cell.description?.trim()) {
+      next = { ...next, description: fallbackCell.description }
+      changed = true
+    }
+
+    const mergedLinks = mergeTechDescriptionLinks(
+      cell.links,
+      fallbackCell.links,
+    )
+    if (JSON.stringify(mergedLinks) !== JSON.stringify(cell.links)) {
+      next = { ...next, links: mergedLinks }
+      changed = true
+    }
+
+    return changed ? next : cell
+  })
   for (const cell of fallback.cells) {
     if (cellIds.has(cell.id)) continue
 
@@ -79,11 +111,30 @@ function mergeMissingBlueprintContent(
     }
   }
 
+  const picturesMerged = data.cells.some((cell, index) => {
+    const mergedCell = cells[index]
+    return mergedCell !== undefined && mergedCell.picture !== cell.picture
+  })
+
+  const descriptionsMerged = data.cells.some((cell, index) => {
+    const mergedCell = cells[index]
+    return mergedCell !== undefined && mergedCell.description !== cell.description
+  })
+
+  const linksMerged = data.cells.some((cell, index) => {
+    const mergedCell = cells[index]
+    if (!mergedCell) return false
+    return JSON.stringify(mergedCell.links) !== JSON.stringify(cell.links)
+  })
+
   const changed =
     layers.length !== data.layers.length ||
     cells.length !== data.cells.length ||
     steps.length !== data.steps.length ||
-    triggers.length !== data.triggers.length
+    triggers.length !== data.triggers.length ||
+    picturesMerged ||
+    descriptionsMerged ||
+    linksMerged
 
   const merged = changed
     ? { ...data, layers, cells, steps, triggers }

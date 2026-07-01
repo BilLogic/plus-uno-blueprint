@@ -24,6 +24,12 @@ export function normalizeCellLinks(raw: Json | null | undefined): CellLink[] {
     if (typeof record.url === 'string') {
       link.url = record.url
     }
+    if (typeof record.description === 'string') {
+      link.description = record.description
+    }
+    if (typeof record.picture === 'string') {
+      link.picture = record.picture
+    }
     return [link]
   })
 }

@@ -81,7 +81,7 @@ function PathNotionPill({
       aria-pressed={checked}
       aria-label={pathLabel}
     >
-      <PathTypeColorKey type={path.path_type} />
+      <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
         description={path.description}
         pathName={path.name}
@@ -112,7 +112,7 @@ export function PathToolbarButton({
       aria-pressed={checked}
       aria-label={pathLabel}
     >
-      <PathTypeColorKey type={path.path_type} />
+      <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
         description={path.description}
         pathName={path.name}
@@ -170,7 +170,7 @@ function PathCheckbox({
         onClick={stopEvent}
         aria-label={pathLabel}
       />
-      <PathTypeColorKey type={path.path_type} />
+      <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
         description={path.description}
         pathName={path.name}

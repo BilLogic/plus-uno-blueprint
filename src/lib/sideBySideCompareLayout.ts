@@ -10,12 +10,15 @@ import {
   BLUEPRINT_ROW_MIN_HEIGHT_COMPACT,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   INTERACTION_LINE_LABEL,
   INTERNAL_INTERACTION_LINE_LABEL,
   VISIBILITY_LINE_LABEL,
   getLayerRowMinHeight,
   getStepColumnsWidth,
   layerHasOverheadArrowCorridor,
+  layerHasRegularTutorInLaneLoopCorridor,
+  layerHasWrapCorridorBelow,
   shouldShowInteractionLineAfter,
   shouldShowInternalInteractionLineAfter,
   shouldShowLaneDividerAfter,
@@ -156,6 +159,7 @@ export type CompareRowHeightSpec = {
   height: number
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
+  inLaneLoopCorridorAbove?: boolean
   kind?: 'path' | 'layer' | 'interaction' | 'visibility' | 'internalInteraction'
   collapsed?: boolean
 }
@@ -169,12 +173,18 @@ export type BlueprintLabelRowSpec = {
   collapsed?: boolean
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
+  inLaneLoopCorridorAbove?: boolean
   showDividerBelow?: boolean
 }
 
 type SwimlaneRowSpec = Pick<
   CompareRowHeightSpec,
-  'height' | 'kind' | 'collapsed' | 'wrapCorridorAbove' | 'wrapCorridorBelow'
+  | 'height'
+  | 'kind'
+  | 'collapsed'
+  | 'wrapCorridorAbove'
+  | 'wrapCorridorBelow'
+  | 'inLaneLoopCorridorAbove'
 >
 
 /** White swimlane board height (section padding + rows + gaps). */
@@ -274,7 +284,12 @@ export function buildSideBySideLabelRowSpecs(
         : getSharedLayerRowHeight(layer, blueprints, compact),
       wrapCorridorAbove:
         !collapsed && layerHasOverheadArrowCorridor(layer, blueprints),
-      wrapCorridorBelow: !collapsed && layerHasInteractionLine(layer),
+      wrapCorridorBelow:
+        !collapsed &&
+        layerHasWrapCorridorBelow(layer, blueprints),
+      inLaneLoopCorridorAbove:
+        !collapsed &&
+        layerHasRegularTutorInLaneLoopCorridor(layer, blueprints),
       showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
     })
 
@@ -397,11 +412,15 @@ export function getCompareRowTrackHeight(row: {
   height: number
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
+  inLaneLoopCorridorAbove?: boolean
 }): number {
   return (
     row.height +
     (row.wrapCorridorAbove ? BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN : 0) +
-    (row.wrapCorridorBelow ? BLUEPRINT_WRAP_CORRIDOR_MARGIN : 0)
+    (row.wrapCorridorBelow ? BLUEPRINT_WRAP_CORRIDOR_MARGIN : 0) +
+    (row.inLaneLoopCorridorAbove
+      ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+      : 0)
   )
 }
 
@@ -614,7 +633,20 @@ export function buildIntegratedLabelRowSpecs(
           sourceBlueprints.length > 0 ? sourceBlueprints : undefined,
           sourceBlueprints.length > 0 ? undefined : data.triggers,
         ),
-      wrapCorridorBelow: !collapsed && layerHasInteractionLine(layer),
+      wrapCorridorBelow:
+        !collapsed &&
+        layerHasWrapCorridorBelow(
+          layer,
+          sourceBlueprints.length > 0 ? sourceBlueprints : undefined,
+          sourceBlueprints.length > 0 ? undefined : data.triggers,
+        ),
+      inLaneLoopCorridorAbove:
+        !collapsed &&
+        layerHasRegularTutorInLaneLoopCorridor(
+          layer,
+          sourceBlueprints.length > 0 ? sourceBlueprints : undefined,
+          sourceBlueprints.length > 0 ? undefined : data.triggers,
+        ),
       showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
     })
 

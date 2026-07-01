@@ -29,7 +29,7 @@ export const PARALLEL_SESSION_LEAD_COLUMN_COUNT =
 
 /** Partner Action cells in warm-up, goal setting, and help request scenarios. */
 export const PARALLEL_SESSION_PARTNER_CELL_ID_PATTERN =
-  /000000(?:04|1a|1b)(\d{2})01$/
+  /000000(?:04|1a|1b|1f|a0|b0|c0|d0)(\d{2})01$/
 
 export function isParallelSessionPartnerWrapTrigger(
   sourceCellId: string,
@@ -50,7 +50,7 @@ export function isParallelSessionPartnerWrapTrigger(
 
 /** Lead Tutor cells in warm-up, goal setting, and help request scenarios. */
 export const PARALLEL_SESSION_LEAD_CELL_ID_PATTERN =
-  /000000(?:04|1a|1b)(\d{2})02$/
+  /000000(?:04|1a|1b|1f|a0|b0|c0|d0)(\d{2})02$/
 
 export function isParallelSessionLeadWrapTrigger(
   sourceCellId: string,
@@ -69,10 +69,14 @@ export function isParallelSessionOverheadWrapTrigger(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
-  return (
-    isParallelSessionPartnerWrapTrigger(sourceCellId, targetCellId) ||
-    isParallelSessionLeadWrapTrigger(sourceCellId, targetCellId)
-  )
+  return isParallelSessionPartnerWrapTrigger(sourceCellId, targetCellId)
+}
+
+export function isParallelSessionLeadBottomWrapTrigger(
+  sourceCellId: string,
+  targetCellId: string,
+): boolean {
+  return isParallelSessionLeadWrapTrigger(sourceCellId, targetCellId)
 }
 
 type PartnerLeadLayerSuffix = '01' | '02'
@@ -83,6 +87,8 @@ type BuildPartnerLeadOptions = {
   partnerLayerId: string
   leadLayerId: string
   stepIdForColumn: (column: number) => string
+  partnerStepPictures?: readonly (string | undefined)[]
+  leadStepPictures?: readonly (string | undefined)[]
 }
 
 function cell(
@@ -90,6 +96,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
+  picture?: string,
 ): BlueprintCell {
   return {
     id,
@@ -97,6 +104,7 @@ function cell(
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
+    ...(picture ? { picture } : {}),
   }
 }
 
@@ -114,6 +122,7 @@ export function buildParallelSessionPartnerLeadCells(
         options.partnerLayerId,
         stepId,
         PARALLEL_SESSION_PARTNER_CONTENT[column - 1]!,
+        options.partnerStepPictures?.[column - 1],
       ),
     )
   }
@@ -127,6 +136,7 @@ export function buildParallelSessionPartnerLeadCells(
         options.leadLayerId,
         stepId,
         PARALLEL_SESSION_LEAD_CONTENT[column - 1]!,
+        options.leadStepPictures?.[column - 1],
       ),
     )
   }

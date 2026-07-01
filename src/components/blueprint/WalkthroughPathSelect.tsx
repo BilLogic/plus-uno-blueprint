@@ -10,7 +10,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { PATH_TYPE_BADGE_CLASSES } from '@/lib/pathTypeTheme'
+import { getPathBadgeStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -49,13 +49,19 @@ export function WalkthroughPathSelect({
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          'inline-flex h-auto max-w-full cursor-pointer items-center gap-1.5 rounded-full border-0 px-2.5 py-1 text-xs font-semibold outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring/50',
-          PATH_TYPE_BADGE_CLASSES[selected.path.path_type],
+          'inline-flex h-auto max-w-full cursor-pointer items-center gap-1.5 rounded-full border-0 px-2.5 py-1 text-xs font-semibold text-white outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring/50',
           className,
         )}
+        style={getPathBadgeStyle({
+          path_type: selected.path.path_type,
+          name: selected.path.name,
+        })}
         aria-label={`Path: ${selectedLabel}. Choose a different path.`}
       >
-        <PathTypeColorKey type={selected.path.path_type} />
+        <PathTypeColorKey
+          type={selected.path.path_type}
+          name={selected.path.name}
+        />
         <span className="truncate leading-none tracking-tight">{selectedLabel}</span>
         <ChevronDown className="size-3.5 shrink-0 opacity-70" aria-hidden />
       </DropdownMenuTrigger>
@@ -73,7 +79,10 @@ export function WalkthroughPathSelect({
                 key={blueprint.path.id}
                 value={blueprint.path.id}
               >
-                <PathTypeColorKey type={blueprint.path.path_type} />
+                <PathTypeColorKey
+                  type={blueprint.path.path_type}
+                  name={blueprint.path.name}
+                />
                 <PathDescriptionTooltip
                   description={blueprint.path.description}
                   pathName={blueprint.path.name}

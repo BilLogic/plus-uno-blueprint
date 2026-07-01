@@ -21,10 +21,12 @@ import { itemsInSelectionOrder } from '@/lib/pathSelection'
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_LAYER_ROW_GAP,
+  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
   getCellContentMinHeight,
+  getVisualCellButtonMaxHeight,
   layerPrecedesBlueprintDivider,
   shouldUsePillCellContent,
   shouldUseVisualContent,
@@ -66,6 +68,7 @@ import type {
 } from '@/types/integratedBlueprint'
 import { getIntegratedCellDisplayOpacity } from '@/types/integratedBlueprint'
 import type { BlueprintLayer } from '@/types/blueprint'
+import { resolveVisualStepPictures } from '@/lib/visualWalkthrough'
 
 type IntegratedBlueprintGridProps = {
   data: IntegratedBlueprintData
@@ -125,6 +128,10 @@ export function IntegratedBlueprintGrid({
   const { layers, steps, cells, triggers, paths } = data
   const pathNameById = useMemo(
     () => new Map(paths.map((path) => [path.id, path.name])),
+    [paths],
+  )
+  const pathDescriptionById = useMemo(
+    () => new Map(paths.map((path) => [path.id, path.description])),
     [paths],
   )
   const gridBodyRef = useRef<HTMLDivElement>(null)
@@ -284,7 +291,6 @@ export function IntegratedBlueprintGrid({
                 layers={layers}
                 compact={compact}
                 onToggleLayer={toggleLayer}
-                walkthroughBlueprints={walkthroughBlueprints}
                 style={{ gridColumn: 1, gridRow: rowIndex + 1 }}
               />
               {row.showDividerBelow ? (
@@ -312,6 +318,7 @@ export function IntegratedBlueprintGrid({
             triggers={triggers}
             cells={cells}
             steps={steps}
+            paths={paths}
             contentRef={contentColumnRef}
             scrollContainerRef={scrollContainerRef}
           />
@@ -327,6 +334,7 @@ export function IntegratedBlueprintGrid({
               fitVertically={fillSwimlaneHeight || fitVertically}
               scenarioName={scenarioName}
               pathNameById={pathNameById}
+              pathDescriptionById={pathDescriptionById}
             />
           ))}
           <IntegratedTriggerArrows
@@ -334,6 +342,7 @@ export function IntegratedBlueprintGrid({
             triggers={triggers}
             cells={cells}
             steps={steps}
+            paths={paths}
             contentRef={contentColumnRef}
             scrollContainerRef={scrollContainerRef}
           />
@@ -397,6 +406,7 @@ function IntegratedContentRow({
   fitVertically,
   scenarioName,
   pathNameById,
+  pathDescriptionById,
 }: {
   row: BlueprintLabelRowSpec
   rowIndex: number
@@ -407,6 +417,7 @@ function IntegratedContentRow({
   fitVertically?: boolean
   scenarioName?: string
   pathNameById: Map<string, string>
+  pathDescriptionById: Map<string, string | null>
 }) {
   const isDivider =
     row.kind === 'interaction' ||
@@ -418,6 +429,9 @@ function IntegratedContentRow({
     : 0
   const corridorBelow = row.wrapCorridorBelow
     ? BLUEPRINT_WRAP_CORRIDOR_MARGIN
+    : 0
+  const inLaneLoopCorridorAbove = row.inLaneLoopCorridorAbove
+    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
     : 0
 
   return (
@@ -452,9 +466,19 @@ function IntegratedContentRow({
       <div
         className={cn(
           'min-h-0',
-          isDivider ? 'flex h-full items-center overflow-hidden' : 'flex-1',
+          isDivider
+            ? 'flex h-full items-center overflow-hidden'
+            : 'flex flex-1 flex-col',
         )}
       >
+        {inLaneLoopCorridorAbove > 0 && (
+          <div
+            aria-hidden
+            data-blueprint-loop-corridor="above"
+            className="shrink-0"
+            style={{ height: inLaneLoopCorridorAbove }}
+          />
+        )}
         {row.kind === 'layer' && row.layer ? (
           row.collapsed ? (
             <div className="h-full" aria-hidden />
@@ -468,6 +492,7 @@ function IntegratedContentRow({
               fitVertically={fitVertically}
               scenarioName={scenarioName}
               pathNameById={pathNameById}
+              pathDescriptionById={pathDescriptionById}
             />
           )
         ) : isDivider ? (
@@ -475,7 +500,12 @@ function IntegratedContentRow({
         ) : null}
       </div>
       {corridorBelow > 0 && (
-        <div aria-hidden className="shrink-0" style={{ height: corridorBelow }} />
+        <div
+          aria-hidden
+          data-blueprint-wrap-corridor="below"
+          className="shrink-0"
+          style={{ height: corridorBelow }}
+        />
       )}
     </div>
   )
@@ -490,6 +520,7 @@ function IntegratedLayerContent({
   fitVertically,
   scenarioName,
   pathNameById,
+  pathDescriptionById,
 }: {
   layer: BlueprintLayer
   layers: BlueprintLayer[]
@@ -499,6 +530,7 @@ function IntegratedLayerContent({
   fitVertically?: boolean
   scenarioName?: string
   pathNameById: Map<string, string>
+  pathDescriptionById: Map<string, string | null>
 }) {
   const isPillLayer = shouldUsePillCellContent(layer.name)
   const laneStyle = getBlueprintLayerStyle(
@@ -529,15 +561,18 @@ function IntegratedLayerContent({
               isVisualLayer ? (
                 <IntegratedVisualCell
                   layer={layer}
+                  layers={layers}
                   step={step}
                   stepIndex={stepIndex}
                   slotCells={slotCells}
+                  allCells={cells}
                   laneStyle={laneStyle}
                   compact={compact}
                   fitVertically={fitVertically}
                   flushBottom={flushBottom}
                   scenarioName={scenarioName}
                   pathNameById={pathNameById}
+                  pathDescriptionById={pathDescriptionById}
                 />
               ) : (
                 <IntegratedCellSlot
@@ -553,6 +588,7 @@ function IntegratedLayerContent({
                   flushBottom={flushBottom}
                   scenarioName={scenarioName}
                   pathNameById={pathNameById}
+                  pathDescriptionById={pathDescriptionById}
                 />
               )
             ) : (
@@ -598,26 +634,32 @@ function pickTallestIntegratedCell(
 
 function IntegratedVisualCell({
   layer,
+  layers,
   step,
   stepIndex,
   slotCells,
+  allCells,
   laneStyle,
   compact = false,
   fitVertically,
   flushBottom,
   scenarioName,
   pathNameById,
+  pathDescriptionById,
 }: {
   layer: BlueprintLayer
+  layers: BlueprintLayer[]
   step: IntegratedBlueprintStep
   stepIndex: number
   slotCells: IntegratedBlueprintCell[]
+  allCells: IntegratedBlueprintCell[]
   laneStyle: BlueprintLayerStyle
   compact?: boolean
   fitVertically?: boolean
   flushBottom?: boolean
   scenarioName?: string
   pathNameById: Map<string, string>
+  pathDescriptionById: Map<string, string | null>
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -628,6 +670,18 @@ function IntegratedVisualCell({
     slotCells.length === 0
       ? undefined
       : [...slotCells].sort((a, b) => b.opacity - a.opacity)[0]
+  const visualPictures =
+    representative == null
+      ? []
+      : resolveVisualStepPictures(
+          {
+            layers,
+            cells: allCells.filter(
+              (cell) => cell.path_id === representative.path_id,
+            ),
+          },
+          step.id,
+        )
   const displayOpacity =
     representative !== undefined
       ? getIntegratedCellDisplayOpacity(representative, step)
@@ -647,33 +701,42 @@ function IntegratedVisualCell({
             (representative
               ? pathNameById.get(representative.path_id)
               : undefined) ?? 'Warm-Up',
+          pathDescription: representative
+            ? (pathDescriptionById.get(representative.path_id) ?? null)
+            : null,
           pathType: (representative?.path_type ?? 'happy') as PathType,
         }
       : undefined
 
   const shellClassName = cn(
-    'relative z-[1] flex shrink-0 items-stretch self-stretch min-w-0',
+    'relative z-[1] flex shrink-0 items-stretch self-stretch min-w-0 overflow-hidden',
     shellPadding,
     fitVertically && 'h-full',
   )
+  const shellVerticalPad = compact ? 24 : 32
   const shellStyle = {
     width: STEP_COLUMN_WIDTH,
     minWidth: STEP_COLUMN_WIDTH,
     maxWidth: STEP_COLUMN_WIDTH,
+    maxHeight: getVisualCellButtonMaxHeight(compact) + shellVerticalPad,
   }
   const visual = (
-    <BlueprintStepVisual
-      compact={compact}
-      fill={laneStyle.lane}
-      selection={
-        selectionContext
-          ? buildBlueprintCellSelection(selectionContext)
-          : undefined
-      }
-      cellId={representative?.id ?? `visual-${step.id}`}
-      stepIndex={stepIndex}
-      opacity={displayOpacity}
-    />
+    <div className="flex h-full min-h-0 max-h-full w-full flex-1 overflow-hidden">
+      <BlueprintStepVisual
+        compact={compact}
+        fill={laneStyle.lane}
+        pictures={visualPictures}
+        selection={
+          selectionContext
+            ? buildBlueprintCellSelection(selectionContext)
+            : undefined
+        }
+        cellId={representative?.id ?? `visual-${step.id}`}
+        stepIndex={stepIndex}
+        opacity={displayOpacity}
+        className="flex-1"
+      />
+    </div>
   )
 
   return (
@@ -696,6 +759,7 @@ function IntegratedCellSlot({
   flushBottom,
   scenarioName,
   pathNameById,
+  pathDescriptionById,
 }: {
   layer: BlueprintLayer
   step: IntegratedBlueprintStep
@@ -709,6 +773,7 @@ function IntegratedCellSlot({
   flushBottom?: boolean
   scenarioName?: string
   pathNameById: Map<string, string>
+  pathDescriptionById: Map<string, string | null>
 }) {
   const shellStyle = {
     width,
@@ -749,6 +814,7 @@ function IntegratedCellSlot({
         stacked={false}
         scenarioName={scenarioName}
         pathNameById={pathNameById}
+        pathDescriptionById={pathDescriptionById}
       />
       {overlayCells.map((cell) => (
         <IntegratedCellBlock
@@ -765,6 +831,7 @@ function IntegratedCellSlot({
           stacked
           scenarioName={scenarioName}
           pathNameById={pathNameById}
+          pathDescriptionById={pathDescriptionById}
         />
       ))}
     </div>
@@ -784,6 +851,7 @@ function IntegratedCellBlock({
   stacked,
   scenarioName,
   pathNameById,
+  pathDescriptionById,
 }: {
   step: IntegratedBlueprintStep
   stepIndex: number
@@ -797,6 +865,7 @@ function IntegratedCellBlock({
   stacked?: boolean
   scenarioName?: string
   pathNameById: Map<string, string>
+  pathDescriptionById: Map<string, string | null>
 }) {
   const displayOpacity = getIntegratedCellDisplayOpacity(cell, step)
   const shellPadding = cn(
@@ -827,8 +896,11 @@ function IntegratedCellBlock({
           stepIndex,
           cellId: cell.id,
           cellContent: cell.content,
+          cellPicture: cell.picture ?? null,
+          cellDescription: cell.description ?? null,
           pathId: cell.path_id,
           pathName: pathNameById.get(cell.path_id) ?? 'Unknown path',
+          pathDescription: pathDescriptionById.get(cell.path_id) ?? null,
           pathType: cell.path_type,
         }
       : undefined

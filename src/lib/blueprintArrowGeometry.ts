@@ -1,10 +1,14 @@
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
+  isRegularTutorInLaneLoopTrigger,
   OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN,
   STEP_COLUMN_GAP,
 } from '@/lib/blueprintLayout'
-import { isParallelSessionOverheadWrapTrigger } from '@/data/parallelSessionPartnerLead'
+import {
+  isParallelSessionLeadBottomWrapTrigger,
+  isParallelSessionOverheadWrapTrigger,
+} from '@/data/parallelSessionPartnerLead'
 
 export type Point = { x: number; y: number }
 
@@ -28,6 +32,8 @@ export const REGULAR_TUTOR_LOOP_TARGET_ID =
 
 /** Arrowhead size (userSpaceOnUse) — Lucide-style filled tip. */
 export const ARROW_CHEVRON_SIZE = 7
+/** Half-height of the chevron base — smaller values read sharper. */
+export const ARROW_CHEVRON_HALF_WIDTH = 2.5
 export const ARROW_STROKE_WIDTH = 1.5
 /** refX/refY: chevron base attaches to path end; tip extends toward target. */
 export const ARROW_MARKER_REF_X = 0
@@ -361,12 +367,113 @@ export function getCellContentBox(
 /** Inset from the interaction line for loop-back horizontal segments. */
 export const WRAP_LOOP_CORRIDOR_INSET = 10
 
+/** Inset above cell tops for Regular Tutor loop-back horizontal segments. */
+export const REGULAR_TUTOR_LOOP_TOP_INSET = 8
+
+/** Backward loop on the Regular Tutor row (e.g. Set Goals step 11 → step 1). */
+export function isRegularTutorInLaneWrapTrigger(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    sourceCellId &&
+    targetCellId &&
+    isParallelSessionLeadBottomWrapTrigger(sourceCellId, targetCellId)
+  ) {
+    return false
+  }
+  if (
+    sourceCellId &&
+    targetCellId &&
+    isParallelSessionOverheadWrapTrigger(sourceCellId, targetCellId)
+  ) {
+    return false
+  }
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const targetStep = parseStepIndex(targetEl)
+  if (sourceStep === null || targetStep === null || targetStep >= sourceStep) {
+    return false
+  }
+
+  const sourceRow = getLayerRow(sourceEl)
+  const targetRow = getLayerRow(targetEl)
+  if (!sourceRow || !targetRow || sourceRow !== targetRow) return false
+
+  if (sourceCellId && targetCellId) {
+    return isRegularTutorInLaneLoopTrigger(
+      resolveArrowLogicCellId(sourceCellId),
+      resolveArrowLogicCellId(targetCellId),
+    )
+  }
+
+  return true
+}
+
+/** Horizontal lane for Regular Tutor loop arrows — centered in the in-lane corridor. */
+export function getRegularTutorInLaneLoopRouteY(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): number {
+  const row = getLayerRow(sourceEl)
+  if (row) {
+    const loopCorridor = row.querySelector<HTMLElement>(
+      '[data-blueprint-loop-corridor="above"]',
+    )
+    if (loopCorridor) {
+      const corridorBox = getElementLayoutBox(loopCorridor, root)
+      return corridorBox.top + corridorBox.height / 2
+    }
+  }
+
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const cellTop = Math.min(sourceBox.top, targetBox.top)
+  return cellTop - REGULAR_TUTOR_LOOP_TOP_INSET
+}
+
+/**
+ * Regular Tutor loop-back: up from source top, across inside the swimlane,
+ * then down into the target top (e.g. Set Goals step 11 → step 1).
+ */
+export function buildRegularTutorInLaneTopWrapPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const source = getCellTopCenter(sourceEl, root)
+  const target = getCellTopCenter(targetEl, root)
+  const routeY = getRegularTutorInLaneLoopRouteY(sourceEl, targetEl, root)
+
+  // Wrap runs right → left; target must sit in an earlier column.
+  if (target.x >= source.x) return ''
+
+  if (routeY >= source.y) return ''
+
+  const lineEndY = target.y - ARROW_CHEVRON_SIZE
+  if (lineEndY <= routeY) return ''
+
+  return buildRoundedPolylinePath(
+    [
+      source,
+      { x: source.x, y: routeY },
+      { x: target.x, y: routeY },
+      { x: target.x, y: lineEndY },
+    ],
+    ARROW_CORNER_RADIUS,
+  )
+}
+
+
 export type WrapCorridorBounds = {
   start: number
   end: number
 }
 
-/** Vertical span between a lane row bottom and the interaction line. */
+/** Vertical span between a lane row bottom and the next wrap corridor or interaction line. */
 export function getWrapCorridorBounds(
   sourceEl: HTMLElement,
   root: HTMLElement,
@@ -376,7 +483,48 @@ export function getWrapCorridorBounds(
 
   const row = sourceEl.closest('[data-blueprint-row]')
   if (row) {
+    const inlineCorridor = row.querySelector<HTMLElement>(
+      '[data-blueprint-wrap-corridor="below"]',
+    )
+    if (inlineCorridor) {
+      const corridorBox = getElementLayoutBox(inlineCorridor, root)
+      const corridorBottom = corridorBox.top + corridorBox.height
+      if (corridorBottom > corridorStart) {
+        return { start: corridorStart, end: corridorBottom }
+      }
+    }
+
     let sibling = row.nextElementSibling
+    while (sibling) {
+      if (
+        sibling instanceof HTMLElement &&
+        sibling.dataset.blueprintWrapCorridor === 'below'
+      ) {
+        const corridorBox = getElementLayoutBox(sibling, root)
+        const corridorBottom = corridorBox.top + corridorBox.height
+        if (corridorBottom > corridorStart) {
+          return { start: corridorStart, end: corridorBottom }
+        }
+      }
+      sibling = sibling.nextElementSibling
+    }
+
+    sibling = row.nextElementSibling
+    while (sibling) {
+      if (
+        sibling instanceof HTMLElement &&
+        sibling.dataset.blueprintRow !== undefined
+      ) {
+        const nextRowBox = getElementLayoutBox(sibling, root)
+        if (nextRowBox.top > corridorStart) {
+          return { start: corridorStart, end: nextRowBox.top }
+        }
+        break
+      }
+      sibling = sibling.nextElementSibling
+    }
+
+    sibling = row.nextElementSibling
     while (sibling) {
       if (
         sibling instanceof HTMLElement &&
@@ -576,6 +724,93 @@ export function buildVerticalArrowPath(
   const lineEndY = target.y - ARROW_CHEVRON_SIZE
   if (lineEndY <= source.y) return ''
   return `M ${source.x} ${source.y} L ${source.x} ${lineEndY}`
+}
+
+export type BidirectionalTriggerLink = {
+  id: string
+  source_cell_id: string
+  target_cell_id: string
+}
+
+export type BidirectionalTriggerPair<T extends BidirectionalTriggerLink> = {
+  first: T
+  second: T
+  cellAId: string
+  cellBId: string
+}
+
+/** Pairs of triggers that connect the same two cells in opposite directions. */
+export function findBidirectionalTriggerPairs<T extends BidirectionalTriggerLink>(
+  triggers: T[],
+): { pairs: BidirectionalTriggerPair<T>[]; remaining: T[] } {
+  const pending = new Map<string, T>()
+  const pairedIds = new Set<string>()
+  const pairs: BidirectionalTriggerPair<T>[] = []
+
+  for (const trigger of triggers) {
+    const reverseKey = `${trigger.target_cell_id}->${trigger.source_cell_id}`
+    const reverse = pending.get(reverseKey)
+    if (reverse) {
+      pairedIds.add(trigger.id)
+      pairedIds.add(reverse.id)
+      pairs.push({
+        first: reverse,
+        second: trigger,
+        cellAId: reverse.source_cell_id,
+        cellBId: reverse.target_cell_id,
+      })
+      pending.delete(reverseKey)
+      continue
+    }
+
+    pending.set(
+      `${trigger.source_cell_id}->${trigger.target_cell_id}`,
+      trigger,
+    )
+  }
+
+  return {
+    pairs,
+    remaining: triggers.filter((trigger) => !pairedIds.has(trigger.id)),
+  }
+}
+
+/**
+ * Double-headed vertical connector between two cells in the same step column.
+ * The stroke is inset so arrowheads sit on the cell edges, not through them.
+ */
+export function buildBidirectionalVerticalArrowPath(
+  cellAEl: HTMLElement,
+  cellBEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const boxA = getCellContentBox(cellAEl, root)
+  const boxB = getCellContentBox(cellBEl, root)
+  const aAbove =
+    boxA.top + boxA.height / 2 <= boxB.top + boxB.height / 2
+  const upperEl = aAbove ? cellAEl : cellBEl
+  const lowerEl = aAbove ? cellBEl : cellAEl
+  const anchors = getVerticalCellAnchors(upperEl, lowerEl, root)
+  const y1 = anchors.source.y + ARROW_CHEVRON_SIZE
+  const y2 = anchors.target.y - ARROW_CHEVRON_SIZE
+  if (y2 <= y1) return ''
+  return `M ${anchors.source.x} ${y1} L ${anchors.source.x} ${y2}`
+}
+
+export function buildBidirectionalArrowPath(
+  cellAEl: HTMLElement,
+  cellBEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const stepA = parseStepIndex(cellAEl)
+  const stepB = parseStepIndex(cellBEl)
+  if (stepA === null || stepB === null || stepA !== stepB) return ''
+
+  const rowA = getLayerRow(cellAEl)
+  const rowB = getLayerRow(cellBEl)
+  if (!rowA || !rowB || rowA === rowB) return ''
+
+  return buildBidirectionalVerticalArrowPath(cellAEl, cellBEl, root)
 }
 
 const INTEGRATED_CELL_ID_PATTERN =
@@ -1223,8 +1458,25 @@ export function buildWrapArrowPath(
     return buildOverheadWrapArrowPath(sourceEl, targetEl, root)
   }
 
+  if (
+    isRegularTutorInLaneWrapTrigger(
+      sourceEl,
+      targetEl,
+      sourceCellId,
+      targetCellId,
+    )
+  ) {
+    return buildRegularTutorInLaneTopWrapPath(sourceEl, targetEl, root)
+  }
+
   const { source, target } = getWrapCellAnchors(sourceEl, targetEl, root)
-  const corridorY = getWrapLoopRouteY(sourceEl, root)
+  const isLeadTutorBottomWrap =
+    sourceCellId !== undefined &&
+    targetCellId !== undefined &&
+    isParallelSessionLeadBottomWrapTrigger(sourceCellId, targetCellId)
+  const corridorY = isLeadTutorBottomWrap
+    ? getWrapCorridorY(sourceEl, root)
+    : getWrapLoopRouteY(sourceEl, root)
 
   // Wrap runs right → left; target must sit in an earlier column.
   if (target.x >= source.x) {

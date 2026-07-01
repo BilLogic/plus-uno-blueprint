@@ -2,7 +2,7 @@ import {
   WARM_UP_ALTERNATE_PATH_ID,
   WARM_UP_SAD_PATH_ID,
 } from '@/data/blueprintFallbacks'
-import { BLUEPRINT_VISUAL_LAYER_UI_ENABLED } from '@/lib/blueprintDisplayFlags'
+import { isBlueprintVisualLayerEnabled } from '@/lib/blueprintDisplayFlags'
 import { shouldUseVisualContent } from '@/lib/blueprintLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -54,8 +54,11 @@ function filterWarmUpNoArrowLayers(
   return { ...data, triggers }
 }
 
-function filterHiddenVisualLayers(data: BlueprintData): BlueprintData {
-  if (BLUEPRINT_VISUAL_LAYER_UI_ENABLED) {
+function filterHiddenVisualLayers(
+  data: BlueprintData,
+  scenarioId?: string,
+): BlueprintData {
+  if (isBlueprintVisualLayerEnabled(scenarioId)) {
     return data
   }
 
@@ -96,5 +99,6 @@ export function applyBlueprintDisplayFilters(
 ): BlueprintData {
   return filterHiddenVisualLayers(
     filterWarmUpNoArrowLayers(data, scenarioId, pathId),
+    scenarioId,
   )
 }
