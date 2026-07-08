@@ -554,7 +554,7 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: PATH_ID,
     name: 'Happy Path',
     description:
-      'Standard warm-up when students join on time and the session proceeds normally.',
+      'Engaged or partially engaged student warm-up.',
     path_type: 'happy',
   },
   layers: [...LAYERS],
@@ -656,7 +656,7 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
   path: {
     id: WARM_UP_ALTERNATE_PATH_ID,
     name: 'Alternate Path',
-    description: 'Warm-up flow that skips the screen-share step.',
+    description: 'Not engaged student warm-up.',
     path_type: 'alternative',
   },
   layers: LAYERS.map((layer) => ({
@@ -888,6 +888,9 @@ const FALLBACK_BY_SCENARIO: Record<string, BlueprintData> = {
   [DISCOVERY_SCENARIO_ID]: APPLICATION_HAPPY_PATH_FALLBACK,
   [INTERVIEW_SCENARIO_ID]: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK,
   [TECH_SETUP_SCENARIO_ID]: TECH_SETUP_HAPPY_PATH_FALLBACK,
+  [ONBOARDING_MODULES_SCENARIO_ID]: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK,
+  [LESSON_MODULES_SCENARIO_ID]: LESSON_MODULES_HAPPY_PATH_FALLBACK,
+  [SESSION_SIGN_UP_SCENARIO_ID]: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK,
 }
 
 const EMPTY_FALLBACK_PATHS: Array<{
@@ -948,7 +951,12 @@ export function mergePathsWithFallback<
         description: fallbackPath.description,
       })
     } else {
-      merged.set(fallbackPath.id, fallbackPath as T)
+      const hasPathOfType = [...merged.values()].some(
+        (path) => path.path_type === fallbackPath.path_type,
+      )
+      if (!hasPathOfType) {
+        merged.set(fallbackPath.id, fallbackPath as T)
+      }
     }
   }
 

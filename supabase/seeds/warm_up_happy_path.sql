@@ -7,7 +7,7 @@ values (
   'a0000000-0000-4000-8000-000000000300',
   'a0000000-0000-4000-8000-000000000203',
   'Happy Path',
-  'Standard warm-up when students join on time and the session proceeds normally.',
+  'Engaged or partially engaged student warm-up.',
   'happy'
 )
 on conflict (id) do update set

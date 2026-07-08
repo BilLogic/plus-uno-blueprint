@@ -1,6 +1,6 @@
-import { Camera } from 'lucide-react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { getVisualCellButtonMaxHeight } from '@/lib/blueprintLayout'
+import { withBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
@@ -59,10 +59,11 @@ export function BlueprintStepVisual({
   pictures,
   presentation = false,
 }: BlueprintStepVisualProps) {
-  const hasPictures = Boolean(pictures?.length)
-  const ariaLabel = hasPictures
+  const displayPictures = withBlueprintStepVisualPlaceholder(pictures)
+  const hasRealPictures = Boolean(pictures?.length)
+  const ariaLabel = hasRealPictures
     ? `Step visuals for ${pictures!.length} users`
-    : 'Image placeholder'
+    : 'Step visual placeholder'
   const inlineMaxHeight = getVisualCellButtonMaxHeight(compact)
 
   if (presentation) {
@@ -77,19 +78,7 @@ export function BlueprintStepVisual({
         role="img"
         aria-label={ariaLabel}
       >
-        {hasPictures ? (
-          <VisualPictureStrip pictures={pictures!} />
-        ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <Camera
-              className={cn(
-                'shrink-0 text-muted-foreground',
-                compact ? 'size-5' : 'size-6',
-              )}
-              aria-hidden
-            />
-          </div>
-        )}
+        <VisualPictureStrip pictures={displayPictures} />
       </div>
     )
   }
@@ -101,7 +90,7 @@ export function BlueprintStepVisual({
       variant="visual"
       className={cn(
         'h-full min-h-0 max-h-full w-full overflow-hidden',
-        hasPictures && 'items-stretch justify-stretch p-1',
+        hasRealPictures && 'items-stretch justify-stretch p-1',
         className,
       )}
       style={{ maxHeight: inlineMaxHeight }}
@@ -111,17 +100,7 @@ export function BlueprintStepVisual({
       opacity={opacity}
       aria-label={ariaLabel}
     >
-      {hasPictures ? (
-        <VisualPictureStrip pictures={pictures!} />
-      ) : (
-        <Camera
-          className={cn(
-            'shrink-0 text-muted-foreground',
-            compact ? 'size-5' : 'size-6',
-          )}
-          aria-hidden
-        />
-      )}
+      <VisualPictureStrip pictures={displayPictures} />
     </BlueprintCellButton>
   )
 }
