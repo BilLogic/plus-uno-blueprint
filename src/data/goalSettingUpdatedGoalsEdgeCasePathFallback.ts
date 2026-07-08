@@ -1,5 +1,6 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
-import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
+import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
+import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadTriggers,
@@ -173,7 +174,7 @@ const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign team'
 const BACKSTAGE_RESEARCHER = 'Researcher sets goal setting activities'
 
 const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_02_DESCRIPTION =
-  'The tutor views the Your Students screen in the PLUS app during a mid-cycle goal check-in session and sees the warning action color with an Update Goals CTA for a student who needs to update their goals.'
+  'The tutor views the Student Dashboard screen in the PLUS app during a mid-cycle goal check-in session and sees the warning action color with an Update Goals CTA for a student who needs to update their goals.'
 
 const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_03_DESCRIPTION =
   'The tutor clicks the Update Goals CTA in the Action column in the PLUS app for the student they are working with.'
@@ -200,7 +201,7 @@ const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_10_DESCRIPTION =
   'The tutor finalizes updating goals with the student in the PLUS app, which displays the goals updated summary with effort and progress goals and goal achievement strategy.'
 
 const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_12_DESCRIPTION =
-  'The tutor navigates back to the Your Students screen in the PLUS app to move on to the next student in the researcher sorted list.'
+  'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
 const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION =
   'The tutor utilizes Zoom/Pencil to virtually connect with the student and joins the breakout room during a mid-cycle goal check-in to update goals with a student who needs to update their goals.'
@@ -246,6 +247,14 @@ function cell(
     Pick<BlueprintCell, 'picture' | 'description' | 'links'>
   > = {},
 ): BlueprintCell {
+  const links =
+    layerId === L.regular
+      ? mergeUrlLinks(
+          metadata.links ?? [],
+          GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS,
+        )
+      : (metadata.links ?? EMPTY_CELL_METADATA.links)
+
   return {
     id,
     layer_id: layerId,
@@ -253,6 +262,7 @@ function cell(
     content,
     ...EMPTY_CELL_METADATA,
     ...metadata,
+    links,
   }
 }
 
@@ -596,6 +606,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(ugCell('09', '09'), L.support, STEPS[8].id, SUPPORT_DEV_DESIGN, {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(ugCell('10', '09'), L.support, STEPS[9].id, SUPPORT_DEV_DESIGN, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(ugCell('12', '09'), L.support, STEPS[11].id, SUPPORT_DEV_DESIGN, {

@@ -55,7 +55,11 @@ export function resolveCellDetailPictures(input: {
   }
 
   const content = input.cellContent?.trim() ?? ''
-  if (content === 'Zoom/Pencil') {
+  if (
+    content === 'Zoom/Pencil' ||
+    content.startsWith('Zoom/Pencil\n') ||
+    content.startsWith('Zoom/Pencil,')
+  ) {
     return getTechItemDetailPictures('Zoom/Pencil')
   }
 

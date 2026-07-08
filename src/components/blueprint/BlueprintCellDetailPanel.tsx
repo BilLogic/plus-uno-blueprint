@@ -28,7 +28,7 @@ import {
 import { shouldUsePillCellContent, shouldUseVisualContent, abbreviateConnectionLayerName } from '@/lib/blueprintLayout'
 import { getTechPillStyle } from '@/lib/techPillTheme'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
-import { resolveTechCellDetailText, resolveTechCellDetailUrl } from '@/lib/blueprintTechDescriptions'
+import { resolveTechCellDetailText, resolveTechCellDetailUrl, URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellConnection } from '@/lib/blueprintCellConnections'
@@ -281,6 +281,45 @@ function FigmaDetailLink({ url, className }: { url: string; className?: string }
   )
 }
 
+function ResourceDetailLink({ label, url }: { label: string; url: string }) {
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        'inline-flex w-fit max-w-full items-center gap-1.5 rounded-full',
+        'border border-border/70 bg-muted/35 px-2.5 py-1',
+        'text-[11px] font-medium leading-none text-foreground/75',
+        'transition-colors hover:border-border hover:bg-muted/60 hover:text-foreground',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+      )}
+    >
+      <ExternalLink className="size-3 shrink-0 opacity-70" aria-hidden />
+      {label}
+    </a>
+  )
+}
+
+function ResourceLinkList({
+  links,
+}: {
+  links: Array<{ label: string; url: string }>
+}) {
+  if (links.length === 0) return null
+
+  return (
+    <div className="flex flex-col gap-1">
+      <p className={DETAIL_META_CLASS}>Onboarding modules</p>
+      <div className="flex flex-col items-start gap-1.5">
+        {links.map((link) => (
+          <ResourceDetailLink key={link.label} label={link.label} url={link.url} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function BlueprintCellDetailPanel() {
   const { selection, clearSelection, isOpen, blueprints, selectCell } =
     useBlueprintCellDetail()
@@ -385,6 +424,15 @@ export function BlueprintCellDetailPanel() {
 
     return items
   }, [linkedTechItems, stepTechItems])
+
+  const resourceLinks = useMemo(() => {
+    if (!selectedCell) return []
+
+    return selectedCell.links.flatMap((link) => {
+      if (link.type !== URL_LINK_TYPE || !link.url?.trim()) return []
+      return [{ label: link.label, url: link.url.trim() }]
+    })
+  }, [selectedCell])
 
   const visualStepEntries = useMemo(() => {
     const stepId = selection?.stepId
@@ -579,6 +627,9 @@ export function BlueprintCellDetailPanel() {
                     <span className="text-muted-foreground">No content</span>
                   )}
                 </p>
+                {resourceLinks.length > 0 ? (
+                  <ResourceLinkList links={resourceLinks} />
+                ) : null}
                 {hasTech ? (
                   <TechList
                     title={techSectionTitle}

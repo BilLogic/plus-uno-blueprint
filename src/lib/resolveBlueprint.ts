@@ -1,9 +1,18 @@
 import {
   DISCOVERY_SCENARIO_ID,
 } from '@/data/applicationHappyPathFallback'
-import { getBlueprintFallback } from '@/data/blueprintFallbacks'
+import {
+  getBlueprintFallback,
+  getRawBlueprintFallback,
+  WARM_UP_ALTERNATE_PATH_ID,
+  WARM_UP_SCENARIO_ID,
+} from '@/data/blueprintFallbacks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
 import { repairDiscoverySadPathBlueprint } from '@/lib/repairDiscoverySadPathBlueprint'
+import {
+  repairWarmUpAlternatePathBlueprint,
+  repairWarmUpPathLayerPositions,
+} from '@/lib/repairWarmUpAlternatePathBlueprint'
 import { mergeTechDescriptionLinks } from '@/lib/blueprintTechDescriptions'
 import {
   deduplicateBlueprintLayers,
@@ -16,6 +25,18 @@ export type BlueprintSource = 'database' | 'fallback' | null
 
 export function isBlueprintEmpty(data: BlueprintData): boolean {
   return data.layers.length === 0
+}
+
+function repairWarmUpBlueprintLayers(
+  data: BlueprintData,
+  scenarioId: string | undefined,
+  fallback: BlueprintData | null,
+): BlueprintData {
+  if (scenarioId !== WARM_UP_SCENARIO_ID || !fallback) {
+    return data
+  }
+
+  return repairWarmUpPathLayerPositions(data, fallback.layers)
 }
 
 /** Add fallback blueprint rows that are missing from a partially synced path. */
@@ -144,6 +165,12 @@ function mergeMissingBlueprintContent(
   if (scenarioId === DISCOVERY_SCENARIO_ID) {
     return repairDiscoverySadPathBlueprint(deduped, fallback)
   }
+  if (
+    scenarioId === WARM_UP_SCENARIO_ID &&
+    pathId === WARM_UP_ALTERNATE_PATH_ID
+  ) {
+    return repairWarmUpAlternatePathBlueprint(deduped)
+  }
   return deduped
 }
 
@@ -154,12 +181,61 @@ export function resolveBlueprintForScenario(
   const pathId = rawPath?.id
   const fallback = getBlueprintFallback(scenarioId, pathId)
 
+  if (
+    scenarioId === WARM_UP_SCENARIO_ID &&
+    pathId === WARM_UP_ALTERNATE_PATH_ID &&
+    fallback
+  ) {
+    const corrected = repairWarmUpAlternatePathBlueprint({
+      ...fallback,
+      path: rawPath
+        ? {
+            id: rawPath.id,
+            name: fallback.path.name,
+            description:
+              fallback.path.description ?? rawPath.description ?? null,
+            path_type: rawPath.path_type,
+          }
+        : fallback.path,
+    })
+
+    return {
+      blueprint: applyBlueprintDisplayFilters(
+        repairWarmUpBlueprintLayers(corrected, scenarioId, fallback),
+        scenarioId,
+        pathId,
+      ),
+      source:
+        rawPath && !isBlueprintEmpty(normalizeBlueprint(rawPath))
+          ? 'database'
+          : 'fallback',
+    }
+  }
+
   if (rawPath) {
     const fromDb = normalizeBlueprint(rawPath)
     if (!isBlueprintEmpty(fromDb)) {
+      const merged = mergeMissingBlueprintContent(fromDb, scenarioId, pathId)
+      const rawFallback = getRawBlueprintFallback(
+        scenarioId,
+        pathId,
+        merged.path.path_type,
+      )
+      const blueprint = rawFallback
+        ? {
+            ...merged,
+            path: {
+              ...merged.path,
+              name: rawFallback.path.name,
+              description:
+                rawFallback.path.description ?? merged.path.description,
+            },
+          }
+        : merged
+
       return {
         blueprint: applyBlueprintDisplayFilters(
-          mergeMissingBlueprintContent(fromDb, scenarioId, pathId),
+          repairWarmUpBlueprintLayers(blueprint, scenarioId, fallback),
           scenarioId,
           pathId,
         ),
@@ -171,7 +247,11 @@ export function resolveBlueprintForScenario(
   if (fallback) {
     return {
       blueprint: applyBlueprintDisplayFilters(
-        deduplicateBlueprintLayers(fallback),
+        repairWarmUpBlueprintLayers(
+          deduplicateBlueprintLayers(fallback),
+          scenarioId,
+          fallback,
+        ),
         scenarioId,
         rawPath?.id ?? fallback.path.id,
       ),

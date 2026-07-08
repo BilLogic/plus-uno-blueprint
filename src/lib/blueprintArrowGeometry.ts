@@ -26,7 +26,7 @@ export type CellAnchor = {
 
 /** Regular Tutor step 8 → step 1 loop (stable IDs). */
 export const REGULAR_TUTOR_LOOP_SOURCE_ID =
-  'a0000000-0000-4000-8000-000000040803'
+  'a0000000-0000-4000-8000-000000040903'
 export const REGULAR_TUTOR_LOOP_TARGET_ID =
   'a0000000-0000-4000-8000-000000040103'
 

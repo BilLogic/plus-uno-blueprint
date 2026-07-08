@@ -1,5 +1,6 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
-import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
+import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
+import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadTriggers,
@@ -143,7 +144,7 @@ const GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS = [
   'The tutor fills out the update, check, or set goals modal in the PLUS app with the student, depending on the point the session is in the goal cycle.',
   'If prompted, the tutor fills out the goal achievement strategy form in the PLUS app with the student, depending on the point the session is in the goal cycle.',
   'The tutor saves the goal activity with the student in the PLUS app.',
-  'The tutor navigates back to the PLUS App dashboard to move on to the student on the researcher sorted list.',
+  'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the student on the researcher sorted list.',
 ] as const
 
 export const GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION =
@@ -170,6 +171,14 @@ function cell(
     Pick<BlueprintCell, 'picture' | 'description' | 'links'>
   > = {},
 ): BlueprintCell {
+  const links =
+    layerId === L.regular
+      ? mergeUrlLinks(
+          metadata.links ?? [],
+          GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS,
+        )
+      : (metadata.links ?? EMPTY_CELL_METADATA.links)
+
   return {
     id,
     layer_id: layerId,
@@ -177,6 +186,7 @@ function cell(
     content,
     ...EMPTY_CELL_METADATA,
     ...metadata,
+    links,
   }
 }
 
@@ -379,9 +389,6 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     'Researcher sets student order',
   ),
 
-  cell(gsCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
-  }),
   cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
@@ -389,6 +396,9 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(gsCell('05', '09'), L.support, STEPS[4].id, 'Dev Team\nDesign team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign team', {

@@ -1,5 +1,6 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
-import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
+import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
+import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadTriggers,
@@ -166,7 +167,7 @@ const BACKSTAGE_RESEARCHER = 'Researchers set goal setting activities'
 const SUPPORT_STEP_11 = 'Dev Team, Design team'
 
 const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_02_DESCRIPTION =
-  'The tutor views the Your Students screen in the PLUS app and clicks the Update Goals CTA in the Action column for the student they are working with.'
+  'The tutor views the Student Dashboard screen in the PLUS app and clicks the Update Goals CTA in the Action column for the student they are working with.'
 
 const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_03_DESCRIPTION =
   'The tutor shares the update goals modal in the PLUS app with the student, which displays the last goal cycle overview and system suggestions for effort and progress goals.'
@@ -187,7 +188,7 @@ const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_09_DESCRIPTION =
   'The tutor finalizes updating goals with the student in the PLUS app, which displays the goals updated summary with effort and progress goals and goal achievement strategy.'
 
 const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_11_DESCRIPTION =
-  'The tutor navigates back to the Your Students screen in the PLUS app to move on to the next student in the researcher sorted list.'
+  'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION =
   'The tutor utilizes Zoom/Pencil to virtually connect with the student and joins the breakout room to update goals with the student.'
@@ -233,6 +234,14 @@ function cell(
     Pick<BlueprintCell, 'picture' | 'description' | 'links'>
   > = {},
 ): BlueprintCell {
+  const links =
+    layerId === L.regular
+      ? mergeUrlLinks(
+          metadata.links ?? [],
+          GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS,
+        )
+      : (metadata.links ?? EMPTY_CELL_METADATA.links)
+
   return {
     id,
     layer_id: layerId,
@@ -240,6 +249,7 @@ function cell(
     content,
     ...EMPTY_CELL_METADATA,
     ...metadata,
+    links,
   }
 }
 
@@ -543,9 +553,6 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
   cell(guCell('03', '09'), L.support, STEPS[2].id, SUPPORT_DEV_DESIGN, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell(guCell('04', '09'), L.support, STEPS[3].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
-  }),
   cell(guCell('05', '09'), L.support, STEPS[4].id, SUPPORT_DEV_DESIGN, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
@@ -556,6 +563,9 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(guCell('08', '09'), L.support, STEPS[7].id, SUPPORT_DEV_DESIGN, {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
+  cell(guCell('09', '09'), L.support, STEPS[8].id, SUPPORT_DEV_DESIGN, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(

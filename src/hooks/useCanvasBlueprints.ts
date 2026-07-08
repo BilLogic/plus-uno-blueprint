@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  filterPathsForScenarioUi,
   getBlueprintFallback,
   getFallbackPathsForScenario,
+  mergePathsWithFallback,
 } from '@/data/blueprintFallbacks'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
@@ -141,7 +141,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
           if (scenarioPaths.length > 0) {
             pathsMap.set(
               scenarioId,
-              filterPathsForScenarioUi(
+              mergePathsWithFallback(
                 scenarioId,
                 scenarioPaths.map((path) => ({
                   id: path.id,

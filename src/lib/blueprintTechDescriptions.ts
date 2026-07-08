@@ -1,6 +1,7 @@
 import type { BlueprintCell, CellLink } from '@/types/blueprint'
 
 export const TECH_DESCRIPTION_LINK_TYPE = 'tech_description'
+export const URL_LINK_TYPE = 'url'
 
 export function techDescriptionLink(
   techLabel: string,
@@ -101,11 +102,42 @@ export function resolveTechCellDetailUrl(
   return null
 }
 
-export function mergeTechDescriptionLinks(
+export function mergeUrlLinks(
   links: CellLink[],
   fallbackLinks: CellLink[],
 ): CellLink[] {
   const merged = links.map((link) => ({ ...link }))
+
+  for (const fallbackLink of fallbackLinks) {
+    if (fallbackLink.type !== URL_LINK_TYPE || !fallbackLink.url?.trim()) continue
+
+    const existingIndex = merged.findIndex(
+      (entry) => entry.type === URL_LINK_TYPE && entry.label === fallbackLink.label,
+    )
+
+    if (existingIndex >= 0) {
+      const existing = merged[existingIndex]
+      merged[existingIndex] = {
+        ...existing,
+        url: existing.url?.trim() || fallbackLink.url,
+      }
+      continue
+    }
+
+    merged.push(fallbackLink)
+  }
+
+  return merged
+}
+
+export function mergeTechDescriptionLinks(
+  links: CellLink[],
+  fallbackLinks: CellLink[],
+): CellLink[] {
+  const merged = mergeUrlLinks(
+    links.map((link) => ({ ...link })),
+    fallbackLinks,
+  )
 
   for (const fallbackLink of fallbackLinks) {
     if (fallbackLink.type !== TECH_DESCRIPTION_LINK_TYPE) continue

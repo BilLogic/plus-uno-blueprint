@@ -29,7 +29,7 @@ export const PARALLEL_SESSION_LEAD_COLUMN_COUNT =
 
 /** Partner Action cells in warm-up, goal setting, and help request scenarios. */
 export const PARALLEL_SESSION_PARTNER_CELL_ID_PATTERN =
-  /000000(?:04|1a|1b|1f|a0|b0|c0|d0)(\d{2})01$/
+  /000000(?:04|06|1a|1b|1f|a0|b0|c0|d0)(\d{2})01$/
 
 export function isParallelSessionPartnerWrapTrigger(
   sourceCellId: string,
@@ -50,7 +50,7 @@ export function isParallelSessionPartnerWrapTrigger(
 
 /** Lead Tutor cells in warm-up, goal setting, and help request scenarios. */
 export const PARALLEL_SESSION_LEAD_CELL_ID_PATTERN =
-  /000000(?:04|1a|1b|1f|a0|b0|c0|d0)(\d{2})02$/
+  /000000(?:04|06|1a|1b|1f|a0|b0|c0|d0)(\d{2})02$/
 
 export function isParallelSessionLeadWrapTrigger(
   sourceCellId: string,

@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import {
-  filterPathsForScenarioUi,
   getBlueprintFallback,
   getFallbackPathsForScenario,
+  mergePathsWithFallback,
 } from '@/data/blueprintFallbacks'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { usePathSelection } from '@/hooks/usePathSelection'
@@ -104,7 +104,7 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
           return
         }
 
-        const list = filterPathsForScenarioUi(
+        const list = mergePathsWithFallback(
           serviceScenarioId,
           (data ?? []) as PathListItem[],
         )
