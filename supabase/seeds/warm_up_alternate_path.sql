@@ -6,7 +6,7 @@ values (
   'a0000000-0000-4000-8000-000000000350',
   'a0000000-0000-4000-8000-000000000203',
   'Alternate Path',
-  'Warm-up flow that skips the screen-share step.',
+  'Not engaged student warm-up.',
   'alternative'
 )
 on conflict (id) do update set

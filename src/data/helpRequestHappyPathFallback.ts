@@ -1,5 +1,28 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
+  GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
+  GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
+} from '@/data/goalSettingParallelSessionPictures'
+import { GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION } from '@/data/goalSettingHappyPathFallback'
+import {
+  HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID,
+  HELP_REQUEST_PLUS_APP_STEP_06_DESCRIPTION,
+  HELP_REQUEST_PLUS_APP_STEP_06_FIGMA_URL,
+  HELP_REQUEST_PLUS_APP_STEP_06_PICTURE,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE,
+  HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+  HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+  HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+} from '@/data/helpRequestPictures'
+import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
+import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadTriggers,
   PARALLEL_SESSION_PARTNER_CONTENT,
@@ -84,13 +107,13 @@ const STEPS = [
     column_position: 4,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000979',
-    name: 'Next student',
+    id: HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID,
+    name: 'Leave breakout room',
     column_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000986',
-    name: PARALLEL_SESSION_PARTNER_CONTENT[5]!,
+    id: 'a0000000-0000-4000-8000-000000000979',
+    name: 'Next student',
     column_position: 6,
   },
   {
@@ -117,6 +140,9 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
+  metadata: Partial<
+    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+  > = {},
 ): BlueprintCell {
   return {
     id,
@@ -124,6 +150,7 @@ function cell(
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
+    ...metadata,
   }
 }
 
@@ -171,6 +198,28 @@ function rowTriggers(
   return triggers
 }
 
+function columnLaneTriggers(
+  fromLayer: string,
+  toLayer: string,
+  idStart: number,
+  stepCount: number,
+): BlueprintCellTrigger[] {
+  const triggers: BlueprintCellTrigger[] = []
+  for (let i = 0; i < stepCount; i++) {
+    const step = String(i + 1).padStart(2, '0')
+    triggers.push(
+      trigger(
+        String(idStart + i).padStart(3, '0'),
+        step,
+        fromLayer,
+        step,
+        toLayer,
+      ),
+    )
+  }
+  return triggers
+}
+
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     hrCell(stepSlot, layerSuffix),
@@ -178,12 +227,18 @@ const partnerLeadOptions = {
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
+  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
+  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
 }
 
+const HELP_REQUEST_PARTNER_LEAD_TRIGGERS =
+  buildParallelSessionPartnerLeadTriggers(partnerLeadOptions)
+
 const HELP_REQUEST_TRIGGERS: BlueprintCellTrigger[] = [
-  ...buildParallelSessionPartnerLeadTriggers(partnerLeadOptions),
-  ...rowTriggers('03', 50, 4),
-  trigger('060', '05', '03', '01', '03'),
+  ...HELP_REQUEST_PARTNER_LEAD_TRIGGERS,
+  ...rowTriggers('03', 50, 5),
+  ...columnLaneTriggers('03', '06', 113, 6),
+  trigger('060', '06', '03', '01', '03'),
 ]
 
 const HELP_REQUEST_CELLS: BlueprintCell[] = [
@@ -192,45 +247,69 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
-  cell(hrCell('01', '03'), L.regular, STEPS[0].id, 'Tutor Receives Help Request'),
+  cell(hrCell('01', '03'), L.regular, STEPS[0].id, 'Tutor Receives Help Request', {
+    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
+  }),
   cell(
     hrCell('02', '03'),
     L.regular,
     STEPS[1].id,
     'Finish current conversation in 1-2 minutes',
+    { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE },
   ),
-  cell(hrCell('03', '03'), L.regular, STEPS[2].id, 'Visit student requesting help'),
-  cell(hrCell('04', '03'), L.regular, STEPS[3].id, 'Resolve Issue'),
+  cell(hrCell('03', '03'), L.regular, STEPS[2].id, 'Visit student requesting help', {
+    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
+  }),
+  cell(hrCell('04', '03'), L.regular, STEPS[3].id, 'Resolve Issue', {
+    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
+  }),
+  cell(hrCell('05', '03'), L.regular, STEPS[4].id, 'Leave breakout room', {
+    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
+  }),
   cell(
-    hrCell('05', '03'),
+    hrCell('06', '03'),
     L.regular,
-    STEPS[4].id,
+    STEPS[5].id,
     'Return to the next student in sorted order set by researchers',
+    { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
 
-  cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil, PLUS App'),
-  cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil, PLUS App'),
-  cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil, PLUS App'),
-  cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil, PLUS App'),
-  cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil, PLUS App'),
+  cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
+    description: HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  }),
+  cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
+    description: HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+  }),
+  cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
+    description: HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  }),
+  cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
+    description: HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+  }),
+  cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil', {
+    description: HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+  }),
+  cell(hrCell('06', '06'), L.frontStageTech, STEPS[5].id, 'PLUS App', {
+    links: [
+      techDescriptionLink(
+        'PLUS App',
+        HELP_REQUEST_PLUS_APP_STEP_06_DESCRIPTION,
+        HELP_REQUEST_PLUS_APP_STEP_06_PICTURE,
+        HELP_REQUEST_PLUS_APP_STEP_06_FIGMA_URL,
+      ),
+    ],
+  }),
 
   cell(
-    hrCell('05', '07'),
+    hrCell('06', '07'),
     L.backStage,
-    STEPS[4].id,
+    STEPS[5].id,
     'Researchers set student order',
   ),
 
-  cell(hrCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign team'),
-  cell(hrCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign team'),
-  cell(hrCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign team'),
-  cell(hrCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign team'),
-  cell(
-    hrCell('05', '09'),
-    L.support,
-    STEPS[4].id,
-    'Researchers set student order\nDev Team\nDesign team',
-  ),
+  cell(hrCell('06', '09'), L.support, STEPS[5].id, 'Dev Team\nDesign team', {
+    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  }),
 ]
 
 export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
