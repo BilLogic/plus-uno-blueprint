@@ -1,4 +1,5 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
@@ -585,6 +586,7 @@ export const GOAL_SETTING_DETAILED_PATH_FALLBACK: BlueprintData = {
     name: 'Set Goals',
     description:
       'No prior personalized goal set and start of a new goal cycle.',
+    note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'alternative',
   },
   layers: [...LAYERS],

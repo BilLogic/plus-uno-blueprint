@@ -264,6 +264,7 @@ export const TECH_SETUP_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Tutor succesfully sets up technology and obtains clearances.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

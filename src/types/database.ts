@@ -202,6 +202,7 @@ export type Database = {
           service_scenario_id: string
           name: string
           description: string | null
+          note: string | null
           path_type: PathType
           created_at: string
           updated_at: string
@@ -211,6 +212,7 @@ export type Database = {
           service_scenario_id: string
           name: string
           description?: string | null
+          note?: string | null
           path_type: PathType
           created_at?: string
           updated_at?: string
@@ -220,6 +222,7 @@ export type Database = {
           service_scenario_id?: string
           name?: string
           description?: string | null
+          note?: string | null
           path_type?: PathType
           created_at?: string
           updated_at?: string

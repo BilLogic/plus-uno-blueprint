@@ -293,6 +293,7 @@ export const ONBOARDING_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Tutor succesfully completes onboarding modules.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

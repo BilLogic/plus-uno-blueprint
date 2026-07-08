@@ -147,6 +147,7 @@ export const STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: STANDARD_SCHEDULING_HAPPY_PATH_ID,
     name: 'Happy Path',
     description: 'The tutors receive semester schedule',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

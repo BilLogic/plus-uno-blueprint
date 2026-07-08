@@ -28,7 +28,12 @@ import {
 import { shouldUsePillCellContent, shouldUseVisualContent, abbreviateConnectionLayerName } from '@/lib/blueprintLayout'
 import { getTechPillStyle } from '@/lib/techPillTheme'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
-import { resolveTechCellDetailText, resolveTechCellDetailUrl, URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import {
+  resolveTechCellDetailLabel,
+  resolveTechCellDetailText,
+  resolveTechCellDetailUrl,
+  URL_LINK_TYPE,
+} from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellConnection } from '@/lib/blueprintCellConnections'
@@ -455,6 +460,14 @@ export function BlueprintCellDetailPanel() {
   const detailBodyText = selectedCell
     ? resolveTechCellDetailText(selection.techItem, selectedCell)
     : cellContent
+  const techDetailLabel =
+    selection.layerName === 'Front Stage Tech' && selectedCell
+      ? resolveTechCellDetailLabel(selection.techItem, selectedCell)
+      : null
+  const detailDescriptionText =
+    techDetailLabel && detailBodyText.trim() === techDetailLabel
+      ? ''
+      : detailBodyText
   const techDetailUrl = selectedCell
     ? resolveTechCellDetailUrl(selection.techItem, selectedCell)
     : null
@@ -622,11 +635,18 @@ export function BlueprintCellDetailPanel() {
               <>
                 {layerHeader}
                 {pictureBlock}
-                <p className="text-sm whitespace-pre-wrap text-foreground">
-                  {detailBodyText || (
-                    <span className="text-muted-foreground">No content</span>
-                  )}
-                </p>
+                {techDetailLabel ? (
+                  <p className="text-sm font-bold leading-snug text-foreground">
+                    {techDetailLabel}
+                  </p>
+                ) : null}
+                {detailDescriptionText.trim() || !techDetailLabel ? (
+                  <p className="text-sm whitespace-pre-wrap text-foreground">
+                    {detailDescriptionText.trim() || (
+                      <span className="text-muted-foreground">No content</span>
+                    )}
+                  </p>
+                ) : null}
                 {resourceLinks.length > 0 ? (
                   <ResourceLinkList links={resourceLinks} />
                 ) : null}

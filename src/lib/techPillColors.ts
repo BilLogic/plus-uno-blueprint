@@ -33,6 +33,12 @@ export type TechPillName = keyof typeof TECH_PILL_COLORS
 const TECH_LABEL_ALIASES: Record<string, TechPillName> = {
   'plus app': 'PLUS App',
   workday: 'Workday (payroll software)',
+  'zoom/pencil': 'Zoom/Pencil',
+  'zoom/ pencil': 'Zoom/Pencil',
+}
+
+function isZoomPencilLabel(label: string): boolean {
+  return /^zoom\s*\/\s*pencil$/i.test(label.trim())
 }
 
 const LOWER_TO_CANONICAL = Object.fromEntries(
@@ -67,6 +73,8 @@ function hashLabel(label: string): number {
 /** Resolve a raw pill label to its canonical registry key when possible. */
 export function normalizeTechPillLabel(label: string): string {
   const trimmed = label.trim()
+  if (isZoomPencilLabel(trimmed)) return 'Zoom/Pencil'
+
   const lower = trimmed.toLowerCase()
   return TECH_LABEL_ALIASES[lower] ?? LOWER_TO_CANONICAL[lower] ?? trimmed
 }

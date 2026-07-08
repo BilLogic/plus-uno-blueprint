@@ -187,6 +187,7 @@ export const LESSON_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Tutor succesfully completes lesson modules.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

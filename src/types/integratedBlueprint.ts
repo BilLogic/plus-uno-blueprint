@@ -45,6 +45,7 @@ export type IntegratedBlueprintData = {
     id: string
     name: string
     description: string | null
+    note: string | null
     path_type: PathType
   }>
   layers: BlueprintLayer[]

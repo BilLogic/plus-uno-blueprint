@@ -1,4 +1,5 @@
 import type { BlueprintCell, CellLink } from '@/types/blueprint'
+import { parseCellContentItems } from '@/lib/parseCellContent'
 
 export const TECH_DESCRIPTION_LINK_TYPE = 'tech_description'
 export const URL_LINK_TYPE = 'url'
@@ -48,6 +49,17 @@ function getTechDescriptionFromLinks(
     }
   }
   return null
+}
+
+/** Tech pill label for the detail panel heading (Front Stage Tech). */
+export function resolveTechCellDetailLabel(
+  techItem: string | undefined,
+  cell: Pick<BlueprintCell, 'content'>,
+): string | null {
+  if (techItem?.trim()) return techItem.trim()
+
+  const items = parseCellContentItems(cell.content)
+  return items.length === 1 ? items[0]! : null
 }
 
 /** Detail panel body copy for a tech pill or single-tech cell. */

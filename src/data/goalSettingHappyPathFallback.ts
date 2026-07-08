@@ -1,4 +1,10 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import { GOAL_SETTING_SCENARIO_ID } from '@/data/parallelSessionScenarioIds'
+import {
+  GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+  SUPPORT_ACTIONS_DESCRIPTION,
+} from '@/data/supportActionsCopy'
+import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
@@ -28,8 +34,8 @@ import type {
   BlueprintData,
 } from '@/types/blueprint'
 
-export const GOAL_SETTING_SCENARIO_ID =
-  'a0000000-0000-4000-8000-000000000204'
+export { GOAL_SETTING_SCENARIO_ID, SUPPORT_ACTIONS_DESCRIPTION }
+export { GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION }
 
 export const GOAL_SETTING_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080c'
@@ -146,9 +152,6 @@ const GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS = [
   'The tutor saves the goal activity with the student in the PLUS app.',
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the student on the researcher sorted list.',
 ] as const
-
-export const GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION =
-  'Dev Team Builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
 
 function happyPathPlusAppLink(
   description: string,
@@ -412,6 +415,7 @@ export const GOAL_SETTING_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'General overview of tutors guiding students through goal-setting activities in breakout sessions. For a more detailed look at the activities, see the other paths in this scenario.',
+    note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'happy',
   },
   layers: [...LAYERS],

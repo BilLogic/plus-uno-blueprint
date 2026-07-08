@@ -200,6 +200,7 @@ export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: FILL_IN_REQUEST_HAPPY_PATH_ID,
     name: 'Happy Path',
     description: 'Tutor succesfully fills in for a fill-in request.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

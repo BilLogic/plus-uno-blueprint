@@ -194,6 +194,7 @@ export function resolveBlueprintForScenario(
             name: fallback.path.name,
             description:
               fallback.path.description ?? rawPath.description ?? null,
+            note: fallback.path.note ?? rawPath.note ?? null,
             path_type: rawPath.path_type,
           }
         : fallback.path,
@@ -229,6 +230,7 @@ export function resolveBlueprintForScenario(
               name: rawFallback.path.name,
               description:
                 rawFallback.path.description ?? merged.path.description,
+              note: rawFallback.path.note ?? merged.path.note,
             },
           }
         : merged

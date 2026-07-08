@@ -1,4 +1,11 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import {
+  STUDENTS_JUST_JOINED_ACTION_LAYER_PLACEHOLDER,
+  STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+  STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+} from '@/data/studentsJustJoinedPictures'
+import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
   BlueprintCellTrigger,
@@ -92,6 +99,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
 ): BlueprintCell {
   return {
     id,
@@ -99,6 +107,7 @@ function cell(
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
+    ...metadata,
   }
 }
 
@@ -150,7 +159,14 @@ const STUDENTS_JUST_JOINED_TRIGGERS: BlueprintCellTrigger[] = [
   ...rowTriggers('01', 1, 2),
   ...rowTriggers('02', 10, 2),
   trigger('020', '03', '02', '03', '03'),
+  trigger('031', '01', '02', '01', '06'),
+  trigger('032', '02', '02', '02', '06'),
+  trigger('030', '03', '03', '03', '06'),
 ]
+
+const ACTION_PLACEHOLDER = {
+  picture: STUDENTS_JUST_JOINED_ACTION_LAYER_PLACEHOLDER,
+} as const
 
 const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
@@ -162,27 +178,31 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
     L.partner,
     STEPS[0].id,
     'Remind students that tutors support multiple students and wait time is normal',
+    ACTION_PLACEHOLDER,
   ),
   cell(
     sjjCell('02', '01'),
     L.partner,
     STEPS[1].id,
     'Ask students to share screen and log into math software',
+    ACTION_PLACEHOLDER,
   ),
   cell(
     sjjCell('03', '01'),
     L.partner,
     STEPS[2].id,
     "Show students how to use the 'raise hand' emoji to let tutors know when they need help",
+    ACTION_PLACEHOLDER,
   ),
 
-  cell(sjjCell('01', '02'), L.lead, STEPS[0].id, 'Greet Students as they Join'),
-  cell(sjjCell('02', '02'), L.lead, STEPS[1].id, 'Mute students if necessary'),
+  cell(sjjCell('01', '02'), L.lead, STEPS[0].id, 'Greet Students as they Join', ACTION_PLACEHOLDER),
+  cell(sjjCell('02', '02'), L.lead, STEPS[1].id, 'Mute students if necessary', ACTION_PLACEHOLDER),
   cell(
     sjjCell('03', '02'),
     L.lead,
     STEPS[2].id,
     'Ping Tutor if they missed moving student to breakout room for late joiners',
+    ACTION_PLACEHOLDER,
   ),
 
   cell(
@@ -190,11 +210,21 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[2].id,
     'move student to breakout room',
+    ACTION_PLACEHOLDER,
   ),
 
-  cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil'),
-  cell(sjjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil'),
-  cell(sjjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil'),
+  cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
+    picture: ZOOM_TECH_LOGO,
+    description: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  }),
+  cell(sjjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
+    picture: ZOOM_TECH_LOGO,
+    description: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+  }),
+  cell(sjjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
+    picture: ZOOM_TECH_LOGO,
+    description: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  }),
 ]
 
 export const STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK: BlueprintData = {
@@ -203,6 +233,7 @@ export const STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Teachers and tutors welcome students as they join the session.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],
