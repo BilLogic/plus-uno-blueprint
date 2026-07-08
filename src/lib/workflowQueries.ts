@@ -1,13 +1,14 @@
 /** Supabase nested selects for the Service Blueprint schema */
 
 export const PATH_LIST_SELECT =
-  'id, name, description, path_type, service_scenario_id, created_at, updated_at'
+  'id, name, description, note, path_type, service_scenario_id, created_at, updated_at'
 
 /** Blueprint grid: path with layers, path_steps, and cells */
 export const PATH_BLUEPRINT_SELECT = `
   id,
   name,
   description,
+  note,
   path_type,
   service_scenario_id,
   layers (

@@ -228,6 +228,7 @@ export const CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: CALL_OFF_REQUEST_HAPPY_PATH_ID,
     name: 'Happy Path',
     description: 'Tutor succesfully calls off for a call-off request.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

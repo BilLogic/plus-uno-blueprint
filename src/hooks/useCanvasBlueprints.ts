@@ -147,6 +147,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
                   id: path.id,
                   name: path.name,
                   description: path.description ?? null,
+                  note: path.note ?? null,
                   path_type: path.path_type,
                 })),
               ),

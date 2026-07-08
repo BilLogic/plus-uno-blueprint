@@ -22,6 +22,7 @@ import {
   HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
 } from '@/data/helpRequestPictures'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
+import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
   buildParallelSessionPartnerLeadCells,
   buildParallelSessionPartnerLeadTriggers,
@@ -33,8 +34,9 @@ import type {
   BlueprintData,
 } from '@/types/blueprint'
 
-export const HELP_REQUEST_SCENARIO_ID =
-  'a0000000-0000-4000-8000-000000000205'
+import { HELP_REQUEST_SCENARIO_ID } from '@/data/parallelSessionScenarioIds'
+
+export { HELP_REQUEST_SCENARIO_ID }
 
 export const HELP_REQUEST_HAPPY_PATH_ID =
   'a0000000-0000-4000-8000-00000000080d'
@@ -318,6 +320,7 @@ export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Tutors receive and resolve student help requests during the session.',
+    note: getScenarioParallelNote(HELP_REQUEST_SCENARIO_ID),
     path_type: 'happy',
   },
   layers: [...LAYERS],

@@ -33,6 +33,7 @@ export type RawPath = {
   id: string
   name: string
   description?: string | null
+  note?: string | null
   path_type: PathType
   layers?: BlueprintLayer[] | null
   /** @deprecated Legacy shape; use path_steps */
@@ -189,6 +190,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       id: raw.id,
       name: raw.name,
       description: raw.description ?? null,
+      note: raw.note ?? null,
       path_type: raw.path_type,
     },
     layers,

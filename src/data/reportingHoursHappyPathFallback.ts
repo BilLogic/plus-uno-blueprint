@@ -151,6 +151,7 @@ export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: REPORTING_HOURS_HAPPY_PATH_ID,
     name: 'Happy Path',
     description: 'Tutor reports tutoring hours after the session.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

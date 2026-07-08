@@ -158,6 +158,7 @@ export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Tutor succesfully signs up for recurring sessions for the rest of the semester.',
+    note: null,
     path_type: 'happy',
   },
   layers: [...LAYERS],

@@ -346,6 +346,7 @@ function buildApplicationDiscoveryFallback(
       id: config.pathId,
       name: config.pathName,
       description: config.pathDescription,
+      note: null,
       path_type: config.pathType,
     },
     layers: [...layers],

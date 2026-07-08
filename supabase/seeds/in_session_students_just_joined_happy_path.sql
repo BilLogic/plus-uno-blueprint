@@ -90,13 +90,50 @@ on conflict (id) do update set
   step_id = excluded.step_id,
   content = excluded.content;
 
+update public.cells
+set picture = '/blueprint-images/shared/step-visual-placeholder.svg'
+where path_id = 'a0000000-0000-4000-8000-00000000080b'
+  and id in (
+    'a0000000-0000-4000-8000-000000190101',
+    'a0000000-0000-4000-8000-000000190201',
+    'a0000000-0000-4000-8000-000000190301',
+    'a0000000-0000-4000-8000-000000190102',
+    'a0000000-0000-4000-8000-000000190202',
+    'a0000000-0000-4000-8000-000000190302',
+    'a0000000-0000-4000-8000-000000190303'
+  );
+
+update public.cells
+set
+  picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png',
+  description = 'The lead tutor greets students on Zoom/Pencil as they join the session.'
+where path_id = 'a0000000-0000-4000-8000-00000000080b'
+  and id = 'a0000000-0000-4000-8000-000000190106';
+
+update public.cells
+set
+  picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png',
+  description = 'On Zoom/Pencil, the lead tutor mutes students if necessary while they share screen with the Teacher and log into math software.'
+where path_id = 'a0000000-0000-4000-8000-00000000080b'
+  and id = 'a0000000-0000-4000-8000-000000190206';
+
+update public.cells
+set
+  picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png',
+  description = 'Regular tutors move their students to their corresponding breakout room on Zoom/Pencil.'
+where path_id = 'a0000000-0000-4000-8000-00000000080b'
+  and id = 'a0000000-0000-4000-8000-000000190306';
+
 insert into public.cell_triggers (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000097001', 'a0000000-0000-4000-8000-000000190101', 'a0000000-0000-4000-8000-000000190201'),
   ('a0000000-0000-4000-8000-000000097002', 'a0000000-0000-4000-8000-000000190201', 'a0000000-0000-4000-8000-000000190301'),
   ('a0000000-0000-4000-8000-000000097010', 'a0000000-0000-4000-8000-000000190102', 'a0000000-0000-4000-8000-000000190202'),
   ('a0000000-0000-4000-8000-000000097011', 'a0000000-0000-4000-8000-000000190202', 'a0000000-0000-4000-8000-000000190302'),
-  ('a0000000-0000-4000-8000-000000097020', 'a0000000-0000-4000-8000-000000190302', 'a0000000-0000-4000-8000-000000190303')
+  ('a0000000-0000-4000-8000-000000097020', 'a0000000-0000-4000-8000-000000190302', 'a0000000-0000-4000-8000-000000190303'),
+  ('a0000000-0000-4000-8000-000000097031', 'a0000000-0000-4000-8000-000000190102', 'a0000000-0000-4000-8000-000000190106'),
+  ('a0000000-0000-4000-8000-000000097032', 'a0000000-0000-4000-8000-000000190202', 'a0000000-0000-4000-8000-000000190206'),
+  ('a0000000-0000-4000-8000-000000097030', 'a0000000-0000-4000-8000-000000190303', 'a0000000-0000-4000-8000-000000190306')
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
   target_cell_id = excluded.target_cell_id;

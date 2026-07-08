@@ -20,6 +20,8 @@ import {
 import { WARM_UP_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/warmUpRegularTutorLinks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
 import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
+import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
+import { WARM_UP_SCENARIO_ID } from '@/data/parallelSessionScenarioIds'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import {
   APPLICATION_HAPPY_PATH_FALLBACK,
@@ -142,7 +144,7 @@ import type {
 } from '@/types/blueprint'
 
 /** Warm-Up scenario from supabase/seed.sql */
-export const WARM_UP_SCENARIO_ID = 'a0000000-0000-4000-8000-000000000203'
+export { WARM_UP_SCENARIO_ID }
 
 export const WARM_UP_HAPPY_PATH_ID = 'a0000000-0000-4000-8000-000000000300'
 export const WARM_UP_ALTERNATE_PATH_ID = 'a0000000-0000-4000-8000-000000000350'
@@ -555,6 +557,7 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Happy Path',
     description:
       'Engaged or partially engaged student warm-up.',
+    note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'happy',
   },
   layers: [...LAYERS],
@@ -657,6 +660,7 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
     id: WARM_UP_ALTERNATE_PATH_ID,
     name: 'Alternate Path',
     description: 'Not engaged student warm-up.',
+    note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'alternative',
   },
   layers: LAYERS.map((layer) => ({
@@ -703,6 +707,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     id: string
     name: string
     description: string | null
+    note: string | null
     path_type: BlueprintData['path']['path_type']
   }>
 > = {
@@ -711,12 +716,14 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: WARM_UP_HAPPY_PATH_FALLBACK.path.id,
       name: WARM_UP_HAPPY_PATH_FALLBACK.path.name,
       description: WARM_UP_HAPPY_PATH_FALLBACK.path.description,
+      note: WARM_UP_HAPPY_PATH_FALLBACK.path.note,
       path_type: WARM_UP_HAPPY_PATH_FALLBACK.path.path_type,
     },
     {
       id: WARM_UP_ALTERNATE_PATH_FALLBACK.path.id,
       name: WARM_UP_ALTERNATE_PATH_FALLBACK.path.name,
       description: WARM_UP_ALTERNATE_PATH_FALLBACK.path.description,
+      note: WARM_UP_ALTERNATE_PATH_FALLBACK.path.note,
       path_type: WARM_UP_ALTERNATE_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -725,6 +732,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: APPLICATION_HAPPY_PATH_FALLBACK.path.id,
       name: APPLICATION_HAPPY_PATH_FALLBACK.path.name,
       description: APPLICATION_HAPPY_PATH_FALLBACK.path.description,
+      note: APPLICATION_HAPPY_PATH_FALLBACK.path.note,
       path_type: APPLICATION_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -733,6 +741,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.id,
       name: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.name,
       description: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.description,
+      note: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.note,
       path_type: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -741,6 +750,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: TECH_SETUP_HAPPY_PATH_FALLBACK.path.id,
       name: TECH_SETUP_HAPPY_PATH_FALLBACK.path.name,
       description: TECH_SETUP_HAPPY_PATH_FALLBACK.path.description,
+      note: TECH_SETUP_HAPPY_PATH_FALLBACK.path.note,
       path_type: TECH_SETUP_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -749,6 +759,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.id,
       name: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.name,
       description: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.description,
+      note: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.note,
       path_type: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -757,6 +768,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.id,
       name: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.name,
       description: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.description,
+      note: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.note,
       path_type: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -765,6 +777,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.id,
       name: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.name,
       description: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.description,
+      note: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.note,
       path_type: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -773,6 +786,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.id,
       name: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.name,
       description: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.description,
+      note: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.note,
       path_type: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -781,6 +795,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.id,
       name: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.name,
       description: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.description,
+      note: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.note,
       path_type: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -789,6 +804,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.id,
       name: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.name,
       description: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.description,
+      note: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.note,
       path_type: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -797,6 +813,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.id,
       name: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.name,
       description: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.description,
+      note: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.note,
       path_type: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -805,6 +822,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.id,
       name: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.name,
       description: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.description,
+      note: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.note,
       path_type: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -813,24 +831,28 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.name,
       description: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.description,
+      note: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.name,
       description: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.description,
+      note: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.name,
       description: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.description,
+      note: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.name,
       description: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.description,
+      note: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.path_type,
     },
     {
@@ -838,6 +860,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.name,
       description:
         GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.description,
+      note: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.path_type,
     },
     {
@@ -845,6 +868,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.name,
       description:
         GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.description,
+      note: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.note,
       path_type:
         GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.path_type,
     },
@@ -854,6 +878,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.id,
       name: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.name,
       description: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.description,
+      note: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.note,
       path_type: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -862,6 +887,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: WRAP_UP_HAPPY_PATH_FALLBACK.path.id,
       name: WRAP_UP_HAPPY_PATH_FALLBACK.path.name,
       description: WRAP_UP_HAPPY_PATH_FALLBACK.path.description,
+      note: WRAP_UP_HAPPY_PATH_FALLBACK.path.note,
       path_type: WRAP_UP_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -870,6 +896,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.id,
       name: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.name,
       description: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.description,
+      note: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.note,
       path_type: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -878,6 +905,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       id: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.id,
       name: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.name,
       description: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.description,
+      note: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.note,
       path_type: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
@@ -897,6 +925,7 @@ const EMPTY_FALLBACK_PATHS: Array<{
   id: string
   name: string
   description: string | null
+  note: string | null
   path_type: BlueprintData['path']['path_type']
 }> = []
 
@@ -931,6 +960,7 @@ export function mergePathsWithFallback<
     id: string
     name: string
     description: string | null
+    note: string | null
     path_type: BlueprintData['path']['path_type']
   },
 >(scenarioId: string | undefined, paths: readonly T[]): T[] {
@@ -949,6 +979,7 @@ export function mergePathsWithFallback<
         ...existing,
         name: fallbackPath.name,
         description: fallbackPath.description,
+        note: fallbackPath.note ?? existing.note,
       })
     } else {
       const hasPathOfType = [...merged.values()].some(
@@ -977,6 +1008,7 @@ export function getFallbackPathsForScenario(
   id: string
   name: string
   description: string | null
+  note: string | null
   path_type: BlueprintData['path']['path_type']
 }> {
   if (!scenarioId) return EMPTY_FALLBACK_PATHS
@@ -992,6 +1024,7 @@ function withPathIdentity(
     id: string
     name: string
     description?: string | null
+    note?: string | null
     path_type: BlueprintData['path']['path_type']
   },
 ): BlueprintData {
@@ -1002,6 +1035,7 @@ function withPathIdentity(
       id: path.id,
       name: path.name,
       description: path.description ?? data.path.description,
+      note: path.note ?? data.path.note,
       path_type: path.path_type,
     },
   }
