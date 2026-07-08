@@ -398,6 +398,26 @@ export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLayer[
   return [...source.layers].sort((a, b) => a.row_position - b.row_position)
 }
 
+/** Map a canonical swimlane row onto a path's layer ids (paths use different layer uuids). */
+export function resolveBlueprintLayer(
+  canonicalLayer: BlueprintLayer,
+  blueprint: BlueprintData,
+): BlueprintLayer {
+  return (
+    blueprint.layers.find((layer) => layer.id === canonicalLayer.id) ??
+    blueprint.layers.find((layer) => layer.name === canonicalLayer.name) ??
+    blueprint.layers.find(
+      (layer) =>
+        layer.row_position === canonicalLayer.row_position &&
+        layer.name === canonicalLayer.name,
+    ) ??
+    blueprint.layers.find(
+      (layer) => layer.row_position === canonicalLayer.row_position,
+    ) ??
+    canonicalLayer
+  )
+}
+
 export function getCompareCellShellMinHeight(
   rowHeight: number,
   compact = false,

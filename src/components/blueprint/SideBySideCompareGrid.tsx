@@ -49,6 +49,7 @@ import {
   getCompareRowTrackCss,
   COMPARE_PATH_SECTION_TOP_INSET,
   COMPARE_PATH_SECTION_BOTTOM_INSET,
+  resolveBlueprintLayer,
 } from '@/lib/sideBySideCompareLayout'
 import { cn } from '@/lib/utils'
 import {
@@ -57,25 +58,7 @@ import {
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import { resolveVisualStepPictures } from '@/lib/visualWalkthrough'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
-
-function resolveBlueprintLayer(
-  canonicalLayer: BlueprintLayer,
-  blueprint: BlueprintData,
-): BlueprintLayer {
-  return (
-    blueprint.layers.find((layer) => layer.id === canonicalLayer.id) ??
-    blueprint.layers.find(
-      (layer) =>
-        layer.row_position === canonicalLayer.row_position &&
-        layer.name === canonicalLayer.name,
-    ) ??
-    blueprint.layers.find(
-      (layer) => layer.row_position === canonicalLayer.row_position,
-    ) ??
-    canonicalLayer
-  )
-}
+import type { BlueprintData } from '@/types/blueprint'
 
 type SideBySideCompareGridProps = {
   blueprints: BlueprintData[]
