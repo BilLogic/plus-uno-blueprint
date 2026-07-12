@@ -45,7 +45,7 @@ export function BlueprintSlideContent({
   headerVariant = 'default',
 }: BlueprintSlideContentProps) {
   const compareScrollRef = useRef<HTMLDivElement>(null)
-  const { getScenarioDisplayViewType, setScenarioDisplayViewType } = useEditor()
+  const { getScenarioDisplayViewType } = useEditor()
   const scenarioId = getBlueprintScenarioId(slide)
   const hasDirectBlueprint = scenarioId !== undefined && !isSubslide(slide)
   const {
@@ -84,11 +84,6 @@ export function BlueprintSlideContent({
     displayViewType === 'single' && selectedPathIds.length > 0
   const noPathsSelected =
     !useIntegratedLayout && paths.length > 0 && selectedPathIds.length === 0
-
-  const handleViewTypeChange = (viewType: typeof displayViewType) => {
-    if (!scenarioId) return
-    setScenarioDisplayViewType(scenarioId, viewType)
-  }
 
   const handleTogglePath = (pathId: string) => {
     togglePathSelection(pathId)
@@ -143,8 +138,6 @@ export function BlueprintSlideContent({
               slide.description ??
               'Scenarios in this phase and how they connect.'
             }
-            viewType={displayViewType}
-            onViewTypeChange={handleViewTypeChange}
             showFilters={false}
             variant={headerVariant}
           />
@@ -182,8 +175,6 @@ export function BlueprintSlideContent({
             slide.description ??
             'Select a scenario under this phase to view its service blueprint.'
           }
-          viewType={displayViewType}
-          onViewTypeChange={handleViewTypeChange}
           showFilters={false}
           variant={headerVariant}
         />
@@ -197,8 +188,6 @@ export function BlueprintSlideContent({
       slide={isSubslide(slide) ? slide : undefined}
       description={scenarioDescription}
       phaseLabel={parentSlide ? getSlideDisplayLabel(parentSlide, slides) : undefined}
-      viewType={displayViewType}
-      onViewTypeChange={handleViewTypeChange}
       paths={paths}
       selectedPathIds={selectedPathIds}
       onTogglePath={handleTogglePath}

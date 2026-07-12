@@ -70,13 +70,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000854',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-000000000855',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000855',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-000000000854',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -137,18 +137,18 @@ const L = {
 } as const
 
 const GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS = [
-  'The tutor utilizes Zoom/Pencil to virtually connect with the student. At this stage, they enter the breakout room the student has been assigned to that they are working with.',
-  'The tutor shares their screen with the student in the breakout room for the goal setting scenario via Zoom/Pencil.',
-  'The tutor completes the goal setting activity for the session while sharing their screen on Zoom/Pencil with the student in the breakout room.',
-  'If prompted, the tutor completes the goal achievement strategy for the session while sharing their screen on Zoom/Pencil with the student in the breakout room.',
-  'The tutor saves the goal setting activity completed for the session while sharing their screen on Zoom/Pencil with the student in the breakout room.',
-  'The tutor says goodbye and leaves the breakout room with the student.',
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
+  'The tutor shares screen via Zoom/Pencil screen share feature.',
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
+  "The tutor leaves the student's Zoom/Pencil breakout room."
 ] as const
 
 const GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS = [
   'The tutor shares the initial goal setting screen in the PLUS app, which is dependent on the point in the goal cycle the session is in.',
-  'The tutor fills out the update, check, or set goals modal in the PLUS app with the student, depending on the point the session is in the goal cycle.',
-  'If prompted, the tutor fills out the goal achievement strategy form in the PLUS app with the student, depending on the point the session is in the goal cycle.',
+  'The tutor fills out the update, check, or set goals modal in the PLUS app with the student.',
+  'If prompted, the tutor fills out the goal achievement strategy form in the PLUS app with the student.',
   'The tutor saves the goal activity with the student in the PLUS app.',
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the student on the researcher sorted list.',
 ] as const
@@ -288,10 +288,10 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
-  cell(gsCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session', {
+  cell(gsCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session.', {
     picture: GOAL_SETTING_HAPPY_PATH_RT_STEP_PICTURES.joinBreakoutSession,
   }),
-  cell(gsCell('02', '03'), L.regular, STEPS[1].id, 'Share screen', {
+  cell(gsCell('02', '03'), L.regular, STEPS[1].id, 'Share screen.', {
     picture: GOAL_SETTING_HAPPY_PATH_RT_STEP_PICTURES.shareScreen,
   }),
   cell(
@@ -305,24 +305,24 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     gsCell('04', '03'),
     L.regular,
     STEPS[3].id,
-    'If prompted, complete goal achievement strategy with student',
+    'If prompted, complete goal achievement strategy with student.',
     { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
   cell(
     gsCell('05', '03'),
     L.regular,
     STEPS[4].id,
-    'Finalize goal activity with student',
+    'Finalize goal activity with student.',
     { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_05_PICTURE },
   ),
-  cell(gsCell('06', '03'), L.regular, STEPS[5].id, 'Leave breakout room', {
+  cell(gsCell('06', '03'), L.regular, STEPS[5].id, 'Leave breakout room.', {
     picture: GOAL_SETTING_REGULAR_TUTOR_STEP_06_PICTURE,
   }),
   cell(
     gsCell('07', '03'),
     L.regular,
     STEPS[6].id,
-    'Move on to the next student in sorted order set by researchers',
+    'Move on to the next student in sorted order set by researchers.',
     { picture: GOAL_SETTING_REGULAR_TUTOR_STEP_07_PICTURE },
   ),
 
@@ -377,34 +377,40 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     gsCell('03', '07'),
     L.backStage,
     STEPS[2].id,
-    'Researcher sets goal setting activities',
+    'Researcher sets goal setting activities.',
   ),
   cell(
     gsCell('04', '07'),
     L.backStage,
     STEPS[3].id,
-    'Researcher sets goal setting activities',
+    'Researcher sets goal setting activities.',
+  ),
+  cell(
+    gsCell('05', '07'),
+    L.backStage,
+    STEPS[4].id,
+    'Researcher sets goal setting activities.',
   ),
   cell(
     gsCell('07', '07'),
     L.backStage,
     STEPS[6].id,
-    'Researcher sets student order',
+    'Researcher sets student order.',
   ),
 
-  cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign team', {
+  cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign Team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell(gsCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign team', {
+  cell(gsCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign Team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign team', {
+  cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell(gsCell('05', '09'), L.support, STEPS[4].id, 'Dev Team\nDesign team', {
+  cell(gsCell('05', '09'), L.support, STEPS[4].id, 'Dev Team\nDesign Team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell(gsCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign team', {
+  cell(gsCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign Team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]

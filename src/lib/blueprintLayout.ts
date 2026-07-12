@@ -66,18 +66,8 @@ export function shouldShowVisibilityLineAfter(
     return false
   }
 
-  // Application: Front Stage Actions sits above Front Stage Tech — visibility
-  // line follows Front Stage Tech, not Front Stage Actions.
-  if (layer.name === 'Front Stage Actions' && layers) {
-    const index = layers.findIndex((entry) => entry.id === layer.id)
-    const next = layers[index + 1]
-    if (next?.name === 'Front Stage Tech') {
-      return false
-    }
-  }
-
-  // Warm-Up / In-session: Front Stage Tech sits above Front Stage Actions —
-  // visibility line follows Front Stage Actions, not Front Stage Tech.
+  // Front Stage Tech sits above Front Stage Actions — visibility line follows
+  // Front Stage Actions, not Front Stage Tech.
   if (layer.name === 'Front Stage Tech' && layers) {
     const index = layers.findIndex((entry) => entry.id === layer.id)
     const next = layers[index + 1]

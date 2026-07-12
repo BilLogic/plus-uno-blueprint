@@ -1,4 +1,5 @@
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
+import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 
@@ -77,8 +78,9 @@ export function resolveVisualStepPictureEntries(
     const layer = layerByName.get(name)
     if (!layer) return []
     const cell = getCellAt(cellLookup, layer.id, stepId)
-    const picture = cell?.picture?.trim()
-    if (!picture) return []
+    if (!cell?.content.trim()) return []
+    const picture = cell.picture?.trim()
+    if (!picture || isBlueprintStepVisualPlaceholder(picture)) return []
     return [
       {
         layerName: name,
@@ -87,6 +89,22 @@ export function resolveVisualStepPictureEntries(
         description: resolveCellDescription(cell),
       },
     ]
+  })
+}
+
+/** True when Partner, Lead Tutor, or Regular Tutor has a cell in this step. */
+export function stepHasVisualWalkthroughLayerCells(
+  blueprint: VisualPictureBlueprint,
+  stepId: string,
+): boolean {
+  const cellLookup = buildCellLookup(blueprint.cells)
+  const layerByName = new Map(blueprint.layers.map((layer) => [layer.name, layer]))
+
+  return VISUAL_WALKTHROUGH_LAYER_NAMES.some((name) => {
+    const layer = layerByName.get(name)
+    if (!layer) return false
+    const cell = getCellAt(cellLookup, layer.id, stepId)
+    return Boolean(cell?.content.trim())
   })
 }
 

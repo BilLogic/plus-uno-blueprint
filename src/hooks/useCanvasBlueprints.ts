@@ -8,6 +8,7 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
 import type { RawPath } from '@/lib/normalizeBlueprint'
 import type { PathListItem } from '@/lib/pathSelection'
+import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -97,13 +98,25 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     setLoading(true)
     setError(null)
 
-    void client
+    const query = client
       .from('paths')
       .select(PATH_BLUEPRINT_SELECT)
       .in('service_scenario_id', orderedScenarioIds)
-      .then(({ data, error: err }) => {
+
+    void raceSupabaseQuery(query).then((result) => {
         if (cancelled) return
 
+        if (result === 'timeout') {
+          setBlueprintsByScenario(staticFallbacks.blueprintsByScenario)
+          setPathsByScenario(staticFallbacks.pathsByScenario)
+          setBlueprintsByPathId(staticFallbacks.blueprintsByPathId)
+          setUsingFallback(staticFallbacks.blueprintsByScenario.size > 0)
+          setError(null)
+          setLoading(false)
+          return
+        }
+
+        const { data, error: err } = result
         if (err) {
           setError(err.message)
           setBlueprintsByScenario(staticFallbacks.blueprintsByScenario)

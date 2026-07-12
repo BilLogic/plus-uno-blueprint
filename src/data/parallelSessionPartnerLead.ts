@@ -3,22 +3,22 @@ import type { BlueprintCell, BlueprintCellTrigger } from '@/types/blueprint'
 
 /** Shared Partner Action: Teacher steps for parallel in-session scenarios. */
 export const PARALLEL_SESSION_PARTNER_CONTENT = [
-  'Circulate and quietly observe the students',
-  'Remind students to keep working while waiting',
-  'Checks if all students are in the correct breakout room',
-  'Receives information that student is absent from session',
-  'Alerts lead tutor about unassigned or miss-assigned students using the "ask for help" alert',
-  'Handles student tech problems as they arise',
-  'Escalates unresolved issues to tutors@tutor.plus promptly',
+  'Circulate and quietly observe the students.',
+  'Remind students to keep working while waiting.',
+  'Checks if all students are in the correct breakout room.',
+  'Receives information that student is absent from session.',
+  'Alerts lead tutor about unassigned or miss-assigned students using the "ask for help" alert.',
+  'Handles student tech problems as they arise.',
+  'Escalates unresolved issues to tutors@tutor.plus promptly.',
 ] as const
 
 /** Shared Lead Tutor steps for parallel in-session scenarios. */
 export const PARALLEL_SESSION_LEAD_CONTENT = [
-  'Rename students to match roster name',
-  'Add any un-rostered students to attendance list',
-  'Manually assign unpaired students to available tutors',
-  'Inform Classroom teacher about students that are absent',
-  'Respond to classroom teachers "ask for help" request',
+  'Rename students to match roster name.',
+  'Add any un-rostered students to attendance list.',
+  'Manually assign unpaired students to available tutors.',
+  'Inform classroom teacher about students that are absent.',
+  'Respond to classroom teachers "ask for help" request.',
 ] as const
 
 export const PARALLEL_SESSION_PARTNER_COLUMN_COUNT =

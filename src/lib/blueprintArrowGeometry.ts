@@ -5,6 +5,7 @@ import {
   OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN,
   STEP_COLUMN_GAP,
 } from '@/lib/blueprintLayout'
+import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
   isParallelSessionLeadBottomWrapTrigger,
   isParallelSessionOverheadWrapTrigger,
@@ -135,6 +136,19 @@ export function getVerticalRouteGutterX(
   return sourceBox.left - STEP_COLUMN_GAP / 2
 }
 
+/** Gutter to the right of a step column. */
+export function getVerticalRouteRightGutterX(
+  root: HTMLElement,
+  stepIndex: number,
+  sourceEl: HTMLElement,
+): number {
+  const rightGap = getStepGapCenterX(root, stepIndex)
+  if (rightGap !== null) return rightGap
+
+  const sourceBox = getCellContentBox(sourceEl, root)
+  return sourceBox.right + STEP_COLUMN_GAP / 2
+}
+
 /** Center of the column gap immediately before the target step. */
 export function getPreTargetGapCenterX(
   root: HTMLElement,
@@ -174,10 +188,18 @@ export function getSameColumnObstructingCells(
 
   const sourceBox = getCellContentBox(sourceEl, root)
   const targetBox = getCellContentBox(targetEl, root)
-  const sourceMidY = sourceBox.top + sourceBox.height / 2
-  const targetMidY = targetBox.top + targetBox.height / 2
-  const bandTop = Math.min(sourceMidY, targetMidY)
-  const bandBottom = Math.max(sourceMidY, targetMidY)
+  const targetAbove =
+    targetBox.top + targetBox.height / 2 <
+    sourceBox.top + sourceBox.height / 2
+  const gapTop = targetAbove
+    ? targetBox.top + targetBox.height
+    : sourceBox.top + sourceBox.height
+  const gapBottom = targetAbove ? sourceBox.top : targetBox.top
+
+  if (gapBottom <= gapTop) return []
+
+  const columnLeft = Math.min(sourceBox.left, targetBox.left)
+  const columnRight = Math.max(sourceBox.right, targetBox.right)
 
   const obstructing: HTMLElement[] = []
   root.querySelectorAll<HTMLElement>('[data-blueprint-cell]').forEach((el) => {
@@ -185,8 +207,8 @@ export function getSameColumnObstructingCells(
     if (parseStepIndex(el) !== stepIndex) return
 
     const box = getCellContentBox(el, root)
-    const cellMidY = box.top + box.height / 2
-    if (cellMidY <= bandTop || cellMidY >= bandBottom) return
+    if (box.right <= columnLeft || box.left >= columnRight) return
+    if (box.top >= gapBottom || box.top + box.height <= gapTop) return
 
     obstructing.push(el)
   })
@@ -220,45 +242,32 @@ export function getSameRowObstructingCells(
   return obstructing
 }
 
-/** Mid-left anchors for same-column gutter detours. */
+/** Top/bottom center anchors for same-column gutter detours. */
 export function getVerticalGutterDetourAnchors(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
 ): CellAnchor {
-  const sourceBox = getCellContentBox(sourceEl, root)
-  const targetBox = getCellContentBox(targetEl, root)
-
-  return {
-    source: {
-      x: sourceBox.left,
-      y: sourceBox.top + sourceBox.height / 2,
-    },
-    target: {
-      x: targetBox.left,
-      y: targetBox.top + targetBox.height / 2,
-    },
-  }
+  return getVerticalCellAnchors(sourceEl, targetEl, root)
 }
 
 /**
  * Same-column connector routed through the left column gutter; exits and
- * enters at the vertical midpoint of each cell's left edge.
+ * enters at top/bottom center of each cell.
  */
 export function buildVerticalGutterDetourPath(
   source: Point,
   target: Point,
   gutterX: number,
 ): string {
-  const entryX = target.x - ARROW_CHEVRON_SIZE
-  if (entryX <= gutterX) return ''
+  if (gutterX >= Math.min(source.x, target.x)) return ''
 
   return buildRoundedPolylinePath(
     [
       source,
       { x: gutterX, y: source.y },
       { x: gutterX, y: target.y },
-      { x: entryX, y: target.y },
+      target,
     ],
     ARROW_CORNER_RADIUS,
   )
@@ -353,15 +362,35 @@ export function getElementLayoutBox(
   }
 }
 
-/** Inner content box — the visible cell card edge, not outer lane padding. */
+/** Inner content box — union of visible cell card edges in the lane. */
 export function getCellContentBox(
   cellEl: HTMLElement,
   root: HTMLElement,
 ): LayoutBox {
-  const anchor = cellEl.querySelector<HTMLElement>(
+  const anchors = cellEl.querySelectorAll<HTMLElement>(
     '[data-blueprint-cell-anchor]',
   )
-  return getElementLayoutBox(anchor ?? cellEl, root)
+  if (anchors.length === 0) {
+    return getElementLayoutBox(cellEl, root)
+  }
+  if (anchors.length === 1) {
+    return getElementLayoutBox(anchors[0]!, root)
+  }
+
+  let left = Infinity
+  let right = -Infinity
+  let top = Infinity
+  let bottom = -Infinity
+
+  for (const anchor of anchors) {
+    const box = getElementLayoutBox(anchor, root)
+    left = Math.min(left, box.left)
+    right = Math.max(right, box.right)
+    top = Math.min(top, box.top)
+    bottom = Math.max(bottom, box.top + box.height)
+  }
+
+  return { left, right, top, height: bottom - top }
 }
 
 /** Inset from the interaction line for loop-back horizontal segments. */
@@ -409,7 +438,7 @@ export function isRegularTutorInLaneWrapTrigger(
     )
   }
 
-  return true
+  return false
 }
 
 /** Horizontal lane for Regular Tutor loop arrows — centered in the in-lane corridor. */
@@ -629,48 +658,7 @@ export function getWrapCellAnchors(
   }
 }
 
-/** Layout boxes for each tech pill inside a multi-pill cell. */
-function getTechPillBoxes(
-  cellEl: HTMLElement,
-  root: HTMLElement,
-): LayoutBox[] {
-  const pills = cellEl.querySelectorAll<HTMLElement>(
-    '[data-blueprint-tech-pill]',
-  )
-  return [...pills].map((pill) => {
-    const anchor =
-      pill.closest<HTMLElement>('[data-blueprint-cell-anchor]') ?? pill
-    return getElementLayoutBox(anchor, root)
-  })
-}
-
-/** Pill whose center is closest to a peer cell — for vertical connectors. */
-function getNearestPillBox(
-  cellEl: HTMLElement,
-  root: HTMLElement,
-  peerBox: LayoutBox,
-): LayoutBox | null {
-  const pillBoxes = getTechPillBoxes(cellEl, root)
-  if (pillBoxes.length === 0) return null
-
-  const peerCenterY = peerBox.top + peerBox.height / 2
-  let nearest = pillBoxes[0]
-  let nearestDistance = Math.abs(
-    nearest.top + nearest.height / 2 - peerCenterY,
-  )
-
-  for (const box of pillBoxes.slice(1)) {
-    const distance = Math.abs(box.top + box.height / 2 - peerCenterY)
-    if (distance < nearestDistance) {
-      nearest = box
-      nearestDistance = distance
-    }
-  }
-
-  return nearest
-}
-
-/** Connectors anchor to top/bottom edges when source and target share a step column. */
+/** Connectors anchor to top/bottom center when source and target share a step column. */
 export function getVerticalCellAnchors(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
@@ -681,28 +669,20 @@ export function getVerticalCellAnchors(
   const sourceMidY = sourceBox.top + sourceBox.height / 2
   const targetMidY = targetBox.top + targetBox.height / 2
   const targetAbove = targetMidY < sourceMidY
-
-  const sourceAnchorBox =
-    getNearestPillBox(sourceEl, root, targetBox) ?? sourceBox
-  const targetAnchorBox =
-    getNearestPillBox(targetEl, root, sourceBox) ?? targetBox
-  const x =
-    (sourceAnchorBox.left +
-      sourceAnchorBox.right +
-      targetAnchorBox.left +
-      targetAnchorBox.right) /
-    4
+  const sourceCenterX = (sourceBox.left + sourceBox.right) / 2
+  const targetCenterX = (targetBox.left + targetBox.right) / 2
+  const x = (sourceCenterX + targetCenterX) / 2
 
   if (targetAbove) {
     return {
-      source: { x, y: sourceAnchorBox.top },
-      target: { x, y: targetAnchorBox.top + targetAnchorBox.height },
+      source: { x, y: sourceBox.top },
+      target: { x, y: targetBox.top + targetBox.height },
     }
   }
 
   return {
-    source: { x, y: sourceAnchorBox.top + sourceAnchorBox.height },
-    target: { x, y: targetAnchorBox.top },
+    source: { x, y: sourceBox.top + sourceBox.height },
+    target: { x, y: targetBox.top },
   }
 }
 
@@ -813,13 +793,810 @@ export function buildBidirectionalArrowPath(
   return buildBidirectionalVerticalArrowPath(cellAEl, cellBEl, root)
 }
 
-const INTEGRATED_CELL_ID_PATTERN =
-  /^integrated-cell-[0-9a-f-]{36}-([0-9a-f-]{36})$/i
-
 /** Map integrated overlay cell ids back to canonical blueprint cell ids for arrow rules. */
 export function resolveArrowLogicCellId(cellId: string): string {
-  const match = INTEGRATED_CELL_ID_PATTERN.exec(cellId)
-  return match ? match[1]! : cellId
+  return resolveBlueprintCellId(cellId)
+}
+
+const SAME_STEP_FRONT_STAGE_TECH_TO_REGULAR_TUTOR_PATTERN =
+  /(\d{2})06$/
+
+/** Same-column Front Stage Tech → Regular Tutor (e.g. Reporting an Issue step 4). */
+export function isSameStepFrontStageTechToRegularTutorTrigger(
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  const sourceMatch = source.match(SAME_STEP_FRONT_STAGE_TECH_TO_REGULAR_TUTOR_PATTERN)
+  if (!sourceMatch) return false
+
+  const targetMatch = target.match(/(\d{2})03$/)
+  if (!targetMatch) return false
+
+  return sourceMatch[1] === targetMatch[1]
+}
+
+/** Same-column Front Stage Tech → Lead Tutor (e.g. Reporting an Issue step 4). */
+export function isSameStepFrontStageTechToLeadTutorTrigger(
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  const sourceMatch = source.match(SAME_STEP_FRONT_STAGE_TECH_TO_REGULAR_TUTOR_PATTERN)
+  if (!sourceMatch) return false
+
+  const targetMatch = target.match(/(\d{2})02$/)
+  if (!targetMatch) return false
+
+  return sourceMatch[1] === targetMatch[1]
+}
+
+const REPORTING_AN_ISSUE_FST_TO_REGULAR_TUTOR_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098073'
+const REPORTING_AN_ISSUE_FST_TO_LEAD_TUTOR_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098075'
+
+const INTEGRATED_TRIGGER_ID_PATTERN =
+  /^integrated-trigger-[0-9a-f-]{36}-([0-9a-f-]{36})$/i
+
+/** Map integrated overlay trigger ids back to canonical trigger ids. */
+export function resolveArrowLogicTriggerId(triggerId: string): string {
+  const match = INTEGRATED_TRIGGER_ID_PATTERN.exec(triggerId)
+  return match ? match[1]! : triggerId
+}
+
+export function isReportingAnIssueFrontStageTechToRegularTutorTrigger(
+  triggerId?: string,
+  _sourceCellId?: string,
+  _targetCellId?: string,
+): boolean {
+  if (!triggerId) return false
+
+  return (
+    resolveArrowLogicTriggerId(triggerId) ===
+    REPORTING_AN_ISSUE_FST_TO_REGULAR_TUTOR_TRIGGER_ID
+  )
+}
+
+export function isReportingAnIssueFrontStageTechToLeadTutorTrigger(
+  triggerId?: string,
+  _sourceCellId?: string,
+  _targetCellId?: string,
+): boolean {
+  if (!triggerId) return false
+
+  return (
+    resolveArrowLogicTriggerId(triggerId) ===
+    REPORTING_AN_ISSUE_FST_TO_LEAD_TUTOR_TRIGGER_ID
+  )
+}
+
+const REPORTING_AN_ISSUE_TUTOR_TO_FST_STEP_1_TRIGGER_IDS = new Set([
+  'a0000000-0000-4000-8000-000000098070',
+  'a0000000-0000-4000-8000-000000098074',
+])
+
+export function isReportingAnIssueTutorToFrontStageTechStep1Trigger(
+  triggerId?: string,
+  _sourceCellId?: string,
+  _targetCellId?: string,
+): boolean {
+  if (!triggerId) return false
+
+  return REPORTING_AN_ISSUE_TUTOR_TO_FST_STEP_1_TRIGGER_IDS.has(
+    resolveArrowLogicTriggerId(triggerId),
+  )
+}
+
+/**
+ * Reporting an Issue step 1 — Lead/Regular Tutor → Front Stage Tech: exit and
+ * enter at the vertical center of each cell's left edge, routed through the
+ * left column gutter when another cell sits between source and target.
+ */
+export function buildReportingAnIssueTutorToFrontStageTechSameStepPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const exitX = sourceBox.left
+  const exitY = sourceBox.top + sourceBox.height / 2
+  const entryX = targetBox.left
+  const entryY = targetBox.top + targetBox.height / 2
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const gutterX =
+    sourceStep !== null
+      ? getVerticalRouteGutterX(root, sourceStep, sourceEl)
+      : exitX - STEP_COLUMN_GAP / 2
+  const routeX = Math.min(gutterX, exitX, entryX)
+  const lineEndX = entryX - ARROW_CHEVRON_SIZE
+  if (lineEndX <= routeX) return ''
+
+  const points: Point[] = [{ x: exitX, y: exitY }]
+
+  if (Math.abs(routeX - exitX) > 0.5) {
+    points.push({ x: routeX, y: exitY })
+  }
+
+  if (Math.abs(entryY - exitY) > 0.5) {
+    points.push({ x: routeX, y: entryY })
+  }
+
+  points.push({ x: lineEndX, y: entryY })
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+const SESSION_SIGN_UP_FST_TO_BSA_STEP_1_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000092001'
+const SESSION_SIGN_UP_FST_STEP_1_CELL_ID_SUFFIX = '000000130106'
+const SESSION_SIGN_UP_BSA_STEP_1_CELL_ID_SUFFIX = '000000130107'
+
+/** Session Sign Up step 1 — Front Stage Tech → Back Stage Actions. */
+export function isSessionSignUpFrontStageTechToBackStageActionStep1Trigger(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      SESSION_SIGN_UP_FST_TO_BSA_STEP_1_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(SESSION_SIGN_UP_FST_STEP_1_CELL_ID_SUFFIX) &&
+    target.endsWith(SESSION_SIGN_UP_BSA_STEP_1_CELL_ID_SUFFIX)
+  )
+}
+
+const FILL_IN_REQUEST_FST_TO_BSA_STEP_1_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000094009'
+const FILL_IN_REQUEST_FST_STEP_1_CELL_ID_SUFFIX = '000000150106'
+const FILL_IN_REQUEST_BSA_STEP_1_CELL_ID_SUFFIX = '000000150107'
+
+/** Fill-in Request step 1 — Front Stage Tech → Back Stage Actions. */
+export function isFillInRequestFrontStageTechToBackStageActionStep1Trigger(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      FILL_IN_REQUEST_FST_TO_BSA_STEP_1_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(FILL_IN_REQUEST_FST_STEP_1_CELL_ID_SUFFIX) &&
+    target.endsWith(FILL_IN_REQUEST_BSA_STEP_1_CELL_ID_SUFFIX)
+  )
+}
+
+const REPORTING_HOURS_LEAD_TUTOR_TO_FST_STEP_1_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098091'
+const REPORTING_HOURS_LEAD_TUTOR_STEP_1_CELL_ID_SUFFIX = '0000001e0102'
+const REPORTING_HOURS_FST_STEP_1_CELL_ID_SUFFIX = '0000001e0106'
+
+export function isReportingHoursLeadTutorToFrontStageTechStep1Trigger(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      REPORTING_HOURS_LEAD_TUTOR_TO_FST_STEP_1_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(REPORTING_HOURS_LEAD_TUTOR_STEP_1_CELL_ID_SUFFIX) &&
+    target.endsWith(REPORTING_HOURS_FST_STEP_1_CELL_ID_SUFFIX)
+  )
+}
+
+export const REPORTING_HOURS_FST_STEP_1_TO_BSA_STEP_2_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098094'
+const REPORTING_HOURS_BSA_STEP_2_CELL_ID_SUFFIX = '0000001e0307'
+
+export function isReportingHoursFrontStageTechStep1ToBackStageActionStep2Connection(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      REPORTING_HOURS_FST_STEP_1_TO_BSA_STEP_2_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(REPORTING_HOURS_FST_STEP_1_CELL_ID_SUFFIX) &&
+    target.endsWith(REPORTING_HOURS_BSA_STEP_2_CELL_ID_SUFFIX)
+  )
+}
+
+const CALL_OFF_FSA_STEP_3_TO_BSA_STEP_5_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000095012'
+const CALL_OFF_FSA_STEP_3_CELL_ID_SUFFIX = '000000170304'
+const CALL_OFF_BSA_STEP_5_CELL_ID_SUFFIX = '000000170507'
+
+/** Call-off Request — Front Stage Actions step 3 → Back Stage Actions step 5. */
+export function isCallOffFrontStageActionStep3ToBackStageActionStep5Connection(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      CALL_OFF_FSA_STEP_3_TO_BSA_STEP_5_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(CALL_OFF_FSA_STEP_3_CELL_ID_SUFFIX) &&
+    target.endsWith(CALL_OFF_BSA_STEP_5_CELL_ID_SUFFIX)
+  )
+}
+
+/**
+ * Reporting Hours — Front Stage Tech step 1 → Back Stage Actions step 2:
+ * L-shape (down from bottom center, rounded corner, right into left edge).
+ */
+export function buildReportingHoursFrontStageTechStep1ToBackStageActionStep2Path(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  return buildReportingAnIssueFrontStageActionStep1ToResolvePath(
+    sourceEl,
+    targetEl,
+    root,
+  )
+}
+
+export const REPORTING_HOURS_FST_STEP_3_TO_LEAD_TUTOR_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098092'
+const REPORTING_HOURS_FST_STEP_3_CELL_ID_SUFFIX = '0000001e0206'
+const REPORTING_HOURS_LEAD_TUTOR_STEP_3_CELL_ID_SUFFIX = '0000001e0202'
+
+export function isReportingHoursFrontStageTechStep3ToLeadTutorConnection(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      REPORTING_HOURS_FST_STEP_3_TO_LEAD_TUTOR_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(REPORTING_HOURS_FST_STEP_3_CELL_ID_SUFFIX) &&
+    target.endsWith(REPORTING_HOURS_LEAD_TUTOR_STEP_3_CELL_ID_SUFFIX)
+  )
+}
+
+/**
+ * Reporting Hours step 3 — Front Stage Tech → Lead Tutor: exit and enter at
+ * the vertical center of each cell's right edge, routed through the right
+ * column gutter when another cell sits between source and target.
+ */
+export function buildReportingHoursFrontStageTechStep3ToLeadTutorPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const exitX = sourceBox.right
+  const exitY = sourceBox.top + sourceBox.height / 2
+  const entryX = targetBox.right
+  const entryY = targetBox.top + targetBox.height / 2
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const gutterX =
+    sourceStep !== null
+      ? getVerticalRouteRightGutterX(root, sourceStep, sourceEl)
+      : exitX + STEP_COLUMN_GAP / 2
+  const routeX = Math.max(gutterX, exitX, entryX)
+  const lineEndX = entryX + ARROW_CHEVRON_SIZE
+  if (lineEndX >= routeX) return ''
+
+  const points: Point[] = [{ x: exitX, y: exitY }]
+
+  if (Math.abs(routeX - exitX) > 0.5) {
+    points.push({ x: routeX, y: exitY })
+  }
+
+  if (Math.abs(entryY - exitY) > 0.5) {
+    points.push({ x: routeX, y: entryY })
+  }
+
+  points.push({ x: lineEndX, y: entryY })
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+const REPORTING_AN_ISSUE_FSA_TO_FST_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098077'
+
+export const REPORTING_AN_ISSUE_FSA_STEP_1_TO_RESOLVE_TRIGGER_ID =
+  'a0000000-0000-4000-8000-000000098081'
+
+const REPORTING_AN_ISSUE_FSA_STEP_1_CELL_ID_SUFFIX = '0000001d0104'
+const REPORTING_AN_ISSUE_RESOLVE_BSA_CELL_ID_SUFFIX = '0000001d0207'
+
+export function isReportingAnIssueFrontStageActionStep1ToResolveConnection(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  if (
+    triggerId &&
+    resolveArrowLogicTriggerId(triggerId) ===
+      REPORTING_AN_ISSUE_FSA_STEP_1_TO_RESOLVE_TRIGGER_ID
+  ) {
+    return true
+  }
+
+  if (!sourceCellId || !targetCellId) return false
+
+  const source = resolveArrowLogicCellId(sourceCellId)
+  const target = resolveArrowLogicCellId(targetCellId)
+  return (
+    source.endsWith(REPORTING_AN_ISSUE_FSA_STEP_1_CELL_ID_SUFFIX) &&
+    target.endsWith(REPORTING_AN_ISSUE_RESOLVE_BSA_CELL_ID_SUFFIX)
+  )
+}
+
+const REPORTING_AN_ISSUE_SPANNING_TO_TOP_ENTRY_TRIGGER_IDS = new Set([
+  'a0000000-0000-4000-8000-000000098079',
+  'a0000000-0000-4000-8000-000000098080',
+])
+
+export function isReportingAnIssueSpanningToTopEntryTrigger(
+  triggerId?: string,
+): boolean {
+  if (!triggerId) return false
+
+  return REPORTING_AN_ISSUE_SPANNING_TO_TOP_ENTRY_TRIGGER_IDS.has(
+    resolveArrowLogicTriggerId(triggerId),
+  )
+}
+
+/**
+ * Reporting an Issue — forward cross-column connectors that span one or more
+ * gaps (tutor/FSA → Back Stage Actions): exit right, route each gap at source
+ * center Y, then drop into the target top center.
+ */
+export function buildReportingAnIssueSpanningToTopEntryPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const sourceStep = parseStepIndex(sourceEl)
+  const targetStep = parseStepIndex(targetEl)
+
+  if (sourceStep === null || targetStep === null || targetStep <= sourceStep) {
+    return ''
+  }
+
+  const exitX = sourceBox.right
+  const exitY = sourceBox.top + sourceBox.height / 2
+  const entryX = (targetBox.left + targetBox.right) / 2
+  const lineEndY = targetBox.top - ARROW_CHEVRON_SIZE
+
+  const points: Point[] = [{ x: exitX, y: exitY }]
+
+  for (let gapIndex = sourceStep; gapIndex < targetStep; gapIndex++) {
+    const gapX = getStepGapCenterX(root, gapIndex)
+    if (gapX !== null) {
+      points.push({ x: gapX, y: exitY })
+    }
+  }
+
+  const last = points[points.length - 1]!
+  if (Math.abs(entryX - last.x) > 0.5) {
+    points.push({ x: entryX, y: exitY })
+  }
+
+  points.push({ x: entryX, y: lineEndY })
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+export function isReportingAnIssueFrontStageActionToFrontStageTechTrigger(
+  triggerId?: string,
+  _sourceCellId?: string,
+  _targetCellId?: string,
+): boolean {
+  if (!triggerId) return false
+
+  return (
+    resolveArrowLogicTriggerId(triggerId) ===
+    REPORTING_AN_ISSUE_FSA_TO_FST_TRIGGER_ID
+  )
+}
+
+export function isReportingAnIssueFrontStageActionStep1ToResolveTrigger(
+  triggerId?: string,
+  sourceCellId?: string,
+  targetCellId?: string,
+): boolean {
+  return isReportingAnIssueFrontStageActionStep1ToResolveConnection(
+    triggerId,
+    sourceCellId,
+    targetCellId,
+  )
+}
+
+/**
+ * Reporting an Issue — Front Stage Actions step 1 → Resolve concern: simple
+ * L-shape (down from bottom center, rounded corner, right into left edge).
+ */
+export function buildReportingAnIssueFrontStageActionStep1ToResolvePath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+
+  const exitX = (sourceBox.left + sourceBox.right) / 2
+  const exitY = sourceBox.top + sourceBox.height
+  const entryY = targetBox.top + targetBox.height / 2
+  const lineEndX = targetBox.left - ARROW_CHEVRON_SIZE
+
+  if (lineEndX <= exitX) return ''
+
+  const points: Point[] = [
+    { x: exitX, y: exitY },
+    { x: exitX, y: entryY },
+    { x: lineEndX, y: entryY },
+  ]
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+export function partitionReportingAnIssueFsaStep1ToResolveTriggers<
+  T extends {
+    id: string
+    source_cell_id: string
+    target_cell_id: string
+  },
+>(triggers: T[]): { resolveTriggers: T[]; otherTriggers: T[] } {
+  const resolveTriggers: T[] = []
+  const otherTriggers: T[] = []
+
+  for (const trigger of triggers) {
+    if (
+      isReportingAnIssueFrontStageActionStep1ToResolveConnection(
+        trigger.id,
+        trigger.source_cell_id,
+        trigger.target_cell_id,
+      )
+    ) {
+      resolveTriggers.push(trigger)
+    } else {
+      otherTriggers.push(trigger)
+    }
+  }
+
+  return { resolveTriggers, otherTriggers }
+}
+
+/**
+ * Reporting an Issue — Front Stage Actions → Front Stage Tech (adjacent columns):
+ * route through the column gap and enter at the bottom center of the tech cell.
+ */
+export function buildReportingAnIssueFrontStageActionToFrontStageTechPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const exitX = sourceBox.right
+  const exitY = sourceBox.top + sourceBox.height / 2
+  const entryX = (targetBox.left + targetBox.right) / 2
+  const entryY = targetBox.top + targetBox.height
+  const lineEndY = entryY + ARROW_CHEVRON_SIZE
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const routeX =
+    getPreTargetGapCenterX(root, sourceEl, targetEl) ??
+    (sourceStep !== null ? getStepGapCenterX(root, sourceStep) : null) ??
+    (sourceBox.right + targetBox.left) / 2
+
+  if (routeX <= exitX) return ''
+
+  const points: Point[] = [
+    { x: exitX, y: exitY },
+    { x: routeX, y: exitY },
+  ]
+
+  if (Math.abs(entryX - routeX) > 0.5) {
+    points.push({ x: entryX, y: exitY })
+  }
+
+  points.push({ x: entryX, y: lineEndY })
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+const DISCOVERY_FSA_TO_REGULAR_TUTOR_TRIGGER_IDS = new Set([
+  'a0000000-0000-4000-8000-000000078001',
+  'a0000000-0000-4000-8000-000000078006',
+  'a0000000-0000-4000-8000-000000728001',
+  'a0000000-0000-4000-8000-000000728006',
+])
+
+const DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_1_TRIGGER_IDS = new Set([
+  'a0000000-0000-4000-8000-000000078001',
+  'a0000000-0000-4000-8000-000000728001',
+])
+
+const DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_4_TRIGGER_IDS = new Set([
+  'a0000000-0000-4000-8000-000000078006',
+  'a0000000-0000-4000-8000-000000728006',
+])
+
+export function isDiscoveryFrontStageActionToRegularTutorTrigger(
+  triggerId?: string,
+  _sourceCellId?: string,
+  _targetCellId?: string,
+): boolean {
+  if (!triggerId) return false
+
+  return DISCOVERY_FSA_TO_REGULAR_TUTOR_TRIGGER_IDS.has(
+    resolveArrowLogicTriggerId(triggerId),
+  )
+}
+
+/**
+ * Discovery step 1 — Front Stage Actions → Regular Tutor: exit top-center,
+ * enter bottom-center (straight vertical when unobstructed).
+ */
+function buildDiscoveryFrontStageActionToRegularTutorStep1Path(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const sourceCenterX = (sourceBox.left + sourceBox.right) / 2
+  const targetCenterX = (targetBox.left + targetBox.right) / 2
+  const source: Point = { x: sourceCenterX, y: sourceBox.top }
+  const targetBottom = targetBox.top + targetBox.height
+  const lineEndY = targetBottom + ARROW_CHEVRON_SIZE
+
+  if (lineEndY >= source.y) return ''
+
+  const obstructing = getSameColumnObstructingCells(
+    sourceEl,
+    targetEl,
+    root,
+  )
+
+  if (obstructing.length > 0) {
+    const sourceStep = parseStepIndex(sourceEl)
+    const gutterX =
+      sourceStep !== null
+        ? getVerticalRouteGutterX(root, sourceStep, sourceEl)
+        : Math.min(sourceBox.left, targetBox.left) - STEP_COLUMN_GAP / 2
+
+    if (gutterX >= Math.min(sourceCenterX, targetCenterX)) return ''
+
+    return buildRoundedPolylinePath(
+      [
+        source,
+        { x: gutterX, y: source.y },
+        { x: gutterX, y: lineEndY },
+        { x: targetCenterX, y: lineEndY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+  }
+
+  if (Math.abs(sourceCenterX - targetCenterX) < 0.5) {
+    return buildVerticalArrowPath(source, { x: targetCenterX, y: targetBottom })
+  }
+
+  const midY = (source.y + targetBottom) / 2
+  return buildRoundedPolylinePath(
+    [
+      source,
+      { x: sourceCenterX, y: midY },
+      { x: targetCenterX, y: midY },
+      { x: targetCenterX, y: lineEndY },
+    ],
+    ARROW_CORNER_RADIUS,
+  )
+}
+
+/**
+ * Discovery step 4 — Front Stage Actions → Regular Tutor: exit at the vertical
+ * center of the source left edge, enter at the vertical center of the target
+ * left edge, routed through the left column gutter around Front Stage Tech.
+ */
+function buildDiscoveryFrontStageActionToRegularTutorStep4Path(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const exitX = sourceBox.left
+  const exitY = sourceBox.top + sourceBox.height / 2
+  const entryY = targetBox.top + targetBox.height / 2
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const gutterX =
+    sourceStep !== null
+      ? getVerticalRouteGutterX(root, sourceStep, sourceEl)
+      : exitX - STEP_COLUMN_GAP / 2
+  const routeX = Math.min(gutterX, exitX)
+  const lineEndX = targetBox.left - ARROW_CHEVRON_SIZE
+  if (lineEndX <= routeX) return ''
+
+  const points: Point[] = [{ x: exitX, y: exitY }]
+
+  if (Math.abs(routeX - exitX) > 0.5) {
+    points.push({ x: routeX, y: exitY })
+  }
+
+  if (Math.abs(entryY - exitY) > 0.5) {
+    points.push({ x: routeX, y: entryY })
+  }
+
+  points.push({ x: lineEndX, y: entryY })
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+/**
+ * Discovery — Front Stage Actions → Regular Tutor: left-edge exit and entry,
+ * routed around same-column Front Stage Tech.
+ */
+export function buildDiscoveryFrontStageActionToRegularTutorSameStepPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+  triggerId?: string,
+): string {
+  if (
+    triggerId &&
+    DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_1_TRIGGER_IDS.has(
+      resolveArrowLogicTriggerId(triggerId),
+    )
+  ) {
+    return buildDiscoveryFrontStageActionToRegularTutorStep1Path(
+      sourceEl,
+      targetEl,
+      root,
+    )
+  }
+
+  if (
+    triggerId &&
+    DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_4_TRIGGER_IDS.has(
+      resolveArrowLogicTriggerId(triggerId),
+    )
+  ) {
+    return buildDiscoveryFrontStageActionToRegularTutorStep4Path(
+      sourceEl,
+      targetEl,
+      root,
+    )
+  }
+
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const exitX = sourceBox.left
+  const entryX = targetBox.left
+  const sourceY = sourceBox.top
+  const entryY = targetBox.top + targetBox.height + ARROW_CHEVRON_SIZE
+
+  if (entryY >= sourceY) return ''
+
+  const points: Point[] = [{ x: exitX, y: sourceY }]
+
+  if (Math.abs(entryX - exitX) > 0.5) {
+    points.push({ x: entryX, y: sourceY })
+    points.push({ x: entryX, y: entryY })
+  } else {
+    points.push({ x: entryX, y: entryY })
+  }
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
+}
+
+/**
+ * Reporting an Issue step 3 — Front Stage Tech → Lead/Regular Tutor: separate
+ * left-edge connectors (exit FST left, enter tutor left via the column gutter)
+ * so they do not overlap outgoing tutor → Resolve concern arrows on the right.
+ */
+export function buildReportingAnIssueFrontStageTechToTutorSameStepPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const exitX = sourceBox.left
+  const exitY = sourceBox.top + sourceBox.height / 2
+  const entryX = targetBox.left
+  const entryY = targetBox.top + targetBox.height / 2
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const gutterX =
+    sourceStep !== null
+      ? getVerticalRouteGutterX(root, sourceStep, sourceEl)
+      : exitX - STEP_COLUMN_GAP / 2
+  const routeX = Math.min(gutterX, exitX, entryX)
+  const lineEndX = entryX - ARROW_CHEVRON_SIZE
+  if (lineEndX <= routeX) return ''
+
+  const points: Point[] = [{ x: exitX, y: exitY }]
+
+  if (Math.abs(routeX - exitX) > 0.5) {
+    points.push({ x: routeX, y: exitY })
+  }
+
+  if (Math.abs(entryY - exitY) > 0.5) {
+    points.push({ x: routeX, y: entryY })
+  }
+
+  points.push({ x: lineEndX, y: entryY })
+
+  return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
 }
 
 const IN_SESSION_COLUMN_GAP_CELL_PATTERN =
@@ -1503,7 +2280,41 @@ export function buildArrowPath(
   root: HTMLElement,
   sourceCellId?: string,
   targetCellId?: string,
+  triggerId?: string,
 ): string {
+  if (
+    isReportingAnIssueFrontStageActionStep1ToResolveConnection(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    )
+  ) {
+    return buildReportingAnIssueFrontStageActionStep1ToResolvePath(
+      sourceEl,
+      targetEl,
+      root,
+    )
+  }
+
+  if (
+    isReportingHoursFrontStageTechStep1ToBackStageActionStep2Connection(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    ) ||
+    isCallOffFrontStageActionStep3ToBackStageActionStep5Connection(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    )
+  ) {
+    return buildReportingHoursFrontStageTechStep1ToBackStageActionStep2Path(
+      sourceEl,
+      targetEl,
+      root,
+    )
+  }
+
   const sourceStep = parseStepIndex(sourceEl)
   const targetStep = parseStepIndex(targetEl)
 
@@ -1512,6 +2323,101 @@ export function buildArrowPath(
     targetStep !== null &&
     sourceStep === targetStep
   ) {
+    if (
+      isReportingAnIssueTutorToFrontStageTechStep1Trigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      )
+    ) {
+      return buildReportingAnIssueTutorToFrontStageTechSameStepPath(
+        sourceEl,
+        targetEl,
+        root,
+      )
+    }
+
+    if (
+      isSessionSignUpFrontStageTechToBackStageActionStep1Trigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      ) ||
+      isFillInRequestFrontStageTechToBackStageActionStep1Trigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      )
+    ) {
+      return buildReportingAnIssueTutorToFrontStageTechSameStepPath(
+        sourceEl,
+        targetEl,
+        root,
+      )
+    }
+
+    if (
+      isReportingHoursLeadTutorToFrontStageTechStep1Trigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      )
+    ) {
+      return buildReportingAnIssueTutorToFrontStageTechSameStepPath(
+        sourceEl,
+        targetEl,
+        root,
+      )
+    }
+
+    if (
+      isReportingHoursFrontStageTechStep3ToLeadTutorConnection(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      )
+    ) {
+      return buildReportingHoursFrontStageTechStep3ToLeadTutorPath(
+        sourceEl,
+        targetEl,
+        root,
+      )
+    }
+
+    if (
+      isReportingAnIssueFrontStageTechToRegularTutorTrigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      ) ||
+      isReportingAnIssueFrontStageTechToLeadTutorTrigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      )
+    ) {
+      return buildReportingAnIssueFrontStageTechToTutorSameStepPath(
+        sourceEl,
+        targetEl,
+        root,
+      )
+    }
+
+    if (
+      isDiscoveryFrontStageActionToRegularTutorTrigger(
+        triggerId,
+        sourceCellId,
+        targetCellId,
+      )
+    ) {
+      return buildDiscoveryFrontStageActionToRegularTutorSameStepPath(
+        sourceEl,
+        targetEl,
+        root,
+        triggerId,
+      )
+    }
+
     const anchors = getVerticalCellAnchors(sourceEl, targetEl, root)
     const obstructing = getSameColumnObstructingCells(
       sourceEl,
@@ -1580,13 +2486,52 @@ export function buildArrowPath(
     return buildApplicationRegularTutorRailPath(sourceEl, targetEl, root)
   }
 
-  if (isCrossLayerForwardTrigger(sourceEl, targetEl)) {
+  if (
+    isReportingAnIssueFrontStageActionToFrontStageTechTrigger(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    )
+  ) {
+    return buildReportingAnIssueFrontStageActionToFrontStageTechPath(
+      sourceEl,
+      targetEl,
+      root,
+    )
+  }
+
+  if (isReportingAnIssueSpanningToTopEntryTrigger(triggerId)) {
+    return buildReportingAnIssueSpanningToTopEntryPath(
+      sourceEl,
+      targetEl,
+      root,
+    )
+  }
+
+  if (
+    isCrossLayerForwardTrigger(sourceEl, targetEl) &&
+    !isReportingAnIssueFrontStageActionStep1ToResolveConnection(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    ) &&
+    !isReportingHoursFrontStageTechStep1ToBackStageActionStep2Connection(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    ) &&
+    !isCallOffFrontStageActionStep3ToBackStageActionStep5Connection(
+      triggerId,
+      sourceCellId,
+      targetCellId,
+    )
+  ) {
     const crossLayerPath = buildCrossLayerForwardArrowPath(
       sourceEl,
       targetEl,
       root,
     )
-    if (crossLayerPath) return crossLayerPath
+    return crossLayerPath
   }
 
   if (getSameRowObstructingCells(sourceEl, targetEl).length > 0) {

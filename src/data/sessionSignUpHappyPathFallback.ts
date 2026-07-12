@@ -1,5 +1,14 @@
 import { SESSION_SIGN_UP_SCENARIO_ID } from '@/data/techSetupHappyPathFallback'
+import {
+  SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+  SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+  SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
+  SESSION_SIGN_UP_PLUS_APP_STEP_01_PICTURE,
+  SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_PICTURE,
+  SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
+} from '@/data/sessionSignUpPictures'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
   BlueprintCellTrigger,
@@ -21,23 +30,23 @@ const LAYERS = [
     row_position: 1,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000880',
-    name: 'Front Stage Actions',
+    id: 'a0000000-0000-4000-8000-000000000881',
+    name: 'Front Stage Tech',
     row_position: 2,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000881',
-    name: 'Front Stage Tech',
+    id: 'a0000000-0000-4000-8000-000000000880',
+    name: 'Front Stage Actions',
     row_position: 3,
-  },
-  {
-    id: 'a0000000-0000-4000-8000-000000000882',
-    name: 'Back Stage Actions',
-    row_position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000883',
     name: 'Back Stage Tech',
+    row_position: 4,
+  },
+  {
+    id: 'a0000000-0000-4000-8000-000000000882',
+    name: 'Back Stage Actions',
     row_position: 5,
   },
   {
@@ -75,6 +84,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
+  extras?: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>>,
 ): BlueprintCell {
   return {
     id,
@@ -82,6 +92,7 @@ function cell(
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
+    ...extras,
   }
 }
 
@@ -108,12 +119,14 @@ function trigger(
 }
 
 const SESSION_SIGN_UP_TRIGGERS: BlueprintCellTrigger[] = [
-  // PLUS app ↔ dev team stores scheduling info
+  // Regular Tutor → PLUS app
+  trigger('003', '01', '03', '01', '06'),
+  // PLUS app → Dev team stores scheduling info
   trigger('001', '01', '06', '01', '07'),
-  trigger('002', '01', '07', '01', '06'),
-
-  // Dev team → tutor supervisor review
-  trigger('011', '01', '07', '02', '07'),
+  // Dev team → Google Spreadsheet
+  trigger('004', '01', '07', '01', '08'),
+  // Google Spreadsheet → Tutor supervisor review
+  trigger('005', '01', '08', '02', '07'),
 ]
 
 const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
@@ -126,30 +139,54 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     ssCell('01', '03'),
     L.regular,
     STEPS[0].id,
-    'Sign up for Recurring Sessions for rest of semester',
+    'Signs up for recurring sessions for rest of semester.',
+    { picture: SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_PICTURE },
   ),
-  cell(ssCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS app'),
+  cell(ssCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS app', {
+    description: SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
+    links: [
+      techDescriptionLink(
+        'PLUS app',
+        SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
+        SESSION_SIGN_UP_PLUS_APP_STEP_01_PICTURE,
+        'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=1751-119990&t=rLMzaNhqBUszclus-1',
+      ),
+    ],
+  }),
   cell(
     ssCell('01', '07'),
     L.backStage,
     STEPS[0].id,
-    'Dev team takes that scheduling info and stores it in a Google Spreadsheet',
+    'Dev Team takes that scheduling info and stores it in a Google Spreadsheet.',
   ),
   cell(
     ssCell('01', '08'),
     L.backStageTech,
     STEPS[0].id,
-    'PLUS App, Google Spreadsheet',
+    'Google Spreadsheet',
+    {
+      description: SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+      links: [
+        techDescriptionLink(
+          'Google Spreadsheet',
+          SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+          SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+        ),
+      ],
+    },
   ),
+  cell(ssCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign Team', {
+    description: SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
+  }),
 
   // Step 2 — Review scheduling
   cell(
     ssCell('02', '07'),
     L.backStage,
     STEPS[1].id,
-    'Tutor Supervisor team receives and reviews google spreadsheet from dev team',
+    'Tutor supervisor team receives and reviews Google Spreadsheet from Dev Team.',
   ),
-  cell(ssCell('02', '08'), L.backStageTech, STEPS[1].id, 'Google Spreadsheet'),
+  cell(ssCell('02', '08'), L.backStageTech, STEPS[1].id, ''),
 ]
 
 export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
@@ -157,7 +194,7 @@ export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     id: SESSION_SIGN_UP_HAPPY_PATH_ID,
     name: 'Happy Path',
     description:
-      'Tutor succesfully signs up for recurring sessions for the rest of the semester.',
+      'Tutor signs up for recurring sessions for the rest of the semester.',
     note: null,
     path_type: 'happy',
   },

@@ -14,9 +14,11 @@ import {
   repairWarmUpPathLayerPositions,
 } from '@/lib/repairWarmUpAlternatePathBlueprint'
 import { mergeTechDescriptionLinks } from '@/lib/blueprintTechDescriptions'
+import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import {
   deduplicateBlueprintLayers,
   normalizeBlueprint,
+  sortBlueprintLayers,
   type RawPath,
 } from '@/lib/normalizeBlueprint'
 import type { BlueprintData } from '@/types/blueprint'
@@ -27,16 +29,17 @@ export function isBlueprintEmpty(data: BlueprintData): boolean {
   return data.layers.length === 0
 }
 
-function repairWarmUpBlueprintLayers(
+function repairBlueprintLayerPositionsFromFallback(
   data: BlueprintData,
-  scenarioId: string | undefined,
   fallback: BlueprintData | null,
 ): BlueprintData {
-  if (scenarioId !== WARM_UP_SCENARIO_ID || !fallback) {
-    return data
+  if (!fallback) {
+    return sortBlueprintLayers(data)
   }
 
-  return repairWarmUpPathLayerPositions(data, fallback.layers)
+  return sortBlueprintLayers(
+    repairWarmUpPathLayerPositions(data, fallback.layers),
+  )
 }
 
 /** Add fallback blueprint rows that are missing from a partially synced path. */
@@ -54,18 +57,44 @@ function mergeMissingBlueprintContent(
   )
   const fallbackLayerIdRemap = new Map<string, string>()
   const layers = [...data.layers]
+  let layersChanged = false
   for (const layer of fallback.layers) {
-    if (layerIds.has(layer.id)) continue
+    const existingByIdIndex = layers.findIndex((entry) => entry.id === layer.id)
+    if (existingByIdIndex !== -1) {
+      const existing = layers[existingByIdIndex]!
+      if (existing.row_position !== layer.row_position) {
+        layers[existingByIdIndex] = {
+          ...existing,
+          row_position: layer.row_position,
+        }
+        layersChanged = true
+      }
+      continue
+    }
 
     const existingLayerId = layerIdByName.get(layer.name)
     if (existingLayerId) {
       fallbackLayerIdRemap.set(layer.id, existingLayerId)
+      const existingIndex = layers.findIndex(
+        (entry) => entry.id === existingLayerId,
+      )
+      if (existingIndex !== -1) {
+        const existing = layers[existingIndex]!
+        if (existing.row_position !== layer.row_position) {
+          layers[existingIndex] = {
+            ...existing,
+            row_position: layer.row_position,
+          }
+          layersChanged = true
+        }
+      }
       continue
     }
 
     layers.push(layer)
     layerIds.add(layer.id)
     layerIdByName.set(layer.name, layer.id)
+    layersChanged = true
   }
   layers.sort((a, b) => a.row_position - b.row_position)
 
@@ -81,13 +110,28 @@ function mergeMissingBlueprintContent(
     let changed = false
     let next = cell
 
-    if (fallbackCell.picture?.trim() && !cell.picture?.trim()) {
-      next = { ...next, picture: fallbackCell.picture }
-      changed = true
+    if (fallbackCell.picture?.trim()) {
+      const cellPicture = cell.picture?.trim()
+      if (
+        !cellPicture ||
+        (isBlueprintStepVisualPlaceholder(cellPicture) &&
+          !isBlueprintStepVisualPlaceholder(fallbackCell.picture))
+      ) {
+        next = { ...next, picture: fallbackCell.picture }
+        changed = true
+      }
     }
 
     if (fallbackCell.description?.trim() && !cell.description?.trim()) {
       next = { ...next, description: fallbackCell.description }
+      changed = true
+    }
+
+    if (
+      fallbackCell.content.trim() &&
+      fallbackCell.content.trim() !== cell.content.trim()
+    ) {
+      next = { ...next, content: fallbackCell.content }
       changed = true
     }
 
@@ -120,10 +164,30 @@ function mergeMissingBlueprintContent(
   }
   steps.sort((a, b) => a.column_position - b.column_position)
 
-  const triggerKeys = new Set(
-    data.triggers.map((trigger) => `${trigger.source_cell_id}:${trigger.target_cell_id}`),
+  const fallbackTriggerKeys = new Set(
+    fallback.triggers.map(
+      (trigger) => `${trigger.source_cell_id}:${trigger.target_cell_id}`,
+    ),
   )
-  const triggers = [...data.triggers]
+  const fallbackCellIds = new Set(fallback.cells.map((cell) => cell.id))
+
+  const triggers = [
+    ...data.triggers.filter((trigger) => {
+      const touchesFallback =
+        fallbackCellIds.has(trigger.source_cell_id) ||
+        fallbackCellIds.has(trigger.target_cell_id)
+      if (!touchesFallback) return true
+      return fallbackTriggerKeys.has(
+        `${trigger.source_cell_id}:${trigger.target_cell_id}`,
+      )
+    }),
+  ]
+
+  const triggerKeys = new Set(
+    triggers.map(
+      (trigger) => `${trigger.source_cell_id}:${trigger.target_cell_id}`,
+    ),
+  )
   for (const trigger of fallback.triggers) {
     const key = `${trigger.source_cell_id}:${trigger.target_cell_id}`
     if (!triggerKeys.has(key)) {
@@ -142,19 +206,38 @@ function mergeMissingBlueprintContent(
     return mergedCell !== undefined && mergedCell.description !== cell.description
   })
 
+  const contentMerged = data.cells.some((cell, index) => {
+    const mergedCell = cells[index]
+    return mergedCell !== undefined && mergedCell.content !== cell.content
+  })
+
   const linksMerged = data.cells.some((cell, index) => {
     const mergedCell = cells[index]
     if (!mergedCell) return false
     return JSON.stringify(mergedCell.links) !== JSON.stringify(cell.links)
   })
 
+  const triggersMerged =
+    triggers.length !== data.triggers.length ||
+    triggers.some(
+      (trigger) =>
+        !data.triggers.some(
+          (previous) =>
+            previous.id === trigger.id &&
+            previous.source_cell_id === trigger.source_cell_id &&
+            previous.target_cell_id === trigger.target_cell_id,
+        ),
+    )
+
   const changed =
+    layersChanged ||
     layers.length !== data.layers.length ||
     cells.length !== data.cells.length ||
     steps.length !== data.steps.length ||
-    triggers.length !== data.triggers.length ||
+    triggersMerged ||
     picturesMerged ||
     descriptionsMerged ||
+    contentMerged ||
     linksMerged
 
   const merged = changed
@@ -202,7 +285,7 @@ export function resolveBlueprintForScenario(
 
     return {
       blueprint: applyBlueprintDisplayFilters(
-        repairWarmUpBlueprintLayers(corrected, scenarioId, fallback),
+        repairBlueprintLayerPositionsFromFallback(corrected, fallback),
         scenarioId,
         pathId,
       ),
@@ -237,7 +320,7 @@ export function resolveBlueprintForScenario(
 
       return {
         blueprint: applyBlueprintDisplayFilters(
-          repairWarmUpBlueprintLayers(blueprint, scenarioId, fallback),
+          repairBlueprintLayerPositionsFromFallback(blueprint, fallback),
           scenarioId,
           pathId,
         ),
@@ -249,9 +332,8 @@ export function resolveBlueprintForScenario(
   if (fallback) {
     return {
       blueprint: applyBlueprintDisplayFilters(
-        repairWarmUpBlueprintLayers(
+        repairBlueprintLayerPositionsFromFallback(
           deduplicateBlueprintLayers(fallback),
-          scenarioId,
           fallback,
         ),
         scenarioId,

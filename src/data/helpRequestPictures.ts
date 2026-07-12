@@ -24,19 +24,19 @@ export const HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID =
   'a0000000-0000-4000-8000-00000000097a'
 
 export const HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor receives a help request via the raise hand emoji from the tutor in Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 export const HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION =
-  'The tutor completes the current conversation with the student in the Zoom/Pencil breakout room before proceeding.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 export const HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'The tutor joins the breakout room on Zoom/Pencil of the student that is requesting help'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 export const HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor connects with the student requesting help via the breakout room on Zoom/Pencil and resolves the problem.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 export const HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'Once problem is resolved, the tutor leaves the breakout room on Zoom/Pencil.'
+  "The tutor leaves the student's Zoom/Pencil breakout room."
 
 export const HELP_REQUEST_PLUS_APP_STEP_06_PICTURE =
   '/blueprint-images/help-request/happy-path/plus-app/step-05-your-students.png'

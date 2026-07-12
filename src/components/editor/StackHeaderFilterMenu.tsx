@@ -10,55 +10,23 @@ import {
   MenubarGroup,
   MenubarLabel,
   MenubarMenu,
-  MenubarRadioGroup,
-  MenubarRadioItem,
   MenubarTrigger,
 } from '@/components/ui/menubar'
-import {
-  SCENARIO_VIEW_TYPE_OPTIONS,
-  SLIDE_VIEW_TYPE_LABELS,
-  type SlideViewType,
-} from '@/types/slides'
 
 type StackHeaderFilterMenuProps = {
-  viewType: SlideViewType
-  onViewTypeChange: (viewType: SlideViewType) => void
   paths: PathOption[]
   selectedPathIds: string[]
   onTogglePath: (pathId: string) => void
 }
 
-/** View and path filters as menubar menus — must be rendered inside `Menubar`. */
+/** Path filters as a menubar menu — must be rendered inside `Menubar`. */
 export function StackHeaderFilterMenu({
-  viewType,
-  onViewTypeChange,
   paths,
   selectedPathIds,
   onTogglePath,
 }: StackHeaderFilterMenuProps) {
   return (
     <div className="ml-auto flex shrink-0 items-center gap-0.5">
-      <MenubarMenu>
-        <MenubarTrigger>View</MenubarTrigger>
-        <MenubarContent align="end">
-          <MenubarGroup>
-            <MenubarLabel>View type</MenubarLabel>
-            <MenubarRadioGroup
-              value={viewType}
-              onValueChange={(value) =>
-                onViewTypeChange(value as SlideViewType)
-              }
-            >
-              {SCENARIO_VIEW_TYPE_OPTIONS.map((option) => (
-                <MenubarRadioItem key={option} value={option}>
-                  {SLIDE_VIEW_TYPE_LABELS[option]}
-                </MenubarRadioItem>
-              ))}
-            </MenubarRadioGroup>
-          </MenubarGroup>
-        </MenubarContent>
-      </MenubarMenu>
-
       <MenubarMenu>
         <MenubarTrigger>Paths</MenubarTrigger>
         <MenubarContent align="end" className="min-w-52">

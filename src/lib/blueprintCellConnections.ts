@@ -1,4 +1,5 @@
 import { buildBlueprintCellSelection, getTechPillItems } from '@/lib/blueprintCellSelection'
+import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { shouldUsePillCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import type { BlueprintCell, BlueprintCellTrigger, BlueprintData } from '@/types/blueprint'
@@ -24,7 +25,8 @@ export type BlueprintCellConnections = {
 }
 
 function findCell(blueprint: BlueprintData, cellId: string): BlueprintCell | undefined {
-  return blueprint.cells.find((cell) => cell.id === cellId)
+  const resolvedId = resolveBlueprintCellId(cellId)
+  return blueprint.cells.find((cell) => cell.id === resolvedId)
 }
 
 function resolveLayerName(blueprint: BlueprintData, layerId: string): string {
@@ -91,7 +93,8 @@ export function getBlueprintCellConnections(
   blueprint: BlueprintData,
   cellId: string,
 ): BlueprintCellConnections {
-  const selectedCell = findCell(blueprint, cellId)
+  const resolvedCellId = resolveBlueprintCellId(cellId)
+  const selectedCell = findCell(blueprint, resolvedCellId)
   const selectedStepIndex =
     selectedCell !== undefined
       ? resolveStepIndex(blueprint, selectedCell.step_id)
@@ -101,7 +104,7 @@ export function getBlueprintCellConnections(
   const outgoing: BlueprintCellConnection[] = []
 
   for (const trigger of blueprint.triggers) {
-    if (trigger.target_cell_id === cellId) {
+    if (trigger.target_cell_id === resolvedCellId) {
       const connection = toConnection(
         blueprint,
         trigger,
@@ -110,7 +113,7 @@ export function getBlueprintCellConnections(
       )
       if (connection) incoming.push(connection)
     }
-    if (trigger.source_cell_id === cellId) {
+    if (trigger.source_cell_id === resolvedCellId) {
       const connection = toConnection(
         blueprint,
         trigger,
@@ -292,6 +295,7 @@ export function buildBlueprintCellSelectionForId(
     cellContent: cell.content,
     cellPicture: cell.picture,
     cellDescription: cell.description,
+    cellLinks: cell.links,
     pathId: blueprint.path.id,
     pathName: blueprint.path.name,
     pathDescription: blueprint.path.description,

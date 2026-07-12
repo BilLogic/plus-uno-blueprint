@@ -103,6 +103,46 @@ where c.layer_id = l.id
   )
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
+-- Front Stage Tech — Zoom/Pencil shared description (all paths, all steps)
+update public.cells c
+set description = 'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+from public.layers l,
+     public.paths p
+where c.layer_id = l.id
+  and c.path_id = p.id
+  and l.name = 'Front Stage Tech'
+  and (
+    c.content = 'Zoom/Pencil'
+    or c.content like 'Zoom/Pencil,%'
+    or c.content like '%, Zoom/Pencil'
+    or c.content like '%, Zoom/Pencil,%'
+  )
+  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+
+-- Front Stage Tech — Zoom/Pencil Share Screen step description (all paths)
+update public.cells
+set description = 'The tutor shares screen via Zoom/Pencil screen share feature.'
+where id in (
+  'a0000000-0000-4000-8000-0000001a0206',
+  'a0000000-0000-4000-8000-0000001f0306',
+  'a0000000-0000-4000-8000-000000a00306',
+  'a0000000-0000-4000-8000-000000b00306',
+  'a0000000-0000-4000-8000-000000c00406',
+  'a0000000-0000-4000-8000-000000d00406'
+);
+
+-- Front Stage Tech — Zoom/Pencil Leave breakout room step description (all paths)
+update public.cells
+set description = 'The tutor leaves the student''s Zoom/Pencil breakout room.'
+where id in (
+  'a0000000-0000-4000-8000-0000001a0606',
+  'a0000000-0000-4000-8000-0000001f1006',
+  'a0000000-0000-4000-8000-000000a00706',
+  'a0000000-0000-4000-8000-000000b01006',
+  'a0000000-0000-4000-8000-000000c01106',
+  'a0000000-0000-4000-8000-000000d01106'
+);
+
 -- Regular Tutor — step 1 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-01-join-breakout-session.png'

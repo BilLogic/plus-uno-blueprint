@@ -8,11 +8,8 @@ export type SlideViewType = 'single' | 'side-by-side' | 'integrated'
 
 export const SLIDE_VIEW_TYPES: SlideViewType[] = ['single', 'side-by-side', 'integrated']
 
-/** Options shown in the scenario view type control. */
-export const SCENARIO_VIEW_TYPE_OPTIONS: SlideViewType[] = [
-  'side-by-side',
-  'integrated',
-]
+/** Options shown in the scenario view type control (integrated disabled). */
+export const SCENARIO_VIEW_TYPE_OPTIONS: SlideViewType[] = ['side-by-side']
 
 export const SLIDE_VIEW_TYPE_LABELS: Record<SlideViewType, string> = {
   single: 'Single',
@@ -321,6 +318,8 @@ export function getBlueprintScenarioId(slide: Slide): string | undefined {
 }
 
 export function getSlideViewType(slide: Slide): SlideViewType {
+  // Integrated view is disabled app-wide; treat it as side-by-side.
+  if (slide.viewType === 'integrated') return 'side-by-side'
   if (slide.viewType) return slide.viewType
   if (isSubslide(slide)) return 'side-by-side'
   if (hasBlueprintFallback(slide.id)) return 'side-by-side'
@@ -342,8 +341,8 @@ export function showsBlueprintFilters(
   return false
 }
 
-export function isIntegratedBlueprintSlide(slide: Slide): boolean {
-  return isSubslide(slide) && getSlideViewType(slide) === 'integrated'
+export function isIntegratedBlueprintSlide(_slide: Slide): boolean {
+  return false
 }
 
 export function isSideBySideBlueprintSlide(slide: Slide): boolean {

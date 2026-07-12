@@ -98,7 +98,12 @@ export function ServiceBlueprintGrid({
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
 }: ServiceBlueprintGridProps) {
-  const { path, layers, steps, triggers } = data
+  const { path, steps, triggers } = data
+  const layers = useMemo(
+    () =>
+      [...data.layers].sort((a, b) => a.row_position - b.row_position),
+    [data.layers],
+  )
   const gridBodyRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { toggleLayer, isLayerCollapsed } = useCollapsedBlueprintLayers()
@@ -496,8 +501,12 @@ function BlueprintSwimLane({
         const cell = getCellAt(cellLookup, layerId, step.id)
         const isVisualLayer = shouldUseVisualContent(layerName)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
-        const showCell =
-          isVisualLayer || hasCellContent(cell?.content, variant)
+        const visualPictures = isVisualLayer
+          ? resolveVisualStepPictures(blueprint, step.id)
+          : undefined
+        const showCell = isVisualLayer
+          ? (visualPictures?.length ?? 0) > 0
+          : hasCellContent(cell?.content, variant)
 
         return (
           <Fragment key={`${layerId}-${step.id}`}>
@@ -516,11 +525,7 @@ function BlueprintSwimLane({
                 fitVertically={fitVertically}
                 rowMinHeight={rowMinHeight}
                 flushBottom={flushBottom}
-                visualPictures={
-                  isVisualLayer
-                    ? resolveVisualStepPictures(blueprint, step.id)
-                    : undefined
-                }
+                visualPictures={visualPictures}
                 blueprint={isVisualLayer ? blueprint : undefined}
                 walkthroughBlueprints={
                   isVisualLayer ? walkthroughBlueprints : undefined
@@ -537,6 +542,7 @@ function BlueprintSwimLane({
                         cellContent: cell?.content ?? '',
                         cellPicture: cell?.picture ?? null,
                         cellDescription: cell?.description ?? null,
+                        cellLinks: cell?.links,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
                         pathDescription: blueprint.path.description,

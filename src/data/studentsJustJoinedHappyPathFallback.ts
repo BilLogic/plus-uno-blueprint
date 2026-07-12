@@ -1,6 +1,14 @@
+import { mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
+import { STUDENTS_JUST_JOINED_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleLinks'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
-  STUDENTS_JUST_JOINED_ACTION_LAYER_PLACEHOLDER,
+  STUDENTS_JUST_JOINED_PARTNER_STEP_01_PICTURE,
+  STUDENTS_JUST_JOINED_PARTNER_STEP_02_PICTURE,
+  STUDENTS_JUST_JOINED_PARTNER_STEP_03_PICTURE,
+  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_PICTURE,
+  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_PICTURE,
+  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_PICTURE,
+  STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE,
   STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
   STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
   STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
@@ -48,13 +56,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000002026',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-000000002027',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000002027',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-000000002026',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -101,6 +109,11 @@ function cell(
   content: string,
   metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
 ): BlueprintCell {
+  const links =
+    layerId === L.regular
+      ? mergeUrlLinks(metadata.links ?? [], STUDENTS_JUST_JOINED_REGULAR_TUTOR_ONBOARDING_LINKS)
+      : (metadata.links ?? EMPTY_CELL_METADATA.links)
+
   return {
     id,
     layer_id: layerId,
@@ -108,6 +121,7 @@ function cell(
     content,
     ...EMPTY_CELL_METADATA,
     ...metadata,
+    links,
   }
 }
 
@@ -164,10 +178,6 @@ const STUDENTS_JUST_JOINED_TRIGGERS: BlueprintCellTrigger[] = [
   trigger('030', '03', '03', '03', '06'),
 ]
 
-const ACTION_PLACEHOLDER = {
-  picture: STUDENTS_JUST_JOINED_ACTION_LAYER_PLACEHOLDER,
-} as const
-
 const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
   ...STEPS.map((step, index) =>
     cell(sjjCell(String(index + 1).padStart(2, '0'), '10'), L.visual, step.id, ''),
@@ -177,40 +187,44 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
     sjjCell('01', '01'),
     L.partner,
     STEPS[0].id,
-    'Remind students that tutors support multiple students and wait time is normal',
-    ACTION_PLACEHOLDER,
+    'Remind students that tutors support multiple students and wait time is normal.',
+    { picture: STUDENTS_JUST_JOINED_PARTNER_STEP_01_PICTURE },
   ),
   cell(
     sjjCell('02', '01'),
     L.partner,
     STEPS[1].id,
-    'Ask students to share screen and log into math software',
-    ACTION_PLACEHOLDER,
+    'Ask students to share screen and log into math software.',
+    { picture: STUDENTS_JUST_JOINED_PARTNER_STEP_02_PICTURE },
   ),
   cell(
     sjjCell('03', '01'),
     L.partner,
     STEPS[2].id,
-    "Show students how to use the 'raise hand' emoji to let tutors know when they need help",
-    ACTION_PLACEHOLDER,
+    "Show students how to use the 'raise hand' emoji to let tutors know when they need help.",
+    { picture: STUDENTS_JUST_JOINED_PARTNER_STEP_03_PICTURE },
   ),
 
-  cell(sjjCell('01', '02'), L.lead, STEPS[0].id, 'Greet Students as they Join', ACTION_PLACEHOLDER),
-  cell(sjjCell('02', '02'), L.lead, STEPS[1].id, 'Mute students if necessary', ACTION_PLACEHOLDER),
+  cell(sjjCell('01', '02'), L.lead, STEPS[0].id, 'Greet students as they join.', {
+    picture: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_PICTURE,
+  }),
+  cell(sjjCell('02', '02'), L.lead, STEPS[1].id, 'Mute students if necessary.', {
+    picture: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_PICTURE,
+  }),
   cell(
     sjjCell('03', '02'),
     L.lead,
     STEPS[2].id,
-    'Ping Tutor if they missed moving student to breakout room for late joiners',
-    ACTION_PLACEHOLDER,
+    'Ping tutor if they missed moving student to breakout room for late joiners.',
+    { picture: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_PICTURE },
   ),
 
   cell(
     sjjCell('03', '03'),
     L.regular,
     STEPS[2].id,
-    'move student to breakout room',
-    ACTION_PLACEHOLDER,
+    'Move student to breakout room.',
+    { picture: STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE },
   ),
 
   cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {

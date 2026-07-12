@@ -14,15 +14,12 @@ import {
   showsBlueprintFilters,
   isSubslide,
   type Slide,
-  type SlideViewType,
 } from '@/types/slides'
 import { cn } from '@/lib/utils'
 
 type PhaseMenubarHeaderProps = {
   slide: Slide
   slides: Slide[]
-  viewType: SlideViewType
-  onViewTypeChange: (viewType: SlideViewType) => void
   paths?: PathOption[]
   selectedPathIds?: string[]
   onTogglePath?: (pathId: string) => void
@@ -51,8 +48,6 @@ function resolveHeaderDescription(
 export function PhaseMenubarHeader({
   slide,
   slides,
-  viewType,
-  onViewTypeChange,
   paths = [],
   selectedPathIds = [],
   onTogglePath,
@@ -90,8 +85,6 @@ export function PhaseMenubarHeader({
 
       {showFilterMenus ? (
         <StackHeaderFilterMenu
-          viewType={viewType}
-          onViewTypeChange={onViewTypeChange}
           paths={paths}
           selectedPathIds={selectedPathIds}
           onTogglePath={onTogglePath}

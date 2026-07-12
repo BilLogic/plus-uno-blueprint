@@ -165,6 +165,16 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
   return { ...data, layers: keptLayers, cells, triggers }
 }
 
+export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
+  const layers = [...data.layers].sort(
+    (a, b) => a.row_position - b.row_position,
+  )
+  const unchanged = layers.every(
+    (layer, index) => layer.id === data.layers[index]?.id,
+  )
+  return unchanged ? data : { ...data, layers }
+}
+
 export function normalizeBlueprint(raw: RawPath): BlueprintData {
   const layers = [...(raw.layers ?? [])].sort(
     (a, b) => a.row_position - b.row_position,
@@ -185,7 +195,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       ? raw.cell_triggers
       : flattenTriggersFromCells(rawCells)
 
-  return {
+  return sortBlueprintLayers({
     path: {
       id: raw.id,
       name: raw.name,
@@ -197,7 +207,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     steps,
     cells,
     triggers,
-  }
+  })
 }
 
 export function buildCellLookup(cells: BlueprintCell[]): Map<string, BlueprintCell> {
