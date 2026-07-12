@@ -82,13 +82,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-0000000008e6',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-0000000008e7',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-0000000008e7',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-0000000008e6',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -116,7 +116,7 @@ const STEPS = [
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f04',
-    name: 'Share Screen',
+    name: 'Share screen',
     column_position: 4,
   },
   {
@@ -171,8 +171,8 @@ const L = {
   support: 'a0000000-0000-4000-8000-0000000008e8',
 } as const
 
-const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign team'
-const BACKSTAGE_RESEARCHERS = 'Researchers set goal setting activities'
+const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign Team'
+const BACKSTAGE_RESEARCHERS = 'Researchers set goal setting activities.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_02_DESCRIPTION =
   'The tutor views the Student Dashboard screen in the PLUS app during a mid-cycle goal check-in session and sees the warning action color with a Set Goals CTA for a student who has not yet set goals.'
@@ -202,31 +202,31 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_12_DESCRIPTION =
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor utilizes Zoom/Pencil to virtually connect with the student and joins the breakout room during a mid-cycle goal check-in to set goals with a student who has not yet set goals.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor shares their screen with the student in the breakout room via Zoom/Pencil to show the set goals flow in the PLUS app.'
+  'The tutor shares screen via Zoom/Pencil screen share feature.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'The tutor explains what goal setting is to the student in the breakout room via Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'The tutor guides the student through setting their first goals while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION =
-  'The tutor works with the student to fill out goal settings and quantities while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION =
-  'If prompted, the tutor works with the student to complete the goal achievement strategy while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION =
-  'The tutor saves the goal with the student while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION =
-  'The tutor finalizes goal setting with the student while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION =
-  'The tutor says goodbye and leaves the breakout room with the student via Zoom/Pencil.'
+  "The tutor leaves the student's Zoom/Pencil breakout room."
 
 function setGoalsEdgeCasePlusAppLink(
   description: string,
@@ -359,7 +359,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
-  cell(geCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session', {
+  cell(geCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session.', {
     picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_01_PICTURE,
   }),
   cell(
@@ -373,58 +373,58 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('03', '03'),
     L.regular,
     STEPS[2].id,
-    "Click on 'Set Goals' CTA in the action column",
+    "Click on 'Set Goals' CTA in the action column.",
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_03_PICTURE },
   ),
-  cell(geCell('04', '03'), L.regular, STEPS[3].id, 'Share Screen', {
+  cell(geCell('04', '03'), L.regular, STEPS[3].id, 'Share screen.', {
     picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_04_PICTURE,
   }),
   cell(
     geCell('05', '03'),
     L.regular,
     STEPS[4].id,
-    'Explain to student what goal setting is',
+    'Explain to student what goal setting is.',
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_05_PICTURE },
   ),
   cell(
     geCell('06', '03'),
     L.regular,
     STEPS[5].id,
-    'Once student understands, starts setting first goal while sharing screen',
+    'Once student understands, starts setting first goal while sharing screen.',
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
   cell(
     geCell('07', '03'),
     L.regular,
     STEPS[6].id,
-    'Fill out goal settings and quantity with the student',
+    'Fill out goal settings and quantity with the student.',
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_07_PICTURE },
   ),
   cell(
     geCell('08', '03'),
     L.regular,
     STEPS[7].id,
-    'If prompted, fill out goal achievement strategy with the student',
+    'If prompted, fill out goal achievement strategy with the student.',
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_08_PICTURE },
   ),
-  cell(geCell('09', '03'), L.regular, STEPS[8].id, 'Save goal', {
+  cell(geCell('09', '03'), L.regular, STEPS[8].id, 'Save goal.', {
     picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_09_PICTURE,
   }),
   cell(
     geCell('10', '03'),
     L.regular,
     STEPS[9].id,
-    'Finalize goal setting with student',
+    'Finalize goal setting with student.',
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_10_PICTURE },
   ),
-  cell(geCell('11', '03'), L.regular, STEPS[10].id, 'Leave breakout room', {
+  cell(geCell('11', '03'), L.regular, STEPS[10].id, 'Leave breakout room.', {
     picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_11_PICTURE,
   }),
   cell(
     geCell('12', '03'),
     L.regular,
     STEPS[11].id,
-    'Move on to the next student in sorted order set by researchers',
+    'Move on to the next student in sorted order set by researchers.',
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_12_PICTURE },
   ),
 
@@ -571,7 +571,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('12', '07'),
     L.backStage,
     STEPS[11].id,
-    'Researchers set student order',
+    'Researchers set student order.',
   ),
 
   cell(geCell('02', '09'), L.support, STEPS[1].id, SUPPORT_DEV_DESIGN, {
@@ -608,7 +608,7 @@ export const GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK: BlueprintData = {
     id: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_ID,
     name: 'Set Goals Edge Case',
     description:
-      'Goal cycle began and deadline not reached, but student did not set goal last session and student has no prior goals.',
+      'Goal cycle began and deadline not reached, but student did not set goals last session and student has no prior goals.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'alternative',
   },

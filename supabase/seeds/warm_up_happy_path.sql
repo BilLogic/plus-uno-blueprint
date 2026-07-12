@@ -55,15 +55,15 @@ values
     5
   ),
   (
-    'a0000000-0000-4000-8000-000000000307',
-    'a0000000-0000-4000-8000-000000000300',
-    'Back Stage Actions',
-    6
-  ),
-  (
     'a0000000-0000-4000-8000-000000000308',
     'a0000000-0000-4000-8000-000000000300',
     'Back Stage Tech',
+    6
+  ),
+  (
+    'a0000000-0000-4000-8000-000000000307',
+    'a0000000-0000-4000-8000-000000000300',
+    'Back Stage Actions',
     7
   ),
   (
@@ -214,21 +214,21 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000311',
-    'Circulate and quietly observe the students'
+    'Circulate and quietly observe the students.'
   ),
   (
     'a0000000-0000-4000-8000-000000040102',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000302',
     'a0000000-0000-4000-8000-000000000311',
-    'Rename students to match roster name'
+    'Rename students to match roster name.'
   ),
   (
     'a0000000-0000-4000-8000-000000040103',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000311',
-    'Enter Breakout room'
+    'Enter breakout room.'
   ),
   (
     'a0000000-0000-4000-8000-000000040106',
@@ -242,7 +242,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000311',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 2: greet_student
   (
@@ -250,21 +250,21 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000312',
-    'Remind students to keep working while waiting'
+    'Remind students to keep working while waiting.'
   ),
   (
     'a0000000-0000-4000-8000-000000040202',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000302',
     'a0000000-0000-4000-8000-000000000312',
-    'Add any un-rostered students to attendance list'
+    'Add any un-rostered students to attendance list.'
   ),
   (
     'a0000000-0000-4000-8000-000000040203',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000312',
-    'Greet student'
+    'Greet student.'
   ),
   (
     'a0000000-0000-4000-8000-000000040206',
@@ -278,7 +278,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000312',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 3: ask_student_share_screen
   (
@@ -286,21 +286,21 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000313',
-    'Checks if all students are in the correct breakout room'
+    'Checks if all students are in the correct breakout room.'
   ),
   (
     'a0000000-0000-4000-8000-000000040302',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000302',
     'a0000000-0000-4000-8000-000000000313',
-    'Manually assign unpaired students to available tutors'
+    'Manually assign unpaired students to available tutors.'
   ),
   (
     'a0000000-0000-4000-8000-000000040303',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000313',
-    'Ask them to share screen'
+    'Ask them to share screen.'
   ),
   (
     'a0000000-0000-4000-8000-000000040306',
@@ -314,7 +314,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000313',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 4: remind_student_can_ask_help
   (
@@ -322,21 +322,21 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000314',
-    'Receives information that student is absent from session'
+    'Receives information that student is absent from session.'
   ),
   (
     'a0000000-0000-4000-8000-000000040402',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000302',
     'a0000000-0000-4000-8000-000000000314',
-    'Inform Classroom teacher about students that are absent'
+    'Inform classroom teacher about students that are absent.'
   ),
   (
     'a0000000-0000-4000-8000-000000040403',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000314',
-    'Remind them that they can ask for help on content and support'
+    'Remind them that they can ask for help on content and support.'
   ),
   (
     'a0000000-0000-4000-8000-000000040406',
@@ -350,7 +350,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000314',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 5: mark_student_present
   (
@@ -358,21 +358,21 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000315',
-    'Alerts lead tutor about unassigned or miss-assigned students using the "ask for help" alert'
+    'Alerts lead tutor about unassigned or miss-assigned students using the "ask for help" alert.'
   ),
   (
     'a0000000-0000-4000-8000-000000040502',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000302',
     'a0000000-0000-4000-8000-000000000315',
-    'Respond to classroom teachers "ask for help" request'
+    'Respond to classroom teachers "ask for help" request.'
   ),
   (
     'a0000000-0000-4000-8000-000000040503',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000315',
-    'Mark them as present'
+    'Mark them as present.'
   ),
   (
     'a0000000-0000-4000-8000-000000040506',
@@ -386,7 +386,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000315',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 6: select_engagement_level
   (
@@ -394,14 +394,14 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000316',
-    'Handles student tech problems as they arise'
+    'Handles student tech problems as they arise.'
   ),
   (
     'a0000000-0000-4000-8000-000000040603',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000316',
-    'Select Engagement level'
+    'Select engagement level.'
   ),
   (
     'a0000000-0000-4000-8000-000000040606',
@@ -415,7 +415,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000316',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 7: mark_student_helped
   (
@@ -423,14 +423,14 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000301',
     'a0000000-0000-4000-8000-000000000317',
-    'Escalates unresolved issues to tutors@tutor.plus promptly'
+    'Escalates unresolved issues to tutors@tutor.plus promptly.'
   ),
   (
     'a0000000-0000-4000-8000-000000040703',
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000317',
-    'Mark them as helped'
+    'Mark them as helped.'
   ),
   (
     'a0000000-0000-4000-8000-000000040706',
@@ -444,7 +444,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000317',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   ),
   -- Step 8: leave_breakout_room
   (
@@ -452,7 +452,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000319',
-    'Leave breakout room'
+    'Leave breakout room.'
   ),
   (
     'a0000000-0000-4000-8000-000000040806',
@@ -467,7 +467,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000303',
     'a0000000-0000-4000-8000-000000000318',
-    'Move on to the next student in sorted order set by researchers'
+    'Move on to the next student in sorted order set by researchers.'
   ),
   (
     'a0000000-0000-4000-8000-000000040906',
@@ -481,7 +481,7 @@ values
     'a0000000-0000-4000-8000-000000000300',
     'a0000000-0000-4000-8000-000000000309',
     'a0000000-0000-4000-8000-000000000318',
-    E'Dev Team\nDesign team'
+    E'Dev Team\nDesign Team'
   )
 on conflict (id) do update set content = excluded.content;
 
@@ -563,3 +563,80 @@ values
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
   target_cell_id = excluded.target_cell_id;
+
+update public.cells
+set description = 'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+where id in (
+  'a0000000-0000-4000-8000-000000040106',
+  'a0000000-0000-4000-8000-000000040206',
+  'a0000000-0000-4000-8000-000000040406',
+  'a0000000-0000-4000-8000-000000040506',
+  'a0000000-0000-4000-8000-000000040606',
+  'a0000000-0000-4000-8000-000000040706'
+);
+
+update public.cells
+set description = 'The student shares screen via Zoom/Pencil screen share feature.'
+where id = 'a0000000-0000-4000-8000-000000040306';
+
+update public.cells
+set description = 'The tutor leaves the student''s Zoom/Pencil breakout room.'
+where id = 'a0000000-0000-4000-8000-000000040806';
+
+update public.cells
+set links = jsonb_build_array(
+  jsonb_build_object(
+    'type', 'tech_description',
+    'label', 'PLUS App',
+    'description', 'The tutor marks the student as present in the Student Dashboard screen in the PLUS app.',
+    'picture', '/blueprint-images/warm-up/shared/plus-app/step-05-your-students.png',
+    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3377-227498&t=LvyyxUtQVUCLMMc2-1'
+  )
+)
+where id = 'a0000000-0000-4000-8000-000000040506';
+
+update public.cells
+set links = jsonb_build_array(
+  jsonb_build_object(
+    'type', 'tech_description',
+    'label', 'PLUS App',
+    'description', 'The tutor marks the student''s engagement level in the Student Dashboard screen in the PLUS app.',
+    'picture', '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png',
+    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
+  )
+)
+where id = 'a0000000-0000-4000-8000-000000040606';
+
+update public.cells
+set links = jsonb_build_array(
+  jsonb_build_object(
+    'type', 'tech_description',
+    'label', 'PLUS App',
+    'description', 'The tutor marks the student as helped in the Student Dashboard screen in the PLUS app.',
+    'picture', '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png',
+    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
+  )
+)
+where id = 'a0000000-0000-4000-8000-000000040706';
+
+update public.cells
+set description =
+  'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
+where id in (
+  'a0000000-0000-4000-8000-000000040509',
+  'a0000000-0000-4000-8000-000000040609',
+  'a0000000-0000-4000-8000-000000040709',
+  'a0000000-0000-4000-8000-000000040909'
+);
+
+update public.cells
+set links = jsonb_build_array(
+  jsonb_build_object(
+    'type', 'tech_description',
+    'label', 'PLUS App',
+    'description', 'The tutor moves on to the next student on the researcher sorted list in the Student Dashboard screen of the PLUS app.',
+    'picture', '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png',
+    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
+  )
+)
+where id = 'a0000000-0000-4000-8000-000000040906';

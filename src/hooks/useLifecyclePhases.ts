@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { phasesToSlides, type PhaseRow } from '@/lib/phasesToSlides'
+import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import type { Slide } from '@/types/slides'
 
 /** Default lifecycle from seed.sql */
@@ -47,13 +48,23 @@ export function useLifecyclePhases(lifecycleId: string = DEFAULT_LIFECYCLE_ID) {
     let cancelled = false
     setLoading(true)
 
-    void client
+    const query = client
       .from('phases')
       .select(LIFECYCLE_PHASES_SELECT)
       .eq('service_lifecycle_id', lifecycleId)
       .order('order_position', { ascending: true })
-      .then(({ data, error: err }) => {
+
+    void raceSupabaseQuery(query).then((result) => {
         if (cancelled) return
+        if (result === 'timeout') {
+          setPhases([])
+          setSlides([])
+          setError(null)
+          setLoading(false)
+          return
+        }
+
+        const { data, error: err } = result
         if (err) {
           setError(err.message)
           setPhases([])

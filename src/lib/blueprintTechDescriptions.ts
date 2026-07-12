@@ -7,14 +7,24 @@ export const URL_LINK_TYPE = 'url'
 export function techDescriptionLink(
   techLabel: string,
   description?: string,
-  picture?: string,
+  picture?: string | readonly string[],
   url?: string,
 ): CellLink {
+  const pictures = Array.isArray(picture)
+    ? picture.map((entry) => entry.trim()).filter(Boolean)
+    : undefined
+  const singlePicture =
+    typeof picture === 'string' && picture.trim() ? picture.trim() : undefined
+
   return {
     type: TECH_DESCRIPTION_LINK_TYPE,
     label: techLabel,
     ...(description ? { description } : {}),
-    ...(picture ? { picture } : {}),
+    ...(pictures && pictures.length > 0
+      ? { pictures, picture: pictures[0] }
+      : singlePicture
+        ? { picture: singlePicture }
+        : {}),
     ...(url ? { url } : {}),
   }
 }
@@ -51,7 +61,19 @@ function getTechDescriptionFromLinks(
   return null
 }
 
-/** Tech pill label for the detail panel heading (Front Stage Tech). */
+function getLinkedDescriptionsForContentItems(
+  links: CellLink[],
+  items: string[],
+): string | null {
+  const parts: string[] = []
+  for (const item of items) {
+    const description = getTechDescriptionFromLinks(links, item)
+    if (description) parts.push(description)
+  }
+  return parts.length > 0 ? parts.join('\n\n') : null
+}
+
+/** Tech pill label for the detail panel heading (Front Stage Tech, Back Stage Tech). */
 export function resolveTechCellDetailLabel(
   techItem: string | undefined,
   cell: Pick<BlueprintCell, 'content'>,
@@ -77,7 +99,25 @@ export function resolveTechCellDetailText(
       return cell.description.trim()
     }
 
+    if (cell.description?.trim()) {
+      const items = parseCellContentItems(cell.content)
+      if (items.includes(techItem)) {
+        return cell.description.trim()
+      }
+    }
+
     return techItem
+  }
+
+  const contentItems = parseCellContentItems(content)
+  if (contentItems.length === 1) {
+    const fromLinks = getTechDescriptionFromLinks(cell.links, contentItems[0]!)
+    if (fromLinks) return fromLinks
+  }
+
+  if (contentItems.length > 1) {
+    const fromLinks = getLinkedDescriptionsForContentItems(cell.links, contentItems)
+    if (fromLinks) return fromLinks
   }
 
   if (content === 'Zoom/Pencil' && cell.description?.trim()) {
@@ -146,8 +186,27 @@ export function mergeTechDescriptionLinks(
   links: CellLink[],
   fallbackLinks: CellLink[],
 ): CellLink[] {
+  const fallbackUrlLabels = new Set(
+    fallbackLinks
+      .filter(
+        (link) => link.type === URL_LINK_TYPE && link.label && link.url?.trim(),
+      )
+      .map((link) => link.label!),
+  )
+
+  // When fallback defines URL resource links, drop existing URL links that are
+  // not in that set (removes obsolete onboarding / resource links).
+  const baseLinks =
+    fallbackUrlLabels.size > 0
+      ? links.filter(
+          (link) =>
+            link.type !== URL_LINK_TYPE ||
+            (link.label != null && fallbackUrlLabels.has(link.label)),
+        )
+      : links
+
   const merged = mergeUrlLinks(
-    links.map((link) => ({ ...link })),
+    baseLinks.map((link) => ({ ...link })),
     fallbackLinks,
   )
 
@@ -167,6 +226,12 @@ export function mergeTechDescriptionLinks(
         description:
           existing.description?.trim() || fallbackLink.description || undefined,
         picture: existing.picture?.trim() || fallbackLink.picture || undefined,
+        pictures:
+          existing.pictures?.length
+            ? existing.pictures
+            : fallbackLink.pictures?.length
+              ? fallbackLink.pictures
+              : undefined,
         url: existing.url?.trim() || fallbackLink.url || undefined,
       }
       continue

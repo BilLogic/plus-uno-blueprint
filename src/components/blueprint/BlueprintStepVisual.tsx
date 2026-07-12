@@ -1,6 +1,5 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { getVisualCellButtonMaxHeight } from '@/lib/blueprintLayout'
-import { withBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
@@ -59,12 +58,16 @@ export function BlueprintStepVisual({
   pictures,
   presentation = false,
 }: BlueprintStepVisualProps) {
-  const displayPictures = withBlueprintStepVisualPlaceholder(pictures)
-  const hasRealPictures = Boolean(pictures?.length)
+  const displayPictures = pictures ?? []
+  const hasRealPictures = displayPictures.length > 0
   const ariaLabel = hasRealPictures
-    ? `Step visuals for ${pictures!.length} users`
-    : 'Step visual placeholder'
+    ? `Step visuals for ${displayPictures.length} users`
+    : 'Empty step visual'
   const inlineMaxHeight = getVisualCellButtonMaxHeight(compact)
+
+  if (!hasRealPictures) {
+    return null
+  }
 
   if (presentation) {
     return (
@@ -90,7 +93,7 @@ export function BlueprintStepVisual({
       variant="visual"
       className={cn(
         'h-full min-h-0 max-h-full w-full overflow-hidden',
-        hasRealPictures && 'items-stretch justify-stretch p-1',
+        'items-stretch justify-stretch p-1',
         className,
       )}
       style={{ maxHeight: inlineMaxHeight }}

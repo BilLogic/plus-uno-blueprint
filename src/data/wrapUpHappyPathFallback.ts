@@ -1,7 +1,20 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import { WRAP_UP_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleLinks'
+import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import { SUPPORT_ACTIONS_DESCRIPTION } from '@/data/supportActionsCopy'
 import {
-  WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  WRAP_UP_PARTNER_STEP_01_PICTURE,
+  WRAP_UP_PARTNER_STEP_02_PICTURE,
+  WRAP_UP_PARTNER_STEP_03_PICTURE,
+  WRAP_UP_PARTNER_STEP_04_PICTURE,
+  WRAP_UP_LEAD_TUTOR_STEP_01_PICTURE,
+  WRAP_UP_LEAD_TUTOR_STEP_02_PICTURE,
+  WRAP_UP_LEAD_TUTOR_STEP_03_PICTURE,
+  WRAP_UP_LEAD_TUTOR_STEP_04_PICTURE,
+  WRAP_UP_REGULAR_TUTOR_STEP_01_PICTURE,
+  WRAP_UP_REGULAR_TUTOR_STEP_02_PICTURE,
+  WRAP_UP_REGULAR_TUTOR_STEP_03_PICTURE,
+  WRAP_UP_REGULAR_TUTOR_STEP_04_PICTURE,
   WRAP_UP_PLUS_APP_STEP_04_DESCRIPTION,
   WRAP_UP_PLUS_APP_STEP_04_FIGMA_URL,
   WRAP_UP_PLUS_APP_STEP_04_PICTURE,
@@ -9,7 +22,6 @@ import {
   WRAP_UP_ZOOM_PENCIL_STEP_02_DESCRIPTION,
   WRAP_UP_ZOOM_PENCIL_STEP_03_DESCRIPTION,
 } from '@/data/wrapUpPictures'
-import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
@@ -53,13 +65,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000876',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-000000000877',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000877',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-000000000876',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -109,10 +121,13 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
-  > = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
 ): BlueprintCell {
+  const links =
+    layerId === L.regular
+      ? mergeUrlLinks(metadata.links ?? [], WRAP_UP_REGULAR_TUTOR_ONBOARDING_LINKS)
+      : (metadata.links ?? EMPTY_CELL_METADATA.links)
+
   return {
     id,
     layer_id: layerId,
@@ -120,6 +135,7 @@ function cell(
     content,
     ...EMPTY_CELL_METADATA,
     ...metadata,
+    links,
   }
 }
 
@@ -203,63 +219,63 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
     cell(wuCell(String(index + 1).padStart(2, '0'), '10'), L.visual, step.id, ''),
   ),
 
-  cell(wuCell('01', '01'), L.partner, STEPS[0].id, 'Help students log out of Zoom', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('01', '01'), L.partner, STEPS[0].id, 'Help students log out of Zoom.', {
+    picture: WRAP_UP_PARTNER_STEP_01_PICTURE,
   }),
   cell(
     wuCell('02', '01'),
     L.partner,
     STEPS[1].id,
-    'Remind students to save their work or note what they accomplished',
-    { picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER },
+    'Remind students to save their work or note what they accomplished.',
+    { picture: WRAP_UP_PARTNER_STEP_02_PICTURE },
   ),
   cell(
     wuCell('03', '01'),
     L.partner,
     STEPS[2].id,
-    'Encourage them to reflect on what they learned or practiced',
-    { picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER },
+    'Encourage them to reflect on what they learned or practiced.',
+    { picture: WRAP_UP_PARTNER_STEP_03_PICTURE },
   ),
   cell(
     wuCell('04', '01'),
     L.partner,
     STEPS[3].id,
-    'Share quick reminders to students about what to bring or prepare for next time',
-    { picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER },
+    'Share quick reminders to students about what to bring or prepare for next time.',
+    { picture: WRAP_UP_PARTNER_STEP_04_PICTURE },
   ),
 
-  cell(wuCell('01', '02'), L.lead, STEPS[0].id, 'Close breakout rooms', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('01', '02'), L.lead, STEPS[0].id, 'Close breakout rooms.', {
+    picture: WRAP_UP_LEAD_TUTOR_STEP_01_PICTURE,
   }),
-  cell(wuCell('02', '02'), L.lead, STEPS[1].id, 'Thank Students', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('02', '02'), L.lead, STEPS[1].id, 'Thank students.', {
+    picture: WRAP_UP_LEAD_TUTOR_STEP_02_PICTURE,
   }),
-  cell(wuCell('03', '02'), L.lead, STEPS[2].id, 'Debrief with tutors', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('03', '02'), L.lead, STEPS[2].id, 'Debrief with tutors.', {
+    picture: WRAP_UP_LEAD_TUTOR_STEP_03_PICTURE,
   }),
   cell(
     wuCell('04', '02'),
     L.lead,
     STEPS[3].id,
-    'Remind Tutors to upload zoom recording and complete reflection form',
-    { picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER },
+    'Remind tutors to upload Zoom recording and complete reflection form.',
+    { picture: WRAP_UP_LEAD_TUTOR_STEP_04_PICTURE },
   ),
 
-  cell(wuCell('01', '03'), L.regular, STEPS[0].id, 'Return to main room', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('01', '03'), L.regular, STEPS[0].id, 'Return to main room.', {
+    picture: WRAP_UP_REGULAR_TUTOR_STEP_01_PICTURE,
   }),
-  cell(wuCell('02', '03'), L.regular, STEPS[1].id, 'Thank Students', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('02', '03'), L.regular, STEPS[1].id, 'Thank students.', {
+    picture: WRAP_UP_REGULAR_TUTOR_STEP_02_PICTURE,
   }),
-  cell(wuCell('03', '03'), L.regular, STEPS[2].id, 'Debrief with lead tutor', {
-    picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER,
+  cell(wuCell('03', '03'), L.regular, STEPS[2].id, 'Debrief with lead tutor.', {
+    picture: WRAP_UP_REGULAR_TUTOR_STEP_03_PICTURE,
   }),
   cell(
     wuCell('04', '03'),
     L.regular,
     STEPS[3].id,
-    'Fill out reflection form and upload zoom recording',
-    { picture: WRAP_UP_ACTION_LAYER_PLACEHOLDER },
+    'Fill out reflection form and upload Zoom recording.',
+    { picture: WRAP_UP_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
 
   cell(wuCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
@@ -285,7 +301,7 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
     ],
   }),
 
-  cell(wuCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign team', {
+  cell(wuCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
     description: SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]

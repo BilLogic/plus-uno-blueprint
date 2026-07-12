@@ -426,8 +426,12 @@ function CompareLayerRow({
         const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
         const isVisualLayer = shouldUseVisualContent(layer.name)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
-        const showCell =
-          isVisualLayer || hasCellContent(cell?.content, variant)
+        const visualPictures = isVisualLayer
+          ? resolveVisualStepPictures(blueprint, step.id)
+          : undefined
+        const showCell = isVisualLayer
+          ? (visualPictures?.length ?? 0) > 0
+          : hasCellContent(cell?.content, variant)
 
         return (
           <Fragment key={`${layer.id}-${step.id}`}>
@@ -443,11 +447,7 @@ function CompareLayerRow({
                 variant={variant}
                 compact={compact}
                 flushBottom={flushBottom}
-                visualPictures={
-                  isVisualLayer
-                    ? resolveVisualStepPictures(blueprint, step.id)
-                    : undefined
-                }
+                visualPictures={visualPictures}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer)
                     ? {
@@ -460,6 +460,7 @@ function CompareLayerRow({
                         cellContent: cell?.content ?? '',
                         cellPicture: cell?.picture ?? null,
                         cellDescription: cell?.description ?? null,
+                        cellLinks: cell?.links,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
                         pathDescription: blueprint.path.description,

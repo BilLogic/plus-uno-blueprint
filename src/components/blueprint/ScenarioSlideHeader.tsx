@@ -1,18 +1,15 @@
 import { NotionPropertyRow } from '@/components/blueprint/NotionPropertyRow'
 import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
 import { ScenarioSlideFilters } from '@/components/blueprint/ScenarioSlideFilters'
-import { ViewTypeSelect } from '@/components/blueprint/ViewTypeSelect'
 import { PathMultiSelect, type PathOption } from '@/components/blueprint/PathMultiSelect'
 import { cn } from '@/lib/utils'
-import type { Slide, SlideViewType } from '@/types/slides'
+import type { Slide } from '@/types/slides'
 
 type ScenarioSlideHeaderProps = {
   title: string
   slide?: Pick<Slide, 'id' | 'label'>
   description?: string | null
   phaseLabel?: string
-  viewType: SlideViewType
-  onViewTypeChange: (viewType: SlideViewType) => void
   paths?: PathOption[]
   selectedPathIds?: string[]
   onTogglePath?: (pathId: string) => void
@@ -27,8 +24,6 @@ export function ScenarioSlideHeader({
   slide,
   description,
   phaseLabel,
-  viewType,
-  onViewTypeChange,
   paths = [],
   selectedPathIds = [],
   onTogglePath,
@@ -38,7 +33,6 @@ export function ScenarioSlideHeader({
   className,
 }: ScenarioSlideHeaderProps) {
   const showPathPicker = paths.length > 0 && onTogglePath
-  const viewTypeId = compact ? 'canvas-scenario-view-type' : 'scenario-view-type'
 
   if (variant === 'notion') {
     return (
@@ -64,29 +58,19 @@ export function ScenarioSlideHeader({
           </p>
         )}
 
-        {showFilters && (
+        {showFilters && showPathPicker ? (
           <div className="mt-6">
-            <NotionPropertyRow label="View">
-              <ViewTypeSelect
-                id={viewTypeId}
-                value={viewType}
-                onChange={onViewTypeChange}
-                variant="notion"
+            <NotionPropertyRow label="Paths">
+              <PathMultiSelect
+                paths={paths}
+                selectedPathIds={selectedPathIds}
+                onToggle={onTogglePath}
+                layout="notion"
+                hideLabel
               />
             </NotionPropertyRow>
-            {showPathPicker && (
-              <NotionPropertyRow label="Paths">
-                <PathMultiSelect
-                  paths={paths}
-                  selectedPathIds={selectedPathIds}
-                  onToggle={onTogglePath}
-                  layout="notion"
-                  hideLabel
-                />
-              </NotionPropertyRow>
-            )}
           </div>
-        )}
+        ) : null}
       </header>
     )
   }
@@ -145,18 +129,15 @@ export function ScenarioSlideHeader({
         )}
       </div>
 
-      {showFilters && (
+      {showFilters ? (
         <ScenarioSlideFilters
-          viewType={viewType}
-          onViewTypeChange={onViewTypeChange}
           paths={paths}
           selectedPathIds={selectedPathIds}
           onTogglePath={onTogglePath}
           layout="vertical"
-          viewTypeId={viewTypeId}
           className={cn(compact ? 'mt-3 gap-4' : 'mt-4')}
         />
-      )}
+      ) : null}
     </header>
   )
 }

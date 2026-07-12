@@ -72,13 +72,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-0000000008b6',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-0000000008b7',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-0000000008b7',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-0000000008b6',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -96,12 +96,12 @@ const STEPS = [
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b02',
-    name: "Click on 'Check Goals' CTA in the Action Column",
+    name: "Click on 'Check Goals' CTA in the Action column",
     column_position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b03',
-    name: 'Share Screen',
+    name: 'Share screen',
     column_position: 3,
   },
   {
@@ -141,10 +141,10 @@ const L = {
   support: 'a0000000-0000-4000-8000-0000000008b8',
 } as const
 
-const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign team'
-const BACKSTAGE_RESEARCHER = 'Researchers set goal setting activities'
+const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign Team'
+const BACKSTAGE_RESEARCHER = 'Researchers set goal setting activities.'
 const SUPPORT_STEP_8 =
-  'Researchers set student order, Dev Team, Design team'
+  'Researchers set student order, Dev Team, Design Team.'
 
 const GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_DESCRIPTION =
   'The tutor views the Student Dashboard screen in the PLUS app and clicks the Check Goals CTA in the Action column for the student they are working with.'
@@ -162,22 +162,22 @@ const GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_DESCRIPTION =
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
 const GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor utilizes Zoom/Pencil to virtually connect with the student and joins the breakout room to check goals with the student.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'The tutor shares their screen with the student in the breakout room via Zoom/Pencil to show the check goals flow in the PLUS app.'
+  'The tutor shares screen via Zoom/Pencil screen share feature.'
 
 const GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor reviews the goals that were set with the student in the breakout room via Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'The tutor works with the student to complete the goal check while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'The tutor finalizes checking goals with the student while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_07_DESCRIPTION =
-  'The tutor says goodbye and leaves the breakout room with the student via Zoom/Pencil.'
+  "The tutor leaves the student's Zoom/Pencil breakout room."
 
 function checkGoalsPlusAppLink(
   description: string,
@@ -314,31 +314,31 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     gcCell('01', '03'),
     L.regular,
     STEPS[0].id,
-    'Join breakout session',
+    'Join breakout session.',
     { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_01_PICTURE },
   ),
   cell(
     gcCell('02', '03'),
     L.regular,
     STEPS[1].id,
-    "Click on 'Check Goals' CTA in the Action Column",
+    "Click on 'Check Goals' CTA in the Action column.",
     { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_02_PICTURE },
   ),
-  cell(gcCell('03', '03'), L.regular, STEPS[2].id, 'Share Screen', {
+  cell(gcCell('03', '03'), L.regular, STEPS[2].id, 'Share screen.', {
     picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_03_PICTURE,
   }),
   cell(
     gcCell('04', '03'),
     L.regular,
     STEPS[3].id,
-    'Review goals that were set with student',
+    'Review goals that were set with student.',
     { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
   cell(
     gcCell('05', '03'),
     L.regular,
     STEPS[4].id,
-    "Once goal review is done, clicks on 'Check Goals' button",
+    "Once goal review is done, clicks on 'Check Goals' button.",
     { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_05_PICTURE },
   ),
   cell(
@@ -348,7 +348,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     'Finalize checking goal with the student.',
     { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
-  cell(gcCell('07', '03'), L.regular, STEPS[6].id, 'Leave breakout room', {
+  cell(gcCell('07', '03'), L.regular, STEPS[6].id, 'Leave breakout room.', {
     picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_07_PICTURE,
   }),
   cell(
@@ -457,7 +457,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     gcCell('08', '07'),
     L.backStage,
     STEPS[7].id,
-    'Researchers set student order',
+    'Researchers set student order.',
   ),
 
   cell(gcCell('02', '09'), L.support, STEPS[1].id, SUPPORT_DEV_DESIGN, {
@@ -485,7 +485,7 @@ export const GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK: BlueprintData = {
   path: {
     id: GOAL_SETTING_CHECK_GOALS_PATH_ID,
     name: 'Check Goals',
-    description: 'Goal already set, but deadline not reached.',
+    description: 'Goals already set, but deadline not reached.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'alternative',
   },

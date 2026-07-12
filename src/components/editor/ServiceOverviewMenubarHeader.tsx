@@ -8,7 +8,6 @@ import {
   BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import { Menubar } from '@/components/ui/menubar'
-import type { SlideViewType } from '@/types/slides'
 import { cn } from '@/lib/utils'
 
 const OVERVIEW_MENU_TITLE = 'Uno Blueprint'
@@ -16,8 +15,6 @@ const OVERVIEW_MENU_DESCRIPTION =
   'An overview of the phases across the PLUS service lifecycle.'
 
 type ServiceOverviewMenubarHeaderProps = {
-  viewType: SlideViewType
-  onViewTypeChange: (viewType: SlideViewType) => void
   paths: PathOption[]
   selectedPathIds: string[]
   onTogglePath: (pathId: string) => void
@@ -26,8 +23,6 @@ type ServiceOverviewMenubarHeaderProps = {
 
 /** Title bar for the service overview canvas. */
 export function ServiceOverviewMenubarHeader({
-  viewType,
-  onViewTypeChange,
   paths,
   selectedPathIds,
   onTogglePath,
@@ -55,8 +50,6 @@ export function ServiceOverviewMenubarHeader({
       </div>
 
       <StackHeaderFilterMenu
-        viewType={viewType}
-        onViewTypeChange={onViewTypeChange}
         paths={paths}
         selectedPathIds={selectedPathIds}
         onTogglePath={onTogglePath}

@@ -25,7 +25,6 @@ import {
 import {
   getBlueprintScenarioId,
   isSubslide,
-  type SlideViewType,
 } from '@/types/slides'
 
 export function SlideModeSidebarNav() {
@@ -99,19 +98,6 @@ export function SlideModeMain() {
     isPhaseDetail ? undefined : scenarioId,
   )
 
-  const headerViewType = isPhaseDetail
-    ? phaseFilters.viewType
-    : getScenarioDisplayViewType(activeSlide)
-
-  const handleViewTypeChange = (viewType: SlideViewType) => {
-    if (isPhaseDetail) {
-      phaseFilters.setViewType(viewType)
-      return
-    }
-    if (!scenarioId) return
-    setScenarioDisplayViewType(scenarioId, viewType)
-  }
-
   const headerPaths = isPhaseDetail
     ? phaseFilters.filterPaths
     : scenarioBlueprint.paths
@@ -123,8 +109,19 @@ export function SlideModeMain() {
     : scenarioBlueprint.togglePathSelection
 
   const viewportResetKey = isPhaseDetail
-    ? `${activeSlideId}:${phaseFilters.filterSelectedPathIds.join(',')}:${phaseFilters.viewType}:${phaseFilters.loading}`
+    ? `${activeSlideId}:${phaseFilters.filterSelectedPathIds.join(',')}:${phaseFilters.loading}`
     : `${activeSlideId}:${scenarioBlueprint.selectedPathIds.join(',')}:${scenarioBlueprint.blueprints.length}`
+
+  const cellDetailBlueprints = useMemo(() => {
+    if (isPhaseDetail) {
+      return [...phaseFilters.blueprintsByPathId.values()]
+    }
+    return scenarioBlueprint.allBlueprints
+  }, [
+    isPhaseDetail,
+    phaseFilters.blueprintsByPathId,
+    scenarioBlueprint.allBlueprints,
+  ])
 
   const cellDetailEnabled = isBlueprintCellDetailEnabled(scenarioId)
 
@@ -132,7 +129,7 @@ export function SlideModeMain() {
     <BlueprintCellDetailProvider
       resetKey={activeSlideId}
       enabled={cellDetailEnabled}
-      blueprints={scenarioBlueprint.blueprints}
+      blueprints={cellDetailBlueprints}
     >
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         {slidesLoading ? (
@@ -159,8 +156,6 @@ export function SlideModeMain() {
             <SlideStickyHeader
               slide={activeSlide}
               slides={slides}
-              viewType={headerViewType}
-              onViewTypeChange={handleViewTypeChange}
               paths={headerPaths}
               selectedPathIds={headerSelectedPathIds}
               onTogglePath={handleTogglePath}

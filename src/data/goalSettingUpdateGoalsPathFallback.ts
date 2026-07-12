@@ -79,13 +79,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-0000000008d6',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-0000000008d7',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-0000000008d7',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-0000000008d6',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -103,12 +103,12 @@ const STEPS = [
   },
   {
     id: 'a0000000-0000-4000-8000-000000009d02',
-    name: "Click on 'Update Goals' CTA in the Action Column",
+    name: "Click on 'Update Goals' CTA in the Action column",
     column_position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009d03',
-    name: 'Share Screen',
+    name: 'Share screen',
     column_position: 3,
   },
   {
@@ -163,9 +163,9 @@ const L = {
   support: 'a0000000-0000-4000-8000-0000000008d8',
 } as const
 
-const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign team'
-const BACKSTAGE_RESEARCHER = 'Researchers set goal setting activities'
-const SUPPORT_STEP_11 = 'Dev Team, Design team'
+const SUPPORT_DEV_DESIGN = 'Dev Team\nDesign Team'
+const BACKSTAGE_RESEARCHER = 'Researchers set goal setting activities.'
+const SUPPORT_STEP_11 = 'Dev Team, Design Team'
 
 const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_02_DESCRIPTION =
   'The tutor views the Student Dashboard screen in the PLUS app and clicks the Update Goals CTA in the Action column for the student they are working with.'
@@ -192,31 +192,31 @@ const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_11_DESCRIPTION =
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor utilizes Zoom/Pencil to virtually connect with the student and joins the breakout room to update goals with the student.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'The tutor shares their screen with the student in the breakout room via Zoom/Pencil to show the update goals flow in the PLUS app.'
+  'The tutor shares screen via Zoom/Pencil screen share feature.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor reviews the last goal cycle overview and system suggestions with the student in the breakout room via Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'The tutor guides the student through updating goals for the next goal cycle while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'The tutor works with the student to fill out goal settings and quantities while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_07_DESCRIPTION =
-  'If prompted, the tutor works with the student to complete the goal achievement strategy while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_08_DESCRIPTION =
-  'The tutor saves the updated goal with the student while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_09_DESCRIPTION =
-  'The tutor finalizes updating goals with the student while sharing their screen on Zoom/Pencil.'
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 
 const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_10_DESCRIPTION =
-  'The tutor says goodbye and leaves the breakout room with the student via Zoom/Pencil.'
+  "The tutor leaves the student's Zoom/Pencil breakout room."
 
 function updateGoalsPlusAppLink(
   description: string,
@@ -349,58 +349,58 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
-  cell(guCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session', {
+  cell(guCell('01', '03'), L.regular, STEPS[0].id, 'Join breakout session.', {
     picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_01_PICTURE,
   }),
   cell(
     guCell('02', '03'),
     L.regular,
     STEPS[1].id,
-    "Click on 'Update Goals' CTA in the Action Column",
+    "Click on 'Update Goals' CTA in the Action column.",
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_02_PICTURE },
   ),
-  cell(guCell('03', '03'), L.regular, STEPS[2].id, 'Share Screen', {
+  cell(guCell('03', '03'), L.regular, STEPS[2].id, 'Share screen.', {
     picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_03_PICTURE,
   }),
   cell(
     guCell('04', '03'),
     L.regular,
     STEPS[3].id,
-    'Review last goal cycle overview and system suggestion',
+    'Review last goal cycle overview and system suggestion.',
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
   cell(
     guCell('05', '03'),
     L.regular,
     STEPS[4].id,
-    'Once student understands, starts updating goal for the next goal cycle while sharing screen',
+    'Once student understands, starts updating goal for the next goal cycle while sharing screen.',
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_05_PICTURE },
   ),
   cell(
     guCell('06', '03'),
     L.regular,
     STEPS[5].id,
-    'Fills out goal settings and quantity with the student',
+    'Fills out goal settings and quantity with the student.',
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
   cell(
     guCell('07', '03'),
     L.regular,
     STEPS[6].id,
-    'If prompted, fill out goal achievement strategy with the student',
+    'If prompted, fill out goal achievement strategy with the student.',
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_07_PICTURE },
   ),
-  cell(guCell('08', '03'), L.regular, STEPS[7].id, 'Save goal', {
+  cell(guCell('08', '03'), L.regular, STEPS[7].id, 'Save goal.', {
     picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_08_PICTURE,
   }),
   cell(
     guCell('09', '03'),
     L.regular,
     STEPS[8].id,
-    'Finalize updating goal with the student',
+    'Finalize updating goal with the student.',
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_09_PICTURE },
   ),
-  cell(guCell('10', '03'), L.regular, STEPS[9].id, 'Leave breakout room', {
+  cell(guCell('10', '03'), L.regular, STEPS[9].id, 'Leave breakout room.', {
     picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_10_PICTURE,
   }),
   cell(
@@ -545,7 +545,7 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     guCell('11', '07'),
     L.backStage,
     STEPS[10].id,
-    'Researchers set student order',
+    'Researchers set student order.',
   ),
 
   cell(guCell('02', '09'), L.support, STEPS[1].id, SUPPORT_DEV_DESIGN, {
@@ -583,7 +583,7 @@ export const GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK: BlueprintData = {
     id: GOAL_SETTING_UPDATE_GOALS_PATH_ID,
     name: 'Update Goals',
     description:
-      'First Tutoring Day of a New Goal Cycle after a Personalized Goal Had Been Set.',
+      'First tutoring day of a new goal cycle after personalized goals have been set.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'alternative',
   },

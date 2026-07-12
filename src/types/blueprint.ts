@@ -29,6 +29,8 @@ export type CellLink = {
   description?: string
   /** Screenshot or illustration for `tech_description` links keyed by tech pill label. */
   picture?: string
+  /** Multiple images for a tech pill (e.g. logo + screenshot). Takes precedence over `picture`. */
+  pictures?: string[]
 }
 
 export type BlueprintCell = {

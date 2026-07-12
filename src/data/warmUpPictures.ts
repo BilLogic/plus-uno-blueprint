@@ -33,7 +33,7 @@ export const WARM_UP_PLUS_APP_STEP_05_PICTURE =
   '/blueprint-images/warm-up/shared/plus-app/step-05-your-students.png'
 
 export const WARM_UP_PLUS_APP_STEP_05_DESCRIPTION =
-  'Once the tutor checks in with the student, the tutor marks the student as present in the Student Dashboard screen in the PLUS app.'
+  'The tutor marks the student as present in the Student Dashboard screen in the PLUS app.'
 
 export const WARM_UP_PLUS_APP_STEP_05_FIGMA_URL =
   'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3377-227498&t=LvyyxUtQVUCLMMc2-1'
@@ -42,13 +42,13 @@ export const WARM_UP_PLUS_APP_STEPS_6_7_9_PICTURE =
   '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png'
 
 export const WARM_UP_PLUS_APP_STEP_06_DESCRIPTION =
-  'Once the tutor marks the student as present, the tutor is able to select the students engagement level in the Student Dashboard screen of the plus app.'
+  "The tutor marks the student's engagement level in the Student Dashboard screen in the PLUS app."
 
 export const WARM_UP_PLUS_APP_STEP_07_DESCRIPTION =
-  'Once the tutor marks the student selects engagement level, the tutor is able to mark the student as helped in the Student Dashboard screen of the plus app.'
+  'The tutor marks the student as helped in the Student Dashboard screen in the PLUS app.'
 
 export const WARM_UP_PLUS_APP_STEP_09_DESCRIPTION =
-  'The tutor moves on to the next student on the researcher sorted list in the Student Dashboard screen of the plus app.'
+  'The tutor moves on to the next student on the researcher sorted list in the Student Dashboard screen of the PLUS app.'
 
 export const WARM_UP_PLUS_APP_STEPS_6_7_9_FIGMA_URL =
   'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'

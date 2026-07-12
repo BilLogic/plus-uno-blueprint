@@ -5,13 +5,13 @@ import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
  * Keys are canonical display labels (case-sensitive).
  */
 export const TECH_PILL_COLORS = {
-  'Clearance Obtainment guide': '#F0E8D8',
+  'Clearance obtainment guide': '#F0E8D8',
   'Dev Tools': '#D8E8F0',
   Email: '#EDE0F5',
   Figma: '#E4D4F8',
   'Google Docs/ Slides': '#F8E0E8',
   'Google Form Application': '#F0E0C8',
-  'Google Quiz embedded in notion': '#F8D8D8',
+  'Google Quiz embedded in Notion': '#F8D8D8',
   'Google Quizzes': '#D8F0E0',
   Handshake: '#D0E8F5',
   'Handshake Employer Profile': '#C8E0F0',
@@ -22,8 +22,11 @@ export const TECH_PILL_COLORS = {
   Posters: '#F5E8C8',
   Slack: BLUEPRINT_CELL_PALETTE.peach,
   'Social Media': '#F8D0E0',
-  'Workday (payroll software)': '#E0D8F0',
-  Zoom: '#D4E4F7',
+  'Workday (employee view)': '#D0E4F0',
+  'Workday (employer view)': '#D0E4F0',
+  Workday: '#D0E4F0',
+  Bank: BLUEPRINT_CELL_PALETTE.mint,
+  Zoom: BLUEPRINT_CELL_PALETTE.powderBlue,
   'Zoom Recording': '#E8D8F0',
   'Zoom/Pencil': BLUEPRINT_CELL_PALETTE.powderBlue,
 } as const satisfies Record<string, string>
@@ -32,7 +35,7 @@ export type TechPillName = keyof typeof TECH_PILL_COLORS
 
 const TECH_LABEL_ALIASES: Record<string, TechPillName> = {
   'plus app': 'PLUS App',
-  workday: 'Workday (payroll software)',
+  workday: 'Workday (employee view)',
   'zoom/pencil': 'Zoom/Pencil',
   'zoom/ pencil': 'Zoom/Pencil',
 }

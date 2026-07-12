@@ -2,6 +2,7 @@ import {
   buildTechPillSelection,
   getTechPillItems,
 } from '@/lib/blueprintCellSelection'
+import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { shouldUsePillCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import type { BlueprintData } from '@/types/blueprint'
@@ -42,7 +43,7 @@ export function getBlueprintStepTechItems(
     for (const item of getTechPillItems(cell.content)) {
       if (
         exclude &&
-        exclude.cellId === cell.id &&
+        resolveBlueprintCellId(exclude.cellId) === cell.id &&
         exclude.item === item
       ) {
         continue
@@ -67,7 +68,9 @@ export function buildTechPillSelectionForItem(
   techItem: string,
   scenarioName: string,
 ): BlueprintCellSelection | null {
-  const cell = blueprint.cells.find((entry) => entry.id === cellId)
+  const cell = blueprint.cells.find(
+    (entry) => entry.id === resolveBlueprintCellId(cellId),
+  )
   if (!cell) return null
 
   const layer = blueprint.layers.find((entry) => entry.id === cell.layer_id)
@@ -88,6 +91,7 @@ export function buildTechPillSelectionForItem(
       cellContent: cell.content,
       cellPicture: cell.picture,
       cellDescription: cell.description,
+      cellLinks: cell.links,
       pathId: blueprint.path.id,
       pathName: blueprint.path.name,
       pathDescription: blueprint.path.description,

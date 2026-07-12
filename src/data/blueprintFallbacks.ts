@@ -167,8 +167,8 @@ const LAYERS = [
   { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', row_position: 3 },
   { id: 'a0000000-0000-4000-8000-000000000306', name: 'Front Stage Tech', row_position: 4 },
   { id: 'a0000000-0000-4000-8000-000000000304', name: 'Front Stage Actions', row_position: 5 },
-  { id: 'a0000000-0000-4000-8000-000000000307', name: 'Back Stage Actions', row_position: 6 },
-  { id: 'a0000000-0000-4000-8000-000000000308', name: 'Back Stage Tech', row_position: 7 },
+  { id: 'a0000000-0000-4000-8000-000000000308', name: 'Back Stage Tech', row_position: 6 },
+  { id: 'a0000000-0000-4000-8000-000000000307', name: 'Back Stage Actions', row_position: 7 },
   { id: 'a0000000-0000-4000-8000-000000000309', name: 'Support Actions', row_position: 8 },
 ] as const
 
@@ -220,23 +220,13 @@ function mapAlternatePathLayerId(layerId: string): string {
 const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom/Pencil'
 const FRONT_STAGE_TECH_STEP = 'Zoom/Pencil\nPLUS App'
 const FRONT_STAGE_TECH_PLUS_APP_ONLY = 'PLUS App'
-const SUPPORT_STEP = 'Dev Team\nDesign team'
-const WARM_UP_ZOOM_PENCIL_STEP_1_DESCRIPTION =
-  'The tutor utilizes Zoom/Pencil to virtually connect with the student. At this stage, they enter the breakout room the student has been assigned to that they are working with.'
-const WARM_UP_ZOOM_PENCIL_STEP_2_DESCRIPTION =
-  'Once the tutor joins the breakout room, they greet the student virtually through Zoom/Pencil.'
-const WARM_UP_ZOOM_PENCIL_STEP_3_DESCRIPTION =
-  'With an engaged student, the tutor asks to share screen to see what the student is working on. This is done through the sharing screen option on Zoom/Pencil.'
-const WARM_UP_ZOOM_PENCIL_REMIND_DESCRIPTION =
-  'While in the breakout room on Zoom/Pencil, the tutor reminds the student that can ask for help on content and support.'
-const WARM_UP_ZOOM_PENCIL_MARK_PRESENT_DESCRIPTION =
-  'Because the tutor was able to check in on the student during the Zoom/Pencil breakout room, the student can be marked as present.'
-const WARM_UP_ZOOM_PENCIL_ENGAGEMENT_DESCRIPTION =
-  "Because the tutor was able to check in on the student during the Zoom/Pencil breakout room, the student's engagement level can be set."
-const WARM_UP_ZOOM_PENCIL_MARK_HELPED_DESCRIPTION =
-  'Because the tutor was able to check in on the student during the Zoom/Pencil breakout room, the student can be marked as helped.'
+const SUPPORT_STEP = 'Dev Team\nDesign Team'
+const WARM_UP_ZOOM_PENCIL_DESCRIPTION =
+  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const WARM_UP_ZOOM_PENCIL_SHARE_SCREEN_DESCRIPTION =
+  'The student shares screen via Zoom/Pencil screen share feature.'
 const WARM_UP_ZOOM_PENCIL_LEAVE_BREAKOUT_DESCRIPTION =
-  'The tutor leaves the breakout room on Zoom/Pencil once the warm-up activities are complete.'
+  "The tutor leaves the student's Zoom/Pencil breakout room."
 
 const warmUpPartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
@@ -358,47 +348,47 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     cell(stepVisualCellId(stepIndex), L.stepVisual, step.id, ''),
   ),
   ...buildParallelSessionPartnerLeadCells(warmUpPartnerLeadOptions),
-  cell('a0000000-0000-4000-8000-000000040103', L.regular, STEPS[0].id, 'Enter Breakout room', {
+  cell('a0000000-0000-4000-8000-000000040103', L.regular, STEPS[0].id, 'Enter breakout room.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_01_PICTURE,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040106',
     STEPS[0].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_STEP_1_DESCRIPTION },
+    { description: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
   ),
-  cell('a0000000-0000-4000-8000-000000040203', L.regular, STEPS[1].id, 'Greet student', {
+  cell('a0000000-0000-4000-8000-000000040203', L.regular, STEPS[1].id, 'Greet student.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_02_PICTURE,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040206',
     STEPS[1].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_STEP_2_DESCRIPTION },
+    { description: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
   ),
-  cell('a0000000-0000-4000-8000-000000040303', L.regular, STEPS[2].id, 'Ask them to share screen', {
+  cell('a0000000-0000-4000-8000-000000040303', L.regular, STEPS[2].id, 'Ask them to share screen.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_03_PICTURE,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040306',
     STEPS[2].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_STEP_3_DESCRIPTION },
+    { description: WARM_UP_ZOOM_PENCIL_SHARE_SCREEN_DESCRIPTION },
   ),
   cell(
     'a0000000-0000-4000-8000-000000040403',
     L.regular,
     STEPS[3].id,
-    'Remind them that they can ask for help on content and support',
+    'Remind them that they can ask for help on content and support.',
     { picture: WARM_UP_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040406',
     STEPS[3].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_REMIND_DESCRIPTION },
+    { description: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
   ),
-  cell('a0000000-0000-4000-8000-000000040503', L.regular, STEPS[4].id, 'Mark them as present', {
+  cell('a0000000-0000-4000-8000-000000040503', L.regular, STEPS[4].id, 'Mark them as present.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_05_PICTURE,
   }),
   warmUpFrontStageTechCell(
@@ -406,7 +396,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[4].id,
     FRONT_STAGE_TECH_STEP,
     {
-      description: WARM_UP_ZOOM_PENCIL_MARK_PRESENT_DESCRIPTION,
+      description: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -420,7 +410,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
   cell('a0000000-0000-4000-8000-000000040509', L.support, STEPS[4].id, SUPPORT_STEP, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell('a0000000-0000-4000-8000-000000040603', L.regular, STEPS[5].id, 'Select Engagement level', {
+  cell('a0000000-0000-4000-8000-000000040603', L.regular, STEPS[5].id, 'Select engagement level.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_06_PICTURE,
   }),
   warmUpFrontStageTechCell(
@@ -428,7 +418,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[5].id,
     FRONT_STAGE_TECH_STEP,
     {
-      description: WARM_UP_ZOOM_PENCIL_ENGAGEMENT_DESCRIPTION,
+      description: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -442,7 +432,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
   cell('a0000000-0000-4000-8000-000000040609', L.support, STEPS[5].id, SUPPORT_STEP, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell('a0000000-0000-4000-8000-000000040703', L.regular, STEPS[6].id, 'Mark them as helped', {
+  cell('a0000000-0000-4000-8000-000000040703', L.regular, STEPS[6].id, 'Mark them as helped.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_07_PICTURE,
   }),
   warmUpFrontStageTechCell(
@@ -450,7 +440,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[6].id,
     FRONT_STAGE_TECH_STEP,
     {
-      description: WARM_UP_ZOOM_PENCIL_MARK_HELPED_DESCRIPTION,
+      description: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -464,7 +454,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
   cell('a0000000-0000-4000-8000-000000040709', L.support, STEPS[6].id, SUPPORT_STEP, {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
-  cell('a0000000-0000-4000-8000-000000040803', L.regular, STEPS[7].id, 'Leave breakout room', {
+  cell('a0000000-0000-4000-8000-000000040803', L.regular, STEPS[7].id, 'Leave breakout room.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_08_PICTURE,
   }),
   warmUpFrontStageTechCell(
@@ -477,7 +467,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040903',
     L.regular,
     STEPS[8].id,
-    'Move on to the next student in sorted order set by researchers',
+    'Move on to the next student in sorted order set by researchers.',
     { picture: WARM_UP_REGULAR_TUTOR_STEP_09_PICTURE },
   ),
   cell(

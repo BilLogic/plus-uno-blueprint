@@ -551,9 +551,27 @@ function IntegratedLayerContent({
         const slotCells = getCellsAt(cells, layer.id, step.id)
         const isVisualLayer = shouldUseVisualContent(layer.name)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
-        const showCell =
-          isVisualLayer ||
-          slotCells.some((cell) => hasCellContent(cell.content, variant))
+        const visualPictures = isVisualLayer
+          ? (() => {
+              const representative =
+                slotCells.length === 0
+                  ? undefined
+                  : [...slotCells].sort((a, b) => b.opacity - a.opacity)[0]
+              if (representative == null) return []
+              return resolveVisualStepPictures(
+                {
+                  layers,
+                  cells: cells.filter(
+                    (cell) => cell.path_id === representative.path_id,
+                  ),
+                },
+                step.id,
+              )
+            })()
+          : undefined
+        const showCell = isVisualLayer
+          ? (visualPictures?.length ?? 0) > 0
+          : slotCells.some((cell) => hasCellContent(cell.content, variant))
 
         return (
           <Fragment key={`${layer.id}-${step.id}`}>
@@ -561,11 +579,9 @@ function IntegratedLayerContent({
               isVisualLayer ? (
                 <IntegratedVisualCell
                   layer={layer}
-                  layers={layers}
                   step={step}
                   stepIndex={stepIndex}
                   slotCells={slotCells}
-                  allCells={cells}
                   laneStyle={laneStyle}
                   compact={compact}
                   fitVertically={fitVertically}
@@ -573,6 +589,7 @@ function IntegratedLayerContent({
                   scenarioName={scenarioName}
                   pathNameById={pathNameById}
                   pathDescriptionById={pathDescriptionById}
+                  visualPictures={visualPictures ?? []}
                 />
               ) : (
                 <IntegratedCellSlot
@@ -634,11 +651,9 @@ function pickTallestIntegratedCell(
 
 function IntegratedVisualCell({
   layer,
-  layers,
   step,
   stepIndex,
   slotCells,
-  allCells,
   laneStyle,
   compact = false,
   fitVertically,
@@ -646,13 +661,12 @@ function IntegratedVisualCell({
   scenarioName,
   pathNameById,
   pathDescriptionById,
+  visualPictures,
 }: {
   layer: BlueprintLayer
-  layers: BlueprintLayer[]
   step: IntegratedBlueprintStep
   stepIndex: number
   slotCells: IntegratedBlueprintCell[]
-  allCells: IntegratedBlueprintCell[]
   laneStyle: BlueprintLayerStyle
   compact?: boolean
   fitVertically?: boolean
@@ -660,6 +674,7 @@ function IntegratedVisualCell({
   scenarioName?: string
   pathNameById: Map<string, string>
   pathDescriptionById: Map<string, string | null>
+  visualPictures: readonly string[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -670,18 +685,6 @@ function IntegratedVisualCell({
     slotCells.length === 0
       ? undefined
       : [...slotCells].sort((a, b) => b.opacity - a.opacity)[0]
-  const visualPictures =
-    representative == null
-      ? []
-      : resolveVisualStepPictures(
-          {
-            layers,
-            cells: allCells.filter(
-              (cell) => cell.path_id === representative.path_id,
-            ),
-          },
-          step.id,
-        )
   const displayOpacity =
     representative !== undefined
       ? getIntegratedCellDisplayOpacity(representative, step)
@@ -898,6 +901,7 @@ function IntegratedCellBlock({
           cellContent: cell.content,
           cellPicture: cell.picture ?? null,
           cellDescription: cell.description ?? null,
+          cellLinks: cell.links,
           pathId: cell.path_id,
           pathName: pathNameById.get(cell.path_id) ?? 'Unknown path',
           pathDescription: pathDescriptionById.get(cell.path_id) ?? null,

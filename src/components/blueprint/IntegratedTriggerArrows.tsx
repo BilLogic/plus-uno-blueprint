@@ -11,12 +11,14 @@ import {
   buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
   buildBidirectionalArrowPath,
+  buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   collectOverheadRailFanOutTriggerIds,
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
   findBidirectionalTriggerPairs,
   groupDiscoveryRailTriggers,
   isWrapTrigger,
+  partitionReportingAnIssueFsaStep1ToResolveTriggers,
 } from '@/lib/blueprintArrowGeometry'
 import {
   buildIntegratedForkDetourBranchPath,
@@ -160,8 +162,46 @@ export function IntegratedTriggerArrows({
     const nextSimple: SimpleSegment[] = []
     const nextForks: ForkRenderGroup[] = []
     const nonForkTriggers = triggers.filter((t) => !forkTriggerIds.has(t.id))
+    const { resolveTriggers, otherTriggers: railInputTriggers } =
+      partitionReportingAnIssueFsaStep1ToResolveTriggers(nonForkTriggers)
+
+    for (const trigger of resolveTriggers) {
+      const sourceEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${trigger.source_cell_id}"]`,
+      )
+      const targetEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${trigger.target_cell_id}"]`,
+      )
+      if (!sourceEl || !targetEl) continue
+
+      const wrap = isWrapTrigger(
+        sourceEl,
+        targetEl,
+        trigger.source_cell_id,
+        trigger.target_cell_id,
+      )
+      if (layer === 'forward' && wrap) continue
+      if (layer === 'wrap' && !wrap) continue
+
+      const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
+        sourceEl,
+        targetEl,
+        content,
+      )
+      if (!d) continue
+
+      const style = resolveSegmentStyle(trigger.path_id, pathById)
+      nextSimple.push({
+        id: trigger.id,
+        d,
+        colorKey: style.colorKey,
+        arrowColor: style.arrowColor,
+        opacity: trigger.opacity,
+      })
+    }
+
     const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
-      nonForkTriggers,
+      railInputTriggers,
       content,
     )
 
@@ -413,6 +453,7 @@ export function IntegratedTriggerArrows({
         content,
         trigger.source_cell_id,
         trigger.target_cell_id,
+        trigger.id,
       )
       if (!d) continue
 

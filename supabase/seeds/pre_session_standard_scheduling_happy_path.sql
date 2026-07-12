@@ -6,7 +6,7 @@ values (
   'a0000000-0000-4000-8000-000000000806',
   'a0000000-0000-4000-8000-000000000126',
   'Happy Path',
-  'The tutors receive semester schedule',
+  'Tutors receive semester schedule.',
   'happy'
 )
 on conflict (id) do update set
@@ -42,27 +42,27 @@ values
     1
   ),
   (
-    'a0000000-0000-4000-8000-000000000887',
-    'a0000000-0000-4000-8000-000000000806',
-    'Front Stage Actions',
-    2
-  ),
-  (
     'a0000000-0000-4000-8000-000000000888',
     'a0000000-0000-4000-8000-000000000806',
     'Front Stage Tech',
-    3
+    2
   ),
   (
-    'a0000000-0000-4000-8000-000000000889',
+    'a0000000-0000-4000-8000-000000000887',
     'a0000000-0000-4000-8000-000000000806',
-    'Back Stage Actions',
-    4
+    'Front Stage Actions',
+    3
   ),
   (
     'a0000000-0000-4000-8000-000000000890',
     'a0000000-0000-4000-8000-000000000806',
     'Back Stage Tech',
+    4
+  ),
+  (
+    'a0000000-0000-4000-8000-000000000889',
+    'a0000000-0000-4000-8000-000000000806',
+    'Back Stage Actions',
     5
   ),
   (
@@ -106,14 +106,15 @@ insert into public.cells (id, path_id, layer_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000140110', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000885', 'a0000000-0000-4000-8000-000000000894', ''),
 
-  ('a0000000-0000-4000-8000-000000140107', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000889', 'a0000000-0000-4000-8000-000000000894', 'Tutor Supervisor Team receives and reviews tutor schedules from the dev team'),
+  ('a0000000-0000-4000-8000-000000140107', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000889', 'a0000000-0000-4000-8000-000000000894', 'Tutor supervisor team receives and reviews tutor schedules from the Dev Team.'),
   ('a0000000-0000-4000-8000-000000140108', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000890', 'a0000000-0000-4000-8000-000000000894', 'Google Spreadsheet'),
   ('a0000000-0000-4000-8000-000000140109', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000895', 'a0000000-0000-4000-8000-000000000894', 'Dev Team'),
 
   ('a0000000-0000-4000-8000-000000140210', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000885', 'a0000000-0000-4000-8000-000000000896', ''),
-  ('a0000000-0000-4000-8000-000000140203', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000886', 'a0000000-0000-4000-8000-000000000896', 'Receive Schedule for the semester'),
-  ('a0000000-0000-4000-8000-000000140204', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000887', 'a0000000-0000-4000-8000-000000000896', 'Tutor Supervisor Team sends schedule'),
-  ('a0000000-0000-4000-8000-000000140206', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000888', 'a0000000-0000-4000-8000-000000000896', 'PLUS App')
+  ('a0000000-0000-4000-8000-000000140203', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000886', 'a0000000-0000-4000-8000-000000000896', 'Receive schedule for the semester.'),
+  ('a0000000-0000-4000-8000-000000140204', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000887', 'a0000000-0000-4000-8000-000000000896', 'Tutor supervisor team sends schedule.'),
+  ('a0000000-0000-4000-8000-000000140206', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000888', 'a0000000-0000-4000-8000-000000000896', 'PLUS App'),
+  ('a0000000-0000-4000-8000-000000140209', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000895', 'a0000000-0000-4000-8000-000000000896', E'Dev Team\nDesign Team')
 on conflict (id) do update set
   path_id = excluded.path_id,
   layer_id = excluded.layer_id,
@@ -123,11 +124,18 @@ on conflict (id) do update set
 delete from public.cell_triggers
 where id in (
   'a0000000-0000-4000-8000-000000093001',
-  'a0000000-0000-4000-8000-000000093002'
+  'a0000000-0000-4000-8000-000000093002',
+  'a0000000-0000-4000-8000-000000093003',
+  'a0000000-0000-4000-8000-000000093004'
 );
 
 insert into public.cell_triggers (id, source_cell_id, target_cell_id)
 values
+  (
+    'a0000000-0000-4000-8000-000000093003',
+    'a0000000-0000-4000-8000-000000140108',
+    'a0000000-0000-4000-8000-000000140107'
+  ),
   (
     'a0000000-0000-4000-8000-000000093001',
     'a0000000-0000-4000-8000-000000140107',
@@ -136,8 +144,52 @@ values
   (
     'a0000000-0000-4000-8000-000000093002',
     'a0000000-0000-4000-8000-000000140204',
+    'a0000000-0000-4000-8000-000000140206'
+  ),
+  (
+    'a0000000-0000-4000-8000-000000093004',
+    'a0000000-0000-4000-8000-000000140206',
     'a0000000-0000-4000-8000-000000140203'
   )
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
   target_cell_id = excluded.target_cell_id;
+
+update public.cells
+set
+  description = 'The tutor''s session scheduling information is stored in a Google Spreadsheet.',
+  links = jsonb_build_array(
+    jsonb_build_object(
+      'type', 'tech_description',
+      'label', 'Google Spreadsheet',
+      'description', 'The tutor''s session scheduling information is stored in a Google Spreadsheet.',
+      'picture', '/blueprint-images/shared/back-stage-tech/google-sheets-logo.png'
+    )
+  )
+where id = 'a0000000-0000-4000-8000-000000140108';
+
+update public.cells
+set
+  description = 'The tutor supervisor team sends the semester schedule to tutors through the PLUS app.',
+  links = jsonb_build_array(
+    jsonb_build_object(
+      'type', 'tech_description',
+      'label', 'PLUS App',
+      'description', 'The tutor supervisor team sends the semester schedule to tutors through the PLUS app.'
+    )
+  )
+where id = 'a0000000-0000-4000-8000-000000140206';
+
+update public.cells
+set description =
+  'The Dev Team stores tutor schedules in a Google Spreadsheet for the tutor supervisor team to review.'
+where id = 'a0000000-0000-4000-8000-000000140109';
+
+update public.cells
+set description =
+  'The Dev Team builds the PLUS app features for sending semester schedules, and the Design Team creates the screens and flows for that experience.'
+where id = 'a0000000-0000-4000-8000-000000140209';
+
+update public.cells
+set picture = '/blueprint-images/standard-scheduling/happy-path/regular-tutor/step-02-receives-schedule.png'
+where id = 'a0000000-0000-4000-8000-000000140203';

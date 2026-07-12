@@ -30,6 +30,14 @@ export function normalizeCellLinks(raw: Json | null | undefined): CellLink[] {
     if (typeof record.picture === 'string') {
       link.picture = record.picture
     }
+    if (Array.isArray(record.pictures)) {
+      const pictures = record.pictures.filter(
+        (entry): entry is string => typeof entry === 'string' && Boolean(entry.trim()),
+      )
+      if (pictures.length > 0) {
+        link.pictures = pictures
+      }
+    }
     return [link]
   })
 }

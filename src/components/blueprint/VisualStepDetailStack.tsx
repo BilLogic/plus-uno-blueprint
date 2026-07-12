@@ -1,4 +1,3 @@
-import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import type { VisualStepPictureEntry } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 
@@ -17,7 +16,7 @@ export function VisualStepDetailStack({
   className,
 }: VisualStepDetailStackProps) {
   if (entries.length === 0) {
-    return <BlueprintStepVisual className={className} />
+    return null
   }
 
   return (

@@ -1,4 +1,6 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
+import { HELP_REQUEST_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleLinks'
+import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
   GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
   GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
@@ -21,7 +23,6 @@ import {
   HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
   HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
 } from '@/data/helpRequestPictures'
-import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
   buildParallelSessionPartnerLeadCells,
@@ -71,13 +72,13 @@ const LAYERS = [
     row_position: 5,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000864',
-    name: 'Back Stage Actions',
+    id: 'a0000000-0000-4000-8000-000000000865',
+    name: 'Back Stage Tech',
     row_position: 6,
   },
   {
-    id: 'a0000000-0000-4000-8000-000000000865',
-    name: 'Back Stage Tech',
+    id: 'a0000000-0000-4000-8000-000000000864',
+    name: 'Back Stage Actions',
     row_position: 7,
   },
   {
@@ -142,10 +143,13 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
-  > = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
 ): BlueprintCell {
+  const links =
+    layerId === L.regular
+      ? mergeUrlLinks(metadata.links ?? [], HELP_REQUEST_REGULAR_TUTOR_ONBOARDING_LINKS)
+      : (metadata.links ?? EMPTY_CELL_METADATA.links)
+
   return {
     id,
     layer_id: layerId,
@@ -153,6 +157,7 @@ function cell(
     content,
     ...EMPTY_CELL_METADATA,
     ...metadata,
+    links,
   }
 }
 
@@ -249,30 +254,30 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
-  cell(hrCell('01', '03'), L.regular, STEPS[0].id, 'Tutor Receives Help Request', {
+  cell(hrCell('01', '03'), L.regular, STEPS[0].id, 'Tutor receives help request.', {
     picture: HELP_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
   }),
   cell(
     hrCell('02', '03'),
     L.regular,
     STEPS[1].id,
-    'Finish current conversation in 1-2 minutes',
+    'Finish current conversation in 1-2 minutes.',
     { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE },
   ),
-  cell(hrCell('03', '03'), L.regular, STEPS[2].id, 'Visit student requesting help', {
+  cell(hrCell('03', '03'), L.regular, STEPS[2].id, 'Visit student requesting help.', {
     picture: HELP_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
   }),
-  cell(hrCell('04', '03'), L.regular, STEPS[3].id, 'Resolve Issue', {
+  cell(hrCell('04', '03'), L.regular, STEPS[3].id, 'Resolve issue.', {
     picture: HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
   }),
-  cell(hrCell('05', '03'), L.regular, STEPS[4].id, 'Leave breakout room', {
+  cell(hrCell('05', '03'), L.regular, STEPS[4].id, 'Leave breakout room.', {
     picture: HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
   }),
   cell(
     hrCell('06', '03'),
     L.regular,
     STEPS[5].id,
-    'Return to the next student in sorted order set by researchers',
+    'Return to the next student in sorted order set by researchers.',
     { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
 
@@ -306,10 +311,10 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
     hrCell('06', '07'),
     L.backStage,
     STEPS[5].id,
-    'Researchers set student order',
+    'Researchers set student order.',
   ),
 
-  cell(hrCell('06', '09'), L.support, STEPS[5].id, 'Dev Team\nDesign team', {
+  cell(hrCell('06', '09'), L.support, STEPS[5].id, 'Dev Team\nDesign Team', {
     description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]

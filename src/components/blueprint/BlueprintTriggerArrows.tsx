@@ -13,9 +13,11 @@ import {
   buildBidirectionalArrowPath,
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
+  buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   findBidirectionalTriggerPairs,
   groupDiscoveryRailTriggers,
   isWrapTrigger,
+  partitionReportingAnIssueFsaStep1ToResolveTriggers,
 } from '@/lib/blueprintArrowGeometry'
 import {
   getPathArrowColor,
@@ -93,8 +95,45 @@ export function BlueprintTriggerArrows({
     }
 
     const next: ArrowSegment[] = []
+    const { resolveTriggers, otherTriggers: railInputTriggers } =
+      partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
+
+    for (const trigger of resolveTriggers) {
+      const sourceEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${trigger.source_cell_id}"]`,
+      )
+      const targetEl = content.querySelector<HTMLElement>(
+        `[data-blueprint-cell="${trigger.target_cell_id}"]`,
+      )
+      if (!sourceEl || !targetEl) continue
+
+      const wrap = isWrapTrigger(
+        sourceEl,
+        targetEl,
+        trigger.source_cell_id,
+        trigger.target_cell_id,
+      )
+      if (layer === 'forward' && wrap) continue
+      if (layer === 'wrap' && !wrap) continue
+
+      const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
+        sourceEl,
+        targetEl,
+        content,
+      )
+      if (!d) continue
+
+      next.push({
+        id: trigger.id,
+        d,
+        colorKey: defaultColorKey,
+        arrowColor: defaultArrowColor,
+        opacity: isColoredTrigger(trigger) ? (trigger.opacity ?? 1) : 1,
+      })
+    }
+
     const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
-      triggers,
+      railInputTriggers,
       content,
     )
 
@@ -211,6 +250,7 @@ export function BlueprintTriggerArrows({
         content,
         trigger.source_cell_id,
         trigger.target_cell_id,
+        trigger.id,
       )
       if (!d) continue
 

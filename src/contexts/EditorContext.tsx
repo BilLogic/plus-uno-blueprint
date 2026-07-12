@@ -11,7 +11,6 @@ import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
 import { mergeSlidesWithFallback } from '@/lib/mergeSlidesWithFallback'
 import {
   FALLBACK_SLIDES,
-  getSlideViewType,
   type EditorView,
   type Slide,
   type SlideViewType,
@@ -50,9 +49,6 @@ export function EditorProvider({ children }: EditorProviderProps) {
     return mergeSlidesWithFallback(dbSlides)
   }, [dbSlides])
 
-  const [scenarioViewTypeOverrides, setScenarioViewTypeOverrides] = useState<
-    Record<string, SlideViewType>
-  >({})
   const [activeSlideId, setActiveSlideId] = useState(FALLBACK_SLIDES[0].id)
 
   const goHome = useCallback(() => {
@@ -65,17 +61,13 @@ export function EditorProvider({ children }: EditorProviderProps) {
   }, [])
 
   const getScenarioDisplayViewType = useCallback(
-    (slide: Slide) =>
-      scenarioViewTypeOverrides[slide.id] ?? getSlideViewType(slide),
-    [scenarioViewTypeOverrides],
+    (_slide: Slide): SlideViewType => 'side-by-side',
+    [],
   )
 
   const setScenarioDisplayViewType = useCallback(
-    (scenarioId: string, viewType: SlideViewType) => {
-      setScenarioViewTypeOverrides((prev) => ({
-        ...prev,
-        [scenarioId]: viewType,
-      }))
+    (_scenarioId: string, _viewType: SlideViewType) => {
+      // Integrated view is disabled; display is always side-by-side.
     },
     [],
   )
