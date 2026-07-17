@@ -76,6 +76,16 @@ type SideBySideCompareGridProps = {
 
 type CompareRowSpec = BlueprintLabelRowSpec
 
+/**
+ * Side-by-side comparison is a general primitive: it renders ANY set of
+ * labeled blueprint variants (paths) as columns — "designed vs. reality" is
+ * just one possible labeling, not an assumption. Column order follows the
+ * caller's `blueprints` array (path-selection activation order upstream; see
+ * `itemsInSelectionOrder`), and each column is labeled with its own path's
+ * `name` and `description` (`PathLabelBadge`) with `path_type` driving only
+ * the frame styling. No path ids, path names, or fixed variant pairs are
+ * hardcoded here or in `sideBySideCompareLayout.ts`.
+ */
 export function SideBySideCompareGrid({
   blueprints,
   className,
