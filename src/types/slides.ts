@@ -1,4 +1,7 @@
 import { hasBlueprintFallback } from '@/data/blueprintFallbacks'
+// Scale-test fixture (Phase 0-G) — template scrub may strip this import and
+// the 'Scale Test' FALLBACK_SLIDES entry below.
+import { SCALE_TEST_SCENARIO_ID } from '@/data/scaleFixture'
 
 /** Home = birds-eye service overview; detail = single slide/scenario editor. */
 export type EditorView = 'home' | 'detail'
@@ -94,33 +97,32 @@ export function isOverviewFlowArrowAnchorPhase(phase: Slide): boolean {
   )
 }
 
-/** Post-session lifecycle loop back to Pre-session on the overview canvas. */
+/** Lifecycle loop arrow between main phases on the overview canvas. */
 export function shouldShowOverviewPostToPreLoopArrow(
   phases: Slide[],
 ): boolean {
   return getOverviewPostToPreLoopTransition(phases) !== null
 }
 
+/**
+ * Loop transition detected from the data alone: the first phase carrying a
+ * `loopToId` (DB `phases.loops_to_phase_id`) whose target phase exists. No
+ * phase-ID or display-label heuristics — works for any org's IDs and any
+ * language.
+ */
 export function getOverviewPostToPreLoopTransition(
   phases: Slide[],
 ): { fromPhaseId: string; toPhaseId: string } | null {
-  const postSession = phases.find(
-    (phase) =>
-      phase.id === POST_SESSION_PHASE_ID || phase.label === 'Post-session',
-  )
-  if (!postSession?.loopToId) return null
+  for (const phase of phases) {
+    if (!phase.loopToId) continue
 
-  const target = getSlideById(postSession.loopToId, phases)
-  if (!target) return null
+    const target = getSlideById(phase.loopToId, phases)
+    if (!target) continue
 
-  if (
-    target.id !== PRE_SESSION_PHASE_ID &&
-    target.label !== 'Pre-session'
-  ) {
-    return null
+    return { fromPhaseId: phase.id, toPhaseId: target.id }
   }
 
-  return { fromPhaseId: postSession.id, toPhaseId: target.id }
+  return null
 }
 
 /** Offline fallback matching supabase/seed.sql when Supabase is not configured. */
@@ -211,6 +213,17 @@ export const FALLBACK_SLIDES: Slide[] = [
     label: 'Call-off Request',
     parentId: PRE_SESSION_ID,
     viewType: 'side-by-side',
+  },
+  // Scale-test fixture (Phase 0-G): generated offline stress-test scenario —
+  // see src/data/scaleFixture.ts; template scrub may strip.
+  {
+    id: SCALE_TEST_SCENARIO_ID,
+    index: 4,
+    label: 'Scale Test',
+    parentId: PRE_SESSION_ID,
+    viewType: 'side-by-side',
+    description:
+      'Generated scale fixture: 12 lanes (incl. custom roles), 16 steps, 3 paths.',
   },
   {
     id: IN_SESSION_ID,

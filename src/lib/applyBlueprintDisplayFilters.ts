@@ -12,7 +12,7 @@ function filterHiddenVisualLayers(
 
   const hiddenLayerIds = new Set(
     data.layers
-      .filter((layer) => shouldUseVisualContent(layer.name))
+      .filter((layer) => shouldUseVisualContent(layer))
       .map((layer) => layer.id),
   )
 

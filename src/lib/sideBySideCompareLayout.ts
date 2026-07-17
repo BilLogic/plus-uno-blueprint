@@ -17,7 +17,6 @@ import {
   getLayerRowMinHeight,
   getStepColumnsWidth,
   layerHasOverheadArrowCorridor,
-  layerHasRegularTutorInLaneLoopCorridor,
   layerHasWrapCorridorBelow,
   shouldShowInteractionLineAfter,
   shouldShowInternalInteractionLineAfter,
@@ -29,6 +28,10 @@ import {
   COMPARE_LAYER_COLLAPSED_HEIGHT,
   isBlueprintLayerCollapsed,
 } from '@/lib/blueprintLayerCollapse'
+import {
+  isParallelSessionLeadBottomWrapTrigger,
+  isParallelSessionPartnerWrapTrigger,
+} from '@/data/parallelSessionPartnerLead'
 import { deriveSourceBlueprintsFromIntegrated, mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { PATH_TYPE_SECTION_BORDER_WIDTH } from '@/lib/pathTypeTheme'
 import type { PathListItem } from '@/lib/pathSelection'
@@ -288,8 +291,7 @@ export function buildSideBySideLabelRowSpecs(
         !collapsed &&
         layerHasWrapCorridorBelow(layer, blueprints),
       inLaneLoopCorridorAbove:
-        !collapsed &&
-        layerHasRegularTutorInLaneLoopCorridor(layer, blueprints),
+        !collapsed && layerHasInLaneLoopCorridor(layer, blueprints),
       showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
     })
 
@@ -311,7 +313,7 @@ export function buildSideBySideLabelRowSpecs(
       })
     }
 
-    if (!collapsed && layerHasInternalInteractionLine(layer)) {
+    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
       specs.push({
         key: `${layer.id}-internal-interaction`,
         kind: 'internalInteraction',
@@ -401,7 +403,7 @@ export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLayer[
 /** Map a canonical swimlane row onto a path's layer ids (paths use different layer uuids). */
 export function resolveBlueprintLayer(
   canonicalLayer: BlueprintLayer,
-  blueprint: BlueprintData,
+  blueprint: Pick<BlueprintData, 'layers'>,
 ): BlueprintLayer {
   return (
     blueprint.layers.find((layer) => layer.id === canonicalLayer.id) ??
@@ -415,6 +417,87 @@ export function resolveBlueprintLayer(
       (layer) => layer.row_position === canonicalLayer.row_position,
     ) ??
     canonicalLayer
+  )
+}
+
+/**
+ * Structural blueprint shape for in-lane loop detection — satisfied by both
+ * `BlueprintData` (single path) and `IntegratedBlueprintData` (merged paths).
+ */
+type InLaneLoopLayoutSource = {
+  layers: BlueprintLayer[]
+  steps: ReadonlyArray<{ id: string; column_position: number }>
+  cells: ReadonlyArray<{ id: string; layer_id: string; step_id: string }>
+  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
+}
+
+/**
+ * Generic in-lane loop-corridor rule: a layer needs loop headroom at the top
+ * of its lane when it contains a trigger whose source and target cells are
+ * BOTH in that layer with the source at a later column than the target — a
+ * backward in-lane loop. Derived purely from blueprint data (cell layer
+ * membership + step column positions), with no scenario or layer identity;
+ * this replaces the side-by-side layout's dependence on the PLUS
+ * `layerHasRegularTutorInLaneLoopCorridor` cell-ID shim (which arrow
+ * rendering still uses for route styling).
+ *
+ * Backward loops already claimed by the PLUS legacy wrap shims are skipped:
+ * Partner Action loops ride the overhead corridor and Lead Tutor loops ride
+ * the below-row wrap corridor, so those lanes must not also reserve an
+ * in-lane corridor. Generic (non-PLUS) content never matches those ID
+ * patterns and gets the pure data-driven rule.
+ */
+export function blueprintLayerHasBackwardInLaneLoop(
+  canonicalLayer: BlueprintLayer,
+  source: InLaneLoopLayoutSource,
+): boolean {
+  const layer = resolveBlueprintLayer(canonicalLayer, source)
+  const cellById = new Map(source.cells.map((cell) => [cell.id, cell]))
+  const columnByStepId = new Map(
+    source.steps.map((step) => [step.id, step.column_position]),
+  )
+
+  return source.triggers.some((trigger) => {
+    if (
+      isParallelSessionPartnerWrapTrigger(
+        trigger.source_cell_id,
+        trigger.target_cell_id,
+      ) ||
+      isParallelSessionLeadBottomWrapTrigger(
+        trigger.source_cell_id,
+        trigger.target_cell_id,
+      )
+    ) {
+      return false
+    }
+
+    const sourceCell = cellById.get(trigger.source_cell_id)
+    const targetCell = cellById.get(trigger.target_cell_id)
+    if (!sourceCell || !targetCell) return false
+    if (
+      sourceCell.layer_id !== layer.id ||
+      targetCell.layer_id !== layer.id
+    ) {
+      return false
+    }
+
+    const sourceColumn = columnByStepId.get(sourceCell.step_id)
+    const targetColumn = columnByStepId.get(targetCell.step_id)
+    return (
+      sourceColumn !== undefined &&
+      targetColumn !== undefined &&
+      targetColumn < sourceColumn
+    )
+  })
+}
+
+/** Canonical row needs an in-lane loop corridor when any compared variant has one. */
+export function layerHasInLaneLoopCorridor(
+  canonicalLayer: BlueprintLayer,
+  sources: readonly InLaneLoopLayoutSource[],
+): boolean {
+  return sources.some((source) =>
+    blueprintLayerHasBackwardInLaneLoop(canonicalLayer, source),
   )
 }
 
@@ -601,8 +684,11 @@ export function layerHasVisibilityLine(
   return shouldShowVisibilityLineAfter(layer, layers)
 }
 
-export function layerHasInternalInteractionLine(layer: BlueprintLayer): boolean {
-  return shouldShowInternalInteractionLineAfter(layer)
+export function layerHasInternalInteractionLine(
+  layer: BlueprintLayer,
+  layers?: BlueprintLayer[],
+): boolean {
+  return shouldShowInternalInteractionLineAfter(layer, layers)
 }
 
 export function getIntegratedLayerRowHeight(
@@ -662,10 +748,9 @@ export function buildIntegratedLabelRowSpecs(
         ),
       inLaneLoopCorridorAbove:
         !collapsed &&
-        layerHasRegularTutorInLaneLoopCorridor(
+        layerHasInLaneLoopCorridor(
           layer,
-          sourceBlueprints.length > 0 ? sourceBlueprints : undefined,
-          sourceBlueprints.length > 0 ? undefined : data.triggers,
+          sourceBlueprints.length > 0 ? sourceBlueprints : [data],
         ),
       showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
     })
@@ -688,7 +773,7 @@ export function buildIntegratedLabelRowSpecs(
       })
     }
 
-    if (!collapsed && layerHasInternalInteractionLine(layer)) {
+    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
       specs.push({
         key: `${layer.id}-internal-interaction`,
         kind: 'internalInteraction',

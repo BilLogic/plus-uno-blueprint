@@ -41,6 +41,7 @@ export function VisualRowPlayOverlay({
     <div
       className={cn('pointer-events-none absolute inset-0 z-10', className)}
       aria-hidden={false}
+      data-print-hide
     >
       <div
         className={cn(

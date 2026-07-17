@@ -124,6 +124,19 @@ import {
   TECH_SETUP_HAPPY_PATH_ID,
   TECH_SETUP_SCENARIO_ID,
 } from '@/data/techSetupHappyPathFallback'
+// Scale-test fixture (Phase 0-G) — generated stress-test scenario; the
+// template scrub can strip this import plus the SCALE_TEST_* registry entries
+// below and src/data/scaleFixture.ts, or keep them deliberately.
+import {
+  SCALE_TEST_ALTERNATIVE_PATH_FALLBACK,
+  SCALE_TEST_ALTERNATIVE_PATH_ID,
+  SCALE_TEST_EXCEPTION_PATH_FALLBACK,
+  SCALE_TEST_EXCEPTION_PATH_ID,
+  SCALE_TEST_HAPPY_PATH_FALLBACK,
+  SCALE_TEST_HAPPY_PATH_ID,
+  SCALE_TEST_PATH_FALLBACKS,
+  SCALE_TEST_SCENARIO_ID,
+} from '@/data/scaleFixture'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
   assignWarmUpAlternateCellLayerId,
@@ -689,6 +702,10 @@ const FALLBACK_BY_PATH: Record<string, BlueprintData> = {
   [WRAP_UP_HAPPY_PATH_ID]: WRAP_UP_HAPPY_PATH_FALLBACK,
   [REPORTING_AN_ISSUE_HAPPY_PATH_ID]: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK,
   [REPORTING_HOURS_HAPPY_PATH_ID]: REPORTING_HOURS_HAPPY_PATH_FALLBACK,
+  // Scale-test fixture (Phase 0-G) — template scrub may strip.
+  [SCALE_TEST_HAPPY_PATH_ID]: SCALE_TEST_HAPPY_PATH_FALLBACK,
+  [SCALE_TEST_ALTERNATIVE_PATH_ID]: SCALE_TEST_ALTERNATIVE_PATH_FALLBACK,
+  [SCALE_TEST_EXCEPTION_PATH_ID]: SCALE_TEST_EXCEPTION_PATH_FALLBACK,
 }
 
 const FALLBACK_PATHS_BY_SCENARIO: Record<
@@ -899,6 +916,14 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       path_type: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.path_type,
     },
   ],
+  // Scale-test fixture (Phase 0-G) — template scrub may strip.
+  [SCALE_TEST_SCENARIO_ID]: SCALE_TEST_PATH_FALLBACKS.map((fallback) => ({
+    id: fallback.path.id,
+    name: fallback.path.name,
+    description: fallback.path.description,
+    note: fallback.path.note,
+    path_type: fallback.path.path_type,
+  })),
 }
 
 const FALLBACK_BY_SCENARIO: Record<string, BlueprintData> = {
@@ -909,6 +934,8 @@ const FALLBACK_BY_SCENARIO: Record<string, BlueprintData> = {
   [ONBOARDING_MODULES_SCENARIO_ID]: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK,
   [LESSON_MODULES_SCENARIO_ID]: LESSON_MODULES_HAPPY_PATH_FALLBACK,
   [SESSION_SIGN_UP_SCENARIO_ID]: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK,
+  // Scale-test fixture (Phase 0-G) — template scrub may strip.
+  [SCALE_TEST_SCENARIO_ID]: SCALE_TEST_HAPPY_PATH_FALLBACK,
 }
 
 const EMPTY_FALLBACK_PATHS: Array<{
