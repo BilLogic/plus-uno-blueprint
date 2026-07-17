@@ -31,6 +31,8 @@ Remediation classes: **parameterize** (make configurable), **generalize** (repla
 | [blueprintTheme.ts](../src/lib/blueprintTheme.ts), [visualWalkthrough.ts](../src/lib/visualWalkthrough.ts), [slideLayout.ts](../src/lib/slideLayout.ts), [blueprintVisualPlaceholder.ts](../src/lib/blueprintVisualPlaceholder.ts) | Grep hits (mostly 'zoom' UI terms); low-confidence residue | Possible stray PLUS references | Verify during template scrub sweep | S | template |
 | Legacy `public.services` table (from `20250602160000_initial.sql`, never dropped) | Dead table in live DBs | Schema noise in template provisioning | Delete in template's schema (drop from clean DDL) | S | template, Phase 3 |
 
+| [EditorContext.tsx](../src/contexts/EditorContext.tsx) `getScenarioDisplayViewType` | Hardcodes side-by-side display, UI-disabling the integrated view (merge itself works — verified with the scale fixture) | `view_type: integrated` scenarios can't display as stored | Generalize: honor the stored view_type | S | template |
+
 ## Summary by remediation class
 
 - **Parameterize**: 3 (lifecycle/phase IDs, org wordmark, package name)
