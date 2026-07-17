@@ -230,7 +230,7 @@ export function ServiceBlueprintGrid({
             />
             {layers.map((layer, layerIndex) => {
               const collapsed = isLayerCollapsed(layer.id)
-              const isPillLayer = shouldUsePillCellContent(layer.name)
+              const isPillLayer = shouldUsePillCellContent(layer)
               const rowMinHeight = collapsed
                 ? BLUEPRINT_LAYER_COLLAPSED_HEIGHT
                 : getLayerRowMinHeight(layer, data, compact, {
@@ -268,8 +268,7 @@ export function ServiceBlueprintGrid({
                       />
                     )}
                     <BlueprintSwimLane
-                      layerId={layer.id}
-                      layerName={layer.name}
+                      layer={layer}
                       laneStyle={laneStyle}
                       rowMinHeight={rowMinHeight}
                       isPillLayer={isPillLayer}
@@ -333,7 +332,8 @@ export function ServiceBlueprintGrid({
                     />
                   )}
 
-                  {!collapsed && shouldShowInternalInteractionLineAfter(layer) && (
+                  {!collapsed &&
+                    shouldShowInternalInteractionLineAfter(layer, layers) && (
                     <BlueprintDividerRow
                       label={INTERNAL_INTERACTION_LINE_LABEL}
                       lineStyle="dotted"
@@ -373,8 +373,7 @@ export function ServiceBlueprintGrid({
 }
 
 function BlueprintSwimLane({
-  layerId,
-  layerName,
+  layer,
   laneStyle,
   rowMinHeight,
   isPillLayer,
@@ -392,8 +391,7 @@ function BlueprintSwimLane({
   phaseName,
   walkthroughBlueprints,
 }: {
-  layerId: string
-  layerName: string
+  layer: BlueprintData['layers'][number]
   laneStyle: BlueprintLayerStyle
   rowMinHeight: number
   isPillLayer: boolean
@@ -411,7 +409,9 @@ function BlueprintSwimLane({
   phaseName?: string
   walkthroughBlueprints?: BlueprintData[]
 }) {
-  const isVisualLayer = shouldUseVisualContent(layerName)
+  const layerId = layer.id
+  const layerName = layer.name
+  const isVisualLayer = shouldUseVisualContent(layer)
   const loopCorridorHeight = showInLaneLoopCorridorAbove
     ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
     : 0
@@ -504,7 +504,6 @@ function BlueprintSwimLane({
           <div className="flex shrink-0">
       {steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, layerId, step.id)
-        const isVisualLayer = shouldUseVisualContent(layerName)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? resolveVisualStepPictureEntries(blueprint, step.id)

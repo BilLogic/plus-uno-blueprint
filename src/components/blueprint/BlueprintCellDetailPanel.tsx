@@ -213,6 +213,19 @@ export function BlueprintCellDetailPanel() {
     return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
   }, [blueprints, pathEntry?.cellId, pathEntry?.pathId, resolvedCellId])
 
+  const selectedLayer = useMemo((): { name: string; role?: string | null } | null => {
+    const layerName = selection?.layerName
+    if (!layerName) return null
+
+    const pathId = pathEntry?.pathId
+    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
+    return (
+      blueprint?.layers.find((layer) => layer.name === layerName) ?? {
+        name: layerName,
+      }
+    )
+  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+
   const otherTechEntries = useMemo(() => {
     const layerNameByCellId = new Map<string, string>()
     const stepIndexByCellId = new Map<string, number>()
@@ -291,7 +304,7 @@ export function BlueprintCellDetailPanel() {
       selectedLayerRowPosition,
       isTechCellSelected:
         Boolean(selection.techItem) ||
-        shouldUsePillCellContent(selection.layerName),
+        Boolean(selectedLayer && shouldUsePillCellContent(selectedLayer)),
       selectedTechItem: selection.techItem,
       otherTech: otherTechEntries,
       links: relevantLinks,
@@ -300,6 +313,8 @@ export function BlueprintCellDetailPanel() {
     cellLinks,
     connections,
     otherTechEntries,
+    selectedCell,
+    selectedLayer,
     selectedLayerRowPosition,
     selection,
   ])
@@ -317,7 +332,9 @@ export function BlueprintCellDetailPanel() {
 
   if (!selection) return null
 
-  const isVisualLayer = shouldUseVisualContent(selection.layerName)
+  const isVisualLayer = Boolean(
+    selectedLayer && shouldUseVisualContent(selectedLayer),
+  )
   const cellContent =
     selection.paths[0]?.content.trim() ||
     selection.techItem ||
@@ -325,7 +342,9 @@ export function BlueprintCellDetailPanel() {
   const detailBodyText = selectedCell
     ? resolveTechCellDetailText(selection.techItem, selectedCell)
     : cellContent
-  const isTechLayer = shouldUsePillCellContent(selection.layerName)
+  const isTechLayer = Boolean(
+    selectedLayer && shouldUsePillCellContent(selectedLayer),
+  )
   const techDetailLabel =
     isTechLayer && selectedCell
       ? resolveTechCellDetailLabel(selection.techItem, selectedCell)

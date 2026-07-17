@@ -29,12 +29,8 @@ function findCell(blueprint: BlueprintData, cellId: string): BlueprintCell | und
   return blueprint.cells.find((cell) => cell.id === resolvedId)
 }
 
-function resolveLayerName(blueprint: BlueprintData, layerId: string): string {
-  return blueprint.layers.find((layer) => layer.id === layerId)?.name ?? 'Unknown layer'
-}
-
-function resolveLayerRowPosition(blueprint: BlueprintData, layerId: string): number {
-  return blueprint.layers.find((layer) => layer.id === layerId)?.row_position ?? -1
+function resolveLayer(blueprint: BlueprintData, layerId: string) {
+  return blueprint.layers.find((layer) => layer.id === layerId)
 }
 
 function resolveStepName(blueprint: BlueprintData, stepId: string): string {
@@ -63,9 +59,10 @@ function toConnection(
   const stepIndex = resolveStepIndex(blueprint, cell.step_id)
   if (stepIndex < 0) return null
 
-  const layerName = resolveLayerName(blueprint, cell.layer_id)
-  const layerRowPosition = resolveLayerRowPosition(blueprint, cell.layer_id)
-  const isTech = shouldUsePillCellContent(layerName)
+  const layer = resolveLayer(blueprint, cell.layer_id)
+  const layerName = layer?.name ?? 'Unknown layer'
+  const layerRowPosition = layer?.row_position ?? -1
+  const isTech = layer ? shouldUsePillCellContent(layer) : false
   const techItems = isTech ? getTechPillItems(cell.content) : []
 
   return {
@@ -228,7 +225,7 @@ export function getSelectedCellLayerRowPosition(
 ): number {
   const cell = findCell(blueprint, cellId)
   if (!cell) return -1
-  return resolveLayerRowPosition(blueprint, cell.layer_id)
+  return resolveLayer(blueprint, cell.layer_id)?.row_position ?? -1
 }
 
 function interactionDirectionFromRows(

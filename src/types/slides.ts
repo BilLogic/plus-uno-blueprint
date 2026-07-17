@@ -94,33 +94,32 @@ export function isOverviewFlowArrowAnchorPhase(phase: Slide): boolean {
   )
 }
 
-/** Post-session lifecycle loop back to Pre-session on the overview canvas. */
+/** Lifecycle loop arrow between main phases on the overview canvas. */
 export function shouldShowOverviewPostToPreLoopArrow(
   phases: Slide[],
 ): boolean {
   return getOverviewPostToPreLoopTransition(phases) !== null
 }
 
+/**
+ * Loop transition detected from the data alone: the first phase carrying a
+ * `loopToId` (DB `phases.loops_to_phase_id`) whose target phase exists. No
+ * phase-ID or display-label heuristics — works for any org's IDs and any
+ * language.
+ */
 export function getOverviewPostToPreLoopTransition(
   phases: Slide[],
 ): { fromPhaseId: string; toPhaseId: string } | null {
-  const postSession = phases.find(
-    (phase) =>
-      phase.id === POST_SESSION_PHASE_ID || phase.label === 'Post-session',
-  )
-  if (!postSession?.loopToId) return null
+  for (const phase of phases) {
+    if (!phase.loopToId) continue
 
-  const target = getSlideById(postSession.loopToId, phases)
-  if (!target) return null
+    const target = getSlideById(phase.loopToId, phases)
+    if (!target) continue
 
-  if (
-    target.id !== PRE_SESSION_PHASE_ID &&
-    target.label !== 'Pre-session'
-  ) {
-    return null
+    return { fromPhaseId: phase.id, toPhaseId: target.id }
   }
 
-  return { fromPhaseId: postSession.id, toPhaseId: target.id }
+  return null
 }
 
 /** Offline fallback matching supabase/seed.sql when Supabase is not configured. */

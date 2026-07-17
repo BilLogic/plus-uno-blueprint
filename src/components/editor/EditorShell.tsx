@@ -21,7 +21,10 @@ export function EditorShell() {
   const isHome = view === 'home'
 
   return (
-    <div className="relative flex h-svh overflow-hidden bg-background">
+    <div
+      className="relative flex h-svh overflow-hidden bg-background"
+      data-editor-shell
+    >
       <aside
         className={cn(
           'flex shrink-0 flex-col overflow-hidden border-r border-border bg-muted/20 transition-[width,border-color,opacity] duration-300 ease-in-out dark:bg-muted/10',
@@ -60,6 +63,7 @@ export function EditorShell() {
               isDetail ? 'opacity-100' : 'pointer-events-none opacity-0',
             )}
             aria-hidden={!isDetail}
+            data-editor-view
           >
             <SlideModeMain />
           </div>
@@ -69,6 +73,7 @@ export function EditorShell() {
               isDetail ? 'pointer-events-none opacity-0' : 'opacity-100',
             )}
             aria-hidden={isDetail}
+            data-editor-view
           >
             <ServiceOverviewView />
           </div>

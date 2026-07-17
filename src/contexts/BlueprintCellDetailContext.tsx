@@ -81,7 +81,9 @@ export function BlueprintCellDetailProvider({
       return { selectedCellIds, directlyConnectedCellIds }
     }
 
-    const skipHighlightZone = shouldUseVisualContent(selection.layerName)
+    const skipHighlightZone = shouldUseVisualContent({
+      name: selection.layerName,
+    })
 
     for (const path of selection.paths) {
       const resolvedCellId = resolveBlueprintCellId(path.cellId)
@@ -111,7 +113,7 @@ export function BlueprintCellDetailProvider({
       // even when no explicit trigger connects it to the active cell.
       const techLayerIds = new Set(
         blueprint.layers
-          .filter((layer) => shouldUsePillCellContent(layer.name))
+          .filter((layer) => shouldUsePillCellContent(layer))
           .map((layer) => layer.id),
       )
       for (const cell of blueprint.cells) {

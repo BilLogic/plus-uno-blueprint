@@ -546,7 +546,7 @@ function IntegratedLayerContent({
   pathNameById: Map<string, string>
   pathDescriptionById: Map<string, string | null>
 }) {
-  const isPillLayer = shouldUsePillCellContent(layer.name)
+  const isPillLayer = shouldUsePillCellContent(layer)
   const laneStyle = getBlueprintLayerStyle(
     layer.name,
     getBlueprintLayerZone(layer, layers),
@@ -563,7 +563,7 @@ function IntegratedLayerContent({
     >
       {steps.map((step, stepIndex) => {
         const slotCells = getCellsAt(cells, layer.id, step.id)
-        const isVisualLayer = shouldUseVisualContent(layer.name)
+        const isVisualLayer = shouldUseVisualContent(layer)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? (() => {

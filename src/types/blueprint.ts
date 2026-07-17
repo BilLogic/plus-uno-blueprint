@@ -10,7 +10,10 @@ export type BlueprintPath = {
 
 export type BlueprintLayer = {
   id: string
+  /** Display label — free-form, any language. */
   name: string
+  /** Semantic role key (`layers.layer_role`); null/absent = generic swimlane. */
+  role?: string | null
   row_position: number
 }
 

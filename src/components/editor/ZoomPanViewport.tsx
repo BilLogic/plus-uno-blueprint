@@ -38,7 +38,10 @@ export function ZoomPanViewport({
   })
 
   return (
-    <div className={cn('relative min-h-0 flex-1', className)}>
+    <div
+      className={cn('relative min-h-0 flex-1', className)}
+      data-zoom-pan-root
+    >
       <div
         ref={containerRef}
         className={cn(
@@ -46,12 +49,14 @@ export function ZoomPanViewport({
           isPanning && 'cursor-grabbing',
         )}
         style={{ backgroundColor: BLUEPRINT_THEME.viewportPad }}
+        data-zoom-pan-viewport
         {...pointerHandlers}
       >
         <div
           ref={contentRef}
           className="absolute left-0 top-0 origin-top-left"
           style={{ backfaceVisibility: 'hidden' }}
+          data-zoom-pan-content
         >
           {children}
         </div>
