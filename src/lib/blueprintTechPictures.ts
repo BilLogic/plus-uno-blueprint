@@ -125,11 +125,10 @@ export function resolveCellDetailPictures(input: {
     return getTechItemDetailPictures('Notion')
   }
 
-  if (content === 'Google Quiz embedded in Notion') {
-    const fromLinks = getTechPicturesFromLinks(
-      links,
-      'Google Quiz embedded in Notion',
-    )
+  if (content === 'Google Quiz' || content === 'Google Quiz embedded in Notion') {
+    const fromLinks =
+      getTechPicturesFromLinks(links, 'Google Quiz') ??
+      getTechPicturesFromLinks(links, 'Google Quiz embedded in Notion')
     if (fromLinks) return fromLinks
   }
 

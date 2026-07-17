@@ -3,23 +3,44 @@
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_01_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-01-join-breakout-session.png'
 
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_01_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-01-join-breakout-session.png'
+
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_02_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-02-share-screen.png'
+
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_02_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-02-share-screen.png'
 
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_03_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-03-goal-activity.png'
 
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_03_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-03-goal-activity.png'
+
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_04_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-04-goal-strategy.png'
+
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_04_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-04-goal-strategy.png'
 
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_05_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-05-finalize-goals.png'
 
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_05_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-05-finalize-goals.png'
+
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_06_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-06-leave-breakout-room.png'
 
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_06_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-06-leave-breakout-room.png'
+
 export const GOAL_SETTING_REGULAR_TUTOR_STEP_07_PICTURE =
   '/blueprint-images/goal-setting/shared/regular-tutor/step-07-next-student.png'
+
+export const GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_07_PICTURE =
+  '/blueprint-images/goal-setting/happy-path/regular-tutor/step-07-next-student.png'
 
 export const GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES = [
   '/blueprint-images/goal-setting/happy-path/lead-tutor/step-01-rename-students.png',

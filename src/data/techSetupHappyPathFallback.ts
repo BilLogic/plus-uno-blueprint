@@ -355,11 +355,11 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     tsCell('06', '06'),
     L.frontStageTech,
     STEPS[5].id,
-    'Workday (employee view)',
+    'Workday (Employee View)',
     {
       links: [
         techDescriptionLink(
-          'Workday (employee view)',
+          'Workday (Employee View)',
           TECH_SETUP_WORKDAY_EMPLOYEE_STEP_06_DESCRIPTION,
           TECH_SETUP_WORKDAY_LOGO,
         ),
@@ -376,11 +376,11 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     tsCell('06', '08'),
     L.backStageTech,
     STEPS[5].id,
-    'Workday (employer view)',
+    'Workday (Employer View)',
     {
       links: [
         techDescriptionLink(
-          'Workday (employer view)',
+          'Workday (Employer View)',
           TECH_SETUP_WORKDAY_EMPLOYER_STEP_06_DESCRIPTION,
           TECH_SETUP_WORKDAY_LOGO,
         ),

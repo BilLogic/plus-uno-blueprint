@@ -15,6 +15,15 @@ export const VISUAL_LAYER_SHORT_LABELS: Record<string, string> = {
   'Regular Tutor': 'Regular Tutor',
 }
 
+/** In-session artwork batches whose gray rounded frame is baked into the PNG. */
+export function hasEmbeddedVisualFrame(picture: string): boolean {
+  return (
+    picture.includes('/warm-up/') ||
+    picture.includes('/goal-setting/') ||
+    picture.includes('/help-request/')
+  )
+}
+
 export type VisualWalkthroughLayerEntry = {
   layerName: string
   content: string
