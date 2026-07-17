@@ -311,7 +311,7 @@ export function buildSideBySideLabelRowSpecs(
       })
     }
 
-    if (!collapsed && layerHasInternalInteractionLine(layer)) {
+    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
       specs.push({
         key: `${layer.id}-internal-interaction`,
         kind: 'internalInteraction',
@@ -601,8 +601,11 @@ export function layerHasVisibilityLine(
   return shouldShowVisibilityLineAfter(layer, layers)
 }
 
-export function layerHasInternalInteractionLine(layer: BlueprintLayer): boolean {
-  return shouldShowInternalInteractionLineAfter(layer)
+export function layerHasInternalInteractionLine(
+  layer: BlueprintLayer,
+  layers?: BlueprintLayer[],
+): boolean {
+  return shouldShowInternalInteractionLineAfter(layer, layers)
 }
 
 export function getIntegratedLayerRowHeight(
@@ -688,7 +691,7 @@ export function buildIntegratedLabelRowSpecs(
       })
     }
 
-    if (!collapsed && layerHasInternalInteractionLine(layer)) {
+    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
       specs.push({
         key: `${layer.id}-internal-interaction`,
         kind: 'internalInteraction',

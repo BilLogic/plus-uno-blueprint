@@ -1,18 +1,34 @@
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
+  BACKSTAGE_ACTIONS_ROLE,
+  BACKSTAGE_TECH_ROLE,
+  CUSTOMER_ACTIONS_ROLE,
+  FRONTSTAGE_ACTIONS_ROLE,
+  FRONTSTAGE_TECH_ROLE,
+  getLayerRole,
+  STEP_VISUAL_ROLE,
+  SUPPORT_SYSTEMS_ROLE,
+  VISUAL_ROLE,
+} from '@/lib/layerRoles'
+import {
   isParallelSessionLeadBottomWrapTrigger,
   isParallelSessionPartnerWrapTrigger,
 } from '@/data/parallelSessionPartnerLead'
 import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
 
-/** Layers after which the standard service-blueprint interaction line is drawn. */
-/** Layers whose cells list multiple items as inline pills (newline-separated content). */
-export const PILL_CELL_LAYER_NAMES = [
-  'Front Stage Tech',
-  'Back Stage Tech',
-  'Computer Systems',
+/** Minimal layer shape for role-driven layout checks. */
+type LayerRoleSource = { name: string; role?: string | null }
+
+/** Roles whose cells list multiple items as inline pills (newline-separated content). */
+export const PILL_CELL_LAYER_ROLES = [
+  FRONTSTAGE_TECH_ROLE,
+  BACKSTAGE_TECH_ROLE,
+  SUPPORT_SYSTEMS_ROLE,
 ] as const
-export const VISUAL_LAYER_NAME = 'Visual' as const
+
+/** Roles rendered as picture rows instead of text cells. */
+export const VISUAL_LAYER_ROLES = [VISUAL_ROLE, STEP_VISUAL_ROLE] as const
+
 export const VISUAL_ROW_MIN_HEIGHT = 132
 export const VISUAL_ROW_MIN_HEIGHT_COMPACT = 108
 
@@ -23,55 +39,41 @@ export function getVisualCellButtonMaxHeight(compact = false): number {
   return rowHeight - shellVerticalPad
 }
 
-export function shouldUsePillCellContent(layerName: string): boolean {
-  return (PILL_CELL_LAYER_NAMES as readonly string[]).includes(layerName)
-}
-
-export function shouldUseVisualContent(layerName: string): boolean {
-  return layerName === VISUAL_LAYER_NAME || layerName === 'Step Visual'
-}
-
-export const INTERACTION_LINE_AFTER_LAYER_NAMES = [
-  'Regular Tutor',
-  'Customer Actions',
-] as const
-
-/** Layers after which the visibility line is drawn (above backstage layers). */
-export const VISIBILITY_LINE_AFTER_LAYER_NAMES = [
-  'Front Stage Actions',
-  'Front Stage Tech',
-  'Frontstage Actions',
-] as const
-
-/** Layers after which the internal interaction line is drawn (onboarding-style blueprints). */
-export const INTERNAL_INTERACTION_LINE_AFTER_LAYER_NAMES = [
-  'Backstage Actions',
-] as const
-
-export function shouldShowInteractionLineAfter(layer: BlueprintLayer): boolean {
-  return (INTERACTION_LINE_AFTER_LAYER_NAMES as readonly string[]).includes(
-    layer.name,
+export function shouldUsePillCellContent(layer: LayerRoleSource): boolean {
+  const role = getLayerRole(layer)
+  return (
+    role !== null && (PILL_CELL_LAYER_ROLES as readonly string[]).includes(role)
   )
 }
 
+export function shouldUseVisualContent(layer: LayerRoleSource): boolean {
+  const role = getLayerRole(layer)
+  return (
+    role !== null && (VISUAL_LAYER_ROLES as readonly string[]).includes(role)
+  )
+}
+
+/** The standard service-blueprint interaction line follows the spine actor. */
+export function shouldShowInteractionLineAfter(layer: BlueprintLayer): boolean {
+  return getLayerRole(layer) === CUSTOMER_ACTIONS_ROLE
+}
+
+/** The visibility line is drawn after frontstage layers (above backstage layers). */
 export function shouldShowVisibilityLineAfter(
   layer: BlueprintLayer,
   layers?: BlueprintLayer[],
 ): boolean {
-  if (
-    !(VISIBILITY_LINE_AFTER_LAYER_NAMES as readonly string[]).includes(
-      layer.name,
-    )
-  ) {
+  const role = getLayerRole(layer)
+  if (role !== FRONTSTAGE_ACTIONS_ROLE && role !== FRONTSTAGE_TECH_ROLE) {
     return false
   }
 
-  // Front Stage Tech sits above Front Stage Actions — visibility line follows
-  // Front Stage Actions, not Front Stage Tech.
-  if (layer.name === 'Front Stage Tech' && layers) {
+  // Frontstage tech can sit above frontstage actions — the visibility line
+  // follows the actions lane, not the tech lane.
+  if (role === FRONTSTAGE_TECH_ROLE && layers) {
     const index = layers.findIndex((entry) => entry.id === layer.id)
     const next = layers[index + 1]
-    if (next?.name === 'Front Stage Actions') {
+    if (next && getLayerRole(next) === FRONTSTAGE_ACTIONS_ROLE) {
       return false
     }
   }
@@ -79,12 +81,23 @@ export function shouldShowVisibilityLineAfter(
   return true
 }
 
+/**
+ * The internal interaction line marks the hand-off from backstage actions to
+ * support systems, so it draws after a backstage-actions layer only when a
+ * support-systems lane follows. (PLUS 'Back Stage Actions' lanes — backfilled
+ * to `backstage_actions` — are followed by tech or generic support-action
+ * lanes and never drew this line under name matching; anchoring on the
+ * following lane keeps their rendering unchanged.)
+ */
 export function shouldShowInternalInteractionLineAfter(
   layer: BlueprintLayer,
+  layers?: BlueprintLayer[],
 ): boolean {
-  return (
-    INTERNAL_INTERACTION_LINE_AFTER_LAYER_NAMES as readonly string[]
-  ).includes(layer.name)
+  if (getLayerRole(layer) !== BACKSTAGE_ACTIONS_ROLE) return false
+  if (!layers) return false
+  const index = layers.findIndex((entry) => entry.id === layer.id)
+  const next = layers[index + 1]
+  return next !== undefined && getLayerRole(next) === SUPPORT_SYSTEMS_ROLE
 }
 
 /** Light rule between swim lanes; omitted before interaction/visibility dividers. */
@@ -96,7 +109,7 @@ export function shouldShowLaneDividerAfter(
   if (layerIndex >= layers.length - 1) return false
   if (shouldShowInteractionLineAfter(layer)) return false
   if (shouldShowVisibilityLineAfter(layer, layers)) return false
-  if (shouldShowInternalInteractionLineAfter(layer)) return false
+  if (shouldShowInternalInteractionLineAfter(layer, layers)) return false
   return true
 }
 
@@ -108,7 +121,7 @@ export function layerPrecedesBlueprintDivider(
   return (
     shouldShowInteractionLineAfter(layer) ||
     shouldShowVisibilityLineAfter(layer, layers) ||
-    shouldShowInternalInteractionLineAfter(layer)
+    shouldShowInternalInteractionLineAfter(layer, layers)
   )
 }
 
@@ -385,7 +398,7 @@ export function countBlueprintDividerRows(layers: BlueprintLayer[]): number {
     (layer) =>
       shouldShowInteractionLineAfter(layer) ||
       shouldShowVisibilityLineAfter(layer, layers) ||
-      shouldShowInternalInteractionLineAfter(layer),
+      shouldShowInternalInteractionLineAfter(layer, layers),
   ).length
 }
 
@@ -528,7 +541,7 @@ export function getCellContentMinHeight(
   content: string | undefined,
   compact = false,
 ): number {
-  if (shouldUseVisualContent(layer.name)) {
+  if (shouldUseVisualContent(layer)) {
     return compact
       ? VISUAL_ROW_MIN_HEIGHT_COMPACT
       : VISUAL_ROW_MIN_HEIGHT
@@ -536,7 +549,7 @@ export function getCellContentMinHeight(
 
   if (!content?.trim()) return 0
 
-  if (shouldUsePillCellContent(layer.name)) {
+  if (shouldUsePillCellContent(layer)) {
     return getPillStackMinHeight(
       parseCellContentItems(content).length,
       compact,
@@ -568,13 +581,13 @@ export function getLayerRowMinHeight(
     ? BLUEPRINT_ROW_MIN_HEIGHT_COMPACT
     : getDefaultCellMinHeight(layer, data, compact)
 
-  if (shouldUseVisualContent(layer.name)) {
+  if (shouldUseVisualContent(layer)) {
     return compact
       ? VISUAL_ROW_MIN_HEIGHT_COMPACT
       : VISUAL_ROW_MIN_HEIGHT
   }
 
-  if (!shouldUsePillCellContent(layer.name)) return base
+  if (!shouldUsePillCellContent(layer)) return base
 
   const pillCount = getMaxPillCountInLayer(data, layer.id)
   return Math.max(base, getPillStackMinHeight(pillCount, compact))

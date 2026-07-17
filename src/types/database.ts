@@ -127,6 +127,7 @@ export type Database = {
           id: string
           path_id: string
           name: string
+          layer_role: string | null
           row_position: number
           created_at: string
           updated_at: string
@@ -135,6 +136,7 @@ export type Database = {
           id?: string
           path_id: string
           name: string
+          layer_role?: string | null
           row_position?: number
           created_at?: string
           updated_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           id?: string
           path_id?: string
           name?: string
+          layer_role?: string | null
           row_position?: number
           created_at?: string
           updated_at?: string

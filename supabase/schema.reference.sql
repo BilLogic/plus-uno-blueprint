@@ -1,6 +1,6 @@
 -- Reference snapshot: Service Blueprint schema
 -- Source of truth: supabase/migrations/
--- Snapshot verified against migrations through 20250707880000_paths_note.sql (2026-07-16).
+-- Snapshot verified against migrations through 20260716120000_layer_role.sql (2026-07-16).
 -- Note: a legacy `public.services` table from 20250602160000_initial.sql still exists in
 -- live databases (never dropped); it is unused by the app and excluded from this snapshot.
 
@@ -51,6 +51,10 @@ create table public.layers (
   id uuid primary key default gen_random_uuid(),
   path_id uuid not null references public.paths (id) on delete cascade,
   name text not null,
+  -- Semantic role key driving rendering (canonical: customer_actions,
+  -- frontstage_actions, backstage_actions, frontstage_tech, backstage_tech,
+  -- support_systems, visual, step_visual; extensible; null = generic swimlane).
+  layer_role text,
   row_position integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

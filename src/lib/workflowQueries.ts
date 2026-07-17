@@ -14,6 +14,7 @@ export const PATH_BLUEPRINT_SELECT = `
   layers (
     id,
     name,
+    layer_role,
     row_position
   ),
   path_steps (

@@ -29,13 +29,23 @@ type RawPathStep = {
   steps: { id: string; name: string } | null
 }
 
+export type RawLayer = {
+  id: string
+  name: string
+  row_position: number
+  /** Semantic role column as selected from the DB. */
+  layer_role?: string | null
+  /** Normalized shape (fallback data passes BlueprintLayer directly). */
+  role?: string | null
+}
+
 export type RawPath = {
   id: string
   name: string
   description?: string | null
   note?: string | null
   path_type: PathType
-  layers?: BlueprintLayer[] | null
+  layers?: RawLayer[] | null
   /** @deprecated Legacy shape; use path_steps */
   steps?: BlueprintStep[] | null
   path_steps?: RawPathStep[] | null
@@ -176,9 +186,14 @@ export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
 }
 
 export function normalizeBlueprint(raw: RawPath): BlueprintData {
-  const layers = [...(raw.layers ?? [])].sort(
-    (a, b) => a.row_position - b.row_position,
-  )
+  const layers: BlueprintLayer[] = [...(raw.layers ?? [])]
+    .sort((a, b) => a.row_position - b.row_position)
+    .map((layer) => ({
+      id: layer.id,
+      name: layer.name,
+      role: layer.layer_role ?? layer.role ?? null,
+      row_position: layer.row_position,
+    }))
   const steps = resolveSteps(raw)
   const rawCells = raw.cells ?? []
   const cells: BlueprintCell[] = rawCells.map((cell) => ({
