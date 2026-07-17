@@ -1,7 +1,4 @@
 import { hasBlueprintFallback } from '@/data/blueprintFallbacks'
-// Scale-test fixture (Phase 0-G) — template scrub may strip this import and
-// the 'Scale Test' FALLBACK_SLIDES entry below.
-import { SCALE_TEST_SCENARIO_ID } from '@/data/scaleFixture'
 
 /** Home = birds-eye service overview; detail = single slide/scenario editor. */
 export type EditorView = 'home' | 'detail'
@@ -213,17 +210,6 @@ export const FALLBACK_SLIDES: Slide[] = [
     label: 'Call-off Request',
     parentId: PRE_SESSION_ID,
     viewType: 'side-by-side',
-  },
-  // Scale-test fixture (Phase 0-G): generated offline stress-test scenario —
-  // see src/data/scaleFixture.ts; template scrub may strip.
-  {
-    id: SCALE_TEST_SCENARIO_ID,
-    index: 4,
-    label: 'Scale Test',
-    parentId: PRE_SESSION_ID,
-    viewType: 'side-by-side',
-    description:
-      'Generated scale fixture: 12 lanes (incl. custom roles), 16 steps, 3 paths.',
   },
   {
     id: IN_SESSION_ID,
