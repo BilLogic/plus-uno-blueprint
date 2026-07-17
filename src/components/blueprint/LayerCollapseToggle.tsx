@@ -21,6 +21,7 @@ export function LayerCollapseToggle({
         'inline-flex shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground',
         className,
       )}
+      data-print-hide
       aria-expanded={!collapsed}
       aria-label={
         collapsed ? `Expand ${layerName} layer` : `Collapse ${layerName} layer`

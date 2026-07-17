@@ -157,7 +157,10 @@ export function ServiceOverviewView() {
       enabled={cellDetailEnabled}
       blueprints={cellDetailBlueprints}
     >
-      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div
+        className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
+        data-slide-canvas
+      >
         <ZoomPanViewport
           resetKey={fitKey}
           showSequenceNav={false}
