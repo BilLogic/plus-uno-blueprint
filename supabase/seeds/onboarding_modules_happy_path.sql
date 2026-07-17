@@ -158,7 +158,7 @@ values
   ('a0000000-0000-4000-8000-000000110409', 'a0000000-0000-4000-8000-000000007201', 'a0000000-0000-4000-8000-000000000846', 'a0000000-0000-4000-8000-000000000854', 'Researchers help guide instructional implementation.'),
 
   ('a0000000-0000-4000-8000-000000110503', 'a0000000-0000-4000-8000-000000007201', 'a0000000-0000-4000-8000-000000000841', 'a0000000-0000-4000-8000-000000000855', 'Completes Google quiz.'),
-  ('a0000000-0000-4000-8000-000000110506', 'a0000000-0000-4000-8000-000000007201', 'a0000000-0000-4000-8000-000000000843', 'a0000000-0000-4000-8000-000000000855', 'Google Quiz embedded in Notion'),
+  ('a0000000-0000-4000-8000-000000110506', 'a0000000-0000-4000-8000-000000007201', 'a0000000-0000-4000-8000-000000000843', 'a0000000-0000-4000-8000-000000000855', 'Google Quiz'),
   ('a0000000-0000-4000-8000-000000110507', 'a0000000-0000-4000-8000-000000007201', 'a0000000-0000-4000-8000-000000000844', 'a0000000-0000-4000-8000-000000000855', 'The instructional design team creates and maintains the Google quiz.'),
   ('a0000000-0000-4000-8000-000000110509', 'a0000000-0000-4000-8000-000000007201', 'a0000000-0000-4000-8000-000000000846', 'a0000000-0000-4000-8000-000000000855', 'Researchers help guide instructional implementation.'),
 
@@ -278,7 +278,7 @@ update public.cells
 set links = jsonb_build_array(
   jsonb_build_object(
     'type', 'tech_description',
-    'label', 'Google Quiz embedded in Notion',
+    'label', 'Google Quiz',
     'description', 'The tutor completes the Google Quiz embedded in the Notion module to check their understanding.',
     'picture', '/blueprint-images/onboarding-modules/happy-path/google-quiz/step-05-module-quiz.png'
   )

@@ -43,8 +43,12 @@ export const VISIBILITY_LINE_AFTER_LAYER_NAMES = [
   'Frontstage Actions',
 ] as const
 
-/** Layers after which the internal interaction line is drawn (onboarding-style blueprints). */
+/**
+ * Layers after which the internal interaction line is drawn —
+ * sits between Back Stage Actions and Support Actions.
+ */
 export const INTERNAL_INTERACTION_LINE_AFTER_LAYER_NAMES = [
+  'Back Stage Actions',
   'Backstage Actions',
 ] as const
 

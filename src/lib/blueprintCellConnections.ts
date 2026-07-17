@@ -276,6 +276,7 @@ export function buildBlueprintCellSelectionForId(
   blueprint: BlueprintData,
   cellId: string,
   scenarioName: string,
+  phaseName?: string,
 ): BlueprintCellSelection | null {
   const cell = findCell(blueprint, cellId)
   if (!cell) return null
@@ -287,6 +288,7 @@ export function buildBlueprintCellSelectionForId(
 
   return buildBlueprintCellSelection({
     scenarioName,
+    phaseName,
     layerName: layer.name,
     stepId: step.id,
     stepName: step.name,

@@ -51,7 +51,10 @@ export function BlueprintStickyLabelBackdrop({
   )
 }
 
-/** Full-width 1px rule at the bottom of a swim-lane grid row. */
+/** Full-width 1px rule at the bottom of a swim-lane grid row.
+ * Starts at column 2 so it stays inside path boards and does not leak
+ * across the label rail / card-gap gutter outside the section frame.
+ */
 export function BlueprintSwimLaneDivider({
   rowIndex,
 }: {
@@ -62,7 +65,7 @@ export function BlueprintSwimLaneDivider({
       aria-hidden
       className="pointer-events-none relative z-[5] justify-self-stretch"
       style={{
-        gridColumn: '1 / -1',
+        gridColumn: '2 / -1',
         gridRow: rowIndex + 1,
         alignSelf: 'end',
         height: 1,
@@ -85,7 +88,7 @@ export function BlueprintDividerRow({
 }: {
   rowIndex?: number
   label: string
-  lineStyle: 'dashed' | 'solid'
+  lineStyle: 'dashed' | 'dotted' | 'solid'
   compact?: boolean
   labelWidth?: number
   labelRailBg?: string
@@ -97,11 +100,18 @@ export function BlueprintDividerRow({
       ? { gridColumn: '1 / -1', gridRow: rowIndex + 1 }
       : {}
 
+  const dividerKind =
+    lineStyle === 'dashed'
+      ? 'interaction'
+      : lineStyle === 'dotted'
+        ? 'internal-interaction'
+        : 'visibility'
+
   return (
     <div
       role="separator"
       aria-label={label}
-      data-blueprint-divider={lineStyle === 'dashed' ? 'interaction' : 'visibility'}
+      data-blueprint-divider={dividerKind}
       className={cn('relative z-[45] min-w-0', className)}
       style={{
         ...gridPlacement,
