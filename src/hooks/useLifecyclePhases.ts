@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { phasesToSlides, type PhaseRow } from '@/lib/phasesToSlides'
 import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
-import type { Slide } from '@/types/slides'
+import type { NavItem } from '@/types/nav'
 
 /** Default lifecycle from seed.sql */
 export const DEFAULT_LIFECYCLE_ID = 'a0000000-0000-4000-8000-000000000001'
@@ -32,7 +32,7 @@ const LIFECYCLE_PHASES_SELECT = `
 export function useLifecyclePhases(lifecycleId: string = DEFAULT_LIFECYCLE_ID) {
   const { client, configured } = useSupabase()
   const [phases, setPhases] = useState<PhaseRow[]>([])
-  const [slides, setSlides] = useState<Slide[]>([])
+  const [slides, setSlides] = useState<NavItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

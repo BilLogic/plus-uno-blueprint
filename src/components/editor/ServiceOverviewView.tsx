@@ -39,9 +39,9 @@ import {
   isOverviewFlowArrowAnchorPhase,
   shouldShowOverviewPhaseFlowArrow,
   isSubslide,
-  type Slide,
+  type NavItem,
   type SlideViewType,
-} from '@/types/slides'
+} from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathListItem } from '@/lib/pathSelection'
 const OVERVIEW_PAN_IGNORE =
@@ -88,8 +88,8 @@ function CanvasFocusEscapeHandler() {
 }
 
 type ServicePhaseSectionProps = {
-  phase: Slide
-  slides: Slide[]
+  phase: NavItem
+  slides: NavItem[]
   pathsByScenario: Map<string, PathListItem[]>
   blueprintsByPathId: Map<string, BlueprintData>
   getSelectedPathIds: (scenarioId: string, paths: PathListItem[]) => string[]

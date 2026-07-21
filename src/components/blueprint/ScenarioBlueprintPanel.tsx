@@ -22,16 +22,16 @@ export type { ScenarioSwimlaneLayoutInput } from '@/lib/sideBySideCompareLayout'
 import {
   getParentSlide,
   getSlideDisplayLabel,
-  type Slide,
+  type NavItem,
   type SlideViewType,
-} from '@/types/slides'
+} from '@/types/nav'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import type { BlueprintData } from '@/types/blueprint'
 
 type ScenarioBlueprintPanelProps = {
-  slide: Slide
-  slides: Slide[]
+  slide: NavItem
+  slides: NavItem[]
   paths: PathListItem[]
   selectedPathIds: string[]
   blueprintsByPathId: Map<string, BlueprintData>

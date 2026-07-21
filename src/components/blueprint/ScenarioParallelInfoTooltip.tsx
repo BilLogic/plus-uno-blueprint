@@ -5,11 +5,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
-import type { Slide } from '@/types/slides'
+import type { NavItem } from '@/types/nav'
 import { cn } from '@/lib/utils'
 
 type ScenarioParallelInfoTooltipProps = {
-  slide: Pick<Slide, 'id' | 'label'>
+  slide: Pick<NavItem, 'id' | 'label'>
   className?: string
   iconClassName?: string
 }

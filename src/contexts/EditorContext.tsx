@@ -10,11 +10,11 @@ import {
 import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
 import { mergeSlidesWithFallback } from '@/lib/mergeSlidesWithFallback'
 import {
-  FALLBACK_SLIDES,
+  FALLBACK_NAV,
   type EditorView,
-  type Slide,
+  type NavItem,
   type SlideViewType,
-} from '@/types/slides'
+} from '@/types/nav'
 
 type EditorContextValue = {
   view: EditorView
@@ -31,10 +31,10 @@ type EditorContextValue = {
    */
   skipCanvasFitAnimation: boolean
   openDetail: (slideId: string) => void
-  slides: Slide[]
+  slides: NavItem[]
   /** Slides from DB/fallback (same as slides; kept for callers). */
-  baseSlides: Slide[]
-  getScenarioDisplayViewType: (slide: Slide) => SlideViewType
+  baseSlides: NavItem[]
+  getScenarioDisplayViewType: (slide: NavItem) => SlideViewType
   setScenarioDisplayViewType: (
     scenarioId: string,
     viewType: SlideViewType,
@@ -43,7 +43,7 @@ type EditorContextValue = {
   slidesError: string | null
   activeSlideId: string
   setActiveSlideId: (id: string) => void
-  activeSlide: Slide
+  activeSlide: NavItem
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null)
@@ -56,12 +56,12 @@ export function EditorProvider({ children }: EditorProviderProps) {
   const { slides: dbSlides, loading, error, configured } = useLifecyclePhases()
 
   const slides = useMemo(() => {
-    if (dbSlides.length === 0) return FALLBACK_SLIDES
+    if (dbSlides.length === 0) return FALLBACK_NAV
     return mergeSlidesWithFallback(dbSlides)
   }, [dbSlides])
 
   const [view, setView] = useState<EditorView>('landing')
-  const [activeSlideId, setActiveSlideId] = useState(FALLBACK_SLIDES[0].id)
+  const [activeSlideId, setActiveSlideId] = useState(FALLBACK_NAV[0].id)
   const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
 
   const goLanding = useCallback(() => {
@@ -84,7 +84,7 @@ export function EditorProvider({ children }: EditorProviderProps) {
   }, [])
 
   const getScenarioDisplayViewType = useCallback(
-    (_slide: Slide): SlideViewType => 'side-by-side',
+    (_slide: NavItem): SlideViewType => 'side-by-side',
     [],
   )
 
@@ -105,7 +105,7 @@ export function EditorProvider({ children }: EditorProviderProps) {
     () =>
       slides.find((s) => s.id === activeSlideId) ??
       slides[0] ??
-      FALLBACK_SLIDES[0],
+      FALLBACK_NAV[0],
     [activeSlideId, slides],
   )
 

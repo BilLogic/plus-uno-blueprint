@@ -11,7 +11,7 @@ import {
   getMainSlides,
   getSlideDisplayLabel,
   getSubslides,
-} from '@/types/slides'
+} from '@/types/nav'
 import { cn } from '@/lib/utils'
 
 /** Flip to `true` to re-enable the title jump menu. */
