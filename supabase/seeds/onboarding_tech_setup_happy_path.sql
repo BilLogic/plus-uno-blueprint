@@ -171,9 +171,9 @@ values
   ('a0000000-0000-4000-8000-000000100509', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000836', 'a0000000-0000-4000-8000-000000000827', 'Employment laws'),
   -- Step 6 — payroll setup
   ('a0000000-0000-4000-8000-000000100603', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000831', 'a0000000-0000-4000-8000-000000000824', 'Sets up payroll.'),
-  ('a0000000-0000-4000-8000-000000100606', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000833', 'a0000000-0000-4000-8000-000000000824', 'Workday (employee view)'),
+  ('a0000000-0000-4000-8000-000000100606', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000833', 'a0000000-0000-4000-8000-000000000824', 'Workday (Employee View)'),
   ('a0000000-0000-4000-8000-000000100607', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000834', 'a0000000-0000-4000-8000-000000000824', 'PLUS supervisor team fills out corresponding paperwork for student employment in payroll software.'),
-  ('a0000000-0000-4000-8000-000000100608', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000835', 'a0000000-0000-4000-8000-000000000824', 'Workday (employer view)'),
+  ('a0000000-0000-4000-8000-000000100608', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000835', 'a0000000-0000-4000-8000-000000000824', 'Workday (Employer View)'),
   -- Step 7 — join Slack
   ('a0000000-0000-4000-8000-000000100703', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000831', 'a0000000-0000-4000-8000-000000000825', 'Join PLUS tutor Slack channel.'),
   ('a0000000-0000-4000-8000-000000100704', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000832', 'a0000000-0000-4000-8000-000000000825', 'Tutor supervisor team sends invite to Slack workspace.'),
@@ -270,7 +270,7 @@ update public.cells
 set links = jsonb_build_array(
   jsonb_build_object(
     'type', 'tech_description',
-    'label', 'Workday (employee view)',
+    'label', 'Workday (Employee View)',
     'description', 'The tutor completes payroll onboarding tasks in Workday, including entering personal and employment information.',
     'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
   )
@@ -281,8 +281,8 @@ update public.cells
 set links = jsonb_build_array(
   jsonb_build_object(
     'type', 'tech_description',
-    'label', 'Workday (employer view)',
-    'description', 'The PLUS supervisor team completes corresponding student employment paperwork in Workday on the employer side.',
+    'label', 'Workday (Employer View)',
+    'description', 'The PLUS Supervisor Team completes corresponding student employment paperwork in Workday on the employer side.',
     'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
   )
 )

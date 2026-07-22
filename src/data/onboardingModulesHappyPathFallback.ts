@@ -357,11 +357,11 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     omCell('05', '06'),
     L.frontStageTech,
     STEPS[4].id,
-    'Google Quiz embedded in Notion',
+    'Google Quiz',
     {
       links: [
         techDescriptionLink(
-          'Google Quiz embedded in Notion',
+          'Google Quiz',
           ONBOARDING_MODULES_GOOGLE_QUIZ_STEP_05_DESCRIPTION,
           ONBOARDING_MODULES_GOOGLE_QUIZ_STEP_05_PICTURE,
         ),
