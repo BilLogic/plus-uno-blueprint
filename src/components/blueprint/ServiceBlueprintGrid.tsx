@@ -237,7 +237,7 @@ export function ServiceBlueprintGrid({
                     fitVertically: fillSwimlaneHeight,
                   })
               const zone = getBlueprintLayerZone(layer, layers)
-              const laneStyle = getBlueprintLayerStyle(layer.name, zone)
+              const laneStyle = getBlueprintLayerStyle(layer.name, zone, layer.role)
               const showLaneDivider = shouldShowLaneDividerAfter(
                 layer,
                 layerIndex,
