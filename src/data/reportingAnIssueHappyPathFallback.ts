@@ -70,27 +70,36 @@ const LAYERS = [
   },
 ] as const
 
+const STEP_REACH_OUT = {
+  id: 'a0000000-0000-4000-8000-000000000988',
+  name: 'Reach out',
+  column_position: 1,
+} as const
+
+const STEP_REQUEST_ASSISTANCE = {
+  id: 'a0000000-0000-4000-8000-000000000991',
+  name: 'Request assistance',
+  column_position: 2,
+} as const
+
+const STEP_FOLLOW_UP = {
+  id: 'a0000000-0000-4000-8000-000000000993',
+  name: 'Follow up',
+  column_position: 3,
+} as const
+
+const STEP_RESOLVE_CONCERN = {
+  id: 'a0000000-0000-4000-8000-000000000990',
+  name: 'Resolve concern',
+  column_position: 4,
+} as const
+
+/** Visual column order: Reach out → Request assistance → Follow up → Resolve concern. */
 const STEPS = [
-  {
-    id: 'a0000000-0000-4000-8000-000000000988',
-    name: 'Reach out',
-    column_position: 1,
-  },
-  {
-    id: 'a0000000-0000-4000-8000-000000000990',
-    name: 'Resolve concern',
-    column_position: 4,
-  },
-  {
-    id: 'a0000000-0000-4000-8000-000000000991',
-    name: 'Request assistance',
-    column_position: 2,
-  },
-  {
-    id: 'a0000000-0000-4000-8000-000000000993',
-    name: 'Follow up',
-    column_position: 3,
-  },
+  STEP_REACH_OUT,
+  STEP_REQUEST_ASSISTANCE,
+  STEP_FOLLOW_UP,
+  STEP_RESOLVE_CONCERN,
 ] as const
 
 const L = {
@@ -163,31 +172,31 @@ const REPORTING_AN_ISSUE_TRIGGERS: BlueprintCellTrigger[] = [
 ]
 
 const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
-  cell(issueCell('01', '10'), L.visual, STEPS[0].id, ''),
+  cell(issueCell('01', '10'), L.visual, STEP_REACH_OUT.id, ''),
   cell(
     issueCell('01', '02'),
     L.lead,
-    STEPS[0].id,
+    STEP_REACH_OUT.id,
     'Reach out to PLUS staff with any concerns.',
     { picture: REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_PICTURE },
   ),
   cell(
     issueCell('01', '03'),
     L.regular,
-    STEPS[0].id,
+    STEP_REACH_OUT.id,
     'Reach out to PLUS staff with any concerns.',
     { picture: REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_PICTURE },
   ),
   cell(
     issueCell('01', '04'),
     L.frontStage,
-    STEPS[0].id,
+    STEP_REACH_OUT.id,
     'PLUS tutor supervisor team evaluates concern and reaches out as needed.',
   ),
   cell(
     issueCell('01', '06'),
     L.frontStageTech,
-    STEPS[0].id,
+    STEP_REACH_OUT.id,
     'Slack, Email',
     {
       links: [
@@ -205,41 +214,42 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
     },
   ),
 
-  cell(issueCell('02', '10'), L.visual, STEPS[1].id, ''),
+  // Cell-id slot "02" is historical (Resolve was once column 2); keep IDs stable.
+  cell(issueCell('02', '10'), L.visual, STEP_RESOLVE_CONCERN.id, ''),
   cell(
     issueCell('02', '07'),
     L.backStage,
-    STEPS[1].id,
+    STEP_RESOLVE_CONCERN.id,
     'PLUS supervisor team is able to resolve concern.',
   ),
 
-  cell(issueCell('03', '10'), L.visual, STEPS[2].id, ''),
+  cell(issueCell('03', '10'), L.visual, STEP_REQUEST_ASSISTANCE.id, ''),
   cell(
     issueCell('03', '04'),
     L.frontStage,
-    STEPS[2].id,
+    STEP_REQUEST_ASSISTANCE.id,
     'If needed, PLUS staff might request assistance.',
   ),
 
-  cell(issueCell('04', '10'), L.visual, STEPS[3].id, ''),
+  cell(issueCell('04', '10'), L.visual, STEP_FOLLOW_UP.id, ''),
   cell(
     issueCell('04', '02'),
     L.lead,
-    STEPS[3].id,
+    STEP_FOLLOW_UP.id,
     'Processes request and follows up on request.',
     { picture: REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_PICTURE },
   ),
   cell(
     issueCell('04', '03'),
     L.regular,
-    STEPS[3].id,
+    STEP_FOLLOW_UP.id,
     'Processes request and follows up on request.',
     { picture: REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_PICTURE },
   ),
   cell(
     issueCell('04', '06'),
     L.frontStageTech,
-    STEPS[3].id,
+    STEP_FOLLOW_UP.id,
     'Slack, Email, Zoom',
     {
       links: [

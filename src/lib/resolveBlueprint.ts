@@ -277,6 +277,15 @@ function applyPlusLegacyRepairs(
   return repaired
 }
 
+function sortBlueprintSteps(data: BlueprintData): BlueprintData {
+  return {
+    ...data,
+    steps: [...data.steps].sort(
+      (a, b) => a.column_position - b.column_position,
+    ),
+  }
+}
+
 export function resolveBlueprintForScenario(
   scenarioId: string | undefined,
   rawPath: RawPath | null | undefined,
@@ -347,8 +356,10 @@ export function resolveBlueprintForScenario(
 
       return {
         blueprint: applyBlueprintDisplayFilters(
-          sortBlueprintLayers(
-            applyPlusLegacyRepairs(blueprint, scenarioId, pathId, fallback),
+          sortBlueprintSteps(
+            sortBlueprintLayers(
+              applyPlusLegacyRepairs(blueprint, scenarioId, pathId, fallback),
+            ),
           ),
           scenarioId,
           pathId,
@@ -361,9 +372,11 @@ export function resolveBlueprintForScenario(
   if (fallback) {
     return {
       blueprint: applyBlueprintDisplayFilters(
-        repairBlueprintLayerPositionsFromFallback(
-          deduplicateBlueprintLayers(fallback),
-          fallback,
+        sortBlueprintSteps(
+          repairBlueprintLayerPositionsFromFallback(
+            deduplicateBlueprintLayers(fallback),
+            fallback,
+          ),
         ),
         scenarioId,
         rawPath?.id ?? fallback.path.id,
