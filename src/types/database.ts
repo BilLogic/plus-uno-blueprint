@@ -24,24 +24,33 @@ export type Database = {
     Tables: {
       cell_triggers: {
         Row: {
+          created_at: string
           id: string
+          kind: string
+          label: string | null
+          note: string | null
           source_cell_id: string
           target_cell_id: string
-          created_at: string
           updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: string
+          kind?: string
+          label?: string | null
+          note?: string | null
           source_cell_id: string
           target_cell_id: string
-          created_at?: string
           updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: string
+          kind?: string
+          label?: string | null
+          note?: string | null
           source_cell_id?: string
           target_cell_id?: string
-          created_at?: string
           updated_at?: string
         }
         Relationships: [
@@ -63,40 +72,55 @@ export type Database = {
       }
       cells: {
         Row: {
-          id: string
-          path_id: string
-          layer_id: string
-          step_id: string
           content: string
-          picture: string | null
-          description: string | null
-          links: Json
           created_at: string
+          description: string | null
+          form: string | null
+          function: string | null
+          id: string
+          layer_id: string
+          links: Json
+          owner: string | null
+          path_id: string
+          perceived_owner: string | null
+          picture: string | null
+          step_id: string
           updated_at: string
+          value_props: Json
         }
         Insert: {
-          id?: string
-          path_id: string
-          layer_id: string
-          step_id: string
           content?: string
-          picture?: string | null
-          description?: string | null
-          links?: Json
           created_at?: string
+          description?: string | null
+          form?: string | null
+          function?: string | null
+          id?: string
+          layer_id: string
+          links?: Json
+          owner?: string | null
+          path_id: string
+          perceived_owner?: string | null
+          picture?: string | null
+          step_id: string
           updated_at?: string
+          value_props?: Json
         }
         Update: {
-          id?: string
-          path_id?: string
-          layer_id?: string
-          step_id?: string
           content?: string
-          picture?: string | null
-          description?: string | null
-          links?: Json
           created_at?: string
+          description?: string | null
+          form?: string | null
+          function?: string | null
+          id?: string
+          layer_id?: string
+          links?: Json
+          owner?: string | null
+          path_id?: string
+          perceived_owner?: string | null
+          picture?: string | null
+          step_id?: string
           updated_at?: string
+          value_props?: Json
         }
         Relationships: [
           {
@@ -122,32 +146,159 @@ export type Database = {
           },
         ]
       }
-      layers: {
+      evidence: {
         Row: {
-          id: string
-          path_id: string
-          name: string
-          layer_role: string | null
-          row_position: number
+          added_by: string | null
+          cell_id: string | null
+          cell_key: string | null
           created_at: string
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          kind: string
+          note: string | null
+          observed_at: string | null
+          proposition_question_key: string | null
+          ref: string | null
+          service_lifecycle_id: string
+          title: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          path_id: string
-          name: string
-          layer_role?: string | null
-          row_position?: number
+          added_by?: string | null
+          cell_id?: string | null
+          cell_key?: string | null
           created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          observed_at?: string | null
+          proposition_question_key?: string | null
+          ref?: string | null
+          service_lifecycle_id: string
+          title: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          path_id?: string
-          name?: string
-          layer_role?: string | null
-          row_position?: number
+          added_by?: string | null
+          cell_id?: string | null
+          cell_key?: string | null
           created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          observed_at?: string | null
+          proposition_question_key?: string | null
+          ref?: string | null
+          service_lifecycle_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'evidence_service_lifecycle_id_fkey'
+            columns: ['service_lifecycle_id']
+            isOneToOne: false
+            referencedRelation: 'service_lifecycles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      findings: {
+        Row: {
+          cell_ids: string[]
+          cell_keys: string[]
+          check_name: string
+          created_at: string
+          fingerprint: string
+          id: string
+          note: string | null
+          run_id: string
+          service_lifecycle_id: string
+          severity: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cell_ids?: string[]
+          cell_keys?: string[]
+          check_name: string
+          created_at?: string
+          fingerprint: string
+          id?: string
+          note?: string | null
+          run_id: string
+          service_lifecycle_id: string
+          severity: string
+          source: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cell_ids?: string[]
+          cell_keys?: string[]
+          check_name?: string
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          note?: string | null
+          run_id?: string
+          service_lifecycle_id?: string
+          severity?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'findings_service_lifecycle_id_fkey'
+            columns: ['service_lifecycle_id']
+            isOneToOne: false
+            referencedRelation: 'service_lifecycles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      layers: {
+        Row: {
+          created_at: string
+          id: string
+          kpis: Json
+          layer_role: string | null
+          name: string
+          owner_team: string | null
+          path_id: string
+          row_position: number
+          tools: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kpis?: Json
+          layer_role?: string | null
+          name: string
+          owner_team?: string | null
+          path_id: string
+          row_position?: number
+          tools?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kpis?: Json
+          layer_role?: string | null
+          name?: string
+          owner_team?: string | null
+          path_id?: string
+          row_position?: number
+          tools?: Json
           updated_at?: string
         }
         Relationships: [
@@ -162,24 +313,24 @@ export type Database = {
       }
       path_steps: {
         Row: {
-          path_id: string
-          step_id: string
           column_position: number
           created_at: string
+          path_id: string
+          step_id: string
           updated_at: string
         }
         Insert: {
-          path_id: string
-          step_id: string
           column_position?: number
           created_at?: string
+          path_id: string
+          step_id: string
           updated_at?: string
         }
         Update: {
-          path_id?: string
-          step_id?: string
           column_position?: number
           created_at?: string
+          path_id?: string
+          step_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -201,33 +352,33 @@ export type Database = {
       }
       paths: {
         Row: {
-          id: string
-          service_scenario_id: string
-          name: string
+          created_at: string
           description: string | null
+          id: string
+          name: string
           note: string | null
           path_type: PathType
-          created_at: string
+          service_scenario_id: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          service_scenario_id: string
-          name: string
+          created_at?: string
           description?: string | null
+          id?: string
+          name: string
           note?: string | null
           path_type: PathType
-          created_at?: string
+          service_scenario_id: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          service_scenario_id?: string
-          name?: string
+          created_at?: string
           description?: string | null
+          id?: string
+          name?: string
           note?: string | null
           path_type?: PathType
-          created_at?: string
+          service_scenario_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -242,36 +393,49 @@ export type Database = {
       }
       phases: {
         Row: {
-          id: string
-          service_lifecycle_id: string
-          name: string
-          description: string | null
-          order_position: number
-          loops_to_phase_id: string | null
+          business_impact: string | null
           created_at: string
+          description: string | null
+          id: string
+          loops_to_phase_id: string | null
+          name: string
+          operational_requirements: string | null
+          order_position: number
+          service_lifecycle_id: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          service_lifecycle_id: string
-          name: string
-          description?: string | null
-          order_position?: number
-          loops_to_phase_id?: string | null
+          business_impact?: string | null
           created_at?: string
+          description?: string | null
+          id?: string
+          loops_to_phase_id?: string | null
+          name: string
+          operational_requirements?: string | null
+          order_position?: number
+          service_lifecycle_id: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          service_lifecycle_id?: string
-          name?: string
-          description?: string | null
-          order_position?: number
-          loops_to_phase_id?: string | null
+          business_impact?: string | null
           created_at?: string
+          description?: string | null
+          id?: string
+          loops_to_phase_id?: string | null
+          name?: string
+          operational_requirements?: string | null
+          order_position?: number
+          service_lifecycle_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'phases_loops_to_phase_id_fkey'
+            columns: ['loops_to_phase_id']
+            isOneToOne: false
+            referencedRelation: 'phases'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'phases_service_lifecycle_id_fkey'
             columns: ['service_lifecycle_id']
@@ -281,60 +445,101 @@ export type Database = {
           },
         ]
       }
-      service_lifecycles: {
+      propositions: {
         Row: {
-          id: string
-          name: string
-          description: string | null
           created_at: string
+          delivery_cost: string | null
+          funding: string | null
+          partners: string | null
+          pricing: string | null
+          revenue_model: string | null
+          service_lifecycle_id: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          name: string
-          description?: string | null
           created_at?: string
+          delivery_cost?: string | null
+          funding?: string | null
+          partners?: string | null
+          pricing?: string | null
+          revenue_model?: string | null
+          service_lifecycle_id: string
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          delivery_cost?: string | null
+          funding?: string | null
+          partners?: string | null
+          pricing?: string | null
+          revenue_model?: string | null
+          service_lifecycle_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'propositions_service_lifecycle_id_fkey'
+            columns: ['service_lifecycle_id']
+            isOneToOne: true
+            referencedRelation: 'service_lifecycles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      service_lifecycles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
           id?: string
           name?: string
-          description?: string | null
-          created_at?: string
           updated_at?: string
         }
         Relationships: []
       }
       service_scenarios: {
         Row: {
-          id: string
-          phase_id: string
-          name: string
-          description: string | null
-          order_position: number
-          view_type: string
           created_at: string
+          description: string | null
+          id: string
+          name: string
+          order_position: number
+          phase_id: string
           updated_at: string
+          view_type: string
         }
         Insert: {
-          id?: string
-          phase_id: string
-          name: string
-          description?: string | null
-          order_position?: number
-          view_type?: string
           created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          order_position?: number
+          phase_id: string
           updated_at?: string
+          view_type?: string
         }
         Update: {
-          id?: string
-          phase_id?: string
-          name?: string
-          description?: string | null
-          order_position?: number
-          view_type?: string
           created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          order_position?: number
+          phase_id?: string
           updated_at?: string
+          view_type?: string
         }
         Relationships: [
           {
@@ -348,51 +553,151 @@ export type Database = {
       }
       services: {
         Row: {
+          created_at: string
+          description: string | null
           id: string
           name: string
-          description: string | null
           slug: string
-          created_at: string
           updated_at: string
         }
         Insert: {
+          created_at?: string
+          description?: string | null
           id?: string
           name: string
-          description?: string | null
           slug: string
-          created_at?: string
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          description?: string | null
           id?: string
           name?: string
-          description?: string | null
           slug?: string
-          created_at?: string
           updated_at?: string
         }
         Relationships: []
       }
-      steps: {
+      slice_items: {
         Row: {
-          id: string
-          service_scenario_id: string
-          name: string
+          caption: string | null
+          cell_ids: string[]
+          cell_keys: string[]
           created_at: string
+          id: string
+          illustration: Json | null
+          narrative: string | null
+          position: number
+          slice_id: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          service_scenario_id: string
-          name: string
+          caption?: string | null
+          cell_ids?: string[]
+          cell_keys?: string[]
           created_at?: string
+          id?: string
+          illustration?: Json | null
+          narrative?: string | null
+          position: number
+          slice_id: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          service_scenario_id?: string
-          name?: string
+          caption?: string | null
+          cell_ids?: string[]
+          cell_keys?: string[]
           created_at?: string
+          id?: string
+          illustration?: Json | null
+          narrative?: string | null
+          position?: number
+          slice_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'slice_items_slice_id_fkey'
+            columns: ['slice_id']
+            isOneToOne: false
+            referencedRelation: 'slices'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      slices: {
+        Row: {
+          actor: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          locale: string
+          origin: string
+          position: number
+          service_lifecycle_id: string
+          slice_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          locale?: string
+          origin?: string
+          position?: number
+          service_lifecycle_id: string
+          slice_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          locale?: string
+          origin?: string
+          position?: number
+          service_lifecycle_id?: string
+          slice_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'slices_service_lifecycle_id_fkey'
+            columns: ['service_lifecycle_id']
+            isOneToOne: false
+            referencedRelation: 'service_lifecycles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      steps: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          service_scenario_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          service_scenario_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          service_scenario_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -406,8 +711,30 @@ export type Database = {
         ]
       }
     }
-    Views: Record<string, never>
-    Functions: Record<string, never>
+    Views: {
+      evidence_counts: {
+        Row: {
+          cell_id: string | null
+          n: number | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      search_blueprint: {
+        Args: { q: string }
+        Returns: {
+          id: string
+          kind: string
+          layer: string
+          phase: string
+          scenario: string
+          snippet: string
+          step: string
+          title: string
+        }[]
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }
@@ -423,3 +750,10 @@ export type Service = Database['public']['Tables']['services']['Row']
 export type ServiceLifecycle = Database['public']['Tables']['service_lifecycles']['Row']
 export type ServiceScenario = Database['public']['Tables']['service_scenarios']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']
+
+export type Slice = Database['public']['Tables']['slices']['Row']
+export type SliceItem = Database['public']['Tables']['slice_items']['Row']
+export type Finding = Database['public']['Tables']['findings']['Row']
+export type Evidence = Database['public']['Tables']['evidence']['Row']
+export type Proposition = Database['public']['Tables']['propositions']['Row']
+export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row']
