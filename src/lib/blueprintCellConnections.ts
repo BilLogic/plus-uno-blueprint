@@ -14,6 +14,12 @@ export type BlueprintCellConnection = {
   stepName: string
   stepIndex: number
   kind: BlueprintCellConnectionKind
+  /** Link semantics from the trigger row: temporal trigger vs functional need. */
+  linkKind: 'trigger' | 'needs'
+  /** Short edge label chip (e.g. a channel tag like "Email"). */
+  linkLabel: string | null
+  /** Why-line shown under the dependency row. */
+  linkNote: string | null
   isTech: boolean
   techItems: string[]
   contentPreview: string
@@ -73,6 +79,9 @@ function toConnection(
     stepName: resolveStepName(blueprint, cell.step_id),
     stepIndex,
     kind: stepIndex === selectedStepIndex ? 'interaction' : 'connection',
+    linkKind: trigger.kind === 'needs' ? 'needs' : 'trigger',
+    linkLabel: trigger.label ?? null,
+    linkNote: trigger.note ?? null,
     isTech,
     techItems,
     contentPreview: contentPreview(cell.content),

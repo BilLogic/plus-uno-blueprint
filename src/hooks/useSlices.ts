@@ -1,18 +1,36 @@
-import { DEV_FALLBACK_SLICES } from '@/data/devSlices'
+import {
+  DEV_FALLBACK_SLICES,
+  DEV_FALLBACK_SLICE_ITEMS,
+} from '@/data/devSlices'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
-import type { Slice } from '@/types/database'
+import type { Slice, SliceItem } from '@/types/database'
+
+/** Slim frame projection carried on the list — powers client-side
+ * membership checks (panel "In slices" footer) without per-cell queries. */
+export type SliceListItem = Pick<SliceItem, 'id' | 'position' | 'cell_ids'>
+
+export type SliceListEntry = Slice & { slice_items: SliceListItem[] }
 
 // TODO(dev-only): remove after DB slices exist — no-DB dev mode only.
-const slicesFallback = (): Slice[] | null =>
-  import.meta.env.DEV ? DEV_FALLBACK_SLICES : null
+const slicesFallback = (): SliceListEntry[] | null =>
+  import.meta.env.DEV
+    ? DEV_FALLBACK_SLICES.map((slice) => ({
+        ...slice,
+        slice_items: (DEV_FALLBACK_SLICE_ITEMS[slice.id] ?? []).map((item) => ({
+          id: item.id,
+          position: item.position,
+          cell_ids: item.cell_ids,
+        })),
+      }))
+    : null
 
 /**
- * All slices for one service lifecycle, ordered by position. With no explicit
- * `lifecycleId`, the first lifecycle by `created_at` is used — the same
- * resolution as `useLifecyclePhases`.
+ * All slices for one service lifecycle, ordered by position, each carrying
+ * its frames' cell ids. With no explicit `lifecycleId`, the first lifecycle
+ * by `created_at` is used — the same resolution as `useLifecyclePhases`.
  */
-export function useSlices(lifecycleId?: string): QueryResult<Slice[]> {
-  return useSupabaseQuery<Slice[]>(
+export function useSlices(lifecycleId?: string): QueryResult<SliceListEntry[]> {
+  return useSupabaseQuery<SliceListEntry[]>(
     `slices:${lifecycleId ?? 'first'}`,
     async (client) => {
       let resolvedLifecycleId = lifecycleId
@@ -29,7 +47,7 @@ export function useSlices(lifecycleId?: string): QueryResult<Slice[]> {
 
       const { data, error } = await client
         .from('slices')
-        .select('*')
+        .select('*, slice_items (id, position, cell_ids)')
         .eq('service_lifecycle_id', resolvedLifecycleId)
         .order('position', { ascending: true })
       if (error) throw new Error(error.message)

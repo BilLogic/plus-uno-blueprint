@@ -11,6 +11,15 @@ import { normalizeCellLinks } from '@/lib/cellMetadata'
 type RawOutgoingTrigger = {
   id: string
   target_cell_id: string
+  /** Fallback data omits these — default kind 'trigger', label/note null. */
+  kind?: string | null
+  label?: string | null
+  note?: string | null
+}
+
+/** Normalize a raw kind column value; anything unknown is a plain trigger. */
+function normalizeTriggerKind(kind: string | null | undefined): 'trigger' | 'needs' {
+  return kind === 'needs' ? 'needs' : 'trigger'
 }
 
 export type RawCell = {
@@ -86,6 +95,9 @@ function flattenTriggersFromCells(cells: RawCell[]): BlueprintCellTrigger[] {
         id: outgoing.id,
         source_cell_id: cell.id,
         target_cell_id: outgoing.target_cell_id,
+        kind: normalizeTriggerKind(outgoing.kind),
+        label: outgoing.label ?? null,
+        note: outgoing.note ?? null,
       })
     }
   }
@@ -207,7 +219,12 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
   }))
   const triggers =
     raw.cell_triggers && raw.cell_triggers.length > 0
-      ? raw.cell_triggers
+      ? raw.cell_triggers.map((trigger) => ({
+          ...trigger,
+          kind: normalizeTriggerKind(trigger.kind),
+          label: trigger.label ?? null,
+          note: trigger.note ?? null,
+        }))
       : flattenTriggersFromCells(rawCells)
 
   return sortBlueprintLayers({

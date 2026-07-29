@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ExternalLink, X } from 'lucide-react'
-import { CellDependencyTable } from '@/components/blueprint/CellDependencyTable'
+import {
+  ExternalLink,
+  FileSearch,
+  Info,
+  Link2,
+  PanelRightClose,
+  PanelRightOpen,
+  Workflow,
+  X,
+} from 'lucide-react'
+import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
+import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
+import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
+import { CellOverviewSpec } from '@/components/blueprint/CellOverviewSpec'
+import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
 import { CELL_DETAIL_PANEL_TOP_CLASS } from '@/components/editor/menubarHeaderLayout'
@@ -20,23 +33,32 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
 import {
   buildBlueprintCellSelectionForId,
   getBlueprintCellConnections,
   getBlueprintForPath,
   getLinkedTechFromConnections,
-  getSelectedCellLayerRowPosition,
   scrollBlueprintCellIntoView,
 } from '@/lib/blueprintCellConnections'
-import { buildCellDependencyRows } from '@/lib/blueprintCellDependencies'
 import {
   buildTechPillSelectionForItem,
   getBlueprintStepTechItems,
   scrollBlueprintTechPillIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
+import { BLUEPRINT_CELL_TEXT_COLOR } from '@/lib/blueprintCellStyle'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
+import {
+  getBlueprintLayerStyle,
+  getBlueprintLayerZone,
+} from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
   resolveTechCellDetailLabel,
@@ -59,6 +81,19 @@ const CELL_DETAIL_SMALL_LOGO_CLASS =
   'size-[6.5rem] shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
 
 const SHOW_CELL_DEPENDENCIES = true
+
+type PanelTab = 'overview' | 'dependencies' | 'evidence' | 'resources'
+
+const PANEL_TABS: Array<{
+  value: PanelTab
+  label: string
+  icon: typeof Info
+}> = [
+  { value: 'overview', label: 'Overview', icon: Info },
+  { value: 'dependencies', label: 'Dependencies', icon: Workflow },
+  { value: 'evidence', label: 'Evidence', icon: FileSearch },
+  { value: 'resources', label: 'Resources', icon: Link2 },
+]
 
 function isFigmaUrl(url: string): boolean {
   return /figma\.com/i.test(url)
@@ -95,6 +130,8 @@ export function BlueprintCellDetailPanel() {
     useBlueprintCellDetail()
   const [closingSelection, setClosingSelection] = useState(currentSelection)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [activeTab, setActiveTab] = useState<PanelTab>('overview')
   const selection = currentSelection ?? closingSelection
 
   useEffect(() => {
@@ -106,6 +143,14 @@ export function BlueprintCellDetailPanel() {
 
     setDrawerOpen(false)
   }, [currentSelection])
+
+  // A new cell always opens on Overview (state reset during render).
+  const currentCellId = currentSelection?.paths[0]?.cellId
+  const [lastCellId, setLastCellId] = useState(currentCellId)
+  if (lastCellId !== currentCellId) {
+    setLastCellId(currentCellId)
+    setActiveTab('overview')
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -203,17 +248,6 @@ export function BlueprintCellDetailPanel() {
     [connections],
   )
 
-  const selectedLayerRowPosition = useMemo(() => {
-    const cellId = pathEntry?.cellId
-    const pathId = pathEntry?.pathId
-    if (!cellId || !pathId) return -1
-
-    const blueprint = getBlueprintForPath(blueprints, pathId)
-    if (!blueprint || !resolvedCellId) return -1
-
-    return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
-  }, [blueprints, pathEntry?.cellId, pathEntry?.pathId, resolvedCellId])
-
   const selectedLayer = useMemo((): { name: string; role?: string | null } | null => {
     const layerName = selection?.layerName
     if (!layerName) return null
@@ -225,6 +259,22 @@ export function BlueprintCellDetailPanel() {
         name: layerName,
       }
     )
+  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+
+  const laneChipStyle = useMemo(() => {
+    const layerName = selection?.layerName
+    if (!layerName) return null
+
+    const pathId = pathEntry?.pathId
+    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
+    const layerRecord =
+      blueprint?.layers.find((layer) => layer.name === layerName) ?? null
+    const zone =
+      layerRecord && blueprint
+        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        : 'frontstage'
+    // Keyed by layer_role — the name argument is only the legacy fallback.
+    return getBlueprintLayerStyle(layerName, zone, layerRecord?.role)
   }, [blueprints, pathEntry?.pathId, selection?.layerName])
 
   const otherTechEntries = useMemo(() => {
@@ -282,55 +332,6 @@ export function BlueprintCellDetailPanel() {
     if (!selection) return null
     return resolveFigmaUrl(selection.techItem, selectedCell, cellLinks)
   }, [cellLinks, selectedCell, selection])
-
-  const dependencyRows = useMemo(() => {
-    if (!selection) return []
-
-    const relevantLinks = cellLinks.flatMap((link, index) => {
-      if (link.type !== URL_LINK_TYPE || !link.url?.trim()) return []
-      const url = link.url.trim()
-      const label =
-        link.label?.trim() ||
-        (isFigmaUrl(url) ? 'Figma' : 'Link')
-      return [
-        {
-          id: `link-${index}`,
-          label,
-          url,
-        },
-      ]
-    })
-
-    if (
-      figmaUrl &&
-      !relevantLinks.some((link) => link.url === figmaUrl)
-    ) {
-      relevantLinks.push({
-        id: 'link-figma',
-        label: 'Figma',
-        url: figmaUrl,
-      })
-    }
-
-    return buildCellDependencyRows({
-      connections,
-      selectedLayerRowPosition,
-      isTechCellSelected:
-        Boolean(selection.techItem) ||
-        Boolean(selectedLayer && shouldUsePillCellContent(selectedLayer)),
-      selectedTechItem: selection.techItem,
-      otherTech: otherTechEntries,
-      links: relevantLinks,
-    })
-  }, [
-    cellLinks,
-    connections,
-    figmaUrl,
-    otherTechEntries,
-    selectedLayer,
-    selectedLayerRowPosition,
-    selection,
-  ])
 
   const visualStepEntries = useMemo(() => {
     const stepId = selection?.stepId
@@ -472,15 +473,29 @@ export function BlueprintCellDetailPanel() {
     </Breadcrumb>
   )
 
-  const layerTitle = (
-    <p className="min-w-0 flex-1 text-sm font-bold leading-snug tracking-tight text-foreground">
+  // Panel v2 header: title is the cell content snippet; the lane appears as
+  // one role-colored chip (colored by layer_role, never by name).
+  const cellTitleText =
+    cellContent.split('\n')[0]?.trim() || selection.layerName
+  const laneChip = laneChipStyle ? (
+    <span
+      className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
+      style={{
+        backgroundColor: laneChipStyle.lane,
+        color: BLUEPRINT_CELL_TEXT_COLOR,
+      }}
+      title={selection.layerName}
+    >
       {selection.layerName}
-    </p>
-  )
+    </span>
+  ) : null
 
   const titleRow = (
-    <div className="flex min-w-0 items-center gap-2">
-      {layerTitle}
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <p className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
+        {cellTitleText}
+      </p>
+      {laneChip}
     </div>
   )
 
@@ -585,6 +600,25 @@ export function BlueprintCellDetailPanel() {
     </div>
   ) : null
 
+  const overviewContent = (
+    <>
+      {pictureBlock}
+      <div className="flex min-w-0 flex-col gap-2">
+        {showTechPillAboveTitle ? selectedTechPill : null}
+        {titleRow}
+        {showTechPill && !showTechPillAboveTitle ? selectedTechPill : null}
+      </div>
+      {detailDescriptionText.trim() ? (
+        <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
+          {detailDescriptionText.trim()}
+        </p>
+      ) : !showTechPill ? (
+        <p className="-mt-3 text-sm text-muted-foreground">No content</p>
+      ) : null}
+      <CellOverviewSpec cellId={resolvedCellId} />
+    </>
+  )
+
   return (
     <Drawer
       open={drawerOpen}
@@ -603,12 +637,13 @@ export function BlueprintCellDetailPanel() {
         data-cell-detail-panel=""
         className={cn(
           CELL_DETAIL_PANEL_TOP_CLASS,
-          '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none w-[20rem] rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+          '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+          expanded ? 'w-[40rem]' : 'w-[20rem]',
         )}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
-        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-5 text-left">
+        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="sr-only">Cell details</DrawerTitle>
             <DrawerDescription className="sr-only">
@@ -616,53 +651,85 @@ export function BlueprintCellDetailPanel() {
             </DrawerDescription>
             {cellBreadcrumb}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Close cell details"
-            onClick={clearSelection}
-          >
-            <X />
-          </Button>
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
+              aria-pressed={expanded}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              {expanded ? <PanelRightClose /> : <PanelRightOpen />}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Close cell details"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
+          </div>
         </DrawerHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
-          {pictureBlock}
-          {isVisualLayer ? (
-            <>
-              {titleRow}
-              <VisualStepDetailStack entries={visualStepEntries} />
-            </>
-          ) : (
-            <>
-              <div className="flex min-w-0 flex-col gap-2">
-                {showTechPillAboveTitle ? selectedTechPill : null}
-                {titleRow}
-                {showTechPill && !showTechPillAboveTitle
-                  ? selectedTechPill
-                  : null}
-              </div>
-              {detailDescriptionText.trim() ? (
-                <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
-                  {detailDescriptionText.trim()}
-                </p>
-              ) : !showTechPill ? (
-                <p className="-mt-3 text-sm text-muted-foreground">No content</p>
-              ) : null}
-              {SHOW_CELL_DEPENDENCIES && dependencyRows.length > 0 ? (
-                <div className="mt-2">
-                  <CellDependencyTable
-                    rows={dependencyRows}
+        {isVisualLayer ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
+            {titleRow}
+            <VisualStepDetailStack entries={visualStepEntries} />
+          </div>
+        ) : (
+          <>
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as PanelTab)}
+              className="min-h-0 flex-1 gap-0"
+            >
+              <TabsList
+                variant="line"
+                className="h-auto w-full justify-start gap-4 rounded-none border-b border-border/60 px-4 pb-0"
+              >
+                {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
+                  <Tooltip key={value}>
+                    <TooltipTrigger
+                      render={
+                        <TabsTrigger
+                          value={value}
+                          aria-label={label}
+                          className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                        >
+                          <TabIcon className="size-3.5" />
+                        </TabsTrigger>
+                      }
+                    />
+                    <TooltipContent side="bottom">{label}</TooltipContent>
+                  </Tooltip>
+                ))}
+              </TabsList>
+              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-4 pb-4 blueprint-scroll">
+                {activeTab === 'overview' ? overviewContent : null}
+                {activeTab === 'dependencies' && SHOW_CELL_DEPENDENCIES ? (
+                  <CellDependencySections
+                    connections={connections}
+                    otherTech={otherTechEntries}
                     onCellSelect={handleConnectionSelect}
                     onTechSelect={handleTechSelect}
                   />
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
+                ) : null}
+                {activeTab === 'evidence' ? (
+                  <CellEvidenceTab cellId={resolvedCellId} />
+                ) : null}
+                {activeTab === 'resources' ? (
+                  <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />
+                ) : null}
+              </div>
+            </Tabs>
+            <CellInSlicesFooter cellId={pathEntry?.cellId ?? null} />
+          </>
+        )}
       </DrawerContent>
     </Drawer>
   )
