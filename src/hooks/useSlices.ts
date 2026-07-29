@@ -1,7 +1,10 @@
+import { DEV_FALLBACK_SLICES } from '@/data/devSlices'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { Slice } from '@/types/database'
 
-const noSlicesFallback = (): Slice[] | null => null
+// TODO(dev-only): remove after DB slices exist — no-DB dev mode only.
+const slicesFallback = (): Slice[] | null =>
+  import.meta.env.DEV ? DEV_FALLBACK_SLICES : null
 
 /**
  * All slices for one service lifecycle, ordered by position. With no explicit
@@ -32,6 +35,6 @@ export function useSlices(lifecycleId?: string): QueryResult<Slice[]> {
       if (error) throw new Error(error.message)
       return data ?? []
     },
-    noSlicesFallback,
+    slicesFallback,
   )
 }

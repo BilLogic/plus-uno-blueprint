@@ -1,3 +1,8 @@
+import { useCallback } from 'react'
+import {
+  DEV_FALLBACK_SLICES,
+  DEV_FALLBACK_SLICE_ITEMS,
+} from '@/data/devSlices'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { Slice, SliceItem } from '@/types/database'
 
@@ -6,10 +11,18 @@ export type SliceDetail = {
   items: SliceItem[]
 }
 
-const noSliceFallback = (): SliceDetail | null => null
+// TODO(dev-only): remove after DB slices exist — no-DB dev mode only.
+function devSliceFallback(sliceId: string): SliceDetail | null {
+  if (!import.meta.env.DEV) return null
+  const slice = DEV_FALLBACK_SLICES.find((entry) => entry.id === sliceId)
+  if (!slice) return null
+  return { slice, items: DEV_FALLBACK_SLICE_ITEMS[slice.id] ?? [] }
+}
 
 /** One slice with its frames (`slice_items`), items ordered by position. */
 export function useSlice(sliceId: string): QueryResult<SliceDetail> {
+  const fallback = useCallback(() => devSliceFallback(sliceId), [sliceId])
+
   return useSupabaseQuery<SliceDetail>(
     `slice:${sliceId}`,
     async (client) => {
@@ -30,6 +43,6 @@ export function useSlice(sliceId: string): QueryResult<SliceDetail> {
 
       return { slice, items: items ?? [] }
     },
-    noSliceFallback,
+    fallback,
   )
 }

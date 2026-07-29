@@ -279,10 +279,13 @@
     background: color-mix(in srgb, var(--canvas) 78%, transparent);
   }
 
-  /* Slice-member outlines persist whether or not the scrim is up. */
+  /* Slice-member outlines persist whether or not the scrim is up. Member
+     cells stay hit-testable (the grid renders them non-interactive with
+     pointer-events none) so clicking one re-focuses the slice. */
   [data-slice-focus] [data-blueprint-cell-anchor][data-slice-member] {
     outline: 2px solid var(--ring);
     outline-offset: 1px;
+    pointer-events: auto;
   }
 
   /* While focused, member cells lift above the z-40 scrim: raise the cell
