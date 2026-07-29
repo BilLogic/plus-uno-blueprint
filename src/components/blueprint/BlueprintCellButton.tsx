@@ -4,6 +4,7 @@ import {
   useBlueprintCellDetailOptional,
   useBlueprintCellPreviewHover,
 } from '@/contexts/BlueprintCellDetailContext'
+import { useAssumptionLens } from '@/contexts/assumptionLensContext'
 import { useSliceDraftOptional } from '@/contexts/sliceDraftContext'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
@@ -79,6 +80,14 @@ export function BlueprintCellButton({
       (sliceMembership.has(cellId) ||
         (resolvedCellId && sliceMembership.has(resolvedCellId))),
   )
+  const assumptionLens = useAssumptionLens()
+  const evidencedCellIds = assumptionLens?.evidencedCellIds ?? null
+  const hasNoEvidence = Boolean(
+    evidencedCellIds &&
+      cellId &&
+      !evidencedCellIds.has(cellId) &&
+      !(resolvedCellId && evidencedCellIds.has(resolvedCellId)),
+  )
   const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
@@ -142,6 +151,7 @@ export function BlueprintCellButton({
       data-blueprint-cell-emphasis={emphasis}
       {...(isSliceMember ? { 'data-slice-member': '' } : {})}
       {...(isDraftSelected ? { 'data-slice-draft-selected': '' } : {})}
+      {...(hasNoEvidence ? { 'data-no-evidence': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}

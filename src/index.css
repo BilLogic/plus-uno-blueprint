@@ -297,6 +297,17 @@
     z-index: 50;
   }
 
+  /* Assumption lens: cells with zero evidence rows get a subtle warning
+     tint (amber token carries its own light/dark values). */
+  [data-lens='assumption'] [data-blueprint-cell-anchor][data-no-evidence] {
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--warning) 22%, transparent),
+      color-mix(in srgb, var(--warning) 22%, transparent)
+    );
+    box-shadow: inset 0 0 0 1.5px
+      color-mix(in srgb, var(--warning) 55%, transparent);
+  }
+
   /* Slice edit mode: every cell is clickable (membership toggle) even though
      the grid renders non-interactive buttons. */
   [data-slice-editing] [data-blueprint-cell-anchor] {

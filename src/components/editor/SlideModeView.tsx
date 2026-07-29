@@ -17,6 +17,7 @@ import {
 } from '@/hooks/usePhaseBlueprintFilters'
 import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
+import { SlicesSidebarSection } from '@/components/editor/SlicesSidebarSection'
 import { SlideNav } from '@/components/editor/SlideNav'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
@@ -64,6 +65,7 @@ export function SlideModeSidebarNav() {
           isHome={view !== 'detail'}
         />
       )}
+      <SlicesSidebarSection />
     </SidebarContent>
   )
 }

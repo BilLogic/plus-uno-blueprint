@@ -39,6 +39,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useAssumptionLens } from '@/contexts/assumptionLensContext'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
 import {
   buildBlueprintCellSelectionForId,
@@ -128,6 +129,7 @@ export function BlueprintCellDetailPanel() {
     selectCell,
   } =
     useBlueprintCellDetail()
+  const assumptionLens = useAssumptionLens()
   const [closingSelection, setClosingSelection] = useState(currentSelection)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -693,20 +695,23 @@ export function BlueprintCellDetailPanel() {
                 className="h-auto w-full justify-start gap-4 rounded-none border-b border-border/60 px-4 pb-0"
               >
                 {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
-                  <Tooltip key={value}>
-                    <TooltipTrigger
-                      render={
-                        <TabsTrigger
-                          value={value}
-                          aria-label={label}
-                          className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
-                        >
-                          <TabIcon className="size-3.5" />
-                        </TabsTrigger>
-                      }
-                    />
-                    <TooltipContent side="bottom">{label}</TooltipContent>
-                  </Tooltip>
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    aria-label={label}
+                    className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                  >
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <span className="inline-flex" aria-hidden>
+                            <TabIcon className="size-3.5" />
+                          </span>
+                        }
+                      />
+                      <TooltipContent side="bottom">{label}</TooltipContent>
+                    </Tooltip>
+                  </TabsTrigger>
                 ))}
               </TabsList>
               <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-4 pb-4 blueprint-scroll">
@@ -720,7 +725,10 @@ export function BlueprintCellDetailPanel() {
                   />
                 ) : null}
                 {activeTab === 'evidence' ? (
-                  <CellEvidenceTab cellId={resolvedCellId} />
+                  <CellEvidenceTab
+                    cellId={resolvedCellId}
+                    onMutated={assumptionLens?.refresh}
+                  />
                 ) : null}
                 {activeTab === 'resources' ? (
                   <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />

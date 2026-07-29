@@ -1,4 +1,5 @@
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
+import { AssumptionLensToggle } from '@/components/editor/AssumptionLensToggle'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
@@ -79,7 +80,8 @@ export function ServiceOverviewStickyHeader({
         {...menubarProps}
         className={BLUEPRINT_MENUBAR_FLAT_CLASS}
       />
-      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
+      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center gap-2">
+        <AssumptionLensToggle />
         <NavbarZoomIndicator />
       </div>
     </div>
