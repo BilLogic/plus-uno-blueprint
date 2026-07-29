@@ -33,12 +33,17 @@ type BlueprintCellDetailContextValue = {
   isOpen: boolean
   selectedCellIds: ReadonlySet<string>
   directlyConnectedCellIds: ReadonlySet<string>
-  previewHover: BlueprintCellPreviewHover | null
   setPreviewHover: (preview: BlueprintCellPreviewHover | null) => void
 }
 
 const BlueprintCellDetailContext =
   createContext<BlueprintCellDetailContextValue | null>(null)
+
+// Hover state lives in its own context: it changes on every pointer move over
+// the dependency table, and keeping it inside the main context value re-renders
+// every cell in every mounted grid per hover.
+const BlueprintCellHoverContext =
+  createContext<BlueprintCellPreviewHover | null>(null)
 
 type BlueprintCellDetailProviderProps = {
   children: ReactNode
@@ -141,7 +146,6 @@ export function BlueprintCellDetailProvider({
       isOpen: enabled && selection !== null,
       selectedCellIds: cellEmphasis.selectedCellIds,
       directlyConnectedCellIds: cellEmphasis.directlyConnectedCellIds,
-      previewHover,
       setPreviewHover,
     }),
     [
@@ -151,15 +155,22 @@ export function BlueprintCellDetailProvider({
       selectCell,
       clearSelection,
       cellEmphasis,
-      previewHover,
     ],
   )
 
   return (
     <BlueprintCellDetailContext.Provider value={value}>
-      {children}
+      <BlueprintCellHoverContext.Provider value={previewHover}>
+        {children}
+      </BlueprintCellHoverContext.Provider>
     </BlueprintCellDetailContext.Provider>
   )
+}
+
+/** Hover preview only — subscribe here instead of the main context so hover
+ * changes don't re-render selection consumers. */
+export function useBlueprintCellPreviewHover() {
+  return useContext(BlueprintCellHoverContext)
 }
 
 export function useBlueprintCellDetail() {

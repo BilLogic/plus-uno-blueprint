@@ -1,5 +1,8 @@
 import { Button } from '@/components/ui/button'
-import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
+import {
+  useBlueprintCellDetailOptional,
+  useBlueprintCellPreviewHover,
+} from '@/contexts/BlueprintCellDetailContext'
 import {
   blueprintCellButtonClassName,
   getBlueprintCellInteractionStyle,
@@ -59,7 +62,7 @@ export function BlueprintCellButton({
         (resolvedCellId &&
           detail.directlyConnectedCellIds.has(resolvedCellId))),
   )
-  const preview = detail?.previewHover ?? null
+  const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
     : null
