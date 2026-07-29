@@ -89,14 +89,16 @@ export function BlueprintTriggerArrows({
 
   const updateArrows = useCallback(() => {
     const content = contentRef.current
-    if (!content || triggers.length === 0) {
+    // `needs` links are panel-only by design — arrows draw temporal triggers only.
+    const arrowTriggers = triggers.filter((t) => (t.kind ?? 'trigger') === 'trigger')
+    if (!content || arrowTriggers.length === 0) {
       setSegments([])
       return
     }
 
     const next: ArrowSegment[] = []
     const { resolveTriggers, otherTriggers: railInputTriggers } =
-      partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
+      partitionReportingAnIssueFsaStep1ToResolveTriggers(arrowTriggers)
 
     for (const trigger of resolveTriggers) {
       const sourceEl = content.querySelector<HTMLElement>(
