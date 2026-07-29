@@ -14,13 +14,18 @@ import {
 } from '@/components/editor/EditorSidebarRail'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
+import { SlicePresentation } from '@/components/editor/SlicePresentation'
+import { SliceView } from '@/components/editor/SliceView'
+import { TabStrip } from '@/components/editor/TabStrip'
 import { SidebarProvider } from '@/components/ui/sidebar'
+import { tabKey, useViewState, type TabDescriptor } from '@/contexts/viewStateStore'
 import { cn } from '@/lib/utils'
 
 const SIDEBAR_WIDTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 export function EditorShell() {
   const { view, goLanding } = useEditor()
+  const { activeTab } = useViewState()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
 
@@ -104,20 +109,42 @@ export function EditorShell() {
         </div>
       </aside>
 
-      <main className="relative min-h-0 min-w-0 flex-1">
-        {isLanding ? (
-          <Homepage />
-        ) : (
-          <VisualWalkthroughShell>
-            <div
-              className="absolute inset-0 flex min-h-0 flex-col"
-              data-editor-view
-            >
-              <ServiceOverviewView />
-            </div>
-          </VisualWalkthroughShell>
-        )}
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <TabStrip />
+        <div className="relative min-h-0 min-w-0 flex-1">
+          {/* Only the active tab's content mounts. */}
+          <ActiveTabContent tab={activeTab} isLanding={isLanding} />
+        </div>
       </main>
     </div>
   )
+}
+
+function ActiveTabContent({
+  tab,
+  isLanding,
+}: {
+  tab: TabDescriptor
+  isLanding: boolean
+}) {
+  switch (tab.kind) {
+    case 'blueprint':
+      // Existing landing / home / detail behavior, unchanged.
+      return isLanding ? (
+        <Homepage />
+      ) : (
+        <VisualWalkthroughShell>
+          <div
+            className="absolute inset-0 flex min-h-0 flex-col"
+            data-editor-view
+          >
+            <ServiceOverviewView />
+          </div>
+        </VisualWalkthroughShell>
+      )
+    case 'slice':
+      return <SliceView key={tabKey(tab)} sliceId={tab.sliceId} />
+    case 'present':
+      return <SlicePresentation key={tabKey(tab)} sliceId={tab.sliceId} />
+  }
 }
