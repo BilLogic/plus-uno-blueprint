@@ -47,6 +47,10 @@ type CanvasPhaseSectionProps = {
   isLoopArrowTo?: boolean
   /** Overview: hover + click opens the phase detail view. */
   onNavigate?: () => void
+  /** When true, this phase is visually de-emphasized (canvas focus mode). */
+  dimmed?: boolean
+  /** When true, this phase is the camera focus target — no hover chrome. */
+  focusActive?: boolean
 }
 
 function useAlignedFlowArrowLeft(
@@ -104,6 +108,8 @@ export function CanvasPhaseSection({
   isLoopArrowFrom = false,
   isLoopArrowTo = false,
   onNavigate,
+  dimmed = false,
+  focusActive = false,
   variant = 'default',
 }: CanvasPhaseSectionProps) {
   const sectionRef = useRef<HTMLElement>(null)
@@ -125,7 +131,7 @@ export function CanvasPhaseSection({
     : undefined
 
   const handleNavigateKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (!onNavigate) return
+    if (!onNavigate || focusActive) return
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
       onNavigate()
@@ -133,9 +139,10 @@ export function CanvasPhaseSection({
   }
 
   const interactive = Boolean(onNavigate)
+  const navigable = interactive && !focusActive
 
   const handleSectionClick = (event: MouseEvent<HTMLElement>) => {
-    if (!interactive || isBlueprintPanelTarget(event.target)) return
+    if (!navigable || isBlueprintPanelTarget(event.target)) return
     onNavigate?.()
   }
 
@@ -143,26 +150,30 @@ export function CanvasPhaseSection({
     <section
       ref={sectionRef}
       className={cn(
-        'relative inline-flex w-max flex-col items-start',
-        interactive &&
+        'relative inline-flex w-max flex-col items-start transition-[opacity,filter] duration-300 ease-out',
+        dimmed &&
+          'opacity-30 saturate-50 [&_[data-blueprint-cell-interactive]]:pointer-events-none',
+        navigable &&
           'cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-0',
         className,
       )}
       data-canvas-phase-section=""
       data-phase-id={phaseId}
+      data-canvas-focus-dimmed={dimmed ? '' : undefined}
+      {...(focusActive ? { 'data-canvas-focus-active': '' } : {})}
       data-phase-section-inset={sectionInset}
       {...(interactive ? { 'data-canvas-phase-interactive': '' } : {})}
       {...(isFlowArrowAnchor ? { 'data-flow-arrow-anchor': '' } : {})}
       {...(isLoopArrowFrom ? { 'data-phase-loop-from': '' } : {})}
       {...(isLoopArrowTo ? { 'data-phase-loop-to': '' } : {})}
       style={showFlowArrow ? { marginBottom: phaseRowGap } : undefined}
-      role={interactive ? 'button' : undefined}
-      tabIndex={interactive ? 0 : undefined}
-      aria-label={interactive ? `Open ${title} phase` : undefined}
-      onClick={interactive ? handleSectionClick : undefined}
-      onKeyDown={interactive ? handleNavigateKeyDown : undefined}
+      role={navigable ? 'button' : undefined}
+      tabIndex={navigable ? 0 : undefined}
+      aria-label={navigable ? `Open ${title} phase` : undefined}
+      onClick={navigable ? handleSectionClick : undefined}
+      onKeyDown={navigable ? handleNavigateKeyDown : undefined}
       onMouseLeave={
-        interactive
+        navigable
           ? () => {
               if (
                 sectionRef.current?.contains(document.activeElement) &&

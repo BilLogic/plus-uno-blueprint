@@ -11,6 +11,7 @@ import type { BlueprintData } from '@/types/blueprint'
 import {
   buildVisualWalkthroughSession,
   filterWalkthroughBlueprints,
+  type VisualWalkthroughContextMeta,
   type VisualWalkthroughSession,
 } from '@/lib/visualWalkthrough'
 
@@ -22,6 +23,7 @@ type VisualWalkthroughContextValue = {
   openWalkthrough: (
     blueprint: BlueprintData,
     allBlueprints?: BlueprintData[],
+    meta?: VisualWalkthroughContextMeta,
   ) => void
   closeWalkthrough: () => void
   switchPath: (pathId: string) => void
@@ -30,7 +32,7 @@ type VisualWalkthroughContextValue = {
   goToStep: (index: number) => void
 }
 
-const VisualWalkthroughContext =
+export const VisualWalkthroughContext =
   createContext<VisualWalkthroughContextValue | null>(null)
 
 type VisualWalkthroughProviderProps = {
@@ -55,7 +57,11 @@ export function VisualWalkthroughProvider({
   }, [])
 
   const openWalkthrough = useCallback(
-    (blueprint: BlueprintData, allBlueprints?: BlueprintData[]) => {
+    (
+      blueprint: BlueprintData,
+      allBlueprints?: BlueprintData[],
+      meta?: VisualWalkthroughContextMeta,
+    ) => {
       const candidates = filterWalkthroughBlueprints(
         allBlueprints?.length ? allBlueprints : [blueprint],
       )
@@ -64,7 +70,7 @@ export function VisualWalkthroughProvider({
         candidates[0]
       if (!activeBlueprint) return
 
-      const nextSession = buildVisualWalkthroughSession(activeBlueprint)
+      const nextSession = buildVisualWalkthroughSession(activeBlueprint, meta)
       if (nextSession.steps.length === 0) return
 
       setAvailableBlueprints(candidates)
@@ -81,13 +87,16 @@ export function VisualWalkthroughProvider({
       )
       if (!blueprint) return
 
-      const nextSession = buildVisualWalkthroughSession(blueprint)
+      const nextSession = buildVisualWalkthroughSession(blueprint, {
+        scenarioName: session?.scenarioName,
+        phaseName: session?.phaseName,
+      })
       if (nextSession.steps.length === 0) return
 
       setSession(nextSession)
       setStepIndex(0)
     },
-    [availableBlueprints],
+    [availableBlueprints, session?.phaseName, session?.scenarioName],
   )
 
   const goToNextStep = useCallback(() => {

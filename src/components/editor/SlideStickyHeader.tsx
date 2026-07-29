@@ -1,7 +1,12 @@
 import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
+import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { PhaseMenubarHeader } from '@/components/editor/PhaseMenubarHeader'
+import {
+  BLUEPRINT_MENUBAR_FLAT_CLASS,
+  BLUEPRINT_NAVBAR_BAR_CLASS,
+} from '@/components/editor/menubarHeaderLayout'
 import {
   getSlideDisplayLabel,
   isSubslide,
@@ -63,7 +68,7 @@ function SlideHeaderContent({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border/80 bg-card shadow-sm',
+        'rounded-2xl border border-border/60 bg-card shadow-sm',
         'px-4 py-3',
       )}
     >
@@ -92,22 +97,28 @@ type SlideStickyHeaderProps = SlideHeaderContentProps & {
   className?: string
 }
 
-/** Fixed overlay header for stack view. */
+/** Docked horizontal navbar above the canvas (main column only). */
 export function SlideStickyHeader({
   className,
   ...contentProps
 }: SlideStickyHeaderProps) {
   return (
     <div
-      data-slide-sticky-header
-      className={cn(
-        'pointer-events-none absolute inset-x-0 top-0 z-20 px-4 pt-4',
-        className,
-      )}
+      data-editor-navbar
+      className={cn('relative', BLUEPRINT_NAVBAR_BAR_CLASS, className)}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="pointer-events-auto w-full">
-        <SlideHeaderContent {...contentProps} inlineDescription />
+      <PhaseMenubarHeader
+        slide={contentProps.slide}
+        slides={contentProps.slides}
+        paths={contentProps.paths}
+        selectedPathIds={contentProps.selectedPathIds}
+        onTogglePath={contentProps.onTogglePath}
+        showFilters
+        className={BLUEPRINT_MENUBAR_FLAT_CLASS}
+      />
+      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
+        <NavbarZoomIndicator />
       </div>
     </div>
   )

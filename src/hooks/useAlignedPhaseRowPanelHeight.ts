@@ -4,6 +4,8 @@ import { getComparePanelScrollPaddingY } from '@/lib/sideBySideCompareLayout'
 /**
  * Keeps every scenario panel in a phase row at one height: the larger of the
  * calculated shared height and the tallest measured blueprint content.
+ * Aligned overview panels are height-locked (no resize handle), so measurement
+ * uses the tighter locked scroll chrome.
  */
 export function useAlignedPhaseRowPanelHeight(
   rowRef: RefObject<HTMLDivElement | null>,
@@ -24,6 +26,7 @@ export function useAlignedPhaseRowPanelHeight(
 
     const row = rowRef.current
     if (!row) return
+    const scrollPad = getComparePanelScrollPaddingY({ lockHeight: true })
 
     const measureRow = () => {
       const contentNodes = row.querySelectorAll<HTMLElement>(
@@ -31,10 +34,9 @@ export function useAlignedPhaseRowPanelHeight(
       )
       let maxPanelHeight = sharedPanelHeight
       contentNodes.forEach((node) => {
-        maxPanelHeight = Math.max(
-          maxPanelHeight,
-          node.scrollHeight + getComparePanelScrollPaddingY(),
-        )
+        // Layout height only — `scrollHeight` also counts arrow overlays and
+        // path frames bleeding past the board, which shows up as gray surplus.
+        maxPanelHeight = Math.max(maxPanelHeight, node.offsetHeight + scrollPad)
       })
       setRowPanelHeight((current) =>
         current === maxPanelHeight ? current : maxPanelHeight,

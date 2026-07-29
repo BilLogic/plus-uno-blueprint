@@ -1,154 +1,124 @@
-import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
-import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
-import { WalkthroughPathSelect } from '@/components/blueprint/WalkthroughPathSelect'
-import { Button } from '@/components/ui/button'
+import { useCallback, useEffect, useState } from 'react'
+import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
   type CarouselApi,
 } from '@/components/ui/carousel'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { useVisualWalkthrough } from '@/contexts/VisualWalkthroughContext'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
-import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
 import type { VisualWalkthroughLayerEntry } from '@/lib/visualWalkthrough'
 import { VISUAL_LAYER_SHORT_LABELS } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
-
-function WalkthroughLayerPanel({ entry }: { entry: VisualWalkthroughLayerEntry }) {
-  const layerStyle = getBlueprintLayerStyle(entry.layerName, 'frontstage')
-  const label = VISUAL_LAYER_SHORT_LABELS[entry.layerName] ?? entry.layerName
-
-  return (
-    <div
-      className="overflow-hidden rounded-lg ring-1 ring-border/50"
-      style={{ backgroundColor: layerStyle.lane }}
-    >
-      <p className="border-b border-border/40 px-3 py-1.5 text-xs font-medium text-foreground/90">
-        {label}
-      </p>
-      <p
-        className={cn(
-          'px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words',
-          entry.content ? 'text-foreground' : 'text-muted-foreground',
-        )}
-      >
-        {entry.content || '—'}
-      </p>
-    </div>
-  )
-}
 
 function WalkthroughStepSlide({
   step,
 }: {
   step: {
-    pictures: string[]
     layerEntries: VisualWalkthroughLayerEntry[]
   }
 }) {
-  const entryCount = step.layerEntries.length
+  const entries = step.layerEntries.map((entry) => ({
+    layerName: entry.layerName,
+    label: VISUAL_LAYER_SHORT_LABELS[entry.layerName] ?? entry.layerName,
+    picture: entry.picture,
+    description: entry.content,
+  }))
+
+  if (entries.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No visuals for this step.
+      </p>
+    )
+  }
 
   return (
-    <div className="flex flex-col gap-3">
-      <BlueprintStepVisual
-        pictures={step.layerEntries.map((entry) => ({
-          picture: entry.picture,
-          label: VISUAL_LAYER_SHORT_LABELS[entry.layerName] ?? entry.layerName,
-        }))}
-        presentation
-      />
-
-      {entryCount > 0 ? (
-        <div
-          className={cn(
-            'grid grid-cols-1 gap-2',
-            entryCount === 2 && 'sm:grid-cols-2',
-            entryCount >= 3 && 'sm:grid-cols-3',
-          )}
-        >
-          {step.layerEntries.map((entry) => (
-            <WalkthroughLayerPanel key={entry.layerName} entry={entry} />
-          ))}
-        </div>
-      ) : null}
-    </div>
+    <VisualStepDetailStack
+      entries={entries}
+      orientation="horizontal"
+      className="h-full"
+    />
   )
 }
 
 export function VisualWalkthroughModal() {
-  const {
-    session,
-    availableBlueprints,
-    stepIndex,
-    isOpen,
-    closeWalkthrough,
-    switchPath,
-    goToNextStep,
-    goToPreviousStep,
-    goToStep,
-  } = useVisualWalkthrough()
+  const { session, isOpen, closeWalkthrough, goToStep } = useVisualWalkthrough()
+  const [api, setApi] = useState<CarouselApi>()
+  const [stepIndex, setStepIndex] = useState(0)
 
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>()
-  const goToStepRef = useRef(goToStep)
-  goToStepRef.current = goToStep
+  const onSelect = useCallback(
+    (carouselApi: CarouselApi) => {
+      if (!carouselApi) return
+      const index = carouselApi.selectedScrollSnap()
+      setStepIndex(index)
+      goToStep(index)
+    },
+    [goToStep],
+  )
 
   useEffect(() => {
-    if (!carouselApi) return
-
-    const onSelect = () => {
-      goToStepRef.current(carouselApi.selectedScrollSnap())
-    }
-
-    onSelect()
-    carouselApi.on('select', onSelect)
+    if (!api) return
+    onSelect(api)
+    api.on('reInit', onSelect)
+    api.on('select', onSelect)
     return () => {
-      carouselApi.off('select', onSelect)
+      api.off('reInit', onSelect)
+      api.off('select', onSelect)
     }
-  }, [carouselApi])
+  }, [api, onSelect])
 
   useEffect(() => {
-    if (!carouselApi || !isOpen) return
-    if (carouselApi.selectedScrollSnap() !== stepIndex) {
-      carouselApi.scrollTo(stepIndex)
+    if (!isOpen) {
+      setStepIndex(0)
+      return
     }
-  }, [carouselApi, isOpen, stepIndex])
-
-  useEffect(() => {
-    if (!isOpen) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeWalkthrough()
+        return
       }
       if (event.key === 'ArrowRight') {
         event.preventDefault()
-        goToNextStep()
+        api?.scrollNext()
       }
       if (event.key === 'ArrowLeft') {
         event.preventDefault()
-        goToPreviousStep()
+        api?.scrollPrev()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [closeWalkthrough, goToNextStep, goToPreviousStep, isOpen])
-
-  const currentStep = session?.steps[stepIndex]
-  const stepCount = session?.steps.length ?? 0
-  const atFirstStep = stepIndex === 0
-  const atLastStep = stepIndex >= stepCount - 1
+  }, [api, closeWalkthrough, isOpen])
 
   if (!isBlueprintVisualWalkthroughEnabled()) return null
+
+  const pathName = session?.pathName.trim() ?? ''
+  const scenarioName = session?.scenarioName?.trim() ?? ''
+  const phaseName = session?.phaseName?.trim() ?? ''
+  const hasPath = Boolean(pathName)
+  const hasScenario = Boolean(scenarioName)
+  const stepCrumbLabel = `Step ${stepIndex + 1}`
 
   return (
     <Dialog
@@ -157,76 +127,109 @@ export function VisualWalkthroughModal() {
         if (!open) closeWalkthrough()
       }}
     >
-      {session && currentStep ? (
+      {session ? (
         <DialogContent
           data-visual-walkthrough-modal=""
-          className="flex max-h-[min(90vh,38rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl"
+          className="flex h-[min(85vh,36rem)] flex-col gap-0 overflow-hidden rounded-2xl border-border/80 p-0 shadow-sm sm:max-w-5xl"
           aria-label="Visual walkthrough"
         >
-          <DialogHeader className="gap-1 border-b px-6 py-4 pr-14">
-            <WalkthroughPathSelect
-              blueprints={availableBlueprints}
-              value={session.pathId}
-              onChange={switchPath}
-            />
-            <DialogTitle className="text-base">{currentStep.stepName}</DialogTitle>
+          <DialogHeader className="shrink-0 flex-row items-center gap-2 border-b border-border/60 px-5 py-3.5 pr-14 text-left">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="sr-only">Visual walkthrough</DialogTitle>
+              <DialogDescription className="sr-only">
+                Presentation for {pathName || 'this path'}
+              </DialogDescription>
+              <Breadcrumb className="min-w-0">
+                <BreadcrumbList className="flex-nowrap gap-0.5 text-[11px] leading-tight text-muted-foreground">
+                  {phaseName ? (
+                    <>
+                      <BreadcrumbItem className="min-w-0">
+                        <span className="block max-w-[5.5rem] truncate font-normal">
+                          {phaseName}
+                        </span>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="[&>svg]:size-3" />
+                    </>
+                  ) : null}
+                  {hasScenario ? (
+                    <>
+                      <BreadcrumbItem className="min-w-0">
+                        <span className="block max-w-[12rem] truncate font-normal">
+                          {scenarioName}
+                        </span>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="shrink-0 [&>svg]:size-3" />
+                    </>
+                  ) : null}
+                  {hasPath ? (
+                    <>
+                      <BreadcrumbItem className="min-w-0">
+                        <span className="block max-w-[5.5rem] truncate font-normal">
+                          {pathName}
+                        </span>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="shrink-0 [&>svg]:size-3" />
+                    </>
+                  ) : null}
+                  <BreadcrumbItem className="min-w-0">
+                    <BreadcrumbPage className="truncate font-medium tracking-tight text-foreground">
+                      {stepCrumbLabel}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+          <div className="relative min-h-0 flex-1">
             <Carousel
               key={session.pathId}
-              setApi={setCarouselApi}
-              opts={{ startIndex: stepIndex, loop: false }}
+              setApi={setApi}
+              opts={{ align: 'start', loop: false }}
+              className={cn(
+                'h-full w-full',
+                '[&_[data-slot=carousel-content]]:h-full',
+                '[&_[data-slot=carousel-content]>div]:h-full',
+              )}
             >
-              <CarouselContent className="ml-0">
+              <CarouselContent className="-ml-0 h-full">
                 {session.steps.map((step) => (
-                  <CarouselItem key={step.stepIndex} className="pl-0">
-                    <WalkthroughStepSlide step={step} />
+                  <CarouselItem
+                    key={step.stepIndex}
+                    className="h-full min-h-0 basis-full pl-0"
+                  >
+                    <div className="h-full min-h-0 px-14 py-4">
+                      <WalkthroughStepSlide step={step} />
+                    </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
+              <CarouselPrevious className="left-3 size-8 rounded-full" />
+              <CarouselNext className="right-3 size-8 rounded-full" />
             </Carousel>
           </div>
 
-          <DialogFooter className="justify-center gap-3 border-t px-6 py-3 sm:justify-center">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              disabled={atFirstStep}
-              onClick={goToPreviousStep}
-              aria-label="Previous step"
+          <DialogFooter className="shrink-0 justify-center gap-3 border-t border-border/60 px-5 py-3 sm:justify-center">
+            <div
+              className="flex items-center gap-1.5"
+              role="tablist"
+              aria-label="Steps"
             >
-              <ArrowLeft />
-            </Button>
-
-            <div className="flex items-center gap-1.5" role="tablist" aria-label="Steps">
               {session.steps.map((_, index) => (
                 <button
                   key={index}
                   type="button"
                   role="tab"
                   aria-selected={index === stepIndex}
-                  aria-label={`Step ${index + 1}`}
+                  aria-label={`Go to step ${index + 1}`}
                   className={cn(
                     'h-1.5 rounded-full bg-muted-foreground/25 transition-all',
                     index === stepIndex ? 'w-5 bg-foreground/70' : 'w-1.5',
                   )}
-                  onClick={() => goToStep(index)}
+                  onClick={() => api?.scrollTo(index)}
                 />
               ))}
             </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              disabled={atLastStep}
-              onClick={goToNextStep}
-              aria-label="Next step"
-            >
-              <ArrowRight />
-            </Button>
           </DialogFooter>
         </DialogContent>
       ) : null}

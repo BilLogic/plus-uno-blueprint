@@ -22,6 +22,11 @@ import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { cn } from '@/lib/utils'
 
+/** Full-width light-gray row hover (matches side-panel reference). */
+const ROW_CLASS = 'group border-b border-border/35 last:border-0'
+const CELL_CLASS =
+  'px-2 py-1.5 align-middle transition-colors group-hover:bg-neutral-100 group-focus-within:bg-neutral-100 dark:group-hover:bg-foreground/[0.08] dark:group-focus-within:bg-foreground/[0.08]'
+
 function DirectionIcon({
   direction,
 }: {
@@ -75,50 +80,51 @@ function ConnectionTarget({
     detail?.setPreviewHover(null)
   }
 
-  const content = (
+  const content = row.techItem ? (
     <>
-      <DirectionIcon direction={row.direction} />
-      {row.techItem ? (
-        <span className="flex min-w-0 flex-col items-start gap-0.5 text-left">
-          <span className="min-w-0 truncate font-normal text-foreground/90">
-            {title}
-          </span>
-          <span className="flex min-w-0 items-center gap-1.5">
-            {row.stepLabel ? (
-              <span className="truncate text-[10px] text-muted-foreground">
-                {row.stepLabel}
-              </span>
-            ) : null}
-            <TechPillFace
-              item={row.techItem}
-              compact
-              asSpan
-              className="!w-fit max-w-full !px-2 !py-0.5 !text-[9px] !font-normal leading-none text-foreground/75"
-            />
-          </span>
+      <span className="flex min-w-0 items-center gap-[7px]">
+        <DirectionIcon direction={row.direction} />
+        <span className="min-w-0 truncate font-normal text-foreground/90">
+          {title}
         </span>
-      ) : (
-        <span className="flex min-w-0 flex-col items-start gap-0.5 text-left">
-          <span className="min-w-0 truncate font-normal text-foreground/90">
-            {title}
+      </span>
+      <span className="flex min-w-0 items-center gap-1.5 pl-[19px]">
+        {row.stepLabel ? (
+          <span className="truncate text-[11px] text-muted-foreground">
+            {row.stepLabel}
           </span>
-          {row.stepLabel ? (
-            <span className="truncate text-[10px] text-muted-foreground">
-              {row.stepLabel}
-            </span>
-          ) : row.detail && row.detail !== title ? (
-            <span className="truncate text-[10px] text-muted-foreground">
-              {row.detail}
-            </span>
-          ) : null}
+        ) : null}
+        <TechPillFace
+          item={row.techItem}
+          compact
+          asSpan
+          className="!w-fit max-w-full !px-2 !py-0.5 !text-[10px] !font-normal leading-none text-foreground/75"
+        />
+      </span>
+    </>
+  ) : (
+    <>
+      <span className="flex min-w-0 items-center gap-[7px]">
+        <DirectionIcon direction={row.direction} />
+        <span className="min-w-0 truncate font-normal text-foreground/90">
+          {title}
         </span>
-      )}
+      </span>
+      {row.stepLabel ? (
+        <span className="truncate pl-[19px] text-[11px] text-muted-foreground">
+          {row.stepLabel}
+        </span>
+      ) : row.detail && row.detail !== title ? (
+        <span className="truncate pl-[19px] text-[11px] text-muted-foreground">
+          {row.detail}
+        </span>
+      ) : null}
     </>
   )
 
   if (!isInteractive || !row.cellId) {
     return (
-      <div className="flex w-full min-w-0 items-start justify-start gap-[7px] text-[11px] leading-snug">
+      <div className="flex w-full min-w-0 flex-col items-stretch gap-0.5 text-xs leading-snug">
         {content}
       </div>
     )
@@ -137,7 +143,7 @@ function ConnectionTarget({
     <button
       type="button"
       className={cn(
-        'flex w-full min-w-0 items-start justify-start gap-[7px] text-left text-[11px] leading-snug',
+        'flex w-full min-w-0 flex-col items-stretch gap-0.5 text-left text-xs leading-snug',
         'text-foreground/85 transition-colors hover:text-foreground',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
       )}
@@ -161,7 +167,7 @@ function LinkTarget({ row }: { row: CellDependencyRow }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'flex w-full min-w-0 items-center justify-start gap-[7px] text-[11px] leading-snug',
+        'flex w-full min-w-0 items-center justify-start gap-[7px] text-xs leading-snug',
         'font-normal text-foreground/90 transition-colors hover:text-foreground',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
       )}
@@ -197,7 +203,7 @@ export function CellDependencyTable({
         {connections.length > 0 ? (
           <TabsTrigger
             value="dependencies"
-            className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-[10px] font-normal text-muted-foreground/50 hover:text-muted-foreground/80 data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+            className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-[11px] font-normal text-muted-foreground/50 hover:text-muted-foreground/80 data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
           >
             Dependencies
           </TabsTrigger>
@@ -205,7 +211,7 @@ export function CellDependencyTable({
         {hasLinks ? (
           <TabsTrigger
             value="relevant-links"
-            className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-[10px] font-normal text-muted-foreground/50 hover:text-muted-foreground/80 data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+            className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-[11px] font-normal text-muted-foreground/50 hover:text-muted-foreground/80 data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
           >
             Relevant Links
           </TabsTrigger>
@@ -214,15 +220,12 @@ export function CellDependencyTable({
 
       {connections.length > 0 ? (
         <TabsContent value="dependencies">
-          <div className="overflow-hidden rounded-lg">
-            <table className="w-full border-collapse text-[11px]">
+          <div className="overflow-hidden">
+            <table className="w-full border-collapse text-xs">
               <tbody>
                 {connections.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-border/35 transition-colors hover:bg-muted/50 focus-within:bg-muted/50 last:border-0"
-                  >
-                    <td className="px-2 py-1.5 align-middle">
+                  <tr key={row.id} className={ROW_CLASS}>
+                    <td className={CELL_CLASS}>
                       <ConnectionTarget
                         row={row}
                         onCellSelect={onCellSelect}
@@ -239,15 +242,12 @@ export function CellDependencyTable({
 
       {hasLinks ? (
         <TabsContent value="relevant-links">
-          <div className="overflow-hidden rounded-lg">
-            <table className="w-full border-collapse text-[11px]">
+          <div className="overflow-hidden">
+            <table className="w-full border-collapse text-xs">
               <tbody>
                 {links.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-border/35 transition-colors hover:bg-muted/50 focus-within:bg-muted/50 last:border-0"
-                  >
-                    <td className="px-2 py-1.5 align-middle">
+                  <tr key={row.id} className={ROW_CLASS}>
+                    <td className={CELL_CLASS}>
                       <LinkTarget row={row} />
                     </td>
                   </tr>

@@ -7,7 +7,7 @@ values (
   'a0000000-0000-4000-8000-000000000204',
   'Set Goals',
   'No prior personalized goals set and start of a new goal cycle.',
-  'alternative'
+  'named'
 )
 on conflict (id) do update set
   service_scenario_id = excluded.service_scenario_id,

@@ -1,4 +1,5 @@
 import { remapDiscoverySadFinalStepId } from '@/lib/repairDiscoverySadPathBlueprint'
+import { pickPreferredPath } from '@/lib/pathSelection'
 import type { BlueprintData } from '@/types/blueprint'
 import {
   getIntegratedCellDisplayOpacity,
@@ -19,8 +20,14 @@ function pathOpacity(pathId: string, selectedPathIds: string[]): number {
 }
 
 function pickPrimaryBlueprint(blueprints: BlueprintData[]): BlueprintData {
+  if (blueprints.length === 0) {
+    throw new Error('pickPrimaryBlueprint requires at least one blueprint')
+  }
+  const preferredPath = pickPreferredPath(
+    blueprints.map((blueprint) => blueprint.path),
+  )
   return (
-    blueprints.find((blueprint) => blueprint.path.path_type === 'happy') ??
+    blueprints.find((blueprint) => blueprint.path.id === preferredPath?.id) ??
     blueprints[0]
   )
 }

@@ -14,6 +14,7 @@ export const PATH_TYPE_SHORT_LABELS: Record<PathType, string> = {
   unhappy: 'Unhappy',
   exception: 'Exception',
   alternative: 'Alternative',
+  named: 'Path',
 }
 
 export const PATH_TYPE_LABELS: Record<PathType, string> = {
@@ -21,6 +22,7 @@ export const PATH_TYPE_LABELS: Record<PathType, string> = {
   unhappy: 'Unhappy path',
   exception: 'Exception',
   alternative: 'Alternative',
+  named: 'Named path',
 }
 export const PATH_TYPE_SECTION_BORDER_WIDTH = 3
 
@@ -62,6 +64,7 @@ export const PATH_TYPE_SWATCH_CLASSES: Record<PathType, string> = {
   unhappy: 'bg-amber-500',
   exception: 'bg-red-500',
   alternative: 'bg-blue-500',
+  named: 'bg-indigo-500',
 }
 
 /** Default Badge fill + label text per path type. */
@@ -70,6 +73,7 @@ export const PATH_TYPE_BADGE_CLASSES: Record<PathType, string> = {
   unhappy: 'bg-amber-500 text-white',
   exception: 'bg-red-500 text-white',
   alternative: 'bg-blue-500 text-white',
+  named: 'bg-indigo-500 text-white',
 }
 
 /** Path-type suffix for compare labels — omitted when the name already implies the type. */
@@ -77,6 +81,8 @@ export function getPathTypeSuffixIfNeeded(path: {
   name: string
   path_type: PathType
 }): string | null {
+  if (path.path_type === 'named') return null
+
   const short = PATH_TYPE_SHORT_LABELS[path.path_type]
   const full = PATH_TYPE_LABELS[path.path_type]
   const normalized = path.name.toLowerCase()
@@ -90,4 +96,31 @@ export function getPathTypeSuffixIfNeeded(path: {
   }
 
   return short
+}
+
+/**
+ * Generic path names (Happy Path, Alternate Path, …) can show a type badge.
+ * Named activity paths (Set Goals, Check Goals, …) should show their title instead.
+ */
+const GENERIC_PATH_TYPE_NAMES = new Set([
+  'happy path',
+  'sad path',
+  'unhappy path',
+  'alternate path',
+  'alternative path',
+  'exception',
+  'exception path',
+])
+
+export function isGenericPathTypeName(name: string): boolean {
+  return GENERIC_PATH_TYPE_NAMES.has(name.trim().toLowerCase())
+}
+
+/** Overview frames: type badge only for generic archetype names — never for `named`. */
+export function shouldShowPathTypeBadge(path: {
+  name: string
+  path_type?: PathType
+}): boolean {
+  if (path.path_type === 'named') return false
+  return isGenericPathTypeName(path.name)
 }

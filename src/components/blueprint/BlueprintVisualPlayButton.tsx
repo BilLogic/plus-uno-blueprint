@@ -1,5 +1,6 @@
 import { Play } from 'lucide-react'
-import { useVisualWalkthrough } from '@/contexts/VisualWalkthroughContext'
+import { useContext } from 'react'
+import { VisualWalkthroughContext } from '@/contexts/VisualWalkthroughContext'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { pickWalkthroughBlueprint } from '@/lib/visualWalkthrough'
 import type { BlueprintData } from '@/types/blueprint'
@@ -8,15 +9,19 @@ import { cn } from '@/lib/utils'
 type BlueprintVisualPlayButtonProps = {
   blueprint?: BlueprintData | null
   blueprints?: BlueprintData[]
+  scenarioName?: string
+  phaseName?: string
   className?: string
 }
 
 export function BlueprintVisualPlayButton({
   blueprint,
   blueprints,
+  scenarioName,
+  phaseName,
   className,
 }: BlueprintVisualPlayButtonProps) {
-  const { openWalkthrough } = useVisualWalkthrough()
+  const walkthrough = useContext(VisualWalkthroughContext)
   const walkthroughBlueprints =
     blueprints?.length ? blueprints : blueprint ? [blueprint] : []
   const activeBlueprint =
@@ -24,6 +29,10 @@ export function BlueprintVisualPlayButton({
   const pathLabel = activeBlueprint?.path.name?.trim()
 
   if (!isBlueprintVisualWalkthroughEnabled()) return null
+  // Homepage / other surfaces may render grids outside the walkthrough provider.
+  if (!walkthrough) return null
+
+  const { openWalkthrough } = walkthrough
 
   return (
     <button
@@ -41,7 +50,11 @@ export function BlueprintVisualPlayButton({
       onClick={(event) => {
         event.stopPropagation()
         if (activeBlueprint) {
-          openWalkthrough(activeBlueprint, walkthroughBlueprints)
+          // Presentation is scoped to the path whose play control was clicked.
+          openWalkthrough(activeBlueprint, [activeBlueprint], {
+            scenarioName,
+            phaseName,
+          })
         }
       }}
     >

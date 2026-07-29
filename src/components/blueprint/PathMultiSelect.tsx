@@ -13,7 +13,11 @@ export type PathOption = {
 
 const MAX_PATHS_PER_COLUMN = 2
 
-const PRIMARY_COLUMN_PATH_TYPES = new Set<PathType>(['happy', 'alternative'])
+const PRIMARY_COLUMN_PATH_TYPES = new Set<PathType>([
+  'happy',
+  'alternative',
+  'named',
+])
 const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['unhappy', 'exception'])
 
 export function formatPathPickerLabel(name: string): string {
@@ -161,7 +165,7 @@ function PathCheckbox({
         id={inputId}
         type="checkbox"
         className={cn(
-          'shrink-0 rounded border-input accent-primary',
+          'shrink-0 rounded border-input accent-foreground',
           dense ? 'size-3' : 'size-4',
         )}
         checked={checked}
@@ -195,8 +199,12 @@ export function PathMultiSelect({
   const isBar = layout === 'bar'
   const isNotion = layout === 'notion'
   const isToolbar = layout === 'toolbar'
+  // Vertical (filter popover) and chip layouts stay one column; only the
+  // horizontal picker groups happy/unhappy into side-by-side columns.
   const columns =
-    isBar || isNotion || isToolbar ? [paths] : groupPathsIntoColumns(paths)
+    isVertical || isBar || isNotion || isToolbar
+      ? [paths]
+      : groupPathsIntoColumns(paths)
 
   return (
     <div
@@ -217,13 +225,13 @@ export function PathMultiSelect({
       )}
       <div
         className={cn(
-          'flex flex-row items-start gap-x-4',
-          isVertical && 'gap-y-2',
+          'flex items-start gap-x-4',
+          isVertical ? 'flex-col gap-y-2' : 'flex-row',
           layout === 'horizontal' &&
             'mt-1 gap-y-2 rounded-lg border border-border bg-background px-3 py-2.5',
-          isBar && 'items-center gap-x-3 gap-y-0',
-          isNotion && 'flex-wrap gap-1.5',
-          isToolbar && 'flex-wrap items-center gap-2',
+          isBar && 'flex-row items-center gap-x-3 gap-y-0',
+          isNotion && 'flex-row flex-wrap gap-1.5',
+          isToolbar && 'flex-row flex-wrap items-center gap-2',
         )}
       >
         {columns.map((column, columnIndex) => (

@@ -25,8 +25,9 @@ import {
   type Slide,
   type SlideViewType,
 } from '@/types/slides'
+import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
+import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import type { BlueprintData } from '@/types/blueprint'
-import { Skeleton } from '@/components/ui/skeleton'
 
 type ScenarioBlueprintPanelProps = {
   slide: Slide
@@ -48,6 +49,10 @@ type ScenarioBlueprintPanelProps = {
   onNavigate?: () => void
   /** Phase/overview filter view type — keeps row sizing aligned across scenarios. */
   displayViewType?: SlideViewType
+  /** When true, this panel is visually de-emphasized (canvas focus mode). */
+  dimmed?: boolean
+  /** When true, this panel is the camera focus target — no hover chrome. */
+  focusActive?: boolean
 }
 
 export function ScenarioBlueprintPanel({
@@ -64,6 +69,8 @@ export function ScenarioBlueprintPanel({
   lockPanelHeight = false,
   onNavigate,
   displayViewType: displayViewTypeProp,
+  dimmed = false,
+  focusActive = false,
 }: ScenarioBlueprintPanelProps) {
   const { getScenarioDisplayViewType } = useEditor()
   const internalScrollRef = useRef<HTMLDivElement>(null)
@@ -77,7 +84,9 @@ export function ScenarioBlueprintPanel({
   const displayViewType =
     displayViewTypeProp ?? getScenarioDisplayViewType(slide)
   const useIntegratedLayout =
-    displayViewType === 'integrated' && paths.length > 0
+    displayViewType === 'integrated' &&
+    paths.length > 0 &&
+    selectedPathIds.length > 0
   const useSideBySideLayout =
     displayViewType === 'side-by-side' && selectedPathIds.length > 0
   const useSinglePathLayout =
@@ -118,13 +127,18 @@ export function ScenarioBlueprintPanel({
   const sectionTitleDescription = sectionTitleLabel
     ? slide.description
     : undefined
+  const sectionTitleInfoTooltip = sectionTitleLabel
+    ? getScenarioParallelTooltip(slide)
+    : null
   const showPathTypeBadge = Boolean(sectionTitleLabel)
 
   const integratedPathCount = Math.max(1, selectedPathIds.length)
   const panelHeight =
     lockedPanelHeight ??
     (fixedSwimlaneBodyHeight !== undefined
-      ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight)
+      ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight, {
+          lockHeight: lockPanelHeight,
+        })
       : showIntegratedGrid
         ? getIntegratedPanelHeight(
             integratedBlueprint!.layers,
@@ -159,21 +173,43 @@ export function ScenarioBlueprintPanel({
     navigateLabel: onNavigate ? `Open ${scenarioName} scenario` : undefined,
     panelTitleLabel: sectionTitleLabel,
     panelTitleDescription: sectionTitleDescription,
+    panelTitleInfoTooltip: sectionTitleInfoTooltip,
+    focusSlideId: slide.id,
+    dimmed,
+    focusActive,
     scrollContainerRef,
   }
 
   if (loading && visibleBlueprints.length === 0 && !showIntegratedGrid) {
     return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="min-h-[320px] w-[640px]" />
+      <div
+        className="flex flex-col gap-2 transition-[opacity,filter] duration-300 ease-out"
+        data-focus-slide-id={slide.id}
+        data-canvas-focus-dimmed={dimmed ? '' : undefined}
+        style={dimmed ? { opacity: 0.3, filter: 'saturate(0.5)' } : undefined}
+        role="status"
+        aria-busy="true"
+        aria-label="Loading blueprint"
+      >
+        <BlueprintPanelLoadingSkeleton />
       </div>
     )
   }
 
   if (!showIntegratedGrid && visibleBlueprints.length === 0) {
+    // Selected filter paths don't exist here — omit the card entirely so only
+    // scenarios that contain the path remain in the phase row.
+    if (selectedPathIds.length === 0 && paths.length > 0) {
+      return null
+    }
+
     return (
-      <div className="flex min-h-[280px] min-w-[320px] items-center justify-center rounded-lg border border-dashed p-8 text-center">
+      <div
+        className="flex min-h-[280px] min-w-[320px] items-center justify-center rounded-lg border border-dashed p-8 text-center transition-[opacity,filter] duration-300 ease-out"
+        data-focus-slide-id={slide.id}
+        data-canvas-focus-dimmed={dimmed ? '' : undefined}
+        style={dimmed ? { opacity: 0.3, filter: 'saturate(0.5)' } : undefined}
+      >
         <p className="text-sm text-muted-foreground">
           No blueprint data for this scenario yet.
         </p>
@@ -236,7 +272,6 @@ export function ScenarioBlueprintPanel({
             className="shrink-0"
             scenarioName={scenarioName}
           phaseName={phaseName}
-            walkthroughBlueprints={allBlueprints}
             headerTitleLabel={sectionTitleLabel}
             headerTitleDescription={sectionTitleDescription}
             showPathTypeBadge={showPathTypeBadge}

@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/source-code-pro";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,6 +14,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -25,6 +28,10 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-tertiary-foreground: var(--tertiary-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -36,8 +43,18 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  /* Supabase DS: Manrope headings, Inter body, Source Code Pro mono */
+  --font-heading: 'Manrope Variable', 'Manrope', sans-serif;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-mono: 'Source Code Pro Variable', 'Source Code Pro', ui-monospace, monospace;
+  /* Studio-tuned type scale (slightly smaller than Tailwind defaults) */
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.75rem;
+  --font-weight-normal: 450;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -48,73 +65,146 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Parametric OKLCH theme aligned to Supabase design-system dials
+ * (packages/ui themes + semantic.css): green brand (~159°), warm-neutral
+ * surfaces, soft elevation toward white. Layer stack (light): canvas
+ * (darkest) → sidebar → card/menubar → popover (lightest).
+ */
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+
+  /* Theme inputs — Supabase light.css */
+  --surface-hue: 34;
+  --brand-hue: 159;
+  --chroma: 0;
+  --surface: 0.985; /* soft-gray canvas so elevated surfaces can brighten */
+  --foreground-l: 0.1;
+  --contrast: 0.53;
+  --elevation-step: 0.024;
+
+  /* --- Derived machinery ----------------------------------------------- */
+  --tone-span: calc(var(--foreground-l) - var(--surface));
+  --grey-c: var(--chroma);
+  --text-c: calc(var(--chroma) * 1.2);
+  --border-c: calc(var(--chroma) * 0.6);
+  --border-opacity: calc(0.06 + (var(--contrast) * var(--contrast) * 0.16));
+  --input-border-opacity: calc(0.1 + (var(--contrast) * var(--contrast) * 0.2));
+  --muted-text-t: calc(0.52 + var(--contrast) * 0.24);
+  --tertiary-text-t: calc(0.36 + var(--contrast) * 0.2);
+
+  /* --- Surfaces: canvas darkest → popover lightest --------------------- */
+  --canvas: oklch(var(--surface) var(--grey-c) var(--surface-hue));
+  --background: var(--canvas);
+  --sidebar: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.4) var(--grey-c)
+      var(--surface-hue)
+  );
+  --secondary: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.6) var(--grey-c)
+      var(--surface-hue)
+  );
+  --muted: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.6) var(--grey-c)
+      var(--surface-hue)
+  );
+  --accent: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.8) var(--grey-c)
+      var(--surface-hue)
+  );
+  /* Menubar + floating chrome */
+  --card: oklch(
+    calc(var(--surface) + var(--elevation-step) * 2.2) var(--grey-c)
+      var(--surface-hue)
+  );
+  /* Side panel / popovers */
+  --popover: oklch(
+    calc(var(--surface) + var(--elevation-step) * 2.8) var(--grey-c)
+      var(--surface-hue)
+  );
+
+  /* --- Text ----------------------------------------------------------- */
+  --foreground: oklch(var(--foreground-l) var(--text-c) var(--surface-hue));
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --secondary-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
+  --sidebar-foreground: var(--foreground);
+  --muted-foreground: oklch(
+    calc(var(--surface) + var(--tone-span) * var(--muted-text-t))
+      var(--text-c) var(--surface-hue)
+  );
+  --tertiary-foreground: oklch(
+    calc(var(--surface) + var(--tone-span) * var(--tertiary-text-t))
+      var(--text-c) var(--surface-hue)
+  );
+
+  /* --- Brand / primary (Supabase green — mode-stable) ------------------ */
+  --primary: oklch(0.76 0.15 var(--brand-hue));
+  --primary-foreground: oklch(0.2 calc(var(--chroma) * 0.45) var(--brand-hue));
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+
+  /* --- Borders & controls ---------------------------------------------- */
+  --border: oklch(
+    var(--foreground-l) var(--border-c) var(--surface-hue) /
+      var(--border-opacity)
+  );
+  --input: oklch(
+    var(--foreground-l) var(--border-c) var(--surface-hue) /
+      var(--input-border-opacity)
+  );
+  --ring: oklch(0.76 0.15 var(--brand-hue) / 0.55);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+
+  /* --- Status (Supabase expressive anchors) ---------------------------- */
+  --destructive: oklch(0.52 0.14 25);
+  --warning: oklch(0.68 0.14 75);
+  --success: oklch(0.76 0.15 var(--brand-hue));
+  --info: oklch(0.54 0.14 288);
+
+  /* --- Charts (neutral ramp along the tone span) ----------------------- */
+  --chart-1: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.2) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-2: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.4) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-3: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.55) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-4: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.7) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-5: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.85) var(--grey-c)
+      var(--surface-hue)
+  );
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Supabase dark.css dials */
+  --surface-hue: 159;
+  --surface: 0.19;
+  --foreground-l: 0.95;
+  --elevation-step: 0.025;
+  --chroma: 0.005;
+  --contrast: 0.5;
+
+  --primary: oklch(0.76 0.15 var(--brand-hue));
+  --primary-foreground: oklch(0.2 calc(var(--chroma) * 0.45) var(--brand-hue));
+
+  --destructive: oklch(0.75 0.14 25);
+  --warning: oklch(0.8 0.14 75);
+  --success: oklch(0.76 0.15 var(--brand-hue));
+  --info: oklch(0.7 0.14 288);
 }
 
 @layer utilities {
@@ -125,6 +215,13 @@
 
   .blueprint-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Hide the system cursor while the pen tool is active. */
+  html[data-pen-tool] [data-zoom-pan-viewport],
+  html[data-pen-tool] [data-canvas-annotation-layer],
+  html[data-pen-tool] [data-canvas-annotation-layer] * {
+    cursor: none !important;
   }
 
   /* Interactive overview / phase panels — pure CSS hover avoids stale React hover state. */
@@ -150,8 +247,8 @@
     border-color: #b6c7d2;
   }
 
-  [data-phase-scenario-panel]:hover,
-  [data-phase-scenario-panel]:focus-within {
+  [data-phase-scenario-panel]:hover:not([data-canvas-focus-active]),
+  [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active]) {
     background-color: #dddfe4;
     border-color: #babac4;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
@@ -162,14 +259,18 @@
     --blueprint-panel-cell-blend: #c8c8d0;
   }
 
-  [data-phase-scenario-panel]:hover [data-scenario-panel-title-badge],
-  [data-phase-scenario-panel]:focus-within [data-scenario-panel-title-badge] {
+  [data-phase-scenario-panel]:hover:not([data-canvas-focus-active])
+    [data-scenario-panel-title-badge],
+  [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active])
+    [data-scenario-panel-title-badge] {
     background-color: #b0b0b8;
     border-color: #b0b0b8;
   }
 
-  [data-phase-scenario-panel]:hover [data-blueprint-cell-anchor],
-  [data-phase-scenario-panel]:focus-within [data-blueprint-cell-anchor] {
+  [data-phase-scenario-panel]:hover:not([data-canvas-focus-active])
+    [data-blueprint-cell-anchor],
+  [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active])
+    [data-blueprint-cell-anchor] {
     --blueprint-cell-bg-panel: color-mix(
       in srgb,
       var(--blueprint-cell-bg-origin, var(--blueprint-cell-bg, #ddeef0)) 88%,
@@ -217,18 +318,26 @@
     pointer-events: none;
   }
 
-  [data-canvas-phase-interactive]:hover:not(:has([data-phase-scenario-panel]:hover))
+  [data-canvas-phase-interactive]:hover:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:hover)
+    )
     [data-phase-frame],
-  [data-canvas-phase-interactive]:focus-within:not(:has([data-phase-scenario-panel]:focus-within))
+  [data-canvas-phase-interactive]:focus-within:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:focus-within)
+    )
     [data-phase-frame] {
     background-color: #c5d6e0;
     border-color: #9aadbe;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   }
 
-  [data-canvas-phase-interactive]:hover:not(:has([data-phase-scenario-panel]:hover))
+  [data-canvas-phase-interactive]:hover:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:hover)
+    )
     [data-phase-title-badge],
-  [data-canvas-phase-interactive]:focus-within:not(:has([data-phase-scenario-panel]:focus-within))
+  [data-canvas-phase-interactive]:focus-within:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:focus-within)
+    )
     [data-phase-title-badge] {
     background-color: #9aadbe;
     border-color: #9aadbe;
@@ -242,7 +351,16 @@
   body {
     /* Required by shadcn Base UI drawer overlay on iOS Safari */
     position: relative;
+    font-weight: var(--font-weight-normal);
     @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
   }
   :where(
     a[href],
@@ -279,16 +397,18 @@
 }
 
 @media print {
-  /* Force light theme tokens so dark mode still prints dark-on-white. */
+  /* Force light theme so dark mode still prints dark-on-white. */
   :root,
   .dark {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --border: oklch(0.922 0 0);
+    --surface-hue: 34;
+    --brand-hue: 159;
+    --surface: 0.985;
+    --foreground-l: 0.1;
+    --chroma: 0;
+    --elevation-step: 0.014;
+    --contrast: 0.53;
+    --primary: oklch(0.76 0.15 var(--brand-hue));
+    --primary-foreground: oklch(0.2 calc(var(--chroma) * 0.45) var(--brand-hue));
   }
 
   /* Preserve lane fills, badges, and divider colors in the PDF. */
@@ -313,7 +433,9 @@
    */
   [data-editor-shell] > aside,
   [data-editor-chrome],
+  [data-editor-navbar],
   [data-zoom-indicator],
+  [data-annotation-toolbar],
   [data-canvas-nav],
   [data-slide-canvas] > [data-slide-sticky-header],
   [data-cell-detail-panel],

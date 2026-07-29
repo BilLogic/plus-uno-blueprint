@@ -41,7 +41,7 @@ create table public.paths (
   name text not null,
   description text,
   note text, -- optional path note shown alongside path metadata (e.g. parallel scenario context)
-  path_type text not null check (path_type in ('happy', 'unhappy', 'exception', 'alternative')),
+  path_type text not null check (path_type in ('happy', 'unhappy', 'exception', 'alternative', 'named')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

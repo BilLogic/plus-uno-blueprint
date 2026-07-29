@@ -1,6 +1,9 @@
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { PathTypeBadge } from '@/components/blueprint/PathTypeBadge'
-import { getPathTypeSectionBorderStyle } from '@/lib/pathTypeTheme'
+import {
+  getPathTypeSectionBorderStyle,
+  shouldShowPathTypeBadge,
+} from '@/lib/pathTypeTheme'
 import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
 import {
   COMPARE_PATH_SECTION_INSET,
@@ -17,7 +20,10 @@ type ComparePathSectionFrameProps = {
   compact?: boolean
   /** When false, only the colored path outline is rendered (service blueprint). */
   showTitle?: boolean
-  /** Overview mode: show path-type badge instead of path name on the frame edge. */
+  /**
+   * Overview mode: prefer a path-type badge for generic names (Happy Path, etc.).
+   * Named paths (Set Goals, …) always show their title.
+   */
   showPathTypeBadge?: boolean
   /** Compare uses extra top inset for the title badge; service uses uniform inset. */
   variant?: 'compare' | 'service'
@@ -35,6 +41,7 @@ export function ComparePathSectionFrame({
   const pathBorder = getPathTypeSectionBorderStyle(path.path_type, path)
   const { borderColor, borderStyle, borderWidth } = pathBorder
   const sectionFill = blueprintPanelSectionFillColor()
+  const useTypeBadge = showPathTypeBadge && shouldShowPathTypeBadge(path)
 
   const inset =
     variant === 'compare'
@@ -72,7 +79,7 @@ export function ComparePathSectionFrame({
         }}
       />
       {showTitle ? (
-        showPathTypeBadge ? (
+        useTypeBadge ? (
           <PathTypeBadge
             pathType={path.path_type}
             description={path.description}

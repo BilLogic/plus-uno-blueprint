@@ -16,6 +16,7 @@ import {
 } from '@/components/blueprint/BlueprintLabelRail'
 import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSectionFrame'
 import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
+import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
 import {
   BLUEPRINT_LAYER_ROW_GAP,
@@ -58,7 +59,13 @@ import {
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
+import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import type { BlueprintData } from '@/types/blueprint'
+
+/** Left gutter on the white board so the play control clears Visual cells. */
+const VISUAL_PLAY_GUTTER = 28
+
 
 type SideBySideCompareGridProps = {
   blueprints: BlueprintData[]
@@ -249,6 +256,10 @@ function ComparePathColumn({
     () => getComparePathArrowData(blueprint),
     [blueprint],
   )
+  const showPlay =
+    isBlueprintVisualWalkthroughEnabled() &&
+    buildVisualWalkthroughSession(blueprint).steps.length > 0
+  const playGutter = showPlay ? VISUAL_PLAY_GUTTER : 0
 
   return (
     <div
@@ -283,8 +294,10 @@ function ComparePathColumn({
           layers={layers}
           compact={compact}
           scenarioName={scenarioName}
-              phaseName={phaseName}
+          phaseName={phaseName}
           fillSwimlaneHeight={fillSwimlaneHeight}
+          playGutter={playGutter}
+          showPlay={showPlay}
         />
       ))}
       <IntegratedTriggerArrows
@@ -309,6 +322,8 @@ function CompareCardRow({
   scenarioName,
   phaseName,
   fillSwimlaneHeight = false,
+  playGutter = 0,
+  showPlay = false,
 }: {
   row: CompareRowSpec
   rowIndex: number
@@ -318,6 +333,8 @@ function CompareCardRow({
   scenarioName?: string
   phaseName?: string
   fillSwimlaneHeight?: boolean
+  playGutter?: number
+  showPlay?: boolean
 }) {
   const isDivider =
     row.kind === 'interaction' ||
@@ -391,6 +408,8 @@ function CompareCardRow({
               scenarioName={scenarioName}
               phaseName={phaseName}
               fillSwimlaneHeight={fillSwimlaneHeight}
+              playGutter={playGutter}
+              showPlay={showPlay}
             />
           )
         ) : isDivider ? (
@@ -417,6 +436,8 @@ function CompareLayerRow({
   scenarioName,
   phaseName,
   fillSwimlaneHeight = false,
+  playGutter = 0,
+  showPlay = false,
 }: {
   blueprint: BlueprintData
   layer: BlueprintData['layers'][number]
@@ -425,6 +446,8 @@ function CompareLayerRow({
   scenarioName?: string
   phaseName?: string
   fillSwimlaneHeight?: boolean
+  playGutter?: number
+  showPlay?: boolean
 }) {
   const blueprintLayer = useMemo(
     () => resolveBlueprintLayer(layer, blueprint),
@@ -440,18 +463,37 @@ function CompareLayerRow({
     getBlueprintLayerZone(layer, layers),
   )
   const flushBottom = layerPrecedesBlueprintDivider(layer, layers)
+  const isVisualLayer = shouldUseVisualContent(layer)
+  const renderPlay = showPlay && isVisualLayer && playGutter > 0
 
   return (
     <div
       className={cn(
-        'flex items-stretch rounded-sm',
+        'relative flex items-stretch rounded-sm',
         fillSwimlaneHeight ? 'h-full min-h-0 w-full' : 'shrink-0',
       )}
-      style={{ backgroundColor: 'transparent' }}
+      style={{
+        backgroundColor: 'transparent',
+        paddingLeft: playGutter || undefined,
+      }}
     >
+      {renderPlay ? (
+        <div
+          className="pointer-events-auto absolute z-50"
+          style={{
+            left: 6,
+            top: compact ? 10 : 14,
+          }}
+        >
+          <BlueprintVisualPlayButton
+            blueprint={blueprint}
+            scenarioName={scenarioName}
+            phaseName={phaseName}
+          />
+        </div>
+      ) : null}
       {blueprint.steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
-        const isVisualLayer = shouldUseVisualContent(layer)
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? resolveVisualStepPictureEntries(blueprint, step.id)
@@ -579,7 +621,7 @@ function CompareCellBlock({
 
   const innerContent =
     variant === 'visual' ? (
-      <div className="flex h-full min-h-0 max-h-full w-full flex-1 overflow-hidden">
+      <div className="relative flex h-full min-h-0 max-h-full w-full flex-1 overflow-hidden">
         <BlueprintStepVisual
           compact={compact}
           fill={laneStyle.lane}

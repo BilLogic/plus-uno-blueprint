@@ -39,6 +39,14 @@ type ResizableComparePanelProps = {
   /** Scenario title on the gray panel top edge (service overview). */
   panelTitleLabel?: string
   panelTitleDescription?: string | null
+  /** Optional info note shown inside the panel title badge. */
+  panelTitleInfoTooltip?: string | null
+  /** Anchor id for canvas camera focus framing. */
+  focusSlideId?: string
+  /** When true, this panel is visually de-emphasized (canvas focus mode). */
+  dimmed?: boolean
+  /** When true, this panel is the camera focus target — no hover chrome. */
+  focusActive?: boolean
   className?: string
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
@@ -55,6 +63,10 @@ export function ResizableComparePanel({
   navigateLabel,
   panelTitleLabel,
   panelTitleDescription,
+  panelTitleInfoTooltip,
+  focusSlideId,
+  dimmed = false,
+  focusActive = false,
   className,
   scrollContainerRef,
 }: ResizableComparePanelProps) {
@@ -74,7 +86,9 @@ export function ResizableComparePanel({
     if (!element) return
 
     const measure = () => {
-      setMeasuredContentHeight(element.scrollHeight)
+      // Layout height only. `scrollHeight` also counts arrow overlays and path
+      // frames that bleed past the board, which would pad the panel with gray.
+      setMeasuredContentHeight(element.offsetHeight)
     }
 
     measure()
@@ -83,9 +97,11 @@ export function ResizableComparePanel({
     return () => observer.disconnect()
   }, [fitContentKey])
 
+  const scrollChrome = { lockHeight }
+  const scrollPaddingY = getComparePanelScrollPaddingY(scrollChrome)
   const measuredPanelHeight =
     measuredContentHeight > 0
-      ? measuredContentHeight + getComparePanelScrollPaddingY()
+      ? measuredContentHeight + scrollPaddingY
       : null
 
   const targetWidth = Math.max(
@@ -102,7 +118,6 @@ export function ResizableComparePanel({
     width: Math.max(targetWidth, userSize.width),
     height: lockHeight ? targetHeight : Math.max(targetHeight, userSize.height),
   }
-  const scrollPaddingY = getComparePanelScrollPaddingY()
   const contentFitsWithPadding =
     lockHeight &&
     measuredContentHeight > 0 &&
@@ -155,27 +170,38 @@ export function ResizableComparePanel({
     [resolvedMinHeight, resolvedMinWidth, size.height, size.width],
   )
 
-  const scrollInsetY = getComparePanelScrollInsetY()
+  const scrollInsetY = getComparePanelScrollInsetY(scrollChrome)
   const panelRef = useRef<HTMLDivElement>(null)
   const interactive = Boolean(onNavigate)
+  const navigable = interactive && !focusActive
 
   const handleNavigateKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      if (!onNavigate) return
+      if (!onNavigate || focusActive) return
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         onNavigate()
       }
     },
-    [onNavigate],
+    [focusActive, onNavigate],
   )
 
   return (
-    <div className={cn('relative shrink-0', className)}>
+    <div
+      className={cn(
+        'relative shrink-0 transition-[opacity,filter] duration-300 ease-out',
+        dimmed &&
+          'opacity-30 saturate-50 [&_[data-blueprint-cell-interactive]]:pointer-events-none',
+        className,
+      )}
+      data-focus-slide-id={focusSlideId}
+      data-canvas-focus-dimmed={dimmed ? '' : undefined}
+    >
       {panelTitleLabel ? (
         <ScenarioTitleBadge
           name={panelTitleLabel}
           description={panelTitleDescription}
+          infoTooltip={panelTitleInfoTooltip}
           tone="panel"
           className="pointer-events-auto absolute z-30 max-w-[min(calc(100%-3rem),28rem)]"
           style={{
@@ -189,7 +215,7 @@ export function ResizableComparePanel({
         ref={panelRef}
         className={cn(
           'relative flex shrink-0 flex-col overflow-hidden rounded-2xl border shadow-sm',
-          interactive &&
+          navigable &&
             'cursor-pointer transition-[box-shadow,border-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-0',
         )}
         style={{
@@ -203,20 +229,21 @@ export function ResizableComparePanel({
         data-compare-panel
         data-blueprint-artboard
         {...(interactive ? { 'data-phase-scenario-panel': '' } : {})}
-        role={interactive ? 'button' : undefined}
-        tabIndex={interactive ? 0 : undefined}
-        aria-label={interactive ? navigateLabel : undefined}
+        {...(focusActive ? { 'data-canvas-focus-active': '' } : {})}
+        role={navigable ? 'button' : undefined}
+        tabIndex={navigable ? 0 : undefined}
+        aria-label={navigable ? navigateLabel : undefined}
         onClick={
-          interactive
+          navigable
             ? (event) => {
                 event.stopPropagation()
                 onNavigate?.()
               }
             : undefined
         }
-        onKeyDown={interactive ? handleNavigateKeyDown : undefined}
+        onKeyDown={navigable ? handleNavigateKeyDown : undefined}
         onMouseLeave={
-          interactive
+          navigable
             ? () => {
                 if (
                   panelRef.current?.contains(document.activeElement) &&

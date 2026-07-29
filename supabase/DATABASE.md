@@ -45,7 +45,7 @@ erDiagram
 | Service Lifecycle | `service_lifecycles` | — |
 | Phase | `phases` | `order_position`; optional `loops_to_phase_id` |
 | Service Scenario | `service_scenarios` | `order_position`; `view_type` for layout |
-| Path | `paths` | `path_type`: happy, unhappy, exception, alternative; optional `note` for path-level context |
+| Path | `paths` | `path_type`: happy, unhappy, exception, alternative, named; optional `note` for path-level context |
 | Blueprint row | `layers` | `row_position` (per path) |
 | Blueprint column | `steps` | canonical per `service_scenario` |
 | Path column order | `path_steps` | `column_position` per `(path_id, step_id)` |

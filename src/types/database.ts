@@ -17,7 +17,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type PathType = 'happy' | 'unhappy' | 'exception' | 'alternative'
+export type PathType = 'happy' | 'unhappy' | 'exception' | 'alternative' | 'named'
 
 export type Database = {
   public: {

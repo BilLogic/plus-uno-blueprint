@@ -10,7 +10,7 @@ const WARM_UP_SCENARIO_ID = 'a0000000-0000-4000-8000-000000000203'
 export const BLUEPRINT_VISUAL_LAYER_UI_ENABLED = true
 export const BLUEPRINT_CELL_DETAIL_UI_ENABLED = true
 /** Visual walkthrough / presentation mode (play button + modal). */
-export const BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED = false
+export const BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED = true
 
 /** Scenarios where the Visual row is shown before global rollout. */
 const BLUEPRINT_VISUAL_LAYER_SCENARIO_IDS = new Set<string>([

@@ -29,7 +29,11 @@ type SlideNavProps = {
   slides: Slide[]
   activeSlideId: string
   onSelect: (id: string) => void
+  /** True when no phase/scenario should appear selected (landing or overview). */
   isHome?: boolean
+  /** Birds-eye canvas overview. */
+  onOverview?: () => void
+  isOverviewActive?: boolean
 }
 
 export function SlideNav({
@@ -37,6 +41,8 @@ export function SlideNav({
   activeSlideId,
   onSelect,
   isHome = false,
+  onOverview,
+  isOverviewActive = false,
 }: SlideNavProps) {
   const mains = getMainSlides(slides)
   const [openParents, setOpenParents] = useState<Set<string>>(() => new Set())
@@ -62,6 +68,18 @@ export function SlideNav({
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
+          {onOverview ? (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={isOverviewActive}
+                onClick={onOverview}
+                tooltip="Overview"
+              >
+                <span className="truncate">Overview</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ) : null}
+
           {mains.map((main) => {
             const children = getSubslides(main.id, slides)
             const hasChildren = children.length > 0
@@ -78,7 +96,7 @@ export function SlideNav({
                     isActive={isMainActive}
                     onClick={() => onSelect(main.id)}
                   >
-                    <span>{mainLabel}</span>
+                    <span className="truncate">{mainLabel}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )
@@ -95,7 +113,7 @@ export function SlideNav({
                     isActive={isMainActive || childActive}
                     onClick={() => onSelect(main.id)}
                   >
-                    <span>{mainLabel}</span>
+                    <span className="truncate">{mainLabel}</span>
                   </SidebarMenuButton>
                   <CollapsibleTrigger
                     render={<SidebarMenuAction showOnHover={false} />}
@@ -112,17 +130,20 @@ export function SlideNav({
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {children.map((child) => (
-                        <SidebarMenuSubItem key={child.id}>
-                          <SidebarMenuSubButton
-                            render={<button type="button" />}
-                            isActive={!isHome && activeSlideId === child.id}
-                            onClick={() => onSelect(child.id)}
-                          >
-                            <span>{getSlideDisplayLabel(child, slides)}</span>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
+                      {children.map((child) => {
+                        const childLabel = getSlideDisplayLabel(child, slides)
+                        return (
+                          <SidebarMenuSubItem key={child.id}>
+                            <SidebarMenuSubButton
+                              render={<button type="button" />}
+                              isActive={!isHome && activeSlideId === child.id}
+                              onClick={() => onSelect(child.id)}
+                            >
+                              <span className="truncate">{childLabel}</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )
+                      })}
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

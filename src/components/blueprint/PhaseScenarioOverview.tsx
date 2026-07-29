@@ -3,6 +3,7 @@ import {
   getScenarioSwimlaneBodyHeight,
   ScenarioBlueprintPanel,
 } from '@/components/blueprint/ScenarioBlueprintPanel'
+import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { useEditor } from '@/contexts/EditorContext'
 import { useAlignedPhaseRowPanelHeight } from '@/hooks/useAlignedPhaseRowPanelHeight'
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
@@ -20,7 +21,7 @@ import {
 } from '@/types/slides'
 import type { BlueprintData } from '@/types/blueprint'
 import { cn } from '@/lib/utils'
-import { Skeleton } from '@/components/ui/skeleton'
+import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 
 const DEFAULT_SCENARIO_GAP = SUBSLIDE_GAP
 
@@ -40,6 +41,13 @@ type PhaseScenarioOverviewProps = {
   getSelectedPathIds?: (scenarioId: string, paths: PathListItem[]) => string[]
   /** Phase/overview filter view type — keeps row sizing aligned across scenarios. */
   displayViewType?: SlideViewType
+  /**
+   * When set in canvas focus mode, scenarios other than this id are dimmed.
+   * Pass null to dim nothing within the phase (phase-level focus).
+   */
+  focusedScenarioId?: string | null
+  /** When true, dim every scenario in this phase (another phase is focused). */
+  dimAllScenarios?: boolean
 }
 
 function PhaseScenarioConnector({ width }: { width: number }) {
@@ -89,6 +97,8 @@ export function PhaseScenarioOverview({
   loading: loadingProp,
   getSelectedPathIds: getSelectedPathIdsProp,
   displayViewType: displayViewTypeProp,
+  focusedScenarioId = null,
+  dimAllScenarios = false,
 }: PhaseScenarioOverviewProps) {
   const { getScenarioDisplayViewType, openDetail } = useEditor()
   const isOverview = variant === 'overview'
@@ -148,18 +158,28 @@ export function PhaseScenarioOverview({
       return undefined
     }
 
+    // No selected paths (or no content) — keep the row empty, don't force a
+    // minimum gray panel height.
     if (sharedSwimlaneBodyHeight === 0) {
-      return COMPARE_MIN_PANEL_HEIGHT
+      return undefined
     }
 
-    return Math.max(
-      COMPARE_MIN_PANEL_HEIGHT,
-      getPanelHeightFromSwimlaneBody(sharedSwimlaneBodyHeight),
-    )
+    return getPanelHeightFromSwimlaneBody(sharedSwimlaneBodyHeight, {
+      lockHeight: true,
+    })
   }, [alignPanelHeights, sharedSwimlaneBodyHeight])
 
   const rowRef = useRef<HTMLDivElement>(null)
-  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}`
+  const selectedPathsMeasureKey = scenarios
+    .map((scenario) => {
+      const paths = pathsByScenario.get(scenario.id) ?? []
+      const selectedPathIds = getSelectedPathIdsProp
+        ? getSelectedPathIdsProp(scenario.id, paths)
+        : defaultSelectedPathIds(paths)
+      return selectedPathIds.join(',')
+    })
+    .join('|')
+  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${displayViewTypeProp ?? ''}:${selectedPathsMeasureKey}`
   const rowPanelHeight = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
@@ -189,19 +209,52 @@ export function PhaseScenarioOverview({
       <div
         className={cn('inline-flex items-stretch', className)}
         data-phase-scenario-overview=""
+        role="status"
+        aria-busy="true"
+        aria-label="Loading phase scenarios"
       >
         {scenarios.map((scenario, index) => (
           <Fragment key={scenario.id}>
-            <Skeleton
-              className="shrink-0 rounded-2xl"
-              style={{
-                width: 640,
-                height: skeletonHeight,
-              }}
+            <BlueprintPanelLoadingSkeleton
+              height={skeletonHeight}
+              width={640}
             />
             {renderScenarioSeparator(index, scenarios.length)}
           </Fragment>
         ))}
+      </div>
+    )
+  }
+
+  const scenarioSelections = scenarios.map((scenario) => {
+    const paths = pathsByScenario.get(scenario.id) ?? []
+    const selectedPathIds = getSelectedPathIdsProp
+      ? getSelectedPathIdsProp(scenario.id, paths)
+      : defaultSelectedPathIds(paths)
+    return { scenario, paths, selectedPathIds }
+  })
+
+  const visibleScenarioSelections = scenarioSelections.filter(
+    ({ selectedPathIds }) => selectedPathIds.length > 0,
+  )
+  const hasAnyPaths = scenarioSelections.some(({ paths }) => paths.length > 0)
+
+  // Selected paths exist elsewhere, but not in this phase.
+  if (visibleScenarioSelections.length === 0 && hasAnyPaths) {
+    return (
+      <div
+        className={cn(
+          'flex min-h-[220px] min-w-[min(36rem,65vw)] items-stretch',
+          className,
+        )}
+        data-phase-scenario-overview=""
+        data-phase-empty=""
+      >
+        <CanvasEmptyState
+          variant="phase"
+          title="No selected paths in this phase"
+          description="The selected path only exists in another phase or scenario."
+        />
       </div>
     )
   }
@@ -212,12 +265,8 @@ export function PhaseScenarioOverview({
       className={cn('inline-flex items-stretch', className)}
       data-phase-scenario-overview=""
     >
-      {scenarios.map((scenario, index) => {
+      {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
-        const paths = pathsByScenario.get(scenario.id) ?? []
-        const selectedPathIds = getSelectedPathIdsProp
-          ? getSelectedPathIdsProp(scenario.id, paths)
-          : defaultSelectedPathIds(paths)
 
         return (
           <Fragment key={scenario.id}>
@@ -233,9 +282,15 @@ export function PhaseScenarioOverview({
               lockPanelHeight={alignPanelHeights}
               displayViewType={displayViewTypeProp}
               onNavigate={() => openDetail(scenario.id)}
+              dimmed={
+                dimAllScenarios ||
+                (focusedScenarioId !== null &&
+                  focusedScenarioId !== scenario.id)
+              }
+              focusActive={focusedScenarioId === scenario.id}
             />
 
-            {renderScenarioSeparator(index, scenarios.length)}
+            {renderScenarioSeparator(index, visibleScenarioSelections.length)}
           </Fragment>
         )
       })}

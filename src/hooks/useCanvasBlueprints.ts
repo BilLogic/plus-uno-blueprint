@@ -8,6 +8,7 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
 import type { RawPath } from '@/lib/normalizeBlueprint'
 import type { PathListItem } from '@/lib/pathSelection'
+import { pickPreferredPath } from '@/lib/pathSelection'
 import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
 import type { BlueprintData } from '@/types/blueprint'
@@ -18,7 +19,7 @@ type CanvasRawPath = RawPath & {
 
 function pickPathForScenario(paths: CanvasRawPath[]): CanvasRawPath | null {
   if (paths.length === 0) return null
-  return paths.find((p) => p.path_type === 'happy') ?? paths[0]
+  return pickPreferredPath(paths) ?? null
 }
 
 function buildFallbackMaps(scenarioIds: string[]) {

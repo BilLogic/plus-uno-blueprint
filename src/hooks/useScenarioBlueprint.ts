@@ -33,7 +33,7 @@ export function useScenarioBlueprint(serviceScenarioId: string | undefined) {
   const { client, configured } = useSupabase()
   const [paths, setPaths] = useState<PathListItem[]>([])
   const { selectedPathIds, setSelectedPathIds, togglePathSelection } =
-    usePathSelection(paths)
+    usePathSelection(serviceScenarioId, paths)
   const [blueprintsByPathId, setBlueprintsByPathId] = useState<
     Record<string, BlueprintData>
   >({})
