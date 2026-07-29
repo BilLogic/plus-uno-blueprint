@@ -19,12 +19,18 @@ function devSliceFallback(sliceId: string): SliceDetail | null {
   return { slice, items: DEV_FALLBACK_SLICE_ITEMS[slice.id] ?? [] }
 }
 
-/** One slice with its frames (`slice_items`), items ordered by position. */
-export function useSlice(sliceId: string): QueryResult<SliceDetail> {
+/**
+ * One slice with its frames (`slice_items`), items ordered by position.
+ * Bump `reloadToken` to refetch after a mutation (edit mode saves).
+ */
+export function useSlice(
+  sliceId: string,
+  reloadToken = 0,
+): QueryResult<SliceDetail> {
   const fallback = useCallback(() => devSliceFallback(sliceId), [sliceId])
 
   return useSupabaseQuery<SliceDetail>(
-    `slice:${sliceId}`,
+    `slice:${sliceId}:${reloadToken}`,
     async (client) => {
       const { data: slice, error: sliceError } = await client
         .from('slices')

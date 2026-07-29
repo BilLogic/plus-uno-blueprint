@@ -10,6 +10,7 @@ import {
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { ServiceOverviewLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { ServiceOverviewStickyHeader } from '@/components/editor/ServiceOverviewMenubarHeader'
+import { SliceCreateBar } from '@/components/editor/SliceCreateBar'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
 import {
@@ -18,6 +19,7 @@ import {
 } from '@/contexts/BlueprintCellDetailContext'
 import { CanvasZoomChromeProvider } from '@/contexts/CanvasZoomChromeContext'
 import { useEditor } from '@/contexts/EditorContext'
+import { SliceDraftProvider } from '@/contexts/SliceDraftProvider'
 import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
 import {
@@ -255,6 +257,7 @@ export function ServiceOverviewView() {
         enabled={cellDetailEnabled}
         blueprints={cellDetailBlueprints}
       >
+       <SliceDraftProvider>
         <CanvasFocusEscapeHandler />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {focusedHeader ? (
@@ -364,8 +367,10 @@ export function ServiceOverviewView() {
               </ZoomPanViewport>
             )}
             {cellDetailEnabled ? <BlueprintCellDetailPanel /> : null}
+            <SliceCreateBar />
           </div>
         </div>
+       </SliceDraftProvider>
       </BlueprintCellDetailProvider>
     </CanvasZoomChromeProvider>
   )

@@ -297,6 +297,13 @@
     z-index: 50;
   }
 
+  /* Slice edit mode: every cell is clickable (membership toggle) even though
+     the grid renders non-interactive buttons. */
+  [data-slice-editing] [data-blueprint-cell-anchor] {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
     background-color: var(
       --blueprint-cell-bg-hover,

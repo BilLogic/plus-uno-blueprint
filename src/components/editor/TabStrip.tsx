@@ -1,11 +1,29 @@
-import { useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Trash2, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { InlineNotice } from '@/components/ui/inline-notice'
+import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   tabKey,
   useViewState,
   type TabDescriptor,
 } from '@/contexts/viewStateStore'
 import { useSlices } from '@/hooks/useSlices'
+import { deleteSlice } from '@/lib/sliceMutations'
 import { cn } from '@/lib/utils'
 import type { Slice } from '@/types/database'
 
@@ -21,9 +39,94 @@ function availableSlices(result: ReturnType<typeof useSlices>): Slice[] {
 }
 
 /**
+ * Confirm-and-delete dialog shared by the tab strip and sidebar context
+ * menus. Deletes the slice (frames cascade) and closes its tabs.
+ */
+export function DeleteSliceDialog({
+  slice,
+  open,
+  onOpenChange,
+}: {
+  slice: { id: string; title: string } | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const { client } = useSupabase()
+  const { closeTabsForSlice } = useViewState()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleDelete = async () => {
+    if (!client || !slice || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteSlice(client, slice.id)
+      closeTabsForSlice(slice.id)
+      onOpenChange(false)
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : String(deleteError),
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange(next)
+        if (!next) setError(null)
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Delete slice</DialogTitle>
+          <DialogDescription>
+            “{slice?.title ?? 'This slice'}” and its frames will be deleted.
+            Blueprint cells are never touched.
+          </DialogDescription>
+        </DialogHeader>
+        {error ? (
+          <div className="px-6 pt-4">
+            <InlineNotice variant="warning">{error}</InlineNotice>
+          </div>
+        ) : null}
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              void handleDelete()
+            }}
+          >
+            {busy ? 'Deleting…' : 'Delete slice'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/**
  * Tab strip above the shell main area. Visible only when more than the
  * pinned blueprint tab is open; also resolves URL deep links once the slice
  * list settles (pending intent — never applied before the data exists).
+ * Slice tabs carry a context menu with "Delete slice…" for writers.
  */
 export function TabStrip() {
   const {
@@ -34,7 +137,12 @@ export function TabStrip() {
     pendingUrlState,
     resolvePending,
   } = useViewState()
+  const { canWrite } = useSupabase()
   const slices = useSlices()
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    title: string
+  } | null>(null)
 
   useEffect(() => {
     if (pendingUrlState === null) return
@@ -69,7 +177,7 @@ export function TabStrip() {
         const key = tabKey(tab)
         const active = key === activeKey
         const label = labelFor(tab)
-        return (
+        const tabElement = (
           <div
             key={key}
             className={cn(
@@ -103,7 +211,36 @@ export function TabStrip() {
             )}
           </div>
         )
+
+        if (tab.kind === 'blueprint' || !canWrite) return tabElement
+
+        return (
+          <ContextMenu key={key}>
+            <ContextMenuTrigger render={tabElement} />
+            <ContextMenuContent>
+              <ContextMenuItem
+                variant="destructive"
+                onClick={() =>
+                  setDeleteTarget({
+                    id: tab.sliceId,
+                    title: titleById.get(tab.sliceId) ?? 'Slice',
+                  })
+                }
+              >
+                <Trash2 className="size-3.5" />
+                Delete slice…
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        )
       })}
+      <DeleteSliceDialog
+        slice={deleteTarget}
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      />
     </div>
   )
 }
