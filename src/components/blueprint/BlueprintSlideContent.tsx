@@ -6,7 +6,7 @@ import { useEditor } from '@/contexts/EditorContext'
 import type { PhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
 import type { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
+import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import {
   SLIDE_ARTBOARD_HEIGHT,
   SLIDE_ARTBOARD_WIDTH,
@@ -77,13 +77,14 @@ export function BlueprintSlideContent({
   const displayViewType =
     phaseBlueprintFilters?.viewType ?? getScenarioDisplayViewType(slide)
   const useIntegratedLayout =
-    displayViewType === 'integrated' && paths.length > 0
+    displayViewType === 'integrated' &&
+    paths.length > 0 &&
+    selectedPathIds.length > 0
   const useSideBySideLayout =
     displayViewType === 'side-by-side' && selectedPathIds.length > 0
   const useSinglePathLayout =
     displayViewType === 'single' && selectedPathIds.length > 0
-  const noPathsSelected =
-    !useIntegratedLayout && paths.length > 0 && selectedPathIds.length === 0
+  const noPathsSelected = paths.length > 0 && selectedPathIds.length === 0
 
   const handleTogglePath = (pathId: string) => {
     togglePathSelection(pathId)
@@ -214,12 +215,15 @@ export function BlueprintSlideContent({
 
   if (loading && !showIntegratedGrid && visibleBlueprints.length === 0) {
     return (
-      <div {...canvasFitAttrs} className="inline-flex w-max min-w-full flex-col">
+      <div
+        {...canvasFitAttrs}
+        className="inline-flex w-max min-w-full flex-col"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading blueprint"
+      >
         {header}
-        <div className="flex flex-col gap-3">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="min-h-[320px] w-full" />
-        </div>
+        <BlueprintPanelLoadingSkeleton className="w-full" width={null} />
       </div>
     )
   }

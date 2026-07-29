@@ -88,6 +88,8 @@ export function BlueprintCellButton({
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (!isInteractive) return
+    // Focus mode: ignore cells in dimmed (inactive) phases/scenarios.
+    if (event.currentTarget.closest('[data-canvas-focus-dimmed]')) return
     event.stopPropagation()
     detail!.selectCell(selection!)
   }

@@ -19,9 +19,21 @@ import {
 type EditorContextValue = {
   view: EditorView
   setView: (view: EditorView) => void
+  /** Orientation homepage (sidebar Home destination). */
+  goLanding: () => void
+  /** Birds-eye service overview canvas (animates fit when leaving detail). */
   goHome: () => void
+  /** Enter the overview canvas from the homepage without a fit zoom animation. */
+  enterCanvas: () => void
+  /**
+   * When true, the next overview fit should jump instead of animating
+   * (set by enterCanvas; cleared by goHome).
+   */
+  skipCanvasFitAnimation: boolean
   openDetail: (slideId: string) => void
   slides: Slide[]
+  /** Slides from DB/fallback (same as slides; kept for callers). */
+  baseSlides: Slide[]
   getScenarioDisplayViewType: (slide: Slide) => SlideViewType
   setScenarioDisplayViewType: (
     scenarioId: string,
@@ -41,7 +53,6 @@ type EditorProviderProps = {
 }
 
 export function EditorProvider({ children }: EditorProviderProps) {
-  const [view, setView] = useState<EditorView>('home')
   const { slides: dbSlides, loading, error, configured } = useLifecyclePhases()
 
   const slides = useMemo(() => {
@@ -49,9 +60,21 @@ export function EditorProvider({ children }: EditorProviderProps) {
     return mergeSlidesWithFallback(dbSlides)
   }, [dbSlides])
 
+  const [view, setView] = useState<EditorView>('landing')
   const [activeSlideId, setActiveSlideId] = useState(FALLBACK_SLIDES[0].id)
+  const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
+
+  const goLanding = useCallback(() => {
+    setView('landing')
+  }, [])
 
   const goHome = useCallback(() => {
+    setSkipCanvasFitAnimation(false)
+    setView('home')
+  }, [])
+
+  const enterCanvas = useCallback(() => {
+    setSkipCanvasFitAnimation(true)
     setView('home')
   }, [])
 
@@ -86,34 +109,42 @@ export function EditorProvider({ children }: EditorProviderProps) {
     [activeSlideId, slides],
   )
 
+  const slidesLoading = configured && loading && dbSlides.length === 0
+  const slidesError = configured ? error : null
+
   const value = useMemo(
     () => ({
       view,
       setView,
+      goLanding,
       goHome,
+      enterCanvas,
+      skipCanvasFitAnimation,
       openDetail,
       slides,
+      baseSlides: slides,
       getScenarioDisplayViewType,
       setScenarioDisplayViewType,
-      slidesLoading: configured && loading && dbSlides.length === 0,
-      slidesError: configured ? error : null,
+      slidesLoading,
+      slidesError,
       activeSlideId,
       setActiveSlideId,
       activeSlide,
     }),
     [
       view,
+      goLanding,
       goHome,
+      enterCanvas,
+      skipCanvasFitAnimation,
       openDetail,
       slides,
       getScenarioDisplayViewType,
       setScenarioDisplayViewType,
-      configured,
-      loading,
-      error,
+      slidesLoading,
+      slidesError,
       activeSlideId,
       activeSlide,
-      dbSlides.length,
     ],
   )
 

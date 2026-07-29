@@ -610,7 +610,7 @@ export const GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK: BlueprintData = {
     description:
       'Goal cycle began and deadline not reached, but student did not set goals last session and student has no prior goals.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
-    path_type: 'alternative',
+    path_type: 'named',
   },
   layers: [...LAYERS],
   steps: [...STEPS],

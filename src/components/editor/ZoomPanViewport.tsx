@@ -1,7 +1,12 @@
 import type { ReactNode } from 'react'
 import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
+import { CanvasAnnotationLayer } from '@/components/editor/CanvasAnnotationLayer'
+import { CanvasAnnotationToolbar } from '@/components/editor/CanvasAnnotationToolbar'
+import { CanvasPenCursor } from '@/components/editor/CanvasPenCursor'
 import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
-import { EditorZoomIndicator } from '@/components/editor/EditorZoomIndicator'
+import { CanvasAnnotationProvider } from '@/contexts/CanvasAnnotationProvider'
+import { usePublishCanvasZoomChrome } from '@/contexts/CanvasZoomChromeContext'
+import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
 
@@ -11,19 +16,41 @@ type ZoomPanViewportProps = {
   resetKey?: string
   panIgnoreSelector?: string
   fitSelector?: string
+  maxFitZoom?: number
+  fitMargin?: number
+  fitTopInset?: number
+  fitBottomInset?: number
+  animateFit?: boolean
   showSequenceNav?: boolean
   refitOnResize?: boolean
+  /** Shows a "Reset View" action in the canvas navbar (focus mode). */
+  onResetView?: () => void
 }
 
-export function ZoomPanViewport({
+export function ZoomPanViewport(props: ZoomPanViewportProps) {
+  return (
+    <CanvasAnnotationProvider>
+      <ZoomPanViewportInner {...props} />
+    </CanvasAnnotationProvider>
+  )
+}
+
+function ZoomPanViewportInner({
   children,
   className,
   resetKey,
   panIgnoreSelector,
   fitSelector,
+  maxFitZoom,
+  fitMargin,
+  fitTopInset,
+  fitBottomInset,
+  animateFit = false,
   showSequenceNav = true,
   refitOnResize = true,
+  onResetView,
 }: ZoomPanViewportProps) {
+  const { isAnnotating } = useCanvasAnnotations()
   const {
     containerRef,
     contentRef,
@@ -33,9 +60,18 @@ export function ZoomPanViewport({
   } = useZoomPanViewport({
     resetKey,
     panIgnoreSelector,
+    // Draw / place tools own the drag gesture — don't pan the board.
+    panEnabled: !isAnnotating,
     fitSelector,
+    maxFitZoom,
+    fitMargin,
+    fitTopInset,
+    fitBottomInset,
+    animateFit,
     refitOnResize,
   })
+
+  usePublishCanvasZoomChrome(onResetView)
 
   return (
     <div
@@ -45,7 +81,7 @@ export function ZoomPanViewport({
       <div
         ref={containerRef}
         className={cn(
-          'absolute inset-0 overflow-hidden touch-none dark:bg-[#1C1C1E]',
+          'absolute inset-0 overflow-hidden touch-none',
           isPanning && 'cursor-grabbing',
         )}
         style={{ backgroundColor: BLUEPRINT_THEME.viewportPad }}
@@ -58,12 +94,16 @@ export function ZoomPanViewport({
           style={{ backfaceVisibility: 'hidden' }}
           data-zoom-pan-content
         >
-          {children}
+          <div className="relative inline-block min-h-0 align-top">
+            {children}
+            <CanvasAnnotationLayer zoom={zoom} />
+          </div>
         </div>
+        <CanvasPenCursor />
       </div>
 
       {showSequenceNav ? <EditorSequenceNav /> : null}
-      <EditorZoomIndicator zoom={zoom} />
+      <CanvasAnnotationToolbar />
     </div>
   )
 }

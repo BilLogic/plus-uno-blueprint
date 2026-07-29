@@ -3,7 +3,7 @@
 
 -- Update Goals Edge Case
 insert into public.paths (id, service_scenario_id, name, description, path_type)
-values ('a0000000-0000-4000-8000-000000000817', 'a0000000-0000-4000-8000-000000000204', 'Update Goals Edge Case', 'Goal cycle began and deadline not reached, but student did not set goals last session and has prior goals.', 'alternative')
+values ('a0000000-0000-4000-8000-000000000817', 'a0000000-0000-4000-8000-000000000204', 'Update Goals Edge Case', 'Goal cycle began and deadline not reached, but student did not set goals last session and has prior goals.', 'named')
 on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
 delete from public.cell_triggers where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000817');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000817';

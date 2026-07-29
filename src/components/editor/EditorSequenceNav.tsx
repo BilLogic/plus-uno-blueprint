@@ -58,6 +58,9 @@ function SequenceNavPreview({
       data-canvas-nav=""
       className={cn(
         'pointer-events-auto absolute bottom-3 z-30 h-auto max-w-40 gap-1.5 py-1.5',
+        'border-border/80 bg-white text-foreground shadow-sm',
+        'hover:bg-neutral-100 hover:text-foreground',
+        'dark:bg-white dark:text-foreground dark:hover:bg-neutral-200',
         isPrev ? 'left-3' : 'right-3',
       )}
     >
@@ -77,7 +80,7 @@ function SequenceNavPreview({
 }
 
 export function EditorSequenceNav() {
-  const { slides, activeSlideId, setActiveSlideId } = useEditor()
+  const { slides, activeSlideId, openDetail } = useEditor()
   const { prev, next } = getSlideSequenceNav(activeSlideId, slides)
 
   if (!prev && !next) return null
@@ -89,7 +92,7 @@ export function EditorSequenceNav() {
           direction="prev"
           slide={prev}
           slides={slides}
-          onClick={() => setActiveSlideId(prev.id)}
+          onClick={() => openDetail(prev.id)}
         />
       ) : null}
       {next ? (
@@ -97,7 +100,7 @@ export function EditorSequenceNav() {
           direction="next"
           slide={next}
           slides={slides}
-          onClick={() => setActiveSlideId(next.id)}
+          onClick={() => openDetail(next.id)}
         />
       ) : null}
     </div>

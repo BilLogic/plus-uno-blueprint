@@ -8,7 +8,6 @@ import {
   isOverviewPathFilterChecked,
   toggleOverviewPathFilter,
 } from '@/lib/overviewPathFilters'
-import { defaultSelectedPathIds } from '@/lib/pathSelection'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathListItem } from '@/lib/pathSelection'
 import { getSubslides, isSubslide, type Slide, type SlideViewType } from '@/types/slides'
@@ -47,7 +46,8 @@ export function usePhaseBlueprintFilters({
     blueprintsByPathId,
     loading,
   } = useCanvasBlueprints(activeScenarioIds)
-  const { getSelectedPathIds, togglePathSelection } =
+
+  const { getSelectedPathIds, togglePathKey, activePathKeys } =
     usePathSelectionsByScenario(pathsByScenario)
 
   const filterPaths = useMemo(
@@ -62,11 +62,11 @@ export function usePhaseBlueprintFilters({
           isOverviewPathFilterChecked(
             getOverviewPathKey(path),
             pathsByScenario,
-            getSelectedPathIds,
+            activePathKeys,
           ),
         )
         .map((path) => path.id),
-    [filterPaths, pathsByScenario, getSelectedPathIds],
+    [filterPaths, pathsByScenario, activePathKeys],
   )
 
   const viewType = useMemo(() => {
@@ -99,16 +99,16 @@ export function usePhaseBlueprintFilters({
         pathKey,
         pathsByScenario,
         getSelectedPathIds,
-        togglePathSelection,
+        togglePathKey,
       )
     },
-    [pathsByScenario, getSelectedPathIds, togglePathSelection],
+    [pathsByScenario, getSelectedPathIds, togglePathKey],
   )
 
   const resolveSelectedPathIds = useCallback(
-    (scenarioId: string, paths: PathListItem[]) => {
-      const selected = getSelectedPathIds(scenarioId)
-      return selected.length > 0 ? selected : defaultSelectedPathIds(paths)
+    (scenarioId: string, _paths: PathListItem[]) => {
+      // Empty selection is intentional — do not fall back to happy path.
+      return getSelectedPathIds(scenarioId)
     },
     [getSelectedPathIds],
   )

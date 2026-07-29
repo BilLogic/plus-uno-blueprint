@@ -3,7 +3,8 @@ import { ExternalLink, X } from 'lucide-react'
 import { CellDependencyTable } from '@/components/blueprint/CellDependencyTable'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { CELL_DETAIL_PANEL_TOP_CLASS } from '@/components/editor/menubarHeaderLayout'
+import { Button } from '@/components/ui/button'
 import {
   Drawer,
   DrawerContent,
@@ -288,8 +289,9 @@ export function BlueprintCellDetailPanel() {
     const relevantLinks = cellLinks.flatMap((link, index) => {
       if (link.type !== URL_LINK_TYPE || !link.url?.trim()) return []
       const url = link.url.trim()
-      const label = link.label?.trim() || 'Link'
-      if (isFigmaUrl(url) || /figma/i.test(label)) return []
+      const label =
+        link.label?.trim() ||
+        (isFigmaUrl(url) ? 'Figma' : 'Link')
       return [
         {
           id: `link-${index}`,
@@ -298,6 +300,17 @@ export function BlueprintCellDetailPanel() {
         },
       ]
     })
+
+    if (
+      figmaUrl &&
+      !relevantLinks.some((link) => link.url === figmaUrl)
+    ) {
+      relevantLinks.push({
+        id: 'link-figma',
+        label: 'Figma',
+        url: figmaUrl,
+      })
+    }
 
     return buildCellDependencyRows({
       connections,
@@ -312,8 +325,8 @@ export function BlueprintCellDetailPanel() {
   }, [
     cellLinks,
     connections,
+    figmaUrl,
     otherTechEntries,
-    selectedCell,
     selectedLayer,
     selectedLayerRowPosition,
     selection,
@@ -465,27 +478,9 @@ export function BlueprintCellDetailPanel() {
     </p>
   )
 
-  const figmaButton =
-    figmaUrl != null ? (
-      <a
-        href={figmaUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={cn(
-          buttonVariants({ variant: 'outline', size: 'xs' }),
-          'h-5 shrink-0 gap-1 px-1.5 text-[10px]',
-        )}
-        aria-label="View in Figma"
-      >
-        Figma
-        <ExternalLink className="size-2.5 opacity-70" aria-hidden />
-      </a>
-    ) : null
-
   const titleRow = (
     <div className="flex min-w-0 items-center gap-2">
       {layerTitle}
-      {figmaButton}
     </div>
   )
 
@@ -533,15 +528,57 @@ export function BlueprintCellDetailPanel() {
                 ))}
               </div>
             ) : null}
-            {screenshots.map((src) => (
-              <div key={src} className={CELL_DETAIL_PICTURE_FRAME_CLASS}>
-                <img
-                  src={src}
-                  alt=""
-                  className={CELL_DETAIL_PICTURE_CLASS}
-                />
-              </div>
-            ))}
+            {screenshots.map((src) =>
+              figmaUrl ? (
+                <a
+                  key={src}
+                  href={figmaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    CELL_DETAIL_PICTURE_FRAME_CLASS,
+                    'group block cursor-pointer',
+                  )}
+                  aria-label="View in Figma"
+                >
+                  <img
+                    src={src}
+                    alt=""
+                    className={cn(
+                      CELL_DETAIL_PICTURE_CLASS,
+                      'transition-[filter,opacity] duration-200',
+                      'group-hover:opacity-80 group-hover:grayscale-[15%]',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'absolute inset-0 z-10 flex items-center justify-center',
+                      'bg-black/55 opacity-0 transition-opacity duration-200',
+                      'group-hover:opacity-100',
+                    )}
+                    aria-hidden
+                  >
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-1.5 text-[11px] font-semibold text-white',
+                        'transition-opacity duration-200',
+                      )}
+                    >
+                      View in Figma
+                      <ExternalLink className="size-2.5 text-white" />
+                    </span>
+                  </span>
+                </a>
+              ) : (
+                <div key={src} className={CELL_DETAIL_PICTURE_FRAME_CLASS}>
+                  <img
+                    src={src}
+                    alt=""
+                    className={CELL_DETAIL_PICTURE_CLASS}
+                  />
+                </div>
+              ),
+            )}
           </>
         )
       })()}
@@ -564,7 +601,10 @@ export function BlueprintCellDetailPanel() {
     >
       <DrawerContent
         data-cell-detail-panel=""
-        className="!top-[67px] !right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none w-[20rem] rounded-2xl border border-border/80 bg-card shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]"
+        className={cn(
+          CELL_DETAIL_PANEL_TOP_CLASS,
+          '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none w-[20rem] rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+        )}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >

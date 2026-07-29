@@ -1,11 +1,12 @@
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
+import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
+import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
 import {
-  BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
+  BLUEPRINT_MENUBAR_FLAT_CLASS,
   BLUEPRINT_MENUBAR_HEADER_CLASS,
-  BLUEPRINT_MENUBAR_SEPARATOR_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
-  BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS,
+  BLUEPRINT_NAVBAR_BAR_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import { Menubar } from '@/components/ui/menubar'
 import { cn } from '@/lib/utils'
@@ -38,44 +39,48 @@ export function ServiceOverviewMenubarHeader({
       onClick={(event) => event.stopPropagation()}
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
-        <span className={BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS}>
-          {OVERVIEW_MENU_TITLE}
-        </span>
-        <span className={BLUEPRINT_MENUBAR_SEPARATOR_CLASS} aria-hidden>
-          ·
-        </span>
-        <p className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS}>
-          {OVERVIEW_MENU_DESCRIPTION}
-        </p>
+        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+          <NavbarSlideTitleNav
+            label={OVERVIEW_MENU_TITLE}
+            description={OVERVIEW_MENU_DESCRIPTION}
+            isOverview
+          />
+          <span
+            className="shrink-0 text-xs text-muted-foreground/70"
+            aria-hidden
+          >
+            \
+          </span>
+          <StackHeaderFilterMenu
+            paths={paths}
+            selectedPathIds={selectedPathIds}
+            onTogglePath={onTogglePath}
+          />
+        </div>
       </div>
-
-      <StackHeaderFilterMenu
-        paths={paths}
-        selectedPathIds={selectedPathIds}
-        onTogglePath={onTogglePath}
-      />
     </Menubar>
   )
 }
 
 type ServiceOverviewStickyHeaderProps = ServiceOverviewMenubarHeaderProps
 
-/** Fixed overlay header for the service overview, matching phase/scenario detail views. */
+/** Docked horizontal navbar above the overview canvas (main column only). */
 export function ServiceOverviewStickyHeader({
   className,
   ...menubarProps
 }: ServiceOverviewStickyHeaderProps) {
   return (
     <div
-      data-slide-sticky-header
-      className={cn(
-        'pointer-events-none absolute inset-x-0 top-0 z-20 px-4 pt-4',
-        className,
-      )}
+      data-editor-navbar
+      className={cn('relative', BLUEPRINT_NAVBAR_BAR_CLASS, className)}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <div className="pointer-events-auto w-full">
-        <ServiceOverviewMenubarHeader {...menubarProps} />
+      <ServiceOverviewMenubarHeader
+        {...menubarProps}
+        className={BLUEPRINT_MENUBAR_FLAT_CLASS}
+      />
+      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
+        <NavbarZoomIndicator />
       </div>
     </div>
   )

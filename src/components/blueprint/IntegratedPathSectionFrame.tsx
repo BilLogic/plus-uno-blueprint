@@ -4,6 +4,7 @@ import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
 import {
   getPathTypeSectionBorderStyle,
   PATH_TYPE_SECTION_BORDER_WIDTH,
+  shouldShowPathTypeBadge,
 } from '@/lib/pathTypeTheme'
 import {
   COMPARE_PATH_SECTION_INSET,
@@ -22,7 +23,7 @@ export type IntegratedPathSectionPath = {
 type IntegratedPathSectionFrameProps = {
   paths: IntegratedPathSectionPath[]
   compact?: boolean
-  /** Overview mode: show path-type badges instead of path names. */
+  /** Overview mode: prefer type badges for generic names; named paths show titles. */
   showPathTypeBadge?: boolean
 }
 
@@ -57,7 +58,10 @@ export function IntegratedPathSectionFrame({
         const offset = index * borderW
         const { borderColor, borderStyle, borderWidth } =
           getPathTypeSectionBorderStyle(path.path_type, path)
-        const isInnermost = index === paths.length - 1
+        // Keep the white board at the outer inset; only the colored borders nest
+        // inward. Filling the innermost nested rect left gray rings (and a
+        // growing bottom band) as more path types were enabled.
+        const isOutermost = index === 0
 
         return (
           <div
@@ -72,7 +76,7 @@ export function IntegratedPathSectionFrame({
               borderWidth,
               borderStyle,
               borderColor,
-              backgroundColor: isInnermost ? sectionFill : 'transparent',
+              backgroundColor: isOutermost ? sectionFill : 'transparent',
             }}
           />
         )
@@ -87,7 +91,7 @@ export function IntegratedPathSectionFrame({
         }}
       >
         {paths.map((path) =>
-          showPathTypeBadge ? (
+          showPathTypeBadge && shouldShowPathTypeBadge(path) ? (
             <PathTypeBadge
               key={path.id}
               pathType={path.path_type}

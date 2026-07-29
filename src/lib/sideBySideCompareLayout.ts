@@ -146,16 +146,30 @@ export const COMPARE_RESIZE_HANDLE_SIZE = 16
 /** Extra scroll space so the resize handle and card shadow do not cover the last row. */
 export const COMPARE_PANEL_BOTTOM_INSET = COMPARE_RESIZE_HANDLE_SIZE + 16
 
+export type ComparePanelScrollChromeOptions = {
+  /**
+   * Locked / overview panels hide the resize handle — skip that inset so the
+   * gray scroll shell hugs the blueprint board instead of leaving empty chrome.
+   */
+  lockHeight?: boolean
+}
+
 /** Symmetric vertical inset inside compare scroll shells (resize handle + arrow bleed). */
-export function getComparePanelScrollInsetY(): number {
-  return (
-    COMPARE_PANEL_BOTTOM_INSET / 2 + BLUEPRINT_ARTBOARD_HEIGHT_BUFFER / 2
-  )
+export function getComparePanelScrollInsetY(
+  options?: ComparePanelScrollChromeOptions,
+): number {
+  const resizeInset = options?.lockHeight ? 0 : COMPARE_PANEL_BOTTOM_INSET / 2
+  const artboardInset = options?.lockHeight
+    ? 0
+    : BLUEPRINT_ARTBOARD_HEIGHT_BUFFER / 2
+  return resizeInset + artboardInset
 }
 
 /** Vertical padding inside the compare panel scroll shell (top + bottom). */
-export function getComparePanelScrollPaddingY(): number {
-  return ARROW_VIEWPORT_PAD * 2 + getComparePanelScrollInsetY() * 2
+export function getComparePanelScrollPaddingY(
+  options?: ComparePanelScrollChromeOptions,
+): number {
+  return ARROW_VIEWPORT_PAD * 2 + getComparePanelScrollInsetY(options) * 2
 }
 
 export type CompareRowHeightSpec = {
@@ -230,11 +244,12 @@ export function expandRowSpecsToSwimlaneBodyHeight<T extends CompareRowHeightSpe
 
 export function getPanelHeightFromSwimlaneBody(
   swimlaneBodyHeight: number,
+  options?: ComparePanelScrollChromeOptions,
 ): number {
   return (
     swimlaneBodyHeight +
     COMPARE_PANEL_PADDING * 2 +
-    getComparePanelScrollPaddingY()
+    getComparePanelScrollPaddingY(options)
   )
 }
 
@@ -342,6 +357,8 @@ export function getScenarioSwimlaneRowSpecs(
   const allBlueprints = getScenarioBlueprints(paths, blueprintsByPathId)
 
   if (displayViewType === 'integrated' && allBlueprints.length > 0) {
+    if (selectedPathIds.length === 0) return []
+
     const integrated = mergeIntegratedBlueprint(allBlueprints, selectedPathIds)
     if (integrated) {
       return buildIntegratedLabelRowSpecs(
@@ -541,7 +558,14 @@ export function getSharedLayerRowHeight(
   const shellPad = getCompareCellShellPaddingY(compact)
   const contentHeight = Math.max(
     ...blueprints.map((blueprint) =>
-      getLayerRowMinHeight(layer, blueprint, compact),
+      // Each path has its own layer uuids — measure against the path's own
+      // layer, or every path but the first is measured as empty and the row
+      // ends up shorter than what actually renders.
+      getLayerRowMinHeight(
+        resolveBlueprintLayer(layer, blueprint),
+        blueprint,
+        compact,
+      ),
     ),
   )
   return getCompareCellShellMinHeight(contentHeight + shellPad, compact)

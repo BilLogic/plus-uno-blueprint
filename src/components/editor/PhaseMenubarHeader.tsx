@@ -1,14 +1,12 @@
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
-import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
+import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
 import {
-  BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
   BLUEPRINT_MENUBAR_HEADER_CLASS,
-  BLUEPRINT_MENUBAR_SEPARATOR_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
-  BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import { Menubar } from '@/components/ui/menubar'
+import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
   showsBlueprintFilters,
@@ -57,6 +55,7 @@ export function PhaseMenubarHeader({
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
+  const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
   const showFilterMenus =
     showFilters && showsBlueprintFilters(slide, slides) && onTogglePath
 
@@ -70,26 +69,29 @@ export function PhaseMenubarHeader({
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
         <div className="flex min-w-0 shrink-0 items-center gap-1.5">
-          {isScenario ? <ScenarioParallelInfoTooltip slide={slide} /> : null}
-          <span className={BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS}>{label}</span>
+          <NavbarSlideTitleNav
+            label={label}
+            description={description}
+            infoTooltip={infoTooltip}
+          />
+          {showFilterMenus ? (
+            <>
+              <span
+                className="shrink-0 text-xs text-muted-foreground/70"
+                aria-hidden
+              >
+                \
+              </span>
+              <StackHeaderFilterMenu
+                paths={paths}
+                selectedPathIds={selectedPathIds}
+                onTogglePath={onTogglePath!}
+                showPathTooltips={isScenario}
+              />
+            </>
+          ) : null}
         </div>
-        {description ? (
-          <>
-            <span className={BLUEPRINT_MENUBAR_SEPARATOR_CLASS} aria-hidden>
-              ·
-            </span>
-            <p className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS}>{description}</p>
-          </>
-        ) : null}
       </div>
-
-      {showFilterMenus ? (
-        <StackHeaderFilterMenu
-          paths={paths}
-          selectedPathIds={selectedPathIds}
-          onTogglePath={onTogglePath}
-        />
-      ) : null}
     </Menubar>
   )
 }

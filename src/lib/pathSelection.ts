@@ -8,8 +8,22 @@ export type PathListItem = {
   path_type: PathType
 }
 
+/** Prefer the canonical "Happy Path" when several paths share path_type happy. */
+export function pickPreferredPath<T extends { name: string; path_type: PathType }>(
+  paths: readonly T[],
+): T | undefined {
+  if (paths.length === 0) return undefined
+  const namedHappy = paths.find(
+    (path) =>
+      path.path_type === 'happy' &&
+      /^happy\s*path$/i.test(path.name.trim()),
+  )
+  if (namedHappy) return namedHappy
+  return paths.find((path) => path.path_type === 'happy') ?? paths[0]
+}
+
 export function defaultSelectedPathIds(paths: PathListItem[]): string[] {
-  const preferred = paths.find((p) => p.path_type === 'happy') ?? paths[0]
+  const preferred = pickPreferredPath(paths)
   return preferred ? [preferred.id] : []
 }
 

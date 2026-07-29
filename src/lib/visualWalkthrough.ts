@@ -1,5 +1,6 @@
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
+import { pickPreferredPath } from '@/lib/pathSelection'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 
@@ -49,7 +50,14 @@ export type VisualWalkthroughSession = {
   pathName: string
   pathDescription: string | null
   pathType: PathType
+  scenarioName?: string
+  phaseName?: string
   steps: VisualWalkthroughStep[]
+}
+
+export type VisualWalkthroughContextMeta = {
+  scenarioName?: string
+  phaseName?: string
 }
 
 export function filterWalkthroughBlueprints(
@@ -64,8 +72,11 @@ export function pickWalkthroughBlueprint(
   blueprints: BlueprintData[],
 ): BlueprintData | null {
   if (blueprints.length === 0) return null
+  const preferredPath = pickPreferredPath(
+    blueprints.map((blueprint) => blueprint.path),
+  )
   return (
-    blueprints.find((blueprint) => blueprint.path.path_type === 'happy') ??
+    blueprints.find((blueprint) => blueprint.path.id === preferredPath?.id) ??
     blueprints[0]
   )
 }
@@ -128,6 +139,7 @@ export function resolveVisualStepPictures(
 
 export function buildVisualWalkthroughSession(
   blueprint: BlueprintData,
+  meta?: VisualWalkthroughContextMeta,
 ): VisualWalkthroughSession {
   const steps = [...blueprint.steps]
     .sort((a, b) => a.column_position - b.column_position)
@@ -149,6 +161,8 @@ export function buildVisualWalkthroughSession(
     pathName: blueprint.path.name,
     pathDescription: blueprint.path.description,
     pathType: blueprint.path.path_type,
+    scenarioName: meta?.scenarioName?.trim() || undefined,
+    phaseName: meta?.phaseName?.trim() || undefined,
     steps,
   }
 }

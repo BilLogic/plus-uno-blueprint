@@ -1,7 +1,11 @@
 import { hasBlueprintFallback } from '@/data/blueprintFallbacks'
 
-/** Home = birds-eye service overview; detail = single slide/scenario editor. */
-export type EditorView = 'home' | 'detail'
+/**
+ * landing = orientation homepage;
+ * home = birds-eye service overview canvas;
+ * detail = focused phase/scenario on the canvas.
+ */
+export type EditorView = 'landing' | 'home' | 'detail'
 
 /** How blueprint paths are laid out on a scenario slide. */
 export type SlideViewType = 'single' | 'side-by-side' | 'integrated'
@@ -349,11 +353,17 @@ export function isSideBySideBlueprintSlide(slide: Slide): boolean {
 }
 
 export function getMainSlides(slides: Slide[] = FALLBACK_SLIDES): Slide[] {
-  return slides.filter((s) => !s.parentId)
+  return slides
+    .filter((s) => !s.parentId)
+    .slice()
+    .sort((a, b) => a.index - b.index || a.label.localeCompare(b.label))
 }
 
 export function getSubslides(parentId: string, slides: Slide[] = FALLBACK_SLIDES): Slide[] {
-  return slides.filter((s) => s.parentId === parentId)
+  return slides
+    .filter((s) => s.parentId === parentId)
+    .slice()
+    .sort((a, b) => a.index - b.index || a.label.localeCompare(b.label))
 }
 
 /** Sidebar / filmstrip order: each main slide followed by its subslides. */

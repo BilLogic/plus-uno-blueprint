@@ -43,9 +43,7 @@ export function CanvasBlueprintArtboard({
 }: CanvasBlueprintArtboardProps) {
   const label = getSlideDisplayLabel(slide, slides)
   const noPathsSelected =
-    hasPathFilters &&
-    !useIntegratedLayout &&
-    selectedPathIds.length === 0
+    hasPathFilters && selectedPathIds.length === 0
   const visibleBlueprints = noPathsSelected
     ? []
     : blueprints && blueprints.length > 0
@@ -101,9 +99,14 @@ export function CanvasBlueprintArtboard({
         onPointerDown={(e) => e.stopPropagation()}
       >
         {!showIntegratedGrid && !noPathsSelected && blueprintLoading && !hasBlueprint ? (
-          <div className="flex flex-1 flex-col gap-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="flex-1" />
+          <div
+            className="flex min-h-0 flex-1 flex-col gap-2"
+            role="status"
+            aria-busy="true"
+            aria-label="Loading blueprint"
+          >
+            <Skeleton className="h-5 w-40 rounded-full" />
+            <Skeleton className="min-h-0 flex-1 rounded-2xl" />
           </div>
         ) : showIntegratedGrid ? (
           <IntegratedBlueprintGrid
@@ -132,7 +135,6 @@ export function CanvasBlueprintArtboard({
                 data={data}
                 className="min-h-0 shrink-0"
                 compact
-                walkthroughBlueprints={visibleBlueprints}
               />
             ))}
           </div>

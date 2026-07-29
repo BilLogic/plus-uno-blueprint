@@ -82,12 +82,22 @@ export function shouldShowVisibilityLineAfter(
 }
 
 /**
+ * Support handoff lanes that sit below backstage actions. `support_systems`
+ * (e.g. Computer Systems) is the canonical role; PLUS also uses a null-role
+ * "Support Actions" swimlane that must still anchor the divider without
+ * picking up support_systems pill-cell rendering.
+ */
+function isSupportHandoffLayer(layer: LayerRoleSource): boolean {
+  if (getLayerRole(layer) === SUPPORT_SYSTEMS_ROLE) return true
+  return (
+    layer.name === 'Support Actions' || layer.name === 'Tech Support Actions'
+  )
+}
+
+/**
  * The internal interaction line marks the hand-off from backstage actions to
- * support systems, so it draws after a backstage-actions layer only when a
- * support-systems lane follows. (PLUS 'Back Stage Actions' lanes — backfilled
- * to `backstage_actions` — are followed by tech or generic support-action
- * lanes and never drew this line under name matching; anchoring on the
- * following lane keeps their rendering unchanged.)
+ * support systems / support actions, so it draws after a backstage-actions
+ * layer only when a support handoff lane follows.
  */
 export function shouldShowInternalInteractionLineAfter(
   layer: BlueprintLayer,
@@ -97,7 +107,7 @@ export function shouldShowInternalInteractionLineAfter(
   if (!layers) return false
   const index = layers.findIndex((entry) => entry.id === layer.id)
   const next = layers[index + 1]
-  return next !== undefined && getLayerRole(next) === SUPPORT_SYSTEMS_ROLE
+  return next !== undefined && isSupportHandoffLayer(next)
 }
 
 /** Light rule between swim lanes; omitted before interaction/visibility dividers. */
