@@ -461,6 +461,7 @@ function CompareLayerRow({
   const laneStyle = getBlueprintLayerStyle(
     layer.name,
     getBlueprintLayerZone(layer, layers),
+    layer.role,
   )
   const flushBottom = layerPrecedesBlueprintDivider(layer, layers)
   const isVisualLayer = shouldUseVisualContent(layer)
