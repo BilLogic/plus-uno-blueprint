@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef } from 'react'
+import { Fragment, useMemo, useRef, type ReactNode } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
@@ -28,6 +28,7 @@ import {
   LAYER_COLUMN_WIDTH,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
+  VISUAL_PLAY_GUTTER,
   getStepColumnsWidth,
   VISIBILITY_LINE_LABEL,
   getBlueprintGridMinHeight,
@@ -73,9 +74,6 @@ import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import type { BlueprintData } from '@/types/blueprint'
 
-/** Left gutter on the white board so the play control clears Visual cells. */
-const VISUAL_PLAY_GUTTER = 28
-
 type ServiceBlueprintGridProps = {
   data: BlueprintData
   className?: string
@@ -91,6 +89,8 @@ type ServiceBlueprintGridProps = {
   fillSwimlaneHeight?: boolean
   /** Render empty cell shells for missing / blank cells (homepage template). */
   showEmptyCells?: boolean
+  /** Absolutely-positioned overlay rendered inside the grid body (slice focus). */
+  focusOverlay?: ReactNode
 }
 
 export function ServiceBlueprintGrid({
@@ -105,6 +105,7 @@ export function ServiceBlueprintGrid({
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
   showEmptyCells = false,
+  focusOverlay,
 }: ServiceBlueprintGridProps) {
   const { path, steps, triggers } = data
   const layers = useMemo(
@@ -375,6 +376,7 @@ export function ServiceBlueprintGrid({
               pathType={path.path_type}
               pathName={path.name}
             />
+            {focusOverlay}
           </div>
 
           {layers.length === 0 && steps.length > 0 && (

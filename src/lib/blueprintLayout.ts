@@ -428,6 +428,8 @@ export const LAYER_COLUMN_WIDTH = 220
 export const STEP_COLUMN_WIDTH = 220
 /** Visible space between step columns where trigger arrows are drawn. */
 export const STEP_COLUMN_GAP = 24
+/** Left gutter on the white board so the play control clears Visual cells. */
+export const VISUAL_PLAY_GUTTER = 28
 
 export function getStepColumnLeft(stepIndex: number): number {
   return LAYER_COLUMN_WIDTH + stepIndex * (STEP_COLUMN_WIDTH + STEP_COLUMN_GAP)

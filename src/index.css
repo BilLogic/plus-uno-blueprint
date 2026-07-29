@@ -274,6 +274,26 @@
     transition-duration: 180ms;
   }
 
+  /* Slice focus — one scrim wash toward the canvas token (SliceFocusOverlay). */
+  .slice-focus-scrim {
+    background: color-mix(in srgb, var(--canvas) 78%, transparent);
+  }
+
+  /* Slice-member outlines persist whether or not the scrim is up. */
+  [data-slice-focus] [data-blueprint-cell-anchor][data-slice-member] {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  /* While focused, member cells lift above the z-40 scrim: raise the cell
+     shell (direct parent of a member cell, or grandparent for pill cells). */
+  [data-slice-focus='focused'] div:has(> [data-slice-member]),
+  [data-slice-focus='focused']
+    div:has(> [data-blueprint-cell] > [data-slice-member]) {
+    position: relative;
+    z-index: 50;
+  }
+
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
     background-color: var(
       --blueprint-cell-bg-hover,

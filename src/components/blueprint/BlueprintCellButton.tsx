@@ -3,6 +3,7 @@ import {
   useBlueprintCellDetailOptional,
   useBlueprintCellPreviewHover,
 } from '@/contexts/BlueprintCellDetailContext'
+import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
   getBlueprintCellInteractionStyle,
@@ -62,6 +63,13 @@ export function BlueprintCellButton({
         (resolvedCellId &&
           detail.directlyConnectedCellIds.has(resolvedCellId))),
   )
+  const sliceMembership = useSliceMembership()
+  const isSliceMember = Boolean(
+    sliceMembership &&
+      cellId &&
+      (sliceMembership.has(cellId) ||
+        (resolvedCellId && sliceMembership.has(resolvedCellId))),
+  )
   const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
@@ -116,6 +124,7 @@ export function BlueprintCellButton({
       aria-label={ariaLabel}
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
+      {...(isSliceMember ? { 'data-slice-member': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}
