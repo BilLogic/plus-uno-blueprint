@@ -13,6 +13,7 @@ import {
   EDITOR_SIDEBAR_WIDTH_PX,
 } from '@/components/editor/EditorSidebarRail'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { SignInControl } from '@/components/editor/SignInControl'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { SliceView } from '@/components/editor/SliceView'
@@ -82,6 +83,9 @@ export function EditorShell() {
               onHome={goLanding}
             />
             <SlideModeSidebarNav />
+            <div className="shrink-0 border-t border-border">
+              <SignInControl />
+            </div>
           </SidebarProvider>
         </div>
 

@@ -15,6 +15,11 @@ type SupabaseContextValue = {
   configured: boolean
   session: Session | null
   isLoading: boolean
+  /**
+   * Visibility hint for mutation UI (hidden — never disabled — when false).
+   * RLS is the authority; this only reflects "configured and signed in".
+   */
+  canWrite: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -62,6 +67,7 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       configured,
       session,
       isLoading,
+      canWrite: configured && session !== null,
     }),
     [client, configured, session, isLoading],
   )
