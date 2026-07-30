@@ -221,7 +221,10 @@ export function SliceView({ sliceId }: SliceViewProps) {
                 className="absolute inset-0 flex min-h-0 flex-col"
                 data-editor-view
               >
-                <ServiceOverviewView loadingVariant="spinner" />
+                <ServiceOverviewView
+                  loadingVariant="spinner"
+                  soloScenarioId={scenarioId}
+                />
               </div>
             </VisualWalkthroughShell>
           </EditorDetailScope>

@@ -48,6 +48,8 @@ type PhaseScenarioOverviewProps = {
   focusedScenarioId?: string | null
   /** When true, dim every scenario in this phase (another phase is focused). */
   dimAllScenarios?: boolean
+  /** Slice-tab scope: mount only this scenario's artboard. */
+  onlyScenarioId?: string | null
 }
 
 function PhaseScenarioConnector({ width }: { width: number }) {
@@ -99,6 +101,7 @@ export function PhaseScenarioOverview({
   displayViewType: displayViewTypeProp,
   focusedScenarioId = null,
   dimAllScenarios = false,
+  onlyScenarioId = null,
 }: PhaseScenarioOverviewProps) {
   const { getScenarioDisplayViewType, openDetail } = useEditor()
   const isOverview = variant === 'overview'
@@ -109,10 +112,12 @@ export function PhaseScenarioOverview({
     return <PhaseScenarioConnector width={scenarioGap} />
   }
 
-  const scenarios = useMemo(
-    () => getSubslides(phase.id, slides),
-    [phase.id, slides],
-  )
+  const scenarios = useMemo(() => {
+    const all = getSubslides(phase.id, slides)
+    return onlyScenarioId
+      ? all.filter((scenario) => scenario.id === onlyScenarioId)
+      : all
+  }, [onlyScenarioId, phase.id, slides])
   const scenarioIds = useMemo(
     () => scenarios.map((scenario) => scenario.id),
     [scenarios],

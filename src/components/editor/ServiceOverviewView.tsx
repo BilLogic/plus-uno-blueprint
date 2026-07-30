@@ -102,6 +102,8 @@ type ServicePhaseSectionProps = {
   dimmed?: boolean
   focusedScenarioId?: string | null
   focusActive?: boolean
+  /** Slice-tab scope: mount only this scenario's artboard within the phase. */
+  onlyScenarioId?: string | null
   onOpenPhase: (phaseId: string) => void
 }
 
@@ -120,6 +122,7 @@ function ServicePhaseSection({
   dimmed = false,
   focusedScenarioId = null,
   focusActive = false,
+  onlyScenarioId = null,
 }: ServicePhaseSectionProps) {
   const label = getSlideDisplayLabel(phase, slides)
   const description =
@@ -149,6 +152,7 @@ function ServicePhaseSection({
         getSelectedPathIds={getSelectedPathIds}
         displayViewType={displayViewType}
         focusedScenarioId={focusedScenarioId}
+        onlyScenarioId={onlyScenarioId}
         loading={false}
       />
     </CanvasPhaseSection>
@@ -162,10 +166,17 @@ type ServiceOverviewViewProps = {
    * layout-mimicking skeleton.
    */
   loadingVariant?: 'skeleton' | 'spinner'
+  /**
+   * Slice-tab scope: only this scenario's artboard (inside its own phase
+   * frame) mounts — neighboring scenarios/phases, lifecycle arrows, and the
+   * prev/next sequence nav all stay out of the canvas. Zoom/pan unchanged.
+   */
+  soloScenarioId?: string
 }
 
 export function ServiceOverviewView({
   loadingVariant = 'skeleton',
+  soloScenarioId,
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
@@ -181,10 +192,18 @@ export function ServiceOverviewView({
     setScenarioDisplayViewType,
     skipCanvasFitAnimation,
   } = useEditor()
-  const phases = getMainSlides(slides)
-  const scenarioIds = slides
-    .filter((slide) => isSubslide(slide))
-    .map((slide) => slide.id)
+  const allPhases = getMainSlides(slides)
+  const soloPhase = soloScenarioId
+    ? (allPhases.find((phase) =>
+        getSubslides(phase.id, slides).some(
+          (scenario) => scenario.id === soloScenarioId,
+        ),
+      ) ?? null)
+    : null
+  const phases = soloPhase ? [soloPhase] : allPhases
+  const scenarioIds = soloScenarioId
+    ? [soloScenarioId]
+    : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
   const isDetail = view === 'detail'
   const focusedScenarioId =
     isDetail && isSubslide(activeSlide) ? activeSlide.id : null
@@ -220,7 +239,9 @@ export function ServiceOverviewView({
   const noPathsSelected =
     overviewPaths.length > 0 && overviewSelectedPathIds.length === 0
 
-  const postToPreLoop = getOverviewPostToPreLoopTransition(phases)
+  const postToPreLoop = soloPhase
+    ? null
+    : getOverviewPostToPreLoopTransition(phases)
   const cellDetailBlueprints = useMemo(
     () => [...blueprintsByPathId.values()],
     [blueprintsByPathId],
@@ -305,7 +326,7 @@ export function ServiceOverviewView({
                 fitTopInset={fitInsets.topInset}
                 fitBottomInset={fitInsets.bottomInset}
                 animateFit={!skipCanvasFitAnimation}
-                showSequenceNav={isDetail}
+                showSequenceNav={isDetail && !soloScenarioId}
                 onResetView={isDetail ? goHome : undefined}
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}
@@ -355,6 +376,7 @@ export function ServiceOverviewView({
                           focusedScenarioId={
                             phaseIsFocused ? focusedScenarioId : null
                           }
+                          onlyScenarioId={soloScenarioId ?? null}
                           showFlowArrow={shouldShowOverviewPhaseFlowArrow(
                             phase,
                             phases[index + 1],
