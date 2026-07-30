@@ -448,6 +448,7 @@ export type Database = {
       propositions: {
         Row: {
           created_at: string
+          created_by: string | null
           delivery_cost: string | null
           funding: string | null
           partners: string | null
@@ -458,6 +459,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           delivery_cost?: string | null
           funding?: string | null
           partners?: string | null
@@ -468,6 +470,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           delivery_cost?: string | null
           funding?: string | null
           partners?: string | null
@@ -584,6 +587,7 @@ export type Database = {
           cell_ids: string[]
           cell_keys: string[]
           created_at: string
+          created_by: string | null
           id: string
           illustration: Json | null
           narrative: string | null
@@ -596,6 +600,7 @@ export type Database = {
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
+          created_by?: string | null
           id?: string
           illustration?: Json | null
           narrative?: string | null
@@ -608,6 +613,7 @@ export type Database = {
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
+          created_by?: string | null
           id?: string
           illustration?: Json | null
           narrative?: string | null
