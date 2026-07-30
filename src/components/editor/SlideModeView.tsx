@@ -28,8 +28,11 @@ export const SIDEBAR_SECTION_TRIGGER_CLASS =
 export function SlideModeSidebarNav() {
   const {
     slides,
-    activeSlideId,
-    openDetail,
+    selectPhase,
+    selectScenario,
+    selectedPhaseId,
+    selectedScenarioId,
+    focusNonce,
     enterCanvas,
     view,
     slidesLoading,
@@ -55,12 +58,19 @@ export function SlideModeSidebarNav() {
   // The phase/scenario nav always drives the app-level (base blueprint
   // view) editor state. When a tab is active that would be invisible, so
   // selecting a phase/scenario also returns to the base view.
-  const handleSelect = useCallback(
-    (slideId: string) => {
+  const handleSelectPhase = useCallback(
+    (phaseId: string) => {
       if (activeKey !== null) activateTab(null)
-      openDetail(slideId)
+      selectPhase(phaseId)
     },
-    [activateTab, activeKey, openDetail],
+    [activateTab, activeKey, selectPhase],
+  )
+  const handleSelectScenario = useCallback(
+    (scenarioId: string) => {
+      if (activeKey !== null) activateTab(null)
+      selectScenario(scenarioId)
+    },
+    [activateTab, activeKey, selectScenario],
   )
   const handleOverview = useCallback(() => {
     if (activeKey !== null) activateTab(null)
@@ -108,13 +118,16 @@ export function SlideModeSidebarNav() {
               ) : (
                 <SlideNav
                   slides={slides}
-                  activeSlideId={activeSlideId}
-                  onSelect={handleSelect}
+                  selectedPhaseId={selectedPhaseId}
+                  selectedScenarioId={selectedScenarioId}
+                  focusNonce={focusNonce}
+                  onSelectPhase={handleSelectPhase}
+                  onSelectScenario={handleSelectScenario}
                   onOverview={handleOverview}
                   isOverviewActive={view === 'home'}
                   isHome={view !== 'detail'}
                   expandedPhaseIds={expandedPhaseIds}
-                  onToggleExpanded={setPhaseExpanded}
+                  onSetExpanded={setPhaseExpanded}
                 />
               )}
             </AccordionContent>
