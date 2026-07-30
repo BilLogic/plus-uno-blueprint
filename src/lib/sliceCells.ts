@@ -2,6 +2,8 @@ import {
   getBlueprintFallback,
   getFallbackPathsForScenario,
 } from '@/data/blueprintFallbacks'
+import { shouldUseVisualContent } from '@/lib/blueprintLayout'
+import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { FALLBACK_NAV, getBlueprintScenarioId } from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
@@ -125,6 +127,50 @@ export function resolveSliceCells(
   })
 
   return { placements, missingCellIds, memberCellIds, sequenceByCellId }
+}
+
+/**
+ * Pictures for one presentation frame, from the frame's member cells:
+ * each member cell's own `picture` first, then the Visual-lane cell of the
+ * same step (many storyboard illustrations live on the Visual lane rather
+ * than the acting cell). Placeholder tokens are skipped; order follows the
+ * frame's cell order; duplicates collapse.
+ */
+export function resolveSliceFramePictures(
+  blueprint: BlueprintData | null,
+  item: SliceItem,
+): string[] {
+  if (!blueprint) return []
+
+  const cellById = new Map(blueprint.cells.map((cell) => [cell.id, cell]))
+  const visualLayerIds = new Set(
+    blueprint.layers
+      .filter((layer) => shouldUseVisualContent(layer))
+      .map((layer) => layer.id),
+  )
+  const visualCellByStepId = new Map(
+    blueprint.cells
+      .filter((cell) => visualLayerIds.has(cell.layer_id))
+      .map((cell) => [cell.step_id, cell]),
+  )
+
+  const pictures: string[] = []
+  const seen = new Set<string>()
+  const add = (picture: string | null | undefined) => {
+    const src = picture?.trim()
+    if (!src || isBlueprintStepVisualPlaceholder(src) || seen.has(src)) return
+    seen.add(src)
+    pictures.push(src)
+  }
+
+  for (const rawCellId of item.cell_ids) {
+    const cell = cellById.get(resolveBlueprintCellId(rawCellId))
+    if (!cell) continue
+    add(cell.picture)
+    add(visualCellByStepId.get(cell.step_id)?.picture)
+  }
+
+  return pictures
 }
 
 export type SliceIllustration = {

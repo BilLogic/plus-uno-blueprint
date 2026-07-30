@@ -18,6 +18,7 @@ import {
   orderedSliceCellIds,
   parseSliceIllustration,
   pickBlueprintForCells,
+  resolveSliceFramePictures,
   sliceIllustrationUrl,
 } from '@/lib/sliceCells'
 import { cn } from '@/lib/utils'
@@ -179,7 +180,16 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
     )
   }
 
+  // Stage media resolution: an authored illustration wins; otherwise fall
+  // back to the frame's own cell pictures (member cells first, then the
+  // Visual-lane cell of the same step); no media → title-slide layout.
   const illustration = parseSliceIllustration(item.illustration)
+  const framePictures = illustration
+    ? []
+    : resolveSliceFramePictures(blueprint, item).slice(0, 3)
+  const stageMedia: string[] = illustration
+    ? [sliceIllustrationUrl(illustration)]
+    : framePictures
   const frameCellIds = new Set(item.cell_ids.map(resolveBlueprintCellId))
   const caption = item.caption ?? detail.slice.title
 
@@ -205,14 +215,32 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
               <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground/70 uppercase">
                 Frame {clampedFrame + 1} of {frameCount}
               </p>
-              {illustration ? (
+              {stageMedia.length > 0 ? (
                 <>
-                  {/* Illustration is the star — large centered media area. */}
-                  <img
-                    src={sliceIllustrationUrl(illustration)}
-                    alt={caption}
-                    className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain"
-                  />
+                  {/* Media is the star — large centered area; multiple cell
+                      pictures in one frame sit side by side. */}
+                  <div className="flex max-w-full items-center justify-center gap-4">
+                    {stageMedia.map((src) => (
+                      <img
+                        key={src}
+                        src={src}
+                        alt={caption}
+                        className={cn(
+                          'max-h-[60vh] w-auto rounded-lg object-contain',
+                          stageMedia.length > 1
+                            ? 'min-w-0 bg-card/40 p-2'
+                            : 'max-w-full',
+                        )}
+                        style={
+                          stageMedia.length > 1
+                            ? {
+                                maxWidth: `${Math.floor(94 / stageMedia.length)}%`,
+                              }
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
                   <h2 className="max-w-3xl text-2xl font-semibold text-balance">
                     {caption}
                   </h2>
