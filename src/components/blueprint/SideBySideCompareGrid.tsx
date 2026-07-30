@@ -5,6 +5,7 @@ import {
   type RefObject,
 } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
+import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
@@ -271,6 +272,7 @@ function ComparePathColumn({
         gridTemplateRows: 'subgrid',
       }}
     >
+      <BlueprintColumnHandles steps={blueprint.steps} bodyRef={columnRef} />
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}
