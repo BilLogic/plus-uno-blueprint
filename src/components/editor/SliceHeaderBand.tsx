@@ -1,0 +1,86 @@
+import type { LucideIcon } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import type { SliceDetail } from '@/hooks/useSlice'
+import { cn } from '@/lib/utils'
+
+export type SliceHeaderPrimaryAction = {
+  label: string
+  icon: LucideIcon
+  onClick: () => void
+}
+
+/**
+ * Slice identity band — one component, two modes. It docks full-width under
+ * the tab strip in the slice focus tab and at the top of the presentation
+ * stage, so switching between the two reads as a mode change on one object
+ * rather than as two unrelated screens.
+ *
+ * Two rows, non-collapsible: slice identity (◇ title + type badge) with the
+ * primary action on the far right, then the slice description as an
+ * always-visible subtitle (em-dash when empty — authoring should require a
+ * description going forward), with the missing-cells notice beside it when
+ * nonzero.
+ *
+ * Every color is a token, so the band picks up dark tokens for free inside
+ * the presentation surface (whose root carries `.dark`).
+ */
+export function SliceHeaderBand({
+  detail,
+  missingCellCount = 0,
+  primaryAction,
+  className,
+}: {
+  detail: SliceDetail
+  missingCellCount?: number
+  primaryAction: SliceHeaderPrimaryAction
+  className?: string
+}) {
+  const description = detail.slice.description?.trim()
+  const PrimaryIcon = primaryAction.icon
+
+  return (
+    <div
+      data-editor-navbar
+      className={cn(
+        'flex w-full shrink-0 items-center gap-3 border-b border-border bg-sidebar px-4 py-2',
+        className,
+      )}
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="min-w-0 truncate text-sm font-semibold">
+            <span aria-hidden>◇ </span>
+            {detail.slice.title}
+          </h2>
+          <Badge variant="secondary" className="shrink-0">
+            {detail.slice.slice_type}
+          </Badge>
+        </div>
+        <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
+            {description || '—'}
+          </p>
+          {missingCellCount > 0 && (
+            <span className="shrink-0 text-xs text-amber-600 dark:text-amber-400">
+              {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
+              longer in the blueprint
+            </span>
+          )}
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        size="sm"
+        className="shrink-0 gap-1.5"
+        onClick={primaryAction.onClick}
+      >
+        <PrimaryIcon className="size-3" aria-hidden />
+        {primaryAction.label}
+      </Button>
+    </div>
+  )
+}

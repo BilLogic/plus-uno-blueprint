@@ -440,6 +440,111 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * Navigational motion.
+ *
+ * One vocabulary, taken from the sidebar collapse (the motion that was
+ * already right): structural moves are 320 ms on cubic-bezier(0.22, 1,
+ * 0.36, 1), opacity crossfades are 200 ms ease-out with a 75 ms stagger
+ * between an out/in pair. The JS-side constants live in `lib/motion.ts`.
+ *
+ * These are CSS animations rather than JS-driven class flips so they need
+ * no rAF tick to start — the element simply mounts (or gains
+ * `data-leaving`) and the animation runs.
+ * ------------------------------------------------------------------------- */
+@keyframes editor-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes editor-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes editor-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes editor-stage-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes editor-filmstrip-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes editor-filmstrip-out {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Presentation enter — sidebar collapses (320 ms, owned by the shell) ∥
+   stage fades up (200 ms) ∥ filmstrip slides up (200 ms). The 75 ms offset
+   lines the pair up with the surface crossfade above. */
+[data-presentation-root] [data-presentation-stage] {
+  animation: editor-stage-in 200ms ease-out 75ms both;
+}
+
+[data-presentation-root] [data-presentation-filmstrip] {
+  animation: editor-filmstrip-in 200ms ease-out 75ms both;
+}
+
+/* Presentation exit — the same three in reverse, same durations. The shell
+   holds the tab switch for the full 320 ms so this actually plays instead
+   of being cut off by the unmount; the band fades last so the dark surface
+   lands on the incoming tab rather than snapping to it. */
+[data-presentation-root][data-leaving] [data-presentation-stage] {
+  animation: editor-stage-out 200ms ease-out both;
+}
+
+[data-presentation-root][data-leaving] [data-presentation-filmstrip] {
+  animation: editor-filmstrip-out 200ms ease-out both;
+}
+
+[data-presentation-root][data-leaving] {
+  animation: editor-fade-out 200ms ease-out 120ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-presentation-root],
+  [data-presentation-root] [data-presentation-stage],
+  [data-presentation-root] [data-presentation-filmstrip] {
+    animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * Print / PDF export (Cmd+P → Save as PDF).
  * Goal: while viewing a blueprint, printing yields the per-path blueprint grid
  * at natural scale on a white page — no app chrome, no zoom/pan transform.

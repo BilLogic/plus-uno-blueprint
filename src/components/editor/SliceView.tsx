@@ -11,15 +11,13 @@ import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthrough
 import { PendingCanvasLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { DelayedSpinner } from '@/components/ui/spinner'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { EditorDetailScope } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
-import type { SliceDetail } from '@/hooks/useSlice'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { resolveSliceCells } from '@/lib/sliceCells'
 import { cn } from '@/lib/utils'
@@ -136,12 +134,16 @@ export function SliceView({ sliceId }: SliceViewProps) {
   }
 
   const header = (
-    <SliceTabHeader
+    <SliceHeaderBand
       detail={detail}
       // Every cell reads as missing until the blueprint lands — the notice
       // stays out of the band rather than flashing a false count.
       missingCellCount={blueprint ? resolution.missingCellIds.length : 0}
-      onPresent={() => openTab({ kind: 'present', sliceId })}
+      primaryAction={{
+        label: 'Present',
+        icon: Play,
+        onClick: () => openTab({ kind: 'present', sliceId }),
+      }}
     />
   )
 
@@ -199,68 +201,6 @@ export function SliceView({ sliceId }: SliceViewProps) {
         {!focused && <SliceRefocusPill onRefocus={() => setFocused(true)} />}
       </div>
     </SliceMembershipContext.Provider>
-  )
-}
-
-/**
- * Slice header band, docked full-width under the tab strip in place of the
- * embedded view's own menubar header. Two rows, non-collapsible: slice
- * identity (◇ title + type badge) with Present on the far right, then the
- * slice description as an always-visible subtitle (em-dash when empty —
- * authoring should require a description going forward), with the
- * missing-cells notice beside it when nonzero.
- */
-function SliceTabHeader({
-  detail,
-  missingCellCount,
-  onPresent,
-}: {
-  detail: SliceDetail
-  missingCellCount: number
-  onPresent: () => void
-}) {
-  const description = detail.slice.description?.trim()
-
-  return (
-    <div
-      data-editor-navbar
-      className="flex w-full shrink-0 items-center gap-3 border-b border-border bg-sidebar px-4 py-2"
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <h2 className="min-w-0 truncate text-sm font-semibold">
-            <span aria-hidden>◇ </span>
-            {detail.slice.title}
-          </h2>
-          <Badge variant="secondary" className="shrink-0">
-            {detail.slice.slice_type}
-          </Badge>
-        </div>
-        <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
-          <p className="min-w-0 truncate text-xs text-muted-foreground">
-            {description || '—'}
-          </p>
-          {missingCellCount > 0 && (
-            <span className="shrink-0 text-xs text-amber-600 dark:text-amber-400">
-              {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
-              longer in the blueprint
-            </span>
-          )}
-        </div>
-      </div>
-
-      <Button
-        type="button"
-        size="sm"
-        className="shrink-0 gap-1.5"
-        onClick={onPresent}
-      >
-        <Play className="size-3" aria-hidden />
-        Present
-      </Button>
-    </div>
   )
 }
 

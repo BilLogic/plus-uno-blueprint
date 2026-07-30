@@ -7,6 +7,7 @@ import {
   type PointerEvent,
 } from 'react'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
+import { prefersReducedMotion } from '@/lib/motion'
 import {
   BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN,
   BLUEPRINT_VIEWPORT_FIT_TOP_INSET,
@@ -88,17 +89,6 @@ function measureFitBounds(
 
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
-/**
- * Read live rather than at mount: the OS setting can change mid-session and
- * every fit should honor the current value.
- */
-function prefersReducedMotion() {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-    return false
-  }
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 /** Sub-pixel camera deltas aren't worth a React commit. */

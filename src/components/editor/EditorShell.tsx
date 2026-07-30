@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useEditor } from '@/contexts/EditorContext'
 import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
@@ -18,15 +18,22 @@ import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { SliceView } from '@/components/editor/SliceView'
 import { TabStrip } from '@/components/editor/TabStrip'
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { tabKey, useViewState, type TabDescriptor } from '@/contexts/viewStateStore'
+import {
+  tabKey,
+  useViewState,
+  type TabDescriptor,
+} from '@/contexts/viewStateStore'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
+import {
+  MOTION_STRUCTURAL_EASE,
+  MOTION_STRUCTURAL_MS,
+  prefersReducedMotion,
+} from '@/lib/motion'
 import { cn } from '@/lib/utils'
-
-const SIDEBAR_WIDTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 export function EditorShell() {
   const { view, goHome, goLanding } = useEditor()
-  const { activeTab, activateTab, tabs } = useViewState()
+  const { activeTab, activateTab, openTab, tabs } = useViewState()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
   // Home reads as active only on the overview canvas itself, and only while
@@ -35,8 +42,33 @@ export function EditorShell() {
 
   // The sidebar stays expanded (and functional) while a slice tab is
   // active — the Paths filter now lives there, and phase clicks return to
-  // the base view via the nav wiring. Present tabs unmount it entirely.
+  // the base view via the nav wiring.
   const activeTabKind = activeTab?.kind ?? null
+
+  // Leaving presentation runs before the tab actually switches: tabs unmount
+  // on switch, so the exit animation has to play while the present tab is
+  // still mounted. `leavingPresent` drops the shell back to its non-present
+  // pose (sidebar expands) while the presentation surface fades out, then
+  // the tab switch lands at the end of the same 320 ms.
+  const [leavingPresent, setLeavingPresent] = useState(false)
+  const leaveTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (leaveTimer.current !== null) window.clearTimeout(leaveTimer.current)
+    },
+    [],
+  )
+
+  // Presentation is full-bleed: the sidebar collapses to its icon rail on
+  // the same 320 ms width ease as every other collapse — it never unmounts,
+  // which is what used to make entering presentation snap.
+  const presenting = activeTabKind === 'present' && !leavingPresent
+  const railOnly = sidebarCollapsed || presenting
+
+  useEffect(() => {
+    // Entering and leaving presentation both resize the canvas container.
+    suppressCanvasResizeRefit()
+  }, [presenting])
 
   const toggleSidebar = () => {
     // The width ease resizes the canvas container for 320 ms. That is
@@ -44,6 +76,30 @@ export function EditorShell() {
     suppressCanvasResizeRefit()
     setSidebarCollapsed((collapsed) => !collapsed)
   }
+
+  /**
+   * Return: exit presentation onto that slice's focus tab, creating the tab
+   * if it is not already open. The three entry moves play in reverse over
+   * the same durations before the switch commits.
+   */
+  const exitPresentation = useCallback(
+    (sliceId: string) => {
+      if (leaveTimer.current !== null) return
+      const land = () => {
+        leaveTimer.current = null
+        openTab({ kind: 'slice', sliceId })
+        setLeavingPresent(false)
+      }
+      if (prefersReducedMotion()) {
+        land()
+        return
+      }
+      setLeavingPresent(true)
+      suppressCanvasResizeRefit()
+      leaveTimer.current = window.setTimeout(land, MOTION_STRUCTURAL_MS)
+    },
+    [openTab],
+  )
 
   // Same reasoning for the tab strip appearing/disappearing: opening the
   // first slice tab (or closing the last) changes the canvas height.
@@ -72,23 +128,20 @@ export function EditorShell() {
       className="relative flex h-svh overflow-hidden bg-background"
       data-editor-shell
     >
-      {/* Presentation is full-bleed: the sidebar unmounts entirely while a
-          present tab is active; the tab strip stays visible for exit. */}
-      {activeTabKind !== 'present' && (
       <aside
         className={cn(
           'relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar',
-          sidebarCollapsed
+          railOnly
             ? EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS
             : EDITOR_SIDEBAR_WIDTH_CLASS,
         )}
         style={{
           transitionProperty: 'width',
-          transitionDuration: '320ms',
-          transitionTimingFunction: SIDEBAR_WIDTH_EASE,
+          transitionDuration: `${MOTION_STRUCTURAL_MS}ms`,
+          transitionTimingFunction: MOTION_STRUCTURAL_EASE,
         }}
         data-editor-sidebar=""
-        data-collapsed={sidebarCollapsed ? '' : undefined}
+        data-collapsed={railOnly ? '' : undefined}
         aria-label="Workspace navigation"
       >
         {/*
@@ -99,11 +152,11 @@ export function EditorShell() {
           className={cn(
             'flex h-full min-h-0 w-60 flex-col',
             'transition-opacity duration-200 ease-out',
-            sidebarCollapsed
+            railOnly
               ? 'pointer-events-none opacity-0'
               : 'opacity-100 delay-75',
           )}
-          aria-hidden={sidebarCollapsed}
+          aria-hidden={railOnly}
         >
           <SidebarProvider
             style={
@@ -130,31 +183,41 @@ export function EditorShell() {
           className={cn(
             'absolute inset-y-0 left-0 z-10 flex w-12 flex-col items-center gap-1 px-1 py-2',
             'transition-opacity duration-200 ease-out',
-            sidebarCollapsed
+            railOnly
               ? 'opacity-100 delay-75'
               : 'pointer-events-none opacity-0',
           )}
-          aria-hidden={!sidebarCollapsed}
+          aria-hidden={!railOnly}
         >
           <HomeNavButton
             isActive={isOverview}
             onClick={goOverview}
             size="icon-sm"
           />
-          <SidebarCollapseButton
-            collapsed={sidebarCollapsed}
-            onToggle={toggleSidebar}
-            size="icon-sm"
-          />
+          {/* Presentation already forces the rail; offering a collapse
+              toggle there would be a button that changes nothing. */}
+          {!presenting && (
+            <SidebarCollapseButton
+              collapsed={sidebarCollapsed}
+              onToggle={toggleSidebar}
+              size="icon-sm"
+            />
+          )}
         </div>
       </aside>
-      )}
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TabStrip />
         <div className="relative min-h-0 min-w-0 flex-1">
           {/* Only the active tab's content mounts. */}
-          <ActiveTabContent tab={activeTab} isLanding={isLanding} />
+          <div className="absolute inset-0">
+            <ActiveTabContent
+              tab={activeTab}
+              isLanding={isLanding}
+              leavingPresent={leavingPresent}
+              onReturn={exitPresentation}
+            />
+          </div>
         </div>
       </main>
     </div>
@@ -164,9 +227,13 @@ export function EditorShell() {
 function ActiveTabContent({
   tab,
   isLanding,
+  leavingPresent,
+  onReturn,
 }: {
   tab: TabDescriptor | null
   isLanding: boolean
+  leavingPresent: boolean
+  onReturn: (sliceId: string) => void
 }) {
   if (tab === null) {
     // Base blueprint view — existing landing / home / detail behavior.
@@ -187,6 +254,13 @@ function ActiveTabContent({
     case 'slice':
       return <SliceView key={tabKey(tab)} sliceId={tab.sliceId} />
     case 'present':
-      return <SlicePresentation key={tabKey(tab)} sliceId={tab.sliceId} />
+      return (
+        <SlicePresentation
+          key={tabKey(tab)}
+          sliceId={tab.sliceId}
+          leaving={leavingPresent}
+          onReturn={() => onReturn(tab.sliceId)}
+        />
+      )
   }
 }

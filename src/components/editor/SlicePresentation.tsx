@@ -6,7 +6,8 @@ import {
   useState,
   type KeyboardEvent,
 } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react'
+import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { DelayedSpinner } from '@/components/ui/spinner'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
@@ -34,6 +35,15 @@ function cellSnippet(cell: BlueprintCell | undefined): string {
 
 type SlicePresentationProps = {
   sliceId: string
+  /**
+   * Exit request. The shell owns it because leaving is a shell-wide move:
+   * the sidebar re-expands in step with the stage fading out, and the tab
+   * only switches once that has played (tabs unmount on switch, so the
+   * outgoing animation has to happen while this tab is still mounted).
+   */
+  onReturn: () => void
+  /** True while the shell is playing the exit animation. */
+  leaving?: boolean
 }
 
 /**
@@ -45,8 +55,16 @@ type SlicePresentationProps = {
  * navigation never refetches. Keyboard is scoped to the container (tabIndex
  * + onKeyDown, no window listeners); the frame mirrors to the URL via the
  * debounced ViewStateContext mechanism.
+ *
+ * The slice header band rides at the top of the stage in dark tokens, with
+ * Return where the focus tab shows Present — presentation is a mode of the
+ * slice, not a separate screen.
  */
-export function SlicePresentation({ sliceId }: SlicePresentationProps) {
+export function SlicePresentation({
+  sliceId,
+  onReturn,
+  leaving = false,
+}: SlicePresentationProps) {
   const { openTab, reportPresentFrame, restoredFrame, consumeRestoredFrame } =
     useViewState()
 
@@ -129,6 +147,12 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
     [openTab, sliceId],
   )
 
+  const returnAction = {
+    label: 'Return',
+    icon: CornerUpLeft,
+    onClick: onReturn,
+  }
+
   // All-or-nothing: the stage waits for the blueprint too, otherwise every
   // cell chip paints "Removed cell" for a beat before the cells land.
   if (
@@ -155,15 +179,25 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
 
   if (frameCount === 0 || !item) {
     return (
-      <div className="dark flex h-full items-center justify-center bg-background p-8 text-foreground">
-        <div className="max-w-sm text-center">
-          <p className="text-2xl font-semibold">
-            <span aria-hidden>▶ </span>
-            {detail.slice.title}
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            This slice has no frames yet.
-          </p>
+      <div
+        className="dark flex h-full min-h-0 flex-col bg-background text-foreground"
+        data-presentation-root=""
+        data-leaving={leaving ? '' : undefined}
+      >
+        <SliceHeaderBand detail={detail} primaryAction={returnAction} />
+        <div
+          className="flex min-h-0 flex-1 items-center justify-center p-8"
+          data-presentation-stage=""
+        >
+          <div className="max-w-sm text-center">
+            <p className="text-2xl font-semibold">
+              <span aria-hidden>▶ </span>
+              {detail.slice.title}
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              This slice has no frames yet.
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -189,9 +223,18 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
       onKeyDown={handleKeyDown}
       aria-label={`${detail.slice.title} presentation`}
       className="dark relative flex h-full min-h-0 flex-col bg-background text-foreground outline-none"
+      data-presentation-root=""
+      data-leaving={leaving ? '' : undefined}
     >
+      {/* Persists across slice ⇄ presentation — the band is the one constant,
+          so the switch reads as a mode change on one object. */}
+      <SliceHeaderBand detail={detail} primaryAction={returnAction} />
+
       {/* Stage — mini-map anchors bottom-right of this box, above the filmstrip. */}
-      <div className="relative flex min-h-0 flex-1 flex-col">
+      <div
+        className="relative flex min-h-0 flex-1 flex-col"
+        data-presentation-stage=""
+      >
         <div className="flex min-h-0 flex-1 items-stretch gap-2 px-4 pt-5">
           <FrameNavButton
             direction="prev"
@@ -341,7 +384,10 @@ function PresentationFilmstrip({
   }
 
   return (
-    <div className="shrink-0 overflow-x-auto border-t border-border px-6 py-4">
+    <div
+      className="shrink-0 overflow-x-auto border-t border-border px-6 py-4"
+      data-presentation-filmstrip=""
+    >
       {/* Centered to match the stage; `w-max mx-auto` keeps centering while the
           strip stays scrollable when frames overflow the viewport. */}
       <div className="mx-auto flex w-max items-start gap-6">
