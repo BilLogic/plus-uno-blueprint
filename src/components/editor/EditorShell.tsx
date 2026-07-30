@@ -12,6 +12,7 @@ import {
   EDITOR_SIDEBAR_WIDTH_PX,
 } from '@/components/editor/EditorSidebarRail'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { SliceView } from '@/components/editor/SliceView'
@@ -269,14 +270,18 @@ function ActiveTabContent({
     return isLanding ? (
       <Homepage />
     ) : (
-      <VisualWalkthroughShell>
-        <div
-          className="absolute inset-0 flex min-h-0 flex-col"
-          data-editor-view
-        >
-          <ServiceOverviewView />
-        </div>
-      </VisualWalkthroughShell>
+      // One mode per surface. The base canvas gets its own, independent of
+      // whatever mode a slice tab is in.
+      <CanvasModeProvider>
+        <VisualWalkthroughShell>
+          <div
+            className="absolute inset-0 flex min-h-0 flex-col"
+            data-editor-view
+          >
+            <ServiceOverviewView />
+          </div>
+        </VisualWalkthroughShell>
+      </CanvasModeProvider>
     )
   }
   switch (tab.kind) {

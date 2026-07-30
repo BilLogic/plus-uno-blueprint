@@ -6,7 +6,7 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react'
-import { Check, Pencil, Play } from 'lucide-react'
+import { Check, Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { PendingCanvasLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
@@ -17,7 +17,8 @@ import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { DelayedSpinner } from '@/components/ui/spinner'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { EditorDetailScope } from '@/contexts/EditorContext'
-import { useSupabase } from '@/contexts/SupabaseProvider'
+import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
+import { useCanvasMode } from '@/contexts/canvasModeContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
@@ -44,6 +45,18 @@ type SliceViewProps = {
  * (BlueprintCellButton reads SliceMembershipContext).
  */
 export function SliceView({ sliceId }: SliceViewProps) {
+  // The provider sits above the surface, not inside the viewport, because the
+  // slice tab itself has to know the mode: in Design mode the tab *is* the
+  // editor, so the frame strip and the picker mount here rather than behind a
+  // separate Edit button.
+  return (
+    <CanvasModeProvider>
+      <SliceSurface sliceId={sliceId} />
+    </CanvasModeProvider>
+  )
+}
+
+function SliceSurface({ sliceId }: SliceViewProps) {
   const { openTab } = useViewState()
   const {
     result,
@@ -71,8 +84,11 @@ export function SliceView({ sliceId }: SliceViewProps) {
   )
 
   const [focused, setFocused] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const { canWrite } = useSupabase()
+  const canvasMode = useCanvasMode()
+  // Design mode is edit mode. Two overlapping "clicks mean something else"
+  // states was one too many.
+  const editing = canvasMode?.mode === 'design'
+  const setMode = canvasMode?.setMode
 
   // Click vs drag discrimination: a drag-pan also fires a click on pointer
   // up, which must not toggle the focus dim. Track the pointer-down origin
@@ -145,17 +161,16 @@ export function SliceView({ sliceId }: SliceViewProps) {
       missingCellCount={blueprint ? resolution.missingCellIds.length : 0}
       primaryAction={
         editing
-          ? { label: 'Done', icon: Check, onClick: () => setEditing(false) }
+          ? {
+              label: 'Done',
+              icon: Check,
+              onClick: () => setMode?.('view'),
+            }
           : {
               label: 'Present',
               icon: Play,
               onClick: () => openTab({ kind: 'present', sliceId }),
             }
-      }
-      secondaryAction={
-        canWrite && !editing
-          ? { label: 'Edit', icon: Pencil, onClick: () => setEditing(true) }
-          : undefined
       }
     />
   )
@@ -221,7 +236,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
   return (
     <SliceMembershipContext.Provider value={membership}>
       {editing ? (
-        <SliceEditSession detail={detail} onClose={() => setEditing(false)}>
+        <SliceEditSession detail={detail} onClose={() => setMode?.('view')}>
           {canvas}
         </SliceEditSession>
       ) : (

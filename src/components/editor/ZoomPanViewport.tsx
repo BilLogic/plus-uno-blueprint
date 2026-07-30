@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
 import { CanvasAnnotationLayer } from '@/components/editor/CanvasAnnotationLayer'
 import { CanvasAnnotationToolbar } from '@/components/editor/CanvasAnnotationToolbar'
-import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { CanvasSelectionProvider } from '@/components/editor/CanvasSelectionProvider'
 import { CanvasPenCursor } from '@/components/editor/CanvasPenCursor'
 import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
@@ -76,11 +75,9 @@ function ZoomPanViewportInner({
   usePublishCanvasZoomChrome(onResetView)
 
   return (
-    // One mode per viewport: the base canvas and each slice tab are separate
-    // surfaces, and editing a slice while reading the base blueprint is a
-    // normal thing to want. It wraps the whole viewport, not just the
-    // toolbar, because the grid reads the mode too.
-    <CanvasModeProvider>
+    // The mode provider is mounted per *surface* (EditorShell for the base
+    // canvas, SliceView for a slice tab) rather than here — a slice tab has to
+    // know the mode above its viewport to swap in the editor.
     <CanvasSelectionProvider>
     <div
       className={cn('relative min-h-0 flex-1', className)}
@@ -117,6 +114,5 @@ function ZoomPanViewportInner({
       <CanvasAnnotationToolbar />
     </div>
     </CanvasSelectionProvider>
-    </CanvasModeProvider>
   )
 }
