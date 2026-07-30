@@ -59,6 +59,9 @@ export function EditorShell() {
       className="relative flex h-svh overflow-hidden bg-background"
       data-editor-shell
     >
+      {/* Presentation is full-bleed: the sidebar unmounts entirely while a
+          present tab is active; the tab strip stays visible for exit. */}
+      {activeTabKind !== 'present' && (
       <aside
         className={cn(
           'relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar',
@@ -130,6 +133,7 @@ export function EditorShell() {
           />
         </div>
       </aside>
+      )}
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TabStrip />

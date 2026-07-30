@@ -39,12 +39,14 @@ type SlicePresentationProps = {
 }
 
 /**
- * Presentation tab: main stage (caption, narrative, illustration, cell
- * chips), filmstrip of cells bracketed per frame, mini-map locator. Frames
- * render synchronously from the cached useSlice data — navigation never
- * refetches. Keyboard is scoped to the container (tabIndex + onKeyDown, no
- * window listeners); the frame mirrors to the URL via the debounced
- * ViewStateContext mechanism.
+ * Presentation tab: a dark full-bleed stage (the root carries the `.dark`
+ * token class regardless of app theme) with the illustration as the star
+ * when present, caption as headline, cell chips as a subtle bottom row, a
+ * dim mini-map locator bottom-right, and a filmstrip of cells bracketed per
+ * frame. Frames render synchronously from the cached useSlice data —
+ * navigation never refetches. Keyboard is scoped to the container (tabIndex
+ * + onKeyDown, no window listeners); the frame mirrors to the URL via the
+ * debounced ViewStateContext mechanism.
  */
 export function SlicePresentation({ sliceId }: SlicePresentationProps) {
   const { openTab, reportPresentFrame, restoredFrame } = useViewState()
@@ -158,13 +160,13 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
 
   if (frameCount === 0 || !item) {
     return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="max-w-sm rounded-lg border border-border bg-card p-6 text-center shadow-sm">
-          <p className="text-sm font-semibold">
+      <div className="dark flex h-full items-center justify-center bg-background p-8 text-foreground">
+        <div className="max-w-sm text-center">
+          <p className="text-2xl font-semibold">
             <span aria-hidden>▶ </span>
             {detail.slice.title}
           </p>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             This slice has no frames yet.
           </p>
         </div>
@@ -174,6 +176,7 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
 
   const illustration = parseSliceIllustration(item.illustration)
   const frameCellIds = new Set(item.cell_ids.map(resolveBlueprintCellId))
+  const caption = item.caption ?? detail.slice.title
 
   return (
     <div
@@ -181,62 +184,84 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
       tabIndex={-1}
       onKeyDown={handleKeyDown}
       aria-label={`${detail.slice.title} presentation`}
-      className="relative flex h-full min-h-0 flex-col bg-background outline-none"
+      className="dark relative flex h-full min-h-0 flex-col bg-background text-foreground outline-none"
     >
-      {blueprint && (
-        <PresentationMiniMap
-          blueprint={blueprint}
-          memberCellIds={memberCellIds}
-          frameCellIds={frameCellIds}
-        />
-      )}
+      {/* Stage — mini-map anchors bottom-right of this box, above the filmstrip. */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 items-stretch gap-2 px-4 pt-5">
+          <FrameNavButton
+            direction="prev"
+            disabled={clampedFrame === 0}
+            onClick={() => goToFrame(clampedFrame - 1)}
+          />
 
-      <div className="flex min-h-0 flex-1 items-stretch gap-2 px-4 py-6">
-        <FrameNavButton
-          direction="prev"
-          disabled={clampedFrame === 0}
-          onClick={() => goToFrame(clampedFrame - 1)}
-        />
-
-        <div className="flex min-w-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-2 text-center">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Frame {clampedFrame + 1} of {frameCount}
-          </p>
-          <h2 className="max-w-2xl text-2xl font-semibold text-balance">
-            {item.caption ?? detail.slice.title}
-          </h2>
-          {item.narrative && (
-            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-              {item.narrative}
-            </p>
-          )}
-          {illustration && (
-            <img
-              src={sliceIllustrationUrl(illustration)}
-              alt={item.caption ?? `Frame ${clampedFrame + 1} illustration`}
-              className="max-h-[40vh] w-auto max-w-full rounded-md border border-border object-contain"
-            />
-          )}
-          <div className="flex max-w-2xl flex-wrap items-center justify-center gap-2">
-            {item.cell_ids.map((cellId) => (
-              <button
-                key={cellId}
-                type="button"
-                onClick={openSliceTab}
-                title="Open in slice focus view"
-                className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground shadow-sm transition-colors hover:bg-accent"
-              >
-                {cellSnippet(cellById.get(resolveBlueprintCellId(cellId)))}
-              </button>
-            ))}
+          <div className="min-w-0 flex-1 overflow-y-auto px-2">
+            <div className="flex min-h-full flex-col items-center justify-center gap-4 py-4 text-center">
+              <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground/70 uppercase">
+                Frame {clampedFrame + 1} of {frameCount}
+              </p>
+              {illustration ? (
+                <>
+                  {/* Illustration is the star — large centered media area. */}
+                  <img
+                    src={sliceIllustrationUrl(illustration)}
+                    alt={caption}
+                    className="max-h-[60vh] w-auto max-w-full rounded-lg object-contain"
+                  />
+                  <h2 className="max-w-3xl text-2xl font-semibold text-balance">
+                    {caption}
+                  </h2>
+                  {item.narrative && (
+                    <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
+                      {item.narrative}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* No illustration: title-slide layout, no card frame. */}
+                  <h2 className="mt-6 max-w-3xl text-3xl font-semibold text-balance">
+                    {caption}
+                  </h2>
+                  {item.narrative && (
+                    <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+                      {item.narrative}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
+
+          <FrameNavButton
+            direction="next"
+            disabled={clampedFrame === frameCount - 1}
+            onClick={() => goToFrame(clampedFrame + 1)}
+          />
         </div>
 
-        <FrameNavButton
-          direction="next"
-          disabled={clampedFrame === frameCount - 1}
-          onClick={() => goToFrame(clampedFrame + 1)}
-        />
+        {/* Cell chips — subtle row at the bottom of the stage. */}
+        <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 px-24 pt-3 pb-4">
+          {item.cell_ids.map((cellId) => (
+            <button
+              key={cellId}
+              type="button"
+              onClick={openSliceTab}
+              title="Open in slice focus view"
+              className="rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              {cellSnippet(cellById.get(resolveBlueprintCellId(cellId)))}
+            </button>
+          ))}
+        </div>
+
+        {blueprint && (
+          <PresentationMiniMap
+            blueprint={blueprint}
+            memberCellIds={memberCellIds}
+            frameCellIds={frameCellIds}
+          />
+        )}
       </div>
 
       {frameCount > 1 && (
@@ -368,11 +393,11 @@ function PresentationMiniMap({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute top-4 right-4 z-10 rounded-md border border-border bg-card/90 p-2 shadow-sm"
+      className="absolute right-3 bottom-2 z-10 rounded-md border border-border bg-card/80 p-1.5 opacity-40 transition-opacity duration-150 hover:opacity-100"
     >
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-px">
         {layers.map((layer) => (
-          <div key={layer.id} className="flex gap-0.5">
+          <div key={layer.id} className="flex gap-px">
             {blueprint.steps.map((step) => {
               const cell = getCellAt(cellLookup, layer.id, step.id)
               const isMember = cell !== undefined && memberCellIds.has(cell.id)
@@ -381,7 +406,7 @@ function PresentationMiniMap({
                 <div
                   key={step.id}
                   className={cn(
-                    'h-1.5 w-2.5 rounded-[2px]',
+                    'h-1 w-2 rounded-[1px]',
                     isCurrent
                       ? 'bg-foreground'
                       : isMember
@@ -402,7 +427,7 @@ function PresentationMiniMap({
 
 function PresentationMessage({ children }: { children: string }) {
   return (
-    <div className="flex h-full items-center justify-center p-8">
+    <div className="dark flex h-full items-center justify-center bg-background p-8">
       <p className="text-sm text-muted-foreground">{children}</p>
     </div>
   )

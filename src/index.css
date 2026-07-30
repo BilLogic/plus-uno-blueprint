@@ -70,8 +70,15 @@
  * (packages/ui themes + semantic.css): green brand (~159°), warm-neutral
  * surfaces, soft elevation toward white. Layer stack (light): canvas
  * (darkest) → sidebar → card/menubar → popover (lightest).
+ *
+ * The whole derived block also applies at `.dark` scopes so a subtree can
+ * opt into dark tokens (presentation stage): the later `.dark` rule
+ * overrides the dial inputs, and re-declaring the derived vars here makes
+ * them recompute locally (custom properties otherwise inherit the values
+ * already substituted at :root).
  */
-:root {
+:root,
+.dark {
   --radius: 0.625rem;
 
   /* Theme inputs — Supabase light.css */
