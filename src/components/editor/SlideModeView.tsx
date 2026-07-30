@@ -34,6 +34,8 @@ export function SlideModeSidebarNav() {
     view,
     slidesLoading,
     slidesError,
+    expandedPhaseIds,
+    setPhaseExpanded,
   } = useEditor()
   const { activeKey, activeTab, activateTab } = useViewState()
 
@@ -111,6 +113,8 @@ export function SlideModeSidebarNav() {
                   onOverview={handleOverview}
                   isOverviewActive={view === 'home'}
                   isHome={view !== 'detail'}
+                  expandedPhaseIds={expandedPhaseIds}
+                  onToggleExpanded={setPhaseExpanded}
                 />
               )}
             </AccordionContent>

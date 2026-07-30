@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -11,6 +12,7 @@ import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
 import { mergeSlidesWithFallback } from '@/lib/mergeSlidesWithFallback'
 import {
   FALLBACK_NAV,
+  isSubslide,
   type EditorView,
   type NavItem,
   type SlideViewType,
@@ -26,10 +28,36 @@ type EditorContextValue = {
   /** Enter the overview canvas from the homepage without a fit zoom animation. */
   enterCanvas: () => void
   /**
-   * When true, the next overview fit should jump instead of animating
-   * (set by enterCanvas; cleared by goHome).
+   * When true, the next fit should jump instead of animating. One-shot:
+   * set by enterCanvas, cleared by the fit that consumes it (and by any
+   * navigation, which is a fresh animation intent).
    */
   skipCanvasFitAnimation: boolean
+  /** Called by the canvas once the skip has been applied to a fit. */
+  consumeCanvasFitAnimationSkip: () => void
+
+  // ---- Navigation state -------------------------------------------------
+  /** Selected phase, or null when nothing is selected (overview/landing). */
+  selectedPhaseId: string | null
+  /** Selected scenario; null means the whole phase is the camera target. */
+  selectedScenarioId: string | null
+  /**
+   * Phases whose scenario list is open. Explicit and multi-open: expansion
+   * is never derived from selection, which is what makes collapsing a phase
+   * leave the camera alone.
+   */
+  expandedPhaseIds: ReadonlySet<string>
+  /** Bumped on every navigation click so re-selecting a row recenters. */
+  focusNonce: number
+  /** Camera target — `selectedScenarioId ?? selectedPhaseId`. */
+  cameraTargetId: string | null
+  selectPhase: (phaseId: string) => void
+  selectScenario: (scenarioId: string) => void
+  togglePhaseExpanded: (phaseId: string) => void
+  setPhaseExpanded: (phaseId: string, open: boolean) => void
+  clearSelection: () => void
+
+  /** Compat wrapper over selectPhase/selectScenario. */
   openDetail: (slideId: string) => void
   slides: NavItem[]
   /** Slides from DB/fallback (same as slides; kept for callers). */
@@ -41,12 +69,202 @@ type EditorContextValue = {
   ) => void
   slidesLoading: boolean
   slidesError: string | null
+  /** Compat view of the camera target; falls back to the first slide. */
   activeSlideId: string
-  setActiveSlideId: (id: string) => void
   activeSlide: NavItem
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null)
+
+const EMPTY_EXPANDED: ReadonlySet<string> = new Set<string>()
+
+function withPhaseExpanded(
+  current: ReadonlySet<string>,
+  phaseId: string,
+  open: boolean,
+): ReadonlySet<string> {
+  if (current.has(phaseId) === open) return current
+  const next = new Set(current)
+  if (open) next.add(phaseId)
+  else next.delete(phaseId)
+  return next
+}
+
+/**
+ * The explicit selection/expansion pair behind the sidebar and the camera,
+ * shared by the app-level provider and the tab-local scope.
+ *
+ * Invariants (nav plan D3):
+ * - No selection action touches expansion, and no expansion action touches
+ *   selection. Collapsing a phase therefore never moves the camera.
+ * - Auto-expanding the selected scenario's phase runs once per scenario
+ *   selection, so a phase the user collapsed afterwards stays collapsed
+ *   (the old effect re-fired whenever `slides` changed identity).
+ */
+function useNavSelectionState(slides: NavItem[]) {
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null)
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(
+    null,
+  )
+  const [expandedPhaseIds, setExpandedPhaseIds] =
+    useState<ReadonlySet<string>>(EMPTY_EXPANDED)
+  const [focusNonce, setFocusNonce] = useState(0)
+  const [view, setView] = useState<EditorView>('landing')
+  const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
+
+  const selectPhase = useCallback((phaseId: string) => {
+    setSelectedPhaseId(phaseId)
+    setSelectedScenarioId(null)
+    setFocusNonce((nonce) => nonce + 1)
+    setSkipCanvasFitAnimation(false)
+    setView('detail')
+  }, [])
+
+  const selectScenario = useCallback(
+    (scenarioId: string) => {
+      const parentId =
+        slides.find((slide) => slide.id === scenarioId)?.parentId ?? null
+      setSelectedScenarioId(scenarioId)
+      // Keep the phase in sync so the sidebar can mark the ancestor of the
+      // selection; the camera still targets the scenario.
+      if (parentId !== null) setSelectedPhaseId(parentId)
+      setFocusNonce((nonce) => nonce + 1)
+      setSkipCanvasFitAnimation(false)
+      setView('detail')
+    },
+    [slides],
+  )
+
+  const clearSelection = useCallback(() => {
+    setSelectedPhaseId(null)
+    setSelectedScenarioId(null)
+  }, [])
+
+  const setPhaseExpanded = useCallback((phaseId: string, open: boolean) => {
+    setExpandedPhaseIds((current) => withPhaseExpanded(current, phaseId, open))
+  }, [])
+
+  const togglePhaseExpanded = useCallback((phaseId: string) => {
+    setExpandedPhaseIds((current) =>
+      withPhaseExpanded(current, phaseId, !current.has(phaseId)),
+    )
+  }, [])
+
+  // Selecting a scenario opens its phase — once. Keyed on the scenario id
+  // rather than an effect dependency so re-renders (including a new
+  // `slides` array from a refetch) never re-open a collapsed phase.
+  const autoExpandedForRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (selectedScenarioId === null) {
+      autoExpandedForRef.current = null
+      return
+    }
+    if (autoExpandedForRef.current === selectedScenarioId) return
+    const parentId = slides.find(
+      (slide) => slide.id === selectedScenarioId,
+    )?.parentId
+    // Slides may not have loaded yet — retry on the next slides change.
+    if (!parentId) return
+    autoExpandedForRef.current = selectedScenarioId
+    setExpandedPhaseIds((current) => withPhaseExpanded(current, parentId, true))
+  }, [selectedScenarioId, slides])
+
+  // Reconcile the selection against the slide list: drop ids that no longer
+  // exist, and re-sort an id that was selected (deep link, click during a
+  // refetch) before `slides` could say whether it was a phase or a scenario.
+  useEffect(() => {
+    if (slides.length === 0) return
+    const find = (id: string) => slides.find((slide) => slide.id === id)
+
+    if (selectedScenarioId !== null) {
+      const scenario = find(selectedScenarioId)
+      if (!scenario) {
+        setSelectedScenarioId(null)
+        return
+      }
+      const parentId = scenario.parentId ?? null
+      if (parentId !== selectedPhaseId) setSelectedPhaseId(parentId)
+      return
+    }
+
+    if (selectedPhaseId === null) return
+    const phase = find(selectedPhaseId)
+    if (!phase) {
+      setSelectedPhaseId(null)
+      return
+    }
+    if (isSubslide(phase)) {
+      setSelectedScenarioId(phase.id)
+      setSelectedPhaseId(phase.parentId ?? null)
+    }
+  }, [slides, selectedPhaseId, selectedScenarioId])
+
+  const cameraTargetId = selectedScenarioId ?? selectedPhaseId
+  const activeSlideId =
+    cameraTargetId ?? slides[0]?.id ?? FALLBACK_NAV[0].id
+
+  const activeSlide = useMemo(
+    () =>
+      slides.find((slide) => slide.id === activeSlideId) ??
+      slides[0] ??
+      FALLBACK_NAV[0],
+    [activeSlideId, slides],
+  )
+
+  const openDetail = useCallback(
+    (slideId: string) => {
+      const slide = slides.find((item) => item.id === slideId)
+      if (slide && isSubslide(slide)) selectScenario(slideId)
+      else selectPhase(slideId)
+    },
+    [selectPhase, selectScenario, slides],
+  )
+
+  const goLanding = useCallback(() => {
+    setView('landing')
+  }, [])
+
+  const goHome = useCallback(() => {
+    setSkipCanvasFitAnimation(false)
+    setFocusNonce((nonce) => nonce + 1)
+    clearSelection()
+    setView('home')
+  }, [clearSelection])
+
+  const enterCanvas = useCallback(() => {
+    setSkipCanvasFitAnimation(true)
+    setFocusNonce((nonce) => nonce + 1)
+    clearSelection()
+    setView('home')
+  }, [clearSelection])
+
+  const consumeCanvasFitAnimationSkip = useCallback(() => {
+    setSkipCanvasFitAnimation(false)
+  }, [])
+
+  return {
+    view,
+    setView,
+    goLanding,
+    goHome,
+    enterCanvas,
+    skipCanvasFitAnimation,
+    consumeCanvasFitAnimationSkip,
+    selectedPhaseId,
+    selectedScenarioId,
+    expandedPhaseIds,
+    focusNonce,
+    cameraTargetId,
+    selectPhase,
+    selectScenario,
+    togglePhaseExpanded,
+    setPhaseExpanded,
+    clearSelection,
+    openDetail,
+    activeSlideId,
+    activeSlide,
+  }
+}
 
 type EditorProviderProps = {
   children: ReactNode
@@ -60,28 +278,7 @@ export function EditorProvider({ children }: EditorProviderProps) {
     return mergeSlidesWithFallback(dbSlides)
   }, [dbSlides])
 
-  const [view, setView] = useState<EditorView>('landing')
-  const [activeSlideId, setActiveSlideId] = useState(FALLBACK_NAV[0].id)
-  const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
-
-  const goLanding = useCallback(() => {
-    setView('landing')
-  }, [])
-
-  const goHome = useCallback(() => {
-    setSkipCanvasFitAnimation(false)
-    setView('home')
-  }, [])
-
-  const enterCanvas = useCallback(() => {
-    setSkipCanvasFitAnimation(true)
-    setView('home')
-  }, [])
-
-  const openDetail = useCallback((slideId: string) => {
-    setActiveSlideId(slideId)
-    setView('detail')
-  }, [])
+  const nav = useNavSelectionState(slides)
 
   const getScenarioDisplayViewType = useCallback(
     (_slide: NavItem): SlideViewType => 'side-by-side',
@@ -95,56 +292,26 @@ export function EditorProvider({ children }: EditorProviderProps) {
     [],
   )
 
-  useEffect(() => {
-    if (slides.length === 0) return
-    const exists = slides.some((s) => s.id === activeSlideId)
-    if (!exists) setActiveSlideId(slides[0].id)
-  }, [slides, activeSlideId])
-
-  const activeSlide = useMemo(
-    () =>
-      slides.find((s) => s.id === activeSlideId) ??
-      slides[0] ??
-      FALLBACK_NAV[0],
-    [activeSlideId, slides],
-  )
-
   const slidesLoading = configured && loading && dbSlides.length === 0
   const slidesError = configured ? error : null
 
   const value = useMemo(
     () => ({
-      view,
-      setView,
-      goLanding,
-      goHome,
-      enterCanvas,
-      skipCanvasFitAnimation,
-      openDetail,
+      ...nav,
       slides,
       baseSlides: slides,
       getScenarioDisplayViewType,
       setScenarioDisplayViewType,
       slidesLoading,
       slidesError,
-      activeSlideId,
-      setActiveSlideId,
-      activeSlide,
     }),
     [
-      view,
-      goLanding,
-      goHome,
-      enterCanvas,
-      skipCanvasFitAnimation,
-      openDetail,
+      nav,
       slides,
       getScenarioDisplayViewType,
       setScenarioDisplayViewType,
       slidesLoading,
       slidesError,
-      activeSlideId,
-      activeSlide,
     ],
   )
 
@@ -170,26 +337,26 @@ type EditorDetailScopeProps = {
 /**
  * Local editor-state override for tabs that embed the normal blueprint view
  * (slice focus tabs). Slides and loading state come from the app-level
- * EditorProvider; `view` / `activeSlideId` are tab-local so navigating
+ * EditorProvider; view and navigation state are tab-local so navigating
  * inside a slice tab never disturbs the blueprint tab, and the tab opens in
  * detail view on the given slide.
  *
  * Invariant: every view-writing method of EditorContext must be overridden
  * here — anything left to the parent would silently retarget the base
- * blueprint view underneath the tab.
+ * blueprint view underneath the tab. That includes the expansion actions:
+ * the sidebar renders outside the scope and reads the parent's state.
  */
 export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps) {
   const parent = useEditor()
-  const [view, setView] = useState<EditorView>('detail')
-  const [activeSlideId, setActiveSlideId] = useState(slideId)
-  const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
+  const nav = useNavSelectionState(parent.slides)
+  const { openDetail } = nav
 
-  // Re-anchor when the scope is re-pointed at a different slide.
-  const [lastSlideId, setLastSlideId] = useState(slideId)
+  // Re-anchor when the scope is re-pointed at a different slide (and on
+  // mount, since the shared state starts unselected on the landing view).
+  const [lastSlideId, setLastSlideId] = useState<string | null>(null)
   if (lastSlideId !== slideId) {
     setLastSlideId(slideId)
-    setActiveSlideId(slideId)
-    setView('detail')
+    openDetail(slideId)
   }
 
   // Landing navigation from inside a slice tab is not a supported
@@ -198,54 +365,13 @@ export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps)
   // the override is a deliberate no-op.
   const goLanding = useCallback(() => {}, [])
 
-  const goHome = useCallback(() => {
-    setSkipCanvasFitAnimation(false)
-    setView('home')
-  }, [])
-
-  const enterCanvas = useCallback(() => {
-    setSkipCanvasFitAnimation(true)
-    setView('home')
-  }, [])
-
-  const openDetail = useCallback((nextSlideId: string) => {
-    setActiveSlideId(nextSlideId)
-    setView('detail')
-  }, [])
-
-  const activeSlide = useMemo(
-    () =>
-      parent.slides.find((slide) => slide.id === activeSlideId) ??
-      parent.slides[0] ??
-      FALLBACK_NAV[0],
-    [activeSlideId, parent.slides],
-  )
-
   const value = useMemo(
     () => ({
       ...parent,
-      view,
-      setView,
+      ...nav,
       goLanding,
-      goHome,
-      enterCanvas,
-      skipCanvasFitAnimation,
-      openDetail,
-      activeSlideId,
-      setActiveSlideId,
-      activeSlide,
     }),
-    [
-      parent,
-      view,
-      goLanding,
-      goHome,
-      enterCanvas,
-      skipCanvasFitAnimation,
-      openDetail,
-      activeSlideId,
-      activeSlide,
-    ],
+    [parent, nav, goLanding],
   )
 
   return (

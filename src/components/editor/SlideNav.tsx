@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import {
   Collapsible,
@@ -18,7 +17,6 @@ import {
 } from '@/components/ui/sidebar'
 import {
   getMainSlides,
-  getSlideById,
   getSlideDisplayLabel,
   getSubslides,
   type NavItem,
@@ -34,6 +32,13 @@ type SlideNavProps = {
   /** Birds-eye canvas overview. */
   onOverview?: () => void
   isOverviewActive?: boolean
+  /**
+   * Expanded phases. Owned by EditorContext, not this component: local
+   * expansion state died on every mode switch, skeleton swap, and
+   * presentation tab, since all of those unmount the sidebar.
+   */
+  expandedPhaseIds: ReadonlySet<string>
+  onToggleExpanded: (phaseId: string, open: boolean) => void
 }
 
 export function SlideNav({
@@ -43,26 +48,10 @@ export function SlideNav({
   isHome = false,
   onOverview,
   isOverviewActive = false,
+  expandedPhaseIds,
+  onToggleExpanded,
 }: SlideNavProps) {
   const mains = getMainSlides(slides)
-  const [openParents, setOpenParents] = useState<Set<string>>(() => new Set())
-
-  useEffect(() => {
-    if (isHome) return
-    const active = getSlideById(activeSlideId, slides)
-    if (active?.parentId) {
-      setOpenParents((prev) => new Set(prev).add(active.parentId!))
-    }
-  }, [activeSlideId, slides, isHome])
-
-  const toggleParent = (parentId: string, open: boolean) => {
-    setOpenParents((prev) => {
-      const next = new Set(prev)
-      if (open) next.add(parentId)
-      else next.delete(parentId)
-      return next
-    })
-  }
 
   return (
     <SidebarGroup>
@@ -86,7 +75,7 @@ export function SlideNav({
             const isMainActive = !isHome && activeSlideId === main.id
             const childActive =
               !isHome && children.some((c) => c.id === activeSlideId)
-            const isOpen = openParents.has(main.id)
+            const isOpen = expandedPhaseIds.has(main.id)
             const mainLabel = getSlideDisplayLabel(main, slides)
 
             if (!hasChildren) {
@@ -106,7 +95,7 @@ export function SlideNav({
               <Collapsible
                 key={main.id}
                 open={isOpen}
-                onOpenChange={(open) => toggleParent(main.id, open)}
+                onOpenChange={(open) => onToggleExpanded(main.id, open)}
               >
                 <SidebarMenuItem>
                   <SidebarMenuButton
