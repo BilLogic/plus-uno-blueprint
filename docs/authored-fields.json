@@ -1,0 +1,216 @@
+{
+  "exported_from": "https://osybxeojvsqcwxkgnalm.supabase.co",
+  "cells": [
+    {
+      "path": "Happy Path",
+      "layer": "Front Stage Tech",
+      "step": "Enter Breakout Room",
+      "function": "Carry the session: Zoom hosts the room, Pencil carries the shared math surface.",
+      "form": null,
+      "value_props": [
+        {
+          "for": "tutor",
+          "value": "one surface for voice, video and math"
+        },
+        {
+          "for": "business",
+          "value": "no bespoke infra to run"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Lead Tutor",
+      "step": "Enter Breakout Room",
+      "function": "Reconcile the live roster so every student maps to a known name before pairing.",
+      "form": null,
+      "value_props": [
+        {
+          "for": "tutor",
+          "value": "greets a name, not a username"
+        },
+        {
+          "for": "business",
+          "value": "attendance data stays clean downstream"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Partner Action: Teacher",
+      "step": "Enter Breakout Room",
+      "function": "Keep the classroom side steady while students transition into breakout rooms.",
+      "form": null,
+      "value_props": [
+        {
+          "for": "student",
+          "value": "orderly transition, no dead air"
+        },
+        {
+          "for": "business",
+          "value": "school partner sees a managed room"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Ask Student to Share Screen",
+      "function": "Gain visibility into the student's work: screen share is the tutor's only window into progress.",
+      "form": "A request, not a demand; explain why sharing helps.",
+      "value_props": [
+        {
+          "for": "tutor",
+          "value": "sees the actual work, not a description of it"
+        },
+        {
+          "for": "student",
+          "value": "help lands on the real problem"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Enter Breakout Room",
+      "function": "Open the tutoring moment: join the assigned breakout room within the first minute so the student is never waiting alone.",
+      "form": "Prompt and unhurried; camera on where policy allows.",
+      "value_props": [
+        {
+          "for": "student",
+          "value": "never left waiting alone in a room"
+        },
+        {
+          "for": "business",
+          "value": "session clock starts on time; utilization holds"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Greet Student",
+      "function": "Establish rapport before any task talk: a personal greeting by name sets the session's tone.",
+      "form": "Warm, by name, one personal beat before math.",
+      "value_props": [
+        {
+          "for": "student",
+          "value": "feels seen before being assessed"
+        },
+        {
+          "for": "business",
+          "value": "rapport drives retention and engagement scores"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Leave Breakout Room",
+      "function": "Close the loop cleanly and free the tutor for the next student in the sorted order.",
+      "form": "Brief goodbye that names what went well.",
+      "value_props": [
+        {
+          "for": "student",
+          "value": "clean ending, named progress"
+        },
+        {
+          "for": "business",
+          "value": "tutor cycles to the next student without drift"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Mark Student Helped",
+      "function": "Log the help interaction so coverage gaps and repeat needs are visible across sessions.",
+      "form": "One tap; keeps focus on the student.",
+      "value_props": [
+        {
+          "for": "business",
+          "value": "help coverage measurable per session"
+        },
+        {
+          "for": "tutor",
+          "value": "credit for the work actually done"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Mark Student Present",
+      "function": "Record attendance in the PLUS app so staffing and payroll reconcile against real presence.",
+      "form": "Invisible to the student; never interrupts the conversation.",
+      "value_props": [
+        {
+          "for": "business",
+          "value": "attendance ground truth for schools and payroll"
+        },
+        {
+          "for": "lead tutor",
+          "value": "live roster accuracy"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Remind Student They Can Ask for Help",
+      "function": "Set the help norm: student must know asking for help is expected and cheap, on content and on tech.",
+      "form": "Reassuring and matter-of-fact, not a disclaimer.",
+      "value_props": [
+        {
+          "for": "student",
+          "value": "permission to ask lowers the cost of being stuck"
+        },
+        {
+          "for": "business",
+          "value": "fewer silent failures mid-session"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    },
+    {
+      "path": "Happy Path",
+      "layer": "Regular Tutor",
+      "step": "Select Engagement level",
+      "function": "Capture an engagement baseline used by researchers and leads to spot struggling pairs early.",
+      "form": "Quick judgment call, logged without ceremony.",
+      "value_props": [
+        {
+          "for": "business",
+          "value": "engagement signal feeds research and staffing"
+        },
+        {
+          "for": "student",
+          "value": "struggling pairs get help sooner"
+        }
+      ],
+      "owner": null,
+      "perceived_owner": null
+    }
+  ],
+  "layers": [],
+  "phases": []
+}
