@@ -17,9 +17,9 @@ import { cn } from '@/lib/utils'
 type SlideHeaderContentProps = {
   slide: NavItem
   slides: NavItem[]
+  /** Paths still inform the description fallback; filtering lives in the sidebar. */
   paths: PathOption[]
   selectedPathIds: string[]
-  onTogglePath?: (pathId: string) => void
   /** When true, title and description share one row inside a menubar. */
   inlineDescription?: boolean
 }
@@ -40,7 +40,6 @@ function SlideHeaderContent({
   slides,
   paths,
   selectedPathIds,
-  onTogglePath,
   inlineDescription = false,
 }: SlideHeaderContentProps) {
   if (inlineDescription) {
@@ -50,8 +49,6 @@ function SlideHeaderContent({
         slides={slides}
         paths={paths}
         selectedPathIds={selectedPathIds}
-        onTogglePath={onTogglePath}
-        showFilters
       />
     )
   }
@@ -113,8 +110,6 @@ export function SlideStickyHeader({
         slides={contentProps.slides}
         paths={contentProps.paths}
         selectedPathIds={contentProps.selectedPathIds}
-        onTogglePath={contentProps.onTogglePath}
-        showFilters
         className={BLUEPRINT_MENUBAR_FLAT_CLASS}
       />
       <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">

@@ -20,6 +20,8 @@ type PathSelectionState = {
 }
 
 type PathSelectionContextValue = {
+  /** Registered paths per scenario id (read-only; merged, never pruned). */
+  catalog: PathCatalog
   /** Selected path identities (`path_type:name`) — shared across overview/phase/scenario. */
   activePathKeys: string[]
   selections: Record<string, string[]>
@@ -226,6 +228,7 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
+      catalog: state.catalog,
       // While uninitialized, surface the happy-path default from whatever is
       // already in the catalog so filters don't flash as empty.
       activePathKeys:

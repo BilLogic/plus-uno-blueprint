@@ -1,6 +1,5 @@
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
-import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
 import {
   BLUEPRINT_MENUBAR_HEADER_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
@@ -9,7 +8,6 @@ import { Menubar } from '@/components/ui/menubar'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
-  showsBlueprintFilters,
   isSubslide,
   type NavItem,
 } from '@/types/nav'
@@ -18,10 +16,9 @@ import { cn } from '@/lib/utils'
 type PhaseMenubarHeaderProps = {
   slide: NavItem
   slides: NavItem[]
+  /** Paths still inform the description fallback; filtering lives in the sidebar. */
   paths?: PathOption[]
   selectedPathIds?: string[]
-  onTogglePath?: (pathId: string) => void
-  showFilters?: boolean
   className?: string
 }
 
@@ -48,16 +45,12 @@ export function PhaseMenubarHeader({
   slides,
   paths = [],
   selectedPathIds = [],
-  onTogglePath,
-  showFilters = false,
   className,
 }: PhaseMenubarHeaderProps) {
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
   const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
-  const showFilterMenus =
-    showFilters && showsBlueprintFilters(slide, slides) && onTogglePath
 
   return (
     <Menubar
@@ -74,14 +67,6 @@ export function PhaseMenubarHeader({
           infoTooltip={infoTooltip}
           className="shrink-0"
         />
-        {showFilterMenus ? (
-          <StackHeaderFilterMenu
-            paths={paths}
-            selectedPathIds={selectedPathIds}
-            onTogglePath={onTogglePath!}
-            showPathTooltips={isScenario}
-          />
-        ) : null}
       </div>
     </Menubar>
   )

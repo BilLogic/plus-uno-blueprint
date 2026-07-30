@@ -29,29 +29,12 @@ export function EditorShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
 
-  // The sidebar's phase/scenario nav drives the base blueprint view, so it
-  // auto-collapses to the icon rail while a slice/present tab is active and
-  // re-expands on return — unless the user toggled it manually in between
-  // (a manual expand on a slice tab makes the nav return to the base view
-  // on click).
+  // The sidebar stays expanded (and functional) while a slice tab is
+  // active — the Paths filter now lives there, and phase clicks return to
+  // the base view via the nav wiring. Present tabs unmount it entirely.
   const activeTabKind = activeTab?.kind ?? null
-  const [autoCollapsed, setAutoCollapsed] = useState(false)
-  const [lastTabKind, setLastTabKind] = useState(activeTabKind)
-  if (lastTabKind !== activeTabKind) {
-    setLastTabKind(activeTabKind)
-    if (activeTabKind !== null) {
-      if (!sidebarCollapsed) {
-        setSidebarCollapsed(true)
-        setAutoCollapsed(true)
-      }
-    } else if (autoCollapsed) {
-      setSidebarCollapsed(false)
-      setAutoCollapsed(false)
-    }
-  }
 
   const toggleSidebar = () => {
-    setAutoCollapsed(false)
     setSidebarCollapsed((collapsed) => !collapsed)
   }
 

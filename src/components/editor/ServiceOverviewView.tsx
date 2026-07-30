@@ -52,7 +52,6 @@ import {
 } from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathListItem } from '@/lib/pathSelection'
-import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 const OVERVIEW_PAN_IGNORE =
   "button, a, input, textarea, select, label, [role='button'], [data-slide-sticky-header], [data-compare-panel], [data-zoom-indicator], [data-annotation-toolbar], [data-canvas-annotation-layer], [data-phase-scenario-overview], [data-phase-scenario-panel], [data-canvas-phase-interactive], [data-phase-menubar-header], [data-canvas-phase-section], [data-path-description-trigger], [data-cell-detail-panel], [data-blueprint-cell-interactive], [data-slot='menubar'], [data-slot='menubar-trigger'], [data-canvas-nav]"
 
@@ -167,17 +166,6 @@ function ServicePhaseSection({
   )
 }
 
-/**
- * Path-filter state handed to a custom header (`renderHeader`) — the same
- * props the built-in docked headers receive, scoped exactly the way the
- * built-in header selection scopes them (focused slide vs full overview).
- */
-export type OverviewHeaderRenderProps = {
-  paths: PathOption[]
-  selectedPathIds: string[]
-  onTogglePath: (pathId: string) => void
-}
-
 type ServiceOverviewViewProps = {
   /**
    * How the not-yet-ready state renders. Embedding tabs (slice focus) use
@@ -193,11 +181,9 @@ type ServiceOverviewViewProps = {
   soloScenarioId?: string
   /**
    * Embedding tabs (slice focus) replace the built-in docked navbar header
-   * with their own consolidated row, wired to the same path-filter state.
-   * Rendered inside the canvas zoom chrome provider, so `NavbarZoomIndicator`
-   * (Reset View) works in the custom header too.
+   * with their own band. Rendered inside the canvas zoom chrome provider.
    */
-  renderHeader?: (props: OverviewHeaderRenderProps) => ReactNode
+  renderHeader?: () => ReactNode
 }
 
 export function ServiceOverviewView({
@@ -247,7 +233,6 @@ export function ServiceOverviewView({
     filterPaths: overviewPaths,
     filterSelectedPathIds: overviewSelectedPathIds,
     viewType: overviewViewType,
-    toggleFilterPath: handleOverviewTogglePath,
     resolveSelectedPathIds,
   } = usePhaseBlueprintFilters({
     scenarioIds,
@@ -326,33 +311,16 @@ export function ServiceOverviewView({
         <CanvasFocusEscapeHandler />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {renderHeader ? (
-            renderHeader(
-              focusedHeader
-                ? {
-                    paths: focusedHeader.paths,
-                    selectedPathIds: focusedHeader.selectedPathIds,
-                    onTogglePath: handleOverviewTogglePath,
-                  }
-                : {
-                    paths: overviewPaths,
-                    selectedPathIds: overviewSelectedPathIds,
-                    onTogglePath: handleOverviewTogglePath,
-                  },
-            )
+            renderHeader()
           ) : focusedHeader ? (
             <SlideStickyHeader
               slide={focusedHeader.slide}
               slides={slides}
               paths={focusedHeader.paths}
               selectedPathIds={focusedHeader.selectedPathIds}
-              onTogglePath={handleOverviewTogglePath}
             />
           ) : (
-            <ServiceOverviewStickyHeader
-              paths={overviewPaths}
-              selectedPathIds={overviewSelectedPathIds}
-              onTogglePath={handleOverviewTogglePath}
-            />
+            <ServiceOverviewStickyHeader />
           )}
           <div
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"

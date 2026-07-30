@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ExternalLink, Play, Trash2 } from 'lucide-react'
 import { DeleteSliceDialog } from '@/components/editor/TabStrip'
+import { SIDEBAR_SECTION_TRIGGER_CLASS } from '@/components/editor/SlideModeView'
 import {
   Accordion,
   AccordionContent,
@@ -13,7 +14,6 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
-import { Separator } from '@/components/ui/separator'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -21,6 +21,16 @@ import {
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSlices, type SliceListEntry } from '@/hooks/useSlices'
+
+/** Sidebar group order — unknown types fall into CUSTOM. */
+const SLICE_TYPE_GROUPS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
+
+type SliceTypeGroup = (typeof SLICE_TYPE_GROUPS)[number]
+
+function sliceTypeGroup(sliceType: string): SliceTypeGroup {
+  const type = sliceType.toLowerCase()
+  return SLICE_TYPE_GROUPS.find((group) => group === type) ?? 'custom'
+}
 
 function SliceRow({
   slice,
@@ -43,9 +53,6 @@ function SliceRow({
     >
       <span aria-hidden>◇</span>
       <span className="min-w-0 flex-1 truncate">{slice.title}</span>
-      <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-[10px] leading-tight text-muted-foreground">
-        {slice.slice_type}
-      </span>
     </button>
   )
 
@@ -73,9 +80,10 @@ function SliceRow({
 }
 
 /**
- * "Slices" accordion section in the sidebar nav — lists the lifecycle's
- * slices by position; click (or the context menu) opens the slice tab,
- * writers can delete from the context menu.
+ * Slices sidebar mode — the lifecycle's slices grouped by `slice_type` into
+ * accordion sections (JOURNEY / STEP / LANE / CELL / CUSTOM; only non-empty
+ * groups render, all open by default). Click (or the context menu) opens the
+ * slice tab; writers can delete from the context menu.
  */
 export function SlicesSidebarSection() {
   const slices = useSlices()
@@ -93,39 +101,61 @@ export function SlicesSidebarSection() {
         ? (slices.fallback ?? [])
         : []
 
-  if (rows.length === 0) return null
+  const groups = SLICE_TYPE_GROUPS.map((type) => ({
+    type,
+    slices: rows.filter((slice) => sliceTypeGroup(slice.slice_type) === type),
+  })).filter((group) => group.slices.length > 0)
+
+  if (groups.length === 0) {
+    return (
+      <p className="px-3 py-1.5 text-xs text-sidebar-foreground/50">
+        No slices yet.
+      </p>
+    )
+  }
 
   return (
-    <SidebarGroup className="mt-2">
-      <Separator className="mb-2" />
+    <SidebarGroup>
       <SidebarGroupContent>
-        <Accordion defaultValue={['slices']} className="border-0">
-          <AccordionItem value="slices" className="border-0">
-            <AccordionTrigger className="px-2 py-1.5 text-[11px] font-medium tracking-wider text-sidebar-foreground/60 uppercase hover:no-underline">
-              Slices
-            </AccordionTrigger>
-            <AccordionContent className="pb-1">
-              <ul className="flex flex-col gap-0.5">
-                {rows.map((slice) => (
-                  <li key={slice.id}>
-                    <SliceRow
-                      slice={slice}
-                      canWrite={canWrite}
-                      onOpen={() =>
-                        openTab({ kind: 'slice', sliceId: slice.id })
-                      }
-                      onPresent={() =>
-                        openTab({ kind: 'present', sliceId: slice.id })
-                      }
-                      onDelete={() =>
-                        setDeleteTarget({ id: slice.id, title: slice.title })
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
+        <Accordion
+          // Remount when the group set changes so late-loading groups still
+          // pick up the open-by-default value.
+          key={groups.map((group) => group.type).join('|')}
+          defaultValue={groups.map((group) => group.type)}
+          className="border-0"
+        >
+          {groups.map((group) => (
+            <AccordionItem
+              key={group.type}
+              value={group.type}
+              className="border-0"
+            >
+              <AccordionTrigger className={SIDEBAR_SECTION_TRIGGER_CLASS}>
+                {group.type}
+              </AccordionTrigger>
+              <AccordionContent className="pb-1">
+                <ul className="flex flex-col gap-0.5">
+                  {group.slices.map((slice) => (
+                    <li key={slice.id}>
+                      <SliceRow
+                        slice={slice}
+                        canWrite={canWrite}
+                        onOpen={() =>
+                          openTab({ kind: 'slice', sliceId: slice.id })
+                        }
+                        onPresent={() =>
+                          openTab({ kind: 'present', sliceId: slice.id })
+                        }
+                        onDelete={() =>
+                          setDeleteTarget({ id: slice.id, title: slice.title })
+                        }
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
         </Accordion>
         <DeleteSliceDialog
           slice={deleteTarget}
