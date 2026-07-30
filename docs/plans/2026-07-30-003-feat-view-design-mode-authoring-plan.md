@@ -523,8 +523,16 @@ scenarios are `view_type = 'side-by-side'`. Attempt 3 targeted the right file
 and still produced nothing, so the remaining unknown is *which component
 inside that file renders the visible column*, not which file.
 
-That is a read-the-layout task, not a write-the-component task, and it should
-start there. It also belongs with plan 004's grid editing, which specs the
+**The target is `ComparePathColumn`** (`SideBySideCompareGrid.tsx:227`) — it
+is what `blueprints.map` renders per visible column, it owns `columnRef`, and
+the cells with `data-step-index` are inside it. Attempt 3 mounted the rail
+there and still rendered nothing, so the next step is to find out *why that
+component returned no handles* before writing any more of them. The two
+candidates, in order: `useCellPick()` returning null inside the compare grid
+(the selection provider is mounted in `ZoomPanViewport` — confirm the compare
+grid is inside it, not portalled out), and the measuring `useLayoutEffect`
+finding zero cells and leaving `columns` empty, which renders null silently.
+A `console.log` in that effect settles it in one run. It also belongs with plan 004's grid editing, which specs the
 same row with rename and `⊕` affordances — building it twice would be waste.
 
 One real fix came out of the chase and was kept (`d51162e`): `data-layer-name`
