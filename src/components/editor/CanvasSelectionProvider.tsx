@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { MarqueeSelection } from '@/components/editor/MarqueeSelection'
 import { CellPickContext, type CellPickApi } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { allCellsInReadingOrder } from '@/lib/canvasCellQuery'
@@ -106,6 +107,9 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
   if (mode !== 'design') return <>{children}</>
 
   return (
-    <CellPickContext.Provider value={api}>{children}</CellPickContext.Provider>
+    <CellPickContext.Provider value={api}>
+      {children}
+      <MarqueeSelection />
+    </CellPickContext.Provider>
   )
 }
