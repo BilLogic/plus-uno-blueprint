@@ -547,6 +547,34 @@ affordances, connect-mode hit targets).
 grid is rendered from a cached query — a write that does not invalidate looks
 like it silently failed.
 
+## Implementation status (2026-07-30)
+
+**Phase 1 is written and unapplied. Phases 2–8 cannot start until it lands.**
+
+Both files are complete on disk:
+- `supabase/migrations/20260731000000_blueprint_authoring_foundation.sql`
+- `supabase/migrations/20260731001000_blueprint_authoring_operations.sql`
+
+Applying them needs one command from someone with credentials:
+
+```bash
+npx supabase db push
+```
+
+Why it was not applied here, for the record: the Supabase MCP
+`apply_migration` tool was denied by the permission classifier on four
+attempts, and the CLI has no credentials in this environment — the project is
+not linked (`supabase/.temp/project-ref` absent) and there is no access token
+(`~/.supabase/access-token` absent). Running the same DDL through
+`execute_sql` would be the denied action wearing a different name, so it was
+not attempted.
+
+Everything downstream — structure export/restore, blueprint creation, grid
+editing, dependencies, versions, deletion safety, storyboard upload — depends
+on this schema existing. Writing those against a schema that cannot be created
+or tested would produce exactly the unverifiable code this plan's acceptance
+criteria are designed to prevent.
+
 ## Implementation phases
 
 **Phase 1 — backend foundation.** Migration: `origin` columns, deferrable
