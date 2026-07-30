@@ -166,8 +166,8 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
       <Alert variant="warning" className="items-center">
         <AlertTriangle className="size-3.5" aria-hidden />
         <AlertDescription className="text-xs">
-          That link points to a slice that no longer exists. Showing the
-          blueprint instead.
+          That link points to a slice that no longer exists — it may have been
+          deleted.
         </AlertDescription>
         <Button
           type="button"

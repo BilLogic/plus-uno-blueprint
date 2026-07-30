@@ -29,7 +29,7 @@ function EditorTitleLabel({
         'block w-full rounded-md px-1 py-0.5 text-left transition-colors hover:bg-sidebar-accent',
         className,
       )}
-      title="Go to the workspace home page"
+      title="Go to the workspace landing page"
     >
       {EDITOR_TITLE}
     </button>

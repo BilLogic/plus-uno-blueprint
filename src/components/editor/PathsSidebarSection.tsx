@@ -38,12 +38,6 @@ function PathsSection({ children }: { children: ReactNode }) {
   )
 }
 
-function PathsHint({ children }: { children: string }) {
-  return (
-    <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">{children}</p>
-  )
-}
-
 /**
  * Placeholder for "a scenario is selected but its path catalog has not
  * arrived yet". Distinct from the hidden state on purpose: without it the
@@ -126,6 +120,11 @@ function SlicePathsChecklist({ sliceId }: { sliceId: string }) {
  * canvas, and hiding the section there would leave no path control anywhere
  * in the app. In that state the whole known catalog is offered so the user
  * can switch one back on.
+ *
+ * An *empty* catalog is a different thing — the boot state, before any
+ * scenario has loaded its paths. There is nothing to control and no dead
+ * end to escape, so the section stays hidden rather than greeting every
+ * visitor with an empty Paths header.
  */
 function PathsSafetyValve() {
   const { catalog, activePathKeys } = usePathSelectionContext()
@@ -134,15 +133,11 @@ function PathsSafetyValve() {
     [catalog],
   )
 
-  if (activePathKeys.length > 0) return null
+  if (activePathKeys.length > 0 || options.length === 0) return null
 
   return (
     <PathsSection>
-      {options.length === 0 ? (
-        <PathsHint>Open a scenario to choose paths.</PathsHint>
-      ) : (
-        <PathChecklist options={options} />
-      )}
+      <PathChecklist options={options} />
     </PathsSection>
   )
 }
