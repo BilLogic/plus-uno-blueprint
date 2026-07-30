@@ -25,20 +25,21 @@ const SIDEBAR_WIDTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 export function EditorShell() {
   const { view, goLanding } = useEditor()
-  const { activeTab } = useViewState()
+  const { activeTab, activateTab } = useViewState()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
 
-  // The sidebar's phase/scenario nav drives the blueprint tab, so it
+  // The sidebar's phase/scenario nav drives the base blueprint view, so it
   // auto-collapses to the icon rail while a slice/present tab is active and
   // re-expands on return — unless the user toggled it manually in between
-  // (a manual expand on a slice tab makes the nav switch tabs on click).
-  const activeTabKind = activeTab.kind
+  // (a manual expand on a slice tab makes the nav return to the base view
+  // on click).
+  const activeTabKind = activeTab?.kind ?? null
   const [autoCollapsed, setAutoCollapsed] = useState(false)
   const [lastTabKind, setLastTabKind] = useState(activeTabKind)
   if (lastTabKind !== activeTabKind) {
     setLastTabKind(activeTabKind)
-    if (activeTabKind !== 'blueprint') {
+    if (activeTabKind !== null) {
       if (!sidebarCollapsed) {
         setSidebarCollapsed(true)
         setAutoCollapsed(true)
@@ -52,6 +53,13 @@ export function EditorShell() {
   const toggleSidebar = () => {
     setAutoCollapsed(false)
     setSidebarCollapsed((collapsed) => !collapsed)
+  }
+
+  // Home always returns to the base blueprint view (deactivating any tab)
+  // before landing on the homepage.
+  const goHomeBase = () => {
+    activateTab(null)
+    goLanding()
   }
 
   return (
@@ -104,7 +112,7 @@ export function EditorShell() {
               sidebarCollapsed={sidebarCollapsed}
               onToggleSidebar={toggleSidebar}
               isHome={isLanding}
-              onHome={goLanding}
+              onHome={goHomeBase}
             />
             <SlideModeSidebarNav />
           </SidebarProvider>
@@ -123,7 +131,7 @@ export function EditorShell() {
         >
           <HomeNavButton
             isActive={isLanding}
-            onClick={goLanding}
+            onClick={goHomeBase}
             size="icon-sm"
           />
           <SidebarCollapseButton
@@ -150,24 +158,25 @@ function ActiveTabContent({
   tab,
   isLanding,
 }: {
-  tab: TabDescriptor
+  tab: TabDescriptor | null
   isLanding: boolean
 }) {
+  if (tab === null) {
+    // Base blueprint view — existing landing / home / detail behavior.
+    return isLanding ? (
+      <Homepage />
+    ) : (
+      <VisualWalkthroughShell>
+        <div
+          className="absolute inset-0 flex min-h-0 flex-col"
+          data-editor-view
+        >
+          <ServiceOverviewView />
+        </div>
+      </VisualWalkthroughShell>
+    )
+  }
   switch (tab.kind) {
-    case 'blueprint':
-      // Existing landing / home / detail behavior, unchanged.
-      return isLanding ? (
-        <Homepage />
-      ) : (
-        <VisualWalkthroughShell>
-          <div
-            className="absolute inset-0 flex min-h-0 flex-col"
-            data-editor-view
-          >
-            <ServiceOverviewView />
-          </div>
-        </VisualWalkthroughShell>
-      )
     case 'slice':
       return <SliceView key={tabKey(tab)} sliceId={tab.sliceId} />
     case 'present':

@@ -123,10 +123,11 @@ export function DeleteSliceDialog({
 }
 
 /**
- * Tab strip above the shell main area. Visible only when more than the
- * pinned blueprint tab is open; also resolves URL deep links once the slice
- * list settles (pending intent — never applied before the data exists).
- * Slice tabs carry a context menu with "Delete slice…" for writers.
+ * Tab strip above the shell main area. Holds only slice / present tabs (the
+ * base blueprint view is not a tab) and renders nothing while no tab is
+ * open; also resolves URL deep links once the slice list settles (pending
+ * intent — never applied before the data exists). Slice tabs carry a
+ * context menu with "Delete slice…" for writers.
  */
 export function TabStrip() {
   const {
@@ -150,7 +151,7 @@ export function TabStrip() {
     resolvePending(availableSlices(slices).map((slice) => slice.id))
   }, [pendingUrlState, resolvePending, slices])
 
-  if (tabs.length <= 1) return null
+  if (tabs.length === 0) return null
 
   const titleById = new Map(
     availableSlices(slices).map((slice) => [slice.id, slice.title]),
@@ -158,8 +159,6 @@ export function TabStrip() {
 
   const labelFor = (tab: TabDescriptor): string => {
     switch (tab.kind) {
-      case 'blueprint':
-        return 'Blueprint'
       case 'slice':
         return `◇ ${titleById.get(tab.sliceId) ?? 'Slice'}`
       case 'present':
@@ -199,20 +198,18 @@ export function TabStrip() {
             >
               {label}
             </button>
-            {tab.kind !== 'blueprint' && (
-              <button
-                type="button"
-                aria-label={`Close ${label}`}
-                onClick={() => closeTab(key)}
-                className="mr-1 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <X className="size-3" />
-              </button>
-            )}
+            <button
+              type="button"
+              aria-label={`Close ${label}`}
+              onClick={() => closeTab(key)}
+              className="mr-1 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X className="size-3" />
+            </button>
           </div>
         )
 
-        if (tab.kind === 'blueprint' || !canWrite) return tabElement
+        if (!canWrite) return tabElement
 
         return (
           <ContextMenu key={key}>

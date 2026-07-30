@@ -43,18 +43,18 @@ export function SlideModeSidebarNav() {
   } = useEditor()
   const { activeKey, activateTab } = useViewState()
 
-  // The phase/scenario nav always drives the app-level (blueprint tab)
-  // editor state. When another tab is active that would be invisible, so
-  // selecting a phase/scenario also brings the blueprint tab forward.
+  // The phase/scenario nav always drives the app-level (base blueprint
+  // view) editor state. When a tab is active that would be invisible, so
+  // selecting a phase/scenario also returns to the base view.
   const handleSelect = useCallback(
     (slideId: string) => {
-      if (activeKey !== 'blueprint') activateTab('blueprint')
+      if (activeKey !== null) activateTab(null)
       openDetail(slideId)
     },
     [activateTab, activeKey, openDetail],
   )
   const handleOverview = useCallback(() => {
-    if (activeKey !== 'blueprint') activateTab('blueprint')
+    if (activeKey !== null) activateTab(null)
     enterCanvas()
   }, [activateTab, activeKey, enterCanvas])
 

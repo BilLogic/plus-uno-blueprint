@@ -8,7 +8,6 @@ import {
 } from 'react'
 import { serializeUrlViewState, type UrlViewState } from '@/lib/urlViewState'
 import {
-  BLUEPRINT_TAB,
   createInitialViewState,
   tabKey,
   ViewStateContext,
@@ -30,13 +29,15 @@ export type {
 const FRAME_URL_DEBOUNCE_MS = 250
 
 function urlStateForTab(
-  tab: TabDescriptor,
+  tab: TabDescriptor | null,
   frame: number,
   lens: 'assumption' | null,
 ): UrlViewState {
+  if (tab === null) {
+    // Base blueprint view — no tab is active.
+    return lens ? { kind: 'blueprint', lens } : { kind: 'blueprint' }
+  }
   switch (tab.kind) {
-    case 'blueprint':
-      return lens ? { kind: 'blueprint', lens } : { kind: 'blueprint' }
     case 'slice':
       return lens
         ? { kind: 'slice', sliceId: tab.sliceId, lens }
@@ -53,7 +54,7 @@ function urlStateForTab(
  */
 function useUrlViewState(
   state: ViewState,
-  activeTab: TabDescriptor,
+  activeTab: TabDescriptor | null,
 ): (frame: number) => void {
   const pending = state.pendingUrlState !== null
   const restoredFrame = state.restoredFrame
@@ -71,7 +72,7 @@ function useUrlViewState(
   })
 
   const writeUrl = useCallback(
-    (tab: TabDescriptor, frame: number, lensValue: 'assumption' | null) => {
+    (tab: TabDescriptor | null, frame: number, lensValue: 'assumption' | null) => {
       const search = serializeUrlViewState(urlStateForTab(tab, frame, lensValue))
       window.history.replaceState(null, '', `${window.location.pathname}${search}`)
     },
@@ -86,7 +87,7 @@ function useUrlViewState(
       window.clearTimeout(debounceRef.current)
       debounceRef.current = null
     }
-    if (activeTab.kind === 'present') {
+    if (activeTab?.kind === 'present') {
       frameRef.current =
         restoredFrame && restoredFrame.sliceId === activeTab.sliceId
           ? restoredFrame.frame
@@ -106,7 +107,7 @@ function useUrlViewState(
     (frame: number) => {
       frameRef.current = frame
       const tab = activeTabRef.current
-      if (pendingRef.current || tab.kind !== 'present') return
+      if (pendingRef.current || tab?.kind !== 'present') return
       if (debounceRef.current !== null) window.clearTimeout(debounceRef.current)
       debounceRef.current = window.setTimeout(() => {
         debounceRef.current = null
@@ -130,7 +131,9 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
 
   const activeTab = useMemo(
     () =>
-      state.tabs.find((tab) => tabKey(tab) === state.activeKey) ?? BLUEPRINT_TAB,
+      state.activeKey === null
+        ? null
+        : (state.tabs.find((tab) => tabKey(tab) === state.activeKey) ?? null),
     [state.tabs, state.activeKey],
   )
 
@@ -145,7 +148,7 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
     [],
   )
   const activateTab = useCallback(
-    (key: TabKey) => dispatch({ type: 'activate', key }),
+    (key: TabKey | null) => dispatch({ type: 'activate', key }),
     [],
   )
   const closeTabsForSlice = useCallback(

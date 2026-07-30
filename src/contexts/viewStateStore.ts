@@ -2,33 +2,34 @@ import { createContext, useContext } from 'react'
 import { parseUrlViewState, type UrlViewState } from '@/lib/urlViewState'
 
 /**
- * Tab model for the editor shell — a pinned blueprint tab plus slice focus /
- * presentation tabs. Pure reducer + key helpers live here (unit-testable, no
+ * Tab model for the editor shell — slice focus / presentation tabs layered
+ * over the base blueprint view. The blueprint/home view is not a tab: it is
+ * the base state, represented by `activeKey === null` (and shown whenever no
+ * tab is active). Pure reducer + key helpers live here (unit-testable, no
  * React rendering); the provider that owns the reducer and URL sync is
  * `ViewStateContext.tsx`.
  */
 
 export type TabDescriptor =
-  | { kind: 'blueprint' }
   | { kind: 'slice'; sliceId: string }
   | { kind: 'present'; sliceId: string }
 
-export type TabKey = 'blueprint' | `slice:${string}` | `present:${string}`
+export type TabKey = `slice:${string}` | `present:${string}`
 
-export const tabKey = (t: TabDescriptor): TabKey =>
-  t.kind === 'blueprint' ? 'blueprint' : `${t.kind}:${t.sliceId}`
+export const tabKey = (t: TabDescriptor): TabKey => `${t.kind}:${t.sliceId}`
 
 export type ViewStateAction =
   | { type: 'open'; tab: TabDescriptor }
   | { type: 'close'; key: TabKey }
-  | { type: 'activate'; key: TabKey }
+  | { type: 'activate'; key: TabKey | null }
   | { type: 'closeForSlice'; sliceId: string }
   | { type: 'resolvePending'; availableSliceIds: readonly string[] }
   | { type: 'setLens'; lens: 'assumption' | null }
 
 export type ViewState = {
   tabs: TabDescriptor[]
-  activeKey: TabKey
+  /** Active tab key; `null` means the base blueprint view. */
+  activeKey: TabKey | null
   /** Parsed boot URL, held until the slice list loads (never applied blind). */
   pendingUrlState: UrlViewState | null
   /** Frame restored from a `?mode=present&frame=` deep link. */
@@ -37,13 +38,11 @@ export type ViewState = {
   lens: 'assumption' | null
 }
 
-export const BLUEPRINT_TAB: TabDescriptor = { kind: 'blueprint' }
-
 export function createInitialViewState(search: string): ViewState {
   const pendingUrlState = parseUrlViewState(search)
   return {
-    tabs: [BLUEPRINT_TAB],
-    activeKey: 'blueprint',
+    tabs: [],
+    activeKey: null,
     pendingUrlState,
     restoredFrame: null,
     lens:
@@ -53,22 +52,19 @@ export function createInitialViewState(search: string): ViewState {
   }
 }
 
-/** Close a set of tab keys; the pinned blueprint tab never closes. */
-function closeKeys(state: ViewState, keysToClose: ReadonlySet<TabKey>): ViewState {
-  const keys = new Set<TabKey>(
-    [...keysToClose].filter((key) => key !== 'blueprint'),
-  )
+/** Close a set of tab keys. */
+function closeKeys(state: ViewState, keys: ReadonlySet<TabKey>): ViewState {
   if (keys.size === 0) return state
 
   const tabs = state.tabs.filter((tab) => !keys.has(tabKey(tab)))
   if (tabs.length === state.tabs.length) return state
 
   let activeKey = state.activeKey
-  if (keys.has(state.activeKey)) {
-    // Closing the active tab activates its nearest surviving left neighbor
-    // (the blueprint tab at index 0 always survives).
+  if (activeKey !== null && keys.has(activeKey)) {
+    // Closing the active tab activates its nearest surviving left neighbor,
+    // or falls back to the base blueprint view when none is left.
     const activeIndex = state.tabs.findIndex((tab) => tabKey(tab) === state.activeKey)
-    activeKey = 'blueprint'
+    activeKey = null
     for (let index = activeIndex - 1; index >= 0; index -= 1) {
       const candidate = state.tabs[index]
       if (candidate && !keys.has(tabKey(candidate))) {
@@ -94,7 +90,9 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
       return closeKeys(state, new Set([action.key]))
     case 'activate': {
       if (action.key === state.activeKey) return state
-      if (!state.tabs.some((tab) => tabKey(tab) === action.key)) return state
+      if (action.key !== null && !state.tabs.some((tab) => tabKey(tab) === action.key)) {
+        return state
+      }
       return { ...state, activeKey: action.key }
     }
     case 'closeForSlice':
@@ -102,7 +100,7 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
         state,
         new Set(
           state.tabs
-            .filter((tab) => tab.kind !== 'blueprint' && tab.sliceId === action.sliceId)
+            .filter((tab) => tab.sliceId === action.sliceId)
             .map(tabKey),
         ),
       )
@@ -112,7 +110,7 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
 
       const cleared: ViewState = { ...state, pendingUrlState: null }
       if (pending.kind === 'blueprint') return cleared
-      // The deep-linked slice never materialized — drop it, stay on blueprint.
+      // The deep-linked slice never materialized — drop it, stay on the base view.
       if (!action.availableSliceIds.includes(pending.sliceId)) return cleared
 
       const tab: TabDescriptor =
@@ -131,8 +129,9 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
 
 export type ViewStateContextValue = {
   tabs: TabDescriptor[]
-  activeKey: TabKey
-  activeTab: TabDescriptor
+  activeKey: TabKey | null
+  /** Active tab descriptor; `null` means the base blueprint view. */
+  activeTab: TabDescriptor | null
   pendingUrlState: UrlViewState | null
   restoredFrame: { sliceId: string; frame: number } | null
   /** Active view lens; mirrored to the `lens` URL param. */
@@ -140,7 +139,8 @@ export type ViewStateContextValue = {
   setLens: (lens: 'assumption' | null) => void
   openTab: (tab: TabDescriptor) => void
   closeTab: (key: TabKey) => void
-  activateTab: (key: TabKey) => void
+  /** Activate a tab, or pass `null` to return to the base blueprint view. */
+  activateTab: (key: TabKey | null) => void
   closeTabsForSlice: (sliceId: string) => void
   /** Activate a pending URL deep link once the slice list has loaded. */
   resolvePending: (availableSliceIds: readonly string[]) => void
