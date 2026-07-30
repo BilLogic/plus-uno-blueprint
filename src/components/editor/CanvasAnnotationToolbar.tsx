@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
 import {
   ANNOTATION_PEN_STROKE_WIDTHS,
   ANNOTATION_PEN_SWATCHES,
@@ -242,21 +243,29 @@ export function CanvasAnnotationToolbar() {
     }
   }, [tool])
 
+  const canvasMode = useCanvasMode()
+  const designing = canvasMode?.mode === 'design'
+
   return (
     <div className="pointer-events-none absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2">
-      {drawActive ? <DrawSubpanel /> : null}
+      {drawActive && !designing ? <DrawSubpanel /> : null}
 
       <div
         data-annotation-toolbar=""
         className="flex items-center gap-0.5 rounded-full border border-border/70 bg-card/95 px-1.5 py-1 shadow-md backdrop-blur-sm"
       >
+        {/* Select holds the first slot in both modes — the one tool that means
+            "do nothing special" should never move under the cursor. */}
         <ToolButton
           id="select"
-          label="Select / pan"
+          label={designing ? 'Select' : 'Select / pan'}
           icon={MousePointer2}
           active={tool === 'select'}
           onSelect={setTool}
         />
+
+        {designing ? <CanvasDesignTools /> : (
+        <>
 
         {/* Single draw slot — swaps to eraser icon when eraser is active (FigJam). */}
         <Tooltip>
@@ -337,7 +346,71 @@ export function CanvasAnnotationToolbar() {
             Clear annotations
           </TooltipContent>
         </Tooltip>
+        </>
+        )}
+
+        {/* The mode switch is not a tool, so it sits after a divider at the
+            far end rather than in the tool run — and it is absent, never
+            disabled, for sessions that cannot write. */}
+        {canvasMode?.available ? (
+          <>
+            <ToolbarDivider />
+            <CanvasModeSwitch
+              mode={canvasMode.mode}
+              onChange={canvasMode.setMode}
+            />
+          </>
+        ) : null}
       </div>
     </div>
   )
+}
+
+/**
+ * View ⇄ Design. Two segments rather than a toggle button: the current mode
+ * has to be readable at a glance, and a single button only ever shows the
+ * mode you are *not* in.
+ */
+function CanvasModeSwitch({
+  mode,
+  onChange,
+}: {
+  mode: CanvasMode
+  onChange: (mode: CanvasMode) => void
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Canvas mode"
+      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-full bg-muted/60 p-0.5"
+    >
+      {(['view', 'design'] as const).map((value) => (
+        <Button
+          key={value}
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-pressed={mode === value}
+          onClick={() => onChange(value)}
+          className={cn(
+            'h-6 rounded-full px-2.5 text-[11px] font-medium capitalize',
+            mode === value
+              ? 'bg-background text-foreground shadow-sm hover:bg-background'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {value}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Design-mode tools. Phase 1 ships select-only (the shared button above), so
+ * this run is currently empty — creation and cell editing land in the phases
+ * that follow, and an empty run beats placeholder buttons that do nothing.
+ */
+function CanvasDesignTools() {
+  return null
 }
