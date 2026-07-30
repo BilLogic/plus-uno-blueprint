@@ -1,9 +1,21 @@
-import { useCallback, useMemo, useState, type MouseEvent } from 'react'
-import { Play } from 'lucide-react'
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react'
+import { Info, Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { Button } from '@/components/ui/button'
 import { DelayedSpinner } from '@/components/ui/spinner'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { EditorDetailScope } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -81,11 +93,33 @@ export function SliceView({ sliceId }: SliceViewProps) {
 
   const [focused, setFocused] = useState(true)
 
+  // Click vs drag discrimination: a drag-pan also fires a click on pointer
+  // up, which must not toggle the focus dim. Track the pointer-down origin
+  // (capture phase, before the viewport handles it) and treat anything that
+  // moved more than a few pixels as a drag.
+  const pointerOrigin = useRef<{ x: number; y: number } | null>(null)
+  const handleFocusPointerDownCapture = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      pointerOrigin.current = { x: event.clientX, y: event.clientY }
+    },
+    [],
+  )
+
   // Clicking a member cell (re-)focuses; clicking elsewhere on the canvas
   // lifts the dim. Capture phase, because interactive cells stop click
   // propagation before it would bubble here.
   const handleFocusClickCapture = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
+      const origin = pointerOrigin.current
+      pointerOrigin.current = null
+      if (
+        origin &&
+        Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 5
+      ) {
+        // Drag-pan, not a click — leave the focus state alone.
+        return
+      }
+
       const target = event.target instanceof HTMLElement ? event.target : null
       if (!target) return
       if (target.closest('[data-slice-member]')) {
@@ -128,8 +162,8 @@ export function SliceView({ sliceId }: SliceViewProps) {
   return (
     <SliceMembershipContext.Provider value={membership}>
       <div className="flex h-full min-h-0 flex-col">
-        <header className="flex shrink-0 flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border px-4 py-2.5">
-          <h2 className="text-sm font-semibold">
+        <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-2">
+          <h2 className="min-w-0 truncate text-sm font-semibold">
             <span aria-hidden>◇ </span>
             {detail.slice.title}
           </h2>
@@ -137,9 +171,22 @@ export function SliceView({ sliceId }: SliceViewProps) {
             {detail.slice.slice_type}
           </span>
           {detail.slice.description && (
-            <p className="min-w-0 text-xs text-muted-foreground">
-              {detail.slice.description}
-            </p>
+            <Tooltip>
+              <TooltipTrigger
+                className={cn(
+                  'inline-flex size-4 shrink-0 items-center justify-center rounded-full',
+                  'border-0 bg-transparent p-0 text-muted-foreground shadow-none outline-none',
+                  'transition-colors hover:text-foreground',
+                  'focus-visible:ring-1 focus-visible:ring-ring',
+                )}
+                aria-label="Slice description"
+              >
+                <Info className="size-3.5" aria-hidden />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                {detail.slice.description}
+              </TooltipContent>
+            </Tooltip>
           )}
           <span className="ml-auto flex items-center gap-2">
             {resolution.missingCellIds.length > 0 && (
@@ -149,7 +196,6 @@ export function SliceView({ sliceId }: SliceViewProps) {
                 longer in the blueprint
               </span>
             )}
-            <SliceFocusToggle focused={focused} onToggle={setFocused} />
             <Button
               type="button"
               variant="outline"
@@ -166,6 +212,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
         <div
           className="relative min-h-0 min-w-0 flex-1"
           data-slice-focus={focused ? 'focused' : 'idle'}
+          onPointerDownCapture={handleFocusPointerDownCapture}
           onClickCapture={handleFocusClickCapture}
         >
           <EditorDetailScope slideId={scenarioId}>
@@ -178,6 +225,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
               </div>
             </VisualWalkthroughShell>
           </EditorDetailScope>
+          {!focused && <SliceRefocusPill onRefocus={() => setFocused(true)} />}
         </div>
       </div>
     </SliceMembershipContext.Provider>
@@ -185,32 +233,36 @@ export function SliceView({ sliceId }: SliceViewProps) {
 }
 
 /**
- * Focus-state indicator + toggle in the slice header strip. The header sits
- * outside the canvas click-capture container, so this never trips the
- * outside-click de-focus behavior.
+ * Floating refocus affordance at the bottom-center of the canvas, visible
+ * only while de-focused. Carries `data-canvas-nav` so the outside-click
+ * capture treats it as chrome (clicking it must not re-run de-focus logic).
  */
-function SliceFocusToggle({
-  focused,
-  onToggle,
-}: {
-  focused: boolean
-  onToggle: (focused: boolean) => void
-}) {
+function SliceRefocusPill({ onRefocus }: { onRefocus: () => void }) {
   return (
-    <button
-      type="button"
-      aria-pressed={focused}
-      onClick={() => onToggle(!focused)}
-      className={cn(
-        'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-        focused
-          ? 'border-transparent bg-foreground text-background'
-          : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground',
-      )}
+    // bottom-16 clears the annotation toolbar docked at the bottom center.
+    <div
+      className="pointer-events-none absolute inset-x-0 bottom-16 z-30 flex justify-center"
+      data-canvas-nav=""
     >
-      <span aria-hidden>{focused ? '◉ ' : '○ '}</span>
-      {focused ? 'Focused' : 'Showing all'}
-    </button>
+      <button
+        type="button"
+        onClick={onRefocus}
+        className={cn(
+          'pointer-events-auto flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5',
+          'text-xs font-medium text-muted-foreground shadow-md transition-colors',
+          'hover:bg-accent hover:text-foreground',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        )}
+      >
+        <span aria-hidden>○</span>
+        Showing all
+        <span aria-hidden className="text-muted-foreground/60">
+          ·
+        </span>
+        <span aria-hidden>⤺</span>
+        Back to slice
+      </button>
+    </div>
   )
 }
 
