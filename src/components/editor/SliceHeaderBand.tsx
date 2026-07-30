@@ -29,13 +29,17 @@ export function SliceHeaderBand({
   detail,
   missingCellCount = 0,
   primaryAction,
+  secondaryAction,
   className,
 }: {
   detail: SliceDetail
   missingCellCount?: number
   primaryAction: SliceHeaderPrimaryAction
+  /** Ghost action left of the primary — Edit in the focus tab. */
+  secondaryAction?: SliceHeaderPrimaryAction
   className?: string
 }) {
+  const SecondaryIcon = secondaryAction?.icon
   const description = detail.slice.description?.trim()
   const PrimaryIcon = primaryAction.icon
 
@@ -71,6 +75,19 @@ export function SliceHeaderBand({
           )}
         </div>
       </div>
+
+      {secondaryAction && SecondaryIcon ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="shrink-0 gap-1.5"
+          onClick={secondaryAction.onClick}
+        >
+          <SecondaryIcon className="size-3" aria-hidden />
+          {secondaryAction.label}
+        </Button>
+      ) : null}
 
       <Button
         type="button"

@@ -7,7 +7,11 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
-import { createSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
+import {
+  createSupabaseClient,
+  hasDevAuthoringKey,
+  isSupabaseConfigured,
+} from '../lib/supabase'
 import type { Database } from '../types/database'
 
 type SupabaseContextValue = {
@@ -17,9 +21,13 @@ type SupabaseContextValue = {
   isLoading: boolean
   /**
    * Visibility hint for mutation UI (hidden — never disabled — when false).
-   * RLS is the authority; this only reflects "configured and signed in".
+   * RLS is the authority; this only reflects whether this session has any
+   * chance of a write succeeding: a signed-in user, or a dev server holding
+   * the local authoring key. A deployed visitor is neither.
    */
   canWrite: boolean
+  /** Writing with the local authoring key rather than as a signed-in user. */
+  isDevAuthoring: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -61,15 +69,18 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
     }
   }, [client])
 
+  const isDevAuthoring = hasDevAuthoringKey()
+
   const value = useMemo(
     () => ({
       client,
       configured,
       session,
       isLoading,
-      canWrite: configured && session !== null,
+      canWrite: configured && (session !== null || isDevAuthoring),
+      isDevAuthoring,
     }),
-    [client, configured, session, isLoading],
+    [client, configured, session, isLoading, isDevAuthoring],
   )
 
   return (

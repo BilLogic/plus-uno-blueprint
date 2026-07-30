@@ -6,16 +6,18 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react'
-import { Play } from 'lucide-react'
+import { Check, Pencil, Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { PendingCanvasLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
+import { SliceEditSession } from '@/components/editor/SliceEditSession'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { DelayedSpinner } from '@/components/ui/spinner'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { EditorDetailScope } from '@/contexts/EditorContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
@@ -69,6 +71,8 @@ export function SliceView({ sliceId }: SliceViewProps) {
   )
 
   const [focused, setFocused] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const { canWrite } = useSupabase()
 
   // Click vs drag discrimination: a drag-pan also fires a click on pointer
   // up, which must not toggle the focus dim. Track the pointer-down origin
@@ -139,11 +143,20 @@ export function SliceView({ sliceId }: SliceViewProps) {
       // Every cell reads as missing until the blueprint lands — the notice
       // stays out of the band rather than flashing a false count.
       missingCellCount={blueprint ? resolution.missingCellIds.length : 0}
-      primaryAction={{
-        label: 'Present',
-        icon: Play,
-        onClick: () => openTab({ kind: 'present', sliceId }),
-      }}
+      primaryAction={
+        editing
+          ? { label: 'Done', icon: Check, onClick: () => setEditing(false) }
+          : {
+              label: 'Present',
+              icon: Play,
+              onClick: () => openTab({ kind: 'present', sliceId }),
+            }
+      }
+      secondaryAction={
+        canWrite && !editing
+          ? { label: 'Edit', icon: Pencil, onClick: () => setEditing(true) }
+          : undefined
+      }
     />
   )
 
@@ -171,35 +184,49 @@ export function SliceView({ sliceId }: SliceViewProps) {
     )
   }
 
+  const canvas = (
+    <div
+      className="relative flex h-full min-h-0 min-w-0 flex-col"
+      // Editing lifts the dim: you cannot pick a cell you cannot see, and
+      // the slice's own members are already marked by their badges.
+      data-slice-focus={focused && !editing ? 'focused' : 'idle'}
+      onPointerDownCapture={handleFocusPointerDownCapture}
+      onClickCapture={editing ? undefined : handleFocusClickCapture}
+    >
+      <EditorDetailScope slideId={scenarioId}>
+        <VisualWalkthroughShell>
+          <div
+            className="absolute inset-0 flex min-h-0 flex-col"
+            data-editor-view
+          >
+            <ServiceOverviewView
+              skeletonHoldKey={skeletonHoldKey}
+              soloScenarioId={scenarioId}
+              renderHeader={() => header}
+              floatingChrome={
+                <div className="rounded-full border border-border bg-card px-1 shadow-sm">
+                  <NavbarZoomIndicator />
+                </div>
+              }
+            />
+          </div>
+        </VisualWalkthroughShell>
+      </EditorDetailScope>
+      {!focused && !editing && (
+        <SliceRefocusPill onRefocus={() => setFocused(true)} />
+      )}
+    </div>
+  )
+
   return (
     <SliceMembershipContext.Provider value={membership}>
-      <div
-        className="relative flex h-full min-h-0 min-w-0 flex-col"
-        data-slice-focus={focused ? 'focused' : 'idle'}
-        onPointerDownCapture={handleFocusPointerDownCapture}
-        onClickCapture={handleFocusClickCapture}
-      >
-        <EditorDetailScope slideId={scenarioId}>
-          <VisualWalkthroughShell>
-            <div
-              className="absolute inset-0 flex min-h-0 flex-col"
-              data-editor-view
-            >
-              <ServiceOverviewView
-                skeletonHoldKey={skeletonHoldKey}
-                soloScenarioId={scenarioId}
-                renderHeader={() => header}
-                floatingChrome={
-                  <div className="rounded-full border border-border bg-card px-1 shadow-sm">
-                    <NavbarZoomIndicator />
-                  </div>
-                }
-              />
-            </div>
-          </VisualWalkthroughShell>
-        </EditorDetailScope>
-        {!focused && <SliceRefocusPill onRefocus={() => setFocused(true)} />}
-      </div>
+      {editing ? (
+        <SliceEditSession detail={detail} onClose={() => setEditing(false)}>
+          {canvas}
+        </SliceEditSession>
+      ) : (
+        canvas
+      )}
     </SliceMembershipContext.Provider>
   )
 }

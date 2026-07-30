@@ -1,5 +1,6 @@
 import { Home, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useSupabase } from '@/contexts/SupabaseProvider'
 import { cn } from '@/lib/utils'
 
 const EDITOR_TITLE = 'Uno Blueprint'
@@ -123,6 +124,8 @@ export function EditorSidebarWorkspaceHeader({
   isLanding = false,
   onWorkspaceTitle,
 }: EditorSidebarWorkspaceHeaderProps) {
+  const { isDevAuthoring } = useSupabase()
+
   return (
     <div
       className="flex shrink-0 items-center gap-2 px-3 py-2"
@@ -131,6 +134,16 @@ export function EditorSidebarWorkspaceHeader({
       <div className="min-w-0 flex-1">
         <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
       </div>
+      {/* Writing with the local authoring key is a privileged state that
+          looks exactly like the read-only app otherwise. Say so. */}
+      {isDevAuthoring ? (
+        <span
+          className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400"
+          title="Local authoring key in use — writes go to the live database"
+        >
+          authoring
+        </span>
+      ) : null}
       {onToggleSidebar ? (
         <SidebarCollapseButton
           collapsed={sidebarCollapsed}

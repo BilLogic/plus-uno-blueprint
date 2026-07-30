@@ -1,3 +1,7 @@
+import { useState } from 'react'
+import { Pencil } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CellSpecEditor } from '@/components/blueprint/CellSpecEditor'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellSpec } from '@/hooks/useCellSpec'
 import { parseValueProps } from '@/lib/valueProps'
@@ -19,13 +23,17 @@ type CellOverviewSpecProps = {
 }
 
 /**
- * Read-only FUNCTION / FORM / VALUE spec block in the panel's inline
- * overview. Sections render only when authored; without a database (or for
- * fallback-only cells) the block stays hidden quietly.
+ * FUNCTION / FORM / VALUE spec block in the panel's inline overview —
+ * read-only for viewers, editable in place for writers.
+ *
+ * Sections render only when authored. Without a database (or for
+ * fallback-only cells) the block stays hidden entirely: there is nothing to
+ * read and nowhere to write it.
  */
 export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
-  const { client, configured } = useSupabase()
+  const { client, configured, canWrite } = useSupabase()
   const specResult = useCellSpec(configured ? cellId : null)
+  const [editing, setEditing] = useState(false)
 
   if (!configured || !client || !cellId) return null
 
@@ -42,32 +50,71 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   // block (and everything below it, including the tab row) grew for ~250 ms
   // and then collapsed again on *every* cell switch. Waiting costs one
   // downward push when a spec does land; reserving cost a bounce every time.
-  if (loading || !hasAnySpec) return null
+  if (loading) return null
+
+  if (editing) {
+    return (
+      <CellSpecEditor
+        cellId={cellId}
+        spec={spec}
+        onDone={() => setEditing(false)}
+      />
+    )
+  }
+
+  if (!hasAnySpec) {
+    // The affordance is the only thing that tells a writer this cell *can*
+    // carry a spec — without it the feature is invisible on exactly the
+    // cells that need it most.
+    if (!canWrite) return null
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
+        onClick={() => setEditing(true)}
+      >
+        <Pencil className="size-3" />
+        Specify function &amp; form
+      </Button>
+    )
+  }
 
   return (
-    <div className="flex flex-col gap-3 animate-in fade-in duration-200">
-      <div className="flex flex-col gap-3">
-        {functionText ? <SpecSection title="Function" text={functionText} /> : null}
-        {formText ? <SpecSection title="Form" text={formText} /> : null}
-        {valueProps.length > 0 ? (
-          <section className="flex flex-col gap-1">
-            <h3 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-              Value
-            </h3>
-            <ul className="flex flex-col gap-1">
-              {valueProps.map((entry, index) => (
-                <li key={index} className="text-sm leading-snug text-foreground/80">
-                  <span className="font-medium text-foreground">
-                    {entry.for}
-                  </span>
-                  {entry.for && entry.value ? ' — ' : ''}
-                  {entry.value}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-      </div>
+    <div className="group/spec flex flex-col gap-3 animate-in fade-in duration-200">
+      {functionText ? <SpecSection title="Function" text={functionText} /> : null}
+      {formText ? <SpecSection title="Form" text={formText} /> : null}
+      {valueProps.length > 0 ? (
+        <section className="flex flex-col gap-1">
+          <h3 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            Value
+          </h3>
+          <ul className="flex flex-col gap-1">
+            {valueProps.map((entry, index) => (
+              <li key={index} className="text-sm leading-snug text-foreground/80">
+                <span className="font-medium text-foreground">{entry.for}</span>
+                {entry.for && entry.value ? ' — ' : ''}
+                {entry.value}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {canWrite ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          // Revealed on hover of the block, like the sidebar chevrons: the
+          // spec is usually read, not edited.
+          className="h-6 self-start px-2 text-xs text-muted-foreground opacity-0 transition-opacity group-hover/spec:opacity-100 focus-visible:opacity-100 hover:text-foreground"
+          onClick={() => setEditing(true)}
+        >
+          <Pencil className="size-3" />
+          Edit
+        </Button>
+      ) : null}
     </div>
   )
 }

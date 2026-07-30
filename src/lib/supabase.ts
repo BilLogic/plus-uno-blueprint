@@ -14,10 +14,46 @@ export function isSupabaseConfigured(): boolean {
   return true
 }
 
+/**
+ * Local authoring key, dev server only.
+ *
+ * The deployed app is read-only by design: every write policy is `to
+ * authenticated`, there is no sign-in, so a browser visitor cannot write.
+ * Authoring is for people who already hold this project's database
+ * credentials — us — working against `npm run dev`.
+ *
+ * Three guards, because a service key in a browser bundle is full database
+ * access to anyone who loads the page:
+ *
+ * 1. `import.meta.env.DEV` — a production build takes the anon path even if
+ *    the variable is somehow present at build time.
+ * 2. The variable lives in `.env.local`, which `.gitignore` covers via
+ *    `.env.*`. It must never be set in Netlify's environment.
+ * 3. The provider surfaces a visible badge while it is in use, so nobody
+ *    edits the live database believing they are a viewer.
+ */
+const devAuthoringKey = import.meta.env.DEV
+  ? import.meta.env.VITE_SUPABASE_DEV_SERVICE_KEY
+  : undefined
+
+/** True when this session can write — dev server, with the authoring key set. */
+export function hasDevAuthoringKey(): boolean {
+  return Boolean(import.meta.env.DEV && devAuthoringKey)
+}
+
 export function createSupabaseClient(): SupabaseClient<Database> | null {
   if (!isSupabaseConfigured()) {
     return null
   }
 
-  return createClient<Database>(supabaseUrl, supabaseAnonKey)
+  const key = hasDevAuthoringKey() ? devAuthoringKey! : supabaseAnonKey
+
+  return createClient<Database>(supabaseUrl, key, {
+    auth: {
+      // A service key must not be persisted or refreshed as if it were a
+      // user session — it is not one, and storing it widens where it lands.
+      persistSession: !hasDevAuthoringKey(),
+      autoRefreshToken: !hasDevAuthoringKey(),
+    },
+  })
 }

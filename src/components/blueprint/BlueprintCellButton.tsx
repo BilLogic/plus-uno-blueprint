@@ -3,6 +3,7 @@ import {
   useBlueprintCellDetailOptional,
   useBlueprintCellPreviewHover,
 } from '@/contexts/BlueprintCellDetailContext'
+import { useCellPick } from '@/contexts/cellPickContext'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
@@ -86,6 +87,12 @@ export function BlueprintCellButton({
           ? sliceMembership.sequenceByCellId.get(resolvedCellId)
           : undefined))
       : undefined
+  // Slice membership and picking both key on the canonical cell id, so
+  // integrated-view overlay ids resolve to the same cell as the base grid.
+  const pick = useCellPick()
+  const pickCellId = resolvedCellId ?? cellId ?? null
+  const pickOrder = pick && pickCellId ? pick.orderOf(pickCellId) : undefined
+  const isPicked = Boolean(pick && pickCellId && pick.isPicked(pickCellId))
   const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
@@ -118,6 +125,13 @@ export function BlueprintCellButton({
     // Focus mode: ignore cells in dimmed (inactive) phases/scenarios.
     if (event.currentTarget.closest('[data-canvas-focus-dimmed]')) return
     event.stopPropagation()
+    // Picking a cell for a slice takes precedence over opening the panel:
+    // in edit mode every click picks, elsewhere only cmd/shift-click does,
+    // so ordinary reading of the blueprint is unaffected.
+    if (pickCellId && pick && (pick.plainClick || event.metaKey || event.shiftKey)) {
+      pick.toggle(pickCellId)
+      return
+    }
     detail!.selectCell(selection!)
   }
 
@@ -141,6 +155,7 @@ export function BlueprintCellButton({
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
       {...(isSliceMember ? { 'data-slice-member': '' } : {})}
+      {...(isPicked ? { 'data-slice-picked': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}
@@ -151,11 +166,22 @@ export function BlueprintCellButton({
         variant === 'visual' &&
           'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
-        sliceSequence !== undefined && 'relative overflow-visible',
+        (sliceSequence !== undefined || isPicked) && 'relative overflow-visible',
       )}
       style={surfaceStyle}
     >
-      {sliceSequence !== undefined ? (
+      {/* Pick order wins the badge slot while picking: during selection the
+          number the user cares about is the one they are building, not the
+          one the saved slice already has. */}
+      {isPicked && pickOrder !== undefined ? (
+        <span
+          aria-hidden
+          data-slice-pick-badge=""
+          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground shadow-sm"
+        >
+          {pickOrder}
+        </span>
+      ) : sliceSequence !== undefined ? (
         <span
           aria-hidden
           data-slice-sequence-badge=""
