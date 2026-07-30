@@ -1,8 +1,11 @@
 import { useCallback, useMemo, useState, type MouseEvent } from 'react'
+import { Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
+import { Button } from '@/components/ui/button'
 import { EditorDetailScope } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
+import { useViewState } from '@/contexts/viewStateStore'
 import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
 import { useSlice, type SliceDetail } from '@/hooks/useSlice'
 import { useSliceScenarioId } from '@/hooks/useSliceScenarioId'
@@ -33,6 +36,7 @@ type SliceViewProps = {
  * (BlueprintCellButton reads SliceMembershipContext).
  */
 export function SliceView({ sliceId }: SliceViewProps) {
+  const { openTab } = useViewState()
   const result = useSlice(sliceId)
   const detail: SliceDetail | null =
     result.status === 'ready'
@@ -143,6 +147,16 @@ export function SliceView({ sliceId }: SliceViewProps) {
                 longer in the blueprint
               </span>
             )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => openTab({ kind: 'present', sliceId })}
+            >
+              <Play className="size-3" aria-hidden />
+              Present
+            </Button>
           </span>
         </header>
 

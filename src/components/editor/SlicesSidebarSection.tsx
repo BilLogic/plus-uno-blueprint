@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ExternalLink, Trash2 } from 'lucide-react'
+import { ExternalLink, Play, Trash2 } from 'lucide-react'
 import { DeleteSliceDialog } from '@/components/editor/TabStrip'
 import {
   Accordion,
@@ -24,11 +24,13 @@ import { useSlices, type SliceListEntry } from '@/hooks/useSlices'
 function SliceRow({
   slice,
   onOpen,
+  onPresent,
   onDelete,
   canWrite,
 }: {
   slice: SliceListEntry
   onOpen: () => void
+  onPresent: () => void
   onDelete: () => void
   canWrite: boolean
 }) {
@@ -53,6 +55,10 @@ function SliceRow({
         <ContextMenuItem onClick={onOpen}>
           <ExternalLink className="size-3.5" />
           Open in new tab
+        </ContextMenuItem>
+        <ContextMenuItem onClick={onPresent}>
+          <Play className="size-3.5" />
+          Present
         </ContextMenuItem>
         {canWrite ? (
           <ContextMenuItem variant="destructive" onClick={onDelete}>
@@ -105,6 +111,9 @@ export function SlicesSidebarSection() {
                       canWrite={canWrite}
                       onOpen={() =>
                         openTab({ kind: 'slice', sliceId: slice.id })
+                      }
+                      onPresent={() =>
+                        openTab({ kind: 'present', sliceId: slice.id })
                       }
                       onDelete={() =>
                         setDeleteTarget({ id: slice.id, title: slice.title })
