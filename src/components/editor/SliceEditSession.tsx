@@ -103,9 +103,14 @@ export function SliceEditSession({
     return {
       // The whole tab is an editor: a plain click picks, no modifier needed.
       plainClick: true,
+      picked: frames.flatMap((frame) => frame.cells),
       isPicked: (cellId) => order.has(cellId),
       orderOf: (cellId) => order.get(cellId),
-      toggle,
+      // Editing a slice is always additive-by-toggle: a plain click adding a
+      // cell must not wipe the frames already built.
+      pick: (cellId) => toggle(cellId),
+      pickMany: (cellIds) => cellIds.forEach(toggle),
+      clear: () => setFrames([]),
     }
   }, [frames, toggle])
 

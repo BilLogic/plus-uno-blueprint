@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
 import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
 import {
   ANNOTATION_PEN_STROKE_WIDTHS,
@@ -406,11 +407,4 @@ function CanvasModeSwitch({
   )
 }
 
-/**
- * Design-mode tools. Phase 1 ships select-only (the shared button above), so
- * this run is currently empty — creation and cell editing land in the phases
- * that follow, and an empty run beats placeholder buttons that do nothing.
- */
-function CanvasDesignTools() {
-  return null
-}
+

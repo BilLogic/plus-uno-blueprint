@@ -128,8 +128,9 @@ export function BlueprintCellButton({
     // Picking a cell for a slice takes precedence over opening the panel:
     // in edit mode every click picks, elsewhere only cmd/shift-click does,
     // so ordinary reading of the blueprint is unaffected.
-    if (pickCellId && pick && (pick.plainClick || event.metaKey || event.shiftKey)) {
-      pick.toggle(pickCellId)
+    if (pickCellId && pick && (pick.plainClick || event.shiftKey)) {
+      // Figma's grammar: plain click replaces the selection, shift toggles.
+      pick.pick(pickCellId, { additive: event.shiftKey })
       return
     }
     detail!.selectCell(selection!)

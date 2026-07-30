@@ -3,6 +3,7 @@ import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
 import { CanvasAnnotationLayer } from '@/components/editor/CanvasAnnotationLayer'
 import { CanvasAnnotationToolbar } from '@/components/editor/CanvasAnnotationToolbar'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
+import { CanvasSelectionProvider } from '@/components/editor/CanvasSelectionProvider'
 import { CanvasPenCursor } from '@/components/editor/CanvasPenCursor'
 import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
 import { CanvasAnnotationProvider } from '@/contexts/CanvasAnnotationProvider'
@@ -80,6 +81,7 @@ function ZoomPanViewportInner({
     // normal thing to want. It wraps the whole viewport, not just the
     // toolbar, because the grid reads the mode too.
     <CanvasModeProvider>
+    <CanvasSelectionProvider>
     <div
       className={cn('relative min-h-0 flex-1', className)}
       data-zoom-pan-root
@@ -114,6 +116,7 @@ function ZoomPanViewportInner({
       {showSequenceNav ? <EditorSequenceNav /> : null}
       <CanvasAnnotationToolbar />
     </div>
+    </CanvasSelectionProvider>
     </CanvasModeProvider>
   )
 }

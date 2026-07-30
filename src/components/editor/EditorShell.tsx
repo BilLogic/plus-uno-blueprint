@@ -12,7 +12,6 @@ import {
   EDITOR_SIDEBAR_WIDTH_PX,
 } from '@/components/editor/EditorSidebarRail'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
-import { SliceDraftProvider } from '@/components/editor/SliceDraftProvider'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { SliceView } from '@/components/editor/SliceView'
@@ -229,10 +228,6 @@ export function EditorShell() {
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TabStrip isOverview={isOverview} onHome={goOverview} />
-        {/* Wraps the content area, not the shell: the floating pick bar is
-            positioned against the canvas, and the sidebar must never fall
-            inside a picking surface. */}
-        <SliceDraftProvider>
         <div className="relative min-h-0 min-w-0 flex-1">
           {/*
             Only the active tab's content mounts, so switching is a
@@ -253,7 +248,6 @@ export function EditorShell() {
             />
           </div>
         </div>
-        </SliceDraftProvider>
       </main>
     </div>
   )
