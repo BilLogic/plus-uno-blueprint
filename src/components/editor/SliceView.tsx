@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -148,6 +149,11 @@ export function SliceView({ sliceId }: SliceViewProps) {
                     onPresent={() => openTab({ kind: 'present', sliceId })}
                   />
                 )}
+                floatingChrome={
+                  <div className="rounded-full border border-border bg-card px-1 shadow-sm">
+                    <NavbarZoomIndicator />
+                  </div>
+                }
               />
             </div>
           </VisualWalkthroughShell>

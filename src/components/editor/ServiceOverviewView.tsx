@@ -184,12 +184,15 @@ type ServiceOverviewViewProps = {
    * with their own band. Rendered inside the canvas zoom chrome provider.
    */
   renderHeader?: () => ReactNode
+  /** Floating chrome anchored bottom-right inside the canvas (slice tabs' Reset View). */
+  floatingChrome?: ReactNode
 }
 
 export function ServiceOverviewView({
   loadingVariant = 'skeleton',
   soloScenarioId,
   renderHeader,
+  floatingChrome,
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
@@ -326,6 +329,11 @@ export function ServiceOverviewView({
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
             data-slide-canvas
           >
+            {floatingChrome ? (
+              <div className="pointer-events-none absolute right-4 bottom-4 z-30 [&>*]:pointer-events-auto">
+                {floatingChrome}
+              </div>
+            ) : null}
             {noPathsSelected ? (
               <div className="absolute inset-0 flex">
                 <CanvasEmptyState />
