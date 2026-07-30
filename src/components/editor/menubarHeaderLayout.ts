@@ -7,11 +7,22 @@ export const BLUEPRINT_NAVBAR_BAR_CLASS =
   'relative shrink-0 border-b border-border bg-sidebar px-4'
 
 /**
- * Cell-detail drawer top offset: clear the docked h-9 navbar + border, then
- * match the panel's right inset (`1rem`). Used instead of a hard-coded `67px`
- * from the old floating header.
+ * Cell-detail drawer top offset. The drawer is portalled to the body, so it
+ * cannot inherit the chrome above it — the panel measures the canvas region
+ * (`[data-slide-canvas]`) at open time and publishes the result in this
+ * variable. The fallback is the base view's docked h-9 navbar + border; a
+ * slice tab, which stacks its header band on top, resolves taller and no
+ * longer covers it.
  */
-export const CELL_DETAIL_PANEL_TOP_CLASS = '!top-[calc(2.25rem+1px+1rem)]'
+export const CELL_DETAIL_PANEL_TOP_VAR = '--cell-detail-panel-top'
+export const CELL_DETAIL_PANEL_TOP_CLASS =
+  '!top-[var(--cell-detail-panel-top,calc(2.25rem+1px+1rem))]'
+
+/** Gap between the canvas top edge and the panel — matches its right inset. */
+export const CELL_DETAIL_PANEL_TOP_GAP_PX = 16
+
+/** The canvas region the panel measures against. */
+export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
 
 /** Flattens the menubar when it sits inside the docked navbar bar. */
 export const BLUEPRINT_MENUBAR_FLAT_CLASS =

@@ -1,5 +1,3 @@
-import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellSpec } from '@/hooks/useCellSpec'
 import { parseValueProps } from '@/lib/valueProps'
@@ -39,12 +37,15 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   const hasAnySpec =
     functionText.length > 0 || formText.length > 0 || valueProps.length > 0
 
-  if (!loading && !hasAnySpec) return null
+  // Nothing is rendered while the query is in flight — not even a reserved
+  // placeholder. Most cells have no spec at all, so reserving space meant the
+  // block (and everything below it, including the tab row) grew for ~250 ms
+  // and then collapsed again on *every* cell switch. Waiting costs one
+  // downward push when a spec does land; reserving cost a bounce every time.
+  if (loading || !hasAnySpec) return null
 
   return (
-    // The block reserves its height while the query is in flight, so the
-    // open drawer never reflows under the reader mid-read.
-    <DeferredSkeleton loading={loading} skeleton={<CellSpecLoadingSkeleton />}>
+    <div className="flex flex-col gap-3 animate-in fade-in duration-200">
       <div className="flex flex-col gap-3">
         {functionText ? <SpecSection title="Function" text={functionText} /> : null}
         {formText ? <SpecSection title="Form" text={formText} /> : null}
@@ -67,21 +68,6 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
           </section>
         ) : null}
       </div>
-    </DeferredSkeleton>
-  )
-}
-
-/** Two spec sections' worth of reserved height. */
-function CellSpecLoadingSkeleton() {
-  return (
-    <div className="flex flex-col gap-3" aria-hidden>
-      {[0, 1].map((index) => (
-        <div key={index} className="flex flex-col gap-1">
-          <Skeleton className="h-2.5 w-16 rounded-full" />
-          <Skeleton className="h-4 w-full rounded-full" />
-          <Skeleton className="h-4 w-4/5 rounded-full" />
-        </div>
-      ))}
     </div>
   )
 }
