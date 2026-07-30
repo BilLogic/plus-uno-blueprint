@@ -149,10 +149,27 @@ zooms past 100%; detail fits at maxZoom 4.
 - Acceptance: fast/warm loads show no skeleton at all; cold loads show exactly one;
   containers never move when content lands.
 
-### Phase 3 — Transition polish
+### Phase 3 — Transition polish + presentation mode rework
+
+**Presentation mode (Bill, 2026-07-30):**
+- **Sidebar collapses to the icon rail — it must NOT unmount.** Today
+  `EditorShell.tsx:55` drops the whole `<aside>` on a present tab, which is why entering
+  presentation snaps instead of wiping. Reuse the existing 320 ms width ease + 200 ms
+  opacity crossfade (75 ms stagger) — the same motion the sidebar already uses when
+  auto-collapsing, so entering and leaving presentation feel identical to every other
+  collapse in the app.
+- **Presentation keeps the slice header band.** Same two-row band as the slice tab (◇
+  title + type badge, subtitle), so switching between the two reads as a mode change on
+  one object rather than two unrelated screens. The only difference: the primary button
+  becomes **Return** (exit presentation, back to that slice's focus tab) instead of
+  Present. Dark-mode tokens apply to the band inside the presentation surface.
+- **Enter/exit symmetry:** entering = sidebar collapses (320 ms) ∥ stage fades up
+  (200 ms) ∥ filmstrip slides up (200 ms); exiting plays the same three in reverse with
+  the same durations/easing. No hard cuts in either direction.
+
+**General:**
 - 200 ms crossfade on tab/content switches and landing ⇄ canvas (model: the sidebar's
   320 ms width + 200 ms opacity with 75 ms stagger — the one motion already right).
-- Presentation entry animates the sidebar collapse instead of unmounting.
 - Badge threshold fades 150 ms; slice-dim eases opacity 180 ms with `filter` applied
   un-transitioned (never add `filter` to the cell transition list — repaint hazard).
 - Panel tab switches: reserved height or 150 ms ease.
