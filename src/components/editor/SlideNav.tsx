@@ -27,9 +27,6 @@ type SlideNavProps = {
   selectedScenarioId: string | null
   /** True when no phase/scenario should appear selected (landing or overview). */
   isHome?: boolean
-  /** Birds-eye canvas overview. */
-  onOverview?: () => void
-  isOverviewActive?: boolean
   /**
    * Expanded phases. Owned by EditorContext, not this component: local
    * expansion state died on every mode switch, skeleton swap, and
@@ -53,8 +50,6 @@ export function SlideNav({
   selectedPhaseId,
   selectedScenarioId,
   isHome = false,
-  onOverview,
-  isOverviewActive = false,
   expandedPhaseIds,
   onSelectPhase,
   onSelectScenario,
@@ -78,18 +73,6 @@ export function SlideNav({
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
-          {onOverview ? (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={isOverviewActive}
-                onClick={onOverview}
-                tooltip="Overview"
-              >
-                <span className="truncate">Overview</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ) : null}
-
           {mains.map((main) => {
             const children = getSubslides(main.id, slides)
             const hasChildren = children.length > 0

@@ -33,7 +33,6 @@ export function SlideModeSidebarNav() {
     selectedPhaseId,
     selectedScenarioId,
     focusNonce,
-    enterCanvas,
     view,
     slidesLoading,
     slidesError,
@@ -72,11 +71,6 @@ export function SlideModeSidebarNav() {
     },
     [activateTab, activeKey, selectScenario],
   )
-  const handleOverview = useCallback(() => {
-    if (activeKey !== null) activateTab(null)
-    enterCanvas()
-  }, [activateTab, activeKey, enterCanvas])
-
   return (
     <SidebarContent className="px-2 pb-1 pt-0.5">
       <Tabs
@@ -130,8 +124,6 @@ export function SlideModeSidebarNav() {
                   focusNonce={focusNonce}
                   onSelectPhase={handleSelectPhase}
                   onSelectScenario={handleSelectScenario}
-                  onOverview={handleOverview}
-                  isOverviewActive={view === 'home'}
                   isHome={view !== 'detail'}
                   expandedPhaseIds={expandedPhaseIds}
                   onSetExpanded={setPhaseExpanded}

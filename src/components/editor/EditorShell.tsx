@@ -25,10 +25,13 @@ import { cn } from '@/lib/utils'
 const SIDEBAR_WIDTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 export function EditorShell() {
-  const { view, goLanding } = useEditor()
+  const { view, goHome, goLanding } = useEditor()
   const { activeTab, activateTab, tabs } = useViewState()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
+  // Home reads as active only on the overview canvas itself, and only while
+  // no tab is covering it.
+  const isOverview = view === 'home' && activeTab === null
 
   // The sidebar stays expanded (and functional) while a slice tab is
   // active — the Paths filter now lives there, and phase clicks return to
@@ -49,9 +52,17 @@ export function EditorShell() {
     suppressCanvasResizeRefit()
   }, [hasTabs])
 
-  // Home always returns to the base blueprint view (deactivating any tab)
-  // before landing on the homepage.
-  const goHomeBase = () => {
+  // Home is the sidebar's route to the birds-eye overview canvas (nav plan
+  // D2) — it deactivates any tab, clears the selection and animates the fit,
+  // exactly like Escape and the workspace breadcrumb. `goHome` (not
+  // `enterCanvas`) so every overview return has the same feel.
+  const goOverview = () => {
+    activateTab(null)
+    goHome()
+  }
+
+  // The orientation landing page moved onto the workspace title.
+  const goLandingBase = () => {
     activateTab(null)
     goLanding()
   }
@@ -105,8 +116,10 @@ export function EditorShell() {
             <EditorSidebarWorkspaceHeader
               sidebarCollapsed={sidebarCollapsed}
               onToggleSidebar={toggleSidebar}
-              isHome={isLanding}
-              onHome={goHomeBase}
+              isHome={isOverview}
+              onHome={goOverview}
+              isLanding={isLanding}
+              onWorkspaceTitle={goLandingBase}
             />
             <SlideModeSidebarNav />
           </SidebarProvider>
@@ -124,8 +137,8 @@ export function EditorShell() {
           aria-hidden={!sidebarCollapsed}
         >
           <HomeNavButton
-            isActive={isLanding}
-            onClick={goHomeBase}
+            isActive={isOverview}
+            onClick={goOverview}
             size="icon-sm"
           />
           <SidebarCollapseButton

@@ -481,9 +481,6 @@ export function getParentSlide(
 export const WORKSPACE_BREADCRUMB_ID = '__workspace__'
 export const WORKSPACE_BREADCRUMB_LABEL = ORG_NAME
 
-/** Sidebar id for the service overview (home) nav item. */
-export const SERVICE_OVERVIEW_NAV_ID = '__service_overview__'
-
 export type SlideBreadcrumb = {
   id: string
   label: string
@@ -520,14 +517,4 @@ export function getSlideBreadcrumbs(
   })
 
   return crumbs
-}
-
-/** Default navigation target when the workspace breadcrumb is selected. */
-export function getWorkspaceBreadcrumbTarget(
-  slides: NavItem[] = FALLBACK_NAV,
-): string | undefined {
-  const application = slides.find(
-    (slide) => !slide.parentId && slide.label === 'Application',
-  )
-  return application?.id ?? getMainSlides(slides)[0]?.id
 }
