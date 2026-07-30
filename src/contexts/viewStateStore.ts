@@ -25,6 +25,7 @@ export type ViewStateAction =
   | { type: 'closeForSlice'; sliceId: string }
   | { type: 'resolvePending'; availableSliceIds: readonly string[] }
   | { type: 'consumeRestoredFrame' }
+  | { type: 'dismissMissingSlice' }
 
 export type ViewState = {
   tabs: TabDescriptor[]
@@ -34,6 +35,12 @@ export type ViewState = {
   pendingUrlState: UrlViewState | null
   /** Frame restored from a `?mode=present&frame=` deep link. */
   restoredFrame: { sliceId: string; frame: number } | null
+  /**
+   * A deep link named a slice that does not exist (deleted, or another
+   * workspace's). Surfaced as a dismissible notice — dropping straight to
+   * the base view looks like the link simply did nothing.
+   */
+  missingSliceId: string | null
 }
 
 export function createInitialViewState(search: string): ViewState {
@@ -42,6 +49,7 @@ export function createInitialViewState(search: string): ViewState {
     activeKey: null,
     pendingUrlState: parseUrlViewState(search),
     restoredFrame: null,
+    missingSliceId: null,
   }
 }
 
@@ -103,8 +111,11 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
 
       const cleared: ViewState = { ...state, pendingUrlState: null }
       if (pending.kind === 'blueprint') return cleared
-      // The deep-linked slice never materialized — drop it, stay on the base view.
-      if (!action.availableSliceIds.includes(pending.sliceId)) return cleared
+      // The deep-linked slice never materialized — stay on the base view,
+      // but say so rather than dropping the link on the floor.
+      if (!action.availableSliceIds.includes(pending.sliceId)) {
+        return { ...cleared, missingSliceId: pending.sliceId }
+      }
 
       const tab: TabDescriptor =
         pending.kind === 'present'
@@ -122,6 +133,10 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
       return state.restoredFrame === null
         ? state
         : { ...state, restoredFrame: null }
+    case 'dismissMissingSlice':
+      return state.missingSliceId === null
+        ? state
+        : { ...state, missingSliceId: null }
   }
 }
 
@@ -132,6 +147,10 @@ export type ViewStateContextValue = {
   activeTab: TabDescriptor | null
   pendingUrlState: UrlViewState | null
   restoredFrame: { sliceId: string; frame: number } | null
+  /** Slice id from a deep link that resolved to nothing; null once dismissed. */
+  missingSliceId: string | null
+  /** Dismiss the missing-slice notice. */
+  dismissMissingSlice: () => void
   openTab: (tab: TabDescriptor) => void
   closeTab: (key: TabKey) => void
   /** Activate a tab, or pass `null` to return to the base blueprint view. */

@@ -53,6 +53,13 @@ type EditorContextValue = {
   cameraTargetId: string | null
   selectPhase: (phaseId: string) => void
   selectScenario: (scenarioId: string) => void
+  /**
+   * Seed the base view from a `?slice=` deep link (nav plan D5): select the
+   * slice's scenario and expand its phase so the sidebar behind the tab is
+   * coherent and closing the tab lands somewhere. No-op once the user has
+   * navigated, and once per boot.
+   */
+  seedBaseSelection: (scenarioId: string) => void
   togglePhaseExpanded: (phaseId: string) => void
   setPhaseExpanded: (phaseId: string, open: boolean) => void
   clearSelection: () => void
@@ -112,7 +119,13 @@ function useNavSelectionState(slides: NavItem[]) {
   const [view, setView] = useState<EditorView>('landing')
   const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
 
+  // Deep-link seeding must not overwrite a place the user chose for
+  // themselves, and must happen at most once per boot.
+  const userNavigatedRef = useRef(false)
+  const baseSelectionSeededRef = useRef(false)
+
   const selectPhase = useCallback((phaseId: string) => {
+    userNavigatedRef.current = true
     setSelectedPhaseId(phaseId)
     setSelectedScenarioId(null)
     setFocusNonce((nonce) => nonce + 1)
@@ -122,6 +135,7 @@ function useNavSelectionState(slides: NavItem[]) {
 
   const selectScenario = useCallback(
     (scenarioId: string) => {
+      userNavigatedRef.current = true
       const parentId =
         slides.find((slide) => slide.id === scenarioId)?.parentId ?? null
       setSelectedScenarioId(scenarioId)
@@ -139,6 +153,29 @@ function useNavSelectionState(slides: NavItem[]) {
     setSelectedPhaseId(null)
     setSelectedScenarioId(null)
   }, [])
+
+  // D5: the deep-linked tab covers the base view, so seeding it moves no
+  // camera — it only decides where the user lands when the tab closes.
+  const seedBaseSelection = useCallback(
+    (scenarioId: string) => {
+      if (userNavigatedRef.current || baseSelectionSeededRef.current) return
+      baseSelectionSeededRef.current = true
+
+      setSelectedScenarioId(scenarioId)
+      setView('detail')
+
+      // A scenario whose phase is not known yet (slides still loading) is
+      // picked up by the auto-expand effect and the reconcile pass below.
+      const parentId =
+        slides.find((slide) => slide.id === scenarioId)?.parentId ?? null
+      if (parentId === null) return
+      setSelectedPhaseId(parentId)
+      setExpandedPhaseIds((current) =>
+        withPhaseExpanded(current, parentId, true),
+      )
+    },
+    [slides],
+  )
 
   const setPhaseExpanded = useCallback((phaseId: string, open: boolean) => {
     setExpandedPhaseIds((current) => withPhaseExpanded(current, phaseId, open))
@@ -176,10 +213,21 @@ function useNavSelectionState(slides: NavItem[]) {
     if (slides.length === 0) return
     const find = (id: string) => slides.find((slide) => slide.id === id)
 
+    // The camera target vanished (deleted elsewhere, or a stale deep link).
+    // Dropping only the scenario id would silently retarget the camera at
+    // its phase, and dropping only the phase id would fall through to
+    // `slides[0]` — either way the user is moved somewhere they never
+    // asked for. Go to the overview and show nothing as selected.
+    const abandonSelection = () => {
+      setSelectedScenarioId(null)
+      setSelectedPhaseId(null)
+      setView((current) => (current === 'detail' ? 'home' : current))
+    }
+
     if (selectedScenarioId !== null) {
       const scenario = find(selectedScenarioId)
       if (!scenario) {
-        setSelectedScenarioId(null)
+        abandonSelection()
         return
       }
       const parentId = scenario.parentId ?? null
@@ -190,7 +238,7 @@ function useNavSelectionState(slides: NavItem[]) {
     if (selectedPhaseId === null) return
     const phase = find(selectedPhaseId)
     if (!phase) {
-      setSelectedPhaseId(null)
+      abandonSelection()
       return
     }
     if (isSubslide(phase)) {
@@ -221,10 +269,12 @@ function useNavSelectionState(slides: NavItem[]) {
   )
 
   const goLanding = useCallback(() => {
+    userNavigatedRef.current = true
     setView('landing')
   }, [])
 
   const goHome = useCallback(() => {
+    userNavigatedRef.current = true
     setSkipCanvasFitAnimation(false)
     setFocusNonce((nonce) => nonce + 1)
     clearSelection()
@@ -232,6 +282,7 @@ function useNavSelectionState(slides: NavItem[]) {
   }, [clearSelection])
 
   const enterCanvas = useCallback(() => {
+    userNavigatedRef.current = true
     setSkipCanvasFitAnimation(true)
     setFocusNonce((nonce) => nonce + 1)
     clearSelection()
@@ -257,6 +308,7 @@ function useNavSelectionState(slides: NavItem[]) {
     cameraTargetId,
     selectPhase,
     selectScenario,
+    seedBaseSelection,
     togglePhaseExpanded,
     setPhaseExpanded,
     clearSelection,

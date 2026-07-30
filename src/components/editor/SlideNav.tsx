@@ -69,6 +69,21 @@ export function SlideNav({
     row?.scrollIntoView({ block: 'nearest' })
   }, [selectedRowId, focusNonce])
 
+  // An empty SidebarMenu renders as blank space that reads like a loading
+  // state that never ends. (A load *failure* is reported separately, by the
+  // Alert above this nav.)
+  if (mains.length === 0) {
+    return (
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">
+            No phases in this workspace yet.
+          </p>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    )
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>

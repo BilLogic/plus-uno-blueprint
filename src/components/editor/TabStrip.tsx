@@ -16,14 +16,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   tabKey,
   useViewState,
   type TabDescriptor,
 } from '@/contexts/viewStateStore'
+import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { useSlices } from '@/hooks/useSlices'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 import { deleteSlice } from '@/lib/sliceMutations'
 import { cn } from '@/lib/utils'
 import type { Slice } from '@/types/database'
@@ -131,11 +134,63 @@ export function DeleteSliceDialog({
 }
 
 /**
+ * Seeds the base blueprint view from a `?slice=` deep link (nav plan D5).
+ * The slice's scenario is only known after the slice, its cells, and their
+ * owning scenario resolve, so this waits for `useSliceBlueprint` rather than
+ * seeding from the URL. Nothing here touches the open tab's camera: the tab
+ * covers the base view, so this only decides where closing it lands.
+ */
+function DeepLinkBaseSeed({ sliceId }: { sliceId: string }) {
+  const { scenarioId } = useSliceBlueprint(sliceId)
+  const { seedBaseSelection } = useEditor()
+
+  useEffect(() => {
+    if (scenarioId === undefined) return
+    seedBaseSelection(scenarioId)
+  }, [scenarioId, seedBaseSelection])
+
+  return null
+}
+
+/** A deep link that named a slice which no longer exists. */
+function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
+  // The notice occupies layout above the canvas; that height change is
+  // chrome moving, not the user navigating.
+  useEffect(() => {
+    suppressCanvasResizeRefit()
+    return () => suppressCanvasResizeRefit()
+  }, [])
+
+  return (
+    <div className="shrink-0 border-b border-border bg-sidebar px-2 py-1.5">
+      <Alert variant="warning" className="items-center">
+        <AlertTriangle className="size-3.5" aria-hidden />
+        <AlertDescription className="text-xs">
+          That link points to a slice that no longer exists. Showing the
+          blueprint instead.
+        </AlertDescription>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="absolute top-1.5 right-1.5"
+          aria-label="Dismiss"
+          onClick={onDismiss}
+        >
+          <X className="size-3" />
+        </Button>
+      </Alert>
+    </div>
+  )
+}
+
+/**
  * Tab strip above the shell main area. Holds only slice / present tabs (the
  * base blueprint view is not a tab) and renders nothing while no tab is
  * open; also resolves URL deep links once the slice list settles (pending
- * intent — never applied before the data exists). Slice tabs carry a
- * context menu with "Delete slice…" for writers.
+ * intent — never applied before the data exists), seeds the base view from
+ * one, and reports a link whose slice is gone. Slice tabs carry a context
+ * menu with "Delete slice…" for writers.
  */
 export function TabStrip() {
   const {
@@ -145,6 +200,8 @@ export function TabStrip() {
     closeTab,
     pendingUrlState,
     resolvePending,
+    missingSliceId,
+    dismissMissingSlice,
   } = useViewState()
   const { canWrite } = useSupabase()
   const slices = useSlices()
@@ -153,13 +210,36 @@ export function TabStrip() {
     title: string
   } | null>(null)
 
+  // The boot deep link's slice, captured before `resolvePending` clears it.
+  const [bootSliceId] = useState(() =>
+    pendingUrlState !== null && pendingUrlState.kind !== 'blueprint'
+      ? pendingUrlState.sliceId
+      : null,
+  )
+
   useEffect(() => {
     if (pendingUrlState === null) return
     if (slices.status === 'loading') return
     resolvePending(availableSlices(slices).map((slice) => slice.id))
   }, [pendingUrlState, resolvePending, slices])
 
-  if (tabs.length === 0) return null
+  const notice =
+    missingSliceId !== null ? (
+      <MissingSliceNotice onDismiss={dismissMissingSlice} />
+    ) : null
+  const seed =
+    bootSliceId !== null && missingSliceId === null ? (
+      <DeepLinkBaseSeed sliceId={bootSliceId} />
+    ) : null
+
+  if (tabs.length === 0) {
+    return (
+      <>
+        {notice}
+        {seed}
+      </>
+    )
+  }
 
   const titleById = new Map(
     availableSlices(slices).map((slice) => [slice.id, slice.title]),
@@ -175,11 +255,14 @@ export function TabStrip() {
   }
 
   return (
-    <div
-      role="tablist"
-      aria-label="Open views"
-      className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border bg-sidebar px-2 py-1.5"
-    >
+    <>
+      {notice}
+      {seed}
+      <div
+        role="tablist"
+        aria-label="Open views"
+        className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border bg-sidebar px-2 py-1.5"
+      >
       {tabs.map((tab) => {
         const key = tabKey(tab)
         const active = key === activeKey
@@ -239,13 +322,14 @@ export function TabStrip() {
           </ContextMenu>
         )
       })}
-      <DeleteSliceDialog
-        slice={deleteTarget}
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null)
-        }}
-      />
-    </div>
+        <DeleteSliceDialog
+          slice={deleteTarget}
+          open={deleteTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null)
+          }}
+        />
+      </div>
+    </>
   )
 }

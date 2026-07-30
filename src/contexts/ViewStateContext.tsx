@@ -148,6 +148,10 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
     () => dispatch({ type: 'consumeRestoredFrame' }),
     [],
   )
+  const dismissMissingSlice = useCallback(
+    () => dispatch({ type: 'dismissMissingSlice' }),
+    [],
+  )
 
   const value = useMemo(
     () => ({
@@ -156,6 +160,8 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       activeTab,
       pendingUrlState: state.pendingUrlState,
       restoredFrame: state.restoredFrame,
+      missingSliceId: state.missingSliceId,
+      dismissMissingSlice,
       openTab,
       closeTab,
       activateTab,
@@ -169,6 +175,8 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       state.activeKey,
       state.pendingUrlState,
       state.restoredFrame,
+      state.missingSliceId,
+      dismissMissingSlice,
       activeTab,
       openTab,
       closeTab,
