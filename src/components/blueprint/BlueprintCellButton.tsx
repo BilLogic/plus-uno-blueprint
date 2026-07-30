@@ -1,11 +1,8 @@
-import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   useBlueprintCellDetailOptional,
   useBlueprintCellPreviewHover,
 } from '@/contexts/BlueprintCellDetailContext'
-import { useAssumptionLens } from '@/contexts/assumptionLensContext'
-import { useSliceDraftOptional } from '@/contexts/sliceDraftContext'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
@@ -66,27 +63,12 @@ export function BlueprintCellButton({
         (resolvedCellId &&
           detail.directlyConnectedCellIds.has(resolvedCellId))),
   )
-  const sliceDraft = useSliceDraftOptional()
-  const isDraftSelected = Boolean(
-    sliceDraft &&
-      cellId &&
-      (sliceDraft.selectedCells.has(cellId) ||
-        (resolvedCellId && sliceDraft.selectedCells.has(resolvedCellId))),
-  )
   const sliceMembership = useSliceMembership()
   const isSliceMember = Boolean(
     sliceMembership &&
       cellId &&
       (sliceMembership.has(cellId) ||
         (resolvedCellId && sliceMembership.has(resolvedCellId))),
-  )
-  const assumptionLens = useAssumptionLens()
-  const evidencedCellIds = assumptionLens?.evidencedCellIds ?? null
-  const hasNoEvidence = Boolean(
-    evidencedCellIds &&
-      cellId &&
-      !evidencedCellIds.has(cellId) &&
-      !(resolvedCellId && evidencedCellIds.has(resolvedCellId)),
   )
   const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
@@ -119,13 +101,6 @@ export function BlueprintCellButton({
     if (!isInteractive) return
     // Focus mode: ignore cells in dimmed (inactive) phases/scenarios.
     if (event.currentTarget.closest('[data-canvas-focus-dimmed]')) return
-    // Modifier click enters slice multi-select without opening the panel.
-    if (sliceDraft && cellId && (event.metaKey || event.shiftKey)) {
-      event.preventDefault()
-      event.stopPropagation()
-      sliceDraft.toggleCell(resolvedCellId ?? cellId, stepIndex)
-      return
-    }
     event.stopPropagation()
     detail!.selectCell(selection!)
   }
@@ -150,8 +125,6 @@ export function BlueprintCellButton({
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
       {...(isSliceMember ? { 'data-slice-member': '' } : {})}
-      {...(isDraftSelected ? { 'data-slice-draft-selected': '' } : {})}
-      {...(hasNoEvidence ? { 'data-no-evidence': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}
@@ -162,18 +135,9 @@ export function BlueprintCellButton({
         variant === 'visual' &&
           'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
-        isDraftSelected && 'relative',
       )}
       style={surfaceStyle}
     >
-      {isDraftSelected ? (
-        <span
-          aria-hidden
-          className="absolute top-1 right-1 z-10 flex size-4 items-center justify-center rounded-full bg-foreground text-background shadow-sm"
-        >
-          <Check className="size-3" />
-        </span>
-      ) : null}
       {children}
     </Button>
   )

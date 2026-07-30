@@ -1,9 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
-import { AssumptionLensToggle } from '@/components/editor/AssumptionLensToggle'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
-import { FindingsToggle } from '@/components/editor/FindingsPanel'
 import { PhaseMenubarHeader } from '@/components/editor/PhaseMenubarHeader'
 import {
   BLUEPRINT_MENUBAR_FLAT_CLASS,
@@ -119,9 +117,7 @@ export function SlideStickyHeader({
         showFilters
         className={BLUEPRINT_MENUBAR_FLAT_CLASS}
       />
-      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center gap-2">
-        <AssumptionLensToggle />
-        <FindingsToggle />
+      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
         <NavbarZoomIndicator />
       </div>
     </div>

@@ -302,7 +302,7 @@ export function CellEvidenceTab({ cellId, onMutated }: CellEvidenceTabProps) {
   if (!canWrite) {
     return (
       <p className="text-xs text-muted-foreground">
-        Sign in to view evidence for this cell.
+        Evidence requires a connected editor.
       </p>
     )
   }

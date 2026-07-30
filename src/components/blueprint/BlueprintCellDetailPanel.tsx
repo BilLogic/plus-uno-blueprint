@@ -39,7 +39,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useAssumptionLens } from '@/contexts/assumptionLensContext'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
 import {
   buildBlueprintCellSelectionForId,
@@ -129,7 +128,6 @@ export function BlueprintCellDetailPanel() {
     selectCell,
   } =
     useBlueprintCellDetail()
-  const assumptionLens = useAssumptionLens()
   const [closingSelection, setClosingSelection] = useState(currentSelection)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -725,10 +723,7 @@ export function BlueprintCellDetailPanel() {
                   />
                 ) : null}
                 {activeTab === 'evidence' ? (
-                  <CellEvidenceTab
-                    cellId={resolvedCellId}
-                    onMutated={assumptionLens?.refresh}
-                  />
+                  <CellEvidenceTab cellId={resolvedCellId} />
                 ) : null}
                 {activeTab === 'resources' ? (
                   <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />
