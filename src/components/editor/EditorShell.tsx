@@ -4,7 +4,6 @@ import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
   EditorSidebarWorkspaceHeader,
-  HomeNavButton,
   SidebarCollapseButton,
 } from '@/components/editor/EditorChrome'
 import {
@@ -33,8 +32,12 @@ import { cn } from '@/lib/utils'
 
 export function EditorShell() {
   const { view, goHome, goLanding } = useEditor()
-  const { activeTab, activateTab, openTab, tabs } = useViewState()
+  const { activeTab, activateTab, openTab } = useViewState()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  // Hovering the collapsed rail peeks the panel back as an overlay. It floats
+  // above the canvas rather than pushing it, so peeking never resizes the
+  // stage — which is what makes it usable during a presentation.
+  const [railHovered, setRailHovered] = useState(false)
   const isLanding = view === 'landing'
   // Home reads as active only on the overview canvas itself, and only while
   // no tab is covering it.
@@ -61,9 +64,22 @@ export function EditorShell() {
 
   // Presentation is full-bleed: the sidebar collapses to its icon rail on
   // the same 320 ms width ease as every other collapse — it never unmounts,
-  // which is what used to make entering presentation snap.
+  // which is what used to make entering presentation snap. The user can still
+  // pin it open from the rail while presenting; the pin is per-presentation.
   const presenting = activeTabKind === 'present' && !leavingPresent
-  const railOnly = sidebarCollapsed || presenting
+  const [presentPinned, setPresentPinned] = useState(false)
+  // Reset during render rather than in an effect: leaving presentation must
+  // not paint one frame with a stale pin.
+  const [wasPresenting, setWasPresenting] = useState(presenting)
+  if (wasPresenting !== presenting) {
+    setWasPresenting(presenting)
+    if (!presenting) setPresentPinned(false)
+  }
+
+  const railOnly = presenting ? !presentPinned : sidebarCollapsed
+  // Peeked = the panel is showing as an overlay over the canvas rather than
+  // in flow. Only reachable from the collapsed rail.
+  const peeked = railOnly && railHovered
 
   useEffect(() => {
     // Entering and leaving presentation both resize the canvas container.
@@ -74,7 +90,9 @@ export function EditorShell() {
     // The width ease resizes the canvas container for 320 ms. That is
     // chrome moving, not the user navigating — the camera holds still.
     suppressCanvasResizeRefit()
-    setSidebarCollapsed((collapsed) => !collapsed)
+    setRailHovered(false)
+    if (presenting) setPresentPinned((pinned) => !pinned)
+    else setSidebarCollapsed((collapsed) => !collapsed)
   }
 
   /**
@@ -101,16 +119,9 @@ export function EditorShell() {
     [openTab],
   )
 
-  // Same reasoning for the tab strip appearing/disappearing: opening the
-  // first slice tab (or closing the last) changes the canvas height.
-  const hasTabs = tabs.length > 0
-  useEffect(() => {
-    suppressCanvasResizeRefit()
-  }, [hasTabs])
-
-  // Home is the sidebar's route to the birds-eye overview canvas (nav plan
-  // D2) — it deactivates any tab, clears the selection and animates the fit,
-  // exactly like Escape and the workspace breadcrumb. `goHome` (not
+  // Home (now in the tab strip) is the route back to the birds-eye overview
+  // canvas — it deactivates any tab, clears the selection and animates the
+  // fit, exactly like Escape and the workspace breadcrumb. `goHome` (not
   // `enterCanvas`) so every overview return has the same feel.
   const goOverview = () => {
     activateTab(null)
@@ -139,7 +150,10 @@ export function EditorShell() {
     >
       <aside
         className={cn(
-          'relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar',
+          'relative z-20 flex shrink-0 flex-col border-r border-border bg-sidebar',
+          // Only clip while the panel is in flow: a peek overlay has to escape
+          // the rail's 48 px.
+          peeked ? 'overflow-visible' : 'overflow-hidden',
           railOnly
             ? EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS
             : EDITOR_SIDEBAR_WIDTH_CLASS,
@@ -152,20 +166,26 @@ export function EditorShell() {
         data-editor-sidebar=""
         data-collapsed={railOnly ? '' : undefined}
         aria-label="Workspace navigation"
+        onMouseEnter={() => setRailHovered(true)}
+        onMouseLeave={() => setRailHovered(false)}
       >
         {/*
-          Fixed-width expanded panel — clipped by the animating aside so open/
-          close reads as a wipe instead of a hard mount/unmount.
+          Fixed-width expanded panel. In flow it is clipped by the animating
+          aside, so open/close reads as a wipe rather than a mount/unmount;
+          peeked from the rail it lifts out as an overlay (same 200 ms fade,
+          8 px slide) and leaves the canvas exactly where it is.
         */}
         <div
           className={cn(
             'flex h-full min-h-0 w-60 flex-col',
-            'transition-opacity duration-200 ease-out',
-            railOnly
-              ? 'pointer-events-none opacity-0'
-              : 'opacity-100 delay-75',
+            'transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none',
+            peeked &&
+              'absolute inset-y-0 left-0 z-30 border-r border-border bg-sidebar shadow-lg',
+            railOnly && !peeked
+              ? 'pointer-events-none -translate-x-2 opacity-0'
+              : 'translate-x-0 opacity-100 delay-75',
           )}
-          aria-hidden={railOnly}
+          aria-hidden={railOnly && !peeked}
         >
           <SidebarProvider
             style={
@@ -176,10 +196,8 @@ export function EditorShell() {
             className="flex min-h-0 min-w-0 flex-1 flex-col"
           >
             <EditorSidebarWorkspaceHeader
-              sidebarCollapsed={sidebarCollapsed}
+              sidebarCollapsed={railOnly}
               onToggleSidebar={toggleSidebar}
-              isHome={isOverview}
-              onHome={goOverview}
               isLanding={isLanding}
               onWorkspaceTitle={goLandingBase}
             />
@@ -187,36 +205,29 @@ export function EditorShell() {
           </SidebarProvider>
         </div>
 
-        {/* Collapsed icon rail — crossfades in as the panel closes. */}
+        {/*
+          Collapsed icon rail — crossfades in as the panel closes. Its toggle
+          is what pins the peeked panel open (in presentation too: that button
+          used to be removed there, which left no way back to the nav).
+        */}
         <div
           className={cn(
             'absolute inset-y-0 left-0 z-10 flex w-12 flex-col items-center gap-1 px-1 py-2',
             'transition-opacity duration-200 ease-out',
-            railOnly
-              ? 'opacity-100 delay-75'
-              : 'pointer-events-none opacity-0',
+            railOnly ? 'opacity-100 delay-75' : 'pointer-events-none opacity-0',
           )}
           aria-hidden={!railOnly}
         >
-          <HomeNavButton
-            isActive={isOverview}
-            onClick={goOverview}
+          <SidebarCollapseButton
+            collapsed
+            onToggle={toggleSidebar}
             size="icon-sm"
           />
-          {/* Presentation already forces the rail; offering a collapse
-              toggle there would be a button that changes nothing. */}
-          {!presenting && (
-            <SidebarCollapseButton
-              collapsed={sidebarCollapsed}
-              onToggle={toggleSidebar}
-              size="icon-sm"
-            />
-          )}
         </div>
       </aside>
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <TabStrip />
+        <TabStrip isOverview={isOverview} onHome={goOverview} />
         <div className="relative min-h-0 min-w-0 flex-1">
           {/*
             Only the active tab's content mounts, so switching is a

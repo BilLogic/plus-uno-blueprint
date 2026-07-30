@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { HomeNavButton } from '@/components/editor/EditorChrome'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -185,14 +186,25 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
 }
 
 /**
- * Tab strip above the shell main area. Holds only slice / present tabs (the
- * base blueprint view is not a tab) and renders nothing while no tab is
- * open; also resolves URL deep links once the slice list settles (pending
- * intent — never applied before the data exists), seeds the base view from
- * one, and reports a link whose slice is gone. Slice tabs carry a context
- * menu with "Delete slice…" for writers.
+ * Tab strip above the shell main area. Holds Home plus the slice / present
+ * tabs (the base blueprint view is not a tab), and always renders: Home lives
+ * here rather than in the sidebar so it never competes with the disclosure
+ * chevrons, and so the way back to the overview stays in the same place
+ * whether the sidebar is open, collapsed or presenting.
+ *
+ * It also resolves URL deep links once the slice list settles (pending intent
+ * — never applied before the data exists), seeds the base view from one, and
+ * reports a link whose slice is gone. Slice tabs carry a context menu with
+ * "Delete slice…" for writers.
  */
-export function TabStrip() {
+export function TabStrip({
+  isOverview,
+  onHome,
+}: {
+  /** The overview canvas is the current view, with no tab covering it. */
+  isOverview: boolean
+  onHome: () => void
+}) {
   const {
     tabs,
     activeKey,
@@ -232,15 +244,6 @@ export function TabStrip() {
       <DeepLinkBaseSeed sliceId={bootSliceId} />
     ) : null
 
-  if (tabs.length === 0) {
-    return (
-      <>
-        {notice}
-        {seed}
-      </>
-    )
-  }
-
   const titleById = new Map(
     availableSlices(slices).map((slice) => [slice.id, slice.title]),
   )
@@ -258,11 +261,18 @@ export function TabStrip() {
     <>
       {notice}
       {seed}
-      <div
-        role="tablist"
-        aria-label="Open views"
-        className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-border bg-sidebar px-2 py-1.5"
-      >
+      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar px-2 py-1.5">
+        <HomeNavButton
+          isActive={isOverview}
+          onClick={onHome}
+          size="icon-sm"
+          className="mr-1"
+        />
+        <div
+          role="tablist"
+          aria-label="Open views"
+          className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
+        >
       {tabs.map((tab) => {
         const key = tabKey(tab)
         const active = key === activeKey
@@ -322,6 +332,7 @@ export function TabStrip() {
           </ContextMenu>
         )
       })}
+        </div>
         <DeleteSliceDialog
           slice={deleteTarget}
           open={deleteTarget !== null}

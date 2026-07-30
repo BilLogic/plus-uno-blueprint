@@ -106,21 +106,20 @@ export function HomeNavButton({
 type EditorSidebarWorkspaceHeaderProps = {
   sidebarCollapsed?: boolean
   onToggleSidebar?: () => void
-  /** The birds-eye overview canvas is the current view. */
-  isHome?: boolean
-  /** Home → overview canvas (D2). */
-  onHome?: () => void
   /** The orientation landing page is the current view. */
   isLanding?: boolean
   /** Workspace title → landing page (D2). */
   onWorkspaceTitle?: () => void
 }
 
+/**
+ * Workspace title + the collapse toggle. Home moved to the tab strip: it was
+ * sitting where the nav's disclosure chevrons now live, and the tab strip
+ * keeps it in one place across every sidebar state.
+ */
 export function EditorSidebarWorkspaceHeader({
   sidebarCollapsed = false,
   onToggleSidebar,
-  isHome = false,
-  onHome,
   isLanding = false,
   onWorkspaceTitle,
 }: EditorSidebarWorkspaceHeaderProps) {
@@ -129,9 +128,6 @@ export function EditorSidebarWorkspaceHeader({
       className="flex shrink-0 items-center gap-2 px-3 py-2"
       data-editor-app-title
     >
-      {onHome ? (
-        <HomeNavButton isActive={isHome} onClick={onHome} />
-      ) : null}
       <div className="min-w-0 flex-1">
         <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
       </div>
