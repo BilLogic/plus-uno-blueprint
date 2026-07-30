@@ -503,21 +503,34 @@ component. Nothing else in this plan assumes slices are the only output.
 | 4 — slice editing folded in | **Done** (`7635b59`) — the mode provider moved to the surface level to make it possible |
 | 5 — Edit cell tool | **Done** (`b298940`) |
 
-**Column headers need a surface that does not exist yet.** The grid renders no
-step-name header row — steps are only column positions for cells — so there is
-nothing to click the way a lane label is clicked.
+**Column headers need a surface that does not exist yet, in a grid nobody
+had identified.** The blueprint renders no step-name header row — steps are
+only column positions for cells — so there is nothing to click the way a lane
+label is clicked.
 
-Attempted and reverted: a Design-mode-only handle rail added to
-`ServiceBlueprintGrid`, aligned by reusing `LAYER_COLUMN_WIDTH` /
-`STEP_COLUMN_WIDTH`. It never rendered, because **every scenario in this
-workspace is `side-by-side` and draws through `IntegratedBlueprintGrid`**,
-which lays out on CSS subgrid — a header row there is a new grid row, not a
-flex row, and is not a paste of the same component. Rather than ship a code
-path this dataset cannot exercise, it was removed.
+Three attempts, all reverted, and the finding is worth more than the code:
 
-The real work is: a handle rail for the subgrid layout, verified against an
-integrated scenario. It belongs with plan 004's grid editing, which specs the
+1. A flex handle rail in `ServiceBlueprintGrid`, aligned with
+   `LAYER_COLUMN_WIDTH` / `STEP_COLUMN_WIDTH`. Never rendered.
+2. A measured, absolutely-positioned rail in `IntegratedBlueprintGrid`.
+   Never rendered.
+3. The same rail in `SideBySideCompareGrid`. Never rendered.
+
+**The canvas actually draws through `SideBySideCompareGrid`** — confirmed from
+the DOM ancestor chain of a live cell (`data-compare-panel` →
+`data-blueprint-artboard` → `data-phase-scenario-panel`) — and all 17
+scenarios are `view_type = 'side-by-side'`. Attempt 3 targeted the right file
+and still produced nothing, so the remaining unknown is *which component
+inside that file renders the visible column*, not which file.
+
+That is a read-the-layout task, not a write-the-component task, and it should
+start there. It also belongs with plan 004's grid editing, which specs the
 same row with rename and `⊕` affordances — building it twice would be waste.
+
+One real fix came out of the chase and was kept (`d51162e`): `data-layer-name`
+was only ever added to `ServiceBlueprintGrid`, so composer rows had been
+showing a cell's text with no lane beneath it in the grid that actually
+renders.
 
 ## Phases
 
