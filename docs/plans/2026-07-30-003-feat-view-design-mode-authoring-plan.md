@@ -523,17 +523,32 @@ scenarios are `view_type = 'side-by-side'`. Attempt 3 targeted the right file
 and still produced nothing, so the remaining unknown is *which component
 inside that file renders the visible column*, not which file.
 
-**The target is `ComparePathColumn`** (`SideBySideCompareGrid.tsx:227`) — it
-is what `blueprints.map` renders per visible column, it owns `columnRef`, and
-the cells with `data-step-index` are inside it. Attempt 3 mounted the rail
-there and still rendered nothing, so the next step is to find out *why that
-component returned no handles* before writing any more of them. The two
-candidates, in order: `useCellPick()` returning null inside the compare grid
-(the selection provider is mounted in `ZoomPanViewport` — confirm the compare
-grid is inside it, not portalled out), and the measuring `useLayoutEffect`
-finding zero cells and leaving `columns` empty, which renders null silently.
-A `console.log` in that effect settles it in one run. It also belongs with plan 004's grid editing, which specs the
-same row with rename and `⊕` affordances — building it twice would be waste.
+**The target is `ComparePathColumn`** (`SideBySideCompareGrid.tsx:227`) — it is
+what `blueprints.map` renders per visible column and owns `columnRef`.
+
+**A probe mounted in exactly that position proved the environment is fine.**
+Rendered from inside `ComparePathColumn`, a throwaway component logged:
+
+```
+[probe] {"mode":"design","hasPick":true,"steps":4,"cellsFound":14,
+         "bodyPresent":true,
+         "measured":[{"i":0,"w":192},{"i":1,"w":192},{"i":2,"w":192},{"i":3,"w":192}]}
+```
+
+So at that point in the tree: Design mode is readable, the pick context is
+non-null, `columnRef` is attached, cells carry `data-step-index` 0..n, and
+every column measures at 192 px. There is nothing missing from the
+surroundings.
+
+**The bug is therefore inside `BlueprintColumnHandles` itself** — the same
+measurement, run from a component that stores the result in state and renders
+from it, produced no handles across three placements. The probe used no
+dependency array and rendered nothing; the component used
+`[active, bodyRef, steps]` and rendered from `useState`. The next attempt
+should start by making the probe *render* its measured handles directly (no
+state, no deps array) and only then reintroduce state — the difference between
+those two is where the defect lives, and it is now a five-minute bisect rather
+than an investigation.
 
 One real fix came out of the chase and was kept (`d51162e`): `data-layer-name`
 was only ever added to `ServiceBlueprintGrid`, so composer rows had been
