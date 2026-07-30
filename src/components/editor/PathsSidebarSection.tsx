@@ -1,16 +1,9 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Check } from 'lucide-react'
 import { useEditor } from '@/contexts/EditorContext'
-import { useViewState } from '@/contexts/viewStateStore'
 import { usePathSelectionContext } from '@/hooks/usePathSelection'
-import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
-import { SIDEBAR_SECTION_TRIGGER_CLASS } from '@/components/editor/SlideModeView'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion'
+import { NavSection } from '@/components/editor/SidebarNav'
+import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   collectOverviewPathOptions,
@@ -20,21 +13,23 @@ import { cn } from '@/lib/utils'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 
 /**
- * The PATHS disclosure. Always mounts expanded: the section is unmounted
- * whenever it is hidden (nav plan D4), so an uncontrolled `defaultValue`
- * re-opens it every time it comes back — a collapsed state could otherwise
- * outlive the hide and greet the user with an empty header.
+ * The PATHS disclosure, divider included — the rule that decides whether the
+ * section renders lives here, so the divider can never outlive it and leave a
+ * line floating under the phase list.
+ *
+ * Local open state (rather than a `defaultValue`) survives the section
+ * hiding and coming back within one mount.
  */
 function PathsSection({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(true)
+
   return (
-    <Accordion multiple defaultValue={['paths']} className="border-0">
-      <AccordionItem value="paths" className="border-0">
-        <AccordionTrigger className={SIDEBAR_SECTION_TRIGGER_CLASS}>
-          Paths
-        </AccordionTrigger>
-        <AccordionContent className="pb-1">{children}</AccordionContent>
-      </AccordionItem>
-    </Accordion>
+    <>
+      <Separator className="my-1.5" />
+      <NavSection title="Paths" open={open} onOpenChange={setOpen}>
+        {children}
+      </NavSection>
+    </>
   )
 }
 
@@ -65,13 +60,19 @@ function PathChecklist({ options }: { options: PathOption[] }) {
               type="button"
               aria-pressed={selected}
               onClick={() => togglePathKey(option.id)}
-              className="flex w-full min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              // The check occupies the same 1rem slot the nav rows give their
+              // chevron, so path names line up with phase names.
+              className="flex w-full min-w-0 items-center gap-1 rounded-md pl-1 text-left text-xs text-sidebar-foreground/85 transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
             >
-              <Check
-                className={cn('size-3.5 shrink-0', !selected && 'invisible')}
-                aria-hidden
-              />
-              <span className="min-w-0 flex-1 truncate">{option.name}</span>
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                <Check
+                  className={cn('size-3.5', !selected && 'invisible')}
+                  aria-hidden
+                />
+              </span>
+              <span className="min-w-0 flex-1 truncate py-1.5 pr-2">
+                {option.name}
+              </span>
             </button>
           </li>
         )
@@ -83,8 +84,7 @@ function PathChecklist({ options }: { options: PathOption[] }) {
 /**
  * Checkmark multi-select of one scenario's paths — one row per path, the
  * Check icon visible only while selected. Wired to the same shared path-key
- * store (`PathSelectionContext`) the removed navbar Paths field used, so a
- * toggle here updates the canvas in the base view and slice tabs alike.
+ * store (`PathSelectionContext`) the removed navbar Paths field used.
  */
 function ScenarioPathsChecklist({ scenarioId }: { scenarioId: string }) {
   const { catalog } = usePathSelectionContext()
@@ -103,15 +103,6 @@ function ScenarioPathsChecklist({ scenarioId }: { scenarioId: string }) {
   if (options.length === 0) return <PathsLoadingRows />
 
   return <PathChecklist options={options} />
-}
-
-/** Resolves a slice tab's owning scenario, then lists that scenario's paths. */
-function SlicePathsChecklist({ sliceId }: { sliceId: string }) {
-  // Reads the same cached queries the slice tab itself resolves from.
-  const { scenarioId } = useSliceBlueprint(sliceId)
-  // A slice tab always has a scenario — it is just still resolving.
-  if (!scenarioId) return <PathsLoadingRows />
-  return <ScenarioPathsChecklist scenarioId={scenarioId} />
 }
 
 /**
@@ -143,29 +134,16 @@ function PathsSafetyValve() {
 }
 
 /**
- * Sidebar PATHS section — the whole disclosure, header included, so the
- * visibility rule lives with the data that decides it (nav plan D4).
+ * Sidebar PATHS section — renders for the base view's selected scenario.
  *
- * Renders for the active scenario: the slice tab's scenario when a tab is
- * active, otherwise the base view's selected scenario. With no scenario
- * selected the section is hidden — unless no path is active at all, which
- * is the one state that must always keep a path control on screen.
- *
- * Deliberately outside the Blueprints/Slices mode tabs: activating a slice
- * tab force-switches the sidebar to Slices, so anything inside the
- * Blueprints branch is unreachable exactly when a slice is open.
+ * Slices deliberately have no path control: a slice is a fixed selection of
+ * cells, so there is nothing for a path filter to narrow. The section is
+ * mounted inside the Blueprints branch of the sidebar, which is also the only
+ * mode that can have a scenario selected.
  */
 export function PathsSidebarSection() {
-  const { activeTab } = useViewState()
   const { view, selectedScenarioId } = useEditor()
 
-  if (activeTab !== null) {
-    return (
-      <PathsSection>
-        <SlicePathsChecklist sliceId={activeTab.sliceId} />
-      </PathsSection>
-    )
-  }
   if (view === 'detail' && selectedScenarioId !== null) {
     return (
       <PathsSection>

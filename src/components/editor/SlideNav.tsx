@@ -1,23 +1,15 @@
-import { useEffect, type KeyboardEvent } from 'react'
-import { ChevronRight } from 'lucide-react'
-import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
+import { useEffect } from 'react'
+import { NavChildren, NavRow } from '@/components/editor/SidebarNav'
 import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from '@/components/ui/sidebar'
+  Collapsible,
+  CollapsibleContent,
+} from '@/components/ui/collapsible'
 import {
   getMainSlides,
   getSlideDisplayLabel,
   getSubslides,
   type NavItem,
 } from '@/types/nav'
-import { cn } from '@/lib/utils'
 
 type SlideNavProps = {
   slides: NavItem[]
@@ -69,134 +61,108 @@ export function SlideNav({
     row?.scrollIntoView({ block: 'nearest' })
   }, [selectedRowId, focusNonce])
 
-  // An empty SidebarMenu renders as blank space that reads like a loading
-  // state that never ends. (A load *failure* is reported separately, by the
-  // Alert above this nav.)
+  // An empty list renders as blank space that reads like a loading state that
+  // never ends. (A load *failure* is reported separately, by the Alert above
+  // this nav.)
   if (mains.length === 0) {
     return (
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">
-            No phases in this workspace yet.
-          </p>
-        </SidebarGroupContent>
-      </SidebarGroup>
+      <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">
+        No phases in this workspace yet.
+      </p>
     )
   }
 
   return (
-    <SidebarGroup>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {mains.map((main) => {
-            const children = getSubslides(main.id, slides)
-            const hasChildren = children.length > 0
-            const isOpen = hasChildren && expandedPhaseIds.has(main.id)
-            const mainLabel = getSlideDisplayLabel(main, slides)
-            // Selected = this phase is the camera target. Ancestor = the
-            // selection lives inside it; those get a marker, never the fill.
-            const isSelected =
-              !isHome &&
-              selectedPhaseId === main.id &&
-              selectedScenarioId === null
-            const isAncestor =
-              !isHome &&
-              selectedPhaseId === main.id &&
-              selectedScenarioId !== null
+    <div className="flex flex-col gap-0.5">
+      {mains.map((main) => {
+        const children = getSubslides(main.id, slides)
+        const hasChildren = children.length > 0
+        const isOpen = hasChildren && expandedPhaseIds.has(main.id)
+        const mainLabel = getSlideDisplayLabel(main, slides)
+        // Selected = this phase is the camera target. Ancestor = the
+        // selection lives inside it; those get a marker, never the fill.
+        const isSelected =
+          !isHome && selectedPhaseId === main.id && selectedScenarioId === null
+        const isAncestor =
+          !isHome && selectedPhaseId === main.id && selectedScenarioId !== null
+        const panelId = `phase-panel-${main.id}`
 
-            // D1: the row both expands and focuses. It collapses only when it
-            // is already expanded *and* already the camera target — otherwise
-            // a phase opened via the chevron could never be focused by
-            // clicking its row. The collapse branch touches no selection
-            // action, so collapsing never moves the camera.
-            const handleClick = () => {
-              if (hasChildren && isOpen && isSelected) {
-                onSetExpanded(main.id, false)
-                return
+        return (
+          <div key={main.id}>
+            <NavRow
+              rowId={main.id}
+              label={mainLabel}
+              toggleLabel={mainLabel}
+              panelId={hasChildren ? panelId : undefined}
+              // The chevron is a real control, not decoration: expansion must
+              // not require selecting the phase first. Clicking the label
+              // still expands *and* focuses, so the common case is one click.
+              open={hasChildren ? isOpen : undefined}
+              onToggle={
+                hasChildren ? () => onSetExpanded(main.id, !isOpen) : undefined
               }
-              if (hasChildren) onSetExpanded(main.id, true)
-              onSelectPhase(main.id)
-            }
-
-            // D6: arrows expand/collapse only — they never move the camera.
-            const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-              if (!hasChildren) return
-              if (event.key === 'ArrowRight' && !isOpen) {
-                event.preventDefault()
-                onSetExpanded(main.id, true)
-              } else if (event.key === 'ArrowLeft' && isOpen) {
-                event.preventDefault()
-                onSetExpanded(main.id, false)
-              }
-            }
-
-            const row = (
-              <SidebarMenuButton
-                isActive={isSelected}
-                data-ancestor={isAncestor ? 'true' : undefined}
-                data-nav-row={main.id}
-                aria-current={isSelected ? 'true' : undefined}
-                aria-expanded={hasChildren ? isOpen : undefined}
-                aria-controls={hasChildren ? `phase-panel-${main.id}` : undefined}
-                onClick={handleClick}
-                onKeyDown={handleKeyDown}
-              >
-                <span className="truncate">{mainLabel}</span>
-                {hasChildren ? (
-                  // Decorative: the row itself is the expander (D6).
-                  <ChevronRight
-                    aria-hidden
-                    className={cn(
-                      'ml-auto shrink-0 text-sidebar-foreground/50 transition-transform group-data-[collapsible=icon]:hidden',
-                      isOpen && 'rotate-90',
-                    )}
-                  />
-                ) : null}
-              </SidebarMenuButton>
-            )
-
-            if (!hasChildren) {
-              return <SidebarMenuItem key={main.id}>{row}</SidebarMenuItem>
-            }
-
-            return (
-              <Collapsible
-                key={main.id}
+              onSelect={() => {
+                if (hasChildren) onSetExpanded(main.id, true)
+                onSelectPhase(main.id)
+              }}
+              selected={isSelected}
+              ancestor={isAncestor}
+            />
+            {hasChildren ? (
+              <PhaseScenarios
+                panelId={panelId}
                 open={isOpen}
                 onOpenChange={(open) => onSetExpanded(main.id, open)}
-              >
-                <SidebarMenuItem>
-                  {row}
-                  <CollapsibleContent id={`phase-panel-${main.id}`}>
-                    <SidebarMenuSub>
-                      {children.map((child) => {
-                        const childLabel = getSlideDisplayLabel(child, slides)
-                        const isChildSelected =
-                          !isHome && selectedScenarioId === child.id
-                        return (
-                          <SidebarMenuSubItem key={child.id}>
-                            <SidebarMenuSubButton
-                              render={<button type="button" />}
-                              isActive={isChildSelected}
-                              data-nav-row={child.id}
-                              aria-current={
-                                isChildSelected ? 'true' : undefined
-                              }
-                              onClick={() => onSelectScenario(child.id)}
-                            >
-                              <span className="truncate">{childLabel}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        )
-                      })}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            )
-          })}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+                items={children.map((child) => ({
+                  id: child.id,
+                  label: getSlideDisplayLabel(child, slides),
+                  selected: !isHome && selectedScenarioId === child.id,
+                }))}
+                onSelect={onSelectScenario}
+              />
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * The scenario list. Rendered through the same height-transitioned panel as
+ * every other sidebar disclosure so a phase opens and closes with the same
+ * 200 ms ease as the sections above it.
+ */
+function PhaseScenarios({
+  panelId,
+  open,
+  onOpenChange,
+  items,
+  onSelect,
+}: {
+  panelId: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  items: Array<{ id: string; label: string; selected: boolean }>
+  onSelect: (scenarioId: string) => void
+}) {
+  return (
+    <Collapsible open={open} onOpenChange={onOpenChange}>
+      <CollapsibleContent id={panelId}>
+        <NavChildren>
+          {items.map((item) => (
+            <li key={item.id}>
+              <NavRow
+                rowId={item.id}
+                label={item.label}
+                onSelect={() => onSelect(item.id)}
+                selected={item.selected}
+                size="sm"
+              />
+            </li>
+          ))}
+        </NavChildren>
+      </CollapsibleContent>
+    </Collapsible>
   )
 }
