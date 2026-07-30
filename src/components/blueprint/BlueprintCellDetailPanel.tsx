@@ -33,17 +33,13 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
 import {
   buildBlueprintCellSelectionForId,
   getBlueprintCellConnections,
   getBlueprintForPath,
   getLinkedTechFromConnections,
+  getSelectedCellLayerRowPosition,
   scrollBlueprintCellIntoView,
 } from '@/lib/blueprintCellConnections'
 import {
@@ -330,6 +326,16 @@ export function BlueprintCellDetailPanel() {
     if (!selection) return null
     return resolveFigmaUrl(selection.techItem, selectedCell, cellLinks)
   }, [cellLinks, selectedCell, selection])
+
+  // Lane row position of the selected cell — orients up/down direction
+  // glyphs on same-step dependency rows.
+  const selectedLayerRowPosition = useMemo(() => {
+    const pathId = pathEntry?.pathId
+    if (!resolvedCellId || !pathId) return -1
+    const blueprint = getBlueprintForPath(blueprints, pathId)
+    if (!blueprint) return -1
+    return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
+  }, [blueprints, pathEntry?.pathId, resolvedCellId])
 
   const visualStepEntries = useMemo(() => {
     const stepId = selection?.stepId
@@ -703,19 +709,10 @@ export function BlueprintCellDetailPanel() {
                     <TabsTrigger
                       key={value}
                       value={value}
-                      aria-label={label}
-                      className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-[11px] font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
                     >
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={
-                            <span className="inline-flex" aria-hidden>
-                              <TabIcon className="size-3.5" />
-                            </span>
-                          }
-                        />
-                        <TooltipContent side="bottom">{label}</TooltipContent>
-                      </Tooltip>
+                      <TabIcon className="size-3" aria-hidden />
+                      {label}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -724,6 +721,7 @@ export function BlueprintCellDetailPanel() {
                     <CellDependencySections
                       connections={connections}
                       otherTech={otherTechEntries}
+                      selectedLayerRowPosition={selectedLayerRowPosition}
                       onCellSelect={handleConnectionSelect}
                       onTechSelect={handleTechSelect}
                     />
