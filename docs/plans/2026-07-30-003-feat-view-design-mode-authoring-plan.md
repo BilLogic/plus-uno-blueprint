@@ -503,12 +503,21 @@ component. Nothing else in this plan assumes slices are the only output.
 | 4 — slice editing folded in | **Done** (`7635b59`) — the mode provider moved to the surface level to make it possible |
 | 5 — Edit cell tool | **Done** (`b298940`) |
 
-**Column headers are blocked on a surface that does not exist.** The grid
-renders no step-name header row at all — steps are only column positions for
-cells. Clicking a step header cannot be wired because there is nothing to
-click. Building that row belongs with plan 004's grid editing, which specs it
-with rename and `⊕` affordances; adding it here would change how the blueprint
-looks for every reader in View mode too.
+**Column headers need a surface that does not exist yet.** The grid renders no
+step-name header row — steps are only column positions for cells — so there is
+nothing to click the way a lane label is clicked.
+
+Attempted and reverted: a Design-mode-only handle rail added to
+`ServiceBlueprintGrid`, aligned by reusing `LAYER_COLUMN_WIDTH` /
+`STEP_COLUMN_WIDTH`. It never rendered, because **every scenario in this
+workspace is `side-by-side` and draws through `IntegratedBlueprintGrid`**,
+which lays out on CSS subgrid — a header row there is a new grid row, not a
+flex row, and is not a paste of the same component. Rather than ship a code
+path this dataset cannot exercise, it was removed.
+
+The real work is: a handle rail for the subgrid layout, verified against an
+integrated scenario. It belongs with plan 004's grid editing, which specs the
+same row with rename and `⊕` affordances — building it twice would be waste.
 
 ## Phases
 
