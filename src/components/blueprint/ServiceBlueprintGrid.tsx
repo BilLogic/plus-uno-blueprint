@@ -433,11 +433,14 @@ function BlueprintSwimLane({
     ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
     : 0
 
+  // `data-layer-name` lets a selected cell say which lane it is in without the
+  // selection having to carry the whole blueprint (see lib/canvasCellQuery).
   return (
     <div
       data-blueprint-swimlane=""
       data-blueprint-row=""
       data-layer-id={layerId}
+      data-layer-name={layer.name}
       className={cn(
         'blueprint-panel-surface flex shrink-0 overflow-visible rounded-sm',
         showDividerBelow && 'border-b',

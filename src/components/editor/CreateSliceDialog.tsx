@@ -12,12 +12,19 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { SliceScreenComposer } from '@/components/editor/SliceScreenComposer'
+import { groupCells } from '@/lib/sliceGrouping'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { findFirstLifecycleId } from '@/lib/lifecycle'
 import { createSlice } from '@/lib/sliceMutations'
-import { SLICE_TYPES, type SliceType } from '@/lib/sliceValidation'
+import {
+  SLICE_TYPES,
+  validateDraftSlice,
+  type DraftFrame,
+  type SliceType,
+} from '@/lib/sliceValidation'
 
 /** What each type is for, in the words someone picking one would use. */
 const TYPE_HINTS: Record<SliceType, string> = {
@@ -54,6 +61,16 @@ export function CreateSliceDialog({
   const [sliceType, setSliceType] = useState<SliceType>('custom')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Screens are seeded one-per-cell and then shaped by hand. Re-seeded
+  // whenever the selection changes underneath an open dialog.
+  const [screens, setScreens] = useState<DraftFrame[]>(() =>
+    groupCells(cellIds, 'per-cell'),
+  )
+  const [seededFrom, setSeededFrom] = useState(cellIds)
+  if (seededFrom !== cellIds) {
+    setSeededFrom(cellIds)
+    setScreens(groupCells(cellIds, 'per-cell'))
+  }
 
   const reset = () => {
     setTitle('')
@@ -62,6 +79,14 @@ export function CreateSliceDialog({
     setSliceType('custom')
     setError(null)
   }
+
+  const problems = validateDraftSlice({
+    title,
+    description,
+    sliceType,
+    actor,
+    frames: screens,
+  })
 
   const handleCreate = async () => {
     if (!client || busy || !title.trim()) return
@@ -79,6 +104,7 @@ export function CreateSliceDialog({
         sliceType,
         actor,
         cellIds,
+        frames: screens,
       })
       invalidateQueries('slices')
       reset()
@@ -108,7 +134,8 @@ export function CreateSliceDialog({
           <DialogTitle>New slice</DialogTitle>
           <DialogDescription>
             {cellIds.length} cell{cellIds.length === 1 ? '' : 's'}, in the order
-            you picked them. You can regroup them into frames after it opens.
+            you picked them. Group them into screens below — one screen is one
+            view in presentation.
           </DialogDescription>
         </DialogHeader>
 
@@ -140,6 +167,32 @@ export function CreateSliceDialog({
               onChange={(event) => setActor(event.target.value)}
             />
           </label>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-xs font-medium text-foreground">
+                Screens
+              </span>
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                Quick group:
+                {([
+                  ['per-cell', 'per cell'],
+                  ['per-step', 'per step'],
+                  ['single', 'all in one'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className="rounded px-1 underline-offset-2 hover:text-foreground hover:underline"
+                    onClick={() => setScreens(groupCells(cellIds, value))}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </div>
+            <SliceScreenComposer screens={screens} onChange={setScreens} />
+          </div>
 
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">Type</span>
@@ -181,7 +234,7 @@ export function CreateSliceDialog({
           <Button
             type="button"
             size="sm"
-            disabled={busy || !title.trim() || cellIds.length === 0}
+            disabled={busy || problems.length > 0 || cellIds.length === 0}
             onClick={handleCreate}
           >
             {busy ? 'Creating…' : 'Create slice'}

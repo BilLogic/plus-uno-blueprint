@@ -81,3 +81,26 @@ export function allCellsInReadingOrder(): string[] {
   )
   return toIds(withOrder.map((entry) => entry.element))
 }
+
+/**
+ * A cell's visible text and lane, read off the rendered grid.
+ *
+ * The composer needs to name cells, and the id is the only handle a selection
+ * carries. Rows labelled `040103` were the single worst thing about the first
+ * editor — this is what replaces them.
+ */
+export function describeCell(id: string): { label: string; lane: string } {
+  const root = canvasRoot()
+  const element = root?.querySelector(
+    `[data-blueprint-cell="${CSS.escape(id)}"]`,
+  )
+  if (!element) return { label: 'Cell', lane: '' }
+
+  const label = (element.textContent ?? '').trim().replace(/\s+/g, ' ')
+  const row = element.closest('[data-blueprint-row][data-layer-name]')
+
+  return {
+    label: label.length > 0 ? label : 'Untitled cell',
+    lane: row?.getAttribute('data-layer-name') ?? '',
+  }
+}
