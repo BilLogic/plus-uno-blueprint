@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   ExternalLink,
   FileSearch,
-  Info,
   Link2,
   PanelRightClose,
   PanelRightOpen,
@@ -82,14 +81,13 @@ const CELL_DETAIL_SMALL_LOGO_CLASS =
 
 const SHOW_CELL_DEPENDENCIES = true
 
-type PanelTab = 'overview' | 'dependencies' | 'evidence' | 'resources'
+type PanelTab = 'dependencies' | 'evidence' | 'resources'
 
 const PANEL_TABS: Array<{
   value: PanelTab
   label: string
-  icon: typeof Info
+  icon: typeof Workflow
 }> = [
-  { value: 'overview', label: 'Overview', icon: Info },
   { value: 'dependencies', label: 'Dependencies', icon: Workflow },
   { value: 'evidence', label: 'Evidence', icon: FileSearch },
   { value: 'resources', label: 'Resources', icon: Link2 },
@@ -131,7 +129,7 @@ export function BlueprintCellDetailPanel() {
   const [closingSelection, setClosingSelection] = useState(currentSelection)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const [activeTab, setActiveTab] = useState<PanelTab>('overview')
+  const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
   const selection = currentSelection ?? closingSelection
 
   useEffect(() => {
@@ -144,12 +142,12 @@ export function BlueprintCellDetailPanel() {
     setDrawerOpen(false)
   }, [currentSelection])
 
-  // A new cell always opens on Overview (state reset during render).
+  // A new cell always opens on Dependencies (state reset during render).
   const currentCellId = currentSelection?.paths[0]?.cellId
   const [lastCellId, setLastCellId] = useState(currentCellId)
   if (lastCellId !== currentCellId) {
     setLastCellId(currentCellId)
-    setActiveTab('overview')
+    setActiveTab('dependencies')
   }
 
   useEffect(() => {
@@ -683,53 +681,62 @@ export function BlueprintCellDetailPanel() {
           </div>
         ) : (
           <>
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as PanelTab)}
-              className="min-h-0 flex-1 gap-0"
-            >
-              <TabsList
-                variant="line"
-                className="h-auto w-full justify-start gap-4 rounded-none border-b border-border/60 px-4 pb-0"
-              >
-                {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    aria-label={label}
-                    className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
-                  >
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <span className="inline-flex" aria-hidden>
-                            <TabIcon className="size-3.5" />
-                          </span>
-                        }
-                      />
-                      <TooltipContent side="bottom">{label}</TooltipContent>
-                    </Tooltip>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pt-4 pb-4 blueprint-scroll">
-                {activeTab === 'overview' ? overviewContent : null}
-                {activeTab === 'dependencies' && SHOW_CELL_DEPENDENCIES ? (
-                  <CellDependencySections
-                    connections={connections}
-                    otherTech={otherTechEntries}
-                    onCellSelect={handleConnectionSelect}
-                    onTechSelect={handleTechSelect}
-                  />
-                ) : null}
-                {activeTab === 'evidence' ? (
-                  <CellEvidenceTab cellId={resolvedCellId} />
-                ) : null}
-                {activeTab === 'resources' ? (
-                  <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />
-                ) : null}
+            {/*
+              Overview content is not a tab — it always renders inline at the
+              top; the tab row (Dependencies default) sits below it and both
+              share one scroll area.
+            */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto blueprint-scroll">
+              <div className="flex flex-col gap-5 px-4 pb-5">
+                {overviewContent}
               </div>
-            </Tabs>
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as PanelTab)}
+                className="gap-0"
+              >
+                <TabsList
+                  variant="line"
+                  className="h-auto w-full justify-start gap-4 rounded-none border-b border-border/60 px-4 pb-0"
+                >
+                  {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      aria-label={label}
+                      className="h-auto flex-none rounded-none px-0 pb-2 pt-0 text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                    >
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <span className="inline-flex" aria-hidden>
+                              <TabIcon className="size-3.5" />
+                            </span>
+                          }
+                        />
+                        <TooltipContent side="bottom">{label}</TooltipContent>
+                      </Tooltip>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <div className="flex flex-col gap-5 px-4 pt-4 pb-4">
+                  {activeTab === 'dependencies' && SHOW_CELL_DEPENDENCIES ? (
+                    <CellDependencySections
+                      connections={connections}
+                      otherTech={otherTechEntries}
+                      onCellSelect={handleConnectionSelect}
+                      onTechSelect={handleTechSelect}
+                    />
+                  ) : null}
+                  {activeTab === 'evidence' ? (
+                    <CellEvidenceTab cellId={resolvedCellId} />
+                  ) : null}
+                  {activeTab === 'resources' ? (
+                    <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />
+                  ) : null}
+                </div>
+              </Tabs>
+            </div>
             <CellInSlicesFooter cellId={pathEntry?.cellId ?? null} />
           </>
         )}
