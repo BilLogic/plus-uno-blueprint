@@ -9,15 +9,11 @@ import {
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { DelayedSpinner } from '@/components/ui/spinner'
 import { useViewState } from '@/contexts/viewStateStore'
-import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
-import { useSlice, type SliceDetail } from '@/hooks/useSlice'
-import { useSliceScenarioId } from '@/hooks/useSliceScenarioId'
+import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
-  orderedSliceCellIds,
   parseSliceIllustration,
-  pickBlueprintForCells,
   resolveSliceFramePictures,
   sliceIllustrationUrl,
 } from '@/lib/sliceCells'
@@ -51,45 +47,11 @@ type SlicePresentationProps = {
  * debounced ViewStateContext mechanism.
  */
 export function SlicePresentation({ sliceId }: SlicePresentationProps) {
-  const { openTab, reportPresentFrame, restoredFrame } = useViewState()
+  const { openTab, reportPresentFrame, restoredFrame, consumeRestoredFrame } =
+    useViewState()
 
-  const result = useSlice(sliceId)
-  const detail: SliceDetail | null =
-    result.status === 'ready'
-      ? result.data
-      : result.status === 'error'
-        ? result.fallback
-        : null
-
-  const items = useMemo(
-    () => [...(detail?.items ?? [])].sort((a, b) => a.position - b.position),
-    [detail],
-  )
-  const cellIds = useMemo(
-    () => orderedSliceCellIds(detail?.items ?? []),
-    [detail],
-  )
-
-  const scenarioResult = useSliceScenarioId(detail ? cellIds : null)
-  const scenarioId =
-    scenarioResult.status === 'ready'
-      ? scenarioResult.data
-      : scenarioResult.status === 'error'
-        ? (scenarioResult.fallback ?? undefined)
-        : undefined
-  // Same cached query key as SliceView / the embedded canvas — no refetch
-  // when presenting a slice whose focus tab is already open.
-  const { blueprintsByPathId } = useCanvasBlueprints(
-    scenarioId ? [scenarioId] : [],
-  )
-  const allBlueprints = useMemo(
-    () => [...blueprintsByPathId.values()],
-    [blueprintsByPathId],
-  )
-  const blueprint = useMemo(
-    () => pickBlueprintForCells(allBlueprints, cellIds),
-    [allBlueprints, cellIds],
-  )
+  const { result, detail, items, cellIds, blueprint } =
+    useSliceBlueprint(sliceId)
   const cellById = useMemo(
     () =>
       new Map((blueprint?.cells ?? []).map((cell) => [cell.id, cell])),
@@ -105,6 +67,12 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
       ? restoredFrame.frame
       : 0,
   )
+
+  // The deep-link frame is one-shot: consume it after the initial read so
+  // reopening this present tab later starts at frame 0.
+  useEffect(() => {
+    if (restoredFrame) consumeRestoredFrame()
+  }, [restoredFrame, consumeRestoredFrame])
   const frameCount = items.length
   const clampedFrame =
     frameCount === 0 ? 0 : Math.min(Math.max(0, frame), frameCount - 1)

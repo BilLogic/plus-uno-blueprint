@@ -24,14 +24,9 @@ import {
 import { EditorDetailScope, useEditor } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
-import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
-import { useSlice, type SliceDetail } from '@/hooks/useSlice'
-import { useSliceScenarioId } from '@/hooks/useSliceScenarioId'
-import {
-  orderedSliceCellIds,
-  pickBlueprintForCells,
-  resolveSliceCells,
-} from '@/lib/sliceCells'
+import type { SliceDetail } from '@/hooks/useSlice'
+import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
+import { resolveSliceCells } from '@/lib/sliceCells'
 import { cn } from '@/lib/utils'
 import { getSlideDisplayLabel } from '@/types/nav'
 
@@ -57,42 +52,9 @@ type SliceViewProps = {
 export function SliceView({ sliceId }: SliceViewProps) {
   const { openTab } = useViewState()
   const { slides } = useEditor()
-  const result = useSlice(sliceId)
-  const detail: SliceDetail | null =
-    result.status === 'ready'
-      ? result.data
-      : result.status === 'error'
-        ? result.fallback
-        : null
+  const { result, detail, items, scenarioResult, scenarioId, blueprint } =
+    useSliceBlueprint(sliceId)
 
-  const items = useMemo(
-    () => [...(detail?.items ?? [])].sort((a, b) => a.position - b.position),
-    [detail],
-  )
-  const cellIds = useMemo(() => orderedSliceCellIds(items), [items])
-
-  const scenarioResult = useSliceScenarioId(detail ? cellIds : null)
-  const scenarioId =
-    scenarioResult.status === 'ready'
-      ? scenarioResult.data
-      : scenarioResult.status === 'error'
-        ? (scenarioResult.fallback ?? undefined)
-        : undefined
-
-  // Membership resolution (badges, tombstones) reads the same cached
-  // `useCanvasBlueprints` query the embedded ServiceOverviewView uses to
-  // render the canvas — one fetch per slice tab, not two.
-  const { blueprintsByPathId } = useCanvasBlueprints(
-    scenarioId ? [scenarioId] : [],
-  )
-  const allBlueprints = useMemo(
-    () => [...blueprintsByPathId.values()],
-    [blueprintsByPathId],
-  )
-  const blueprint = useMemo(
-    () => pickBlueprintForCells(allBlueprints, cellIds),
-    [allBlueprints, cellIds],
-  )
   const resolution = useMemo(
     () => resolveSliceCells(blueprint, items),
     [blueprint, items],

@@ -173,6 +173,10 @@ type EditorDetailScopeProps = {
  * EditorProvider; `view` / `activeSlideId` are tab-local so navigating
  * inside a slice tab never disturbs the blueprint tab, and the tab opens in
  * detail view on the given slide.
+ *
+ * Invariant: every view-writing method of EditorContext must be overridden
+ * here — anything left to the parent would silently retarget the base
+ * blueprint view underneath the tab.
  */
 export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps) {
   const parent = useEditor()
@@ -187,6 +191,12 @@ export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps)
     setActiveSlideId(slideId)
     setView('detail')
   }
+
+  // Landing navigation from inside a slice tab is not a supported
+  // affordance (the scope cannot reach the tab store to leave the tab, and
+  // the parent's goLanding would switch the base view underneath it), so
+  // the override is a deliberate no-op.
+  const goLanding = useCallback(() => {}, [])
 
   const goHome = useCallback(() => {
     setSkipCanvasFitAnimation(false)
@@ -216,6 +226,7 @@ export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps)
       ...parent,
       view,
       setView,
+      goLanding,
       goHome,
       enterCanvas,
       skipCanvasFitAnimation,
@@ -227,6 +238,7 @@ export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps)
     [
       parent,
       view,
+      goLanding,
       goHome,
       enterCanvas,
       skipCanvasFitAnimation,

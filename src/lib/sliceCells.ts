@@ -9,13 +9,6 @@ import { FALLBACK_NAV, getBlueprintScenarioId } from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
 import type { Json, SliceItem } from '@/types/database'
 
-/** Cell ids across a slice's items, in frame order then in-frame order. */
-export function orderedSliceCellIds(items: readonly SliceItem[]): string[] {
-  return [...items]
-    .sort((a, b) => a.position - b.position)
-    .flatMap((item) => item.cell_ids)
-}
-
 /** Scan the local fallback registry for the scenario owning these cells. */
 export function findFallbackScenarioForCells(
   cellIds: readonly string[],
@@ -121,8 +114,11 @@ export function resolveSliceCells(
       })
       memberCellIds.add(cellId)
       memberCellIds.add(rawCellId)
-      sequenceByCellId.set(cellId, order)
-      sequenceByCellId.set(rawCellId, order)
+      // A cell repeated across frames keeps its first sequence number.
+      if (!sequenceByCellId.has(cellId)) sequenceByCellId.set(cellId, order)
+      if (!sequenceByCellId.has(rawCellId)) {
+        sequenceByCellId.set(rawCellId, order)
+      }
     }
   })
 

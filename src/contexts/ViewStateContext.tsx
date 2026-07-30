@@ -43,15 +43,18 @@ function useUrlViewState(
   activeTab: TabDescriptor | null,
 ): (frame: number) => void {
   const pending = state.pendingUrlState !== null
-  const restoredFrame = state.restoredFrame
   const frameRef = useRef(0)
   const debounceRef = useRef<number | null>(null)
   const activeTabRef = useRef(activeTab)
   const pendingRef = useRef(pending)
+  // Read through a ref so consuming the one-shot restored frame (setting it
+  // to null) does not re-run the tab-change effect and clobber the URL.
+  const restoredFrameRef = useRef(state.restoredFrame)
 
   useEffect(() => {
     activeTabRef.current = activeTab
     pendingRef.current = pending
+    restoredFrameRef.current = state.restoredFrame
   })
 
   const writeUrl = useCallback((tab: TabDescriptor | null, frame: number) => {
@@ -68,13 +71,14 @@ function useUrlViewState(
       debounceRef.current = null
     }
     if (activeTab?.kind === 'present') {
+      const restoredFrame = restoredFrameRef.current
       frameRef.current =
         restoredFrame && restoredFrame.sliceId === activeTab.sliceId
           ? restoredFrame.frame
           : 0
     }
     writeUrl(activeTab, frameRef.current)
-  }, [activeTab, pending, restoredFrame, writeUrl])
+  }, [activeTab, pending, writeUrl])
 
   useEffect(
     () => () => {
@@ -140,6 +144,10 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       dispatch({ type: 'resolvePending', availableSliceIds }),
     [],
   )
+  const consumeRestoredFrame = useCallback(
+    () => dispatch({ type: 'consumeRestoredFrame' }),
+    [],
+  )
 
   const value = useMemo(
     () => ({
@@ -153,6 +161,7 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       activateTab,
       closeTabsForSlice,
       resolvePending,
+      consumeRestoredFrame,
       reportPresentFrame,
     }),
     [
@@ -166,6 +175,7 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       activateTab,
       closeTabsForSlice,
       resolvePending,
+      consumeRestoredFrame,
       reportPresentFrame,
     ],
   )

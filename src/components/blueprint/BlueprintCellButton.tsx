@@ -77,11 +77,13 @@ export function BlueprintCellButton({
       (sliceMembership.memberCellIds.has(cellId) ||
         (resolvedCellId && sliceMembership.memberCellIds.has(resolvedCellId))),
   )
+  // Checking `sliceMembership && cellId` directly (not via isSliceMember)
+  // lets TypeScript narrow both — no non-null assertions.
   const sliceSequence =
-    isSliceMember && sliceSequenceBadge && cellId
-      ? (sliceMembership!.sequenceByCellId.get(cellId) ??
+    sliceMembership && cellId && isSliceMember && sliceSequenceBadge
+      ? (sliceMembership.sequenceByCellId.get(cellId) ??
         (resolvedCellId
-          ? sliceMembership!.sequenceByCellId.get(resolvedCellId)
+          ? sliceMembership.sequenceByCellId.get(resolvedCellId)
           : undefined))
       : undefined
   const preview = useBlueprintCellPreviewHover()

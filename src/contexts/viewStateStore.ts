@@ -24,6 +24,7 @@ export type ViewStateAction =
   | { type: 'activate'; key: TabKey | null }
   | { type: 'closeForSlice'; sliceId: string }
   | { type: 'resolvePending'; availableSliceIds: readonly string[] }
+  | { type: 'consumeRestoredFrame' }
 
 export type ViewState = {
   tabs: TabDescriptor[]
@@ -114,6 +115,13 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
         ? { ...opened, restoredFrame: { sliceId: pending.sliceId, frame: pending.frame } }
         : opened
     }
+    case 'consumeRestoredFrame':
+      // One-shot: once the presentation has seeded its frame, drop the
+      // deep-link frame so reopening a present tab starts at frame 0
+      // instead of snapping back to the stale URL frame.
+      return state.restoredFrame === null
+        ? state
+        : { ...state, restoredFrame: null }
   }
 }
 
@@ -131,6 +139,8 @@ export type ViewStateContextValue = {
   closeTabsForSlice: (sliceId: string) => void
   /** Activate a pending URL deep link once the slice list has loaded. */
   resolvePending: (availableSliceIds: readonly string[]) => void
+  /** Clear `restoredFrame` after the presentation reads it (one-shot). */
+  consumeRestoredFrame: () => void
   /** Presentation frame changes mirror to the URL (debounced). */
   reportPresentFrame: (frame: number) => void
 }

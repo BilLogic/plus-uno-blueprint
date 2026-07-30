@@ -31,16 +31,25 @@ type CellInSlicesFooterProps = {
 }
 
 /**
- * Collapsible "In slices" footer — derived client-side from the cached
- * useSlices list (no per-open membership query). Rows open the slice tab.
+ * Collapsible "In slices" footer — derived client-side from the shared
+ * useSlices cache (no per-open membership query). On error it falls back to
+ * the stale/fallback list, matching TabStrip and SlicesSidebarSection. Rows
+ * open the slice tab.
  */
 export function CellInSlicesFooter({ cellId }: CellInSlicesFooterProps) {
   const slices = useSlices()
   const { openTab } = useViewState()
 
-  if (!cellId || slices.status !== 'ready') return null
+  if (!cellId) return null
 
-  const matches = slicesContainingCell(slices.data, cellId)
+  const rows: SliceListEntry[] =
+    slices.status === 'ready'
+      ? slices.data
+      : slices.status === 'error'
+        ? (slices.fallback ?? [])
+        : []
+
+  const matches = slicesContainingCell(rows, cellId)
   if (matches.length === 0) return null
 
   return (
