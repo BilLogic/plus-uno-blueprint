@@ -18,11 +18,11 @@ import { cn } from '@/lib/utils'
 
 /**
  * Chrome that must neither re-focus nor de-focus the slice when clicked:
- * the cell detail panel, navbar, canvas nav, zoom chrome, the focus pill
- * itself, and any open walkthrough modal.
+ * the cell detail panel, navbar, canvas nav, zoom chrome, and any open
+ * walkthrough modal.
  */
 const FOCUS_CLICK_IGNORE =
-  '[data-cell-detail-panel], [data-editor-navbar], [data-canvas-nav], [data-zoom-indicator], [data-annotation-toolbar], [data-slice-focus-pill], [data-visual-walkthrough-modal]'
+  '[data-cell-detail-panel], [data-editor-navbar], [data-canvas-nav], [data-zoom-indicator], [data-annotation-toolbar], [data-visual-walkthrough-modal]'
 
 type SliceViewProps = {
   sliceId: string
@@ -147,6 +147,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
                 longer in the blueprint
               </span>
             )}
+            <SliceFocusToggle focused={focused} onToggle={setFocused} />
             <Button
               type="button"
               variant="outline"
@@ -175,14 +176,18 @@ export function SliceView({ sliceId }: SliceViewProps) {
               </div>
             </VisualWalkthroughShell>
           </EditorDetailScope>
-          <SliceFocusPill focused={focused} onToggle={setFocused} />
         </div>
       </div>
     </SliceMembershipContext.Provider>
   )
 }
 
-function SliceFocusPill({
+/**
+ * Focus-state indicator + toggle in the slice header strip. The header sits
+ * outside the canvas click-capture container, so this never trips the
+ * outside-click de-focus behavior.
+ */
+function SliceFocusToggle({
   focused,
   onToggle,
 }: {
@@ -192,21 +197,17 @@ function SliceFocusPill({
   return (
     <button
       type="button"
-      data-slice-focus-pill=""
       aria-pressed={focused}
-      onClick={(event) => {
-        event.stopPropagation()
-        onToggle(!focused)
-      }}
+      onClick={() => onToggle(!focused)}
       className={cn(
-        'absolute bottom-4 left-4 z-50 rounded-full border px-3 py-1.5 text-xs font-medium shadow-md transition-colors',
+        'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
         focused
           ? 'border-transparent bg-foreground text-background'
-          : 'border-border bg-card text-foreground hover:bg-accent',
+          : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground',
       )}
     >
-      <span aria-hidden>◇ </span>
-      Slice focus
+      <span aria-hidden>{focused ? '◉ ' : '○ '}</span>
+      {focused ? 'Focused' : 'Showing all'}
     </button>
   )
 }
