@@ -1,7 +1,7 @@
 ---
 title: "View / Design mode — one switch that decides what the canvas is for"
 type: feat
-status: partially-implemented
+status: completed
 date: 2026-07-30
 ---
 
@@ -498,62 +498,37 @@ component. Nothing else in this plan assumes slices are the only output.
 | Phase | State |
 |---|---|
 | 1 — mode switch, view parity | **Done** (`7a4078a`) |
-| 2 — selection model | **Done except column headers** — click, shift-click, lane labels, marquee, Cmd-A, Escape shipped (`0593674`, `a73c8bc`, `003ee9c`) |
+| 2 — selection model | **Done** — click, shift-click, lane labels, column handles, marquee, Cmd-A, Escape (`0593674`, `a73c8bc`, `003ee9c`, `f6d3a29`) |
 | 3 — slice creation in Design mode | **Done**, with the screen composer (`d706743`) |
 | 4 — slice editing folded in | **Done** (`7635b59`) — the mode provider moved to the surface level to make it possible |
 | 5 — Edit cell tool | **Done** (`b298940`) |
 
-**Column headers need a surface that does not exist yet, in a grid nobody
-had identified.** The blueprint renders no step-name header row — steps are
-only column positions for cells — so there is nothing to click the way a lane
-label is clicked.
+**Column handles: shipped in `f6d3a29`, after four failed attempts.** The
+blueprint renders no step-name header row — steps are only column positions
+for cells — so the handles are a Design-mode-only overlay, positioned by
+measuring each column off its own first cell.
 
-Three attempts, all reverted, and the finding is worth more than the code:
+Three attempts concluded "the component never renders" and went hunting
+through `ServiceBlueprintGrid`, `IntegratedBlueprintGrid` and
+`SideBySideCompareGrid` in turn. All three were wrong about the cause. A
+throwaway probe in the same position proved the environment was fine
+(`mode: design`, `hasPick: true`, all columns measuring 192 px), which
+localised the defect to the component. Two real bugs were behind it:
 
-1. A flex handle rail in `ServiceBlueprintGrid`, aligned with
-   `LAYER_COLUMN_WIDTH` / `STEP_COLUMN_WIDTH`. Never rendered.
-2. A measured, absolutely-positioned rail in `IntegratedBlueprintGrid`.
-   Never rendered.
-3. The same rail in `SideBySideCompareGrid`. Never rendered.
+1. **A dependency array on the measuring effect makes it measure nothing** —
+   the subtree remounts when Design mode toggles (the selection provider
+   changes element type at that position), so the single run lands before the
+   measurement is meaningful. A `ResizeObserver` variant failed identically.
+2. **Without an equality guard, setting state each render crashes the subtree**
+   in an update loop — which presents as "renders nothing", and is what sent
+   the earlier attempts looking in the wrong place.
 
-**The canvas actually draws through `SideBySideCompareGrid`** — confirmed from
-the DOM ancestor chain of a live cell (`data-compare-panel` →
-`data-blueprint-artboard` → `data-phase-scenario-panel`) — and all 17
-scenarios are `view_type = 'side-by-side'`. Attempt 3 targeted the right file
-and still produced nothing, so the remaining unknown is *which component
-inside that file renders the visible column*, not which file.
+Worth carrying forward: *"component renders nothing" is as often an update
+loop as a missing context.* Probe the position before changing files.
 
-**The target is `ComparePathColumn`** (`SideBySideCompareGrid.tsx:227`) — it is
-what `blueprints.map` renders per visible column and owns `columnRef`.
-
-**A probe mounted in exactly that position proved the environment is fine.**
-Rendered from inside `ComparePathColumn`, a throwaway component logged:
-
-```
-[probe] {"mode":"design","hasPick":true,"steps":4,"cellsFound":14,
-         "bodyPresent":true,
-         "measured":[{"i":0,"w":192},{"i":1,"w":192},{"i":2,"w":192},{"i":3,"w":192}]}
-```
-
-So at that point in the tree: Design mode is readable, the pick context is
-non-null, `columnRef` is attached, cells carry `data-step-index` 0..n, and
-every column measures at 192 px. There is nothing missing from the
-surroundings.
-
-**The bug is therefore inside `BlueprintColumnHandles` itself** — the same
-measurement, run from a component that stores the result in state and renders
-from it, produced no handles across three placements. The probe used no
-dependency array and rendered nothing; the component used
-`[active, bodyRef, steps]` and rendered from `useState`. The next attempt
-should start by making the probe *render* its measured handles directly (no
-state, no deps array) and only then reintroduce state — the difference between
-those two is where the defect lives, and it is now a five-minute bisect rather
-than an investigation.
-
-One real fix came out of the chase and was kept (`d51162e`): `data-layer-name`
-was only ever added to `ServiceBlueprintGrid`, so composer rows had been
-showing a cell's text with no lane beneath it in the grid that actually
-renders.
+One further defect found and fixed on the way (`d51162e`): `data-layer-name`
+existed only on `ServiceBlueprintGrid`, so composer rows had been showing a
+cell's text with no lane beneath it in the grid that actually renders.
 
 ## Phases
 
