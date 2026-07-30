@@ -95,7 +95,14 @@ export function SlideModeSidebarNav() {
       </Tabs>
 
       {mode === 'blueprints' ? (
-        <Accordion defaultValue={['phases', 'paths']} className="border-0">
+        <Accordion
+          // Base UI defaults to single-open: without this, opening Paths
+          // collapsed Phases (and with it the whole nav) out from under the
+          // user.
+          multiple
+          defaultValue={['phases', 'paths']}
+          className="border-0"
+        >
           <AccordionItem value="phases" className="border-0">
             <AccordionTrigger className={SIDEBAR_SECTION_TRIGGER_CLASS}>
               Phases
