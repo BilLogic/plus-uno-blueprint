@@ -358,6 +358,9 @@ function CompareCardRow({
             'data-blueprint-swimlane': '',
             'data-blueprint-row': '',
             'data-layer-id': row.layer.id,
+            // Lets a picked cell name its lane without the selection
+            // carrying the whole blueprint (see lib/canvasCellQuery).
+            'data-layer-name': row.layer.name,
           }
         : {})}
       {...(isDivider
