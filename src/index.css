@@ -43,6 +43,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-selected: var(--sidebar-selected);
+  --color-sidebar-selected-foreground: var(--sidebar-selected-foreground);
+  --color-sidebar-selected-rail: var(--sidebar-selected-rail);
+  --color-sidebar-ancestor: var(--sidebar-ancestor);
   /* Supabase DS: Manrope headings, Inter body, Source Code Pro mono */
   --font-heading: 'Manrope Variable', 'Manrope', sans-serif;
   --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
@@ -166,6 +171,19 @@
   --sidebar-ring: var(--ring);
   --sidebar-accent: var(--accent);
   --sidebar-accent-foreground: var(--accent-foreground);
+
+  /*
+   * Sidebar selection language (nav plan D8). Hover and selected used to be
+   * the same `--sidebar-accent` fill, which is why a selected row was
+   * indistinguishable from a hovered one. Now: hover is the neutral
+   * elevation lift, selected is a brand tint plus a full-chroma left rail,
+   * and a row that merely *contains* the selection gets the marker dot.
+   */
+  --sidebar-hover: var(--accent);
+  --sidebar-selected: oklch(0.76 0.15 var(--brand-hue) / 0.2);
+  --sidebar-selected-foreground: var(--foreground);
+  --sidebar-selected-rail: oklch(0.76 0.15 var(--brand-hue));
+  --sidebar-ancestor: oklch(0.76 0.15 var(--brand-hue) / 0.55);
 
   /* --- Status (Supabase expressive anchors) ---------------------------- */
   --destructive: oklch(0.52 0.14 25);
