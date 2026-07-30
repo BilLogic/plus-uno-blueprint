@@ -1,7 +1,7 @@
 ---
 title: "View / Design mode — one switch that decides what the canvas is for"
 type: feat
-status: active
+status: partially-implemented
 date: 2026-07-30
 ---
 
@@ -492,6 +492,23 @@ what the amber `authoring` badge already announces.
 **Seam for option B.** `CanvasDesignToolbar`'s creation control is a menu, not
 a button, so "Blueprint…" attaches as a second entry without re-cutting the
 component. Nothing else in this plan assumes slices are the only output.
+
+## Implementation status (2026-07-30)
+
+| Phase | State |
+|---|---|
+| 1 — mode switch, view parity | **Done** (`7a4078a`) |
+| 2 — selection model | **Done except column headers** — click, shift-click, lane labels, marquee, Cmd-A, Escape shipped (`0593674`, `a73c8bc`, `003ee9c`) |
+| 3 — slice creation in Design mode | **Done**, with the screen composer (`d706743`) |
+| 4 — slice editing folded in | **Done** (`7635b59`) — the mode provider moved to the surface level to make it possible |
+| 5 — Edit cell tool | **Done** (`b298940`) |
+
+**Column headers are blocked on a surface that does not exist.** The grid
+renders no step-name header row at all — steps are only column positions for
+cells. Clicking a step header cannot be wired because there is nothing to
+click. Building that row belongs with plan 004's grid editing, which specs it
+with rename and `⊕` affordances; adding it here would change how the blueprint
+looks for every reader in View mode too.
 
 ## Phases
 
