@@ -274,19 +274,23 @@
     transition-duration: 180ms;
   }
 
-  /* Slice focus — member outlines persist whether or not the dim is up. */
+  /* Slice focus — member rings persist whether or not the dim is up. Ring
+     takes the lane's role accent so members pop at overview zoom, plus a
+     soft shadow lift over the dimmed field. */
   [data-slice-focus] [data-blueprint-cell-anchor][data-slice-member] {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--blueprint-cell-ring, var(--ring));
     outline-offset: 1px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
   }
 
-  /* While focused, non-member cells soft-dim toward the canvas (the slice
+  /* While focused, non-member cells drop hard toward the canvas (the slice
      tab wraps the normal blueprint view, so the grid keeps its own stacking
-     contexts — no scrim plane, just per-cell dim + desaturate). */
+     contexts — no scrim plane, just per-cell dim + desaturate + grey).
+     Dimmed text may go near-unreadable; focused mode is about the members. */
   [data-slice-focus='focused']
     [data-blueprint-cell-anchor]:not([data-slice-member]) {
-    opacity: 0.4;
-    filter: saturate(0.4);
+    opacity: 0.22;
+    filter: saturate(0.35) grayscale(0.5);
   }
 
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
