@@ -3,6 +3,7 @@ import { Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { Button } from '@/components/ui/button'
+import { DelayedSpinner } from '@/components/ui/spinner'
 import { EditorDetailScope } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -98,7 +99,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
   )
 
   if (result.status === 'loading') {
-    return <SliceViewMessage>Loading slice…</SliceViewMessage>
+    return <DelayedSpinner />
   }
 
   if (!detail) {
@@ -114,11 +115,12 @@ export function SliceView({ sliceId }: SliceViewProps) {
   }
 
   if (!scenarioId) {
+    if (scenarioResult.status === 'loading') {
+      return <DelayedSpinner />
+    }
     return (
       <SliceViewMessage>
-        {scenarioResult.status === 'loading'
-          ? 'Loading slice…'
-          : 'The cells in this slice could not be found in any blueprint.'}
+        The cells in this slice could not be found in any blueprint.
       </SliceViewMessage>
     )
   }
@@ -172,7 +174,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
                 className="absolute inset-0 flex min-h-0 flex-col"
                 data-editor-view
               >
-                <ServiceOverviewView />
+                <ServiceOverviewView loadingVariant="spinner" />
               </div>
             </VisualWalkthroughShell>
           </EditorDetailScope>

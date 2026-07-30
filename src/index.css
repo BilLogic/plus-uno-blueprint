@@ -215,6 +215,18 @@
 }
 
 @layer utilities {
+  /* Loading indicators that hold back ~300ms so fast loads show nothing. */
+  .delayed-appear {
+    opacity: 0;
+    animation: delayed-appear 200ms ease-out 300ms forwards;
+  }
+
+  @keyframes delayed-appear {
+    to {
+      opacity: 1;
+    }
+  }
+
   .blueprint-scroll {
     -ms-overflow-style: none;
     scrollbar-width: none;

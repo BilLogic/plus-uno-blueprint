@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { DelayedSpinner } from '@/components/ui/spinner'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
 import { useSlice, type SliceDetail } from '@/hooks/useSlice'
@@ -145,7 +146,11 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
   )
 
   if (result.status === 'loading') {
-    return <PresentationMessage>Loading slice…</PresentationMessage>
+    return (
+      <div className="dark flex h-full bg-background">
+        <DelayedSpinner />
+      </div>
+    )
   }
 
   if (!detail) {

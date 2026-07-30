@@ -9,6 +9,7 @@ import {
 } from '@/components/editor/PhaseOverviewPhaseLoopArrow'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { ServiceOverviewLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import { DelayedSpinner } from '@/components/ui/spinner'
 import { ServiceOverviewStickyHeader } from '@/components/editor/ServiceOverviewMenubarHeader'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
@@ -154,7 +155,18 @@ function ServicePhaseSection({
   )
 }
 
-export function ServiceOverviewView() {
+type ServiceOverviewViewProps = {
+  /**
+   * How the not-yet-ready state renders. Embedding tabs (slice focus) use
+   * 'spinner' — a single delayed spinner instead of the blueprint tab's
+   * layout-mimicking skeleton.
+   */
+  loadingVariant?: 'skeleton' | 'spinner'
+}
+
+export function ServiceOverviewView({
+  loadingVariant = 'skeleton',
+}: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
   const {
@@ -245,7 +257,11 @@ export function ServiceOverviewView() {
   ])
 
   if (!overviewReady) {
-    return <ServiceOverviewLoadingSkeleton />
+    return loadingVariant === 'spinner' ? (
+      <DelayedSpinner />
+    ) : (
+      <ServiceOverviewLoadingSkeleton />
+    )
   }
 
   return (
