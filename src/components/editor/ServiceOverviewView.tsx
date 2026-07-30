@@ -280,6 +280,13 @@ export function ServiceOverviewView({
     ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}`
     : `service-canvas:loading:${skeletonPhases.map((phase) => phase.scenarioCount).join('-') || 'unknown'}`
 
+  // The cell-detail panel clears its selection when this changes, so it must
+  // track navigation only — never the camera's own bookkeeping. `fitKey`
+  // flips once when the skeleton swaps to content, which is not a
+  // navigation, and using it here silently deselected any cell picked in the
+  // first moments after a load.
+  const cellDetailResetKey = `service-canvas:${view}:${cameraTargetId ?? 'none'}:${focusNonce}`
+
   // Every fit up to and including the swap to content is a jump. The
   // skeleton fit frames a fresh mount (animating it would swoop in from
   // pan 0,0 / zoom 1) and the swap fit only corrects the skeleton's
@@ -351,7 +358,7 @@ export function ServiceOverviewView({
   return (
     <CanvasZoomChromeProvider>
       <BlueprintCellDetailProvider
-        resetKey={fitKey}
+        resetKey={cellDetailResetKey}
         enabled={cellDetailEnabled}
         blueprints={cellDetailBlueprints}
       >
