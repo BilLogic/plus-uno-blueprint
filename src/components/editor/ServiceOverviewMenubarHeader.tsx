@@ -1,7 +1,5 @@
-import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
-import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
 import {
   BLUEPRINT_MENUBAR_FLAT_CLASS,
   BLUEPRINT_MENUBAR_HEADER_CLASS,
@@ -16,17 +14,11 @@ const OVERVIEW_MENU_DESCRIPTION =
   'An overview of the phases across the PLUS service lifecycle.'
 
 type ServiceOverviewMenubarHeaderProps = {
-  paths: PathOption[]
-  selectedPathIds: string[]
-  onTogglePath: (pathId: string) => void
   className?: string
 }
 
 /** Title bar for the service overview canvas. */
 export function ServiceOverviewMenubarHeader({
-  paths,
-  selectedPathIds,
-  onTogglePath,
   className,
 }: ServiceOverviewMenubarHeaderProps) {
   return (
@@ -39,24 +31,12 @@ export function ServiceOverviewMenubarHeader({
       onClick={(event) => event.stopPropagation()}
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
-        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
-          <NavbarSlideTitleNav
-            label={OVERVIEW_MENU_TITLE}
-            description={OVERVIEW_MENU_DESCRIPTION}
-            isOverview
-          />
-          <span
-            className="shrink-0 text-xs text-muted-foreground/70"
-            aria-hidden
-          >
-            \
-          </span>
-          <StackHeaderFilterMenu
-            paths={paths}
-            selectedPathIds={selectedPathIds}
-            onTogglePath={onTogglePath}
-          />
-        </div>
+        <NavbarSlideTitleNav
+          label={OVERVIEW_MENU_TITLE}
+          description={OVERVIEW_MENU_DESCRIPTION}
+          isOverview
+          className="shrink-0"
+        />
       </div>
     </Menubar>
   )

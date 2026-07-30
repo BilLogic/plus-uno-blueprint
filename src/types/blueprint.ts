@@ -51,6 +51,12 @@ export type BlueprintCellTrigger = {
   id: string
   source_cell_id: string
   target_cell_id: string
+  /** trigger = temporal "sets off" (default); needs = functional dependency. */
+  kind?: 'trigger' | 'needs'
+  /** Short edge label, e.g. a channel tag like "Email". */
+  label?: string | null
+  /** Why-line shown in the cell panel dependencies tab. */
+  note?: string | null
 }
 
 export type BlueprintData = {

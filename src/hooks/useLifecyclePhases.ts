@@ -1,17 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery'
+import { findFirstLifecycleId } from '@/lib/lifecycle'
 import { phasesToSlides, type PhaseRow } from '@/lib/phasesToSlides'
-import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
-import type { Slide } from '@/types/slides'
-
-/** Default lifecycle from seed.sql */
-export const DEFAULT_LIFECYCLE_ID = 'a0000000-0000-4000-8000-000000000001'
-
-/** In-session phase from seed.sql */
-export const IN_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000104'
-
-/** Pre-session phase from seed.sql */
-export const PRE_SESSION_PHASE_ID = 'a0000000-0000-4000-8000-000000000103'
+import type { NavItem } from '@/types/nav'
 
 const LIFECYCLE_PHASES_SELECT = `
   id,
@@ -29,59 +21,77 @@ const LIFECYCLE_PHASES_SELECT = `
   )
 `
 
-export function useLifecyclePhases(lifecycleId: string = DEFAULT_LIFECYCLE_ID) {
-  const { client, configured } = useSupabase()
-  const [phases, setPhases] = useState<PhaseRow[]>([])
-  const [slides, setSlides] = useState<Slide[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+/**
+ * Same projection plus the owning lifecycle, for the unpinned read that
+ * cannot filter server-side because the lifecycle id is still in flight.
+ */
+const LIFECYCLE_PHASES_SELECT_WITH_OWNER = `service_lifecycle_id,${LIFECYCLE_PHASES_SELECT}`
 
-  useEffect(() => {
-    if (!configured || !client) {
-      setPhases([])
-      setSlides([])
-      setLoading(false)
-      setError(null)
-      return
-    }
+type PhaseQueryRow = PhaseRow & { service_lifecycle_id?: string }
 
-    let cancelled = false
-    setLoading(true)
+const NO_PHASES: PhaseRow[] = []
 
-    const query = client
-      .from('phases')
-      .select(LIFECYCLE_PHASES_SELECT)
-      .eq('service_lifecycle_id', lifecycleId)
-      .order('order_position', { ascending: true })
+/**
+ * Load the phases (and nested scenarios) of one service lifecycle.
+ *
+ * With no explicit `lifecycleId`, the first lifecycle by `created_at` is used
+ * — the common case is a single lifecycle per database. Pass an id to pin a
+ * specific lifecycle in multi-lifecycle databases.
+ *
+ * Both reads go out in the same tick. Resolving the lifecycle *then*
+ * querying its phases put a full serial round trip in front of the canvas
+ * mount, which is exactly the window where the unfitted viewport used to
+ * show. Unpinned, the phases read is therefore unfiltered and narrowed to
+ * the resolved lifecycle client-side — no extra rows in the single-lifecycle
+ * databases this targets. The result goes through the shared query cache, so
+ * the lookup survives remounts and is shared with every other consumer of
+ * `findFirstLifecycleId`.
+ */
+export function useLifecyclePhases(lifecycleId?: string) {
+  const { configured } = useSupabase()
+  const fallback = useCallback(() => null, [])
 
-    void raceSupabaseQuery(query).then((result) => {
-        if (cancelled) return
-        if (result === 'timeout') {
-          setPhases([])
-          setSlides([])
-          setError(null)
-          setLoading(false)
-          return
-        }
+  const result = useSupabaseQuery<PhaseRow[]>(
+    `lifecycle-phases:${lifecycleId ?? 'first'}`,
+    async (client) => {
+      const lifecycleIdPromise = lifecycleId
+        ? Promise.resolve<string | null>(lifecycleId)
+        : findFirstLifecycleId(client)
 
-        const { data, error: err } = result
-        if (err) {
-          setError(err.message)
-          setPhases([])
-          setSlides([])
-        } else {
-          const rows = (data ?? []) as PhaseRow[]
-          setError(null)
-          setPhases(rows)
-          setSlides(phasesToSlides(rows))
-        }
-        setLoading(false)
-      })
+      const rowsPromise = (
+        lifecycleId
+          ? client
+              .from('phases')
+              .select(LIFECYCLE_PHASES_SELECT)
+              .eq('service_lifecycle_id', lifecycleId)
+          : client.from('phases').select(LIFECYCLE_PHASES_SELECT_WITH_OWNER)
+      ).order('order_position', { ascending: true })
 
-    return () => {
-      cancelled = true
-    }
-  }, [client, configured, lifecycleId])
+      const [resolvedLifecycleId, { data, error }] = await Promise.all([
+        lifecycleIdPromise,
+        rowsPromise,
+      ])
+      if (error) throw new Error(error.message)
+      // Empty database — the caller falls back to local sample slides.
+      if (!resolvedLifecycleId) return NO_PHASES
 
-  return { phases, slides, loading, error, configured }
+      const rows = (data ?? []) as PhaseQueryRow[]
+      if (lifecycleId) return rows as PhaseRow[]
+      return rows.filter(
+        (row) => row.service_lifecycle_id === resolvedLifecycleId,
+      )
+    },
+    fallback,
+  )
+
+  const phases = result.status === 'ready' ? result.data : NO_PHASES
+  const slides = useMemo<NavItem[]>(() => phasesToSlides(phases), [phases])
+
+  return {
+    phases,
+    slides,
+    loading: result.status === 'loading',
+    error: result.status === 'error' ? result.message : null,
+    configured,
+  }
 }

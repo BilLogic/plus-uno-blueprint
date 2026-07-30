@@ -6,6 +6,8 @@ import {
   useState,
   type PointerEvent,
 } from 'react'
+import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
+import { prefersReducedMotion } from '@/lib/motion'
 import {
   BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN,
   BLUEPRINT_VIEWPORT_FIT_TOP_INSET,
@@ -43,10 +45,12 @@ type UseZoomPanViewportOptions = {
   animateFit?: boolean
   /** Duration for animated camera moves (ms). */
   fitDurationMs?: number
-  /** Refit whenever the content box resizes (e.g. async blueprint panels). */
+  /** Re-center whenever the content box resizes (e.g. async blueprint panels). */
   refitOnResize?: boolean
   /** Debounce for refitOnResize (ms). */
   refitDebounceMs?: number
+  /** Never react to container/content resizes (viewport owns its own framing). */
+  suppressResizeRefit?: boolean
 }
 
 function applyTransformToElement(
@@ -87,6 +91,18 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
+/** Sub-pixel camera deltas aren't worth a React commit. */
+function isSameTransform(
+  a: { pan: { x: number; y: number }; zoom: number },
+  b: { pan: { x: number; y: number }; zoom: number },
+) {
+  return (
+    Math.abs(a.pan.x - b.pan.x) < 0.5 &&
+    Math.abs(a.pan.y - b.pan.y) < 0.5 &&
+    Math.abs(a.zoom - b.zoom) < 0.0001
+  )
+}
+
 export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const {
     resetKey,
@@ -101,6 +117,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     fitDurationMs = 420,
     refitOnResize = true,
     refitDebounceMs = 200,
+    suppressResizeRefit = false,
   } = options
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -113,6 +130,23 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const pendingFitRef = useRef(false)
   const userAdjustedViewRef = useRef(false)
   const fitAnimationRef = useRef<number | null>(null)
+  /**
+   * False until this viewport instance has framed content once. The first
+   * fit jumps: animating it would swoop in from the unfitted origin
+   * (pan 0,0 / zoom 1) that every fresh mount starts at.
+   */
+  const hasFittedRef = useRef(false)
+  /**
+   * Latest `animateFit`, kept in a ref so `fitToView` stays identity-stable
+   * across renders — otherwise flipping the prop would re-run the fit
+   * effect and fire a second camera move. Synced by an effect declared
+   * above the fit effect, so it is current by the time that effect reads it.
+   */
+  const animateFitRef = useRef(animateFit)
+
+  useEffect(() => {
+    animateFitRef.current = animateFit
+  }, [animateFit])
 
   const cancelFitAnimation = useCallback(() => {
     if (fitAnimationRef.current !== null) {
@@ -194,11 +228,16 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [cancelFitAnimation, commitTransform],
   )
 
-  const fitToView = useCallback(
-    (options?: { animate?: boolean }) => {
+  /**
+   * Camera transform that frames the fit target, or null when the geometry
+   * isn't measurable yet (viewport unmounted, content not laid out).
+   * `forcedZoom` keeps an existing zoom and solves for pan only.
+   */
+  const computeFitTransform = useCallback(
+    (forcedZoom?: number) => {
       const el = containerRef.current
       const content = contentRef.current
-      if (!el || !content) return
+      if (!el || !content) return null
 
       const margin = fitMargin
       const fitTarget =
@@ -214,42 +253,75 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
       const fitWidth = Math.max(el.clientWidth - insets.left - insets.right, 1)
       const fitHeight = Math.max(el.clientHeight - insets.top - insets.bottom, 1)
-      if (bounds.width <= 0 || bounds.height <= 0) return
+      if (bounds.width <= 0 || bounds.height <= 0) return null
 
-      const nextZoom = clampZoom(
-        Math.min(
-          fitWidth / bounds.width,
-          fitHeight / bounds.height,
-          maxFitZoom,
-        ),
-      )
+      const nextZoom =
+        forcedZoom ??
+        clampZoom(
+          Math.min(fitWidth / bounds.width, fitHeight / bounds.height, maxFitZoom),
+        )
 
       const targetCenterX = bounds.left + bounds.width / 2
       const targetCenterY = bounds.top + bounds.height / 2
       const viewportCenterX = insets.left + fitWidth / 2
       const viewportCenterY = insets.top + fitHeight / 2
-      const nextPan = {
-        x: viewportCenterX - targetCenterX * nextZoom,
-        y: viewportCenterY - targetCenterY * nextZoom,
-      }
 
-      const shouldAnimate = options?.animate ?? animateFit
-      if (shouldAnimate) {
-        animateTransform(nextPan, nextZoom)
-      } else {
-        commitTransform(nextPan, nextZoom, true)
+      return {
+        pan: {
+          x: viewportCenterX - targetCenterX * nextZoom,
+          y: viewportCenterY - targetCenterY * nextZoom,
+        },
+        zoom: nextZoom,
       }
     },
-    [
-      animateFit,
-      animateTransform,
-      commitTransform,
-      fitBottomInset,
-      fitMargin,
-      fitSelector,
-      fitTopInset,
-      maxFitZoom,
-    ],
+    [fitBottomInset, fitMargin, fitSelector, fitTopInset, maxFitZoom],
+  )
+
+  /** Frames the fit target. Returns false when geometry wasn't measurable. */
+  const fitToView = useCallback(
+    (options?: { animate?: boolean }) => {
+      const next = computeFitTransform()
+      if (!next) return false
+
+      const shouldAnimate =
+        (options?.animate ?? animateFitRef.current) && !prefersReducedMotion()
+      if (shouldAnimate) {
+        animateTransform(next.pan, next.zoom)
+      } else {
+        commitTransform(next.pan, next.zoom, true)
+      }
+      return true
+    },
+    [animateTransform, commitTransform, computeFitTransform],
+  )
+
+  /**
+   * Re-centers the fit target at the current zoom. Resizes use this instead
+   * of a fit so a window drag never throws away the zoom the user chose.
+   */
+  const recenterToView = useCallback(() => {
+    const current = transformRef.current
+    const next = computeFitTransform(current.zoom)
+    if (!next || isSameTransform(current, next)) return
+    commitTransform(next.pan, next.zoom, true)
+  }, [commitTransform, computeFitTransform])
+
+  /**
+   * Runs the fit scheduled by the last `resetKey` change, at most once.
+   * Clearing `pendingFitRef` here is what demotes the 150 ms timeout to a
+   * true backstop — without it the timeout fires on top of the rAF fit and
+   * restarts the ease from its own midpoint.
+   */
+  const runPendingFit = useCallback(
+    (animate: boolean) => {
+      if (!pendingFitRef.current) return
+      const didFit = fitToView({ animate: hasFittedRef.current && animate })
+      // Geometry wasn't ready — leave the fit pending for the backstop.
+      if (!didFit) return
+      pendingFitRef.current = false
+      hasFittedRef.current = true
+    },
+    [fitToView],
   )
 
   const resetView = useCallback(() => {
@@ -268,29 +340,26 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     pendingFitRef.current = true
     userAdjustedViewRef.current = false
 
+    // Captured now, not read at fit time: a one-shot skip flag may be
+    // cleared between scheduling this fit and the frame it runs on.
+    const animate = animateFitRef.current
     let frame1 = 0
     let frame2 = 0
-    const runFit = () => {
-      if (!pendingFitRef.current) return
-      fitToView({ animate: animateFit })
-    }
+    const runFit = () => runPendingFit(animate)
 
     frame1 = requestAnimationFrame(() => {
       frame2 = requestAnimationFrame(runFit)
     })
 
-    const timeout = window.setTimeout(() => {
-      if (!pendingFitRef.current) return
-      fitToView({ animate: animateFit })
-      pendingFitRef.current = false
-    }, 150)
+    // Backstop for content that hasn't laid out within two frames.
+    const timeout = window.setTimeout(runFit, 150)
 
     return () => {
       cancelAnimationFrame(frame1)
       cancelAnimationFrame(frame2)
       window.clearTimeout(timeout)
     }
-  }, [resetKey, fitSelector, fitToView, animateFit])
+  }, [resetKey, fitSelector, runPendingFit])
 
   useEffect(() => {
     return () => cancelFitAnimation()
@@ -303,23 +372,25 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
     let debounceTimer = 0
 
-    const scheduleFit = () => {
+    const onResize = () => {
       if (userAdjustedViewRef.current) return
 
       if (refitOnResize) {
+        // Checked as the resize is observed, not when the debounce fires:
+        // the chrome window closes before a 200 ms debounce would elapse.
+        if (suppressResizeRefit || isCanvasResizeRefitSuppressed()) return
         window.clearTimeout(debounceTimer)
-        debounceTimer = window.setTimeout(
-          () => fitToView({ animate: false }),
-          refitDebounceMs,
-        )
+        // Re-center only. A resize is not a navigation, so it must not
+        // discard the zoom level the viewport is currently at.
+        debounceTimer = window.setTimeout(recenterToView, refitDebounceMs)
         return
       }
-      if (!pendingFitRef.current) return
-      fitToView({ animate: false })
-      pendingFitRef.current = false
+      // Not a refit: the fit scheduled by the last resetKey is still
+      // waiting on content that has only now laid out.
+      runPendingFit(false)
     }
 
-    const observer = new ResizeObserver(scheduleFit)
+    const observer = new ResizeObserver(onResize)
 
     observer.observe(content)
     if (container) observer.observe(container)
@@ -328,7 +399,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       window.clearTimeout(debounceTimer)
       observer.disconnect()
     }
-  }, [fitToView, resetKey, refitOnResize, refitDebounceMs])
+  }, [
+    recenterToView,
+    resetKey,
+    refitOnResize,
+    refitDebounceMs,
+    runPendingFit,
+    suppressResizeRefit,
+  ])
 
   useEffect(() => {
     const el = containerRef.current

@@ -1,9 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ExternalLink, X } from 'lucide-react'
-import { CellDependencyTable } from '@/components/blueprint/CellDependencyTable'
+import {
+  ExternalLink,
+  FileSearch,
+  Link2,
+  PanelRightClose,
+  PanelRightOpen,
+  Workflow,
+  X,
+} from 'lucide-react'
+import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
+import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
+import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
+import { CellOverviewSpec } from '@/components/blueprint/CellOverviewSpec'
+import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
-import { CELL_DETAIL_PANEL_TOP_CLASS } from '@/components/editor/menubarHeaderLayout'
+import {
+  CANVAS_REGION_SELECTOR,
+  CELL_DETAIL_PANEL_TOP_CLASS,
+  CELL_DETAIL_PANEL_TOP_GAP_PX,
+  CELL_DETAIL_PANEL_TOP_VAR,
+} from '@/components/editor/menubarHeaderLayout'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -20,6 +37,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
 import {
   buildBlueprintCellSelectionForId,
@@ -29,14 +47,18 @@ import {
   getSelectedCellLayerRowPosition,
   scrollBlueprintCellIntoView,
 } from '@/lib/blueprintCellConnections'
-import { buildCellDependencyRows } from '@/lib/blueprintCellDependencies'
 import {
   buildTechPillSelectionForItem,
   getBlueprintStepTechItems,
   scrollBlueprintTechPillIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
+import { BLUEPRINT_CELL_TEXT_COLOR } from '@/lib/blueprintCellStyle'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
+import {
+  getBlueprintLayerStyle,
+  getBlueprintLayerZone,
+} from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
   resolveTechCellDetailLabel,
@@ -58,7 +80,17 @@ const CELL_DETAIL_LOGO_CLASS =
 const CELL_DETAIL_SMALL_LOGO_CLASS =
   'size-[6.5rem] shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
 
-const SHOW_CELL_DEPENDENCIES = true
+type PanelTab = 'dependencies' | 'evidence' | 'resources'
+
+const PANEL_TABS: Array<{
+  value: PanelTab
+  label: string
+  icon: typeof Workflow
+}> = [
+  { value: 'dependencies', label: 'Dependencies', icon: Workflow },
+  { value: 'evidence', label: 'Evidence', icon: FileSearch },
+  { value: 'resources', label: 'Resources', icon: Link2 },
+]
 
 function isFigmaUrl(url: string): boolean {
   return /figma\.com/i.test(url)
@@ -84,6 +116,35 @@ function resolveFigmaUrl(
   return null
 }
 
+/**
+ * Publishes the canvas region's top edge so the portalled drawer can sit
+ * below whatever chrome that surface stacks above it — the base view's navbar
+ * alone, or a slice tab's header band on top of it. Re-measured on resize and
+ * whenever the panel opens; the surface's own transitions (sidebar wipe, tab
+ * strip) do not move the canvas top, so no observer is needed.
+ */
+function useCanvasTopOffset(active: boolean) {
+  useEffect(() => {
+    if (!active) return
+
+    const measure = () => {
+      const canvas = document.querySelector(CANVAS_REGION_SELECTOR)
+      const top = canvas?.getBoundingClientRect().top ?? 0
+      document.documentElement.style.setProperty(
+        CELL_DETAIL_PANEL_TOP_VAR,
+        `${Math.max(0, top) + CELL_DETAIL_PANEL_TOP_GAP_PX}px`,
+      )
+    }
+
+    measure()
+    window.addEventListener('resize', measure)
+    return () => {
+      window.removeEventListener('resize', measure)
+      document.documentElement.style.removeProperty(CELL_DETAIL_PANEL_TOP_VAR)
+    }
+  }, [active])
+}
+
 export function BlueprintCellDetailPanel() {
   const {
     selection: currentSelection,
@@ -95,7 +156,10 @@ export function BlueprintCellDetailPanel() {
     useBlueprintCellDetail()
   const [closingSelection, setClosingSelection] = useState(currentSelection)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
   const selection = currentSelection ?? closingSelection
+  useCanvasTopOffset(currentSelection !== null)
 
   useEffect(() => {
     if (currentSelection) {
@@ -106,6 +170,14 @@ export function BlueprintCellDetailPanel() {
 
     setDrawerOpen(false)
   }, [currentSelection])
+
+  // A new cell always opens on Dependencies (state reset during render).
+  const currentCellId = currentSelection?.paths[0]?.cellId
+  const [lastCellId, setLastCellId] = useState(currentCellId)
+  if (lastCellId !== currentCellId) {
+    setLastCellId(currentCellId)
+    setActiveTab('dependencies')
+  }
 
   useEffect(() => {
     if (!isOpen) return
@@ -203,17 +275,6 @@ export function BlueprintCellDetailPanel() {
     [connections],
   )
 
-  const selectedLayerRowPosition = useMemo(() => {
-    const cellId = pathEntry?.cellId
-    const pathId = pathEntry?.pathId
-    if (!cellId || !pathId) return -1
-
-    const blueprint = getBlueprintForPath(blueprints, pathId)
-    if (!blueprint || !resolvedCellId) return -1
-
-    return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
-  }, [blueprints, pathEntry?.cellId, pathEntry?.pathId, resolvedCellId])
-
   const selectedLayer = useMemo((): { name: string; role?: string | null } | null => {
     const layerName = selection?.layerName
     if (!layerName) return null
@@ -225,6 +286,22 @@ export function BlueprintCellDetailPanel() {
         name: layerName,
       }
     )
+  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+
+  const laneChipStyle = useMemo(() => {
+    const layerName = selection?.layerName
+    if (!layerName) return null
+
+    const pathId = pathEntry?.pathId
+    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
+    const layerRecord =
+      blueprint?.layers.find((layer) => layer.name === layerName) ?? null
+    const zone =
+      layerRecord && blueprint
+        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        : 'frontstage'
+    // Keyed by layer_role — the name argument is only the legacy fallback.
+    return getBlueprintLayerStyle(layerName, zone, layerRecord?.role)
   }, [blueprints, pathEntry?.pathId, selection?.layerName])
 
   const otherTechEntries = useMemo(() => {
@@ -283,54 +360,15 @@ export function BlueprintCellDetailPanel() {
     return resolveFigmaUrl(selection.techItem, selectedCell, cellLinks)
   }, [cellLinks, selectedCell, selection])
 
-  const dependencyRows = useMemo(() => {
-    if (!selection) return []
-
-    const relevantLinks = cellLinks.flatMap((link, index) => {
-      if (link.type !== URL_LINK_TYPE || !link.url?.trim()) return []
-      const url = link.url.trim()
-      const label =
-        link.label?.trim() ||
-        (isFigmaUrl(url) ? 'Figma' : 'Link')
-      return [
-        {
-          id: `link-${index}`,
-          label,
-          url,
-        },
-      ]
-    })
-
-    if (
-      figmaUrl &&
-      !relevantLinks.some((link) => link.url === figmaUrl)
-    ) {
-      relevantLinks.push({
-        id: 'link-figma',
-        label: 'Figma',
-        url: figmaUrl,
-      })
-    }
-
-    return buildCellDependencyRows({
-      connections,
-      selectedLayerRowPosition,
-      isTechCellSelected:
-        Boolean(selection.techItem) ||
-        Boolean(selectedLayer && shouldUsePillCellContent(selectedLayer)),
-      selectedTechItem: selection.techItem,
-      otherTech: otherTechEntries,
-      links: relevantLinks,
-    })
-  }, [
-    cellLinks,
-    connections,
-    figmaUrl,
-    otherTechEntries,
-    selectedLayer,
-    selectedLayerRowPosition,
-    selection,
-  ])
+  // Lane row position of the selected cell — orients up/down direction
+  // glyphs on same-step dependency rows.
+  const selectedLayerRowPosition = useMemo(() => {
+    const pathId = pathEntry?.pathId
+    if (!resolvedCellId || !pathId) return -1
+    const blueprint = getBlueprintForPath(blueprints, pathId)
+    if (!blueprint) return -1
+    return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
+  }, [blueprints, pathEntry?.pathId, resolvedCellId])
 
   const visualStepEntries = useMemo(() => {
     const stepId = selection?.stepId
@@ -472,15 +510,29 @@ export function BlueprintCellDetailPanel() {
     </Breadcrumb>
   )
 
-  const layerTitle = (
-    <p className="min-w-0 flex-1 text-sm font-bold leading-snug tracking-tight text-foreground">
+  // Panel v2 header: title is the cell content snippet; the lane appears as
+  // one role-colored chip (colored by layer_role, never by name).
+  const cellTitleText =
+    cellContent.split('\n')[0]?.trim() || selection.layerName
+  const laneChip = laneChipStyle ? (
+    <span
+      className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
+      style={{
+        backgroundColor: laneChipStyle.lane,
+        color: BLUEPRINT_CELL_TEXT_COLOR,
+      }}
+      title={selection.layerName}
+    >
       {selection.layerName}
-    </p>
-  )
+    </span>
+  ) : null
 
   const titleRow = (
-    <div className="flex min-w-0 items-center gap-2">
-      {layerTitle}
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <p className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
+        {cellTitleText}
+      </p>
+      {laneChip}
     </div>
   )
 
@@ -585,6 +637,25 @@ export function BlueprintCellDetailPanel() {
     </div>
   ) : null
 
+  const overviewContent = (
+    <>
+      {pictureBlock}
+      <div className="flex min-w-0 flex-col gap-2">
+        {showTechPillAboveTitle ? selectedTechPill : null}
+        {titleRow}
+        {showTechPill && !showTechPillAboveTitle ? selectedTechPill : null}
+      </div>
+      {detailDescriptionText.trim() ? (
+        <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
+          {detailDescriptionText.trim()}
+        </p>
+      ) : !showTechPill ? (
+        <p className="-mt-3 text-sm text-muted-foreground">No content</p>
+      ) : null}
+      <CellOverviewSpec cellId={resolvedCellId} />
+    </>
+  )
+
   return (
     <Drawer
       open={drawerOpen}
@@ -603,12 +674,13 @@ export function BlueprintCellDetailPanel() {
         data-cell-detail-panel=""
         className={cn(
           CELL_DETAIL_PANEL_TOP_CLASS,
-          '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none w-[20rem] rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+          '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+          expanded ? 'w-[40rem]' : 'w-[20rem]',
         )}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
-        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-5 text-left">
+        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="sr-only">Cell details</DrawerTitle>
             <DrawerDescription className="sr-only">
@@ -616,53 +688,95 @@ export function BlueprintCellDetailPanel() {
             </DrawerDescription>
             {cellBreadcrumb}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Close cell details"
-            onClick={clearSelection}
-          >
-            <X />
-          </Button>
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
+              aria-pressed={expanded}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              {expanded ? <PanelRightClose /> : <PanelRightOpen />}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Close cell details"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
+          </div>
         </DrawerHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
-          {pictureBlock}
-          {isVisualLayer ? (
-            <>
-              {titleRow}
-              <VisualStepDetailStack entries={visualStepEntries} />
-            </>
-          ) : (
-            <>
-              <div className="flex min-w-0 flex-col gap-2">
-                {showTechPillAboveTitle ? selectedTechPill : null}
-                {titleRow}
-                {showTechPill && !showTechPillAboveTitle
-                  ? selectedTechPill
-                  : null}
+        {isVisualLayer ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
+            {titleRow}
+            <VisualStepDetailStack entries={visualStepEntries} />
+          </div>
+        ) : (
+          <>
+            {/*
+              Overview content is not a tab — it always renders inline at the
+              top; the tab row (Dependencies default) sits below it and both
+              share one scroll area.
+            */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto blueprint-scroll">
+              <div className="flex flex-col gap-5 px-4 pb-5">
+                {overviewContent}
               </div>
-              {detailDescriptionText.trim() ? (
-                <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
-                  {detailDescriptionText.trim()}
-                </p>
-              ) : !showTechPill ? (
-                <p className="-mt-3 text-sm text-muted-foreground">No content</p>
-              ) : null}
-              {SHOW_CELL_DEPENDENCIES && dependencyRows.length > 0 ? (
-                <div className="mt-2">
-                  <CellDependencyTable
-                    rows={dependencyRows}
-                    onCellSelect={handleConnectionSelect}
-                    onTechSelect={handleTechSelect}
-                  />
+              <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as PanelTab)}
+                className="gap-0"
+              >
+                <TabsList
+                  variant="line"
+                  className="h-auto w-full justify-start gap-4 rounded-none border-b border-border/60 px-4 pb-0"
+                >
+                  {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
+                    <TabsTrigger
+                      key={value}
+                      value={value}
+                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-[11px] font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                    >
+                      <TabIcon className="size-3" aria-hidden />
+                      {label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {/*
+                  Reserved height: the three tabs have very different
+                  content lengths, and without a floor the panel jumped a
+                  couple of hundred pixels on every switch. Cheaper and
+                  steadier than easing the height.
+                */}
+                <div className="flex min-h-56 flex-col gap-5 px-4 pt-4 pb-4">
+                  {activeTab === 'dependencies' ? (
+                    <CellDependencySections
+                      connections={connections}
+                      otherTech={otherTechEntries}
+                      selectedLayerRowPosition={selectedLayerRowPosition}
+                      onCellSelect={handleConnectionSelect}
+                      onTechSelect={handleTechSelect}
+                    />
+                  ) : null}
+                  {activeTab === 'evidence' ? (
+                    <CellEvidenceTab cellId={resolvedCellId} />
+                  ) : null}
+                  {activeTab === 'resources' ? (
+                    <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />
+                  ) : null}
                 </div>
-              ) : null}
-            </>
-          )}
-        </div>
+              </Tabs>
+            </div>
+            <CellInSlicesFooter cellId={pathEntry?.cellId ?? null} />
+          </>
+        )}
       </DrawerContent>
     </Drawer>
   )

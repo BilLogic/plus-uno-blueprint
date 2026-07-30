@@ -1,4 +1,5 @@
 import { hasBlueprintFallback } from '@/data/blueprintFallbacks'
+import { ORG_NAME } from '@/config'
 
 /**
  * landing = orientation homepage;
@@ -21,7 +22,7 @@ export const SLIDE_VIEW_TYPE_LABELS: Record<SlideViewType, string> = {
   integrated: 'Integrated',
 }
 
-export type Slide = {
+export type NavItem = {
   id: string
   index: number
   label: string
@@ -79,8 +80,8 @@ const OVERVIEW_PHASE_FLOW_TRANSITIONS: ReadonlyArray<{
 
 /** Whether the service overview canvas should draw a flow arrow between two phases. */
 export function shouldShowOverviewPhaseFlowArrow(
-  fromPhase: Slide,
-  toPhase: Slide | undefined,
+  fromPhase: NavItem,
+  toPhase: NavItem | undefined,
 ): boolean {
   if (!toPhase) return false
 
@@ -92,7 +93,7 @@ export function shouldShowOverviewPhaseFlowArrow(
 }
 
 /** Horizontal anchor for overview flow arrows (Application phase center). */
-export function isOverviewFlowArrowAnchorPhase(phase: Slide): boolean {
+export function isOverviewFlowArrowAnchorPhase(phase: NavItem): boolean {
   return (
     phase.id === APPLICATION_PHASE_ID || phase.label === 'Application'
   )
@@ -100,7 +101,7 @@ export function isOverviewFlowArrowAnchorPhase(phase: Slide): boolean {
 
 /** Lifecycle loop arrow between main phases on the overview canvas. */
 export function shouldShowOverviewPostToPreLoopArrow(
-  phases: Slide[],
+  phases: NavItem[],
 ): boolean {
   return getOverviewPostToPreLoopTransition(phases) !== null
 }
@@ -112,7 +113,7 @@ export function shouldShowOverviewPostToPreLoopArrow(
  * language.
  */
 export function getOverviewPostToPreLoopTransition(
-  phases: Slide[],
+  phases: NavItem[],
 ): { fromPhaseId: string; toPhaseId: string } | null {
   for (const phase of phases) {
     if (!phase.loopToId) continue
@@ -127,7 +128,7 @@ export function getOverviewPostToPreLoopTransition(
 }
 
 /** Offline fallback matching supabase/seed.sql when Supabase is not configured. */
-export const FALLBACK_SLIDES: Slide[] = [
+export const FALLBACK_NAV: NavItem[] = [
   {
     id: 'a0000000-0000-4000-8000-000000000101',
     index: 1,
@@ -303,24 +304,24 @@ export const FALLBACK_SLIDES: Slide[] = [
 ]
 
 export function getSlideDisplayLabel(
-  slide: Slide,
-  _slides: Slide[] = FALLBACK_SLIDES,
+  slide: NavItem,
+  _slides: NavItem[] = FALLBACK_NAV,
 ): string {
   return slide.label
 }
 
-export function isSubslide(slide: Slide): boolean {
+export function isSubslide(slide: NavItem): boolean {
   return Boolean(slide.parentId)
 }
 
 /** Scenario id for blueprint loading — subsides use their id; single-scenario phases use phase id. */
-export function getBlueprintScenarioId(slide: Slide): string | undefined {
+export function getBlueprintScenarioId(slide: NavItem): string | undefined {
   if (isSubslide(slide)) return slide.id
   if (hasBlueprintFallback(slide.id)) return slide.id
   return undefined
 }
 
-export function getSlideViewType(slide: Slide): SlideViewType {
+export function getSlideViewType(slide: NavItem): SlideViewType {
   // Integrated view is disabled app-wide; treat it as side-by-side.
   if (slide.viewType === 'integrated') return 'side-by-side'
   if (slide.viewType) return slide.viewType
@@ -330,8 +331,8 @@ export function getSlideViewType(slide: Slide): SlideViewType {
 }
 
 export function showsBlueprintFilters(
-  slide: Slide,
-  slides: Slide[] = FALLBACK_SLIDES,
+  slide: NavItem,
+  slides: NavItem[] = FALLBACK_NAV,
 ): boolean {
   if (getBlueprintScenarioId(slide) !== undefined) return true
 
@@ -344,22 +345,23 @@ export function showsBlueprintFilters(
   return false
 }
 
-export function isIntegratedBlueprintSlide(_slide: Slide): boolean {
+export function isIntegratedBlueprintSlide(_slide: NavItem): boolean {
+  // Integrated view is disabled app-wide in uno.
   return false
 }
 
-export function isSideBySideBlueprintSlide(slide: Slide): boolean {
+export function isSideBySideBlueprintSlide(slide: NavItem): boolean {
   return isSubslide(slide) && getSlideViewType(slide) === 'side-by-side'
 }
 
-export function getMainSlides(slides: Slide[] = FALLBACK_SLIDES): Slide[] {
+export function getMainSlides(slides: NavItem[] = FALLBACK_NAV): NavItem[] {
   return slides
     .filter((s) => !s.parentId)
     .slice()
     .sort((a, b) => a.index - b.index || a.label.localeCompare(b.label))
 }
 
-export function getSubslides(parentId: string, slides: Slide[] = FALLBACK_SLIDES): Slide[] {
+export function getSubslides(parentId: string, slides: NavItem[] = FALLBACK_NAV): NavItem[] {
   return slides
     .filter((s) => s.parentId === parentId)
     .slice()
@@ -367,8 +369,8 @@ export function getSubslides(parentId: string, slides: Slide[] = FALLBACK_SLIDES
 }
 
 /** Sidebar / filmstrip order: each main slide followed by its subslides. */
-export function getSlidesInNavOrder(slides: Slide[] = FALLBACK_SLIDES): Slide[] {
-  const ordered: Slide[] = []
+export function getSlidesInNavOrder(slides: NavItem[] = FALLBACK_NAV): NavItem[] {
+  const ordered: NavItem[] = []
   for (const main of getMainSlides(slides)) {
     ordered.push(main)
     ordered.push(...getSubslides(main.id, slides))
@@ -377,18 +379,18 @@ export function getSlidesInNavOrder(slides: Slide[] = FALLBACK_SLIDES): Slide[] 
 }
 
 export type SlideSequenceNav = {
-  prev: Slide | null
-  next: Slide | null
+  prev: NavItem | null
+  next: NavItem | null
   index: number
   total: number
 }
 
 function getAdjacentMainPhase(
-  currentMain: Slide,
-  mains: Slide[],
-  slides: Slide[],
+  currentMain: NavItem,
+  mains: NavItem[],
+  slides: NavItem[],
   direction: 'prev' | 'next',
-): Slide | null {
+): NavItem | null {
   const phaseIndex = mains.findIndex((phase) => phase.id === currentMain.id)
   if (phaseIndex === -1) return null
 
@@ -410,7 +412,7 @@ function getAdjacentMainPhase(
 /** Previous / next target for phase- and scenario-level detail navigation. */
 export function getSlideSequenceNav(
   activeSlideId: string,
-  slides: Slide[] = FALLBACK_SLIDES,
+  slides: NavItem[] = FALLBACK_NAV,
 ): SlideSequenceNav {
   const current = getSlideById(activeSlideId, slides)
   const mains = getMainSlides(slides)
@@ -449,7 +451,7 @@ export function getSlideSequenceNav(
       ? scenarios[scenarioIndex - 1]!
       : getAdjacentMainPhase(parent, mains, slides, 'prev')
 
-  let next: Slide | null
+  let next: NavItem | null
   if (scenarioIndex < scenarios.length - 1) {
     next = scenarios[scenarioIndex + 1]!
   } else {
@@ -464,23 +466,20 @@ export function getSlideSequenceNav(
   }
 }
 
-export function getSlideById(id: string, slides: Slide[] = FALLBACK_SLIDES): Slide | undefined {
+export function getSlideById(id: string, slides: NavItem[] = FALLBACK_NAV): NavItem | undefined {
   return slides.find((s) => s.id === id)
 }
 
 export function getParentSlide(
-  slide: Slide,
-  slides: Slide[] = FALLBACK_SLIDES,
-): Slide | undefined {
+  slide: NavItem,
+  slides: NavItem[] = FALLBACK_NAV,
+): NavItem | undefined {
   if (!slide.parentId) return undefined
   return getSlideById(slide.parentId, slides)
 }
 
 export const WORKSPACE_BREADCRUMB_ID = '__workspace__'
-export const WORKSPACE_BREADCRUMB_LABEL = 'PLUS'
-
-/** Sidebar id for the service overview (home) nav item. */
-export const SERVICE_OVERVIEW_NAV_ID = '__service_overview__'
+export const WORKSPACE_BREADCRUMB_LABEL = ORG_NAME
 
 export type SlideBreadcrumb = {
   id: string
@@ -489,14 +488,14 @@ export type SlideBreadcrumb = {
 
 /** Breadcrumb trail from workspace root through parent phases to the active slide. */
 export function getSlideBreadcrumbs(
-  slide: Slide,
-  slides: Slide[] = FALLBACK_SLIDES,
+  slide: NavItem,
+  slides: NavItem[] = FALLBACK_NAV,
 ): SlideBreadcrumb[] {
   const crumbs: SlideBreadcrumb[] = [
     { id: WORKSPACE_BREADCRUMB_ID, label: WORKSPACE_BREADCRUMB_LABEL },
   ]
 
-  const ancestors: Slide[] = []
+  const ancestors: NavItem[] = []
   let parentId = slide.parentId
   while (parentId) {
     const parent = getSlideById(parentId, slides)
@@ -518,14 +517,4 @@ export function getSlideBreadcrumbs(
   })
 
   return crumbs
-}
-
-/** Default navigation target when the workspace breadcrumb is selected. */
-export function getWorkspaceBreadcrumbTarget(
-  slides: Slide[] = FALLBACK_SLIDES,
-): string | undefined {
-  const application = slides.find(
-    (slide) => !slide.parentId && slide.label === 'Application',
-  )
-  return application?.id ?? getMainSlides(slides)[0]?.id
 }

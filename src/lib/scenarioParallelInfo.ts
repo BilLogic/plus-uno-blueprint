@@ -3,7 +3,7 @@ import {
   HELP_REQUEST_SCENARIO_ID,
   WARM_UP_SCENARIO_ID,
 } from '@/data/parallelSessionScenarioIds'
-import type { Slide } from '@/types/slides'
+import type { NavItem } from '@/types/nav'
 
 export { GOAL_SETTING_SCENARIO_ID }
 
@@ -30,7 +30,7 @@ export function getScenarioParallelNote(
 }
 
 export function getScenarioParallelTooltip(
-  slide: Pick<Slide, 'id' | 'label'>,
+  slide: Pick<NavItem, 'id' | 'label'>,
 ): string | null {
   return (
     SCENARIO_PARALLEL_NOTE_BY_ID[slide.id] ??

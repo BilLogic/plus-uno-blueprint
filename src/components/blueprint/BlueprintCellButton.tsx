@@ -1,5 +1,9 @@
 import { Button } from '@/components/ui/button'
-import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
+import {
+  useBlueprintCellDetailOptional,
+  useBlueprintCellPreviewHover,
+} from '@/contexts/BlueprintCellDetailContext'
+import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
   getBlueprintCellInteractionStyle,
@@ -21,6 +25,12 @@ type BlueprintCellButtonProps = {
   stepIndex?: number
   variant?: 'cell' | 'pill' | 'visual'
   opacity?: number
+  /**
+   * Whether this button may carry the slice sequence badge. Tech pills share
+   * their cell's id, so pill call sites pass `index === 0` to badge the
+   * first pill only; plain cell faces leave the default (true).
+   */
+  sliceSequenceBadge?: boolean
   children: ReactNode
   'aria-label'?: string
   'data-blueprint-tech-pill'?: string
@@ -36,6 +46,7 @@ export function BlueprintCellButton({
   stepIndex = -1,
   variant = 'cell',
   opacity,
+  sliceSequenceBadge = true,
   children,
   'aria-label': ariaLabel,
   'data-blueprint-tech-pill': techPillLabel,
@@ -59,7 +70,23 @@ export function BlueprintCellButton({
         (resolvedCellId &&
           detail.directlyConnectedCellIds.has(resolvedCellId))),
   )
-  const preview = detail?.previewHover ?? null
+  const sliceMembership = useSliceMembership()
+  const isSliceMember = Boolean(
+    sliceMembership &&
+      cellId &&
+      (sliceMembership.memberCellIds.has(cellId) ||
+        (resolvedCellId && sliceMembership.memberCellIds.has(resolvedCellId))),
+  )
+  // Checking `sliceMembership && cellId` directly (not via isSliceMember)
+  // lets TypeScript narrow both — no non-null assertions.
+  const sliceSequence =
+    sliceMembership && cellId && isSliceMember && sliceSequenceBadge
+      ? (sliceMembership.sequenceByCellId.get(cellId) ??
+        (resolvedCellId
+          ? sliceMembership.sequenceByCellId.get(resolvedCellId)
+          : undefined))
+      : undefined
+  const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
     : null
@@ -113,6 +140,7 @@ export function BlueprintCellButton({
       aria-label={ariaLabel}
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
+      {...(isSliceMember ? { 'data-slice-member': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}
@@ -123,9 +151,19 @@ export function BlueprintCellButton({
         variant === 'visual' &&
           'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
+        sliceSequence !== undefined && 'relative overflow-visible',
       )}
       style={surfaceStyle}
     >
+      {sliceSequence !== undefined ? (
+        <span
+          aria-hidden
+          data-slice-sequence-badge=""
+          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-foreground text-[10px] font-semibold text-background shadow-sm"
+        >
+          {sliceSequence}
+        </span>
+      ) : null}
       {children}
     </Button>
   )

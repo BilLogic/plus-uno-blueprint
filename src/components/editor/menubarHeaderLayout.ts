@@ -7,18 +7,33 @@ export const BLUEPRINT_NAVBAR_BAR_CLASS =
   'relative shrink-0 border-b border-border bg-sidebar px-4'
 
 /**
- * Cell-detail drawer top offset: clear the docked h-9 navbar + border, then
- * match the panel's right inset (`1rem`). Used instead of a hard-coded `67px`
- * from the old floating header.
+ * Cell-detail drawer top offset. The drawer is portalled to the body, so it
+ * cannot inherit the chrome above it — the panel measures the canvas region
+ * (`[data-slide-canvas]`) at open time and publishes the result in this
+ * variable. The fallback is the base view's docked h-9 navbar + border; a
+ * slice tab, which stacks its header band on top, resolves taller and no
+ * longer covers it.
  */
-export const CELL_DETAIL_PANEL_TOP_CLASS = '!top-[calc(2.25rem+1px+1rem)]'
+export const CELL_DETAIL_PANEL_TOP_VAR = '--cell-detail-panel-top'
+export const CELL_DETAIL_PANEL_TOP_CLASS =
+  '!top-[var(--cell-detail-panel-top,calc(2.25rem+1px+1rem))]'
+
+/** Gap between the canvas top edge and the panel — matches its right inset. */
+export const CELL_DETAIL_PANEL_TOP_GAP_PX = 16
+
+/** The canvas region the panel measures against. */
+export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
 
 /** Flattens the menubar when it sits inside the docked navbar bar. */
 export const BLUEPRINT_MENUBAR_FLAT_CLASS =
   'relative h-9 rounded-none border-0 bg-transparent px-0 py-0 shadow-none'
 
+/**
+ * Left-aligned title + paths control row. Right padding keeps the row clear
+ * of the absolutely-positioned zoom indicator / Reset View cluster.
+ */
 export const BLUEPRINT_MENUBAR_TITLE_CLASS =
-  'absolute left-1/2 top-1/2 z-10 flex max-w-[min(52rem,calc(100%-18rem))] -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 px-1 text-center'
+  'relative z-10 flex h-full min-w-0 max-w-[calc(100%-9rem)] items-center gap-2.5 px-1'
 
 export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
   'min-w-0 truncate text-xs text-muted-foreground'

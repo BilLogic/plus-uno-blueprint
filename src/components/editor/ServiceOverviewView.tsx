@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { BlueprintCellDetailPanel } from '@/components/blueprint/BlueprintCellDetailPanel'
 import { PhaseScenarioOverview } from '@/components/blueprint/PhaseScenarioOverview'
 import { CanvasPhaseSection } from '@/components/editor/CanvasPhaseSection'
@@ -8,7 +15,8 @@ import {
   PHASE_OVERVIEW_LOOP_CHANNEL_OFFSET,
 } from '@/components/editor/PhaseOverviewPhaseLoopArrow'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
-import { ServiceOverviewLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import { ServiceOverviewCanvasSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { ServiceOverviewStickyHeader } from '@/components/editor/ServiceOverviewMenubarHeader'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
@@ -39,9 +47,9 @@ import {
   isOverviewFlowArrowAnchorPhase,
   shouldShowOverviewPhaseFlowArrow,
   isSubslide,
-  type Slide,
+  type NavItem,
   type SlideViewType,
-} from '@/types/slides'
+} from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathListItem } from '@/lib/pathSelection'
 const OVERVIEW_PAN_IGNORE =
@@ -88,8 +96,8 @@ function CanvasFocusEscapeHandler() {
 }
 
 type ServicePhaseSectionProps = {
-  phase: Slide
-  slides: Slide[]
+  phase: NavItem
+  slides: NavItem[]
   pathsByScenario: Map<string, PathListItem[]>
   blueprintsByPathId: Map<string, BlueprintData>
   getSelectedPathIds: (scenarioId: string, paths: PathListItem[]) => string[]
@@ -101,6 +109,8 @@ type ServicePhaseSectionProps = {
   dimmed?: boolean
   focusedScenarioId?: string | null
   focusActive?: boolean
+  /** Slice-tab scope: mount only this scenario's artboard within the phase. */
+  onlyScenarioId?: string | null
   onOpenPhase: (phaseId: string) => void
 }
 
@@ -119,6 +129,7 @@ function ServicePhaseSection({
   dimmed = false,
   focusedScenarioId = null,
   focusActive = false,
+  onlyScenarioId = null,
 }: ServicePhaseSectionProps) {
   const label = getSlideDisplayLabel(phase, slides)
   const description =
@@ -148,13 +159,41 @@ function ServicePhaseSection({
         getSelectedPathIds={getSelectedPathIds}
         displayViewType={displayViewType}
         focusedScenarioId={focusedScenarioId}
+        onlyScenarioId={onlyScenarioId}
         loading={false}
       />
     </CanvasPhaseSection>
   )
 }
 
-export function ServiceOverviewView() {
+type ServiceOverviewViewProps = {
+  /**
+   * Shares this view's skeleton session with an embedding surface, so a
+   * waterfall that resolves upstream (slice → scenario → blueprints) holds
+   * one skeleton across the hand-off instead of restarting it.
+   */
+  skeletonHoldKey?: string
+  /**
+   * Slice-tab scope: only this scenario's artboard (inside its own phase
+   * frame) mounts — neighboring scenarios/phases, lifecycle arrows, and the
+   * prev/next sequence nav all stay out of the canvas. Zoom/pan unchanged.
+   */
+  soloScenarioId?: string
+  /**
+   * Embedding tabs (slice focus) replace the built-in docked navbar header
+   * with their own band. Rendered inside the canvas zoom chrome provider.
+   */
+  renderHeader?: () => ReactNode
+  /** Floating chrome anchored bottom-right inside the canvas (slice tabs' Reset View). */
+  floatingChrome?: ReactNode
+}
+
+export function ServiceOverviewView({
+  skeletonHoldKey,
+  soloScenarioId,
+  renderHeader,
+  floatingChrome,
+}: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
   const {
@@ -164,15 +203,32 @@ export function ServiceOverviewView() {
     goHome,
     view,
     activeSlide,
-    activeSlideId,
+    cameraTargetId,
+    focusNonce,
     getScenarioDisplayViewType,
     setScenarioDisplayViewType,
     skipCanvasFitAnimation,
+    consumeCanvasFitAnimationSkip,
   } = useEditor()
-  const phases = getMainSlides(slides)
-  const scenarioIds = slides
-    .filter((slide) => isSubslide(slide))
-    .map((slide) => slide.id)
+  const allPhases = useMemo(() => getMainSlides(slides), [slides])
+  const soloPhase = useMemo(
+    () =>
+      soloScenarioId
+        ? (allPhases.find((phase) =>
+            getSubslides(phase.id, slides).some(
+              (scenario) => scenario.id === soloScenarioId,
+            ),
+          ) ?? null)
+        : null,
+    [allPhases, slides, soloScenarioId],
+  )
+  const phases = useMemo(
+    () => (soloPhase ? [soloPhase] : allPhases),
+    [allPhases, soloPhase],
+  )
+  const scenarioIds = soloScenarioId
+    ? [soloScenarioId]
+    : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
   const isDetail = view === 'detail'
   const focusedScenarioId =
     isDetail && isSubslide(activeSlide) ? activeSlide.id : null
@@ -189,7 +245,6 @@ export function ServiceOverviewView() {
     filterPaths: overviewPaths,
     filterSelectedPathIds: overviewSelectedPathIds,
     viewType: overviewViewType,
-    toggleFilterPath: handleOverviewTogglePath,
     resolveSelectedPathIds,
   } = usePhaseBlueprintFilters({
     scenarioIds,
@@ -202,18 +257,66 @@ export function ServiceOverviewView() {
   const fitSelector = getCanvasFocusSelector(view, activeSlide)
   const maxFitZoom = getCanvasFocusMaxZoom(view)
   const fitInsets = getCanvasFocusFitInsets(view)
+
+  // Skeleton geometry, taken from nav metadata (which lands before the
+  // blueprints): real phase count, real scenarios per phase. The camera
+  // fits these frames, so the swap to content barely moves it.
+  const skeletonPhases = useMemo(
+    () =>
+      phases.map((phase) => ({
+        id: phase.id,
+        scenarioCount: soloScenarioId
+          ? 1
+          : getSubslides(phase.id, slides).length,
+      })),
+    [phases, slides, soloScenarioId],
+  )
+
+  // Camera key. Deliberately excludes the selected path ids: toggling a path
+  // is a filter, not a navigation, and having it here threw away the user's
+  // pan/zoom on every checkbox. `focusNonce` bumps on each nav click so
+  // re-selecting the row you are already on recenters after panning away.
   const fitKey = overviewReady
-    ? `service-canvas:${view}:${activeSlideId}:${phases.length}-${scenarioIds.length}-${overviewSelectedPathIds.join(',')}`
-    : 'service-overview-loading'
+    ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}`
+    : `service-canvas:loading:${skeletonPhases.map((phase) => phase.scenarioCount).join('-') || 'unknown'}`
+
+  // The cell-detail panel clears its selection when this changes, so it must
+  // track navigation only — never the camera's own bookkeeping. `fitKey`
+  // flips once when the skeleton swaps to content, which is not a
+  // navigation, and using it here silently deselected any cell picked in the
+  // first moments after a load.
+  const cellDetailResetKey = `service-canvas:${view}:${cameraTargetId ?? 'none'}:${focusNonce}`
+
+  // Every fit up to and including the swap to content is a jump. The
+  // skeleton fit frames a fresh mount (animating it would swoop in from
+  // pan 0,0 / zoom 1) and the swap fit only corrects the skeleton's
+  // approximate geometry under the 200 ms content fade — neither is a
+  // navigation, so neither animates. Navigations after that do.
+  const [contentSettled, setContentSettled] = useState(false)
+  useEffect(() => {
+    if (!overviewReady || contentSettled) return
+    // Deferred to a microtask so this render does not cascade: the fit for
+    // the swap commit was already scheduled (by the viewport's effect,
+    // which runs first) with animation off, and the flag only needs to be
+    // true by the time the *next* navigation changes the fit key.
+    queueMicrotask(() => setContentSettled(true))
+  }, [contentSettled, overviewReady])
+
   const noPathsSelected =
     overviewPaths.length > 0 && overviewSelectedPathIds.length === 0
 
-  const postToPreLoop = getOverviewPostToPreLoopTransition(phases)
+  const postToPreLoop = soloPhase
+    ? null
+    : getOverviewPostToPreLoopTransition(phases)
   const cellDetailBlueprints = useMemo(
     () => [...blueprintsByPathId.values()],
     [blueprintsByPathId],
   )
-  const cellDetailEnabled = isBlueprintCellDetailEnabled()
+  // Cells open the detail panel only when zoomed into a phase/scenario
+  // (detail view, including detail-scoped slice tabs). At overview zoom the
+  // cells stay inert, so clicks fall through to the scenario/phase panels
+  // and navigate instead of opening the panel.
+  const cellDetailEnabled = isBlueprintCellDetailEnabled() && isDetail
 
   const focusedHeader = useMemo(() => {
     if (!isDetail) return null
@@ -244,38 +347,44 @@ export function ServiceOverviewView() {
     slides,
   ])
 
-  if (!overviewReady) {
-    return <ServiceOverviewLoadingSkeleton />
-  }
+  // The viewport below has already scheduled this fit with animation
+  // suppressed (child effects run before parent effects), so release the
+  // one-shot now — every later navigation animates.
+  useEffect(() => {
+    if (!overviewReady || !skipCanvasFitAnimation) return
+    consumeCanvasFitAnimationSkip()
+  }, [overviewReady, skipCanvasFitAnimation, consumeCanvasFitAnimationSkip])
 
   return (
     <CanvasZoomChromeProvider>
       <BlueprintCellDetailProvider
-        resetKey={fitKey}
+        resetKey={cellDetailResetKey}
         enabled={cellDetailEnabled}
         blueprints={cellDetailBlueprints}
       >
         <CanvasFocusEscapeHandler />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {focusedHeader ? (
+          {renderHeader ? (
+            renderHeader()
+          ) : focusedHeader ? (
             <SlideStickyHeader
               slide={focusedHeader.slide}
               slides={slides}
               paths={focusedHeader.paths}
               selectedPathIds={focusedHeader.selectedPathIds}
-              onTogglePath={handleOverviewTogglePath}
             />
           ) : (
-            <ServiceOverviewStickyHeader
-              paths={overviewPaths}
-              selectedPathIds={overviewSelectedPathIds}
-              onTogglePath={handleOverviewTogglePath}
-            />
+            <ServiceOverviewStickyHeader />
           )}
           <div
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
             data-slide-canvas
           >
+            {floatingChrome ? (
+              <div className="pointer-events-none absolute right-4 bottom-4 z-30 [&>*]:pointer-events-auto">
+                {floatingChrome}
+              </div>
+            ) : null}
             {noPathsSelected ? (
               <div className="absolute inset-0 flex">
                 <CanvasEmptyState />
@@ -288,79 +397,95 @@ export function ServiceOverviewView() {
                 fitMargin={fitInsets.margin}
                 fitTopInset={fitInsets.topInset}
                 fitBottomInset={fitInsets.bottomInset}
-                animateFit={!skipCanvasFitAnimation}
-                showSequenceNav={isDetail}
+                animateFit={!skipCanvasFitAnimation && contentSettled}
+                showSequenceNav={isDetail && !soloScenarioId}
                 onResetView={isDetail ? goHome : undefined}
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}
               >
-                <div
-                  ref={(node) => {
-                    overviewRef.current = node
-                    setOverviewEl(node)
-                  }}
-                  data-service-overview
-                  data-canvas-fit
-                  className="relative inline-flex w-max flex-col items-start"
-                  style={{
-                    paddingTop: OVERVIEW_CANVAS_PADDING_Y,
-                    paddingBottom: OVERVIEW_CANVAS_PADDING_Y,
-                    paddingRight: OVERVIEW_CANVAS_PADDING_X,
-                    paddingLeft:
-                      OVERVIEW_CANVAS_PADDING_X +
-                      (postToPreLoop
-                        ? PHASE_OVERVIEW_LOOP_CHANNEL_OFFSET + 16
-                        : 0),
-                  }}
-                >
-                  {phases.map((phase, index) => {
-                    const phaseIsFocused = focusedPhaseId === phase.id
-                    const dimPhase = isDetail && !phaseIsFocused
-
-                    return (
-                      <Fragment key={phase.id}>
-                        {index > 0 &&
-                        !shouldShowOverviewPhaseFlowArrow(
-                          phases[index - 1],
-                          phase,
-                        ) ? (
-                          <OverviewPhaseRowDivider />
-                        ) : null}
-                        <ServicePhaseSection
-                          phase={phase}
-                          slides={slides}
-                          pathsByScenario={pathsByScenario}
-                          blueprintsByPathId={blueprintsByPathId}
-                          getSelectedPathIds={resolveSelectedPathIds}
-                          displayViewType={overviewViewType}
-                          onOpenPhase={openDetail}
-                          dimmed={dimPhase}
-                          focusActive={phaseIsFocused}
-                          focusedScenarioId={
-                            phaseIsFocused ? focusedScenarioId : null
-                          }
-                          showFlowArrow={shouldShowOverviewPhaseFlowArrow(
-                            phase,
-                            phases[index + 1],
-                          )}
-                          isFlowArrowAnchor={isOverviewFlowArrowAnchorPhase(
-                            phase,
-                          )}
-                          isLoopArrowFrom={
-                            phase.id === postToPreLoop?.fromPhaseId
-                          }
-                          isLoopArrowTo={phase.id === postToPreLoop?.toPhaseId}
-                        />
-                      </Fragment>
-                    )
-                  })}
-                  {postToPreLoop ? (
-                    <PhaseOverviewPhaseLoopArrow
-                      overviewRef={overviewRef}
-                      overviewEl={overviewEl}
+                <DeferredSkeleton
+                  loading={!overviewReady}
+                  holdKey={skeletonHoldKey}
+                  skeleton={
+                    <ServiceOverviewCanvasSkeleton
+                      phases={skeletonPhases}
+                      loopChannelOffset={
+                        postToPreLoop
+                          ? PHASE_OVERVIEW_LOOP_CHANNEL_OFFSET + 16
+                          : 0
+                      }
                     />
-                  ) : null}
-                </div>
+                  }
+                >
+                  <div
+                    ref={(node) => {
+                      overviewRef.current = node
+                      setOverviewEl(node)
+                    }}
+                    data-service-overview
+                    data-canvas-fit
+                    className="relative inline-flex w-max flex-col items-start"
+                    style={{
+                      paddingTop: OVERVIEW_CANVAS_PADDING_Y,
+                      paddingBottom: OVERVIEW_CANVAS_PADDING_Y,
+                      paddingRight: OVERVIEW_CANVAS_PADDING_X,
+                      paddingLeft:
+                        OVERVIEW_CANVAS_PADDING_X +
+                        (postToPreLoop
+                          ? PHASE_OVERVIEW_LOOP_CHANNEL_OFFSET + 16
+                          : 0),
+                    }}
+                  >
+                    {phases.map((phase, index) => {
+                      const phaseIsFocused = focusedPhaseId === phase.id
+                      const dimPhase = isDetail && !phaseIsFocused
+
+                      return (
+                        <Fragment key={phase.id}>
+                          {index > 0 &&
+                          !shouldShowOverviewPhaseFlowArrow(
+                            phases[index - 1],
+                            phase,
+                          ) ? (
+                            <OverviewPhaseRowDivider />
+                          ) : null}
+                          <ServicePhaseSection
+                            phase={phase}
+                            slides={slides}
+                            pathsByScenario={pathsByScenario}
+                            blueprintsByPathId={blueprintsByPathId}
+                            getSelectedPathIds={resolveSelectedPathIds}
+                            displayViewType={overviewViewType}
+                            onOpenPhase={openDetail}
+                            dimmed={dimPhase}
+                            focusActive={phaseIsFocused}
+                            focusedScenarioId={
+                              phaseIsFocused ? focusedScenarioId : null
+                            }
+                            onlyScenarioId={soloScenarioId ?? null}
+                            showFlowArrow={shouldShowOverviewPhaseFlowArrow(
+                              phase,
+                              phases[index + 1],
+                            )}
+                            isFlowArrowAnchor={isOverviewFlowArrowAnchorPhase(
+                              phase,
+                            )}
+                            isLoopArrowFrom={
+                              phase.id === postToPreLoop?.fromPhaseId
+                            }
+                            isLoopArrowTo={phase.id === postToPreLoop?.toPhaseId}
+                          />
+                        </Fragment>
+                      )
+                    })}
+                    {postToPreLoop ? (
+                      <PhaseOverviewPhaseLoopArrow
+                        overviewRef={overviewRef}
+                        overviewEl={overviewEl}
+                      />
+                    ) : null}
+                  </div>
+                </DeferredSkeleton>
               </ZoomPanViewport>
             )}
             {cellDetailEnabled ? <BlueprintCellDetailPanel /> : null}

@@ -1,11 +1,11 @@
 import { CANVAS_FIT_SELECTOR, MAX_ZOOM } from '@/hooks/useZoomPanViewport'
 import { BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN } from '@/lib/slideLayout'
-import { isSubslide, type EditorView, type Slide } from '@/types/slides'
+import { isSubslide, type EditorView, type NavItem } from '@/types/nav'
 
 /** CSS selector for the canvas region the camera should frame. */
 export function getCanvasFocusSelector(
   view: EditorView,
-  activeSlide: Slide,
+  activeSlide: NavItem,
 ): string {
   if (view === 'home' || view === 'landing') return CANVAS_FIT_SELECTOR
   if (isSubslide(activeSlide)) {

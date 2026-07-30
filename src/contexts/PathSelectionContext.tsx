@@ -20,8 +20,17 @@ type PathSelectionState = {
 }
 
 type PathSelectionContextValue = {
+  /** Registered paths per scenario id (read-only; merged, never pruned). */
+  catalog: PathCatalog
   /** Selected path identities (`path_type:name`) — shared across overview/phase/scenario. */
   activePathKeys: string[]
+  /**
+   * The happy-path default derived from the catalog — the same derivation
+   * the first sync applies. Empty until some scenario's paths have loaded.
+   */
+  defaultPathKeys: string[]
+  /** Restore that default: the way back from "no paths selected". */
+  restoreDefaultPathKeys: () => void
   selections: Record<string, string[]>
   getSelectedPathIds: (scenarioId: string) => string[]
   /** Toggle by path identity — updates every known scenario that has that path. */
@@ -164,6 +173,18 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const restoreDefaultPathKeys = useCallback(() => {
+    setState((prev) => {
+      const activePathKeys = defaultPathKeysFromCatalog(prev.catalog)
+      if (activePathKeys.length === 0) return prev
+      return {
+        ...prev,
+        activePathKeys,
+        selections: deriveSelections(prev.catalog, activePathKeys),
+      }
+    })
+  }, [])
+
   const getSelectedPathIds = useCallback(
     (scenarioId: string) => state.selections[scenarioId] ?? [],
     [state.selections],
@@ -224,30 +245,33 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    const defaultPathKeys = defaultPathKeysFromCatalog(state.catalog)
+    return {
+      catalog: state.catalog,
       // While uninitialized, surface the happy-path default from whatever is
       // already in the catalog so filters don't flash as empty.
-      activePathKeys:
-        state.activePathKeys ?? defaultPathKeysFromCatalog(state.catalog),
+      activePathKeys: state.activePathKeys ?? defaultPathKeys,
+      defaultPathKeys,
       selections: state.selections,
       getSelectedPathIds,
       togglePathKey,
       togglePathSelection,
       setSelectedPathIds,
+      restoreDefaultPathKeys,
       syncScenarioPaths,
-    }),
-    [
-      state.activePathKeys,
-      state.catalog,
-      state.selections,
-      getSelectedPathIds,
-      togglePathKey,
-      togglePathSelection,
-      setSelectedPathIds,
-      syncScenarioPaths,
-    ],
-  )
+    }
+  }, [
+    state.activePathKeys,
+    state.catalog,
+    state.selections,
+    getSelectedPathIds,
+    togglePathKey,
+    togglePathSelection,
+    setSelectedPathIds,
+    restoreDefaultPathKeys,
+    syncScenarioPaths,
+  ])
 
   return (
     <PathSelectionContext.Provider value={value}>

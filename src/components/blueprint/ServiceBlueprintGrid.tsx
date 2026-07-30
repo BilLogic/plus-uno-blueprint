@@ -28,6 +28,7 @@ import {
   LAYER_COLUMN_WIDTH,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
+  VISUAL_PLAY_GUTTER,
   getStepColumnsWidth,
   VISIBILITY_LINE_LABEL,
   getBlueprintGridMinHeight,
@@ -72,9 +73,6 @@ import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import type { BlueprintData } from '@/types/blueprint'
-
-/** Left gutter on the white board so the play control clears Visual cells. */
-const VISUAL_PLAY_GUTTER = 28
 
 type ServiceBlueprintGridProps = {
   data: BlueprintData
@@ -733,6 +731,7 @@ function BlueprintCellBlock({
               selectionContext={selectionContext}
               stepIndex={stepIndex}
               compact={compact}
+              sliceSequenceBadge={index === 0}
             />
           ) : (
             <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />

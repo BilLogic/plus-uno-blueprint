@@ -44,11 +44,15 @@ export function useCanvasZoomChrome() {
 
 /** Publishes reset-view chrome from the active viewport; clears on unmount. */
 export function usePublishCanvasZoomChrome(onResetView?: () => void) {
-  const ctx = useContext(CanvasZoomChromeContext)
+  // Depend on the stable setter only — depending on the whole context value
+  // loops: publishing chrome changes the value identity, which re-runs the
+  // effect, which publishes a fresh object, forever ("Maximum update depth
+  // exceeded" storms that re-render the entire canvas subtree).
+  const setChrome = useContext(CanvasZoomChromeContext)?.setChrome
 
   useEffect(() => {
-    if (!ctx) return
-    ctx.setChrome({ onResetView })
-    return () => ctx.setChrome(null)
-  }, [ctx, onResetView])
+    if (!setChrome) return
+    setChrome({ onResetView })
+    return () => setChrome(null)
+  }, [setChrome, onResetView])
 }

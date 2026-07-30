@@ -654,6 +654,7 @@ function CompareCellBlock({
               selectionContext={selectionContext}
               stepIndex={stepIndex}
               compact={compact}
+              sliceSequenceBadge={index === 0}
             />
           ) : (
             <TechPillFace

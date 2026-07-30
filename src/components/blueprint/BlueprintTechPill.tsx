@@ -11,6 +11,8 @@ type BlueprintTechPillProps = {
   stepIndex: number
   compact?: boolean
   opacity?: number
+  /** Pills share their cell id — only the first pill carries the badge. */
+  sliceSequenceBadge?: boolean
 }
 
 export function BlueprintTechPill({
@@ -19,6 +21,7 @@ export function BlueprintTechPill({
   stepIndex,
   compact = false,
   opacity,
+  sliceSequenceBadge = false,
 }: BlueprintTechPillProps) {
   return (
     <BlueprintCellButton
@@ -29,6 +32,7 @@ export function BlueprintTechPill({
       variant="pill"
       compact={compact}
       opacity={opacity}
+      sliceSequenceBadge={sliceSequenceBadge}
       className="min-w-0 shrink-0 break-words"
       data-blueprint-tech-pill={item}
     >

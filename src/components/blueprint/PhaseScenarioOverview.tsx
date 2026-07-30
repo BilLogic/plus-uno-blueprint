@@ -16,9 +16,9 @@ import { SUBSLIDE_GAP } from '@/lib/slideLayout'
 import {
   getSlideDisplayLabel,
   getSubslides,
-  type Slide,
+  type NavItem,
   type SlideViewType,
-} from '@/types/slides'
+} from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
 import { cn } from '@/lib/utils'
 import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
@@ -26,8 +26,8 @@ import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoading
 const DEFAULT_SCENARIO_GAP = SUBSLIDE_GAP
 
 type PhaseScenarioOverviewProps = {
-  phase: Slide
-  slides: Slide[]
+  phase: NavItem
+  slides: NavItem[]
   className?: string
   /** When true, scenario panels share one row height (detail phase view). */
   alignPanelHeights?: boolean
@@ -48,6 +48,8 @@ type PhaseScenarioOverviewProps = {
   focusedScenarioId?: string | null
   /** When true, dim every scenario in this phase (another phase is focused). */
   dimAllScenarios?: boolean
+  /** Slice-tab scope: mount only this scenario's artboard. */
+  onlyScenarioId?: string | null
 }
 
 function PhaseScenarioConnector({ width }: { width: number }) {
@@ -99,6 +101,7 @@ export function PhaseScenarioOverview({
   displayViewType: displayViewTypeProp,
   focusedScenarioId = null,
   dimAllScenarios = false,
+  onlyScenarioId = null,
 }: PhaseScenarioOverviewProps) {
   const { getScenarioDisplayViewType, openDetail } = useEditor()
   const isOverview = variant === 'overview'
@@ -109,10 +112,12 @@ export function PhaseScenarioOverview({
     return <PhaseScenarioConnector width={scenarioGap} />
   }
 
-  const scenarios = useMemo(
-    () => getSubslides(phase.id, slides),
-    [phase.id, slides],
-  )
+  const scenarios = useMemo(() => {
+    const all = getSubslides(phase.id, slides)
+    return onlyScenarioId
+      ? all.filter((scenario) => scenario.id === onlyScenarioId)
+      : all
+  }, [onlyScenarioId, phase.id, slides])
   const scenarioIds = useMemo(
     () => scenarios.map((scenario) => scenario.id),
     [scenarios],
