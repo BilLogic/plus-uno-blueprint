@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { CellPickContext, type CellPickApi } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { allCellsInReadingOrder } from '@/lib/canvasCellQuery'
 
 /**
  * The Design-mode selection.
@@ -65,7 +66,23 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (mode !== 'design') return
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setPicked([])
+      if (event.key === 'Escape') {
+        setPicked([])
+        return
+      }
+      // Cmd/Ctrl-A takes the whole grid, in reading order. Guarded on the
+      // event target so it never steals the shortcut from a text field.
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLowerCase() === 'a' &&
+        !(event.target instanceof HTMLInputElement) &&
+        !(event.target instanceof HTMLTextAreaElement)
+      ) {
+        const all = allCellsInReadingOrder()
+        if (all.length === 0) return
+        event.preventDefault()
+        setPicked(all)
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)

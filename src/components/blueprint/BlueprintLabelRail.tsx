@@ -1,3 +1,4 @@
+import type { MouseEvent as ReactMouseEvent } from 'react'
 import {
   BlueprintDividerRailLabelLine,
 } from '@/components/blueprint/BlueprintDividerTag'
@@ -141,6 +142,10 @@ export function BlueprintDividerRow({
   )
 }
 
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useCellPick } from '@/contexts/cellPickContext'
+import { cellsInLane } from '@/lib/canvasCellQuery'
+
 export function BlueprintLabelRow({
   row,
   layers,
@@ -154,6 +159,25 @@ export function BlueprintLabelRow({
   compact?: boolean
   onToggleLayer?: (layerId: string) => void
 }) {
+  // Hooks first: this component returns early for divider rows, and a hook
+  // after that return would run in a different order between row kinds.
+  //
+  // In Design mode the lane label becomes a selection handle — clicking takes
+  // the whole lane, shift-clicking adds it to what is already picked. Inert in
+  // View, so reading the blueprint is untouched.
+  const canvasMode = useCanvasModeValue()
+  const pick = useCellPick()
+  const laneId = row.kind === 'layer' ? (row.layer?.id ?? null) : null
+  const laneSelectable =
+    canvasMode === 'design' && pick !== null && laneId !== null
+  const selectLane = (event: ReactMouseEvent<HTMLElement>) => {
+    if (!laneSelectable || laneId === null) return
+    const cells = cellsInLane(laneId)
+    if (cells.length === 0) return
+    event.stopPropagation()
+    pick.pickMany(cells, { additive: event.shiftKey })
+  }
+
   const isDivider =
     row.kind === 'interaction' ||
     row.kind === 'visibility' ||
@@ -214,12 +238,24 @@ export function BlueprintLabelRow({
           compact ? 'pt-3' : 'pt-4',
         )}
       >
-        <span
-          className="min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"
-          style={{ color: labelColor }}
-        >
-          {row.label}
-        </span>
+        {laneSelectable ? (
+          <button
+            type="button"
+            onClick={selectLane}
+            title={`Select the ${row.label} lane`}
+            className="group/lane min-w-0 flex-1 cursor-pointer rounded-sm text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words underline-offset-4 hover:underline"
+            style={{ color: labelColor }}
+          >
+            {row.label}
+          </button>
+        ) : (
+          <span
+            className="min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"
+            style={{ color: labelColor }}
+          >
+            {row.label}
+          </span>
+        )}
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
           row.kind === 'layer' &&
           row.layer &&
