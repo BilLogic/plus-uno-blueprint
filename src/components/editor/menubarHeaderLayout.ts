@@ -17,8 +17,12 @@ export const CELL_DETAIL_PANEL_TOP_CLASS = '!top-[calc(2.25rem+1px+1rem)]'
 export const BLUEPRINT_MENUBAR_FLAT_CLASS =
   'relative h-9 rounded-none border-0 bg-transparent px-0 py-0 shadow-none'
 
+/**
+ * Left-aligned title + paths control row. Right padding keeps the row clear
+ * of the absolutely-positioned zoom indicator / Reset View cluster.
+ */
 export const BLUEPRINT_MENUBAR_TITLE_CLASS =
-  'absolute left-1/2 top-1/2 z-10 flex max-w-[min(52rem,calc(100%-18rem))] -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 px-1 text-center'
+  'relative z-10 flex h-full min-w-0 max-w-[calc(100%-9rem)] items-center gap-2.5 px-1'
 
 export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
   'min-w-0 truncate text-xs text-muted-foreground'

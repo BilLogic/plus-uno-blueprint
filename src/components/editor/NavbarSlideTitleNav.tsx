@@ -17,8 +17,12 @@ import { cn } from '@/lib/utils'
 /** Flip to `true` to re-enable the title jump menu. */
 const NAVBAR_TITLE_NAV_ENABLED = false
 
+/**
+ * Plain breadcrumb-ish navbar title — reads as static context text, not a
+ * floating pill (description stays reachable via the badge tooltip).
+ */
 const NAVBAR_TITLE_BADGE_CLASS =
-  'h-5 max-w-full border-transparent bg-black px-2 py-0.5 text-xs font-semibold text-white'
+  'h-5 max-w-full border-transparent bg-transparent px-0 py-0.5 text-[13px] font-semibold text-foreground shadow-none'
 
 type NavbarSlideTitleNavProps = {
   label: string

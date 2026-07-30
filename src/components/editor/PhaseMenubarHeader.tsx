@@ -68,29 +68,20 @@ export function PhaseMenubarHeader({
       onClick={(event) => event.stopPropagation()}
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
-        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
-          <NavbarSlideTitleNav
-            label={label}
-            description={description}
-            infoTooltip={infoTooltip}
+        <NavbarSlideTitleNav
+          label={label}
+          description={description}
+          infoTooltip={infoTooltip}
+          className="shrink-0"
+        />
+        {showFilterMenus ? (
+          <StackHeaderFilterMenu
+            paths={paths}
+            selectedPathIds={selectedPathIds}
+            onTogglePath={onTogglePath!}
+            showPathTooltips={isScenario}
           />
-          {showFilterMenus ? (
-            <>
-              <span
-                className="shrink-0 text-xs text-muted-foreground/70"
-                aria-hidden
-              >
-                \
-              </span>
-              <StackHeaderFilterMenu
-                paths={paths}
-                selectedPathIds={selectedPathIds}
-                onTogglePath={onTogglePath!}
-                showPathTooltips={isScenario}
-              />
-            </>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </Menubar>
   )

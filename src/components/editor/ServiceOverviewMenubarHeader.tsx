@@ -39,24 +39,17 @@ export function ServiceOverviewMenubarHeader({
       onClick={(event) => event.stopPropagation()}
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
-        <div className="flex min-w-0 shrink-0 items-center gap-1.5">
-          <NavbarSlideTitleNav
-            label={OVERVIEW_MENU_TITLE}
-            description={OVERVIEW_MENU_DESCRIPTION}
-            isOverview
-          />
-          <span
-            className="shrink-0 text-xs text-muted-foreground/70"
-            aria-hidden
-          >
-            \
-          </span>
-          <StackHeaderFilterMenu
-            paths={paths}
-            selectedPathIds={selectedPathIds}
-            onTogglePath={onTogglePath}
-          />
-        </div>
+        <NavbarSlideTitleNav
+          label={OVERVIEW_MENU_TITLE}
+          description={OVERVIEW_MENU_DESCRIPTION}
+          isOverview
+          className="shrink-0"
+        />
+        <StackHeaderFilterMenu
+          paths={paths}
+          selectedPathIds={selectedPathIds}
+          onTogglePath={onTogglePath}
+        />
       </div>
     </Menubar>
   )
