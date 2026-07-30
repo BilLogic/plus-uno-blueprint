@@ -297,6 +297,16 @@
     z-index: 50;
   }
 
+  /* Finding focus — the blueprint-tab grids (compare/integrated) own their
+     stacking contexts, so instead of the slice tab's scrim plane, non-member
+     cells soft-dim toward the canvas. Member cells keep the slice-focus ring
+     via [data-slice-focus] + [data-slice-member] above. */
+  [data-finding-focus='focused']
+    [data-blueprint-cell-anchor]:not([data-slice-member]) {
+    opacity: 0.3;
+    filter: saturate(0.5);
+  }
+
   /* Assumption lens: cells with zero evidence rows get a subtle warning
      tint (amber token carries its own light/dark values). */
   [data-lens='assumption'] [data-blueprint-cell-anchor][data-no-evidence] {

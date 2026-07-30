@@ -9,6 +9,11 @@ import {
 } from '@/components/editor/PhaseOverviewPhaseLoopArrow'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { ServiceOverviewLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import {
+  FindingFocusPill,
+  FindingFocusScope,
+  FindingsPanel,
+} from '@/components/editor/FindingsPanel'
 import { PropositionCard } from '@/components/editor/PropositionCard'
 import { ServiceOverviewStickyHeader } from '@/components/editor/ServiceOverviewMenubarHeader'
 import { SliceCreateBar } from '@/components/editor/SliceCreateBar'
@@ -21,6 +26,7 @@ import {
 import { AssumptionLensProvider } from '@/contexts/AssumptionLensProvider'
 import { CanvasZoomChromeProvider } from '@/contexts/CanvasZoomChromeContext'
 import { useEditor } from '@/contexts/EditorContext'
+import { FindingsProvider } from '@/contexts/FindingsProvider'
 import { SliceDraftProvider } from '@/contexts/SliceDraftProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
@@ -263,6 +269,7 @@ export function ServiceOverviewView() {
       >
        <SliceDraftProvider>
        <AssumptionLensProvider>
+       <FindingsProvider blueprints={cellDetailBlueprints}>
         <CanvasFocusEscapeHandler />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {focusedHeader ? (
@@ -280,7 +287,7 @@ export function ServiceOverviewView() {
               onTogglePath={handleOverviewTogglePath}
             />
           )}
-          <div
+          <FindingFocusScope
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
             data-slide-canvas
             {...(lens === 'assumption' ? { 'data-lens': 'assumption' } : {})}
@@ -373,10 +380,13 @@ export function ServiceOverviewView() {
               </ZoomPanViewport>
             )}
             {cellDetailEnabled ? <BlueprintCellDetailPanel /> : null}
+            <FindingsPanel />
+            <FindingFocusPill />
             <SliceCreateBar />
             <PropositionCard />
-          </div>
+          </FindingFocusScope>
         </div>
+       </FindingsProvider>
        </AssumptionLensProvider>
        </SliceDraftProvider>
       </BlueprintCellDetailProvider>
