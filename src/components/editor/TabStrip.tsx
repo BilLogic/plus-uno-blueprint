@@ -23,6 +23,7 @@ import {
   type TabDescriptor,
 } from '@/contexts/viewStateStore'
 import { useSlices } from '@/hooks/useSlices'
+import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { deleteSlice } from '@/lib/sliceMutations'
 import { cn } from '@/lib/utils'
 import type { Slice } from '@/types/database'
@@ -62,6 +63,10 @@ export function DeleteSliceDialog({
     setError(null)
     try {
       await deleteSlice(client, slice.id)
+      // Drop the cached slice list ('slices:*') and the deleted slice's
+      // detail ('slice:<id>') so every mounted list refetches.
+      invalidateQueries('slices')
+      invalidateQueries('slice:')
       closeTabsForSlice(slice.id)
       onOpenChange(false)
     } catch (deleteError) {

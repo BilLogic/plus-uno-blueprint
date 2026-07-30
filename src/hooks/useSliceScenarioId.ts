@@ -2,19 +2,25 @@ import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import { findFallbackScenarioForCells } from '@/lib/sliceCells'
 
-/** Scenario owning a slice's cells (v1 slices are single-scenario). */
+/**
+ * Scenario owning a slice's cells (v1 slices are single-scenario). Pass
+ * `null` while the slice detail is still loading — the query is gated (no
+ * fetch, no transient error) until the real cell ids exist.
+ */
 export function useSliceScenarioId(
-  cellIds: readonly string[],
+  cellIds: readonly string[] | null,
 ): QueryResult<string> {
   const fallback = useCallback(
-    () => findFallbackScenarioForCells(cellIds),
+    () => (cellIds ? findFallbackScenarioForCells(cellIds) : null),
     [cellIds],
   )
 
   return useSupabaseQuery<string>(
-    `slice-scenario:${cellIds.join('|')}`,
+    cellIds === null ? null : `slice-scenario:${cellIds.join('|')}`,
     async (client) => {
-      if (cellIds.length === 0) throw new Error('The slice has no cells')
+      if (!cellIds || cellIds.length === 0) {
+        throw new Error('The slice has no cells')
+      }
 
       const { data, error } = await client
         .from('cells')

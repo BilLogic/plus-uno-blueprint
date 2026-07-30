@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { findFirstLifecycleId } from '@/lib/lifecycle'
 import { phasesToSlides, type PhaseRow } from '@/lib/phasesToSlides'
 import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import type { NavItem } from '@/types/nav'
@@ -84,34 +85,25 @@ export function useLifecyclePhases(lifecycleId?: string) {
     if (lifecycleId) {
       loadPhases(lifecycleId)
     } else {
-      const lifecycleQuery = client
-        .from('service_lifecycles')
-        .select('id')
-        .order('created_at', { ascending: true })
-        .limit(1)
-
-      void raceSupabaseQuery(lifecycleQuery).then((result) => {
-        if (cancelled) return
-        if (result === 'timeout') {
-          fail(null)
-          return
-        }
-
-        const { data, error: err } = result
-        if (err) {
-          fail(err.message)
-          return
-        }
-
-        const first = (data ?? [])[0] as { id: string } | undefined
-        if (!first) {
-          // Empty database — fall back to local sample slides upstream.
-          fail(null)
-          return
-        }
-
-        loadPhases(first.id)
-      })
+      void raceSupabaseQuery(findFirstLifecycleId(client)).then(
+        (result) => {
+          if (cancelled) return
+          if (result === 'timeout') {
+            fail(null)
+            return
+          }
+          if (!result) {
+            // Empty database — fall back to local sample slides upstream.
+            fail(null)
+            return
+          }
+          loadPhases(result)
+        },
+        (error: unknown) => {
+          if (cancelled) return
+          fail(error instanceof Error ? error.message : String(error))
+        },
+      )
     }
 
     return () => {

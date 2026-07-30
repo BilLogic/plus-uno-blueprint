@@ -24,7 +24,7 @@ import {
 import { EditorDetailScope, useEditor } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
-import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
+import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { useSlice, type SliceDetail } from '@/hooks/useSlice'
 import { useSliceScenarioId } from '@/hooks/useSliceScenarioId'
 import {
@@ -71,7 +71,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
   )
   const cellIds = useMemo(() => orderedSliceCellIds(items), [items])
 
-  const scenarioResult = useSliceScenarioId(cellIds)
+  const scenarioResult = useSliceScenarioId(detail ? cellIds : null)
   const scenarioId =
     scenarioResult.status === 'ready'
       ? scenarioResult.data
@@ -79,9 +79,16 @@ export function SliceView({ sliceId }: SliceViewProps) {
         ? (scenarioResult.fallback ?? undefined)
         : undefined
 
-  // Fetched only to resolve membership (badges, tombstones) — the canvas
-  // itself renders through the normal view's own blueprint pipeline.
-  const { allBlueprints } = useScenarioBlueprint(scenarioId)
+  // Membership resolution (badges, tombstones) reads the same cached
+  // `useCanvasBlueprints` query the embedded ServiceOverviewView uses to
+  // render the canvas — one fetch per slice tab, not two.
+  const { blueprintsByPathId } = useCanvasBlueprints(
+    scenarioId ? [scenarioId] : [],
+  )
+  const allBlueprints = useMemo(
+    () => [...blueprintsByPathId.values()],
+    [blueprintsByPathId],
+  )
   const blueprint = useMemo(
     () => pickBlueprintForCells(allBlueprints, cellIds),
     [allBlueprints, cellIds],

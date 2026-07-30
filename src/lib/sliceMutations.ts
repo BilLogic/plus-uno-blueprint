@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { resolveFirstLifecycleId } from '@/lib/lifecycle'
 import {
   updateWithConcurrency,
   type ConcurrencyOutcome,
@@ -6,19 +7,6 @@ import {
 import type { Database, Slice, SliceItem } from '@/types/database'
 
 type Client = SupabaseClient<Database>
-
-/** First lifecycle by created_at — the same resolution as useSlices. */
-export async function resolveFirstLifecycleId(client: Client): Promise<string> {
-  const { data, error } = await client
-    .from('service_lifecycles')
-    .select('id')
-    .order('created_at', { ascending: true })
-    .limit(1)
-  if (error) throw new Error(error.message)
-  const id = data?.[0]?.id
-  if (!id) throw new Error('No service lifecycle exists in the database')
-  return id
-}
 
 /**
  * Create a slice from selected cells: one slices row plus a single

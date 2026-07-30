@@ -9,7 +9,7 @@ import {
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { DelayedSpinner } from '@/components/ui/spinner'
 import { useViewState } from '@/contexts/viewStateStore'
-import { useScenarioBlueprint } from '@/hooks/useScenarioBlueprint'
+import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { useSlice, type SliceDetail } from '@/hooks/useSlice'
 import { useSliceScenarioId } from '@/hooks/useSliceScenarioId'
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
@@ -70,14 +70,22 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
     [detail],
   )
 
-  const scenarioResult = useSliceScenarioId(cellIds)
+  const scenarioResult = useSliceScenarioId(detail ? cellIds : null)
   const scenarioId =
     scenarioResult.status === 'ready'
       ? scenarioResult.data
       : scenarioResult.status === 'error'
         ? (scenarioResult.fallback ?? undefined)
         : undefined
-  const { allBlueprints } = useScenarioBlueprint(scenarioId)
+  // Same cached query key as SliceView / the embedded canvas — no refetch
+  // when presenting a slice whose focus tab is already open.
+  const { blueprintsByPathId } = useCanvasBlueprints(
+    scenarioId ? [scenarioId] : [],
+  )
+  const allBlueprints = useMemo(
+    () => [...blueprintsByPathId.values()],
+    [blueprintsByPathId],
+  )
   const blueprint = useMemo(
     () => pickBlueprintForCells(allBlueprints, cellIds),
     [allBlueprints, cellIds],

@@ -3,6 +3,7 @@ import {
   DEV_FALLBACK_SLICE_ITEMS,
 } from '@/data/devSlices'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
+import { findFirstLifecycleId } from '@/lib/lifecycle'
 import type { Slice, SliceItem } from '@/types/database'
 
 /** Slim frame projection carried on the list — powers client-side
@@ -35,13 +36,7 @@ export function useSlices(lifecycleId?: string): QueryResult<SliceListEntry[]> {
     async (client) => {
       let resolvedLifecycleId = lifecycleId
       if (!resolvedLifecycleId) {
-        const { data, error } = await client
-          .from('service_lifecycles')
-          .select('id')
-          .order('created_at', { ascending: true })
-          .limit(1)
-        if (error) throw new Error(error.message)
-        resolvedLifecycleId = data?.[0]?.id
+        resolvedLifecycleId = (await findFirstLifecycleId(client)) ?? undefined
         if (!resolvedLifecycleId) return []
       }
 

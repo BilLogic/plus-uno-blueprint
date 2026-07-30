@@ -17,7 +17,7 @@ import { InlineNotice } from '@/components/ui/inline-notice'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useEvidence } from '@/hooks/useEvidence'
-import { resolveFirstLifecycleId } from '@/lib/sliceMutations'
+import { resolveFirstLifecycleId } from '@/lib/lifecycle'
 import { safeExternalHref } from '@/lib/sliceCells'
 import type { Database, Evidence } from '@/types/database'
 
