@@ -75,8 +75,6 @@ const CELL_DETAIL_LOGO_CLASS =
 const CELL_DETAIL_SMALL_LOGO_CLASS =
   'size-[6.5rem] shrink-0 rounded-lg bg-muted/20 p-2 object-contain object-center'
 
-const SHOW_CELL_DEPENDENCIES = true
-
 type PanelTab = 'dependencies' | 'evidence' | 'resources'
 
 const PANEL_TABS: Array<{
@@ -717,7 +715,7 @@ export function BlueprintCellDetailPanel() {
                   ))}
                 </TabsList>
                 <div className="flex flex-col gap-5 px-4 pt-4 pb-4">
-                  {activeTab === 'dependencies' && SHOW_CELL_DEPENDENCIES ? (
+                  {activeTab === 'dependencies' ? (
                     <CellDependencySections
                       connections={connections}
                       otherTech={otherTechEntries}

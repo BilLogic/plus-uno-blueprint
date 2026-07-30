@@ -2,14 +2,13 @@
  * URL view state — the one module that owns the view query-param names.
  *
  * Params: `slice` (slice id), `mode` (`present` only; absence of `mode` with a
- * `slice` param means slice focus view), `frame` (presentation frame index),
- * `lens` (`assumption` only). Unknown params are ignored on parse and dropped
- * on serialize.
+ * `slice` param means slice focus view), `frame` (presentation frame index).
+ * Unknown params are ignored on parse and dropped on serialize.
  */
 
 export type UrlViewState =
-  | { kind: 'blueprint'; lens?: 'assumption' }
-  | { kind: 'slice'; sliceId: string; lens?: 'assumption' }
+  | { kind: 'blueprint' }
+  | { kind: 'slice'; sliceId: string }
   | { kind: 'present'; sliceId: string; frame: number }
 
 /** Malformed or missing frames parse to 0; negative integers clamp to 0. */
@@ -24,16 +23,14 @@ function parseFrameParam(raw: string | null): number {
 export function parseUrlViewState(search: string): UrlViewState | null {
   const params = new URLSearchParams(search)
   const sliceId = params.get('slice')
-  const lens = params.get('lens') === 'assumption' ? ('assumption' as const) : undefined
 
   if (sliceId) {
     if (params.get('mode') === 'present') {
       return { kind: 'present', sliceId, frame: parseFrameParam(params.get('frame')) }
     }
-    return lens ? { kind: 'slice', sliceId, lens } : { kind: 'slice', sliceId }
+    return { kind: 'slice', sliceId }
   }
 
-  if (lens) return { kind: 'blueprint', lens }
   return null
 }
 
@@ -43,11 +40,9 @@ export function serializeUrlViewState(state: UrlViewState): string {
 
   switch (state.kind) {
     case 'blueprint':
-      if (state.lens) params.set('lens', state.lens)
       break
     case 'slice':
       params.set('slice', state.sliceId)
-      if (state.lens) params.set('lens', state.lens)
       break
     case 'present':
       params.set('slice', state.sliceId)

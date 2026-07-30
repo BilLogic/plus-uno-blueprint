@@ -6,7 +6,7 @@ import type { Slice, SliceItem } from '@/types/database'
 // Tutor lane). Open with `?slice=<DEV_SLICE_ID>` or
 // `?slice=<DEV_SLICE_ID>&mode=present`.
 
-export const DEV_SLICE_ID = 'd0000000-0000-4000-8000-000000000001'
+const DEV_SLICE_ID = 'd0000000-0000-4000-8000-000000000001'
 
 const DEV_TIMESTAMP = '2026-07-29T00:00:00+00:00'
 

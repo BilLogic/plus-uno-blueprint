@@ -17,31 +17,17 @@ import {
   type ViewState,
 } from '@/contexts/viewStateStore'
 
-export type {
-  TabDescriptor,
-  TabKey,
-  ViewState,
-  ViewStateAction,
-  ViewStateContextValue,
-} from '@/contexts/viewStateStore'
-
 /** Safari throttles history.replaceState — debounce per-frame writes. */
 const FRAME_URL_DEBOUNCE_MS = 250
 
-function urlStateForTab(
-  tab: TabDescriptor | null,
-  frame: number,
-  lens: 'assumption' | null,
-): UrlViewState {
+function urlStateForTab(tab: TabDescriptor | null, frame: number): UrlViewState {
   if (tab === null) {
     // Base blueprint view — no tab is active.
-    return lens ? { kind: 'blueprint', lens } : { kind: 'blueprint' }
+    return { kind: 'blueprint' }
   }
   switch (tab.kind) {
     case 'slice':
-      return lens
-        ? { kind: 'slice', sliceId: tab.sliceId, lens }
-        : { kind: 'slice', sliceId: tab.sliceId }
+      return { kind: 'slice', sliceId: tab.sliceId }
     case 'present':
       return { kind: 'present', sliceId: tab.sliceId, frame }
   }
@@ -58,29 +44,23 @@ function useUrlViewState(
 ): (frame: number) => void {
   const pending = state.pendingUrlState !== null
   const restoredFrame = state.restoredFrame
-  const lens = state.lens
   const frameRef = useRef(0)
   const debounceRef = useRef<number | null>(null)
   const activeTabRef = useRef(activeTab)
   const pendingRef = useRef(pending)
-  const lensRef = useRef(lens)
 
   useEffect(() => {
     activeTabRef.current = activeTab
     pendingRef.current = pending
-    lensRef.current = lens
   })
 
-  const writeUrl = useCallback(
-    (tab: TabDescriptor | null, frame: number, lensValue: 'assumption' | null) => {
-      const search = serializeUrlViewState(urlStateForTab(tab, frame, lensValue))
-      window.history.replaceState(null, '', `${window.location.pathname}${search}`)
-    },
-    [],
-  )
+  const writeUrl = useCallback((tab: TabDescriptor | null, frame: number) => {
+    const search = serializeUrlViewState(urlStateForTab(tab, frame))
+    window.history.replaceState(null, '', `${window.location.pathname}${search}`)
+  }, [])
 
-  // Immediate write on tab or lens change; a pending in-flight frame write
-  // is stale for the previous tab, so drop it.
+  // Immediate write on tab change; a pending in-flight frame write is stale
+  // for the previous tab, so drop it.
   useEffect(() => {
     if (pending) return
     if (debounceRef.current !== null) {
@@ -93,8 +73,8 @@ function useUrlViewState(
           ? restoredFrame.frame
           : 0
     }
-    writeUrl(activeTab, frameRef.current, lens)
-  }, [activeTab, lens, pending, restoredFrame, writeUrl])
+    writeUrl(activeTab, frameRef.current)
+  }, [activeTab, pending, restoredFrame, writeUrl])
 
   useEffect(
     () => () => {
@@ -111,7 +91,7 @@ function useUrlViewState(
       if (debounceRef.current !== null) window.clearTimeout(debounceRef.current)
       debounceRef.current = window.setTimeout(() => {
         debounceRef.current = null
-        writeUrl(tab, frame, lensRef.current)
+        writeUrl(tab, frame)
       }, FRAME_URL_DEBOUNCE_MS)
     },
     [writeUrl],
@@ -160,10 +140,6 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       dispatch({ type: 'resolvePending', availableSliceIds }),
     [],
   )
-  const setLens = useCallback(
-    (lens: 'assumption' | null) => dispatch({ type: 'setLens', lens }),
-    [],
-  )
 
   const value = useMemo(
     () => ({
@@ -172,8 +148,6 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       activeTab,
       pendingUrlState: state.pendingUrlState,
       restoredFrame: state.restoredFrame,
-      lens: state.lens,
-      setLens,
       openTab,
       closeTab,
       activateTab,
@@ -186,9 +160,7 @@ export function ViewStateProvider({ children }: ViewStateProviderProps) {
       state.activeKey,
       state.pendingUrlState,
       state.restoredFrame,
-      state.lens,
       activeTab,
-      setLens,
       openTab,
       closeTab,
       activateTab,

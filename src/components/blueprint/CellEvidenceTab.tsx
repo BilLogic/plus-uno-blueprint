@@ -224,11 +224,9 @@ function AddSourceForm({
 function EvidenceList({
   client,
   cellId,
-  onMutated,
 }: {
   client: SupabaseClient<Database>
   cellId: string
-  onMutated?: () => void
 }) {
   const [reloadToken, setReloadToken] = useState(0)
   const result = useEvidence(cellId, reloadToken)
@@ -270,10 +268,7 @@ function EvidenceList({
       <AddSourceForm
         client={client}
         cellId={cellId}
-        onAdded={() => {
-          setReloadToken((token) => token + 1)
-          onMutated?.()
-        }}
+        onAdded={() => setReloadToken((token) => token + 1)}
       />
     </div>
   )
@@ -282,8 +277,6 @@ function EvidenceList({
 type CellEvidenceTabProps = {
   /** Canonical (resolved) cell id; null when the cell is fallback-only. */
   cellId: string | null
-  /** Called after an evidence mutation (assumption-lens counts refresh). */
-  onMutated?: () => void
 }
 
 /**
@@ -291,7 +284,7 @@ type CellEvidenceTabProps = {
  * sign-in prompt — never an all-assumption state derived from an empty
  * restricted read. No-DB sessions get an offline note.
  */
-export function CellEvidenceTab({ cellId, onMutated }: CellEvidenceTabProps) {
+export function CellEvidenceTab({ cellId }: CellEvidenceTabProps) {
   const { client, configured, canWrite } = useSupabase()
 
   if (!configured || !client) {
@@ -316,5 +309,5 @@ export function CellEvidenceTab({ cellId, onMutated }: CellEvidenceTabProps) {
     )
   }
 
-  return <EvidenceList client={client} cellId={cellId} onMutated={onMutated} />
+  return <EvidenceList client={client} cellId={cellId} />
 }

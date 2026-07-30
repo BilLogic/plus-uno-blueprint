@@ -18,10 +18,3 @@ export function parseValueProps(raw: Json | null | undefined): ValueProp[] {
     return [{ for: record.for, value: record.value }]
   })
 }
-
-/** Serialize back to the JSONB shape, dropping fully empty rows. */
-export function serializeValueProps(entries: readonly ValueProp[]): Json {
-  return entries
-    .filter((entry) => entry.for.trim() || entry.value.trim())
-    .map((entry) => ({ for: entry.for.trim(), value: entry.value.trim() }))
-}

@@ -24,7 +24,6 @@ export type ViewStateAction =
   | { type: 'activate'; key: TabKey | null }
   | { type: 'closeForSlice'; sliceId: string }
   | { type: 'resolvePending'; availableSliceIds: readonly string[] }
-  | { type: 'setLens'; lens: 'assumption' | null }
 
 export type ViewState = {
   tabs: TabDescriptor[]
@@ -34,21 +33,14 @@ export type ViewState = {
   pendingUrlState: UrlViewState | null
   /** Frame restored from a `?mode=present&frame=` deep link. */
   restoredFrame: { sliceId: string; frame: number } | null
-  /** Active view lens (`?lens=assumption`) — rides the URL for sharing. */
-  lens: 'assumption' | null
 }
 
 export function createInitialViewState(search: string): ViewState {
-  const pendingUrlState = parseUrlViewState(search)
   return {
     tabs: [],
     activeKey: null,
-    pendingUrlState,
+    pendingUrlState: parseUrlViewState(search),
     restoredFrame: null,
-    lens:
-      pendingUrlState && pendingUrlState.kind !== 'present'
-        ? (pendingUrlState.lens ?? null)
-        : null,
   }
 }
 
@@ -122,8 +114,6 @@ export function viewStateReducer(state: ViewState, action: ViewStateAction): Vie
         ? { ...opened, restoredFrame: { sliceId: pending.sliceId, frame: pending.frame } }
         : opened
     }
-    case 'setLens':
-      return state.lens === action.lens ? state : { ...state, lens: action.lens }
   }
 }
 
@@ -134,9 +124,6 @@ export type ViewStateContextValue = {
   activeTab: TabDescriptor | null
   pendingUrlState: UrlViewState | null
   restoredFrame: { sliceId: string; frame: number } | null
-  /** Active view lens; mirrored to the `lens` URL param. */
-  lens: 'assumption' | null
-  setLens: (lens: 'assumption' | null) => void
   openTab: (tab: TabDescriptor) => void
   closeTab: (key: TabKey) => void
   /** Activate a tab, or pass `null` to return to the base blueprint view. */
