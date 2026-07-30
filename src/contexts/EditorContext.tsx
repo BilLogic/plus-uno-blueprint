@@ -160,3 +160,83 @@ export function useEditor() {
   }
   return context
 }
+
+type EditorDetailScopeProps = {
+  /** Slide (scenario) the scope opens focused on. */
+  slideId: string
+  children: ReactNode
+}
+
+/**
+ * Local editor-state override for tabs that embed the normal blueprint view
+ * (slice focus tabs). Slides and loading state come from the app-level
+ * EditorProvider; `view` / `activeSlideId` are tab-local so navigating
+ * inside a slice tab never disturbs the blueprint tab, and the tab opens in
+ * detail view on the given slide.
+ */
+export function EditorDetailScope({ slideId, children }: EditorDetailScopeProps) {
+  const parent = useEditor()
+  const [view, setView] = useState<EditorView>('detail')
+  const [activeSlideId, setActiveSlideId] = useState(slideId)
+  const [skipCanvasFitAnimation, setSkipCanvasFitAnimation] = useState(false)
+
+  // Re-anchor when the scope is re-pointed at a different slide.
+  const [lastSlideId, setLastSlideId] = useState(slideId)
+  if (lastSlideId !== slideId) {
+    setLastSlideId(slideId)
+    setActiveSlideId(slideId)
+    setView('detail')
+  }
+
+  const goHome = useCallback(() => {
+    setSkipCanvasFitAnimation(false)
+    setView('home')
+  }, [])
+
+  const enterCanvas = useCallback(() => {
+    setSkipCanvasFitAnimation(true)
+    setView('home')
+  }, [])
+
+  const openDetail = useCallback((nextSlideId: string) => {
+    setActiveSlideId(nextSlideId)
+    setView('detail')
+  }, [])
+
+  const activeSlide = useMemo(
+    () =>
+      parent.slides.find((slide) => slide.id === activeSlideId) ??
+      parent.slides[0] ??
+      FALLBACK_NAV[0],
+    [activeSlideId, parent.slides],
+  )
+
+  const value = useMemo(
+    () => ({
+      ...parent,
+      view,
+      setView,
+      goHome,
+      enterCanvas,
+      skipCanvasFitAnimation,
+      openDetail,
+      activeSlideId,
+      setActiveSlideId,
+      activeSlide,
+    }),
+    [
+      parent,
+      view,
+      goHome,
+      enterCanvas,
+      skipCanvasFitAnimation,
+      openDetail,
+      activeSlideId,
+      activeSlide,
+    ],
+  )
+
+  return (
+    <EditorContext.Provider value={value}>{children}</EditorContext.Provider>
+  )
+}
