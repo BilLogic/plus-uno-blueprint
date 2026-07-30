@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { cn } from '@/lib/utils'
 
 type CanvasEmptyStateProps = {
@@ -10,14 +12,39 @@ type CanvasEmptyStateProps = {
    * `phase` — inside a phase frame with no matching scenarios.
    */
   variant?: 'canvas' | 'panel' | 'phase'
+  /** One-click way out of "no paths selected"; canvas variant only by default. */
+  showRestoreAction?: boolean
+}
+
+/**
+ * Restores the happy-path default selection, reusing the same derivation
+ * `PathSelectionContext` applies on its first sync (no second definition of
+ * "the default path"). Hidden until the catalog has something to restore.
+ */
+function RestoreDefaultPathsButton() {
+  const { defaultPathKeys, restoreDefaultPathKeys } = usePathSelectionContext()
+  if (defaultPathKeys.length === 0) return null
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="mt-1 self-start"
+      onClick={restoreDefaultPathKeys}
+    >
+      Show the default path
+    </Button>
+  )
 }
 
 /** Empty-canvas / empty-panel placeholder for path filter states. */
 export function CanvasEmptyState({
   className,
   title = 'No paths selected',
-  description = 'Choose one or more paths from Visible Paths to populate the canvas.',
+  description = 'Pick a path under Paths in the sidebar to populate the canvas.',
   variant = 'canvas',
+  showRestoreAction,
 }: CanvasEmptyStateProps) {
   const isCanvas = variant === 'canvas'
   const isPanel = variant === 'panel'
@@ -62,6 +89,7 @@ export function CanvasEmptyState({
         >
           {description}
         </p>
+        {(showRestoreAction ?? isCanvas) ? <RestoreDefaultPathsButton /> : null}
       </div>
     </div>
   )
