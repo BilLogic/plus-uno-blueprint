@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Trash2, X } from 'lucide-react'
+import { AlertTriangle, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   ContextMenu,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { InlineNotice } from '@/components/ui/inline-notice'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   tabKey,
@@ -98,7 +98,10 @@ export function DeleteSliceDialog({
         </DialogHeader>
         {error ? (
           <div className="px-6 pt-4">
-            <InlineNotice variant="warning">{error}</InlineNotice>
+            <Alert variant="warning">
+              <AlertTriangle className="size-3.5" aria-hidden />
+              <AlertDescription className="text-xs">{error}</AlertDescription>
+            </Alert>
           </div>
         ) : null}
         <DialogFooter>

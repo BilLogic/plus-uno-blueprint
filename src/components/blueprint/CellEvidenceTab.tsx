@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import {
+  AlertTriangle,
   BarChart3,
   CalendarCheck,
   CircleDashed,
@@ -12,8 +13,8 @@ import {
   Plus,
 } from 'lucide-react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { InlineNotice } from '@/components/ui/inline-notice'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useEvidence } from '@/hooks/useEvidence'
@@ -203,7 +204,12 @@ function AddSourceForm({
         value={note}
         onChange={(event) => setNote(event.target.value)}
       />
-      {error ? <InlineNotice variant="warning">{error}</InlineNotice> : null}
+      {error ? (
+        <Alert variant="warning">
+          <AlertTriangle className="size-3.5" aria-hidden />
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex items-center justify-end gap-1.5">
         <Button
           type="button"
@@ -236,9 +242,12 @@ function EvidenceList({
   }
   if (result.status === 'error') {
     return (
-      <InlineNotice variant="warning">
-        Evidence could not be loaded: {result.message}
-      </InlineNotice>
+      <Alert variant="warning">
+        <AlertTriangle className="size-3.5" aria-hidden />
+        <AlertDescription className="text-xs">
+          Evidence could not be loaded: {result.message}
+        </AlertDescription>
+      </Alert>
     )
   }
 
