@@ -18,6 +18,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
 } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSlices, type SliceListEntry } from '@/hooks/useSlices'
@@ -34,12 +35,18 @@ function sliceTypeGroup(sliceType: string): SliceTypeGroup {
 
 function SliceRow({
   slice,
+  isActive,
+  isOpenInactive,
   onOpen,
   onPresent,
   onDelete,
   canWrite,
 }: {
   slice: SliceListEntry
+  /** This slice's tab is the active one. */
+  isActive: boolean
+  /** This slice has an open tab that is not the active one. */
+  isOpenInactive: boolean
   onOpen: () => void
   onPresent: () => void
   onDelete: () => void
@@ -48,7 +55,20 @@ function SliceRow({
   const row = (
     <button
       type="button"
-      className="flex w-full min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      aria-current={isActive ? 'true' : undefined}
+      // Same three-state language as the Phases section (nav plan D8): the
+      // active tab gets the selected fill + rail, an open-but-inactive tab
+      // gets the marker dot, everything else is plain.
+      className={cn(
+        'relative flex w-full min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+        isActive
+          ? 'bg-sidebar-selected font-medium text-sidebar-selected-foreground before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
+          : 'hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
+        !isActive &&
+          (isOpenInactive
+            ? 'text-sidebar-foreground before:absolute before:top-1/2 before:left-0.5 before:size-1 before:-translate-y-1/2 before:rounded-full before:bg-sidebar-ancestor'
+            : 'text-sidebar-foreground/85'),
+      )}
       onClick={onOpen}
     >
       <span aria-hidden>◇</span>
@@ -87,12 +107,20 @@ function SliceRow({
  */
 export function SlicesSidebarSection() {
   const slices = useSlices()
-  const { openTab } = useViewState()
+  const { openTab, tabs, activeKey } = useViewState()
   const { canWrite } = useSupabase()
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string
     title: string
   } | null>(null)
+  // Tracked as the *collapsed* set rather than the open one: a group the
+  // user never touched stays open even when it first appears (slices load
+  // late, new types get created), while an explicit collapse survives the
+  // list changing under it. The old `key={groups.join('|')}` remount reset
+  // every group whenever a slice was created or deleted.
+  const [collapsedGroups, setCollapsedGroups] = useState<ReadonlySet<string>>(
+    () => new Set<string>(),
+  )
 
   const rows: SliceListEntry[] =
     slices.status === 'ready'
@@ -118,10 +146,22 @@ export function SlicesSidebarSection() {
     <SidebarGroup>
       <SidebarGroupContent>
         <Accordion
-          // Remount when the group set changes so late-loading groups still
-          // pick up the open-by-default value.
-          key={groups.map((group) => group.type).join('|')}
-          defaultValue={groups.map((group) => group.type)}
+          // Base UI defaults to single-open, so without this collapsing one
+          // group silently closed every other one.
+          multiple
+          value={groups
+            .map((group) => group.type)
+            .filter((type) => !collapsedGroups.has(type))}
+          onValueChange={(value) => {
+            const open = new Set(value.map(String))
+            setCollapsedGroups(
+              new Set(
+                groups
+                  .map((group) => group.type)
+                  .filter((type) => !open.has(type)),
+              ),
+            )
+          }}
           className="border-0"
         >
           {groups.map((group) => (
@@ -139,6 +179,15 @@ export function SlicesSidebarSection() {
                     <li key={slice.id}>
                       <SliceRow
                         slice={slice}
+                        isActive={
+                          activeKey === `slice:${slice.id}` ||
+                          activeKey === `present:${slice.id}`
+                        }
+                        isOpenInactive={
+                          activeKey !== `slice:${slice.id}` &&
+                          activeKey !== `present:${slice.id}` &&
+                          tabs.some((tab) => tab.sliceId === slice.id)
+                        }
                         canWrite={canWrite}
                         onOpen={() =>
                           openTab({ kind: 'slice', sliceId: slice.id })
