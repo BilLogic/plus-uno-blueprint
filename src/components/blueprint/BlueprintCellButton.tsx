@@ -25,6 +25,12 @@ type BlueprintCellButtonProps = {
   stepIndex?: number
   variant?: 'cell' | 'pill' | 'visual'
   opacity?: number
+  /**
+   * Whether this button may carry the slice sequence badge. Tech pills share
+   * their cell's id, so pill call sites pass `index === 0` to badge the
+   * first pill only; plain cell faces leave the default (true).
+   */
+  sliceSequenceBadge?: boolean
   children: ReactNode
   'aria-label'?: string
   'data-blueprint-tech-pill'?: string
@@ -40,6 +46,7 @@ export function BlueprintCellButton({
   stepIndex = -1,
   variant = 'cell',
   opacity,
+  sliceSequenceBadge = true,
   children,
   'aria-label': ariaLabel,
   'data-blueprint-tech-pill': techPillLabel,
@@ -70,10 +77,8 @@ export function BlueprintCellButton({
       (sliceMembership.memberCellIds.has(cellId) ||
         (resolvedCellId && sliceMembership.memberCellIds.has(resolvedCellId))),
   )
-  // Tech pills share their cell's id — only the plain cell face carries the
-  // slice sequence badge, never each pill in the step.
   const sliceSequence =
-    isSliceMember && !techPillLabel && cellId
+    isSliceMember && sliceSequenceBadge && cellId
       ? (sliceMembership!.sequenceByCellId.get(cellId) ??
         (resolvedCellId
           ? sliceMembership!.sequenceByCellId.get(resolvedCellId)

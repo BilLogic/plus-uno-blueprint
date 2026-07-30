@@ -731,6 +731,7 @@ function BlueprintCellBlock({
               selectionContext={selectionContext}
               stepIndex={stepIndex}
               compact={compact}
+              sliceSequenceBadge={index === 0}
             />
           ) : (
             <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />

@@ -962,6 +962,7 @@ function IntegratedCellBlock({
               stepIndex={stepIndex}
               compact={compact}
               opacity={displayOpacity}
+              sliceSequenceBadge={index === 0}
             />
           ) : (
             <TechPillFace
