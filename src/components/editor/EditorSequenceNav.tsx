@@ -32,6 +32,9 @@ function SequenceNavPreview({
   const accessibleLabel = phaseLabel ? `${phaseLabel}, ${title}` : title
   const ariaLabel = `${actionLabel}: ${accessibleLabel}`
 
+  // Both buttons always render the same two-line structure so the pair
+  // shares one height and baseline: the phase line is reserved (invisible)
+  // when the target is a phase itself.
   const label = (
     <span
       className={cn(
@@ -39,12 +42,16 @@ function SequenceNavPreview({
         isPrev ? 'items-start text-left' : 'items-end text-right',
       )}
     >
-      {phaseLabel ? (
-        <span className="truncate text-[10px] font-normal text-muted-foreground">
-          {phaseLabel}
-        </span>
-      ) : null}
-      <span className="truncate text-xs font-medium">{title}</span>
+      <span
+        className={cn(
+          'w-full truncate text-[10px] font-normal text-muted-foreground',
+          !phaseLabel && 'invisible',
+        )}
+        aria-hidden={!phaseLabel}
+      >
+        {phaseLabel ?? '\u00A0'}
+      </span>
+      <span className="w-full truncate text-xs font-medium">{title}</span>
     </span>
   )
 
