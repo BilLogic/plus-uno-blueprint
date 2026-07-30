@@ -8,11 +8,14 @@ import {
 } from 'react'
 import { Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { PendingCanvasLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { DelayedSpinner } from '@/components/ui/spinner'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { EditorDetailScope } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -42,8 +45,18 @@ type SliceViewProps = {
  */
 export function SliceView({ sliceId }: SliceViewProps) {
   const { openTab } = useViewState()
-  const { result, detail, items, scenarioResult, scenarioId, blueprint } =
-    useSliceBlueprint(sliceId)
+  const {
+    result,
+    detail,
+    items,
+    scenarioResult,
+    scenarioId,
+    blueprint,
+  } = useSliceBlueprint(sliceId)
+  // One skeleton session for the whole slice → scenario → blueprints
+  // waterfall: the stage that resolves the scenario and the canvas that
+  // loads the blueprints hand the same skeleton back and forth.
+  const skeletonHoldKey = `slice-tab:${sliceId}`
 
   const resolution = useMemo(
     () => resolveSliceCells(blueprint, items),
@@ -114,14 +127,45 @@ export function SliceView({ sliceId }: SliceViewProps) {
     )
   }
 
-  if (!scenarioId) {
-    if (scenarioResult.status === 'loading') {
-      return <DelayedSpinner />
-    }
+  if (!scenarioId && scenarioResult.status !== 'loading') {
     return (
       <SliceViewMessage>
         The cells in this slice could not be found in any blueprint.
       </SliceViewMessage>
+    )
+  }
+
+  const header = (
+    <SliceTabHeader
+      detail={detail}
+      // Every cell reads as missing until the blueprint lands — the notice
+      // stays out of the band rather than flashing a false count.
+      missingCellCount={blueprint ? resolution.missingCellIds.length : 0}
+      onPresent={() => openTab({ kind: 'present', sliceId })}
+    />
+  )
+
+  // Stage 2 — the owning scenario is still resolving, so the canvas cannot
+  // mount yet. The header band paints immediately (the slice row is already
+  // cached from the sidebar) and the canvas area holds the surface's one
+  // skeleton, which the canvas below picks up unbroken once it mounts.
+  if (!scenarioId) {
+    return (
+      <div className="flex h-full min-h-0 min-w-0 flex-col">
+        {header}
+        <div
+          className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
+          style={{ backgroundColor: BLUEPRINT_THEME.viewportPad }}
+        >
+          <DeferredSkeleton
+            loading
+            holdKey={skeletonHoldKey}
+            skeleton={<PendingCanvasLoadingSkeleton />}
+          >
+            {null}
+          </DeferredSkeleton>
+        </div>
+      </div>
     )
   }
 
@@ -140,15 +184,9 @@ export function SliceView({ sliceId }: SliceViewProps) {
               data-editor-view
             >
               <ServiceOverviewView
-                loadingVariant="spinner"
+                skeletonHoldKey={skeletonHoldKey}
                 soloScenarioId={scenarioId}
-                renderHeader={() => (
-                  <SliceTabHeader
-                    detail={detail}
-                    missingCellCount={resolution.missingCellIds.length}
-                    onPresent={() => openTab({ kind: 'present', sliceId })}
-                  />
-                )}
+                renderHeader={() => header}
                 floatingChrome={
                   <div className="rounded-full border border-border bg-card px-1 shadow-sm">
                     <NavbarZoomIndicator />

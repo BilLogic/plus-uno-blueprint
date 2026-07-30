@@ -50,8 +50,15 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
   const { openTab, reportPresentFrame, restoredFrame, consumeRestoredFrame } =
     useViewState()
 
-  const { result, detail, items, cellIds, blueprint } =
-    useSliceBlueprint(sliceId)
+  const {
+    result,
+    detail,
+    items,
+    cellIds,
+    blueprint,
+    scenarioResult,
+    blueprintsLoading,
+  } = useSliceBlueprint(sliceId)
   const cellById = useMemo(
     () =>
       new Map((blueprint?.cells ?? []).map((cell) => [cell.id, cell])),
@@ -122,7 +129,13 @@ export function SlicePresentation({ sliceId }: SlicePresentationProps) {
     [openTab, sliceId],
   )
 
-  if (result.status === 'loading') {
+  // All-or-nothing: the stage waits for the blueprint too, otherwise every
+  // cell chip paints "Removed cell" for a beat before the cells land.
+  if (
+    result.status === 'loading' ||
+    scenarioResult.status === 'loading' ||
+    blueprintsLoading
+  ) {
     return (
       <div className="dark flex h-full bg-background">
         <DelayedSpinner />

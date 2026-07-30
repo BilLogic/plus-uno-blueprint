@@ -15,7 +15,9 @@ import {
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useEvidence } from '@/hooks/useEvidence'
 import { resolveFirstLifecycleId } from '@/lib/lifecycle'
@@ -227,6 +229,23 @@ function AddSourceForm({
   )
 }
 
+/** Reserves the summary line plus one source row while evidence loads. */
+function EvidenceLoadingSkeleton() {
+  return (
+    <div className="flex flex-col gap-2" aria-hidden>
+      <Skeleton className="h-4 w-24 rounded-full" />
+      <div className="flex items-start gap-2 py-2">
+        <Skeleton className="mt-px size-3.5 rounded-full" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Skeleton className="h-3 w-2/3 rounded-full" />
+          <Skeleton className="h-3 w-1/3 rounded-full" />
+        </div>
+      </div>
+      <Skeleton className="h-7 w-28 rounded-md" />
+    </div>
+  )
+}
+
 function EvidenceList({
   client,
   cellId,
@@ -237,9 +256,6 @@ function EvidenceList({
   const [reloadToken, setReloadToken] = useState(0)
   const result = useEvidence(cellId, reloadToken)
 
-  if (result.status === 'loading') {
-    return <p className="text-xs text-muted-foreground">Loading evidence…</p>
-  }
   if (result.status === 'error') {
     return (
       <Alert variant="warning">
@@ -251,35 +267,40 @@ function EvidenceList({
     )
   }
 
-  const rows = result.data
+  const rows = result.status === 'ready' ? result.data : []
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs text-muted-foreground">
-        {rows.length === 0 ? (
-          <>
-            <span aria-hidden>○ </span>
-            assumption — no evidence yet
-          </>
-        ) : (
-          <>
-            {rows.length} {rows.length === 1 ? 'source' : 'sources'}
-          </>
-        )}
-      </p>
-      {rows.length > 0 ? (
-        <ul className="flex flex-col">
-          {rows.map((row) => (
-            <EvidenceRow key={row.id} row={row} />
-          ))}
-        </ul>
-      ) : null}
-      <AddSourceForm
-        client={client}
-        cellId={cellId}
-        onAdded={() => setReloadToken((token) => token + 1)}
-      />
-    </div>
+    <DeferredSkeleton
+      loading={result.status === 'loading'}
+      skeleton={<EvidenceLoadingSkeleton />}
+    >
+      <div className="flex flex-col gap-2">
+        <p className="text-xs text-muted-foreground">
+          {rows.length === 0 ? (
+            <>
+              <span aria-hidden>○ </span>
+              assumption — no evidence yet
+            </>
+          ) : (
+            <>
+              {rows.length} {rows.length === 1 ? 'source' : 'sources'}
+            </>
+          )}
+        </p>
+        {rows.length > 0 ? (
+          <ul className="flex flex-col">
+            {rows.map((row) => (
+              <EvidenceRow key={row.id} row={row} />
+            ))}
+          </ul>
+        ) : null}
+        <AddSourceForm
+          client={client}
+          cellId={cellId}
+          onAdded={() => setReloadToken((token) => token + 1)}
+        />
+      </div>
+    </DeferredSkeleton>
   )
 }
 

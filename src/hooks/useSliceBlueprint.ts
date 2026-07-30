@@ -22,6 +22,8 @@ export type SliceBlueprint = {
   scenarioId: string | undefined
   /** The scenario blueprint containing the most of the slice's cells. */
   blueprint: BlueprintData | null
+  /** True while the scenario's blueprints are still in flight. */
+  blueprintsLoading: boolean
 }
 
 /**
@@ -61,9 +63,8 @@ export function useSliceBlueprint(sliceId: string): SliceBlueprint {
 
   // Same cached query key as the embedded canvas (ServiceOverviewView) —
   // membership resolution never refetches what the canvas already loaded.
-  const { blueprintsByPathId } = useCanvasBlueprints(
-    scenarioId ? [scenarioId] : [],
-  )
+  const { blueprintsByPathId, loading: blueprintsLoading } =
+    useCanvasBlueprints(scenarioId ? [scenarioId] : [])
   const blueprint = useMemo(
     () => pickBlueprintForCells([...blueprintsByPathId.values()], cellIds),
     [blueprintsByPathId, cellIds],
@@ -77,5 +78,6 @@ export function useSliceBlueprint(sliceId: string): SliceBlueprint {
     scenarioResult,
     scenarioId,
     blueprint,
+    blueprintsLoading,
   }
 }

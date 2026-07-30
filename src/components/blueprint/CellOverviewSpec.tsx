@@ -1,3 +1,5 @@
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellSpec } from '@/hooks/useCellSpec'
 import { parseValueProps } from '@/lib/valueProps'
@@ -28,39 +30,58 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   const specResult = useCellSpec(configured ? cellId : null)
 
   if (!configured || !client || !cellId) return null
-  if (specResult.status !== 'ready' || specResult.data === null) return null
 
-  const spec = specResult.data
-  const functionText = spec.function?.trim() ?? ''
-  const formText = spec.form?.trim() ?? ''
-  const valueProps = parseValueProps(spec.value_props)
+  const loading = specResult.status === 'loading'
+  const spec = specResult.status === 'ready' ? specResult.data : null
+  const functionText = spec?.function?.trim() ?? ''
+  const formText = spec?.form?.trim() ?? ''
+  const valueProps = parseValueProps(spec?.value_props ?? null)
   const hasAnySpec =
     functionText.length > 0 || formText.length > 0 || valueProps.length > 0
 
-  if (!hasAnySpec) return null
+  if (!loading && !hasAnySpec) return null
 
   return (
-    <div className="flex flex-col gap-3">
-      {functionText ? <SpecSection title="Function" text={functionText} /> : null}
-      {formText ? <SpecSection title="Form" text={formText} /> : null}
-      {valueProps.length > 0 ? (
-        <section className="flex flex-col gap-1">
-          <h3 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            Value
-          </h3>
-          <ul className="flex flex-col gap-1">
-            {valueProps.map((entry, index) => (
-              <li key={index} className="text-sm leading-snug text-foreground/80">
-                <span className="font-medium text-foreground">
-                  {entry.for}
-                </span>
-                {entry.for && entry.value ? ' — ' : ''}
-                {entry.value}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+    // The block reserves its height while the query is in flight, so the
+    // open drawer never reflows under the reader mid-read.
+    <DeferredSkeleton loading={loading} skeleton={<CellSpecLoadingSkeleton />}>
+      <div className="flex flex-col gap-3">
+        {functionText ? <SpecSection title="Function" text={functionText} /> : null}
+        {formText ? <SpecSection title="Form" text={formText} /> : null}
+        {valueProps.length > 0 ? (
+          <section className="flex flex-col gap-1">
+            <h3 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Value
+            </h3>
+            <ul className="flex flex-col gap-1">
+              {valueProps.map((entry, index) => (
+                <li key={index} className="text-sm leading-snug text-foreground/80">
+                  <span className="font-medium text-foreground">
+                    {entry.for}
+                  </span>
+                  {entry.for && entry.value ? ' — ' : ''}
+                  {entry.value}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
+    </DeferredSkeleton>
+  )
+}
+
+/** Two spec sections' worth of reserved height. */
+function CellSpecLoadingSkeleton() {
+  return (
+    <div className="flex flex-col gap-3" aria-hidden>
+      {[0, 1].map((index) => (
+        <div key={index} className="flex flex-col gap-1">
+          <Skeleton className="h-2.5 w-16 rounded-full" />
+          <Skeleton className="h-4 w-full rounded-full" />
+          <Skeleton className="h-4 w-4/5 rounded-full" />
+        </div>
+      ))}
     </div>
   )
 }
