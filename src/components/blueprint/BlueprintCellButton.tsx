@@ -67,9 +67,18 @@ export function BlueprintCellButton({
   const isSliceMember = Boolean(
     sliceMembership &&
       cellId &&
-      (sliceMembership.has(cellId) ||
-        (resolvedCellId && sliceMembership.has(resolvedCellId))),
+      (sliceMembership.memberCellIds.has(cellId) ||
+        (resolvedCellId && sliceMembership.memberCellIds.has(resolvedCellId))),
   )
+  // Tech pills share their cell's id — only the plain cell face carries the
+  // slice sequence badge, never each pill in the step.
+  const sliceSequence =
+    isSliceMember && !techPillLabel && cellId
+      ? (sliceMembership!.sequenceByCellId.get(cellId) ??
+        (resolvedCellId
+          ? sliceMembership!.sequenceByCellId.get(resolvedCellId)
+          : undefined))
+      : undefined
   const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
@@ -135,9 +144,19 @@ export function BlueprintCellButton({
         variant === 'visual' &&
           'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
+        sliceSequence !== undefined && 'relative overflow-visible',
       )}
       style={surfaceStyle}
     >
+      {sliceSequence !== undefined ? (
+        <span
+          aria-hidden
+          data-slice-sequence-badge=""
+          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-foreground text-[10px] font-semibold text-background shadow-sm"
+        >
+          {sliceSequence}
+        </span>
+      ) : null}
       {children}
     </Button>
   )

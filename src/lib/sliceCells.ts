@@ -74,6 +74,11 @@ export type SliceCellResolution = {
   missingCellIds: string[]
   /** Raw + resolved member ids, for `data-slice-member` matching. */
   memberCellIds: ReadonlySet<string>
+  /**
+   * Raw + resolved member id → 1-based sequence number (tombstones skipped),
+   * for the badge each member cell renders on its own corner.
+   */
+  sequenceByCellId: ReadonlyMap<string, number>
 }
 
 /** Place a slice's cells on one blueprint; unresolvable ids become tombstones. */
@@ -92,6 +97,7 @@ export function resolveSliceCells(
   const placements: SliceCellPlacement[] = []
   const missingCellIds: string[] = []
   const memberCellIds = new Set<string>()
+  const sequenceByCellId = new Map<string, number>()
   let order = 0
 
   sorted.forEach((item, itemIndex) => {
@@ -113,10 +119,12 @@ export function resolveSliceCells(
       })
       memberCellIds.add(cellId)
       memberCellIds.add(rawCellId)
+      sequenceByCellId.set(cellId, order)
+      sequenceByCellId.set(rawCellId, order)
     }
   })
 
-  return { placements, missingCellIds, memberCellIds }
+  return { placements, missingCellIds, memberCellIds, sequenceByCellId }
 }
 
 export type SliceIllustration = {

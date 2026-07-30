@@ -66,6 +66,13 @@ export function SliceView({ sliceId }: SliceViewProps) {
     () => resolveSliceCells(blueprint, items),
     [blueprint, items],
   )
+  const membership = useMemo(
+    () => ({
+      memberCellIds: resolution.memberCellIds,
+      sequenceByCellId: resolution.sequenceByCellId,
+    }),
+    [resolution],
+  )
 
   const [focused, setFocused] = useState(true)
 
@@ -113,7 +120,7 @@ export function SliceView({ sliceId }: SliceViewProps) {
   }
 
   return (
-    <SliceMembershipContext.Provider value={resolution.memberCellIds}>
+    <SliceMembershipContext.Provider value={membership}>
       <div className="flex h-full min-h-0 flex-col">
         <header className="flex shrink-0 flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-border px-4 py-2.5">
           <h2 className="text-sm font-semibold">
