@@ -1,7 +1,7 @@
 ---
 title: "Sidebar navigation & interaction model"
 type: feat
-status: active
+status: completed
 date: 2026-07-30
 ---
 

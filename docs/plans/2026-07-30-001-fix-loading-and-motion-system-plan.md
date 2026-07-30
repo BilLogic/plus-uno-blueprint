@@ -1,7 +1,7 @@
 ---
 title: "Loading & motion system — one skeleton, one camera move, restored zoom feel"
 type: fix
-status: active
+status: completed
 date: 2026-07-30
 ---
 
