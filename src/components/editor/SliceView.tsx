@@ -6,29 +6,19 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react'
-import { Info, Play } from 'lucide-react'
+import { Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
-import {
-  ServiceOverviewView,
-  type OverviewHeaderRenderProps,
-} from '@/components/editor/ServiceOverviewView'
-import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
-import { StackHeaderFilterMenu } from '@/components/editor/StackHeaderFilterMenu'
+import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DelayedSpinner } from '@/components/ui/spinner'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { EditorDetailScope, useEditor } from '@/contexts/EditorContext'
+import { EditorDetailScope } from '@/contexts/EditorContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
 import type { SliceDetail } from '@/hooks/useSlice'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { resolveSliceCells } from '@/lib/sliceCells'
 import { cn } from '@/lib/utils'
-import { getSlideDisplayLabel } from '@/types/nav'
 
 /**
  * Chrome that must neither re-focus nor de-focus the slice when clicked:
@@ -51,7 +41,6 @@ type SliceViewProps = {
  */
 export function SliceView({ sliceId }: SliceViewProps) {
   const { openTab } = useViewState()
-  const { slides } = useEditor()
   const { result, detail, items, scenarioResult, scenarioId, blueprint } =
     useSliceBlueprint(sliceId)
 
@@ -66,13 +55,6 @@ export function SliceView({ sliceId }: SliceViewProps) {
     }),
     [resolution],
   )
-
-  const scenarioSlide = scenarioId
-    ? (slides.find((slide) => slide.id === scenarioId) ?? null)
-    : null
-  const scenarioLabel = scenarioSlide
-    ? getSlideDisplayLabel(scenarioSlide, slides)
-    : null
 
   const [focused, setFocused] = useState(true)
 
@@ -159,13 +141,11 @@ export function SliceView({ sliceId }: SliceViewProps) {
               <ServiceOverviewView
                 loadingVariant="spinner"
                 soloScenarioId={scenarioId}
-                renderHeader={(header) => (
+                renderHeader={() => (
                   <SliceTabHeader
                     detail={detail}
-                    scenarioLabel={scenarioLabel}
                     missingCellCount={resolution.missingCellIds.length}
                     onPresent={() => openTab({ kind: 'present', sliceId })}
-                    header={header}
                   />
                 )}
               />
@@ -179,95 +159,63 @@ export function SliceView({ sliceId }: SliceViewProps) {
 }
 
 /**
- * Consolidated single-row slice-tab header, docked under the tab strip in
- * place of the embedded view's own menubar header: slice identity on the
- * left, scenario context + the shared Paths field in the middle, Reset View
- * and Present on the right. Wired to the same path-filter and zoom-chrome
- * state the embedded header used (via `renderHeader` / zoom chrome context).
+ * Slice header band, docked full-width under the tab strip in place of the
+ * embedded view's own menubar header. Two rows, non-collapsible: slice
+ * identity (◇ title + type badge) with Present on the far right, then the
+ * slice description as an always-visible subtitle (em-dash when empty —
+ * authoring should require a description going forward), with the
+ * missing-cells notice beside it when nonzero.
  */
 function SliceTabHeader({
   detail,
-  scenarioLabel,
   missingCellCount,
   onPresent,
-  header,
 }: {
   detail: SliceDetail
-  scenarioLabel: string | null
   missingCellCount: number
   onPresent: () => void
-  header: OverviewHeaderRenderProps
 }) {
+  const description = detail.slice.description?.trim()
+
   return (
     <div
       data-editor-navbar
-      className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-sidebar px-4"
+      className="flex w-full shrink-0 items-center gap-3 border-b border-border bg-sidebar px-4 py-2"
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex min-w-0 shrink items-center gap-2">
-        <h2 className="min-w-0 truncate text-sm font-semibold">
-          <span aria-hidden>◇ </span>
-          {detail.slice.title}
-        </h2>
-        <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-[10px] leading-tight text-muted-foreground">
-          {detail.slice.slice_type}
-        </span>
-        {detail.slice.description && (
-          <Tooltip>
-            <TooltipTrigger
-              className={cn(
-                'inline-flex size-4 shrink-0 items-center justify-center rounded-full',
-                'border-0 bg-transparent p-0 text-muted-foreground shadow-none outline-none',
-                'transition-colors hover:text-foreground',
-                'focus-visible:ring-1 focus-visible:ring-ring',
-              )}
-              aria-label="Slice description"
-            >
-              <Info className="size-3.5" aria-hidden />
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-xs">
-              {detail.slice.description}
-            </TooltipContent>
-          </Tooltip>
-        )}
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="min-w-0 truncate text-sm font-semibold">
+            <span aria-hidden>◇ </span>
+            {detail.slice.title}
+          </h2>
+          <Badge variant="secondary" className="shrink-0">
+            {detail.slice.slice_type}
+          </Badge>
+        </div>
+        <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
+            {description || '—'}
+          </p>
+          {missingCellCount > 0 && (
+            <span className="shrink-0 text-xs text-amber-600 dark:text-amber-400">
+              {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
+              longer in the blueprint
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="h-4 w-px shrink-0 bg-border" aria-hidden />
-
-      <div className="flex min-w-0 flex-1 items-center gap-2.5">
-        {scenarioLabel && (
-          <span className="shrink-0 text-[13px] font-medium text-muted-foreground">
-            {scenarioLabel}
-          </span>
-        )}
-        <StackHeaderFilterMenu
-          paths={header.paths}
-          selectedPathIds={header.selectedPathIds}
-          onTogglePath={header.onTogglePath}
-          showPathTooltips
-        />
-      </div>
-
-      <div className="flex shrink-0 items-center gap-2">
-        {missingCellCount > 0 && (
-          <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
-            longer in the blueprint
-          </span>
-        )}
-        <NavbarZoomIndicator />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={onPresent}
-        >
-          <Play className="size-3" aria-hidden />
-          Present
-        </Button>
-      </div>
+      <Button
+        type="button"
+        size="sm"
+        className="shrink-0 gap-1.5"
+        onClick={onPresent}
+      >
+        <Play className="size-3" aria-hidden />
+        Present
+      </Button>
     </div>
   )
 }
