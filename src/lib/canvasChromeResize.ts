@@ -16,8 +16,13 @@
 
 let suppressedUntil = 0
 
-/** Duration of the sidebar width ease (`EditorShell`), plus a settle frame. */
-export const CHROME_RESIZE_SUPPRESS_MS = 380
+/**
+ * Comfortably longer than the 320 ms sidebar width ease. The slack matters:
+ * the observer's final callback lands a frame or more after the transition
+ * ends, and later still when the main thread is busy — measured overshoot
+ * past a 380 ms window on sidebar expand.
+ */
+export const CHROME_RESIZE_SUPPRESS_MS = 600
 
 /**
  * Ignore container resizes for the next `durationMs`. Safe to call again
