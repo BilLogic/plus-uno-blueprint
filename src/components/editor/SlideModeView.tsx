@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { BlueprintCellDetailPanel } from '@/components/blueprint/BlueprintCellDetailPanel'
 import { BlueprintSlideContent } from '@/components/blueprint/BlueprintSlideContent'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
@@ -25,6 +25,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
 } from '@/components/ui/sidebar'
+import { useViewState } from '@/contexts/viewStateStore'
 import {
   getBlueprintScenarioId,
   isSubslide,
@@ -40,6 +41,22 @@ export function SlideModeSidebarNav() {
     slidesLoading,
     slidesError,
   } = useEditor()
+  const { activeKey, activateTab } = useViewState()
+
+  // The phase/scenario nav always drives the app-level (blueprint tab)
+  // editor state. When another tab is active that would be invisible, so
+  // selecting a phase/scenario also brings the blueprint tab forward.
+  const handleSelect = useCallback(
+    (slideId: string) => {
+      if (activeKey !== 'blueprint') activateTab('blueprint')
+      openDetail(slideId)
+    },
+    [activateTab, activeKey, openDetail],
+  )
+  const handleOverview = useCallback(() => {
+    if (activeKey !== 'blueprint') activateTab('blueprint')
+    enterCanvas()
+  }, [activateTab, activeKey, enterCanvas])
 
   return (
     <SidebarContent className="px-2 pb-1 pt-0.5">
@@ -59,8 +76,8 @@ export function SlideModeSidebarNav() {
         <SlideNav
           slides={slides}
           activeSlideId={activeSlideId}
-          onSelect={openDetail}
-          onOverview={enterCanvas}
+          onSelect={handleSelect}
+          onOverview={handleOverview}
           isOverviewActive={view === 'home'}
           isHome={view !== 'detail'}
         />

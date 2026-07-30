@@ -29,8 +29,30 @@ export function EditorShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
 
-  const toggleSidebar = () =>
+  // The sidebar's phase/scenario nav drives the blueprint tab, so it
+  // auto-collapses to the icon rail while a slice/present tab is active and
+  // re-expands on return — unless the user toggled it manually in between
+  // (a manual expand on a slice tab makes the nav switch tabs on click).
+  const activeTabKind = activeTab.kind
+  const [autoCollapsed, setAutoCollapsed] = useState(false)
+  const [lastTabKind, setLastTabKind] = useState(activeTabKind)
+  if (lastTabKind !== activeTabKind) {
+    setLastTabKind(activeTabKind)
+    if (activeTabKind !== 'blueprint') {
+      if (!sidebarCollapsed) {
+        setSidebarCollapsed(true)
+        setAutoCollapsed(true)
+      }
+    } else if (autoCollapsed) {
+      setSidebarCollapsed(false)
+      setAutoCollapsed(false)
+    }
+  }
+
+  const toggleSidebar = () => {
+    setAutoCollapsed(false)
     setSidebarCollapsed((collapsed) => !collapsed)
+  }
 
   return (
     <div

@@ -13,6 +13,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import { Separator } from '@/components/ui/separator'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -95,11 +96,12 @@ export function SlicesSidebarSection() {
   if (rows.length === 0) return null
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="mt-2">
+      <Separator className="mb-2" />
       <SidebarGroupContent>
         <Accordion defaultValue={['slices']} className="border-0">
           <AccordionItem value="slices" className="border-0">
-            <AccordionTrigger className="px-2 py-1.5 text-xs font-medium text-sidebar-foreground/70 hover:no-underline">
+            <AccordionTrigger className="px-2 py-1.5 text-[11px] font-medium tracking-wider text-sidebar-foreground/60 uppercase hover:no-underline">
               Slices
             </AccordionTrigger>
             <AccordionContent className="pb-1">
