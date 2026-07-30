@@ -48,14 +48,20 @@ The one well-sequenced motion in the app — sidebar collapse (320 ms
 `cubic-bezier(0.22,1,0.36,1)` width + 200 ms opacity crossfade with 75 ms delay) — is
 the model everything else should follow.
 
-## Design principles (proposed, need sign-off)
+## Design principles (revised per Bill, 2026-07-30)
 
-- **One loading vocabulary, one clock.** A single `DeferredFallback` wrapper owns the
-  timing contract for EVERY loading state: nothing for the first ~250 ms, then the
-  surface-appropriate fallback fading in over 200 ms, then content crossfading in.
-  Skeletons remain the fallback for full-surface loads (base canvas — layout-shaped),
-  the spinner for embedded/partial loads (slice tabs, panel tabs, presentation). What
-  users never see again: fallbacks for warm loads, strobing between multiple loaders.
+- **Structure-true loading.** The fallback is never a generic guess: render the REAL
+  containers of what is actually about to load — the true artboard frame(s), lane rails,
+  panel chrome — sized from data we already have (nav/slice metadata is cached and
+  arrives first), with only the inner content shimmering. The page's bones appear
+  immediately and never move; content fills into them. This replaces the fake
+  3-row skeleton guess AND the bare centered spinner. Spinners survive only where no
+  structure is knowable (cold deep link before the slice row arrives).
+- **One clock.** A single `DeferredFallback` wrapper owns timing for every loading
+  state: structure renders immediately; the inner shimmer appears only if content takes
+  >250 ms, fading in over 200 ms; content crossfades in over 200 ms when it replaces a
+  shown shimmer (frame-1 instant when warm). Never fallbacks for warm loads, never
+  loader → blank → loader strobes.
 - **A surface shows at most ONE loader per load.** Waterfalls hold the same fallback
   instance until content is ready — never loader → blank → loader.
 - **The camera moves exactly once per navigation.** Fit when geometry is settled, not
@@ -80,19 +86,88 @@ the model everything else should follow.
 - Acceptance: cold overview load = exactly one 420 ms camera animation (count via a dev
   hook on `animateTransform`); no post-fit snap unless the window actually resized.
 
-### Phase 2 — One loading vocabulary
-- New `DeferredFallback` (wraps the existing `.delayed-appear` timing): props
-  `{fallback: 'skeleton-overview' | 'skeleton-panel' | 'spinner', minHold?: number}`;
-  content mounts with a 200 ms fade-in when it replaces a shown fallback (no fade when
-  warm — frame-1 content stays instant).
-- Kill `loadingVariant` divergence: base view and slice tabs both go through
-  `DeferredFallback`; skeletons gain the 250 ms hold (no more skeleton flash on fast
-  loads); `"Loading evidence…"` text and `CellOverviewSpec`'s null-pop adopt it too
-  (spec block reserves height while loading).
-- Slice-tab waterfall shows ONE fallback for the whole chain (hoist the loader above
-  the three stages; stages no longer each own a spinner).
-- Acceptance: throttled-network walkthrough shows at most one fallback per surface;
-  fast loads (<250 ms) show zero fallbacks anywhere.
+### Phase 2 — Structure-true loading vocabulary
+- New `DeferredFallback` (wraps the existing `.delayed-appear` timing): structure
+  slot renders immediately, shimmer slot defers 250 ms, content crossfades 200 ms when
+  replacing a shown shimmer (frame-1 instant when warm).
+- Structure sources (all available before the heavy cells query): nav metadata gives
+  phase/scenario names + counts (base view frames); the cached slices list gives slice
+  title/description/type (slice header instantly); path metadata gives lane-rail counts
+  once paths load. Containers are laid out at real positions — the camera can fit to
+  them BEFORE cells arrive, so first content paint is already at the fitted transform.
+- Kill `loadingVariant` divergence and the fake 3-row skeleton; `"Loading evidence…"`
+  text and `CellOverviewSpec`'s null-pop adopt the same wrapper (spec block reserves
+  height while loading).
+- Slice-tab waterfall shows ONE structure + shimmer for the whole chain — never a
+  second loader.
+- Acceptance: throttled-network walkthrough shows real containers with at most one
+  shimmer per surface; fast loads (<250 ms) show structure-then-content with zero
+  shimmer; containers never move when content lands.
+
+## ASCII prototypes — loading scenarios & transitions
+
+**S1 — cold overview load (base view).** Bones first, shimmer inside, one camera move:
+
+```
+t=0ms  frame containers from nav data,     t>250ms  inner shimmer fades in     content lands: cells crossfade in,
+       already camera-fitted                        (only if still loading)    containers never move
+┌─────────┐ ┌─────────┐ ┌────────┐         ┌─────────┐ ┌─────────┐            ┌─────────┐ ┌─────────┐
+│In-session│ │Post-ses…│ │ …      │         │▒▒▒▒▒▒▒▒▒│ │▒▒▒▒▒▒▒▒▒│            │[cell][ce│ │[cell][ce│
+│          │ │         │ │        │   →     │▒▒▒▒▒▒▒▒▒│ │▒▒▒▒▒▒▒▒▒│     →      │[cell][ce│ │[cell][ce│
+│          │ │         │ │        │         │▒▒▒▒▒▒▒▒▒│ │▒▒▒▒▒▒▒▒▒│            │[cell][ce│ │[cell][ce│
+└─────────┘ └─────────┘ └────────┘         └─────────┘ └─────────┘            └─────────┘ └─────────┘
+(no fake 3-row guess; no zoom-1 flash; camera fits ONCE, to these frames)
+```
+
+**S2 — cold slice tab.** Header is instant (slice row already cached from the sidebar
+list); one artboard skeleton with lane rails; single shimmer for the whole waterfall:
+
+```
+t=0ms                                           content lands
+┌────────────────────────────────────[▶ Present]┐    ┌──────────────────────────────[▶ Present]┐
+│ ◇ Tutor warm-up journey  (journey)            │    │ ◇ Tutor warm-up journey  (journey)       │
+│ What the tutor does and touches…              │    │ What the tutor does and touches…         │
+├───────────────────────────────────────────────┤ →  ├──────────────────────────────────────────┤
+│ ┌─ Warm-Up ────────────────────────────────┐  │    │ ┌─ Warm-Up ────────────────────────────┐ │
+│ │ Visual   │▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒│ │  │    │ │ ① [cell] ② [cell] … badges + dim     │ │
+│ │ Lead Tut │▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒│ │  │    │ │ …                                    │ │
+│ │ Reg Tut  │▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒│ │  │    │ │                                      │ │
+│ └──────────────────────────────────────────┘  │    │ └──────────────────────────────────────┘ │
+└───────────────────────────────────────────────┘    └──────────────────────────────────────────┘
+(never spinner→blank→spinner; lane rails appear when path metadata lands, cells after)
+```
+
+**S3 — warm tab switch.** Zero loaders, zero network; 200 ms content crossfade only:
+
+```
+[slice tab A] ──click tab B──▶ A fades out (200ms, ease) ⟍
+                                                          ⟩ 75ms stagger (sidebar model)
+                               B fades in  (200ms, ease) ⟋
+```
+
+**S4 — entering presentation.** Sidebar wipes (320 ms width ease, not unmount-snap);
+stage fades up from dark:
+
+```
+│▓ sidebar ▓│ canvas │   →   │▓│ canvas → dark stage fades in (200ms)   →   │ dark stage, full bleed │
+   320ms width ease                                                            filmstrip slides up 200ms
+```
+
+**S5 — cell panel spec load.** Panel opens at full height; spec block shimmers in place,
+no reflow:
+
+```
+┌─ panel ─────┐        ┌─ panel ─────┐
+│ title, chip │        │ title, chip │
+│ description │   →    │ description │
+│ ▒▒▒▒▒▒▒▒▒▒ │        │ FUNCTION …  │   (reserved height; crossfade; tabs below never jump)
+│ [Deps][Ev.] │        │ [Deps][Ev.] │
+└─────────────┘        └─────────────┘
+```
+
+**S6 — badge zoom threshold & slice dim.** Badges fade 150 ms at the 0.25× threshold
+(no display:none pop); dim eases opacity 180 ms with filter applied un-transitioned at
+t=0 (single visual event, no per-frame filter animation).
 
 ### Phase 3 — Deterministic warm paths (cache semantics)
 - Negative caching: failures/timeouts cache for 15 s (with the error state served),
