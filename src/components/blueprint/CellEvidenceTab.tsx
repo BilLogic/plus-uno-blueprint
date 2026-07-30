@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useEvidence } from '@/hooks/useEvidence'
 import { resolveFirstLifecycleId } from '@/lib/sliceMutations'
+import { safeExternalHref } from '@/lib/sliceCells'
 import type { Database, Evidence } from '@/types/database'
 
 const EVIDENCE_KINDS = [
@@ -50,14 +51,15 @@ function kindIcon(kind: string) {
 }
 
 function EvidenceRow({ row }: { row: Evidence }) {
+  const refHref = safeExternalHref(row.ref)
   return (
     <li className="flex items-start gap-2 border-b border-border/35 py-2 last:border-0">
       {kindIcon(row.kind)}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="text-xs font-medium text-foreground">{row.title}</p>
-        {row.ref ? (
+        {refHref ? (
           <a
-            href={row.ref}
+            href={refHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-fit min-w-0 items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"

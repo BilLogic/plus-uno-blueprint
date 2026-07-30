@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react'
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import { safeExternalHref } from '@/lib/sliceCells'
 import type { CellLink } from '@/types/blueprint'
 
 type ResourceRow = {
@@ -38,10 +39,10 @@ export function CellResourcesTab({ links, figmaUrl }: CellResourcesTabProps) {
 
   return (
     <ul className="flex flex-col">
-      {rows.map((row) => (
+      {rows.filter((row) => safeExternalHref(row.url)).map((row) => (
         <li key={row.id} className="border-b border-border/35 last:border-0">
           <a
-            href={row.url}
+            href={safeExternalHref(row.url) ?? undefined}
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-full min-w-0 items-center gap-[7px] px-2 py-1.5 text-xs leading-snug font-normal text-foreground/90 transition-colors hover:bg-neutral-100 hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none dark:hover:bg-foreground/[0.08]"

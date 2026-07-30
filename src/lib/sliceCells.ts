@@ -200,3 +200,9 @@ export function sliceIllustrationUrl(illustration: SliceIllustration): string {
     ? `${illustration.src}?v=${encodeURIComponent(illustration.updatedAt)}`
     : illustration.src
 }
+
+/** Only http(s) URLs may render as anchors — DB-sourced refs are untrusted. */
+export function safeExternalHref(href: string | null | undefined): string | null {
+  if (!href) return null
+  return /^https?:\/\//i.test(href) ? href : null
+}
