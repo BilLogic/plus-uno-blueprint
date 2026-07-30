@@ -90,11 +90,10 @@ export function SlideModeSidebarNav() {
 
       {mode === 'blueprints' ? (
         <Accordion
-          // Base UI defaults to single-open: without this, opening Paths
-          // collapsed Phases (and with it the whole nav) out from under the
-          // user.
+          // Base UI defaults to single-open; the sidebar's sections are
+          // independent.
           multiple
-          defaultValue={['phases', 'paths']}
+          defaultValue={['phases']}
           className="border-0"
         >
           <AccordionItem value="phases" className="border-0">
@@ -131,18 +130,16 @@ export function SlideModeSidebarNav() {
               )}
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="paths" className="border-0">
-            <AccordionTrigger className={SIDEBAR_SECTION_TRIGGER_CLASS}>
-              Paths
-            </AccordionTrigger>
-            <AccordionContent className="pb-1">
-              <PathsSidebarSection />
-            </AccordionContent>
-          </AccordionItem>
         </Accordion>
       ) : (
         <SlicesSidebarSection />
       )}
+
+      {/* Outside the mode tabs on purpose: a slice tab force-switches the
+          sidebar to Slices, which would make a Blueprints-only Paths
+          section unreachable exactly when a slice is open (D4). The
+          section hides itself when there is nothing to bind it to. */}
+      <PathsSidebarSection />
     </SidebarContent>
   )
 }
