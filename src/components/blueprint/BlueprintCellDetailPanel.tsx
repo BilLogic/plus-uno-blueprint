@@ -714,7 +714,13 @@ export function BlueprintCellDetailPanel() {
                     </TabsTrigger>
                   ))}
                 </TabsList>
-                <div className="flex flex-col gap-5 px-4 pt-4 pb-4">
+                {/*
+                  Reserved height: the three tabs have very different
+                  content lengths, and without a floor the panel jumped a
+                  couple of hundred pixels on every switch. Cheaper and
+                  steadier than easing the height.
+                */}
+                <div className="flex min-h-56 flex-col gap-5 px-4 pt-4 pb-4">
                   {activeTab === 'dependencies' ? (
                     <CellDependencySections
                       connections={connections}

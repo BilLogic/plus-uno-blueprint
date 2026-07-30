@@ -306,6 +306,11 @@
   /* Cell fills stay at their role color when a panel is hovered/focused —
      the old grey color-mix blend muddied role-based colors on click. */
 
+  /* The slice dim eases on opacity only. `filter` is applied but never
+     listed here on purpose: transitioning a filter repaints every
+     non-member cell on every frame of the ease, which the perf review
+     flagged explicitly. The desaturation lands on frame 1 under a cell that
+     is still near-opaque, so the pair still reads as one event. */
   [data-blueprint-cell-anchor] {
     transition-property: box-shadow, transform, opacity, background-color;
     transition-duration: 180ms;
@@ -331,9 +336,16 @@
   }
 
   /* Sequence badges scale with the canvas transform; once the camera is far
-     enough out that the numbers are illegible they read as noise — hide. */
+     enough out that the numbers are illegible they read as noise. Fading
+     rather than `display: none` keeps the 0.25 threshold from popping —
+     crossing it now costs one 150 ms opacity animation, not a relayout. */
+  [data-slice-sequence-badge] {
+    transition: opacity 150ms ease-out;
+  }
+
   [data-canvas-zoom-far] [data-slice-sequence-badge] {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
   }
 
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
@@ -509,6 +521,13 @@
   }
 }
 
+/* Tab / landing ⇄ canvas switches. Only the active surface is mounted, so
+   this is a fade-through: the incoming surface fades up after the same
+   75 ms stagger the sidebar crossfade uses. */
+[data-editor-content] {
+  animation: editor-fade-in 200ms ease-out 75ms both;
+}
+
 /* Presentation enter — sidebar collapses (320 ms, owned by the shell) ∥
    stage fades up (200 ms) ∥ filmstrip slides up (200 ms). The 75 ms offset
    lines the pair up with the surface crossfade above. */
@@ -537,6 +556,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-editor-content],
   [data-presentation-root],
   [data-presentation-root] [data-presentation-stage],
   [data-presentation-root] [data-presentation-filmstrip] {
@@ -599,12 +619,6 @@
   [data-cell-detail-panel],
   [data-visual-walkthrough-modal],
   [data-print-hide] {
-    display: none !important;
-  }
-
-  /* The inactive stacked view (home vs. detail) is opacity-0/aria-hidden on
-   * screen; remove it entirely so only the visible view prints. */
-  [data-editor-view][aria-hidden='true'] {
     display: none !important;
   }
 

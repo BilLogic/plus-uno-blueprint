@@ -123,6 +123,15 @@ export function EditorShell() {
     goLanding()
   }
 
+  // What counts as a content switch for the crossfade. Navigation *inside*
+  // the base canvas (home ⇄ detail) is a camera move, not a screen change,
+  // so it deliberately keeps the same key.
+  const contentKey = activeTab
+    ? tabKey(activeTab)
+    : isLanding
+      ? 'landing'
+      : 'blueprint'
+
   return (
     <div
       className="relative flex h-svh overflow-hidden bg-background"
@@ -209,8 +218,17 @@ export function EditorShell() {
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <TabStrip />
         <div className="relative min-h-0 min-w-0 flex-1">
-          {/* Only the active tab's content mounts. */}
-          <div className="absolute inset-0">
+          {/*
+            Only the active tab's content mounts, so switching is a
+            fade-through rather than a true crossfade: the keyed wrapper
+            remounts and the incoming surface fades up over 200 ms after the
+            75 ms stagger the sidebar already uses.
+          */}
+          <div
+            key={contentKey}
+            className="absolute inset-0"
+            data-editor-content=""
+          >
             <ActiveTabContent
               tab={activeTab}
               isLanding={isLanding}
