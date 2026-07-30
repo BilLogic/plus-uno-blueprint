@@ -312,6 +312,12 @@
     filter: saturate(0.35) grayscale(0.5);
   }
 
+  /* Sequence badges scale with the canvas transform; once the camera is far
+     enough out that the numbers are illegible they read as noise — hide. */
+  [data-canvas-zoom-far] [data-slice-sequence-badge] {
+    display: none;
+  }
+
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
     background-color: var(
       --blueprint-cell-bg-hover,
