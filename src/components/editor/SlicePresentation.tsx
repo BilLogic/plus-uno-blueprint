@@ -329,7 +329,9 @@ function PresentationFilmstrip({
 
   return (
     <div className="shrink-0 overflow-x-auto border-t border-border px-6 py-4">
-      <div className="flex items-start gap-6">
+      {/* Centered to match the stage; `w-max mx-auto` keeps centering while the
+          strip stays scrollable when frames overflow the viewport. */}
+      <div className="mx-auto flex w-max items-start gap-6">
         {items.map((item, index) => {
           const active = index === activeFrame
           return (
