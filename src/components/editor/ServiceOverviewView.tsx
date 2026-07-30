@@ -203,10 +203,12 @@ export function ServiceOverviewView({
     goHome,
     view,
     activeSlide,
-    activeSlideId,
+    cameraTargetId,
+    focusNonce,
     getScenarioDisplayViewType,
     setScenarioDisplayViewType,
     skipCanvasFitAnimation,
+    consumeCanvasFitAnimationSkip,
   } = useEditor()
   const allPhases = getMainSlides(slides)
   const soloPhase = soloScenarioId
@@ -248,8 +250,12 @@ export function ServiceOverviewView({
   const fitSelector = getCanvasFocusSelector(view, activeSlide)
   const maxFitZoom = getCanvasFocusMaxZoom(view)
   const fitInsets = getCanvasFocusFitInsets(view)
+  // Camera key. Deliberately excludes the selected path ids: toggling a path
+  // is a filter, not a navigation, and having it here threw away the user's
+  // pan/zoom on every checkbox. `focusNonce` bumps on each nav click so
+  // re-selecting the row you are already on recenters after panning away.
   const fitKey = overviewReady
-    ? `service-canvas:${view}:${activeSlideId}:${phases.length}-${scenarioIds.length}-${overviewSelectedPathIds.join(',')}`
+    ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}`
     : 'service-overview-loading'
   const noPathsSelected =
     overviewPaths.length > 0 && overviewSelectedPathIds.length === 0
@@ -295,6 +301,14 @@ export function ServiceOverviewView({
     pathsByScenario,
     slides,
   ])
+
+  // The viewport below has already scheduled this fit with animation
+  // suppressed (child effects run before parent effects), so release the
+  // one-shot now — every later navigation animates.
+  useEffect(() => {
+    if (!overviewReady || !skipCanvasFitAnimation) return
+    consumeCanvasFitAnimationSkip()
+  }, [overviewReady, skipCanvasFitAnimation, consumeCanvasFitAnimationSkip])
 
   if (!overviewReady) {
     return loadingVariant === 'spinner' ? (

@@ -384,11 +384,11 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
     const onResize = () => {
       if (userAdjustedViewRef.current) return
-      // Checked as the resize is observed, not when the debounce fires:
-      // the chrome window closes before a 200 ms debounce would elapse.
-      if (suppressResizeRefit || isCanvasResizeRefitSuppressed()) return
 
       if (refitOnResize) {
+        // Checked as the resize is observed, not when the debounce fires:
+        // the chrome window closes before a 200 ms debounce would elapse.
+        if (suppressResizeRefit || isCanvasResizeRefitSuppressed()) return
         window.clearTimeout(debounceTimer)
         // Re-center only. A resize is not a navigation, so it must not
         // discard the zoom level the viewport is currently at.

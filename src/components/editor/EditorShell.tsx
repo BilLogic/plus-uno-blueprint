@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useEditor } from '@/contexts/EditorContext'
 import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
@@ -19,13 +19,14 @@ import { SliceView } from '@/components/editor/SliceView'
 import { TabStrip } from '@/components/editor/TabStrip'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { tabKey, useViewState, type TabDescriptor } from '@/contexts/viewStateStore'
+import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 import { cn } from '@/lib/utils'
 
 const SIDEBAR_WIDTH_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
 export function EditorShell() {
   const { view, goLanding } = useEditor()
-  const { activeTab, activateTab } = useViewState()
+  const { activeTab, activateTab, tabs } = useViewState()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
 
@@ -35,8 +36,18 @@ export function EditorShell() {
   const activeTabKind = activeTab?.kind ?? null
 
   const toggleSidebar = () => {
+    // The width ease resizes the canvas container for 320 ms. That is
+    // chrome moving, not the user navigating — the camera holds still.
+    suppressCanvasResizeRefit()
     setSidebarCollapsed((collapsed) => !collapsed)
   }
+
+  // Same reasoning for the tab strip appearing/disappearing: opening the
+  // first slice tab (or closing the last) changes the canvas height.
+  const hasTabs = tabs.length > 0
+  useEffect(() => {
+    suppressCanvasResizeRefit()
+  }, [hasTabs])
 
   // Home always returns to the base blueprint view (deactivating any tab)
   // before landing on the homepage.
