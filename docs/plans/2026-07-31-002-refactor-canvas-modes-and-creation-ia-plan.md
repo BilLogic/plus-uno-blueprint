@@ -504,6 +504,126 @@ cross-blueprint session leaves half of it applied. If a true draft session is
 wanted it deserves its own plan rather than three buttons on a canvas that
 writes as it goes.
 
+#### Edit with a slice open — a state the bar has never had
+
+Everything above assumes a blueprint underneath. Open a slice and the same bar
+has a different job: there is nothing to *make*, because the slice already
+exists, and the work is arranging what is in it.
+
+```
+Edit, editing the slice “Tutor warm-up journey”
+┌────────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ 8 frames ⌄   ▷ Present  │  ⚑ 2 ⌄  ✓ Save  │  👁 View ✎ Edit│
+└────────────────────────────────────────────────────────────────────────┘
+              ▲                ▲
+              │                └─ play it, without leaving Edit
+              └─ the slice sheet
+```
+
+`Make slice` is replaced, not disabled — a different noun is on the canvas, so
+a different verb belongs in the slot.
+
+#### Frames live on the cells, and only order lives in the sheet
+
+The split is the same one the whole plan runs on: **what has a location goes on
+the canvas, what has none goes in a sheet.** A frame *membership* has a
+location — the cell. A frame *order* does not; a frame is not a place.
+
+So membership is edited on the grid:
+
+```
+   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+   │ ①        │  │ ①        │  │ ②        │  │ ·        │
+   │ Greet    │  │ Ask to   │  │ Mark     │  │ Move to  │
+   │ student  │  │ share    │  │ present  │  │ next     │
+   └──────────┘  └──────────┘  └──────────┘  └──────────┘
+        └─── frame 1 ───┘       └frame 2┘     ▲ in the slice,
+                                              no frame yet
+```
+
+- **click a badge** → cycles the cell to the next frame, then to “new frame”
+- **shift-click two cells** → puts them in the same frame
+- **drag a cell onto another** → joins that cell’s frame
+- **hover a badge** → every cell not in that frame dims, so the grouping is
+  read off the blueprint rather than inferred from a strip
+
+That last one is what the current docked editor cannot do at all, and it is the
+whole reason to move: today grouping is inferred from chips labelled `0110ab`,
+the last six characters of a UUID.
+
+#### The slice sheet
+
+Dropdown, anchored under `◆ 8 frames`, **not a modal** — same reason as the
+change sheet: the cells it names are behind it, and `⌖` points at them.
+
+```
+                          ◆ 8 frames ⌄
+   ┌───────────────────────────────────────────────────────────┐
+   │  Tutor warm-up journey                            journey │
+   │  What the regular tutor does and touches while warming up. │
+   ├───────────────────────────────────────────────────────────┤
+   │                                                           │
+   │  ⠿  1   Greet the student                          ⌖  ⋯   │
+   │         2 cells · Regular Tutor, Front Stage Tech         │
+   │                                                           │
+   │  ⠿  2   Ask them to share their screen              ⌖  ⋯   │
+   │         2 cells · Regular Tutor, Zoom/Pencil              │
+   │                                                           │
+   │  ⠿  3   ⟨no caption⟩                                ⌖  ⋯   │
+   │         1 cell · Regular Tutor                            │
+   │         ⚠ a frame with no caption presents blank          │
+   │                                                           │
+   │  … 5 more                                                 │
+   ├───────────────────────────────────────────────────────────┤
+   │  ⊕ Add empty frame          │        1 cell not in a frame │
+   └───────────────────────────────────────────────────────────┘
+```
+
+What each part is doing:
+
+- **`⠿` drags to reorder.** The only genuinely sheet-shaped action here —
+  frame order is a sequence with no representation on the grid.
+- **The caption is the row.** Click it and type; it is the thing presented, so
+  it should be the most prominent text, not a field inside a card.
+- **“2 cells · Regular Tutor, Front Stage Tech”** — lanes, not ids. A frame is
+  recognised by *what it contains*, and lane names are how a reader already
+  thinks about the grid.
+- **`⌖`** flies the camera to the frame’s cells and dims the rest — the same
+  gesture as hovering a badge, available from the list.
+- **`⋯`** carries split, merge-with-next, and remove — the three that were
+  buttons on every card in the old strip, now one menu on the row that needs
+  them.
+- **The unassigned count** is the footer, permanently, because it is the one
+  error the editor used to allow silently: a cell in the slice that no frame
+  shows, which presents as a cell that simply never appears.
+- **The caption warning** is inline on the offending row, not a validation
+  summary somewhere else.
+
+#### What replaces the docked strip
+
+`SliceFrameEditor` stops being the editor. What is left of it is a **scrubber**
+— the thing you need while *watching* a slice rather than building one:
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│  ◀   ①  ②  ③  ④  ⑤  ⑥  ⑦  ⑧   ▶     “Ask them to share…”         │
+└────────────────────────────────────────────────────────────────────┘
+        ▲ current                       ▲ the caption of the frame you are on
+```
+
+Order is visible, position is visible, and the caption is the one piece of text
+that matters at playback. Everything that was drag-a-chip moves to the cells or
+the sheet.
+
+#### Why not keep the strip and just fix the labels
+
+Worth stating, because it is the cheaper option and it is still wrong. Swapping
+`0110ab` for “Greet the student” makes the strip readable but leaves the
+gesture backwards: you would still arrange a slice by dragging text between
+cards while the blueprint those cells live on is a foot away on the same
+screen, greyed out and unused. The labels were a symptom. The strip being a
+*second* representation of the grid is the defect.
+
 #### Make slice with nothing picked
 
 **Not disabled.** A greyed button with a tooltip teaches nothing to the person
@@ -736,8 +856,8 @@ them.
 labelled `0110ab` — the last six characters of a UUID. You reorganise by
 reading identifiers instead of by looking at the blueprint. This is the same
 category of defect as the arrow picker that showed three identical rows, and it
-is the one story in this list the current design does not support. Proposal is
-in "Open" below.
+is the one story in this list the current design does not support. Specced in
+"Frames live on the cells" and "The slice sheet" above.
 
 ### S10 — "Read the blueprint without touching anything"
 
@@ -818,26 +938,9 @@ a bigger build than the problem currently justifies.
 
 ### 2. Slice frames are edited by reading UUIDs (from S9)
 
-The docked strip holds chips labelled `0110ab`. Proposal — put the frame number
-on the cell, on the canvas, where the pick-order badge already sits:
-
-```
-   ┌──────────┐  ┌──────────┐  ┌──────────┐
-   │ ①        │  │ ①        │  │ ②        │
-   │ Greet    │  │ Ask to   │  │ Mark     │
-   │ student  │  │ share    │  │ present  │
-   └──────────┘  └──────────┘  └──────────┘
-        └── frame 1 ──┘         └─ frame 2 ─┘
-```
-
-- click a badge → cycle the cell to the next frame
-- shift-click two cells → same frame
-- drag a cell onto another → join that cell's frame
-- hover a badge → dim everything not in that frame
-
-The strip stops being the editor and becomes a scrubber: thumbnails, order, and
-the current frame's caption. Reordering frames stays there, because a frame is
-not a place on the canvas and has nowhere else to live.
+Specced above — membership moves onto the cells as frame badges, order and
+captions move into the slice sheet, and the docked strip shrinks to a scrubber.
+Not built.
 
 ### 3. What else belongs in Edit's run
 
