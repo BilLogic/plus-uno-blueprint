@@ -9,6 +9,7 @@ import {
   Type,
   SquarePen,
   Eye,
+  Hand,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -264,6 +265,24 @@ export function CanvasAnnotationToolbar() {
           active={tool === 'select'}
           onSelect={setTool}
         />
+
+        {/*
+          Edit needs its own pan tool; View does not. In View a drag on empty
+          canvas already pans, because there is nothing else it could mean. In
+          Edit that same drag is a marquee, which left the camera reachable
+          only by trackpad or an undiscoverable space-drag — and a slice may
+          gather cells from blueprints that are nowhere near each other, so
+          crossing the canvas is part of the ordinary job, not an edge case.
+        */}
+        {designing ? (
+          <ToolButton
+            id="hand"
+            label="Hand — drag to pan"
+            icon={Hand}
+            active={tool === 'hand'}
+            onSelect={setTool}
+          />
+        ) : null}
 
         {designing ? (
           <CanvasDesignTools />

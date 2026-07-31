@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 
@@ -33,11 +34,14 @@ type Rect = { left: number; top: number; width: number; height: number }
  * one piece of this codebase where a regression is expensive, and this way it
  * keeps exactly the behaviour it has today.
  *
- * Panning in Design mode stays available on space-drag, the trackpad, and the
- * wheel — none of which route through this listener.
+ * Panning stays available on space-drag, the trackpad and the wheel — none of
+ * which route through this listener — and, since a slice may span blueprints
+ * that are nowhere near each other, on the Hand tool, which suspends this
+ * listener outright.
  */
 export function MarqueeSelection() {
   const mode = useCanvasModeValue()
+  const { tool } = useCanvasAnnotations()
   const pick = useCellPick()
   const [rect, setRect] = useState<Rect | null>(null)
   // Refs, not state: these change on every pointermove and must not re-render.
@@ -45,7 +49,10 @@ export function MarqueeSelection() {
   const moved = useRef(false)
 
   useEffect(() => {
-    if (mode !== 'design' || !pick) return
+    // Hand stands down entirely: the whole point of the tool is that a drag
+    // means "move the camera", and this listener claims the gesture in the
+    // capture phase before the pan handler can ever see it.
+    if (mode !== 'design' || tool === 'hand' || !pick) return
     const root = document.querySelector('[data-zoom-pan-root]')
     if (!(root instanceof HTMLElement)) return
 
@@ -135,7 +142,7 @@ export function MarqueeSelection() {
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
     }
-  }, [mode, pick])
+  }, [mode, pick, tool])
 
   if (!rect) return null
 

@@ -1,5 +1,10 @@
 export type CanvasAnnotationTool =
   | 'select'
+  /**
+   * Pan without selecting. Only offered in Edit mode: View's Select already
+   * pans, because there is nothing there for a drag to mean instead.
+   */
+  | 'hand'
   | 'pen'
   | 'rect'
   | 'ellipse'

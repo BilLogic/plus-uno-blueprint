@@ -3,6 +3,7 @@ import {
   useBlueprintCellDetailOptional,
   useBlueprintCellPreviewHover,
 } from '@/contexts/BlueprintCellDetailContext'
+import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
@@ -90,6 +91,7 @@ export function BlueprintCellButton({
   // Slice membership and picking both key on the canonical cell id, so
   // integrated-view overlay ids resolve to the same cell as the base grid.
   const pick = useCellPick()
+  const { tool: annotationTool } = useCanvasAnnotations()
   const pickCellId = resolvedCellId ?? cellId ?? null
   const pickOrder = pick && pickCellId ? pick.orderOf(pickCellId) : undefined
   const isPicked = Boolean(pick && pickCellId && pick.isPicked(pickCellId))
@@ -128,6 +130,9 @@ export function BlueprintCellButton({
     // Picking a cell for a slice takes precedence over opening the panel:
     // in edit mode every click picks, elsewhere only cmd/shift-click does,
     // so ordinary reading of the blueprint is unaffected.
+    // Hand means the canvas is being moved, not read: a click that lands at
+    // the end of a pan must not also change the selection.
+    if (annotationTool === 'hand') return
     if (pickCellId && pick && (pick.plainClick || event.shiftKey)) {
       // A click gathers; shift reaches back to the last one and takes
       // everything between. A picker that is not gathering (a slice edit
