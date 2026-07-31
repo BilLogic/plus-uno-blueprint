@@ -2,6 +2,8 @@
   "exported_from": "https://osybxeojvsqcwxkgnalm.supabase.co",
   "cells": [
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Front Stage Tech",
       "step": "Enter Breakout Room",
@@ -21,6 +23,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Lead Tutor",
       "step": "Enter Breakout Room",
@@ -40,6 +44,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Partner Action: Teacher",
       "step": "Enter Breakout Room",
@@ -59,6 +65,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Ask Student to Share Screen",
@@ -78,6 +86,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Enter Breakout Room",
@@ -97,6 +107,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Greet Student",
@@ -116,6 +128,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Leave Breakout Room",
@@ -135,6 +149,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Mark Student Helped",
@@ -154,6 +170,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Mark Student Present",
@@ -173,6 +191,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Remind Student They Can Ask for Help",
@@ -192,6 +212,8 @@
       "perceived_owner": null
     },
     {
+      "phase": "In-session",
+      "scenario": "Warm-Up",
       "path": "Happy Path",
       "layer": "Regular Tutor",
       "step": "Select Engagement level",
