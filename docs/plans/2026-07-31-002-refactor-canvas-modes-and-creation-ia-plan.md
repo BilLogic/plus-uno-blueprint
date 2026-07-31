@@ -131,17 +131,22 @@ Lifecycle
 Slice ..................................... references cells anywhere
 ```
 
-**Things with a sidebar row can be created from the sidebar. Things with a
-position cannot be created from a menu**, because "add a step" is not a
-complete instruction — "add a step *after which one*" is. A menu would have to
-ask a follow-up question that the canvas answers by being pointed at.
+**Things with a sidebar row can be created from the sidebar. A position has to
+be either pointed at or asked for** — "add a step" is not a complete
+instruction, "add a step *after which one*" is. Pointing is faster and is what
+the grid handles are for; asking is what the **Create** dialog is for, and it
+is the only route that works for somewhere you are not currently looking.
+
+*(An earlier draft of this section said a position "cannot be created from a
+menu" at all. That conflated a menu which acts on click with one which opens
+and asks. See "The Create button, and where Decision 2 was too clever".)*
 
 Creation therefore splits by what a thing needs in order to exist:
 
 | Needs | Surface | Creates |
 |---|---|---|
 | a parent | **sidebar, hover `+`** | phase, blueprint, path |
-| a position | **canvas handle** | step, lane, cell |
+| a position | **canvas handle**, or the **Create** dialog | step, lane, cell |
 | a selection | **the Edit tool run** | slice |
 | a sentence | [agent](./2026-07-31-003-feat-inline-agent-chat-plan.md) | any of them, described |
 
@@ -504,6 +509,104 @@ cross-blueprint session leaves half of it applied. If a true draft session is
 wanted it deserves its own plan rather than three buttons on a canvas that
 writes as it goes.
 
+#### The Create button, and where Decision 2 was too clever
+
+Decision 2 argued that positional things "cannot be created from a menu",
+because *"add a step" is not a complete instruction — "add a step after which
+one" is*. That is true of a menu that acts on click. It is **not** true of a
+menu that opens and asks, and the distinction was collapsed.
+
+So Edit gets one deliberate place that can create anything:
+
+```
+⊕ Create
+┌──────────────────────────────────────────────┐
+│   ▦  Scenario…                               │
+│   ⧉  Path…                                   │
+│   ▤  Step…                                   │
+│   ▭  Lane…                                   │
+│   ▢  Cell…                                   │
+│  ──────────────────────────────────────────  │
+│   ◱  Phase…                                  │
+└──────────────────────────────────────────────┘
+```
+
+Phase sits below a divider because it changes the shape of the whole canvas
+rather than the contents of one grid.
+
+Every entry opens the same dialog, differing only in which locators it asks for:
+
+```
+⊕ Create step
+┌─────────────────────────────────────────────────────┐
+│  New step                                           │
+│                                                     │
+│  Name        [ Greet the student            ]       │
+│                                                     │
+│  Where                                              │
+│    Phase     ( In-session            ⌄ )            │
+│    Scenario  ( Warm-Up               ⌄ )            │
+│    Path      ( Happy Path            ⌄ )            │
+│    Position  ( After “Ask to share”  ⌄ )            │
+│                                                     │
+│  ⓘ Pre-filled from what you are looking at.         │
+│                                                     │
+│              [ Cancel ]        [ Create step ]      │
+└─────────────────────────────────────────────────────┘
+```
+
+Three rules make this worth having rather than a second way to do the same
+thing badly:
+
+1. **Every locator is pre-filled from the current view.** Standing in Warm-Up /
+   Happy Path, the first three are already right and only *Position* needs a
+   look. The dialog is a confirmation in the common case and a full form only
+   when creating somewhere you are not.
+2. **Locators cascade and truncate.** Choosing Scenario reloads Path; Cell adds
+   *Lane* and *Step*; Phase shows none of them. Nothing asks for a locator that
+   the chosen type does not have.
+3. **It never replaces the contextual affordances.** The sidebar `+` and the
+   grid handles stay, and stay faster — pointing at a gap is one gesture where
+   this is five. Create is the path for *"a step in a scenario I am not looking
+   at"*, which is exactly the case pointing cannot serve.
+
+**Corrected claim.** Decision 2's table said a position "cannot be created from
+a menu". It should read: a position cannot be *inferred* by a menu — it has to
+be either pointed at or asked for. Both are legitimate; the mistake was
+offering only one.
+
+#### Delete — deliberately not symmetric
+
+The obvious next question is a matching Delete button, and the answer is no.
+
+Create and delete are not mirror images, because **choosing the wrong row from
+a dropdown has opposite consequences.** Create the wrong thing and there is an
+extra empty step to remove. Delete the wrong thing and 43 cells, 34 arrows and
+7 slices go with it — and picking "Happy Path" from a list of five paths named
+*Happy Path*, *Set Goals*, *Check Goals*… is precisely the mistake a locator
+dropdown invites.
+
+So deletion stays **on the object**, where the target cannot be mistaken:
+
+| To delete | Where | State today |
+|---|---|---|
+| Path | its sidebar row → `⋯` | **built** |
+| Scenario | its sidebar row → `⋯` | not built |
+| Phase | its sidebar row → `⋯` | not built — needs `delete_phase` |
+| Step | the step header → `⋯` | not built |
+| Lane | the lane label → `⋯` | not built |
+| Cell | the detail panel, or the cell's `⋯` | not built |
+
+Each of these already has an RPC behind it except `delete_phase`, and each
+keeps the guard the path delete already ships: `deletion_impact` read first,
+the cascade named in full, the name typed to confirm, and the whole affordance
+hidden while `deleted_structure` is missing.
+
+**One exception worth allowing:** the change sheet's `↺`, which deletes what
+was *just created* in this session. That is safe for the reason the general
+case is not — the target is unambiguous, it is named in the row, and it was
+made moments ago by the person pressing it.
+
 #### Edit with a slice open — a state the bar has never had
 
 Everything above assumes a blueprint underneath. Open a slice and the same bar
@@ -513,23 +616,32 @@ exists, and the work is arranging what is in it.
 ```
 Edit, editing the slice “Tutor warm-up journey”
 ┌────────────────────────────────────────────────────────────────────────┐
-│  ▷  ✋  │  ◆ 8 frames ⌄   ▷ Present  │  ⚑ 2 ⌄  ✓ Save  │  👁 View ✎ Edit│
+│  ▷  ✋  │  ⊕ Create   ◆ 14 cells ⌄  │  ⚑ 2 ⌄  ✓ Save  │  👁 View ✎ Edit│
 └────────────────────────────────────────────────────────────────────────┘
-              ▲                ▲
-              │                └─ play it, without leaving Edit
-              └─ the slice sheet
+                            ▲
+                            └─ the slice sheet
 ```
 
 `Make slice` is replaced, not disabled — a different noun is on the canvas, so
 a different verb belongs in the slot.
 
-#### Frames live on the cells, and only order lives in the sheet
+**Present is not here.** Presenting is a reading activity: it hides the tools,
+plays the slice, and writes nothing. Putting it in the authoring bar would be
+the one control in Edit that is not editing. It stays where it is, on the slice
+header in View.
+
+**The slot counts cells, not frames.** Cells are the thing a person picked and
+the thing they can see on the grid; a "frame" is an internal grouping they
+never asked for by that name. `slice_items` keeps its name in the schema, and
+the code keeps `DraftFrame`, but no user-facing string says *frame*.
+
+#### Grouping lives on the cells, and only order lives in the sheet
 
 The split is the same one the whole plan runs on: **what has a location goes on
-the canvas, what has none goes in a sheet.** A frame *membership* has a
-location — the cell. A frame *order* does not; a frame is not a place.
+the canvas, what has none goes in a sheet.** Which cells belong together has a
+location — the cells. The order they play in does not; a group is not a place.
 
-So membership is edited on the grid:
+So which cells go together is decided on the grid:
 
 ```
    ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
@@ -537,14 +649,14 @@ So membership is edited on the grid:
    │ Greet    │  │ Ask to   │  │ Mark     │  │ Move to  │
    │ student  │  │ share    │  │ present  │  │ next     │
    └──────────┘  └──────────┘  └──────────┘  └──────────┘
-        └─── frame 1 ───┘       └frame 2┘     ▲ in the slice,
-                                              no frame yet
+        └──── group 1 ───┘       └group 2┘    ▲ in the slice,
+                                              not grouped yet
 ```
 
-- **click a badge** → cycles the cell to the next frame, then to “new frame”
-- **shift-click two cells** → puts them in the same frame
-- **drag a cell onto another** → joins that cell’s frame
-- **hover a badge** → every cell not in that frame dims, so the grouping is
+- **click a badge** → moves the cell to the next group, then to a new one
+- **shift-click two cells** → puts them together
+- **drag a cell onto another** → joins that cell’s group
+- **hover a badge** → every cell outside that group dims, so the grouping is
   read off the blueprint rather than inferred from a strip
 
 That last one is what the current docked editor cannot do at all, and it is the
@@ -553,11 +665,11 @@ the last six characters of a UUID.
 
 #### The slice sheet
 
-Dropdown, anchored under `◆ 8 frames`, **not a modal** — same reason as the
+Dropdown, anchored under `◆ 14 cells`, **not a modal** — same reason as the
 change sheet: the cells it names are behind it, and `⌖` points at them.
 
 ```
-                          ◆ 8 frames ⌄
+                         ◆ 14 cells ⌄
    ┌───────────────────────────────────────────────────────────┐
    │  Tutor warm-up journey                            journey │
    │  What the regular tutor does and touches while warming up. │
@@ -571,30 +683,29 @@ change sheet: the cells it names are behind it, and `⌖` points at them.
    │                                                           │
    │  ⠿  3   ⟨no caption⟩                                ⌖  ⋯   │
    │         1 cell · Regular Tutor                            │
-   │         ⚠ a frame with no caption presents blank          │
+   │         ⚠ no caption — this one presents blank            │
    │                                                           │
-   │  … 5 more                                                 │
+   │  … 5 more · 14 cells in total                             │
    ├───────────────────────────────────────────────────────────┤
-   │  ⊕ Add empty frame          │        1 cell not in a frame │
-   └───────────────────────────────────────────────────────────┘
+   │  ⊕ Add an empty group       │      1 cell not grouped yet  │
 ```
 
 What each part is doing:
 
 - **`⠿` drags to reorder.** The only genuinely sheet-shaped action here —
-  frame order is a sequence with no representation on the grid.
+  the order is a sequence with no representation on the grid.
 - **The caption is the row.** Click it and type; it is the thing presented, so
   it should be the most prominent text, not a field inside a card.
-- **“2 cells · Regular Tutor, Front Stage Tech”** — lanes, not ids. A frame is
-  recognised by *what it contains*, and lane names are how a reader already
-  thinks about the grid.
-- **`⌖`** flies the camera to the frame’s cells and dims the rest — the same
-  gesture as hovering a badge, available from the list.
+- **“2 cells · Regular Tutor, Front Stage Tech”** — cells and lanes, never ids.
+  A group is recognised by *what it contains*, and lane names are how a reader
+  already thinks about the grid.
+- **`⌖`** flies the camera to those cells and dims the rest — the same gesture
+  as hovering a badge, available from the list.
 - **`⋯`** carries split, merge-with-next, and remove — the three that were
   buttons on every card in the old strip, now one menu on the row that needs
   them.
-- **The unassigned count** is the footer, permanently, because it is the one
-  error the editor used to allow silently: a cell in the slice that no frame
+- **The ungrouped count** is the footer, permanently, because it is the one
+  error the editor used to allow silently: a cell in the slice that no group
   shows, which presents as a cell that simply never appears.
 - **The caption warning** is inline on the offending row, not a validation
   summary somewhere else.
@@ -608,7 +719,7 @@ What each part is doing:
 ┌────────────────────────────────────────────────────────────────────┐
 │  ◀   ①  ②  ③  ④  ⑤  ⑥  ⑦  ⑧   ▶     “Ask them to share…”         │
 └────────────────────────────────────────────────────────────────────┘
-        ▲ current                       ▲ the caption of the frame you are on
+        ▲ where you are                 ▲ the caption you are looking at
 ```
 
 Order is visible, position is visible, and the caption is the one piece of text
@@ -847,12 +958,12 @@ count says 7 and the other four are off-screen. See "Open" below.
 *Passes.* The capture affordance existing *is* the notice that reloading loses
 them.
 
-### S9 — "Reorganise which frames a slice's cells belong to"
+### S9 — "Reorganise how a slice's cells are grouped"
 
 1. Open a slice, **Edit**
-2. Move the third cell into frame 2
+2. Move the third cell into group 2
 
-**Fails today.** The frame editor is a docked strip of cards holding chips
+**Fails today.** The slice editor is a docked strip of cards holding chips
 labelled `0110ab` — the last six characters of a UUID. You reorganise by
 reading identifiers instead of by looking at the blueprint. This is the same
 category of defect as the arrow picker that showed three identical rows, and it
@@ -936,11 +1047,11 @@ somewhere else. Cheapest honest fix: the count becomes `7 · 2 blueprints`, and
 hovering it dims everything not picked. A stronger one is a mini-map, which is
 a bigger build than the problem currently justifies.
 
-### 2. Slice frames are edited by reading UUIDs (from S9)
+### 2. Slice grouping is edited by reading UUIDs (from S9)
 
-Specced above — membership moves onto the cells as frame badges, order and
-captions move into the slice sheet, and the docked strip shrinks to a scrubber.
-Not built.
+Specced above — grouping moves onto the cells as badges, order and captions
+move into the slice sheet, and the docked strip shrinks to a scrubber. Not
+built.
 
 ### 3. What else belongs in Edit's run
 
