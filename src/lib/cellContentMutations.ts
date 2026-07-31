@@ -1,0 +1,98 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { CellLink } from '@/types/blueprint'
+import type { Database, Json } from '@/types/database'
+import { toAuthoringError } from '@/lib/authoringErrors'
+import { validateResourceUrl } from '@/lib/resourceUrl'
+import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+
+type Client = SupabaseClient<Database>
+
+export type CellContentUpdate = {
+  /** The text in the cell on the grid. */
+  content: string
+  description: string
+  owner: string
+  perceivedOwner: string
+}
+
+/**
+ * Write the cell's own text.
+ *
+ * These columns carry a column-level grant from the authoring migration, for
+ * the same reason the spec columns do: the panel can edit what a cell *says*
+ * without that opening the cell's position — path, layer, step — to the same
+ * path. Where a cell sits is structure, and structure goes through the RPCs.
+ *
+ * `content` is the one field that is never nulled. A cell with no text is a
+ * blank box on the grid that cannot be told apart from a gap in the blueprint,
+ * so an empty label is refused here rather than stored.
+ */
+export async function updateCellContent(
+  client: Client,
+  cellId: string,
+  update: CellContentUpdate,
+): Promise<void> {
+  const content = update.content.trim()
+  if (!content) {
+    throw new Error('A cell needs text — an empty one reads as a gap in the grid.')
+  }
+
+  const { error } = await client
+    .from('cells')
+    .update({
+      content,
+      // Empty means "not specified", stored as null so the read path has one
+      // kind of empty to check rather than two.
+      description: update.description.trim() || null,
+      owner: update.owner.trim() || null,
+      perceived_owner: update.perceivedOwner.trim() || null,
+    })
+    .eq('id', cellId)
+  if (error) throw toAuthoringError(error)
+}
+
+export type ResourceDraft = { label: string; url: string }
+
+/**
+ * Replace the cell's resource links.
+ *
+ * `links` carries more than resources — tech descriptions, pictures, Figma
+ * embeds all live in the same array keyed by `type`. So this rewrites *only*
+ * the `URL_LINK_TYPE` entries and leaves every other kind untouched. Writing
+ * the whole array from what the resources editor knows about would silently
+ * delete the tech pills.
+ */
+export async function updateCellResources(
+  client: Client,
+  cellId: string,
+  existing: CellLink[],
+  drafts: ResourceDraft[],
+): Promise<void> {
+  const rebuilt: CellLink[] = []
+
+  for (const draft of drafts) {
+    const checked = validateResourceUrl(draft.url)
+    if (!checked.ok) throw new Error(checked.problem)
+    rebuilt.push({
+      type: URL_LINK_TYPE,
+      label: draft.label.trim() || hostOf(checked.url),
+      url: checked.url,
+    })
+  }
+
+  const preserved = existing.filter((link) => link.type !== URL_LINK_TYPE)
+  const { error } = await client
+    .from('cells')
+    .update({ links: [...preserved, ...rebuilt] as unknown as Json })
+    .eq('id', cellId)
+  if (error) throw toAuthoringError(error)
+}
+
+/** A link with no label still needs to say something — its host will do. */
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return 'Link'
+  }
+}

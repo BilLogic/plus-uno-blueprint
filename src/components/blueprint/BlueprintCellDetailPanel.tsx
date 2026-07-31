@@ -12,6 +12,7 @@ import { CellDependencySections } from '@/components/blueprint/CellDependencySec
 import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
 import { CellOverviewSpec } from '@/components/blueprint/CellOverviewSpec'
+import { CellContentSection } from '@/components/blueprint/CellContentSection'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
@@ -653,6 +654,7 @@ export function BlueprintCellDetailPanel() {
         <p className="-mt-3 text-sm text-muted-foreground">No content</p>
       ) : null}
       <CellOverviewSpec cellId={resolvedCellId} />
+      <CellContentSection cellId={resolvedCellId} />
     </>
   )
 
