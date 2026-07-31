@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Diamond, Pencil } from 'lucide-react'
+import { Diamond, LayoutGrid, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { CreateSliceDialog } from '@/components/editor/CreateSliceDialog'
+import { CreateBlueprintDialog } from '@/components/editor/CreateBlueprintDialog'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { buildBlueprintCellSelectionForId } from '@/lib/blueprintCellConnections'
@@ -24,6 +25,7 @@ export function CanvasDesignTools() {
   const pick = useCellPick()
   const detail = useBlueprintCellDetailOptional()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [blueprintDialogOpen, setBlueprintDialogOpen] = useState(false)
   const pickedCellIds = pick?.picked ?? []
   const count = pickedCellIds.length
 
@@ -112,6 +114,27 @@ export function CanvasDesignTools() {
         </TooltipContent>
       </Tooltip>
 
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="New blueprint"
+              onClick={() => setBlueprintDialogOpen(true)}
+              className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <LayoutGrid className="size-3.5" aria-hidden />
+              New blueprint
+            </Button>
+          }
+        />
+        <TooltipContent side="top" className="text-xs">
+          Create an empty blueprint in a phase
+        </TooltipContent>
+      </Tooltip>
+
       <CreateSliceDialog
         cellIds={pickedCellIds}
         open={dialogOpen}
@@ -120,6 +143,11 @@ export function CanvasDesignTools() {
           pick?.clear()
           setDialogOpen(false)
         }}
+      />
+
+      <CreateBlueprintDialog
+        open={blueprintDialogOpen}
+        onOpenChange={setBlueprintDialogOpen}
       />
     </>
   )
