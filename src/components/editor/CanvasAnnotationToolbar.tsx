@@ -9,6 +9,7 @@ import {
   Trash2,
   Type,
   SquarePen,
+  Eye,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -19,7 +20,7 @@ import {
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { AnnotationCaptureMenu } from '@/components/editor/AnnotationCaptureMenu'
 import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
-import { useCanvasMode } from '@/contexts/canvasModeContext'
+import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
 import {
   ANNOTATION_PEN_STROKE_WIDTHS,
   ANNOTATION_PEN_SWATCHES,
@@ -267,6 +268,7 @@ export function CanvasAnnotationToolbar() {
           onSelect={setTool}
         />
 
+        {designing ? <CanvasDesignTools /> : (
         <>
 
         {/* Single draw slot — swaps to eraser icon when eraser is active (FigJam). */}
@@ -350,13 +352,7 @@ export function CanvasAnnotationToolbar() {
         </Tooltip>
           <AnnotationCaptureMenu />
         </>
-
-        {designing ? (
-          <>
-            <ToolbarDivider />
-            <CanvasDesignTools />
-          </>
-        ) : null}
+        )}
 
         {/* Edit is not a tool, so it sits after a divider at the far end
             rather than in the tool run — and it is absent, never disabled,
@@ -364,9 +360,9 @@ export function CanvasAnnotationToolbar() {
         {canvasMode?.available ? (
           <>
             <ToolbarDivider />
-            <CanvasEditToggle
-              editing={designing}
-              onChange={(next) => canvasMode.setMode(next ? 'design' : 'view')}
+            <CanvasModeSwitch
+              mode={canvasMode.mode}
+              onChange={canvasMode.setMode}
             />
           </>
         ) : null}
@@ -376,53 +372,64 @@ export function CanvasAnnotationToolbar() {
 }
 
 /**
- * Edit: on or off.
+ * View ⇄ Edit.
  *
- * This was two segments, "view" and "design", on the reasoning that the
- * current mode has to be readable at a glance and a single button only ever
- * shows the mode you are *not* in. That reasoning holds for a mode picker and
- * this is not one: there is nothing to switch *between*, only a capability
- * that is on or off. The tools to its left already say what a click does.
+ * Two segments rather than one on/off button, because these are two *modes*
+ * and not a capability with a switch: each owns its own tool run, and the
+ * question a reader has is "which one am I in", which a single button can only
+ * answer by naming the other one.
  *
- * Pressed state is a filled pill rather than a shade of grey, because at the
- * far end of a bar this is the one control that has to read without being
- * looked for.
+ * Icon-led with the label beside it, and the active half carries a filled pill
+ * rather than a shade of grey — at the far end of the bar this is the control
+ * that has to read without being looked for.
  */
-function CanvasEditToggle({
-  editing,
+function CanvasModeSwitch({
+  mode,
   onChange,
 }: {
-  editing: boolean
-  onChange: (editing: boolean) => void
+  mode: CanvasMode
+  onChange: (mode: CanvasMode) => void
 }) {
+  const segments = [
+    { value: 'view' as const, label: 'View', icon: Eye },
+    { value: 'design' as const, label: 'Edit', icon: SquarePen },
+  ]
+
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-pressed={editing}
-            aria-label={editing ? 'Turn off editing' : 'Turn on editing'}
-            onClick={() => onChange(!editing)}
-            className={cn(
-              'pointer-events-auto h-7 shrink-0 gap-1.5 rounded-full px-2.5 text-xs',
-              editing
-                ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <SquarePen className="size-3.5" aria-hidden />
-            Edit
-          </Button>
-        }
-      />
-      <TooltipContent side="top" className="text-xs">
-        {editing
-          ? 'Editing on — cells are selectable and handles are shown'
-          : 'Turn on editing to change the blueprint'}
-      </TooltipContent>
-    </Tooltip>
+    <div
+      role="group"
+      aria-label="Canvas mode"
+      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-full bg-muted/60 p-0.5"
+    >
+      {segments.map(({ value, label, icon: Icon }) => (
+        <Tooltip key={value}>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-pressed={mode === value}
+                onClick={() => onChange(value)}
+                className={cn(
+                  'h-6 gap-1.5 rounded-full px-2.5 text-[11px] font-medium',
+                  mode === value
+                    ? 'bg-background text-foreground shadow-sm hover:bg-background hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Icon className="size-3.5" aria-hidden />
+                {label}
+              </Button>
+            }
+          />
+          <TooltipContent side="top" className="text-xs">
+            {value === 'view'
+              ? 'Read, navigate and mark up'
+              : 'Author the blueprint — cells become selectable'}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </div>
   )
 }

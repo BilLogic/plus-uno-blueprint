@@ -7,7 +7,6 @@ import {
   type ReactNode,
 } from 'react'
 import { MarqueeSelection } from '@/components/editor/MarqueeSelection'
-import { SelectionToolbar } from '@/components/editor/SelectionToolbar'
 import {
   CellPickContext,
   type CellPickApi,
@@ -225,7 +224,6 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     <CellPickContext.Provider value={api}>
       {children}
       <MarqueeSelection />
-      <SelectionToolbar />
     </CellPickContext.Provider>
   )
 }
