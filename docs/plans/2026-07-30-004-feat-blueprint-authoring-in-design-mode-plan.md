@@ -596,10 +596,10 @@ them all — which is why `AffectedSlice.cell_keys` is typed
 | 2 — structure export/restore | Landed | Live database: 11/11 cells round-trip, injected collisions refused |
 | 3 — create + dialog | Entry point landed | Browser against live data; write reaches PostgREST with the right seven parameters |
 | 4 — cell contents | Landed | 7 tests |
-| 5 — dependencies | Landed | 6 tests |
-| 6 — versions | Landed | 5 tests |
-| 7 — deletion guardrails | Landed; **affordances gated off** | 8 tests |
-| 8 — storyboard upload | Checks landed | 9 tests |
+| 5 — dependencies | Landed **and mounted** | 6 tests; browser: `set_cell_dependency` reaches PostgREST with its five parameter names |
+| 6 — versions | Landed **and mounted** | 5 tests; browser: `create_path` reaches PostgREST with its four parameter names |
+| 7 — deletion guardrails | Landed; **affordance wired but hidden** | 8 tests; browser: no delete button renders against a schema with no archive |
+| 8 — storyboard upload | Checks landed, **not mounted** | 9 tests |
 
 35 tests, all passing, via `npm test`.
 
@@ -614,6 +614,36 @@ returns `canDelete: false` while `deleted_structure` does not exist, and the
 affordance is hidden rather than disabled. The dialog, the impact reading and
 the confirmation are all built and tested; nothing can reach them yet. This
 holds the ordering rule below without depending on anyone remembering it.
+
+`archiveAvailable` now comes from `useArchiveAvailable()`, which asks
+PostgREST for a row from `deleted_structure` rather than reading a flag. The
+app is deployed against more than one database, so the question has to be
+answered per-connection: a build cannot know which schema it will be pointed
+at. An empty result is availability; only an error is absence. Confirmed in
+the browser — against the current schema the Delete version button does not
+render at all.
+
+**What the mounting pass changed (2026-07-31, later).** Phases 5, 6 and 7 were
+written but reachable from nowhere: `CellDependencyEditor`, `CreateVersionDialog`
+and `DeleteStructureDialog` were each imported by no file. They are now mounted —
+the arrow editor behind "Add dependency" in the panel's Dependencies tab, the
+version dialog and the archive-gated delete in the Design tool run. Both live
+write paths were driven in the browser and fail only on function-not-found,
+with the parameter names matching the migration exactly.
+
+Mounting surfaced one real defect that no test could have: the arrow picker
+labelled candidates by step name and lane, and Discovery runs several columns
+all named "Discovers PLUS" — three rows read identically, so choosing between
+them was a coin flip. Labels now lead with the column number and sort in grid
+reading order. Twenty-five candidates, zero duplicates. Note this is the same
+duplicate-name data defect that leaves 24 cells unkeyable; the picker works
+around it, the backfill still cannot.
+
+**Phase 8 is written but not mounted.** `storyboardUpload.ts` keys images by
+`(sliceId, itemId)` — persisted row ids — and the frame editor works on draft
+frames that have no ids until they are saved. Wiring it needs the persisted
+slice-item surface, and the bucket's mime widening from the unapplied
+migration. Left out deliberately rather than half-wired.
 
 **Still outstanding regardless of the migration:** the `cell_keys` backfill.
 Until it runs, `splitByRecoverability` will classify most affected slices as

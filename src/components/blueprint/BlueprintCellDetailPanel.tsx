@@ -5,9 +5,11 @@ import {
   Link2,
   PanelRightClose,
   PanelRightOpen,
+  Plus,
   Workflow,
   X,
 } from 'lucide-react'
+import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
 import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
@@ -40,6 +42,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   buildBlueprintCellSelectionForId,
   getBlueprintCellConnections,
@@ -69,7 +72,25 @@ import {
 } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
+import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
+import type { DependencyEndpoint } from '@/lib/dependencyValidation'
 import type { BlueprintCell, CellLink } from '@/types/blueprint'
+
+/**
+ * Where a cell sits, said so that two cells never say the same thing.
+ *
+ * Step names are not unique — a blueprint may run several columns all called
+ * "Discovers PLUS" — so the column number leads. Without it the arrow picker
+ * offers three identical rows and choosing between them is a coin flip.
+ */
+function cellPositionLabel(
+  stepIndex: number,
+  stepName: string,
+  layerName: string,
+): string {
+  const column = stepIndex >= 0 ? `${stepIndex + 1}. ` : ''
+  return `${column}${stepName} · ${layerName}`
+}
 
 /** Fixed panel and illustration frame so every row/step uses the same size. */
 const CELL_DETAIL_PICTURE_FRAME_CLASS =
@@ -159,6 +180,8 @@ export function BlueprintCellDetailPanel() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
+  const [addingDependency, setAddingDependency] = useState(false)
+  const { canWrite } = useSupabase()
   const selection = currentSelection ?? closingSelection
   useCanvasTopOffset(currentSelection !== null)
 
@@ -173,11 +196,14 @@ export function BlueprintCellDetailPanel() {
   }, [currentSelection])
 
   // A new cell always opens on Dependencies (state reset during render).
+  // The arrow editor closes with it — a half-typed arrow carried onto a
+  // different cell would be pointing away from somewhere nobody is looking.
   const currentCellId = currentSelection?.paths[0]?.cellId
   const [lastCellId, setLastCellId] = useState(currentCellId)
   if (lastCellId !== currentCellId) {
     setLastCellId(currentCellId)
     setActiveTab('dependencies')
+    setAddingDependency(false)
   }
 
   useEffect(() => {
@@ -370,6 +396,91 @@ export function BlueprintCellDetailPanel() {
     if (!blueprint) return -1
     return getSelectedCellLayerRowPosition(blueprint, resolvedCellId)
   }, [blueprints, pathEntry?.pathId, resolvedCellId])
+
+  /**
+   * Every other cell in this version, as somewhere an arrow could point.
+   *
+   * Scoped to the version on purpose — the RPC refuses a cross-version
+   * dependency, and offering one here would only be a way to reach that
+   * refusal. Versions are alternatives, not stages.
+   *
+   * Labels lead with the column number because step *names* repeat: Discovery
+   * holds several columns all named "Discovers PLUS", so name-and-lane alone
+   * names three different cells and the picker becomes a guess. The column
+   * number is the only part of a cell's position that is always unique, and
+   * ordering by it puts the list in the reading order of the grid.
+   */
+  const dependencyCandidates = useMemo<DependencyEndpoint[]>(() => {
+    const pathId = pathEntry?.pathId
+    if (!resolvedCellId || !pathId) return []
+    const blueprint = getBlueprintForPath(blueprints, pathId)
+    if (!blueprint) return []
+
+    const layerNames = new Map(
+      blueprint.layers.map((layer) => [layer.id, layer.name]),
+    )
+    const stepOrder = new Map(
+      blueprint.steps.map((step, index) => [step.id, { index, name: step.name }]),
+    )
+
+    return blueprint.cells
+      .filter((cell) => cell.id !== resolvedCellId)
+      .map((cell) => {
+        const step = stepOrder.get(cell.step_id)
+        return {
+          cellId: cell.id,
+          pathId,
+          stepIndex: step?.index ?? Number.MAX_SAFE_INTEGER,
+          label: cellPositionLabel(
+            step?.index ?? -1,
+            step?.name ?? 'Unknown step',
+            layerNames.get(cell.layer_id) ?? 'Unknown lane',
+          ),
+        }
+      })
+      .sort(
+        (a, b) =>
+          a.stepIndex - b.stepIndex || a.label.localeCompare(b.label),
+      )
+      .map(({ cellId, pathId: path, label }) => ({
+        cellId,
+        pathId: path,
+        label,
+      }))
+  }, [blueprints, pathEntry?.pathId, resolvedCellId])
+
+  // Only outgoing arrows: this cell owns the ones it is the source of, and
+  // those are the ones it may remove. An incoming arrow belongs to the cell at
+  // the other end, and is edited from there.
+  const existingDependencies = useMemo<ExistingDependency[]>(
+    () =>
+      connections.outgoing.map((connection) => ({
+        id: connection.triggerId,
+        targetCellId: connection.cellId,
+        targetLabel: cellPositionLabel(
+          connection.stepIndex,
+          connection.stepName,
+          connection.layerName,
+        ),
+        kind: connection.linkKind,
+        label: connection.linkLabel,
+      })),
+    [connections.outgoing],
+  )
+
+  const dependencySource = useMemo<DependencyEndpoint | null>(() => {
+    const pathId = pathEntry?.pathId
+    if (!resolvedCellId || !pathId || !selection) return null
+    return {
+      cellId: resolvedCellId,
+      pathId,
+      label: cellPositionLabel(
+        selection.stepIndex,
+        selection.stepName,
+        selection.layerName,
+      ),
+    }
+  }, [pathEntry?.pathId, resolvedCellId, selection])
 
   const visualStepEntries = useMemo(() => {
     const stepId = selection?.stepId
@@ -759,13 +870,36 @@ export function BlueprintCellDetailPanel() {
                 */}
                 <div className="flex min-h-56 flex-col gap-5 px-4 pt-4 pb-4">
                   {activeTab === 'dependencies' ? (
-                    <CellDependencySections
-                      connections={connections}
-                      otherTech={otherTechEntries}
-                      selectedLayerRowPosition={selectedLayerRowPosition}
-                      onCellSelect={handleConnectionSelect}
-                      onTechSelect={handleTechSelect}
-                    />
+                    <>
+                      <CellDependencySections
+                        connections={connections}
+                        otherTech={otherTechEntries}
+                        selectedLayerRowPosition={selectedLayerRowPosition}
+                        onCellSelect={handleConnectionSelect}
+                        onTechSelect={handleTechSelect}
+                      />
+                      {canWrite && dependencySource ? (
+                        addingDependency ? (
+                          <CellDependencyEditor
+                            source={dependencySource}
+                            candidates={dependencyCandidates}
+                            existing={existingDependencies}
+                            onDone={() => setAddingDependency(false)}
+                          />
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
+                            onClick={() => setAddingDependency(true)}
+                          >
+                            <Plus className="size-3" aria-hidden />
+                            Add dependency
+                          </Button>
+                        )
+                      ) : null}
+                    </>
                   ) : null}
                   {activeTab === 'evidence' ? (
                     <CellEvidenceTab cellId={resolvedCellId} />
