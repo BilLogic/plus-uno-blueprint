@@ -37,12 +37,21 @@ export function ToolFamilyMenu({
   tools,
   active,
   onSelect,
+  open,
+  onOpenChange,
 }: {
   label: string
   tools: FamilyTool[]
   /** The whole toolbar's current tool; may belong to another family. */
   active: CanvasAnnotationTool
   onSelect: (tool: CanvasAnnotationTool) => void
+  /**
+   * Controlled by the toolbar rather than by this menu, so that the bar can
+   * hold the rule "one thing open at a time" in one place — a menu cannot know
+   * what else the bar is currently showing above itself.
+   */
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }) {
   const inFamily = tools.some((tool) => tool.id === active)
   // The face is the family's active tool, or the last one used in it. Falling
@@ -66,7 +75,13 @@ export function ToolFamilyMenu({
               size="sm"
               aria-label={face.label}
               aria-pressed={inFamily}
-              onClick={() => onSelect(face.id)}
+              onClick={() => {
+                // Activating the face closes whatever the bar had open —
+                // otherwise a menu left hanging from a previous click sits over
+                // the options row this tool is about to show.
+                onOpenChange(false)
+                onSelect(face.id)
+              }}
               className={cn(
                 'size-7 shrink-0 rounded-r-none p-0 text-muted-foreground hover:text-foreground',
                 inFamily && 'text-foreground hover:bg-violet-100',
@@ -81,7 +96,7 @@ export function ToolFamilyMenu({
         </TooltipContent>
       </Tooltip>
 
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={onOpenChange}>
         <DropdownMenuTrigger
           render={
             <Button

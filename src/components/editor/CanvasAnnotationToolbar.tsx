@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   Circle,
   Eraser,
@@ -242,15 +243,34 @@ export function CanvasAnnotationToolbar() {
   // The family menus remember their own face, so the toolbar no longer has to
   // track "which draw tool was last used" on their behalf.
 
+  /**
+   * Which family menu is open — at most one, and never at the same time as the
+   * pen's options row.
+   *
+   * Both grow upward out of the same edge of the same bar, so they landed on
+   * top of each other: the pen options showing colour and weight, and a menu
+   * listing Pen and Eraser, overlapping in a stack where neither could be read.
+   * Holding the open menu here rather than inside each menu is what makes the
+   * rule expressible at all — a menu can close its siblings, but it cannot know
+   * about a panel it does not own.
+   */
+  const [openFamily, setOpenFamily] = useState<string | null>(null)
+  const familyProps = (label: string) => ({
+    open: openFamily === label,
+    onOpenChange: (next: boolean) =>
+      setOpenFamily(next ? label : (current) => (current === label ? null : current)),
+  })
+
   const canvasMode = useCanvasMode()
   const designing = canvasMode?.mode === 'design'
   // The pen's colour/width panel belongs to the pen, not to the bar — it
   // shows whenever a drawing tool is live, and drawing only exists in View.
   const drawActive = tool === 'pen' || tool === 'eraser'
+  const showSubpanel = drawActive && !designing && openFamily === null
 
   return (
     <div className="pointer-events-none absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2">
-      {drawActive && !designing ? <DrawSubpanel /> : null}
+      {showSubpanel ? <DrawSubpanel /> : null}
 
       <div
         data-annotation-toolbar=""
@@ -298,18 +318,21 @@ export function CanvasAnnotationToolbar() {
               tools={DRAW_FAMILY}
               active={tool}
               onSelect={setTool}
+              {...familyProps('Draw')}
             />
             <ToolFamilyMenu
               label="Shapes"
               tools={SHAPE_FAMILY}
               active={tool}
               onSelect={setTool}
+              {...familyProps('Shapes')}
             />
             <ToolFamilyMenu
               label="Content"
               tools={CONTENT_FAMILY}
               active={tool}
               onSelect={setTool}
+              {...familyProps('Content')}
             />
 
             <ToolbarDivider />
