@@ -588,6 +588,37 @@ which frames it cannot promise to restore rather than implying it can restore
 them all — which is why `AffectedSlice.cell_keys` is typed
 `Array<string | null>` and not `string[]`.
 
+### Phase status (2026-07-31)
+
+| Phase | State | Verified by |
+|---|---|---|
+| 1 — backend foundation | Written, **unapplied**; two defects fixed | — |
+| 2 — structure export/restore | Landed | Live database: 11/11 cells round-trip, injected collisions refused |
+| 3 — create + dialog | Entry point landed | Browser against live data; write reaches PostgREST with the right seven parameters |
+| 4 — cell contents | Landed | 7 tests |
+| 5 — dependencies | Landed | 6 tests |
+| 6 — versions | Landed | 5 tests |
+| 7 — deletion guardrails | Landed; **affordances gated off** | 8 tests |
+| 8 — storyboard upload | Checks landed | 9 tests |
+
+35 tests, all passing, via `npm test`.
+
+**What "landed" does not mean.** No write path in phases 3–8 has ever
+succeeded, because every one of them needs the migration. What is proven is
+everything up to the wire: validation, cascade description, key derivation,
+link preservation, parameter names. What is not proven is the database
+accepting any of it.
+
+**Phase 7 is deliberately inert.** `deletionReadiness(archiveAvailable)`
+returns `canDelete: false` while `deleted_structure` does not exist, and the
+affordance is hidden rather than disabled. The dialog, the impact reading and
+the confirmation are all built and tested; nothing can reach them yet. This
+holds the ordering rule below without depending on anyone remembering it.
+
+**Still outstanding regardless of the migration:** the `cell_keys` backfill.
+Until it runs, `splitByRecoverability` will classify most affected slices as
+unrecoverable — which is correct, and is why undo cannot be trusted yet.
+
 ### Landed ahead of the migration
 
 `src/lib/authoringRpc.ts` and `src/lib/authoringErrors.ts` — the typed call
