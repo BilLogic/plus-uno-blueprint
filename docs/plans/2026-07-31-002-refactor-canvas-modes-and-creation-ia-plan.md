@@ -88,25 +88,30 @@ So:
 | **View** (default) | read, navigate, and mark up. The tool says which. | nothing |
 | **Edit** (toggle) | the same canvas, with authoring affordances revealed | the database |
 
-Edit is a **toggle, not a segment of a mode picker**, because it is not a peer
-of the tools — it is orthogonal to them. You can hold the pen with Edit on;
-drawing still draws, and the insert handles are still there when you switch
-back to Select.
-
-What Edit turns on, and nothing else:
+**Second correction.** A later draft made Edit a single on/off *toggle* and let
+annotation tools live in both modes. Both were wrong, and for one reason: these
+are two modes, each owning a tool run. A pen active while cells are selectable
+is a click with two meanings, which is the exact thing the switch exists to
+prevent — and a single button can only answer "which mode am I in" by naming
+the other one. So: two segments, and annotation belongs to View alone.
 
 ```
-Edit OFF                          Edit ON
-────────                          ───────
-cells are inert                   cells are selectable
-no handles                        insert handles between steps and lanes
-sidebar rows are links            sidebar rows reveal + and ⋯ on hover
-no selection toolbar              selection toolbar floats over picks
+View                              Edit
+────                              ────
+Select / pan · Draw ⌄ ·           Select · Hand · Make slice
+Shapes ⌄ · Content ⌄ · Clear
+                                  cells are selectable
+cells are inert                   insert handles between steps and lanes
+                                  empty squares offer a +
+                                  sidebar rows reveal + and ⋯ on hover
 ```
 
-Annotation tools are present in both, because they were never the thing that
-distinguished them. That also fixes finding 2 — today they vanish in Design
-mode, which is why switching feels like a different app.
+**Edit carries a Hand tool and View does not.** In View a drag on empty canvas
+already pans, because there is nothing else it could mean. In Edit the same
+drag is a marquee — so without Hand the camera was reachable only by cmd-wheel
+or an undiscoverable space-drag, and clicking a scenario picks instead of
+fitting to it. A slice may gather cells from blueprints nowhere near each
+other (see S3), so crossing the canvas is ordinary work.
 
 ---
 
@@ -137,7 +142,7 @@ Creation therefore splits by what a thing needs in order to exist:
 |---|---|---|
 | a parent | **sidebar, hover `+`** | phase, blueprint, path |
 | a position | **canvas handle** | step, lane, cell |
-| a selection | **selection toolbar** | slice |
+| a selection | **the Edit tool run** | slice |
 | a sentence | [agent](./2026-07-31-003-feat-inline-agent-chat-plan.md) | any of them, described |
 
 ### Sidebar — everything reveals on hover
@@ -286,7 +291,7 @@ toolbar takes over.
 
 ```
 click A            →  [A]      → detail panel opens on A
-click B            →  [A B]    → panel closes, selection toolbar appears
+click B            →  [A B]    → panel closes, Make slice lights up
 click B again      →  [A]      → panel reopens on A
 ```
 
@@ -351,30 +356,6 @@ is a capability that is on or off.
 Absent, never disabled, for sessions that cannot write — the rule the current
 switch already follows.
 
-### Selection toolbar — Miro/Figma's contextual pattern
-
-The thing that stops the bottom bar growing forever: **actions on a selection
-float next to the selection**, not in a global bar. This is Figma's selection
-toolbar and Miro's shape toolbar, and it is why neither has a bottom bar that
-grows with every feature.
-
-```
-                    ┌─────────────────────────────┐
-                    │  ◇ Make slice   ✎   🗑      │   ← floats above the picks
-                    └─────────────────────────────┘
-        ┌────────┐  ┌────────┐  ┌────────┐
-        │  ▣ 1   │  │  ▣ 2   │  │  ▣ 3   │            ← three cells picked
-        └────────┘  └────────┘  └────────┘
-```
-
-- Appears at **two or more** picks. At exactly one the detail panel is the
-  surface instead (Decision 3).
-- Anchored above the selection's bounding box, flipping below when there is no
-  room — the standard rule.
-- `◇ Make slice` is the old *New slice* button, now beside the cells it will
-  use, with the count implicit in what is highlighted rather than printed on a
-  badge that changes the bar's width.
-
 ### The dropdowns
 
 ```
@@ -404,7 +385,7 @@ cannot point at anything, which is the most common review gesture. Easy to drop.
 | New path | sidebar, PATHS header `+` |
 | Delete path | sidebar, path row `⋯` |
 | Edit cell | clicking one cell (already worked) |
-| New slice ③ | selection toolbar, floating over the picks |
+| New slice ③ | still in the bar, but filled and primary |
 | the mode switch's second segment | a single Edit toggle |
 
 Five labelled buttons plus a switch → **four tool families plus one toggle**,
@@ -425,8 +406,12 @@ and adds no new surface.*
 Edit; the mode switch becomes a single toggle.
 `CanvasAnnotationToolbar.tsx`, `canvasModeContext.ts`.
 
-**Phase 3 — selection toolbar.** Floating contextual bar at ≥2 picks, carrying
-*Make slice*. Removes *New slice* from the bottom bar.
+**Phase 3 — the slice action.** Tried as a floating bar anchored to the picks,
+Figma-style, and **reverted**: picks can span lanes and steps across a canvas
+thousands of pixels wide, so a bar on their bounding box lands somewhere
+unpredictable and often off-screen — verified at y=-3530. A fixed home beats
+proximity when the thing being described has no compact location. *Make slice*
+is the filled primary of the Edit run instead.
 
 **Phase 4 — `create_phase` RPC.** The one new backend function, in the same
 `security definer` style as the other sixteen.
@@ -481,6 +466,111 @@ rather than a defect, and the affordance says so by existing.
 
 ---
 
+---
+
+## User stories — what the design has to survive
+
+Acceptance criteria below check that parts work. These check that the *shape*
+works: each one is a job someone actually does, written so it can be walked
+through against the real app. Where the current build fails one, it says so.
+
+### S1 — "Make a slice of what the tutor touches during warm-up"
+
+Pick cells one at a time across a lane, then turn them into a slice.
+
+1. Open Warm-Up, switch to **Edit**
+2. Click eight cells on the Regular Tutor lane, one after another
+3. The count on **Make slice** reads 8; each cell wears its pick order
+4. Click **Make slice**, name it, save
+
+*Passes.* This is the story the selection-grammar fix was for — before it,
+step 2 ended with one cell picked.
+
+### S2 — "Actually I want the lane, not eight clicks"
+
+3'. Click the **Regular Tutor** lane label instead → the whole lane is added,
+    unioned with anything already picked
+3''. Shift-click the lane label → the lane comes back out
+
+*Passes.* `add` rather than `toggle` is why a half-picked lane ends up wholly
+picked rather than half-inverted.
+
+### S3 — "This slice spans two blueprints"
+
+A journey that starts in Pre-session scheduling and ends in In-session warm-up.
+
+1. In **Edit**, pick three cells in Standard Scheduling
+2. **Pan across the canvas** to Warm-Up — the picks survive
+3. Pick four more there; the count reads 7
+4. **Make slice**
+
+*Passes as of the Hand tool.* Step 2 was impossible before it: every drag was a
+marquee, so the only way across was cmd-wheel or an undiscoverable space-drag.
+The selection surviving is not luck — `ZoomPanViewport`'s `resetKey` is a hook
+argument, not a React key, so navigating does not remount the picker.
+
+**Still weak:** with picks on two blueprints, nothing on screen says so. The
+count says 7 and the other four are off-screen. See "Open" below.
+
+### S4 — "Add a step in the middle of a journey"
+
+1. **Edit**, hover the gap between step 2 and step 3
+2. A full-height line and a `+` appear; the ghost shows the columns shifting
+3. Click → a blank step lands at position 3, named in place
+
+*Passes.*
+
+### S5 — "This lane is missing a cell at step 4"
+
+1. **Edit**, hover the empty square
+2. A faint `+` appears; click → an empty cell exists and can be typed into
+
+*Passes.*
+
+### S6 — "Add a scenario to Onboarding"
+
+1. Hover **Onboarding** in the sidebar → its own `+` appears
+2. Click → the dialog opens with the phase already fixed, not asked
+
+*Passes.* The `+` being attached to the row is what makes it unambiguous.
+
+### S7 — "Delete a path I created by mistake"
+
+1. Hover the path row in **Paths** → `⋯`
+2. **Delete path** → the confirm names the cells, arrows and slices that die,
+   and asks for the name typed exactly
+
+*Passes.* Deliberately not in the tool run, where it sat next to Make slice.
+
+### S8 — "Mark up a blueprint during a review call, then hand it over"
+
+1. **View**, pick Pen from the Draw family, circle two cells, add a sticky
+2. A capture button appears — the only sign the marks are not saved
+3. Save → structure, not a screenshot: each mark with the cells it overlaps
+
+*Passes.* The capture affordance existing *is* the notice that reloading loses
+them.
+
+### S9 — "Reorganise which frames a slice's cells belong to"
+
+1. Open a slice, **Edit**
+2. Move the third cell into frame 2
+
+**Fails today.** The frame editor is a docked strip of cards holding chips
+labelled `0110ab` — the last six characters of a UUID. You reorganise by
+reading identifiers instead of by looking at the blueprint. This is the same
+category of defect as the arrow picker that showed three identical rows, and it
+is the one story in this list the current design does not support. Proposal is
+in "Open" below.
+
+### S10 — "Read the blueprint without touching anything"
+
+1. **View**, Select tool, click a scenario → the camera fits to it
+2. Click a cell → the detail panel opens, nothing is selected, nothing is written
+
+*Passes* — and is the story that keeps annotation tools out of Edit. A pen
+active while cells are selectable makes step 2 mean two things.
+
 ## Acceptance criteria
 
 - [ ] Clicking cells one after another in Edit mode accumulates a selection
@@ -507,8 +597,8 @@ cell gives immediate feedback that the click did something.
 **Hover-only affordances are invisible on touch.** Mitigation: coarse pointers
 show them permanently; keyboard focus reveals them.
 
-**A floating selection toolbar can cover the cells it describes.** Mitigation:
-flip below when there is no room above, and never cover the selection itself.
+**A selection spanning blueprints is invisible.** With picks on two scenarios
+the count says 7 and four of them are off-screen. Unmitigated — see Open.
 
 **A new phase changes the whole canvas layout.** Mitigation: create, then fit
 the camera to it, so the consequence is visible rather than found later by
@@ -541,10 +631,60 @@ scrolling.
   save the marks, or send them to the agent — so capture is a decision rather
   than a background side effect. See Decision 5.
 
-## Open questions
+## Open
 
-1. **Line and Arrow** in shapes — wanted, or scope? (Additive; nothing waits on
-   it.)
+### 1. A selection spanning blueprints is invisible (from S3)
+
+Picks survive panning between scenarios, but nothing says four of the seven are
+somewhere else. Cheapest honest fix: the count becomes `7 · 2 blueprints`, and
+hovering it dims everything not picked. A stronger one is a mini-map, which is
+a bigger build than the problem currently justifies.
+
+### 2. Slice frames are edited by reading UUIDs (from S9)
+
+The docked strip holds chips labelled `0110ab`. Proposal — put the frame number
+on the cell, on the canvas, where the pick-order badge already sits:
+
+```
+   ┌──────────┐  ┌──────────┐  ┌──────────┐
+   │ ①        │  │ ①        │  │ ②        │
+   │ Greet    │  │ Ask to   │  │ Mark     │
+   │ student  │  │ share    │  │ present  │
+   └──────────┘  └──────────┘  └──────────┘
+        └── frame 1 ──┘         └─ frame 2 ─┘
+```
+
+- click a badge → cycle the cell to the next frame
+- shift-click two cells → same frame
+- drag a cell onto another → join that cell's frame
+- hover a badge → dim everything not in that frame
+
+The strip stops being the editor and becomes a scrubber: thumbnails, order, and
+the current frame's caption. Reordering frames stays there, because a frame is
+not a place on the canvas and has nowhere else to live.
+
+### 3. What else belongs in Edit's run
+
+The test is the one that emptied it: **the bar gets what has no location.**
+Applied to the obvious candidates —
+
+| Candidate | Verdict |
+|---|---|
+| Undo / redo | **Yes, eventually.** Acts on the last action, which has no place. The one genuine gap. |
+| Rename step / lane | No — edit in place on the header or rail. |
+| Reorder steps | No — drag the header. |
+| Duplicate path | No — the path's `⋯` row menu. |
+| Add dependency | No — it is a cell-pair relationship; the detail panel already owns it. |
+| Frame grouping | No — see 2; it belongs on the cells. |
+| Zoom | No — dropped as unhelpful. |
+
+So Edit's run is Select, Hand, Make slice today, and Select, Hand, Make slice,
+Undo/Redo once undo exists. That is the whole list; everything else has
+somewhere better to be.
+
+### 4. Line and Arrow in shapes
+
+Additive; nothing waits on it.
 
 ---
 
