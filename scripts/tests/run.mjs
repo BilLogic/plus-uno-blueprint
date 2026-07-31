@@ -20,7 +20,12 @@ const TESTS_DIR = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(TESTS_DIR, '../..')
 
 /** Source modules the tests import, by the specifier they use. */
-const MODULES = ['src/lib/resourceUrl.ts', 'src/lib/cellContentMutations.ts']
+const MODULES = [
+  'src/lib/resourceUrl.ts',
+  'src/lib/cellContentMutations.ts',
+  'src/lib/dependencyValidation.ts',
+  'src/lib/versionValidation.ts',
+]
 
 const work = mkdtempSync(join(tmpdir(), 'uno-tests-'))
 
