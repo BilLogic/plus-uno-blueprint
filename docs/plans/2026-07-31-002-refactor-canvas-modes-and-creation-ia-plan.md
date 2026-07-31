@@ -586,21 +586,94 @@ extra empty step to remove. Delete the wrong thing and 43 cells, 34 arrows and
 *Happy Path*, *Set Goals*, *Check Goals*… is precisely the mistake a locator
 dropdown invites.
 
-So deletion stays **on the object**, where the target cannot be mistaken:
+So deletion stays **on the object**, where the target cannot be mistaken. Two
+homes, split by whether the thing has a sidebar row:
 
-| To delete | Where | State today |
-|---|---|---|
-| Path | its sidebar row → `⋯` | **built** |
-| Scenario | its sidebar row → `⋯` | not built |
-| Phase | its sidebar row → `⋯` | not built — needs `delete_phase` |
-| Step | the step header → `⋯` | not built |
-| Lane | the lane label → `⋯` | not built |
-| Cell | the detail panel, or the cell's `⋯` | not built |
+```
+SIDEBAR — things with a row              CANVAS — things with a position
+──────────────────────────               ──────────────────────────────
+Phase        row ⋯                       Step      column header ⋯
+Scenario     row ⋯                       Lane      lane label ⋯
+Path         row ⋯   (built)             Cell      cell ⋯
+```
 
-Each of these already has an RPC behind it except `delete_phase`, and each
-keeps the guard the path delete already ships: `deletion_impact` read first,
-the cascade named in full, the name typed to confirm, and the whole affordance
-hidden while `deleted_structure` is missing.
+Every one keeps the guard the path delete already ships: `deletion_impact` read
+first, the cascade named in full, the name typed to confirm, and the whole
+affordance **hidden** while `deleted_structure` is missing — `deletionReadiness`
+stays the gate rather than a comment.
+
+##### Sidebar rows
+
+```
+hovering a scenario                      hovering a phase
+┌──────────────────────────┐             ┌──────────────────────────┐
+│   Application        [+] │             │ ⌄ PHASES             [+] │
+│     Discovery    [+] [⋯] │             │   Application    [+] [⋯] │
+└──────────────────────────┘             └──────────────────────────┘
+                       │                                        │
+   ┌───────────────────▼──────┐             ┌──────────────────▼───────┐
+   │  ✎  Rename…              │             │  ✎  Rename…              │
+   │  ⧉  Duplicate…           │             │  ⇅  Move earlier / later │
+   │  ─────────────────────   │             │  ─────────────────────   │
+   │  🗑  Delete scenario      │             │  🗑  Delete phase         │
+   └──────────────────────────┘             └──────────────────────────┘
+```
+
+A scenario row carries **both** `+` and `⋯`: the `+` makes a path inside it,
+the `⋯` acts on the scenario itself. They read as different because one is
+additive and one is a menu, and they sit in that order everywhere.
+
+`delete_phase` does not exist yet — the only RPC this whole section is missing.
+Deleting a phase cascades to every scenario in it, so its confirm will report
+the largest number the app ever shows, which is exactly why it needs the same
+typed-name gate rather than a lighter one.
+
+##### Canvas — step and lane
+
+The handles already exist and already know what they point at; they gain a `⋯`
+on hover, beside the insert `+` that is already there.
+
+```
+       ┌──────────────┐                  ┌──────┐
+       │ Step 2   ⋯   │ ← column header  │  ⋯   │ ← lane label
+       └──────────────┘                  │Visual│
+              │                          └──────┘
+   ┌──────────▼───────────────┐              │
+   │  ✎  Rename…              │   ┌──────────▼───────────────┐
+   │  ⇥  Insert step after    │   │  ✎  Rename…              │
+   │  ─────────────────────   │   │  ⇥  Insert lane below    │
+   │  🗑  Delete step          │   │  ─────────────────────   │
+   └──────────────────────────┘   │  🗑  Delete lane          │
+                                  └──────────────────────────┘
+```
+
+Deleting a lane is the widest of these: `remove_lane` is scenario-scoped, so it
+takes that lane out of **every path** at once. The confirm has to say so in
+those words, because the grid on screen shows one path and the damage is to all
+of them.
+
+##### Canvas — the cell
+
+```
+   ┌─────────────────┐
+   │ Reach out to  ⋯ │ ← revealed on hover, in Edit only
+   │ PLUS staff      │
+   └─────────────────┘
+            │
+   ┌────────▼─────────────────────┐
+   │  ✎  Edit contents            │  → opens the detail panel
+   │  ⇢  Add a dependency…        │
+   │  ─────────────────────────   │
+   │  ⌫  Clear contents           │  → keeps the cell, empties it
+   │  🗑  Delete cell              │
+   └──────────────────────────────┘
+```
+
+**Clear and Delete are both offered, and they are genuinely different.** An
+empty cell still occupies its square and can be typed into; a deleted one
+leaves a gap the empty-square `+` can refill. Slices care about the difference:
+clearing keeps `cell_key` and every slice that references it, deleting takes
+the cell out of every slice it appears in. The confirm says which.
 
 **One exception worth allowing:** the change sheet's `↺`, which deletes what
 was *just created* in this session. That is safe for the reason the general
@@ -662,6 +735,79 @@ So which cells go together is decided on the grid:
 That last one is what the current docked editor cannot do at all, and it is the
 whole reason to move: today grouping is inferred from chips labelled `0110ab`,
 the last six characters of a UUID.
+
+#### The cell menu, while a slice is open
+
+The gestures above are fast once known and invisible until then, so the badge
+also carries a menu. It is the same `⋯` the cell has when editing a blueprint,
+showing a different list because a different thing is open — which is the same
+rule the bar follows when `Make slice` becomes `14 cells`.
+
+```
+   ┌─────────────────┐
+   │ ①  Greet      ⋯ │ ← the badge is the handle; ⋯ appears on hover
+   │    student      │
+   └─────────────────┘
+            │
+   ┌────────▼──────────────────────────────┐
+   │  In this slice                        │
+   │                                       │
+   │  ✓  1 · Greet the student             │
+   │     2 · Ask them to share their screen│
+   │     3 · ⟨no caption⟩                  │
+   │     …                                 │
+   │  ─────────────────────────────────    │
+   │  ⊕  Move to a new group               │
+   │  ⇱  Make this the first group         │
+   │  ─────────────────────────────────    │
+   │  ⊖  Take out of this slice            │
+   └───────────────────────────────────────┘
+```
+
+Five things it is doing:
+
+- **The groups are listed by caption, not by number alone.** "Move to group 2"
+  requires remembering what 2 was; "Ask them to share their screen" does not.
+  A group with no caption reads `⟨no caption⟩` rather than being hidden, since
+  it is a real destination and also a defect worth noticing.
+- **The current group is ticked**, so the menu answers "which one is this in"
+  before it offers to change it. That question is asked far more often than the
+  move is made.
+- **Moving is one click on the destination.** No submenu, no drag.
+- **`⊕ Move to a new group`** is the same thing clicking the badge does when it
+  wraps past the last group — the gesture and the menu produce the same result,
+  which is what makes the gesture learnable from the menu.
+- **`⊖ Take out of this slice`** removes the cell from the slice entirely. It
+  is not delete: the cell stays on the blueprint, and the menu says *this
+  slice* to make that unmistakable.
+
+**A cell in the slice but in no group** shows `·` for a badge and its menu opens
+with nothing ticked and a line above the list: *"not in a group yet — it will
+not appear when this slice is presented."* That is the silent failure the old
+strip allowed, stated at the one moment someone is looking straight at it.
+
+##### Multi-select works here too
+
+With several cells picked, the menu acts on all of them — the same selection
+grammar as the rest of Edit, so grouping five cells is pick-five-then-one-menu
+rather than five separate moves.
+
+```
+   3 cells picked → any of their ⋯
+   ┌───────────────────────────────────────┐
+   │  3 cells in this slice                │
+   │                                       │
+   │  ⊕  Move all 3 to a new group         │
+   │  ✓  1 · Greet the student             │  ← ✓ = all three are here
+   │  ◐  2 · Ask them to share…            │  ← ◐ = some of them are
+   │  ─────────────────────────────────    │
+   │  ⊖  Take all 3 out of this slice      │
+   └───────────────────────────────────────┘
+```
+
+`◐` for a partial match matters: without it, a menu showing an unticked row
+implies none of the selection is there, and moving to that group would look
+like a no-op for the two cells already in it.
 
 #### The slice sheet
 
