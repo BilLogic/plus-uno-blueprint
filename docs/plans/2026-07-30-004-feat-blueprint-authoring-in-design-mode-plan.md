@@ -547,9 +547,57 @@ affordances, connect-mode hit targets).
 grid is rendered from a cached query — a write that does not invalidate looks
 like it silently failed.
 
-## Implementation status (2026-07-30)
+## Implementation status (2026-07-31)
 
 **Phase 1 is written and unapplied. Phases 2–8 cannot start until it lands.**
+
+### Correction: slice recovery was broken before it was built (2026-07-31)
+
+Reviewing the unapplied migration against live data turned up a defect that
+would have shipped silently. `cell_natural_key` derived
+`path.name/layer.name/step.name` — three parts, unslugified. The keys slices
+are actually bound by look like `warm-up/happy/regular-tutor/step-5`, and
+`slice_tools.py:cell_key` produces `lifecycle/scenario/path/layer/step`.
+Neither matches the derived form, and `paths.name` is "Happy Path" where the
+key segment is `happy`. Every recovery lookup would have missed, and missed
+*quietly* — Phase 7's entire undo path rests on this function.
+
+The key cannot be derived at all: it is **authored in the IR**, not computed
+from display names, and names repeat across scenarios. So the fix is a column,
+not a better expression — `cells.cell_key`, written by the import pipeline for
+imported rows and minted by `upsert_cell` for app rows. `cell_natural_key` now
+reads it and returns null when it was never written; `slices_referencing` now
+returns the actual keys each slice would lose, which is what the confirm dialog
+and the undo path both need and what its comment had always claimed.
+
+**Blocking data problem this exposed.** `slice_items.cell_keys` today holds
+three incompatible conventions across 36 stored keys:
+
+| Shape | Keys | Slices | Recoverable |
+|---|---|---|---|
+| Raw UUIDs (`a0000000-…`) | 17 | 4 | No — an id, not a key |
+| `warm-up/happy/rt/s4` | some of 19 | 3 | Only against itself |
+| `warm-up/happy/regular-tutor/step-5` | rest of 19 | 3 | Only against itself |
+
+None matches what `slice_tools.py` emits now. **`cell_keys` is currently
+decorative — it cannot recover anything.** Phase 7 therefore gains a
+prerequisite: backfill `cells.cell_key` from the IR and rewrite
+`slice_items.cell_keys` through one convention, then verify every stored key
+resolves to a live cell. Until that passes, the delete confirm must say plainly
+which frames it cannot promise to restore rather than implying it can restore
+them all — which is why `AffectedSlice.cell_keys` is typed
+`Array<string | null>` and not `string[]`.
+
+### Landed ahead of the migration
+
+`src/lib/authoringRpc.ts` and `src/lib/authoringErrors.ts` — the typed call
+seam every later phase writes through, and the mapping that keeps trigger text
+("cells.step_id must be linked to cells.path_id in path_steps") out of the UI.
+Verified by `tsc` against the migration's actual signatures, which caught six
+parameter mismatches that would each have been a silent PostgREST 404:
+`add_step` takes `at_position`; `add_lane` is scenario-scoped, takes `at_row`,
+and returns void; `create_path`/`duplicate_path` default to `'alternative'`;
+`duplicate_path` takes `source_path_id`, `copy_cells`, `copy_dependencies`.
 
 Both files are complete on disk:
 - `supabase/migrations/20260731000000_blueprint_authoring_foundation.sql`

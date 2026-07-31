@@ -1,0 +1,415 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database'
+import { toAuthoringError } from '@/lib/authoringErrors'
+
+type Client = SupabaseClient<Database>
+
+/**
+ * The app's entire structural write surface.
+ *
+ * Every function here is a `security definer` RPC from
+ * `20260731001000_blueprint_authoring_operations.sql`. There is no table-level
+ * INSERT or DELETE grant behind any of them — the app holds *operations*, not
+ * tables, which is what lets an anonymous reader coexist with an authoring
+ * session in the same schema.
+ *
+ * The map skill calls these same functions with the service key. That is the
+ * point: one write path, so the app and the skill cannot drift into producing
+ * differently-shaped blueprints.
+ *
+ * Callers should treat every one of these as **pessimistic** — the grid must
+ * re-read after a structural write rather than patch itself, because these
+ * cascade across tables in ways the client cannot mirror. Cell text edits are
+ * the exception and stay optimistic; they live in `cellSpecMutations.ts`.
+ */
+
+// ---------------------------------------------------------------------------
+// Shapes returned by the RPCs that return more than an id.
+// ---------------------------------------------------------------------------
+
+/** What `create_scenario` hands back: the blueprint and its first version. */
+export type CreatedScenario = { scenario_id: string; path_id: string }
+
+/**
+ * One slice that would lose frames to a delete.
+ *
+ * A `null` entry in `cell_keys` is a cell whose authored key was never
+ * written — it can be deleted but **not** restored by the undo path, which
+ * matches on keys. Surface those separately rather than counting them as
+ * recoverable.
+ */
+export type AffectedSlice = {
+  slice_id: string
+  title: string
+  cell_keys: Array<string | null>
+}
+
+/**
+ * What a delete would destroy, read *before* the confirm dialog opens.
+ *
+ * `affected_slices` is the one that matters: a slice quietly losing cells
+ * stays renderable and simply says less than it did, which is worse than an
+ * error — nothing surfaces, and the story is silently wrong.
+ */
+export type DeletionImpact = {
+  label: string
+  cell_count: number
+  dependency_count: number
+  affected_slices: AffectedSlice[]
+}
+
+export type LaneSetEntry = {
+  name: string
+  layer_role: string | null
+  row_position: number
+}
+
+export type DependencyKind = 'trigger' | 'needs'
+
+export type ViewType = 'single' | 'side-by-side' | 'integrated'
+
+// ---------------------------------------------------------------------------
+// The call seam.
+// ---------------------------------------------------------------------------
+
+/**
+ * One place where a PostgREST failure becomes an `AuthoringError`.
+ *
+ * `rpc` is untyped against our generated `Database` because these functions
+ * post-date the last type generation; the parameter and return types above are
+ * the contract until `generate_typescript_types` is re-run against the applied
+ * migration.
+ */
+async function call<T>(
+  client: Client,
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see doc above
+  const { data, error } = await (client.rpc as any)(fn, args)
+  if (error) {
+    const authoring = toAuthoringError(error)
+    console.error(`[authoring] ${fn} failed:`, authoring.raw)
+    throw authoring
+  }
+  return data as T
+}
+
+// ---------------------------------------------------------------------------
+// Create
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a blueprint with one version, a lane set, and empty columns.
+ *
+ * Prefer `laneSourcePathId` over `laneSet`: lane vocabulary drifting between
+ * blueprints is the single most common defect in a service blueprint set, and
+ * copying an existing version's lanes is the cheapest way to not cause it.
+ */
+export function createScenario(
+  client: Client,
+  input: {
+    phaseId: string
+    name: string
+    viewType?: ViewType
+    laneSourcePathId?: string | null
+    laneSet?: LaneSetEntry[]
+    stepCount?: number
+    pathName?: string
+  },
+): Promise<CreatedScenario> {
+  return call<CreatedScenario>(client, 'create_scenario', {
+    phase_id: input.phaseId,
+    name: input.name,
+    view_type: input.viewType ?? 'single',
+    lane_source_path_id: input.laneSourcePathId ?? null,
+    lane_set: input.laneSet ?? [],
+    step_count: input.stepCount ?? 5,
+    path_name: input.pathName ?? 'Happy Path',
+  })
+}
+
+/** Add a column to a version. `atPosition` inserts; omitted appends. */
+export function addStep(
+  client: Client,
+  input: { pathId: string; name: string; atPosition?: number },
+): Promise<string> {
+  return call<string>(client, 'add_step', {
+    path_id: input.pathId,
+    name: input.name,
+    at_position: input.atPosition ?? null,
+  })
+}
+
+/**
+ * Add a lane to **every version** of a blueprint. `atRow` inserts; omitted
+ * appends.
+ *
+ * Scenario-scoped, not version-scoped, and returns nothing rather than an id:
+ * the call creates one `layers` row per version, so there is no single id to
+ * hand back, and adding a lane to one version alone would misalign the rows in
+ * the side-by-side view. Re-read the grid afterwards.
+ */
+export function addLane(
+  client: Client,
+  input: {
+    scenarioId: string
+    name: string
+    layerRole?: string | null
+    atRow?: number
+  },
+): Promise<void> {
+  return call<void>(client, 'add_lane', {
+    scenario_id: input.scenarioId,
+    name: input.name,
+    layer_role: input.layerRole ?? null,
+    at_row: input.atRow ?? null,
+  })
+}
+
+/**
+ * Create or update the cell at (lane, column).
+ *
+ * The link between column and version is ensured inside the function, so a
+ * caller may drop a cell into a column the version does not carry yet and get
+ * the column linked rather than a trigger exception.
+ */
+export function upsertCell(
+  client: Client,
+  input: { pathId: string; layerId: string; stepId: string; content: string },
+): Promise<string> {
+  return call<string>(client, 'upsert_cell', {
+    path_id: input.pathId,
+    layer_id: input.layerId,
+    step_id: input.stepId,
+    content: input.content,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Order
+// ---------------------------------------------------------------------------
+
+/**
+ * Renumber a version's columns to exactly this order.
+ *
+ * Safe as one statement because `path_steps_path_column_unique` was made
+ * `deferrable initially deferred` in the foundation migration — before that, a
+ * multi-row shift collided with itself midway through.
+ */
+export function reorderSteps(
+  client: Client,
+  pathId: string,
+  stepIds: string[],
+): Promise<void> {
+  return call<void>(client, 'reorder_steps', {
+    path_id: pathId,
+    step_ids: stepIds,
+  })
+}
+
+/** Set which columns a version carries, and in what order. */
+export function setPathSteps(
+  client: Client,
+  pathId: string,
+  stepIds: string[],
+): Promise<void> {
+  return call<void>(client, 'set_path_steps', {
+    path_id: pathId,
+    step_ids: stepIds,
+  })
+}
+
+/**
+ * Reorder lanes across a whole blueprint, by name.
+ *
+ * By name, not by id, because every version of a blueprint has its own copy of
+ * each lane and they must stay row-aligned — reordering one version's lane ids
+ * would misalign it against its siblings in the side-by-side view.
+ */
+export function reorderLanes(
+  client: Client,
+  scenarioId: string,
+  laneNames: string[],
+): Promise<void> {
+  return call<void>(client, 'reorder_lanes', {
+    scenario_id: scenarioId,
+    lane_names: laneNames,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Dependencies
+// ---------------------------------------------------------------------------
+
+/**
+ * Add or update one dependency between two cells in the same version.
+ *
+ * `trigger` draws an arrow; `needs` records a dependency that deliberately
+ * does not — a blueprint where every relationship is an arrow is unreadable,
+ * and most "this depends on that" facts are not handoffs.
+ */
+export function setCellDependency(
+  client: Client,
+  input: {
+    sourceCellId: string
+    targetCellId: string
+    kind?: DependencyKind
+    label?: string | null
+    note?: string | null
+  },
+): Promise<string> {
+  return call<string>(client, 'set_cell_dependency', {
+    source_cell_id: input.sourceCellId,
+    target_cell_id: input.targetCellId,
+    kind: input.kind ?? 'trigger',
+    label: input.label ?? null,
+    note: input.note ?? null,
+  })
+}
+
+export function clearCellDependency(
+  client: Client,
+  dependencyId: string,
+): Promise<void> {
+  return call<void>(client, 'clear_cell_dependency', {
+    dependency_id: dependencyId,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Versions
+// ---------------------------------------------------------------------------
+
+/** Create an empty version of a blueprint, optionally copying a lane set. */
+export function createPath(
+  client: Client,
+  input: {
+    scenarioId: string
+    name: string
+    pathType?: string
+    laneSourcePathId?: string | null
+  },
+): Promise<string> {
+  return call<string>(client, 'create_path', {
+    scenario_id: input.scenarioId,
+    name: input.name,
+    path_type: input.pathType ?? 'alternative',
+    lane_source_path_id: input.laneSourcePathId ?? null,
+  })
+}
+
+/**
+ * Copy a version.
+ *
+ * `withDependencies` remaps every arrow onto the copies — an arrow left
+ * pointing at the original's cells would render as a line leaving the version
+ * it belongs to, which is the failure mode this flag exists to prevent.
+ */
+export function duplicatePath(
+  client: Client,
+  input: {
+    sourcePathId: string
+    name: string
+    pathType?: string
+    copyCells?: boolean
+    copyDependencies?: boolean
+  },
+): Promise<string> {
+  return call<string>(client, 'duplicate_path', {
+    source_path_id: input.sourcePathId,
+    name: input.name,
+    path_type: input.pathType ?? 'alternative',
+    copy_cells: input.copyCells ?? true,
+    copy_dependencies: input.copyDependencies ?? true,
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Delete
+// ---------------------------------------------------------------------------
+
+export type DeletionKind = 'scenario' | 'path' | 'step' | 'lane'
+
+/**
+ * What a delete would destroy. Read this before opening a confirm dialog —
+ * the numbers shown must be the numbers that die, including the arrows that
+ * cascade with the cells and the slices that lose frames.
+ */
+export function deletionImpact(
+  client: Client,
+  kind: DeletionKind,
+  targetId: string,
+): Promise<DeletionImpact> {
+  return call<DeletionImpact>(client, 'deletion_impact', {
+    kind,
+    target_id: targetId,
+  })
+}
+
+/**
+ * Each of these archives everything it destroys into `deleted_structure` in
+ * the same transaction as the cascade, and returns the archive row's id — pass
+ * it to the undo toast.
+ */
+export function deleteScenario(client: Client, scenarioId: string): Promise<string> {
+  return call<string>(client, 'delete_scenario', { scenario_id: scenarioId })
+}
+
+export function deletePath(client: Client, pathId: string): Promise<string> {
+  return call<string>(client, 'delete_path', { path_id: pathId })
+}
+
+export function removeStep(
+  client: Client,
+  pathId: string,
+  stepId: string,
+): Promise<string> {
+  return call<string>(client, 'remove_step', { path_id: pathId, step_id: stepId })
+}
+
+export function removeLane(
+  client: Client,
+  scenarioId: string,
+  laneName: string,
+): Promise<string> {
+  return call<string>(client, 'remove_lane', {
+    scenario_id: scenarioId,
+    lane_name: laneName,
+  })
+}
+
+export function deleteCell(client: Client, cellId: string): Promise<string> {
+  return call<string>(client, 'delete_cell', { cell_id: cellId })
+}
+
+// ---------------------------------------------------------------------------
+// Reads that support the above
+// ---------------------------------------------------------------------------
+
+/**
+ * The authored key of a cell — `lifecycle/scenario/path/layer/step`.
+ *
+ * Slices bind to cells through these rather than through ids, because a
+ * scenario re-import deletes and recreates every `cells` row. The id changes;
+ * the key does not.
+ *
+ * **Null is a real answer**, not an error: it means the cell's key was never
+ * written, so nothing that references it can be recovered by key. Do not
+ * substitute a derived guess — a key that matches nothing is worse than an
+ * absent one, because it looks like a successful match.
+ */
+export function cellNaturalKey(
+  client: Client,
+  cellId: string,
+): Promise<string | null> {
+  return call<string | null>(client, 'cell_natural_key', { cell_id: cellId })
+}
+
+/** Which slices reference any of these cells. */
+export function slicesReferencing(
+  client: Client,
+  cellIds: string[],
+): Promise<AffectedSlice[]> {
+  return call<AffectedSlice[]>(client, 'slices_referencing', { cell_ids: cellIds })
+}

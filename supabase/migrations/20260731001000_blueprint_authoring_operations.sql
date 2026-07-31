@@ -19,37 +19,120 @@
 -- Helpers
 -- ---------------------------------------------------------------------------
 
--- Natural key for a cell, used by the archive and by slice recovery.
+/**
+ * Slug for one key segment: lowercase, ASCII, hyphen-joined.
+ *
+ * Matches what the IR authors write by hand ("Warm Up" is keyed `warm-up`).
+ * Used only when *minting* a key for an app-created cell — never to guess an
+ * imported cell's key, which is authored and cannot be derived.
+ */
+create or replace function public.key_slug(value text)
+returns text
+language sql immutable
+set search_path = pg_catalog, pg_temp
+as $$
+  select nullif(
+    trim(both '-' from regexp_replace(lower(coalesce(value, '')), '[^a-z0-9]+', '-', 'g')),
+    ''
+  );
+$$;
+
+/**
+ * A cell's authored key — read, not computed.
+ *
+ * The key is `lifecycle/scenario/path/layer/step` and is authored in the IR,
+ * so it cannot be reconstructed from display names: `paths.name` is "Happy
+ * Path" where the key segment is `happy`, and names repeat across scenarios.
+ * An earlier version of this function derived `path.name/layer.name/step.name`
+ * and would have produced keys that matched nothing a slice was bound by —
+ * silently breaking the recovery path that deletion safety depends on.
+ *
+ * Returns null for a cell whose key was never written. Callers must treat
+ * null as "not recoverable" rather than substituting a guess.
+ */
 create or replace function public.cell_natural_key(cell_id uuid)
 returns text
 language sql stable
 set search_path = public, pg_catalog, pg_temp
 as $$
-  select p.name || '/' || l.name || '/' || s.name
-  from public.cells c
-  join public.paths p on p.id = c.path_id
-  join public.layers l on l.id = c.layer_id
-  join public.steps s on s.id = c.step_id
-  where c.id = cell_id;
+  select c.cell_key from public.cells c where c.id = cell_id;
 $$;
 
--- Which slices reference any of these cells, and which keys they lose.
--- Read before a destructive operation so the confirm dialog can name them.
+/**
+ * Mint a key for an app-created cell.
+ *
+ * Slugs the display names, which is correct here and only here: an app-created
+ * cell has no IR entry, so its names *are* its authored source. Scoped by
+ * scenario and path type so it lands in the same shape as an imported key.
+ */
+create or replace function public.mint_cell_key(
+  path_id uuid,
+  layer_id uuid,
+  step_id uuid
+)
+returns text
+language sql stable
+set search_path = public, pg_catalog, pg_temp
+as $$
+  select concat_ws('/',
+    public.key_slug(sl.name),
+    public.key_slug(sc.name),
+    coalesce(public.key_slug(p.path_type), public.key_slug(p.name)),
+    public.key_slug(l.name),
+    public.key_slug(s.name)
+  )
+  from public.paths p
+  join public.service_scenarios sc on sc.id = p.service_scenario_id
+  join public.phases ph on ph.id = sc.phase_id
+  join public.service_lifecycles sl on sl.id = ph.service_lifecycle_id
+  join public.layers l on l.id = layer_id
+  join public.steps s on s.id = step_id
+  where p.id = path_id;
+$$;
+
+/**
+ * Which slices reference any of these cells, and exactly which keys they lose.
+ *
+ * The keys are the point. A slice that quietly loses cells stays renderable
+ * and simply says less than it did — the worst outcome here, because nothing
+ * surfaces. Undo re-points by matching these keys back to the restored cells,
+ * so a delete that cannot name them cannot be undone.
+ *
+ * A lost key that is null (a cell that never had one written) still appears,
+ * as null, so the confirm dialog can say how many frames it cannot promise to
+ * restore instead of implying it can restore them all.
+ */
 create or replace function public.slices_referencing(cell_ids uuid[])
 returns jsonb
 language sql stable
 set search_path = public, pg_catalog, pg_temp
 as $$
-  select coalesce(
-    jsonb_agg(distinct jsonb_build_object('slice_id', s.id, 'title', s.title)),
-    '[]'::jsonb
-  )
-  from public.slices s
-  join public.slice_items i on i.slice_id = s.id
-  where i.cell_ids && cell_ids;
+  select coalesce(jsonb_agg(entry), '[]'::jsonb)
+  from (
+    select jsonb_build_object(
+      'slice_id', s.id,
+      'title', s.title,
+      'cell_keys', (
+        select coalesce(jsonb_agg(to_jsonb(c.cell_key)), '[]'::jsonb)
+        from public.cells c
+        where c.id = any(cell_ids)
+          and c.id = any(
+            select unnest(i2.cell_ids) from public.slice_items i2
+            where i2.slice_id = s.id
+          )
+      )
+    ) as entry
+    from public.slices s
+    where exists (
+      select 1 from public.slice_items i
+      where i.slice_id = s.id and i.cell_ids && cell_ids
+    )
+  ) rows;
 $$;
 
+grant execute on function public.key_slug(text) to anon, authenticated;
 grant execute on function public.cell_natural_key(uuid) to anon, authenticated;
+grant execute on function public.mint_cell_key(uuid, uuid, uuid) to anon, authenticated;
 grant execute on function public.slices_referencing(uuid[]) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -319,9 +402,14 @@ begin
     values (upsert_cell.path_id, upsert_cell.step_id, next_column);
   end if;
 
-  insert into public.cells (path_id, layer_id, step_id, content, origin)
+  -- Minted on insert, never on update: a cell's key is its identity for slice
+  -- recovery, so renaming a lane must not silently repoint every slice that
+  -- referenced the cells in it.
+  insert into public.cells (path_id, layer_id, step_id, content, origin, cell_key)
   values (upsert_cell.path_id, upsert_cell.layer_id, upsert_cell.step_id,
-          coalesce(content, ''), 'app')
+          coalesce(content, ''), 'app',
+          public.mint_cell_key(upsert_cell.path_id, upsert_cell.layer_id,
+                               upsert_cell.step_id))
   on conflict (layer_id, step_id) do update set content = excluded.content
   returning id into cell_id;
 

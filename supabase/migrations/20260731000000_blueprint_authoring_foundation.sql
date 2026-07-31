@@ -25,6 +25,36 @@ alter table public.cells
     constraint cells_origin_check check (origin in ('import', 'app'));
 
 -- ---------------------------------------------------------------------------
+-- The cell's authored key, stored rather than derived.
+--
+-- Slices bind to cells through `slice_items.cell_keys` because a scenario
+-- re-import deletes and recreates every `cells` row — the id changes, the key
+-- does not. That only works if the key can actually be recovered from a cell,
+-- and until now it could not: the key is *authored* in the IR
+-- (`lifecycle/scenario/path/layer/step`, per `slice_tools.py:cell_key`), not
+-- computed from display names, so no SQL function can reconstruct it. A cell
+-- had no way to say what its own key was.
+--
+-- Nullable on purpose. Imported rows are backfilled by the import pipeline,
+-- which is the only thing that knows the authored keys; app-created rows get
+-- one minted by `upsert_cell`. A null key means "this cell predates the
+-- column" — visible, rather than silently wrong.
+--
+-- Current data, for the record: of 36 stored `cell_keys`, 17 are raw UUIDs
+-- (no recovery value at all) and 19 are keys in two different abbreviation
+-- styles (`warm-up/happy/rt/s4` and `warm-up/happy/regular-tutor/step-5`),
+-- neither matching what `slice_tools.py` produces today. Recovery is not
+-- functional until those are backfilled through one convention.
+-- ---------------------------------------------------------------------------
+alter table public.cells add column if not exists cell_key text;
+
+create unique index if not exists cells_cell_key_unique
+  on public.cells (cell_key) where cell_key is not null;
+
+comment on column public.cells.cell_key is
+  'Authored key: lifecycle/scenario/path/layer/step. Written by the import pipeline for origin=import, minted by upsert_cell for origin=app. Survives re-import; slice_items.cell_keys matches against it.';
+
+-- ---------------------------------------------------------------------------
 -- Column ordering. `slice_items` was built DEFERRABLE INITIALLY DEFERRED so
 -- its editor could renumber in one batch; path_steps was not, which makes any
 -- multi-row shift collide with itself midway. The RPCs do the shifting in one
