@@ -356,6 +356,130 @@ is a capability that is on or off.
 Absent, never disabled, for sessions that cannot write — the rule the current
 switch already follows.
 
+### Edit mode — the full prototype
+
+The bar, in every state it has. Nothing here is hypothetical layout: each state
+is reachable today except the change-tracking group, which is specced in full
+below and not yet built.
+
+```
+Edit, nothing picked, no changes yet
+┌──────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice        │              │   👁 View  ✎ Edit    │
+└──────────────────────────────────────────────────────────────────────┘
+    ▲   ▲       ▲ disabled — "pick cells first"        ▲ active half filled
+    │   └─ Hand: drag to pan
+    └─ Select: click gathers, drag marquees
+
+Edit, three cells picked
+┌──────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice ③   ✕  │              │   👁 View  ✎ Edit    │
+└──────────────────────────────────────────────────────────────────────┘
+                       ▲       ▲ clear the selection (Esc is invisible)
+                       └─ count, so the bar never has to be counted by eye
+
+Edit, after two changes
+┌──────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice        │  ↶ ↷  ⚑ 2 ⌄  │   👁 View  ✎ Edit    │
+└──────────────────────────────────────────────────────────────────────┘
+                                    ▲ ▲   ▲
+                                    │ │   └─ the session: what has changed
+                                    │ └─ redo
+                                    └─ undo
+```
+
+The change-tracking group **appears only once something has changed**, the way
+the annotation capture button does. A permanent "Save" on a canvas that has
+saved everything already is a control that lies at rest.
+
+#### The session menu
+
+```
+⚑ 2 changes ⌄
+┌────────────────────────────────────────────┐
+│  Since you turned Edit on                  │
+│                                            │
+│   ·  Added step 3 to Happy Path            │
+│   ·  Added a cell on Back Stage Tech       │
+│  ────────────────────────────────────────  │
+│   ↶  Undo the last one          ⌘Z         │
+│   ↷  Redo                       ⇧⌘Z        │
+│  ────────────────────────────────────────  │
+│   ⤺  Discard all 2 changes                 │
+│   ✓  Keep them and clear this list         │
+└────────────────────────────────────────────┘
+```
+
+Reading the list is the feature. "Discard all changes" is only trustworthy if
+it can first say *which* changes — a button that discards an unnamed amount of
+work is one nobody presses.
+
+#### What Save and Discard can honestly mean
+
+There is a problem to resolve before building these, and it is not cosmetic.
+
+**Every edit already writes.** Clicking an empty square calls `upsert_cell` and
+the row exists; the insert handle calls `add_step` and the column exists. There
+is no draft state anywhere in the app — verified, not assumed. So a **Save**
+button would have nothing to save, and **Discard** would have to *reverse*
+work, not abandon it.
+
+Two ways to make the three buttons mean something:
+
+**A — buffer the session, commit on Save.** Edits accumulate client-side and
+land on Save.
+
+```
+  ✓ Save is honest — nothing is written until it is pressed
+  ✓ Discard is free — throw the buffer away
+  ✗ The grid renders from the database, so every buffered edit needs an
+    optimistic overlay the renderer knows how to merge
+  ✗ Two people editing cannot see each other until one saves
+  ✗ Cross-blueprint sessions (S3) buffer changes to rows in several scenarios
+    at once, and a partial commit failure leaves half of them applied
+```
+
+**B — write immediately, keep inverses.** Each RPC call pushes its inverse onto
+a session stack. Undo pops one. Discard pops all of them.
+
+```
+  ✓ Nothing changes about how the grid renders
+  ✓ Undo is genuinely useful on its own, which Save is not
+  ✓ Concurrent editing keeps working
+  ✗ "Save" is not a real action — it becomes "clear the list", a checkpoint
+  ✗ Every operation needs an inverse, and two do not have clean ones yet:
+    `remove_lane` (restores from the archive) and `upsert_cell` on an existing
+    cell (needs the prior content)
+```
+
+**Recommendation: B, and rename the button.** The honest label for the third
+item is not *Save* but **Done** or **Keep changes** — it ends the session and
+clears the list. Calling it Save would be the same class of mistake as the
+`grant execute … to authenticated` that read like a gate and was not one.
+
+If a true draft session is wanted, that is a bigger piece of work than the rest
+of this plan combined, and it should be its own document rather than three
+buttons bolted onto a canvas that writes as it goes.
+
+#### What the inverses are
+
+Needed for B, one row per operation. The three marked ⚠ are the work.
+
+| Operation | Inverse |
+|---|---|
+| `create_phase` / `create_scenario` / `create_path` | the matching delete |
+| `add_step` | `remove_step` |
+| `add_lane` | `remove_lane` |
+| `upsert_cell` (new) | `delete_cell` |
+| `upsert_cell` (existing) | ⚠ re-upsert the prior content — must be captured before the call |
+| `set_cell_dependency` | `clear_cell_dependency` |
+| `reorder_steps` / `reorder_lanes` / `set_path_steps` | re-apply the prior order |
+| `delete_*` / `remove_*` | ⚠ restore from `deleted_structure` — the payload exists, the restore path does not |
+| storyboard upload | ⚠ no inverse; the previous image is overwritten in storage |
+
+The third row is why deletion shipped inert until the archive existed: the
+payload was always the point, and this is the feature that finally reads it.
+
 ### The dropdowns
 
 ```
@@ -670,7 +794,9 @@ Applied to the obvious candidates —
 
 | Candidate | Verdict |
 |---|---|
-| Undo / redo | **Yes, eventually.** Acts on the last action, which has no place. The one genuine gap. |
+| Undo / redo | **Yes.** Acts on the last action, which has no place. Specced in "Edit mode — the full prototype". |
+| Discard all changes | **Yes**, in the session menu, and only once it can name what it would discard. |
+| Save | **No — as a name.** Everything is already written; the honest label is *Keep changes*, which ends the session and clears the list. |
 | Rename step / lane | No — edit in place on the header or rail. |
 | Reorder steps | No — drag the header. |
 | Duplicate path | No — the path's `⋯` row menu. |
@@ -678,9 +804,9 @@ Applied to the obvious candidates —
 | Frame grouping | No — see 2; it belongs on the cells. |
 | Zoom | No — dropped as unhelpful. |
 
-So Edit's run is Select, Hand, Make slice today, and Select, Hand, Make slice,
-Undo/Redo once undo exists. That is the whole list; everything else has
-somewhere better to be.
+So Edit's run is **Select · Hand · Make slice** today, and **Select · Hand ·
+Make slice · Undo · Redo · Session** once the inverse stack exists. That is the
+whole list; everything else has somewhere better to be.
 
 ### 4. Line and Arrow in shapes
 
