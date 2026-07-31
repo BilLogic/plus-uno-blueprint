@@ -599,9 +599,9 @@ them all — which is why `AffectedSlice.cell_keys` is typed
 | 5 — dependencies | Landed **and mounted** | 6 tests; browser: `set_cell_dependency` reaches PostgREST with its five parameter names |
 | 6 — versions | Landed **and mounted** | 5 tests; browser: `create_path` reaches PostgREST with its four parameter names |
 | 7 — deletion guardrails | Landed; **affordance wired but hidden** | 8 tests; browser: no delete button renders against a schema with no archive |
-| 8 — storyboard upload | Checks landed, **not mounted** | 9 tests |
+| 8 — storyboard upload | Landed **and mounted**; policy defect fixed | 13 tests; browser: upload reaches storage, refused by RLS as an unauthenticated session should be |
 
-35 tests, all passing, via `npm test`.
+38 tests, all passing, via `npm test`.
 
 **What "landed" does not mean.** No write path in phases 3–8 has ever
 succeeded, because every one of them needs the migration. What is proven is
@@ -639,11 +639,32 @@ reading order. Twenty-five candidates, zero duplicates. Note this is the same
 duplicate-name data defect that leaves 24 cells unkeyable; the picker works
 around it, the backfill still cannot.
 
-**Phase 8 is written but not mounted.** `storyboardUpload.ts` keys images by
-`(sliceId, itemId)` — persisted row ids — and the frame editor works on draft
-frames that have no ids until they are saved. Wiring it needs the persisted
-slice-item surface, and the bucket's mime widening from the unapplied
-migration. Left out deliberately rather than half-wired.
+**Phase 8 is mounted too, and mounting it found a live defect.** A saved frame
+already carries its `slice_items.id`, so `SliceStoryboardField` sits on each
+frame in the strip; an unsaved frame says so instead of offering an upload it
+could not key.
+
+Wiring it exposed a disagreement between the app and the bucket. The insert
+policy from `20260729120000` accepts only
+`slices/<uuid>/(frame-N|character-ref).png`, and `storyboardPath` produced
+`<sliceId>/<itemId>.<ext>` — no prefix, a uuid filename, and possibly a `.jpg`.
+**No upload the app could build would ever have been accepted**, and the mime
+widening next to it was dead code: a JPEG would clear the bucket's mime check
+and then be refused by a policy that hard-codes `\.png$`.
+
+Fixed on the policy side rather than the app side, because keying a frame's
+image by *position* is the actual bug: splitting or reordering frames
+renumbers them, so `frame-3.png` silently becomes a different frame's picture.
+The row id does not move. The policy now accepts the id form and all three
+extensions, and still accepts the old names so anything already uploaded keeps
+resolving. `storyboardPath` gained the `slices/` prefix the policy requires,
+and a test now holds the app's paths against the policy's own regex so the two
+cannot drift apart again.
+
+Verified in the browser: the oversize guard rejects a 6 MB file before
+anything crosses the wire, and a real PNG upload reaches storage and is
+refused by RLS — which is the correct answer for a session with no signed-in
+user, and leaves no stray object behind.
 
 **Still outstanding regardless of the migration:** the `cell_keys` backfill.
 Until it runs, `splitByRecoverability` will classify most affected slices as

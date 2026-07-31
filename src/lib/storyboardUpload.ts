@@ -71,6 +71,12 @@ export function checkStoryboardFile(file: {
  * accumulating orphans nothing points at — a slice edited ten times would
  * otherwise leave nine files behind, and nothing in the app would ever list
  * them.
+ *
+ * The `slices/` prefix is not decoration: the bucket's insert policy matches
+ * on the object name, and an unprefixed path is refused. Keyed by the frame's
+ * row id rather than its position, because positions move — splitting or
+ * reordering frames renumbers them, and a position-keyed image would silently
+ * end up on a different frame.
  */
 export function storyboardPath(
   sliceId: string,
@@ -78,7 +84,7 @@ export function storyboardPath(
   mimeType: string,
 ): string {
   const extension = EXTENSIONS[mimeType] ?? 'png'
-  return `${sliceId}/${itemId}.${extension}`
+  return `slices/${sliceId}/${itemId}.${extension}`
 }
 
 function formatMb(bytes: number): string {

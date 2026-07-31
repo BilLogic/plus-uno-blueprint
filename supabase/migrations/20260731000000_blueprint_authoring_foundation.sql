@@ -127,3 +127,39 @@ create policy "service_scenarios_update_auth" on public.service_scenarios
 update storage.buckets
   set allowed_mime_types = array['image/png', 'image/jpeg', 'image/webp']
   where id = 'slice-illustrations';
+
+-- The bucket's write policies name the *only* paths that may be written, and
+-- the pattern from `20260729120000` accepts none of the paths the app builds.
+-- Two disagreements, both fatal:
+--
+--   1. It hard-codes `\.png$`, so widening the mime types above would have
+--      changed nothing — a JPEG would clear the bucket check and then be
+--      refused by the policy.
+--   2. It keys a frame's image by *position* (`frame-3.png`). Positions move:
+--      splitting or reordering frames renumbers them, so every image would
+--      silently repoint at a different frame. The app keys by `slice_items.id`
+--      instead, which is stable across every edit that is not a delete.
+--
+-- The old names stay accepted so anything already uploaded keeps resolving.
+do $$
+begin
+  drop policy if exists "slice_illustrations_insert" on storage.objects;
+  drop policy if exists "slice_illustrations_update" on storage.objects;
+
+  create policy "slice_illustrations_insert" on storage.objects
+    for insert to authenticated
+    with check (
+      bucket_id = 'slice-illustrations'
+      and name ~ '^slices/[0-9a-f-]{36}/([0-9a-f-]{36}|frame-[0-9]+|character-ref)\.(png|jpg|webp)$'
+    );
+  create policy "slice_illustrations_update" on storage.objects
+    for update to authenticated
+    using (bucket_id = 'slice-illustrations')
+    with check (
+      bucket_id = 'slice-illustrations'
+      and name ~ '^slices/[0-9a-f-]{36}/([0-9a-f-]{36}|frame-[0-9]+|character-ref)\.(png|jpg|webp)$'
+    );
+exception
+  when insufficient_privilege then
+    raise notice 'storage.objects policies skipped (not owner): bucket writes stay service-key only until these are added via the dashboard.';
+end $$;

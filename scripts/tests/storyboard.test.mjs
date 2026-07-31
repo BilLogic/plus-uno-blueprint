@@ -57,23 +57,54 @@ test('a missing type is still refused, without an odd sentence', () => {
   assert.match(result.problem, /^That file cannot be used/)
 })
 
+const SLICE = 'a0000000-0000-4000-8000-000000000001'
+const ITEM = 'b0000000-0000-4000-8000-000000000002'
+
 test('the path is derived, so a replace overwrites', () => {
-  const first = storyboardPath('slice-1', 'item-1', 'image/png')
-  const second = storyboardPath('slice-1', 'item-1', 'image/png')
+  const first = storyboardPath(SLICE, ITEM, 'image/png')
+  const second = storyboardPath(SLICE, ITEM, 'image/png')
   assert.equal(first, second)
-  assert.equal(first, 'slice-1/item-1.png')
+  assert.equal(first, `slices/${SLICE}/${ITEM}.png`)
 })
 
 test('each format gets its own extension', () => {
-  assert.equal(storyboardPath('s', 'i', 'image/jpeg'), 's/i.jpg')
-  assert.equal(storyboardPath('s', 'i', 'image/webp'), 's/i.webp')
+  assert.equal(storyboardPath(SLICE, ITEM, 'image/jpeg'), `slices/${SLICE}/${ITEM}.jpg`)
+  assert.equal(storyboardPath(SLICE, ITEM, 'image/webp'), `slices/${SLICE}/${ITEM}.webp`)
   // Unknown types never reach here, but a path is still better than a crash.
-  assert.equal(storyboardPath('s', 'i', 'image/gif'), 's/i.png')
+  assert.equal(storyboardPath(SLICE, ITEM, 'image/gif'), `slices/${SLICE}/${ITEM}.png`)
 })
 
 test('different screens never share a path', () => {
   assert.notEqual(
-    storyboardPath('slice-1', 'item-1', 'image/png'),
-    storyboardPath('slice-1', 'item-2', 'image/png'),
+    storyboardPath(SLICE, ITEM, 'image/png'),
+    storyboardPath(SLICE, 'b0000000-0000-4000-8000-000000000003', 'image/png'),
   )
+})
+
+/**
+ * The bucket's insert policy matches on the object name, so a path the app
+ * builds and a path the policy accepts are two different facts that have to
+ * agree. They did not: the original policy hard-coded `frame-<position>.png`,
+ * which no `storyboardPath` output can ever match — every upload would have
+ * been refused, and the mime widening beside it would have been dead. Kept in
+ * step here rather than discovered at upload time.
+ */
+const POLICY_PATTERN =
+  /^slices\/[0-9a-f-]{36}\/([0-9a-f-]{36}|frame-[0-9]+|character-ref)\.(png|jpg|webp)$/
+
+test('every path the app builds is one the bucket policy accepts', () => {
+  for (const type of ['image/png', 'image/jpeg', 'image/webp']) {
+    const path = storyboardPath(SLICE, ITEM, type)
+    assert.match(path, POLICY_PATTERN, `${type} produced ${path}`)
+  }
+})
+
+test('the policy still accepts what was uploaded under the old naming', () => {
+  assert.match(`slices/${SLICE}/frame-3.png`, POLICY_PATTERN)
+  assert.match(`slices/${SLICE}/character-ref.png`, POLICY_PATTERN)
+})
+
+test('a path outside a slice folder is refused', () => {
+  assert.doesNotMatch(`${SLICE}/${ITEM}.png`, POLICY_PATTERN)
+  assert.doesNotMatch(`slices/${ITEM}.png`, POLICY_PATTERN)
 })

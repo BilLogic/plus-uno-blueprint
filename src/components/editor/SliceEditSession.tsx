@@ -50,6 +50,13 @@ export function SliceEditSession({
 }) {
   const { client } = useSupabase()
   const [frames, setFrames] = useState<DraftFrame[]>(() => toDraftFrames(detail))
+  // Read from `detail`, not the draft: a storyboard upload writes straight to
+  // `slice_items` and refreshes the slice, so the draft never sees it.
+  const illustrationFor = useCallback(
+    (itemId: string) =>
+      detail.items.find((item) => item.id === itemId)?.illustration ?? null,
+    [detail.items],
+  )
   const [activeFrame, setActiveFrame] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -172,6 +179,8 @@ export function SliceEditSession({
           frames={frames}
           activeFrame={activeFrame}
           problems={problems}
+          sliceId={detail.slice.id}
+          illustrationFor={illustrationFor}
           onActivate={setActiveFrame}
           onChange={setFrames}
         />

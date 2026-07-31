@@ -2,8 +2,10 @@ import { useState, type DragEvent } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { SliceStoryboardField } from '@/components/editor/SliceStoryboardField'
 import { cn } from '@/lib/utils'
 import type { DraftFrame, ValidationProblem } from '@/lib/sliceValidation'
+import type { Json } from '@/types/database'
 
 /**
  * The frame editor, docked under the canvas while a slice is being edited.
@@ -23,12 +25,21 @@ export function SliceFrameEditor({
   frames,
   activeFrame,
   problems,
+  sliceId,
+  illustrationFor,
   onActivate,
   onChange,
 }: {
   frames: DraftFrame[]
   activeFrame: number
   problems: ValidationProblem[]
+  sliceId: string
+  /**
+   * The saved illustration for a frame's row, read from the slice rather than
+   * carried in the draft: the image is written straight to `slice_items` on
+   * upload, so the draft would go stale the moment one lands.
+   */
+  illustrationFor: (itemId: string) => Json | null
   onActivate: (index: number) => void
   onChange: (frames: DraftFrame[]) => void
 }) {
@@ -230,6 +241,12 @@ export function SliceFrameEditor({
                 )
               }
               className="w-full resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-[11px] outline-none focus-visible:border-ring"
+            />
+
+            <SliceStoryboardField
+              sliceId={sliceId}
+              itemId={frame.id}
+              illustration={frame.id ? illustrationFor(frame.id) : null}
             />
 
             {frameProblems.length > 0 ? (
