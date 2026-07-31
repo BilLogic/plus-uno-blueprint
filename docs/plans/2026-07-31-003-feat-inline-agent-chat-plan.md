@@ -61,9 +61,14 @@ Worth fixing early, because agent features drift into these by default.
 
 ## Where it lives
 
-A bar in the bottom nav, in all three modes. Collapsed it is a placeholder;
-focused it grows **upward** into a panel over the canvas, so the canvas stays
-the subject of the conversation rather than being pushed off screen.
+A bar in the bottom nav, present whether or not Edit is on. Collapsed it is a
+placeholder; focused it grows **upward** into a panel over the canvas, so the
+canvas stays the subject of the conversation rather than being pushed off
+screen.
+
+Plan 002's bar deliberately does not reserve a slot for this — the two plans
+ship on different timelines, and a permanently empty chat box would be worse
+than none. Adding it is a change to that bar, made when this is built.
 
 ```
 collapsed                          focused
@@ -231,7 +236,8 @@ What the agent is told about the screen, assembled client-side per message:
 
 ```ts
 type AgentContext = {
-  mode: 'view' | 'mark' | 'edit'
+  editing: boolean          // Edit toggle, per plan 002
+  tool: string              // what a click currently does
   phase?:     { id: string; name: string }
   blueprint?: { id: string; name: string }
   paths:      Array<{ id: string; name: string; pathType: string }>
