@@ -382,6 +382,20 @@ Edit, three cells picked
                           ▲     ▲ clear the selection (Esc is invisible)
                           └─ count, so the bar is never counted by eye
 
+Edit, three cells picked across two scenarios
+┌───────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice ③ · 2 blueprints  ✕  │   👁 View   ✎ Edit    │
+└───────────────────────────────────────────────────────────────────────┘
+                            ▲ click it to fly through them in turn
+```
+
+The second line only appears when picks span more than one scenario, and it
+exists because Hand made crossing the canvas easy: cells picked two blueprints
+away are now the normal case, and without this the bar reads `③` while two of
+them are somewhere the user cannot see. Clicking the count tours them.
+
+```
+
 Edit, three unsaved changes
 ┌───────────────────────────────────────────────────────────────────────┐
 │  ▷  ✋  │  ◆ Make slice  │  ⚑ 3 changes ⌄   ✓ Save changes  │  👁  ✎  │
@@ -402,12 +416,11 @@ rather than a walk backwards through things you do not.
 
 #### The sheet
 
-A dropdown sheet anchored under the counter, **not a modal**. The canvas stays
-live behind it, because half of what the list names is on screen and pointing
-at it is the fastest way to know which "Added a cell" is which.
+A dropdown sheet **opening upward from the counter**, not a modal. The canvas
+stays live behind it, because half of what the list names is on screen and
+pointing at it is the fastest way to know which "Added a cell" is which.
 
 ```
-                              ⚑ 3 changes ⌄
       ┌──────────────────────────────────────────────────────┐
       │  3 unsaved changes                        Since 14:02│
       ├──────────────────────────────────────────────────────┤
@@ -421,8 +434,11 @@ at it is the fastest way to know which "Added a cell" is which.
       │                                                      │
       ├──────────────────────────────────────────────────────┤
       │  ⤺ Discard all 3            │      ✓ Save changes    │
-      └──────────────────────────────────────────────────────┘
-                                              ▲ same action as the bar button
+      └────────────────▲─────────────────────────────────────┘
+                       │ opens upward from the bar
+┌──────────────────────┴────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice  │  ⚑ 3 changes ⌄   ✓ Save changes  │  👁  ✎  │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 Four things the layout is doing:
@@ -476,18 +492,47 @@ actually made.
 **Recommended split:** ship the log, the counter, the grouped sheet, the camera
 fly and Save first — all of it useful on its own, since knowing what you have
 changed is most of the value. Add `↺` per row as the inverses land, greying the
-rows that cannot be reverted yet rather than pretending they can. `Discard all`
-turns on when every row in the session is revertible.
+rows that cannot be reverted yet rather than pretending they can.
 
-That last rule is the same one deletion already follows: no affordance ships
-before the thing that makes it safe. A Discard that silently skips the
-storyboard it cannot undo is worse than no Discard.
+**`Discard all` stays enabled and reverts what it can**, naming the exceptions
+first:
+
+```
+   ⤺ Discard all 3
+   ┌────────────────────────────────────────────┐
+   │  2 of 3 will be undone.                    │
+   │  The storyboard image cannot be put back.  │
+   │              [ Cancel ]   [ Discard 2 ]    │
+   └────────────────────────────────────────────┘
+```
+
+An earlier draft disabled Discard until *every* row was revertible, which
+inverts the point: one storyboard upload would kill the session-wide escape
+hatch for everything else. Naming the exception is the honest version;
+refusing outright punishes the wrong work.
 
 #### What "Save changes" means
 
 It does not write. Everything is already written — clicking an empty square
 calls `upsert_cell` and the row exists. Save **ends the session and clears the
 list**: an acknowledgement that the changes are wanted.
+
+Which makes it a **one-way door**, so it says so — but only when it matters:
+
+```
+   ✓ Save changes            (session is all additive)
+   → saves silently. Nothing to warn about.
+
+   ✓ Save changes            (session contains a delete)
+   ┌──────────────────────────────────────────────────┐
+   │  Keep 3 changes?                                 │
+   │  Deletes in this session can no longer be undone.│
+   │              [ Cancel ]      [ Keep changes ]    │
+   └──────────────────────────────────────────────────┘
+```
+
+A confirm on every save would be noise; a confirm on none of them is a trap on
+the one action that cannot be taken back.
 
 That is worth being blunt about in the UI rather than papering over, because a
 button labelled Save that does not save is the same class of mistake as the
@@ -665,7 +710,7 @@ of them.
    │  ⇢  Add a dependency…        │
    │  ─────────────────────────   │
    │  ⌫  Clear contents           │  → keeps the cell, empties it
-   │  🗑  Delete cell              │
+   │  🗑  Delete cell · in 3 slices│  → the count is in the item itself
    └──────────────────────────────┘
 ```
 
@@ -673,7 +718,13 @@ of them.
 empty cell still occupies its square and can be typed into; a deleted one
 leaves a gap the empty-square `+` can refill. Slices care about the difference:
 clearing keeps `cell_key` and every slice that references it, deleting takes
-the cell out of every slice it appears in. The confirm says which.
+the cell out of every slice it appears in.
+
+**The slice count is on the menu item, before it is opened.** A cell is the
+object most likely to be in several slices at once, and the whole guard is
+worthless if the number only appears after someone has already decided. The
+confirm behind it is the same one path delete uses — `deletion_impact` read
+first, affected slices named, name typed.
 
 **One exception worth allowing:** the change sheet's `↺`, which deletes what
 was *just created* in this session. That is safe for the reason the general
@@ -715,11 +766,15 @@ and with what". Splitting them across two surfaces means holding one in your
 head while working the other, so they live in **one sheet**, and everything in
 it is drag-to-arrange.
 
-Dropdown anchored under `◆ 14 cells`, **not a modal** — the cells it names are
-on the canvas behind it, and `⌖` points at them.
+**It opens upward, out of the bar.** Every sheet and dropdown in the bottom bar
+does — the bar sits at the bottom of the window, so a menu hanging down would
+be off-screen or pinned against the edge. Growing up over the canvas also puts
+the list next to the cells it names rather than pushing them further away.
+
+Anchored, **not a modal**: the canvas stays live behind it, which is what makes
+`⌖` worth having.
 
 ```
-                         ◆ 14 cells ⌄
  ┌──────────────────────────────────────────────────────────────┐
  │  Tutor warm-up journey                               journey │
  │  What the regular tutor does while warming up.               │
@@ -742,13 +797,24 @@ on the canvas behind it, and `⌖` points at them.
  │                                                              │
  ├──────────────────────────────────────────────────────────────┤
  │  ⊕ Add a group                              14 cells in 3    │
- └──────────────────────────────────────────────────────────────┘
+ └────────────────────────────────▲─────────────────────────────┘
+                                  │ opens upward from the bar
+┌─────────────────────────────────┴──────────────────────────────────────┐
+│  ▷  ✋  │  ⊕ Create   ◆ 14 cells ⌄  │  ⚑ 2 ⌄  ✓ Save  │  👁 View ✎ Edit│
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Two drag targets, one gesture.** The `⠿` on a *group row* reorders groups.
 The `⠿` on a *cell row* moves that cell — into another group, or out to the
 ungrouped list at the bottom. Nothing else to learn: if it has a handle, drag
 it, and where it lands is what it means.
+
+**Cell rows also carry "Move to…" on their `⋯`.** Dragging is right for the
+neighbouring case, which is most of them, and wrong for group 7 → group 2 in a
+forty-row list where the target is off-screen and the drag turns into an
+auto-scrolling journey. The menu lists groups by caption and does it in one
+click. Group rows stay drag-only — there are rarely more than a handful, so
+they are all on screen together.
 
 That is the whole answer to why this is one menu rather than two surfaces.
 Reordering is dragging a group; regrouping is dragging a cell; they are the
@@ -861,6 +927,28 @@ before                             after clicking with nothing picked
 
 This costs one state and one animation, and it turns the bar's dead control
 into the only place the picking gesture is ever taught.
+
+### Everything in the bar opens upward
+
+One rule, applied without exception: the bottom bar's menus, sheets and tool
+families all open **up over the canvas**. The bar is already at the bottom edge
+of the window, so anything hanging down is clipped or pinned — and opening up
+keeps a list beside the thing it describes instead of pushing it off-screen.
+
+```
+   ┌────────────────────┐
+   │  ✓ ▭  Rectangle    │   ← the list
+   │    ◯  Ellipse      │
+   │    ／ Line         │
+   │    ↗  Arrow        │
+   └──────────▲─────────┘
+┌────────────┴───────────────────────────────────────────┐
+│  ▷   ✎ ⌄   ▢ ⌄   T ⌄   🗑        │   👁 View   ✎ Edit  │
+└────────────────────────────────────────────────────────┘
+```
+
+Already true in the built tool families and the capture menu, both of which
+pass `side="top"`.
 
 ### The dropdowns
 
@@ -1076,6 +1164,105 @@ is the one story in this list the current design does not support. Specced in
 
 *Passes* — and is the story that keeps annotation tools out of Edit. A pen
 active while cells are selectable makes step 2 mean two things.
+
+---
+
+## Design review against the stories
+
+The stories were written before the Create dialog, the delete surfaces, the
+change sheet and the one-sheet grouping existed. Walking the final design back
+through them found five problems. They are listed with what changes in
+response, and the plan above has been amended.
+
+### The original ten, re-checked
+
+| | Story | Against the final design |
+|---|---|---|
+| S1 | Slice from a lane, clicking cells | Passes |
+| S2 | Click the lane label instead | Passes |
+| S3 | Slice spanning two blueprints | Passes — but see **F3** |
+| S4 | Step in the middle of a journey | Passes; also now possible from Create |
+| S5 | Fill an empty square | Passes |
+| S6 | Scenario into a phase | Passes |
+| S7 | Delete a path | Passes |
+| S8 | Mark up, then hand over | Passes |
+| S9 | Regroup a slice's cells | Specced — sheet plus canvas mirror |
+| S10 | Read without touching | Passes |
+
+### Six stories the new surfaces need
+
+**S11 — "Add a step to a scenario I'm not looking at."**
+Create → Step, change *Scenario*, pick a position, create. *Passes.* This is
+the case that justifies the dialog: pointing cannot reach it.
+
+**S12 — "I added three things; I want the middle one back."**
+Open the change sheet, `↺` on that row. *Passes* once inverses land — and is
+why the list replaced undo, which would have reversed the wrong two first.
+
+**S13 — "Delete the Escalation lane."**
+Lane label → `⋯` → Delete. The confirm must say the lane leaves **every path
+in the scenario**, not just the one on screen. *Passes only if it says so* —
+`remove_lane` is scenario-scoped and the grid shows one path.
+
+**S14 — "Delete a cell that three slices use."**
+Cell `⋯` → Delete cell. *Gap found* — see **F5**.
+
+**S15 — "Arrange a 40-cell slice across eight groups."**
+Open the sheet, drag a cell from group 7 to group 2. *Fails* — see **F4**.
+
+**S16 — "I saved, then realised the lane was a mistake."**
+*Fails.* Save clears the list, and nothing brings it back — see **F2**.
+
+### What the walk broke
+
+**F1 — one unrevertible change disables Discard for the whole session.**
+The rule was "Discard all turns on when every row is revertible". Upload one
+storyboard and Discard is dead for everything else, which is the opposite of
+what a session-wide escape hatch is for.
+**Revision:** Discard stays enabled and reverts what it can, listing what it
+cannot *before* running: *"2 of 3 will be undone. The storyboard image cannot
+be put back."* Naming the exception is the honest version; refusing outright
+punishes the wrong thing.
+
+**F2 — Save is a one-way door with no warning.**
+Once the list is cleared there is no route back, and nothing says so at the
+moment of pressing. For a button this prominent that is a trap.
+**Revision:** Save confirms in one line when the session contains anything
+destructive — *"3 changes kept. Deletes in this session can no longer be
+undone."* Non-destructive sessions save silently; there is nothing to warn
+about when everything is additive.
+
+**F3 — a selection spanning blueprints is invisible.**
+Known, still open, and now more likely: Hand made crossing the canvas easy, so
+picks off-screen are the normal case rather than the odd one.
+**Revision:** the count in `Make slice` gains a second line when picks span
+more than one scenario — `③ · 2 blueprints` — and clicking the count flies
+through them in turn. Cheap, and it removes the silent case where someone
+saves a slice with three cells they have forgotten about.
+
+**F4 — drag-to-reorder inside a scrolling sheet.**
+The sheet is the one surface that grows without limit: eight groups of five
+cells is forty rows, so the drag target is usually off-screen. Auto-scroll
+while dragging is the standard answer and it is unpleasant at this length.
+**Revision:** cell rows get **"Move to…"** on their `⋯` as well as the drag
+handle, listing groups by caption. Dragging stays for the neighbouring case,
+which is most of them; the menu handles group 7 → group 2 without a journey.
+Group rows keep drag-only, since there are rarely more than a handful.
+
+**F5 — deleting a cell says nothing about the slices that lose it.**
+Path delete reads `deletion_impact` and names the slices. Cell delete was
+specced without it, and a cell is exactly the object most likely to be in
+several slices at once.
+**Revision:** `delete_cell` goes through the same confirm — impact read first,
+affected slices named, and the cell's own menu shows the count inline before
+the menu is even opened: *"Delete cell · in 3 slices"*.
+
+### What did not change
+
+The walk left the rest alone, which is the useful signal. Creation splitting by
+what a thing needs, delete living on the object, two modes with two tool runs,
+one sheet for ordering and grouping, and everything opening upward all survived
+contact with all sixteen stories.
 
 ## Acceptance criteria
 
