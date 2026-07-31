@@ -31,6 +31,13 @@ export type FamilyTool = {
  *
  * The face remembering the last choice is what makes the second use cheap:
  * having drawn one ellipse, the next one is a single click on the same pixel.
+ *
+ * **The active family drops its chevron**, which is Figma again. A caret is an
+ * offer to change tool, and the one family you have already chosen is the one
+ * where that offer is least useful — so it is spent on the others, and the
+ * active slot reads as a single solid pill instead of a pill with a seam in it.
+ * The list is not lost: clicking the face again opens it, because re-selecting
+ * the tool you are already holding is the one click with nothing else to mean.
  */
 export function ToolFamilyMenu({
   label,
@@ -59,76 +66,88 @@ export function ToolFamilyMenu({
   const face = tools.find((tool) => tool.id === active) ?? tools[0]
   const FaceIcon = face.icon
 
-  return (
-    <div
+  const faceButton = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      aria-label={inFamily ? `${face.label} — ${label} tools` : face.label}
+      aria-pressed={inFamily}
+      onClick={
+        inFamily
+          ? undefined // the trigger below owns the click
+          : () => {
+              // Activating the face closes whatever the bar had open —
+              // otherwise a menu left hanging from a previous click sits over
+              // the options row this tool is about to show.
+              onOpenChange(false)
+              onSelect(face.id)
+            }
+      }
       className={cn(
-        'pointer-events-auto flex shrink-0 items-center rounded-md',
-        inFamily && 'bg-violet-100',
+        'size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground',
+        inFamily
+          ? 'rounded-md text-foreground hover:bg-violet-100'
+          : 'rounded-r-none',
       )}
     >
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label={face.label}
-              aria-pressed={inFamily}
-              onClick={() => {
-                // Activating the face closes whatever the bar had open —
-                // otherwise a menu left hanging from a previous click sits over
-                // the options row this tool is about to show.
-                onOpenChange(false)
-                onSelect(face.id)
-              }}
-              className={cn(
-                'size-7 shrink-0 rounded-r-none p-0 text-muted-foreground hover:text-foreground',
-                inFamily && 'text-foreground hover:bg-violet-100',
-              )}
-            >
-              <FaceIcon className={cn('size-3.5', inFamily && 'size-4')} aria-hidden />
-            </Button>
-          }
-        />
-        <TooltipContent side="top" className="text-xs">
-          {face.label}
-        </TooltipContent>
-      </Tooltip>
+      <FaceIcon className={cn('size-3.5', inFamily && 'size-4')} aria-hidden />
+    </Button>
+  )
 
-      <DropdownMenu open={open} onOpenChange={onOpenChange}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label={`${label} tools`}
-              className={cn(
-                'h-7 w-4 shrink-0 rounded-l-none px-0 text-muted-foreground hover:text-foreground',
-                inFamily && 'text-foreground hover:bg-violet-100',
-              )}
-            >
-              <ChevronDown className="size-3" aria-hidden />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="center" side="top" className="min-w-40 text-xs">
-          {tools.map((tool) => {
-            const Icon = tool.icon
-            return (
-              <DropdownMenuItem key={tool.id} onClick={() => onSelect(tool.id)}>
-                <Check
-                  className={cn('size-3', tool.id !== active && 'invisible')}
-                  aria-hidden
-                />
-                <Icon className="size-3.5" aria-hidden />
-                {tool.label}
-              </DropdownMenuItem>
-            )
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+  return (
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+      <div
+        className={cn(
+          'pointer-events-auto flex shrink-0 items-center rounded-md',
+          inFamily && 'bg-violet-100',
+        )}
+      >
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              inFamily ? <DropdownMenuTrigger render={faceButton} /> : faceButton
+            }
+          />
+          <TooltipContent side="top" className="text-xs">
+            {face.label}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Absent, not disabled, while this family holds the tool — see the
+            note above the component. */}
+        {inFamily ? null : (
+          <DropdownMenuTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label={`${label} tools`}
+                className="h-7 w-4 shrink-0 rounded-l-none px-0 text-muted-foreground hover:text-foreground"
+              >
+                <ChevronDown className="size-3" aria-hidden />
+              </Button>
+            }
+          />
+        )}
+      </div>
+
+      <DropdownMenuContent align="center" side="top" className="min-w-40 text-xs">
+        {tools.map((tool) => {
+          const Icon = tool.icon
+          return (
+            <DropdownMenuItem key={tool.id} onClick={() => onSelect(tool.id)}>
+              <Check
+                className={cn('size-3', tool.id !== active && 'invisible')}
+                aria-hidden
+              />
+              <Icon className="size-3.5" aria-hidden />
+              {tool.label}
+            </DropdownMenuItem>
+          )
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

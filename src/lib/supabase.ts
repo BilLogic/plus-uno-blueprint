@@ -41,6 +41,28 @@ export function hasDevAuthoringKey(): boolean {
   return Boolean(import.meta.env.DEV && devAuthoringKey)
 }
 
+/**
+ * Show the authoring UI on the dev server *without* an authoring key.
+ *
+ * Grants nothing. RLS and the function grants are the authority and neither of
+ * them reads this flag — holding only the anon key, a write still comes back
+ * `permission denied for function upsert_cell`, which is the revoke working.
+ *
+ * It exists because the Edit surfaces became invisible to their own designer:
+ * hiding them when `canWrite` is false is right for a deployed visitor and
+ * wrong for someone building them, and the alternative — pasting a
+ * service-role key into a bundle to look at a toolbar — is a far worse trade.
+ * A flag that over-promises costs one clear error message; a key in a bundle
+ * costs the database.
+ */
+const devAuthoringUi = import.meta.env.DEV
+  ? import.meta.env.VITE_DEV_AUTHORING_UI
+  : undefined
+
+export function hasDevAuthoringUi(): boolean {
+  return Boolean(import.meta.env.DEV && devAuthoringUi === 'true')
+}
+
 export function createSupabaseClient(): SupabaseClient<Database> | null {
   if (!isSupabaseConfigured()) {
     return null

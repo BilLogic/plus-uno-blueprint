@@ -124,7 +124,7 @@ export function EditorSidebarWorkspaceHeader({
   isLanding = false,
   onWorkspaceTitle,
 }: EditorSidebarWorkspaceHeaderProps) {
-  const { isDevAuthoring } = useSupabase()
+  const { isDevAuthoring, isEditPreview } = useSupabase()
 
   return (
     <div
@@ -142,6 +142,18 @@ export function EditorSidebarWorkspaceHeader({
           title="Local authoring key in use — writes go to the live database"
         >
           authoring
+        </span>
+      ) : null}
+      {/* The opposite state, and it must not look like the one above: the Edit
+          surfaces are visible so they can be worked on, and every write will
+          be refused. Amber says "careful, this is live"; slate says "nothing
+          you do here lands". */}
+      {isEditPreview ? (
+        <span
+          className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+          title="Edit UI preview — no authoring key, so writes will be refused"
+        >
+          edit preview
         </span>
       ) : null}
       {onToggleSidebar ? (

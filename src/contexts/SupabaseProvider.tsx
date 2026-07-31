@@ -10,6 +10,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import {
   createSupabaseClient,
   hasDevAuthoringKey,
+  hasDevAuthoringUi,
   isSupabaseConfigured,
 } from '../lib/supabase'
 import type { Database } from '../types/database'
@@ -28,6 +29,13 @@ type SupabaseContextValue = {
   canWrite: boolean
   /** Writing with the local authoring key rather than as a signed-in user. */
   isDevAuthoring: boolean
+  /**
+   * Showing the authoring UI on a dev server that cannot actually write.
+   * Distinct from `isDevAuthoring`, and the two must never share a badge: one
+   * means "your writes reach the live database", the other means "they will
+   * not". Getting those the wrong way round is the expensive mistake.
+   */
+  isEditPreview: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -70,6 +78,9 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
   }, [client])
 
   const isDevAuthoring = hasDevAuthoringKey()
+  // Only ever true on a dev server, and never when the key is present — a
+  // session that can really write is not a preview of one.
+  const isEditPreview = hasDevAuthoringUi() && !isDevAuthoring
 
   const value = useMemo(
     () => ({
@@ -77,10 +88,12 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       configured,
       session,
       isLoading,
-      canWrite: configured && (session !== null || isDevAuthoring),
+      canWrite:
+        configured && (session !== null || isDevAuthoring || isEditPreview),
       isDevAuthoring,
+      isEditPreview,
     }),
-    [client, configured, session, isLoading, isDevAuthoring],
+    [client, configured, session, isLoading, isDevAuthoring, isEditPreview],
   )
 
   return (
