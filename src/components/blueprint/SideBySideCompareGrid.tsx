@@ -6,6 +6,7 @@ import {
 } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
+import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
@@ -272,7 +273,11 @@ function ComparePathColumn({
         gridTemplateRows: 'subgrid',
       }}
     >
-      <BlueprintColumnHandles steps={blueprint.steps} bodyRef={columnRef} />
+      <BlueprintColumnHandles
+        steps={blueprint.steps}
+        bodyRef={columnRef}
+        pathId={blueprint.path.id}
+      />
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}
@@ -546,13 +551,14 @@ function CompareLayerRow({
                 }
               />
             ) : (
-              <div
-                aria-hidden
-                className="shrink-0 self-stretch"
-                style={{
-                  width: STEP_COLUMN_WIDTH,
-                  minWidth: STEP_COLUMN_WIDTH,
-                }}
+              // Empty in Edit mode is not nothing: it is where a cell can go.
+              // Outside Edit it stays the inert spacer it has always been.
+              <BlueprintEmptyCellSlot
+                pathId={blueprint.path.id}
+                layerId={blueprintLayer.id}
+                stepId={step.id}
+                width={STEP_COLUMN_WIDTH}
+                selfStretch
               />
             )}
             {stepIndex < blueprint.steps.length - 1 && (

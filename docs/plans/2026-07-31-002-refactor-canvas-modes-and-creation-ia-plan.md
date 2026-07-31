@@ -1,13 +1,15 @@
 ---
 title: "One canvas: the tool decides the click, Edit decides the affordances"
 type: refactor
-status: draft — for alignment, not implementation
+status: implemented
 date: 2026-07-31
 ---
 
 # One canvas: the tool decides the click, Edit decides the affordances
 
-Plan only. Nothing here is built.
+**Shipped.** All seven phases are built; this stands as the record of why the
+shape is what it is. The one open question (Line and Arrow) was additive and is
+still open.
 
 The whole plan follows from one sentence:
 

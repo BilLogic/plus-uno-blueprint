@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useRef } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
+import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
@@ -599,15 +600,14 @@ function BlueprintSwimLane({
                 }
               />
             ) : (
-              <div
-                aria-hidden
-                className="shrink-0"
-                style={{
-                  width: STEP_COLUMN_WIDTH,
-                  minWidth: STEP_COLUMN_WIDTH,
-                  maxWidth: STEP_COLUMN_WIDTH,
-                  minHeight: rowMinHeight,
-                }}
+              // Empty in Edit mode is not nothing: it is where a cell can go.
+              // Outside Edit it stays the inert spacer it has always been.
+              <BlueprintEmptyCellSlot
+                pathId={blueprint.path.id}
+                layerId={layerId}
+                stepId={step.id}
+                width={STEP_COLUMN_WIDTH}
+                minHeight={rowMinHeight}
               />
             )}
             {stepIndex < steps.length - 1 && (

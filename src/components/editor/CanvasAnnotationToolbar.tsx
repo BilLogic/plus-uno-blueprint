@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { AnnotationCaptureMenu } from '@/components/editor/AnnotationCaptureMenu'
 import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
 import { useCanvasMode } from '@/contexts/canvasModeContext'
 import {
@@ -347,6 +348,7 @@ export function CanvasAnnotationToolbar() {
             Clear annotations
           </TooltipContent>
         </Tooltip>
+          <AnnotationCaptureMenu />
         </>
 
         {designing ? (
