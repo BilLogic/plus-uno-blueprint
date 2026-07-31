@@ -57,7 +57,6 @@ export function CreateSliceDialog({
   const { openTab } = useViewState()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [actor, setActor] = useState('')
   const [sliceType, setSliceType] = useState<SliceType>('custom')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -75,7 +74,6 @@ export function CreateSliceDialog({
   const reset = () => {
     setTitle('')
     setDescription('')
-    setActor('')
     setSliceType('custom')
     setError(null)
   }
@@ -84,7 +82,9 @@ export function CreateSliceDialog({
     title,
     description,
     sliceType,
-    actor,
+    // Always blank: the field is gone, and the column stays nullable
+    // until a migration drops it.
+    actor: '',
     frames: screens,
   })
 
@@ -102,7 +102,7 @@ export function CreateSliceDialog({
         title,
         description,
         sliceType,
-        actor,
+        actor: '',
         cellIds,
         frames: screens,
       })
@@ -157,16 +157,14 @@ export function CreateSliceDialog({
               onChange={(event) => setDescription(event.target.value)}
             />
           </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground">
-              Actor <span className="text-muted-foreground">(optional)</span>
-            </span>
-            <Input
-              value={actor}
-              placeholder="Regular Tutor"
-              onChange={(event) => setActor(event.target.value)}
-            />
-          </label>
+          {/*
+            No Actor field. It was asked for, stored, and read by nothing —
+            no header, no slide, no sidebar row — so it took a decision from
+            the author and gave nothing back. For a journey slice the actor is
+            already the lane its cells sit in, which is on screen; asking again
+            only invites the two to disagree. If a label is wanted later it
+            should be derived from those lanes, not typed.
+          */}
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-baseline justify-between gap-2">

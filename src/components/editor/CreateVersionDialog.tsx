@@ -116,10 +116,9 @@ export function CreateVersionDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New version of {scenarioName}</DialogTitle>
+          <DialogTitle>New path in {scenarioName}</DialogTitle>
           <DialogDescription>
-            Versions are alternatives, not stages — nothing connects across
-            them.
+            Paths are alternatives, not stages — nothing connects across them.
           </DialogDescription>
         </DialogHeader>
 
@@ -198,7 +197,7 @@ export function CreateVersionDialog({
                 }
               >
                 {draft.mode === 'duplicate' ? (
-                  <option value="">Pick a version…</option>
+                  <option value="">Pick a path…</option>
                 ) : (
                   <option value="">Same lanes as the rest of this journey</option>
                 )}
@@ -269,7 +268,7 @@ export function CreateVersionDialog({
             disabled={busy || problems.length > 0}
             onClick={handleCreate}
           >
-            {busy ? 'Creating…' : 'Create version'}
+            {busy ? 'Creating…' : 'Create path'}
           </Button>
         </DialogFooter>
       </DialogContent>

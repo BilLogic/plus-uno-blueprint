@@ -57,17 +57,17 @@ export function validateDraftVersion(
   const name = draft.name.trim()
 
   if (!name) {
-    problems.push('A version needs a name.')
+    problems.push('A path needs a name.')
   } else if (
     siblingNames.some((sibling) => sibling.trim().toLowerCase() === name.toLowerCase())
   ) {
     problems.push(
-      `This journey already has a version called “${name}”. Two versions with the same name cannot be told apart in the sidebar or a slice.`,
+      `This journey already has a path called “${name}”. Two paths with the same name cannot be told apart in the sidebar or a slice.`,
     )
   }
 
   if (draft.mode === 'duplicate' && !draft.sourcePathId) {
-    problems.push('Pick the version to copy.')
+    problems.push('Pick the path to copy.')
   }
 
   if (draft.mode === 'duplicate' && draft.copyDependencies && !draft.copyCells) {
@@ -84,15 +84,15 @@ export function validateDraftVersion(
  *
  * Worth saying out loud because the arrow behaviour is the part people get
  * wrong: a copy whose arrows still pointed at the original's cells would draw
- * lines leaving the version they belong to.
+ * lines leaving the path they belong to.
  */
 export function describeVersionOutcome(draft: DraftVersion): string {
   if (draft.mode === 'blank') {
     return draft.sourcePathId
-      ? 'An empty grid with the same lanes as the version you picked.'
+      ? 'An empty grid with the same lanes as the path you picked.'
       : 'An empty grid with the same lanes as the rest of this journey.'
   }
-  if (!draft.copyCells) return 'The lanes and columns only — no cell text.'
+  if (!draft.copyCells) return 'The lanes and steps only — no cell text.'
   return draft.copyDependencies
     ? 'Every cell and every arrow, with the arrows repointed onto the copies.'
     : 'Every cell, with no arrows between them.'

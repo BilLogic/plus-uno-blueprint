@@ -69,7 +69,7 @@ export function validateDraftDependency(
 
   if (target.pathId !== source.pathId) {
     problems.push(
-      'Both cells must be in the same version of the journey — versions are alternatives, so a handoff between them cannot happen.',
+      'Both cells must be on the same path — paths are alternatives, so a handoff between them cannot happen.',
     )
   }
 

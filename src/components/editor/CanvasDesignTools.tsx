@@ -86,7 +86,7 @@ export function CanvasDesignTools() {
   const count = pickedCellIds.length
 
   /**
-   * The version a delete would act on, or null if there is no safe one.
+   * The path a delete would act on, or null if there is no safe one.
    *
    * Null hides the affordance entirely rather than disabling it — a disabled
    * delete invites someone to go looking for how to enable it, and while the
@@ -94,7 +94,7 @@ export function CanvasDesignTools() {
    * is the gate, not a comment: a database without `deleted_structure` cannot
    * put back what it removes.
    *
-   * One selected version only. "Delete these two" is a different confirm with
+   * One selected path only. "Delete these two" is a different confirm with
    * a different cascade behind it, and running this one twice is not it.
    */
   const deletableVersion = useMemo(() => {
@@ -220,10 +220,10 @@ export function CanvasDesignTools() {
               type="button"
               variant="ghost"
               size="sm"
-              // A version belongs to one blueprint, so there is nothing to
+              // A path belongs to one blueprint, so there is nothing to
               // name it against until one is selected.
               disabled={versionData === null}
-              aria-label="New version"
+              aria-label="New path"
               onClick={() => setVersionDialogOpen(true)}
               className={cn(
                 'pointer-events-auto h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground',
@@ -231,14 +231,14 @@ export function CanvasDesignTools() {
               )}
             >
               <Copy className="size-3.5" aria-hidden />
-              New version
+              New path
             </Button>
           }
         />
         <TooltipContent side="top" className="text-xs">
           {versionData === null
-            ? 'Select a blueprint first — versions belong to one'
-            : `Add a version of ${versionData.scenarioName}`}
+            ? 'Select a blueprint first — paths belong to one'
+            : `Add a path to ${versionData.scenarioName}`}
         </TooltipContent>
       </Tooltip>
 
@@ -250,7 +250,7 @@ export function CanvasDesignTools() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                aria-label={`Delete version ${deletableVersion.name}`}
+                aria-label={`Delete path ${deletableVersion.name}`}
                 onClick={() =>
                   setDeleteTarget({
                     kind: 'path',
@@ -262,7 +262,7 @@ export function CanvasDesignTools() {
                 className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="size-3.5" aria-hidden />
-                Delete version
+                Delete path
               </Button>
             }
           />

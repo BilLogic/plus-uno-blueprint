@@ -500,6 +500,45 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     zoomAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2, 1 / 1.2)
   }, [zoomAtPoint])
 
+  /**
+   * Keyboard zoom, because on some setups there is otherwise none.
+   *
+   * Zoom had exactly two gestures: `cmd`+wheel, and clicking a blueprint in
+   * View mode to fit the camera to it. Design mode gives that click to the cell
+   * picker, so a mouse without a pinch gesture could not zoom in Design mode
+   * **at all**. `zoomIn`/`zoomOut`/`fitToView` already existed here and were
+   * bound to nothing; this binds them.
+   *
+   * Guarded on the event target so it never steals `⌘−` from a text field, and
+   * on `⌘` so a bare `-` still types a hyphen.
+   */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return
+      const target = event.target
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return
+      }
+      // `=` is the unshifted key most people press for "+".
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault()
+        zoomIn()
+      } else if (event.key === '-' || event.key === '_') {
+        event.preventDefault()
+        zoomOut()
+      } else if (event.key === '0') {
+        event.preventDefault()
+        fitToView({ animate: true })
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [fitToView, zoomIn, zoomOut])
+
   return {
     containerRef,
     contentRef,

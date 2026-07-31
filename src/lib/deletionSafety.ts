@@ -9,11 +9,11 @@ import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authorin
  * table destroys imported blueprint content with nothing behind it.
  */
 
-/** Nouns for the confirm sentence. `path` is "version" in every user-facing string. */
+/** Nouns for the confirm sentence. `steps` read as "step", `layers` as "lane". */
 export const DELETION_NOUNS: Record<DeletionKind, string> = {
   scenario: 'blueprint',
-  path: 'version',
-  step: 'column',
+  path: 'path',
+  step: 'step',
   lane: 'lane',
 }
 

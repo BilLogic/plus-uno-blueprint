@@ -46,14 +46,14 @@ test('a cell cannot depend on itself', () => {
   assert.ok(problems.some((p) => /cannot depend on itself/.test(p)))
 })
 
-test('an arrow may not cross versions', () => {
+test('an arrow may not cross paths', () => {
   const problems = validateDraftDependency(
     draft({ targetCellId: 'c' }),
     source,
     otherVersion,
     [],
   )
-  assert.ok(problems.some((p) => /same version/.test(p)))
+  assert.ok(problems.some((p) => /same path/.test(p)))
 })
 
 test('no target is reported before anything else', () => {
@@ -107,7 +107,7 @@ test('sibling names must differ, ignoring case', () => {
   const problems = validateDraftVersion(version({ name: 'happy path' }), [
     'Happy Path',
   ])
-  assert.ok(problems.some((p) => /already has a version/.test(p)))
+  assert.ok(problems.some((p) => /already has a path/.test(p)))
 })
 
 test('duplicating requires a source', () => {
@@ -115,7 +115,7 @@ test('duplicating requires a source', () => {
     version({ mode: 'duplicate', sourcePathId: null }),
     [],
   )
-  assert.ok(problems.some((p) => /Pick the version to copy/.test(p)))
+  assert.ok(problems.some((p) => /Pick the path to copy/.test(p)))
 })
 
 test('arrows cannot be copied without their cells', () => {
