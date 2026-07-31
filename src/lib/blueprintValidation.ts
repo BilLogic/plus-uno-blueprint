@@ -1,7 +1,7 @@
 import type { LaneSetEntry, ViewType } from '@/lib/authoringRpc'
 
 /**
- * What a new blueprint needs before it is worth sending.
+ * What a new scenario needs before it is worth sending.
  *
  * Mirrors the checks `create_scenario` raises, for the same reason
  * `sliceValidation.ts` mirrors the slice tool: a rule enforced only in the
@@ -21,12 +21,12 @@ export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
 /** What each view type is for, in the words someone choosing one would use. */
 export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
   single: 'One version at a time',
-  'side-by-side': 'Versions compared column by column',
+  'side-by-side': 'Paths compared step by step',
   integrated: 'Every version merged into one grid',
 }
 
 /**
- * The lanes a blueprint starts with when nothing is copied.
+ * The lanes a scenario starts with when nothing is copied.
  *
  * Deliberately the standard set rather than something minimal: an empty lane
  * rail invites inventing a private vocabulary, which is the drift copying
@@ -79,10 +79,10 @@ export function validateDraftBlueprint(draft: DraftBlueprint): string[] {
   const problems: string[] = []
 
   if (!draft.phaseId) {
-    problems.push('Pick the phase this blueprint belongs to.')
+    problems.push('Pick the phase this scenario belongs to.')
   }
   if (!draft.name.trim()) {
-    problems.push('A blueprint needs a name.')
+    problems.push('A scenario needs a name.')
   }
   if (!draft.pathName.trim()) {
     problems.push('The first version needs a name — "Happy Path" is the usual one.')
@@ -93,10 +93,10 @@ export function validateDraftBlueprint(draft: DraftBlueprint): string[] {
   if (!Number.isInteger(draft.stepCount)) {
     problems.push('The number of columns must be a whole number.')
   } else if (draft.stepCount < MIN_STEP_COUNT) {
-    problems.push('A blueprint needs at least one column.')
+    problems.push('A scenario needs at least one step.')
   } else if (draft.stepCount > MAX_STEP_COUNT) {
     problems.push(
-      `${MAX_STEP_COUNT} columns is the practical limit — past that it reads as a process map rather than a blueprint. Add more later if the story needs them.`,
+      `${MAX_STEP_COUNT} steps is the practical limit — past that it reads as a process map rather than a service blueprint. Add more later if the story needs them.`,
     )
   }
 

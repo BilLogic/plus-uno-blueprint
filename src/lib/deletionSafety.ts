@@ -11,7 +11,7 @@ import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authorin
 
 /** Nouns for the confirm sentence. `steps` read as "step", `layers` as "lane". */
 export const DELETION_NOUNS: Record<DeletionKind, string> = {
-  scenario: 'blueprint',
+  scenario: 'scenario',
   path: 'path',
   step: 'step',
   lane: 'lane',

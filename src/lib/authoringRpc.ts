@@ -106,6 +106,24 @@ async function call<T>(
  * blueprints is the single most common defect in a service blueprint set, and
  * copying an existing version's lanes is the cheapest way to not cause it.
  */
+/**
+ * Add a phase at the end of a service.
+ *
+ * Appends rather than taking a position: a phase is a column of the whole
+ * canvas, so inserting one mid-sequence re-lays-out every scenario to its
+ * right. That is a reorder, and reordering is a different operation.
+ */
+export function createPhase(
+  client: Client,
+  input: { lifecycleId: string; name: string; description?: string | null },
+): Promise<string> {
+  return call<string>(client, 'create_phase', {
+    lifecycle_id: input.lifecycleId,
+    name: input.name,
+    description: input.description ?? null,
+  })
+}
+
 export function createScenario(
   client: Client,
   input: {

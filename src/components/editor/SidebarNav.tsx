@@ -36,6 +36,53 @@ const CHEVRON_REVEAL_CLASS =
 /** Child rows indent by exactly one chevron slot. */
 export const NAV_CHILD_INDENT_CLASS = 'pl-4'
 
+/**
+ * A hover-revealed action at the right of a row or section header — the `+`
+ * that creates a child, the `⋯` that opens a row menu.
+ *
+ * Revealed rather than permanent, and headers are no exception: a sidebar with
+ * a `+` on every row is a column of plus signs, and this list is read far more
+ * often than it is added to. It wears the same reveal the chevron does, so the
+ * two appear together and the row has one hover state rather than two.
+ *
+ * Coarse pointers have no hover to reveal it with, so there it is always shown.
+ * Keyboard focus reveals it through `group-focus-within`, and it stays in the
+ * tab order either way — an affordance that only exists under a mouse is not an
+ * affordance for everyone.
+ */
+export function NavRowAction({
+  label,
+  onClick,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={(event) => {
+        // The whole row is a button; without this the create would also
+        // navigate to whatever it was attached to.
+        event.stopPropagation()
+        onClick()
+      }}
+      className={cn(
+        CHEVRON_SLOT_CLASS,
+        CHEVRON_REVEAL_CLASS,
+        'shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
+        'focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+        '[@media(pointer:coarse)]:opacity-100',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 function NavChevron({ open }: { open: boolean }) {
   return (
     <ChevronRight
@@ -68,6 +115,8 @@ type NavRowProps = {
   rowId?: string
   /** Emphasis for top-level rows; children read one step quieter. */
   size?: 'md' | 'sm'
+  /** Hover-revealed action at the right edge — the `+` that creates a child. */
+  trailing?: ReactNode
   className?: string
 }
 
@@ -89,6 +138,7 @@ export function NavRow({
   panelId,
   rowId,
   size = 'md',
+  trailing,
   className,
 }: NavRowProps) {
   const expandable = open !== undefined && onToggle !== undefined
@@ -158,6 +208,7 @@ export function NavRow({
         ) : null}
         {label}
       </button>
+      {trailing}
     </div>
   )
 }

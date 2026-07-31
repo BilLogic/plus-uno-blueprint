@@ -1,5 +1,10 @@
 import { useEffect } from 'react'
-import { NavChildren, NavRow } from '@/components/editor/SidebarNav'
+import { Plus } from 'lucide-react'
+import {
+  NavChildren,
+  NavRow,
+  NavRowAction,
+} from '@/components/editor/SidebarNav'
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,6 +35,11 @@ type SlideNavProps = {
   onSelectPhase: (phaseId: string) => void
   onSelectScenario: (scenarioId: string) => void
   onSetExpanded: (phaseId: string, open: boolean) => void
+  /**
+   * Start a new scenario inside a phase. Absent for sessions that cannot
+   * write, which is what hides the `+` rather than disabling it.
+   */
+  onAddScenario?: (phaseId: string) => void
   /** Bumped by every nav click; re-scrolls the selected row into view. */
   focusNonce: number
 }
@@ -46,6 +56,7 @@ export function SlideNav({
   onSelectPhase,
   onSelectScenario,
   onSetExpanded,
+  onAddScenario,
   focusNonce,
 }: SlideNavProps) {
   const mains = getMainSlides(slides)
@@ -107,6 +118,22 @@ export function SlideNav({
               }}
               selected={isSelected}
               ancestor={isAncestor}
+              // The `+` is attached to the phase, which is what makes it
+              // unambiguous: a scenario created from here goes in *this*
+              // phase, so there is no phase picker to get wrong.
+              trailing={
+                onAddScenario ? (
+                  <NavRowAction
+                    label={`New scenario in ${mainLabel}`}
+                    onClick={() => {
+                      onSetExpanded(main.id, true)
+                      onAddScenario(main.id)
+                    }}
+                  >
+                    <Plus className="size-3" aria-hidden />
+                  </NavRowAction>
+                ) : undefined
+              }
             />
             {hasChildren ? (
               <PhaseScenarios

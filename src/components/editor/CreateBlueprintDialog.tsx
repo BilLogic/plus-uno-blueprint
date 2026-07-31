@@ -83,22 +83,29 @@ const EMPTY_DRAFT: DraftBlueprint = {
 }
 
 /**
- * Create a blueprint: where it lives, what it is called, what lanes it starts
+ * Create a scenario: where it lives, what it is called, what lanes it starts
  * with, and how many columns.
  *
  * Columns are created empty and named "Step 1…n" — naming them here would be
  * five text fields answering a question nobody can answer before they have
  * seen the grid. The lane set is the decision worth making up front, because
- * lanes are what a blueprint is compared along.
+ * lanes are what a scenario is compared along.
  */
 export function CreateBlueprintDialog({
   open,
   onOpenChange,
   onCreated,
+  fixedPhaseId = null,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCreated?: (scenarioId: string) => void
+  /**
+   * Set when the dialog was opened from a phase's own `+` in the sidebar.
+   * The phase is then already chosen, so the picker becomes a label: asking
+   * again invites answering differently from the row that was clicked.
+   */
+  fixedPhaseId?: string | null
 }) {
   const { client } = useSupabase()
   const phases = useLifecyclePhases()
@@ -111,6 +118,14 @@ export function CreateBlueprintDialog({
     key: K,
     value: DraftBlueprint[K],
   ) => setDraft((current) => ({ ...current, [key]: value }))
+
+  // Adopt the phase the `+` was attached to, during render rather than in an
+  // effect so the dialog never paints one frame with no phase chosen.
+  const [lastFixed, setLastFixed] = useState(fixedPhaseId)
+  if (lastFixed !== fixedPhaseId) {
+    setLastFixed(fixedPhaseId)
+    if (fixedPhaseId) setDraft((current) => ({ ...current, phaseId: fixedPhaseId }))
+  }
 
   // Both reads are discriminated unions, so the ready branch is where the
   // rows live. An errored lane-source read is not fatal — the standard set is
@@ -157,9 +172,9 @@ export function CreateBlueprintDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New blueprint</DialogTitle>
+          <DialogTitle>New scenario</DialogTitle>
           <DialogDescription>
-            An empty grid to fill in — lanes down the side, columns across.
+            An empty grid to fill in — lanes down the side, steps across.
             Both can be changed afterwards.
           </DialogDescription>
         </DialogHeader>
@@ -180,11 +195,17 @@ export function CreateBlueprintDialog({
 
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">Phase</span>
-            {phaseRows.length === 0 ? (
+            {fixedPhaseId ? (
+              <p className="text-sm text-foreground/80">
+                {phaseRows.find(
+                  (phase: { id: string; name: string }) => phase.id === fixedPhaseId,
+                )?.name ?? 'This phase'}
+              </p>
+            ) : phaseRows.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 {phases.loading
                   ? 'Loading phases…'
-                  : 'No phases found — a blueprint has to belong to one.'}
+                  : 'No phases found — a scenario has to belong to one.'}
               </p>
             ) : (
               <div className="flex flex-wrap gap-1.5">

@@ -34,7 +34,7 @@ export type DeletionTarget = {
   id: string
   /** Typed to confirm, and shown throughout. */
   label: string
-  /** Lane and column deletes are scoped by their parent. */
+  /** Lane and step deletes are scoped by their parent. */
   scenarioId?: string
   pathId?: string
 }
@@ -43,8 +43,8 @@ export type DeletionTarget = {
  * Confirm a destructive change by naming everything it destroys.
  *
  * The impact is read before the dialog can be confirmed, never estimated in
- * the client: a column delete cascades to every cell on that column across
- * every version, and then to the arrows on both ends of each. A dialog that
+ * the client: a step delete cascades to every cell in that step across
+ * every path, and then to the arrows on both ends of each. A dialog that
  * counted what it could see would undercount by design.
  *
  * Typing the name is the gate. It is the one interaction that cannot be done
@@ -121,7 +121,7 @@ export function DeleteStructureDialog({
           archiveId = await deletePath(client, target.id)
           break
         case 'step':
-          if (!target.pathId) throw new Error('A column delete needs its version.')
+          if (!target.pathId) throw new Error('A step delete needs its path.')
           archiveId = await removeStep(client, target.pathId, target.id)
           break
         case 'lane':

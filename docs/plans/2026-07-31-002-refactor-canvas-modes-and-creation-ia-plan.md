@@ -437,9 +437,45 @@ the bar.
 squares clickable, following the six affordance rules. Uses `add_step`,
 `add_lane`, `upsert_cell` — all live.
 
-**Phase 7 — annotation persistence.** Marks survive a reload. Worth doing on
-its own, and the prerequisite for
-[003](./2026-07-31-003-feat-inline-agent-chat-plan.md)'s screen-reading.
+**Phase 7 — annotation capture.** Not persistence: marks stay ephemeral, and
+gain an explicit way out instead. See Decision 5.
+
+---
+
+## Decision 5 — annotations stay a scratch layer, with a way out
+
+Marks vanish on reload today, and the obvious fix — a table — turns out to be
+the wrong one. Persisting every stroke makes markup a *record*, which changes
+what it is: people stop scribbling freely once a scribble is permanent and
+shared, and the layer's whole value is that it costs nothing.
+
+So the layer stays ephemeral, and gains one explicit action:
+
+```
+┌───────────────────────────────────────────────┐
+│  ▷   ✎ ⌄   ▢ ⌄   T ⌄   🗑   ⇪        │  ▦ Edit │
+└───────────────────────────────────────────────┘
+                              ▲
+                              └─ appears only while marks exist
+
+┌──────────────────────────────┐
+│  ⇪  Save as image            │
+│  💬  Send to the agent       │   → 003, disabled until it exists
+└──────────────────────────────┘
+```
+
+Two consequences worth naming:
+
+- **No migration, no RLS, no new table.** Phase 7 shrinks to a menu and an
+  export.
+- **"Send to the agent" becomes the capture path**, which is what
+  [003](./2026-07-31-003-feat-inline-agent-chat-plan.md)'s screen-reading mode
+  needs — and it no longer waits on persistence, because the marks are in
+  memory at exactly the moment they are sent. That removes the dependency 003
+  listed as a prerequisite.
+
+Reloading still loses unsaved marks. That is now a property of the design
+rather than a defect, and the affordance says so by existing.
 
 ---
 
@@ -478,19 +514,35 @@ scrolling.
 
 ---
 
+## Resolved
+
+- **View and Mark are one mode** — the tool disambiguates.
+- **New phase is offered.** `create_phase` shipped.
+- **The chat bar is out** of this plan.
+- **"Scenario", not "blueprint".** A journey with a grid is a *scenario*, which
+  is what the table, the aria-labels and most of the codebase already call it.
+  "Blueprint" goes back to meaning the whole artefact — the thing the product is
+  named after — rather than one journey inside it. So the button becomes **New
+  scenario**, and [001](./2026-07-31-001-design-mode-nav-and-vocabulary-plan.md)'s
+  vocabulary table is amended: `service_scenarios` → **scenario**, and the two
+  names that were genuinely mine to fix (`version` → **path**, `column` →
+  **step**) stand.
+- **The selection toolbar carries Make slice only.** Deleting cells stays on
+  rows and handles, for the same reason Delete path moved onto its sidebar row:
+  a destructive button one pixel from a constructive one is what we are moving
+  away from.
+- **An empty square reveals a `+` on hover before it is clickable.** Creation
+  stays one click, but a stray click while panning or picking never writes a
+  row — which matters at ~400 squares, most of them empty.
+- **Annotations stay ephemeral.** No table, no migration; the scratch layer
+  remains a scratch layer. What it gains instead is an explicit way *out* —
+  save the marks, or send them to the agent — so capture is a decision rather
+  than a background side effect. See Decision 5.
+
 ## Open questions
 
-1. **"Blueprint" or "scenario"** user-facing? Carried from
-   [001](./2026-07-31-001-design-mode-nav-and-vocabulary-plan.md); the sidebar
-   copy depends on it.
-2. **Line and Arrow** in shapes — wanted, or scope?
-3. **Cell creation by clicking an empty square** — right, or too easy to do by
-   accident on a 400-cell grid?
-4. **Does the selection toolbar also carry Delete** for cells, or does deletion
-   stay entirely on rows and handles?
-
-*Resolved:* View and Mark are **one mode** — the tool disambiguates. New phase
-**is** offered. The chat bar is **out** of this plan.
+1. **Line and Arrow** in shapes — wanted, or scope? (Additive; nothing waits on
+   it.)
 
 ---
 
