@@ -28,6 +28,7 @@ const MODULES = [
   'src/lib/storyboardUpload.ts',
   'src/lib/deletionSafety.ts',
   'src/lib/annotationCapture.ts',
+  'src/lib/authoringSession.ts',
 ]
 
 const work = mkdtempSync(join(tmpdir(), 'uno-tests-'))

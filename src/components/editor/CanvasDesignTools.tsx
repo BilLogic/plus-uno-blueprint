@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Diamond, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -7,7 +7,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { CreateSliceDialog } from '@/components/editor/CreateSliceDialog'
+import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
+import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCellPick } from '@/contexts/cellPickContext'
+
+/** Module-level so an empty selection is the same array on every render. */
+const NO_PICKS: readonly string[] = []
 
 /**
  * The Edit tool run.
@@ -39,8 +44,39 @@ import { useCellPick } from '@/contexts/cellPickContext'
  */
 export function CanvasDesignTools() {
   const pick = useCellPick()
-  const picked = pick?.picked ?? []
+  const detail = useBlueprintCellDetailOptional()
+  const picked = pick?.picked ?? NO_PICKS
   const [sliceDialogOpen, setSliceDialogOpen] = useState(false)
+  // Armed: clicked with nothing picked. The button becomes the instruction
+  // rather than sitting greyed out — "pick cells first" is advice you can only
+  // read once you have already guessed that cells are pickable.
+  const [armed, setArmed] = useState(false)
+
+  /**
+   * How many blueprints the selection spans.
+   *
+   * Worth saying out loud because the Hand tool made crossing the canvas easy,
+   * so cells picked two blueprints away are now ordinary rather than odd — and
+   * without this the bar reads "3" while two of them are somewhere the user
+   * cannot see.
+   */
+  const spannedPaths = useMemo(() => {
+    if (!detail || picked.length === 0) return 0
+    const paths = new Set<string>()
+    for (const blueprint of detail.blueprints) {
+      if (blueprint.cells.some((cell) => picked.includes(cell.id))) {
+        paths.add(blueprint.path.id)
+      }
+    }
+    return paths.size
+  }, [detail, picked])
+
+  // Picking something disarms: the instruction has been followed.
+  const [lastCount, setLastCount] = useState(picked.length)
+  if (lastCount !== picked.length) {
+    setLastCount(picked.length)
+    if (picked.length > 0 && armed) setArmed(false)
+  }
 
   return (
     <>
@@ -56,20 +92,22 @@ export function CanvasDesignTools() {
       <Button
         type="button"
         size="sm"
-        disabled={picked.length === 0}
         aria-label={
           picked.length === 0
-            ? 'Make a slice — pick cells first'
+            ? 'Make a slice — click cells to add them'
             : `Make a slice from ${picked.length} cells`
         }
-        onClick={() => setSliceDialogOpen(true)}
+        onClick={() => {
+          if (picked.length === 0) setArmed(true)
+          else setSliceDialogOpen(true)
+        }}
         className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2.5 text-xs"
       >
         <Diamond className="size-3.5" aria-hidden />
-        Make slice
+        {armed && picked.length === 0 ? 'Click cells to add them' : 'Make slice'}
         {picked.length > 0 ? (
           <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-semibold tabular-nums">
-            {picked.length}
+            {spannedPaths > 1 ? `${picked.length} · ${spannedPaths} blueprints` : picked.length}
           </span>
         ) : null}
       </Button>
@@ -78,7 +116,7 @@ export function CanvasDesignTools() {
         Clearing lives beside the count because that is the question the count
         raises — "how do I start over" — and Escape is invisible.
       */}
-      {picked.length > 0 ? (
+      {picked.length > 0 || armed ? (
         <Tooltip>
           <TooltipTrigger
             render={
@@ -86,8 +124,11 @@ export function CanvasDesignTools() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                aria-label="Clear the selection"
-                onClick={() => pick?.clear()}
+                aria-label={armed && picked.length === 0 ? 'Cancel' : 'Clear the selection'}
+                onClick={() => {
+                  setArmed(false)
+                  pick?.clear()
+                }}
                 className="pointer-events-auto size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3.5" aria-hidden />
@@ -99,6 +140,8 @@ export function CanvasDesignTools() {
           </TooltipContent>
         </Tooltip>
       ) : null}
+
+      <SessionChangesSheet />
 
       <CreateSliceDialog
         cellIds={picked}

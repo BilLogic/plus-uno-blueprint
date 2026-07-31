@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { toAuthoringError } from '@/lib/authoringErrors'
+import { recordChange } from '@/lib/authoringSession'
 
 type Client = SupabaseClient<Database>
 
@@ -92,6 +93,10 @@ async function call<T>(
     console.error(`[authoring] ${fn} failed:`, authoring.raw)
     throw authoring
   }
+  // Logged here and only here, *after* the call succeeded. That placement is
+  // what makes the session list trustworthy: it records writes that actually
+  // landed, so it can never claim a change the database does not have.
+  recordChange(fn, args)
   return data as T
 }
 
