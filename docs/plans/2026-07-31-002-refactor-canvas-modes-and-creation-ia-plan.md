@@ -183,7 +183,7 @@ bottom bar onto the object it destroys.
 - A phase is a **column of the whole canvas**, so creating one changes the
   camera's world. The new phase is scrolled to, not silently appended
   off-screen.
-- `order_position` appends last; `loop_to_id` starts null. Both editable
+- `order_position` appends last; `loops_to_phase_id` starts null. Both editable
   afterwards from the row menu.
 - **There is no `create_phase` RPC.** The only new backend surface this plan
   needs; everything else calls functions that already exist and are
