@@ -175,7 +175,9 @@ export function BlueprintLabelRow({
     const cells = cellsInLane(laneId)
     if (cells.length === 0) return
     event.stopPropagation()
-    pick.pickMany(cells, { additive: event.shiftKey })
+    // Add, not toggle: a lane that is already half-picked should end up wholly
+    // picked. Shift takes the lane back out.
+    pick.pickMany(cells, event.shiftKey ? 'toggle' : 'add')
   }
 
   const isDivider =

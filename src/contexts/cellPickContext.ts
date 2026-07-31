@@ -23,14 +23,45 @@ export type CellPickApi = {
   /** 1-based position in the pick order, for the badge. */
   orderOf: (cellId: string) => number | undefined
   /**
-   * Figma's grammar: a plain pick *replaces* the selection, an additive one
-   * (shift) toggles the cell in or out of it.
+   * `true` while the picker is a set-builder rather than a cursor — Design
+   * mode. A slice edit session picks too, but its clicks mean "put this cell in
+   * the active frame", so it keeps replace-style semantics of its own.
    */
-  pick: (cellId: string, options?: { additive?: boolean }) => void
+  gathers?: boolean
+  /**
+   * What a pick does to the selection already there.
+   *
+   * This was a single `additive` boolean carrying Figma's object grammar —
+   * plain replaces, shift toggles. That grammar is right when a selection is
+   * the subject of the next verb and verbs are frequent (move it, resize it),
+   * and wrong here: this selection is a **set being assembled**, with one verb
+   * at the end of it. Replace-on-click meant the set could never be built by
+   * clicking, only by holding shift for every cell after the first.
+   *
+   * A boolean cannot say which of these four is meant, so it is an enum.
+   */
+  pick: (cellId: string, mode?: PickMode) => void
   /** Bulk pick, in the given order — lane, column, marquee, select-all. */
-  pickMany: (cellIds: readonly string[], options?: { additive?: boolean }) => void
+  pickMany: (cellIds: readonly string[], mode?: PickMode) => void
   clear: () => void
 }
+
+export type PickMode =
+  /** Default for a cell click: in if out, out if in. */
+  | 'toggle'
+  /**
+   * Union. A lane or column click takes the whole run — a lane half-picked
+   * already should end up wholly picked, which `toggle` would not do.
+   */
+  | 'add'
+  /** Marquee: a deliberate sweep says "these", not "these as well". */
+  | 'replace'
+  /**
+   * Shift-click a cell: everything between the last pick and this one, in grid
+   * reading order. Falls back to `toggle` when there is no anchor to reach
+   * from.
+   */
+  | 'range'
 
 export const CellPickContext = createContext<CellPickApi | null>(null)
 

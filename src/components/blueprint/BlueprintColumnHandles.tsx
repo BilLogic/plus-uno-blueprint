@@ -115,7 +115,7 @@ export function BlueprintColumnHandles({
               .filter((id): id is string => id !== null)
             if (cells.length === 0) return
             event.stopPropagation()
-            pick.pickMany(cells, { additive: event.shiftKey })
+            pick.pickMany(cells, event.shiftKey ? 'toggle' : 'add')
           }}
           className="pointer-events-auto absolute truncate rounded-md border border-dashed border-border/70 bg-card/90 px-2 py-1 text-[11px] font-medium text-muted-foreground shadow-sm transition-colors hover:border-primary hover:text-foreground"
           style={{ left: column.left, width: column.width, top: -32 }}

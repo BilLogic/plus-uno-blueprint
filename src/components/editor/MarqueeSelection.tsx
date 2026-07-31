@@ -121,7 +121,10 @@ export function MarqueeSelection() {
       // sort keep lane order inside each column.
       hits.sort((left, right) => (left.step || 0) - (right.step || 0))
       const ids = [...new Set(hits.map((entry) => entry.id))]
-      if (ids.length > 0) pick.pickMany(ids, { additive: start.additive })
+      // A sweep says "these", not "these as well" — replace unless shift asked
+      // to widen. This is the one gesture that still narrows a selection in one
+      // move, now that a plain click gathers.
+      if (ids.length > 0) pick.pickMany(ids, start.additive ? 'add' : 'replace')
     }
 
     root.addEventListener('pointerdown', onPointerDown, true)

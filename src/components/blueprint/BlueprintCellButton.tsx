@@ -129,8 +129,14 @@ export function BlueprintCellButton({
     // in edit mode every click picks, elsewhere only cmd/shift-click does,
     // so ordinary reading of the blueprint is unaffected.
     if (pickCellId && pick && (pick.plainClick || event.shiftKey)) {
-      // Figma's grammar: plain click replaces the selection, shift toggles.
-      pick.pick(pickCellId, { additive: event.shiftKey })
+      // A click gathers; shift reaches back to the last one and takes
+      // everything between. A picker that is not gathering (a slice edit
+      // session, where a click means "put this in the active frame") keeps
+      // toggling on shift, because there is no run to reach across.
+      pick.pick(
+        pickCellId,
+        event.shiftKey ? (pick.gathers ? 'range' : 'toggle') : 'toggle',
+      )
       return
     }
     detail!.selectCell(selection!)
