@@ -25,6 +25,8 @@ const MODULES = [
   'src/lib/cellContentMutations.ts',
   'src/lib/dependencyValidation.ts',
   'src/lib/versionValidation.ts',
+  'src/lib/storyboardUpload.ts',
+  'src/lib/deletionSafety.ts',
 ]
 
 const work = mkdtempSync(join(tmpdir(), 'uno-tests-'))
