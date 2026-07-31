@@ -726,88 +726,108 @@ So which cells go together is decided on the grid:
                                               not grouped yet
 ```
 
-- **click a badge** → moves the cell to the next group, then to a new one
-- **shift-click two cells** → puts them together
-- **drag a cell onto another** → joins that cell’s group
-- **hover a badge** → every cell outside that group dims, so the grouping is
-  read off the blueprint rather than inferred from a strip
+Click a badge to step the cell forward a group, drag one cell onto another to
+join it, hover a badge to dim everything outside that group. Each is drawn in
+full in "Grouping is done on the cells" below.
 
 That last one is what the current docked editor cannot do at all, and it is the
 whole reason to move: today grouping is inferred from chips labelled `0110ab`,
 the last six characters of a UUID.
 
-#### The cell menu, while a slice is open
+#### Grouping is done on the cells, with no menu at all
 
-The gestures above are fast once known and invisible until then, so the badge
-also carries a menu. It is the same `⋯` the cell has when editing a blueprint,
-showing a different list because a different thing is open — which is the same
-rule the bar follows when `Make slice` becomes `14 cells`.
+**Correction.** A draft of this section put a dropdown on each cell listing
+every group by caption, with the current one ticked. That was a pop-up wearing
+a smaller hat — the exact thing this section exists to get away from — and it
+reintroduced the defect it was meant to fix: choosing a group by reading a list
+of captions, rather than by looking at the cells that are in it.
 
-```
-   ┌─────────────────┐
-   │ ①  Greet      ⋯ │ ← the badge is the handle; ⋯ appears on hover
-   │    student      │
-   └─────────────────┘
-            │
-   ┌────────▼──────────────────────────────┐
-   │  In this slice                        │
-   │                                       │
-   │  ✓  1 · Greet the student             │
-   │     2 · Ask them to share their screen│
-   │     3 · ⟨no caption⟩                  │
-   │     …                                 │
-   │  ─────────────────────────────────    │
-   │  ⊕  Move to a new group               │
-   │  ⇱  Make this the first group         │
-   │  ─────────────────────────────────    │
-   │  ⊖  Take out of this slice            │
-   └───────────────────────────────────────┘
-```
+There is no cell menu. Three direct manipulations, and the bar for the one case
+that acts on a selection.
 
-Five things it is doing:
-
-- **The groups are listed by caption, not by number alone.** "Move to group 2"
-  requires remembering what 2 was; "Ask them to share their screen" does not.
-  A group with no caption reads `⟨no caption⟩` rather than being hidden, since
-  it is a real destination and also a defect worth noticing.
-- **The current group is ticked**, so the menu answers "which one is this in"
-  before it offers to change it. That question is asked far more often than the
-  move is made.
-- **Moving is one click on the destination.** No submenu, no drag.
-- **`⊕ Move to a new group`** is the same thing clicking the badge does when it
-  wraps past the last group — the gesture and the menu produce the same result,
-  which is what makes the gesture learnable from the menu.
-- **`⊖ Take out of this slice`** removes the cell from the slice entirely. It
-  is not delete: the cell stays on the blueprint, and the menu says *this
-  slice* to make that unmistakable.
-
-**A cell in the slice but in no group** shows `·` for a badge and its menu opens
-with nothing ticked and a line above the list: *"not in a group yet — it will
-not appear when this slice is presented."* That is the silent failure the old
-strip allowed, stated at the one moment someone is looking straight at it.
-
-##### Multi-select works here too
-
-With several cells picked, the menu acts on all of them — the same selection
-grammar as the rest of Edit, so grouping five cells is pick-five-then-one-menu
-rather than five separate moves.
+##### 1. The badge is a stepper
 
 ```
-   3 cells picked → any of their ⋯
-   ┌───────────────────────────────────────┐
-   │  3 cells in this slice                │
-   │                                       │
-   │  ⊕  Move all 3 to a new group         │
-   │  ✓  1 · Greet the student             │  ← ✓ = all three are here
-   │  ◐  2 · Ask them to share…            │  ← ◐ = some of them are
-   │  ─────────────────────────────────    │
-   │  ⊖  Take all 3 out of this slice      │
-   └───────────────────────────────────────┘
+   ┌──────────┐        click        ┌──────────┐        click        ┌──────────┐
+   │ ①        │  ───────────────▶   │ ②        │  ───────────────▶   │ ⊕        │
+   │ Greet    │                     │ Greet    │                     │ Greet    │
+   └──────────┘                     └──────────┘                     └──────────┘
+     group 1                          group 2                     a new group at the end
 ```
 
-`◐` for a partial match matters: without it, a menu showing an unticked row
-implies none of the selection is there, and moving to that group would look
-like a no-op for the two cells already in it.
+Click cycles forward; the last stop is a new group, so "put this somewhere of
+its own" needs no separate control. Shift-click steps backwards, which is the
+only reason a wrap-around is tolerable at eight groups.
+
+##### 2. Drag one cell onto another to join it
+
+```
+   ┌──────────┐          ┌──────────┐              ┌──────────┐   ┌──────────┐
+   │ ③        │ ·······▶ │ ①        │      →       │ ①        │   │ ①        │
+   │ Mark     │          │ Greet    │              │ Mark     │   │ Greet    │
+   └──────────┘          └──────────┘              └──────────┘   └──────────┘
+     dragged              drop target                 both in group 1
+```
+
+The drop target highlights its whole group while dragging, so before releasing
+you can see exactly what the cell is joining. That is the answer to "which
+group is 2 again" — you never ask it, because you point at cells instead of
+picking a number.
+
+##### 3. Hovering a badge dims everything outside its group
+
+```
+   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+   │ ①        │  │ ①        │  │ ▒▒       │  │ ▒▒       │
+   │ Greet    │  │ Ask to   │  │ ▒▒▒▒▒▒   │  │ ▒▒▒▒▒▒   │
+   └──────────┘  └──────────┘  └──────────┘  └──────────┘
+        └──── hovering either of these ────┘
+```
+
+This is the whole reason grouping belongs on the canvas. A strip of cards can
+list what is in a group; only the blueprint can *show* it, in the positions
+those cells actually occupy.
+
+##### 4. Several cells at once: the bar, not a menu
+
+Picking cells already works everywhere in Edit, so grouping several is the same
+gesture followed by one button — in the same slot `Make slice` occupies when a
+blueprint is open, for the same reason: it acts on the selection, and a
+selection has no single location.
+
+```
+Edit, slice open, three cells picked
+┌────────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ⊞ Group these ③   ✕  │  ⚑ 2 ⌄  ✓ Save  │   👁 View  ✎ Edit  │
+└────────────────────────────────────────────────────────────────────────┘
+             ▲
+             └─ puts all three in one group; if they are already together,
+                reads “⊟ Ungroup these ③” instead
+```
+
+One button that flips its verb, rather than two that are each wrong half the
+time. Nothing is picked → the slot is `◆ 14 cells ⌄`, the sheet, as before.
+
+##### A cell that is in the slice but in no group
+
+It shows `·` instead of a number, and the sheet's footer counts it — *"1 cell
+not grouped yet"*. Presenting is what makes this matter: an ungrouped cell
+never appears, so a slice can look complete on the canvas and be missing a beat
+when played. The count sits in the footer permanently rather than appearing as
+a validation error at save time, because the moment to notice is while
+arranging, not afterwards.
+
+##### Where the affordances are taught
+
+The gestures are fast once known and invisible until then, which is what the
+menu was wrongly solving. The honest fixes are cheaper:
+
+- **First time a slice is opened in Edit**, the badges pulse once and a single
+  line sits under the bar: *"Click a number to move a cell · drag one cell onto
+  another to group them."* It goes away and does not come back.
+- **The sheet already lists every group** with its cells and lanes, so the
+  overview a menu would have given is one click away and permanently available
+  — without being in front of a cell that is trying to be dragged.
 
 #### The slice sheet
 
