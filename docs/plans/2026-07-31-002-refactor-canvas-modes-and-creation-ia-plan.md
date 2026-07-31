@@ -708,177 +708,102 @@ the thing they can see on the grid; a "frame" is an internal grouping they
 never asked for by that name. `slice_items` keeps its name in the schema, and
 the code keeps `DraftFrame`, but no user-facing string says *frame*.
 
-#### Grouping lives on the cells, and only order lives in the sheet
+#### The slice sheet — one menu for ordering and grouping
 
-The split is the same one the whole plan runs on: **what has a location goes on
-the canvas, what has none goes in a sheet.** Which cells belong together has a
-location — the cells. The order they play in does not; a group is not a place.
+Ordering and grouping are the same job seen twice: both answer "what plays,
+and with what". Splitting them across two surfaces means holding one in your
+head while working the other, so they live in **one sheet**, and everything in
+it is drag-to-arrange.
 
-So which cells go together is decided on the grid:
+Dropdown anchored under `◆ 14 cells`, **not a modal** — the cells it names are
+on the canvas behind it, and `⌖` points at them.
+
+```
+                         ◆ 14 cells ⌄
+ ┌──────────────────────────────────────────────────────────────┐
+ │  Tutor warm-up journey                               journey │
+ │  What the regular tutor does while warming up.               │
+ ├──────────────────────────────────────────────────────────────┤
+ │                                                              │
+ │  ⠿  1   Greet the student                            ⌖   ⋯   │
+ │         ⠿  Greet student                  Regular Tutor      │
+ │         ⠿  Say hello on camera            Front Stage Tech   │
+ │                                                              │
+ │  ⠿  2   Ask them to share their screen               ⌖   ⋯   │
+ │         ⠿  Ask to share screen            Regular Tutor      │
+ │         ⠿  Zoom / Pencil                  Front Stage Tech   │
+ │                                                              │
+ │  ⠿  3   ⟨name this group⟩                            ⌖   ⋯   │
+ │         ⠿  Mark student present           Regular Tutor      │
+ │                                                              │
+ │  ─────────────────────────────────────────────────────────   │
+ │  Not in a group — these will not appear when presented       │
+ │         ⠿  Move to next student           Regular Tutor      │
+ │                                                              │
+ ├──────────────────────────────────────────────────────────────┤
+ │  ⊕ Add a group                              14 cells in 3    │
+ └──────────────────────────────────────────────────────────────┘
+```
+
+**Two drag targets, one gesture.** The `⠿` on a *group row* reorders groups.
+The `⠿` on a *cell row* moves that cell — into another group, or out to the
+ungrouped list at the bottom. Nothing else to learn: if it has a handle, drag
+it, and where it lands is what it means.
+
+That is the whole answer to why this is one menu rather than two surfaces.
+Reordering is dragging a group; regrouping is dragging a cell; they are the
+same motion at two levels of the same list.
+
+##### What each part is doing
+
+- **Cells are named by their content and lane** — "Greet student · Regular
+  Tutor", never `0110ab`. The old strip's UUID chips were the actual defect;
+  a list is not wrong, reading identifiers is.
+- **The caption is the group row.** Click and type. It is the text that gets
+  presented, so it should be the most prominent thing in the row, not a field
+  buried in a card. Unnamed reads `⟨name this group⟩`, which is an instruction
+  rather than a blank.
+- **`⌖` flies the camera** to that group's cells and dims the rest — the reason
+  this cannot be a modal.
+- **`⋯` on a group row** carries split, merge with next, and remove — three
+  actions that were a button each on every card in the old strip, now one menu
+  on the row that needs them.
+- **"Not in a group" is a real section**, not a warning banner. A cell can be
+  dragged out to it deliberately, and anything sitting there is stated in the
+  same words the presentation will make true: *these will not appear*. This is
+  the silent failure the old editor allowed.
+- **The footer counts cells and groups**, because "14 cells in 3" is the shape
+  of the slice in one line.
+
+##### The canvas mirrors it, and offers a shortcut
+
+The sheet is where arranging happens. The canvas shows the *result*, so the
+grouping can be read against the blueprint rather than only in a list:
 
 ```
    ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
    │ ①        │  │ ①        │  │ ②        │  │ ·        │
-   │ Greet    │  │ Ask to   │  │ Mark     │  │ Move to  │
-   │ student  │  │ share    │  │ present  │  │ next     │
+   │ Greet    │  │ Say hello│  │ Ask to   │  │ Move to  │
+   │ student  │  │ on camera│  │ share    │  │ next     │
    └──────────┘  └──────────┘  └──────────┘  └──────────┘
-        └──── group 1 ───┘       └group 2┘    ▲ in the slice,
-                                              not grouped yet
+        └──── group 1 ────┘     └group 2┘     ▲ not in a group
 ```
 
-Click a badge to step the cell forward a group, drag one cell onto another to
-join it, hover a badge to dim everything outside that group. Each is drawn in
-full in "Grouping is done on the cells" below.
+- **Hovering a badge dims every cell outside that group.** This is what no list
+  can do: show a group in the positions its cells actually occupy.
+- **Clicking a badge steps the cell to the next group.** A shortcut for the
+  common single move, not the place grouping is managed — the sheet is that.
+  Anything done here appears in the sheet immediately, because they are two
+  views of one list.
 
-That last one is what the current docked editor cannot do at all, and it is the
-whole reason to move: today grouping is inferred from chips labelled `0110ab`,
-the last six characters of a UUID.
+Selecting several cells and using `⊞ Group these ③` in the bar is the third
+route, for when the cells are easier to point at than to find in a list.
 
-#### Grouping is done on the cells, with no menu at all
-
-**Correction.** A draft of this section put a dropdown on each cell listing
-every group by caption, with the current one ticked. That was a pop-up wearing
-a smaller hat — the exact thing this section exists to get away from — and it
-reintroduced the defect it was meant to fix: choosing a group by reading a list
-of captions, rather than by looking at the cells that are in it.
-
-There is no cell menu. Three direct manipulations, and the bar for the one case
-that acts on a selection.
-
-##### 1. The badge is a stepper
-
-```
-   ┌──────────┐        click        ┌──────────┐        click        ┌──────────┐
-   │ ①        │  ───────────────▶   │ ②        │  ───────────────▶   │ ⊕        │
-   │ Greet    │                     │ Greet    │                     │ Greet    │
-   └──────────┘                     └──────────┘                     └──────────┘
-     group 1                          group 2                     a new group at the end
-```
-
-Click cycles forward; the last stop is a new group, so "put this somewhere of
-its own" needs no separate control. Shift-click steps backwards, which is the
-only reason a wrap-around is tolerable at eight groups.
-
-##### 2. Drag one cell onto another to join it
-
-```
-   ┌──────────┐          ┌──────────┐              ┌──────────┐   ┌──────────┐
-   │ ③        │ ·······▶ │ ①        │      →       │ ①        │   │ ①        │
-   │ Mark     │          │ Greet    │              │ Mark     │   │ Greet    │
-   └──────────┘          └──────────┘              └──────────┘   └──────────┘
-     dragged              drop target                 both in group 1
-```
-
-The drop target highlights its whole group while dragging, so before releasing
-you can see exactly what the cell is joining. That is the answer to "which
-group is 2 again" — you never ask it, because you point at cells instead of
-picking a number.
-
-##### 3. Hovering a badge dims everything outside its group
-
-```
-   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
-   │ ①        │  │ ①        │  │ ▒▒       │  │ ▒▒       │
-   │ Greet    │  │ Ask to   │  │ ▒▒▒▒▒▒   │  │ ▒▒▒▒▒▒   │
-   └──────────┘  └──────────┘  └──────────┘  └──────────┘
-        └──── hovering either of these ────┘
-```
-
-This is the whole reason grouping belongs on the canvas. A strip of cards can
-list what is in a group; only the blueprint can *show* it, in the positions
-those cells actually occupy.
-
-##### 4. Several cells at once: the bar, not a menu
-
-Picking cells already works everywhere in Edit, so grouping several is the same
-gesture followed by one button — in the same slot `Make slice` occupies when a
-blueprint is open, for the same reason: it acts on the selection, and a
-selection has no single location.
-
-```
-Edit, slice open, three cells picked
-┌────────────────────────────────────────────────────────────────────────┐
-│  ▷  ✋  │  ⊞ Group these ③   ✕  │  ⚑ 2 ⌄  ✓ Save  │   👁 View  ✎ Edit  │
-└────────────────────────────────────────────────────────────────────────┘
-             ▲
-             └─ puts all three in one group; if they are already together,
-                reads “⊟ Ungroup these ③” instead
-```
-
-One button that flips its verb, rather than two that are each wrong half the
-time. Nothing is picked → the slot is `◆ 14 cells ⌄`, the sheet, as before.
-
-##### A cell that is in the slice but in no group
-
-It shows `·` instead of a number, and the sheet's footer counts it — *"1 cell
-not grouped yet"*. Presenting is what makes this matter: an ungrouped cell
-never appears, so a slice can look complete on the canvas and be missing a beat
-when played. The count sits in the footer permanently rather than appearing as
-a validation error at save time, because the moment to notice is while
-arranging, not afterwards.
-
-##### Where the affordances are taught
-
-The gestures are fast once known and invisible until then, which is what the
-menu was wrongly solving. The honest fixes are cheaper:
-
-- **First time a slice is opened in Edit**, the badges pulse once and a single
-  line sits under the bar: *"Click a number to move a cell · drag one cell onto
-  another to group them."* It goes away and does not come back.
-- **The sheet already lists every group** with its cells and lanes, so the
-  overview a menu would have given is one click away and permanently available
-  — without being in front of a cell that is trying to be dragged.
-
-#### The slice sheet
-
-Dropdown, anchored under `◆ 14 cells`, **not a modal** — same reason as the
-change sheet: the cells it names are behind it, and `⌖` points at them.
-
-```
-                         ◆ 14 cells ⌄
-   ┌───────────────────────────────────────────────────────────┐
-   │  Tutor warm-up journey                            journey │
-   │  What the regular tutor does and touches while warming up. │
-   ├───────────────────────────────────────────────────────────┤
-   │                                                           │
-   │  ⠿  1   Greet the student                          ⌖  ⋯   │
-   │         2 cells · Regular Tutor, Front Stage Tech         │
-   │                                                           │
-   │  ⠿  2   Ask them to share their screen              ⌖  ⋯   │
-   │         2 cells · Regular Tutor, Zoom/Pencil              │
-   │                                                           │
-   │  ⠿  3   ⟨no caption⟩                                ⌖  ⋯   │
-   │         1 cell · Regular Tutor                            │
-   │         ⚠ no caption — this one presents blank            │
-   │                                                           │
-   │  … 5 more · 14 cells in total                             │
-   ├───────────────────────────────────────────────────────────┤
-   │  ⊕ Add an empty group       │      1 cell not grouped yet  │
-```
-
-What each part is doing:
-
-- **`⠿` drags to reorder.** The only genuinely sheet-shaped action here —
-  the order is a sequence with no representation on the grid.
-- **The caption is the row.** Click it and type; it is the thing presented, so
-  it should be the most prominent text, not a field inside a card.
-- **“2 cells · Regular Tutor, Front Stage Tech”** — cells and lanes, never ids.
-  A group is recognised by *what it contains*, and lane names are how a reader
-  already thinks about the grid.
-- **`⌖`** flies the camera to those cells and dims the rest — the same gesture
-  as hovering a badge, available from the list.
-- **`⋯`** carries split, merge-with-next, and remove — the three that were
-  buttons on every card in the old strip, now one menu on the row that needs
-  them.
-- **The ungrouped count** is the footer, permanently, because it is the one
-  error the editor used to allow silently: a cell in the slice that no group
-  shows, which presents as a cell that simply never appears.
-- **The caption warning** is inline on the offending row, not a validation
-  summary somewhere else.
 
 #### What replaces the docked strip
 
-`SliceFrameEditor` stops being the editor. What is left of it is a **scrubber**
+`SliceFrameEditor` stops being the arranging surface — the sheet is. What is
+left of it is a **scrubber**
 — the thing you need while *watching* a slice rather than building one:
 
 ```
@@ -892,14 +817,22 @@ Order is visible, position is visible, and the caption is the one piece of text
 that matters at playback. Everything that was drag-a-chip moves to the cells or
 the sheet.
 
-#### Why not keep the strip and just fix the labels
+#### What actually changes about the strip
 
-Worth stating, because it is the cheaper option and it is still wrong. Swapping
-`0110ab` for “Greet the student” makes the strip readable but leaves the
-gesture backwards: you would still arrange a slice by dragging text between
-cards while the blueprint those cells live on is a foot away on the same
-screen, greyed out and unused. The labels were a symptom. The strip being a
-*second* representation of the grid is the defect.
+The strip's defect was never that it was a list. It was three things, all
+fixable:
+
+1. **Chips read `0110ab`** — six characters of a UUID, so arranging meant
+   reading identifiers instead of content.
+2. **It was always docked**, taking canvas height whether or not you were
+   arranging anything.
+3. **Grouping and ordering were the same drag with no distinction** — cell
+   chips and card order both moved by dragging, with nothing saying which you
+   were doing.
+
+The sheet fixes all three: content-and-lane labels, opened on demand from the
+bar, and two clearly different handles at two levels of one list. Keeping a
+list was right; keeping *that* list was not.
 
 #### Make slice with nothing picked
 
