@@ -358,127 +358,179 @@ switch already follows.
 
 ### Edit mode — the full prototype
 
-The bar, in every state it has. Nothing here is hypothetical layout: each state
-is reachable today except the change-tracking group, which is specced in full
-below and not yet built.
+Every state the bar has. All of it is reachable today except the change group,
+which is specced below and not yet built.
 
 ```
-Edit, nothing picked, no changes yet
-┌──────────────────────────────────────────────────────────────────────┐
-│  ▷  ✋  │  ◆ Make slice        │              │   👁 View  ✎ Edit    │
-└──────────────────────────────────────────────────────────────────────┘
-    ▲   ▲       ▲ disabled — "pick cells first"        ▲ active half filled
-    │   └─ Hand: drag to pan
+Edit, nothing picked, nothing changed
+┌───────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice           │            │   👁 View   ✎ Edit   │
+└───────────────────────────────────────────────────────────────────────┘
+    ▲  ▲       ▲ enabled, not greyed — see "Make slice with nothing picked"
+    │  └─ Hand: drag to pan
     └─ Select: click gathers, drag marquees
 
 Edit, three cells picked
-┌──────────────────────────────────────────────────────────────────────┐
-│  ▷  ✋  │  ◆ Make slice ③   ✕  │              │   👁 View  ✎ Edit    │
-└──────────────────────────────────────────────────────────────────────┘
-                       ▲       ▲ clear the selection (Esc is invisible)
-                       └─ count, so the bar never has to be counted by eye
+┌───────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice ③   ✕     │            │   👁 View   ✎ Edit   │
+└───────────────────────────────────────────────────────────────────────┘
+                          ▲     ▲ clear the selection (Esc is invisible)
+                          └─ count, so the bar is never counted by eye
 
-Edit, after two changes
-┌──────────────────────────────────────────────────────────────────────┐
-│  ▷  ✋  │  ◆ Make slice        │  ↶ ↷  ⚑ 2 ⌄  │   👁 View  ✎ Edit    │
-└──────────────────────────────────────────────────────────────────────┘
-                                    ▲ ▲   ▲
-                                    │ │   └─ the session: what has changed
-                                    │ └─ redo
-                                    └─ undo
+Edit, three unsaved changes
+┌───────────────────────────────────────────────────────────────────────┐
+│  ▷  ✋  │  ◆ Make slice  │  ⚑ 3 changes ⌄   ✓ Save changes  │  👁  ✎  │
+└───────────────────────────────────────────────────────────────────────┘
+                              ▲                 ▲
+                              │                 └─ filled primary. The most
+                              │                    prominent thing in the bar
+                              │                    while anything is unsaved.
+                              └─ opens the sheet below
 ```
 
-The change-tracking group **appears only once something has changed**, the way
-the annotation capture button does. A permanent "Save" on a canvas that has
-saved everything already is a control that lies at rest.
+**No undo and no redo buttons.** The list replaces them, and is better than
+them: undo is *positional* — it reverses whatever happened last — while a list
+is *addressable*. Having added a step, a lane and a cell, wanting the lane back
+should not mean undoing two things you meant to keep. Every row in the sheet
+carries its own revert, so the common case is one click on the thing you regret
+rather than a walk backwards through things you do not.
 
-#### The session menu
+#### The sheet
 
-```
-⚑ 2 changes ⌄
-┌────────────────────────────────────────────┐
-│  Since you turned Edit on                  │
-│                                            │
-│   ·  Added step 3 to Happy Path            │
-│   ·  Added a cell on Back Stage Tech       │
-│  ────────────────────────────────────────  │
-│   ↶  Undo the last one          ⌘Z         │
-│   ↷  Redo                       ⇧⌘Z        │
-│  ────────────────────────────────────────  │
-│   ⤺  Discard all 2 changes                 │
-│   ✓  Keep them and clear this list         │
-└────────────────────────────────────────────┘
-```
-
-Reading the list is the feature. "Discard all changes" is only trustworthy if
-it can first say *which* changes — a button that discards an unnamed amount of
-work is one nobody presses.
-
-#### What Save and Discard can honestly mean
-
-There is a problem to resolve before building these, and it is not cosmetic.
-
-**Every edit already writes.** Clicking an empty square calls `upsert_cell` and
-the row exists; the insert handle calls `add_step` and the column exists. There
-is no draft state anywhere in the app — verified, not assumed. So a **Save**
-button would have nothing to save, and **Discard** would have to *reverse*
-work, not abandon it.
-
-Two ways to make the three buttons mean something:
-
-**A — buffer the session, commit on Save.** Edits accumulate client-side and
-land on Save.
+A dropdown sheet anchored under the counter, **not a modal**. The canvas stays
+live behind it, because half of what the list names is on screen and pointing
+at it is the fastest way to know which "Added a cell" is which.
 
 ```
-  ✓ Save is honest — nothing is written until it is pressed
-  ✓ Discard is free — throw the buffer away
-  ✗ The grid renders from the database, so every buffered edit needs an
-    optimistic overlay the renderer knows how to merge
-  ✗ Two people editing cannot see each other until one saves
-  ✗ Cross-blueprint sessions (S3) buffer changes to rows in several scenarios
-    at once, and a partial commit failure leaves half of them applied
+                              ⚑ 3 changes ⌄
+      ┌──────────────────────────────────────────────────────┐
+      │  3 unsaved changes                        Since 14:02│
+      ├──────────────────────────────────────────────────────┤
+      │                                                      │
+      │  ▦ Warm-Up · Happy Path                              │
+      │     ▤  Added step “Greet”  after step 2         ↺  ⌖ │
+      │     ▢  Added a cell on Front Stage Tech         ↺  ⌖ │
+      │                                                      │
+      │  ▦ Standard Scheduling · Happy Path                  │
+      │     ▭  Added lane “Escalation”                 ↺  ⌖ │
+      │                                                      │
+      ├──────────────────────────────────────────────────────┤
+      │  ⤺ Discard all 3            │      ✓ Save changes    │
+      └──────────────────────────────────────────────────────┘
+                                              ▲ same action as the bar button
 ```
 
-**B — write immediately, keep inverses.** Each RPC call pushes its inverse onto
-a session stack. Undo pops one. Discard pops all of them.
+Four things the layout is doing:
+
+- **Grouped by scenario and path.** A session can span blueprints (S3), so a
+  flat list would put two "Added a cell" rows next to each other with no way to
+  tell them apart — the same defect as the arrow picker that offered three
+  identical rows.
+- **`↺` reverts one row.** This is what replaces undo.
+- **`⌖` flies the camera to it.** The cheapest possible answer to "which one is
+  that?", and the reason the sheet must not be modal.
+- **Named by what was done, not by table.** "Added step *Greet* after step 2",
+  never `INSERT path_steps`.
+
+Empty state, when nothing has changed, is not an empty sheet — the counter and
+the Save button are simply absent. A permanent Save on a canvas with nothing to
+save is a control that lies at rest.
+
+#### Is the counter hard to build?
+
+**The counter and the sheet are cheap. Reverting is not.** They are worth
+separating, because the first is a day and the second is the real feature.
+
+Every structural write already funnels through one place — `authoringRpc.ts`,
+sixteen functions behind a single `call()`. A session log is an append in that
+wrapper:
+
+```ts
+// what call() already sees, and everything the list needs
+{ fn: 'add_step', args: { path_id, name, at_position }, at: Date.now() }
+```
+
+So: **counter, grouping, camera-fly, Save-clears-the-list — all cheap**, and
+none of them can be wrong, because the log is a record of calls that were
+actually made.
+
+`↺` and `Discard all` are the expensive half, because each needs an inverse:
+
+| Operation | Inverse | Cost |
+|---|---|---|
+| `create_phase` / `create_scenario` / `create_path` | matching delete | free |
+| `add_step` | `remove_step` | free |
+| `add_lane` | `remove_lane` | free |
+| `upsert_cell` on an empty square | `delete_cell` | free |
+| `set_cell_dependency` | `clear_cell_dependency` | free |
+| `reorder_*` / `set_path_steps` | re-apply prior order | cheap — capture before |
+| `upsert_cell` on an existing cell | re-upsert prior content | ⚠ capture before the call |
+| any `delete_*` / `remove_*` | replay `deleted_structure.payload` | ⚠ restore path does not exist |
+| storyboard upload | — | ⚠ no inverse; storage is overwritten |
+
+**Recommended split:** ship the log, the counter, the grouped sheet, the camera
+fly and Save first — all of it useful on its own, since knowing what you have
+changed is most of the value. Add `↺` per row as the inverses land, greying the
+rows that cannot be reverted yet rather than pretending they can. `Discard all`
+turns on when every row in the session is revertible.
+
+That last rule is the same one deletion already follows: no affordance ships
+before the thing that makes it safe. A Discard that silently skips the
+storyboard it cannot undo is worse than no Discard.
+
+#### What "Save changes" means
+
+It does not write. Everything is already written — clicking an empty square
+calls `upsert_cell` and the row exists. Save **ends the session and clears the
+list**: an acknowledgement that the changes are wanted.
+
+That is worth being blunt about in the UI rather than papering over, because a
+button labelled Save that does not save is the same class of mistake as the
+`grant execute … to authenticated` that read like a gate and was not one. The
+sheet says so in one line:
 
 ```
-  ✓ Nothing changes about how the grid renders
-  ✓ Undo is genuinely useful on its own, which Save is not
-  ✓ Concurrent editing keeps working
-  ✗ "Save" is not a real action — it becomes "clear the list", a checkpoint
-  ✗ Every operation needs an inverse, and two do not have clean ones yet:
-    `remove_lane` (restores from the archive) and `upsert_cell` on an existing
-    cell (needs the prior content)
+      ┌──────────────────────────────────────────────────────┐
+      │  3 unsaved changes                        Since 14:02│
+      │  Already saved to the database — this list is how you│
+      │  can still take them back.                           │
+      └──────────────────────────────────────────────────────┘
 ```
 
-**Recommendation: B, and rename the button.** The honest label for the third
-item is not *Save* but **Done** or **Keep changes** — it ends the session and
-clears the list. Calling it Save would be the same class of mistake as the
-`grant execute … to authenticated` that read like a gate and was not one.
+The alternative — buffering every edit and committing on Save — is a much
+larger build: the grid renders from the database, so each buffered edit needs
+an optimistic overlay the renderer does not have, and a partial commit across a
+cross-blueprint session leaves half of it applied. If a true draft session is
+wanted it deserves its own plan rather than three buttons on a canvas that
+writes as it goes.
 
-If a true draft session is wanted, that is a bigger piece of work than the rest
-of this plan combined, and it should be its own document rather than three
-buttons bolted onto a canvas that writes as it goes.
+#### Make slice with nothing picked
 
-#### What the inverses are
+**Not disabled.** A greyed button with a tooltip teaches nothing to the person
+who never hovers it, and "pick cells first" is advice you can only read once
+you have already guessed that cells are pickable.
 
-Needed for B, one row per operation. The three marked ⚠ are the work.
+Enabled, and clicking it *arms* the picking:
 
-| Operation | Inverse |
-|---|---|
-| `create_phase` / `create_scenario` / `create_path` | the matching delete |
-| `add_step` | `remove_step` |
-| `add_lane` | `remove_lane` |
-| `upsert_cell` (new) | `delete_cell` |
-| `upsert_cell` (existing) | ⚠ re-upsert the prior content — must be captured before the call |
-| `set_cell_dependency` | `clear_cell_dependency` |
-| `reorder_steps` / `reorder_lanes` / `set_path_steps` | re-apply the prior order |
-| `delete_*` / `remove_*` | ⚠ restore from `deleted_structure` — the payload exists, the restore path does not |
-| storyboard upload | ⚠ no inverse; the previous image is overwritten in storage |
+```
+before                             after clicking with nothing picked
+┌────────────────────┐             ┌──────────────────────────────────────┐
+│  ◆ Make slice      │             │  ◆ Click cells to add them   0   ✕   │
+└────────────────────┘             └──────────────────────────────────────┘
+                                      ▲ the button becomes the instruction
+   canvas: cells sit still            canvas: every pickable cell shows a
+                                      1px dashed outline for ~2s, then
+                                      settles — enough to say "these"
+```
 
-The third row is why deletion shipped inert until the archive existed: the
-payload was always the point, and this is the feature that finally reads it.
+- The button relabels to the gesture, and counts up as cells are picked.
+- At one pick it returns to **Make slice ①** and stays armed.
+- `✕` or Escape disarms.
+- The brief outline pass is the part that matters: it answers "what is
+  pickable" by showing it, which no tooltip can.
+
+This costs one state and one animation, and it turns the bar's dead control
+into the only place the picking gesture is ever taught.
 
 ### The dropdowns
 
@@ -794,9 +846,11 @@ Applied to the obvious candidates —
 
 | Candidate | Verdict |
 |---|---|
-| Undo / redo | **Yes.** Acts on the last action, which has no place. Specced in "Edit mode — the full prototype". |
-| Discard all changes | **Yes**, in the session menu, and only once it can name what it would discard. |
-| Save | **No — as a name.** Everything is already written; the honest label is *Keep changes*, which ends the session and clears the list. |
+| Undo / redo | **No.** Superseded by the change list, which is addressable where undo is only positional — reverting the lane you regret should not mean undoing two things you meant to keep. |
+| Change counter + sheet | **Yes**, and cheap: every write already funnels through one `call()` in `authoringRpc.ts`. |
+| Revert one change | **Yes**, per row, as each operation's inverse lands. |
+| Discard all | **Yes**, but only once every row in the session is revertible. |
+| Save changes | **Yes**, and prominent — but it ends the session rather than writing, and the sheet says so. |
 | Rename step / lane | No — edit in place on the header or rail. |
 | Reorder steps | No — drag the header. |
 | Duplicate path | No — the path's `⋯` row menu. |
@@ -805,7 +859,7 @@ Applied to the obvious candidates —
 | Zoom | No — dropped as unhelpful. |
 
 So Edit's run is **Select · Hand · Make slice** today, and **Select · Hand ·
-Make slice · Undo · Redo · Session** once the inverse stack exists. That is the
+Make slice · ⚑ changes · Save changes** once the session log lands. That is the
 whole list; everything else has somewhere better to be.
 
 ### 4. Line and Arrow in shapes
