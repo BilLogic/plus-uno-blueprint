@@ -56,12 +56,22 @@ export type FrameLoss = {
  * A null key means the cell's authored key was never written, so nothing can
  * match it back after a restore. Presenting those together with the
  * recoverable ones would let a confirm dialog imply an undo it cannot perform.
+ *
+ * **No keys at all counts as unrecoverable, not as nothing to worry about.**
+ * This slice is in the list precisely because it loses cells to the delete; an
+ * empty key list means not one of them can be matched back, which is the least
+ * recoverable state there is. Reading it as "no missing keys, therefore fine"
+ * inverts the answer — and that is exactly what a plain `.some()` does on an
+ * empty array.
  */
 export function splitByRecoverability(slices: AffectedSlice[]): FrameLoss {
   const recoverable: AffectedSlice[] = []
   const unrecoverable: AffectedSlice[] = []
   for (const slice of slices) {
-    if (slice.cell_keys.some((key) => key === null || key === '')) {
+    const missing =
+      slice.cell_keys.length === 0 ||
+      slice.cell_keys.some((key) => key === null || key === '')
+    if (missing) {
       unrecoverable.push(slice)
     } else {
       recoverable.push(slice)

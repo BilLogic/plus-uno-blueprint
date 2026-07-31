@@ -592,7 +592,7 @@ them all — which is why `AffectedSlice.cell_keys` is typed
 
 | Phase | State | Verified by |
 |---|---|---|
-| 1 — backend foundation | Written, **unapplied**; two defects fixed | — |
+| 1 — backend foundation | **Applied**; four defects fixed | Live schema: 2 columns, archive table, 21 functions, deferrable constraint, widened bucket |
 | 2 — structure export/restore | Landed | Live database: 11/11 cells round-trip, injected collisions refused |
 | 3 — create + dialog | Entry point landed | Browser against live data; write reaches PostgREST with the right seven parameters |
 | 4 — cell contents | Landed | 7 tests |
@@ -601,13 +601,52 @@ them all — which is why `AffectedSlice.cell_keys` is typed
 | 7 — deletion guardrails | Landed; **affordance wired but hidden** | 8 tests; browser: no delete button renders against a schema with no archive |
 | 8 — storyboard upload | Landed **and mounted**; policy defect fixed | 13 tests; browser: upload reaches storage, refused by RLS as an unauthenticated session should be |
 
-38 tests, all passing, via `npm test`.
+39 tests, all passing, via `npm test`.
 
-**What "landed" does not mean.** No write path in phases 3–8 has ever
-succeeded, because every one of them needs the migration. What is proven is
-everything up to the wire: validation, cascade description, key derivation,
-link preservation, parameter names. What is not proven is the database
-accepting any of it.
+**The migration is applied (2026-07-31).** Both parts landed against
+`osybxeojvsqcwxkgnalm`, plus a third file fixing what applying them exposed.
+Verified directly against the live schema: `cells.cell_key` and the five
+`origin` columns present, `deleted_structure` created and readable,
+21 functions installed, `path_steps_path_column_unique` now deferrable, the
+bucket widened to PNG/JPEG/WebP, and the storage policies replaced (the owner
+guard did not trip). `deletion_impact` answers with real cascades.
+
+**Applying it exposed two more defects, both invisible until the SQL ran.**
+Neither was reachable by a test, and neither would have raised an error — both
+returned confident wrong answers.
+
+`slices_referencing(cell_ids uuid[])` read `slice_items.cell_ids` instead of
+its own parameter. In a `language sql` function an unqualified name that
+matches an in-scope column binds to the **column**, silently, so
+`i.cell_ids && cell_ids` compiled as `i.cell_ids && i.cell_ids` — true for
+every slice with any frame. Measured live: the same seven slices came back for
+a real cell set, for an empty array, and for a uuid that does not exist. Every
+confirm dialog would have named seven unrelated slices as losing frames, and
+`deletion_impact` would have written that into the archive. The one read whose
+entire job is to stop a silent slice loss was itself silently wrong.
+`mint_cell_key` had the same bug, with `layers.path_id` shadowing its first
+parameter — harmless where it is called today, wrong for the next caller.
+Both are now written with `$1`/`$2`/`$3`, which cannot resolve to a column.
+The plpgsql functions all qualify their parameters (`add_step.path_id`) and
+were never affected; only the two SQL-language ones were.
+
+The second defect was on the app side and the same shape — a check that
+inverts on the empty case. `splitByRecoverability` asked whether *some* key was
+missing, and `.some()` on an empty array is false, so a slice with **no keys at
+all** read as fully recoverable. A slice is in that list precisely because it
+loses cells, so no keys is the least recoverable state there is. Now treated as
+unrecoverable, with a test for it.
+
+Confirmed in the browser afterwards: deleting Warm-Up's Happy Path reports 43
+cells, 34 arrows, and names its seven slices as **cannot be restored by undo** —
+which is the truth, because the key backfill has not run.
+
+**What is still not proven.** No *write* RPC has been executed. The read paths
+(`deletion_impact`, `slices_referencing`, `cell_natural_key`) are verified
+against live data; `create_path`, `set_cell_dependency`, `upsert_cell` and the
+deletes resolve and are granted, but nothing has been created or destroyed.
+Running them needs a signed-in session — every write policy is `to
+authenticated`, and the app has no sign-in.
 
 **Phase 7 is deliberately inert.** `deletionReadiness(archiveAvailable)`
 returns `canDelete: false` while `deleted_structure` does not exist, and the
@@ -666,9 +705,21 @@ anything crosses the wire, and a real PNG upload reaches storage and is
 refused by RLS — which is the correct answer for a session with no signed-in
 user, and leaves no stray object behind.
 
-**Still outstanding regardless of the migration:** the `cell_keys` backfill.
-Until it runs, `splitByRecoverability` will classify most affected slices as
-unrecoverable — which is correct, and is why undo cannot be trusted yet.
+**Still outstanding: the `cell_keys` backfill.** Until it runs,
+`splitByRecoverability` classifies every affected slice as unrecoverable —
+which is correct, and is why undo cannot be trusted yet. The delete affordance
+is nonetheless live, because `deleted_structure` exists: the archive keeps the
+payload, and the dialog says plainly that slices cannot be put back.
+
+It is written as `20260731002000_backfill_cell_keys.sql` and is **not applied**
+— row mutation is denied to this session while DDL is allowed, so it needs
+`supabase db push` (or the same allowance). Plan mode measured it against the
+live database: 737 cells, 713 keyable, 24 colliding, 36 of 36 slice-frame keys
+resolvable, 0 unresolvable, 17 frames rewritten. The 24 are one content defect
+— Discovery runs seven lanes across two columns both named "Discovers PLUS" —
+and re-running the file after renaming them apart picks them up.
+
+38 tests → 39 with the empty-key case.
 
 ### Landed ahead of the migration
 

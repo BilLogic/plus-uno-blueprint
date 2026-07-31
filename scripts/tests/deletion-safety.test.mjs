@@ -38,6 +38,19 @@ test('a slice with a null key is not counted as recoverable', () => {
   assert.deepEqual(unrecoverable.map((s) => s.title), ['Orphan', 'Blank'])
 })
 
+/**
+ * The inverted case. A slice is in this list *because* it loses cells, so no
+ * keys at all is the least recoverable state there is — but `.some()` on an
+ * empty array is false, which would have read as "nothing missing, fine".
+ */
+test('a slice with no keys at all is unrecoverable, not recoverable', () => {
+  const { recoverable, unrecoverable } = splitByRecoverability([
+    { slice_id: '1', title: 'No keys', cell_keys: [] },
+  ])
+  assert.deepEqual(recoverable, [])
+  assert.deepEqual(unrecoverable.map((s) => s.title), ['No keys'])
+})
+
 test('the impact names cells, arrows and affected slices', () => {
   const lines = describeImpact('lane', {
     label: 'Regular Tutor',
