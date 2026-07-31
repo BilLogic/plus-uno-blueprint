@@ -1,23 +1,42 @@
 /**
- * Rules for creating or copying a version of a journey.
+ * Rules for creating or copying a path of a journey.
  *
- * "Version" is the word in the UI; `paths` is the table. A journey has one
- * happy path and any number of alternatives, and they are *alternatives* — not
- * stages, not revisions. That is why nothing connects across them.
+ * A journey has one happy path and any number of alternatives, and they are
+ * *alternatives* — not stages, not revisions. That is why nothing connects
+ * across them.
  */
 
 export type VersionMode = 'blank' | 'duplicate'
 
-/** `path_type` values in use. The seed writes `happy`; the RPCs default to
- * `alternative`. Anything else is free text the renderer colours generically. */
-export const PATH_TYPES = ['happy', 'alternative', 'edge-case', 'sad'] as const
+/**
+ * The `path_type` values the database actually accepts.
+ *
+ * These are not a UI vocabulary choice — `paths_path_type_check` is a CHECK
+ * constraint, and anything outside this list is refused by the insert. The
+ * list here was previously `happy | alternative | edge-case | sad`, of which
+ * **two did not exist**: picking "Edge case" or "Sad path" built a row the
+ * database rejected, so half the dropdown could not be submitted. In the other
+ * direction `named` was unreachable, and `named` is what Goal Setting's five
+ * paths are — the app could not have created the data it was already showing.
+ *
+ * Keep this in step with the constraint. If a new type is wanted, the
+ * constraint changes first.
+ */
+export const PATH_TYPES = [
+  'happy',
+  'alternative',
+  'unhappy',
+  'exception',
+  'named',
+] as const
 export type PathType = (typeof PATH_TYPES)[number]
 
 export const PATH_TYPE_LABELS: Record<PathType, string> = {
   happy: 'Happy path',
   alternative: 'Alternative',
-  'edge-case': 'Edge case',
-  sad: 'Sad path',
+  unhappy: 'Unhappy path',
+  exception: 'Exception',
+  named: 'Named variant',
 }
 
 export type DraftVersion = {
