@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   Circle,
   Eraser,
@@ -19,6 +18,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { AnnotationCaptureMenu } from '@/components/editor/AnnotationCaptureMenu'
+import { ToolFamilyMenu, type FamilyTool } from '@/components/editor/ToolFamilyMenu'
 import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
 import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
 import {
@@ -34,14 +34,17 @@ type ToolDef = {
   icon: typeof Pencil
 }
 
-type DrawTool = 'pen' | 'eraser'
+const DRAW_FAMILY: FamilyTool[] = [
+  { id: 'pen', label: 'Pen', icon: Pencil },
+  { id: 'eraser', label: 'Eraser', icon: Eraser },
+]
 
-const SHAPE_TOOLS: ToolDef[] = [
+const SHAPE_FAMILY: FamilyTool[] = [
   { id: 'rect', label: 'Rectangle', icon: Square },
   { id: 'ellipse', label: 'Ellipse', icon: Circle },
 ]
 
-const CONTENT_TOOLS: ToolDef[] = [
+const CONTENT_FAMILY: FamilyTool[] = [
   { id: 'text', label: 'Text', icon: Type },
   { id: 'sticky', label: 'Sticky note', icon: StickyNote },
 ]
@@ -235,20 +238,14 @@ export function CanvasAnnotationToolbar() {
   const { tool, setTool, annotations, clearAnnotations } =
     useCanvasAnnotations()
 
-  const [lastDrawTool, setLastDrawTool] = useState<DrawTool>('pen')
-  const drawActive = tool === 'pen' || tool === 'eraser'
-  const mainDrawTool: DrawTool = drawActive ? tool : lastDrawTool
-  const MainDrawIcon = mainDrawTool === 'eraser' ? Eraser : Pencil
-  const mainDrawLabel = mainDrawTool === 'eraser' ? 'Eraser' : 'Draw'
-
-  useEffect(() => {
-    if (tool === 'pen' || tool === 'eraser') {
-      setLastDrawTool(tool)
-    }
-  }, [tool])
+  // The family menus remember their own face, so the toolbar no longer has to
+  // track "which draw tool was last used" on their behalf.
 
   const canvasMode = useCanvasMode()
   const designing = canvasMode?.mode === 'design'
+  // The pen's colour/width panel belongs to the pen, not to the bar — it
+  // shows whenever a drawing tool is live, and drawing only exists in View.
+  const drawActive = tool === 'pen' || tool === 'eraser'
 
   return (
     <div className="pointer-events-none absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2">
@@ -268,90 +265,59 @@ export function CanvasAnnotationToolbar() {
           onSelect={setTool}
         />
 
-        {designing ? <CanvasDesignTools /> : (
-        <>
+        {designing ? (
+          <CanvasDesignTools />
+        ) : (
+          <>
+            <ToolbarDivider />
 
-        {/* Single draw slot — swaps to eraser icon when eraser is active (FigJam). */}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={mainDrawLabel}
-                aria-pressed={drawActive}
-                onClick={() => setTool(mainDrawTool)}
-                className={cn(
-                  'pointer-events-auto size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground',
-                  drawActive &&
-                    'bg-violet-100 text-foreground hover:bg-violet-100 hover:text-foreground',
-                )}
-              >
-                <MainDrawIcon
-                  className={cn('size-3.5', drawActive && 'size-4')}
-                  aria-hidden
-                />
-              </Button>
-            }
-          />
-          <TooltipContent side="top" className="text-xs">
-            {mainDrawLabel}
-          </TooltipContent>
-        </Tooltip>
-
-        <ToolbarDivider />
-
-        <div
-          role="group"
-          aria-label="Shapes"
-          className="flex items-center gap-0.5"
-        >
-          {SHAPE_TOOLS.map((item) => (
-            <ToolButton
-              key={item.id}
-              {...item}
-              active={tool === item.id}
+            {/* Three families rather than six squares. The bar reads as
+                "draw / shapes / content" instead of a row of near-identical
+                icons that has to be scanned before anything can be clicked. */}
+            <ToolFamilyMenu
+              label="Draw"
+              tools={DRAW_FAMILY}
+              active={tool}
               onSelect={setTool}
             />
-          ))}
-        </div>
+            <ToolFamilyMenu
+              label="Shapes"
+              tools={SHAPE_FAMILY}
+              active={tool}
+              onSelect={setTool}
+            />
+            <ToolFamilyMenu
+              label="Content"
+              tools={CONTENT_FAMILY}
+              active={tool}
+              onSelect={setTool}
+            />
 
-        <ToolbarDivider />
+            <ToolbarDivider />
 
-        {CONTENT_TOOLS.map((item) => (
-          <ToolButton
-            key={item.id}
-            {...item}
-            active={tool === item.id}
-            onSelect={setTool}
-          />
-        ))}
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Clear annotations"
+                    disabled={annotations.length === 0}
+                    onClick={clearAnnotations}
+                    className="pointer-events-auto size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground disabled:opacity-40"
+                  >
+                    <Trash2 className="size-3.5" aria-hidden />
+                  </Button>
+                }
+              />
+              <TooltipContent side="top" className="text-xs">
+                Clear annotations
+              </TooltipContent>
+            </Tooltip>
 
-        <ToolbarDivider />
-
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label="Clear annotations"
-                disabled={annotations.length === 0}
-                onClick={clearAnnotations}
-                className="pointer-events-auto size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground disabled:opacity-40"
-              >
-                <Trash2 className="size-3.5" aria-hidden />
-              </Button>
-            }
-          />
-          <TooltipContent side="top" className="text-xs">
-            Clear annotations
-          </TooltipContent>
-        </Tooltip>
-          <AnnotationCaptureMenu />
-        </>
+            <AnnotationCaptureMenu />
+          </>
         )}
 
         {/* Edit is not a tool, so it sits after a divider at the far end

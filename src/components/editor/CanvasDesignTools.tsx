@@ -1,22 +1,13 @@
-import { useMemo, useState } from 'react'
-import { Diamond, Trash2, X } from 'lucide-react'
+import { useState } from 'react'
+import { Diamond, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  DeleteStructureDialog,
-  type DeletionTarget,
-} from '@/components/editor/DeleteStructureDialog'
 import { CreateSliceDialog } from '@/components/editor/CreateSliceDialog'
 import { useCellPick } from '@/contexts/cellPickContext'
-import { useEditor } from '@/contexts/EditorContext'
-import { usePathSelectionContext } from '@/contexts/PathSelectionContext'
-import { useArchiveAvailable } from '@/hooks/useArchiveAvailable'
-import { useScenarioPaths } from '@/hooks/useScenarioPaths'
-import { deletionReadiness } from '@/lib/deletionSafety'
 
 /**
  * The Edit tool run.
@@ -41,39 +32,15 @@ import { deletionReadiness } from '@/lib/deletionSafety'
  * What stays is what acts on the *selection*, which has no home on the canvas:
  * making a slice from it, and clearing it.
  *
- * Delete path is the last stray, on its way to the path's own row menu. It
- * stays until that menu exists, because losing the only delete affordance in
- * the meantime would be a regression rather than a simplification.
+ * **Delete path** has now gone too, to the path's own row menu in the sidebar.
+ * A destructive button sitting beside "Make slice" is a misclick waiting to
+ * happen, and a global one also has to guess which path it means — a row
+ * cannot be wrong about that.
  */
 export function CanvasDesignTools() {
-  const { selectedScenarioId } = useEditor()
   const pick = useCellPick()
   const picked = pick?.picked ?? []
   const [sliceDialogOpen, setSliceDialogOpen] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<DeletionTarget | null>(null)
-  const scenarioPaths = useScenarioPaths(selectedScenarioId)
-  const pathData = scenarioPaths.status === 'ready' ? scenarioPaths.data : null
-  const { getSelectedPathIds } = usePathSelectionContext()
-  const archiveAvailable = useArchiveAvailable()
-
-  /**
-   * The path a delete would act on, or null if there is no safe one.
-   *
-   * Null hides the affordance entirely rather than disabling it — a disabled
-   * delete invites someone to go looking for how to enable it, and while the
-   * recovery archive is missing there is no safe way to. `deletionReadiness`
-   * is the gate, not a comment.
-   *
-   * One selected path only. "Delete these two" is a different confirm with a
-   * different cascade behind it, and running this one twice is not it.
-   */
-  const deletablePath = useMemo(() => {
-    if (!deletionReadiness(archiveAvailable).canDelete) return null
-    if (!selectedScenarioId || !pathData) return null
-    const selected = getSelectedPathIds(selectedScenarioId)
-    if (selected.length !== 1) return null
-    return pathData.versions.find((entry) => entry.pathId === selected[0]) ?? null
-  }, [archiveAvailable, getSelectedPathIds, pathData, selectedScenarioId])
 
   return (
     <>
@@ -133,36 +100,6 @@ export function CanvasDesignTools() {
         </Tooltip>
       ) : null}
 
-      {deletablePath ? (
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={`Delete path ${deletablePath.name}`}
-                onClick={() =>
-                  setDeleteTarget({
-                    kind: 'path',
-                    id: deletablePath.pathId,
-                    label: deletablePath.name,
-                    scenarioId: selectedScenarioId ?? undefined,
-                  })
-                }
-                className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="size-3.5" aria-hidden />
-                Delete path
-              </Button>
-            }
-          />
-          <TooltipContent side="top" className="text-xs">
-            Delete “{deletablePath.name}” and everything on it
-          </TooltipContent>
-        </Tooltip>
-      ) : null}
-
       <CreateSliceDialog
         cellIds={picked}
         open={sliceDialogOpen}
@@ -173,13 +110,6 @@ export function CanvasDesignTools() {
         }}
       />
 
-      <DeleteStructureDialog
-        target={deleteTarget}
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null)
-        }}
-      />
     </>
   )
 }
