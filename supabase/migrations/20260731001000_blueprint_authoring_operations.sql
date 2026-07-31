@@ -40,12 +40,12 @@ $$;
 /**
  * A cell's authored key — read, not computed.
  *
- * The key is `lifecycle/scenario/path/layer/step` and is authored in the IR,
- * so it cannot be reconstructed from display names: `paths.name` is "Happy
- * Path" where the key segment is `happy`, and names repeat across scenarios.
- * An earlier version of this function derived `path.name/layer.name/step.name`
- * and would have produced keys that matched nothing a slice was bound by —
- * silently breaking the recovery path that deletion safety depends on.
+ * The key is `lifecycle/scenario/version/layer/step` and is authored in the IR
+ * for imported cells, so it cannot be reconstructed for them: an earlier
+ * version of this function derived `path.name/layer.name/step.name` — three
+ * segments, unqualified — which collides on 27 of 737 cells and would have
+ * produced keys matching nothing a slice was bound by, silently breaking the
+ * recovery path that deletion safety depends on.
  *
  * Returns null for a cell whose key was never written. Callers must treat
  * null as "not recoverable" rather than substituting a guess.
@@ -62,8 +62,14 @@ $$;
  * Mint a key for an app-created cell.
  *
  * Slugs the display names, which is correct here and only here: an app-created
- * cell has no IR entry, so its names *are* its authored source. Scoped by
- * scenario and path type so it lands in the same shape as an imported key.
+ * cell has no IR entry, so its names *are* its authored source.
+ *
+ * The version segment is the version's **name**, not its `path_type`. Type
+ * looked right — the seeded keys read `warm-up/happy/...` — but several
+ * versions of one journey routinely share a type: Goal Setting has five all
+ * typed `named`. Keying on type collides on 167 of 737 cells; keying on name
+ * collides on 17, and those 17 are a genuine data defect (Discovery has five
+ * distinct steps all called "Discovers PLUS") rather than a flaw in the key.
  */
 create or replace function public.mint_cell_key(
   path_id uuid,
@@ -77,7 +83,7 @@ as $$
   select concat_ws('/',
     public.key_slug(sl.name),
     public.key_slug(sc.name),
-    coalesce(public.key_slug(p.path_type), public.key_slug(p.name)),
+    coalesce(public.key_slug(p.name), public.key_slug(p.path_type)),
     public.key_slug(l.name),
     public.key_slug(s.name)
   )
