@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { CreateSliceDialog } from '@/components/editor/CreateSliceDialog'
+import { CreateSliceSheet } from '@/components/editor/CreateSliceSheet'
 import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCellPick } from '@/contexts/cellPickContext'
@@ -89,28 +89,47 @@ export function CanvasDesignTools() {
         box lands somewhere unpredictable and often off-screen. A fixed home is
         worth more here than proximity.
       */}
-      <Button
-        type="button"
-        size="sm"
-        aria-label={
-          picked.length === 0
-            ? 'Make a slice — click cells to add them'
-            : `Make a slice from ${picked.length} cells`
-        }
-        onClick={() => {
-          if (picked.length === 0) setArmed(true)
-          else setSliceDialogOpen(true)
+      <CreateSliceSheet
+        cellIds={picked}
+        open={sliceDialogOpen}
+        onOpenChange={setSliceDialogOpen}
+        onCreated={() => {
+          pick?.clear()
+          setSliceDialogOpen(false)
         }}
-        className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2.5 text-xs"
-      >
-        <Diamond className="size-3.5" aria-hidden />
-        {armed && picked.length === 0 ? 'Click cells to add them' : 'Make slice'}
-        {picked.length > 0 ? (
-          <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-semibold tabular-nums">
-            {spannedPaths > 1 ? `${picked.length} · ${spannedPaths} blueprints` : picked.length}
-          </span>
-        ) : null}
-      </Button>
+        trigger={
+          <Button
+            type="button"
+            size="sm"
+            aria-label={
+              picked.length === 0
+                ? 'Make a slice — click cells to add them'
+                : `Make a slice from ${picked.length} cells`
+            }
+            onClick={(event) => {
+              // With nothing picked the button teaches instead of opening: a
+              // sheet listing no cells answers a question nobody asked.
+              if (picked.length === 0) {
+                event.preventDefault()
+                setArmed(true)
+              }
+            }}
+            className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+          >
+            <Diamond className="size-3.5" aria-hidden />
+            {armed && picked.length === 0
+              ? 'Click cells to add them'
+              : 'Make slice'}
+            {picked.length > 0 ? (
+              <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-semibold tabular-nums">
+                {spannedPaths > 1
+                  ? `${picked.length} · ${spannedPaths} blueprints`
+                  : picked.length}
+              </span>
+            ) : null}
+          </Button>
+        }
+      />
 
       {/*
         Clearing lives beside the count because that is the question the count
@@ -142,17 +161,6 @@ export function CanvasDesignTools() {
       ) : null}
 
       <SessionChangesSheet />
-
-      <CreateSliceDialog
-        cellIds={picked}
-        open={sliceDialogOpen}
-        onOpenChange={setSliceDialogOpen}
-        onCreated={() => {
-          pick?.clear()
-          setSliceDialogOpen(false)
-        }}
-      />
-
     </>
   )
 }

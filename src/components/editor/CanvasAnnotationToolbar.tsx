@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
@@ -387,9 +388,12 @@ export function CanvasAnnotationToolbar() {
  * question a reader has is "which one am I in", which a single button can only
  * answer by naming the other one.
  *
- * Icon-led with the label beside it, and the active half carries a filled pill
- * rather than a shade of grey — at the far end of the bar this is the control
- * that has to read without being looked for.
+ * Icons only, and the active half carries a filled pill rather than a shade of
+ * grey — at the far end of the bar this is the control that has to read
+ * without being looked for. The words moved into tooltips on a delay: two
+ * always-on labels cost more width than the whole tool run beside them, and an
+ * eye against a pencil is not a distinction that needs spelling out every time
+ * it is looked at.
  */
 function CanvasModeSwitch({
   mode,
@@ -404,6 +408,11 @@ function CanvasModeSwitch({
   ]
 
   return (
+    // Long enough that the labels do not flash past while crossing the bar,
+    // short enough to arrive before the question is abandoned. Scoped to this
+    // group: everything else in the bar keeps the instant tooltips, because
+    // there the icon alone is usually enough.
+    <TooltipProvider delay={500}>
     <div
       role="group"
       aria-label="Canvas mode"
@@ -417,27 +426,33 @@ function CanvasModeSwitch({
                 type="button"
                 variant="ghost"
                 size="sm"
+                aria-label={label}
                 aria-pressed={mode === value}
                 onClick={() => onChange(value)}
                 className={cn(
-                  'h-6 gap-1.5 rounded-full px-2.5 text-[11px] font-medium',
+                  'size-6 rounded-full p-0',
                   mode === value
                     ? 'bg-background text-foreground shadow-sm hover:bg-background hover:text-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <Icon className="size-3.5" aria-hidden />
-                {label}
               </Button>
             }
           />
           <TooltipContent side="top" className="text-xs">
-            {value === 'view'
-              ? 'Read, navigate and mark up'
-              : 'Author the blueprint — cells become selectable'}
+            {/* The mode's name first, because that is what the icon stands
+                for and the reason the tooltip was waited for. */}
+            <span className="font-medium">{label}</span>
+            <span className="text-background/70">
+              {value === 'view'
+                ? 'Read, navigate and mark up'
+                : 'Author — cells become selectable'}
+            </span>
           </TooltipContent>
         </Tooltip>
       ))}
     </div>
+    </TooltipProvider>
   )
 }

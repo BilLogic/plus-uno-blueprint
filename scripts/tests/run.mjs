@@ -29,6 +29,7 @@ const MODULES = [
   'src/lib/deletionSafety.ts',
   'src/lib/annotationCapture.ts',
   'src/lib/authoringSession.ts',
+  'src/lib/sliceType.ts',
 ]
 
 const work = mkdtempSync(join(tmpdir(), 'uno-tests-'))

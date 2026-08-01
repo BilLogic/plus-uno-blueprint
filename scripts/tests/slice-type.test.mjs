@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+/**
+ * Reading a slice's type off the selection.
+ *
+ * The type steers which sidebar group a slice lands in, so a wrong answer is
+ * a slice nobody finds again. What is tested is that the shapes people
+ * actually pick get the names people would give them — and that the
+ * degenerate cases resolve one way rather than by whichever branch is first.
+ *
+ * Run: npm test
+ */
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { deriveSliceType, describeSliceType } from '../../src/lib/sliceType.ts'
+
+/** A fake grid: `id` is "step/lane". */
+const at = (id) => {
+  const [step, lane] = id.split('/')
+  return { step, lane }
+}
+const derive = (ids) => deriveSliceType(ids, at)
+
+test('one cell is a cell, whatever its position', () => {
+  assert.equal(derive(['1/tutor']), 'cell')
+})
+
+test('nothing picked has no shape to report', () => {
+  assert.equal(derive([]), 'custom')
+})
+
+test('one lane across several steps is a journey', () => {
+  assert.equal(derive(['1/tutor', '2/tutor', '3/tutor']), 'journey')
+})
+
+test('one step across several lanes is a step', () => {
+  assert.equal(derive(['2/tutor', '2/staff', '2/tech']), 'step')
+})
+
+test('two cells in one lane and one step read as a journey, not a step', () => {
+  // Degenerate: it satisfies both. Journey is what a reader would call two
+  // cells sitting side by side in a lane, so the order of the checks is a
+  // decision and not an accident.
+  assert.equal(derive(['1/tutor', '1/tutor']), 'lane')
+  assert.equal(derive(['1/tutor', '2/tutor']), 'journey')
+})
+
+test('cells scattered across lanes and steps are custom', () => {
+  assert.equal(derive(['1/tutor', '2/staff', '5/tech']), 'custom')
+})
+
+test('a cell whose position cannot be read does not crash the derivation', () => {
+  // Unreadable positions are null, which is a value like any other — three
+  // unknowns are "one lane, one step", not an exception.
+  assert.equal(deriveSliceType(['a', 'b'], () => ({ step: null, lane: null })), 'lane')
+})
+
+test('the description counts cells and names the shape', () => {
+  assert.equal(describeSliceType('journey', 3), '3 cells down one lane — a journey')
+  assert.equal(describeSliceType('cell', 1), 'One cell, read closely')
+  assert.equal(describeSliceType('step', 1), '1 cell across one moment — a step')
+})
