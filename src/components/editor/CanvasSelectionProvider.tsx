@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { CanvasCellContextMenu } from '@/components/editor/CanvasCellContextMenu'
 import { MarqueeSelection } from '@/components/editor/MarqueeSelection'
 import {
   CellPickContext,
@@ -224,6 +225,7 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     <CellPickContext.Provider value={api}>
       {children}
       <MarqueeSelection />
+      <CanvasCellContextMenu />
     </CellPickContext.Provider>
   )
 }

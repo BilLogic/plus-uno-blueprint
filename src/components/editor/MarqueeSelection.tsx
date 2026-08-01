@@ -93,10 +93,15 @@ export function MarqueeSelection() {
       if (!start) return
 
       if (!moved.current) {
-        // A click on empty canvas clears, the way clicking empty space does
-        // in any canvas tool.
+        // A click on empty canvas does **not** clear.
+        //
+        // It does in every canvas tool, and it is wrong here, because this
+        // selection is not the subject of the next verb — it is a set being
+        // assembled over minutes, across blueprints that need panning between.
+        // Every miss between two cells threw the work away, and a gesture that
+        // destroys minutes of work while meaning nothing is not a gesture.
+        // Clearing is the ✕ in the bar, where it can be aimed at.
         setRect(null)
-        if (!start.additive) pick.clear()
         return
       }
 

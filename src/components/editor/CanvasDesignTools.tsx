@@ -134,6 +134,10 @@ export function CanvasDesignTools() {
       {/*
         Clearing lives beside the count because that is the question the count
         raises — "how do I start over" — and Escape is invisible.
+
+        It is also now the *only* way to clear. Clicking empty canvas used to,
+        and a selection gathered across several blueprints is far too expensive
+        to lose to a miss between two cells. One deliberate target, aimed at.
       */}
       {picked.length > 0 || armed ? (
         <Tooltip>
@@ -155,7 +159,7 @@ export function CanvasDesignTools() {
             }
           />
           <TooltipContent side="top" className="text-xs">
-            Clear the selection (Esc)
+            Clear the selection — the only thing that does (Esc)
           </TooltipContent>
         </Tooltip>
       ) : null}

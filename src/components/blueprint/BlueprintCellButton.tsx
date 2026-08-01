@@ -147,6 +147,21 @@ export function BlueprintCellButton({
     detail!.selectCell(selection!)
   }
 
+  /**
+   * Open the cell, whatever the click is currently for.
+   *
+   * While gathering cells for a slice, a click picks — which leaves no way to
+   * read a cell you are still deciding about, and deciding is most of the job.
+   * The two clicks that precede this one pick and then unpick, so the net
+   * effect on the selection is nothing: look without joining.
+   */
+  const handleDoubleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!isInteractive || annotationTool === 'hand') return
+    if (event.currentTarget.closest('[data-canvas-focus-dimmed]')) return
+    event.stopPropagation()
+    detail!.selectCell(selection!)
+  }
+
   const surfaceStyle = {
     ...getBlueprintCellInteractionStyle(fill),
     ...(opacity != null && opacity < 1 ? { opacity } : undefined),
@@ -171,6 +186,7 @@ export function BlueprintCellButton({
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}
+      onDoubleClick={isInteractive ? handleDoubleClick : undefined}
       tabIndex={isInteractive ? 0 : -1}
       className={cn(
         blueprintCellButtonClassName({ compact, variant, className }),

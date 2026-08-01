@@ -228,19 +228,31 @@ export function SliceScreenComposer({
                   <li key={cell}>
                     <DropLine target={{ screen: screenIndex, index: cellIndex }} />
 
-                    {/* Split between two cells, where the cut actually goes.
-                        Hidden while dragging so it does not compete with the
-                        insertion line for the same two pixels. */}
+                    {/*
+                      Where a new screen gets made.
+
+                      This was here before and nobody could find it: the whole
+                      row was `text-transparent` with a transparent rule, so
+                      until the pointer happened to cross two pixels of empty
+                      space there was no sign that a boundary could exist at
+                      all — which reads as "you cannot create screens". The
+                      line is now always drawn, because the boundary is real
+                      whether or not it is hovered; only the words wait.
+
+                      Hidden while dragging, so it does not compete with the
+                      insertion line for the same two pixels.
+                    */}
                     {cellIndex > 0 && dragging === null ? (
                       <button
                         type="button"
+                        aria-label="Split into a new screen here"
                         onClick={() => splitAt(screenIndex, cellIndex)}
-                        className="group/split flex h-3 w-full items-center gap-1 text-[10px] text-transparent transition-colors hover:text-muted-foreground"
+                        className="group/split flex h-4 w-full items-center gap-1 text-[10px] text-muted-foreground/0 transition-colors hover:text-primary"
                       >
-                        <span className="h-px flex-1 bg-transparent group-hover/split:bg-border" />
-                        <Scissors className="size-2.5" aria-hidden />
-                        split here
-                        <span className="h-px flex-1 bg-transparent group-hover/split:bg-border" />
+                        <span className="h-px flex-1 bg-border transition-colors group-hover/split:bg-primary" />
+                        <Scissors className="size-2.5 text-muted-foreground/50 transition-colors group-hover/split:text-primary" aria-hidden />
+                        <span className="whitespace-nowrap">new screen</span>
+                        <span className="h-px flex-1 bg-border transition-colors group-hover/split:bg-primary" />
                       </button>
                     ) : null}
 
