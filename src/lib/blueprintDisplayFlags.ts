@@ -10,7 +10,11 @@ const WARM_UP_SCENARIO_ID = 'a0000000-0000-4000-8000-000000000203'
 export const BLUEPRINT_VISUAL_LAYER_UI_ENABLED = true
 export const BLUEPRINT_CELL_DETAIL_UI_ENABLED = true
 /** Visual walkthrough / presentation mode (play button + modal). */
-export const BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED = true
+// Off: the ▶ sat inside the Visual lane of every blueprint looking like part
+// of the diagram, and the walkthrough it opened duplicated what presentation
+// mode already does better. The machinery stays for a future surface that
+// earns it; the flag is the single switch every grid reads.
+export const BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED = false
 
 /** Scenarios where the Visual row is shown before global rollout. */
 const BLUEPRINT_VISUAL_LAYER_SCENARIO_IDS = new Set<string>([

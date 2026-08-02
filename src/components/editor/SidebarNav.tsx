@@ -105,7 +105,12 @@ type NavRowProps = {
   onSelect?: () => void
   /** Camera/tab target: accent fill + left rail. */
   selected?: boolean
-  /** Contains the selection, or is open-but-inactive: marker dot only. */
+  /**
+   * Contains the selection. No longer drawn: the highlighted scenario one
+   * line below already says it, and two markers for one fact read as two
+   * facts. Kept in the type so call sites keep stating it, which is what
+   * guards against `selected` and `ancestor` ever both being true.
+   */
   ancestor?: boolean
   /** Accessible name for the chevron ("Expand X" / "Collapse X"). */
   toggleLabel?: string
@@ -133,7 +138,6 @@ export function NavRow({
   onToggle,
   onSelect,
   selected = false,
-  ancestor = false,
   toggleLabel,
   panelId,
   rowId,
@@ -164,9 +168,6 @@ export function NavRow({
         selected
           ? 'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
           : 'hover:bg-sidebar-hover',
-        !selected &&
-          ancestor &&
-          'before:absolute before:top-1/2 before:left-0.5 before:size-1 before:-translate-y-1/2 before:rounded-full before:bg-sidebar-ancestor',
         className,
       )}
     >

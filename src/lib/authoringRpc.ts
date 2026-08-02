@@ -152,6 +152,40 @@ export function createScenario(
   })
 }
 
+/**
+ * Renames. One operation per entity rather than a generic update: an RPC that
+ * can only change a name cannot be talked into changing anything else.
+ */
+export function renamePhase(
+  client: Client,
+  input: { phaseId: string; name: string },
+): Promise<void> {
+  return call<void>(client, 'rename_phase', {
+    phase_id: input.phaseId,
+    new_name: input.name,
+  })
+}
+
+export function renameScenario(
+  client: Client,
+  input: { scenarioId: string; name: string },
+): Promise<void> {
+  return call<void>(client, 'rename_scenario', {
+    scenario_id: input.scenarioId,
+    new_name: input.name,
+  })
+}
+
+export function renamePath(
+  client: Client,
+  input: { pathId: string; name: string },
+): Promise<void> {
+  return call<void>(client, 'rename_path', {
+    path_id: input.pathId,
+    new_name: input.name,
+  })
+}
+
 /** Add a column to a version. `atPosition` inserts; omitted appends. */
 export function addStep(
   client: Client,

@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactElement } from 'react'
-import { AlertTriangle, ArrowLeft, Info } from 'lucide-react'
+import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -7,11 +7,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { Input } from '@/components/ui/input'
 import { SliceScreenComposer } from '@/components/editor/SliceScreenComposer'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -58,12 +53,11 @@ export function CreateSliceSheet({
   onCreated: () => void
   trigger: ReactElement
 }) {
-  const { client } = useSupabase()
+  const { client, isEditPreview } = useSupabase()
   const { openTab } = useViewState()
   const [step, setStep] = useState<'screens' | 'name'>('screens')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [subtitleShown, setSubtitleShown] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -84,7 +78,6 @@ export function CreateSliceSheet({
     setStep('screens')
     setTitle('')
     setDescription('')
-    setSubtitleShown(false)
     setError(null)
   }
 
@@ -123,8 +116,14 @@ export function CreateSliceSheet({
       // at it, and the tab is also where it gets edited.
       openTab({ kind: 'slice', sliceId: slice.id })
     } catch (createError) {
+      const message =
+        createError instanceof Error ? createError.message : String(createError)
+      // In the preview state every write comes back "permission denied", and
+      // raw PostgREST text reads like a bug when it is actually the answer.
       setError(
-        createError instanceof Error ? createError.message : String(createError),
+        isEditPreview && /permission denied/i.test(message)
+          ? 'Edit preview can’t write to the database. To author for real, put the authoring key in .env.local (see .env.example) and restart the dev server.'
+          : message,
       )
     } finally {
       setBusy(false)
@@ -149,7 +148,7 @@ export function CreateSliceSheet({
         side="top"
         align="center"
         sideOffset={10}
-        className="w-84 p-0"
+        className="w-[26rem] p-0"
       >
         <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
           {step === 'name' ? (
@@ -202,32 +201,10 @@ export function CreateSliceSheet({
           </>
         ) : (
           <>
-            <div className="flex flex-col gap-2 px-3 py-3">
+            <div className="flex flex-col gap-2.5 px-3 py-3">
               <label className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-1 text-xs font-medium text-foreground">
+                <span className="text-xs font-medium text-foreground">
                   Title
-                  {/* The subtitle is optional and rarely load-bearing, so it
-                      costs a click rather than a permanent field. */}
-                  {subtitleShown ? null : (
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={
-                          <button
-                            type="button"
-                            aria-label="Add a subtitle"
-                            onClick={() => setSubtitleShown(true)}
-                            className="text-muted-foreground hover:text-foreground"
-                          >
-                            <Info className="size-3" aria-hidden />
-                          </button>
-                        }
-                      />
-                      <TooltipContent side="top" className="text-xs">
-                        Add a subtitle — one line on what this shows, and who
-                        it is for
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
                 </span>
                 <Input
                   value={title}
@@ -237,13 +214,23 @@ export function CreateSliceSheet({
                 />
               </label>
 
-              {subtitleShown ? (
+              {/* Both fields, visible at once — this step exists to name the
+                  thing, so hiding half the name behind a click saved four
+                  pixels and cost a discovery. Required-ness is carried by the
+                  labels, not by which field is on screen. */}
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Subtitle{' '}
+                  <span className="font-normal text-muted-foreground/70">
+                    · optional
+                  </span>
+                </span>
                 <Input
                   value={description}
                   placeholder="What this slice shows, and who it is for"
                   onChange={(event) => setDescription(event.target.value)}
                 />
-              ) : null}
+              </label>
 
               {/*
                 No Actor field. It was asked for, stored, and read by nothing —

@@ -5,6 +5,7 @@ import {
   NavRow,
   NavRowAction,
 } from '@/components/editor/SidebarNav'
+import { StructureRowMenu } from '@/components/editor/StructureRowMenu'
 import {
   Collapsible,
   CollapsibleContent,
@@ -120,19 +121,29 @@ export function SlideNav({
               ancestor={isAncestor}
               // The `+` is attached to the phase, which is what makes it
               // unambiguous: a scenario created from here goes in *this*
-              // phase, so there is no phase picker to get wrong.
+              // phase, so there is no phase picker to get wrong. The `⋯`
+              // beside it renames — the menu hides itself for read-only
+              // sessions, so no gate is needed here.
               trailing={
-                onAddScenario ? (
-                  <NavRowAction
-                    label={`New scenario in ${mainLabel}`}
-                    onClick={() => {
-                      onSetExpanded(main.id, true)
-                      onAddScenario(main.id)
-                    }}
-                  >
-                    <Plus className="size-3" aria-hidden />
-                  </NavRowAction>
-                ) : undefined
+                <>
+                  {onAddScenario ? (
+                    <NavRowAction
+                      label={`New scenario in ${mainLabel}`}
+                      onClick={() => {
+                        onSetExpanded(main.id, true)
+                        onAddScenario(main.id)
+                      }}
+                    >
+                      <Plus className="size-3" aria-hidden />
+                    </NavRowAction>
+                  ) : null}
+                  <StructureRowMenu
+                    kind="phase"
+                    id={main.id}
+                    name={mainLabel}
+                    className="group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100"
+                  />
+                </>
               }
             />
             {hasChildren ? (
@@ -185,6 +196,14 @@ function PhaseScenarios({
                 onSelect={() => onSelect(item.id)}
                 selected={item.selected}
                 size="sm"
+                trailing={
+                  <StructureRowMenu
+                    kind="scenario"
+                    id={item.id}
+                    name={item.label}
+                    className="group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100"
+                  />
+                }
               />
             </li>
           ))}

@@ -98,6 +98,13 @@ export function isIrreversible(entry: ChangeEntry): boolean {
  * `INSERT path_steps`. Where a name was supplied to the RPC it is quoted,
  * because that is the word the person typed and the one they will recognise.
  */
+/** Rename args carry `new_name`, not `name` — quote what it became. */
+function renameTo(entry: ChangeEntry): string {
+  const name =
+    typeof entry.args.new_name === 'string' ? entry.args.new_name.trim() : ''
+  return name ? ` to “${name}”` : ''
+}
+
 export function describeChange(entry: ChangeEntry): string {
   const name = typeof entry.args.name === 'string' ? entry.args.name.trim() : ''
   const quoted = name ? ` “${name}”` : ''
@@ -111,6 +118,12 @@ export function describeChange(entry: ChangeEntry): string {
       return `Added path${quoted}`
     case 'duplicate_path':
       return `Duplicated a path as${quoted || ' a copy'}`
+    case 'rename_phase':
+      return `Renamed a phase${renameTo(entry)}`
+    case 'rename_scenario':
+      return `Renamed a scenario${renameTo(entry)}`
+    case 'rename_path':
+      return `Renamed a path${renameTo(entry)}`
     case 'add_step':
       return name ? `Added step${quoted}` : 'Added a step'
     case 'add_lane':

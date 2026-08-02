@@ -416,7 +416,7 @@ function CanvasModeSwitch({
     <div
       role="group"
       aria-label="Canvas mode"
-      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-full bg-muted/60 p-0.5"
+      className="pointer-events-auto flex shrink-0 items-center gap-0.5"
     >
       {segments.map(({ value, label, icon: Icon }) => (
         <Tooltip key={value}>
@@ -429,10 +429,14 @@ function CanvasModeSwitch({
                 aria-label={label}
                 aria-pressed={mode === value}
                 onClick={() => onChange(value)}
+                // Figma's bottom bar exactly: square-ish slots side by side,
+                // and the active one is a filled brand square, not a paler
+                // grey — "which mode am I in" has to read from across the
+                // room, and neutral-on-neutral does not.
                 className={cn(
-                  'size-6 rounded-full p-0',
+                  'size-7 rounded-md p-0',
                   mode === value
-                    ? 'bg-background text-foreground shadow-sm hover:bg-background hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >

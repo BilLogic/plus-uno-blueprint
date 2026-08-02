@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GripVertical, Scissors, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +14,13 @@ import type { DraftFrame } from '@/lib/sliceValidation'
  * gesture space. Cells between two dividers are one screen, so reordering and
  * re-bucketing are the same drag.
  *
+ * The drag is **pointer events, not HTML5 drag-and-drop**. That API failed
+ * here twice — first silently refusing to start without a `dataTransfer`
+ * payload, then fighting the popover for the pointer — and its failures all
+ * present the same way: the row snaps back and the user is told, in effect,
+ * that they imagined the gesture. Pointer capture has one owner and no such
+ * moods: down on the grip, move updates the slot under the pointer, up drops.
+ *
  * "Screen" is the word here on purpose. A frame is the row in `slice_items`;
  * a screen is what the reader sees in presentation. The code keeps `frame`.
  */
@@ -24,6 +31,17 @@ type DropSlot = { screen: number; index: number }
 const sameSlot = (left: DropSlot | null, right: DropSlot | null) =>
   left?.screen === right?.screen && left?.index === right?.index
 
+/** Read the slot back off the element under the pointer. */
+function slotAt(x: number, y: number): DropSlot | null {
+  const hit = document
+    .elementFromPoint(x, y)
+    ?.closest<HTMLElement>('[data-drop-slot]')
+  if (!hit) return null
+  const [screen, index] = (hit.dataset.dropSlot ?? '').split(':').map(Number)
+  if (Number.isNaN(screen) || Number.isNaN(index)) return null
+  return { screen, index }
+}
+
 export function SliceScreenComposer({
   screens,
   onChange,
@@ -33,23 +51,28 @@ export function SliceScreenComposer({
 }) {
   const [dragging, setDragging] = useState<string | null>(null)
   const [slot, setSlot] = useState<DropSlot | null>(null)
+  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null)
   const scroller = useRef<HTMLDivElement>(null)
+
+  // Latest values for the window listeners, which are bound once per drag.
+  const slotRef = useRef(slot)
+  const screensRef = useRef(screens)
+  useEffect(() => {
+    slotRef.current = slot
+    screensRef.current = screens
+  })
 
   /**
    * Move a cell to an explicit position rather than "into a screen".
    *
-   * The old version appended to whichever screen the pointer was over, which
-   * is what made the drag feel like a drop: a cell aimed between two rows
-   * landed at the bottom of a list instead, and aimed at its own screen it
-   * silently jumped to the end. A slot says exactly where, and the insertion
-   * line drawn from the same slot is therefore a promise the drop keeps.
+   * Remove first, then re-derive the index — pulling the cell out shifts
+   * everything after it, and inserting at the pre-removal index is how a drag
+   * one place down silently becomes a no-op.
    */
   const moveTo = (cell: string, target: DropSlot) => {
-    // Remove first, then re-derive the index — pulling the cell out shifts
-    // everything after it, and inserting at the pre-removal index is how a
-    // drag one place to the right silently becomes a no-op.
+    const current = screensRef.current
     let insertIndex = target.index
-    const withoutCell = screens.map((screen, index) => {
+    const withoutCell = current.map((screen, index) => {
       const position = screen.cells.indexOf(cell)
       if (position === -1) return screen
       if (index === target.screen && position < target.index) insertIndex -= 1
@@ -72,9 +95,48 @@ export function SliceScreenComposer({
     // A screen emptied by the move disappears — an empty screen is not a
     // renderable state, and leaving one behind only fails validation later.
     onChange(next.filter((screen) => screen.cells.length > 0))
-    setDragging(null)
-    setSlot(null)
   }
+
+  /** The whole drag lives on window: the pointer is captured, not trusted. */
+  useEffect(() => {
+    if (dragging === null) return
+
+    const onMove = (event: PointerEvent) => {
+      event.preventDefault()
+      setPointer({ x: event.clientX, y: event.clientY })
+      // The list scrolls, and a drag near its edge has to scroll it — a
+      // screen below the fold is otherwise unreachable.
+      const element = scroller.current
+      if (element) {
+        const box = element.getBoundingClientRect()
+        if (event.clientY < box.top + 28) element.scrollTop -= 10
+        else if (event.clientY > box.bottom - 28) element.scrollTop += 10
+      }
+      const next = slotAt(event.clientX, event.clientY)
+      // Written straight to the ref as well: a pointerup in the same frame
+      // as the last move must not read a slot from one render ago.
+      slotRef.current = next
+      setSlot((current) => (sameSlot(current, next) ? current : next))
+    }
+
+    const onUp = () => {
+      const target = slotRef.current
+      if (target) moveTo(dragging, target)
+      setDragging(null)
+      setSlot(null)
+      setPointer(null)
+    }
+
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- moveTo reads refs
+  }, [dragging])
 
   const splitAt = (screenIndex: number, cellIndex: number) => {
     const screen = screens[screenIndex]
@@ -112,56 +174,32 @@ export function SliceScreenComposer({
     )
   }
 
-  /**
-   * The list scrolls, and HTML drag-and-drop does not scroll it for you — a
-   * screen below the fold was unreachable by drag, which is half of "it drops
-   * instead of moving".
-   */
-  const edgeScroll = (clientY: number) => {
-    const element = scroller.current
-    if (!element) return
-    const box = element.getBoundingClientRect()
-    const margin = 28
-    if (clientY < box.top + margin) element.scrollTop -= 12
-    else if (clientY > box.bottom - margin) element.scrollTop += 12
-  }
-
-  const overSlot = (event: DragEvent, target: DropSlot) => {
-    event.preventDefault()
-    // Without this the browser shows a "copy" cursor and, in Firefox, refuses
-    // the drop outright.
-    event.dataTransfer.dropEffect = 'move'
-    edgeScroll(event.clientY)
-    setSlot((current) => (sameSlot(current, target) ? current : target))
-  }
-
   // Running cell number across screens, derived from the screens above each
   // one rather than a counter mutated during render.
   const offsets = screens.map((_, index) =>
     screens.slice(0, index).reduce((total, screen) => total + screen.cells.length, 0),
   )
 
-  /** The insertion line. Also the drop target — you can only drop on a slot. */
+  /**
+   * The insertion line, and the drop target: while dragging, each slot is a
+   * generous hit band, and the one under the pointer draws the line the drop
+   * will honour. The line is a promise, not a decoration — both are computed
+   * from the same slot.
+   */
   const DropLine = ({ target }: { target: DropSlot }) => {
     const active = dragging !== null && sameSlot(slot, target)
     return (
       <div
-        onDragOver={(event) => overSlot(event, target)}
-        onDrop={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          if (dragging) moveTo(dragging, target)
-        }}
-        // Tall enough to hit while dragging, invisible while not.
+        data-drop-slot={`${target.screen}:${target.index}`}
         className={cn(
-          'relative -my-0.5 h-2 transition-opacity',
-          dragging === null && 'pointer-events-none opacity-0',
+          'relative transition-[height]',
+          dragging === null ? 'h-1' : 'h-4',
         )}
         aria-hidden
       >
         <span
           className={cn(
-            'absolute inset-x-1 top-1/2 h-0.5 -translate-y-1/2 rounded-full transition-colors',
+            'absolute inset-x-1 top-1/2 h-0.5 -translate-y-1/2 rounded-full',
             active ? 'bg-primary' : 'bg-transparent',
           )}
         />
@@ -169,14 +207,15 @@ export function SliceScreenComposer({
     )
   }
 
+  const draggedLabel = dragging ? describeCell(dragging).label : null
+
   return (
     <div
       ref={scroller}
-      className="flex max-h-72 flex-col gap-2 overflow-y-auto"
-      onDragEnd={() => {
-        setDragging(null)
-        setSlot(null)
-      }}
+      className={cn(
+        'flex max-h-80 flex-col gap-2 overflow-y-auto',
+        dragging !== null && 'select-none',
+      )}
     >
       {screens.map((screen, screenIndex) => {
         const holdsDrag = dragging !== null && slot?.screen === screenIndex
@@ -229,18 +268,10 @@ export function SliceScreenComposer({
                     <DropLine target={{ screen: screenIndex, index: cellIndex }} />
 
                     {/*
-                      Where a new screen gets made.
-
-                      This was here before and nobody could find it: the whole
-                      row was `text-transparent` with a transparent rule, so
-                      until the pointer happened to cross two pixels of empty
-                      space there was no sign that a boundary could exist at
-                      all — which reads as "you cannot create screens". The
-                      line is now always drawn, because the boundary is real
-                      whether or not it is hovered; only the words wait.
-
-                      Hidden while dragging, so it does not compete with the
-                      insertion line for the same two pixels.
+                      Where a new screen gets made. The line is always drawn,
+                      because the boundary is real whether or not it is
+                      hovered; only the words wait. Hidden while dragging so
+                      it does not compete with the insertion line.
                     */}
                     {cellIndex > 0 && dragging === null ? (
                       <button
@@ -257,28 +288,29 @@ export function SliceScreenComposer({
                     ) : null}
 
                     <div
-                      draggable
-                      onDragStart={(event) => {
-                        // Some browsers refuse to start a drag at all without
-                        // payload, which is the other half of "it drops
-                        // instead of moving".
-                        event.dataTransfer.setData('text/plain', cell)
-                        event.dataTransfer.effectAllowed = 'move'
-                        setDragging(cell)
-                      }}
-                      onDragEnd={() => {
-                        setDragging(null)
-                        setSlot(null)
-                      }}
                       className={cn(
-                        'flex cursor-grab items-center gap-1.5 rounded-md px-1 py-1 transition-opacity hover:bg-muted/60 active:cursor-grabbing',
+                        'flex items-center gap-1.5 rounded-md px-1 py-1 transition-opacity hover:bg-muted/60',
                         isDragging && 'opacity-40',
                       )}
                     >
-                      <GripVertical
-                        className="size-3 shrink-0 text-muted-foreground/60"
-                        aria-hidden
-                      />
+                      {/*
+                        Only the grip starts a drag. The row also holds a
+                        caption field and a remove button, and a drag that can
+                        start anywhere turns every misjudged click into a
+                        move.
+                      */}
+                      <button
+                        type="button"
+                        aria-label={`Drag to move ${described.label}`}
+                        onPointerDown={(event) => {
+                          event.preventDefault()
+                          setDragging(cell)
+                          setPointer({ x: event.clientX, y: event.clientY })
+                        }}
+                        className="shrink-0 cursor-grab touch-none text-muted-foreground/60 hover:text-foreground active:cursor-grabbing"
+                      >
+                        <GripVertical className="size-3" aria-hidden />
+                      </button>
                       <span className="grid size-4 shrink-0 place-items-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
                         {running}
                       </span>
@@ -318,6 +350,18 @@ export function SliceScreenComposer({
           </div>
         )
       })}
+
+      {/* The dragged row's ghost, under the pointer — without it the only
+          feedback mid-drag is a faded row somewhere off-screen. */}
+      {dragging !== null && pointer !== null ? (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed z-50 max-w-56 truncate rounded-md border border-border bg-popover px-2 py-1 text-xs shadow-md"
+          style={{ left: pointer.x + 10, top: pointer.y + 6 }}
+        >
+          {draggedLabel}
+        </div>
+      ) : null}
     </div>
   )
 }
