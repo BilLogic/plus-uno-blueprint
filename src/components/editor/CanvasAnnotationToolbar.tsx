@@ -422,7 +422,10 @@ function CanvasModeSwitch({
     <div
       role="group"
       aria-label="Canvas mode"
-      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-lg bg-muted p-0.5 inset-shadow-2xs"
+      // A literal tint rather than `bg-muted`: this bar is already `bg-card`,
+      // which resolves to the same near-white, so the token left the track
+      // invisible and the two squares looked loose again.
+      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-lg bg-black/[0.055] p-0.5 dark:bg-white/10"
     >
       {segments.map(({ value, label, icon: Icon }) => (
         <Tooltip key={value}>
@@ -439,10 +442,16 @@ function CanvasModeSwitch({
                 // and the active one is a filled brand square, not a paler
                 // grey — "which mode am I in" has to read from across the
                 // room, and neutral-on-neutral does not.
+                // Figma's own segmented control: the track is the recessed
+                // grey, the active slot is a *raised white square* and the
+                // brand colour lives in its icon. Filling the whole square
+                // with brand made it read as a primary button that happened
+                // to sit in a toolbar, which is the opposite of "one of these
+                // two is currently on".
                 className={cn(
                   'size-6 rounded-md p-0',
                   mode === value
-                    ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
+                    ? 'bg-background text-primary shadow-sm ring-1 ring-black/5 hover:bg-background hover:text-primary'
                     : 'text-muted-foreground hover:bg-transparent hover:text-foreground',
                 )}
               >

@@ -36,9 +36,27 @@ const devAuthoringKey = import.meta.env.DEV
   ? import.meta.env.VITE_SUPABASE_DEV_SERVICE_KEY
   : undefined
 
-/** True when this session can write — dev server, with the authoring key set. */
+/**
+ * True when this session can write — dev server, with a *real* authoring key.
+ *
+ * A placeholder is worse than nothing here, and it fails in the least
+ * obvious way available: the key is used for every request, not just writes,
+ * so `<your-service-key>` left in `.env.local` turns the whole app into
+ * "Invalid API key" — phases, scenarios, cells, all of it — with no hint that
+ * the cause is one unsubstituted line in a file. Treating an obvious
+ * placeholder as absent degrades to the read-only path instead, which works.
+ */
 export function hasDevAuthoringKey(): boolean {
-  return Boolean(import.meta.env.DEV && devAuthoringKey)
+  if (!import.meta.env.DEV || !devAuthoringKey) return false
+  return !looksLikePlaceholder(devAuthoringKey)
+}
+
+/** `<paste-me>`, `your-key-here`, or anything far too short to be a JWT. */
+function looksLikePlaceholder(key: string): boolean {
+  const value = key.trim()
+  if (value.length < 40) return true
+  if (value.startsWith('<') || value.endsWith('>')) return true
+  return /^(your|paste|replace|todo)[-_]/i.test(value)
 }
 
 /**

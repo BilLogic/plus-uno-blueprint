@@ -1,13 +1,41 @@
 import { useState } from 'react'
-import { ExternalLink, Play, Trash2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  ExternalLink,
+  MoreHorizontal,
+  Pencil,
+  Play,
+  Trash2,
+} from 'lucide-react'
 import { DeleteSliceDialog } from '@/components/editor/TabStrip'
 import { NavRow, NavSection } from '@/components/editor/SidebarNav'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { sliceToken, updateSliceMeta } from '@/lib/sliceMutations'
+import { isSliceType } from '@/lib/sliceValidation'
+import { cn } from '@/lib/utils'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -30,6 +58,7 @@ function SliceRow({
   onOpen,
   onPresent,
   onDelete,
+  onRename,
   canWrite,
 }: {
   slice: SliceListEntry
@@ -40,6 +69,7 @@ function SliceRow({
   onOpen: () => void
   onPresent: () => void
   onDelete: () => void
+  onRename: () => void
   canWrite: boolean
 }) {
   // Same row component, states and indent as the Phases tree: the active tab
@@ -53,6 +83,20 @@ function SliceRow({
       onSelect={onOpen}
       selected={isActive}
       ancestor={isOpenInactive}
+      // The same hover-revealed `⋯` phase, scenario and path rows carry.
+      // The context menu below still works and still holds more; this is
+      // what makes it findable without knowing to right-click.
+      trailing={
+        canWrite ? (
+          <SliceRowMenu
+            slice={slice}
+            onOpen={onOpen}
+            onPresent={onPresent}
+            onDelete={onDelete}
+            onRename={onRename}
+          />
+        ) : undefined
+      }
     />
   )
 
@@ -71,10 +115,16 @@ function SliceRow({
           Present
         </ContextMenuItem>
         {canWrite ? (
-          <ContextMenuItem variant="destructive" onClick={onDelete}>
-            <Trash2 className="size-3.5" />
-            Delete slice…
-          </ContextMenuItem>
+          <>
+            <ContextMenuItem onClick={onRename}>
+              <Pencil className="size-3.5" />
+              Rename…
+            </ContextMenuItem>
+            <ContextMenuItem variant="destructive" onClick={onDelete}>
+              <Trash2 className="size-3.5" />
+              Delete slice…
+            </ContextMenuItem>
+          </>
         ) : null}
       </ContextMenuContent>
     </ContextMenu>
@@ -97,6 +147,7 @@ export function SlicesSidebarSection() {
     id: string
     title: string
   } | null>(null)
+  const [renameTarget, setRenameTarget] = useState<SliceListEntry | null>(null)
   // Tracked as the *collapsed* set rather than the open one: a group the
   // user never touched stays open even when it first appears (slices load
   // late, new types get created), while an explicit collapse survives the
@@ -164,6 +215,7 @@ export function SlicesSidebarSection() {
                   onDelete={() =>
                     setDeleteTarget({ id: slice.id, title: slice.title })
                   }
+                  onRename={() => setRenameTarget(slice)}
                 />
               </li>
             ))}
@@ -177,6 +229,205 @@ export function SlicesSidebarSection() {
           if (!open) setDeleteTarget(null)
         }}
       />
+      <RenameSliceDialog
+        slice={renameTarget}
+        open={renameTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setRenameTarget(null)
+        }}
+      />
     </div>
+  )
+}
+
+/**
+ * The hover-revealed `⋯` on a slice row.
+ *
+ * Mirrors `StructureRowMenu` deliberately: the same glyph, the same reveal,
+ * the same order of items. A slice is another thing in the sidebar that can be
+ * renamed and deleted, and a second vocabulary for that would be one to learn
+ * for no reason.
+ */
+function SliceRowMenu({
+  slice,
+  onOpen,
+  onPresent,
+  onRename,
+  onDelete,
+}: {
+  slice: SliceListEntry
+  onOpen: () => void
+  onPresent: () => void
+  onRename: () => void
+  onDelete: () => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            aria-label={`Actions for ${slice.title}`}
+            title={`Actions for ${slice.title}`}
+            onClick={(event) => event.stopPropagation()}
+            className={cn(
+              'flex size-4 shrink-0 items-center justify-center rounded-sm',
+              'opacity-0 transition-opacity duration-150',
+              'group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100',
+              'text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
+              'focus-visible:opacity-100 focus-visible:outline-none',
+              '[@media(pointer:coarse)]:opacity-100',
+            )}
+          >
+            <MoreHorizontal className="size-3" aria-hidden />
+          </button>
+        }
+      />
+      <DropdownMenuContent align="end" className="text-xs">
+        <DropdownMenuItem onClick={onRename}>
+          <Pencil className="size-3.5" aria-hidden />
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onOpen}>
+          <ExternalLink className="size-3.5" aria-hidden />
+          Open in new tab
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onPresent}>
+          <Play className="size-3.5" aria-hidden />
+          Present
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={onDelete}>
+          <Trash2 className="size-3.5" aria-hidden />
+          Delete slice…
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/**
+ * Rename a slice — title and subtitle, the two fields creating one asks for.
+ *
+ * `updateSliceMeta` is a guarded update: it carries the `updated_at` the row
+ * was loaded with and matches on it, so a rename typed over a slice someone
+ * else has since changed fails rather than silently overwriting them. That is
+ * also why the whole meta goes back — type, actor and origin are re-sent
+ * unchanged rather than dropped.
+ */
+function RenameSliceDialog({
+  slice,
+  open,
+  onOpenChange,
+}: {
+  slice: SliceListEntry | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const { client } = useSupabase()
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Re-seed when the dialog opens on a different slice.
+  const [seededFor, setSeededFor] = useState<string | null>(null)
+  if (open && slice && seededFor !== slice.id) {
+    setSeededFor(slice.id)
+    setTitle(slice.title)
+    setDescription(slice.description ?? '')
+    setError(null)
+  }
+
+  const save = async () => {
+    if (!client || !slice || busy || !title.trim()) return
+    setBusy(true)
+    setError(null)
+    let outcome
+    try {
+      outcome = await updateSliceMeta(client, slice.id, sliceToken(slice), {
+        title,
+        description,
+        sliceType: isSliceType(slice.slice_type) ? slice.slice_type : 'custom',
+        actor: slice.actor ?? '',
+        origin: slice.origin ?? 'human',
+      })
+    } catch (renameError) {
+      setBusy(false)
+      setError(
+        renameError instanceof Error ? renameError.message : String(renameError),
+      )
+      return
+    }
+    setBusy(false)
+    if (outcome.status === 'ok') {
+      invalidateQueries('slices')
+      onOpenChange(false)
+      return
+    }
+    // `readWriteOutcome` throws on a real error, so the only other outcome
+    // is a lost race on `updated_at`.
+    setError('This slice changed somewhere else. Reopen it and try again.')
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Rename slice</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-2.5 px-6">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-foreground">Title</span>
+            <Input
+              value={title}
+              autoFocus
+              onChange={(event) => setTitle(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') void save()
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">
+              Subtitle{' '}
+              <span className="font-normal text-muted-foreground/70">
+                · optional
+              </span>
+            </span>
+            <Input
+              value={description}
+              placeholder="What this slice shows, and who it is for"
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </label>
+          {error ? (
+            <Alert variant="warning">
+              <AlertTriangle className="size-3.5" aria-hidden />
+              <AlertDescription className="text-xs">{error}</AlertDescription>
+            </Alert>
+          ) : null}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={busy || !title.trim()}
+            onClick={save}
+          >
+            {busy ? 'Renaming…' : 'Rename'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
