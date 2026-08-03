@@ -11,8 +11,6 @@ import {
   SquarePen,
   Eye,
   Hand,
-  ZoomIn,
-  ZoomOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -239,17 +237,7 @@ function DrawSubpanel() {
   )
 }
 
-export function CanvasAnnotationToolbar({
-  zoom,
-  onZoomIn,
-  onZoomOut,
-  onFit,
-}: {
-  zoom: number
-  onZoomIn: () => void
-  onZoomOut: () => void
-  onFit: () => void
-}) {
+export function CanvasAnnotationToolbar() {
   const { tool, setTool, annotations, clearAnnotations } =
     useCanvasAnnotations()
 
@@ -375,14 +363,6 @@ export function CanvasAnnotationToolbar({
           </>
         )}
 
-        <ToolbarDivider />
-        <CanvasZoomControls
-          zoom={zoom}
-          onZoomIn={onZoomIn}
-          onZoomOut={onZoomOut}
-          onFit={onFit}
-        />
-
         {/* Edit is not a tool, so it sits after a divider at the far end
             rather than in the tool run — and it is absent, never disabled,
             for sessions that cannot write. */}
@@ -396,96 +376,6 @@ export function CanvasAnnotationToolbar({
           </>
         ) : null}
       </div>
-    </div>
-  )
-}
-
-/**
- * Zoom, as buttons.
- *
- * Zoom had only gestures: ⌘+wheel, ⌘±, and — in View only — clicking a
- * blueprint to fit it. Edit gives that click to the cell picker, so on a
- * trackpad-less mouse, or any setup where the modified wheel does not arrive
- * the way the browser expects, Edit mode had *no reachable zoom at all*. A
- * gesture nobody can find is the same as a missing feature, and this is the
- * one piece of canvas chrome where being stuck is unrecoverable: too far out
- * and nothing is readable, too far in and nothing is findable.
- *
- * The percentage is a button too — it fits the whole canvas, which is the
- * thing people actually want when they say they are lost.
- */
-function CanvasZoomControls({
-  zoom,
-  onZoomIn,
-  onZoomOut,
-  onFit,
-}: {
-  zoom: number
-  onZoomIn: () => void
-  onZoomOut: () => void
-  onFit: () => void
-}) {
-  return (
-    <div className="pointer-events-auto flex shrink-0 items-center">
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label="Zoom out"
-              onClick={onZoomOut}
-              className="size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
-            >
-              <ZoomOut className="size-3.5" aria-hidden />
-            </Button>
-          }
-        />
-        <TooltipContent side="top" className="text-xs">
-          Zoom out (⌘−)
-        </TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label={`Zoom ${Math.round(zoom * 100)} percent — fit to view`}
-              onClick={onFit}
-              className="h-7 shrink-0 px-1 text-[11px] tabular-nums text-muted-foreground hover:text-foreground"
-            >
-              {Math.round(zoom * 100)}%
-            </Button>
-          }
-        />
-        <TooltipContent side="top" className="text-xs">
-          Fit to view (⌘0)
-        </TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label="Zoom in"
-              onClick={onZoomIn}
-              className="size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground"
-            >
-              <ZoomIn className="size-3.5" aria-hidden />
-            </Button>
-          }
-        />
-        <TooltipContent side="top" className="text-xs">
-          Zoom in (⌘+)
-        </TooltipContent>
-      </Tooltip>
     </div>
   )
 }

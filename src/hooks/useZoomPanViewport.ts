@@ -203,6 +203,30 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [cancelFitAnimation, commitTransform, fitDurationMs],
   )
 
+  /**
+   * Publish the live transform to React once the gesture goes quiet.
+   *
+   * Trailing rather than leading: during a pinch nothing reads `zoom` that
+   * cannot wait, and the point is to keep React out of the gesture entirely.
+   */
+  const syncTimer = useRef<number | null>(null)
+  const syncZoomToReact = useCallback(() => {
+    if (syncTimer.current !== null) window.clearTimeout(syncTimer.current)
+    syncTimer.current = window.setTimeout(() => {
+      syncTimer.current = null
+      const { pan: p, zoom: z } = transformRef.current
+      setPan(p)
+      setZoom(z)
+    }, 80)
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (syncTimer.current !== null) window.clearTimeout(syncTimer.current)
+    },
+    [],
+  )
+
   const zoomAtPoint = useCallback(
     (clientX: number, clientY: number, scaleFactor: number, syncReact = true) => {
       const el = containerRef.current
@@ -408,20 +432,66 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     suppressResizeRefit,
   ])
 
+  /**
+   * Pinch to zoom, two fingers to pan.
+   *
+   * Bound on **window, in the capture phase**, and then filtered by hit test —
+   * not on the container. Three failures came out of binding it to the
+   * container, and they all look identical to the person using it (the canvas
+   * simply does not move):
+   *
+   * 1. The effect reads `containerRef.current` once. If it runs before that
+   *    node exists the listener is never attached, and since the deps are all
+   *    stable it is never retried — the canvas is permanently unzoomable.
+   * 2. Anything between the pointer and the container that handles `wheel`
+   *    first wins, and the overlays on this canvas are numerous and change.
+   * 3. A pointer over a child that is not a DOM descendant of the container —
+   *    a portalled overlay drawn on top of the canvas — never bubbles to it.
+   *
+   * Capture on window has none of those failure modes: it runs before every
+   * other handler, needs no ref at attach time, and asks
+   * `elementFromPoint`-style containment rather than trusting the event path.
+   *
+   * `{ passive: false }` is what makes `preventDefault` legal here, and
+   * preventing the default is the whole job on macOS — an unprevented
+   * ctrl+wheel is a browser page-zoom, which is why an unzoomable canvas often
+   * came with the *page* zooming instead.
+   */
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-
     const onWheel = (e: WheelEvent) => {
+      const el = containerRef.current
+      if (!el) return
+      const target = e.target
+      if (!(target instanceof Node) || !el.contains(target)) return
+
+      // macOS sends pinch as ctrl+wheel; ⌘+wheel is the mouse equivalent.
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault()
+        e.stopPropagation()
         const scaleFactor = Math.exp(-e.deltaY * 0.01)
-        zoomAtPoint(e.clientX, e.clientY, scaleFactor, true)
+        /*
+          `syncReact: false` — and this is the whole bug.
+
+          A pinch is not one event, it is sixty a second. Syncing React on
+          each one re-rendered the entire canvas subtree, which on a
+          four-hundred-cell blueprint is far more work than a frame has time
+          for, so the main thread saturated and the camera appeared not to
+          move at all. A single ⌘+wheel tick always worked, which is exactly
+          why this looked like "zoom is broken on the trackpad only".
+
+          The pan branch below has always passed `false` for the same reason.
+          The transform is written straight to the element either way; React
+          state only carries `zoom` for chrome that reads it, and that can
+          arrive one frame after the fingers stop.
+        */
+        zoomAtPoint(e.clientX, e.clientY, scaleFactor, false)
+        syncZoomToReact()
         return
       }
 
       if (e.deltaX !== 0 || e.deltaY !== 0) {
         e.preventDefault()
+        e.stopPropagation()
         cancelFitAnimation()
         userAdjustedViewRef.current = true
         const { pan: p, zoom: z } = transformRef.current
@@ -436,9 +506,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
     }
 
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [cancelFitAnimation, commitTransform, zoomAtPoint])
+    window.addEventListener('wheel', onWheel, {
+      passive: false,
+      capture: true,
+    })
+    return () =>
+      window.removeEventListener('wheel', onWheel, { capture: true })
+  }, [cancelFitAnimation, commitTransform, syncZoomToReact, zoomAtPoint])
 
   const handlePointerDown = useCallback(
     (e: PointerEvent) => {
