@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { GripVertical, Scissors, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { describeCell } from '@/lib/canvasCellQuery'
 import { cn } from '@/lib/utils'
 import type { DraftFrame } from '@/lib/sliceValidation'
@@ -231,20 +230,18 @@ export function SliceScreenComposer({
               <span className="shrink-0 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
                 Screen {screenIndex + 1}
               </span>
-              <Input
-                value={screen.caption}
-                placeholder="Caption"
-                className="h-6 min-w-0 flex-1 text-xs"
-                onChange={(event) =>
-                  onChange(
-                    screens.map((entry, index) =>
-                      index === screenIndex
-                        ? { ...entry, caption: event.target.value }
-                        : entry,
-                    ),
-                  )
-                }
-              />
+              {/*
+                No caption field here any more, and the space it took is now
+                the screen's own. Captions are prose about a screen, and prose
+                cannot be written before the screen exists — asking for it
+                mid-grouping interrupts the one job this step has with a blank
+                box per screen, five of which is five blank boxes. They are
+                written in the slice itself, against the cells they describe.
+                `caption` stays on the draft and saves as empty.
+              */}
+              <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                {screen.cells.length} cell{screen.cells.length === 1 ? '' : 's'}
+              </span>
               {screenIndex > 0 ? (
                 <Button
                   type="button"

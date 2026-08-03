@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Eye, Plus, Minus } from 'lucide-react'
-import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
-import { buildBlueprintCellSelectionForId } from '@/lib/blueprintCellConnections'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 
 type Menu = { x: number; y: number; cellId: string }
@@ -25,7 +23,6 @@ const MENU = { width: 176, height: 76 }
  */
 export function CanvasCellContextMenu() {
   const mode = useCanvasModeValue()
-  const detail = useBlueprintCellDetailOptional()
   const pick = useCellPick()
   const [menu, setMenu] = useState<Menu | null>(null)
 
@@ -71,20 +68,29 @@ export function CanvasCellContextMenu() {
   const pickId = resolveBlueprintCellId(menu.cellId) ?? menu.cellId
   const picked = Boolean(pick?.isPicked(pickId))
 
+  /**
+   * Open the cell by asking the cell itself.
+   *
+   * This used to rebuild the selection from the id via
+   * `buildBlueprintCellSelectionForId`, and silently did nothing: a cell
+   * rendered by the compare grid carries an overlay id that does not resolve
+   * back through that path, so the loop fell through every blueprint and
+   * returned. The button already holds the exact selection it was rendered
+   * with, and already opens the panel on double-click — so this replays that
+   * gesture instead of reconstructing its input. One code path for "open this
+   * cell" means the menu cannot drift from the double-click again.
+   */
   const viewDetail = () => {
     setMenu(null)
-    if (!detail) return
-    for (const blueprint of detail.blueprints) {
-      const selection = buildBlueprintCellSelectionForId(
-        blueprint,
-        menu.cellId,
-        '',
-      )
-      if (selection) {
-        detail.selectCell(selection)
-        return
-      }
-    }
+    const element = document.querySelector(
+      `[data-blueprint-cell="${CSS.escape(menu.cellId)}"]`,
+    )
+    if (!(element instanceof HTMLElement)) return
+    // Two clicks, because that is the gesture the cell understands — it
+    // counts a click pair itself rather than listening for `dblclick`, which
+    // never reached it through base-ui's Button.
+    element.click()
+    element.click()
   }
 
   return (

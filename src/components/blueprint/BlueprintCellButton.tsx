@@ -39,6 +39,13 @@ type BlueprintCellButtonProps = {
   'data-blueprint-tech-pill'?: string
 }
 
+/**
+ * The last cell clicked, and when — module level because two clicks on one
+ * cell are two separate renders of it, and state would be reset by the first.
+ */
+let lastClick: { cellId: string | null; at: number } = { cellId: null, at: 0 }
+const DOUBLE_CLICK_MS = 350
+
 export function BlueprintCellButton({
   fill,
   compact = false,
@@ -136,6 +143,34 @@ export function BlueprintCellButton({
     if (annotationTool === 'hand') return
     // The grammar lives in one place — see `cellPickGrammar` for what each
     // modifier means and where it departs from Figma, and why.
+    /*
+      Double-click opens the cell, detected here from the click pair rather
+      than through `onDoubleClick`.
+
+      The prop was the obvious way and it silently did nothing: this renders
+      through base-ui's Button, and the handler never reached the DOM node, so
+      the gesture the right-click menu also depends on was dead. Counting two
+      clicks on the same cell needs no framework cooperation at all.
+
+      The two clicks pick and then unpick, so the selection ends where it
+      started — which is the point: read a cell you are still deciding about
+      without joining it to the slice.
+    */
+    const now = Date.now()
+    const isSecondClick =
+      lastClick.cellId === pickCellId && now - lastClick.at < DOUBLE_CLICK_MS
+    lastClick = { cellId: isSecondClick ? null : pickCellId, at: now }
+
+    if (isSecondClick) {
+      // Undo this click's pick, then open — a double-click is a read, and a
+      // read must not leave the selection one cell different.
+      if (pickCellId && pick && clickPicks(event, pick.plainClick)) {
+        pick.pick(pickCellId, 'toggle')
+      }
+      detail!.selectCell(selection!)
+      return
+    }
+
     if (pickCellId && pick && clickPicks(event, pick.plainClick)) {
       pick.pick(pickCellId, pickModeForClick(event, pick.gathers ?? false))
       return
@@ -143,20 +178,6 @@ export function BlueprintCellButton({
     detail!.selectCell(selection!)
   }
 
-  /**
-   * Open the cell, whatever the click is currently for.
-   *
-   * While gathering cells for a slice, a click picks — which leaves no way to
-   * read a cell you are still deciding about, and deciding is most of the job.
-   * The two clicks that precede this one pick and then unpick, so the net
-   * effect on the selection is nothing: look without joining.
-   */
-  const handleDoubleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (!isInteractive || annotationTool === 'hand') return
-    if (event.currentTarget.closest('[data-canvas-focus-dimmed]')) return
-    event.stopPropagation()
-    detail!.selectCell(selection!)
-  }
 
   const surfaceStyle = {
     ...getBlueprintCellInteractionStyle(fill),
@@ -182,7 +203,6 @@ export function BlueprintCellButton({
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
       {...(isInteractive ? { 'data-blueprint-cell-interactive': '' } : {})}
       onClick={isInteractive ? handleClick : undefined}
-      onDoubleClick={isInteractive ? handleDoubleClick : undefined}
       tabIndex={isInteractive ? 0 : -1}
       className={cn(
         blueprintCellButtonClassName({ compact, variant, className }),

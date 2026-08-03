@@ -58,6 +58,9 @@ function ZoomPanViewportInner({
     zoom,
     isPanning,
     pointerHandlers,
+    zoomIn,
+    zoomOut,
+    fitToView,
   } = useZoomPanViewport({
     resetKey,
     panIgnoreSelector,
@@ -111,7 +114,12 @@ function ZoomPanViewportInner({
       </div>
 
       {showSequenceNav ? <EditorSequenceNav /> : null}
-      <CanvasAnnotationToolbar />
+      <CanvasAnnotationToolbar
+        zoom={zoom}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onFit={() => fitToView({ animate: true })}
+      />
     </div>
     </CanvasSelectionProvider>
   )
