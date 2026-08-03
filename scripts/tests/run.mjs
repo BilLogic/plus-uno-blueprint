@@ -30,6 +30,7 @@ const MODULES = [
   'src/lib/annotationCapture.ts',
   'src/lib/authoringSession.ts',
   'src/lib/sliceType.ts',
+  'src/lib/cellPickGrammar.ts',
 ]
 
 const work = mkdtempSync(join(tmpdir(), 'uno-tests-'))

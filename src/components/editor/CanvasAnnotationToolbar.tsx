@@ -413,10 +413,16 @@ function CanvasModeSwitch({
     // group: everything else in the bar keeps the instant tooltips, because
     // there the icon alone is usually enough.
     <TooltipProvider delay={500}>
+    {/*
+      A track holding two squares, not two loose buttons: the inset well and
+      the shared gutter are what say "these two are one control and one of them
+      is on". Without the track the active square reads as a button that
+      happens to be coloured.
+    */}
     <div
       role="group"
       aria-label="Canvas mode"
-      className="pointer-events-auto flex shrink-0 items-center gap-0.5"
+      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-lg bg-muted p-0.5 inset-shadow-2xs"
     >
       {segments.map(({ value, label, icon: Icon }) => (
         <Tooltip key={value}>
@@ -434,10 +440,10 @@ function CanvasModeSwitch({
                 // grey — "which mode am I in" has to read from across the
                 // room, and neutral-on-neutral does not.
                 className={cn(
-                  'size-7 rounded-md p-0',
+                  'size-6 rounded-md p-0',
                   mode === value
                     ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary hover:text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    : 'text-muted-foreground hover:bg-transparent hover:text-foreground',
                 )}
               >
                 <Icon className="size-3.5" aria-hidden />

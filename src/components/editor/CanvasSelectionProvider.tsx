@@ -15,7 +15,6 @@ import {
 } from '@/contexts/cellPickContext'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
-import { buildBlueprintCellSelectionForId } from '@/lib/blueprintCellConnections'
 import { allCellsInReadingOrder } from '@/lib/canvasCellQuery'
 
 /** Toggle each id in or out, preserving pick order for the ones that stay. */
@@ -49,9 +48,11 @@ function toggleInto(current: string[], cellIds: readonly string[]): string[] {
  * the end: make a slice. So the grammar here is a file list's, not a canvas
  * editor's — click gathers, shift reaches, Escape clears.
  *
- * Editing a single cell is not lost to this: at exactly one pick the detail
- * panel opens, which is what clicking a cell did before and what makes the
- * separate "Edit cell" button unnecessary.
+ * The full table of what each modifier means, and every place it departs from
+ * Figma, is in `cellPickGrammar` — one file, so no two gestures can disagree.
+ *
+ * Editing a single cell is not lost to this: double-click, or right-click →
+ * View cell detail. Both leave the selection exactly as it was.
  */
 export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
   const mode = useCanvasModeValue()
@@ -126,56 +127,42 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   /**
-   * One cell picked means one cell being edited.
+   * Picking no longer opens the detail panel.
    *
-   * This is what pays for the grammar change. Clicking a single cell used to
-   * open the panel because a click *was* a single selection; now a click
-   * gathers, so the panel follows the selection instead — and a second pick
-   * closes it, because there is no such thing as a detail panel for two cells.
+   * It used to: a click *was* a single selection, so one pick meant one cell
+   * being edited. Once a click started gathering that stopped being true —
+   * every first cell of a slice threw a panel across the canvas you were
+   * picking from, and the panel is 320px of the thing you are trying to read.
    *
-   * Two things here are load-bearing, both learned the hard way:
+   * Opening it is now deliberate, and has two gestures of its own:
+   * double-click and right-click → *View cell detail*. Both leave the
+   * selection exactly as it was, which is the whole point — you can read a
+   * cell you are still deciding about.
+   *
+   * What remains here is only the *closing* half: once two or more cells are
+   * picked, a panel describing one of them is describing the wrong thing.
    *
    * The detail context is read through a **ref**, not a dependency. Its value
    * is a fresh object on every render of its provider, and selecting a cell
-   * re-renders that provider — so depending on it directly re-runs this effect,
-   * which selects again, which re-renders. That is not a subtle risk; it is an
-   * immediate "Maximum update depth exceeded".
-   *
-   * And the panel is only driven when the *answer changes*. Without that guard,
-   * closing the panel by hand while one cell is still picked would have it
-   * reopen on the next render, which makes the close button look broken.
+   * re-renders that provider — so depending on it directly re-runs this
+   * effect, which selects again, which re-renders. That is not a subtle risk;
+   * it is an immediate "Maximum update depth exceeded".
    */
   const detailRef = useRef(detail)
   useEffect(() => {
     detailRef.current = detail
   })
 
-  const drivenCellId = useRef<string | null>(null)
+  const wasMultiple = useRef(false)
   useEffect(() => {
     const target = detailRef.current
     if (mode !== 'design' || !target) return
 
-    const only = picked.length === 1 ? picked[0] : null
-    if (only === drivenCellId.current) return
-    drivenCellId.current = only
-
-    if (only === null) {
-      // Two or more picked: the selection toolbar is the surface now, not a
-      // panel describing one cell. Zero picked is left alone — the panel may
-      // have been opened by something other than picking.
-      if (picked.length > 1) target.clearSelection()
-      return
-    }
-
-    for (const blueprint of target.blueprints) {
-      // The scenario name is only used for the breadcrumb, which the panel
-      // re-derives from context — empty is honest rather than a guess.
-      const selection = buildBlueprintCellSelectionForId(blueprint, only, '')
-      if (selection) {
-        target.selectCell(selection)
-        return
-      }
-    }
+    const multiple = picked.length > 1
+    // Only on the transition, so closing the panel by hand while two cells
+    // stay picked does not have it slammed shut again on the next render.
+    if (multiple && !wasMultiple.current) target.clearSelection()
+    wasMultiple.current = multiple
   }, [mode, picked])
 
   useEffect(() => {

@@ -10,6 +10,7 @@ import { CreateSliceSheet } from '@/components/editor/CreateSliceSheet'
 import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCellPick } from '@/contexts/cellPickContext'
+import { cn } from '@/lib/utils'
 
 /** Module-level so an empty selection is the same array on every render. */
 const NO_PICKS: readonly string[] = []
@@ -100,6 +101,7 @@ export function CanvasDesignTools() {
         trigger={
           <Button
             type="button"
+            variant="ghost"
             size="sm"
             aria-label={
               picked.length === 0
@@ -114,14 +116,25 @@ export function CanvasDesignTools() {
                 setArmed(true)
               }
             }}
-            className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+            // Never a filled button. Nothing in this bar is a page's primary
+            // action — it is a tool bar, and a solid brand pill in it reads
+            // as "press me" from the moment the canvas loads, long before
+            // there is anything to press it about. Weight arrives with the
+            // selection instead: ghost at rest, tinted and bordered once
+            // cells are picked, which is also when it starts doing anything.
+            className={cn(
+              'pointer-events-auto h-7 shrink-0 gap-1.5 px-2.5 text-xs',
+              picked.length > 0
+                ? 'border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
           >
             <Diamond className="size-3.5" aria-hidden />
             {armed && picked.length === 0
               ? 'Click cells to add them'
               : 'Make slice'}
             {picked.length > 0 ? (
-              <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-semibold tabular-nums">
+              <span className="rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums">
                 {spannedPaths > 1
                   ? `${picked.length} · ${spannedPaths} blueprints`
                   : picked.length}

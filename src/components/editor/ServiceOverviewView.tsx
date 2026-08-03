@@ -398,7 +398,12 @@ export function ServiceOverviewView({
                 fitTopInset={fitInsets.topInset}
                 fitBottomInset={fitInsets.bottomInset}
                 animateFit={!skipCanvasFitAnimation && contentSettled}
-                showSequenceNav={isDetail && !soloScenarioId}
+                // Off. The prev/next phase pair sat at the bottom corners
+                // flanking the tool bar, which made three bottom controls
+                // that look alike and do unrelated things — and the sidebar
+                // already navigates phases, with the whole list visible
+                // rather than one neighbour at a time.
+                showSequenceNav={false}
                 onResetView={isDetail ? goHome : undefined}
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}

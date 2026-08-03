@@ -6,6 +6,7 @@ import { PathsSidebarSection } from '@/components/editor/PathsSidebarSection'
 import { NavRowAction, NavSection } from '@/components/editor/SidebarNav'
 import { CreatePhaseDialog } from '@/components/editor/CreatePhaseDialog'
 import { CreateBlueprintDialog } from '@/components/editor/CreateBlueprintDialog'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { findFirstLifecycleId } from '@/lib/lifecycle'
 import { SlicesSidebarSection } from '@/components/editor/SlicesSidebarSection'
@@ -33,6 +34,10 @@ export function SlideModeSidebarNav() {
   } = useEditor()
   const { activeKey, activeTab, activateTab } = useViewState()
   const { client, canWrite } = useSupabase()
+  const canvasMode = useCanvasModeValue()
+  // Creating is authoring, so the sidebar's `+`s belong to Edit mode — in
+  // View the sidebar navigates and nothing more.
+  const authoring = canWrite && canvasMode === 'design'
   const [phasesOpen, setPhasesOpen] = useState(true)
   const [phaseDialogOpen, setPhaseDialogOpen] = useState(false)
   const [scenarioPhaseId, setScenarioPhaseId] = useState<string | null>(null)
@@ -111,7 +116,7 @@ export function SlideModeSidebarNav() {
             open={phasesOpen}
             onOpenChange={setPhasesOpen}
             trailing={
-              canWrite && lifecycleId ? (
+              authoring && lifecycleId ? (
                 <NavRowAction
                   label="New phase"
                   onClick={() => {
@@ -145,7 +150,7 @@ export function SlideModeSidebarNav() {
                 isHome={view !== 'detail'}
                 expandedPhaseIds={expandedPhaseIds}
                 onSetExpanded={setPhaseExpanded}
-                onAddScenario={canWrite ? setScenarioPhaseId : undefined}
+                onAddScenario={authoring ? setScenarioPhaseId : undefined}
               />
             )}
           </NavSection>

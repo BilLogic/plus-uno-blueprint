@@ -172,12 +172,16 @@ export function SessionChangesSheet() {
         unsaved it should be the most prominent thing there, and reaching it
         must not require opening a list first.
       */}
+      {/* Tinted, not filled — nothing in this bar is a filled button. It is
+          still the loudest thing here, because it is the only control that
+          appears at all while something is unsaved. */}
       <Button
         type="button"
+        variant="ghost"
         size="sm"
         aria-label={`Save ${changes.length} changes`}
         onClick={save}
-        className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+        className="pointer-events-auto h-7 shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
       >
         <Check className="size-3.5" aria-hidden />
         Save changes

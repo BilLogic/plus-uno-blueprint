@@ -5,6 +5,7 @@ import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { NavRowAction, NavSection } from '@/components/editor/SidebarNav'
 import { CreateVersionDialog } from '@/components/editor/CreateVersionDialog'
 import { StructureRowMenu } from '@/components/editor/StructureRowMenu'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useScenarioPaths } from '@/hooks/useScenarioPaths'
 import { Separator } from '@/components/ui/separator'
@@ -57,11 +58,13 @@ function PathsSection({
  */
 function NewPathAction({ scenarioId }: { scenarioId: string }) {
   const { canWrite } = useSupabase()
+  const mode = useCanvasModeValue()
   const [open, setOpen] = useState(false)
   const paths = useScenarioPaths(canWrite ? scenarioId : null)
   const data = paths.status === 'ready' ? paths.data : null
 
-  if (!canWrite || !data) return null
+  // Edit mode only — creating is authoring.
+  if (!canWrite || !data || mode !== 'design') return null
 
   return (
     <>

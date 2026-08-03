@@ -8,6 +8,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSlices, type SliceListEntry } from '@/hooks/useSlices'
@@ -90,6 +91,8 @@ export function SlicesSidebarSection() {
   const slices = useSlices()
   const { openTab, tabs, activeKey } = useViewState()
   const { canWrite } = useSupabase()
+  // Edit mode only, like every other authoring affordance in this sidebar.
+  const mode = useCanvasModeValue()
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string
     title: string
@@ -153,7 +156,7 @@ export function SlicesSidebarSection() {
                     activeKey !== `present:${slice.id}` &&
                     tabs.some((tab) => tab.sliceId === slice.id)
                   }
-                  canWrite={canWrite}
+                  canWrite={canWrite && mode === 'design'}
                   onOpen={() => openTab({ kind: 'slice', sliceId: slice.id })}
                   onPresent={() =>
                     openTab({ kind: 'present', sliceId: slice.id })

@@ -22,6 +22,7 @@ import {
   DeleteStructureDialog,
   type DeletionTarget,
 } from '@/components/editor/DeleteStructureDialog'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useArchiveAvailable } from '@/hooks/useArchiveAvailable'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -63,13 +64,16 @@ export function StructureRowMenu({
   className?: string
 }) {
   const { client, canWrite } = useSupabase()
+  const mode = useCanvasModeValue()
   const archiveAvailable = useArchiveAvailable()
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState<DeletionTarget | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  if (!canWrite || !client) return null
+  // Edit mode only. Renaming and deleting are authoring, and View mode's
+  // whole premise is that nothing on screen changes anything.
+  if (!canWrite || !client || mode !== 'design') return null
 
   const canDelete =
     kind !== 'phase' && deletionReadiness(archiveAvailable).canDelete

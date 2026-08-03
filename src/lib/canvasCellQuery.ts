@@ -96,7 +96,18 @@ export function describeCell(id: string): { label: string; lane: string } {
   )
   if (!element) return { label: 'Cell', lane: '' }
 
-  const label = (element.textContent ?? '').trim().replace(/\s+/g, ' ')
+  // Overlays live *inside* the cell button, so `textContent` swallows them:
+  // the pick badge turned "Regular Tutor" into "1Regular Tutor", and a lane of
+  // tech pills into "2Slack2Email2Zoom". Clone and strip them rather than
+  // regexing digits off the front — a cell whose text genuinely starts with a
+  // number is a real cell, and stripping it would be a worse bug than the one
+  // being fixed.
+  const clone = element.cloneNode(true) as Element
+  clone
+    .querySelectorAll('[data-slice-pick-badge], [data-slice-sequence-badge]')
+    .forEach((badge) => badge.remove())
+
+  const label = (clone.textContent ?? '').trim().replace(/\s+/g, ' ')
   const row = element.closest('[data-blueprint-row][data-layer-name]')
 
   return {

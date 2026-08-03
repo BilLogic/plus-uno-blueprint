@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { pickModeForMarquee } from '@/lib/cellPickGrammar'
 
 /** Chrome a marquee must never start on — these own their own drags. */
 const IGNORE = [
@@ -135,8 +136,10 @@ export function MarqueeSelection() {
       const ids = [...new Set(hits.map((entry) => entry.id))]
       // A sweep says "these", not "these as well" — replace unless shift asked
       // to widen. This is the one gesture that still narrows a selection in one
-      // move, now that a plain click gathers.
-      if (ids.length > 0) pick.pickMany(ids, start.additive ? 'add' : 'replace')
+      // move, now that a plain click gathers. (See `cellPickGrammar`.)
+      if (ids.length > 0) {
+        pick.pickMany(ids, pickModeForMarquee({ shiftKey: start.additive }))
+      }
     }
 
     root.addEventListener('pointerdown', onPointerDown, true)

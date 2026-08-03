@@ -5,6 +5,7 @@ import {
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
+import { clickPicks, pickModeForClick } from '@/lib/cellPickGrammar'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
@@ -133,15 +134,10 @@ export function BlueprintCellButton({
     // Hand means the canvas is being moved, not read: a click that lands at
     // the end of a pan must not also change the selection.
     if (annotationTool === 'hand') return
-    if (pickCellId && pick && (pick.plainClick || event.shiftKey)) {
-      // A click gathers; shift reaches back to the last one and takes
-      // everything between. A picker that is not gathering (a slice edit
-      // session, where a click means "put this in the active frame") keeps
-      // toggling on shift, because there is no run to reach across.
-      pick.pick(
-        pickCellId,
-        event.shiftKey ? (pick.gathers ? 'range' : 'toggle') : 'toggle',
-      )
+    // The grammar lives in one place — see `cellPickGrammar` for what each
+    // modifier means and where it departs from Figma, and why.
+    if (pickCellId && pick && clickPicks(event, pick.plainClick)) {
+      pick.pick(pickCellId, pickModeForClick(event, pick.gathers ?? false))
       return
     }
     detail!.selectCell(selection!)

@@ -145,6 +145,14 @@ export function EditorShell() {
       : 'blueprint'
 
   return (
+    // The base surface's mode, hoisted to include the sidebar.
+    //
+    // It used to wrap only the canvas, which left the sidebar unable to answer
+    // "are we editing?" — so its `+` and `⋯` were on in View mode, offering to
+    // create and rename things on a surface whose whole premise is that it
+    // changes nothing. A slice tab still mounts its own provider inside this
+    // one and shadows it, which is what keeps the two surfaces independent.
+    <CanvasModeProvider>
     <div
       className="relative flex h-svh overflow-hidden bg-background"
       data-editor-shell
@@ -251,6 +259,7 @@ export function EditorShell() {
         </div>
       </main>
     </div>
+    </CanvasModeProvider>
   )
 }
 
@@ -270,18 +279,16 @@ function ActiveTabContent({
     return isLanding ? (
       <Homepage />
     ) : (
-      // One mode per surface. The base canvas gets its own, independent of
-      // whatever mode a slice tab is in.
-      <CanvasModeProvider>
-        <VisualWalkthroughShell>
-          <div
-            className="absolute inset-0 flex min-h-0 flex-col"
-            data-editor-view
-          >
-            <ServiceOverviewView />
-          </div>
-        </VisualWalkthroughShell>
-      </CanvasModeProvider>
+      // No provider here: the base surface's mode is the shell's, so the
+      // sidebar and this canvas are always in the same one.
+      <VisualWalkthroughShell>
+        <div
+          className="absolute inset-0 flex min-h-0 flex-col"
+          data-editor-view
+        >
+          <ServiceOverviewView />
+        </div>
+      </VisualWalkthroughShell>
     )
   }
   switch (tab.kind) {
