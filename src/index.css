@@ -179,7 +179,12 @@
    * elevation lift, selected is a brand tint plus a full-chroma left rail,
    * and a row that merely *contains* the selection gets the marker dot.
    */
-  --sidebar-hover: var(--accent);
+  /* Hover must go DARKER than the rail, not lighter: the elevation scale
+     brightens, and brightening a 0.985-lightness surface clamps to pure
+     white — a hover state that mathematically cannot be seen. */
+  --sidebar-hover: oklch(
+    calc(var(--surface) - 0.04) var(--grey-c) var(--surface-hue)
+  );
   --sidebar-selected: oklch(0.76 0.15 var(--brand-hue) / 0.2);
   --sidebar-selected-foreground: var(--foreground);
   --sidebar-selected-rail: oklch(0.76 0.15 var(--brand-hue));

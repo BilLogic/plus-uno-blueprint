@@ -239,9 +239,22 @@ export function mergeIntegratedBlueprint(
   )
   const layerNameToId = new Map(layers.map((layer) => [layer.name, layer.id]))
   const comparing = Boolean(options.compare) && selectedPathIds.length >= 2
-  const namedMerge = comparing
-    ? mergeStepsByName(blueprints, primary)
-    : null
+  // Compare merges the *selected* paths' steps only. Folding every path's
+  // steps in appended trailing columns nothing selected ever occupies —
+  // a six-path scenario comparing two of them grew a board three times as
+  // wide as its cells.
+  const compareBlueprints = comparing
+    ? blueprints.filter((blueprint) =>
+        selectedPathIds.includes(blueprint.path.id),
+      )
+    : blueprints
+  const namedMerge =
+    comparing && compareBlueprints.length > 0
+      ? mergeStepsByName(
+          compareBlueprints,
+          pickPrimaryBlueprint(compareBlueprints),
+        )
+      : null
   const steps = namedMerge?.steps ?? mergeSteps(blueprints, primary)
   const stepAlias = namedMerge?.alias ?? null
 
