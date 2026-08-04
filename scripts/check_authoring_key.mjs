@@ -44,10 +44,14 @@ function looksLikePlaceholder(key) {
 const env = readEnv(ENV_LOCAL)
 const key = env.VITE_SUPABASE_DEV_SERVICE_KEY ?? ''
 const previewUi = env.VITE_DEV_AUTHORING_UI === 'true'
+const devEmail = env.VITE_SUPABASE_DEV_EMAIL ?? ''
+const devPassword = env.VITE_SUPABASE_DEV_PASSWORD ?? ''
 
-if (!existsSync(ENV_LOCAL)) {
-  console.log('✗ No .env.local. Authoring is off; the app opens read-only.')
-} else if (!key) {
+if (devEmail && devPassword) {
+  console.log(
+    `✓ Dev sign-in configured (${devEmail}). The app signs in on boot; writes go through RLS as an authenticated user.`,
+  )
+} else if (!existsSync(ENV_LOCAL)) {
   console.log(
     previewUi
       ? '● Edit preview. The Edit UI is visible, and every write will be refused.'
