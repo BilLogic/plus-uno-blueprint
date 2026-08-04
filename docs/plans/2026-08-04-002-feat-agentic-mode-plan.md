@@ -161,13 +161,38 @@ authenticated session, same as Edit's).
 │  │   ├─ ✔ Added a cell      [↺]  │                       │          │
 │  │   └─ ⋯ Adding a cell          │                       │          │
 │  ├───────────────────────────────┤                       │          │
-│⚙ │ ⏹ Stop  [ message……… ]  [➤]  │                       │          │
+│  │                               │ ┌───────────────────┐ │          │
+│  │                               │ │▷ ✋ ◇│⏺ Save (9)│👁 ✎│ │          │
+│⚙ │ ⏹ Stop  [ message……… ]  [➤]  │ └───────────────────┘ │          │
 └──┴───────────────────────────────┴───────────────────────┴──────────┘
-          bottom bar: │ ▷ ✋ ◇ │ ⏺ Save changes (9) │ 👁 ✎ │
+                                     ↑ bottom toolbar floats INSIDE the
+                                       canvas region — it never spans
+                                       under the rail or agent panel
 ```
 
-- Sessions list collapses to the active row once a conversation is going;
-  `[+ New]` always visible.
+- **Bottom toolbar lives on the canvas side.** It is canvas chrome
+  (tools, Save gate, View/Edit) and docks at the canvas region's bottom
+  edge, right of the sidebar — not a window-wide bar.
+- **Sessions = accordion + fuzzy search.** The session list is an
+  Accordion (DS `accordion.tsx`): active session expanded, the rest
+  collapsed to title + change count. A filter Input sits above it with
+  fuzzy matching over session titles — the same filter-as-you-type
+  pattern OwnerTagSelect uses. `[+ New]` always visible.
+
+  ```
+  ├───────────────────────────────┤
+  │ 🔍 [ filter sessions…      ]  │
+  │ ▾ Draft the Warm-Up    12 chg │  ← active, expanded
+  │ ▸ Fill tech specs       4 chg │
+  │ ▸ Q&A about Discovery   0 chg │
+  ├───────────────────────────────┤
+  ```
+- **DS-native components only.** Every agent-UX element composes
+  existing `src/components/ui/` primitives (Accordion, Input, Collapsible,
+  Badge, DropdownMenu, Popover, ContextMenu, Dialog, Skeleton, Spinner) —
+  nothing hand-rolled. The full need→primitive map lives in the harness
+  plan's `ui-inventory.md` section
+  ([2026-08-04-003](./2026-08-04-003-feat-agent-harness-and-skills-plan.md)).
 - Tool calls render as change rows — the same `describeChange` vocabulary
   as the session sheet, with per-row ↺ revert inline in the transcript.
 - Stop aborts via `AbortSignal`; whatever landed stays, revertible.
@@ -355,10 +380,11 @@ ledger entries stamped with the session id.
 
 **③ UI prototype**
 5. Shell restructure: full-width top nav, rail + content panel, floating
-   collapse pill, ✦ tab. (Own commit — it reshapes navigation for
-   everything, agent aside.)
-6. Agent panel: sessions list, transcript with tool rows (`describeChange`
-   reuse), Stop, composer; ⚙ settings with key entry.
+   collapse pill, ✦ tab; bottom toolbar docks inside the canvas region.
+   (Own commit — it reshapes navigation for everything, agent aside.)
+6. Agent panel, DS-native throughout: sessions accordion with fuzzy
+   filter input, transcript with tool rows (`describeChange` reuse),
+   Stop, composer; ⚙ settings popover with key entry.
 7. Sessions persistence migration + restore.
 8. Ledger ✦ badges + per-session counts + agent-touched cell pulse.
 9. Live e2e with Bill's Gemini key (pasted into ⚙ in-app, never chat/repo):
