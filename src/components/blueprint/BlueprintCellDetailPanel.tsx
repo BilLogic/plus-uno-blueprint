@@ -15,6 +15,7 @@ import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
 import { CellOverviewSpec } from '@/components/blueprint/CellOverviewSpec'
 import { CellContentSection } from '@/components/blueprint/CellContentSection'
+import { CellPanelEditor } from '@/components/blueprint/CellPanelEditor'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
@@ -216,9 +217,11 @@ function BlueprintCellDetailPanelBody() {
     isOpen,
     blueprints,
     selectCell,
+    draftCell,
   } =
     useBlueprintCellDetail()
   const [closingSelection, setClosingSelection] = useState(currentSelection)
+  const [closingDraft, setClosingDraft] = useState(draftCell)
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
   const [addingDependency, setAddingDependency] = useState(false)
@@ -227,7 +230,8 @@ function BlueprintCellDetailPanelBody() {
   // panel — pencils, Add dependency, resource editing — is Edit-mode only.
   const canEdit = useCanvasModeValue() === 'design' && canWrite
   const selection = currentSelection ?? closingSelection
-  useCanvasTopOffset(currentSelection !== null)
+  const draft = draftCell ?? closingDraft
+  useCanvasTopOffset(currentSelection !== null || draftCell !== null)
 
   /*
     The drawer's `open` is derived from the selection, full stop.
@@ -245,11 +249,14 @@ function BlueprintCellDetailPanelBody() {
     `closingSelection` survives only to keep the *content* rendered during
     the exit animation, and is cleared when that animation completes.
   */
-  const drawerOpen = currentSelection !== null
+  const drawerOpen = currentSelection !== null || draftCell !== null
 
   useEffect(() => {
     if (currentSelection) setClosingSelection(currentSelection)
   }, [currentSelection])
+  useEffect(() => {
+    if (draftCell) setClosingDraft(draftCell)
+  }, [draftCell])
 
   // A new cell always opens on Dependencies (state reset during render).
   // The arrow editor closes with it — a half-typed arrow carried onto a
@@ -549,6 +556,88 @@ function BlueprintCellDetailPanelBody() {
     return resolveVisualStepPictureEntries(blueprint, stepId)
   }, [blueprints, pathEntry?.pathId, selection?.stepId])
 
+  /*
+    Draft creation: the panel opens on an empty slot's target and nothing is
+    written until Save. Closing the drawer (✕, Escape, Cancel) discards the
+    draft entirely — a cancelled cell never existed.
+  */
+  if (!selection && draft) {
+    const blueprint = getBlueprintForPath(blueprints, draft.pathId)
+    const layerRecord =
+      blueprint?.layers.find((layer) => layer.name === draft.layerName) ?? null
+    const zone =
+      layerRecord && blueprint
+        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        : 'frontstage'
+    const draftLaneStyle = getBlueprintLayerStyle(
+      draft.layerName,
+      zone,
+      layerRecord?.role,
+    )
+
+    return (
+      <Drawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          if (!open) clearSelection()
+        }}
+        onOpenChangeComplete={(open) => {
+          if (!open) {
+            setClosingSelection(null)
+            setClosingDraft(null)
+          }
+        }}
+        modal={false}
+        disablePointerDismissal
+        swipeDirection="right"
+      >
+        <DrawerContent
+          data-cell-detail-panel=""
+          className={cn(
+            CELL_DETAIL_PANEL_TOP_CLASS,
+            '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+            expanded ? 'w-[40rem]' : 'w-[20rem]',
+          )}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
+            <div className="min-w-0 flex-1">
+              <DrawerTitle className="text-sm font-bold tracking-tight">
+                New cell
+              </DrawerTitle>
+              <DrawerDescription className="text-[11px] text-muted-foreground">
+                {`${draft.stepIndex + 1}. ${draft.stepName}`}
+              </DrawerDescription>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Discard new cell"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
+          </DrawerHeader>
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
+            <span
+              className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
+              style={{
+                backgroundColor: draftLaneStyle.lane,
+                color: BLUEPRINT_CELL_TEXT_COLOR,
+              }}
+            >
+              {draft.layerName}
+            </span>
+            <CellPanelEditor cellId={null} draft={draft} onDone={clearSelection} />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
   if (!selection) return null
 
   const isVisualLayer = Boolean(
@@ -805,25 +894,53 @@ function BlueprintCellDetailPanelBody() {
     </div>
   ) : null
 
+  // A pill that says exactly what the title says is the title twice — one of
+  // them yields. The pill keeps the tech identity; the plain-text title only
+  // renders when it adds words the pill does not have.
+  const titleRepeatsPill =
+    showTechPill && techDetailLabel?.trim() === cellTitleText.trim()
+  const editingCell = canEdit && resolvedCellId !== null
+
   const overviewContent = (
     <>
       {pictureBlock}
       <div className="flex min-w-0 flex-col gap-2">
         {showTechPillAboveTitle ? selectedTechPill : null}
-        {titleRow}
+        {/* In edit mode the form's TEXT field *is* the title; repeating it
+            above the field would be the same word twice on one screen. */}
+        {editingCell ? (
+          titleRepeatsPill ? null : laneChip
+        ) : titleRepeatsPill ? (
+          laneChip
+        ) : (
+          titleRow
+        )}
         {showTechPill && !showTechPillAboveTitle ? selectedTechPill : null}
+        {editingCell && titleRepeatsPill ? laneChip : null}
       </div>
-      {detailDescriptionText.trim() ? (
+      {/* The description paragraph is the reading view; the editor shows the
+          same text inside its DESCRIPTION field instead. */}
+      {!editingCell && detailDescriptionText.trim() ? (
         <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
           {detailDescriptionText.trim()}
         </p>
-      ) : !showTechPill ? (
+      ) : !editingCell && !showTechPill ? (
         <p className="-mt-3 text-sm text-muted-foreground">No content</p>
       ) : null}
-      {/* Basic info (text, description, owners) first; the function/form/
-          value spec is a deeper layer of the same cell and reads below it. */}
-      <CellContentSection cellId={resolvedCellId} />
-      <CellOverviewSpec cellId={resolvedCellId} />
+      {editingCell ? (
+        <CellPanelEditor
+          cellId={resolvedCellId}
+          fallbackDescription={detailDescriptionText.trim()}
+          onDone={clearSelection}
+        />
+      ) : (
+        <>
+          {/* Basic info (text, description, owners) first; the function/form/
+              value spec is a deeper layer of the same cell and reads below it. */}
+          <CellContentSection cellId={resolvedCellId} />
+          <CellOverviewSpec cellId={resolvedCellId} />
+        </>
+      )}
     </>
   )
 
@@ -838,7 +955,10 @@ function BlueprintCellDetailPanelBody() {
         if (!open) clearSelection()
       }}
       onOpenChangeComplete={(open) => {
-        if (!open) setClosingSelection(null)
+        if (!open) {
+          setClosingSelection(null)
+          setClosingDraft(null)
+        }
       }}
       modal={false}
       disablePointerDismissal

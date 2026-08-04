@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { clearCellDependency, setCellDependency } from '@/lib/authoringRpc'
+import { cn } from '@/lib/utils'
 import {
   DEPENDENCY_KINDS,
   DEPENDENCY_KIND_HINTS,
@@ -133,19 +134,33 @@ export function CellDependencyEditor({
         </ul>
       ) : null}
 
-      <div className="flex flex-wrap gap-1.5">
-        {DEPENDENCY_KINDS.map((kind) => (
-          <Button
-            key={kind}
-            type="button"
-            size="sm"
-            variant={draft.kind === kind ? 'default' : 'outline'}
-            className="h-7 text-xs"
-            onClick={() => setDraft((current) => ({ ...current, kind }))}
-          >
-            {DEPENDENCY_KIND_LABELS[kind]}
-          </Button>
-        ))}
+      {/* One control, two positions — the same track-and-raised-square
+          vocabulary as the View/Edit switch, because that is what this is:
+          a mode for the connection, not two competing buttons. */}
+      <div
+        role="group"
+        aria-label="Connection kind"
+        className="flex w-fit items-center gap-0.5 rounded-lg bg-black/[0.055] p-0.5 dark:bg-white/10"
+      >
+        {DEPENDENCY_KINDS.map((kind) => {
+          const active = draft.kind === kind
+          return (
+            <button
+              key={kind}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setDraft((current) => ({ ...current, kind }))}
+              className={cn(
+                'flex h-6 items-center rounded-md px-2.5 text-[11px] font-medium transition-colors',
+                active
+                  ? 'bg-background text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {DEPENDENCY_KIND_LABELS[kind]}
+            </button>
+          )
+        })}
       </div>
       <p className="text-xs text-muted-foreground">
         {DEPENDENCY_KIND_HINTS[draft.kind]}

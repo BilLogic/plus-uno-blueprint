@@ -571,6 +571,11 @@ function CompareLayerRow({
                 pathId={blueprint.path.id}
                 layerId={blueprintLayer.id}
                 stepId={step.id}
+                layerName={layer.name}
+                stepName={step.name}
+                stepIndex={stepIndex}
+                scenarioName={scenarioName}
+                phaseName={phaseName}
                 width={STEP_COLUMN_WIDTH}
                 selfStretch
               />

@@ -617,6 +617,11 @@ function BlueprintSwimLane({
                 pathId={blueprint.path.id}
                 layerId={layerId}
                 stepId={step.id}
+                layerName={layerName}
+                stepName={step.name}
+                stepIndex={stepIndex}
+                scenarioName={scenarioName}
+                phaseName={phaseName}
                 width={STEP_COLUMN_WIDTH}
                 minHeight={rowMinHeight}
               />

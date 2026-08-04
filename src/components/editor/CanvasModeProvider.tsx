@@ -1,21 +1,44 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import {
   CanvasModeContext,
   type CanvasMode,
 } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 
-/**
- * Holds one canvas surface's mode.
- *
- * Mounted per viewport rather than once at the shell, so the base canvas and
- * each slice tab keep their own. Deliberately not in the URL: mode is a
- * working state, not a destination, and a shared link should open in View —
- * the reader's mode — whatever the sender was doing.
- */
+/*
+  One mode for the whole session, module-level.
+
+  This began as per-surface state ("editing a slice while reading the base
+  blueprint is a normal thing to want") and lost to how it actually feels:
+  flipping to Edit, opening a slice tab, and landing back in View reads as
+  the switch not having taken. Mode is the person's posture, not the
+  surface's — it follows them across tabs. Deliberately not in the URL: a
+  shared link should open in View whatever the sender was doing.
+*/
+let sharedMode: CanvasMode = 'view'
+let listeners: Array<() => void> = []
+
+function setSharedMode(mode: CanvasMode) {
+  if (mode === sharedMode) return
+  sharedMode = mode
+  for (const listener of listeners) listener()
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners = [...listeners, listener]
+  return () => {
+    listeners = listeners.filter((entry) => entry !== listener)
+  }
+}
+
+/** Provides the shared mode to one canvas surface. */
 export function CanvasModeProvider({ children }: { children: ReactNode }) {
   const { canWrite } = useSupabase()
-  const [mode, setMode] = useState<CanvasMode>('view')
+  const mode = useSyncExternalStore(
+    subscribe,
+    () => sharedMode,
+    () => 'view' as CanvasMode,
+  )
 
   const value = useMemo(
     () => ({
@@ -23,7 +46,7 @@ export function CanvasModeProvider({ children }: { children: ReactNode }) {
       // to `view` means a session that loses access mid-edit degrades to
       // reading rather than to a broken editor.
       mode: canWrite ? mode : ('view' as CanvasMode),
-      setMode,
+      setMode: setSharedMode,
       available: canWrite,
     }),
     [canWrite, mode],

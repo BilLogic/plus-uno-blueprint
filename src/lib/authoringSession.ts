@@ -173,6 +173,13 @@ export function describeChange(entry: ChangeEntry): string {
       return 'Edited a cell’s resources'
     case 'update_cell_spec':
       return 'Specified function & form'
+    case 'rename_owner_tag': {
+      const from = typeof entry.args.from === 'string' ? entry.args.from : ''
+      const to = typeof entry.args.to === 'string' ? entry.args.to : ''
+      return from && to
+        ? `Renamed owner tag “${from}” to “${to}”`
+        : 'Renamed an owner tag'
+    }
     case 'set_cell_dependency':
       return 'Connected two cells'
     case 'clear_cell_dependency':

@@ -46,6 +46,23 @@ export async function executeRevert(
         await updateCellSpec(client, cellId, update)
         return
       }
+      case 'rename_owner_tag': {
+        // Bulk tag rename, inverted: put the old name back everywhere the
+        // new one now appears, in both owner columns.
+        const from = revert.args.from as string
+        const to = revert.args.to as string
+        const ownerUpdate = await client
+          .from('cells')
+          .update({ owner: to })
+          .eq('owner', from)
+        if (ownerUpdate.error) throw toAuthoringError(ownerUpdate.error)
+        const perceivedUpdate = await client
+          .from('cells')
+          .update({ perceived_owner: to })
+          .eq('perceived_owner', from)
+        if (perceivedUpdate.error) throw toAuthoringError(perceivedUpdate.error)
+        return
+      }
       case 'update_cell_resources': {
         // The captured value is the full pre-write links array — write it
         // back verbatim rather than rebuilding through the draft validator,

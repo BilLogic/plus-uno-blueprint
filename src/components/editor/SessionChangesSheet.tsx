@@ -1,4 +1,4 @@
-import { useSyncExternalStore, useState } from 'react'
+import { useSyncExternalStore, useEffect, useState } from 'react'
 import { Flag, Check, Crosshair, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,6 +35,66 @@ function useSessionChanges(): ChangeEntry[] {
   return useSyncExternalStore(subscribeToSession, sessionSnapshot, () => EMPTY)
 }
 
+/** Revert one entry and clean up after it — shared by the row and ⌘Z. */
+async function revertEntry(
+  client: NonNullable<ReturnType<typeof useSupabase>['client']>,
+  entry: ChangeEntry,
+): Promise<void> {
+  await executeRevert(client, entry)
+  // The change is gone from the database, so it leaves the list — and the
+  // grid re-reads, because every revert is structural or content-bearing.
+  forgetChange(entry.id)
+  invalidateQueries('lifecycle-phases')
+  invalidateQueries('canvas-blueprints')
+  const cellId =
+    typeof entry.args.cell_id === 'string' ? entry.args.cell_id : null
+  if (cellId) {
+    invalidateQueries(`cell-content:${cellId}`)
+    invalidateQueries(`cell-spec:${cellId}`)
+  }
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target.isContentEditable
+  )
+}
+
+/**
+ * ⌘Z reverts the most recent change that captured an inverse.
+ *
+ * Scoped away from text fields — inside an input the browser's own undo is
+ * the one people mean. Skips entries with no inverse (deletes) rather than
+ * silently doing nothing forever: the newest revertible change is the
+ * answer to "undo" even when a non-revertible one landed after it.
+ */
+function useUndoHotkey(changes: ChangeEntry[]) {
+  const { client } = useSupabase()
+
+  useEffect(() => {
+    if (!client || changes.length === 0) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'z')
+        return
+      if (event.shiftKey) return
+      if (isEditableTarget(event.target)) return
+      const last = [...changes].reverse().find((entry) => entry.revert)
+      if (!last) return
+      event.preventDefault()
+      void revertEntry(client, last).catch((error) => {
+        console.error('[authoring] ⌘Z revert failed:', error)
+      })
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [changes, client])
+}
+
 /**
  * What has changed since Edit was turned on, and the way to keep it.
  *
@@ -50,6 +110,7 @@ export function SessionChangesSheet() {
   const changes = useSessionChanges()
   const detail = useBlueprintCellDetailOptional()
   const [confirming, setConfirming] = useState(false)
+  useUndoHotkey(changes)
 
   if (changes.length === 0) return null
 
@@ -210,16 +271,7 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
     setBusy(true)
     setError(null)
     try {
-      await executeRevert(client, entry)
-      // The change is gone from the database, so it leaves the list — and the
-      // grid re-reads, because every revert is structural or content-bearing.
-      forgetChange(entry.id)
-      invalidateQueries('lifecycle-phases')
-      invalidateQueries('canvas-blueprints')
-      if (cellId) {
-        invalidateQueries(`cell-content:${cellId}`)
-        invalidateQueries(`cell-spec:${cellId}`)
-      }
+      await revertEntry(client, entry)
     } catch (revertError) {
       setError(
         revertError instanceof Error ? revertError.message : String(revertError),
