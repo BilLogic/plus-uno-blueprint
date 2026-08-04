@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -39,11 +44,21 @@ export function CellSpecEditor({
     setBusy(true)
     setError(null)
     try {
-      await updateCellSpec(client, cellId, {
-        function: functionText,
-        form: formText,
-        valueProps,
-      })
+      await updateCellSpec(
+        client,
+        cellId,
+        {
+          function: functionText,
+          form: formText,
+          valueProps,
+        },
+        // Pre-edit values, captured as the revert state.
+        {
+          function: spec?.function ?? '',
+          form: spec?.form ?? '',
+          valueProps: parseValueProps(spec?.value_props ?? null),
+        },
+      )
       // The panel reads the spec through the shared query cache; drop this
       // cell's entry so the read view shows what was just written.
       invalidateQueries(`cell-spec:${cellId}`)
@@ -157,14 +172,19 @@ export function CellSpecEditor({
   )
 }
 
+/** Label with its explanation folded into a hover tooltip, not inline text. */
 function FieldLabel({ label, hint }: { label: string; hint: string }) {
   return (
-    <div className="flex items-baseline gap-1.5">
-      <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-        {label}
-      </span>
-      <span className="text-[10px] text-muted-foreground/70">{hint}</span>
-    </div>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <span className="w-fit text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            {label}
+          </span>
+        }
+      />
+      <TooltipContent side="left">{hint}</TooltipContent>
+    </Tooltip>
   )
 }
 

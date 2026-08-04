@@ -1,17 +1,19 @@
 import { useState } from 'react'
-import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
-import {
-  updateCellContent,
-  updateCellResources,
-  type ResourceDraft,
-} from '@/lib/cellContentMutations'
-import { validateResourceUrl } from '@/lib/resourceUrl'
-import type { CellLink } from '@/types/blueprint'
+import { updateCellContent } from '@/lib/cellContentMutations'
 
+/**
+ * Field label with its explanation folded into a hover tooltip — the caption
+ * text under every input made the form read twice as long as it is.
+ */
 function Field({
   label,
   hint,
@@ -21,25 +23,37 @@ function Field({
   hint?: string
   children: React.ReactNode
 }) {
+  const labelText = (
+    <span className="w-fit text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+      {label}
+    </span>
+  )
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-        {label}
-      </span>
+      {hint ? (
+        <Tooltip>
+          <TooltipTrigger render={labelText} />
+          <TooltipContent side="left">{hint}</TooltipContent>
+        </Tooltip>
+      ) : (
+        labelText
+      )}
       {children}
-      {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
     </label>
   )
 }
 
 /**
- * Inline editor for what a cell says, and what it links to.
+ * Inline editor for what a cell says.
  *
  * Two owner fields, not one, because they answer different questions and the
  * gap between them is usually the finding: *owner* is the team accountable for
  * the step; *perceived owner* is who the person on the other side thinks they
  * are dealing with. A blueprint where those differ everywhere is describing a
  * service that feels fragmented no matter how well each team performs.
+ *
+ * Resources are deliberately not here — they live on the Resources tab, which
+ * edits in place. One concern per surface.
  */
 export function CellContentEditor({
   cellId,
@@ -47,7 +61,6 @@ export function CellContentEditor({
   description,
   owner,
   perceivedOwner,
-  links,
   onDone,
 }: {
   cellId: string
@@ -55,7 +68,6 @@ export function CellContentEditor({
   description: string
   owner: string
   perceivedOwner: string
-  links: CellLink[]
   onDone: () => void
 }) {
   const { client } = useSupabase()
@@ -63,42 +75,27 @@ export function CellContentEditor({
   const [descriptionText, setDescriptionText] = useState(description)
   const [ownerText, setOwnerText] = useState(owner)
   const [perceivedText, setPerceivedText] = useState(perceivedOwner)
-  const [resources, setResources] = useState<ResourceDraft[]>(() =>
-    links
-      .filter((link) => link.type === 'url' && link.url?.trim())
-      .map((link) => ({ label: link.label, url: link.url ?? '' })),
-  )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Checked as they type rather than on save: a bad link is worth knowing
-  // about while the cursor is still in the field that caused it.
-  const urlProblems = resources.map((resource) =>
-    resource.url.trim() ? validateResourceUrl(resource.url).ok === false : false,
-  )
-  const blocked = !contentText.trim() || urlProblems.some(Boolean)
-
-  const setResource = (index: number, patch: Partial<ResourceDraft>) =>
-    setResources((current) =>
-      current.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)),
-    )
+  const blocked = !contentText.trim()
 
   const handleSave = async () => {
     if (!client || busy || blocked) return
     setBusy(true)
     setError(null)
     try {
-      await updateCellContent(client, cellId, {
-        content: contentText,
-        description: descriptionText,
-        owner: ownerText,
-        perceivedOwner: perceivedText,
-      })
-      await updateCellResources(
+      await updateCellContent(
         client,
         cellId,
-        links,
-        resources.filter((resource) => resource.url.trim()),
+        {
+          content: contentText,
+          description: descriptionText,
+          owner: ownerText,
+          perceivedOwner: perceivedText,
+        },
+        // The props are the pre-edit values — captured as the revert state.
+        { content, description, owner, perceivedOwner },
       )
       // The grid holds the cell's text, so its read has to be dropped too —
       // invalidating only the panel's own query would leave the box on the
@@ -131,82 +128,23 @@ export function CellContentEditor({
       </Field>
 
       <div className="grid grid-cols-2 gap-2">
-        <Field label="Owner">
+        <Field label="Owner" hint="The team accountable for this moment.">
           <Input
             value={ownerText}
             placeholder="Tutor Ops"
             onChange={(event) => setOwnerText(event.target.value)}
           />
         </Field>
-        <Field label="Perceived owner">
+        <Field
+          label="Perceived owner"
+          hint="Who the person on the other side thinks they are dealing with. A gap between the two is a finding."
+        >
           <Input
             value={perceivedText}
             placeholder="PLUS"
             onChange={(event) => setPerceivedText(event.target.value)}
           />
         </Field>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-          Resources
-        </span>
-        {resources.map((resource, index) => (
-          <div key={index} className="flex flex-col gap-1">
-            <div className="flex items-center gap-1.5">
-              <Input
-                value={resource.label}
-                placeholder="Label"
-                className="h-7 w-28 text-xs"
-                onChange={(event) =>
-                  setResource(index, { label: event.target.value })
-                }
-              />
-              <Input
-                value={resource.url}
-                placeholder="https://…"
-                className="h-7 flex-1 text-xs"
-                aria-invalid={urlProblems[index] || undefined}
-                onChange={(event) =>
-                  setResource(index, { url: event.target.value })
-                }
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Remove resource ${index + 1}`}
-                onClick={() =>
-                  setResources((current) =>
-                    current.filter((_, i) => i !== index),
-                  )
-                }
-              >
-                <X className="size-3" />
-              </Button>
-            </div>
-            {urlProblems[index] ? (
-              <p className="pl-1 text-xs text-destructive">
-                {validateResourceUrl(resource.url).ok
-                  ? null
-                  : (validateResourceUrl(resource.url) as { problem: string })
-                      .problem}
-              </p>
-            ) : null}
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
-          onClick={() =>
-            setResources((current) => [...current, { label: '', url: '' }])
-          }
-        >
-          <Plus className="size-3" />
-          Add resource
-        </Button>
       </div>
 
       {!contentText.trim() ? (

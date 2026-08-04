@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { toAuthoringError } from '@/lib/authoringErrors'
-import { recordChange } from '@/lib/authoringSession'
+import { recordChange, type RevertSpec } from '@/lib/authoringSession'
 
 type Client = SupabaseClient<Database>
 
@@ -85,6 +85,7 @@ async function call<T>(
   client: Client,
   fn: string,
   args: Record<string, unknown>,
+  revert?: RevertSpec,
 ): Promise<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see doc above
   const { data, error } = await (client.rpc as any)(fn, args)
@@ -96,8 +97,62 @@ async function call<T>(
   // Logged here and only here, *after* the call succeeded. That placement is
   // what makes the session list trustworthy: it records writes that actually
   // landed, so it can never claim a change the database does not have.
-  recordChange(fn, args)
+  recordChange(fn, args, revert ?? deriveRevert(fn, args, data))
   return data as T
+}
+
+/**
+ * The inverse of a change, derived at the only moment it is cheap: right
+ * after the call, while the returned id is in hand.
+ *
+ * Only *creations* derive an inverse here — the created thing's id came back
+ * from the call, and deleting it restores the world exactly. Renames and
+ * reorders need before-state their wrappers must pass explicitly; deletes
+ * have no inverse RPC and stay non-revertible per row.
+ */
+function deriveRevert(
+  fn: string,
+  args: Record<string, unknown>,
+  data: unknown,
+): RevertSpec | undefined {
+  switch (fn) {
+    case 'add_step':
+      return typeof data === 'string'
+        ? { fn: 'remove_step', args: { path_id: args.path_id, step_id: data } }
+        : undefined
+    case 'add_lane':
+      return {
+        fn: 'remove_lane',
+        args: { scenario_id: args.scenario_id, lane_name: args.name },
+      }
+    case 'upsert_cell':
+      // The app only calls upsert_cell on empty slots, so the upsert was a
+      // create and deleting it is a true inverse. If an update path ever
+      // appears, it must pass its own revert.
+      return typeof data === 'string'
+        ? { fn: 'delete_cell', args: { cell_id: data } }
+        : undefined
+    case 'create_scenario': {
+      const scenario = data as CreatedScenario | null
+      return scenario?.scenario_id
+        ? {
+            fn: 'delete_scenario',
+            args: { scenario_id: scenario.scenario_id },
+          }
+        : undefined
+    }
+    case 'create_path':
+    case 'duplicate_path':
+      return typeof data === 'string'
+        ? { fn: 'delete_path', args: { path_id: data } }
+        : undefined
+    case 'set_cell_dependency':
+      return typeof data === 'string'
+        ? { fn: 'clear_cell_dependency', args: { dependency_id: data } }
+        : undefined
+    default:
+      return undefined
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -158,32 +213,53 @@ export function createScenario(
  */
 export function renamePhase(
   client: Client,
-  input: { phaseId: string; name: string },
+  input: { phaseId: string; name: string; previousName?: string },
 ): Promise<void> {
-  return call<void>(client, 'rename_phase', {
-    phase_id: input.phaseId,
-    new_name: input.name,
-  })
+  return call<void>(
+    client,
+    'rename_phase',
+    { phase_id: input.phaseId, new_name: input.name },
+    input.previousName
+      ? {
+          fn: 'rename_phase',
+          args: { phase_id: input.phaseId, new_name: input.previousName },
+        }
+      : undefined,
+  )
 }
 
 export function renameScenario(
   client: Client,
-  input: { scenarioId: string; name: string },
+  input: { scenarioId: string; name: string; previousName?: string },
 ): Promise<void> {
-  return call<void>(client, 'rename_scenario', {
-    scenario_id: input.scenarioId,
-    new_name: input.name,
-  })
+  return call<void>(
+    client,
+    'rename_scenario',
+    { scenario_id: input.scenarioId, new_name: input.name },
+    input.previousName
+      ? {
+          fn: 'rename_scenario',
+          args: { scenario_id: input.scenarioId, new_name: input.previousName },
+        }
+      : undefined,
+  )
 }
 
 export function renamePath(
   client: Client,
-  input: { pathId: string; name: string },
+  input: { pathId: string; name: string; previousName?: string },
 ): Promise<void> {
-  return call<void>(client, 'rename_path', {
-    path_id: input.pathId,
-    new_name: input.name,
-  })
+  return call<void>(
+    client,
+    'rename_path',
+    { path_id: input.pathId, new_name: input.name },
+    input.previousName
+      ? {
+          fn: 'rename_path',
+          args: { path_id: input.pathId, new_name: input.previousName },
+        }
+      : undefined,
+  )
 }
 
 /** Add a column to a version. `atPosition` inserts; omitted appends. */

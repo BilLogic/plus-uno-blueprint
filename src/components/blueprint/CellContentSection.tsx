@@ -29,11 +29,14 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
     the next cell keeps the posture the mode implies.
   */
   const mode = useCanvasModeValue()
-  const [editing, setEditing] = useState(mode === 'design' && canWrite)
+  // View mode is read-only, full stop — the edit affordance itself is
+  // Edit-mode furniture. Switching modes is how one starts editing.
+  const canEdit = mode === 'design' && canWrite
+  const [editing, setEditing] = useState(canEdit)
   const [editingFor, setEditingFor] = useState(cellId)
   if (editingFor !== cellId) {
     setEditingFor(cellId)
-    setEditing(mode === 'design' && canWrite)
+    setEditing(canEdit)
   }
 
   if (!configured || !client || !cellId) return null
@@ -42,7 +45,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
   const cell = result.status === 'ready' ? result.data : null
   if (!cell) return null
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <CellContentEditor
         cellId={cellId}
@@ -50,7 +53,6 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
         description={cell.description ?? ''}
         owner={cell.owner ?? ''}
         perceivedOwner={cell.perceived_owner ?? ''}
-        links={cell.links}
         onDone={() => setEditing(false)}
       />
     )
@@ -60,7 +62,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
   const perceived = cell.perceived_owner?.trim() ?? ''
   const hasOwners = owner.length > 0 || perceived.length > 0
 
-  if (!hasOwners && !canWrite) return null
+  if (!hasOwners && !canEdit) return null
 
   return (
     <div className="group/content flex flex-col gap-2">
@@ -72,7 +74,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
           ) : null}
         </div>
       ) : null}
-      {canWrite ? (
+      {canEdit ? (
         <Button
           type="button"
           variant="ghost"
@@ -83,7 +85,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
           onClick={() => setEditing(true)}
         >
           <Pencil className="size-3" />
-          {hasOwners ? 'Edit' : 'Edit text & resources'}
+          {hasOwners ? 'Edit' : 'Edit text'}
         </Button>
       ) : null}
     </div>

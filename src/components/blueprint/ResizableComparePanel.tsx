@@ -73,7 +73,11 @@ export function ResizableComparePanel({
   const resolvedMinWidth = minWidth ?? COMPARE_MIN_PANEL_WIDTH
   const resolvedMinHeight = minHeight ?? COMPARE_MIN_PANEL_HEIGHT
   const contentMeasureRef = useRef<HTMLDivElement>(null)
-  const [measuredContentHeight, setMeasuredContentHeight] = useState(0)
+  const [measuredContent, setMeasuredContent] = useState({
+    width: 0,
+    height: 0,
+  })
+  const measuredContentHeight = measuredContent.height
   const [userSize, setUserSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
@@ -86,9 +90,12 @@ export function ResizableComparePanel({
     if (!element) return
 
     const measure = () => {
-      // Layout height only. `scrollHeight` also counts arrow overlays and path
+      // Layout size only. `scrollHeight` also counts arrow overlays and path
       // frames that bleed past the board, which would pad the panel with gray.
-      setMeasuredContentHeight(element.offsetHeight)
+      setMeasuredContent({
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+      })
     }
 
     measure()
@@ -103,17 +110,33 @@ export function ResizableComparePanel({
     measuredContentHeight > 0
       ? measuredContentHeight + scrollPaddingY
       : null
+  // Horizontal chrome around the content — must match the padding applied to
+  // the content container below.
+  const contentPaddingX =
+    ARROW_VIEWPORT_PAD * 2 +
+    (COMPARE_PANEL_PADDING_RIGHT - COMPARE_PANEL_PADDING)
+  const measuredPanelWidth =
+    measuredContent.width > 0 ? measuredContent.width + contentPaddingX : null
 
+  /*
+    The panel never scrolls internally. It lives on a zoomable, pannable
+    canvas — that camera *is* the scrolling — so a second scrollbar inside
+    the panel meant two nested viewports fighting over the same wheel. The
+    estimate functions size the panel up front; when the rendered content
+    turns out larger than the estimate, the panel grows to fit instead of
+    growing a scrollbar. `lockHeight` still sets the shared floor across a
+    phase row, but it is a floor, not a ceiling.
+  */
   const targetWidth = Math.max(
     resolvedMinWidth,
     defaultWidth ?? resolvedMinWidth,
+    measuredPanelWidth ?? 0,
   )
-  const targetHeight = lockHeight
-    ? Math.max(resolvedMinHeight, defaultHeight ?? resolvedMinHeight)
-    : Math.max(
-        resolvedMinHeight,
-        measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
-      )
+  const targetHeight = Math.max(
+    resolvedMinHeight,
+    lockHeight ? (defaultHeight ?? resolvedMinHeight) : 0,
+    measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
+  )
   const size = {
     width: Math.max(targetWidth, userSize.width),
     height: lockHeight ? targetHeight : Math.max(targetHeight, userSize.height),
@@ -259,7 +282,7 @@ export function ResizableComparePanel({
       <div
         ref={scrollContainerRef}
         className={cn(
-          'min-h-0 flex-1 overflow-auto blueprint-scroll',
+          'min-h-0 flex-1 overflow-hidden',
           contentFitsWithPadding && !lockHeight && 'flex flex-col justify-center',
         )}
         style={{

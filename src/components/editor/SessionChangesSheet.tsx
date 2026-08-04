@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useState } from 'react'
-import { Flag, Check, Crosshair } from 'lucide-react'
+import { Flag, Check, Crosshair, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailCo
 import {
   clearSession,
   describeChange,
+  forgetChange,
   groupChanges,
   sessionHasDestructive,
   sessionSnapshot,
@@ -22,6 +23,9 @@ import {
   type ChangeEntry,
 } from '@/lib/authoringSession'
 import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
+import { executeRevert } from '@/lib/revertChange'
+import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { useSupabase } from '@/contexts/SupabaseProvider'
 import { cn } from '@/lib/utils'
 
 /** Server snapshot for SSR — there is no session before hydration. */
@@ -191,6 +195,9 @@ export function SessionChangesSheet() {
 }
 
 function ChangeRow({ entry }: { entry: ChangeEntry }) {
+  const { client } = useSupabase()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const cellId =
     typeof entry.args.cell_id === 'string'
       ? entry.args.cell_id
@@ -198,26 +205,69 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
         ? entry.args.source_cell_id
         : null
 
+  const revert = async () => {
+    if (!client || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await executeRevert(client, entry)
+      // The change is gone from the database, so it leaves the list — and the
+      // grid re-reads, because every revert is structural or content-bearing.
+      forgetChange(entry.id)
+      invalidateQueries('lifecycle-phases')
+      invalidateQueries('canvas-blueprints')
+      if (cellId) {
+        invalidateQueries(`cell-content:${cellId}`)
+        invalidateQueries(`cell-spec:${cellId}`)
+      }
+    } catch (revertError) {
+      setError(
+        revertError instanceof Error ? revertError.message : String(revertError),
+      )
+      setBusy(false)
+    }
+  }
+
   return (
     <div
       className={cn(
-        'group/change flex items-center gap-2 rounded-md px-2 py-1.5',
+        'group/change flex flex-col rounded-md px-2 py-1.5',
         'hover:bg-muted/60',
       )}
     >
-      <span className="min-w-0 flex-1 truncate text-foreground/85">
-        {describeChange(entry)}
-      </span>
-      {cellId ? (
-        <button
-          type="button"
-          aria-label="Show me where"
-          title="Show me where"
-          onClick={() => scrollBlueprintCellIntoView(cellId)}
-          className="shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/change:opacity-100 focus-visible:opacity-100 hover:text-foreground"
-        >
-          <Crosshair className="size-3" aria-hidden />
-        </button>
+      <div className="flex items-center gap-2">
+        <span className="min-w-0 flex-1 truncate text-foreground/85">
+          {describeChange(entry)}
+        </span>
+        {cellId ? (
+          <button
+            type="button"
+            aria-label="Show me where"
+            title="Show me where"
+            onClick={() => scrollBlueprintCellIntoView(cellId)}
+            className="shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/change:opacity-100 focus-visible:opacity-100 hover:text-foreground"
+          >
+            <Crosshair className="size-3" aria-hidden />
+          </button>
+        ) : null}
+        {entry.revert ? (
+          <button
+            type="button"
+            aria-label="Revert this change"
+            title="Revert this change"
+            disabled={busy}
+            onClick={() => void revert()}
+            className="shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/change:opacity-100 focus-visible:opacity-100 hover:text-foreground disabled:opacity-40"
+          >
+            <Undo2
+              className={cn('size-3', busy && 'animate-pulse')}
+              aria-hidden
+            />
+          </button>
+        ) : null}
+      </div>
+      {error ? (
+        <p className="mt-0.5 text-[10px] text-destructive">{error}</p>
       ) : null}
     </div>
   )

@@ -215,10 +215,20 @@ function RenameDialog({
     setBusy(true)
     onError(null)
     try {
-      if (kind === 'phase') await renamePhase(client, { phaseId: id, name })
+      if (kind === 'phase')
+        await renamePhase(client, {
+          phaseId: id,
+          name,
+          previousName: currentName,
+        })
       else if (kind === 'scenario')
-        await renameScenario(client, { scenarioId: id, name })
-      else await renamePath(client, { pathId: id, name })
+        await renameScenario(client, {
+          scenarioId: id,
+          name,
+          previousName: currentName,
+        })
+      else
+        await renamePath(client, { pathId: id, name, previousName: currentName })
       invalidateQueries('lifecycle-phases')
       onOpenChange(false)
     } catch (renameError) {

@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   buildBlueprintCellSelectionForId,
@@ -222,6 +223,9 @@ function BlueprintCellDetailPanelBody() {
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
   const [addingDependency, setAddingDependency] = useState(false)
   const { canWrite } = useSupabase()
+  // View mode presents everything read-only; every edit affordance in this
+  // panel — pencils, Add dependency, resource editing — is Edit-mode only.
+  const canEdit = useCanvasModeValue() === 'design' && canWrite
   const selection = currentSelection ?? closingSelection
   useCanvasTopOffset(currentSelection !== null)
 
@@ -816,8 +820,10 @@ function BlueprintCellDetailPanelBody() {
       ) : !showTechPill ? (
         <p className="-mt-3 text-sm text-muted-foreground">No content</p>
       ) : null}
-      <CellOverviewSpec cellId={resolvedCellId} />
+      {/* Basic info (text, description, owners) first; the function/form/
+          value spec is a deeper layer of the same cell and reads below it. */}
       <CellContentSection cellId={resolvedCellId} />
+      <CellOverviewSpec cellId={resolvedCellId} />
     </>
   )
 
@@ -933,7 +939,7 @@ function BlueprintCellDetailPanelBody() {
                         onCellSelect={handleConnectionSelect}
                         onTechSelect={handleTechSelect}
                       />
-                      {canWrite && dependencySource ? (
+                      {canEdit && dependencySource ? (
                         addingDependency ? (
                           <CellDependencyEditor
                             source={dependencySource}
@@ -960,7 +966,11 @@ function BlueprintCellDetailPanelBody() {
                     <CellEvidenceTab cellId={resolvedCellId} />
                   ) : null}
                   {activeTab === 'resources' ? (
-                    <CellResourcesTab links={cellLinks} figmaUrl={figmaUrl} />
+                    <CellResourcesTab
+                      cellId={resolvedCellId}
+                      links={cellLinks}
+                      figmaUrl={figmaUrl}
+                    />
                   ) : null}
                 </div>
               </Tabs>

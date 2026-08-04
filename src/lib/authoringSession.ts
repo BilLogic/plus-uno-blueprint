@@ -10,12 +10,25 @@
  * Deliberately not an undo stack. Undo is positional — it reverses whatever
  * happened last — while this is addressable: having added a step, a lane and a
  * cell, wanting the lane back should not mean undoing two things you meant to
- * keep. Reverting a single entry is a later phase; knowing what you changed is
- * most of the value and arrives first.
+ * keep. Entries that captured an inverse carry it in `revert`, and the sheet
+ * offers a per-row revert; entries without one (deletes, changes recorded
+ * before their before-state was captured) simply show no revert control.
  *
  * Module-level rather than React state because `call()` is a plain function
  * with no component around it. Subscribers read through `useSyncExternalStore`.
  */
+
+/**
+ * How to take one change back: the operation that undoes it, captured at
+ * record time while the before-state was still known. `fn` is either an
+ * authoring RPC name or one of the direct-table mutation names
+ * (`update_cell_content`, `update_cell_spec`, `update_cell_resources`) —
+ * `executeRevert` in `revertChange.ts` knows which is which.
+ */
+export type RevertSpec = {
+  fn: string
+  args: Record<string, unknown>
+}
 
 export type ChangeEntry = {
   id: string
@@ -24,6 +37,8 @@ export type ChangeEntry = {
   /** Exactly what was sent. Ids, not names — names are resolved at render. */
   args: Record<string, unknown>
   at: number
+  /** Present when this change can be individually taken back. */
+  revert?: RevertSpec
 }
 
 /** Operations that cannot be taken back once the session is saved. */
@@ -45,6 +60,23 @@ const IRREVERSIBLE = new Set<string>([])
 let entries: ChangeEntry[] = []
 let listeners: Array<() => void> = []
 let counter = 0
+let recordingSuspended = false
+
+/**
+ * Run a write without it appearing in the session log. Only the revert path
+ * uses this: undoing "Added a lane" must not append "Deleted a lane" — the
+ * pair would read as two changes when the truth is zero.
+ */
+export async function withRecordingSuspended<T>(
+  run: () => Promise<T>,
+): Promise<T> {
+  recordingSuspended = true
+  try {
+    return await run()
+  } finally {
+    recordingSuspended = false
+  }
+}
 
 function emit() {
   for (const listener of listeners) listener()
@@ -62,9 +94,14 @@ export function sessionSnapshot(): ChangeEntry[] {
   return entries
 }
 
-export function recordChange(fn: string, args: Record<string, unknown>): void {
+export function recordChange(
+  fn: string,
+  args: Record<string, unknown>,
+  revert?: RevertSpec,
+): void {
+  if (recordingSuspended) return
   counter += 1
-  entries = [...entries, { id: `c${counter}`, fn, args, at: Date.now() }]
+  entries = [...entries, { id: `c${counter}`, fn, args, at: Date.now(), revert }]
   emit()
 }
 

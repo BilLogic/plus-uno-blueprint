@@ -38,11 +38,13 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
     Same posture rule as CellContentSection: Edit mode opens editing.
   */
   const mode = useCanvasModeValue()
-  const [editing, setEditing] = useState(mode === 'design' && canWrite)
+  // View mode is read-only — no pencil, no empty-state affordance.
+  const canEdit = mode === 'design' && canWrite
+  const [editing, setEditing] = useState(canEdit)
   const [editingFor, setEditingFor] = useState(cellId)
   if (editingFor !== cellId) {
     setEditingFor(cellId)
-    setEditing(mode === 'design' && canWrite)
+    setEditing(canEdit)
   }
 
   if (!configured || !client || !cellId) return null
@@ -62,7 +64,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   // downward push when a spec does land; reserving cost a bounce every time.
   if (loading) return null
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <CellSpecEditor
         cellId={cellId}
@@ -76,7 +78,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
     // The affordance is the only thing that tells a writer this cell *can*
     // carry a spec — without it the feature is invisible on exactly the
     // cells that need it most.
-    if (!canWrite) return null
+    if (!canEdit) return null
     return (
       <Button
         type="button"
@@ -111,7 +113,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
           </ul>
         </section>
       ) : null}
-      {canWrite ? (
+      {canEdit ? (
         <Button
           type="button"
           variant="ghost"

@@ -32,6 +32,8 @@ export async function updateCellContent(
   client: Client,
   cellId: string,
   update: CellContentUpdate,
+  /** The values being replaced — captured so the change can be reverted. */
+  previous?: CellContentUpdate,
 ): Promise<void> {
   const content = update.content.trim()
   if (!content) {
@@ -52,7 +54,16 @@ export async function updateCellContent(
   if (error) throw toAuthoringError(error)
   // Direct table write, so `call()` never sees it — logged here for the same
   // reason and with the same after-success placement.
-  recordChange('update_cell_content', { cell_id: cellId })
+  recordChange(
+    'update_cell_content',
+    { cell_id: cellId },
+    previous?.content.trim()
+      ? {
+          fn: 'update_cell_content',
+          args: { cell_id: cellId, update: previous },
+        }
+      : undefined,
+  )
 }
 
 export type ResourceDraft = { label: string; url: string }
@@ -90,7 +101,13 @@ export async function updateCellResources(
     .update({ links: [...preserved, ...rebuilt] as unknown as Json })
     .eq('id', cellId)
   if (error) throw toAuthoringError(error)
-  recordChange('update_cell_resources', { cell_id: cellId })
+  recordChange(
+    'update_cell_resources',
+    { cell_id: cellId },
+    // Reverting means writing back the full pre-write array — URL entries as
+    // they were, plus the non-URL entries this write preserved anyway.
+    { fn: 'update_cell_resources', args: { cell_id: cellId, links: existing } },
+  )
 }
 
 /** A link with no label still needs to say something — its host will do. */
