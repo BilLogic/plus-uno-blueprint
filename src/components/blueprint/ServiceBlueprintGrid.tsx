@@ -48,7 +48,7 @@ import {
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
-import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
+import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   BLUEPRINT_THEME,
@@ -73,7 +73,7 @@ import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
-import type { BlueprintData } from '@/types/blueprint'
+import type { BlueprintCell, BlueprintData } from '@/types/blueprint'
 
 type ServiceBlueprintGridProps = {
   data: BlueprintData
@@ -543,13 +543,23 @@ function BlueprintSwimLane({
             ) : null}
       {steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, layerId, step.id)
+        // A tech slot can hold several cells — one per touchpoint — and each
+        // renders as its own pill with its own identity. Everything else
+        // keeps asking for "the" cell.
+        const slotCells = isPillLayer
+          ? getCellsAt(cellLookup, layerId, step.id)
+          : undefined
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? resolveVisualStepPictureEntries(blueprint, step.id)
           : undefined
         const showCell = isVisualLayer
           ? (visualPictures?.length ?? 0) > 0 || showEmptyCells
-          : hasCellContent(cell?.content, variant) || showEmptyCells
+          : isPillLayer
+            ? (slotCells ?? []).some((entry) =>
+                hasCellContent(entry.content, variant),
+              ) || showEmptyCells
+            : hasCellContent(cell?.content, variant) || showEmptyCells
 
         return (
           <Fragment key={`${layerId}-${step.id}`}>
@@ -573,6 +583,7 @@ function BlueprintSwimLane({
                 rowMinHeight={rowMinHeight}
                 flushBottom={flushBottom}
                 visualPictures={visualPictures}
+                slotCells={slotCells}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer || showEmptyCells)
                     ? {
@@ -656,6 +667,7 @@ function BlueprintCellBlock({
   flushBottom,
   selectionContext,
   visualPictures,
+  slotCells,
 }: {
   stepIndex: number
   cellId?: string
@@ -669,14 +681,34 @@ function BlueprintCellBlock({
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
+  /** Every cell in a tech slot — one per touchpoint since the split. */
+  slotCells?: BlueprintCell[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
     compact ? 'pt-3' : 'pt-4',
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
-  const pillItems =
-    variant === 'pills' && content ? getTechPillItems(content) : []
+  /*
+    One pill per (cell, item). Since the split a tech slot holds one cell
+    per touchpoint, so this is one pill per cell — but a cell whose content
+    still parses to several items (pre-split data, or hand-typed lists)
+    renders them all, attributed to that cell. Nothing is dropped either way.
+  */
+  const pillEntries =
+    variant === 'pills'
+      ? (slotCells && slotCells.length > 0
+          ? slotCells
+          : content !== undefined
+            ? [{ id: cellId, content, picture: null, description: null, links: [] }]
+            : []
+        ).flatMap((slotCell) =>
+          getTechPillItems(slotCell.content ?? '').map((item) => ({
+            item,
+            cell: slotCell,
+          })),
+        )
+      : []
 
   const shellStyle = {
     width,
@@ -726,15 +758,28 @@ function BlueprintCellBlock({
           !fitVertically && 'min-h-[80px] justify-center',
         )}
       >
-        {pillItems.map((item, index) =>
+        {pillEntries.map(({ item, cell: slotCell }, index) =>
           selectionContext ? (
             <BlueprintTechPill
-              key={`${item}-${index}`}
+              key={`${slotCell.id ?? 'anon'}-${item}-${index}`}
               item={item}
-              selectionContext={selectionContext}
+              // Each pill speaks for its own cell: identity is the whole
+              // point of the split, and the selection context must carry the
+              // touchpoint's id, not the slot's first.
+              selectionContext={{
+                ...selectionContext,
+                cellId: slotCell.id ?? selectionContext.cellId,
+                cellContent: slotCell.content ?? '',
+                cellPicture: slotCell.picture ?? null,
+                cellDescription: slotCell.description ?? null,
+                cellLinks: slotCell.links,
+              }}
               stepIndex={stepIndex}
               compact={compact}
-              sliceSequenceBadge={index === 0}
+              sliceSequenceBadge={
+                index === 0 ||
+                slotCell.id !== pillEntries[index - 1]?.cell.id
+              }
             />
           ) : (
             <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />

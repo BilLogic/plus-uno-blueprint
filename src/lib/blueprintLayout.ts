@@ -541,12 +541,18 @@ export function getMaxPillCountInLayer(
   data: BlueprintData,
   layerId: string,
 ): number {
-  let max = 0
+  // Summed per *slot*, not maxed per cell: since the split a slot holds one
+  // cell per touchpoint, and a row sized to the tallest single cell would be
+  // one pill tall over a stack of three.
+  const perStep = new Map<string, number>()
   for (const cell of data.cells) {
     if (cell.layer_id === layerId && cell.content?.trim()) {
-      max = Math.max(max, parseCellContentItems(cell.content).length)
+      const count = parseCellContentItems(cell.content).length
+      perStep.set(cell.step_id, (perStep.get(cell.step_id) ?? 0) + count)
     }
   }
+  let max = 0
+  for (const total of perStep.values()) max = Math.max(max, total)
   return max
 }
 

@@ -32,7 +32,7 @@ import {
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
-import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
+import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   getBlueprintLayerStyle,
@@ -63,7 +63,7 @@ import {
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
-import type { BlueprintData } from '@/types/blueprint'
+import type { BlueprintData, BlueprintCell } from '@/types/blueprint'
 
 /** Left gutter on the white board so the play control clears Visual cells. */
 const VISUAL_PLAY_GUTTER = 28
@@ -505,13 +505,21 @@ function CompareLayerRow({
       ) : null}
       {blueprint.steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
+        // Tech slots hold one cell per touchpoint since the split.
+        const slotCells = isPillLayer
+          ? getCellsAt(cellLookup, blueprintLayer.id, step.id)
+          : undefined
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? resolveVisualStepPictureEntries(blueprint, step.id)
           : undefined
         const showCell = isVisualLayer
           ? (visualPictures?.length ?? 0) > 0
-          : hasCellContent(cell?.content, variant)
+          : isPillLayer
+            ? (slotCells ?? []).some((entry) =>
+                hasCellContent(entry.content, variant),
+              )
+            : hasCellContent(cell?.content, variant)
 
         return (
           <Fragment key={`${layer.id}-${step.id}`}>
@@ -528,6 +536,7 @@ function CompareLayerRow({
                 compact={compact}
                 flushBottom={flushBottom}
                 visualPictures={visualPictures}
+                slotCells={slotCells}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer)
                     ? {
@@ -598,6 +607,7 @@ function CompareCellBlock({
   flushBottom,
   selectionContext,
   visualPictures,
+  slotCells,
 }: {
   cellId?: string
   stepIndex: number
@@ -608,6 +618,8 @@ function CompareCellBlock({
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
+  /** Every cell in a tech slot — one per touchpoint since the split. */
+  slotCells?: BlueprintCell[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -657,15 +669,41 @@ function CompareCellBlock({
           compact ? 'gap-2' : 'gap-2.5',
         )}
       >
-        {getTechPillItems(content).map((item, index) =>
+        {(slotCells && slotCells.length > 0
+          ? slotCells.flatMap((slotCell) =>
+              getTechPillItems(slotCell.content ?? '').map((item) => ({
+                item,
+                slotCell,
+              })),
+            )
+          : getTechPillItems(content).map((item) => ({
+              item,
+              slotCell: undefined,
+            }))
+        ).map(({ item, slotCell }, index, all) =>
           selectionContext ? (
             <BlueprintTechPill
-              key={`${item}-${index}`}
+              key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
-              selectionContext={selectionContext}
+              // Identity is the split's point: each pill carries its own
+              // cell in the selection it hands to the panel and the picker.
+              selectionContext={
+                slotCell
+                  ? {
+                      ...selectionContext,
+                      cellId: slotCell.id,
+                      cellContent: slotCell.content ?? '',
+                      cellPicture: slotCell.picture ?? null,
+                      cellDescription: slotCell.description ?? null,
+                      cellLinks: slotCell.links,
+                    }
+                  : selectionContext
+              }
               stepIndex={stepIndex}
               compact={compact}
-              sliceSequenceBadge={index === 0}
+              sliceSequenceBadge={
+                index === 0 || slotCell?.id !== all[index - 1]?.slotCell?.id
+              }
             />
           ) : (
             <TechPillFace
