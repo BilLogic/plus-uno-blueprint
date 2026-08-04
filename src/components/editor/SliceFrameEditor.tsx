@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SliceStoryboardField } from '@/components/editor/SliceStoryboardField'
 import { cn } from '@/lib/utils'
+import { describeCell } from '@/lib/canvasCellQuery'
 import type { DraftFrame, ValidationProblem } from '@/lib/sliceValidation'
 import type { Json } from '@/types/database'
 
@@ -177,7 +178,7 @@ export function SliceFrameEditor({
               </span>
               <Input
                 value={frame.caption}
-                placeholder="Caption"
+                placeholder="Screen caption"
                 className="h-6 min-w-0 flex-1 border-0 bg-transparent px-1 text-xs shadow-none focus-visible:ring-0"
                 onClick={(event) => event.stopPropagation()}
                 onChange={(event) =>
@@ -206,8 +207,10 @@ export function SliceFrameEditor({
                   <span className="shrink-0 text-muted-foreground">
                     {sequenceByFrame[index][cellIndex]}
                   </span>
-                  <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted-foreground">
-                    {cell.slice(-6)}
+                  {/* The cell's words, not the tail of its key. `070110` is
+                      an address; nobody recognises their content by address. */}
+                  <span className="min-w-0 flex-1 truncate text-[11px] text-foreground/80">
+                    {describeCell(cell).label}
                   </span>
                   <Button
                     type="button"
@@ -310,7 +313,7 @@ export function SliceFrameEditor({
         }}
       >
         <Plus className="size-4" />
-        Add frame
+        Add screen
       </button>
     </div>
   )

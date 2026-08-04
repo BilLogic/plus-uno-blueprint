@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p2
 issue_id: "005"
 tags: [code-review, canvas, slices]
@@ -26,3 +26,8 @@ drag-composed grouping, with no confirmation.
 ## Acceptance Criteria
 - [ ] Composing 3 screens, then picking one more cell on canvas, keeps the
       3 screens and appends the new cell.
+
+## Work Log
+- 2026-08-04: Fixed with solution 2 (merge). `mergeSelectionIntoScreens` in
+  CreateSliceSheet: removals drop out of their screens, additions append as
+  new screens, shaped screens survive.

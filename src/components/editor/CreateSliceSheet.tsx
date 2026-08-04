@@ -23,6 +23,28 @@ function seedScreens(cellIds: readonly string[]): DraftFrame[] {
 }
 
 /**
+ * Reconcile a live selection change with screens already shaped by hand.
+ * Removals are honoured (and an emptied screen disappears, as everywhere
+ * else); additions arrive as new one-cell screens at the end, which is the
+ * same shape seeding would have given them.
+ */
+function mergeSelectionIntoScreens(
+  current: DraftFrame[],
+  cellIds: readonly string[],
+): DraftFrame[] {
+  const wanted = new Set(cellIds)
+  const kept = current
+    .map((screen) => ({
+      ...screen,
+      cells: screen.cells.filter((cell) => wanted.has(cell)),
+    }))
+    .filter((screen) => screen.cells.length > 0)
+  const present = new Set(kept.flatMap((screen) => screen.cells))
+  const added = cellIds.filter((cell) => !present.has(cell))
+  return [...kept, ...seedScreens(added)]
+}
+
+/**
  * Making a slice out of the cells that are picked.
  *
  * A sheet hanging off the button, not a modal. The picked cells are the
@@ -61,13 +83,17 @@ export function CreateSliceSheet({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Screens are seeded one-per-cell and then shaped by hand. Re-seeded
-  // whenever the selection changes underneath an open sheet.
+  // Screens are seeded one-per-cell and then shaped by hand. When the
+  // selection changes under an open sheet — the canvas stays live — the
+  // composition is *merged*, never rebuilt: cells that left the selection
+  // drop out of their screens, cells that joined append as new screens, and
+  // every screen the author already shaped survives. Reseeding on any change
+  // used to throw away minutes of drag-composed grouping for one stray pick.
   const [screens, setScreens] = useState<DraftFrame[]>(() => seedScreens(cellIds))
   const [seededFrom, setSeededFrom] = useState(cellIds)
   if (seededFrom !== cellIds) {
     setSeededFrom(cellIds)
-    setScreens(seedScreens(cellIds))
+    setScreens((current) => mergeSelectionIntoScreens(current, cellIds))
   }
 
   // Read once per selection rather than per render: it walks the DOM, and the

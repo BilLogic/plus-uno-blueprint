@@ -46,6 +46,19 @@ const NO_PICKS: readonly string[] = []
 export function CanvasDesignTools() {
   const pick = useCellPick()
   const { isEditPreview } = useSupabase()
+
+  /*
+    Two pickers wear this bar, and they are different sentences.
+
+    The base canvas gathers cells *toward* a slice (`gathers: true`), so its
+    verb is "Make slice". A slice tab's edit session picks cells *into the
+    highlighted screen* of a slice that already exists — offering "Make
+    slice" there reads as an invitation to make a slice out of a slice,
+    which is exactly the confusion it caused. That surface's own strip
+    (screens, captions, storyboards) is the verb; the bar contributes only
+    the shared chrome (save state, preview chip).
+  */
+  const gathering = pick?.gathers ?? false
   const picked = pick?.picked ?? NO_PICKS
   const [sliceDialogOpen, setSliceDialogOpen] = useState(false)
   // Armed: clicked with nothing picked. The button becomes the instruction
@@ -71,6 +84,7 @@ export function CanvasDesignTools() {
         box lands somewhere unpredictable and often off-screen. A fixed home is
         worth more here than proximity.
       */}
+      {gathering ? (
       <CreateSliceSheet
         cellIds={picked}
         open={sliceDialogOpen}
@@ -122,6 +136,7 @@ export function CanvasDesignTools() {
           </Button>
         }
       />
+      ) : null}
 
       {/*
         Clearing lives beside the count because that is the question the count
@@ -131,7 +146,8 @@ export function CanvasDesignTools() {
         and a selection gathered across several blueprints is far too expensive
         to lose to a miss between two cells. One deliberate target, aimed at.
       */}
-      {picked.length > 0 || armed ? (
+
+      {gathering && (picked.length > 0 || armed) ? (
         <Tooltip>
           <TooltipTrigger
             render={

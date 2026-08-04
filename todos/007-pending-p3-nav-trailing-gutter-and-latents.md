@@ -27,3 +27,8 @@ assumptions are explicit:
 - [ ] keyboard/wheel binding strategy decided before comparison view ships
 - [ ] rename conflict either retries with a fresh read or keeps this message
       deliberately
+
+## Work Log
+- 2026-08-04: Item 1 investigated — NavRow renders `{trailing}` inline; a
+  fragment of nulls renders nothing and flex gap ignores it, so there is no
+  dead gutter in practice. No change. Items 2–3 remain deliberate deferrals.

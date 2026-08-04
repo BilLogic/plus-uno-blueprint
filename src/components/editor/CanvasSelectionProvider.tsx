@@ -10,6 +10,7 @@ import { CanvasCellContextMenu } from '@/components/editor/CanvasCellContextMenu
 import { MarqueeSelection } from '@/components/editor/MarqueeSelection'
 import {
   CellPickContext,
+  useCellPick,
   type CellPickApi,
   type PickMode,
 } from '@/contexts/cellPickContext'
@@ -56,6 +57,16 @@ function toggleInto(current: string[], cellIds: readonly string[]): string[] {
  */
 export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
   const mode = useCanvasModeValue()
+  /*
+    A picker may already own this surface. The slice edit session provides
+    its own — clicks mean "put this cell in the highlighted screen", not
+    "gather toward a new slice" — and this provider mounts *inside* it, on
+    the viewport. Providing unconditionally shadowed the session: canvas
+    clicks fed a phantom gathering selection, and the bar offered to make a
+    slice out of a slice. An outer picker passes through untouched; the
+    gathering machinery below exists only for surfaces that have none.
+  */
+  const outer = useCellPick()
   const detail = useBlueprintCellDetailOptional()
   const [picked, setPicked] = useState<string[]>([])
   // Where a shift-range reaches *from*. Held separately from `picked` because
@@ -232,10 +243,15 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     Outside Design the *value* is null instead, which is exactly what
     consumers already expect from `useCellPick` when there is no picker.
   */
+  const gatherHere = outer === null && mode === 'design'
+
   return (
-    <CellPickContext.Provider value={mode === 'design' ? api : null}>
+    <CellPickContext.Provider value={outer ?? (mode === 'design' ? api : null)}>
       {children}
-      {mode === 'design' ? (
+      {/* Marquee and the context menu speak the gathering grammar (replace
+          sweeps, toggle items); they stand down under a session picker whose
+          clicks mean something else. */}
+      {gatherHere ? (
         <>
           <MarqueeSelection />
           <CanvasCellContextMenu />
