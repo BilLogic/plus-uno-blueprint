@@ -1,8 +1,15 @@
 import { useState } from 'react'
-import { Copy, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { Copy, Pencil, Trash2 } from 'lucide-react'
 import { AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 import {
   Dialog,
   DialogContent,
@@ -10,13 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
   DeleteStructureDialog,
@@ -33,35 +33,37 @@ import {
   renameScenario,
 } from '@/lib/authoringRpc'
 import { deletionReadiness } from '@/lib/deletionSafety'
-import { cn } from '@/lib/utils'
 
 export type StructureKind = 'phase' | 'scenario' | 'path'
 
 /**
- * The `⋯` on a phase, scenario or path row — rename, duplicate, delete.
+ * Right-click on a phase, scenario or path row — rename, duplicate, delete.
  *
- * One component for all three because the *shape* is identical and the
- * differences are facts, not code paths: what can be duplicated (paths — the
- * only entity with a deep-copy operation), what can be deleted (paths and
- * scenarios — `delete_phase` does not exist yet, so a phase shows no delete
- * rather than a dead one), and which rename RPC to call.
+ * This replaced the hover-revealed `⋯` button: the row's own hover state is
+ * signal enough, and a per-row button was one more piece of chrome saying
+ * what right-click already says. One component for all three kinds because
+ * the *shape* is identical and the differences are facts, not code paths:
+ * what can be duplicated (paths — the only entity with a deep-copy
+ * operation), what can be deleted (paths and scenarios — `delete_phase`
+ * does not exist yet, so a phase shows no delete rather than a dead one),
+ * and which rename RPC to call.
  *
- * Hover-revealed like every other row action in this sidebar, and absent —
- * never disabled — for sessions that cannot write.
+ * Renders children unwrapped — no menu at all — for sessions that cannot
+ * write or surfaces in View mode.
  */
-export function StructureRowMenu({
+export function StructureRowContextMenu({
   kind,
   id,
   name,
   scenarioId,
-  className,
+  children,
 }: {
   kind: StructureKind
   id: string
   name: string
   /** Required for path deletes, which are scoped by their scenario. */
   scenarioId?: string
-  className?: string
+  children: React.ReactNode
 }) {
   const { client, canWrite } = useSupabase()
   const mode = useCanvasModeValue()
@@ -73,7 +75,7 @@ export function StructureRowMenu({
 
   // Edit mode only. Renaming and deleting are authoring, and View mode's
   // whole premise is that nothing on screen changes anything.
-  if (!canWrite || !client || mode !== 'design') return null
+  if (!canWrite || !client || mode !== 'design') return <>{children}</>
 
   const canDelete =
     kind !== 'phase' && deletionReadiness(archiveAvailable).canDelete
@@ -94,42 +96,25 @@ export function StructureRowMenu({
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <button
-              type="button"
-              aria-label={`Actions for ${name}`}
-              title={`Actions for ${name}`}
-              onClick={(event) => event.stopPropagation()}
-              className={cn(
-                'flex size-4 shrink-0 items-center justify-center rounded-sm',
-                'opacity-0 transition-opacity duration-150',
-                'text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
-                'focus-visible:opacity-100 focus-visible:outline-none',
-                '[@media(pointer:coarse)]:opacity-100',
-                className,
-              )}
-            >
-              <MoreHorizontal className="size-3" aria-hidden />
-            </button>
-          }
-        />
-        <DropdownMenuContent align="end" className="text-xs">
-          <DropdownMenuItem onClick={() => setRenaming(true)}>
+      <ContextMenu>
+        <ContextMenuTrigger className="block w-full">
+          {children}
+        </ContextMenuTrigger>
+        <ContextMenuContent className="text-xs">
+          <ContextMenuItem onClick={() => setRenaming(true)}>
             <Pencil className="size-3.5" aria-hidden />
             Rename
-          </DropdownMenuItem>
+          </ContextMenuItem>
           {kind === 'path' ? (
-            <DropdownMenuItem disabled={busy} onClick={duplicate}>
+            <ContextMenuItem disabled={busy} onClick={duplicate}>
               <Copy className="size-3.5" aria-hidden />
               Duplicate
-            </DropdownMenuItem>
+            </ContextMenuItem>
           ) : null}
           {canDelete ? (
             <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
+              <ContextMenuSeparator />
+              <ContextMenuItem
                 variant="destructive"
                 onClick={() =>
                   setDeleting({
@@ -142,11 +127,11 @@ export function StructureRowMenu({
               >
                 <Trash2 className="size-3.5" aria-hidden />
                 Delete {kind}
-              </DropdownMenuItem>
+              </ContextMenuItem>
             </>
           ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </ContextMenuContent>
+      </ContextMenu>
 
       <RenameDialog
         kind={kind}

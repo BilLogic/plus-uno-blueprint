@@ -75,7 +75,10 @@ export function CanvasAnnotationProvider({
       clearAnnotations,
       selectedId,
       setSelectedId,
-      isAnnotating: tool !== 'select',
+      // The hand is a *navigation* tool, not an annotation tool — counting
+      // it here disabled the viewport's drag-pan the moment the hand was
+      // picked, which is the exact gesture the hand exists to provide.
+      isAnnotating: tool !== 'select' && tool !== 'hand',
     }),
     [
       tool,

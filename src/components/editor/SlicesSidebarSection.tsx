@@ -3,7 +3,6 @@ import {
   AlertTriangle,
   Copy,
   ExternalLink,
-  MoreHorizontal,
   Pencil,
   Play,
   Trash2,
@@ -25,18 +24,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { duplicateSlice, sliceToken, updateSliceMeta } from '@/lib/sliceMutations'
 import { isSliceType } from '@/lib/sliceValidation'
-import { cn } from '@/lib/utils'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -86,21 +77,6 @@ function SliceRow({
       onSelect={onOpen}
       selected={isActive}
       ancestor={isOpenInactive}
-      // The same hover-revealed `⋯` phase, scenario and path rows carry.
-      // The context menu below still works and still holds more; this is
-      // what makes it findable without knowing to right-click.
-      trailing={
-        canWrite ? (
-          <SliceRowMenu
-            slice={slice}
-            onOpen={onOpen}
-            onPresent={onPresent}
-            onDelete={onDelete}
-            onRename={onRename}
-            onDuplicate={onDuplicate}
-          />
-        ) : undefined
-      }
     />
   )
 
@@ -259,78 +235,6 @@ export function SlicesSidebarSection() {
         }}
       />
     </div>
-  )
-}
-
-/**
- * The hover-revealed `⋯` on a slice row.
- *
- * Mirrors `StructureRowMenu` deliberately: the same glyph, the same reveal,
- * the same order of items. A slice is another thing in the sidebar that can be
- * renamed and deleted, and a second vocabulary for that would be one to learn
- * for no reason.
- */
-function SliceRowMenu({
-  slice,
-  onOpen,
-  onPresent,
-  onRename,
-  onDelete,
-  onDuplicate,
-}: {
-  slice: SliceListEntry
-  onOpen: () => void
-  onPresent: () => void
-  onRename: () => void
-  onDelete: () => void
-  onDuplicate: () => void
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            aria-label={`Actions for ${slice.title}`}
-            title={`Actions for ${slice.title}`}
-            onClick={(event) => event.stopPropagation()}
-            className={cn(
-              'flex size-4 shrink-0 items-center justify-center rounded-sm',
-              'opacity-0 transition-opacity duration-150',
-              'group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100',
-              'text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
-              'focus-visible:opacity-100 focus-visible:outline-none',
-              '[@media(pointer:coarse)]:opacity-100',
-            )}
-          >
-            <MoreHorizontal className="size-3" aria-hidden />
-          </button>
-        }
-      />
-      <DropdownMenuContent align="end" className="text-xs">
-        <DropdownMenuItem onClick={onRename}>
-          <Pencil className="size-3.5" aria-hidden />
-          Rename
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDuplicate}>
-          <Copy className="size-3.5" aria-hidden />
-          Duplicate
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onOpen}>
-          <ExternalLink className="size-3.5" aria-hidden />
-          Open in new tab
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onPresent}>
-          <Play className="size-3.5" aria-hidden />
-          Present
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={onDelete}>
-          <Trash2 className="size-3.5" aria-hidden />
-          Delete slice…
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   )
 }
 

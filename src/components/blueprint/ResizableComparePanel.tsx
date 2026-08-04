@@ -127,10 +127,12 @@ export function ResizableComparePanel({
     growing a scrollbar. `lockHeight` still sets the shared floor across a
     phase row, but it is a floor, not a ceiling.
   */
+  // The default is a pre-measure placeholder, not a floor: once the content
+  // has been measured, the measurement replaces it. Keeping the estimate as
+  // a floor left compare panels wider than their columns.
   const targetWidth = Math.max(
     resolvedMinWidth,
-    defaultWidth ?? resolvedMinWidth,
-    measuredPanelWidth ?? 0,
+    measuredPanelWidth ?? defaultWidth ?? resolvedMinWidth,
   )
   const targetHeight = Math.max(
     resolvedMinHeight,

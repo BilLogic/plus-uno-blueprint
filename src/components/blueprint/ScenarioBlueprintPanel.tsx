@@ -161,16 +161,13 @@ export function ScenarioBlueprintPanel({
   const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
 
   const comparePanelProps = {
+    // Both compare-grid estimates run hot: the width one still counts
+    // per-path nesting the merged grid no longer draws, and the height one
+    // predates classification collapsing stacked slots. A floor set from a
+    // hot estimate is dead gray space — the measured content rules instead.
     minWidth: showIntegratedGrid
-      ? getIntegratedPanelWidth(
-          integratedBlueprint!.steps.length,
-          false,
-          integratedPathCount,
-        )
+      ? undefined
       : getComparePanelWidth(visibleBlueprints),
-    // The compare grid's height estimate runs hot (stacked slots collapse
-    // after classification), and a floor set from a hot estimate is dead
-    // gray space below the content. Let the measured content rule there.
     minHeight: showIntegratedGrid ? undefined : panelHeight,
     defaultWidth: showIntegratedGrid
       ? getIntegratedPanelWidth(

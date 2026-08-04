@@ -4,7 +4,7 @@ import { useEditor } from '@/contexts/EditorContext'
 import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { NavRowAction, NavSection } from '@/components/editor/SidebarNav'
 import { CreateVersionDialog } from '@/components/editor/CreateVersionDialog'
-import { StructureRowMenu } from '@/components/editor/StructureRowMenu'
+import { StructureRowContextMenu } from '@/components/editor/StructureRowMenu'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useScenarioPaths } from '@/hooks/useScenarioPaths'
@@ -110,9 +110,15 @@ function PathChecklist({
       {options.map((option) => {
         const selected = activePathKeys.includes(option.id)
         return (
-          <li
-            key={option.id}
-            className="group/path-row flex items-center gap-1 rounded-md pr-1 hover:bg-sidebar-hover"
+          <li key={option.id}>
+          <StructureRowContextMenu
+            kind="path"
+            id={option.id}
+            name={option.name}
+            scenarioId={scenarioId}
+          >
+          <div
+            className="group/path-row flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-sidebar-hover"
           >
             <button
               type="button"
@@ -143,15 +149,8 @@ function PathChecklist({
                 {option.name}
               </span>
             </button>
-            {scenarioId ? (
-              <StructureRowMenu
-                kind="path"
-                id={option.id}
-                name={option.name}
-                scenarioId={scenarioId}
-                className="group-hover/path-row:opacity-100 group-focus-within/path-row:opacity-100"
-              />
-            ) : null}
+          </div>
+          </StructureRowContextMenu>
           </li>
         )
       })}

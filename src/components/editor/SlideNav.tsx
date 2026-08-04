@@ -5,7 +5,7 @@ import {
   NavRow,
   NavRowAction,
 } from '@/components/editor/SidebarNav'
-import { StructureRowMenu } from '@/components/editor/StructureRowMenu'
+import { StructureRowContextMenu } from '@/components/editor/StructureRowMenu'
 import {
   Collapsible,
   CollapsibleContent,
@@ -101,6 +101,10 @@ export function SlideNav({
 
         return (
           <div key={main.id}>
+            {/* Rename lives on right-click now — the row's hover state is
+                the affordance, not a per-row ⋯ button. The `+` stays: it is
+                an action right-click cannot imply. */}
+            <StructureRowContextMenu kind="phase" id={main.id} name={mainLabel}>
             <NavRow
               rowId={main.id}
               label={mainLabel}
@@ -119,33 +123,21 @@ export function SlideNav({
               }}
               selected={isSelected}
               ancestor={isAncestor}
-              // The `+` is attached to the phase, which is what makes it
-              // unambiguous: a scenario created from here goes in *this*
-              // phase, so there is no phase picker to get wrong. The `⋯`
-              // beside it renames — the menu hides itself for read-only
-              // sessions, so no gate is needed here.
               trailing={
-                <>
-                  {onAddScenario ? (
-                    <NavRowAction
-                      label={`New scenario in ${mainLabel}`}
-                      onClick={() => {
-                        onSetExpanded(main.id, true)
-                        onAddScenario(main.id)
-                      }}
-                    >
-                      <Plus className="size-3" aria-hidden />
-                    </NavRowAction>
-                  ) : null}
-                  <StructureRowMenu
-                    kind="phase"
-                    id={main.id}
-                    name={mainLabel}
-                    className="group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100"
-                  />
-                </>
+                onAddScenario ? (
+                  <NavRowAction
+                    label={`New scenario in ${mainLabel}`}
+                    onClick={() => {
+                      onSetExpanded(main.id, true)
+                      onAddScenario(main.id)
+                    }}
+                  >
+                    <Plus className="size-3" aria-hidden />
+                  </NavRowAction>
+                ) : undefined
               }
             />
+            </StructureRowContextMenu>
             {hasChildren ? (
               <PhaseScenarios
                 panelId={panelId}
@@ -190,21 +182,19 @@ function PhaseScenarios({
         <NavChildren>
           {items.map((item) => (
             <li key={item.id}>
-              <NavRow
-                rowId={item.id}
-                label={item.label}
-                onSelect={() => onSelect(item.id)}
-                selected={item.selected}
-                size="sm"
-                trailing={
-                  <StructureRowMenu
-                    kind="scenario"
-                    id={item.id}
-                    name={item.label}
-                    className="group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100"
-                  />
-                }
-              />
+              <StructureRowContextMenu
+                kind="scenario"
+                id={item.id}
+                name={item.label}
+              >
+                <NavRow
+                  rowId={item.id}
+                  label={item.label}
+                  onSelect={() => onSelect(item.id)}
+                  selected={item.selected}
+                  size="sm"
+                />
+              </StructureRowContextMenu>
             </li>
           ))}
         </NavChildren>
