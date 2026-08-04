@@ -34,6 +34,14 @@ export async function updateCellContent(
   update: CellContentUpdate,
   /** The values being replaced — captured so the change can be reverted. */
   previous?: CellContentUpdate,
+  /**
+   * Session-log participation, decided per call rather than by ambient
+   * module state: a revert passes `record: false` so undoing "edited text"
+   * never logs a new edit — while a concurrent ordinary save, in flight at
+   * the same moment, still logs itself. A global suspend flag around an
+   * `await` swallowed exactly those saves.
+   */
+  options: { record?: boolean } = {},
 ): Promise<void> {
   const content = update.content.trim()
   if (!content) {
@@ -54,16 +62,18 @@ export async function updateCellContent(
   if (error) throw toAuthoringError(error)
   // Direct table write, so `call()` never sees it — logged here for the same
   // reason and with the same after-success placement.
-  recordChange(
-    'update_cell_content',
-    { cell_id: cellId },
-    previous?.content.trim()
-      ? {
-          fn: 'update_cell_content',
-          args: { cell_id: cellId, update: previous },
-        }
-      : undefined,
-  )
+  if (options.record !== false) {
+    recordChange(
+      'update_cell_content',
+      { cell_id: cellId },
+      previous?.content.trim()
+        ? {
+            fn: 'update_cell_content',
+            args: { cell_id: cellId, update: previous },
+          }
+        : undefined,
+    )
+  }
 }
 
 export type ResourceDraft = { label: string; url: string }

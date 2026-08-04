@@ -49,6 +49,10 @@ export function CanvasCellContextMenu() {
       const cellId = cell.getAttribute('data-blueprint-cell')
       if (!cellId || !(cell instanceof HTMLElement)) return
       event.preventDefault()
+      // A fresh menu is never pre-armed. Without this, opening the menu on
+      // a different cell via keyboard (Menu key / Shift+F10, no pointerdown
+      // to dismiss the old one) would carry the armed delete across cells.
+      setConfirmingDelete(false)
       setMenu({
         x: Math.min(event.clientX, window.innerWidth - MENU.width - 8),
         y: Math.min(event.clientY, window.innerHeight - MENU.height - 8),

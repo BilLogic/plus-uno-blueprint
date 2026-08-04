@@ -170,6 +170,16 @@ function useCanvasTopOffset(active: boolean) {
 }
 
 /**
+ * True while the panel's editor has a save in flight. Every dismiss path
+ * (Escape, ✕-driven close requests) checks this: closing mid-save reads as
+ * "cancelled", but the write lands anyway — for a draft that means a cell
+ * materializing after the panel that explained it is gone.
+ */
+function panelEditorBusy(): boolean {
+  return document.querySelector('[data-cell-panel-editor][data-busy]') !== null
+}
+
+/**
  * A render error in the drawer must cost the drawer, not the app.
  *
  * This panel is the one surface that renders arbitrary cell content —
@@ -251,12 +261,23 @@ function BlueprintCellDetailPanelBody() {
   */
   const drawerOpen = currentSelection !== null || draftCell !== null
 
-  useEffect(() => {
-    if (currentSelection) setClosingSelection(currentSelection)
-  }, [currentSelection])
-  useEffect(() => {
-    if (draftCell) setClosingDraft(draftCell)
-  }, [draftCell])
+  /*
+    The closing snapshots exist only to keep content rendered during the
+    exit animation. Each one must clear when the *other* kind opens: the
+    render gates read `selection = current ?? closingSelection`, so a stale
+    closing snapshot from a still-animating close would win over a freshly
+    opened draft — the panel would glide back in wearing the old cell, and
+    since the drawer never finishes closing, nothing would ever clear it.
+    Guarded render-phase sets, the codebase's derive-during-render idiom.
+  */
+  if (currentSelection && closingSelection !== currentSelection) {
+    setClosingSelection(currentSelection)
+    setClosingDraft(null)
+  }
+  if (draftCell && closingDraft !== draftCell) {
+    setClosingDraft(draftCell)
+    setClosingSelection(null)
+  }
 
   // A new cell always opens on Dependencies (state reset during render).
   // The arrow editor closes with it — a half-typed arrow carried onto a
@@ -273,7 +294,7 @@ function BlueprintCellDetailPanelBody() {
     if (!isOpen) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !panelEditorBusy()) {
         clearSelection()
       }
     }
@@ -579,7 +600,7 @@ function BlueprintCellDetailPanelBody() {
       <Drawer
         open={drawerOpen}
         onOpenChange={(open) => {
-          if (!open) clearSelection()
+          if (!open && !panelEditorBusy()) clearSelection()
         }}
         onOpenChangeComplete={(open) => {
           if (!open) {
@@ -607,7 +628,13 @@ function BlueprintCellDetailPanelBody() {
                 New cell
               </DrawerTitle>
               <DrawerDescription className="text-[11px] text-muted-foreground">
-                {`${draft.stepIndex + 1}. ${draft.stepName}`}
+                {[
+                  draft.phaseName,
+                  draft.scenarioName,
+                  `${draft.stepIndex + 1}. ${draft.stepName}`,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </DrawerDescription>
             </div>
             <Button
@@ -952,7 +979,7 @@ function BlueprintCellDetailPanelBody() {
         // `open` derived from the selection they can only fire while a
         // selection exists — the delayed-callback-wipes-new-selection class
         // of bug died with the second owner.
-        if (!open) clearSelection()
+        if (!open && !panelEditorBusy()) clearSelection()
       }}
       onOpenChangeComplete={(open) => {
         if (!open) {

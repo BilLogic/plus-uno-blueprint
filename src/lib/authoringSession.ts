@@ -60,23 +60,6 @@ const IRREVERSIBLE = new Set<string>([])
 let entries: ChangeEntry[] = []
 let listeners: Array<() => void> = []
 let counter = 0
-let recordingSuspended = false
-
-/**
- * Run a write without it appearing in the session log. Only the revert path
- * uses this: undoing "Added a lane" must not append "Deleted a lane" — the
- * pair would read as two changes when the truth is zero.
- */
-export async function withRecordingSuspended<T>(
-  run: () => Promise<T>,
-): Promise<T> {
-  recordingSuspended = true
-  try {
-    return await run()
-  } finally {
-    recordingSuspended = false
-  }
-}
 
 function emit() {
   for (const listener of listeners) listener()
@@ -99,7 +82,6 @@ export function recordChange(
   args: Record<string, unknown>,
   revert?: RevertSpec,
 ): void {
-  if (recordingSuspended) return
   counter += 1
   entries = [...entries, { id: `c${counter}`, fn, args, at: Date.now(), revert }]
   emit()

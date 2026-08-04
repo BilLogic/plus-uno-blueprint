@@ -151,14 +151,6 @@ export function IntegratedBlueprintGrid({
     [selectedPathIds, paths],
   )
 
-  if (steps.length === 0 && layers.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No integrated blueprint data yet.
-      </p>
-    )
-  }
-
   const layoutOptions = useMemo(
     () => ({
       fitVertically: fillSwimlaneHeight,
@@ -220,6 +212,16 @@ export function IntegratedBlueprintGrid({
       ),
     [layers, data, compact, collapsedLayerIds, layoutOptions],
   )
+
+  // Below every hook — an early return above them made the hook order
+  // conditional, which React forbids.
+  if (steps.length === 0 && layers.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No integrated blueprint data yet.
+      </p>
+    )
+  }
 
   const scrollMinHeight = gridBodyMinHeight + ARROW_VIEWPORT_PAD * 2
 

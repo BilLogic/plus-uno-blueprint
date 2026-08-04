@@ -81,8 +81,15 @@ export function ScenarioBlueprintPanel({
   const phaseName = parentPhase
     ? getSlideDisplayLabel(parentPhase, slides)
     : undefined
-  const displayViewType =
+  const storedViewType =
     displayViewTypeProp ?? getScenarioDisplayViewType(slide)
+  // Compare needs two sides. The toggle hides below 2 selected paths, but
+  // the stored override survives — falling back here keeps a scenario from
+  // being stranded in a compare it can no longer leave.
+  const displayViewType =
+    storedViewType === 'integrated' && selectedPathIds.length < 2
+      ? 'side-by-side'
+      : storedViewType
   const useIntegratedLayout =
     displayViewType === 'integrated' &&
     paths.length > 0 &&

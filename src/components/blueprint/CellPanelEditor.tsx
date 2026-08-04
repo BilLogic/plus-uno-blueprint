@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -108,24 +108,39 @@ export function CellPanelEditor({
     if (contentResult.status === 'loading' || specResult.status === 'loading') {
       return null
     }
-    const content = contentResult.status === 'ready' ? contentResult.data : null
-    const spec = specResult.status === 'ready' ? specResult.data : null
+    if (contentResult.status === 'error' || specResult.status === 'error') {
+      return (
+        <p className="text-xs text-destructive">
+          This cell's fields could not be loaded — close the panel and try
+          again.
+        </p>
+      )
+    }
+    const content = contentResult.data
+    const spec = specResult.data
     if (!content) return null
+
+    const baseline: FormState = {
+      text: content.content,
+      // The DB truth. The *field* may be seeded with the links-derived
+      // fallback below, but diffs and reverts compare against this — an
+      // owner-only edit must not smuggle the fallback prose into the
+      // description column, and undo must restore what the DB actually held.
+      description: content.description ?? '',
+      owner: content.owner ?? '',
+      perceivedOwner: content.perceived_owner ?? '',
+      functionText: spec?.function ?? '',
+      formText: spec?.form ?? '',
+      valueProps: parseValueProps(spec?.value_props ?? null),
+    }
 
     return (
       <CellPanelEditorForm
         key={cellId}
         cellId={cellId}
         draft={undefined}
-        initial={{
-          text: content.content,
-          description: content.description ?? fallbackDescription,
-          owner: content.owner ?? '',
-          perceivedOwner: content.perceived_owner ?? '',
-          functionText: spec?.function ?? '',
-          formText: spec?.form ?? '',
-          valueProps: parseValueProps(spec?.value_props ?? null),
-        }}
+        baseline={baseline}
+        seededDescription={content.description ?? fallbackDescription}
         onDone={onDone}
       />
     )
@@ -137,7 +152,7 @@ export function CellPanelEditor({
       key={`${draft.layerId}:${draft.stepId}`}
       cellId={null}
       draft={draft}
-      initial={{
+      baseline={{
         text: '',
         description: '',
         owner: '',
@@ -146,6 +161,7 @@ export function CellPanelEditor({
         formText: '',
         valueProps: [],
       }}
+      seededDescription=""
       onDone={onDone}
     />
   )
@@ -154,41 +170,75 @@ export function CellPanelEditor({
 function CellPanelEditorForm({
   cellId,
   draft,
-  initial,
+  baseline: baselineProp,
+  seededDescription,
   onDone,
 }: {
   cellId: string | null
   draft: DraftCellTarget | undefined
-  initial: FormState
+  baseline: FormState
+  seededDescription: string
   onDone: () => void
 }) {
   const { client } = useSupabase()
-  const [form, setForm] = useState<FormState>(initial)
+  /*
+    Frozen at mount (state initializer, never re-set). The props keep
+    tracking the live query — a ⌘Z revert of this same cell refetches it
+    and changes them mid-edit — but the form's diff and its captured
+    `previous` must speak about the world as it was when editing began, or
+    Save quietly writes reverted values back.
+  */
+  const [baseline] = useState(baselineProp)
+  const [form, setForm] = useState<FormState>({
+    ...baseline,
+    description: seededDescription,
+  })
+  // Only a deliberate edit persists the seeded fallback prose into the
+  // description column; an untouched field keeps whatever the DB held.
+  const [descriptionTouched, setDescriptionTouched] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // A save that resolves after this form unmounted (the user switched
+  // cells) must not call onDone — that would slam shut whatever panel they
+  // are reading now.
+  const aliveRef = useRef(true)
+  useEffect(() => {
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
+  // A draft that created its row but failed a later write resumes on retry
+  // instead of upserting a second time (which would log a second "Added a
+  // cell" whose revert deletes the same row).
+  const [createdId, setCreatedId] = useState<string | null>(null)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
   const blocked = !form.text.trim()
 
+  const effectiveDescription = descriptionTouched
+    ? form.description
+    : baseline.description
   const contentChanged =
-    form.text !== initial.text ||
-    form.description !== initial.description ||
-    form.owner !== initial.owner ||
-    form.perceivedOwner !== initial.perceivedOwner
+    form.text !== baseline.text ||
+    effectiveDescription !== baseline.description ||
+    form.owner !== baseline.owner ||
+    form.perceivedOwner !== baseline.perceivedOwner
   const specChanged =
-    form.functionText !== initial.functionText ||
-    form.formText !== initial.formText ||
-    JSON.stringify(form.valueProps) !== JSON.stringify(initial.valueProps)
+    form.functionText !== baseline.functionText ||
+    form.formText !== baseline.formText ||
+    JSON.stringify(form.valueProps) !== JSON.stringify(baseline.valueProps)
 
   const handleSave = async () => {
     if (!client || busy || blocked) return
     setBusy(true)
     setError(null)
     try {
-      let targetId = cellId
-      if (!targetId) {
+      let targetId = cellId ?? createdId
+      const creating = targetId === null
+      if (targetId === null) {
         // The draft becomes real here and only here. Cancel never writes.
         targetId = await upsertCell(client, {
           pathId: draft!.pathId,
@@ -196,26 +246,37 @@ function CellPanelEditorForm({
           stepId: draft!.stepId,
           content: form.text.trim(),
         })
+        setCreatedId(targetId)
       }
 
-      if (contentChanged || !cellId) {
+      const draftExtras =
+        !cellId &&
+        Boolean(
+          form.description.trim() ||
+            form.owner.trim() ||
+            form.perceivedOwner.trim(),
+        )
+      if ((cellId && contentChanged) || (!cellId && (draftExtras || !creating))) {
         await updateCellContent(
           client,
           targetId,
           {
             content: form.text,
-            description: form.description,
+            description: cellId ? effectiveDescription : form.description,
             owner: form.owner,
             perceivedOwner: form.perceivedOwner,
           },
           cellId
             ? {
-                content: initial.text,
-                description: initial.description,
-                owner: initial.owner,
-                perceivedOwner: initial.perceivedOwner,
+                content: baseline.text,
+                description: baseline.description,
+                owner: baseline.owner,
+                perceivedOwner: baseline.perceivedOwner,
               }
             : undefined,
+          // The create already logs "Added a cell"; its field fill-in is
+          // part of the same user action, not a second change.
+          { record: Boolean(cellId) },
         )
       }
       if (specChanged) {
@@ -229,11 +290,12 @@ function CellPanelEditorForm({
           },
           cellId
             ? {
-                function: initial.functionText,
-                form: initial.formText,
-                valueProps: initial.valueProps,
+                function: baseline.functionText,
+                form: baseline.formText,
+                valueProps: baseline.valueProps,
               }
             : undefined,
+          { record: Boolean(cellId) },
         )
       }
 
@@ -241,16 +303,28 @@ function CellPanelEditorForm({
       invalidateQueries('canvas-blueprints')
       invalidateQueries(`cell-content:${targetId}`)
       invalidateQueries(`cell-spec:${targetId}`)
-      onDone()
+      invalidateQueries('owner-tags')
+      if (aliveRef.current) onDone()
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : String(saveError))
+      if (aliveRef.current) {
+        setError(
+          saveError instanceof Error ? saveError.message : String(saveError),
+        )
+      }
     } finally {
-      setBusy(false)
+      if (aliveRef.current) setBusy(false)
     }
   }
 
   return (
-    <div className="flex flex-col gap-3" data-cell-panel-editor="">
+    <div
+      className="flex flex-col gap-3"
+      data-cell-panel-editor=""
+      // Read by the panel's dismiss paths: Escape while a save is in flight
+      // must not close the drawer — "cancelled" a beat after clicking Create
+      // would otherwise materialize the cell into a panel-less silence.
+      data-busy={busy || undefined}
+    >
       <Field label="Text" hint="What this cell says on the grid.">
         <Input
           value={form.text}
@@ -263,7 +337,10 @@ function CellPanelEditorForm({
         <textarea
           value={form.description}
           rows={3}
-          onChange={(event) => set('description', event.target.value)}
+          onChange={(event) => {
+            setDescriptionTouched(true)
+            set('description', event.target.value)
+          }}
           className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </Field>

@@ -35,22 +35,36 @@ function useSessionChanges(): ChangeEntry[] {
   return useSyncExternalStore(subscribeToSession, sessionSnapshot, () => EMPTY)
 }
 
+/**
+ * Entries with a revert currently executing. Module-level and shared by the
+ * row button and ⌘Z on purpose: `forgetChange` only runs after the network
+ * resolves, so without this a second trigger in that window re-reverts the
+ * same entry — for a creation, that is `delete_cell` twice.
+ */
+const revertsInFlight = new Set<string>()
+
 /** Revert one entry and clean up after it — shared by the row and ⌘Z. */
 async function revertEntry(
   client: NonNullable<ReturnType<typeof useSupabase>['client']>,
   entry: ChangeEntry,
 ): Promise<void> {
-  await executeRevert(client, entry)
-  // The change is gone from the database, so it leaves the list — and the
-  // grid re-reads, because every revert is structural or content-bearing.
-  forgetChange(entry.id)
-  invalidateQueries('lifecycle-phases')
-  invalidateQueries('canvas-blueprints')
-  const cellId =
-    typeof entry.args.cell_id === 'string' ? entry.args.cell_id : null
-  if (cellId) {
-    invalidateQueries(`cell-content:${cellId}`)
-    invalidateQueries(`cell-spec:${cellId}`)
+  if (revertsInFlight.has(entry.id)) return
+  revertsInFlight.add(entry.id)
+  try {
+    await executeRevert(client, entry)
+    // The change is gone from the database, so it leaves the list — and the
+    // grid re-reads, because every revert is structural or content-bearing.
+    forgetChange(entry.id)
+    invalidateQueries('lifecycle-phases')
+    invalidateQueries('canvas-blueprints')
+    const cellId =
+      typeof entry.args.cell_id === 'string' ? entry.args.cell_id : null
+    if (cellId) {
+      invalidateQueries(`cell-content:${cellId}`)
+      invalidateQueries(`cell-spec:${cellId}`)
+    }
+  } finally {
+    revertsInFlight.delete(entry.id)
   }
 }
 
@@ -80,9 +94,13 @@ function useUndoHotkey(changes: ChangeEntry[]) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'z')
         return
-      if (event.shiftKey) return
+      if (event.shiftKey || event.altKey) return
       if (isEditableTarget(event.target)) return
-      const last = [...changes].reverse().find((entry) => entry.revert)
+      // One undo at a time. Key repeat fires long before the network
+      // resolves; letting each press grab "the next entry" would rip
+      // through the whole session on one held key.
+      if (revertsInFlight.size > 0) return
+      const last = changes.findLast((entry) => entry.revert)
       if (!last) return
       event.preventDefault()
       void revertEntry(client, last).catch((error) => {

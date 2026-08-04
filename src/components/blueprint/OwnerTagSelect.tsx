@@ -66,6 +66,14 @@ export function OwnerTagSelect({
       setRenaming(null)
       return
     }
+    // Renaming onto an existing tag would silently merge two vocabularies —
+    // and the recorded revert would then rename *every* cell of the target
+    // tag back, corrupting cells that were never touched. Refuse; merging
+    // is a decision, not a typo.
+    if (tags.some((tag) => tag !== from && tag === next)) {
+      setError(`“${next}” already exists — pick it instead of renaming onto it.`)
+      return
+    }
     setBusy(true)
     setError(null)
     try {
@@ -124,9 +132,13 @@ export function OwnerTagSelect({
           autoFocus
           onChange={(event) => setFilter(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' && trimmedFilter && !exactExists) {
-              pick(trimmedFilter)
-            }
+            if (event.key !== 'Enter' || !trimmedFilter) return
+            // Enter picks the existing tag when one matches exactly —
+            // otherwise it creates. Never a silent no-op.
+            const existing = tags.find(
+              (tag) => tag.toLowerCase() === trimmedFilter.toLowerCase(),
+            )
+            pick(existing ?? trimmedFilter)
           }}
         />
         <div className="flex max-h-48 flex-col overflow-y-auto">

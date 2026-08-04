@@ -29,6 +29,8 @@ export async function updateCellSpec(
   update: CellSpecUpdate,
   /** The values being replaced — captured so the change can be reverted. */
   previous?: CellSpecUpdate,
+  /** `record: false` = revert path; see updateCellContent for the why. */
+  options: { record?: boolean } = {},
 ): Promise<void> {
   const valueProps = update.valueProps
     .map((entry) => ({ for: entry.for.trim(), value: entry.value.trim() }))
@@ -44,11 +46,13 @@ export async function updateCellSpec(
     .eq('id', cellId)
   if (error) throw new Error(error.message)
   // Direct table write — `call()` never sees it, so it logs itself.
-  recordChange(
-    'update_cell_spec',
-    { cell_id: cellId },
-    previous
-      ? { fn: 'update_cell_spec', args: { cell_id: cellId, update: previous } }
-      : undefined,
-  )
+  if (options.record !== false) {
+    recordChange(
+      'update_cell_spec',
+      { cell_id: cellId },
+      previous
+        ? { fn: 'update_cell_spec', args: { cell_id: cellId, update: previous } }
+        : undefined,
+    )
+  }
 }
