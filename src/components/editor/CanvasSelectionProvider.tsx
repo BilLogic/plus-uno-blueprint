@@ -217,15 +217,30 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     }
   }, [clear, mode, pick, pickMany, picked])
 
-  // Outside Design mode there is no picker at all, so a cell click means what
-  // it has always meant.
-  if (mode !== 'design') return <>{children}</>
+  /*
+    One tree shape in both modes.
 
+    This used to return a bare fragment in View and the Provider in Edit —
+    which reads as an optimisation and is actually a bomb: React sees a
+    different element type at the root and unmounts the entire subtree on
+    every mode switch. The camera reset to identity and its refit never
+    landed (an empty canvas at 100% zoom, read as "zoom is broken"), 400
+    cells re-rendered from scratch (~700ms jam, read as "loading is
+    broken"), and every annotation — held in plain useState inside the
+    remounted subtree — was silently deleted.
+
+    Outside Design the *value* is null instead, which is exactly what
+    consumers already expect from `useCellPick` when there is no picker.
+  */
   return (
-    <CellPickContext.Provider value={api}>
+    <CellPickContext.Provider value={mode === 'design' ? api : null}>
       {children}
-      <MarqueeSelection />
-      <CanvasCellContextMenu />
+      {mode === 'design' ? (
+        <>
+          <MarqueeSelection />
+          <CanvasCellContextMenu />
+        </>
+      ) : null}
     </CellPickContext.Provider>
   )
 }

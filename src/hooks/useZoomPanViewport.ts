@@ -91,6 +91,47 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
+/**
+ * True when something between `target` and `container` can still scroll in
+ * the direction of this wheel delta — in which case the wheel belongs to it,
+ * not to the camera. At-the-end counts as "cannot": a list scrolled to its
+ * bottom hands further downward wheel to the canvas, which is how native
+ * scroll chaining behaves everywhere else.
+ */
+function scrollableAncestorCanConsume(
+  target: Node,
+  container: HTMLElement,
+  deltaX: number,
+  deltaY: number,
+): boolean {
+  let node: Node | null = target
+  while (node && node !== container) {
+    if (node instanceof HTMLElement) {
+      const style = getComputedStyle(node)
+      const scrollsY =
+        node.scrollHeight > node.clientHeight &&
+        /auto|scroll/.test(style.overflowY)
+      const scrollsX =
+        node.scrollWidth > node.clientWidth &&
+        /auto|scroll/.test(style.overflowX)
+      if (scrollsY && deltaY !== 0) {
+        const atTop = node.scrollTop <= 0
+        const atBottom =
+          node.scrollTop + node.clientHeight >= node.scrollHeight - 1
+        if ((deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom)) return true
+      }
+      if (scrollsX && deltaX !== 0) {
+        const atLeft = node.scrollLeft <= 0
+        const atRight =
+          node.scrollLeft + node.clientWidth >= node.scrollWidth - 1
+        if ((deltaX < 0 && !atLeft) || (deltaX > 0 && !atRight)) return true
+      }
+    }
+    node = node.parentNode
+  }
+  return false
+}
+
 /** Sub-pixel camera deltas aren't worth a React commit. */
 function isSameTransform(
   a: { pan: { x: number; y: number }; zoom: number },
@@ -399,6 +440,19 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     const onResize = () => {
       if (userAdjustedViewRef.current) return
 
+      // A fit that is still owed takes priority over every policy below: the
+      // resetKey fit retries twice by frame and once at 150ms, and on a heavy
+      // mount all three fire before the grid has laid out — after which this
+      // observer used to be the only agent left, and the refit branch never
+      // ran it. A viewport that has never framed anything has nothing to
+      // preserve; re-centering a camera that does not exist yet is not a
+      // policy question. This is how Edit mode ended up permanently at
+      // identity zoom over an empty corner.
+      if (pendingFitRef.current) {
+        runPendingFit(false)
+        return
+      }
+
       if (refitOnResize) {
         // Checked as the resize is observed, not when the debounce fires:
         // the chrome window closes before a 200 ms debounce would elapse.
@@ -500,6 +554,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
 
       if (e.deltaX !== 0 || e.deltaY !== 0) {
+        // A scrollable *inside* the canvas that can still consume this delta
+        // keeps it — an overflowing cell body, a text editor. Hijacking those
+        // scrolls pans the whole canvas while the text under the pointer
+        // sits unread, which is the exact jank this handler exists to fight.
+        if (scrollableAncestorCanConsume(target, el, e.deltaX, e.deltaY)) {
+          return
+        }
         e.preventDefault()
         e.stopImmediatePropagation()
         cancelFitAnimation()
@@ -513,6 +574,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           z,
           false,
         )
+        // Pan must publish too, on the same trailing debounce as zoom —
+        // otherwise React's copy of the camera is the camera of ten minutes
+        // ago, and the next feature to read it inherits a stale-state bug.
+        syncZoomToReact()
       }
     }
 
@@ -560,10 +625,16 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [commitTransform, isPanning],
   )
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    setIsPanning(false)
-    containerRef.current?.releasePointerCapture(e.pointerId)
-  }, [])
+  const handlePointerUp = useCallback(
+    (e: PointerEvent) => {
+      setIsPanning(false)
+      containerRef.current?.releasePointerCapture(e.pointerId)
+      // The drag committed straight to the element the whole way; publish the
+      // final camera to React so its copy is not the one from before the drag.
+      syncZoomToReact()
+    },
+    [syncZoomToReact],
+  )
 
   useEffect(() => {
     if (panEnabled) return

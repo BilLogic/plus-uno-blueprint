@@ -142,13 +142,25 @@ export function MarqueeSelection() {
       }
     }
 
+    // A cancelled gesture (touch takeover, browser gesture, window blur)
+    // must not leave the ghost rectangle glued to the screen.
+    const onCancel = () => {
+      origin.current = null
+      moved.current = false
+      setRect(null)
+    }
+
     root.addEventListener('pointerdown', onPointerDown, true)
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointercancel', onCancel)
+    window.addEventListener('blur', onCancel)
     return () => {
       root.removeEventListener('pointerdown', onPointerDown, true)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('pointerup', onPointerUp)
+      window.removeEventListener('pointercancel', onCancel)
+      window.removeEventListener('blur', onCancel)
     }
   }, [mode, pick, tool])
 

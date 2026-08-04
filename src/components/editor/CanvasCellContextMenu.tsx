@@ -97,6 +97,9 @@ export function CanvasCellContextMenu() {
   const viewDetail = () => {
     const element = menu.el
     setMenu(null)
+    // A remount between right-click and this click leaves a detached node;
+    // a click dispatched into it bubbles nowhere near React's root.
+    if (!element.isConnected) return
     element.dispatchEvent(
       new MouseEvent('click', { bubbles: true, cancelable: true, detail: 2 }),
     )

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { GripVertical, Scissors, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { describeCell } from '@/lib/canvasCellQuery'
@@ -54,12 +55,15 @@ export function SliceScreenComposer({
   const scroller = useRef<HTMLDivElement>(null)
 
   // Latest values for the window listeners, which are bound once per drag.
+  // Written during render, not in an effect: an effect lands one commit late,
+  // and a pointerup in that gap would apply the drop against the previous
+  // list — silently discarding whatever changed it.
   const slotRef = useRef(slot)
   const screensRef = useRef(screens)
-  useEffect(() => {
-    slotRef.current = slot
-    screensRef.current = screens
-  })
+  // eslint-disable-next-line react-hooks/refs -- latest-value mirror; an effect is one commit late
+  slotRef.current = slot
+  // eslint-disable-next-line react-hooks/refs -- same: a pointerup in the effect gap would drop against a stale list
+  screensRef.current = screens
 
   /**
    * Move a cell to an explicit position rather than "into a screen".
@@ -100,22 +104,48 @@ export function SliceScreenComposer({
   useEffect(() => {
     if (dragging === null) return
 
-    const onMove = (event: PointerEvent) => {
-      event.preventDefault()
-      setPointer({ x: event.clientX, y: event.clientY })
-      // The list scrolls, and a drag near its edge has to scroll it — a
-      // screen below the fold is otherwise unreachable.
-      const element = scroller.current
-      if (element) {
-        const box = element.getBoundingClientRect()
-        if (event.clientY < box.top + 28) element.scrollTop -= 10
-        else if (event.clientY > box.bottom - 28) element.scrollTop += 10
-      }
-      const next = slotAt(event.clientX, event.clientY)
+    let pointerNow = { x: 0, y: 0 }
+    let raf = 0
+
+    const updateSlot = (x: number, y: number) => {
+      const next = slotAt(x, y)
       // Written straight to the ref as well: a pointerup in the same frame
       // as the last move must not read a slot from one render ago.
       slotRef.current = next
       setSlot((current) => (sameSlot(current, next) ? current : next))
+    }
+
+    /*
+      Edge scrolling runs on its own frame loop, not on pointermove. Coupled
+      to move events, a pointer held *still* in the edge band scrolled
+      nothing — the user waits at the edge like at a bus stop with no bus —
+      and when it did scroll, the slot under the pointer changed without the
+      pointer moving, so the drawn line and the actual drop target drifted
+      apart. The loop scrolls and re-derives the slot every frame.
+    */
+    const tick = () => {
+      const element = scroller.current
+      if (element) {
+        const box = element.getBoundingClientRect()
+        let scrolled = false
+        if (pointerNow.y < box.top + 28 && element.scrollTop > 0) {
+          element.scrollTop -= 6
+          scrolled = true
+        } else if (pointerNow.y > box.bottom - 28) {
+          element.scrollTop += 6
+          scrolled = true
+        }
+        if (scrolled) updateSlot(pointerNow.x, pointerNow.y)
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+
+    const onMove = (event: PointerEvent) => {
+      event.preventDefault()
+      pointerNow = { x: event.clientX, y: event.clientY }
+      setPointer(pointerNow)
+      updateSlot(event.clientX, event.clientY)
     }
 
     const onUp = () => {
@@ -130,6 +160,7 @@ export function SliceScreenComposer({
     window.addEventListener('pointerup', onUp)
     window.addEventListener('pointercancel', onUp)
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
@@ -348,17 +379,25 @@ export function SliceScreenComposer({
         )
       })}
 
-      {/* The dragged row's ghost, under the pointer — without it the only
-          feedback mid-drag is a faded row somewhere off-screen. */}
-      {dragging !== null && pointer !== null ? (
-        <div
-          aria-hidden
-          className="pointer-events-none fixed z-50 max-w-56 truncate rounded-md border border-border bg-popover px-2 py-1 text-xs shadow-md"
-          style={{ left: pointer.x + 10, top: pointer.y + 6 }}
-        >
-          {draggedLabel}
-        </div>
-      ) : null}
+      {/*
+        The dragged row's ghost, under the pointer. Portalled to the body:
+        the composer lives inside a popover whose popup carries a transform,
+        and a transformed ancestor becomes the containing block for
+        position:fixed — the ghost would render offset by the popover's
+        translation, confidently not under the finger.
+      */}
+      {dragging !== null && pointer !== null
+        ? createPortal(
+            <div
+              aria-hidden
+              className="pointer-events-none fixed z-50 max-w-56 truncate rounded-md border border-border bg-popover px-2 py-1 text-xs shadow-md"
+              style={{ left: pointer.x + 10, top: pointer.y + 6 }}
+            >
+              {draggedLabel}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

@@ -218,7 +218,6 @@ function BlueprintCellDetailPanelBody() {
   } =
     useBlueprintCellDetail()
   const [closingSelection, setClosingSelection] = useState(currentSelection)
-  const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
   const [addingDependency, setAddingDependency] = useState(false)
@@ -226,14 +225,26 @@ function BlueprintCellDetailPanelBody() {
   const selection = currentSelection ?? closingSelection
   useCanvasTopOffset(currentSelection !== null)
 
-  useEffect(() => {
-    if (currentSelection) {
-      setClosingSelection(currentSelection)
-      const frame = window.requestAnimationFrame(() => setDrawerOpen(true))
-      return () => window.cancelAnimationFrame(frame)
-    }
+  /*
+    The drawer's `open` is derived from the selection, full stop.
 
-    setDrawerOpen(false)
+    It used to be its own state, synced from the selection by an effect,
+    through a requestAnimationFrame, and back again through base-ui's async
+    close callbacks — two owners of one fact, reconciled asynchronously,
+    which is a machine for manufacturing disagreements. The reproducible
+    one: close the panel, reselect a cell during the ~1s exit animation,
+    and the two halves wedge — selection set, canvas dimmed, drawer
+    convinced it is already open, and no edge left that could ever reopen
+    it. Minutes later a delayed close callback would wipe a selection it
+    had never met.
+
+    `closingSelection` survives only to keep the *content* rendered during
+    the exit animation, and is cleared when that animation completes.
+  */
+  const drawerOpen = currentSelection !== null
+
+  useEffect(() => {
+    if (currentSelection) setClosingSelection(currentSelection)
   }, [currentSelection])
 
   // A new cell always opens on Dependencies (state reset during render).
@@ -814,7 +825,10 @@ function BlueprintCellDetailPanelBody() {
     <Drawer
       open={drawerOpen}
       onOpenChange={(open) => {
-        setDrawerOpen(open)
+        // Only close *requests* (✕, Escape, swipe) arrive here, and with
+        // `open` derived from the selection they can only fire while a
+        // selection exists — the delayed-callback-wipes-new-selection class
+        // of bug died with the second owner.
         if (!open) clearSelection()
       }}
       onOpenChangeComplete={(open) => {
