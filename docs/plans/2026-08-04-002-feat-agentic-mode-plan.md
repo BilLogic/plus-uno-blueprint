@@ -1,25 +1,36 @@
 ---
-title: 'feat: agentic mode — the third posture'
+title: 'feat: agentic mode — sidebar-native agent, Figma-style nav shell'
 type: feat
 status: active
 date: 2026-08-04
+revised: 2026-08-04 (v2 — sidebar IA pivot, skills-first priority)
 ---
 
-# Agentic mode — the third posture
+# Agentic mode — a sidebar-native agent in a Figma-style shell
 
 ## Overview
 
-View reads. Edit writes. **Agent converses** — a third mode where a model
-holds the same pen the human holds: it authors through the same RPCs, its
-changes land in the same session sheet, each row individually revertible,
-all of it behind the same Save gate. The agent proposes by *doing*, and the
-human keeps the veto.
+View reads. Edit writes. **The agent converses** — from a panel docked in
+the left sidebar, holding the same pen the human holds: it authors through
+the same RPCs, its changes land in the same session sheet, each row
+individually revertible, all of it behind the same Save gate. The agent
+proposes by *doing*, and the human keeps the veto.
 
-Why now: everything an agent needs to be safe just shipped. One write path
-(`authoringRpc.call()`), a session log that records only writes that landed,
-per-row revert with captured inverses, ⌘Z, and a review-then-save popup.
-None of that was built *for* the agent, and all of it is exactly the
-containment an agent requires.
+**v2 revisions** (this rewrite):
+
+1. The agent is **not a floating window and not a third canvas mode** — it
+   is a sidebar surface. The whole sidebar moves to Figma's IA: a vertical
+   icon rail with the content panel to its right.
+2. The top nav takes **full window width**; the sidebar starts below it.
+3. Collapsed sidebar becomes a **floating pill** over the canvas (Figma's
+   collapsed-file-pill pattern), not a docked 48px rail.
+4. **Skills before UI.** The system prompt was a sketch in v1; it is now
+   the centerpiece, assembled from the domain rulebook already written for
+   the `agentic-service-blueprinting` plugin, and iterated in a CLI harness
+   *before* any panel is built.
+
+Build order (locked): **① lo-fi wireframes (this doc) → ② agent skills +
+harness iteration → ③ UI prototype.**
 
 ## Problem statement
 
@@ -30,254 +41,355 @@ An agent that drafts structure from prose, fills specs, proposes slices and
 answers "where do tutors touch PLUS App?" turns hours of transcription into
 minutes of review.
 
-## The UI, before the code
+Secondary problem this revision absorbs: the sidebar's horizontal
+`Blueprints | Slices` tab strip ([SlideModeView.tsx:104](../../src/components/editor/SlideModeView.tsx))
+doesn't scale to a third surface. A horizontal segmented control with three
+labels eats the sidebar's width; Figma's vertical rail is the proven shape
+for "several tools share one dock."
 
-### The mode toggle grows a third square
+---
 
-```
-                 bottom toolbar
-┌──────────────────────────────────────────────────┐
-│  ▷  ✋  ◇ Make slice        ┌────┬────┬────┐      │
-│                             │ 👁 │ ✎  │ ✦  │      │
-│                             └────┴────┴────┘      │
-│                              View Edit Agent      │
-└──────────────────────────────────────────────────┘
-```
+## Part 1 — The shell, before the agent
 
-Same track-and-raised-square control. **Agent mode is Edit mode plus the
-agent panel** — every Edit affordance stays live (the human can edit
-mid-conversation), and leaving Agent mode closes the panel but keeps the
-session.
+### 1.1 Full-width top nav
 
-### The agent panel — left side, opposite the cell panel
-
-The one-right-panel rule survives: cell details keep the right edge, the
-agent docks left. Both can be open at once — "look at this cell" while the
-agent talks about it is the normal case.
+Today the tab strip lives inside `<main>`, so the sidebar runs the full
+window height beside it. Revised: the top nav spans the window; everything
+else — rail, panel, canvas — sits under it.
 
 ```
-┌────────┬──────────────────────────────────────────────┬──────────┐
-│sidebar │                 canvas                       │          │
-│        │   ┌──────────────────────────────────┐       │  (cell   │
-│        │   │        blueprint grid            │       │  detail  │
-│        │   │   ┌╌╌╌╌╌╌╌┐                      │       │  panel,  │
-│        │   │   │ cell  │ ← agent-touched cells │       │  as      │
-│        │   │   └╌╌╌╌╌╌╌┘   pulse briefly       │       │  today)  │
-│        │   └──────────────────────────────────┘       │          │
-│┌───────┴────────────────────┐                         │          │
-││ ✦ Agent      [session ▾] ✕ │                         │          │
-│├────────────────────────────┤                         │          │
-││ ▸ Draft the Warm-Up        │  ← session list         │          │
-││ ▸ Fill specs for tech lane │    (collapsed here)     │          │
-│├────────────────────────────┤                         │          │
-││ You: turn these interview  │                         │          │
-││ notes into a Help Request  │                         │          │
-││ scenario …                 │                         │          │
-││                            │                         │          │
-││ ✦: I'll add 6 steps and    │                         │          │
-││ fill 3 lanes. Working…     │                         │          │
-││  ├─ ✔ Added step "Reach    │  ← tool calls render    │          │
-││  │    out"                 │    as change rows,      │          │
-││  ├─ ✔ Added a cell   [↺]   │    same vocabulary as   │          │
-││  └─ ⋯ Adding a cell        │    the session sheet    │          │
-│├────────────────────────────┤                         │          │
-││ ⏹ Stop   [message……] [➤]  │                         │          │
-│└────────────────────────────┘                         │          │
-└────────┬───────────────────────────────────┬──────────┘          │
-         │ ▷ ✋ ◇ │ ⏺ Save changes (9) │ 👁 ✎ ✦ │                   │
-         └───────────────────────────────────┴─────────────────────┘
+BEFORE                                AFTER
+┌─────┬────────────────────────┐      ┌──────────────────────────────────┐
+│ side│ ⌂ tabstrip             │      │ ⌂  tabstrip …………………………………  ✕ ▢  │  ← full width
+│ bar │────────────────────────│      ├──┬─────────────┬─────────────────┤
+│     │                        │      │r │  content    │                 │
+│     │        canvas          │      │a │  panel      │     canvas      │
+│     │                        │      │i │             │                 │
+│     │                        │      │l │             │                 │
+└─────┴────────────────────────┘      └──┴─────────────┴─────────────────┘
 ```
 
-### The shared ledger — one change sheet, two authors
+`EditorShell` restructures from `[aside | main(TabStrip, canvas)]` to
+`[TabStrip, row(rail, panel, canvas)]`. The workspace-title header that
+currently tops the sidebar moves into the top nav's left end (it becomes
+the collapsed pill's contents too — see 1.3).
+
+### 1.2 The rail — vertical tabs, Figma's setup
+
+A fixed ~48px icon rail. Each icon is a *surface*, not a mode: it decides
+what the content panel shows, never what a canvas click does.
+
+```
+┌──┬──────────────────────────┐
+│▦ │  PHASES                  │   ▦  Blueprints — phases/scenarios/paths
+│  │   ▸ Discovery            │       (today's SlideModeSidebarNav content)
+│◇ │   ▾ Warm-Up              │
+│  │      Happy Path          │   ◇  Slices — the slice type groups
+│✦ │      Call-off Request    │       (today's SlicesSidebarSection)
+│  │  PATHS                   │
+│  │   ◉ Happy Path           │   ✦  Agent — sessions + conversation
+│  │   ○ Set Goals            │       (new; Part 2)
+│  │                          │
+│⚙ │                          │   ⚙  Settings — pinned to rail bottom
+└──┴──────────────────────────┘       (provider keys live here)
+```
+
+- Active rail icon: filled square, same selected vocabulary as sidebar rows.
+- Naming: the third tab is **Agent** — not "Sessions" (collides with the
+  change-ledger's "session sheet" vocabulary) and not "Convos" (register
+  mismatch with Blueprints/Slices). Sessions are what you see *inside* the
+  Agent tab.
+- Auto-switch survives: activating a slice tab still flips the rail to ◇,
+  exactly as the horizontal tabs auto-switch today.
+- The content panel is 240px for ▦/◇ and **320px for ✦** — transcripts
+  need more line length than a nav tree; the width eases on the same
+  320ms structural curve as collapse.
+
+### 1.3 Collapse — the floating pill
+
+Collapsing hides rail *and* panel. What remains is a floating pill over the
+canvas (Figma's collapsed-file-chip), top-left, workspace name + expand:
+
+```
+expanded                              collapsed
+┌──┬────────────┬──────────────┐      ┌──────────────────────────────────┐
+│▦ │ PHASES     │              │      │ ┌──────────────────────┐         │
+│◇ │  Discovery │    canvas    │  ⇄   │ │ ⬒ Uno Blueprint  ▣  │ canvas  │
+│✦ │  Warm-Up   │              │      │ └──────────────────────┘         │
+└──┴────────────┴──────────────┘      │   ↑ floats over canvas, z-raised │
+                                      └──────────────────────────────────┘
+```
+
+- The pill is the workspace header relocated: title + expand affordance.
+  One control, one home, whether docked or floating.
+- Hover-peek survives: hovering the pill slides the full rail+panel out as
+  an overlay (today's `railHovered` behavior generalizes — the canvas never
+  resizes during a peek).
+- Presentation mode uses the same collapsed state it uses today; the pill
+  hides during presentation (Return is the way back).
+
+### 1.4 Canvas mode toggle — back to two squares
+
+v1 proposed a third ✦ square on the View/Edit toggle. Retired: with the
+agent as a rail surface, a canvas mode named "Agent" would be a category
+error — the toggle answers "what does clicking the canvas do," and the
+agent changes nothing about that. View and Edit remain the only postures;
+the agent panel is available in either (its *writes* require the
+authenticated session, same as Edit's).
+
+---
+
+## Part 2 — The agent surface (lo-fi, priority ①)
+
+### 2.1 The panel
+
+```
+┌──┬───────────────────────────────┬───────────────────────┬──────────┐
+│▦ │ ✦ Agent          [+ New]      │                       │          │
+│  ├───────────────────────────────┤        canvas         │ (cell    │
+│◇ │ ● Draft the Warm-Up   12 chg  │                       │  detail  │
+│  │ ○ Fill tech specs      4 chg  │   ┌╌╌╌╌╌╌╌┐           │  drawer, │
+│✦●│ ○ Q&A about Discovery  0 chg  │   │ cell  │← agent-   │  as      │
+│  ├───────────────────────────────┤   └╌╌╌╌╌╌╌┘  touched  │  today)  │
+│  │ You: turn these interview     │              cells    │          │
+│  │ notes into a Help Request     │              pulse    │          │
+│  │ scenario …                    │                       │          │
+│  │                               │                       │          │
+│  │ ✦ I'll add 6 steps and fill   │                       │          │
+│  │   3 lanes. Working…           │                       │          │
+│  │   ├─ ✔ Added step "Reach out" │                       │          │
+│  │   ├─ ✔ Added a cell      [↺]  │                       │          │
+│  │   └─ ⋯ Adding a cell          │                       │          │
+│  ├───────────────────────────────┤                       │          │
+│⚙ │ ⏹ Stop  [ message……… ]  [➤]  │                       │          │
+└──┴───────────────────────────────┴───────────────────────┴──────────┘
+          bottom bar: │ ▷ ✋ ◇ │ ⏺ Save changes (9) │ 👁 ✎ │
+```
+
+- Sessions list collapses to the active row once a conversation is going;
+  `[+ New]` always visible.
+- Tool calls render as change rows — the same `describeChange` vocabulary
+  as the session sheet, with per-row ↺ revert inline in the transcript.
+- Stop aborts via `AbortSignal`; whatever landed stays, revertible.
+- Cell drawer on the right unchanged — "look at this cell" while the agent
+  talks about it is the normal case, and the two panels are on opposite
+  edges by construction now.
+
+### 2.2 The agent flow (end to end)
+
+```
+   user picks ✦ on rail              (no key yet? panel shows settings
+        │                             prompt → ⚙ provider + key first)
+        ▼
+   types instruction ──────────────► provider.chat(system, messages, TOOLS)
+                                          │ streams
+        ┌─────────────────────────────────┤
+        ▼ text deltas                     ▼ tool_use
+   transcript grows              dispatch(tool, args)
+                                     ├─ read tools → compact snapshots
+                                     └─ write tools → SAME wrappers UI calls
+                                          → recordChange(author:'agent',
+                                                         session_id)
+                                          → invalidateQueries
+                                          → canvas updates live + pulse
+        ◄─────────────────────────────────┘ tool result loops back
+        │
+        ▼
+   human reviews: ledger rows wear ✦, revert any row, ⌘Z works,
+   Save changes gate unchanged. Deletes: not offered to the agent, v1.
+```
+
+### 2.3 The shared ledger — one change sheet, two authors
 
 ```
 ┌ Save changes (9) ────────────────────────────┐
-│ 9 unsaved changes                            │
-│ Already saved to the database — this list    │
-│ is how you can still take them back.         │
-├──────────────────────────────────────────────┤
 │ HELP REQUEST · HAPPY PATH                    │
 │   ✦ Added step "Reach out"            ⌖  ↺  │
 │   ✦ Added a cell                      ⌖  ↺  │
-│   ✦ Edited a cell's text              ⌖  ↺  │
 │      Added lane "QA"                  ⌖  ↺  │  ← human row, no badge
 ├──────────────────────────────────────────────┤
-│ Everything can still be found in the list.   │
 │                            [ ✔ Keep all ]    │
 └──────────────────────────────────────────────┘
 ```
 
-The agent's rows carry a ✦ badge; nothing else about them differs. Revert
-one agent change without touching your own, or ⌘Z through the lot. **This
-is the entire safety model, and it is already built** — the only new part
-is the badge (`recordChange` gains an `author: 'human' | 'agent'` field).
+Unchanged from v1 — this is the entire safety model and it is already
+built. New parts: the ✦ badge (`recordChange` gains
+`author: 'human' | 'agent'` + `agentSessionId`).
 
-### Sessions
+---
 
-A session = one conversation + the change-set it produced.
+## Part 3 — Skills, system prompt, harness (priority ②)
 
-```
-┌ ✦ Agent ────────────────── [ + New session ] ┐
-│ ● Draft the Warm-Up scenario      12 changes │   ← active
-│ ○ Fill specs for tech lane         4 changes │
-│ ○ Q&A about Discovery              0 changes │
-└──────────────────────────────────────────────┘
-```
+v1 waved at "a system prompt sketch." Wrong order. The prompt *is* the
+product for authoring quality, and most of it is already written — the
+`agentic-service-blueprinting` plugin (github.com/BilLogic/agentic-service-blueprinting)
+carries a reviewed domain rulebook. We lift, adapt, and iterate it in a
+harness before the panel exists.
 
-- Sessions persist (tables below); reopening one restores the transcript.
-- "N changes" links a session to its `recordChange` entries via a
-  `session_id` stamped on each entry while that session is active.
-- A session with 0 changes is just a conversation — Q&A is a first-class
-  use, not a failure to edit.
-
-## Technical approach
-
-### Providers: BYO key, three out of the box
-
-Google (Gemini), Anthropic (Claude), OpenAI — one thin adapter each behind
-one interface. Deliberately no more: anyone needing another provider can
-vibe-code a fourth adapter against the same interface.
-
-```ts
-// src/lib/agent/provider.ts
-export type AgentProvider = {
-  id: 'google' | 'anthropic' | 'openai'
-  /** Streamed chat with tool-calling; yields text deltas and tool calls. */
-  chat(input: {
-    system: string
-    messages: AgentMessage[]
-    tools: ToolSpec[]
-    apiKey: string
-    model: string
-    signal: AbortSignal
-  }): AsyncIterable<AgentEvent>
-}
-```
-
-- All three support browser CORS (Anthropic via the
-  `anthropic-dangerous-direct-browser-access: true` header).
-- **Key storage: `localStorage`, per provider, never the repo, never
-  Netlify env.** Settings popover on the agent panel: provider picker,
-  model picker (sensible defaults: `gemini-2.5-pro`, `claude-sonnet-4-5`,
-  `gpt-4o`), key field with paste-and-forget UX (masked after save).
-- v1 runs **entirely in the browser**: the key talks straight to the
-  provider, the tool results come from the same authenticated Supabase
-  session the human uses. No server component, no key custody problem.
-  A Supabase edge-function relay is a later phase *if* team key-sharing is
-  ever wanted — explicitly out of scope now.
-
-### The tool loop
+### 3.1 Prompt architecture — modular skill files
 
 ```
-user message
-   │
-   ▼
-provider.chat(system, messages, TOOLS) ──► text deltas → transcript
-   │                                        tool_use   → dispatch
-   ▼
-dispatch(tool, args)
-   ├─ read tools  → snapshot/query helpers (no session-log entries)
-   └─ write tools → the SAME wrappers the UI calls:
-                    addStep / addLane / upsertCell / updateCellContent /
-                    updateCellSpec / setCellDependency / createSlice /
-                    renamePath / duplicatePath …
-                    → recordChange (author: 'agent', session_id)
-                    → invalidateQueries → canvas updates live
-   │
-   ▼
-tool result → back into provider.chat → loop until done / Stop
+src/lib/agent/skills/
+  00-role.md            the posture: service designer's assistant; propose
+                        by doing; small batches; narrate before writing;
+                        never delete; ask when the spine is ambiguous
+  10-data-model.md      hierarchy (lifecycle → phase → scenario → path →
+                        steps×lanes → cells; triggers; slices), adapted from
+                        plugin references/data-model.md to the LIVE schema
+                        (slot_position, owner tags, dependency needs/trigger)
+  20-house-rules.md     the authoring rulebook (see 3.2)
+  30-tools.md           tool contract: what each tool does, when to read
+                        before writing, batch etiquette, error handling
+  40-review-lenses.md   self-check before finishing a batch, adapted from
+                        the plugin's blueprint-reviewer lenses
 ```
 
-- **Write tools are the existing wrappers, not new endpoints.** RLS,
-  validation, session logging and revert capture all come for free.
-- Deletes: v1 exposes NO delete tools. The agent adds and edits; removal
-  stays human. (Deletes have no per-row revert — the agent does not get
-  the one irreversible verb.)
-- Read tools: `get_blueprint(scenario)` returning a compact text snapshot
-  (steps × lanes × cell text), `list_scenarios()`, `get_cell(id)`,
-  `list_slices()`. Compact on purpose — the whole lifecycle is ~500 cells
-  and fits in any context window.
-- Stop button aborts via `AbortSignal`; whatever landed stays in the
-  sheet, revertible.
+Assembled at session start: concatenate + inject a live context snapshot
+(current phase/scenario/paths, selection, owner-tag vocabulary, step/lane
+names — labels and ids, not full contents; the agent reads details through
+tools). The snapshot design carries over from the earlier inline-agent plan
+([2026-07-31-003](./2026-07-31-003-feat-inline-agent-chat-plan.md)), which
+already settled: labels+ids only, contents on request.
 
-### Persistence
+### 3.2 House rules to lift (source: plugin references/, verbatim where possible)
 
-```sql
-create table agent_sessions (
-  id uuid primary key default gen_random_uuid(),
-  service_lifecycle_id uuid references service_lifecycles not null,
-  title text not null default 'New session',   -- first-message summary later
-  provider text not null,
-  model text not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create table agent_messages (
-  id uuid primary key default gen_random_uuid(),
-  session_id uuid references agent_sessions on delete cascade not null,
-  role text not null check (role in ('user','assistant','tool')),
-  content jsonb not null,          -- text | tool_use | tool_result blocks
-  created_at timestamptz not null default now()
-);
--- RLS: authenticated read/write, anon none. Same posture as authoring.
+From `layer-roles.md` / `lane-vocabulary.md`:
+- "Never infer semantics from the display name."
+- Actor vs system: "A person doing work is `*_actions`, not a `*_tech`
+  pill." Keep tech lanes as pills; prose in a pill lane reads badly.
+- Same actor group → byte-identical lane label everywhere; never bake a
+  role word into a label.
+- One spine actor per path at most; ask "whose journey is the spine?"
+  rather than assuming.
+
+From `elicitation-protocol.md` / playbooks:
+- 5–15 named steps; merge micro-steps, split epics.
+- Empty cells are normal — don't fish for filler; volunteered detail goes
+  in description/summary, not bloated labels.
+- Arrows only where they add information; same path only.
+- Propose structure as plain text FIRST and get a nod — "structure
+  mistakes are cheap here, expensive later."
+- Never fabricate: low confidence = flag it, don't guess. "Cells that read
+  like system capabilities rather than journey moments" is the fabrication
+  signature (reviewer heuristic → self-check).
+
+App-specific additions (not in the plugin):
+- Owner and perceived-owner are **tag vocabularies** — read existing tags
+  before inventing one.
+- Cells are born with text; summary is the tl;dr of the detailed fields.
+- `needs` vs `trigger` on dependencies — define both, with an example.
+- Every write lands immediately and revertibly — say what you're about to
+  do in one line before a batch, then do it.
+
+### 3.3 The elicitation protocol → conversation playbook
+
+The plugin's Q0–Q9 elicitation script (right-sizing → lifecycle → phases →
+spine → steps → lanes → cells → paths → triggers) becomes the agent's
+*co-creation* playbook for "turn these notes into a scenario" requests —
+the exact task the Ecoeled dogfood proved is the bottleneck.
+
+### 3.4 The harness — iterate prompts before pixels
+
+A CLI harness so skill iteration doesn't wait on (or get polluted by) UI:
+
+```
+scripts/agent-harness/
+  run.mjs         REPL: pick provider+model, loads skills + a scenario
+                  snapshot, streams chat, executes READ tools live
+                  (dev-auth Supabase), prints WRITE tool calls as a dry-run
+                  plan by default; --apply executes them through the same
+                  wrappers (revertible, so cheap to undo)
+  cases/          scripted eval prompts with expected-behavior notes:
+                  "add a QA lane to Warm-Up", "notes → Help Request
+                  scenario", "where do tutors touch PLUS App?",
+                  "rename owner tag consistently", an injection probe
+                  (cell text containing instructions — must be ignored)
 ```
 
-`recordChange` entries stay in-memory as today; they gain
-`author?: 'human' | 'agent'` and `agentSessionId?: string` for the badge
-and the per-session change count. (Persisting the ledger itself is a
-separate, later decision.)
+Exit condition for priority ② (deterministic, per the plugin's own rule
+that phases end on evidence, not vibes): all cases produce correct tool
+plans on Gemini + one other provider, zero fabricated structure, zero
+delete attempts, injection probe ignored.
 
-### System prompt (sketch)
+### 3.5 Providers — unchanged from v1
 
-The agent is a *service designer's assistant*, told: the schema vocabulary
-(phase → scenario → path → step/lane → cell; slices), the house rules
-(cells are born with text; owner values are tags — read the vocabulary
-before inventing one; `needs` vs `trigger`), and the contract (small
-batches; narrate what you are about to do; never delete).
+Google / Anthropic / OpenAI adapters behind one interface; browser CORS
+(Anthropic via `anthropic-dangerous-direct-browser-access: true`); keys in
+localStorage via the ⚙ rail settings, never repo/bundle/Netlify; defaults
+`gemini-2.5-pro` / `claude-sonnet-4-5` / `gpt-4o`. Deliberately no fourth
+provider — the adapter interface is the extension point.
 
-## Implementation units
+### 3.6 Tools — unchanged from v1
 
-1. **Provider adapters + settings** — `src/lib/agent/{provider,google,anthropic,openai}.ts`,
-   key settings popover, localStorage. Verify: each adapter streams a
-   hello-world with a dummy tool. *(Patterns: OwnerTagSelect popover;
-   supabase.ts env handling for "configured vs not".)*
-2. **Tool registry** — read snapshots + write wrappers with JSON-schema
-   specs; `author`/`agentSessionId` threading through `recordChange`.
-   Verify: node tests on snapshot shape + a mocked tool round-trip.
-3. **Mode + panel shell** — third toggle square, docked left panel,
-   session list, transcript rendering (text + tool rows reusing
-   `describeChange`), Stop. *(Patterns: CanvasAnnotationToolbar segments;
-   SessionChangesSheet rows.)*
-4. **Sessions persistence** — migration above, load/save messages,
-   session switcher. Verify: reload restores transcript.
-5. **Ledger badges** — ✦ on agent rows in the change sheet, per-session
-   change counts, canvas pulse on agent-touched cells (reuse the
-   invalidate → refetch path; pulse via a transient id set).
-6. **Live e2e** — with the user's Gemini key: "add a QA lane to Warm-Up
-   and describe it" → lane appears, sheet shows ✦ rows, revert works.
+- Write tools = the existing wrappers (`addStep/addLane/upsertCell/
+  updateCellContent/updateCellSpec/setCellDependency/createSlice/
+  renamePath/duplicatePath…`) → `recordChange(author:'agent')`. RLS,
+  validation, logging, revert come free. **No delete tools, v1.**
+- Read tools = compact snapshots: `list_scenarios()`, `get_blueprint(
+  scenario)` (steps × lanes × cell text), `get_cell(id)`, `list_slices()`,
+  `list_owner_tags()`.
+- Static allow-list (`agentTools.ts` per the 07-31 plan): no dynamic
+  dispatch, no table names as arguments, no free SQL. Off-list request =
+  refusal, not attempt.
+
+### 3.7 Persistence — unchanged from v1
+
+`agent_sessions` / `agent_messages` tables, RLS authenticated-only, anon
+none. Reopening a session restores the transcript; "N changes" counts
+ledger entries stamped with the session id.
+
+---
+
+## Implementation units (in the locked priority order)
+
+**① Wireframes** — this document. Exit: Bill nods at Parts 1–2.
+
+**② Skills + harness**
+1. `src/lib/agent/skills/*.md` — adapt plugin rulebook to live schema.
+2. Provider adapters (`provider.ts`, `google.ts`, `anthropic.ts`,
+   `openai.ts`) — needed by the harness anyway, UI-free.
+3. Tool registry with JSON-schema specs; read tools live, write tools
+   behind dry-run/apply flag.
+4. `scripts/agent-harness/run.mjs` + `cases/`; iterate until the exit
+   condition in 3.4 holds.
+
+**③ UI prototype**
+5. Shell restructure: full-width top nav, rail + content panel, floating
+   collapse pill, ✦ tab. (Own commit — it reshapes navigation for
+   everything, agent aside.)
+6. Agent panel: sessions list, transcript with tool rows (`describeChange`
+   reuse), Stop, composer; ⚙ settings with key entry.
+7. Sessions persistence migration + restore.
+8. Ledger ✦ badges + per-session counts + agent-touched cell pulse.
+9. Live e2e with Bill's Gemini key (pasted into ⚙ in-app, never chat/repo):
+   "add a QA lane to Warm-Up and describe it" → lane appears, sheet shows
+   ✦ rows, revert works, reload restores the session.
 
 ## Scope boundaries (non-goals)
 
 - No deletes, no destructive tools, v1.
 - No edge-function relay / shared team keys — browser BYO-key only.
-- No agent-initiated slices *presentation* (it may create slices; it does
-  not present them).
-- Deployed site: agent mode hides — writes require the authenticated dev
-  session, and the deployed app is read-only by decision. Local-first
-  feature for now.
+- No agent-initiated slice *presentation* (creating slices is fine).
+- Deployed read-only site: ✦ rail tab and ⚙ key entry hidden (gated on
+  `canWrite`, same as authoring chrome).
+- Search as a first-class feature stays out of scope (the agent answering
+  "where is X" via read tools is incidental, per the 07-31 plan).
 
 ## Acceptance criteria
 
-- [ ] Three-square toggle; Agent = Edit + panel; mode persists across
-      surfaces like the other two
-- [ ] Keys for Google/Anthropic/OpenAI enter once, live in localStorage,
-      never appear in the repo, bundle, or network logs beyond the
-      provider call itself
-- [ ] Agent writes appear on the canvas live and in the change sheet as
-      ✦ rows, each revertible; ⌘Z includes them
-- [ ] Stop aborts mid-batch cleanly; partial work stays and is revertible
+- [ ] Top nav spans full window; rail + panel sidebar below it; ▦/◇/✦
+      surfaces switch in the rail; slice-tab activation auto-selects ◇
+- [ ] Collapse produces the floating pill; hover-peek overlays without
+      resizing the canvas; presentation hides the pill
+- [ ] View/Edit toggle is two squares again; agent panel opens in either
+- [ ] Skills harness exit condition met before any panel code is written
+- [ ] Keys enter once via ⚙, live in localStorage, never repo/bundle/
+      Netlify; settings absent when `canWrite` is false
+- [ ] Agent writes appear live on canvas and as ✦ ledger rows, each
+      revertible; ⌘Z includes them; Stop aborts cleanly mid-batch
 - [ ] Sessions persist and restore across reload
-- [ ] A cancelled/failed provider call leaves no phantom ledger rows
+- [ ] Injection probe (instructions inside cell text) is ignored — cell
+      content enters prompts as data, tool list is static
 
 ## Post-deploy monitoring & validation
 
@@ -286,9 +398,13 @@ off on the deployed read-only site.
 
 ## Sources & references
 
+- **Domain rulebook**: BilLogic/agentic-service-blueprinting —
+  `skills/blueprint/SKILL.md`, `references/{layer-roles, lane-vocabulary,
+  elicitation-protocol, data-model}.md`, `agents/blueprint-reviewer.md`
+- **Earlier stab (concepts carried forward)**:
+  [2026-07-31-003 inline agent chat](./2026-07-31-003-feat-inline-agent-chat-plan.md) —
+  context snapshot shape, static tool allow-list, honest key handling,
+  prompt-injection posture, four conversation modes
 - Change-ledger + revert design: `docs/plans/2026-07-31-002-refactor-canvas-modes-and-creation-ia-plan.md`
-- Undo/RLS groundwork: `docs/plans/2026-07-30-004-feat-blueprint-authoring-in-design-mode-plan.md`
-- Tool-surface prior art: the service-blueprint skill plan (memory:
-  `service-blueprint-skill-plan`) — same RPC vocabulary, different caller
-- This session: panel-first drafts, per-row revert, ⌘Z, review-then-save —
-  the containment the agent inherits
+- Shell as-built: `src/components/editor/EditorShell.tsx`,
+  `SlideModeView.tsx` (the horizontal tabs this replaces), `TabStrip.tsx`
