@@ -15,10 +15,21 @@ export const AGENT_PROVIDERS: Array<{ id: AgentProviderId; label: string }> = [
   { id: 'openai', label: 'OpenAI' },
 ]
 
+/**
+ * Curated per-provider model lists — a dropdown, not a free-text field, so
+ * a typo can't silently 404 every request. First entry is the default.
+ * Vibe-coding a new id in means editing this list, which is the point.
+ */
+export const MODEL_OPTIONS: Record<AgentProviderId, string[]> = {
+  google: ['gemini-2.5-pro', 'gemini-2.5-flash'],
+  anthropic: ['claude-sonnet-5', 'claude-opus-5', 'claude-haiku-4-5'],
+  openai: ['gpt-5', 'gpt-5-mini', 'gpt-4o'],
+}
+
 export const DEFAULT_MODELS: Record<AgentProviderId, string> = {
-  google: 'gemini-2.5-pro',
-  anthropic: 'claude-sonnet-4-5',
-  openai: 'gpt-4o',
+  google: MODEL_OPTIONS.google[0],
+  anthropic: MODEL_OPTIONS.anthropic[0],
+  openai: MODEL_OPTIONS.openai[0],
 }
 
 export type AgentSettings = {

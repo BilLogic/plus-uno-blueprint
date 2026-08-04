@@ -135,8 +135,6 @@ function WorkspaceBadges() {
 }
 
 type TopNavWorkspaceProps = {
-  sidebarCollapsed: boolean
-  onToggleSidebar: () => void
   /** The orientation landing page is the current view. */
   isLanding?: boolean
   /** Workspace title → landing page (D2). */
@@ -144,14 +142,12 @@ type TopNavWorkspaceProps = {
 }
 
 /**
- * The workspace identity group at the top nav's left end: collapse toggle,
- * title, environment badges. It used to head the sidebar; the top nav spans
- * the full window now, so identity moved up where it survives every sidebar
- * state — including fully collapsed, when the floating pill mirrors it.
+ * The workspace identity group at the top nav's left end: title and
+ * environment badges. The collapse toggle deliberately does NOT live here —
+ * the sidebar has exactly one toggle, at the top of the rail when expanded
+ * and on the floating pill when collapsed, always in the same corner.
  */
 export function TopNavWorkspace({
-  sidebarCollapsed,
-  onToggleSidebar,
   isLanding = false,
   onWorkspaceTitle,
 }: TopNavWorkspaceProps) {
@@ -160,11 +156,6 @@ export function TopNavWorkspace({
       className="flex min-w-0 shrink-0 items-center gap-1.5"
       data-editor-app-title
     >
-      <SidebarCollapseButton
-        collapsed={sidebarCollapsed}
-        onToggle={onToggleSidebar}
-        size="icon-sm"
-      />
       <div className="min-w-0 max-w-48">
         <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
       </div>
@@ -175,21 +166,13 @@ export function TopNavWorkspace({
 
 /**
  * The collapsed sidebar's remnant: a floating pill over the canvas (Figma's
- * collapsed-file-chip). Hovering it peeks the full sidebar as an overlay;
- * the button pins it back into flow.
+ * collapsed-file-chip). Clicking its toggle expands the sidebar back into
+ * flow — no hover-peek: one control, one behavior.
  */
-export function FloatingSidebarPill({
-  onExpand,
-  onHoverChange,
-}: {
-  onExpand: () => void
-  onHoverChange: (hovered: boolean) => void
-}) {
+export function FloatingSidebarPill({ onExpand }: { onExpand: () => void }) {
   return (
     <div
       className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border bg-background/95 py-1 pl-3 pr-1 shadow-md backdrop-blur-sm"
-      onMouseEnter={() => onHoverChange(true)}
-      onMouseLeave={() => onHoverChange(false)}
       data-editor-sidebar-pill
     >
       <p className="max-w-40 truncate text-xs font-medium text-foreground">

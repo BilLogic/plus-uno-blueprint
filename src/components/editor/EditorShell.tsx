@@ -4,6 +4,7 @@ import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
   FloatingSidebarPill,
+  SidebarCollapseButton,
   TopNavWorkspace,
 } from '@/components/editor/EditorChrome'
 import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
@@ -52,10 +53,6 @@ export function EditorShell() {
   const { activeTab, activateTab, openTab } = useViewState()
   const { canWrite } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  // Hovering the floating pill peeks the sidebar back as an overlay. It
-  // floats above the canvas rather than pushing it, so peeking never
-  // resizes the stage — which is what makes it usable during a presentation.
-  const [pillHovered, setPillHovered] = useState(false)
   const isLanding = view === 'landing'
   // Home reads as active only on the overview canvas itself, and only while
   // no tab is covering it.
@@ -95,10 +92,6 @@ export function EditorShell() {
   const presenting = activeTabKind === 'present' && !leavingPresent
 
   const railOnly = presenting || sidebarCollapsed
-  // Peeked = the sidebar is showing as an overlay over the canvas rather
-  // than in flow. Only reachable from the floating pill, so never while
-  // presenting (the pill is hidden there).
-  const peeked = railOnly && !presenting && pillHovered
 
   useEffect(() => {
     // Entering and leaving presentation both resize the canvas container.
@@ -109,7 +102,6 @@ export function EditorShell() {
     // The width ease resizes the canvas container for 320 ms. That is
     // chrome moving, not the user navigating — the camera holds still.
     suppressCanvasResizeRefit()
-    setPillHovered(false)
     setSidebarCollapsed((collapsed) => !collapsed)
   }
 
@@ -173,6 +165,9 @@ export function EditorShell() {
           }
         }}
         showAgent={canWrite}
+        topSlot={
+          <SidebarCollapseButton collapsed={false} onToggle={toggleSidebar} />
+        }
         bottomSlot={canWrite ? <AgentSettingsRailButton /> : undefined}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -213,8 +208,6 @@ export function EditorShell() {
           onHome={goOverview}
           leading={
             <TopNavWorkspace
-              sidebarCollapsed={railOnly}
-              onToggleSidebar={toggleSidebar}
               isLanding={isLanding}
               onWorkspaceTitle={goLandingBase}
             />
@@ -224,10 +217,7 @@ export function EditorShell() {
         <div className="relative flex min-h-0 min-w-0 flex-1">
           <aside
             className={cn(
-              'relative z-20 shrink-0 bg-sidebar',
-              // Only clip while in flow: the peek overlay has to escape a
-              // zero-width aside.
-              peeked ? 'overflow-visible' : 'overflow-hidden',
+              'relative z-20 shrink-0 overflow-hidden bg-sidebar',
               railOnly ? 'w-0' : cn(ASIDE_WIDTH_CLASS[surface], 'border-r border-border'),
             )}
             style={{
@@ -238,30 +228,22 @@ export function EditorShell() {
             data-editor-sidebar=""
             data-collapsed={railOnly ? '' : undefined}
             aria-label="Workspace navigation"
-            onMouseEnter={() => {
-              if (railOnly) setPillHovered(true)
-            }}
-            onMouseLeave={() => setPillHovered(false)}
           >
             {/*
               Fixed-width sidebar body (rail + panel). In flow it is clipped
               by the animating aside, so open/close reads as a wipe rather
-              than a mount/unmount; peeked from the pill it lifts out as an
-              overlay (same 200 ms fade, 8 px slide) and leaves the canvas
-              exactly where it is.
+              than a mount/unmount.
             */}
             <div
               className={cn(
                 'flex h-full min-h-0 flex-row',
                 ASIDE_WIDTH_CLASS[surface],
                 'transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none',
-                peeked &&
-                  'absolute inset-y-0 left-0 z-30 border-r border-border bg-sidebar shadow-lg',
-                railOnly && !peeked
+                railOnly
                   ? 'pointer-events-none -translate-x-2 opacity-0'
                   : 'translate-x-0 opacity-100 delay-75',
               )}
-              aria-hidden={railOnly && !peeked}
+              aria-hidden={railOnly}
             >
               {sidebarBody}
             </div>
@@ -269,15 +251,12 @@ export function EditorShell() {
 
           {/*
             Collapsed remnant: the floating pill over the canvas. Hidden
-            while presenting (full-bleed; Return is the way back) and while
-            the peek overlay is out (the overlay covers its spot).
+            while presenting (full-bleed; Return is the way back). Its
+            toggle is the same single control the rail carries expanded.
           */}
-          {railOnly && !presenting && !peeked ? (
+          {railOnly && !presenting ? (
             <div className="pointer-events-none absolute left-3 top-3 z-30">
-              <FloatingSidebarPill
-                onExpand={toggleSidebar}
-                onHoverChange={setPillHovered}
-              />
+              <FloatingSidebarPill onExpand={toggleSidebar} />
             </div>
           ) : null}
 

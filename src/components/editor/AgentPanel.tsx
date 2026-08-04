@@ -51,7 +51,7 @@ import {
 } from '@/lib/agent/sessions'
 import {
   AGENT_PROVIDERS,
-  DEFAULT_MODELS,
+  MODEL_OPTIONS,
   hasKey,
   modelFor,
   saveAgentSettings,
@@ -554,19 +554,33 @@ export function AgentSettingsRailButton() {
               <span className="w-16 shrink-0 text-[11px] text-muted-foreground">
                 Model
               </span>
-              <Input
-                value={
-                  settings.models[settings.provider] ??
-                  DEFAULT_MODELS[settings.provider]
-                }
-                onChange={(event) =>
-                  saveAgentSettings({
-                    models: { [settings.provider]: event.target.value },
-                  })
-                }
-                className="h-7 flex-1 text-xs"
-                aria-label="Model"
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 flex-1 justify-start font-mono text-xs"
+                    >
+                      {modelFor(settings)}
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="start">
+                  {MODEL_OPTIONS[settings.provider].map((model) => (
+                    <DropdownMenuItem
+                      key={model}
+                      onClick={() =>
+                        saveAgentSettings({
+                          models: { [settings.provider]: model },
+                        })
+                      }
+                    >
+                      <span className="font-mono text-xs">{model}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div className="flex items-center gap-2">

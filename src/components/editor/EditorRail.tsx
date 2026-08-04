@@ -68,19 +68,23 @@ function RailButton({
 }
 
 /**
- * The vertical icon rail. `bottomSlot` is pinned under a spacer — the ⚙
- * settings entry lives there so keys are reachable from any surface.
+ * The vertical icon rail. `topSlot` holds the sidebar's ONE collapse
+ * toggle — same corner the floating pill occupies when collapsed.
+ * `bottomSlot` is pinned under a spacer — the ⚙ settings entry lives there
+ * so keys are reachable from any surface.
  */
 export function EditorRail({
   surface,
   onSelectSurface,
   showAgent,
+  topSlot,
   bottomSlot,
 }: {
   surface: SidebarSurface
   onSelectSurface: (surface: SidebarSurface) => void
   /** Deployed read-only builds hide the agent surface entirely. */
   showAgent: boolean
+  topSlot?: ReactNode
   bottomSlot?: ReactNode
 }) {
   return (
@@ -93,6 +97,12 @@ export function EditorRail({
         )}
         data-editor-rail
       >
+        {topSlot ? (
+          <>
+            {topSlot}
+            <div className="my-0.5 h-px w-6 shrink-0 bg-border/60" aria-hidden />
+          </>
+        ) : null}
         {SURFACES.filter((entry) => entry.id !== 'agent' || showAgent).map(
           ({ id, label, icon: Icon }) => (
             <RailButton
