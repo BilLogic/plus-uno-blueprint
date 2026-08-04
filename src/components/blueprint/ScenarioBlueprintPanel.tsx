@@ -4,6 +4,7 @@ import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePa
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { useEditor } from '@/contexts/EditorContext'
+import { comparePathCells } from '@/lib/comparePathCells'
 import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
@@ -90,12 +91,21 @@ export function ScenarioBlueprintPanel({
     storedViewType === 'integrated' && selectedPathIds.length < 2
       ? 'side-by-side'
       : storedViewType
-  const useIntegratedLayout =
-    displayViewType === 'integrated' &&
-    paths.length > 0 &&
-    selectedPathIds.length > 0
+  /*
+    Compare v2 is a *highlight pass over side-by-side*, not a merged grid.
+    The merged spine (ideation idea 1) shipped first and failed reading:
+    collapsing shared cells destroyed the row rhythm that makes a blueprint
+    scannable, and re-pointed arrows read as noise. The stored 'integrated'
+    view type now means "side-by-side, painted": identical cells dim,
+    unique cells wear their path's ring, divergent counterparts get a ≠
+    badge. Nothing moves; the differences are all that changes ink.
+  */
+  const compareHighlight =
+    displayViewType === 'integrated' && selectedPathIds.length >= 2
+  const useIntegratedLayout = false
   const useSideBySideLayout =
-    displayViewType === 'side-by-side' && selectedPathIds.length > 0
+    (displayViewType === 'side-by-side' || displayViewType === 'integrated') &&
+    selectedPathIds.length > 0
   const useSinglePathLayout =
     displayViewType === 'single' && selectedPathIds.length > 0
 
@@ -123,10 +133,20 @@ export function ScenarioBlueprintPanel({
   )
 
   const integratedBlueprint = useMemo(
-    // The integrated layout *is* the comparison view: shared spine collapses
-    // to one desaturated copy, divergences band by path, arrows fork.
     () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds, { compare: true }),
     [allBlueprints, selectedPathIds],
+  )
+
+  const compareStatusByCellId = useMemo(
+    () =>
+      compareHighlight
+        ? comparePathCells(
+            itemsInSelectionOrder(selectedPathIds, (id) =>
+              blueprintsByPathId.get(id),
+            ),
+          )
+        : undefined,
+    [blueprintsByPathId, compareHighlight, selectedPathIds],
   )
 
   const showIntegratedGrid =
@@ -263,6 +283,7 @@ export function ScenarioBlueprintPanel({
           sectionTitleDescription={sectionTitleDescription}
           fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
           fillSwimlaneHeight={fillSwimlaneHeight}
+          compareStatusByCellId={compareStatusByCellId}
         />
       </ResizableComparePanel>
     )
