@@ -273,16 +273,16 @@ harness before the panel exists.
 
 Deepened in its own doc:
 [2026-08-04-003 harness & skills IA](./2026-08-04-003-feat-agent-harness-and-skills-plan.md).
-The shape follows the architecture locked in
-[2026-07-16-001](./2026-07-16-001-feat-service-blueprint-agent-skill-plan.md):
-**one skill, `skills/canvas-agent/` in the plugin repo** — SKILL.md
-(under the 500-line budget: posture, ⚠ hard requirements, task routing
-table, deterministic exits) + a few `references/` files
-(operating-contract, canvas-playbooks, self-review), sharing
-`skills/blueprint`'s domain references (data-model, layer-roles,
-lane-vocabulary, elicitation-protocol) rather than copying them. Humans
-manage it from the IDE like any plugin skill; the app vendors the same
-files and serves `references/` through a `read_reference` tool — one
+**No new skill.** The canvas agent consumes the plugin's four-skill
+roadmap — `blueprint` (→ `map`), `slice`, `audit`, `whatif`
+(agentic-service-blueprinting plan 2026-07-29-004) — one skill active
+per task via a thin intent router, plus ONE new plugin reference,
+`canvas-adapter.md`, translating the workspace dialect (IR files,
+validators, sign-off) to the app's tool surface (live RPCs, revertible
+ledger, human Save gate). v1 wires blueprint(map) + slice; audit and
+whatif drop in when 004 Phases 2–3 land. Humans manage the same four
+skills from the IDE; the app vendors the same files and serves
+`references/` through a `read_reference` tool — one
 progressive-disclosure mechanism, two consumers.
 
 Assembled at session start: SKILL.md + inject a live context snapshot
@@ -388,8 +388,8 @@ ledger entries stamped with the session id.
 **② Skills + harness** (detailed units in
 [2026-08-04-003](./2026-08-04-003-feat-agent-harness-and-skills-plan.md))
 1. AGENTS.md + `docs/agent/ui-inventory.md` in this repo.
-2. `skills/canvas-agent/` in the plugin repo (SKILL.md + references,
-   sharing the blueprint skill's domain files).
+2. `references/canvas-adapter.md` in the plugin repo (the four skills
+   stay untouched).
 3. Vendor + assemble: sync script, `prompt.ts`, tool registry with
    `read_reference`, provider adapters. UI-free.
 4. `scripts/agent-harness/run.mjs` + cases; iterate until the exit
