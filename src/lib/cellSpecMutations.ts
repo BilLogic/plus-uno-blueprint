@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { recordChange } from '@/lib/authoringSession'
 import type { ValueProp } from '@/lib/valueProps'
 import type { Database, Json } from '@/types/database'
 
@@ -40,4 +41,6 @@ export async function updateCellSpec(
     })
     .eq('id', cellId)
   if (error) throw new Error(error.message)
+  // Direct table write — `call()` never sees it, so it logs itself.
+  recordChange('update_cell_spec', { cell_id: cellId })
 }

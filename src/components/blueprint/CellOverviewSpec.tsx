@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CellSpecEditor } from '@/components/blueprint/CellSpecEditor'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellSpec } from '@/hooks/useCellSpec'
 import { parseValueProps } from '@/lib/valueProps'
@@ -33,7 +34,16 @@ type CellOverviewSpecProps = {
 export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   const { client, configured, canWrite } = useSupabase()
   const specResult = useCellSpec(configured ? cellId : null)
-  const [editing, setEditing] = useState(false)
+  /*
+    Same posture rule as CellContentSection: Edit mode opens editing.
+  */
+  const mode = useCanvasModeValue()
+  const [editing, setEditing] = useState(mode === 'design' && canWrite)
+  const [editingFor, setEditingFor] = useState(cellId)
+  if (editingFor !== cellId) {
+    setEditingFor(cellId)
+    setEditing(mode === 'design' && canWrite)
+  }
 
   if (!configured || !client || !cellId) return null
 

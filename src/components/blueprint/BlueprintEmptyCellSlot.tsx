@@ -63,6 +63,7 @@ export function BlueprintEmptyCellSlot({
       // presents. The grid re-reads because a new cell changes the layout.
       await upsertCell(client, { pathId, layerId, stepId, content: '' })
       invalidateQueries('lifecycle-phases')
+      invalidateQueries('canvas-blueprints')
     } catch (error) {
       console.error('[authoring] upsert_cell failed:', error)
     } finally {

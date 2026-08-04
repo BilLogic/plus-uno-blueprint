@@ -6,6 +6,7 @@ import {
 } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
+import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandles'
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
@@ -278,6 +279,10 @@ function ComparePathColumn({
         bodyRef={columnRef}
         pathId={blueprint.path.id}
       />
+      {/* Lanes are scenario-wide, so one set of handles is enough — the
+          first path column carries them (the grid reserves columns 1–2 for
+          the label rail), the rest would only double the targets. */}
+      {columnIndex === 2 ? <BlueprintLaneHandles bodyRef={columnRef} /> : null}
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CellContentEditor } from '@/components/blueprint/CellContentEditor'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellContent } from '@/hooks/useCellContent'
 
@@ -20,7 +21,20 @@ import { useCellContent } from '@/hooks/useCellContent'
 export function CellContentSection({ cellId }: { cellId: string | null }) {
   const { client, configured, canWrite } = useSupabase()
   const result = useCellContent(configured ? cellId : null)
-  const [editing, setEditing] = useState(false)
+  /*
+    Edit mode opens editing; View mode opens reading. The pencil toggle was
+    right for a reader who occasionally corrects, and wrong the moment Edit
+    became a mode: a panel opened *from* Edit that still greets its author
+    read-only is a second door on a door. Re-derived per cell, so moving to
+    the next cell keeps the posture the mode implies.
+  */
+  const mode = useCanvasModeValue()
+  const [editing, setEditing] = useState(mode === 'design' && canWrite)
+  const [editingFor, setEditingFor] = useState(cellId)
+  if (editingFor !== cellId) {
+    setEditingFor(cellId)
+    setEditing(mode === 'design' && canWrite)
+  }
 
   if (!configured || !client || !cellId) return null
   if (result.status === 'loading') return null

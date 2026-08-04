@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p1
 issue_id: "008"
 tags: [code-review, panel, editing, design]
@@ -37,3 +37,14 @@ be configurable.
 - [ ] Every visible field either edits in place or states why not
 - [ ] Writes appear in the session change counter
 - [ ] View mode panel unchanged
+
+## Work Log
+- 2026-08-04: Shipped via solution 1 (mode-aware panel). CellContentSection
+  and CellOverviewSpec open editing when the canvas mode is design and the
+  session can write, re-derived per cell. The three direct-table writes
+  (update_cell_content / update_cell_resources / update_cell_spec) now log
+  themselves into the session change counter, same after-success placement
+  as the RPCs. Verified: ⌘-click a text cell in Edit → drawer opens with
+  both editors live (2 textareas, 4 inputs, Save/Cancel). Lane insert
+  handles shipped in the same pass (BlueprintLaneHandles): hover boundary →
+  + → name → Enter; verified end to end against the live DB and cleaned up.

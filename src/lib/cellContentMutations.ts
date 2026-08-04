@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
+import { recordChange } from '@/lib/authoringSession'
 import { toAuthoringError } from '@/lib/authoringErrors'
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
@@ -49,6 +50,9 @@ export async function updateCellContent(
     })
     .eq('id', cellId)
   if (error) throw toAuthoringError(error)
+  // Direct table write, so `call()` never sees it — logged here for the same
+  // reason and with the same after-success placement.
+  recordChange('update_cell_content', { cell_id: cellId })
 }
 
 export type ResourceDraft = { label: string; url: string }
@@ -86,6 +90,7 @@ export async function updateCellResources(
     .update({ links: [...preserved, ...rebuilt] as unknown as Json })
     .eq('id', cellId)
   if (error) throw toAuthoringError(error)
+  recordChange('update_cell_resources', { cell_id: cellId })
 }
 
 /** A link with no label still needs to say something — its host will do. */

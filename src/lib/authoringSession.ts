@@ -130,6 +130,12 @@ export function describeChange(entry: ChangeEntry): string {
       return `Added lane${quoted}`
     case 'upsert_cell':
       return 'Added a cell'
+    case 'update_cell_content':
+      return 'Edited a cell’s text'
+    case 'update_cell_resources':
+      return 'Edited a cell’s resources'
+    case 'update_cell_spec':
+      return 'Specified function & form'
     case 'set_cell_dependency':
       return 'Connected two cells'
     case 'clear_cell_dependency':

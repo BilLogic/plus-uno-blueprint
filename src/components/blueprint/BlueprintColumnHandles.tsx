@@ -138,6 +138,7 @@ export function BlueprintColumnHandles({
       // for the one thing that is easiest to type where it lands.
       await addStep(client, { pathId, name: '', atPosition: at })
       invalidateQueries('lifecycle-phases')
+      invalidateQueries('canvas-blueprints')
     } catch (error) {
       console.error('[authoring] add_step failed:', error)
     } finally {
