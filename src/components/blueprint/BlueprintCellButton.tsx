@@ -3,7 +3,7 @@ import {
   useBlueprintCellDetailOptional,
   useBlueprintCellPreviewHover,
 } from '@/contexts/BlueprintCellDetailContext'
-import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { useCanvasAnnotationsOptional } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { clickPicks, pickModeForClick } from '@/lib/cellPickGrammar'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
@@ -99,7 +99,10 @@ export function BlueprintCellButton({
   // Slice membership and picking both key on the canonical cell id, so
   // integrated-view overlay ids resolve to the same cell as the base grid.
   const pick = useCellPick()
-  const { tool: annotationTool } = useCanvasAnnotations()
+  // Optional, not asserted: this button also renders inside the portalled
+  // detail drawer, which is outside CanvasAnnotationProvider. The throwing
+  // hook there was an app-wide white screen (see canvasAnnotationContext).
+  const annotationTool = useCanvasAnnotationsOptional()?.tool ?? null
   const pickCellId = resolvedCellId ?? cellId ?? null
   const pickOrder = pick && pickCellId ? pick.orderOf(pickCellId) : undefined
   const isPicked = Boolean(pick && pickCellId && pick.isPicked(pickCellId))

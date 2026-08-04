@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
   ExternalLink,
   FileSearch,
@@ -167,7 +167,48 @@ function useCanvasTopOffset(active: boolean) {
   }, [active])
 }
 
+/**
+ * A render error in the drawer must cost the drawer, not the app.
+ *
+ * This panel is the one surface that renders arbitrary cell content —
+ * pictures, links, tech pills, prose — outside the canvas's providers, which
+ * makes it the most likely place for a render throw. Without a boundary that
+ * throw unmounted the entire editor to a white page, which is how a broken
+ * pill icon read as "loading is broken". React error boundaries are still
+ * class-only.
+ */
+class CellDetailErrorBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false }
+  static getDerivedStateFromError() {
+    return { failed: true }
+  }
+  componentDidCatch(error: unknown) {
+    console.error('[cell-detail] panel render failed:', error)
+  }
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="fixed right-4 bottom-16 z-40 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground shadow-md">
+          This cell's details failed to display. The canvas is unaffected.
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export function BlueprintCellDetailPanel() {
+  return (
+    <CellDetailErrorBoundary>
+      <BlueprintCellDetailPanelBody />
+    </CellDetailErrorBoundary>
+  )
+}
+
+function BlueprintCellDetailPanelBody() {
   const {
     selection: currentSelection,
     clearSelection,
