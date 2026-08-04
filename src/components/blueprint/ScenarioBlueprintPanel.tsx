@@ -168,7 +168,10 @@ export function ScenarioBlueprintPanel({
           integratedPathCount,
         )
       : getComparePanelWidth(visibleBlueprints),
-    minHeight: panelHeight,
+    // The compare grid's height estimate runs hot (stacked slots collapse
+    // after classification), and a floor set from a hot estimate is dead
+    // gray space below the content. Let the measured content rule there.
+    minHeight: showIntegratedGrid ? undefined : panelHeight,
     defaultWidth: showIntegratedGrid
       ? getIntegratedPanelWidth(
           integratedBlueprint!.steps.length,

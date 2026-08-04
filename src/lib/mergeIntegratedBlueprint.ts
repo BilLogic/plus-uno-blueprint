@@ -160,6 +160,72 @@ export function classifyCompareCells(
   return { cells: kept, remap }
 }
 
+/**
+ * Compare-mode step alignment: two steps are the same *column* when their
+ * names match, even though each path carries its own step rows.
+ *
+ * Merging by id (the integrated view's default) only unifies paths that
+ * physically share `steps` rows — duplicated paths do, independently
+ * authored ones do not. Without this, comparing two paths that both have a
+ * "Set goals" column rendered it twice, every slot classified "only", and
+ * the merged spine read as nonsense. Names pair by occurrence order, so a
+ * path with two "Discovers PLUS" columns maps its first onto the other
+ * path's first, second onto second.
+ *
+ * Returns the unified step list plus an alias map (`pathId:stepId` → the
+ * unified step id) the cell pass translates through.
+ */
+function mergeStepsByName(
+  blueprints: BlueprintData[],
+  primary: BlueprintData,
+): { steps: IntegratedBlueprintStep[]; alias: Map<string, string> } {
+  const unified: IntegratedBlueprintStep[] = []
+  const alias = new Map<string, string>()
+  const normalize = (name: string) => name.trim().toLowerCase()
+
+  const append = (blueprint: BlueprintData) => {
+    // Occurrence counter per name, so repeated step names pair in order.
+    const seen = new Map<string, number>()
+    for (const step of [...blueprint.steps].sort(
+      (a, b) => a.column_position - b.column_position,
+    )) {
+      const name = normalize(step.name)
+      const occurrence = seen.get(name) ?? 0
+      seen.set(name, occurrence + 1)
+
+      const match = unified.filter(
+        (entry) => normalize(entry.name) === name,
+      )[occurrence]
+      if (match) {
+        match.pathStepIds[blueprint.path.id] = step.id
+        alias.set(`${blueprint.path.id}:${step.id}`, match.id)
+        continue
+      }
+
+      const created: IntegratedBlueprintStep = {
+        id: step.id,
+        name: step.name,
+        column_position: unified.length + 1,
+        pathStepIds: { [blueprint.path.id]: step.id },
+      }
+      unified.push(created)
+      alias.set(`${blueprint.path.id}:${step.id}`, created.id)
+    }
+  }
+
+  append(primary)
+  for (const blueprint of blueprints) {
+    if (blueprint.path.id === primary.path.id) continue
+    append(blueprint)
+  }
+
+  unified.forEach((step, index) => {
+    step.column_position = index + 1
+  })
+
+  return { steps: unified, alias }
+}
+
 export function mergeIntegratedBlueprint(
   blueprints: BlueprintData[],
   selectedPathIds: string[],
@@ -172,7 +238,12 @@ export function mergeIntegratedBlueprint(
     (a, b) => a.row_position - b.row_position,
   )
   const layerNameToId = new Map(layers.map((layer) => [layer.name, layer.id]))
-  const steps = mergeSteps(blueprints, primary)
+  const comparing = Boolean(options.compare) && selectedPathIds.length >= 2
+  const namedMerge = comparing
+    ? mergeStepsByName(blueprints, primary)
+    : null
+  const steps = namedMerge?.steps ?? mergeSteps(blueprints, primary)
+  const stepAlias = namedMerge?.alias ?? null
 
   const integratedStepIds = new Set(steps.map((step) => step.id))
   const integratedStepById = new Map(steps.map((step) => [step.id, step]))
@@ -186,11 +257,14 @@ export function mergeIntegratedBlueprint(
         cell.step_id,
         blueprint.path.id,
       )
+      // Compare mode: the cell's own step id translates onto the unified
+      // (name-aligned) column it belongs to.
+      const aliasedStepId =
+        stepAlias?.get(`${blueprint.path.id}:${resolvedStepId}`) ??
+        resolvedStepId
       const step =
-        blueprint.steps.find((entry) => entry.id === resolvedStepId) ??
-        (integratedStepIds.has(resolvedStepId)
-          ? integratedStepById.get(resolvedStepId)
-          : undefined)
+        integratedStepById.get(aliasedStepId) ??
+        blueprint.steps.find((entry) => entry.id === resolvedStepId)
       if (!layer || !step) continue
 
       const integratedLayerId = layerNameToId.get(layer.name)
@@ -231,7 +305,6 @@ export function mergeIntegratedBlueprint(
   */
   let finalCells = cells
   let compareRemap: Map<string, string> | null = null
-  const comparing = Boolean(options.compare) && selectedPathIds.length >= 2
   if (comparing) {
     const classified = classifyCompareCells(
       cells,

@@ -183,18 +183,6 @@ export function SliceScreenComposer({
     onChange(next.filter((entry) => entry.cells.length > 0))
   }
 
-  const mergeUp = (screenIndex: number) => {
-    if (screenIndex === 0) return
-    const next = [...screens]
-    const [merged] = next.splice(screenIndex, 1)
-    next[screenIndex - 1] = {
-      ...next[screenIndex - 1],
-      cells: [...next[screenIndex - 1].cells, ...merged.cells],
-      caption: next[screenIndex - 1].caption || merged.caption,
-    }
-    onChange(next)
-  }
-
   const removeCell = (screenIndex: number, cell: string) => {
     onChange(
       screens
@@ -274,20 +262,12 @@ export function SliceScreenComposer({
                 written in the slice itself, against the cells they describe.
                 `caption` stays on the draft and saves as empty.
               */}
-              <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
-                {screen.cells.length} cell{screen.cells.length === 1 ? '' : 's'}
-              </span>
-              {screenIndex > 0 ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 shrink-0 px-1.5 text-[10px] text-muted-foreground"
-                  onClick={() => mergeUp(screenIndex)}
-                >
-                  Merge up
-                </Button>
-              ) : null}
+              {/*
+                No "Merge up" button: dragging a cell across the boundary IS
+                the merge, and the split line is its opposite. Two gestures,
+                zero buttons — a per-screen action row was noise that said
+                less than the drag it duplicated.
+              */}
             </div>
 
             <ul className="flex flex-col">

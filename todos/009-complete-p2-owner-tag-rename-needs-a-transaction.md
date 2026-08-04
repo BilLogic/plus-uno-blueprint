@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p2
 issue_id: "009"
 tags: [code-review, data-integrity, owners, supabase]
@@ -36,3 +36,8 @@ but the transactional gap and the name-based revert remain.)
 ## Work Log
 - 2026-08-04: Found by race + TS reviewers during /ce:review. Client-side
   merge-block and Enter-picks-existing shipped as mitigation.
+
+- 2026-08-04 (later): DONE — `rename_owner_tag(from,to)` RPC applied to
+  osybxeojvsqcwxkgnalm (migration 20260804120000), returns affected cell
+  ids; client records `rename_owner_tag_scoped` revert executed via
+  id-scoped updates.

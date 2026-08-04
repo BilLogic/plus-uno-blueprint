@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useEffect, useState } from 'react'
-import { Flag, Check, Crosshair, Undo2 } from 'lucide-react'
+import { Check, Crosshair, Undo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -153,6 +153,14 @@ export function SessionChangesSheet() {
     setConfirming(false)
   }
 
+  /*
+    One control, not two. The flag counter and the Save button used to sit
+    side by side — the same fact (unsaved changes exist) wearing two faces.
+    Now Save changes *is* the trigger: clicking it opens the list above,
+    where the changes are reviewed, individually reverted, and confirmed —
+    the same pattern as slice creation's popup. Saving requires seeing what
+    is being kept.
+  */
   return (
     <>
       <DropdownMenu>
@@ -165,10 +173,11 @@ export function SessionChangesSheet() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    aria-label={`${changes.length} unsaved changes`}
-                    className="pointer-events-auto h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    aria-label={`Review and save ${changes.length} changes`}
+                    className="pointer-events-auto h-7 shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
                   >
-                    <Flag className="size-3.5" aria-hidden />
+                    <Check className="size-3.5" aria-hidden />
+                    Save changes
                     <span className="tabular-nums">{changes.length}</span>
                   </Button>
                 }
@@ -176,7 +185,7 @@ export function SessionChangesSheet() {
             }
           />
           <TooltipContent side="top" className="text-xs">
-            See what you have changed
+            Review what changed, then save
           </TooltipContent>
         </Tooltip>
 
@@ -249,26 +258,6 @@ export function SessionChangesSheet() {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/*
-        Save is also in the bar, not only in the sheet: while anything is
-        unsaved it should be the most prominent thing there, and reaching it
-        must not require opening a list first.
-      */}
-      {/* Tinted, not filled — nothing in this bar is a filled button. It is
-          still the loudest thing here, because it is the only control that
-          appears at all while something is unsaved. */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        aria-label={`Save ${changes.length} changes`}
-        onClick={save}
-        className="pointer-events-auto h-7 shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
-      >
-        <Check className="size-3.5" aria-hidden />
-        Save changes
-      </Button>
     </>
   )
 }

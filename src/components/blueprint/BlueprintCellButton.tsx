@@ -99,6 +99,12 @@ export function BlueprintCellButton({
   const pickCellId = resolvedCellId ?? cellId ?? null
   const pickOrder = pick && pickCellId ? pick.orderOf(pickCellId) : undefined
   const isPicked = Boolean(pick && pickCellId && pick.isPicked(pickCellId))
+  // While a selection is being built (slice edit, Make slice), the picked
+  // cells are the subject — everything else recedes. No dim while nothing
+  // is picked yet: an empty selection should not gray the whole canvas.
+  const dimUnpicked = Boolean(
+    pick && pick.picked.length > 0 && pickCellId && !isPicked,
+  )
   const preview = useBlueprintCellPreviewHover()
   const previewCellId = preview?.cellId
     ? resolveBlueprintCellId(preview.cellId)
@@ -207,6 +213,7 @@ export function BlueprintCellButton({
           'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
         (sliceSequence !== undefined || isPicked) && 'relative overflow-visible',
+        dimUnpicked && 'opacity-60 saturate-[.6] transition-[opacity,filter]',
       )}
       style={surfaceStyle}
     >

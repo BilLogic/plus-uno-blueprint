@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SliceFrameEditor } from '@/components/editor/SliceFrameEditor'
 import { CellPickContext, type CellPickApi } from '@/contexts/cellPickContext'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import type { SliceDetail } from '@/hooks/useSlice'
@@ -49,6 +50,7 @@ export function SliceEditSession({
   children: ReactNode
 }) {
   const { client } = useSupabase()
+  const mode = useCanvasModeValue()
   const [frames, setFrames] = useState<DraftFrame[]>(() => toDraftFrames(detail))
   // Read from `detail`, not the draft: a storyboard upload writes straight to
   // `slice_items` and refreshes the slice, so the draft never sees it.
@@ -175,15 +177,20 @@ export function SliceEditSession({
           </Alert>
         ) : null}
 
-        <SliceFrameEditor
-          frames={frames}
-          activeFrame={activeFrame}
-          problems={problems}
-          sliceId={detail.slice.id}
-          illustrationFor={illustrationFor}
-          onActivate={setActiveFrame}
-          onChange={setFrames}
-        />
+        {/* The customization strip is Edit-mode furniture: flipping the
+            slice tab to View reads the slice, and reading needs the canvas,
+            not the composer. */}
+        {mode === 'design' ? (
+          <SliceFrameEditor
+            frames={frames}
+            activeFrame={activeFrame}
+            problems={problems}
+            sliceId={detail.slice.id}
+            illustrationFor={illustrationFor}
+            onActivate={setActiveFrame}
+            onChange={setFrames}
+          />
+        ) : null}
 
         <div className="flex shrink-0 items-center gap-2 border-t border-border bg-sidebar px-3 py-1.5">
           <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">

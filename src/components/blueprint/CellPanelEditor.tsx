@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,11 +12,20 @@ import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellContent } from '@/hooks/useCellContent'
 import { useCellSpec } from '@/hooks/useCellSpec'
+import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { upsertCell } from '@/lib/authoringRpc'
 import { updateCellContent } from '@/lib/cellContentMutations'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { parseValueProps, type ValueProp } from '@/lib/valueProps'
+
+/**
+ * The one place the panel's Save and Cancel live: a host element pinned to
+ * the drawer's bottom edge, below the scroll region and the tabs. The form
+ * portals its buttons here so they read as controls for the whole panel —
+ * one Save for everything on it — instead of a row buried mid-scroll.
+ */
+export const CELL_PANEL_FOOTER_ID = 'cell-panel-editor-footer'
 
 /** Where a not-yet-created cell would go — the draft the editor writes on Save. */
 export type DraftCellTarget = {
@@ -33,15 +43,19 @@ export type DraftCellTarget = {
 function Field({
   label,
   hint,
+  required = false,
   children,
 }: {
   label: string
   hint?: string
+  /** Draws the asterisk — the only signal a field cannot be left empty. */
+  required?: boolean
   children: React.ReactNode
 }) {
   const labelText = (
     <span className="w-fit text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
       {label}
+      {required ? <span className="ml-0.5 text-destructive">*</span> : null}
     </span>
   )
   return (
@@ -181,6 +195,15 @@ function CellPanelEditorForm({
   onDone: () => void
 }) {
   const { client } = useSupabase()
+  const audiencesResult = useValueAudiences()
+  const audiences =
+    audiencesResult.status === 'ready' ? audiencesResult.data : []
+  // The footer host mounts in the same commit as this form; looked up once
+  // after mount so the portal lands below the scroll region.
+  const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
+  useEffect(() => {
+    setFooterHost(document.getElementById(CELL_PANEL_FOOTER_ID))
+  }, [])
   /*
     Frozen at mount (state initializer, never re-set). The props keep
     tracking the live query — a ⌘Z revert of this same cell refetches it
@@ -325,7 +348,7 @@ function CellPanelEditorForm({
       // would otherwise materialize the cell into a panel-less silence.
       data-busy={busy || undefined}
     >
-      <Field label="Text" hint="What this cell says on the grid.">
+      <Field label="Text" hint="What this cell says on the grid." required>
         <Input
           value={form.text}
           autoFocus={cellId === null}
@@ -389,6 +412,9 @@ function CellPanelEditorForm({
               <Input
                 value={entry.for}
                 placeholder="For…"
+                // Suggests the audiences already in use — same tag logic as
+                // owners, lighter control: a datalist suggests, never blocks.
+                list="cell-value-audiences"
                 className="h-7 w-24 shrink-0 text-xs"
                 onChange={(event) =>
                   set(
@@ -445,6 +471,11 @@ function CellPanelEditorForm({
             <Plus className="size-3" />
             Add value
           </Button>
+          <datalist id="cell-value-audiences">
+            {audiences.map((audience) => (
+              <option key={audience} value={audience} />
+            ))}
+          </datalist>
         </div>
       </Field>
 
@@ -455,14 +486,32 @@ function CellPanelEditorForm({
       ) : null}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
-      <div className="flex items-center gap-2 border-t border-border/60 pt-3">
-        <Button type="button" size="sm" disabled={busy || blocked} onClick={handleSave}>
-          {busy ? 'Saving…' : cellId ? 'Save' : 'Create cell'}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" disabled={busy} onClick={onDone}>
-          Cancel
-        </Button>
-      </div>
+      {(() => {
+        const controls = (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={busy || blocked}
+              onClick={handleSave}
+            >
+              {busy ? 'Saving…' : cellId ? 'Save' : 'Create cell'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={onDone}
+            >
+              Cancel
+            </Button>
+          </div>
+        )
+        // Pinned to the drawer bottom when the host exists — shared footing
+        // for everything on the panel. Inline only as a fallback.
+        return footerHost ? createPortal(controls, footerHost) : controls
+      })()}
     </div>
   )
 }

@@ -75,20 +75,25 @@ export async function executeRevert(
       }
       return
     }
-    case 'rename_owner_tag': {
-      // Bulk tag rename, inverted: put the old name back everywhere the
-      // new one now appears, in both owner columns.
+    case 'rename_owner_tag_scoped': {
+      // Tag rename, inverted with precision: only the cells the rename
+      // actually touched get the old name back. A name-based inverse would
+      // also rewrite cells that legitimately adopted the new name since.
       const from = stringArg(revert.args, 'from')
       const to = stringArg(revert.args, 'to')
+      const ids = revert.args.cell_ids
+      if (!Array.isArray(ids) || ids.length === 0) return
       const ownerUpdate = await client
         .from('cells')
         .update({ owner: to })
         .eq('owner', from)
+        .in('id', ids as string[])
       if (ownerUpdate.error) throw toAuthoringError(ownerUpdate.error)
       const perceivedUpdate = await client
         .from('cells')
         .update({ perceived_owner: to })
         .eq('perceived_owner', from)
+        .in('id', ids as string[])
       if (perceivedUpdate.error) throw toAuthoringError(perceivedUpdate.error)
       return
     }

@@ -15,7 +15,10 @@ import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
 import { CellOverviewSpec } from '@/components/blueprint/CellOverviewSpec'
 import { CellContentSection } from '@/components/blueprint/CellContentSection'
-import { CellPanelEditor } from '@/components/blueprint/CellPanelEditor'
+import {
+  CELL_PANEL_FOOTER_ID,
+  CellPanelEditor,
+} from '@/components/blueprint/CellPanelEditor'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
@@ -660,6 +663,11 @@ function BlueprintCellDetailPanelBody() {
             </span>
             <CellPanelEditor cellId={null} draft={draft} onDone={clearSelection} />
           </div>
+          {/* The editor portals Create/Cancel here — panel-level footing. */}
+          <div
+            id={CELL_PANEL_FOOTER_ID}
+            className="shrink-0 border-t border-border/60 px-4 py-3 empty:hidden"
+          />
         </DrawerContent>
       </Drawer>
     )
@@ -923,9 +931,15 @@ function BlueprintCellDetailPanelBody() {
 
   // A pill that says exactly what the title says is the title twice — one of
   // them yields. The pill keeps the tech identity; the plain-text title only
-  // renders when it adds words the pill does not have.
+  // renders when it adds words the pill does not have. Same rule for the
+  // description paragraph: a cell with no authored description falls back to
+  // its own content, and printing the title again as "description" is the
+  // same word twice pretending to be two facts.
   const titleRepeatsPill =
     showTechPill && techDetailLabel?.trim() === cellTitleText.trim()
+  const descriptionRepeatsTitle =
+    detailDescriptionText.trim() === cellTitleText.trim() ||
+    detailDescriptionText.trim() === cellContent.trim()
   const editingCell = canEdit && resolvedCellId !== null
 
   const overviewContent = (
@@ -947,17 +961,19 @@ function BlueprintCellDetailPanelBody() {
       </div>
       {/* The description paragraph is the reading view; the editor shows the
           same text inside its DESCRIPTION field instead. */}
-      {!editingCell && detailDescriptionText.trim() ? (
+      {!editingCell && detailDescriptionText.trim() && !descriptionRepeatsTitle ? (
         <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
           {detailDescriptionText.trim()}
         </p>
-      ) : !editingCell && !showTechPill ? (
-        <p className="-mt-3 text-sm text-muted-foreground">No content</p>
       ) : null}
       {editingCell ? (
         <CellPanelEditor
           cellId={resolvedCellId}
-          fallbackDescription={detailDescriptionText.trim()}
+          // Never seed the field with the title wearing a description's
+          // clothes — only prose that actually says more than the cell text.
+          fallbackDescription={
+            descriptionRepeatsTitle ? '' : detailDescriptionText.trim()
+          }
           onDone={clearSelection}
         />
       ) : (
@@ -1122,6 +1138,14 @@ function BlueprintCellDetailPanelBody() {
                 </div>
               </Tabs>
             </div>
+            {/* The editor portals Save/Cancel here — below the tabs, shared
+                footing for every property the panel holds. */}
+            {editingCell ? (
+              <div
+                id={CELL_PANEL_FOOTER_ID}
+                className="shrink-0 border-t border-border/60 px-4 py-3 empty:hidden"
+              />
+            ) : null}
             <CellInSlicesFooter cellId={pathEntry?.cellId ?? null} />
           </>
         )}

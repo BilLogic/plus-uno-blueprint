@@ -215,10 +215,7 @@ export function CreateSliceSheet({
             >
               <SliceScreenComposer screens={screens} onChange={setScreens} />
             </div>
-            <div className="flex items-center gap-2 border-t border-border/60 px-3 py-2">
-              <p className="min-w-0 flex-1 text-[11px] text-muted-foreground">
-                Drag to reorder or regroup. One screen is one view.
-              </p>
+            <div className="flex items-center justify-end gap-2 border-t border-border/60 px-3 py-2">
               <Button
                 type="button"
                 size="sm"
@@ -235,7 +232,7 @@ export function CreateSliceSheet({
             <div className="flex flex-col gap-2.5 px-3 py-3">
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-foreground">
-                  Title
+                  Title<span className="ml-0.5 text-destructive">*</span>
                 </span>
                 <Input
                   value={title}

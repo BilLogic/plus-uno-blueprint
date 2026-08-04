@@ -1,5 +1,5 @@
 import { useState, type DragEvent } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, GripVertical, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SliceStoryboardField } from '@/components/editor/SliceStoryboardField'
@@ -53,6 +53,9 @@ export function SliceFrameEditor({
     | null
   >(null)
   const [dropTarget, setDropTarget] = useState<number | null>(null)
+  // The strip folds like an accordion: the screens are working material,
+  // and while the canvas is the subject the strip collapses to one bar.
+  const [collapsed, setCollapsed] = useState(false)
 
   const update = (next: DraftFrame[]) => {
     onChange(next)
@@ -136,7 +139,27 @@ export function SliceFrameEditor({
   })
 
   return (
-    <div className="flex max-h-56 shrink-0 gap-2 overflow-x-auto border-t border-border bg-sidebar p-2">
+    <div className="flex shrink-0 flex-col border-t border-border bg-sidebar">
+      <button
+        type="button"
+        aria-expanded={!collapsed}
+        onClick={() => setCollapsed((value) => !value)}
+        className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[11px] font-medium text-muted-foreground hover:text-foreground"
+      >
+        <ChevronDown
+          className={cn(
+            'size-3.5 transition-transform',
+            collapsed && '-rotate-90',
+          )}
+          aria-hidden
+        />
+        Screens
+        <span className="tabular-nums text-muted-foreground/70">
+          {frames.length}
+        </span>
+      </button>
+      {collapsed ? null : (
+    <div className="flex max-h-56 shrink-0 gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2">
       {frames.map((frame, index) => {
         const frameProblems = problems.filter(
           (problem) => problem.frame === index,
@@ -147,7 +170,10 @@ export function SliceFrameEditor({
           <div
             key={index}
             className={cn(
-              'group/frame flex w-56 shrink-0 flex-col gap-1.5 rounded-lg border bg-card p-2 transition-colors',
+              // min-h-0 + overflow-hidden: a card taller than the strip must
+              // clip inside itself, not paint its narrative over the next
+              // row's captions.
+              'group/frame flex min-h-0 w-56 shrink-0 flex-col gap-1.5 overflow-hidden rounded-lg border bg-card p-2 transition-colors',
               isActive ? 'border-primary' : 'border-border',
               dropTarget === index && 'ring-2 ring-primary/40',
             )}
@@ -173,6 +199,12 @@ export function SliceFrameEditor({
               onDragEnd={() => setDragging(null)}
               className="flex cursor-grab items-center gap-1.5 active:cursor-grabbing"
             >
+              {/* The grip names the gesture — a row that merely *is*
+                  draggable looks exactly like one that is not. */}
+              <GripVertical
+                className="size-3 shrink-0 text-muted-foreground/50"
+                aria-hidden
+              />
               <span className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-[10px] font-semibold text-background">
                 {index + 1}
               </span>
@@ -193,7 +225,7 @@ export function SliceFrameEditor({
               />
             </div>
 
-            <ul className="flex min-h-8 flex-col gap-1">
+            <ul className="flex max-h-24 min-h-8 shrink-0 flex-col gap-1 overflow-y-auto">
               {frame.cells.map((cell, cellIndex) => (
                 <li
                   key={cell}
@@ -204,6 +236,10 @@ export function SliceFrameEditor({
                   onDragEnd={() => setDragging(null)}
                   className="group/chip flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-[11px] active:cursor-grabbing"
                 >
+                  <GripVertical
+                    className="size-3 shrink-0 text-muted-foreground/50"
+                    aria-hidden
+                  />
                   <span className="shrink-0 text-muted-foreground">
                     {sequenceByFrame[index][cellIndex]}
                   </span>
@@ -234,6 +270,8 @@ export function SliceFrameEditor({
             <textarea
               value={frame.narrative}
               rows={2}
+              // shrink-0: the textarea holds its two rows and scrolls its
+              // own overflow rather than being squeezed by the card.
               placeholder="Narrative"
               onClick={(event) => event.stopPropagation()}
               onChange={(event) =>
@@ -245,7 +283,7 @@ export function SliceFrameEditor({
                   ),
                 )
               }
-              className="w-full resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-[11px] outline-none focus-visible:border-ring"
+              className="w-full shrink-0 resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-[11px] outline-none focus-visible:border-ring"
             />
 
             <SliceStoryboardField
@@ -319,6 +357,8 @@ export function SliceFrameEditor({
         <Plus className="size-4" />
         Add screen
       </button>
+    </div>
+      )}
     </div>
   )
 }
