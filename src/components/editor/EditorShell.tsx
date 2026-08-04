@@ -7,6 +7,10 @@ import {
   TopNavWorkspace,
 } from '@/components/editor/EditorChrome'
 import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
+import {
+  AgentPanel,
+  AgentSettingsRailButton,
+} from '@/components/editor/AgentPanel'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
@@ -169,6 +173,7 @@ export function EditorShell() {
           }
         }}
         showAgent={canWrite}
+        bottomSlot={canWrite ? <AgentSettingsRailButton /> : undefined}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SidebarProvider
@@ -180,11 +185,7 @@ export function EditorShell() {
           className="flex min-h-0 min-w-0 flex-1 flex-col"
         >
           {surface === 'agent' ? (
-            // Placeholder until the agent panel lands (plan 2026-08-04-002
-            // unit 6) — the rail tab exists so the shell's geometry is real.
-            <div className="flex flex-1 items-center justify-center p-4 text-center text-xs text-muted-foreground">
-              Agent panel lands next.
-            </div>
+            <AgentPanel />
           ) : (
             <SlideModeSidebarNav surface={surface} />
           )}
