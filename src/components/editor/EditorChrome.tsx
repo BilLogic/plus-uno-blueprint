@@ -104,36 +104,10 @@ export function HomeNavButton({
   )
 }
 
-type EditorSidebarWorkspaceHeaderProps = {
-  sidebarCollapsed?: boolean
-  onToggleSidebar?: () => void
-  /** The orientation landing page is the current view. */
-  isLanding?: boolean
-  /** Workspace title → landing page (D2). */
-  onWorkspaceTitle?: () => void
-}
-
-/**
- * Workspace title + the collapse toggle. Home moved to the tab strip: it was
- * sitting where the nav's disclosure chevrons now live, and the tab strip
- * keeps it in one place across every sidebar state.
- */
-export function EditorSidebarWorkspaceHeader({
-  sidebarCollapsed = false,
-  onToggleSidebar,
-  isLanding = false,
-  onWorkspaceTitle,
-}: EditorSidebarWorkspaceHeaderProps) {
+function WorkspaceBadges() {
   const { isDevAuthoring, isEditPreview } = useSupabase()
-
   return (
-    <div
-      className="flex shrink-0 items-center gap-2 px-3 py-2"
-      data-editor-app-title
-    >
-      <div className="min-w-0 flex-1">
-        <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
-      </div>
+    <>
       {/* Writing with the local authoring key is a privileged state that
           looks exactly like the read-only app otherwise. Say so. */}
       {isDevAuthoring ? (
@@ -156,12 +130,72 @@ export function EditorSidebarWorkspaceHeader({
           edit preview
         </span>
       ) : null}
-      {onToggleSidebar ? (
-        <SidebarCollapseButton
-          collapsed={sidebarCollapsed}
-          onToggle={onToggleSidebar}
-        />
-      ) : null}
+    </>
+  )
+}
+
+type TopNavWorkspaceProps = {
+  sidebarCollapsed: boolean
+  onToggleSidebar: () => void
+  /** The orientation landing page is the current view. */
+  isLanding?: boolean
+  /** Workspace title → landing page (D2). */
+  onWorkspaceTitle?: () => void
+}
+
+/**
+ * The workspace identity group at the top nav's left end: collapse toggle,
+ * title, environment badges. It used to head the sidebar; the top nav spans
+ * the full window now, so identity moved up where it survives every sidebar
+ * state — including fully collapsed, when the floating pill mirrors it.
+ */
+export function TopNavWorkspace({
+  sidebarCollapsed,
+  onToggleSidebar,
+  isLanding = false,
+  onWorkspaceTitle,
+}: TopNavWorkspaceProps) {
+  return (
+    <div
+      className="flex min-w-0 shrink-0 items-center gap-1.5"
+      data-editor-app-title
+    >
+      <SidebarCollapseButton
+        collapsed={sidebarCollapsed}
+        onToggle={onToggleSidebar}
+        size="icon-sm"
+      />
+      <div className="min-w-0 max-w-48">
+        <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
+      </div>
+      <WorkspaceBadges />
+    </div>
+  )
+}
+
+/**
+ * The collapsed sidebar's remnant: a floating pill over the canvas (Figma's
+ * collapsed-file-chip). Hovering it peeks the full sidebar as an overlay;
+ * the button pins it back into flow.
+ */
+export function FloatingSidebarPill({
+  onExpand,
+  onHoverChange,
+}: {
+  onExpand: () => void
+  onHoverChange: (hovered: boolean) => void
+}) {
+  return (
+    <div
+      className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border bg-background/95 py-1 pl-3 pr-1 shadow-md backdrop-blur-sm"
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+      data-editor-sidebar-pill
+    >
+      <p className="max-w-40 truncate text-xs font-medium text-foreground">
+        {EDITOR_TITLE}
+      </p>
+      <SidebarCollapseButton collapsed onToggle={onExpand} size="icon-sm" />
     </div>
   )
 }

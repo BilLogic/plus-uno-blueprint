@@ -13,12 +13,14 @@ import { SlicesSidebarSection } from '@/components/editor/SlicesSidebarSection'
 import { SlideNav } from '@/components/editor/SlideNav'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { SidebarContent } from '@/components/ui/sidebar'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useViewState } from '@/contexts/viewStateStore'
 
-type SidebarMode = 'blueprints' | 'slices'
-
-export function SlideModeSidebarNav() {
+export function SlideModeSidebarNav({
+  surface,
+}: {
+  /** Which nav surface the rail selected — this component renders both non-agent ones. */
+  surface: 'blueprints' | 'slices'
+}) {
   const {
     slides,
     selectPhase,
@@ -32,7 +34,7 @@ export function SlideModeSidebarNav() {
     expandedPhaseIds,
     setPhaseExpanded,
   } = useEditor()
-  const { activeKey, activeTab, activateTab } = useViewState()
+  const { activeKey, activateTab } = useViewState()
   const { client, canWrite } = useSupabase()
   const canvasMode = useCanvasModeValue()
   // Creating is authoring, so the sidebar's `+`s belong to Edit mode — in
@@ -62,19 +64,6 @@ export function SlideModeSidebarNav() {
     }
   }, [canWrite, client])
 
-  // Segmented sidebar mode — defaults to Blueprints, auto-switches to
-  // Slices when a slice/present tab activates (initializer covers remounts
-  // while a tab is already active, e.g. returning from a presentation).
-  const activeTabKind = activeTab?.kind ?? null
-  const [mode, setMode] = useState<SidebarMode>(
-    activeTabKind !== null ? 'slices' : 'blueprints',
-  )
-  const [lastTabKind, setLastTabKind] = useState(activeTabKind)
-  if (lastTabKind !== activeTabKind) {
-    setLastTabKind(activeTabKind)
-    if (activeTabKind !== null) setMode('slices')
-  }
-
   // The phase/scenario nav always drives the app-level (base blueprint
   // view) editor state. When a tab is active that would be invisible, so
   // selecting a phase/scenario also returns to the base view.
@@ -93,23 +82,8 @@ export function SlideModeSidebarNav() {
     [activateTab, activeKey, selectScenario],
   )
   return (
-    <SidebarContent className="px-2 pt-0.5 pb-1">
-      <Tabs
-        value={mode}
-        onValueChange={(value) => setMode(value as SidebarMode)}
-        className="px-1 pb-1"
-      >
-        <TabsList className="h-7 w-full">
-          <TabsTrigger value="blueprints" className="text-xs">
-            Blueprints
-          </TabsTrigger>
-          <TabsTrigger value="slices" className="text-xs">
-            Slices
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {mode === 'blueprints' ? (
+    <SidebarContent className="px-2 pt-1 pb-1">
+      {surface === 'blueprints' ? (
         <>
           <NavSection
             title="Phases"

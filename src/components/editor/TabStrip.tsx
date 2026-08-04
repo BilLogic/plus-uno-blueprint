@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { AlertTriangle, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HomeNavButton } from '@/components/editor/EditorChrome'
@@ -200,10 +200,17 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
 export function TabStrip({
   isOverview,
   onHome,
+  leading,
 }: {
   /** The overview canvas is the current view, with no tab covering it. */
   isOverview: boolean
   onHome: () => void
+  /**
+   * Left end of the strip — the workspace title group. The strip spans the
+   * full window now (the sidebar starts below it), so the workspace
+   * identity that used to head the sidebar lives here.
+   */
+  leading?: ReactNode
 }) {
   const {
     tabs,
@@ -262,6 +269,12 @@ export function TabStrip({
       {notice}
       {seed}
       <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar px-2 py-1.5">
+        {leading ? (
+          <>
+            {leading}
+            <div className="mx-1 h-5 w-px shrink-0 bg-border/80" aria-hidden />
+          </>
+        ) : null}
         <HomeNavButton
           isActive={isOverview}
           onClick={onHome}
