@@ -332,14 +332,28 @@ export function EditorProvider({ children }: EditorProviderProps) {
 
   const nav = useNavSelectionState(slides)
 
+  /*
+    Per-scenario display override, session-local. Side-by-side is the
+    default reading view; 'integrated' is the comparison lens (the header
+    toggle calls it Compare) — one merged grid where the shared spine
+    collapses and only the differences carry color.
+  */
+  const [viewTypeOverrides, setViewTypeOverrides] = useState<
+    Record<string, SlideViewType>
+  >({})
+
   const getScenarioDisplayViewType = useCallback(
-    (_slide: NavItem): SlideViewType => 'side-by-side',
-    [],
+    (slide: NavItem): SlideViewType =>
+      viewTypeOverrides[slide.id] ?? 'side-by-side',
+    [viewTypeOverrides],
   )
 
   const setScenarioDisplayViewType = useCallback(
-    (_scenarioId: string, _viewType: SlideViewType) => {
-      // Integrated view is disabled; display is always side-by-side.
+    (scenarioId: string, viewType: SlideViewType) => {
+      setViewTypeOverrides((current) => ({
+        ...current,
+        [scenarioId]: viewType,
+      }))
     },
     [],
   )

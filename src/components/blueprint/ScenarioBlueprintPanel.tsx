@@ -116,7 +116,9 @@ export function ScenarioBlueprintPanel({
   )
 
   const integratedBlueprint = useMemo(
-    () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds),
+    // The integrated layout *is* the comparison view: shared spine collapses
+    // to one desaturated copy, divergences band by path, arrows fork.
+    () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds, { compare: true }),
     [allBlueprints, selectedPathIds],
   )
 

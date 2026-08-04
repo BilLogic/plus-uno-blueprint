@@ -31,6 +31,7 @@ const MODULES = [
   'src/lib/authoringSession.ts',
   'src/lib/sliceType.ts',
   'src/lib/cellPickGrammar.ts',
+  'src/lib/mergeIntegratedBlueprint.ts',
 ]
 
 const work = mkdtempSync(join(tmpdir(), 'uno-tests-'))
