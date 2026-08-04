@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   ChevronLeft,
   Pencil,
@@ -7,6 +7,7 @@ import {
   SendHorizontal,
   Settings,
   Sparkles,
+  Square,
   Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -41,7 +42,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { Loader2 } from 'lucide-react'
 import { NavSection } from '@/components/editor/SidebarNav'
+import { useEditor } from '@/contexts/EditorContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import {
+  sessionSnapshot,
+  subscribeToSession,
+} from '@/lib/authoringSession'
+import {
+  sendToAgent,
+  stopAgent,
+  useAgentRun,
+  type TranscriptEvent,
+} from '@/lib/agent/loop'
+import { listModels } from '@/lib/agent/providers/models'
+import { getSlideDisplayLabel } from '@/types/nav'
 import {
   createAgentSession,
   deleteAgentSession,
@@ -54,8 +70,11 @@ import {
   MODEL_OPTIONS,
   hasKey,
   modelFor,
+  openAgentSettings,
   saveAgentSettings,
+  setAgentSettingsOpen,
   useAgentSettings,
+  useAgentSettingsOpen,
 } from '@/lib/agent/settings'
 import { cn } from '@/lib/utils'
 
@@ -130,6 +149,7 @@ function SessionRow({
   onRename: () => void
   onDelete: () => void
 }) {
+  const changeCount = useAgentChangeCount(session.id)
   const row = (
     <button
       type="button"
@@ -146,9 +166,9 @@ function SessionRow({
       <span className="min-w-0 flex-1 truncate text-[13px] text-sidebar-foreground/85 group-hover/session:text-sidebar-accent-foreground">
         {session.title}
       </span>
-      {session.changeCount > 0 ? (
+      {changeCount > 0 ? (
         <span className="shrink-0 text-[10px] tabular-nums text-sidebar-foreground/50">
-          {session.changeCount} chg
+          ✦ {changeCount} chg
         </span>
       ) : null}
     </button>
@@ -316,6 +336,50 @@ function AgentSessionsView({
   )
 }
 
+/** Live count of ledger entries this agent session produced. */
+function useAgentChangeCount(sessionId: string): number {
+  const changes = useSyncExternalStore(subscribeToSession, sessionSnapshot)
+  return changes.filter((entry) => entry.agentSessionId === sessionId).length
+}
+
+function TranscriptRow({ event }: { event: TranscriptEvent }) {
+  switch (event.kind) {
+    case 'user':
+      return (
+        <div className="rounded-md bg-muted/60 px-2 py-1.5 text-xs text-foreground">
+          {event.text}
+        </div>
+      )
+    case 'assistant':
+      return (
+        <div className="whitespace-pre-wrap px-0.5 text-xs text-foreground/90">
+          {event.text}
+        </div>
+      )
+    case 'tool':
+      return (
+        <div
+          className={cn(
+            'flex items-center gap-1.5 px-0.5 text-[11px]',
+            event.isError ? 'text-destructive' : 'text-muted-foreground',
+          )}
+        >
+          <span aria-hidden>{event.isError ? '✕' : '✔'}</span>
+          <span className="font-mono">{event.name}</span>
+          {event.summary ? (
+            <span className="min-w-0 truncate">{event.summary}</span>
+          ) : null}
+        </div>
+      )
+    case 'status':
+      return (
+        <p className="px-0.5 text-[11px] italic text-muted-foreground">
+          {event.text}
+        </p>
+      )
+  }
+}
+
 function AgentChatView({
   session,
   onBack,
@@ -324,8 +388,45 @@ function AgentChatView({
   onBack: () => void
 }) {
   const settings = useAgentSettings()
+  const { client } = useSupabase()
+  const { slides, selectedPhaseId, selectedScenarioId } = useEditor()
   const keyed = hasKey(settings)
   const [draft, setDraft] = useState('')
+  const { events, running } = useAgentRun(session.id)
+  const changeCount = useAgentChangeCount(session.id)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Pin the transcript to its newest line as events stream in.
+  useEffect(() => {
+    const node = scrollRef.current
+    if (node) node.scrollTop = node.scrollHeight
+  }, [events.length])
+
+  const contextNote = useMemo(() => {
+    const phase = slides.find((slide) => slide.id === selectedPhaseId)
+    const scenario = slides.find((slide) => slide.id === selectedScenarioId)
+    const lines: string[] = []
+    if (phase)
+      lines.push(`Open phase: "${getSlideDisplayLabel(phase, slides)}" (${phase.id})`)
+    if (scenario)
+      lines.push(
+        `Open scenario: "${getSlideDisplayLabel(scenario, slides)}" (${scenario.id})`,
+      )
+    return lines.join('\n')
+  }, [selectedPhaseId, selectedScenarioId, slides])
+
+  const send = () => {
+    const text = draft.trim()
+    if (!text || running || !client) return
+    setDraft('')
+    void sendToAgent({
+      client,
+      sessionId: session.id,
+      settings,
+      contextNote,
+      text,
+    })
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-agent-panel="chat">
@@ -345,43 +446,84 @@ function AgentChatView({
         <p className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
           {session.title}
         </p>
-        {session.changeCount > 0 ? (
+        {changeCount > 0 ? (
           <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
-            {session.changeCount} chg
+            ✦ {changeCount} chg
           </span>
         ) : null}
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-end gap-2 overflow-y-auto p-3">
-        {keyed ? (
-          <p className="text-xs text-muted-foreground">
-            Provider ready ({modelFor(settings)}). The conversation loop is
-            the next unit — messages don't send yet.
-          </p>
+      <div
+        ref={scrollRef}
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3"
+      >
+        {events.length === 0 ? (
+          keyed ? (
+            <p className="text-xs text-muted-foreground">
+              Ready ({modelFor(settings)}). Writes land live on the canvas
+              and in the change sheet as ✦ rows — each one revertible.
+            </p>
+          ) : (
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-xs text-muted-foreground">
+                No provider key yet — the key stays in this browser only.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 text-xs"
+                onClick={openAgentSettings}
+              >
+                Add API key…
+              </Button>
+            </div>
+          )
         ) : (
-          <p className="text-xs text-muted-foreground">
-            No provider key yet. Add one in the ⚙ settings at the bottom of
-            the rail — the key stays in this browser only.
-          </p>
+          // Index keys are safe here: the transcript is append-only.
+          events.map((event, index) => (
+            <TranscriptRow key={index} event={event} />
+          ))
         )}
+        {running ? (
+          <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden />
+        ) : null}
       </div>
 
       <div className="shrink-0 border-t border-border/60 p-2">
         <div className="flex items-center gap-1.5">
+          {running ? (
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="outline"
+              aria-label="Stop"
+              title="Stop — whatever landed stays, revertible"
+              onClick={() => stopAgent(session.id)}
+            >
+              <Square className="size-3" aria-hidden />
+            </Button>
+          ) : null}
           <Input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder="Message the agent…"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                send()
+              }
+            }}
+            placeholder={keyed ? 'Message the agent…' : 'Add a key in ⚙ first'}
             className="h-7 flex-1 text-xs"
             aria-label="Message the agent"
+            disabled={!keyed}
           />
           <Button
             type="button"
             size="icon-sm"
             variant="default"
             aria-label="Send"
-            disabled
-            title="The provider loop ships next — nothing sends yet"
+            disabled={!keyed || running || draft.trim() === ''}
+            onClick={send}
           >
             <SendHorizontal className="size-3.5" aria-hidden />
           </Button>
@@ -490,6 +632,35 @@ function DeleteSessionDialog({
 export function AgentSettingsRailButton() {
   const settings = useAgentSettings()
   const [keyDraft, setKeyDraft] = useState('')
+  const open = useAgentSettingsOpen()
+  const setOpen = setAgentSettingsOpen
+  // Live model list from the provider's own list-models endpoint — current
+  // by construction. The curated MODEL_OPTIONS list is only the no-key
+  // fallback. null = not fetched (no key / failed / loading).
+  const [liveModels, setLiveModels] = useState<{
+    provider: string
+    models: string[]
+  } | null>(null)
+  const provider = settings.provider
+  const savedKeyForFetch = settings.keys[provider]
+  useEffect(() => {
+    if (!open || !savedKeyForFetch) return
+    const controller = new AbortController()
+    listModels(provider, savedKeyForFetch, controller.signal)
+      .then((models) => {
+        if (!controller.signal.aborted && models.length > 0)
+          setLiveModels({ provider, models })
+      })
+      .catch(() => {
+        // Fallback list stays; a failed listing is not worth an error state.
+      })
+    return () => controller.abort()
+  }, [open, provider, savedKeyForFetch])
+  // Stale fetches self-invalidate by provider tag — no reset effect needed.
+  const modelChoices =
+    liveModels && liveModels.provider === provider
+      ? liveModels.models
+      : MODEL_OPTIONS[provider]
   const providerLabel =
     AGENT_PROVIDERS.find((entry) => entry.id === settings.provider)?.label ??
     settings.provider
@@ -497,7 +668,7 @@ export function AgentSettingsRailButton() {
 
   return (
     <TooltipProvider delay={300}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <Tooltip>
           <TooltipTrigger
             render={
@@ -566,8 +737,8 @@ export function AgentSettingsRailButton() {
                     </Button>
                   }
                 />
-                <DropdownMenuContent align="start">
-                  {MODEL_OPTIONS[settings.provider].map((model) => (
+                <DropdownMenuContent align="start" className="max-h-64 overflow-y-auto">
+                  {modelChoices.map((model) => (
                     <DropdownMenuItem
                       key={model}
                       onClick={() =>

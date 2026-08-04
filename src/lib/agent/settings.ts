@@ -99,3 +99,31 @@ export function modelFor(settings: AgentSettings): string {
 export function hasKey(settings: AgentSettings): boolean {
   return Boolean(settings.keys[settings.provider])
 }
+
+/**
+ * "Open the ⚙ popover" as a callable, shared between the rail button and
+ * the chat view's no-key hint. Lives here (not the component file) so fast
+ * refresh keeps working there.
+ */
+let settingsOpenFlag = false
+const settingsOpenListeners = new Set<() => void>()
+
+export function openAgentSettings(): void {
+  settingsOpenFlag = true
+  settingsOpenListeners.forEach((listener) => listener())
+}
+
+export function setAgentSettingsOpen(next: boolean): void {
+  settingsOpenFlag = next
+  settingsOpenListeners.forEach((listener) => listener())
+}
+
+export function useAgentSettingsOpen(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      settingsOpenListeners.add(listener)
+      return () => settingsOpenListeners.delete(listener)
+    },
+    () => settingsOpenFlag,
+  )
+}

@@ -39,6 +39,23 @@ export type ChangeEntry = {
   at: number
   /** Present when this change can be individually taken back. */
   revert?: RevertSpec
+  /** Set when the canvas agent made this change; absent = human. */
+  author?: 'agent'
+  /** The agent session the change belongs to (its ✦ row grouping). */
+  agentSessionId?: string
+}
+
+/**
+ * While set, recorded changes are attributed to the agent. Set around the
+ * agent's tool dispatch only. A human save landing during an in-flight
+ * agent batch would wear the wrong badge — a cosmetic misattribution, not
+ * a data hazard (unlike the old recording-suspend flag this deliberately
+ * does not gate), and one person racing their own agent is the corner.
+ */
+let agentAttribution: { sessionId: string } | null = null
+
+export function setAgentAttribution(sessionId: string | null): void {
+  agentAttribution = sessionId === null ? null : { sessionId }
 }
 
 /** Operations that cannot be taken back once the session is saved. */
@@ -83,7 +100,19 @@ export function recordChange(
   revert?: RevertSpec,
 ): void {
   counter += 1
-  entries = [...entries, { id: `c${counter}`, fn, args, at: Date.now(), revert }]
+  entries = [
+    ...entries,
+    {
+      id: `c${counter}`,
+      fn,
+      args,
+      at: Date.now(),
+      revert,
+      ...(agentAttribution
+        ? { author: 'agent' as const, agentSessionId: agentAttribution.sessionId }
+        : {}),
+    },
+  ]
   emit()
 }
 

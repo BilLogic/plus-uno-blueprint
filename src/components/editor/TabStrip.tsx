@@ -269,18 +269,15 @@ export function TabStrip({
       {notice}
       {seed}
       <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar px-2 py-1.5">
+        {/* Home sits at the far left so it lines up with the rail's icon
+            column directly below it. */}
+        <HomeNavButton isActive={isOverview} onClick={onHome} size="icon-sm" />
         {leading ? (
           <>
             {leading}
             <div className="mx-1 h-5 w-px shrink-0 bg-border/80" aria-hidden />
           </>
         ) : null}
-        <HomeNavButton
-          isActive={isOverview}
-          onClick={onHome}
-          size="icon-sm"
-          className="mr-1"
-        />
         <div
           role="tablist"
           aria-label="Open views"

@@ -295,6 +295,17 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
       )}
     >
       <div className="flex items-center gap-2">
+        {/* ✦ marks a change the canvas agent made. Nothing else differs —
+            same revert, same Save gate; the badge is the entire distinction. */}
+        {entry.author === 'agent' ? (
+          <span
+            className="shrink-0 text-[10px] text-primary"
+            title="Made by the agent"
+            aria-label="Made by the agent"
+          >
+            ✦
+          </span>
+        ) : null}
         <span className="min-w-0 flex-1 truncate text-foreground/85">
           {describeChange(entry)}
         </span>

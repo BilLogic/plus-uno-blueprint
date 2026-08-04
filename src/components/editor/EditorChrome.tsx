@@ -134,30 +134,22 @@ function WorkspaceBadges() {
   )
 }
 
-type TopNavWorkspaceProps = {
-  /** The orientation landing page is the current view. */
-  isLanding?: boolean
-  /** Workspace title → landing page (D2). */
-  onWorkspaceTitle?: () => void
-}
-
 /**
- * The workspace identity group at the top nav's left end: title and
- * environment badges. The collapse toggle deliberately does NOT live here —
- * the sidebar has exactly one toggle, at the top of the rail when expanded
- * and on the floating pill when collapsed, always in the same corner.
+ * The workspace identity group in the top nav: title and environment
+ * badges. The title is a LABEL, not a control — a heading that navigates
+ * reads as a bug (the landing page keeps only its boot-time entry). The
+ * collapse toggle deliberately does not live here either — the sidebar has
+ * exactly one toggle, at the top of the rail when expanded and on the
+ * floating pill when collapsed, always the same corner.
  */
-export function TopNavWorkspace({
-  isLanding = false,
-  onWorkspaceTitle,
-}: TopNavWorkspaceProps) {
+export function TopNavWorkspace() {
   return (
     <div
       className="flex min-w-0 shrink-0 items-center gap-1.5"
       data-editor-app-title
     >
       <div className="min-w-0 max-w-48">
-        <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
+        <EditorTitleLabel />
       </div>
       <WorkspaceBadges />
     </div>

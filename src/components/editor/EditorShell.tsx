@@ -49,7 +49,7 @@ const PANEL_WIDTH_PX: Record<SidebarSurface, string> = {
 }
 
 export function EditorShell() {
-  const { view, goHome, goLanding } = useEditor()
+  const { view, goHome } = useEditor()
   const { activeTab, activateTab, openTab } = useViewState()
   const { canWrite } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -138,12 +138,6 @@ export function EditorShell() {
     goHome()
   }
 
-  // The orientation landing page lives on the workspace title.
-  const goLandingBase = () => {
-    activateTab(null)
-    goLanding()
-  }
-
   // What counts as a content switch for the crossfade. Navigation *inside*
   // the base canvas (home ⇄ detail) is a camera move, not a screen change,
   // so it deliberately keeps the same key.
@@ -206,12 +200,7 @@ export function EditorShell() {
         <TabStrip
           isOverview={isOverview}
           onHome={goOverview}
-          leading={
-            <TopNavWorkspace
-              isLanding={isLanding}
-              onWorkspaceTitle={goLandingBase}
-            />
-          }
+          leading={<TopNavWorkspace />}
         />
 
         <div className="relative flex min-h-0 min-w-0 flex-1">
