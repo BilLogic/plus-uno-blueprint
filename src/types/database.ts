@@ -84,6 +84,7 @@ export type Database = {
           path_id: string
           perceived_owner: string | null
           picture: string | null
+          slot_position: number
           step_id: string
           updated_at: string
           value_props: Json
@@ -101,6 +102,7 @@ export type Database = {
           path_id: string
           perceived_owner?: string | null
           picture?: string | null
+          slot_position?: number
           step_id: string
           updated_at?: string
           value_props?: Json
@@ -118,6 +120,7 @@ export type Database = {
           path_id?: string
           perceived_owner?: string | null
           picture?: string | null
+          slot_position?: number
           step_id?: string
           updated_at?: string
           value_props?: Json

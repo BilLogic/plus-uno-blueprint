@@ -1,5 +1,5 @@
 ---
-status: pending
+status: complete
 priority: p3
 issue_id: "006"
 tags: [code-review, canvas]
@@ -21,3 +21,8 @@ tech cell (between pills) is inconsistent with every other cell face.
 ## Acceptance Criteria
 - [ ] Right-click anywhere on a tech cell offers the cell menu, or the
       tech-cell split has landed and made the wrapper a real cell.
+
+## Work Log
+- 2026-08-04: Dissolved by the tech-cell split (stages 1-3 shipped). Every
+  pill is its own cell button carrying data-blueprint-cell-interactive, so
+  right-click hits a real cell everywhere in the lane.

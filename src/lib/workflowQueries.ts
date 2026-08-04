@@ -28,6 +28,7 @@ export const PATH_BLUEPRINT_SELECT = `
     id,
     layer_id,
     step_id,
+    slot_position,
     content,
     picture,
     description,
