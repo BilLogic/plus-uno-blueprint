@@ -141,26 +141,53 @@ authenticated session, same as Edit's).
 
 ## Part 2 — The agent surface (lo-fi, priority ①)
 
-### 2.1 The panel
+### 2.1 The panel — two-step progressive disclosure
+
+The ✦ surface is **two views, one at a time** — session info never
+crowds the conversation. Step 1 picks (or creates) a session; step 2 is
+the chat, full-height. Same pattern as Figma's Pages panel header: title
+row with 🔍 and ＋ at the right.
+
+**Step 1 — sessions view** (what ✦ opens onto):
 
 ```
 ┌──┬───────────────────────────────┬───────────────────────┬──────────┐
-│▦ │ ✦ Agent          [+ New]      │                       │          │
+│▦ │ Sessions              🔍  ＋  │                       │          │
 │  ├───────────────────────────────┤        canvas         │ (cell    │
-│◇ │ ● Draft the Warm-Up   12 chg  │                       │  detail  │
-│  │ ○ Fill tech specs      4 chg  │   ┌╌╌╌╌╌╌╌┐           │  drawer, │
-│✦●│ ○ Q&A about Discovery  0 chg  │   │ cell  │← agent-   │  as      │
-│  ├───────────────────────────────┤   └╌╌╌╌╌╌╌┘  touched  │  today)  │
-│  │ You: turn these interview     │              cells    │          │
-│  │ notes into a Help Request     │              pulse    │          │
-│  │ scenario …                    │                       │          │
+│◇ │ TODAY                         │                       │  detail  │
+│  │  ✦ Draft the Warm-Up   12 chg │  ← click = enter chat │  drawer, │
+│✦●│  ✦ Fill tech specs      4 chg │                       │  as      │
+│  │ EARLIER                       │                       │  today)  │
+│  │  ✦ Q&A about Discovery  0 chg │                       │          │
 │  │                               │                       │          │
-│  │ ✦ I'll add 6 steps and fill   │                       │          │
-│  │   3 lanes. Working…           │                       │          │
+│  │  (right-click a row:          │ ┌───────────────────┐ │          │
+│  │   Rename / Delete)            │ │▷ ✋ ◇│⏺ Save (9)│👁 ✎│ │          │
+│⚙ │                               │ └───────────────────┘ │          │
+└──┴───────────────────────────────┴───────────────────────┴──────────┘
+```
+
+- 🔍 expands in place into a filter Input (fuzzy match over titles —
+  OwnerTagSelect's filter-as-you-type pattern); Esc restores the header.
+- ＋ starts a session and drops straight into step 2.
+- Groups (Today / Earlier) are Accordion sections (DS `accordion.tsx`).
+- Row context menu: Rename / Delete — right-click, consistent with the
+  rest of the sidebar.
+
+**Step 2 — chat view** (after selecting a session):
+
+```
+┌──┬───────────────────────────────┬───────────────────────┬──────────┐
+│▦ │ ‹  Draft the Warm-Up   12 chg │                       │          │
+│  ├───────────────────────────────┤        canvas         │          │
+│◇ │ You: turn these interview     │                       │          │
+│  │ notes into a Help Request     │   ┌╌╌╌╌╌╌╌┐           │          │
+│✦●│ scenario …                    │   │ cell  │← agent-   │          │
+│  │                               │   └╌╌╌╌╌╌╌┘  touched  │          │
+│  │ ✦ I'll add 6 steps and fill   │              cells    │          │
+│  │   3 lanes. Working…           │              pulse    │          │
 │  │   ├─ ✔ Added step "Reach out" │                       │          │
 │  │   ├─ ✔ Added a cell      [↺]  │                       │          │
 │  │   └─ ⋯ Adding a cell          │                       │          │
-│  ├───────────────────────────────┤                       │          │
 │  │                               │ ┌───────────────────┐ │          │
 │  │                               │ │▷ ✋ ◇│⏺ Save (9)│👁 ✎│ │          │
 │⚙ │ ⏹ Stop  [ message……… ]  [➤]  │ └───────────────────┘ │          │
@@ -170,29 +197,20 @@ authenticated session, same as Edit's).
                                        under the rail or agent panel
 ```
 
+- Header: `‹` back to sessions view + session title + change count.
+  Nothing else — the transcript owns the rest of the height.
+- Re-tapping ✦ on the rail returns to whichever view was last open.
+
+**Shared rules:**
+
 - **Bottom toolbar lives on the canvas side.** It is canvas chrome
   (tools, Save gate, View/Edit) and docks at the canvas region's bottom
-  edge, right of the sidebar — not a window-wide bar.
-- **Sessions = accordion + fuzzy search.** The session list is an
-  Accordion (DS `accordion.tsx`): active session expanded, the rest
-  collapsed to title + change count. A filter Input sits above it with
-  fuzzy matching over session titles — the same filter-as-you-type
-  pattern OwnerTagSelect uses. `[+ New]` always visible.
-
-  ```
-  ├───────────────────────────────┤
-  │ 🔍 [ filter sessions…      ]  │
-  │ ▾ Draft the Warm-Up    12 chg │  ← active, expanded
-  │ ▸ Fill tech specs       4 chg │
-  │ ▸ Q&A about Discovery   0 chg │
-  ├───────────────────────────────┤
-  ```
+  edge, right of the sidebar — never a window-wide bar.
 - **DS-native components only.** Every agent-UX element composes
   existing `src/components/ui/` primitives (Accordion, Input, Collapsible,
   Badge, DropdownMenu, Popover, ContextMenu, Dialog, Skeleton, Spinner) —
-  nothing hand-rolled. The full need→primitive map lives in the harness
-  plan's `ui-inventory.md` section
-  ([2026-08-04-003](./2026-08-04-003-feat-agent-harness-and-skills-plan.md)).
+  nothing hand-rolled. Need→primitive map:
+  [2026-08-04-003 §ui-inventory](./2026-08-04-003-feat-agent-harness-and-skills-plan.md).
 - Tool calls render as change rows — the same `describeChange` vocabulary
   as the session sheet, with per-row ↺ revert inline in the transcript.
 - Stop aborts via `AbortSignal`; whatever landed stays, revertible.
@@ -251,25 +269,23 @@ product for authoring quality, and most of it is already written — the
 carries a reviewed domain rulebook. We lift, adapt, and iterate it in a
 harness before the panel exists.
 
-### 3.1 Prompt architecture — modular skill files
+### 3.1 Prompt architecture — one plugin-shaped skill
 
-```
-src/lib/agent/skills/
-  00-role.md            the posture: service designer's assistant; propose
-                        by doing; small batches; narrate before writing;
-                        never delete; ask when the spine is ambiguous
-  10-data-model.md      hierarchy (lifecycle → phase → scenario → path →
-                        steps×lanes → cells; triggers; slices), adapted from
-                        plugin references/data-model.md to the LIVE schema
-                        (slot_position, owner tags, dependency needs/trigger)
-  20-house-rules.md     the authoring rulebook (see 3.2)
-  30-tools.md           tool contract: what each tool does, when to read
-                        before writing, batch etiquette, error handling
-  40-review-lenses.md   self-check before finishing a batch, adapted from
-                        the plugin's blueprint-reviewer lenses
-```
+Deepened in its own doc:
+[2026-08-04-003 harness & skills IA](./2026-08-04-003-feat-agent-harness-and-skills-plan.md).
+The shape follows the architecture locked in
+[2026-07-16-001](./2026-07-16-001-feat-service-blueprint-agent-skill-plan.md):
+**one skill, `skills/canvas-agent/` in the plugin repo** — SKILL.md
+(under the 500-line budget: posture, ⚠ hard requirements, task routing
+table, deterministic exits) + a few `references/` files
+(operating-contract, canvas-playbooks, self-review), sharing
+`skills/blueprint`'s domain references (data-model, layer-roles,
+lane-vocabulary, elicitation-protocol) rather than copying them. Humans
+manage it from the IDE like any plugin skill; the app vendors the same
+files and serves `references/` through a `read_reference` tool — one
+progressive-disclosure mechanism, two consumers.
 
-Assembled at session start: concatenate + inject a live context snapshot
+Assembled at session start: SKILL.md + inject a live context snapshot
 (current phase/scenario/paths, selection, owner-tag vocabulary, step/lane
 names — labels and ids, not full contents; the agent reads details through
 tools). The snapshot design carries over from the earlier inline-agent plan
@@ -369,14 +385,15 @@ ledger entries stamped with the session id.
 
 **① Wireframes** — this document. Exit: Bill nods at Parts 1–2.
 
-**② Skills + harness**
-1. `src/lib/agent/skills/*.md` — adapt plugin rulebook to live schema.
-2. Provider adapters (`provider.ts`, `google.ts`, `anthropic.ts`,
-   `openai.ts`) — needed by the harness anyway, UI-free.
-3. Tool registry with JSON-schema specs; read tools live, write tools
-   behind dry-run/apply flag.
-4. `scripts/agent-harness/run.mjs` + `cases/`; iterate until the exit
-   condition in 3.4 holds.
+**② Skills + harness** (detailed units in
+[2026-08-04-003](./2026-08-04-003-feat-agent-harness-and-skills-plan.md))
+1. AGENTS.md + `docs/agent/ui-inventory.md` in this repo.
+2. `skills/canvas-agent/` in the plugin repo (SKILL.md + references,
+   sharing the blueprint skill's domain files).
+3. Vendor + assemble: sync script, `prompt.ts`, tool registry with
+   `read_reference`, provider adapters. UI-free.
+4. `scripts/agent-harness/run.mjs` + cases; iterate until the exit
+   condition holds.
 
 **③ UI prototype**
 5. Shell restructure: full-width top nav, rail + content panel, floating
