@@ -147,7 +147,7 @@ export function SliceFrameEditor({
           <div
             key={index}
             className={cn(
-              'flex w-56 shrink-0 flex-col gap-1.5 rounded-lg border bg-card p-2 transition-colors',
+              'group/frame flex w-56 shrink-0 flex-col gap-1.5 rounded-lg border bg-card p-2 transition-colors',
               isActive ? 'border-primary' : 'border-border',
               dropTarget === index && 'ring-2 ring-primary/40',
             )}
@@ -202,7 +202,7 @@ export function SliceFrameEditor({
                     setDragging({ kind: 'cell', frame: index, cell })
                   }
                   onDragEnd={() => setDragging(null)}
-                  className="flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-[11px] active:cursor-grabbing"
+                  className="group/chip flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-[11px] active:cursor-grabbing"
                 >
                   <span className="shrink-0 text-muted-foreground">
                     {sequenceByFrame[index][cellIndex]}
@@ -217,7 +217,9 @@ export function SliceFrameEditor({
                     variant="ghost"
                     size="icon-xs"
                     aria-label="Remove cell from slice"
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    // Revealed on chip hover — a permanent ✕ per row is the
+                    // loudest thing on a card that is mostly read.
+                    className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/chip:opacity-100 focus-visible:opacity-100 hover:text-foreground"
                     onClick={(event) => {
                       event.stopPropagation()
                       removeCell(index, cell)
@@ -258,7 +260,9 @@ export function SliceFrameEditor({
               </p>
             ) : null}
 
-            <div className="flex items-center gap-0.5">
+            {/* Frame surgery (split / merge / delete) reveals on card hover:
+                the actions matter occasionally, the captions and cells always. */}
+            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/frame:opacity-100 focus-within:opacity-100">
               <Button
                 type="button"
                 variant="ghost"

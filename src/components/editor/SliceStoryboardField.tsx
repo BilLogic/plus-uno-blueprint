@@ -133,13 +133,10 @@ export function SliceStoryboardField({
     }
   }
 
-  if (!itemId) {
-    return (
-      <p className="text-[10px] text-muted-foreground">
-        Save the slice to add a storyboard image.
-      </p>
-    )
-  }
+  // Unsaved frame: no control and no explanatory caption. The affordance
+  // appears once the frame is saved; a permanent sentence about it on every
+  // draft card was noise repeated per frame.
+  if (!itemId) return null
 
   return (
     <div className="flex flex-col gap-1" onClick={(event) => event.stopPropagation()}>
