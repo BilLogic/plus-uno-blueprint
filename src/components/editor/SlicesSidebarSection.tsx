@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   AlertTriangle,
+  Copy,
   ExternalLink,
   MoreHorizontal,
   Pencil,
@@ -33,7 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
-import { sliceToken, updateSliceMeta } from '@/lib/sliceMutations'
+import { duplicateSlice, sliceToken, updateSliceMeta } from '@/lib/sliceMutations'
 import { isSliceType } from '@/lib/sliceValidation'
 import { cn } from '@/lib/utils'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -59,6 +60,7 @@ function SliceRow({
   onPresent,
   onDelete,
   onRename,
+  onDuplicate,
   canWrite,
 }: {
   slice: SliceListEntry
@@ -70,6 +72,7 @@ function SliceRow({
   onPresent: () => void
   onDelete: () => void
   onRename: () => void
+  onDuplicate: () => void
   canWrite: boolean
 }) {
   // Same row component, states and indent as the Phases tree: the active tab
@@ -94,6 +97,7 @@ function SliceRow({
             onPresent={onPresent}
             onDelete={onDelete}
             onRename={onRename}
+            onDuplicate={onDuplicate}
           />
         ) : undefined
       }
@@ -120,6 +124,10 @@ function SliceRow({
               <Pencil className="size-3.5" />
               Rename…
             </ContextMenuItem>
+            <ContextMenuItem onClick={onDuplicate}>
+              <Copy className="size-3.5" />
+              Duplicate
+            </ContextMenuItem>
             <ContextMenuItem variant="destructive" onClick={onDelete}>
               <Trash2 className="size-3.5" />
               Delete slice…
@@ -140,7 +148,7 @@ function SliceRow({
 export function SlicesSidebarSection() {
   const slices = useSlices()
   const { openTab, tabs, activeKey } = useViewState()
-  const { canWrite } = useSupabase()
+  const { client, canWrite } = useSupabase()
   // Edit mode only, like every other authoring affordance in this sidebar.
   const mode = useCanvasModeValue()
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -216,6 +224,20 @@ export function SlicesSidebarSection() {
                     setDeleteTarget({ id: slice.id, title: slice.title })
                   }
                   onRename={() => setRenameTarget(slice)}
+                  onDuplicate={() => {
+                    if (!client) return
+                    void duplicateSlice(client, slice.id)
+                      .then((copy) => {
+                        invalidateQueries('slices')
+                        openTab({ kind: 'slice', sliceId: copy.id })
+                      })
+                      .catch((duplicateError) => {
+                        console.error(
+                          '[slices] duplicate failed:',
+                          duplicateError,
+                        )
+                      })
+                  }}
                 />
               </li>
             ))}
@@ -254,12 +276,14 @@ function SliceRowMenu({
   onPresent,
   onRename,
   onDelete,
+  onDuplicate,
 }: {
   slice: SliceListEntry
   onOpen: () => void
   onPresent: () => void
   onRename: () => void
   onDelete: () => void
+  onDuplicate: () => void
 }) {
   return (
     <DropdownMenu>
@@ -287,6 +311,10 @@ function SliceRowMenu({
         <DropdownMenuItem onClick={onRename}>
           <Pencil className="size-3.5" aria-hidden />
           Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDuplicate}>
+          <Copy className="size-3.5" aria-hidden />
+          Duplicate
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onOpen}>
           <ExternalLink className="size-3.5" aria-hidden />

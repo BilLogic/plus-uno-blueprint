@@ -985,18 +985,19 @@ function IntegratedCellBlock({
           minWidth: width,
           maxWidth: width,
         }
-  // The compare vocabulary: the spine recedes, the differences carry color.
+  // The compare vocabulary: the spine recedes, the differences carry their
+  // path's color — a left border, the same mark the divergent bands wear,
+  // so "belongs to this path" reads one way everywhere. (The dashed outline
+  // this replaces read as "broken", not "unique to a path".)
   const compareClass =
     cell.compare === 'shared' ? 'opacity-80 saturate-[.55]' : undefined
   const onlyOutline =
     cell.compare === 'only'
       ? {
-          outline: `2px dashed ${getPathColor({
+          borderLeft: `3px solid ${getPathColor({
             path_type: cell.path_type,
             name: pathNameById.get(cell.path_id) ?? '',
           })}`,
-          outlineOffset: -2,
-          borderRadius: 10,
         }
       : undefined
   const shellClass = cn(

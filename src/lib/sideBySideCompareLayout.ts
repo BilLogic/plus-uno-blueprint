@@ -14,6 +14,7 @@ import {
   INTERACTION_LINE_LABEL,
   INTERNAL_INTERACTION_LINE_LABEL,
   VISIBILITY_LINE_LABEL,
+  getCellContentMinHeight,
   getLayerRowMinHeight,
   getStepColumnsWidth,
   layerHasOverheadArrowCorridor,
@@ -715,15 +716,55 @@ export function layerHasInternalInteractionLine(
   return shouldShowInternalInteractionLineAfter(layer, layers)
 }
 
+/**
+ * Compare mode: a divergent slot renders one band per path stacked
+ * vertically inside the slot, so the row must be as tall as its tallest
+ * *stack*, not its tallest single cell. Rows grow to give the bands room
+ * rather than squeezing them into the single-cell estimate.
+ */
+function getCompareStackedRowExtra(
+  layer: BlueprintLayer,
+  data: IntegratedBlueprintData,
+  compact: boolean,
+): number {
+  let tallest = 0
+  const slots = new Map<string, Map<string, number>>()
+  for (const cell of data.cells) {
+    if (cell.layer_id !== layer.id || cell.compare !== 'divergent') continue
+    const slotKey = cell.step_id
+    const perPath = slots.get(slotKey) ?? new Map<string, number>()
+    const height =
+      (perPath.get(cell.path_id) ?? 0) +
+      getCellContentMinHeight(layer, cell.content, compact)
+    perPath.set(cell.path_id, height)
+    slots.set(slotKey, perPath)
+  }
+  for (const perPath of slots.values()) {
+    let stack = 0
+    for (const height of perPath.values()) stack += height
+    tallest = Math.max(tallest, stack)
+  }
+  return tallest
+}
+
 export function getIntegratedLayerRowHeight(
   layer: BlueprintLayer,
   data: IntegratedBlueprintData,
   compact = false,
   options?: IntegratedLayoutOptions,
 ): number {
+  const stackedExtra = getCompareStackedRowExtra(layer, data, compact)
   const sourceBlueprints = resolveIntegratedSourceBlueprints(data, options)
   if (sourceBlueprints.length > 0) {
-    return getSharedLayerRowHeight(layer, sourceBlueprints, compact)
+    const base = getSharedLayerRowHeight(layer, sourceBlueprints, compact)
+    if (stackedExtra === 0) return base
+    return Math.max(
+      base,
+      getCompareCellShellMinHeight(
+        stackedExtra + getCompareCellShellPaddingY(compact),
+        compact,
+      ),
+    )
   }
 
   return getCompareCellShellMinHeight(

@@ -53,7 +53,7 @@ function Field({
   children: React.ReactNode
 }) {
   const labelText = (
-    <span className="w-fit text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+    <span className="w-fit text-[11px] font-medium text-muted-foreground">
       {label}
       {required ? <span className="ml-0.5 text-destructive">*</span> : null}
     </span>
@@ -356,7 +356,10 @@ function CellPanelEditorForm({
         />
       </Field>
 
-      <Field label="Description" hint="The longer version, for the panel.">
+      {/* "Summary", not "Description": it is the tl;dr that consolidates
+          what the detailed fields (function, form, value) spell out. The
+          column stays `description` — a label rename is not a migration. */}
+      <Field label="Summary" hint="The tl;dr — what the detailed fields below add up to.">
         <textarea
           value={form.description}
           rows={3}

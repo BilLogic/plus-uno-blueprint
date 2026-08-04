@@ -193,10 +193,10 @@ export function SliceEditSession({
         ) : null}
 
         <div className="flex shrink-0 items-center gap-2 border-t border-border bg-sidebar px-3 py-1.5">
+          {/* Problems only. The old standing instruction sentence was chrome
+              that repeated itself on every open. */}
           <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-            {problems.length > 0
-              ? problems[0].message
-              : 'Click cells on the canvas to add them to the highlighted frame.'}
+            {problems.length > 0 ? problems[0].message : ''}
           </p>
           <Button
             type="button"

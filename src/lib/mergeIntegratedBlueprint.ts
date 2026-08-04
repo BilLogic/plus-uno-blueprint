@@ -350,18 +350,20 @@ export function mergeIntegratedBlueprint(
         targetCompare === 'divergent' ||
         targetCompare === 'only'
 
+      // Compare mode draws ONLY the arrows that point out a divergence.
+      // Spine-to-spine arrows are the flow both paths agree on — context the
+      // side-by-side view already shows — and keeping them (even faded)
+      // turned the merged grid into arrow spaghetti.
+      if (comparing && !touchesDivergence) continue
+
       triggers.push({
         id: `integrated-trigger-${blueprint.path.id}-${trigger.id}`,
         source_cell_id: sourceCellId,
         target_cell_id: targetCellId,
         path_id: blueprint.path.id,
         path_type: blueprint.path.path_type,
-        // In compare mode the arrows point out the divergence: full weight
-        // where an arrow enters or leaves a band, receded along the spine.
         opacity: comparing
-          ? touchesDivergence
-            ? 1
-            : 0.35
+          ? 1
           : pathOpacity(blueprint.path.id, selectedPathIds),
       })
     }

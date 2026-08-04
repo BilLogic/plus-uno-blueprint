@@ -5,7 +5,7 @@ import { parseValueProps } from '@/lib/valueProps'
 function SpecSection({ title, text }: { title: string; text: string }) {
   return (
     <section className="flex flex-col gap-1">
-      <h3 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+      <h3 className="text-[11px] font-medium text-muted-foreground">
         {title}
       </h3>
       <p className="text-sm whitespace-pre-wrap text-foreground/80">{text}</p>
@@ -50,7 +50,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
       {formText ? <SpecSection title="Form" text={formText} /> : null}
       {valueProps.length > 0 ? (
         <section className="flex flex-col gap-1">
-          <h3 className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          <h3 className="text-[11px] font-medium text-muted-foreground">
             Value
           </h3>
           <ul className="flex flex-col gap-1">

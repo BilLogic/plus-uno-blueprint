@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { GripVertical, Scissors, X } from 'lucide-react'
+import { GripVertical, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { describeCell } from '@/lib/canvasCellQuery'
 import { cn } from '@/lib/utils'
@@ -82,18 +82,23 @@ export function SliceScreenComposer({
       return { ...screen, cells: screen.cells.filter((id) => id !== cell) }
     })
 
-    const next = withoutCell.map((screen, index) =>
-      index === target.screen
-        ? {
-            ...screen,
-            cells: [
-              ...screen.cells.slice(0, insertIndex),
-              cell,
-              ...screen.cells.slice(insertIndex),
-            ],
-          }
-        : screen,
-    )
+    // A drop past the last screen mints a new one — with Split gone, this
+    // drop zone is how a screen boundary comes into being.
+    const next =
+      target.screen >= withoutCell.length
+        ? [...withoutCell, { cells: [cell], caption: '', narrative: '' }]
+        : withoutCell.map((screen, index) =>
+            index === target.screen
+              ? {
+                  ...screen,
+                  cells: [
+                    ...screen.cells.slice(0, insertIndex),
+                    cell,
+                    ...screen.cells.slice(insertIndex),
+                  ],
+                }
+              : screen,
+          )
 
     // A screen emptied by the move disappears — an empty screen is not a
     // renderable state, and leaving one behind only fails validation later.
@@ -170,18 +175,6 @@ export function SliceScreenComposer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- moveTo reads refs
   }, [dragging])
-
-  const splitAt = (screenIndex: number, cellIndex: number) => {
-    const screen = screens[screenIndex]
-    const next = [...screens]
-    next.splice(
-      screenIndex,
-      1,
-      { ...screen, cells: screen.cells.slice(0, cellIndex) },
-      { cells: screen.cells.slice(cellIndex), caption: '', narrative: '' },
-    )
-    onChange(next.filter((entry) => entry.cells.length > 0))
-  }
 
   const removeCell = (screenIndex: number, cell: string) => {
     onChange(
@@ -279,26 +272,6 @@ export function SliceScreenComposer({
                   <li key={cell}>
                     <DropLine target={{ screen: screenIndex, index: cellIndex }} />
 
-                    {/*
-                      Where a new screen gets made. The line is always drawn,
-                      because the boundary is real whether or not it is
-                      hovered; only the words wait. Hidden while dragging so
-                      it does not compete with the insertion line.
-                    */}
-                    {cellIndex > 0 && dragging === null ? (
-                      <button
-                        type="button"
-                        aria-label="Split into a new screen here"
-                        onClick={() => splitAt(screenIndex, cellIndex)}
-                        className="group/split flex h-4 w-full items-center gap-1 text-[10px] text-muted-foreground/0 transition-colors hover:text-primary"
-                      >
-                        <span className="h-px flex-1 bg-border transition-colors group-hover/split:bg-primary" />
-                        <Scissors className="size-2.5 text-muted-foreground/50 transition-colors group-hover/split:text-primary" aria-hidden />
-                        <span className="whitespace-nowrap">new screen</span>
-                        <span className="h-px flex-1 bg-border transition-colors group-hover/split:bg-primary" />
-                      </button>
-                    ) : null}
-
                     <div
                       className={cn(
                         'flex items-center gap-1.5 rounded-md px-1 py-1 transition-opacity hover:bg-muted/60',
@@ -362,6 +335,22 @@ export function SliceScreenComposer({
           </div>
         )
       })}
+
+      {/* Dropping past the last screen creates one — the boundary-minting
+          gesture now that Split is gone. Visible only mid-drag. */}
+      {dragging !== null ? (
+        <div
+          data-drop-slot={`${screens.length}:0`}
+          className={cn(
+            'flex h-9 items-center justify-center rounded-lg border border-dashed text-[11px] transition-colors',
+            slot?.screen === screens.length
+              ? 'border-primary text-primary'
+              : 'border-border text-muted-foreground',
+          )}
+        >
+          Drop here for a new screen
+        </div>
+      ) : null}
 
       {/*
         The dragged row's ghost, under the pointer. Portalled to the body:

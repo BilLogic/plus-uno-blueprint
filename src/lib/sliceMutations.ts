@@ -105,6 +105,62 @@ export async function replaceSliceFrames(
   if (error) throw new Error(error.message)
 }
 
+/**
+ * Copy a slice — row and frames — as "<title> copy".
+ *
+ * The copy is `origin: 'human'` regardless of the source's origin: the act
+ * of duplicating is authorship, and a copy the slice skill could regenerate
+ * over would not be the safe scratchpad duplication exists to provide.
+ */
+export async function duplicateSlice(
+  client: Client,
+  sliceId: string,
+): Promise<Slice> {
+  const { data: source, error: sourceError } = await client
+    .from('slices')
+    .select()
+    .eq('id', sliceId)
+    .single()
+  if (sourceError) throw new Error(sourceError.message)
+
+  const { data: items, error: itemsError } = await client
+    .from('slice_items')
+    .select()
+    .eq('slice_id', sliceId)
+    .order('position', { ascending: true })
+  if (itemsError) throw new Error(itemsError.message)
+
+  const { data: copy, error: insertError } = await client
+    .from('slices')
+    .insert({
+      service_lifecycle_id: source.service_lifecycle_id,
+      title: `${source.title} copy`,
+      description: source.description,
+      slice_type: source.slice_type,
+      actor: source.actor,
+      origin: 'human',
+    })
+    .select()
+    .single()
+  if (insertError) throw new Error(insertError.message)
+
+  if ((items ?? []).length > 0) {
+    const rows = (items ?? []).map((item) => ({
+      slice_id: copy.id,
+      position: item.position,
+      cell_ids: item.cell_ids,
+      cell_keys: item.cell_keys,
+      caption: item.caption,
+      narrative: item.narrative,
+      illustration: item.illustration,
+    }))
+    const { error } = await client.from('slice_items').insert(rows)
+    if (error) throw new Error(error.message)
+  }
+
+  return copy
+}
+
 export type SliceMetaUpdate = {
   title: string
   description: string

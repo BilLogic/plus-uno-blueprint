@@ -200,9 +200,6 @@ export function CreateSliceSheet({
               {describeSliceType(sliceType, cellCount)}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-            {screens.length} screen{screens.length === 1 ? '' : 's'}
-          </span>
         </div>
 
         {step === 'screens' ? (

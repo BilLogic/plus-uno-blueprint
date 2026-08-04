@@ -53,6 +53,12 @@ export function SliceFrameEditor({
     | null
   >(null)
   const [dropTarget, setDropTarget] = useState<number | null>(null)
+  // Where a dragged cell would land inside a frame — one drag reorders,
+  // whether the destination is the same frame or another.
+  const [cellDrop, setCellDrop] = useState<{
+    frame: number
+    index: number
+  } | null>(null)
   // The strip folds like an accordion: the screens are working material,
   // and while the canvas is the subject the strip collapses to one bar.
   const [collapsed, setCollapsed] = useState(false)
@@ -61,16 +67,38 @@ export function SliceFrameEditor({
     onChange(next)
     setDragging(null)
     setDropTarget(null)
+    setCellDrop(null)
   }
 
-  const moveCell = (from: number, cell: string, to: number) => {
-    if (from === to) return
-    const next = frames.map((frame, index) => {
-      if (index === from) {
-        return { ...frame, cells: frame.cells.filter((id) => id !== cell) }
+  const moveCell = (cell: string, to: number, at?: number) => {
+    // Remove first, then re-derive the insert index: pulling the cell out
+    // shifts everything after it, and inserting at the pre-removal index is
+    // how a drag one place down silently becomes a no-op.
+    let insertAt = at
+    const withoutCell = frames.map((frame, index) => {
+      const position = frame.cells.indexOf(cell)
+      if (position === -1) return frame
+      if (
+        index === to &&
+        insertAt !== undefined &&
+        position < insertAt
+      ) {
+        insertAt -= 1
       }
-      if (index === to) return { ...frame, cells: [...frame.cells, cell] }
-      return frame
+      return { ...frame, cells: frame.cells.filter((id) => id !== cell) }
+    })
+
+    const next = withoutCell.map((frame, index) => {
+      if (index !== to) return frame
+      const position = insertAt ?? frame.cells.length
+      return {
+        ...frame,
+        cells: [
+          ...frame.cells.slice(0, position),
+          cell,
+          ...frame.cells.slice(position),
+        ],
+      }
     })
     // A frame emptied by the move disappears — an empty frame is not a
     // renderable state, and leaving one behind would just fail validation.
@@ -82,37 +110,6 @@ export function SliceFrameEditor({
     const next = [...frames]
     const [moved] = next.splice(from, 1)
     next.splice(to, 0, moved)
-    update(next)
-  }
-
-  const splitFrame = (index: number) => {
-    const frame = frames[index]
-    if (frame.cells.length < 2) return
-    // Split after the first cell: repeated splits peel one cell at a time,
-    // which is predictable. Splitting down the middle is not, once a frame
-    // has an odd number of cells.
-    const next = [...frames]
-    next.splice(
-      index,
-      1,
-      { ...frame, cells: frame.cells.slice(0, 1) },
-      { cells: frame.cells.slice(1), caption: '', narrative: '' },
-    )
-    update(next)
-  }
-
-  const mergeWithNext = (index: number) => {
-    if (index >= frames.length - 1) return
-    const next = [...frames]
-    const [second] = next.splice(index + 1, 1)
-    next[index] = {
-      ...next[index],
-      cells: [...next[index].cells, ...second.cells],
-      // Captions cannot both survive a merge; keeping the first is the least
-      // surprising, and the second is one keystroke away in the input.
-      caption: next[index].caption || second.caption,
-      narrative: next[index].narrative || second.narrative,
-    }
     update(next)
   }
 
@@ -153,10 +150,7 @@ export function SliceFrameEditor({
           )}
           aria-hidden
         />
-        Screens
-        <span className="tabular-nums text-muted-foreground/70">
-          {frames.length}
-        </span>
+        Storyboard
       </button>
       {collapsed ? null : (
     <div className="flex max-h-56 shrink-0 gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2">
@@ -187,7 +181,11 @@ export function SliceFrameEditor({
               event.preventDefault()
               if (!dragging) return
               if (dragging.kind === 'cell') {
-                moveCell(dragging.frame, dragging.cell, index)
+                moveCell(
+                  dragging.cell,
+                  index,
+                  cellDrop?.frame === index ? cellDrop.index : undefined,
+                )
               } else {
                 moveFrame(dragging.frame, index)
               }
@@ -233,8 +231,31 @@ export function SliceFrameEditor({
                   onDragStart={() =>
                     setDragging({ kind: 'cell', frame: index, cell })
                   }
-                  onDragEnd={() => setDragging(null)}
-                  className="group/chip flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-[11px] active:cursor-grabbing"
+                  onDragEnd={() => {
+                    setDragging(null)
+                    setCellDrop(null)
+                  }}
+                  onDragOver={(event: DragEvent) => {
+                    if (dragging?.kind !== 'cell') return
+                    event.preventDefault()
+                    // Top half inserts before this chip, bottom half after —
+                    // one drag is the whole reordering grammar.
+                    const box = event.currentTarget.getBoundingClientRect()
+                    const before = event.clientY < box.top + box.height / 2
+                    setCellDrop({
+                      frame: index,
+                      index: before ? cellIndex : cellIndex + 1,
+                    })
+                  }}
+                  className={cn(
+                    'group/chip flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-[11px] active:cursor-grabbing',
+                    cellDrop?.frame === index &&
+                      cellDrop.index === cellIndex &&
+                      'shadow-[0_-2px_0_0_var(--primary)]',
+                    cellDrop?.frame === index &&
+                      cellDrop.index === cellIndex + 1 &&
+                      'shadow-[0_2px_0_0_var(--primary)]',
+                  )}
                 >
                   <GripVertical
                     className="size-3 shrink-0 text-muted-foreground/50"
@@ -298,40 +319,15 @@ export function SliceFrameEditor({
               </p>
             ) : null}
 
-            {/* Frame surgery (split / merge / delete) reveals on card hover:
-                the actions matter occasionally, the captions and cells always. */}
-            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/frame:opacity-100 focus-within:opacity-100">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-1.5 text-[10px] text-muted-foreground"
-                disabled={frame.cells.length < 2}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  splitFrame(index)
-                }}
-              >
-                Split
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 px-1.5 text-[10px] text-muted-foreground"
-                disabled={index >= frames.length - 1}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  mergeWithNext(index)
-                }}
-              >
-                Merge →
-              </Button>
+            {/* Split and Merge are gone everywhere in slices — dragging a
+                cell between screens IS both. Delete is the only action a
+                drag cannot express, revealed on hover. */}
+            <div className="flex items-center opacity-0 transition-opacity group-hover/frame:opacity-100 focus-within:opacity-100">
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label={`Delete frame ${index + 1}`}
+                aria-label={`Delete screen ${index + 1}`}
                 className="ml-auto text-muted-foreground hover:text-destructive"
                 onClick={(event) => {
                   event.stopPropagation()
