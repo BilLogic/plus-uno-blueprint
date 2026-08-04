@@ -48,10 +48,23 @@ test('cells scattered across lanes and steps are custom', () => {
   assert.equal(derive(['1/tutor', '2/staff', '5/tech']), 'custom')
 })
 
-test('a cell whose position cannot be read does not crash the derivation', () => {
-  // Unreadable positions are null, which is a value like any other — three
-  // unknowns are "one lane, one step", not an exception.
-  assert.equal(deriveSliceType(['a', 'b'], () => ({ step: null, lane: null })), 'lane')
+test('a cell whose position cannot be read makes the whole guess custom', () => {
+  // Three unknowns all report lane null, which a Set happily calls "one
+  // lane" — a slice confidently filed under LANE on no evidence is worse
+  // than one filed under CUSTOM honestly.
+  assert.equal(
+    deriveSliceType(['a', 'b'], () => ({ step: null, lane: null })),
+    'custom',
+  )
+  // One unknown among known positions also disqualifies the guess.
+  assert.equal(
+    deriveSliceType(['1/tutor', 'gone'], (id) =>
+      id === 'gone'
+        ? { step: null, lane: null }
+        : { step: '1', lane: 'tutor' },
+    ),
+    'custom',
+  )
 })
 
 test('the description counts cells and names the shape', () => {

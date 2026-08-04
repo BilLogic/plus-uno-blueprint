@@ -42,6 +42,13 @@ export function deriveSliceType(
   if (cellIds.length === 1) return 'cell'
 
   const positions = cellIds.map(read)
+  // Any cell whose position cannot be read disqualifies the whole guess:
+  // three unknowns all report lane `null`, which a Set is happy to call "one
+  // lane" — and a slice confidently filed under LANE on no evidence is worse
+  // than one filed under CUSTOM honestly.
+  if (positions.some((position) => position.step === null && position.lane === null)) {
+    return 'custom'
+  }
   const steps = new Set(positions.map((position) => position.step))
   const lanes = new Set(positions.map((position) => position.lane))
 

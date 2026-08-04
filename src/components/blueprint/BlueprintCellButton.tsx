@@ -40,11 +40,19 @@ type BlueprintCellButtonProps = {
 }
 
 /**
- * The last cell clicked, and when — module level because two clicks on one
- * cell are two separate renders of it, and state would be reset by the first.
+ * The selection as it stood before the last single click, so a double-click
+ * can put it back exactly.
+ *
+ * Module level because the two clicks of a pair are two separate renders.
+ * Keyed by the actual DOM element — the first version keyed on cell id, and
+ * tech pills share their cell's id, so pill A then pill B half a second apart
+ * read as a "double-click" and silently toggled the cell. The element cannot
+ * lie about which thing was clicked.
  */
-let lastClick: { cellId: string | null; at: number } = { cellId: null, at: 0 }
-const DOUBLE_CLICK_MS = 350
+let lastClick: {
+  el: EventTarget | null
+  snapshot: readonly string[] | null
+} = { el: null, snapshot: null }
 
 export function BlueprintCellButton({
   fill,
@@ -147,31 +155,35 @@ export function BlueprintCellButton({
     // The grammar lives in one place — see `cellPickGrammar` for what each
     // modifier means and where it departs from Figma, and why.
     /*
-      Double-click opens the cell, detected here from the click pair rather
-      than through `onDoubleClick`.
+      Double-click opens the cell — read `event.detail`, which is the
+      browser's own per-element click count. `onDoubleClick` never fired
+      (the prop does not survive base-ui's Button), and a hand-rolled timer
+      keyed by cell id treated two different pills of one cell as a pair.
 
-      The prop was the obvious way and it silently did nothing: this renders
-      through base-ui's Button, and the handler never reached the DOM node, so
-      the gesture the right-click menu also depends on was dead. Counting two
-      clicks on the same cell needs no framework cooperation at all.
-
-      The two clicks pick and then unpick, so the selection ends where it
-      started — which is the point: read a cell you are still deciding about
-      without joining it to the slice.
+      A double-click is a read, and a read must not change the selection.
+      The first click of the pair has already picked by the time the second
+      arrives, so the second *restores the snapshot* taken before the first —
+      exact order, exact positions — rather than "undoing" with a toggle,
+      which would re-append the cell at the end and quietly reorder the
+      slice being built. Restore only where the picker gathers: a slice edit
+      session's picks mean "move between frames" and have no replace mode.
     */
-    const now = Date.now()
-    const isSecondClick =
-      lastClick.cellId === pickCellId && now - lastClick.at < DOUBLE_CLICK_MS
-    lastClick = { cellId: isSecondClick ? null : pickCellId, at: now }
-
-    if (isSecondClick) {
-      // Undo this click's pick, then open — a double-click is a read, and a
-      // read must not leave the selection one cell different.
-      if (pickCellId && pick && clickPicks(event, pick.plainClick)) {
-        pick.pick(pickCellId, 'toggle')
+    if (event.detail >= 2) {
+      if (
+        pick?.gathers &&
+        lastClick.el === event.currentTarget &&
+        lastClick.snapshot
+      ) {
+        pick.pickMany(lastClick.snapshot, 'replace')
       }
+      lastClick = { el: null, snapshot: null }
       detail!.selectCell(selection!)
       return
+    }
+
+    lastClick = {
+      el: event.currentTarget,
+      snapshot: pick ? [...pick.picked] : null,
     }
 
     if (pickCellId && pick && clickPicks(event, pick.plainClick)) {

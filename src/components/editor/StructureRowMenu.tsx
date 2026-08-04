@@ -193,16 +193,22 @@ function RenameDialog({
   const [name, setName] = useState(currentName)
   const [busy, setBusy] = useState(false)
 
-  // Re-seed from the row when the dialog opens — the field should start at
-  // the name being changed, not at whatever a previous rename left behind.
-  const [seededFor, setSeededFor] = useState<string | null>(null)
-  if (open && seededFor !== id + currentName) {
-    setSeededFor(id + currentName)
+  // Re-seed on every open — the field starts at the name being changed, not
+  // at whatever a cancelled edit left behind. Cleared on close rather than
+  // keyed on id+name, which kept abandoned junk alive for the same row.
+  const [seeded, setSeeded] = useState(false)
+  if (open && !seeded) {
+    setSeeded(true)
     setName(currentName)
   }
+  if (!open && seeded) setSeeded(false)
 
   const save = async () => {
-    if (!client || busy || !name.trim() || name.trim() === currentName) {
+    // Busy is its own case: a second Enter mid-request must not dismiss the
+    // dialog — the failure would then land in a closed dialog and resurface,
+    // stale, on the next open.
+    if (busy) return
+    if (!client || !name.trim() || name.trim() === currentName) {
       onOpenChange(false)
       return
     }

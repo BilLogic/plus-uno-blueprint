@@ -330,14 +330,16 @@ function RenameSliceDialog({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Re-seed when the dialog opens on a different slice.
-  const [seededFor, setSeededFor] = useState<string | null>(null)
-  if (open && slice && seededFor !== slice.id) {
-    setSeededFor(slice.id)
+  // Re-seed on every open, cleared on close — keying on slice.id kept a
+  // cancelled edit's junk alive for the same slice, one Enter from saving.
+  const [seeded, setSeeded] = useState(false)
+  if (open && slice && !seeded) {
+    setSeeded(true)
     setTitle(slice.title)
     setDescription(slice.description ?? '')
     setError(null)
   }
+  if (!open && seeded) setSeeded(false)
 
   const save = async () => {
     if (!client || !slice || busy || !title.trim()) return

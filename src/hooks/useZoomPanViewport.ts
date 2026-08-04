@@ -462,12 +462,22 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const el = containerRef.current
       if (!el) return
       const target = e.target
-      if (!(target instanceof Node) || !el.contains(target)) return
+      if (!(target instanceof Node) || !el.contains(target)) {
+        // Not the canvas — but an unprevented ctrl+wheel is still a browser
+        // *page* zoom, and a pinch that strays two pixels onto a popover or
+        // the toolbar must not permanently rescale the whole app. Page zoom
+        // persists across everything and is exactly what "the zoom keeps
+        // shifting" feels like. Swallow the page zoom; apply nothing.
+        if (e.ctrlKey) e.preventDefault()
+        return
+      }
 
       // macOS sends pinch as ctrl+wheel; ⌘+wheel is the mouse equivalent.
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault()
-        e.stopPropagation()
+        // Immediate: a second viewport's window listener must not also apply
+        // the same tick, squaring the scale factor.
+        e.stopImmediatePropagation()
         const scaleFactor = Math.exp(-e.deltaY * 0.01)
         /*
           `syncReact: false` — and this is the whole bug.
@@ -491,7 +501,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
       if (e.deltaX !== 0 || e.deltaY !== 0) {
         e.preventDefault()
-        e.stopPropagation()
+        e.stopImmediatePropagation()
         cancelFitAnimation()
         userAdjustedViewRef.current = true
         const { pan: p, zoom: z } = transformRef.current

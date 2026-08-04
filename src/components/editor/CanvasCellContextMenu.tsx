@@ -4,7 +4,7 @@ import { useCellPick } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 
-type Menu = { x: number; y: number; cellId: string }
+type Menu = { x: number; y: number; cellId: string; el: HTMLElement }
 
 /** Roughly the menu's size, used only to keep it inside the window. */
 const MENU = { width: 176, height: 76 }
@@ -37,28 +37,44 @@ export function CanvasCellContextMenu() {
       // away from the whole canvas would cost more than this gives.
       if (!cell) return
       const cellId = cell.getAttribute('data-blueprint-cell')
-      if (!cellId) return
+      if (!cellId || !(cell instanceof HTMLElement)) return
       event.preventDefault()
       setMenu({
         x: Math.min(event.clientX, window.innerWidth - MENU.width - 8),
         y: Math.min(event.clientY, window.innerHeight - MENU.height - 8),
         cellId,
+        // The element itself, not just its id: a pills cell shares its id
+        // with a wrapper div and with every sibling pill, and re-querying by
+        // id later finds the wrong one first.
+        el: cell,
       })
     }
 
-    const dismiss = () => setMenu(null)
+    const dismiss = (event: PointerEvent) => {
+      // Not for pointerdowns inside the menu: dismissing there unmounts the
+      // item before its own click can fire, and the click then retargets to
+      // whatever cell sits under the pointer — which, in Edit mode, picks it.
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[data-canvas-cell-menu]')
+      ) {
+        return
+      }
+      setMenu(null)
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMenu(null)
     }
 
+    const dismissAll = () => setMenu(null)
     window.addEventListener('contextmenu', onContextMenu)
     window.addEventListener('pointerdown', dismiss)
-    window.addEventListener('blur', dismiss)
+    window.addEventListener('blur', dismissAll)
     window.addEventListener('keydown', onKeyDown)
     return () => {
       window.removeEventListener('contextmenu', onContextMenu)
       window.removeEventListener('pointerdown', dismiss)
-      window.removeEventListener('blur', dismiss)
+      window.removeEventListener('blur', dismissAll)
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [mode])
@@ -69,28 +85,21 @@ export function CanvasCellContextMenu() {
   const picked = Boolean(pick?.isPicked(pickId))
 
   /**
-   * Open the cell by asking the cell itself.
+   * Open the cell by asking the element that was right-clicked.
    *
-   * This used to rebuild the selection from the id via
-   * `buildBlueprintCellSelectionForId`, and silently did nothing: a cell
-   * rendered by the compare grid carries an overlay id that does not resolve
-   * back through that path, so the loop fell through every blueprint and
-   * returned. The button already holds the exact selection it was rendered
-   * with, and already opens the panel on double-click — so this replays that
-   * gesture instead of reconstructing its input. One code path for "open this
-   * cell" means the menu cannot drift from the double-click again.
+   * Held from the contextmenu event rather than re-queried by id — a pills
+   * cell shares its id with its wrapper and its sibling pills, and
+   * `querySelector` returns whichever comes first, which is how "View cell
+   * detail" opened nothing (the wrapper has no handler) or the wrong pill.
+   * `detail: 2` because the cell reads the browser's click count: one
+   * synthetic double-click, which the button treats as "open, touch nothing".
    */
   const viewDetail = () => {
+    const element = menu.el
     setMenu(null)
-    const element = document.querySelector(
-      `[data-blueprint-cell="${CSS.escape(menu.cellId)}"]`,
+    element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true, detail: 2 }),
     )
-    if (!(element instanceof HTMLElement)) return
-    // Two clicks, because that is the gesture the cell understands — it
-    // counts a click pair itself rather than listening for `dblclick`, which
-    // never reached it through base-ui's Button.
-    element.click()
-    element.click()
   }
 
   return (

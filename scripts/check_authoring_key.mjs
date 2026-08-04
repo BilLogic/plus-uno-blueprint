@@ -36,7 +36,7 @@ function readEnv(path) {
 
 /** Same rule the app uses — keep the two in step. */
 function looksLikePlaceholder(key) {
-  if (key.length < 40) return true
+  if (key.length < 20) return true
   if (key.startsWith('<') || key.endsWith('>')) return true
   return /^(your|paste|replace|todo)[-_]/i.test(key)
 }

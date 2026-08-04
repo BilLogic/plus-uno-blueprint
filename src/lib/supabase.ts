@@ -51,10 +51,16 @@ export function hasDevAuthoringKey(): boolean {
   return !looksLikePlaceholder(devAuthoringKey)
 }
 
-/** `<paste-me>`, `your-key-here`, or anything far too short to be a JWT. */
+/**
+ * `<paste-me>`, `your-key-here`, or something far too short to be any real
+ * key. The floor is 20, not 40: Supabase's newer `sb_secret_…` keys can sit
+ * near 40 characters, and classifying a real key as a placeholder silently
+ * downgrades every request to the anon key — reads return nothing, no error
+ * anywhere, and the app just looks like loading broke.
+ */
 function looksLikePlaceholder(key: string): boolean {
   const value = key.trim()
-  if (value.length < 40) return true
+  if (value.length < 20) return true
   if (value.startsWith('<') || value.endsWith('>')) return true
   return /^(your|paste|replace|todo)[-_]/i.test(value)
 }
