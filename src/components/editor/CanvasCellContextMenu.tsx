@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Eye, Plus, Minus } from 'lucide-react'
+import { Eye, Plus, Minus, Trash2 } from 'lucide-react'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { deleteCell } from '@/lib/authoringRpc'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
+import { cn } from '@/lib/utils'
 
 type Menu = { x: number; y: number; cellId: string; el: HTMLElement }
 
 /** Roughly the menu's size, used only to keep it inside the window. */
-const MENU = { width: 176, height: 76 }
+const MENU = { width: 176, height: 108 }
 
 /**
  * Right-click on a cell.
@@ -24,7 +28,13 @@ const MENU = { width: 176, height: 76 }
 export function CanvasCellContextMenu() {
   const mode = useCanvasModeValue()
   const pick = useCellPick()
+  const { client, canWrite } = useSupabase()
   const [menu, setMenu] = useState<Menu | null>(null)
+  // Two-step delete: the first click arms it, the second executes. A menu
+  // item that deletes on one click is a misclick away from data loss; a
+  // full dialog is more ceremony than one cell warrants.
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (mode !== 'design') return
@@ -79,10 +89,33 @@ export function CanvasCellContextMenu() {
     }
   }, [mode])
 
+  // Re-arm on close or when the menu moves to another cell (guarded reset).
+  if (!menu && confirmingDelete) setConfirmingDelete(false)
+
   if (!menu || mode !== 'design') return null
 
   const pickId = resolveBlueprintCellId(menu.cellId) ?? menu.cellId
   const picked = Boolean(pick?.isPicked(pickId))
+
+  const destroy = async () => {
+    if (!client || deleting) return
+    if (!confirmingDelete) {
+      setConfirmingDelete(true)
+      return
+    }
+    setDeleting(true)
+    try {
+      await deleteCell(client, pickId)
+      invalidateQueries('lifecycle-phases')
+      invalidateQueries('canvas-blueprints')
+      setMenu(null)
+      setConfirmingDelete(false)
+    } catch (error) {
+      console.error('[authoring] delete_cell failed:', error)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   /**
    * Open the cell by asking the element that was right-clicked.
@@ -140,6 +173,27 @@ export function CanvasCellContextMenu() {
             <Plus className="size-3.5 text-muted-foreground" aria-hidden />
           )}
           {picked ? 'Remove from selection' : 'Add to selection'}
+        </button>
+      ) : null}
+      {canWrite && client ? (
+        <button
+          type="button"
+          role="menuitem"
+          disabled={deleting}
+          onClick={() => void destroy()}
+          className={cn(
+            'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left',
+            confirmingDelete
+              ? 'bg-destructive/10 text-destructive hover:bg-destructive/15'
+              : 'text-destructive/90 hover:bg-muted',
+          )}
+        >
+          <Trash2 className="size-3.5" aria-hidden />
+          {deleting
+            ? 'Deleting…'
+            : confirmingDelete
+              ? 'Click again to delete'
+              : 'Delete cell'}
         </button>
       ) : null}
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useAtScenarioLevel } from '@/contexts/EditorContext'
@@ -14,12 +14,14 @@ import { cn } from '@/lib/utils'
  * whole design of this component. A blueprint is a few hundred squares and most
  * of them are empty; a grid of plus signs would be unreadable, and a square
  * that writes a row on any stray click would fire constantly while panning and
- * picking. Hover-then-click keeps creation to one click without making the
- * click cheap.
+ * picking.
  *
- * The position *is* the argument. There is no dialog because there is nothing
- * to ask: a cell at (lane, step) is fully specified by the square that was
- * pointed at, and its text is typed in place afterwards.
+ * The click opens an inline text field and **Enter** creates. It used to
+ * create immediately with empty content, and that was the "creating a cell
+ * does nothing" bug: the grid hides cells with no text (an empty box is
+ * indistinguishable from a gap), so the row landed in the database and the
+ * square looked exactly as empty as before. A cell is born with its text or
+ * not at all — the same rule the lane handles follow with names.
  */
 export function BlueprintEmptyCellSlot({
   pathId,
@@ -40,7 +42,10 @@ export function BlueprintEmptyCellSlot({
   const mode = useCanvasModeValue()
   const { client, canWrite } = useSupabase()
   const atScenarioLevel = useAtScenarioLevel()
+  const [naming, setNaming] = useState(false)
+  const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const style = {
     width,
@@ -55,15 +60,16 @@ export function BlueprintEmptyCellSlot({
   }
 
   const create = async () => {
-    if (busy) return
+    const trimmed = text.trim()
+    if (busy || !trimmed) return
     setBusy(true)
     try {
-      // Empty content: the cell exists so it can be typed into, and inventing
-      // placeholder text here is how "Untitled" ends up in a blueprint someone
-      // presents. The grid re-reads because a new cell changes the layout.
-      await upsertCell(client, { pathId, layerId, stepId, content: '' })
+      await upsertCell(client, { pathId, layerId, stepId, content: trimmed })
+      // The grid re-reads because a new cell changes the layout.
       invalidateQueries('lifecycle-phases')
       invalidateQueries('canvas-blueprints')
+      setNaming(false)
+      setText('')
     } catch (error) {
       console.error('[authoring] upsert_cell failed:', error)
     } finally {
@@ -71,15 +77,57 @@ export function BlueprintEmptyCellSlot({
     }
   }
 
+  if (naming) {
+    return (
+      <div
+        className={cn('relative shrink-0', stretch)}
+        style={style}
+        data-blueprint-empty-slot=""
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <textarea
+          ref={inputRef}
+          value={text}
+          autoFocus
+          disabled={busy}
+          placeholder="Cell text…"
+          rows={2}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              void create()
+            }
+            if (event.key === 'Escape') {
+              setNaming(false)
+              setText('')
+            }
+          }}
+          onBlur={() => {
+            // A click elsewhere abandons quietly; Enter is the commit.
+            if (!busy) {
+              setNaming(false)
+              setText('')
+            }
+          }}
+          className={cn(
+            'absolute inset-0 h-full w-full resize-none rounded-md border border-primary/60',
+            'bg-background px-1.5 py-1 text-[10px] leading-snug outline-none',
+            'placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/40',
+          )}
+        />
+      </div>
+    )
+  }
+
   return (
     <button
       type="button"
-      disabled={busy}
       aria-label="Add a cell here"
       title="Add a cell here"
       onClick={(event) => {
         event.stopPropagation()
-        void create()
+        setNaming(true)
       }}
       data-blueprint-empty-slot=""
       className={cn(
