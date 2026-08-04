@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Diamond, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/tooltip'
 import { CreateSliceSheet } from '@/components/editor/CreateSliceSheet'
 import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
-import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cn } from '@/lib/utils'
 
@@ -45,32 +44,12 @@ const NO_PICKS: readonly string[] = []
  */
 export function CanvasDesignTools() {
   const pick = useCellPick()
-  const detail = useBlueprintCellDetailOptional()
   const picked = pick?.picked ?? NO_PICKS
   const [sliceDialogOpen, setSliceDialogOpen] = useState(false)
   // Armed: clicked with nothing picked. The button becomes the instruction
   // rather than sitting greyed out — "pick cells first" is advice you can only
   // read once you have already guessed that cells are pickable.
   const [armed, setArmed] = useState(false)
-
-  /**
-   * How many blueprints the selection spans.
-   *
-   * Worth saying out loud because the Hand tool made crossing the canvas easy,
-   * so cells picked two blueprints away are now ordinary rather than odd — and
-   * without this the bar reads "3" while two of them are somewhere the user
-   * cannot see.
-   */
-  const spannedPaths = useMemo(() => {
-    if (!detail || picked.length === 0) return 0
-    const paths = new Set<string>()
-    for (const blueprint of detail.blueprints) {
-      if (blueprint.cells.some((cell) => picked.includes(cell.id))) {
-        paths.add(blueprint.path.id)
-      }
-    }
-    return paths.size
-  }, [detail, picked])
 
   // Picking something disarms: the instruction has been followed.
   const [lastCount, setLastCount] = useState(picked.length)
@@ -135,9 +114,7 @@ export function CanvasDesignTools() {
               : 'Make slice'}
             {picked.length > 0 ? (
               <span className="rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums">
-                {spannedPaths > 1
-                  ? `${picked.length} · ${spannedPaths} blueprints`
-                  : picked.length}
+                {picked.length}
               </span>
             ) : null}
           </Button>

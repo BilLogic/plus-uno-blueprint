@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState, type RefObject } from 'react'
 import { Plus } from 'lucide-react'
+import { useAtScenarioLevel } from '@/contexts/EditorContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -49,12 +50,15 @@ export function BlueprintColumnHandles({
   pathId?: string
 }) {
   const mode = useCanvasModeValue()
+  const atScenarioLevel = useAtScenarioLevel()
   const pick = useCellPick()
   const { client, canWrite } = useSupabase()
   const [columns, setColumns] = useState<Column[]>([])
   const [bodyHeight, setBodyHeight] = useState(0)
   const [busyAt, setBusyAt] = useState<number | null>(null)
-  const active = mode === 'design' && pick !== null
+  // Scenario level only: at the overview twenty blueprints render at 6%
+  // zoom, and an insert handle there is an unaimed weapon.
+  const active = mode === 'design' && pick !== null && atScenarioLevel
 
   // No dependency array, deliberately.
   //

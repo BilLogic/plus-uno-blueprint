@@ -91,8 +91,8 @@ export function CanvasCellContextMenu() {
    * cell shares its id with its wrapper and its sibling pills, and
    * `querySelector` returns whichever comes first, which is how "View cell
    * detail" opened nothing (the wrapper has no handler) or the wrong pill.
-   * `detail: 2` because the cell reads the browser's click count: one
-   * synthetic double-click, which the button treats as "open, touch nothing".
+   * Dispatched as a ⌘-click, which is the grammar's open-detail gesture —
+   * the one click the button is guaranteed to read as "open, touch nothing".
    */
   const viewDetail = () => {
     const element = menu.el
@@ -101,7 +101,7 @@ export function CanvasCellContextMenu() {
     // a click dispatched into it bubbles nowhere near React's root.
     if (!element.isConnected) return
     element.dispatchEvent(
-      new MouseEvent('click', { bubbles: true, cancelable: true, detail: 2 }),
+      new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }),
     )
   }
 

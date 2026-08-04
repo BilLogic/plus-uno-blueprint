@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useAtScenarioLevel } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { upsertCell } from '@/lib/authoringRpc'
@@ -38,6 +39,7 @@ export function BlueprintEmptyCellSlot({
 }) {
   const mode = useCanvasModeValue()
   const { client, canWrite } = useSupabase()
+  const atScenarioLevel = useAtScenarioLevel()
   const [busy, setBusy] = useState(false)
 
   const style = {
@@ -48,7 +50,7 @@ export function BlueprintEmptyCellSlot({
   }
   const stretch = selfStretch ? 'self-stretch' : ''
 
-  if (mode !== 'design' || !canWrite || !client) {
+  if (mode !== 'design' || !canWrite || !client || !atScenarioLevel) {
     return <div aria-hidden className={cn('shrink-0', stretch)} style={style} />
   }
 

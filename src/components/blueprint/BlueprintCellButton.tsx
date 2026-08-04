@@ -5,7 +5,7 @@ import {
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasAnnotationsOptional } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
-import { clickPicks, pickModeForClick } from '@/lib/cellPickGrammar'
+import { clickOpensDetail, clickPicks, pickModeForClick } from '@/lib/cellPickGrammar'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
@@ -38,21 +38,6 @@ type BlueprintCellButtonProps = {
   'aria-label'?: string
   'data-blueprint-tech-pill'?: string
 }
-
-/**
- * The selection as it stood before the last single click, so a double-click
- * can put it back exactly.
- *
- * Module level because the two clicks of a pair are two separate renders.
- * Keyed by the actual DOM element — the first version keyed on cell id, and
- * tech pills share their cell's id, so pill A then pill B half a second apart
- * read as a "double-click" and silently toggled the cell. The element cannot
- * lie about which thing was clicked.
- */
-let lastClick: {
-  el: EventTarget | null
-  snapshot: readonly string[] | null
-} = { el: null, snapshot: null }
 
 export function BlueprintCellButton({
   fill,
@@ -152,38 +137,23 @@ export function BlueprintCellButton({
     // Hand means the canvas is being moved, not read: a click that lands at
     // the end of a pan must not also change the selection.
     if (annotationTool === 'hand') return
-    // The grammar lives in one place — see `cellPickGrammar` for what each
-    // modifier means and where it departs from Figma, and why.
     /*
-      Double-click opens the cell — read `event.detail`, which is the
-      browser's own per-element click count. `onDoubleClick` never fired
-      (the prop does not survive base-ui's Button), and a hand-rolled timer
-      keyed by cell id treated two different pills of one cell as a pair.
+      The grammar lives in one place — `cellPickGrammar` — and the branch
+      order here is the whole of it: ⌘/ctrl reads, everything else picks
+      (when there is a picker), and a bare click on a canvas with no picker
+      opens, because that is all a click can mean there.
 
-      A double-click is a read, and a read must not change the selection.
-      The first click of the pair has already picked by the time the second
-      arrives, so the second *restores the snapshot* taken before the first —
-      exact order, exact positions — rather than "undoing" with a toggle,
-      which would re-append the cell at the end and quietly reorder the
-      slice being built. Restore only where the picker gathers: a slice edit
-      session's picks mean "move between frames" and have no replace mode.
+      Double-click deliberately does nothing special. In a toggle grammar,
+      click-in click-out *is* a fast double-click — the two are
+      indistinguishable by construction, and every attempt to give the pair
+      its own meaning turned reading a cell into flipping its membership. A
+      held modifier cannot be produced by clicking fast; that is why the
+      open gesture is a modifier, with right-click → "View cell detail" as
+      the discoverable route to the same place.
     */
-    if (event.detail >= 2) {
-      if (
-        pick?.gathers &&
-        lastClick.el === event.currentTarget &&
-        lastClick.snapshot
-      ) {
-        pick.pickMany(lastClick.snapshot, 'replace')
-      }
-      lastClick = { el: null, snapshot: null }
+    if (clickOpensDetail(event)) {
       detail!.selectCell(selection!)
       return
-    }
-
-    lastClick = {
-      el: event.currentTarget,
-      snapshot: pick ? [...pick.picked] : null,
     }
 
     if (pickCellId && pick && clickPicks(event, pick.plainClick)) {
@@ -232,7 +202,7 @@ export function BlueprintCellButton({
       {/* Pick order wins the badge slot while picking: during selection the
           number the user cares about is the one they are building, not the
           one the saved slice already has. */}
-      {isPicked && pickOrder !== undefined ? (
+      {isPicked && pickOrder !== undefined && sliceSequenceBadge ? (
         <span
           aria-hidden
           data-slice-pick-badge=""

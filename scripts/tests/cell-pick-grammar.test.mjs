@@ -12,6 +12,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  clickOpensDetail,
   clickPicks,
   pickModeForClick,
   pickModeForMarquee,
@@ -29,10 +30,9 @@ test('a plain click toggles, so a set can be built by clicking', () => {
 })
 
 test('toggle is also how a cell leaves — unpicking needs no new gesture', () => {
-  // Same mode both ways round: `toggle` is in-if-out, out-if-in, so there is
-  // no separate "deselect" gesture that could be missing.
+  // `toggle` is in-if-out, out-if-in, so there is no separate "deselect"
+  // gesture that could be missing.
   assert.equal(pickModeForClick(click(), true), 'toggle')
-  assert.equal(pickModeForClick(click({ metaKey: true }), true), 'toggle')
 })
 
 test('shift reaches across a run when the picker gathers', () => {
@@ -45,19 +45,24 @@ test('shift falls back to toggle when there is no run to reach across', () => {
   assert.equal(pickModeForClick(click({ shiftKey: true }), false), 'toggle')
 })
 
-test('cmd and ctrl behave as a plain click, never as nothing', () => {
-  // Figma's ⌘-click descends into a child; there is no nesting here. Matching
-  // the plain click means the modifier people reach for by habit does the
-  // expected harmless thing.
-  assert.equal(pickModeForClick(click({ metaKey: true }), true), 'toggle')
-  assert.equal(pickModeForClick(click({ ctrlKey: true }), true), 'toggle')
+test('cmd and ctrl read the cell — they never touch the selection', () => {
+  // The open gesture must not be producible by clicking fast, which is why
+  // it is a held modifier and why double-click means nothing: in a toggle
+  // grammar, click-in click-out IS a fast double-click.
+  assert.equal(clickOpensDetail(click({ metaKey: true })), true)
+  assert.equal(clickOpensDetail(click({ ctrlKey: true })), true)
+  assert.equal(clickOpensDetail(click()), false)
+  assert.equal(clickOpensDetail(click({ shiftKey: true })), false)
+  assert.equal(clickPicks(click({ metaKey: true }), true), false)
+  assert.equal(clickPicks(click({ ctrlKey: true }), true), false)
 })
 
-test('shift wins over cmd when both are held', () => {
+test('cmd wins over shift when both are held — a read stays a read', () => {
   assert.equal(
-    pickModeForClick(click({ shiftKey: true, metaKey: true }), true),
-    'range',
+    clickOpensDetail(click({ shiftKey: true, metaKey: true })),
+    true,
   )
+  assert.equal(clickPicks(click({ shiftKey: true, metaKey: true }), true), false)
 })
 
 test('a bare marquee replaces; shift-marquee widens', () => {
@@ -65,11 +70,12 @@ test('a bare marquee replaces; shift-marquee widens', () => {
   assert.equal(pickModeForMarquee({ shiftKey: true }), 'add')
 })
 
-test('outside Edit mode only a modified click reaches the picker', () => {
+test('outside Edit mode only a shift click reaches the picker', () => {
   assert.equal(clickPicks(click(), false), false)
   assert.equal(clickPicks(click({ shiftKey: true }), false), true)
-  assert.equal(clickPicks(click({ metaKey: true }), false), true)
-  assert.equal(clickPicks(click({ ctrlKey: true }), false), true)
+  // ⌘/ctrl is the open gesture everywhere; it never picks.
+  assert.equal(clickPicks(click({ metaKey: true }), false), false)
+  assert.equal(clickPicks(click({ ctrlKey: true }), false), false)
 })
 
 test('in Edit mode every click reaches the picker', () => {

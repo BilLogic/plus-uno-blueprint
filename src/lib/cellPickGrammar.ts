@@ -11,35 +11,38 @@ import type { PickMode } from '@/contexts/cellPickContext'
  *
  * ## The grammar, and where it departs from Figma
  *
- * | gesture              | Figma (canvas)     | here                       |
- * | -------------------- | ------------------ | -------------------------- |
- * | click                | replace            | **toggle**                 |
- * | ⇧ click              | add / toggle       | **range** from the anchor  |
- * | ⌘ / ctrl click       | deep-select child  | **toggle** (same as click) |
- * | ⇧ drag (marquee)     | add to selection   | add                        |
- * | drag (marquee)       | replace            | replace                    |
- * | click empty canvas   | clear              | **nothing**                |
+ * | gesture              | Figma (canvas)     | here                        |
+ * | -------------------- | ------------------ | --------------------------- |
+ * | click                | replace            | **toggle**                  |
+ * | ⇧ click              | add / toggle       | **range** from the anchor   |
+ * | ⌘ / ctrl click       | deep-select child  | **open the detail panel**   |
+ * | double click         | enter/edit         | nothing (two toggles)       |
+ * | ⇧ drag (marquee)     | add to selection   | add                         |
+ * | drag (marquee)       | replace            | replace                     |
+ * | click empty canvas   | clear              | **nothing**                 |
  *
- * Two deliberate departures, both for the same reason: this selection is a
- * **set being assembled** over minutes, with exactly one verb at the end of
- * it — make a slice. Figma's grammar assumes the opposite, a selection that is
- * the subject of the next of many verbs, held for seconds.
+ * The departures share one reason: this selection is a **set being
+ * assembled** over minutes, with exactly one verb at the end of it — make a
+ * slice. Figma's grammar assumes the opposite, a selection that is the
+ * subject of the next of many verbs, held for seconds.
  *
  * - **Click toggles rather than replaces.** Replace-on-click means the set can
  *   never be built by clicking; it can only be built by holding a modifier for
  *   every cell after the first, which nothing tells you.
  * - **Empty canvas does not clear.** A miss between two cells would throw away
  *   minutes of work gathered across blueprints. The ✕ in the bar clears.
+ * - **⌘-click opens the detail panel, and double-click means nothing.**
+ *   Opening a cell needs a deliberate gesture while plain clicks pick, and
+ *   double-click cannot be that gesture in a toggle grammar: click-in,
+ *   click-out *is* a fast double-click, so the two are indistinguishable by
+ *   construction — reading a cell kept flipping its membership. A held
+ *   modifier cannot be produced by clicking fast. Right-click → "View cell
+ *   detail" is the discoverable route to the same place.
  *
- * ⌘-click matching plain click is not laziness: Figma's ⌘-click means
- * "select the child under the pointer", and there is no nesting here to
- * descend into. Making it toggle means the modifier people reach for out of
- * habit does the harmless, expected thing instead of nothing.
- *
- * Unpicking is therefore always available and always the same gesture: click a
- * picked cell (with or without ⌘) and it leaves. `range` is the one mode that
- * cannot unpick, which is correct — a range is a reach, not a toggle, and
- * Figma's shift-range does not unpick either.
+ * Unpicking is always the same gesture as picking: click a picked cell and it
+ * leaves. `range` is the one mode that cannot unpick, which is correct — a
+ * range is a reach, not a toggle, and Figma's shift-range does not unpick
+ * either.
  */
 export type ClickModifiers = {
   shiftKey: boolean
@@ -56,6 +59,14 @@ export function pickModeForClick(
   return 'toggle'
 }
 
+/**
+ * True when this click asks to *read* the cell rather than pick it.
+ * The one gesture that must not be producible by clicking fast.
+ */
+export function clickOpensDetail(event: ClickModifiers): boolean {
+  return event.metaKey || event.ctrlKey
+}
+
 /** Marquee: a bare sweep says "these", shift says "these as well". */
 export function pickModeForMarquee(event: { shiftKey: boolean }): PickMode {
   return event.shiftKey ? 'add' : 'replace'
@@ -64,12 +75,13 @@ export function pickModeForMarquee(event: { shiftKey: boolean }): PickMode {
 /**
  * Does this click belong to the picker at all?
  *
- * In Design mode every plain click picks. Outside it, only a modified click
- * does — ordinary reading of a blueprint must stay ordinary.
+ * In Design mode every plain or shift click picks; ⌘/ctrl never does — it is
+ * the open-detail gesture and must not also touch the selection.
  */
 export function clickPicks(
   event: ClickModifiers,
   plainClick: boolean,
 ): boolean {
-  return plainClick || event.shiftKey || event.metaKey || event.ctrlKey
+  if (clickOpensDetail(event)) return false
+  return plainClick || event.shiftKey
 }

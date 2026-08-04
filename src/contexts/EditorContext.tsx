@@ -380,6 +380,19 @@ export function useEditor() {
   return context
 }
 
+/**
+ * True while the canvas is focused on one scenario — the only place the
+ * grid's structural affordances (insert handles, empty-cell `+`) belong.
+ * At the overview, twenty blueprints render at 6% zoom; an insert handle
+ * there is an unaimed weapon. Null-safe for surfaces outside the editor
+ * provider (a slice tab), which are never at scenario level.
+ */
+// eslint-disable-next-line react-refresh/only-export-components -- same trade the file already makes for useEditor above
+export function useAtScenarioLevel(): boolean {
+  const context = useContext(EditorContext)
+  return context?.view === 'detail' && context.selectedScenarioId !== null
+}
+
 type EditorDetailScopeProps = {
   /** Slide (scenario) the scope opens focused on. */
   slideId: string
