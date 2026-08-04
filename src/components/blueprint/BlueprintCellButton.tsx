@@ -118,13 +118,24 @@ export function BlueprintCellButton({
         ? preview?.techItem === techPillLabel
         : !preview?.techItem),
   )
-  const emphasis = !detail?.selection
-    ? undefined
-    : isActive
-      ? 'active'
-      : isSelectedCell || isDirectlyConnected
-        ? 'connected'
-        : 'unrelated'
+  /*
+    While gathering (Edit's canvas), the detail selection paints nothing.
+
+    The emphasis system is View's vocabulary: opening a cell rings it, rings
+    its dependency chain, and dims everything else. In a service blueprint
+    dependencies run vertically within a step, so ⌘-clicking one cell ringed
+    a column of them — on a canvas where rings mean *picked*, that read as
+    "⌘-click selected the whole column". Two ring vocabularies cannot share
+    one canvas; in Edit, picking owns it and the panel is just a panel.
+  */
+  const emphasis =
+    pick?.gathers || !detail?.selection
+      ? undefined
+      : isActive
+        ? 'active'
+        : isSelectedCell || isDirectlyConnected
+          ? 'connected'
+          : 'unrelated'
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (!isInteractive) return

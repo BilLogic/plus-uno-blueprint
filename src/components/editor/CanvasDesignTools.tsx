@@ -9,6 +9,7 @@ import {
 import { CreateSliceSheet } from '@/components/editor/CreateSliceSheet'
 import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
 import { useCellPick } from '@/contexts/cellPickContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
 import { cn } from '@/lib/utils'
 
 /** Module-level so an empty selection is the same array on every render. */
@@ -44,6 +45,7 @@ const NO_PICKS: readonly string[] = []
  */
 export function CanvasDesignTools() {
   const pick = useCellPick()
+  const { isEditPreview } = useSupabase()
   const picked = pick?.picked ?? NO_PICKS
   const [sliceDialogOpen, setSliceDialogOpen] = useState(false)
   // Armed: clicked with nothing picked. The button becomes the instruction
@@ -155,6 +157,32 @@ export function CanvasDesignTools() {
       ) : null}
 
       <SessionChangesSheet />
+
+      {/*
+        The preview state, said where the tools are. The sidebar badge was
+        true but ignorable; three sessions in a row read "permission denied"
+        as the app being broken. The place someone looks when a create does
+        nothing is the bar they clicked from — so the answer lives there,
+        amber, always on while it is true.
+      */}
+      {isEditPreview ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <span className="pointer-events-auto flex shrink-0 cursor-help items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+                <span className="size-1.5 rounded-full bg-amber-500" aria-hidden />
+                preview — nothing saves
+              </span>
+            }
+          />
+          <TooltipContent side="top" className="max-w-64 text-xs">
+            Edit preview shows the authoring UI without write access. Every
+            create and edit will be refused by the database. To author for
+            real: put the authoring key in .env.local (see .env.example),
+            restart the dev server — or run `npm run authoring:check`.
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
     </>
   )
 }
