@@ -124,7 +124,10 @@ export function SliceScreenComposer({
       apart. The loop scrolls and re-derives the slot every frame.
     */
     const tick = () => {
-      const element = scroller.current
+      // The composer no longer scrolls; the sheet's scroll surface does.
+      const element =
+        scroller.current?.closest<HTMLElement>('[data-slice-sheet-scroll]') ??
+        scroller.current
       if (element) {
         const box = element.getBoundingClientRect()
         let scrolled = false
@@ -242,10 +245,11 @@ export function SliceScreenComposer({
   return (
     <div
       ref={scroller}
-      className={cn(
-        'flex max-h-80 flex-col gap-2 overflow-y-auto',
-        dragging !== null && 'select-none',
-      )}
+      // No scroll of its own. The composer used to cap at max-h-80 and
+      // scroll internally, which put a scrollbar *inside* the sheet's
+      // scrollbar — two nested scroll regions for one column of content.
+      // The sheet owns the one scroll surface; this just grows.
+      className={cn('flex flex-col gap-2', dragging !== null && 'select-none')}
     >
       {screens.map((screen, screenIndex) => {
         const holdsDrag = dragging !== null && slot?.screen === screenIndex

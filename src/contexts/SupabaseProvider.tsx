@@ -9,6 +9,7 @@ import {
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import {
   createSupabaseClient,
+  devLoginCredentials,
   hasDevAuthoringKey,
   hasDevAuthoringUi,
   isSupabaseConfigured,
@@ -77,10 +78,41 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
     }
   }, [client])
 
+  /*
+    Dev sign-in. A real session through the front door: `signInWithPassword`
+    against a dev account, so RLS sees `authenticated` exactly as it would
+    for any user. This is the sanctioned alternative to the service key —
+    the key bypasses policy; this obeys it.
+
+    Runs once per boot, only in DEV, only when the pair is configured, and
+    only when no session already exists (a persisted session from the last
+    boot wins). Failure downgrades to read-only and logs — same behavior as
+    having no credentials at all.
+  */
+  useEffect(() => {
+    if (!client || isLoading || session) return
+    const credentials = devLoginCredentials()
+    if (!credentials) return
+    let cancelled = false
+    void client.auth
+      .signInWithPassword(credentials)
+      .then(({ error }) => {
+        if (!cancelled && error) {
+          console.error('[dev-login] sign-in failed:', error.message)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [client, isLoading, session])
+
   const isDevAuthoring = hasDevAuthoringKey()
-  // Only ever true on a dev server, and never when the key is present — a
-  // session that can really write is not a preview of one.
-  const isEditPreview = hasDevAuthoringUi() && !isDevAuthoring
+  // Only ever true on a dev server, and never while anything can actually
+  // write — a session that saves for real is not a preview of one, and the
+  // "nothing saves" chip lying over working saves would be worse than either
+  // state alone.
+  const isEditPreview =
+    hasDevAuthoringUi() && !isDevAuthoring && session === null
 
   const value = useMemo(
     () => ({

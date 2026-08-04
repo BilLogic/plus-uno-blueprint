@@ -181,7 +181,12 @@ export function CreateSliceSheet({
 
         {step === 'screens' ? (
           <>
-            <div className="px-3 py-2">
+            {/* The one scroll surface: capped to the viewport, scrolls once.
+                The composer inside grows freely — no scroll within a scroll. */}
+            <div
+              data-slice-sheet-scroll=""
+              className="max-h-[55vh] overflow-y-auto px-3 py-2"
+            >
               <SliceScreenComposer screens={screens} onChange={setScreens} />
             </div>
             <div className="flex items-center gap-2 border-t border-border/60 px-3 py-2">

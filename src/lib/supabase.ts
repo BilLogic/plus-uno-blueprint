@@ -87,6 +87,22 @@ export function hasDevAuthoringUi(): boolean {
   return Boolean(import.meta.env.DEV && devAuthoringUi === 'true')
 }
 
+/**
+ * Dev sign-in: a real authenticated session, which is what the write
+ * policies were written for — no service key anywhere near a browser bundle.
+ *
+ * The pair lives in `.env.local` (gitignored) and is read only on the dev
+ * server. RLS treats the session like any signed-in user: writes allowed by
+ * policy, nothing bypassed. A production build ignores both variables.
+ */
+export function devLoginCredentials(): { email: string; password: string } | null {
+  if (!import.meta.env.DEV) return null
+  const email = import.meta.env.VITE_SUPABASE_DEV_EMAIL
+  const password = import.meta.env.VITE_SUPABASE_DEV_PASSWORD
+  if (!email || !password) return null
+  return { email, password }
+}
+
 export function createSupabaseClient(): SupabaseClient<Database> | null {
   if (!isSupabaseConfigured()) {
     return null
