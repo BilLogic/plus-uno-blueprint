@@ -166,6 +166,9 @@
     min(var(--surface), var(--foreground-lightness))
       calc(var(--chroma) * 0.45) var(--primary-hue)
   );
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+
   /* --- Interaction states ----------------------------------------------
    * There are none here, deliberately. Supabase's semantic.css defines no
    * hover, pressed, selected or disabled colour: across their whole system
@@ -181,9 +184,6 @@
    * blueprint canvas, where the resting colour comes from data and so cannot
    * be a static utility class — see blueprint.css.
    */
-
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground);
 
   /* --- Borders & controls ---------------------------------------------- */
   --border: oklch(
