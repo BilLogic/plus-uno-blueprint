@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Diamond, X } from 'lucide-react'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -72,6 +73,29 @@ export function CanvasDesignTools() {
     setLastCount(picked.length)
     if (picked.length > 0 && armed) setArmed(false)
   }
+
+  // Agent parity: the Make-slice flow. With cells picked it opens the
+  // sheet; with none it arms the button, exactly like a click.
+  const pickedCountRef = useRef(picked.length)
+  useEffect(() => {
+    pickedCountRef.current = picked.length
+  })
+  useEffect(() => {
+    if (!gathering) return
+    return registerAgentUiCommand({
+      name: 'open_make_slice',
+      description:
+        'Open the Make slice sheet over the current Design-mode selection (select_cells first). Prefer create_slice when you already know the member cells — this hands the flow to the human.',
+      run: () => {
+        if (pickedCountRef.current === 0) {
+          setArmed(true)
+          return 'Nothing selected yet — gather cells first (select_cells), then retry.'
+        }
+        setSliceDialogOpen(true)
+        return 'Make-slice sheet opened over the selection.'
+      },
+    })
+  }, [gathering])
 
   return (
     <>

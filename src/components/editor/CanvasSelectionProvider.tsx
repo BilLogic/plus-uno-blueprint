@@ -15,7 +15,11 @@ import {
   type PickMode,
 } from '@/contexts/cellPickContext'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
-import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import {
+  getSharedCanvasMode,
+  useCanvasModeValue,
+} from '@/contexts/canvasModeContext'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { allCellsInReadingOrder } from '@/lib/canvasCellQuery'
 
@@ -176,6 +180,40 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     if (multiple && !wasMultiple.current) target.clearSelection()
     wasMultiple.current = multiple
   }, [mode, picked])
+
+  // Agent parity: gather/clear the Design-mode selection by cell id —
+  // the same pickMany/clear the marquee and lane/column headers call.
+  useEffect(() => {
+    if (outer !== null) return // a session picker owns clicks here
+    const unregister = [
+      registerAgentUiCommand({
+        name: 'select_cells',
+        description:
+          'Gather cells into the Design-mode selection (for Make slice etc.). arg: comma-separated cell ids, or "all". Replaces the current selection. Needs design mode.',
+        run: (arg) => {
+          if (getSharedCanvasMode() !== 'design')
+            return 'Selection gathers only in design mode — set_canvas_mode design first.'
+          if (!arg) throw new Error('arg required: cell ids or "all"')
+          const ids =
+            arg.trim() === 'all'
+              ? allCellsInReadingOrder()
+              : arg.split(',').map((id) => id.trim()).filter(Boolean)
+          if (ids.length === 0) return 'Nothing to select.'
+          pickMany(ids, 'replace')
+          return `Selected ${ids.length} cell(s).`
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'clear_cell_selection',
+        description: 'Clear the Design-mode cell selection.',
+        run: () => {
+          clear()
+          return 'Selection cleared.'
+        },
+      }),
+    ]
+    return () => unregister.forEach((fn) => fn())
+  }, [outer, pickMany, clear])
 
   // Report the gathered selection to the agent's UI-context collector —
   // "what the user selected" in Design mode is exactly this ordered list.

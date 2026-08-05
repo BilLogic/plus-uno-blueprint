@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   clearSession,
   describeChange,
@@ -110,6 +111,39 @@ function useUndoHotkey(changes: ChangeEntry[]) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
+  }, [changes, client])
+
+  // Agent parity: the same undo the ⌘Z path runs, plus "keep changes".
+  useEffect(() => {
+    if (!client) return
+    const unregister = [
+      registerAgentUiCommand({
+        name: 'undo_last_change',
+        description:
+          'Undo the newest revertible change of this session (same as ⌘Z). One at a time.',
+        run: () => {
+          if (revertsInFlight.size > 0) return 'An undo is already in flight — wait for it.'
+          const last = changes.findLast((entry) => entry.revert)
+          if (!last) return 'Nothing revertible in this session.'
+          void revertEntry(client, last).catch((error) => {
+            console.error('[authoring] agent undo failed:', error)
+          })
+          return `Reverting: ${describeChange(last)}`
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'keep_all_changes',
+        description:
+          "Accept the session's changes (clears the change sheet). Refused when the session holds destructive changes — those need the human's own confirm.",
+        run: () => {
+          if (sessionHasDestructive(changes))
+            return 'This session contains destructive changes — the human must confirm those in the Save changes sheet themselves.'
+          clearSession()
+          return 'Changes kept; the change sheet is clear.'
+        },
+      }),
+    ]
+    return () => unregister.forEach((fn) => fn())
   }, [changes, client])
 }
 
