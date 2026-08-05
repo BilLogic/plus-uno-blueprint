@@ -94,6 +94,10 @@ export function CreateVersionDialog({
               laneSourcePathId: draft.sourcePathId,
             })
       invalidateQueries('lifecycle-phases')
+      // Also the paths catalog: this dialog's own duplicate-source list and
+      // name-uniqueness check read it, and staleTime Infinity means only an
+      // explicit invalidation refreshes it.
+      invalidateQueries('scenario-paths')
       setDraft(EMPTY)
       onOpenChange(false)
       onCreated?.(pathId)

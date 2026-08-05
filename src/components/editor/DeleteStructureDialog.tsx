@@ -133,6 +133,11 @@ export function DeleteStructureDialog({
       }
       invalidateQueries('lifecycle-phases')
       invalidateQueries('slices')
+      // Path deletes must clear the paths catalog, lane removals the lane
+      // picker; prefix matches are no-ops for the other kinds this dialog
+      // handles.
+      invalidateQueries('scenario-paths')
+      invalidateQueries('lane-sources')
       onOpenChange(false)
       onDeleted?.(archiveId)
     } catch (deleteError) {

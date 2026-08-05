@@ -11,7 +11,7 @@
  *    off the cell, and nothing on screen would say so.
  * 2. A resource URL that is not `https:` must be refused rather than coerced.
  *
- * Run: node --test scripts/tests/cell-content.test.mjs
+ * Run: npm test
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'

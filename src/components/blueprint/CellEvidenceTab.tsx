@@ -19,7 +19,7 @@ import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useEvidence } from '@/hooks/useEvidence'
+import { invalidateEvidence, useEvidence } from '@/hooks/useEvidence'
 import { resolveFirstLifecycleId } from '@/lib/lifecycle'
 import { safeExternalHref } from '@/lib/sliceCells'
 import type { Database, Evidence } from '@/types/database'
@@ -256,8 +256,7 @@ function EvidenceList({
   client: SupabaseClient<Database>
   cellId: string
 }) {
-  const [reloadToken, setReloadToken] = useState(0)
-  const result = useEvidence(cellId, reloadToken)
+  const result = useEvidence(cellId)
 
   if (result.status === 'error') {
     return (
@@ -301,7 +300,7 @@ function EvidenceList({
         <AddSourceForm
           client={client}
           cellId={cellId}
-          onAdded={() => setReloadToken((token) => token + 1)}
+          onAdded={() => invalidateEvidence(cellId)}
         />
       </div>
     </DeferredSkeleton>

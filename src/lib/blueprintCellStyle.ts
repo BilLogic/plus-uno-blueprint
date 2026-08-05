@@ -1,6 +1,4 @@
 import { cn } from '@/lib/utils'
-import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
-import type { CSSProperties } from 'react'
 
 /*
  * Blueprint colour vocabulary — two sets, deliberately disjoint.
@@ -118,29 +116,6 @@ export function blueprintLaneAttrs(
   role: BlueprintLaneRole,
 ): { 'data-blueprint-lane': BlueprintLaneRole } {
   return { 'data-blueprint-lane': role }
-}
-
-/**
- * Reads the properties the lane rule already set, rather than re-deriving them,
- * so a surface rendered outside a Button still matches its lane exactly.
- */
-export function getBlueprintCellSurfaceStyle(
-  _role: BlueprintLaneRole,
-  extra?: CSSProperties,
-): CSSProperties {
-  return {
-    backgroundColor: 'var(--background-blueprint-cell)',
-    color: 'var(--foreground-blueprint-cell)',
-    borderColor: BLUEPRINT_CELL_BORDER_COLOR,
-    ...extra,
-  }
-}
-
-export function getBlueprintCellSurfaceStyleFromLane(
-  laneStyle: BlueprintLayerStyle,
-  extra?: CSSProperties,
-): CSSProperties {
-  return getBlueprintCellSurfaceStyle(laneStyle.lane, extra)
 }
 
 export function blueprintCellButtonClassName({

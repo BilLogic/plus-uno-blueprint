@@ -4,7 +4,7 @@ import {
   blueprintCellButtonClassName,
   blueprintToneAttrs,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillToneFor } from '@/lib/techPillTheme'
+import { getTouchpointTone } from '@/lib/techPillColors'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
@@ -27,7 +27,7 @@ export function TechPillFace({
   opacity,
   asSpan = false,
 }: TechPillFaceProps) {
-  const tone = getTechPillToneFor(item)
+  const tone = getTouchpointTone(item)
 
   if (asSpan) {
     const style = {

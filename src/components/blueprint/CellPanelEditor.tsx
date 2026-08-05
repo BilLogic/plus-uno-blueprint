@@ -327,6 +327,9 @@ function CellPanelEditorForm({
       invalidateQueries(`cell-content:${targetId}`)
       invalidateQueries(`cell-spec:${targetId}`)
       invalidateQueries('owner-tags')
+      // A save can introduce a new value audience; the autocomplete list
+      // caches under its own key and never refetches on its own.
+      invalidateQueries('value-audiences')
       if (aliveRef.current) onDone()
     } catch (saveError) {
       if (aliveRef.current) {

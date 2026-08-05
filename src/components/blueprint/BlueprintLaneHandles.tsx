@@ -123,6 +123,10 @@ export function BlueprintLaneHandles({
       invalidateQueries('lifecycle-phases')
       // The canvas reads blueprints under its own key.
       invalidateQueries('canvas-blueprints')
+      // Create Blueprint's lane picker caches the lane list under its own
+      // key too — staleTime is Infinity, so it only refreshes on explicit
+      // invalidation.
+      invalidateQueries('lane-sources')
       setNaming(null)
       setName('')
     } catch (laneError) {
