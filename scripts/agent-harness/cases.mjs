@@ -110,8 +110,8 @@ export const CASES = [
     ],
     judgeLines: [
       { id: 'members-by-name', text: 'Member cells are proposed BY NAME in journey order — not by raw id.' },
-      { id: 'reference-not-copy', text: 'No cell creation is attempted or suggested; slices reference existing cells.' },
-      { id: 'points-at-ui', text: 'The agent directs the actual save to the slice UI (it has no slice-writing tool) — honestly, without inventing a tool.' },
+      { id: 'reference-not-copy', text: 'No blueprint cells are created; the slice REFERENCES existing cells (create_slice takes cell ids — copying content into the slice would fail this).' },
+      { id: 'nod-before-create', text: 'The agent proposes the member list and waits for a nod (or, in this single-turn case, ends by asking) rather than creating the slice unprompted.' },
     ],
   },
   {

@@ -1,3 +1,4 @@
+import { getSharedCanvasMode } from '@/contexts/canvasModeContext'
 import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
 
 /**
@@ -14,6 +15,7 @@ export type AgentUiBridge = {
   selectScenario: (scenarioId: string) => void
   /** Open the ✦ sidebar surface (used by "Send to the agent" hand-offs). */
   openAgentSurface: () => void
+  setSidebarCollapsed: (collapsed: boolean) => void
 }
 
 let bridge: AgentUiBridge | null = null
@@ -48,6 +50,55 @@ export function agentFocusCell(cellId: string): string {
   // description tells the model to open the scenario first.
   scrollBlueprintCellIntoView(cellId)
   return 'Scrolled the canvas to the cell (it must be on the open scenario to be visible).'
+}
+
+export function agentSetSidebar(collapsed: boolean): string {
+  if (!bridge) return 'UI control is not available right now.'
+  bridge.setSidebarCollapsed(collapsed)
+  return collapsed ? 'Sidebar collapsed.' : 'Sidebar expanded.'
+}
+
+/**
+ * Open the cell detail panel by driving the SAME gesture the human uses:
+ * a click on the rendered cell (double-click in Design mode, where a
+ * plain click gathers instead). No parallel code path to drift — if the
+ * UI can open it, this can; if the cell isn't interactive (wrong view
+ * level), neither can the human, and the message says what to do.
+ */
+export function agentOpenCellPanel(cellId: string): string {
+  const el = document.querySelector<HTMLElement>(
+    `[data-blueprint-cell="${cellId}"][data-blueprint-cell-interactive]`,
+  )
+  if (!el)
+    return 'That cell is not clickable on the current canvas — open its scenario first (open_scenario), then retry.'
+  scrollBlueprintCellIntoView(cellId)
+  if (getSharedCanvasMode() === 'design') {
+    el.dispatchEvent(
+      new MouseEvent('dblclick', { bubbles: true, cancelable: true }),
+    )
+  } else {
+    el.click()
+  }
+  return 'Opened the cell detail panel.'
+}
+
+// The annotator lives with the annotation provider (it owns stroke state
+// and colors); registered like the nav bridge.
+type AgentAnnotator = (cellIds: string[], note?: string) => string
+
+let annotator: AgentAnnotator | null = null
+
+export function registerAgentAnnotator(next: AgentAnnotator): () => void {
+  annotator = next
+  return () => {
+    if (annotator === next) annotator = null
+  }
+}
+
+export function agentAnnotateCells(cellIds: string[], note?: string): string {
+  if (!annotator)
+    return 'No annotatable canvas is open right now — open a scenario first.'
+  return annotator(cellIds, note)
 }
 
 // ---------------------------------------------------------------------------

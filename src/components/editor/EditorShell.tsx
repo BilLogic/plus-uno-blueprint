@@ -140,6 +140,10 @@ export function EditorShell() {
           setSurface('agent')
           setSidebarCollapsed(false)
         },
+        setSidebarCollapsed: (collapsed) => {
+          suppressCanvasResizeRefit()
+          setSidebarCollapsed(collapsed)
+        },
       }),
     [selectPhase, selectScenario],
   )

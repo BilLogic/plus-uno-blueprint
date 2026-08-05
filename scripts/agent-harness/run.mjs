@@ -177,11 +177,26 @@ export const TOOL_SPECS = [
   { name: 'update_cell_spec', description: "Edit a cell's spec: function, form, value_props.", parameters: { type: 'object', properties: { cell_id: str('Cell id'), function: str('omit to keep'), form: str('omit to keep'), value_props: { type: 'array', description: 'full replacement', items: { type: 'object', properties: { for: str('Audience'), value: str('Value') }, required: ['for', 'value'] } } }, required: ['cell_id'] } },
   { name: 'set_cell_dependency', description: 'Connect two cells on the SAME path. trigger = source sets target in motion (arrow); needs = source depends on target existing (panel-only) — "only makes sense after X" / "depends on X" reads as needs. State which kind you chose and why in your reply.', parameters: { type: 'object', properties: { source_cell_id: str('Source'), target_cell_id: str('Target'), kind: { type: 'string', enum: ['trigger', 'needs'], description: 'Default trigger' }, label: str('omit for none') }, required: ['source_cell_id', 'target_cell_id'] } },
   { name: 'rename_path', description: 'Rename a path.', parameters: { type: 'object', properties: { path_id: str('Path id'), name: str('New name') }, required: ['path_id', 'name'] } },
+  // Parity additions (mirrors registry.ts) — structural creates, slices, UI control.
+  { name: 'create_phase', description: 'Create a new phase. Propose as text and get a nod first.', parameters: { type: 'object', properties: { name: str('Phase name'), description: str('omit for none') }, required: ['name'] } },
+  { name: 'create_scenario', description: "Create a scenario in a phase with its first path. lane_source_path_id copies an existing path's lane stack (STRONGLY preferred). Nod first.", parameters: { type: 'object', properties: { phase_id: str('Phase id'), name: str('Name'), path_name: str('default "Happy Path"'), step_count: { type: 'number', description: 'default 5' }, lane_source_path_id: str('omit for none') }, required: ['phase_id', 'name'] } },
+  { name: 'create_path', description: 'Add a path variant to a scenario; lane_source_path_id copies sibling lanes.', parameters: { type: 'object', properties: { scenario_id: str('Scenario id'), name: str('Name'), path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'], description: 'default alternative' }, lane_source_path_id: str('omit for none') }, required: ['scenario_id', 'name'] } },
+  { name: 'duplicate_path', description: 'Copy a path (lanes, steps, optionally cells+arrows) as a new variant.', parameters: { type: 'object', properties: { source_path_id: str('Source'), name: str('New name'), path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'], description: 'default alternative' }, copy_cells: { type: 'boolean', description: 'default true' } }, required: ['source_path_id', 'name'] } },
+  { name: 'create_slice', description: 'Create a slice REFERENCING existing cells — never copies. cell_ids in journey order. Propose members by name and get a nod first.', parameters: { type: 'object', properties: { title: str('Title'), description: str('omit for none'), slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'Kind' }, actor: str('omit for none'), cell_ids: { type: 'array', description: 'Existing cell ids in order', items: { type: 'string' } } }, required: ['title', 'slice_type', 'cell_ids'] } },
+  { name: 'update_slice', description: "Edit a slice's fields.", parameters: { type: 'object', properties: { slice_id: str('Slice id'), title: str('omit to keep'), description: str('omit to keep'), actor: str('omit to keep'), slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'omit to keep' } }, required: ['slice_id'] } },
+  { name: 'replace_slice_frames', description: "Replace a slice's frames wholesale — reorder/merge/split screens. Read the slice first; pass the complete new list.", parameters: { type: 'object', properties: { slice_id: str('Slice id'), frames: { type: 'array', description: 'Full replacement in order', items: { type: 'object', properties: { cells: { type: 'array', description: 'Cell ids', items: { type: 'string' } }, caption: str('omit for none'), narrative: str('omit for none') }, required: ['cells'] } } }, required: ['slice_id', 'frames'] } },
+  { name: 'get_slice', description: 'One slice in full: fields + frames. Read before update_slice/replace_slice_frames.', parameters: { type: 'object', properties: { slice_id: str('Slice id') }, required: ['slice_id'] } },
+  { name: 'open_cell_panel', description: "Open the cell detail side panel on the user's screen (scenario must be open).", parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
+  { name: 'set_canvas_mode', description: "Switch the user's canvas between view and design mode.", parameters: { type: 'object', properties: { mode: { type: 'string', enum: ['view', 'design'], description: 'Target' } }, required: ['mode'] } },
+  { name: 'set_sidebar', description: 'Collapse or expand the sidebar.', parameters: { type: 'object', properties: { collapsed: { type: 'boolean', description: 'true = collapse' } }, required: ['collapsed'] } },
+  { name: 'annotate_cells', description: 'Draw ephemeral annotation boxes around cells on the open canvas (optional note). Never saved.', parameters: { type: 'object', properties: { cell_ids: { type: 'array', description: 'Cells to box', items: { type: 'string' } }, note: str('omit for none') }, required: ['cell_ids'] } },
 ]
 
 const WRITE_TOOLS = new Set([
   'add_step', 'add_lane', 'upsert_cell', 'update_cell_content',
   'update_cell_spec', 'set_cell_dependency', 'rename_path',
+  'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
+  'create_slice', 'update_slice', 'replace_slice_frames',
 ])
 
 async function realListScenarios() {
@@ -299,6 +314,22 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'get_cell': record.result = await realGetCell(args.cell_id); return record.result
       case 'list_owner_tags': record.result = await realListOwnerTags(); return record.result
       case 'list_slices': record.result = await realListSlices(); return record.result
+      case 'get_slice': {
+        const rows = await rest(
+          `slices?select=id,title,description,slice_type,actor,origin,slice_items(id,position,caption,narrative,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
+        )
+        if (!rows?.[0]) throw new Error('No slice with that id.')
+        const slice = rows[0]
+        const frames = [...(slice.slice_items ?? [])]
+          .sort((a, b) => a.position - b.position)
+          .map((f, i) => `frame ${i + 1}: cells [${(f.cell_ids ?? []).join(', ')}]${f.caption ? ` caption "${f.caption}"` : ''}`)
+        record.result = `slice "${slice.title}" (${slice.id}) type=${slice.slice_type}\n${frames.join('\n') || '(no frames)'}`
+        return record.result
+      }
+      case 'open_cell_panel': record.result = 'Opened the cell detail panel.'; return record.result
+      case 'set_canvas_mode': record.result = `Canvas mode is now ${args.mode === 'design' ? 'design' : 'view'}.`; return record.result
+      case 'set_sidebar': record.result = args.collapsed === true ? 'Sidebar collapsed.' : 'Sidebar expanded.'; return record.result
+      case 'annotate_cells': record.result = `Drew boxes around ${Array.isArray(args.cell_ids) ? args.cell_ids.length : 0} cell(s).`; return record.result
       case 'get_ui_state': record.result = 'No UI state is being reported right now.'; return record.result
       case 'get_change_history': record.result = 'No changes recorded in this browser session yet.'; return record.result
       case 'open_phase': record.result = 'Opened the phase on the canvas.'; return record.result

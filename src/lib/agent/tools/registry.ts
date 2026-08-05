@@ -3,10 +3,22 @@ import type { Database } from '@/types/database'
 import {
   addLane,
   addStep,
+  createPath,
+  createPhase,
+  createScenario,
+  duplicatePath,
   renamePath,
   setCellDependency,
   upsertCell,
 } from '@/lib/authoringRpc'
+import {
+  createSlice,
+  replaceSliceFrames,
+  updateSliceMeta,
+} from '@/lib/sliceMutations'
+import type { SliceType } from '@/lib/sliceValidation'
+import { asUpdatedAtToken } from '@/lib/optimisticConcurrency'
+import { setSharedCanvasMode } from '@/contexts/canvasModeContext'
 import {
   describeChange,
   sessionSnapshot,
@@ -20,9 +32,12 @@ import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import type { ToolSpec } from '@/lib/agent/providers/provider'
 import {
+  agentAnnotateCells,
   agentFocusCell,
+  agentOpenCellPanel,
   agentOpenPhase,
   agentOpenScenario,
+  agentSetSidebar,
   collectAgentUiContext,
 } from '@/lib/agent/uiBridge'
 import {
@@ -56,6 +71,13 @@ export const WRITE_TOOL_NAMES = new Set([
   'update_cell_spec',
   'set_cell_dependency',
   'rename_path',
+  'create_phase',
+  'create_scenario',
+  'create_path',
+  'duplicate_path',
+  'create_slice',
+  'update_slice',
+  'replace_slice_frames',
 ])
 
 export const TOOL_SPECS: ToolSpec[] = [
@@ -96,6 +118,16 @@ export const TOOL_SPECS: ToolSpec[] = [
     name: 'list_slices',
     description: 'List existing slices (stakeholder views) with ids and types.',
     parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_slice',
+    description:
+      'One slice in full: fields plus every frame with its cells, caption, narrative. Read before update_slice or replace_slice_frames.',
+    parameters: {
+      type: 'object',
+      properties: { slice_id: str('Slice id from list_slices') },
+      required: ['slice_id'],
+    },
   },
   {
     name: 'list_owner_tags',
@@ -148,6 +180,183 @@ export const TOOL_SPECS: ToolSpec[] = [
       type: 'object',
       properties: { cell_id: str('Cell id') },
       required: ['cell_id'],
+    },
+  },
+  {
+    name: 'open_cell_panel',
+    description:
+      "Open the cell detail side panel on the user's screen — the same panel a click opens. The cell's scenario must be open first (open_scenario).",
+    parameters: {
+      type: 'object',
+      properties: { cell_id: str('Cell id') },
+      required: ['cell_id'],
+    },
+  },
+  {
+    name: 'set_canvas_mode',
+    description:
+      "Switch the user's canvas between 'view' (reading) and 'design' (authoring) mode — same switch as the toolbar's.",
+    parameters: {
+      type: 'object',
+      properties: {
+        mode: { type: 'string', enum: ['view', 'design'], description: 'Target mode' },
+      },
+      required: ['mode'],
+    },
+  },
+  {
+    name: 'set_sidebar',
+    description: 'Collapse or expand the sidebar (more canvas vs more navigation).',
+    parameters: {
+      type: 'object',
+      properties: {
+        collapsed: { type: 'boolean', description: 'true = collapse' },
+      },
+      required: ['collapsed'],
+    },
+  },
+  {
+    name: 'annotate_cells',
+    description:
+      'Draw ephemeral annotation boxes around cells on the open canvas (optional short text note above them) — use to point at things visually, like a human with a marker. Marks are scratch-layer only: never saved, cleared on reload.',
+    parameters: {
+      type: 'object',
+      properties: {
+        cell_ids: {
+          type: 'array',
+          description: 'Cells to box (must be on the open scenario)',
+          items: { type: 'string' },
+        },
+        note: str('Optional short label drawn above the boxes; omit for none'),
+      },
+      required: ['cell_ids'],
+    },
+  },
+  {
+    name: 'create_phase',
+    description:
+      'Create a new phase in the service lifecycle. Propose the structure as text and get a nod first.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('Phase name'),
+        description: str('One-line description; omit for none'),
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'create_scenario',
+    description:
+      'Create a new scenario in a phase, with its first path and empty steps. lane_source_path_id copies an existing path\'s lane stack (STRONGLY preferred — lane labels must match across scenarios). Propose as text and get a nod first.',
+    parameters: {
+      type: 'object',
+      properties: {
+        phase_id: str('Phase id from list_scenarios'),
+        name: str('Scenario name'),
+        path_name: str('First path name; defaults to "Happy Path"'),
+        step_count: { type: 'number', description: 'Initial step columns (default 5)' },
+        lane_source_path_id: str('Path id whose lanes to copy; omit for none'),
+      },
+      required: ['phase_id', 'name'],
+    },
+  },
+  {
+    name: 'create_path',
+    description:
+      'Add a path (variant) to a scenario — alternative/unhappy/exception. lane_source_path_id copies the sibling\'s lane stack (preferred).',
+    parameters: {
+      type: 'object',
+      properties: {
+        scenario_id: str('Scenario id'),
+        name: str('Path name'),
+        path_type: {
+          type: 'string',
+          enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'],
+          description: 'Default alternative',
+        },
+        lane_source_path_id: str('Sibling path id whose lanes to copy; omit for none'),
+      },
+      required: ['scenario_id', 'name'],
+    },
+  },
+  {
+    name: 'duplicate_path',
+    description:
+      'Copy a path — lanes, steps, optionally cells and arrows — as a new variant of the same scenario.',
+    parameters: {
+      type: 'object',
+      properties: {
+        source_path_id: str('Path to copy'),
+        name: str('New path name'),
+        path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'], description: 'Default alternative' },
+        copy_cells: { type: 'boolean', description: 'Default true' },
+      },
+      required: ['source_path_id', 'name'],
+    },
+  },
+  {
+    name: 'create_slice',
+    description:
+      'Create a slice (stakeholder view) that REFERENCES existing cells — never copies. cell_ids in journey order, one frame per cell by default. Propose members by name and get a nod first.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: str('Slice title'),
+        description: str('One-line description; omit for none'),
+        slice_type: {
+          type: 'string',
+          enum: ['journey', 'lane', 'step', 'custom'],
+          description: 'Kind of cut',
+        },
+        actor: str('Whose view this is; omit for none'),
+        cell_ids: {
+          type: 'array',
+          description: 'Existing cell ids, in journey order',
+          items: { type: 'string' },
+        },
+      },
+      required: ['title', 'slice_type', 'cell_ids'],
+    },
+  },
+  {
+    name: 'update_slice',
+    description: "Edit a slice's own fields: title, description, actor, type.",
+    parameters: {
+      type: 'object',
+      properties: {
+        slice_id: str('Slice id from list_slices'),
+        title: str('omit to keep'),
+        description: str('omit to keep'),
+        actor: str('omit to keep'),
+        slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'omit to keep' },
+      },
+      required: ['slice_id'],
+    },
+  },
+  {
+    name: 'replace_slice_frames',
+    description:
+      "Replace a slice's frames wholesale — THE tool for reordering, resequencing, merging cells into one screen, or splitting them apart. Read the slice first; pass the complete new frame list (each frame: cells in order + optional caption/narrative).",
+    parameters: {
+      type: 'object',
+      properties: {
+        slice_id: str('Slice id'),
+        frames: {
+          type: 'array',
+          description: 'Full replacement, in order',
+          items: {
+            type: 'object',
+            properties: {
+              cells: { type: 'array', description: 'Cell ids in this frame', items: { type: 'string' } },
+              caption: str('Frame caption; omit for none'),
+              narrative: str('Frame narrative; omit for none'),
+            },
+            required: ['cells'],
+          },
+        },
+      },
+      required: ['slice_id', 'frames'],
     },
   },
   {
@@ -264,6 +473,21 @@ export const TOOL_SPECS: ToolSpec[] = [
   },
 ]
 
+// One lifecycle per deployment today; cached after the first ask.
+let cachedLifecycleId: string | null = null
+async function lifecycleId(client: Client): Promise<string> {
+  if (cachedLifecycleId) return cachedLifecycleId
+  const { data, error } = await client
+    .from('service_lifecycles')
+    .select('id')
+    .limit(1)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!data) throw new Error('No service lifecycle exists yet.')
+  cachedLifecycleId = data.id
+  return data.id
+}
+
 function s(args: Record<string, unknown>, key: string): string | undefined {
   const value = args[key]
   return typeof value === 'string' && value.trim() !== '' ? value : undefined
@@ -320,14 +544,47 @@ export async function dispatchTool(
         })
         .join('\n')
     }
-    // Navigation: drives the camera, changes no data — no attribution,
-    // no ledger entry.
+    case 'get_slice': {
+      const sliceId = need(args, 'slice_id')
+      const { data, error } = await client
+        .from('slices')
+        .select('id, title, description, slice_type, actor, origin, slice_items(id, position, caption, narrative, cell_ids)')
+        .eq('id', sliceId)
+        .maybeSingle()
+      if (error) throw new Error(error.message)
+      if (!data) throw new Error(`No slice with id ${sliceId}.`)
+      const frames = [...(data.slice_items ?? [])]
+        .sort((a, b) => a.position - b.position)
+        .map(
+          (frame, index) =>
+            `frame ${index + 1}: cells [${(frame.cell_ids ?? []).join(', ')}]${frame.caption ? ` caption "${frame.caption}"` : ''}${frame.narrative ? ` narrative "${frame.narrative}"` : ''}`,
+        )
+      return `slice "${data.title}" (${data.id}) type=${data.slice_type}${data.actor ? ` actor=${data.actor}` : ''}\n${frames.join('\n') || '(no frames)'}`
+    }
+    // UI control + navigation: drives the interface, changes no data — no
+    // attribution, no ledger entry. Same gestures the human has.
     case 'open_phase':
       return agentOpenPhase(need(args, 'phase_id'))
     case 'open_scenario':
       return agentOpenScenario(need(args, 'scenario_id'))
     case 'focus_cell':
       return agentFocusCell(need(args, 'cell_id'))
+    case 'open_cell_panel':
+      return agentOpenCellPanel(need(args, 'cell_id'))
+    case 'set_canvas_mode': {
+      const mode = args.mode === 'design' ? 'design' : 'view'
+      setSharedCanvasMode(mode)
+      return `Canvas mode is now ${mode}.`
+    }
+    case 'set_sidebar':
+      return agentSetSidebar(args.collapsed === true)
+    case 'annotate_cells': {
+      const ids = Array.isArray(args.cell_ids)
+        ? args.cell_ids.filter((value): value is string => typeof value === 'string')
+        : []
+      if (ids.length === 0) throw new Error('cell_ids must be a non-empty array.')
+      return agentAnnotateCells(ids, s(args, 'note'))
+    }
   }
 
   // Everything below writes.
@@ -441,6 +698,101 @@ export async function dispatchTool(
           name: need(args, 'name'),
         })
         return 'Path renamed.'
+      }
+      case 'create_phase': {
+        const id = await createPhase(client, {
+          lifecycleId: await lifecycleId(client),
+          name: need(args, 'name'),
+          description: s(args, 'description') ?? null,
+        })
+        return `Created phase (${id}).`
+      }
+      case 'create_scenario': {
+        const created = await createScenario(client, {
+          phaseId: need(args, 'phase_id'),
+          name: need(args, 'name'),
+          pathName: s(args, 'path_name'),
+          stepCount:
+            typeof args.step_count === 'number' ? args.step_count : undefined,
+          laneSourcePathId: s(args, 'lane_source_path_id') ?? null,
+        })
+        return `Created scenario. ${JSON.stringify(created)} — re-read the blueprint for its steps and lanes.`
+      }
+      case 'create_path': {
+        const id = await createPath(client, {
+          scenarioId: need(args, 'scenario_id'),
+          name: need(args, 'name'),
+          pathType: s(args, 'path_type'),
+          laneSourcePathId: s(args, 'lane_source_path_id') ?? null,
+        })
+        return `Created path (${id}).`
+      }
+      case 'duplicate_path': {
+        const id = await duplicatePath(client, {
+          sourcePathId: need(args, 'source_path_id'),
+          name: need(args, 'name'),
+          pathType: s(args, 'path_type'),
+          copyCells: args.copy_cells !== false,
+        })
+        return `Duplicated path (${id}).`
+      }
+      case 'create_slice': {
+        const cellIds = Array.isArray(args.cell_ids)
+          ? args.cell_ids.filter(
+              (value): value is string => typeof value === 'string',
+            )
+          : []
+        if (cellIds.length === 0)
+          throw new Error('cell_ids must be a non-empty array of existing cell ids.')
+        const slice = await createSlice(client, {
+          lifecycleId: await lifecycleId(client),
+          title: need(args, 'title'),
+          description: s(args, 'description') ?? '',
+          sliceType: need(args, 'slice_type') as SliceType,
+          actor: s(args, 'actor') ?? '',
+          cellIds,
+        })
+        return `Created slice "${slice.title}" (${slice.id}) with one frame per cell — replace_slice_frames regroups them.`
+      }
+      case 'update_slice': {
+        const sliceId = need(args, 'slice_id')
+        const { data, error } = await client
+          .from('slices')
+          .select('title, description, slice_type, actor, origin, updated_at')
+          .eq('id', sliceId)
+          .maybeSingle()
+        if (error) throw new Error(error.message)
+        if (!data) throw new Error(`No slice with id ${sliceId}.`)
+        const outcome = await updateSliceMeta(client, sliceId, asUpdatedAtToken(data.updated_at), {
+          title: s(args, 'title') ?? data.title,
+          description: s(args, 'description') ?? data.description ?? '',
+          sliceType: (s(args, 'slice_type') ?? data.slice_type) as SliceType,
+          actor: s(args, 'actor') ?? data.actor ?? '',
+          origin: data.origin,
+        })
+        if (outcome.status === 'conflict')
+          throw new Error('The slice changed since you read it — re-read and retry.')
+        return 'Slice updated.'
+      }
+      case 'replace_slice_frames': {
+        const sliceId = need(args, 'slice_id')
+        const rawFrames = Array.isArray(args.frames) ? args.frames : []
+        if (rawFrames.length === 0)
+          throw new Error('frames must be a non-empty array.')
+        const frames = (rawFrames as Array<Record<string, unknown>>).map(
+          (frame) => ({
+            cells: Array.isArray(frame.cells)
+              ? frame.cells.filter(
+                  (value): value is string => typeof value === 'string',
+                )
+              : [],
+            caption: typeof frame.caption === 'string' ? frame.caption : '',
+            narrative:
+              typeof frame.narrative === 'string' ? frame.narrative : '',
+          }),
+        )
+        await replaceSliceFrames(client, sliceId, frames)
+        return `Replaced the slice's frames (${frames.length}).`
       }
       default:
         return `Tool "${name}" is not on the allow-list. Available tools are fixed; deletes do not exist here — removal is human-only.`
