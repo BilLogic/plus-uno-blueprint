@@ -17,7 +17,6 @@
  *
  * The inventory, since it is otherwise only discoverable by reading .ts:
  *
- *   --blueprint-cell-bg-origin    resting surface   set by getBlueprintCellInteractionStyle
  *   --blueprint-cell-bg           "                 "
  *   --blueprint-cell-bg-hover     hover surface     "
  *   --blueprint-cell-bg-pressed   pressed surface   "
@@ -158,8 +157,8 @@
     border-radius: inherit;
     /* `--color-gray-1200`, not `var(--foreground)`: the scrim should darken the
        cell it sits on in either theme, and `--foreground` inverts.
-       `getBlueprintCellInteractionStyle` always sets the hover var, so the
-       fallback only covers a cell rendered outside that helper. */
+       the `[data-blueprint-lane]` rules always set the hover var, so the
+       fallback only covers a cell rendered without a lane. */
     background: color-mix(
       in srgb,
       var(--blueprint-cell-bg-hover, var(--color-gray-1200)) 30%,
@@ -192,5 +191,149 @@
     [data-phase-title-badge] {
     background-color: var(--color-slate-900);
     border-color: var(--color-slate-900);
+  }
+}
+
+@layer utilities {
+  /*
+   * Lane → steps. The whole of it, in CSS.
+   *
+   * TypeScript sets `data-blueprint-lane` and nothing else: which lane a cell
+   * belongs to is row data, but which colour that means is a styling decision
+   * and belongs here. Supabase never sets a colour custom property from
+   * JavaScript — `setProperty('--color…')` returns nothing across their
+   * repository — and now neither do we.
+   *
+   * Steps, and why each: 500 is Radix's component surface; 600/700 are its
+   * hover and pressed pairings; 1100 is the ring. The ring is NOT the step-8
+   * "border" step — Radix specifies 8 against the app background (steps 1–2),
+   * and on a step-5 surface it measures 1.38:1 and fails SC 1.4.11. Step 11 is
+   * the lowest clearing 3:1 against step 5 across every family in both themes.
+   * `palette.test.ts` holds that line.
+   */
+  [data-blueprint-lane='amber'] {
+    --blueprint-cell-bg-origin: var(--color-amber-500);
+    --blueprint-cell-bg: var(--color-amber-500);
+    --blueprint-cell-bg-hover: var(--color-amber-600);
+    --blueprint-cell-bg-pressed: var(--color-amber-700);
+    --blueprint-cell-ring: var(--color-amber-1100);
+    --blueprint-cell-ring-soft: var(--color-amber-1100);
+  }
+
+  [data-blueprint-lane='blue'] {
+    --blueprint-cell-bg-origin: var(--color-blue-500);
+    --blueprint-cell-bg: var(--color-blue-500);
+    --blueprint-cell-bg-hover: var(--color-blue-600);
+    --blueprint-cell-bg-pressed: var(--color-blue-700);
+    --blueprint-cell-ring: var(--color-blue-1100);
+    --blueprint-cell-ring-soft: var(--color-blue-1100);
+  }
+
+  [data-blueprint-lane='crimson'] {
+    --blueprint-cell-bg-origin: var(--color-crimson-500);
+    --blueprint-cell-bg: var(--color-crimson-500);
+    --blueprint-cell-bg-hover: var(--color-crimson-600);
+    --blueprint-cell-bg-pressed: var(--color-crimson-700);
+    --blueprint-cell-ring: var(--color-crimson-1100);
+    --blueprint-cell-ring-soft: var(--color-crimson-1100);
+  }
+
+  [data-blueprint-lane='gold'] {
+    --blueprint-cell-bg-origin: var(--color-gold-500);
+    --blueprint-cell-bg: var(--color-gold-500);
+    --blueprint-cell-bg-hover: var(--color-gold-600);
+    --blueprint-cell-bg-pressed: var(--color-gold-700);
+    --blueprint-cell-ring: var(--color-gold-1100);
+    --blueprint-cell-ring-soft: var(--color-gold-1100);
+  }
+
+  [data-blueprint-lane='gray'] {
+    --blueprint-cell-bg-origin: var(--color-gray-500);
+    --blueprint-cell-bg: var(--color-gray-500);
+    --blueprint-cell-bg-hover: var(--color-gray-600);
+    --blueprint-cell-bg-pressed: var(--color-gray-700);
+    --blueprint-cell-ring: var(--color-gray-1100);
+    --blueprint-cell-ring-soft: var(--color-gray-1100);
+  }
+
+  [data-blueprint-lane='green'] {
+    --blueprint-cell-bg-origin: var(--color-green-500);
+    --blueprint-cell-bg: var(--color-green-500);
+    --blueprint-cell-bg-hover: var(--color-green-600);
+    --blueprint-cell-bg-pressed: var(--color-green-700);
+    --blueprint-cell-ring: var(--color-green-1100);
+    --blueprint-cell-ring-soft: var(--color-green-1100);
+  }
+
+  [data-blueprint-lane='indigo'] {
+    --blueprint-cell-bg-origin: var(--color-indigo-500);
+    --blueprint-cell-bg: var(--color-indigo-500);
+    --blueprint-cell-bg-hover: var(--color-indigo-600);
+    --blueprint-cell-bg-pressed: var(--color-indigo-700);
+    --blueprint-cell-ring: var(--color-indigo-1100);
+    --blueprint-cell-ring-soft: var(--color-indigo-1100);
+  }
+
+  [data-blueprint-lane='lime'] {
+    --blueprint-cell-bg-origin: var(--color-lime-500);
+    --blueprint-cell-bg: var(--color-lime-500);
+    --blueprint-cell-bg-hover: var(--color-lime-600);
+    --blueprint-cell-bg-pressed: var(--color-lime-700);
+    --blueprint-cell-ring: var(--color-lime-1100);
+    --blueprint-cell-ring-soft: var(--color-lime-1100);
+  }
+
+  [data-blueprint-lane='orange'] {
+    --blueprint-cell-bg-origin: var(--color-orange-500);
+    --blueprint-cell-bg: var(--color-orange-500);
+    --blueprint-cell-bg-hover: var(--color-orange-600);
+    --blueprint-cell-bg-pressed: var(--color-orange-700);
+    --blueprint-cell-ring: var(--color-orange-1100);
+    --blueprint-cell-ring-soft: var(--color-orange-1100);
+  }
+
+  [data-blueprint-lane='pink'] {
+    --blueprint-cell-bg-origin: var(--color-pink-500);
+    --blueprint-cell-bg: var(--color-pink-500);
+    --blueprint-cell-bg-hover: var(--color-pink-600);
+    --blueprint-cell-bg-pressed: var(--color-pink-700);
+    --blueprint-cell-ring: var(--color-pink-1100);
+    --blueprint-cell-ring-soft: var(--color-pink-1100);
+  }
+
+  [data-blueprint-lane='purple'] {
+    --blueprint-cell-bg-origin: var(--color-purple-500);
+    --blueprint-cell-bg: var(--color-purple-500);
+    --blueprint-cell-bg-hover: var(--color-purple-600);
+    --blueprint-cell-bg-pressed: var(--color-purple-700);
+    --blueprint-cell-ring: var(--color-purple-1100);
+    --blueprint-cell-ring-soft: var(--color-purple-1100);
+  }
+
+  [data-blueprint-lane='red'] {
+    --blueprint-cell-bg-origin: var(--color-red-500);
+    --blueprint-cell-bg: var(--color-red-500);
+    --blueprint-cell-bg-hover: var(--color-red-600);
+    --blueprint-cell-bg-pressed: var(--color-red-700);
+    --blueprint-cell-ring: var(--color-red-1100);
+    --blueprint-cell-ring-soft: var(--color-red-1100);
+  }
+
+  [data-blueprint-lane='slate'] {
+    --blueprint-cell-bg-origin: var(--color-slate-500);
+    --blueprint-cell-bg: var(--color-slate-500);
+    --blueprint-cell-bg-hover: var(--color-slate-600);
+    --blueprint-cell-bg-pressed: var(--color-slate-700);
+    --blueprint-cell-ring: var(--color-slate-1100);
+    --blueprint-cell-ring-soft: var(--color-slate-1100);
+  }
+
+  [data-blueprint-lane='violet'] {
+    --blueprint-cell-bg-origin: var(--color-violet-500);
+    --blueprint-cell-bg: var(--color-violet-500);
+    --blueprint-cell-bg-hover: var(--color-violet-600);
+    --blueprint-cell-bg-pressed: var(--color-violet-700);
+    --blueprint-cell-ring: var(--color-violet-1100);
+    --blueprint-cell-ring-soft: var(--color-violet-1100);
   }
 }

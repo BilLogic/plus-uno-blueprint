@@ -67,37 +67,18 @@ export function cellToken(
  */
 export const BLUEPRINT_CELL_BORDER_COLOR = 'var(--color-gray-1200)'
 
-/** Per-cell interaction tones — same family as the fill, stepped for each state. */
-export function getBlueprintCellInteractionColors(
+/**
+ * Marks which lane a cell belongs to. The `[data-blueprint-lane]` rules in
+ * blueprint.css turn that into the surface, hover, pressed and ring steps.
+ *
+ * An attribute, not a bag of custom properties: which lane a cell is in is row
+ * data, but which colour that means is a styling decision, and it belongs in
+ * the stylesheet. Nothing here assigns a colour.
+ */
+export function blueprintLaneAttrs(
   family: BlueprintCellFamily,
-): {
-  bg: string
-  bgHover: string
-  bgPressed: string
-  ring: string
-  ringSoft: string
-} {
-  return {
-    bg: cellToken(family, CELL_STEP.surface),
-    bgHover: cellToken(family, CELL_STEP.hover),
-    bgPressed: cellToken(family, CELL_STEP.pressed),
-    ring: cellToken(family, CELL_STEP.ring),
-    ringSoft: cellToken(family, CELL_STEP.ring),
-  }
-}
-
-export function getBlueprintCellInteractionStyle(
-  family: BlueprintCellFamily,
-): Record<string, string> {
-  const colors = getBlueprintCellInteractionColors(family)
-  return {
-    '--blueprint-cell-bg-origin': colors.bg,
-    '--blueprint-cell-bg': colors.bg,
-    '--blueprint-cell-bg-hover': colors.bgHover,
-    '--blueprint-cell-bg-pressed': colors.bgPressed,
-    '--blueprint-cell-ring': colors.ring,
-    '--blueprint-cell-ring-soft': colors.ringSoft,
-  }
+): { 'data-blueprint-lane': BlueprintCellFamily } {
+  return { 'data-blueprint-lane': family }
 }
 
 export function getBlueprintCellSurfaceStyle(

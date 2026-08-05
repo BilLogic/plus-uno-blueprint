@@ -2,7 +2,7 @@ import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { buttonVariants } from '@/components/ui/button'
 import {
   blueprintCellButtonClassName,
-  getBlueprintCellInteractionStyle,
+  blueprintLaneAttrs,
 } from '@/lib/blueprintCellStyle'
 import { getTechPillFamilyFor } from '@/lib/techPillTheme'
 import { cn } from '@/lib/utils'
@@ -31,7 +31,6 @@ export function TechPillFace({
 
   if (asSpan) {
     const style = {
-      ...getBlueprintCellInteractionStyle(family),
       ...(opacity != null && opacity < 1 ? { opacity } : undefined),
     } as CSSProperties
 
@@ -44,6 +43,7 @@ export function TechPillFace({
           className,
         )}
         style={style}
+        {...blueprintLaneAttrs(family)}
       >
         {item}
       </span>

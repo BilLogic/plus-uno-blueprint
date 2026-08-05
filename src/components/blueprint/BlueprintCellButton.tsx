@@ -6,7 +6,7 @@ import {
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
-  getBlueprintCellInteractionStyle,
+  blueprintLaneAttrs,
   type BlueprintCellFamily,
 } from '@/lib/blueprintCellStyle'
 import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
@@ -130,7 +130,6 @@ export function BlueprintCellButton({
   }
 
   const surfaceStyle = {
-    ...getBlueprintCellInteractionStyle(fill),
     ...(opacity != null && opacity < 1 ? { opacity } : undefined),
     ...style,
   } as CSSProperties
@@ -142,6 +141,7 @@ export function BlueprintCellButton({
       type="button"
       variant={buttonVariant}
       data-blueprint-cell-anchor=""
+      {...blueprintLaneAttrs(fill)}
       {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
       data-step-index={stepIndex}
       {...(techPillLabel ? { 'data-blueprint-tech-pill': techPillLabel } : {})}
