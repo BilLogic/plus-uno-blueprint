@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   ChevronLeft,
+  ChevronRight,
   Pencil,
   Plus,
   Search,
@@ -58,6 +59,11 @@ import {
 import { AgentMarkdown } from '@/components/editor/AgentMarkdown'
 import { NavSection } from '@/components/editor/SidebarNav'
 import { Badge } from '@/components/ui/badge'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   Attachment,
   AttachmentAction,
@@ -401,7 +407,61 @@ function useAgentChangeCount(sessionId: string): number {
  * and status lines are Markers — the chat vocabulary shadcn ships, not a
  * hand-rolled lookalike.
  */
-function TranscriptRow({ event }: { event: TranscriptEvent }) {
+/**
+ * Working prose from mid-run turns collapses to one muted line once the
+ * conversation has moved past it — the reasoning stays reachable without
+ * the transcript reading like a log dump. The latest answer never
+ * collapses, and short narration lines are left alone.
+ */
+function CollapsedAssistantRow({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger
+        render={
+          <button
+            type="button"
+            className="group/collapsed flex w-full min-w-0 items-center gap-1 rounded-sm py-0.5 text-left text-[11px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronRight
+              className={cn(
+                'size-3 shrink-0 transition-transform',
+                open && 'rotate-90',
+              )}
+              aria-hidden
+            />
+            <span className={cn('min-w-0 flex-1 italic', !open && 'truncate')}>
+              {open ? 'Working notes' : text.replace(/\s+/g, ' ').trim()}
+            </span>
+          </button>
+        }
+      />
+      <CollapsibleContent>
+        <div className="pl-4">
+          <AgentMarkdown text={text} className="text-xs text-foreground/80" />
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
+const COLLAPSE_THRESHOLD = 200
+
+function TranscriptRow({
+  event,
+  intermediate = false,
+}: {
+  event: TranscriptEvent
+  /** An assistant turn the conversation already moved past. */
+  intermediate?: boolean
+}) {
+  if (
+    event.kind === 'assistant' &&
+    intermediate &&
+    event.text.length > COLLAPSE_THRESHOLD
+  ) {
+    return <CollapsedAssistantRow text={event.text} />
+  }
   switch (event.kind) {
     case 'user':
       return (
@@ -492,6 +552,12 @@ function AgentChatView({
   const { events, running } = useAgentRun(session.id)
   const changeCount = useAgentChangeCount(session.id)
   const [renaming, setRenaming] = useState(false)
+  // Only the latest answer renders full-width; earlier assistant turns are
+  // working notes and collapse (see CollapsedAssistantRow).
+  const lastAssistantIndex = events.reduce(
+    (last, entry, index) => (entry.kind === 'assistant' ? index : last),
+    -1,
+  )
 
   // Reopening a session after a reload restores its transcript from
   // agent_messages (no-op for never-persisted sessions).
@@ -642,7 +708,12 @@ function AgentChatView({
           // Index keys are safe here: the transcript is append-only.
           events.map((event, index) => (
             <MessageScrollerItem key={index} scrollAnchor={index === events.length - 1}>
-              <TranscriptRow event={event} />
+              <TranscriptRow
+                event={event}
+                intermediate={
+                  event.kind === 'assistant' && index !== lastAssistantIndex
+                }
+              />
             </MessageScrollerItem>
           ))
         )}
@@ -663,27 +734,8 @@ function AgentChatView({
       />
 
       <div className="shrink-0 border-t border-border/60 p-2">
-        {pendingSkill || attachment ? (
+        {attachment ? (
           <div className="mb-1.5 flex flex-col gap-1.5">
-            {pendingSkill ? (
-              <div className="flex items-center gap-1">
-                <Badge variant="secondary" className="font-mono text-[10px]">
-                  {pendingSkill.label}
-                </Badge>
-                <span className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground">
-                  {pendingSkill.description}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label="Remove skill"
-                  onClick={() => setPendingSkill(null)}
-                >
-                  <X className="size-3" aria-hidden />
-                </Button>
-              </div>
-            ) : null}
             {attachment ? (
               <Attachment size="sm" className="w-full">
                 <AttachmentContent>
@@ -741,32 +793,92 @@ function AgentChatView({
               <Square className="size-3" aria-hidden />
             </Button>
           ) : null}
-          <Input
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (slashOpen && (event.key === 'Enter' || event.key === 'Tab')) {
-                event.preventDefault()
-                const first = slashMatches.find((command) => command.content)
-                if (first) pickSkill(first)
-                return
+          {/* One bordered field: the recognized /command sits INSIDE it as
+              an accent chip (Claude's grammar — the token visibly stopped
+              being text), the input itself goes borderless. */}
+          <div
+            className={cn(
+              'flex h-7 min-w-0 flex-1 items-center gap-1 rounded-md border border-input bg-transparent px-2',
+              'focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30',
+              !keyed && 'opacity-50',
+            )}
+          >
+            {pendingSkill ? (
+              <Badge
+                variant="secondary"
+                className="shrink-0 gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-[10px] text-primary"
+              >
+                {pendingSkill.label}
+                <button
+                  type="button"
+                  aria-label="Remove skill"
+                  onClick={() => setPendingSkill(null)}
+                  className="rounded-sm p-0.5 hover:bg-primary/15"
+                >
+                  <X className="size-2.5" aria-hidden />
+                </button>
+              </Badge>
+            ) : null}
+            <Input
+              value={draft}
+              onChange={(event) => {
+                const value = event.target.value
+                // Typing a full command + space converts it into the chip
+                // on the spot — the token is recognized, not just text.
+                if (!pendingSkill) {
+                  const token = /^\/(\w+)\s([\s\S]*)$/.exec(value)
+                  const command = token
+                    ? AGENT_SKILL_COMMANDS.find(
+                        (entry) => entry.id === token[1].toLowerCase(),
+                      )
+                    : undefined
+                  if (command?.content) {
+                    setPendingSkill(command)
+                    setDraft(token![2])
+                    return
+                  }
+                }
+                setDraft(value)
+              }}
+              onKeyDown={(event) => {
+                if (
+                  slashOpen &&
+                  (event.key === 'Enter' || event.key === 'Tab')
+                ) {
+                  event.preventDefault()
+                  const first = slashMatches.find((command) => command.content)
+                  if (first) pickSkill(first)
+                  return
+                }
+                if (slashOpen && event.key === 'Escape') {
+                  setDraft('')
+                  return
+                }
+                if (
+                  event.key === 'Backspace' &&
+                  draft === '' &&
+                  pendingSkill
+                ) {
+                  setPendingSkill(null)
+                  return
+                }
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  send()
+                }
+              }}
+              placeholder={
+                pendingSkill
+                  ? pendingSkill.description
+                  : keyed
+                    ? 'Message the agent… ("/" for skills)'
+                    : 'Add a key in ⚙ first'
               }
-              if (slashOpen && event.key === 'Escape') {
-                setDraft('')
-                return
-              }
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                send()
-              }
-            }}
-            placeholder={
-              keyed ? 'Message the agent… ("/" for skills)' : 'Add a key in ⚙ first'
-            }
-            className="h-7 flex-1 text-xs"
-            aria-label="Message the agent"
-            disabled={!keyed}
-          />
+              className="h-6 min-w-0 flex-1 border-0 px-0 text-xs shadow-none focus-visible:border-0 focus-visible:ring-0"
+              aria-label="Message the agent"
+              disabled={!keyed}
+            />
+          </div>
           <Button
             type="button"
             size="icon-sm"

@@ -39,17 +39,36 @@ import { cn } from '@/lib/utils'
 
 /**
  * Aside = rail (48px) + content panel. The agent surface gets a wider
- * panel — transcripts need line length a nav tree doesn't.
+ * default — transcripts need line length a nav tree doesn't — and every
+ * surface is drag-resizable from the aside's right edge, remembered
+ * per surface.
  */
-const ASIDE_WIDTH_CLASS: Record<SidebarSurface, string> = {
-  blueprints: 'w-[288px]',
-  slices: 'w-[288px]',
-  agent: 'w-[368px]',
+const RAIL_WIDTH = 48
+const DEFAULT_ASIDE_WIDTH: Record<SidebarSurface, number> = {
+  blueprints: 288,
+  slices: 288,
+  agent: 368,
 }
-const PANEL_WIDTH_PX: Record<SidebarSurface, string> = {
-  blueprints: '15rem',
-  slices: '15rem',
-  agent: '20rem',
+const MIN_ASIDE_WIDTH = 240
+const MAX_ASIDE_WIDTH = 640
+const WIDTH_STORAGE_KEY = 'uno-sidebar-widths'
+
+function loadAsideWidths(): Record<SidebarSurface, number> {
+  try {
+    const raw = window.localStorage.getItem(WIDTH_STORAGE_KEY)
+    const parsed = raw ? (JSON.parse(raw) as Record<string, number>) : {}
+    const clamp = (value: unknown, fallback: number) =>
+      typeof value === 'number' && Number.isFinite(value)
+        ? Math.min(MAX_ASIDE_WIDTH, Math.max(MIN_ASIDE_WIDTH, value))
+        : fallback
+    return {
+      blueprints: clamp(parsed.blueprints, DEFAULT_ASIDE_WIDTH.blueprints),
+      slices: clamp(parsed.slices, DEFAULT_ASIDE_WIDTH.slices),
+      agent: clamp(parsed.agent, DEFAULT_ASIDE_WIDTH.agent),
+    }
+  } catch {
+    return { ...DEFAULT_ASIDE_WIDTH }
+  }
 }
 
 export function EditorShell() {
@@ -159,6 +178,43 @@ export function EditorShell() {
     setSidebarCollapsed((collapsed) => !collapsed)
   }
 
+  // Per-surface drag-resize. During a drag the width transition is off —
+  // easing against the pointer reads as lag, not motion.
+  const [asideWidths, setAsideWidths] = useState(loadAsideWidths)
+  const [resizing, setResizing] = useState(false)
+  const asideWidth = asideWidths[surface]
+  const startResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setResizing(true)
+    suppressCanvasResizeRefit()
+  }
+  const moveResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizing) return
+    // The aside is flush with the window's left edge, so the pointer's x IS
+    // the aside width.
+    const next = Math.min(
+      MAX_ASIDE_WIDTH,
+      Math.max(MIN_ASIDE_WIDTH, Math.round(event.clientX)),
+    )
+    suppressCanvasResizeRefit()
+    setAsideWidths((widths) =>
+      widths[surface] === next ? widths : { ...widths, [surface]: next },
+    )
+  }
+  const endResize = () => {
+    if (!resizing) return
+    setResizing(false)
+    setAsideWidths((widths) => {
+      try {
+        window.localStorage.setItem(WIDTH_STORAGE_KEY, JSON.stringify(widths))
+      } catch {
+        // Width memory is a nicety; failing to store is fine.
+      }
+      return widths
+    })
+  }
+
   /**
    * Return: exit presentation onto that slice's focus tab, creating the tab
    * if it is not already open. The three entry moves play in reverse over
@@ -222,7 +278,7 @@ export function EditorShell() {
         <SidebarProvider
           style={
             {
-              '--sidebar-width': PANEL_WIDTH_PX[surface],
+              '--sidebar-width': `${asideWidth - RAIL_WIDTH}px`,
             } as CSSProperties
           }
           className="flex min-h-0 min-w-0 flex-1 flex-col"
@@ -261,10 +317,11 @@ export function EditorShell() {
           <aside
             className={cn(
               'relative z-20 shrink-0 overflow-hidden bg-sidebar',
-              railOnly ? 'w-0' : cn(ASIDE_WIDTH_CLASS[surface], 'border-r border-border'),
+              !railOnly && 'border-r border-border',
             )}
             style={{
-              transitionProperty: 'width',
+              width: railOnly ? 0 : asideWidth,
+              transitionProperty: resizing ? 'none' : 'width',
               transitionDuration: `${MOTION_STRUCTURAL_MS}ms`,
               transitionTimingFunction: MOTION_STRUCTURAL_EASE,
             }}
@@ -280,16 +337,34 @@ export function EditorShell() {
             <div
               className={cn(
                 'flex h-full min-h-0 flex-row',
-                ASIDE_WIDTH_CLASS[surface],
                 'transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none',
                 railOnly
                   ? 'pointer-events-none -translate-x-2 opacity-0'
                   : 'translate-x-0 opacity-100 delay-75',
               )}
+              style={{ width: asideWidth }}
               aria-hidden={railOnly}
             >
               {sidebarBody}
             </div>
+            {/* Drag the aside's right edge to resize; width is remembered
+                per surface. Hidden while collapsed — there is no edge. */}
+            {!railOnly ? (
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize sidebar"
+                onPointerDown={startResize}
+                onPointerMove={moveResize}
+                onPointerUp={endResize}
+                onPointerCancel={endResize}
+                className={cn(
+                  'absolute inset-y-0 right-0 z-30 w-1.5 cursor-col-resize',
+                  'hover:bg-border/80 active:bg-border',
+                  resizing && 'bg-border',
+                )}
+              />
+            ) : null}
           </aside>
 
           {/*
