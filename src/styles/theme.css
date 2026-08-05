@@ -41,10 +41,6 @@
   --color-info-foreground: var(--info-foreground);
   --color-annotation-selected: var(--annotation-selected);
 
-  /* Supabase's documented text vocabulary, kept as aliases so `text-foreground-light`
-     and `text-foreground-lighter` read the same as in their docs. */
-  --color-foreground-light: var(--muted-foreground);
-  --color-foreground-lighter: var(--tertiary-foreground);
 
   /* Status border tokens for tinted surfaces (border-destructive, border-warning…) */
   --color-border-destructive: var(--border-destructive);

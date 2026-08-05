@@ -1,3 +1,41 @@
+/*
+ * Blueprint board styling, and the contract for its component tokens.
+ *
+ * TOKEN TIERS — three you can look up, one you set.
+ *
+ *   1. Primitive   colors.css      --color-{family}-{step}
+ *   2. Semantic    semantic.css    --background, --primary, --warning, --sidebar-*
+ *   3. Tailwind    theme.css       --color-{semantic}, so utilities exist
+ *   4. Component   here            --blueprint-*
+ *
+ * Tier 4 is what a component sets on itself so a shared rule can read it — the
+ * same shape as Radix's `--radix-popper-*` or Supabase's `--card-padding-x`. It
+ * is NOT a design token: nothing here introduces a colour. Every value assigned
+ * to one of these is a tier-1 or tier-2 reference, and the assignment happens in
+ * TypeScript because the value depends on row data (which lane a cell is in),
+ * which CSS cannot know.
+ *
+ * The inventory, since it is otherwise only discoverable by reading .ts:
+ *
+ *   --blueprint-cell-bg-origin    resting surface   set by getBlueprintCellInteractionStyle
+ *   --blueprint-cell-bg           "                 "
+ *   --blueprint-cell-bg-hover     hover surface     "
+ *   --blueprint-cell-bg-pressed   pressed surface   "
+ *   --blueprint-cell-ring         outline + focus   "
+ *   --blueprint-cell-ring-soft    "                 "
+ *   --blueprint-cell-bg-panel     opt-in override   set by BlueprintStepVisual
+ *   --blueprint-panel-label-rail  panel hover       set by getBlueprintPanelHoverCssVars
+ *   --blueprint-panel-canvas      "                 "
+ *   --blueprint-panel-section-fill "                "
+ *   --blueprint-panel-divider-bg  "                 "
+ *   --blueprint-panel-cell-hover  hover strength    "
+ *
+ * None of them are declared at `:root`, deliberately. Every consumer reads them
+ * as `var(--blueprint-…, fallback)`, and a root declaration would make the
+ * property always resolve, so the fallback arm — which is the default state —
+ * would become unreachable.
+ */
+
 @layer utilities {
   /* Interactive overview / phase panels — pure CSS hover avoids stale React hover state. */
   [data-phase-scenario-panel] {

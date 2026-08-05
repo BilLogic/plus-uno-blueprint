@@ -6,6 +6,10 @@
  * entry pure removes a whole class of ordering mistake.
  */
 @import 'tailwindcss';
+/* JS plugins. Tailwind v4 supports `@plugin` for both v3-style JS plugins and
+ * v4-native packages. */
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/inter';
@@ -20,6 +24,7 @@
  */
 @import './global.css';
 @import './semantic.css';
+@import './compat.css';
 @import './themes/light.css';
 @import './themes/dark.css';
 
@@ -30,6 +35,7 @@
 
 @import './animations.css';
 @import './utilities.css';
+@import './tailwind-plugins/hit-area.css';
 @import './variants.css';
 @import './base.css';
 @import './blueprint.css';
