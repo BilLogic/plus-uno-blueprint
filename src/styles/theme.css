@@ -309,17 +309,25 @@
   --color-sidebar-selected-rail: var(--sidebar-selected-rail);
   --color-sidebar-ancestor: var(--sidebar-ancestor);
   /*
-   * Supabase's font stacks, verbatim. The inner `var(--font-sans, …)` is their
+   * Font stacks, in Supabase's shape. The inner `var(--font-sans, …)` is their
    * injection seam: `@theme inline` never emits the property, so the utility
-   * compiles to `font-family: var(--font-sans, Circular, …)` and resolves
-   * against whatever `--font-sans` the app sets at :root — Supabase injects
-   * Circular there via next/font; base.css is our equivalent hook. No heading
-   * font, no type-scale overrides, no weight overrides: Supabase defines none.
+   * compiles to `font-family: var(--font-sans, Ubuntu Sans Variable, …)` and
+   * resolves against whatever `--font-sans` an embedding app declares at
+   * `:root`. Unset, the default applies.
+   *
+   * The default is the one thing that differs from theirs, and it has to:
+   * their default is Circular, which is a licensed face we cannot ship. Ubuntu
+   * Sans is the brand face here, loaded from `@fontsource-variable/ubuntu-sans`
+   * in the entry — variable, so the whole weight axis comes in one file.
+   *
+   * No heading font, no type-scale overrides, no weight overrides: Supabase
+   * defines none, and headings are this stack at a heavier weight.
    */
   --font-sans: var(
     --font-sans,
-    Circular,
-    custom-font,
+    'Ubuntu Sans Variable',
+    'Ubuntu Sans',
+    Ubuntu,
     Helvetica Neue,
     Helvetica,
     Arial,

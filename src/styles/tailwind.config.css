@@ -12,8 +12,9 @@
 @plugin '@tailwindcss/forms';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-/* Mono seam only. Sans is Supabase's stack (Circular first) with no bundled
- * file — see the injection note in base.css. */
+/* The two faces the stacks in theme.css name first. Both variable, so each is
+ * one file across its whole weight axis. */
+@import '@fontsource-variable/ubuntu-sans';
 @import '@fontsource-variable/source-code-pro';
 
 /*

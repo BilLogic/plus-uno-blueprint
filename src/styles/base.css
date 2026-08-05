@@ -7,13 +7,13 @@
     @apply border-border outline-ring;
   }
   /*
-   * Font injection, Supabase-style. Their theme.css stacks read
-   * `var(--font-sans, Circular, …)` / `var(--font-source-code-pro, …)`, and
-   * apps inject the real font by setting the variable at :root (they use
-   * next/font). Circular is a licensed font we do not bundle, so `--font-sans`
-   * stays unset and the stack falls through — drop licensed @font-face rules
-   * plus a `--font-sans` declaration here to light it up. The mono seam is
-   * fed from the @fontsource package.
+   * The mono seam, filled. Supabase's `--font-mono` reads
+   * `var(--font-source-code-pro, …)` and their app injects the loaded face
+   * here; this is that injection, pointing at the @fontsource family name.
+   *
+   * `--font-sans` has no matching line on purpose: its default in theme.css is
+   * already Ubuntu Sans, so the seam stays open for an embedding app to
+   * override rather than being spent on our own default.
    */
   :root {
     --font-source-code-pro: 'Source Code Pro Variable', 'Source Code Pro';
