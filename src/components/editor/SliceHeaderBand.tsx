@@ -64,7 +64,7 @@ export function SliceHeaderBand({
             {description || '—'}
           </p>
           {missingCellCount > 0 && (
-            <span className="shrink-0 text-xs text-warning">
+            <span className="shrink-0 text-xs text-warning-600">
               {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
               longer in the blueprint
             </span>

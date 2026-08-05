@@ -10,23 +10,75 @@
 
   --radius: 0.625rem;
 
+  /* Brand hue. oklch(… 177.6) is the blue-green this product is specified
+     around — `--brand-400` below is #85ECD5 exactly. */
+  --hue: 177.6;
+  /* Warm grey canvas, decoupled from the brand hue (`--surface-hue` defaults to
+     `--hue`; overriding it is the point of splitting the two). Moot while
+     `--chroma` is 0, but it is what a tinted light theme would turn. */
   --surface-hue: 34;
-  --brand-hue: 159;
   --chroma: 0;
-  /* Soft-grey canvas, not pure white, so elevated surfaces have headroom to
-     brighten toward white. */
-  --surface: 0.985;
-  --foreground-l: 0.1;
+  /*
+   * Soft-grey canvas so raised surfaces have headroom to brighten toward white.
+   *
+   * DELIBERATE DIVERGENCE: Supabase ships `--surface: 0.995` with a 0.024 step,
+   * which puts every rung past L=1 — card lands at 1.019 and clips, so their
+   * light ladder is flat and only the translucent overlays (muted / accent /
+   * tertiary) carry elevation. Ours keeps the same "higher = lighter" direction
+   * with room to move: 0.968 + 0.009 × {1, 1.5, 2} = 0.977 / 0.9815 / 0.986,
+   * all in range. Retune the step alongside `--surface`.
+   */
+  --surface: 0.968;
+  --elevation-step: 0.009;
   --contrast: 0.53;
-  --elevation-step: 0.024;
-  /* Brand step scale — per-theme HSL literals, consumed by colors.css via
-     `hsl(var(--brand-N))`. Values taken from Supabase's light theme; Phase D
-     replaces them with the teal ramp. */
-  --brand-link: 153.4deg 86.5% 28.3%;
-  --brand-default: 152.9deg 60% 52.9%;
-  --brand-600: 156.5deg 86.5% 26.1%;
-  --brand-500: 155.3deg 78.4% 40%;
-  --brand-400: 151.3deg 66.9% 66.9%;
-  --brand-300: 147.5deg 72% 80.4%;
-  --brand-200: 147.6deg 72.5% 90%;
+  --foreground-lightness: 0.1;
+  --muted-foreground-level: 0.65;
+  --tertiary-foreground-level: 0.5;
+  /*
+   * Expressive fills run darker than the dark-theme anchors so they hold
+   * contrast against the near-white surface (a light amber on white disappears).
+   * Lightness is mode-aware; chroma is the shared `--expressive-chroma`.
+   */
+  --warning-lightness: 0.68;
+  --destructive-lightness: 0.52;
+  --info-lightness: 0.54;
+  --success-lightness: 0.55;
+
+  /*
+   * Stepped numeric scales — per-theme HSL literals, mapped to utilities in
+   * theme.css and consumed by colors.css via `hsl(var(--brand-N))`.
+   *
+   * The brand ramp is the Supabase ramp re-derived on our hue: each step is an
+   * OKLCH point at 177.6 converted to HSL, so the ramp stays perceptually even
+   * rather than drifting the way a raw hue-rotate would. 400 is the anchor.
+   * 500/600/link run dark enough to serve as text and links on the light canvas.
+   */
+  --brand-link: 171.2deg 100% 26%;
+  --brand-default: 166.6deg 73% 72.4%;
+  --brand-600: 171.1deg 100% 24%;
+  --brand-500: 170.3deg 74.8% 41.1%;
+  --brand-400: 166.6deg 73% 72.4%;
+  --brand-300: 164.5deg 69.8% 86.5%;
+  --brand-200: 163.7deg 72.1% 93.1%;
+
+  /* Warning / destructive tint ramps, taken from Supabase's light theme:
+     200 = subtle surface, 500 = border, 600 = text. */
+  /*
+   * Radix amber-1100, not Supabase's `30.3deg 80.3% 47.8%`. Theirs measures
+   * 2.96:1 against `--warning-200` — the surface it is paired with in their own
+   * Alert — which fails SC 1.4.3 and even the 3:1 large-text floor. Radix step
+   * 11 is the step specified for text on a step-2/3 surface and measures 4.91:1
+   * on the same pair. Dark mode keeps Supabase's value, which measures 6.39:1.
+   */
+  --warning-600: 30deg 100% 34%;
+  --warning-500: 36.3deg 85.7% 67.1%;
+  --warning-400: 41.9deg 100% 81.8%;
+  --warning-300: 44.3deg 100% 91.8%;
+  --warning-200: 40deg 81.8% 97.8%;
+  --destructive-default: 10.2deg 77.9% 53.9%;
+  --destructive-600: 9.9deg 82% 43.5%;
+  --destructive-500: 10.4deg 77.1% 79.4%;
+  --destructive-400: 7.1deg 91.3% 91%;
+  --destructive-300: 7.1deg 100% 96.7%;
+  --destructive-200: 0deg 100% 99.4%;
 }

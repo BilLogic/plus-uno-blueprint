@@ -3,7 +3,11 @@
  *
  * Themes declare a small set of dial inputs; every semantic colour below is
  * derived from them in OKLCH. Dials live in `themes/`, derivations live here —
- * a name should never be declared in both (CI enforces this).
+ * a name should never be declared in both.
+ *
+ * The stepped numeric scales (brand / warning / destructive) are NOT derived
+ * here. They are per-theme HSL literals in the theme files, mapped to utilities
+ * in theme.css — same split Supabase uses.
  *
  * SELECTOR LIST — the one place we diverge from Supabase, deliberately.
  *
@@ -21,92 +25,173 @@
 :root,
 .dark,
 .light {
-  /* --- Derived machinery ----------------------------------------------- */
-  --tone-span: calc(var(--foreground-l) - var(--surface));
-  --grey-c: var(--chroma);
-  --text-c: calc(var(--chroma) * 1.2);
-  --border-c: calc(var(--chroma) * 0.6);
-  --border-opacity: calc(0.06 + (var(--contrast) * var(--contrast) * 0.16));
-  --input-border-opacity: calc(0.1 + (var(--contrast) * var(--contrast) * 0.2));
-  --muted-text-t: calc(0.52 + var(--contrast) * 0.24);
-  --tertiary-text-t: calc(0.36 + var(--contrast) * 0.2);
+  /*
+   * Hue inputs. `--hue` is the single knob; `--surface-hue` tints the neutral
+   * ramp (backgrounds, text, borders) and `--primary-hue` drives the brand, so
+   * a theme can run a warm-grey surface against a cool brand without the two
+   * being locked together.
+   */
+  --surface-hue: var(--hue);
+  --primary-hue: var(--hue);
+
+  /* --- Contrast ---------------------------------------------------------
+   * Global knob, 0–1. 0.5 is the baseline: foreground lands exactly on
+   * `--foreground-lightness`, and borders sit mid-strength. Below 0.5 text
+   * eases back toward the surface (floor `--contrast-text-floor`); the border
+   * ramp is squared so most of its travel happens near full strength.
+   */
+  --contrast-delta: calc((var(--contrast) - 0.5) / 0.5);
+  --contrast-up: max(0, var(--contrast-delta));
+  --contrast-down: max(0, calc(var(--contrast-delta) * -1));
+  --contrast-text-floor: 0.9;
+  --contrast-border-floor: 0.05;
+  --contrast-text: calc(
+    1 - (1 - var(--contrast-text-floor)) * var(--contrast-down)
+  );
+  --contrast-border-linear: calc(
+    var(--contrast-border-floor) + (1 - var(--contrast-border-floor)) *
+      var(--contrast)
+  );
+  --contrast-border: calc(
+    var(--contrast-border-linear) * var(--contrast-border-linear)
+  );
+
+  /* --- Elevation --------------------------------------------------------
+   * Shared ratios; `--elevation-step` is signed per theme, so "higher = lighter"
+   * holds in both modes. See themes/light.css for why the light step is small.
+   */
+  --elevation-1: 1;
+  --elevation-2: 1.5;
+  --elevation-3: 2;
+  --elevation-4: 3;
+  /* Signed span surface→foreground (+ in dark, − in light). */
+  --tone-span: calc(var(--foreground-lightness) - var(--surface));
+  /*
+   * `max(x, -x)` rather than `abs()`: Tailwind hardcodes its Lightning CSS
+   * targets at Chrome 111 / Safari 16.4 / Firefox 128 and does not read
+   * vite.config.ts, and `abs()` did not ship until Chrome 133. Supabase's
+   * source uses `abs()`; this is the same value with wider reach.
+   */
+  --tone-span-abs: max(var(--tone-span), calc(var(--tone-span) * -1));
+
+  /*
+   * Foreground overlays for muted / accent / tertiary. These are translucent
+   * `--foreground`, NOT lightened surfaces, which is the fix for the light-mode
+   * ladder: a raised surface has nowhere to go once it clips at white, but an
+   * overlay composites against whatever sits beneath it and therefore darkens
+   * in light and lightens in dark. Alpha is tuned so each level matches the
+   * lightness delta of the same elevation ratio.
+   */
+  --surface-overlay-unit: calc(var(--elevation-step) / var(--tone-span-abs));
+  --muted-alpha: calc(var(--surface-overlay-unit) * var(--elevation-1));
+  --accent-alpha: calc(var(--surface-overlay-unit) * var(--elevation-2));
+  --tertiary-alpha: calc(var(--surface-overlay-unit) * var(--elevation-3));
 
   /* --- Surfaces: canvas darkest → popover lightest --------------------- */
-  --canvas: oklch(var(--surface) var(--grey-c) var(--surface-hue));
-  --background: var(--canvas);
+  --background: oklch(
+    var(--surface) calc(var(--chroma) * 0.5) var(--surface-hue)
+  );
+  --canvas: var(--background);
   --sidebar: oklch(
-    calc(var(--surface) + var(--elevation-step) * 1.4) var(--grey-c)
-      var(--surface-hue)
+    from var(--background) calc(l + var(--elevation-step) * var(--elevation-1))
+      c h
+  );
+  --card: oklch(
+    from var(--background) calc(l + var(--elevation-step) * var(--elevation-2))
+      c h
+  );
+  --popover: oklch(
+    from var(--background) calc(l + var(--elevation-step) * var(--elevation-3))
+      c h
   );
   --secondary: oklch(
-    calc(var(--surface) + var(--elevation-step) * 1.6) var(--grey-c)
-      var(--surface-hue)
-  );
-  --muted: oklch(
-    calc(var(--surface) + var(--elevation-step) * 1.6) var(--grey-c)
-      var(--surface-hue)
-  );
-  --accent: oklch(
-    calc(var(--surface) + var(--elevation-step) * 1.8) var(--grey-c)
-      var(--surface-hue)
-  );
-  /* Menubar + floating chrome */
-  --card: oklch(
-    calc(var(--surface) + var(--elevation-step) * 2.2) var(--grey-c)
-      var(--surface-hue)
-  );
-  /* Side panel / popovers */
-  --popover: oklch(
-    calc(var(--surface) + var(--elevation-step) * 2.8) var(--grey-c)
-      var(--surface-hue)
+    from var(--background) calc(l + var(--elevation-step) * var(--elevation-3))
+      c h
   );
 
-  /* --- Text ----------------------------------------------------------- */
-  --foreground: oklch(var(--foreground-l) var(--text-c) var(--surface-hue));
+  /* --- Text ------------------------------------------------------------ */
+  --foreground: oklch(
+    calc(var(--surface) + var(--tone-span) * var(--contrast-text))
+      calc(var(--chroma) * 0.55) var(--surface-hue)
+  );
+  /* Canvas-coloured text for inverted fills (bg-foreground, bg-primary is
+     handled separately by --primary-foreground). */
+  --foreground-contrast: oklch(
+    var(--surface) calc(var(--chroma) * 0.55) var(--surface-hue)
+  );
   --card-foreground: var(--foreground);
   --popover-foreground: var(--foreground);
   --secondary-foreground: var(--foreground);
   --accent-foreground: var(--foreground);
   --sidebar-foreground: var(--foreground);
+  --muted-foreground-mix: calc(
+    var(--muted-foreground-level) + (1 - var(--muted-foreground-level)) *
+      var(--contrast-up) - var(--muted-foreground-level) * 0.5 *
+      var(--contrast-down)
+  );
   --muted-foreground: oklch(
-    calc(var(--surface) + var(--tone-span) * var(--muted-text-t))
-      var(--text-c) var(--surface-hue)
+    from var(--foreground)
+      calc(var(--surface) + var(--tone-span) * var(--muted-foreground-mix)) c h
+  );
+  --tertiary-foreground-mix: calc(
+    var(--tertiary-foreground-level) + (1 - var(--tertiary-foreground-level)) *
+      var(--contrast-up) - var(--tertiary-foreground-level) * 0.5 *
+      var(--contrast-down)
   );
   --tertiary-foreground: oklch(
-    calc(var(--surface) + var(--tone-span) * var(--tertiary-text-t))
-      var(--text-c) var(--surface-hue)
+    from var(--foreground)
+      calc(var(--surface) + var(--tone-span) * var(--tertiary-foreground-mix)) c
+      h
   );
 
-  /* --- Brand / primary (Supabase green — mode-stable) ------------------ */
-  --primary: oklch(0.76 0.15 var(--brand-hue));
-  --primary-foreground: oklch(0.2 calc(var(--chroma) * 0.45) var(--brand-hue));
+  /* --- State surfaces (translucent, see --*-alpha above) --------------- */
+  --muted: oklch(from var(--foreground) l c h / var(--muted-alpha));
+  --accent: oklch(from var(--foreground) l c h / var(--accent-alpha));
+  --tertiary: oklch(from var(--foreground) l c h / var(--tertiary-alpha));
+
+  /* --- Brand / primary -------------------------------------------------- */
+  /*
+   * Mode-invariant and decoupled from `--chroma`, so the brand holds its
+   * identity even as neutrals desaturate. The anchor is the blue-green this
+   * product was specified around — oklch(0.874 0.1025 177.6) is #85ECD5 exactly.
+   * `--primary-foreground` is dark ink rather than white: at L 0.874 the fill is
+   * light, so white on it would fail SC 1.4.3 badly.
+   */
+  --primary: oklch(0.874 0.1025 var(--primary-hue));
+  --primary-foreground: oklch(
+    min(var(--surface), var(--foreground-lightness))
+      calc(var(--chroma) * 0.45) var(--primary-hue)
+  );
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
 
   /* --- Borders & controls ---------------------------------------------- */
   --border: oklch(
-    var(--foreground-l) var(--border-c) var(--surface-hue) /
-      var(--border-opacity)
+    from var(--foreground) l calc(c * 0.54) h /
+      calc(2% + 20% * var(--contrast-border))
   );
   --input: oklch(
-    var(--foreground-l) var(--border-c) var(--surface-hue) /
-      var(--input-border-opacity)
+    from var(--foreground) l calc(c * 0.5) h /
+      calc(3% + 38% * var(--contrast-border))
   );
   /*
-   * Full alpha, deliberately diverging from Supabase's `--primary / 55%`.
+   * Full alpha on a darker brand weight, deliberately diverging from Supabase's
+   * `oklch(from var(--primary) l c h / 55%)`.
    *
    * `--ring` is consumed two ways in `ui/button.tsx`: as `focus-visible:border-ring`
    * — the line that *carries* the focus affordance — and as `focus-visible:ring-3
-   * ring-ring/50`, a decorative glow. At 55% the border measured 1.85:1 against the
-   * light canvas, failing WCAG 2.2 SC 1.4.11 (non-text contrast, 3:1). The `/50` at
-   * the utility site still produces the softer glow, so one token serves both.
+   * ring-ring/50`, a decorative glow. Inheriting `--primary`'s L 0.874 at 55%
+   * would put the affordance around 1.2:1 on the light canvas, failing WCAG 2.2
+   * SC 1.4.11 (non-text contrast, 3:1). Dropping to L 0.58 clears it while
+   * staying unmistakably the brand hue; the `/50` at the utility site still
+   * produces the softer glow, so one token serves both.
    *
-   * Note this never renders over a blueprint cell: those resolve
+   * This never renders over a blueprint cell: those resolve
    * `--blueprint-cell-ring-soft`, which `getBlueprintCellInteractionStyle` always
    * sets, so the fallback in `var(--blueprint-cell-ring-soft, var(--ring))` is
    * unreachable. `--ring` only ever sits on app chrome.
    */
-  --ring: oklch(0.76 0.15 var(--brand-hue));
+  --ring: oklch(from var(--primary) 0.58 calc(c * 1.3) h);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
   --sidebar-accent: var(--accent);
@@ -120,32 +205,99 @@
    * and a row that merely *contains* the selection gets the marker dot.
    */
   --sidebar-hover: var(--accent);
-  --sidebar-selected: oklch(0.76 0.15 var(--brand-hue) / 0.2);
+  --sidebar-selected: oklch(from var(--ring) l c h / 0.16);
   --sidebar-selected-foreground: var(--foreground);
-  --sidebar-selected-rail: oklch(0.76 0.15 var(--brand-hue));
-  --sidebar-ancestor: oklch(0.76 0.15 var(--brand-hue) / 0.55);
+  --sidebar-selected-rail: var(--ring);
+  --sidebar-ancestor: oklch(from var(--ring) l c h / 0.55);
 
-  /* --- Status (derived from the palette, Supabase-style) ---------------- */
-  /*
-   * Sourced from colors.css rather than hand-picked OKLCH triples, which is how
-   * Supabase builds its status roles (`--warning-600: var(--colors-amber-1100)`).
-   * Two things fall out of that:
+  /* --- Status ----------------------------------------------------------
+   * Hues stay anchored to amber / red / green / violet but pull a fraction of
+   * the way toward `--primary-hue` for harmony, then clamp to their perceptual
+   * category so warning always reads amber and destructive always reads red.
+   * At `--brand-hue-reference` the pull term is zero.
    *
-   *  - Step 1100 is the Radix "low-contrast text" step, so these are safe as
-   *    `text-*` on their own surface — which is how all four are actually used.
-   *    A separate solid-fill weight would be step 900; add it when something
-   *    needs one, don't guess it now.
-   *  - Dark mode is free. `.dark` in colors.css already re-points every step to
-   *    the dark scale, so these need no override there (the previous per-theme
-   *    `--destructive`/`--warning`/... pairs are gone).
-   *
-   * These are also the reason colors.css uses `@theme static`: the source scan
-   * cannot see a `var()` reference from hand-written CSS.
+   * Warning sits at 75 (amber) rather than nearer yellow: yellow cannot darken
+   * without going olive, so it loses contrast on light surfaces.
    */
-  --destructive: var(--color-red-1100);
-  --warning: var(--color-amber-1100);
-  --success: var(--color-green-1100);
-  --info: var(--color-blue-1100);
+  --brand-hue-reference: 159;
+  --status-hue-pull: 0.15;
+  --warning-hue: clamp(
+    65,
+    calc(
+      75 + (var(--primary-hue) - var(--brand-hue-reference)) *
+        var(--status-hue-pull)
+    ),
+    95
+  );
+  --destructive-hue: clamp(
+    12,
+    calc(
+      25 + (var(--primary-hue) - var(--brand-hue-reference)) *
+        var(--status-hue-pull)
+    ),
+    42
+  );
+  --info-hue: clamp(
+    272,
+    calc(
+      288 + (var(--primary-hue) - var(--brand-hue-reference)) *
+        var(--status-hue-pull)
+    ),
+    302
+  );
+  /*
+   * `--success-hue` is pinned rather than pulled: with the brand at 177.6 a
+   * brand-relative green would collide with `--primary`, and a success state
+   * has to stay distinguishable from a brand fill.
+   */
+  --success-hue: 152;
+  /*
+   * Expressive colours are deliberately NOT derived from the neutral
+   * surface→foreground span the way text and surfaces are — an expressive
+   * colour has its own identity. Each is anchored to a per-theme target
+   * lightness near its hue's chroma peak plus one shared `--expressive-chroma`,
+   * a flat constant so status stays legible even when the brand is dialled
+   * toward greyscale.
+   */
+  --expressive-chroma: 0.14;
+  --warning: oklch(
+    var(--warning-lightness) var(--expressive-chroma) var(--warning-hue)
+  );
+  --destructive: oklch(
+    var(--destructive-lightness) var(--expressive-chroma) var(--destructive-hue)
+  );
+  --info: oklch(var(--info-lightness) var(--expressive-chroma) var(--info-hue));
+  --success: oklch(
+    var(--success-lightness) var(--expressive-chroma) var(--success-hue)
+  );
+  /*
+   * Text that sits on the solid fill: dark ink on light fills, near-white on
+   * dark ones. The clamp turns the fill's own lightness into a hard flip around
+   * L≈0.62 — (0.62 − l) is negative for light fills (→ floor 0.12) and positive
+   * for dark ones (→ ceiling 0.99) — so on-colours keep flipping correctly if
+   * the anchors are retuned. A trace of hue chroma keeps the ink off flat grey.
+   */
+  --warning-foreground: oklch(
+    from var(--warning) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08)
+      h
+  );
+  --destructive-foreground: oklch(
+    from var(--destructive) clamp(0.12, calc((0.62 - l) * 100), 0.99)
+      calc(c * 0.08) h
+  );
+  --info-foreground: oklch(
+    from var(--info) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --success-foreground: oklch(
+    from var(--success) clamp(0.12, calc((0.62 - l) * 100), 0.99)
+      calc(c * 0.08) h
+  );
+
+  /* Status border tokens for subtle / tinted surfaces */
+  --border-destructive: oklch(from var(--destructive) l c h / 30%);
+  --border-warning: oklch(from var(--warning) l c h / 30%);
+  --border-info: oklch(from var(--info) l c h / 30%);
+  --border-brand: oklch(from var(--primary) l c h / 30%);
 
   /*
    * Selection chrome for canvas annotations (outline, resize handles).
@@ -160,23 +312,18 @@
 
   /* --- Charts (neutral ramp along the tone span) ----------------------- */
   --chart-1: oklch(
-    calc(var(--surface) + var(--tone-span) * 0.2) var(--grey-c)
-      var(--surface-hue)
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.2) c h
   );
   --chart-2: oklch(
-    calc(var(--surface) + var(--tone-span) * 0.4) var(--grey-c)
-      var(--surface-hue)
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.4) c h
   );
   --chart-3: oklch(
-    calc(var(--surface) + var(--tone-span) * 0.55) var(--grey-c)
-      var(--surface-hue)
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.55) c h
   );
   --chart-4: oklch(
-    calc(var(--surface) + var(--tone-span) * 0.7) var(--grey-c)
-      var(--surface-hue)
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.7) c h
   );
   --chart-5: oklch(
-    calc(var(--surface) + var(--tone-span) * 0.85) var(--grey-c)
-      var(--surface-hue)
+    from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.85) c h
   );
 }

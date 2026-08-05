@@ -10,16 +10,15 @@
  * are semantic — light/dark values live in the theme files (light.css /
  * dark.css), not here.
  *
- * The light half is declared in `@theme static` (not `@theme inline`, and not
- * `:root`) so Tailwind generates bg-/text-/border-/ring- utilities for every
- * step. It must follow unset-tw-colors.css, which clears the built-in scales
- * first.
- *
- * `static` matters: without it Tailwind only emits the theme variables whose
- * utilities appear in source, and semantic.css reads several steps through
- * `var()` in hand-written CSS, which the source scan cannot see. This is also
- * what makes the scale a real primitive layer — hand-authored CSS can rely on
- * any step existing.
+ * Both halves are plain rules — `:root` for light, `.dark` for dark — and this
+ * file declares VALUES only. Tailwind registration happens in theme.css, which
+ * re-declares each step self-referentially inside `@theme inline`
+ * (`--color-amber-100: var(--color-amber-100)`). That is Supabase's own split:
+ * `@theme inline` does not emit properties, it only teaches Tailwind the name,
+ * so the utility compiles to `var(--color-amber-100)` and resolves against the
+ * declaration here. One copy of every value, and the dark override is a normal
+ * cascade rule instead of a second `@theme` block (`@theme` always emits at
+ * `:root`, so it cannot be scoped).
  *
  * The dark half is a plain `.dark` rule rather than a second `@theme` block:
  * `@theme` always emits at `:root`, so it cannot be scoped. The generated
@@ -30,7 +29,7 @@
  * The scale exists so semantic.css has something to derive from.
  */
 
-@theme static {
+:root {
   --color-amber-100: hsl(39, 70%, 99%);
   --color-amber-200: hsl(40, 100%, 96.5%);
   --color-amber-300: hsl(44, 100%, 91.7%);
@@ -223,18 +222,18 @@
   --color-scale-1000: hsl(206, 5.8%, 52.3%);
   --color-scale-1100: hsl(206, 6%, 43.5%);
   --color-scale-1200: hsl(206, 24%, 9%);
-  --color-brand-100: hsla(153, 80%, 99%, 1);
+  --color-brand-100: hsla(167, 80%, 99%, 1);
   --color-brand-200: hsl(var(--brand-200));
   --color-brand-300: hsl(var(--brand-300));
   --color-brand-400: hsl(var(--brand-400));
   --color-brand-500: hsl(var(--brand-500));
   --color-brand-600: hsl(var(--brand-600));
-  --color-brand-700: hsla(149, 43%, 69%, 1);
-  --color-brand-800: hsla(154, 55%, 45%, 1);
-  --color-brand-900: hsla(153, 60%, 53%, 1);
-  --color-brand-1000: hsla(153, 50%, 50%, 1);
-  --color-brand-1100: hsla(153, 50%, 34%, 1);
-  --color-brand-1200: hsla(153, 40%, 12%, 1);
+  --color-brand-700: hsla(167, 43%, 69%, 1);
+  --color-brand-800: hsla(167, 55%, 45%, 1);
+  --color-brand-900: hsla(167, 60%, 53%, 1);
+  --color-brand-1000: hsla(167, 50%, 50%, 1);
+  --color-brand-1100: hsla(167, 50%, 34%, 1);
+  --color-brand-1200: hsla(167, 40%, 12%, 1);
 }
 
 .dark {
@@ -430,16 +429,16 @@
   --color-scale-1000: hsl(0, 0%, 49.4%);
   --color-scale-1100: #bbbbbb;
   --color-scale-1200: hsl(0, 0%, 93%);
-  --color-brand-100: hsla(153, 75%, 6%, 1);
+  --color-brand-100: hsla(167, 75%, 6%, 1);
   --color-brand-200: hsl(var(--brand-200));
   --color-brand-300: hsl(var(--brand-300));
   --color-brand-400: hsl(var(--brand-400));
   --color-brand-500: hsl(var(--brand-500));
   --color-brand-600: hsl(var(--brand-600));
-  --color-brand-700: hsla(154, 62%, 22%, 1);
-  --color-brand-800: hsla(153, 60%, 28%, 1);
-  --color-brand-900: hsla(153, 60%, 53%, 1);
-  --color-brand-1000: hsla(153, 60%, 70%, 1);
-  --color-brand-1100: hsla(153, 60%, 50%, 1);
-  --color-brand-1200: hsla(153, 60%, 95%, 1);
+  --color-brand-700: hsla(167, 62%, 22%, 1);
+  --color-brand-800: hsla(167, 60%, 28%, 1);
+  --color-brand-900: hsla(167, 60%, 53%, 1);
+  --color-brand-1000: hsla(167, 60%, 70%, 1);
+  --color-brand-1100: hsla(167, 60%, 50%, 1);
+  --color-brand-1200: hsla(167, 60%, 95%, 1);
 }
