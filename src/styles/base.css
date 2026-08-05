@@ -6,19 +6,22 @@
        `--ring` alone does not reach here — the modifier is applied at this site. */
     @apply border-border outline-ring;
   }
+  /*
+   * Font injection, Supabase-style. Their theme.css stacks read
+   * `var(--font-sans, Circular, …)` / `var(--font-source-code-pro, …)`, and
+   * apps inject the real font by setting the variable at :root (they use
+   * next/font). Circular is a licensed font we do not bundle, so `--font-sans`
+   * stays unset and the stack falls through — drop licensed @font-face rules
+   * plus a `--font-sans` declaration here to light it up. The mono seam is
+   * fed from the @fontsource package.
+   */
+  :root {
+    --font-source-code-pro: 'Source Code Pro Variable', 'Source Code Pro';
+  }
   body {
     /* Required by shadcn Base UI drawer overlay on iOS Safari */
     position: relative;
-    font-weight: var(--font-weight-normal);
     @apply bg-background text-foreground;
-  }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-heading;
   }
   :where(
     a[href],

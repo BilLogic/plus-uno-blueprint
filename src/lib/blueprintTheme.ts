@@ -64,14 +64,14 @@ export const BLUEPRINT_THEME = {
 } as const
 
 /** Set on interactive compare panels; children inherit label-rail hover. */
-export const BLUEPRINT_PANEL_LABEL_RAIL_VAR = '--blueprint-panel-label-rail'
+export const BLUEPRINT_PANEL_LABEL_RAIL_VAR = '--background-blueprint-panel-label-rail'
 /** White swimlane / path section surfaces inside interactive panels. */
-export const BLUEPRINT_PANEL_CANVAS_VAR = '--blueprint-panel-canvas'
-export const BLUEPRINT_PANEL_SECTION_FILL_VAR = '--blueprint-panel-section-fill'
+export const BLUEPRINT_PANEL_CANVAS_VAR = '--background-blueprint-panel-canvas'
+export const BLUEPRINT_PANEL_SECTION_FILL_VAR = '--background-blueprint-panel-section'
 /** Divider row backgrounds (interaction / visibility bands). */
-export const BLUEPRINT_PANEL_DIVIDER_BG_VAR = '--blueprint-panel-divider-bg'
+export const BLUEPRINT_PANEL_DIVIDER_BG_VAR = '--background-blueprint-panel-divider'
 /** Cell tint strength when an interactive panel is hovered (0–1). */
-export const BLUEPRINT_PANEL_CELL_HOVER_VAR = '--blueprint-panel-cell-hover'
+export const BLUEPRINT_PANEL_CELL_HOVER_VAR = '--background-blueprint-panel-cell-hover'
 
 export function blueprintPanelLabelRailColor(
   fallback: string = BLUEPRINT_THEME.labelRail,

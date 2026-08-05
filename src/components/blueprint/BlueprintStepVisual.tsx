@@ -106,7 +106,7 @@ export function BlueprintStepVisual({
           'h-[min(16rem,35vh)] min-h-[12.5rem]',
           className,
         )}
-        style={{ backgroundColor: 'var(--blueprint-cell-bg)' }}
+        style={{ backgroundColor: 'var(--background-blueprint-cell)' }}
         role="img"
         aria-label={ariaLabel}
       >
@@ -127,7 +127,7 @@ export function BlueprintStepVisual({
       )}
       style={{
         maxHeight: inlineMaxHeight,
-        '--blueprint-cell-bg-panel': 'transparent',
+        '--background-blueprint-cell-panel': 'transparent',
       } as CSSProperties}
       selection={selection}
       cellId={cellId}

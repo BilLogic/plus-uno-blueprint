@@ -12,8 +12,8 @@
 @plugin '@tailwindcss/forms';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/manrope';
+/* Mono seam only. Sans is Supabase's stack (Circular first) with no bundled
+ * file — see the injection note in base.css. */
 @import '@fontsource-variable/source-code-pro';
 
 /*
@@ -40,3 +40,12 @@
 @import './base.css';
 @import './blueprint.css';
 @import './print.css';
+
+/*
+ * Typography prose overrides live in a focused JS config because
+ * @tailwindcss/typography reads its theme.typography options from the JS
+ * config — not from CSS @theme tokens. Mirrors Supabase's
+ * packages/config/typography.config.js. See:
+ * https://github.com/tailwindlabs/tailwindcss-typography#customizing-the-css
+ */
+@config './typography.config.js';

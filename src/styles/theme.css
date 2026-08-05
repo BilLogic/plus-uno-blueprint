@@ -308,18 +308,24 @@
   --color-sidebar-selected-foreground: var(--sidebar-selected-foreground);
   --color-sidebar-selected-rail: var(--sidebar-selected-rail);
   --color-sidebar-ancestor: var(--sidebar-ancestor);
-  /* Supabase DS: Manrope headings, Inter body, Source Code Pro mono */
-  --font-heading: 'Manrope Variable', 'Manrope', sans-serif;
-  --font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
-  --font-mono: 'Source Code Pro Variable', 'Source Code Pro', ui-monospace, monospace;
-  /* Studio-tuned type scale (slightly smaller than Tailwind defaults) */
-  --text-sm: 0.8125rem;
-  --text-base: 0.9375rem;
-  --text-lg: 1rem;
-  --text-xl: 1.125rem;
-  --text-2xl: 1.375rem;
-  --text-3xl: 1.75rem;
-  --font-weight-normal: 450;
+  /*
+   * Supabase's font stacks, verbatim. The inner `var(--font-sans, …)` is their
+   * injection seam: `@theme inline` never emits the property, so the utility
+   * compiles to `font-family: var(--font-sans, Circular, …)` and resolves
+   * against whatever `--font-sans` the app sets at :root — Supabase injects
+   * Circular there via next/font; base.css is our equivalent hook. No heading
+   * font, no type-scale overrides, no weight overrides: Supabase defines none.
+   */
+  --font-sans: var(
+    --font-sans,
+    Circular,
+    custom-font,
+    Helvetica Neue,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  --font-mono: var(--font-source-code-pro, Source Code Pro, Office Code Pro, Menlo, monospace);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -340,15 +346,8 @@
   --width-listbox: 320px;
   --breakpoint-xs: 480px;
 
-  /*
-   * Shadows on the elevation ratios, so `shadow-*` means the same thing the
-   * surface ladder does instead of being an unrelated Tailwind default.
-   */
-  --shadow-panel: 0 1px 2px oklch(from var(--foreground) l c h / 0.06);
-  --shadow-card: 0 2px 6px oklch(from var(--foreground) l c h / 0.08);
-  --shadow-popover:
-    0 8px 24px oklch(from var(--foreground) l c h / 0.12),
-    0 2px 6px oklch(from var(--foreground) l c h / 0.06);
+  /* No --shadow-* tokens, deliberately: Supabase defines none anywhere and
+     uses Tailwind's default shadow scale at call sites. So do we. */
 
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);

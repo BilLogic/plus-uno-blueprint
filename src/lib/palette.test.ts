@@ -248,7 +248,7 @@ describe('interaction states', () => {
   ].map(([, role, body]) => ({
     role,
     props: Object.fromEntries(
-      [...body.matchAll(/(--blueprint-cell-[a-z-]+):\s*var\(--color-([a-z]+-\d+)\)/g)]
+      [...body.matchAll(/(--[a-z-]+-blueprint-cell[a-z-]*):\s*var\(--color-([a-z]+-\d+)\)/g)]
         .map(([, prop, token]) => [prop, token]),
     ) as Record<string, string>,
   }))
@@ -257,13 +257,13 @@ describe('interaction states', () => {
   // a token nothing reads does not belong on the list, because then the test
   // is asserting the stylesheet against itself rather than against the app.
   const REQUIRED = [
-    '--blueprint-cell-bg',
-    '--blueprint-cell-bg-origin',
-    '--blueprint-cell-bg-hover',
-    '--blueprint-cell-bg-pressed',
-    '--blueprint-cell-ring',
-    '--blueprint-cell-ring-soft',
-    '--blueprint-cell-text',
+    '--background-blueprint-cell',
+    '--background-blueprint-cell-origin',
+    '--background-blueprint-cell-hover',
+    '--background-blueprint-cell-pressed',
+    '--ring-blueprint-cell',
+    '--ring-blueprint-cell-soft',
+    '--foreground-blueprint-cell',
   ]
 
   it('defines every state on every lane role', () => {
@@ -281,12 +281,12 @@ describe('interaction states', () => {
       (_role, { props }) => {
         const at = (key: string) =>
           THEMES[theme].get(props[key]) as [number, number, number]
-        const rest = at('--blueprint-cell-bg')
+        const rest = at('--background-blueprint-cell')
         // A state nobody can see is not a state.
-        expect(contrast(rest, at('--blueprint-cell-bg-hover'))).toBeGreaterThan(1.03)
+        expect(contrast(rest, at('--background-blueprint-cell-hover'))).toBeGreaterThan(1.03)
         expect(
-          contrast(rest, at('--blueprint-cell-bg-pressed')),
-        ).toBeGreaterThan(contrast(rest, at('--blueprint-cell-bg-hover')))
+          contrast(rest, at('--background-blueprint-cell-pressed')),
+        ).toBeGreaterThan(contrast(rest, at('--background-blueprint-cell-hover')))
       },
     )
 
@@ -295,9 +295,9 @@ describe('interaction states', () => {
       (_role, { props }) => {
         const at = (key: string) =>
           THEMES[theme].get(props[key]) as [number, number, number]
-        const text = at('--blueprint-cell-text')
-        expect(contrast(text, at('--blueprint-cell-bg-hover'))).toBeGreaterThanOrEqual(4.5)
-        expect(contrast(text, at('--blueprint-cell-bg-pressed'))).toBeGreaterThanOrEqual(4.5)
+        const text = at('--foreground-blueprint-cell')
+        expect(contrast(text, at('--background-blueprint-cell-hover'))).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(text, at('--background-blueprint-cell-pressed'))).toBeGreaterThanOrEqual(4.5)
       },
     )
   })

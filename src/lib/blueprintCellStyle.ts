@@ -129,8 +129,8 @@ export function getBlueprintCellSurfaceStyle(
   extra?: CSSProperties,
 ): CSSProperties {
   return {
-    backgroundColor: 'var(--blueprint-cell-bg)',
-    color: 'var(--blueprint-cell-text)',
+    backgroundColor: 'var(--background-blueprint-cell)',
+    color: 'var(--foreground-blueprint-cell)',
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
     ...extra,
   }

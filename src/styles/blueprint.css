@@ -6,7 +6,7 @@
  *   1. Primitive   colors.css      --color-{family}-{step}
  *   2. Semantic    semantic.css    --background, --primary, --warning, --sidebar-*
  *   3. Tailwind    theme.css       --color-{semantic}, so utilities exist
- *   4. Component   here            --blueprint-*
+ *   4. Component   here            --{property}-blueprint-{part}-{state}
  *
  * Tier 4 is what a component sets on itself so a shared rule can read it — the
  * same shape as Radix's `--radix-popper-*` or Supabase's `--card-padding-x`. It
@@ -15,22 +15,26 @@
  * TypeScript because the value depends on row data (which lane a cell is in),
  * which CSS cannot know.
  *
+ * Names follow Supabase's component-token order — property first, component,
+ * then state (`--border-button-hover`, `--background-overlay-hover`) — with
+ * `blueprint` as the component namespace: `--background-blueprint-cell-hover`.
+ *
  * The inventory, since it is otherwise only discoverable by reading .ts:
  *
- *   --blueprint-cell-bg           "                 "
- *   --blueprint-cell-bg-hover     hover surface     "
- *   --blueprint-cell-bg-pressed   pressed surface   "
- *   --blueprint-cell-ring         outline + focus   "
- *   --blueprint-cell-ring-soft    "                 "
- *   --blueprint-cell-bg-panel     opt-in override   set by BlueprintStepVisual
- *   --blueprint-panel-label-rail  panel hover       set by getBlueprintPanelHoverCssVars
- *   --blueprint-panel-canvas      "                 "
- *   --blueprint-panel-section-fill "                "
- *   --blueprint-panel-divider-bg  "                 "
- *   --blueprint-panel-cell-hover  hover strength    "
+ *   --background-blueprint-cell              resting surface   set per lane below
+ *   --background-blueprint-cell-hover        hover surface     "
+ *   --background-blueprint-cell-pressed      pressed surface   "
+ *   --ring-blueprint-cell                    outline + focus   "
+ *   --ring-blueprint-cell-soft               "                 "
+ *   --background-blueprint-cell-panel        opt-in override   set by BlueprintStepVisual
+ *   --background-blueprint-panel-label-rail  panel hover       set by getBlueprintPanelHoverCssVars
+ *   --background-blueprint-panel-canvas      "                 "
+ *   --background-blueprint-panel-section     "                 "
+ *   --background-blueprint-panel-divider     "                 "
+ *   --background-blueprint-panel-cell-hover  hover strength    "
  *
  * None of them are declared at `:root`, deliberately. Every consumer reads them
- * as `var(--blueprint-…, fallback)`, and a root declaration would make the
+ * as `var(--…-blueprint-…, fallback)`, and a root declaration would make the
  * property always resolve, so the fallback arm — which is the default state —
  * would become unreachable.
  */
@@ -64,10 +68,10 @@
     background-color: var(--color-slate-600);
     border-color: var(--color-slate-800);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    --blueprint-panel-label-rail: var(--color-slate-600);
-    --blueprint-panel-canvas: var(--color-slate-300);
-    --blueprint-panel-section-fill: var(--color-slate-300);
-    --blueprint-panel-divider-bg: var(--color-slate-600);
+    --background-blueprint-panel-label-rail: var(--color-slate-600);
+    --background-blueprint-panel-canvas: var(--color-slate-300);
+    --background-blueprint-panel-section: var(--color-slate-300);
+    --background-blueprint-panel-divider: var(--color-slate-600);
   }
 
   [data-phase-scenario-panel]:hover:not([data-canvas-focus-active])
@@ -95,7 +99,7 @@
      takes the lane's role accent so members pop at overview zoom, plus a
      soft shadow lift over the dimmed field. */
   [data-slice-focus] [data-blueprint-cell-anchor][data-slice-member] {
-    outline: 2px solid var(--blueprint-cell-ring, var(--ring));
+    outline: 2px solid var(--ring-blueprint-cell, var(--ring));
     outline-offset: 1px;
     box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
   }
@@ -131,10 +135,10 @@
 
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
     background-color: var(
-      --blueprint-cell-bg-hover,
+      --background-blueprint-cell-hover,
       var(
-        --blueprint-cell-bg-panel,
-        var(--blueprint-cell-bg-origin, var(--blueprint-cell-bg))
+        --background-blueprint-cell-panel,
+        var(--background-blueprint-cell-origin, var(--background-blueprint-cell))
       )
     );
   }
@@ -145,7 +149,7 @@
       inset 0 0 0 1px
         color-mix(
           in srgb,
-          var(--blueprint-cell-ring-soft, var(--ring)) 42%,
+          var(--ring-blueprint-cell-soft, var(--ring)) 42%,
           transparent
         ),
       0 3px 8px rgb(0 0 0 / 0.1);
@@ -161,7 +165,7 @@
        fallback only covers a cell rendered without a lane. */
     background: color-mix(
       in srgb,
-      var(--blueprint-cell-bg-hover, var(--color-gray-1200)) 30%,
+      var(--background-blueprint-cell-hover, var(--color-gray-1200)) 30%,
       transparent
     );
     content: '';
@@ -202,13 +206,13 @@
    * needs, not just a fill. Each role below defines the same ten properties;
    * only the family changes. Nothing outside this file picks a colour.
    *
-   *   --blueprint-cell-bg           resting surface
-   *   --blueprint-cell-bg-origin    resting surface, kept for the panel chain
-   *   --blueprint-cell-bg-hover     pointer over
-   *   --blueprint-cell-bg-pressed   aria-pressed / active
-   *   --blueprint-cell-ring         2px slice-member outline
-   *   --blueprint-cell-ring-soft    focus-visible ring
-   *   --blueprint-cell-text         primary label
+   *   --background-blueprint-cell           resting surface
+   *   --background-blueprint-cell-origin    resting surface, kept for the panel chain
+   *   --background-blueprint-cell-hover     pointer over
+   *   --background-blueprint-cell-pressed   aria-pressed / active
+   *   --ring-blueprint-cell                 2px slice-member outline
+   *   --ring-blueprint-cell-soft            focus-visible ring
+   *   --foreground-blueprint-cell           primary label
    *
    * Seven, not ten. `-bg-selected`, `-text-muted` and `-border` were also
    * defined here and nothing read any of them: selection is the ring, cells
@@ -233,8 +237,8 @@
    * Steps by role: 500/600/700 for lanes, 400/500/600 for tones — a pill sits a
    * step paler than the lane it lives in. Ring is 1100 in both: step 8, Radix's
    * "border" step, is specified against the app background (steps 1–2) and
-   * measures 1.38:1 on a step-5 surface, failing SC 1.4.11. `--blueprint-cell-
-   * border` is step 8 because that IS a border, against the cell's own fill.
+   * measures 1.38:1 on a step-5 surface, failing SC 1.4.11. A per-family cell
+   * border would be step 8, because that IS a border against the cell's own fill.
    *
    * Disabled and dimmed are deliberately absent: both are opacity, applied by
    * the element, and giving them colours would let a dimmed cell drift away
@@ -242,90 +246,90 @@
    */
   /* visual */
 [data-blueprint-lane='visual'] {
-    --blueprint-cell-bg-origin: var(--color-slate-500);
-    --blueprint-cell-bg: var(--color-slate-500);
-    --blueprint-cell-bg-hover: var(--color-slate-600);
-    --blueprint-cell-bg-pressed: var(--color-slate-700);
-    --blueprint-cell-ring: var(--color-slate-1100);
-    --blueprint-cell-ring-soft: var(--color-slate-1100);
-    --blueprint-cell-text: var(--color-slate-1200);
+    --background-blueprint-cell-origin: var(--color-slate-500);
+    --background-blueprint-cell: var(--color-slate-500);
+    --background-blueprint-cell-hover: var(--color-slate-600);
+    --background-blueprint-cell-pressed: var(--color-slate-700);
+    --ring-blueprint-cell: var(--color-slate-1100);
+    --ring-blueprint-cell-soft: var(--color-slate-1100);
+    --foreground-blueprint-cell: var(--color-slate-1200);
   }
 
   /* evidence */
 [data-blueprint-lane='evidence'] {
-    --blueprint-cell-bg-origin: var(--color-blue-500);
-    --blueprint-cell-bg: var(--color-blue-500);
-    --blueprint-cell-bg-hover: var(--color-blue-600);
-    --blueprint-cell-bg-pressed: var(--color-blue-700);
-    --blueprint-cell-ring: var(--color-blue-1100);
-    --blueprint-cell-ring-soft: var(--color-blue-1100);
-    --blueprint-cell-text: var(--color-blue-1200);
+    --background-blueprint-cell-origin: var(--color-blue-500);
+    --background-blueprint-cell: var(--color-blue-500);
+    --background-blueprint-cell-hover: var(--color-blue-600);
+    --background-blueprint-cell-pressed: var(--color-blue-700);
+    --ring-blueprint-cell: var(--color-blue-1100);
+    --ring-blueprint-cell-soft: var(--color-blue-1100);
+    --foreground-blueprint-cell: var(--color-blue-1200);
   }
 
   /* actor */
 [data-blueprint-lane='actor'] {
-    --blueprint-cell-bg-origin: var(--color-green-500);
-    --blueprint-cell-bg: var(--color-green-500);
-    --blueprint-cell-bg-hover: var(--color-green-600);
-    --blueprint-cell-bg-pressed: var(--color-green-700);
-    --blueprint-cell-ring: var(--color-green-1100);
-    --blueprint-cell-ring-soft: var(--color-green-1100);
-    --blueprint-cell-text: var(--color-green-1200);
+    --background-blueprint-cell-origin: var(--color-green-500);
+    --background-blueprint-cell: var(--color-green-500);
+    --background-blueprint-cell-hover: var(--color-green-600);
+    --background-blueprint-cell-pressed: var(--color-green-700);
+    --ring-blueprint-cell: var(--color-green-1100);
+    --ring-blueprint-cell-soft: var(--color-green-1100);
+    --foreground-blueprint-cell: var(--color-green-1200);
   }
 
   /* frontstage-tech */
 [data-blueprint-lane='frontstage-tech'] {
-    --blueprint-cell-bg-origin: var(--color-violet-500);
-    --blueprint-cell-bg: var(--color-violet-500);
-    --blueprint-cell-bg-hover: var(--color-violet-600);
-    --blueprint-cell-bg-pressed: var(--color-violet-700);
-    --blueprint-cell-ring: var(--color-violet-1100);
-    --blueprint-cell-ring-soft: var(--color-violet-1100);
-    --blueprint-cell-text: var(--color-violet-1200);
+    --background-blueprint-cell-origin: var(--color-violet-500);
+    --background-blueprint-cell: var(--color-violet-500);
+    --background-blueprint-cell-hover: var(--color-violet-600);
+    --background-blueprint-cell-pressed: var(--color-violet-700);
+    --ring-blueprint-cell: var(--color-violet-1100);
+    --ring-blueprint-cell-soft: var(--color-violet-1100);
+    --foreground-blueprint-cell: var(--color-violet-1200);
   }
 
   /* frontstage-action */
 [data-blueprint-lane='frontstage-action'] {
-    --blueprint-cell-bg-origin: var(--color-pink-500);
-    --blueprint-cell-bg: var(--color-pink-500);
-    --blueprint-cell-bg-hover: var(--color-pink-600);
-    --blueprint-cell-bg-pressed: var(--color-pink-700);
-    --blueprint-cell-ring: var(--color-pink-1100);
-    --blueprint-cell-ring-soft: var(--color-pink-1100);
-    --blueprint-cell-text: var(--color-pink-1200);
+    --background-blueprint-cell-origin: var(--color-pink-500);
+    --background-blueprint-cell: var(--color-pink-500);
+    --background-blueprint-cell-hover: var(--color-pink-600);
+    --background-blueprint-cell-pressed: var(--color-pink-700);
+    --ring-blueprint-cell: var(--color-pink-1100);
+    --ring-blueprint-cell-soft: var(--color-pink-1100);
+    --foreground-blueprint-cell: var(--color-pink-1200);
   }
 
   /* backstage-tech */
 [data-blueprint-lane='backstage-tech'] {
-    --blueprint-cell-bg-origin: var(--color-lime-500);
-    --blueprint-cell-bg: var(--color-lime-500);
-    --blueprint-cell-bg-hover: var(--color-lime-600);
-    --blueprint-cell-bg-pressed: var(--color-lime-700);
-    --blueprint-cell-ring: var(--color-lime-1100);
-    --blueprint-cell-ring-soft: var(--color-lime-1100);
-    --blueprint-cell-text: var(--color-lime-1200);
+    --background-blueprint-cell-origin: var(--color-lime-500);
+    --background-blueprint-cell: var(--color-lime-500);
+    --background-blueprint-cell-hover: var(--color-lime-600);
+    --background-blueprint-cell-pressed: var(--color-lime-700);
+    --ring-blueprint-cell: var(--color-lime-1100);
+    --ring-blueprint-cell-soft: var(--color-lime-1100);
+    --foreground-blueprint-cell: var(--color-lime-1200);
   }
 
   /* backstage-action */
 [data-blueprint-lane='backstage-action'] {
-    --blueprint-cell-bg-origin: var(--color-orange-500);
-    --blueprint-cell-bg: var(--color-orange-500);
-    --blueprint-cell-bg-hover: var(--color-orange-600);
-    --blueprint-cell-bg-pressed: var(--color-orange-700);
-    --blueprint-cell-ring: var(--color-orange-1100);
-    --blueprint-cell-ring-soft: var(--color-orange-1100);
-    --blueprint-cell-text: var(--color-orange-1200);
+    --background-blueprint-cell-origin: var(--color-orange-500);
+    --background-blueprint-cell: var(--color-orange-500);
+    --background-blueprint-cell-hover: var(--color-orange-600);
+    --background-blueprint-cell-pressed: var(--color-orange-700);
+    --ring-blueprint-cell: var(--color-orange-1100);
+    --ring-blueprint-cell-soft: var(--color-orange-1100);
+    --foreground-blueprint-cell: var(--color-orange-1200);
   }
 
   /* support */
 [data-blueprint-lane='support'] {
-    --blueprint-cell-bg-origin: var(--color-amber-500);
-    --blueprint-cell-bg: var(--color-amber-500);
-    --blueprint-cell-bg-hover: var(--color-amber-600);
-    --blueprint-cell-bg-pressed: var(--color-amber-700);
-    --blueprint-cell-ring: var(--color-amber-1100);
-    --blueprint-cell-ring-soft: var(--color-amber-1100);
-    --blueprint-cell-text: var(--color-amber-1200);
+    --background-blueprint-cell-origin: var(--color-amber-500);
+    --background-blueprint-cell: var(--color-amber-500);
+    --background-blueprint-cell-hover: var(--color-amber-600);
+    --background-blueprint-cell-pressed: var(--color-amber-700);
+    --ring-blueprint-cell: var(--color-amber-1100);
+    --ring-blueprint-cell-soft: var(--color-amber-1100);
+    --foreground-blueprint-cell: var(--color-amber-1200);
   }
 
   /*
@@ -336,72 +340,72 @@
    * owns the blueprint, so the hue is the meaning here.
    */
   [data-blueprint-tone='crimson'] {
-    --blueprint-cell-bg-origin: var(--color-crimson-400);
-    --blueprint-cell-bg: var(--color-crimson-400);
-    --blueprint-cell-bg-hover: var(--color-crimson-500);
-    --blueprint-cell-bg-pressed: var(--color-crimson-600);
-    --blueprint-cell-ring: var(--color-crimson-1100);
-    --blueprint-cell-ring-soft: var(--color-crimson-1100);
-    --blueprint-cell-text: var(--color-crimson-1200);
+    --background-blueprint-cell-origin: var(--color-crimson-400);
+    --background-blueprint-cell: var(--color-crimson-400);
+    --background-blueprint-cell-hover: var(--color-crimson-500);
+    --background-blueprint-cell-pressed: var(--color-crimson-600);
+    --ring-blueprint-cell: var(--color-crimson-1100);
+    --ring-blueprint-cell-soft: var(--color-crimson-1100);
+    --foreground-blueprint-cell: var(--color-crimson-1200);
   }
 
   [data-blueprint-tone='gold'] {
-    --blueprint-cell-bg-origin: var(--color-gold-400);
-    --blueprint-cell-bg: var(--color-gold-400);
-    --blueprint-cell-bg-hover: var(--color-gold-500);
-    --blueprint-cell-bg-pressed: var(--color-gold-600);
-    --blueprint-cell-ring: var(--color-gold-1100);
-    --blueprint-cell-ring-soft: var(--color-gold-1100);
-    --blueprint-cell-text: var(--color-gold-1200);
+    --background-blueprint-cell-origin: var(--color-gold-400);
+    --background-blueprint-cell: var(--color-gold-400);
+    --background-blueprint-cell-hover: var(--color-gold-500);
+    --background-blueprint-cell-pressed: var(--color-gold-600);
+    --ring-blueprint-cell: var(--color-gold-1100);
+    --ring-blueprint-cell-soft: var(--color-gold-1100);
+    --foreground-blueprint-cell: var(--color-gold-1200);
   }
 
   [data-blueprint-tone='indigo'] {
-    --blueprint-cell-bg-origin: var(--color-indigo-400);
-    --blueprint-cell-bg: var(--color-indigo-400);
-    --blueprint-cell-bg-hover: var(--color-indigo-500);
-    --blueprint-cell-bg-pressed: var(--color-indigo-600);
-    --blueprint-cell-ring: var(--color-indigo-1100);
-    --blueprint-cell-ring-soft: var(--color-indigo-1100);
-    --blueprint-cell-text: var(--color-indigo-1200);
+    --background-blueprint-cell-origin: var(--color-indigo-400);
+    --background-blueprint-cell: var(--color-indigo-400);
+    --background-blueprint-cell-hover: var(--color-indigo-500);
+    --background-blueprint-cell-pressed: var(--color-indigo-600);
+    --ring-blueprint-cell: var(--color-indigo-1100);
+    --ring-blueprint-cell-soft: var(--color-indigo-1100);
+    --foreground-blueprint-cell: var(--color-indigo-1200);
   }
 
   [data-blueprint-tone='purple'] {
-    --blueprint-cell-bg-origin: var(--color-purple-400);
-    --blueprint-cell-bg: var(--color-purple-400);
-    --blueprint-cell-bg-hover: var(--color-purple-500);
-    --blueprint-cell-bg-pressed: var(--color-purple-600);
-    --blueprint-cell-ring: var(--color-purple-1100);
-    --blueprint-cell-ring-soft: var(--color-purple-1100);
-    --blueprint-cell-text: var(--color-purple-1200);
+    --background-blueprint-cell-origin: var(--color-purple-400);
+    --background-blueprint-cell: var(--color-purple-400);
+    --background-blueprint-cell-hover: var(--color-purple-500);
+    --background-blueprint-cell-pressed: var(--color-purple-600);
+    --ring-blueprint-cell: var(--color-purple-1100);
+    --ring-blueprint-cell-soft: var(--color-purple-1100);
+    --foreground-blueprint-cell: var(--color-purple-1200);
   }
 
   [data-blueprint-tone='red'] {
-    --blueprint-cell-bg-origin: var(--color-red-400);
-    --blueprint-cell-bg: var(--color-red-400);
-    --blueprint-cell-bg-hover: var(--color-red-500);
-    --blueprint-cell-bg-pressed: var(--color-red-600);
-    --blueprint-cell-ring: var(--color-red-1100);
-    --blueprint-cell-ring-soft: var(--color-red-1100);
-    --blueprint-cell-text: var(--color-red-1200);
+    --background-blueprint-cell-origin: var(--color-red-400);
+    --background-blueprint-cell: var(--color-red-400);
+    --background-blueprint-cell-hover: var(--color-red-500);
+    --background-blueprint-cell-pressed: var(--color-red-600);
+    --ring-blueprint-cell: var(--color-red-1100);
+    --ring-blueprint-cell-soft: var(--color-red-1100);
+    --foreground-blueprint-cell: var(--color-red-1200);
   }
 
   [data-blueprint-tone='tomato'] {
-    --blueprint-cell-bg-origin: var(--color-tomato-400);
-    --blueprint-cell-bg: var(--color-tomato-400);
-    --blueprint-cell-bg-hover: var(--color-tomato-500);
-    --blueprint-cell-bg-pressed: var(--color-tomato-600);
-    --blueprint-cell-ring: var(--color-tomato-1100);
-    --blueprint-cell-ring-soft: var(--color-tomato-1100);
-    --blueprint-cell-text: var(--color-tomato-1200);
+    --background-blueprint-cell-origin: var(--color-tomato-400);
+    --background-blueprint-cell: var(--color-tomato-400);
+    --background-blueprint-cell-hover: var(--color-tomato-500);
+    --background-blueprint-cell-pressed: var(--color-tomato-600);
+    --ring-blueprint-cell: var(--color-tomato-1100);
+    --ring-blueprint-cell-soft: var(--color-tomato-1100);
+    --foreground-blueprint-cell: var(--color-tomato-1200);
   }
 
   [data-blueprint-tone='yellow'] {
-    --blueprint-cell-bg-origin: var(--color-yellow-400);
-    --blueprint-cell-bg: var(--color-yellow-400);
-    --blueprint-cell-bg-hover: var(--color-yellow-500);
-    --blueprint-cell-bg-pressed: var(--color-yellow-600);
-    --blueprint-cell-ring: var(--color-yellow-1100);
-    --blueprint-cell-ring-soft: var(--color-yellow-1100);
-    --blueprint-cell-text: var(--color-yellow-1200);
+    --background-blueprint-cell-origin: var(--color-yellow-400);
+    --background-blueprint-cell: var(--color-yellow-400);
+    --background-blueprint-cell-hover: var(--color-yellow-500);
+    --background-blueprint-cell-pressed: var(--color-yellow-600);
+    --ring-blueprint-cell: var(--color-yellow-1100);
+    --ring-blueprint-cell-soft: var(--color-yellow-1100);
+    --foreground-blueprint-cell: var(--color-yellow-1200);
   }
 }

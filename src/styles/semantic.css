@@ -207,9 +207,9 @@
    * produces the softer glow, so one token serves both.
    *
    * This never renders over a blueprint cell: those resolve
-   * `--blueprint-cell-ring-soft`, which the `[data-blueprint-lane]` rules in
+   * `--ring-blueprint-cell-soft`, which the `[data-blueprint-lane]` rules in
    * blueprint.css always set, so the fallback in
-   * `var(--blueprint-cell-ring-soft, var(--ring))` is unreachable. `--ring` only ever sits on app chrome.
+   * `var(--ring-blueprint-cell-soft, var(--ring))` is unreachable. `--ring` only ever sits on app chrome.
    */
   --ring: oklch(from var(--primary) 0.58 calc(c * 1.3) h);
   --sidebar-border: var(--border);

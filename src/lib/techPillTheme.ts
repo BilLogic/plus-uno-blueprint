@@ -23,8 +23,8 @@ export function getTechPillToneFor(
  */
 export function getTechPillStyle(): TechPillStyle {
   return {
-    backgroundColor: 'var(--blueprint-cell-bg)',
-    color: 'var(--blueprint-cell-text)',
+    backgroundColor: 'var(--background-blueprint-cell)',
+    color: 'var(--foreground-blueprint-cell)',
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
   }
 }
