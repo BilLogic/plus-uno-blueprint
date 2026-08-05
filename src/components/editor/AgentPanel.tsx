@@ -9,6 +9,7 @@ import {
   Sparkles,
   Square,
   Trash2,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,24 +55,48 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
+import { AgentMarkdown } from '@/components/editor/AgentMarkdown'
 import { NavSection } from '@/components/editor/SidebarNav'
-import { useEditor } from '@/contexts/EditorContext'
-import { useSupabase } from '@/contexts/SupabaseProvider'
+import { Badge } from '@/components/ui/badge'
 import {
+  Attachment,
+  AttachmentAction,
+  AttachmentActions,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentTitle,
+} from '@/components/ui/attachment'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { usePathSelectionContext } from '@/hooks/usePathSelection'
+import {
+  describeChange,
   sessionSnapshot,
   subscribeToSession,
 } from '@/lib/authoringSession'
 import {
+  hydrateAgentTranscript,
   sendToAgent,
   stopAgent,
   useAgentRun,
   type TranscriptEvent,
 } from '@/lib/agent/loop'
+import {
+  setPendingAgentAttachment,
+  takePendingAgentAttachment,
+  usePendingAgentAttachment,
+} from '@/lib/agent/attachments'
+import { attachAgentPersistence } from '@/lib/agent/persistence'
+import {
+  AGENT_SKILL_COMMANDS,
+  parseSkillDraft,
+  type AgentSkillCommand,
+} from '@/lib/agent/skills'
 import { listModels } from '@/lib/agent/providers/models'
-import { getSlideDisplayLabel } from '@/types/nav'
 import {
   createAgentSession,
   deleteAgentSession,
+  hydrateAgentSessions,
   renameAgentSession,
   useAgentSessions,
   type AgentSession,
@@ -125,6 +150,15 @@ function isToday(iso: string): boolean {
 export function AgentPanel() {
   const sessions = useAgentSessions()
   const [openSessionId, setOpenSessionId] = useState<string | null>(null)
+  const { client, canWrite } = useSupabase()
+
+  // Persistence rides the authenticated client: locally everything lands in
+  // agent_sessions/agent_messages; read-only visitors stay on localStorage.
+  useEffect(() => {
+    attachAgentPersistence(canWrite ? client : null)
+    if (canWrite && client) void hydrateAgentSessions()
+    return () => attachAgentPersistence(null)
+  }, [canWrite, client])
 
   const openSession =
     openSessionId !== null
@@ -219,6 +253,7 @@ function AgentSessionsView({
   const [deleteTarget, setDeleteTarget] = useState<AgentSession | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
+  const pendingAttachment = usePendingAgentAttachment()
   const searching = searchOpen && query.trim() !== ''
   const filtered = useMemo(
     () => sessions.filter((session) => fuzzyMatches(query, session.title)),
@@ -289,6 +324,13 @@ function AgentSessionsView({
           <Plus className="size-3.5" aria-hidden />
         </Button>
       </div>
+
+      {pendingAttachment ? (
+        <p className="mx-2 mb-1 rounded-md bg-muted px-2 py-1.5 text-[11px] text-muted-foreground">
+          ✎ {pendingAttachment.label} ready — open or start a session to send
+          them.
+        </p>
+      ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {sessions.length === 0 ? (
@@ -365,6 +407,20 @@ function TranscriptRow({ event }: { event: TranscriptEvent }) {
       return (
         <Message align="end">
           <MessageContent>
+            {event.skill || event.attachmentLabel ? (
+              <div className="mb-0.5 flex justify-end gap-1">
+                {event.skill ? (
+                  <Badge variant="secondary" className="font-mono text-[10px]">
+                    /{event.skill}
+                  </Badge>
+                ) : null}
+                {event.attachmentLabel ? (
+                  <Badge variant="outline" className="text-[10px]">
+                    ✎ {event.attachmentLabel}
+                  </Badge>
+                ) : null}
+              </div>
+            ) : null}
             <Bubble variant="tinted">
               <BubbleContent className="text-xs whitespace-pre-wrap">
                 {event.text}
@@ -378,8 +434,8 @@ function TranscriptRow({ event }: { event: TranscriptEvent }) {
         <Message>
           <MessageContent>
             <Bubble variant="ghost">
-              <BubbleContent className="text-xs whitespace-pre-wrap text-foreground/90">
-                {event.text}
+              <BubbleContent className="text-foreground/90">
+                <AgentMarkdown text={event.text} className="text-xs" />
               </BubbleContent>
             </Bubble>
           </MessageContent>
@@ -424,36 +480,96 @@ function AgentChatView({
 }) {
   const settings = useAgentSettings()
   const { client } = useSupabase()
-  const { slides, selectedPhaseId, selectedScenarioId } = useEditor()
+  const mode = useCanvasModeValue()
+  const { activePathKeys } = usePathSelectionContext()
+  const changes = useSyncExternalStore(subscribeToSession, sessionSnapshot)
   const keyed = hasKey(settings)
   const [draft, setDraft] = useState('')
+  const [pendingSkill, setPendingSkill] = useState<AgentSkillCommand | null>(
+    null,
+  )
+  const attachment = usePendingAgentAttachment()
   const { events, running } = useAgentRun(session.id)
   const changeCount = useAgentChangeCount(session.id)
   const [renaming, setRenaming] = useState(false)
 
+  // Reopening a session after a reload restores its transcript from
+  // agent_messages (no-op for never-persisted sessions).
+  useEffect(() => {
+    void hydrateAgentTranscript(session.id)
+  }, [session.id])
+
+  // React-side context. What the user is *looking at* (view, selection,
+  // open panel, Design picks) comes from the UI-context bridge, collected
+  // live per round in the loop — this covers the rest: posture, filters,
+  // and the session's edit history.
   const contextNote = useMemo(() => {
-    const phase = slides.find((slide) => slide.id === selectedPhaseId)
-    const scenario = slides.find((slide) => slide.id === selectedScenarioId)
-    const lines: string[] = []
-    if (phase)
-      lines.push(`Open phase: "${getSlideDisplayLabel(phase, slides)}" (${phase.id})`)
-    if (scenario)
+    const lines: string[] = [
+      `Canvas mode: ${mode}${mode === 'design' ? ' (authoring)' : ' (read-only posture)'}`,
+    ]
+    if (activePathKeys.length > 0)
+      lines.push(`Visible path variants: ${activePathKeys.join(', ')}`)
+    const recent = [...changes].reverse().slice(0, 5)
+    if (recent.length > 0) {
       lines.push(
-        `Open scenario: "${getSlideDisplayLabel(scenario, slides)}" (${scenario.id})`,
+        'Recent changes this browser session, newest first (get_change_history has all):',
+        ...recent.map(
+          (entry) =>
+            `- ${entry.author === 'agent' ? 'agent' : 'user'}: ${describeChange(entry)}`,
+        ),
       )
+    }
     return lines.join('\n')
-  }, [selectedPhaseId, selectedScenarioId, slides])
+  }, [activePathKeys, changes, mode])
+
+  // "/" at the start of an otherwise word-only draft is a skill lookup.
+  const slashQuery =
+    !pendingSkill && draft.startsWith('/') && !draft.includes(' ')
+      ? draft.slice(1).toLowerCase()
+      : null
+  const slashMatches =
+    slashQuery !== null
+      ? AGENT_SKILL_COMMANDS.filter((command) =>
+          command.id.startsWith(slashQuery),
+        )
+      : []
+  const slashOpen = slashMatches.length > 0
+
+  const pickSkill = (command: AgentSkillCommand) => {
+    if (!command.content) return
+    setPendingSkill(command)
+    setDraft('')
+  }
 
   const send = () => {
-    const text = draft.trim()
-    if (!text || running || !client) return
+    let text = draft.trim()
+    let skill = pendingSkill
+    // Typed-through form: "/map turn my notes into a scenario" sends in one go.
+    if (!skill) {
+      const parsed = parseSkillDraft(text)
+      if (parsed?.command.content) {
+        skill = parsed.command
+        text = parsed.rest
+      }
+    }
+    const attached = takePendingAgentAttachment()
+    if (!text && skill) text = `Run ${skill.label} from the top of its flow.`
+    if (!text && attached) text = 'Here are my canvas annotations.'
+    if (!text || running || !client) {
+      // Nothing usable to send — put a taken attachment back on the shelf.
+      if (attached) setPendingAgentAttachment(attached)
+      return
+    }
     setDraft('')
+    setPendingSkill(null)
     void sendToAgent({
       client,
       sessionId: session.id,
       settings,
       contextNote,
       text,
+      skill,
+      attachment: attached,
     })
   }
 
@@ -547,7 +663,72 @@ function AgentChatView({
       />
 
       <div className="shrink-0 border-t border-border/60 p-2">
-        <div className="flex items-center gap-1.5">
+        {pendingSkill || attachment ? (
+          <div className="mb-1.5 flex flex-col gap-1.5">
+            {pendingSkill ? (
+              <div className="flex items-center gap-1">
+                <Badge variant="secondary" className="font-mono text-[10px]">
+                  {pendingSkill.label}
+                </Badge>
+                <span className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground">
+                  {pendingSkill.description}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Remove skill"
+                  onClick={() => setPendingSkill(null)}
+                >
+                  <X className="size-3" aria-hidden />
+                </Button>
+              </div>
+            ) : null}
+            {attachment ? (
+              <Attachment size="sm" className="w-full">
+                <AttachmentContent>
+                  <AttachmentTitle className="text-xs">
+                    {attachment.label}
+                  </AttachmentTitle>
+                  <AttachmentDescription className="text-[10px]">
+                    {attachment.lines.join(' · ')}
+                  </AttachmentDescription>
+                </AttachmentContent>
+                <AttachmentActions>
+                  <AttachmentAction
+                    aria-label="Remove attachment"
+                    onClick={() => setPendingAgentAttachment(null)}
+                  >
+                    <X className="size-3" aria-hidden />
+                  </AttachmentAction>
+                </AttachmentActions>
+              </Attachment>
+            ) : null}
+          </div>
+        ) : null}
+        <div className="relative flex items-center gap-1.5">
+          {/* The slash menu: type "/" to see the four skills — the same
+              SKILL.md files IDE agents run, minus their file mechanics. */}
+          {slashOpen ? (
+            <div className="absolute bottom-full left-0 z-20 mb-1.5 w-72 rounded-md border border-border bg-popover p-1 shadow-md">
+              {slashMatches.map((command) => (
+                <button
+                  key={command.id}
+                  type="button"
+                  disabled={!command.content}
+                  onClick={() => pickSkill(command)}
+                  className="flex w-full items-baseline gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
+                >
+                  <span className="shrink-0 font-mono text-xs text-foreground">
+                    {command.label}
+                  </span>
+                  <span className="min-w-0 flex-1 text-[11px] leading-snug text-muted-foreground">
+                    {command.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
           {running ? (
             <Button
               type="button"
@@ -564,12 +745,24 @@ function AgentChatView({
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
+              if (slashOpen && (event.key === 'Enter' || event.key === 'Tab')) {
+                event.preventDefault()
+                const first = slashMatches.find((command) => command.content)
+                if (first) pickSkill(first)
+                return
+              }
+              if (slashOpen && event.key === 'Escape') {
+                setDraft('')
+                return
+              }
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault()
                 send()
               }
             }}
-            placeholder={keyed ? 'Message the agent…' : 'Add a key in ⚙ first'}
+            placeholder={
+              keyed ? 'Message the agent… ("/" for skills)' : 'Add a key in ⚙ first'
+            }
             className="h-7 flex-1 text-xs"
             aria-label="Message the agent"
             disabled={!keyed}
@@ -579,7 +772,11 @@ function AgentChatView({
             size="icon-sm"
             variant="default"
             aria-label="Send"
-            disabled={!keyed || running || draft.trim() === ''}
+            disabled={
+              !keyed ||
+              running ||
+              (draft.trim() === '' && !pendingSkill && !attachment)
+            }
             onClick={send}
           >
             <SendHorizontal className="size-3.5" aria-hidden />

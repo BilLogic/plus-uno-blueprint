@@ -24,8 +24,12 @@ import {
   useViewState,
   type TabDescriptor,
 } from '@/contexts/viewStateStore'
-import { registerAgentUiBridge } from '@/lib/agent/uiBridge'
+import {
+  registerAgentUiBridge,
+  registerAgentUiContext,
+} from '@/lib/agent/uiBridge'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
+import { getSlideDisplayLabel } from '@/types/nav'
 import {
   MOTION_STRUCTURAL_EASE,
   MOTION_STRUCTURAL_MS,
@@ -49,7 +53,15 @@ const PANEL_WIDTH_PX: Record<SidebarSurface, string> = {
 }
 
 export function EditorShell() {
-  const { view, goHome, selectPhase, selectScenario } = useEditor()
+  const {
+    view,
+    goHome,
+    selectPhase,
+    selectScenario,
+    selectedPhaseId,
+    selectedScenarioId,
+    slides,
+  } = useEditor()
   const { activeTab, activateTab, openTab } = useViewState()
   const { canWrite } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -101,8 +113,43 @@ export function EditorShell() {
   // Hand the agent its navigation hands: open_phase / open_scenario tools
   // land on the same callbacks the sidebar rows use.
   useEffect(
-    () => registerAgentUiBridge({ selectPhase, selectScenario }),
+    () =>
+      registerAgentUiBridge({
+        selectPhase,
+        selectScenario,
+        openAgentSurface: () => {
+          setSurface('agent')
+          setSidebarCollapsed(false)
+        },
+      }),
     [selectPhase, selectScenario],
+  )
+
+  // The read side: what the shell itself knows about what's on screen.
+  // Ref-refreshed each render, registered once — the collector always sees
+  // the latest without effect churn.
+  const phaseSlide = slides.find((slide) => slide.id === selectedPhaseId)
+  const scenarioSlide = slides.find((slide) => slide.id === selectedScenarioId)
+  const shellContext = [
+    `View level: ${view}${view === 'home' ? ' (zoomed-out overview of all phases)' : ''}`,
+    phaseSlide
+      ? `Selected phase: "${getSlideDisplayLabel(phaseSlide, slides)}" (${phaseSlide.id})`
+      : 'Selected phase: none',
+    scenarioSlide
+      ? `Selected scenario: "${getSlideDisplayLabel(scenarioSlide, slides)}" (${scenarioSlide.id})`
+      : 'Selected scenario: none',
+    activeTab
+      ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
+      : 'Active tab: base blueprint view (no slice tab)',
+    `Sidebar: ${surface} surface${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
+  ].join('\n')
+  const shellContextRef = useRef(shellContext)
+  useEffect(() => {
+    shellContextRef.current = shellContext
+  })
+  useEffect(
+    () => registerAgentUiContext('shell', () => shellContextRef.current),
+    [],
   )
 
   const toggleSidebar = () => {

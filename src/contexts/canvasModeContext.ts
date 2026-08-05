@@ -25,6 +25,30 @@ export const CanvasModeContext = createContext<CanvasModeContextValue | null>(
   null,
 )
 
+/*
+  The shared mode store lives here (not in the provider component file) so
+  non-React code — the agent's UI-context collector — can read it too.
+*/
+let sharedMode: CanvasMode = 'view'
+let listeners: Array<() => void> = []
+
+export function setSharedCanvasMode(mode: CanvasMode) {
+  if (mode === sharedMode) return
+  sharedMode = mode
+  for (const listener of listeners) listener()
+}
+
+export function subscribeSharedCanvasMode(listener: () => void): () => void {
+  listeners = [...listeners, listener]
+  return () => {
+    listeners = listeners.filter((entry) => entry !== listener)
+  }
+}
+
+export function getSharedCanvasMode(): CanvasMode {
+  return sharedMode
+}
+
 /**
  * Null outside a provider — surfaces that never author (presentation, the
  * landing page) simply do not supply one, and the toolbar reads that as

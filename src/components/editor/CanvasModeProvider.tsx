@@ -1,12 +1,16 @@
 import { useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import {
   CanvasModeContext,
+  getSharedCanvasMode,
+  setSharedCanvasMode,
+  subscribeSharedCanvasMode,
   type CanvasMode,
 } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 
 /*
-  One mode for the whole session, module-level.
+  One mode for the whole session, module-level (store lives in
+  canvasModeContext.ts so non-React readers can reach it).
 
   This began as per-surface state ("editing a slice while reading the base
   blueprint is a normal thing to want") and lost to how it actually feels:
@@ -15,28 +19,13 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
   surface's — it follows them across tabs. Deliberately not in the URL: a
   shared link should open in View whatever the sender was doing.
 */
-let sharedMode: CanvasMode = 'view'
-let listeners: Array<() => void> = []
-
-function setSharedMode(mode: CanvasMode) {
-  if (mode === sharedMode) return
-  sharedMode = mode
-  for (const listener of listeners) listener()
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners = [...listeners, listener]
-  return () => {
-    listeners = listeners.filter((entry) => entry !== listener)
-  }
-}
 
 /** Provides the shared mode to one canvas surface. */
 export function CanvasModeProvider({ children }: { children: ReactNode }) {
   const { canWrite } = useSupabase()
   const mode = useSyncExternalStore(
-    subscribe,
-    () => sharedMode,
+    subscribeSharedCanvasMode,
+    getSharedCanvasMode,
     () => 'view' as CanvasMode,
   )
 
@@ -46,7 +35,7 @@ export function CanvasModeProvider({ children }: { children: ReactNode }) {
       // to `view` means a session that loses access mid-edit degrades to
       // reading rather than to a broken editor.
       mode: canWrite ? mode : ('view' as CanvasMode),
-      setMode: setSharedMode,
+      setMode: setSharedCanvasMode,
       available: canWrite,
     }),
     [canWrite, mode],

@@ -1,10 +1,16 @@
 import { useSyncExternalStore } from 'react'
+import {
+  deletePersistedSession,
+  loadPersistedSessions,
+  persistSession,
+} from '@/lib/agent/persistence'
 
 /**
- * Agent sessions, localStorage-backed for the UI prototype. The plan's
- * persistence unit (agent_sessions/agent_messages tables, RLS
- * authenticated-only) replaces this store without changing the panel API —
- * which is the point of keeping the API this small.
+ * Agent sessions. localStorage is the always-there layer; when the session
+ * is authenticated (local dev), every mutation also writes through to
+ * agent_sessions and `hydrateAgentSessions` merges the DB list in on boot —
+ * so sessions survive reloads and browsers, and read-only visitors lose
+ * nothing they ever had.
  */
 
 export type AgentSession = {
@@ -63,7 +69,26 @@ export function createAgentSession(title = 'New session'): AgentSession {
   }
   // Newest first — the list renders in store order.
   write([session, ...snapshot])
+  persistSession(session)
   return session
+}
+
+/**
+ * Merge the DB's sessions in (DB wins on shared ids, local-only rows stay).
+ * Called once persistence attaches; a no-op when the DB is unreachable.
+ */
+export async function hydrateAgentSessions(): Promise<void> {
+  const persisted = await loadPersistedSessions()
+  if (!persisted) return
+  const byId = new Map(persisted.map((session) => [session.id, session]))
+  const localOnly = snapshot.filter((session) => !byId.has(session.id))
+  // Local-only sessions predate persistence — push them up so the merge
+  // converges instead of forking per browser.
+  localOnly.forEach(persistSession)
+  const merged = [...persisted, ...localOnly].sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
+  )
+  write(merged)
 }
 
 /**
@@ -88,8 +113,11 @@ export function renameAgentSession(id: string, title: string) {
         : session,
     ),
   )
+  const renamed = snapshot.find((session) => session.id === id)
+  if (renamed) persistSession(renamed)
 }
 
 export function deleteAgentSession(id: string) {
   write(snapshot.filter((session) => session.id !== id))
+  deletePersistedSession(id)
 }

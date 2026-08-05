@@ -16,6 +16,7 @@ import {
 } from '@/contexts/cellPickContext'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { allCellsInReadingOrder } from '@/lib/canvasCellQuery'
 
 /** Toggle each id in or out, preserving pick order for the ones that stay. */
@@ -175,6 +176,17 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     if (multiple && !wasMultiple.current) target.clearSelection()
     wasMultiple.current = multiple
   }, [mode, picked])
+
+  // Report the gathered selection to the agent's UI-context collector —
+  // "what the user selected" in Design mode is exactly this ordered list.
+  useEffect(() => {
+    if (picked.length === 0) return
+    return registerAgentUiContext(
+      'design-picks',
+      () =>
+        `User's Design-mode selection (${picked.length} cells, in pick order): ${picked.join(', ')}`,
+    )
+  }, [picked])
 
   useEffect(() => {
     if (mode !== 'design') return

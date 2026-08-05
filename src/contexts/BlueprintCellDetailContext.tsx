@@ -18,6 +18,7 @@ import {
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
+import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 
 export type BlueprintCellPreviewHover = {
@@ -77,6 +78,19 @@ export function BlueprintCellDetailProvider({
     setDraftCell(null)
     setPreviewHover(null)
   }, [resetKey])
+
+  // Tell the agent's UI-context collector which cell the human has open in
+  // the side panel — the panel mounts under the canvas, out of the agent
+  // panel's React reach, so this goes through the module bridge.
+  useEffect(() => {
+    if (!selection) return
+    return registerAgentUiContext('cell-panel', () => {
+      const cells = selection.paths
+        .map((entry) => `${entry.pathName}: ${entry.cellId}`)
+        .join('; ')
+      return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — layer "${selection.layerName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
+    })
+  }, [selection])
 
   const selectCell = useCallback((next: BlueprintCellSelection) => {
     setSelection(next)

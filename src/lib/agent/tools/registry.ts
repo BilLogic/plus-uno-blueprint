@@ -7,7 +7,11 @@ import {
   setCellDependency,
   upsertCell,
 } from '@/lib/authoringRpc'
-import { setAgentAttribution } from '@/lib/authoringSession'
+import {
+  describeChange,
+  sessionSnapshot,
+  setAgentAttribution,
+} from '@/lib/authoringSession'
 import {
   updateCellContent,
   type CellContentUpdate,
@@ -19,6 +23,7 @@ import {
   agentFocusCell,
   agentOpenPhase,
   agentOpenScenario,
+  collectAgentUiContext,
 } from '@/lib/agent/uiBridge'
 import {
   getBlueprint,
@@ -86,6 +91,23 @@ export const TOOL_SPECS: ToolSpec[] = [
     description:
       'The owner tag vocabulary in use. ALWAYS read before writing owner or perceived_owner — reuse an existing tag unless creating one deliberately.',
     parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_ui_state',
+    description:
+      'What the user is looking at RIGHT NOW: view level, selected phase/scenario, active tab, open cell panel, Design-mode selection. Call after navigating, or whenever "this/here/what I selected" needs grounding.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_change_history',
+    description:
+      "This session's edit history — every change made in this browser session (human and agent), newest first, with what each did and whether it is revertible.",
+    parameters: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Max entries (default 30)' },
+      },
+    },
   },
   {
     name: 'open_phase',
@@ -266,6 +288,27 @@ export async function dispatchTool(
       return listSlices(client)
     case 'list_owner_tags':
       return listOwnerTags(client)
+    case 'get_ui_state': {
+      const context = collectAgentUiContext()
+      return context || 'No UI state is being reported right now.'
+    }
+    case 'get_change_history': {
+      const limit =
+        typeof args.limit === 'number' && args.limit > 0 ? args.limit : 30
+      const entries = [...sessionSnapshot()].reverse().slice(0, limit)
+      if (entries.length === 0)
+        return 'No changes recorded in this browser session yet.'
+      return entries
+        .map((entry) => {
+          const who =
+            entry.author === 'agent'
+              ? `agent${entry.agentSessionId === agentSessionId ? ' (this session)' : ''}`
+              : 'user'
+          const when = new Date(entry.at).toISOString().slice(11, 19)
+          return `[${when} UTC] ${who}: ${describeChange(entry)}${entry.revert ? '' : ' (not revertible)'}`
+        })
+        .join('\n')
+    }
     // Navigation: drives the camera, changes no data — no attribution,
     // no ledger entry.
     case 'open_phase':

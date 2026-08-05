@@ -22,6 +22,62 @@ export type PathType = 'happy' | 'unhappy' | 'exception' | 'alternative' | 'name
 export type Database = {
   public: {
     Tables: {
+      agent_messages: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          payload: Json
+          seq: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          payload: Json
+          seq: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          payload?: Json
+          seq?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'agent_messages_session_id_fkey'
+            columns: ['session_id']
+            isOneToOne: false
+            referencedRelation: 'agent_sessions'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      agent_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cell_triggers: {
         Row: {
           created_at: string
@@ -749,6 +805,8 @@ export type Database = {
   }
 }
 
+export type AgentSessionRow = Database['public']['Tables']['agent_sessions']['Row']
+export type AgentMessageRow = Database['public']['Tables']['agent_messages']['Row']
 export type Cell = Database['public']['Tables']['cells']['Row']
 export type CellTrigger = Database['public']['Tables']['cell_triggers']['Row']
 export type Layer = Database['public']['Tables']['layers']['Row']

@@ -312,11 +312,16 @@ export function ServiceOverviewView({
     () => [...blueprintsByPathId.values()],
     [blueprintsByPathId],
   )
-  // Cells open the detail panel only when zoomed into a phase/scenario
-  // (detail view, including detail-scoped slice tabs). At overview zoom the
-  // cells stay inert, so clicks fall through to the scenario/phase panels
-  // and navigate instead of opening the panel.
-  const cellDetailEnabled = isBlueprintCellDetailEnabled() && isDetail
+  // Cells open the detail panel only when a SCENARIO is the focus — either
+  // selected in the base view or scoped by a slice tab (soloScenarioId).
+  // Everywhere wider (overview zoom, a phase's row of boards) cells stay
+  // inert, so clicks fall through to the scenario/phase panels and navigate.
+  // Phase-level detail used to qualify, which reintroduced the "panel opens
+  // from the zoomed-out view" bug this gate exists to prevent.
+  const cellDetailEnabled =
+    isBlueprintCellDetailEnabled() &&
+    isDetail &&
+    (focusedScenarioId !== null || soloScenarioId != null)
 
   const focusedHeader = useMemo(() => {
     if (!isDetail) return null

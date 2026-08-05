@@ -264,10 +264,17 @@ export function TabStrip({
     <>
       {notice}
       {seed}
-      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar px-2 py-1.5">
-        {/* Home sits at the far left so it lines up with the rail's icon
-            column directly below it. */}
-        <HomeNavButton isActive={isOverview} onClick={onHome} size="icon-sm" />
+      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar pr-2 py-1.5">
+        {/* Home occupies the same 48px column as the rail below, centered,
+            so the icon stack reads as one continuous left edge. The tabs then
+            start exactly where the sidebar panel starts. */}
+        <div className="flex w-12 shrink-0 items-center justify-center">
+          <HomeNavButton
+            isActive={isOverview}
+            onClick={onHome}
+            size="icon-sm"
+          />
+        </div>
         <div
           role="tablist"
           aria-label="Open views"

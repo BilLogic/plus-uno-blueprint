@@ -13,6 +13,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { setPendingAgentAttachment } from '@/lib/agent/attachments'
+import { openAgentSurface } from '@/lib/agent/uiBridge'
 import {
   captureMarks,
   describeMarks,
@@ -31,6 +34,7 @@ import {
  */
 export function AnnotationCaptureMenu() {
   const { annotations } = useCanvasAnnotations()
+  const { canWrite } = useSupabase()
   const [busy, setBusy] = useState(false)
 
   if (annotations.length === 0) return null
@@ -42,6 +46,20 @@ export function AnnotationCaptureMenu() {
    * runs once, when someone asks for it, and the camera has usually moved
    * several times since the marks were drawn.
    */
+  // Marks live in the annotation layer's local space; cell rects come from
+  // the DOM in screen space. Undo the camera by measuring the layer itself:
+  // its on-screen rect vs its layout size gives the zoom, its origin the pan.
+  const layerElement = document.querySelector<HTMLElement>(
+    '[data-canvas-annotation-layer]',
+  )
+  const layerRect = layerElement?.getBoundingClientRect()
+  const scale =
+    layerElement && layerRect && layerElement.offsetWidth > 0
+      ? layerRect.width / layerElement.offsetWidth
+      : 1
+  const originLeft = layerRect?.left ?? 0
+  const originTop = layerRect?.top ?? 0
+
   const cellRects = Array.from(
     document.querySelectorAll('[data-blueprint-cell]'),
   ).flatMap((element) => {
@@ -50,10 +68,10 @@ export function AnnotationCaptureMenu() {
     const rect = element.getBoundingClientRect()
     if (rect.width === 0 && rect.height === 0) return []
     const bounds: MarkBounds = {
-      left: rect.left,
-      top: rect.top,
-      right: rect.right,
-      bottom: rect.bottom,
+      left: (rect.left - originLeft) / scale,
+      top: (rect.top - originTop) / scale,
+      right: (rect.right - originLeft) / scale,
+      bottom: (rect.bottom - originTop) / scale,
     }
     return [{ cellId, bounds }]
   })
@@ -115,15 +133,37 @@ export function AnnotationCaptureMenu() {
           Save {annotations.length} mark{annotations.length === 1 ? '' : 's'}
         </DropdownMenuItem>
         {/*
-          Disabled rather than hidden, uniquely here: this is the one place the
-          agent is worth advertising before it exists, because "send to the
-          agent" is what the marks are *for* and knowing it is coming changes
-          whether someone bothers to draw them.
+          Structure, not pixels: the marks resolve to the cells they overlap
+          plus their text, land on the composer as a removable chip, and the
+          chip lists exactly what will travel. Hidden without write access —
+          the agent surface does not exist on the read-only site.
         */}
-        <DropdownMenuItem disabled>
-          <MessageSquare className="size-3.5" aria-hidden />
-          Send to the agent — not built yet
-        </DropdownMenuItem>
+        {canWrite ? (
+          <DropdownMenuItem
+            onClick={() => {
+              const marks = captureMarks(annotations, cellRects)
+              const lines = describeMarks(marks)
+              setPendingAgentAttachment({
+                kind: 'annotations',
+                label: `${marks.length} canvas mark${marks.length === 1 ? '' : 's'}`,
+                lines,
+                payload: JSON.stringify(
+                  marks.map((mark) => ({
+                    type: mark.type,
+                    ...(mark.text ? { text: mark.text } : {}),
+                    overlapping_cell_ids: mark.overlaps,
+                  })),
+                  null,
+                  1,
+                ),
+              })
+              openAgentSurface()
+            }}
+          >
+            <MessageSquare className="size-3.5" aria-hidden />
+            Send to the agent
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

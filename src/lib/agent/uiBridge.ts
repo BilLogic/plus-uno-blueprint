@@ -12,6 +12,8 @@ import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
 export type AgentUiBridge = {
   selectPhase: (phaseId: string) => void
   selectScenario: (scenarioId: string) => void
+  /** Open the ✦ sidebar surface (used by "Send to the agent" hand-offs). */
+  openAgentSurface: () => void
 }
 
 let bridge: AgentUiBridge | null = null
@@ -35,9 +37,51 @@ export function agentOpenScenario(scenarioId: string): string {
   return 'Opened the scenario on the canvas.'
 }
 
+export function openAgentSurface(): boolean {
+  if (!bridge) return false
+  bridge.openAgentSurface()
+  return true
+}
+
 export function agentFocusCell(cellId: string): string {
   // Works only when the cell is mounted on the current canvas — the tool
   // description tells the model to open the scenario first.
   scrollBlueprintCellIntoView(cellId)
   return 'Scrolled the canvas to the cell (it must be on the open scenario to be visible).'
+}
+
+// ---------------------------------------------------------------------------
+// UI context — the read side of the bridge. Scattered surfaces (shell,
+// canvas viewport, cell panel, design-mode picker) each register a
+// contributor that describes their live state in a line or two; the agent
+// panel and the get_ui_state tool collect them all. Same shape as the
+// navigation bridge: module registry, so the tool layer needs no React.
+// ---------------------------------------------------------------------------
+
+type UiContextContributor = () => string | null
+
+const contributors = new Map<string, UiContextContributor>()
+
+export function registerAgentUiContext(
+  key: string,
+  contributor: UiContextContributor,
+): () => void {
+  contributors.set(key, contributor)
+  return () => {
+    if (contributors.get(key) === contributor) contributors.delete(key)
+  }
+}
+
+/** All registered contributors' lines, empty string when nothing reports. */
+export function collectAgentUiContext(): string {
+  const lines: string[] = []
+  for (const contributor of contributors.values()) {
+    try {
+      const line = contributor()
+      if (line) lines.push(line)
+    } catch {
+      // A broken contributor should never take the send down with it.
+    }
+  }
+  return lines.join('\n')
 }

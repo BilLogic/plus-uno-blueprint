@@ -11,11 +11,10 @@
 import { copyFileSync, existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const PLUGIN_REFS = resolve(
-  process.env.PLUGIN_REPO ?? '../agentic-service-blueprinting',
-  'references',
-)
+const PLUGIN = resolve(process.env.PLUGIN_REPO ?? '../agentic-service-blueprinting')
+const PLUGIN_REFS = resolve(PLUGIN, 'references')
 const VENDORED = resolve('src/lib/agent/skill/references')
+const VENDORED_SKILLS = resolve('src/lib/agent/skill/skills')
 
 const FILES = [
   'canvas-adapter.md',
@@ -23,6 +22,15 @@ const FILES = [
   'lane-vocabulary.md',
   'elicitation-protocol.md',
   'data-model.md',
+]
+
+// The four-skill architecture: these SKILL.md files are the same ones IDE
+// humans get from the plugin; the app vendors them for the /slash triggers.
+// audit and whatif join this list when the plugin ships them (plan
+// 2026-07-29-004 phases 2–3).
+const SKILLS = [
+  ['blueprint/SKILL.md', 'blueprint.md'],
+  ['slice/SKILL.md', 'slice.md'],
 ]
 
 const check = process.argv.includes('--check')
@@ -33,11 +41,17 @@ if (!existsSync(PLUGIN_REFS)) {
 }
 
 let drift = 0
-for (const file of FILES) {
-  const source = resolve(PLUGIN_REFS, file)
-  const target = resolve(VENDORED, file)
+const pairs = [
+  ...FILES.map((file) => [resolve(PLUGIN_REFS, file), resolve(VENDORED, file), file]),
+  ...SKILLS.map(([from, to]) => [
+    resolve(PLUGIN, 'skills', from),
+    resolve(VENDORED_SKILLS, to),
+    `skills/${from}`,
+  ]),
+]
+for (const [source, target, label] of pairs) {
   if (!existsSync(source)) {
-    console.error(`missing in plugin: ${file}`)
+    console.error(`missing in plugin: ${label}`)
     drift += 1
     continue
   }
@@ -46,11 +60,11 @@ for (const file of FILES) {
     readFileSync(source, 'utf8') === readFileSync(target, 'utf8')
   if (same) continue
   if (check) {
-    console.error(`drift: ${file}`)
+    console.error(`drift: ${label}`)
     drift += 1
   } else {
     copyFileSync(source, target)
-    console.log(`synced: ${file}`)
+    console.log(`synced: ${label}`)
   }
 }
 
