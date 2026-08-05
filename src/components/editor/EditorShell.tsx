@@ -401,7 +401,7 @@ export function EditorShell() {
         topSlot={
           <SidebarCollapseButton collapsed={false} onToggle={toggleSidebar} />
         }
-        bottomSlot={canWrite ? <AgentSettingsRailButton /> : undefined}
+        bottomSlot={<AgentSettingsRailButton />}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SidebarProvider

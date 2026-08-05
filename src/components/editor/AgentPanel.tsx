@@ -995,13 +995,48 @@ function DeleteSessionDialog({
 }
 
 /**
- * The ⚙ at the rail's bottom: provider, model, key. Pinned to the rail so
- * keys are reachable from any surface — and absent entirely when the
- * session cannot write (the deployed read-only site never offers it).
+ * The ⚙ at the rail's bottom: admin sign-in always; provider/model/key only
+ * when this session can write. On the deployed site the gear is therefore
+ * the front door — sign in as an admin (accounts are hand-created; public
+ * sign-ups stay disabled) and the authoring surface + agent appear. RLS is
+ * still the authority; this UI only starts a session.
  */
 export function AgentSettingsRailButton() {
   const settings = useAgentSettings()
+  const { client, session, canWrite } = useSupabase()
   const [keyDraft, setKeyDraft] = useState('')
+  const [emailDraft, setEmailDraft] = useState('')
+  const [passwordDraft, setPasswordDraft] = useState('')
+  const [authBusy, setAuthBusy] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+
+  const signIn = () => {
+    if (!client || authBusy) return
+    const email = emailDraft.trim()
+    if (!email || !passwordDraft) return
+    setAuthBusy(true)
+    setAuthError(null)
+    void client.auth
+      .signInWithPassword({ email, password: passwordDraft })
+      .then(({ error }) => {
+        setAuthBusy(false)
+        if (error) {
+          setAuthError(error.message)
+          return
+        }
+        setEmailDraft('')
+        setPasswordDraft('')
+      })
+  }
+
+  const signOut = () => {
+    if (!client || authBusy) return
+    setAuthBusy(true)
+    void client.auth.signOut().then(() => {
+      setAuthBusy(false)
+      setAuthError(null)
+    })
+  }
   const open = useAgentSettingsOpen()
   const setOpen = setAgentSettingsOpen
   // Live model list from the provider's own list-models endpoint — current
@@ -1061,6 +1096,72 @@ export function AgentSettingsRailButton() {
         </Tooltip>
         <PopoverContent side="right" align="end" className="w-72 p-3">
           <div className="flex flex-col gap-2.5">
+            <p className="text-xs font-medium text-foreground">Admin</p>
+            {session ? (
+              <div className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                  {session.user.email ?? 'Signed in'}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  disabled={authBusy}
+                  onClick={signOut}
+                >
+                  Sign out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Input
+                  type="email"
+                  value={emailDraft}
+                  onChange={(event) => setEmailDraft(event.target.value)}
+                  placeholder="admin@…"
+                  className="h-7 text-xs"
+                  aria-label="Admin email"
+                  autoComplete="email"
+                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="password"
+                    value={passwordDraft}
+                    onChange={(event) => setPasswordDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') signIn()
+                    }}
+                    placeholder="Password"
+                    className="h-7 flex-1 text-xs"
+                    aria-label="Admin password"
+                    autoComplete="current-password"
+                  />
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    disabled={
+                      authBusy || emailDraft.trim() === '' || passwordDraft === ''
+                    }
+                    onClick={signIn}
+                  >
+                    Sign in
+                  </Button>
+                </div>
+                {authError ? (
+                  <p className="text-[10px] leading-snug text-destructive">
+                    {authError}
+                  </p>
+                ) : (
+                  <p className="text-[10px] leading-snug text-muted-foreground">
+                    Signing in unlocks editing and the agent on this device.
+                  </p>
+                )}
+              </>
+            )}
+
+            {canWrite ? (
+              <>
+            <div className="my-0.5 border-t border-border/60" />
             <p className="text-xs font-medium text-foreground">Agent</p>
 
             <div className="flex items-center gap-2">
@@ -1156,6 +1257,8 @@ export function AgentSettingsRailButton() {
               kept in the browser is readable by anyone with devtools on this
               machine; use a personal key, not a shared or production one.
             </p>
+              </>
+            ) : null}
           </div>
         </PopoverContent>
       </Popover>
