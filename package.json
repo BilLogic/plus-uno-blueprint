@@ -16,7 +16,6 @@
     "supabase:types:local": "supabase gen types typescript --local > src/types/database.ts",
     "supabase:apply-goal-setting-pending": "node scripts/apply_pending_goal_setting_migrations.mjs",
     "setup:env": "cp -n .env.example .env 2>/dev/null || cp .env.example .env",
-    "test:node": "node scripts/tests/run.mjs",
     "authoring:check": "node scripts/check_authoring_key.mjs"
   },
   "dependencies": {

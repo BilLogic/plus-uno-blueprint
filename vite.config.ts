@@ -13,10 +13,10 @@ export default defineConfig({
     },
   },
   test: {
-    // Pure-function tests only for now (colour math, layout helpers). Add
-    // `environment: 'jsdom'` alongside a DOM testing library when component
-    // tests arrive.
+    // Pure-function tests only for now (colour math, layout helpers, the
+    // script-level suites migrated off node:test). Add `environment: 'jsdom'`
+    // alongside a DOM testing library when component tests arrive.
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'scripts/tests/**/*.test.mjs'],
   },
 })

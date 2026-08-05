@@ -8,7 +8,7 @@
  *
  * Run: npm test
  */
-import { test } from 'node:test'
+import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { validateDraftDependency } from '../../src/lib/dependencyValidation.ts'
 import {

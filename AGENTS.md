@@ -36,9 +36,9 @@ vocabulary).
 
 ## Commands
 
-- `npm test` — node:test via `scripts/tests/run.mjs`; a NEW test module
-  must be added to its MODULES list or it silently never runs.
-- `npm run lint` — baseline is tracked (currently ~63 problems); do not
+- `npm test` — vitest; collects `src/**/*.test.ts` and
+  `scripts/tests/**/*.test.mjs` automatically (no registration list).
+- `npm run lint` — baseline is tracked (currently ~57 problems); do not
   regress it, fixing nearby noise is welcome.
 - `npm run build` — the real type-check (`npx tsc --noEmit` trips on a
   deprecated tsconfig option; use the build).

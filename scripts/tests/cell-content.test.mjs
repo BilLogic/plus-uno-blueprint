@@ -13,7 +13,7 @@
  *
  * Run: node --test scripts/tests/cell-content.test.mjs
  */
-import { test } from 'node:test'
+import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { validateResourceUrl } from '../../src/lib/resourceUrl.ts'
 import { updateCellResources } from '../../src/lib/cellContentMutations.ts'
