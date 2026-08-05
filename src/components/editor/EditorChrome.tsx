@@ -5,38 +5,6 @@ import { cn } from '@/lib/utils'
 
 const EDITOR_TITLE = 'Uno Blueprint'
 
-/**
- * Workspace name. Since Home now goes to the overview canvas (nav plan D2),
- * the title is the sidebar's route to the orientation landing page — a
- * button when that action is wired, plain text otherwise.
- */
-function EditorTitleLabel({
-  onClick,
-  isActive = false,
-}: {
-  onClick?: () => void
-  isActive?: boolean
-}) {
-  const className = 'truncate text-sm font-medium leading-tight text-foreground'
-
-  if (!onClick) return <p className={className}>{EDITOR_TITLE}</p>
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-current={isActive ? 'page' : undefined}
-      className={cn(
-        'block w-full rounded-md px-1 py-0.5 text-left transition-colors hover:bg-sidebar-accent',
-        className,
-      )}
-      title="Go to the workspace landing page"
-    >
-      {EDITOR_TITLE}
-    </button>
-  )
-}
-
 type SidebarCollapseButtonProps = {
   collapsed: boolean
   onToggle: () => void
@@ -104,7 +72,7 @@ export function HomeNavButton({
   )
 }
 
-function WorkspaceBadges() {
+export function WorkspaceBadges() {
   const { isDevAuthoring, isEditPreview } = useSupabase()
   return (
     <>
@@ -131,28 +99,6 @@ function WorkspaceBadges() {
         </span>
       ) : null}
     </>
-  )
-}
-
-/**
- * The workspace identity group in the top nav: title and environment
- * badges. The title is a LABEL, not a control — a heading that navigates
- * reads as a bug (the landing page keeps only its boot-time entry). The
- * collapse toggle deliberately does not live here either — the sidebar has
- * exactly one toggle, at the top of the rail when expanded and on the
- * floating pill when collapsed, always the same corner.
- */
-export function TopNavWorkspace() {
-  return (
-    <div
-      className="flex min-w-0 shrink-0 items-center gap-1.5"
-      data-editor-app-title
-    >
-      <div className="min-w-0 max-w-48">
-        <EditorTitleLabel />
-      </div>
-      <WorkspaceBadges />
-    </div>
   )
 }
 

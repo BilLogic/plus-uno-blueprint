@@ -17,7 +17,7 @@ import {
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { ServiceOverviewCanvasSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { ServiceOverviewStickyHeader } from '@/components/editor/ServiceOverviewMenubarHeader'
+import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
 import {
@@ -373,9 +373,10 @@ export function ServiceOverviewView({
               paths={focusedHeader.paths}
               selectedPathIds={focusedHeader.selectedPathIds}
             />
-          ) : (
-            <ServiceOverviewStickyHeader />
-          )}
+          ) : // Overview: no navbar. The workspace tab in the top nav already
+          // names the view; a bar holding only a repeated title read as a
+          // broken fragment. The zoom pill floats over the canvas instead.
+          null}
           <div
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
             data-slide-canvas
@@ -383,6 +384,11 @@ export function ServiceOverviewView({
             {floatingChrome ? (
               <div className="pointer-events-none absolute right-4 bottom-4 z-30 [&>*]:pointer-events-auto">
                 {floatingChrome}
+              </div>
+            ) : null}
+            {!focusedHeader && !renderHeader ? (
+              <div className="pointer-events-none absolute right-4 top-3 z-30 flex items-center">
+                <NavbarZoomIndicator />
               </div>
             ) : null}
             {noPathsSelected ? (

@@ -42,7 +42,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Loader2 } from 'lucide-react'
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import { Bubble, BubbleContent } from '@/components/ui/bubble'
+import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
+import { Message, MessageContent } from '@/components/ui/message'
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from '@/components/ui/message-scroller'
 import { NavSection } from '@/components/editor/SidebarNav'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -342,40 +353,64 @@ function useAgentChangeCount(sessionId: string): number {
   return changes.filter((entry) => entry.agentSessionId === sessionId).length
 }
 
+/**
+ * One transcript row, built from the DS chat primitives: user turns are
+ * tinted bubbles on the right, agent prose is a ghost bubble, tool calls
+ * and status lines are Markers — the chat vocabulary shadcn ships, not a
+ * hand-rolled lookalike.
+ */
 function TranscriptRow({ event }: { event: TranscriptEvent }) {
   switch (event.kind) {
     case 'user':
       return (
-        <div className="rounded-md bg-muted/60 px-2 py-1.5 text-xs text-foreground">
-          {event.text}
-        </div>
+        <Message align="end">
+          <MessageContent>
+            <Bubble variant="tinted">
+              <BubbleContent className="text-xs whitespace-pre-wrap">
+                {event.text}
+              </BubbleContent>
+            </Bubble>
+          </MessageContent>
+        </Message>
       )
     case 'assistant':
       return (
-        <div className="whitespace-pre-wrap px-0.5 text-xs text-foreground/90">
-          {event.text}
-        </div>
+        <Message>
+          <MessageContent>
+            <Bubble variant="ghost">
+              <BubbleContent className="text-xs whitespace-pre-wrap text-foreground/90">
+                {event.text}
+              </BubbleContent>
+            </Bubble>
+          </MessageContent>
+        </Message>
       )
     case 'tool':
       return (
-        <div
+        <Marker
           className={cn(
-            'flex items-center gap-1.5 px-0.5 text-[11px]',
-            event.isError ? 'text-destructive' : 'text-muted-foreground',
+            'text-[11px]',
+            event.isError && 'text-destructive',
           )}
         >
-          <span aria-hidden>{event.isError ? '✕' : '✔'}</span>
-          <span className="font-mono">{event.name}</span>
-          {event.summary ? (
-            <span className="min-w-0 truncate">{event.summary}</span>
-          ) : null}
-        </div>
+          <MarkerIcon>
+            {event.isError ? (
+              <XCircle className="size-3.5" aria-hidden />
+            ) : (
+              <CheckCircle2 className="size-3.5" aria-hidden />
+            )}
+          </MarkerIcon>
+          <MarkerContent>
+            <span className="font-mono">{event.name}</span>
+            {event.summary ? <span className="ml-1.5">{event.summary}</span> : null}
+          </MarkerContent>
+        </Marker>
       )
     case 'status':
       return (
-        <p className="px-0.5 text-[11px] italic text-muted-foreground">
-          {event.text}
-        </p>
+        <Marker variant="separator" className="text-[11px] italic">
+          <MarkerContent>{event.text}</MarkerContent>
+        </Marker>
       )
   }
 }
@@ -394,13 +429,7 @@ function AgentChatView({
   const [draft, setDraft] = useState('')
   const { events, running } = useAgentRun(session.id)
   const changeCount = useAgentChangeCount(session.id)
-  const scrollRef = useRef<HTMLDivElement>(null)
-
-  // Pin the transcript to its newest line as events stream in.
-  useEffect(() => {
-    const node = scrollRef.current
-    if (node) node.scrollTop = node.scrollHeight
-  }, [events.length])
+  const [renaming, setRenaming] = useState(false)
 
   const contextNote = useMemo(() => {
     const phase = slides.find((slide) => slide.id === selectedPhaseId)
@@ -443,9 +472,22 @@ function AgentChatView({
         >
           <ChevronLeft className="size-3.5" aria-hidden />
         </Button>
-        <p className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
-          {session.title}
-        </p>
+        {/* The title is editable in place — auto-names are a default, not
+            a decision. */}
+        <button
+          type="button"
+          onClick={() => setRenaming(true)}
+          title="Rename session"
+          className="group/title flex min-w-0 flex-1 items-center gap-1 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="min-w-0 truncate text-xs font-medium text-foreground">
+            {session.title}
+          </span>
+          <Pencil
+            className="size-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/title:opacity-100"
+            aria-hidden
+          />
+        </button>
         {changeCount > 0 ? (
           <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
             ✦ {changeCount} chg
@@ -453,10 +495,12 @@ function AgentChatView({
         ) : null}
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3"
-      >
+      {/* MessageScroller owns the hard parts: anchored turns, streamed
+          replies, jump-to-latest. */}
+      <MessageScrollerProvider>
+        <MessageScroller className="relative min-h-0 flex-1">
+        <MessageScrollerViewport className="p-3">
+          <MessageScrollerContent className="flex flex-col gap-2.5">
         {events.length === 0 ? (
           keyed ? (
             <p className="text-xs text-muted-foreground">
@@ -481,13 +525,26 @@ function AgentChatView({
         ) : (
           // Index keys are safe here: the transcript is append-only.
           events.map((event, index) => (
-            <TranscriptRow key={index} event={event} />
+            <MessageScrollerItem key={index} scrollAnchor={index === events.length - 1}>
+              <TranscriptRow event={event} />
+            </MessageScrollerItem>
           ))
         )}
         {running ? (
           <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden />
         ) : null}
-      </div>
+          </MessageScrollerContent>
+        </MessageScrollerViewport>
+          <MessageScrollerButton />
+        </MessageScroller>
+      </MessageScrollerProvider>
+
+      <RenameSessionDialog
+        session={renaming ? session : null}
+        onOpenChange={(open) => {
+          if (!open) setRenaming(false)
+        }}
+      />
 
       <div className="shrink-0 border-t border-border/60 p-2">
         <div className="flex items-center gap-1.5">

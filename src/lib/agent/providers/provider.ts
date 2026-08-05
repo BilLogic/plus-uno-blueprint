@@ -10,7 +10,13 @@ import type { AgentProviderId } from '@/lib/agent/settings'
  * does not change.
  */
 
-export type AgentTextPart = { type: 'text'; text: string }
+export type AgentTextPart = {
+  type: 'text'
+  text: string
+  /** Provider-opaque reasoning signature (Gemini 3 thoughtSignature) —
+   * captured on parse and echoed back verbatim on replay. */
+  signature?: string
+}
 
 export type AgentToolCallPart = {
   type: 'tool_call'
@@ -18,6 +24,9 @@ export type AgentToolCallPart = {
   id: string
   name: string
   args: Record<string, unknown>
+  /** Gemini 3 requires function calls to be replayed WITH their
+   * thoughtSignature — omitting it is a 400. Opaque; echo verbatim. */
+  signature?: string
 }
 
 export type AgentToolResultPart = {

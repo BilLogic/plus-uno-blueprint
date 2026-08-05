@@ -5,7 +5,6 @@ import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
   FloatingSidebarPill,
   SidebarCollapseButton,
-  TopNavWorkspace,
 } from '@/components/editor/EditorChrome'
 import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
 import {
@@ -25,6 +24,7 @@ import {
   useViewState,
   type TabDescriptor,
 } from '@/contexts/viewStateStore'
+import { registerAgentUiBridge } from '@/lib/agent/uiBridge'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 import {
   MOTION_STRUCTURAL_EASE,
@@ -49,7 +49,7 @@ const PANEL_WIDTH_PX: Record<SidebarSurface, string> = {
 }
 
 export function EditorShell() {
-  const { view, goHome } = useEditor()
+  const { view, goHome, selectPhase, selectScenario } = useEditor()
   const { activeTab, activateTab, openTab } = useViewState()
   const { canWrite } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -97,6 +97,13 @@ export function EditorShell() {
     // Entering and leaving presentation both resize the canvas container.
     suppressCanvasResizeRefit()
   }, [presenting])
+
+  // Hand the agent its navigation hands: open_phase / open_scenario tools
+  // land on the same callbacks the sidebar rows use.
+  useEffect(
+    () => registerAgentUiBridge({ selectPhase, selectScenario }),
+    [selectPhase, selectScenario],
+  )
 
   const toggleSidebar = () => {
     // The width ease resizes the canvas container for 320 ms. That is
@@ -200,7 +207,7 @@ export function EditorShell() {
         <TabStrip
           isOverview={isOverview}
           onHome={goOverview}
-          leading={<TopNavWorkspace />}
+          onBase={() => activateTab(null)}
         />
 
         <div className="relative flex min-h-0 min-w-0 flex-1">

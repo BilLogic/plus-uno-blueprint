@@ -12,10 +12,14 @@ import {
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta'
 
-type GooglePart =
-  | { text: string }
-  | { functionCall: { name: string; args: Record<string, unknown> } }
-  | { functionResponse: { name: string; response: Record<string, unknown> } }
+type GooglePart = {
+  text?: string
+  functionCall?: { name: string; args: Record<string, unknown> }
+  functionResponse?: { name: string; response: Record<string, unknown> }
+  /** Gemini 3 reasoning signature — must ride back on replayed parts. */
+  thoughtSignature?: string
+  thought?: boolean
+}
 
 type GoogleContent = { role: 'user' | 'model'; parts: GooglePart[] }
 
@@ -51,10 +55,16 @@ function toContents(messages: AgentMessage[]): GoogleContent[] {
       case 'assistant':
         return {
           role: 'model',
-          parts: message.parts.map((part) =>
+          parts: message.parts.map((part): GooglePart =>
             part.type === 'text'
-              ? { text: part.text }
-              : { functionCall: { name: part.name, args: part.args } },
+              ? {
+                  text: part.text,
+                  ...(part.signature ? { thoughtSignature: part.signature } : {}),
+                }
+              : {
+                  functionCall: { name: part.name, args: part.args },
+                  ...(part.signature ? { thoughtSignature: part.signature } : {}),
+                },
           ),
         }
       case 'tool':
@@ -110,14 +120,23 @@ export const googleAdapter: AgentProviderAdapter = {
     const parts: Array<AgentTextPart | AgentToolCallPart> = []
     let call = 0
     for (const part of rawParts) {
-      if ('text' in part && part.text) parts.push({ type: 'text', text: part.text })
-      else if ('functionCall' in part)
+      // Thought-summary parts (thought: true) are display-only — skip them;
+      // replaying them corrupts the turn.
+      if (part.thought) continue
+      if (part.text)
+        parts.push({
+          type: 'text',
+          text: part.text,
+          ...(part.thoughtSignature ? { signature: part.thoughtSignature } : {}),
+        })
+      else if (part.functionCall)
         parts.push({
           type: 'tool_call',
           // Gemini issues no call ids; mint stable ones for the transcript.
           id: `call_${Date.now()}_${call++}`,
           name: part.functionCall.name,
           args: part.functionCall.args ?? {},
+          ...(part.thoughtSignature ? { signature: part.thoughtSignature } : {}),
         })
     }
     return {

@@ -1,7 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertTriangle, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { HomeNavButton } from '@/components/editor/EditorChrome'
+import { HomeNavButton, WorkspaceBadges } from '@/components/editor/EditorChrome'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -200,17 +200,13 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
 export function TabStrip({
   isOverview,
   onHome,
-  leading,
+  onBase,
 }: {
   /** The overview canvas is the current view, with no tab covering it. */
   isOverview: boolean
   onHome: () => void
-  /**
-   * Left end of the strip — the workspace title group. The strip spans the
-   * full window now (the sidebar starts below it), so the workspace
-   * identity that used to head the sidebar lives here.
-   */
-  leading?: ReactNode
+  /** Activate the base blueprint view (deactivate any tab). */
+  onBase: () => void
 }) {
   const {
     tabs,
@@ -272,17 +268,36 @@ export function TabStrip({
         {/* Home sits at the far left so it lines up with the rail's icon
             column directly below it. */}
         <HomeNavButton isActive={isOverview} onClick={onHome} size="icon-sm" />
-        {leading ? (
-          <>
-            {leading}
-            <div className="mx-1 h-5 w-px shrink-0 bg-border/80" aria-hidden />
-          </>
-        ) : null}
         <div
           role="tablist"
           aria-label="Open views"
           className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
         >
+          {/* The workspace is a PERMANENT tab, not a title: same chrome as
+              slice tabs, active whenever no tab covers the base view, and —
+              deliberately — no close button. It replaces the old clickable
+              heading, which read as a bug. */}
+          <div
+            className={cn(
+              'flex shrink-0 items-center rounded-md border text-xs',
+              activeKey === null
+                ? 'border-border bg-background shadow-sm'
+                : 'border-transparent hover:bg-accent',
+            )}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeKey === null}
+              onClick={onBase}
+              className={cn(
+                'max-w-56 truncate px-2.5 py-1 font-medium',
+                activeKey === null ? 'text-foreground' : 'text-muted-foreground',
+              )}
+            >
+              Uno Blueprint
+            </button>
+          </div>
       {tabs.map((tab) => {
         const key = tabKey(tab)
         const active = key === activeKey
@@ -342,6 +357,11 @@ export function TabStrip({
           </ContextMenu>
         )
       })}
+        </div>
+        {/* Environment badges (authoring / edit preview) keep their home in
+            the top nav, at the quiet end of the strip. */}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <WorkspaceBadges />
         </div>
         <DeleteSliceDialog
           slice={deleteTarget}

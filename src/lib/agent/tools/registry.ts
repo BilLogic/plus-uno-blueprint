@@ -16,6 +16,11 @@ import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import type { ToolSpec } from '@/lib/agent/providers/provider'
 import {
+  agentFocusCell,
+  agentOpenPhase,
+  agentOpenScenario,
+} from '@/lib/agent/uiBridge'
+import {
   getBlueprint,
   getCell,
   listOwnerTags,
@@ -81,6 +86,36 @@ export const TOOL_SPECS: ToolSpec[] = [
     description:
       'The owner tag vocabulary in use. ALWAYS read before writing owner or perceived_owner — reuse an existing tag unless creating one deliberately.',
     parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'open_phase',
+    description:
+      'Navigate the user\'s canvas to a phase. Use when asked to go to / show / open something, or to show your work after writing into it.',
+    parameters: {
+      type: 'object',
+      properties: { phase_id: str('Phase id from list_scenarios') },
+      required: ['phase_id'],
+    },
+  },
+  {
+    name: 'open_scenario',
+    description:
+      'Navigate the user\'s canvas to a scenario. Open the scenario before focus_cell.',
+    parameters: {
+      type: 'object',
+      properties: { scenario_id: str('Scenario id from list_scenarios') },
+      required: ['scenario_id'],
+    },
+  },
+  {
+    name: 'focus_cell',
+    description:
+      'Scroll the open scenario\'s canvas to a specific cell — use to point at evidence when answering questions. The cell\'s scenario must be open first (open_scenario).',
+    parameters: {
+      type: 'object',
+      properties: { cell_id: str('Cell id') },
+      required: ['cell_id'],
+    },
   },
   {
     name: 'add_step',
@@ -231,6 +266,14 @@ export async function dispatchTool(
       return listSlices(client)
     case 'list_owner_tags':
       return listOwnerTags(client)
+    // Navigation: drives the camera, changes no data — no attribution,
+    // no ledger entry.
+    case 'open_phase':
+      return agentOpenPhase(need(args, 'phase_id'))
+    case 'open_scenario':
+      return agentOpenScenario(need(args, 'scenario_id'))
+    case 'focus_cell':
+      return agentFocusCell(need(args, 'cell_id'))
   }
 
   // Everything below writes.

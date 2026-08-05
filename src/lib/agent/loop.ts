@@ -16,6 +16,7 @@ import {
   modelFor,
   type AgentSettings,
 } from '@/lib/agent/settings'
+import { autoNameSession } from '@/lib/agent/sessions'
 
 type Client = SupabaseClient<Database>
 
@@ -166,6 +167,10 @@ export async function sendToAgent(input: {
   run.controller = controller
   run.messages.push({ role: 'user', parts: [{ type: 'text', text }] })
   push(sessionId, { kind: 'user', text })
+  // First message names the session — a list of "New session" rows says
+  // nothing. Explicit renames always win (autoNameSession only replaces
+  // the default title).
+  autoNameSession(sessionId, text)
 
   try {
     for (let round = 0; round < MAX_ROUNDS; round += 1) {

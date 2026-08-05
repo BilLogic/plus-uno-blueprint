@@ -66,6 +66,20 @@ export function createAgentSession(title = 'New session'): AgentSession {
   return session
 }
 
+/**
+ * Derive a title from the first message, but only while the session still
+ * wears the default name — a deliberate rename is never overwritten.
+ */
+export function autoNameSession(id: string, firstMessage: string) {
+  const session = snapshot.find((entry) => entry.id === id)
+  if (!session || session.title !== 'New session') return
+  const condensed = firstMessage.replace(/\s+/g, ' ').trim()
+  if (!condensed) return
+  const title =
+    condensed.length > 44 ? `${condensed.slice(0, 43).trimEnd()}…` : condensed
+  renameAgentSession(id, title)
+}
+
 export function renameAgentSession(id: string, title: string) {
   write(
     snapshot.map((session) =>
