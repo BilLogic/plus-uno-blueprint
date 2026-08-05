@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
@@ -25,12 +24,10 @@ type ThemeToggleProps = {
  */
 export function ThemeToggle({ className, size = 'icon-xs' }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
+  // `resolvedTheme` is undefined until next-themes has read localStorage and
+  // the OS preference, which is exactly the "not yet known" signal we need —
+  // no mount flag, and therefore no setState in an effect.
+  const mounted = resolvedTheme !== undefined
   const isDark = resolvedTheme === 'dark'
 
   return (
