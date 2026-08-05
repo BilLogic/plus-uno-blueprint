@@ -189,6 +189,8 @@ export const TOOL_SPECS = [
   { name: 'open_cell_panel', description: "Open the cell detail side panel on the user's screen (scenario must be open).", parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
   { name: 'set_canvas_mode', description: "Switch the user's canvas between view and design mode.", parameters: { type: 'object', properties: { mode: { type: 'string', enum: ['view', 'design'], description: 'Target' } }, required: ['mode'] } },
   { name: 'set_sidebar', description: 'Collapse or expand the sidebar.', parameters: { type: 'object', properties: { collapsed: { type: 'boolean', description: 'true = collapse' } }, required: ['collapsed'] } },
+  { name: 'list_ui_commands', description: 'The LIVE list of UI controls you can drive right now (panel tabs, zoom, compare toggle, presentation, undo, …).', parameters: { type: 'object', properties: {} } },
+  { name: 'ui_command', description: 'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only — never data.', parameters: { type: 'object', properties: { command: str('Command name'), arg: str('omit unless the command takes one') }, required: ['command'] } },
   { name: 'annotate_cells', description: 'Draw ephemeral annotation boxes around cells on the open canvas (optional note). Never saved.', parameters: { type: 'object', properties: { cell_ids: { type: 'array', description: 'Cells to box', items: { type: 'string' } }, note: str('omit for none') }, required: ['cell_ids'] } },
 ]
 
@@ -329,6 +331,8 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'open_cell_panel': record.result = 'Opened the cell detail panel.'; return record.result
       case 'set_canvas_mode': record.result = `Canvas mode is now ${args.mode === 'design' ? 'design' : 'view'}.`; return record.result
       case 'set_sidebar': record.result = args.collapsed === true ? 'Sidebar collapsed.' : 'Sidebar expanded.'; return record.result
+      case 'list_ui_commands': record.result = 'cell_panel_tab — Switch the open cell panel\'s tab. arg: dependencies | evidence | resources\ncell_panel_close — Close the open cell detail panel.\nzoom — arg: in | out | fit\ngo_overview — Back to the overview\nset_scenario_view — arg: side-by-side | integrated\ntoggle_path_filter — arg: path key or name\nopen_slice_tab / present_slice / exit_presentation / close_slice_tab — arg: slice id\nclear_annotations — erase marks'; return record.result
+      case 'ui_command': record.result = `Done (${args.command}${args.arg ? `: ${args.arg}` : ''}).`; return record.result
       case 'annotate_cells': record.result = `Drew boxes around ${Array.isArray(args.cell_ids) ? args.cell_ids.length : 0} cell(s).`; return record.result
       case 'get_ui_state': record.result = 'No UI state is being reported right now.'; return record.result
       case 'get_change_history': record.result = 'No changes recorded in this browser session yet.'; return record.result

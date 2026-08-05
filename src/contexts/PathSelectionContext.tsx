@@ -1,9 +1,12 @@
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -244,6 +247,47 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
     },
     [],
   )
+
+  // Agent parity: the PATHS filter checkboxes. Reads the live catalog via
+  // a ref so registration stays stable.
+  const catalogRef = useRef(state.catalog)
+  useEffect(() => {
+    catalogRef.current = state.catalog
+  })
+  useEffect(() => {
+    const unregister = [
+      registerAgentUiCommand({
+        name: 'toggle_path_filter',
+        description:
+          'Toggle a path variant\'s visibility (the PATHS checkboxes). arg: the path key (type:name, e.g. "happy:Happy Path") or a path name.',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: path key or name')
+          const keys = [
+            ...new Set(
+              Object.values(catalogRef.current)
+                .flat()
+                .map((path) => getOverviewPathKey(path)),
+            ),
+          ]
+          const match =
+            keys.find((key) => key === arg) ??
+            keys.find((key) => key.toLowerCase().includes(arg.toLowerCase()))
+          if (!match) throw new Error(`No path matches "${arg}". Known: ${keys.join(', ')}`)
+          togglePathKey(match)
+          return `Toggled path "${match}".`
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'restore_default_paths',
+        description: 'Reset the path filter to its defaults.',
+        run: () => {
+          restoreDefaultPathKeys()
+          return 'Path filter restored to defaults.'
+        },
+      }),
+    ]
+    return () => unregister.forEach((fn) => fn())
+  }, [togglePathKey, restoreDefaultPathKeys])
 
   const value = useMemo(() => {
     const defaultPathKeys = defaultPathKeysFromCatalog(state.catalog)

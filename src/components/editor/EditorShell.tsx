@@ -28,6 +28,7 @@ import {
   registerAgentUiBridge,
   registerAgentUiContext,
 } from '@/lib/agent/uiBridge'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 import { getSlideDisplayLabel } from '@/types/nav'
 import {
@@ -80,8 +81,10 @@ export function EditorShell() {
     selectedPhaseId,
     selectedScenarioId,
     slides,
+    togglePhaseExpanded,
+    setScenarioDisplayViewType,
   } = useEditor()
-  const { activeTab, activateTab, openTab } = useViewState()
+  const { activeTab, activateTab, openTab, closeTab } = useViewState()
   const { canWrite } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
@@ -175,6 +178,99 @@ export function EditorShell() {
     [],
   )
 
+  // Agent parity: the shell-level controls (tabs, presentation, phase
+  // accordion, compare toggle). Ref-snapshotted so registration is stable
+  // while the handlers stay current.
+  type ShellCommands = {
+    goOverview: () => void
+    activateBase: () => void
+    openSliceTab: (sliceId: string, present: boolean) => void
+    closeSliceTab: (sliceId: string) => void
+    exitPresent: () => string
+    togglePhase: (phaseId: string) => void
+    setScenarioView: (view: 'side-by-side' | 'integrated') => string
+  }
+  const shellCommandsRef = useRef<ShellCommands>({
+    goOverview: () => {},
+    activateBase: () => {},
+    openSliceTab: () => {},
+    closeSliceTab: () => {},
+    exitPresent: () => 'Shell not ready yet.',
+    togglePhase: () => {},
+    setScenarioView: () => 'Shell not ready yet.',
+  })
+  useEffect(() => {
+    const commands = shellCommandsRef
+    const unregister = [
+      registerAgentUiCommand({
+        name: 'go_overview',
+        description: 'Back to the zoomed-out overview of all phases (Home).',
+        run: () => {
+          commands.current.goOverview()
+          return 'On the overview.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'activate_base_tab',
+        description: 'Bring the base blueprint view forward (deactivate any slice tab).',
+        run: () => {
+          commands.current.activateBase()
+          return 'Base blueprint view is active.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'open_slice_tab',
+        description: 'Open a slice in a tab. arg: slice id (list_slices).',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: slice id')
+          commands.current.openSliceTab(arg, false)
+          return 'Slice tab opened.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'present_slice',
+        description: 'Start presenting a slice full-bleed. arg: slice id.',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: slice id')
+          commands.current.openSliceTab(arg, true)
+          return 'Presenting the slice.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'exit_presentation',
+        description: 'Leave the running presentation back onto its slice tab.',
+        run: () => commands.current.exitPresent(),
+      }),
+      registerAgentUiCommand({
+        name: 'close_slice_tab',
+        description: 'Close a slice\'s open tab(s). arg: slice id.',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: slice id')
+          commands.current.closeSliceTab(arg)
+          return 'Tab closed.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'toggle_phase_expanded',
+        description: "Expand/collapse a phase's accordion in the sidebar. arg: phase id.",
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: phase id')
+          commands.current.togglePhase(arg)
+          return 'Toggled the phase accordion.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'set_scenario_view',
+        description: 'Switch the SELECTED scenario between its two displays. arg: side-by-side | integrated (integrated = the Compare view; needs 2+ visible paths).',
+        run: (arg) =>
+          commands.current.setScenarioView(
+            arg === 'integrated' ? 'integrated' : 'side-by-side',
+          ),
+      }),
+    ]
+    return () => unregister.forEach((fn) => fn())
+  }, [])
+
   const toggleSidebar = () => {
     // The width ease resizes the canvas container for 320 ms. That is
     // chrome moving, not the user navigating — the camera holds still.
@@ -251,6 +347,35 @@ export function EditorShell() {
     activateTab(null)
     goHome()
   }
+
+  // Latest handlers for the registered shell commands (declared above);
+  // assigned below everything they close over, inside an every-render
+  // effect (refs are not written during render).
+  const shellCommands: ShellCommands = {
+    goOverview,
+    activateBase: () => activateTab(null),
+    openSliceTab: (sliceId, present) =>
+      openTab({ kind: present ? 'present' : 'slice', sliceId }),
+    closeSliceTab: (sliceId) => {
+      closeTab(tabKey({ kind: 'slice', sliceId }))
+      closeTab(tabKey({ kind: 'present', sliceId }))
+    },
+    exitPresent: () => {
+      if (activeTab?.kind !== 'present') return 'Not presenting right now.'
+      exitPresentation(activeTab.sliceId)
+      return 'Left the presentation onto the slice tab.'
+    },
+    togglePhase: (phaseId) => togglePhaseExpanded(phaseId),
+    setScenarioView: (viewType) => {
+      const scenario = slides.find((slide) => slide.id === selectedScenarioId)
+      if (!scenario) return 'No scenario is selected — open one first.'
+      setScenarioDisplayViewType(scenario.id, viewType)
+      return `Scenario view set to ${viewType === 'integrated' ? 'Compare' : 'Side by side'}.`
+    },
+  }
+  useEffect(() => {
+    shellCommandsRef.current = shellCommands
+  })
 
   // What counts as a content switch for the crossfade. Navigation *inside*
   // the base canvas (home ⇄ detail) is a camera move, not a screen change,

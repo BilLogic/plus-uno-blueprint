@@ -20,6 +20,10 @@ import type { SliceType } from '@/lib/sliceValidation'
 import { asUpdatedAtToken } from '@/lib/optimisticConcurrency'
 import { setSharedCanvasMode } from '@/contexts/canvasModeContext'
 import {
+  listAgentUiCommands,
+  runAgentUiCommand,
+} from '@/lib/agent/uiCommands'
+import {
   describeChange,
   sessionSnapshot,
   setAgentAttribution,
@@ -180,6 +184,25 @@ export const TOOL_SPECS: ToolSpec[] = [
       type: 'object',
       properties: { cell_id: str('Cell id') },
       required: ['cell_id'],
+    },
+  },
+  {
+    name: 'list_ui_commands',
+    description:
+      'The LIVE list of UI controls you can drive right now (panel tabs, zoom, compare toggle, presentation, undo, …). Commands appear/disappear with the surfaces that own them — list before ui_command when unsure what exists.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'ui_command',
+    description:
+      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only — never data.',
+    parameters: {
+      type: 'object',
+      properties: {
+        command: str('Command name from list_ui_commands'),
+        arg: str('Argument where the command takes one; omit otherwise'),
+      },
+      required: ['command'],
     },
   },
   {
@@ -569,6 +592,10 @@ export async function dispatchTool(
       return agentOpenScenario(need(args, 'scenario_id'))
     case 'focus_cell':
       return agentFocusCell(need(args, 'cell_id'))
+    case 'list_ui_commands':
+      return listAgentUiCommands()
+    case 'ui_command':
+      return runAgentUiCommand(need(args, 'command'), s(args, 'arg'))
     case 'open_cell_panel':
       return agentOpenCellPanel(need(args, 'cell_id'))
     case 'set_canvas_mode': {

@@ -1,4 +1,5 @@
 import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   ExternalLink,
   FileSearch,
@@ -237,6 +238,39 @@ function BlueprintCellDetailPanelBody() {
   const [closingDraft, setClosingDraft] = useState(draftCell)
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
+
+  // Agent parity: the panel's own controls, registered while it is open.
+  useEffect(() => {
+    const unregister = [
+      registerAgentUiCommand({
+        name: 'cell_panel_tab',
+        description: "Switch the open cell panel's tab. arg: dependencies | evidence | resources",
+        run: (arg) => {
+          const tab = arg === 'evidence' || arg === 'resources' ? arg : 'dependencies'
+          setActiveTab(tab)
+          return `Cell panel is on the ${tab} tab.`
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'cell_panel_expand',
+        description: 'Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
+        run: (arg) => {
+          const wide = arg !== 'false'
+          setExpanded(wide)
+          return wide ? 'Cell panel expanded.' : 'Cell panel back to normal width.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'cell_panel_close',
+        description: 'Close the open cell detail panel.',
+        run: () => {
+          clearSelection()
+          return 'Cell panel closed.'
+        },
+      }),
+    ]
+    return () => unregister.forEach((fn) => fn())
+  }, [clearSelection])
   const [addingDependency, setAddingDependency] = useState(false)
   const { canWrite } = useSupabase()
   // View mode presents everything read-only; every edit affordance in this

@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useZoomPanViewport } from '@/hooks/useZoomPanViewport'
 import { CanvasAnnotationLayer } from '@/components/editor/CanvasAnnotationLayer'
 import { CanvasAnnotationToolbar } from '@/components/editor/CanvasAnnotationToolbar'
 import { CanvasSelectionProvider } from '@/components/editor/CanvasSelectionProvider'
 import { CanvasPenCursor } from '@/components/editor/CanvasPenCursor'
 import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import { CanvasAnnotationProvider } from '@/contexts/CanvasAnnotationProvider'
 import { usePublishCanvasZoomChrome } from '@/contexts/CanvasZoomChromeContext'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
@@ -58,6 +59,9 @@ function ZoomPanViewportInner({
     zoom,
     isPanning,
     pointerHandlers,
+    zoomIn,
+    zoomOut,
+    fitToView,
   } = useZoomPanViewport({
     resetKey,
     panIgnoreSelector,
@@ -73,6 +77,21 @@ function ZoomPanViewportInner({
   })
 
   usePublishCanvasZoomChrome(onResetView)
+
+  // Agent parity: camera controls (otherwise keyboard-only ⌘+/⌘−/⌘0).
+  useEffect(() => {
+    return registerAgentUiCommand({
+      name: 'zoom',
+      description:
+        'Zoom the canvas camera. arg: in | out | fit (fit the current focus)',
+      run: (arg) => {
+        if (arg === 'in') zoomIn()
+        else if (arg === 'out') zoomOut()
+        else fitToView({ animate: true })
+        return `Camera: ${arg === 'in' || arg === 'out' ? `zoomed ${arg}` : 'fit to view'}.`
+      },
+    })
+  }, [zoomIn, zoomOut, fitToView])
 
   return (
     // The mode provider is mounted per *surface* (EditorShell for the base

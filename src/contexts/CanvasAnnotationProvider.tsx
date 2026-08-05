@@ -15,6 +15,7 @@ import {
 } from '@/lib/canvasAnnotations'
 import { CanvasAnnotationContext } from '@/contexts/canvasAnnotationContext'
 import { registerAgentAnnotator } from '@/lib/agent/uiBridge'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 
 type CanvasAnnotationProviderProps = {
   children: ReactNode
@@ -123,6 +124,19 @@ export function CanvasAnnotationProvider({
         return `Drew boxes around ${drawn} cell(s)${note ? ' with a note' : ''}. Marks are ephemeral — the capture menu saves or sends them.`
       }),
     [],
+  )
+
+  useEffect(
+    () =>
+      registerAgentUiCommand({
+        name: 'clear_annotations',
+        description: 'Erase every annotation mark from the canvas scratch layer.',
+        run: () => {
+          clearAnnotations()
+          return 'Annotations cleared.'
+        },
+      }),
+    [clearAnnotations],
   )
 
   const value = useMemo(
