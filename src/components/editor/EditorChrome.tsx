@@ -1,4 +1,5 @@
 import { Home, PanelLeft } from 'lucide-react'
+import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -131,6 +132,7 @@ export function EditorSidebarWorkspaceHeader({
       <div className="min-w-0 flex-1">
         <EditorTitleLabel onClick={onWorkspaceTitle} isActive={isLanding} />
       </div>
+      <ThemeToggle />
       {onToggleSidebar ? (
         <SidebarCollapseButton
           collapsed={sidebarCollapsed}

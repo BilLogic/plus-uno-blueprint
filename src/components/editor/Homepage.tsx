@@ -91,7 +91,10 @@ export function Homepage() {
             <Button
               type="button"
               onClick={enterCanvas}
-              className="h-9 shrink-0 bg-[#0472A8] px-3.5 font-heading font-semibold text-white shadow-sm hover:bg-[#036090] focus-visible:border-[#0472A8] focus-visible:ring-[#0472A8]/40"
+              // The one primary action on the landing page, so it takes the
+              // brand fill. It used to hardcode the PLUS blue #0472A8, which
+              // predates the token system and did not move with the theme.
+              className="h-9 shrink-0 bg-primary px-3.5 font-heading font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
             >
               View PLUS Blueprints
             </Button>
