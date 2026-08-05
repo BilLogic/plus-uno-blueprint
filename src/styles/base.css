@@ -43,15 +43,3 @@
     @apply font-sans;
   }
 }
-
-/* ---------------------------------------------------------------------------
- * Navigational motion.
- *
- * One vocabulary, taken from the sidebar collapse (the motion that was
- * already right): structural moves are 320 ms on cubic-bezier(0.22, 1,
- * 0.36, 1), opacity crossfades are 200 ms ease-out with a 75 ms stagger
- * between an out/in pair. The JS-side constants live in `lib/motion.ts`.
- *
- * These are CSS animations rather than JS-driven class flips so they need
- * no rAF tick to start — the element simply mounts (or gains
- * `data-leaving`) and the animation runs.

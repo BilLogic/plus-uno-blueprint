@@ -98,8 +98,3 @@
     animation: none !important;
   }
 }
-
-/* ---------------------------------------------------------------------------
- * Print / PDF export (Cmd+P → Save as PDF).
- * Goal: while viewing a blueprint, printing yields the per-path blueprint grid
- * at natural scale on a white page — no app chrome, no zoom/pan transform.

@@ -10,11 +10,16 @@
  * are semantic — light/dark values live in the theme files (light.css /
  * dark.css), not here.
  *
- * theme.css references these vars from its @theme inline block so Tailwind v4
- * generates the bg-/text-/border-/ring- utilities.
+ * The light half is declared in `@theme` (not `@theme inline`, and not `:root`)
+ * so Tailwind generates bg-/text-/border-/ring- utilities for every step. It
+ * must follow unset-tw-colors.css, which clears the built-in scales first.
+ *
+ * The dark half is a plain `.dark` rule rather than a second `@theme` block:
+ * `@theme` always emits at `:root`, so it cannot be scoped. The generated
+ * utilities reference `var(--color-*)`, so overriding the property is enough.
  */
 
-:root {
+@theme {
   --color-amber-100: hsl(39, 70%, 99%);
   --color-amber-200: hsl(40, 100%, 96.5%);
   --color-amber-300: hsl(44, 100%, 91.7%);
@@ -221,7 +226,7 @@
   --color-brand-1200: hsla(153, 40%, 12%, 1);
 }
 
-[data-theme*='dark'] {
+.dark {
   --color-amber-100: hsl(36, 100%, 6.1%);
   --color-amber-200: hsl(35, 100%, 7.6%);
   --color-amber-300: hsl(32, 100%, 10.2%);
