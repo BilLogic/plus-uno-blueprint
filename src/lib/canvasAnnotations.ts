@@ -1,3 +1,6 @@
+import { getContrastRatio } from '@/lib/blueprintCellStyle'
+import { RADIX_LIGHT } from '@/lib/radixLight'
+
 export type CanvasAnnotationTool =
   | 'select'
   | 'pen'
@@ -63,52 +66,60 @@ export type CanvasAnnotation =
   | TextAnnotation
   | StickyAnnotation
 
-export const ANNOTATION_INK = '#111827'
-export const ANNOTATION_STICKY_BG = '#FACC15'
+export const ANNOTATION_INK: string = RADIX_LIGHT.slate1200
+export const ANNOTATION_PAPER: string = '#FFFFFF'
+export const ANNOTATION_STICKY_BG: string = RADIX_LIGHT.yellow500
 export const ANNOTATION_DEFAULT_STROKE = 2.5
 export const ANNOTATION_STICKY_SIZE = { width: 160, height: 120 }
 
-/** FigJam-style sticky pastel fills. */
+/**
+ * Sticky fills — step 500, the same weight as the blueprint cells they sit
+ * beside, so a note reads as another object on the board rather than a
+ * different material.
+ */
 export const ANNOTATION_STICKY_SWATCHES = [
-  '#FACC15',
-  '#FDE68A',
-  '#86EFAC',
-  '#6EE7B7',
-  '#93C5FD',
-  '#A5B4FC',
-  '#C4B5FD',
-  '#F9A8D4',
-  '#FDA4AF',
-  '#FDBA74',
-  '#E5E7EB',
-  '#FFFFFF',
+  RADIX_LIGHT.yellow500,
+  RADIX_LIGHT.amber500,
+  RADIX_LIGHT.lime500,
+  RADIX_LIGHT.green500,
+  RADIX_LIGHT.blue500,
+  RADIX_LIGHT.indigo500,
+  RADIX_LIGHT.violet500,
+  RADIX_LIGHT.pink500,
+  RADIX_LIGHT.red500,
+  RADIX_LIGHT.orange500,
+  RADIX_LIGHT.slate500,
+  ANNOTATION_PAPER,
 ] as const
 
-/** Soft fills — readable over board content without overpowering it. */
+/**
+ * Shape fills — step 300. One step paler than the cells, which is what lets a
+ * filled rectangle sit over a lane without hiding it.
+ */
 export const ANNOTATION_FILL_SWATCHES = [
-  '#FEF3C7',
-  '#FFEDD5',
-  '#FEE2E2',
-  '#FCE7F3',
-  '#EDE9FE',
-  '#DBEAFE',
-  '#D1FAE5',
-  '#E5E7EB',
-  '#FFFFFF',
-  '#111827',
+  RADIX_LIGHT.amber300,
+  RADIX_LIGHT.orange300,
+  RADIX_LIGHT.red300,
+  RADIX_LIGHT.pink300,
+  RADIX_LIGHT.violet300,
+  RADIX_LIGHT.blue300,
+  RADIX_LIGHT.green300,
+  RADIX_LIGHT.slate300,
+  ANNOTATION_PAPER,
+  ANNOTATION_INK,
 ] as const
 
-/** Strong outline colors. */
+/** Outline colours — step 1100, the text weight, so a 1.5px stroke still reads. */
 export const ANNOTATION_STROKE_SWATCHES = [
-  '#111827',
-  '#FFFFFF',
-  '#DC2626',
-  '#EA580C',
-  '#CA8A04',
-  '#16A34A',
-  '#2563EB',
-  '#7C3AED',
-  '#DB2777',
+  ANNOTATION_INK,
+  ANNOTATION_PAPER,
+  RADIX_LIGHT.red1100,
+  RADIX_LIGHT.orange1100,
+  RADIX_LIGHT.yellow1100,
+  RADIX_LIGHT.green1100,
+  RADIX_LIGHT.blue1100,
+  RADIX_LIGHT.violet1100,
+  RADIX_LIGHT.pink1100,
 ] as const
 
 export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
@@ -117,17 +128,24 @@ export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
  * Thick is intentionally much heavier so it reads at overview zoom.
  */
 export const ANNOTATION_PEN_STROKE_WIDTHS = [3, 14] as const
-/** Soft board-friendly pen colors (FigJam-like). */
+/**
+ * Pen colors — Radix step 900, the solid fill step, plus ink and paper.
+ *
+ * These used to be Tailwind's 300-level tints (#FCA5A5, #FDBA74, …), which are
+ * lighter than the step-500 cell fills they get drawn on: a pen stroke was
+ * fainter than its own background. Step 9 is the vivid step, so every swatch now
+ * reads against the board.
+ */
 export const ANNOTATION_PEN_SWATCHES = [
-  '#111827',
-  '#6B7280',
-  '#FCA5A5',
-  '#FDBA74',
-  '#FDE047',
-  '#86EFAC',
-  '#93C5FD',
-  '#C4B5FD',
-  '#FFFFFF',
+  RADIX_LIGHT.slate1200,
+  RADIX_LIGHT.slate900,
+  RADIX_LIGHT.red900,
+  RADIX_LIGHT.orange900,
+  RADIX_LIGHT.amber900,
+  RADIX_LIGHT.green900,
+  RADIX_LIGHT.blue900,
+  RADIX_LIGHT.violet900,
+  ANNOTATION_PAPER,
 ] as const
 export const ANNOTATION_FONT_SIZES = [12, 14, 18, 24, 32, 48] as const
 export const ANNOTATION_MIN_SIZE = { width: 48, height: 40 } as const
@@ -149,11 +167,19 @@ export function annotationFontSizeLabel(fontSize: number): string {
   return ANNOTATION_FONT_SIZE_LABELS[fontSize] ?? `${fontSize}px`
 }
 
-/** Text on a filled shape — light fills get dark text, dark fills get white. */
+/**
+ * Text on a filled shape — whichever of ink and paper reads better on the fill.
+ *
+ * Measured rather than matched against a hardcoded set of dark hexes: that set
+ * listed three specific values, so any fill outside it silently got dark ink,
+ * including a dark one added later.
+ */
 export function annotationTextOnFill(fillColor: string | null): string {
   if (!fillColor) return ANNOTATION_INK
-  const darkFills = new Set(['#111827', '#1F2937', '#0F172A'])
-  return darkFills.has(fillColor.toUpperCase()) ? '#FFFFFF' : ANNOTATION_INK
+  return getContrastRatio(ANNOTATION_INK, fillColor) >=
+    getContrastRatio(ANNOTATION_PAPER, fillColor)
+    ? ANNOTATION_INK
+    : ANNOTATION_PAPER
 }
 
 export function createAnnotationId(): string {

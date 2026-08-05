@@ -114,6 +114,22 @@
   --color-indigo-1000: hsl(226, 58.6%, 51.3%);
   --color-indigo-1100: hsl(226, 55%, 45%);
   --color-indigo-1200: hsl(226, 62%, 17%);
+  /* Lime is not in Supabase's set. Added for the blueprint chartreuse lane:
+     the shipped families leave a gap between amber (40°) and green (140°), and
+     collapsing that lane onto yellow would sit it next to amber. Values are
+     @radix-ui/colors v3 lime, converted to hsl() to match the file. */
+  --color-lime-100: hsl(80, 42.9%, 98.6%);
+  --color-lime-200: hsl(77, 41.2%, 96.7%);
+  --color-lime-300: hsl(75, 64.0%, 90.2%);
+  --color-lime-400: hsl(76, 63.0%, 84.1%);
+  --color-lime-500: hsl(78, 57.5%, 77.8%);
+  --color-lime-600: hsl(80, 49.7%, 71.2%);
+  --color-lime-700: hsl(82, 42.9%, 62.9%);
+  --color-lime-800: hsl(85, 40.2%, 52.2%);
+  --color-lime-900: hsl(81, 80.3%, 66.1%);
+  --color-lime-1000: hsl(81, 75.5%, 60.0%);
+  --color-lime-1100: hsl(85, 45.0%, 33.5%);
+  --color-lime-1200: hsl(75, 39.1%, 18.0%);
   --color-orange-100: hsl(24, 70%, 99%);
   --color-orange-200: hsl(24, 83.3%, 97.6%);
   --color-orange-300: hsl(24, 100%, 95.3%);
@@ -321,6 +337,22 @@
   --color-indigo-1000: hsl(227, 75.2%, 61.6%);
   --color-indigo-1100: hsl(228, 100%, 75.9%);
   --color-indigo-1200: hsl(226, 83%, 96.3%);
+  /* Lime is not in Supabase's set. Added for the blueprint chartreuse lane:
+     the shipped families leave a gap between amber (40°) and green (140°), and
+     collapsing that lane onto yellow would sit it next to amber. Values are
+     @radix-ui/colors v3 lime, converted to hsl() to match the file. */
+  --color-lime-100: hsl(77, 22.6%, 6.1%);
+  --color-lime-200: hsl(90, 23.8%, 8.2%);
+  --color-lime-300: hsl(93, 28.1%, 12.5%);
+  --color-lime-400: hsl(92, 31.0%, 16.5%);
+  --color-lime-500: hsl(91, 32.0%, 20.2%);
+  --color-lime-600: hsl(92, 32.3%, 24.3%);
+  --color-lime-700: hsl(91, 33.3%, 28.8%);
+  --color-lime-800: hsl(90, 35.3%, 33.9%);
+  --color-lime-900: hsl(81, 80.3%, 66.1%);
+  --color-lime-1000: hsl(78, 100.0%, 72.0%);
+  --color-lime-1100: hsl(80, 69.9%, 66.1%);
+  --color-lime-1200: hsl(80, 79.2%, 84.9%);
   --color-orange-100: hsl(30, 70%, 7.2%);
   --color-orange-200: hsl(28, 100%, 8.4%);
   --color-orange-300: hsl(26, 91.1%, 11.6%);

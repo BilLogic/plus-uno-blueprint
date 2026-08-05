@@ -1,4 +1,5 @@
 import type { BlueprintLayer } from '@/types/blueprint'
+import { RADIX_LIGHT } from '@/lib/radixLight'
 import {
   shouldShowInteractionLineAfter,
   shouldShowVisibilityLineAfter,
@@ -90,16 +91,30 @@ export function getBlueprintPanelHoverCssVars(): Record<string, string> {
   }
 }
 
-/** Layer fills — readable pastels that pair with ring-based button states. */
+/**
+ * Layer fills — Radix step 500 across seven hues plus a neutral.
+ *
+ * Previously eight hand-picked pastels with no shared construction, which left
+ * them unevenly saturated: chartreuse was vivid enough to read as a highlight
+ * while powder blue was nearly white. Step 500 is the Radix "component
+ * surface" step, so every lane now sits at the same perceptual weight and every
+ * one of them clears 15:1 against the black cell text.
+ *
+ * The key names are kept — they are the vocabulary the lane map and Figma both
+ * use — but each now points at a scale step rather than a one-off value. Lime
+ * exists in colors.css only for `chartreuse`: the families Supabase ships leave
+ * a gap between amber (40°) and green (140°), and folding that lane into yellow
+ * would have put it next to `cream`.
+ */
 export const BLUEPRINT_CELL_PALETTE = {
-  powderBlue: '#DDEEF0',
-  chartreuse: '#C9E882',
-  peach: '#F5DFD0',
-  lavender: '#EDE0F5',
-  cream: '#F8E8D4',
-  mint: '#E0F0E8',
-  blush: '#F8DDE8',
-  visual: '#F2F2F4',
+  powderBlue: RADIX_LIGHT.blue500,
+  chartreuse: RADIX_LIGHT.lime500,
+  peach: RADIX_LIGHT.orange500,
+  lavender: RADIX_LIGHT.violet500,
+  cream: RADIX_LIGHT.amber500,
+  mint: RADIX_LIGHT.green500,
+  blush: RADIX_LIGHT.pink500,
+  visual: RADIX_LIGHT.slate500,
   charcoal: '#000000',
 } as const
 
