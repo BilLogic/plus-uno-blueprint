@@ -140,10 +140,47 @@ describe('path badges', () => {
     })
   })
 
+  describe.each(['light', 'dark'] as const)('%s open set', (theme) => {
+    // The type defaults were measured above, but a named path draws its badge
+    // from the open set — seven more fills that also render white text.
+    const open = [
+      ...new Set(
+        Array.from({ length: 40 }, (_, i) =>
+          getPathColor({ path_type: 'named', name: `Path ${i}` }),
+        ),
+      ),
+    ]
+    it.each(open)('%s carries white text', (token) => {
+      const ink = resolve('--color-gray-100', theme)
+      expect(contrast(resolve(token, theme), ink)).toBeGreaterThanOrEqual(4.5)
+    })
+  })
+
   it('separates two unregistered named paths', () => {
     const a = getPathColor({ path_type: 'named', name: 'Alpha' })
     const b = getPathColor({ path_type: 'named', name: 'Beta' })
     expect(a === b).toBe(false)
+  })
+
+  it('tells the named paths on the live board apart without colour', () => {
+    // These five are what the database actually holds. They were all rendering
+    // `7 4 2 4` — registered, so the dash fell through to the type default —
+    // which left colour as the only channel (SC 1.4.1).
+    const live = [
+      'Set Goals',
+      'Check Goals',
+      'Update Goals',
+      'Set Goals Edge Case',
+      'Update Goals Edge Case',
+    ]
+    const dashes = live.map((name) =>
+      getPathDashArray({ path_type: 'named', name }),
+    )
+    expect(new Set(dashes).size).toBe(live.length)
+    const colours = live.map((name) =>
+      getPathColor({ path_type: 'named', name }),
+    )
+    expect(new Set(colours).size).toBe(live.length)
   })
 
   it('pairs a distinct dash with every family in the open set', () => {

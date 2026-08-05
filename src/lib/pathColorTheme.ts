@@ -6,7 +6,8 @@ export type PathColorInput = {
 }
 
 /**
- * Primary accent per path type — also used as defaults for unnamed paths.
+ * Primary accent per path type — the default when a path's own name is not
+ * pinned and its type is not one of the open-ended two.
  *
  * Radix step 1100, not the Tailwind v3 defaults these used to be (#10B981 and
  * friends). The step matters: `getPathBadgeStyle` renders white on this fill,
@@ -46,10 +47,6 @@ export function getPathColorKey(path: PathColorInput): string {
 }
 
 /**
- * Canonical path colors — shared across every scenario.
- * Keys match `getPathColorKey` (`path_type:Path Name`).
- */
-/**
  * The families a path may be drawn from once its identity is a *name* rather
  * than a type — the same seven the touchpoint tones use.
  *
@@ -78,34 +75,56 @@ const PATH_NAMED_FAMILIES = [
   'red',
 ] as const
 
-const named = (family: string, step: 1000 | 1100) =>
-  `var(--color-${family}-${step})`
+const step = (family: string, weight: 1000 | 1100) =>
+  `var(--color-${family}-${weight})`
+
+/**
+ * Pinned named paths, as a *slot* in the open set rather than a colour.
+ *
+ * Colour and stroke pattern are both read from this one number, so the pair can
+ * never drift — the same guarantee the hash gives an unregistered path, stated
+ * explicitly for the ones that actually render. Pinning only the colour is what
+ * left all five of these sharing a single dash: they were in the registry, so
+ * `getPathDashArray` fell through to the type default and every named path on
+ * the board came out `7 4 2 4`. Colour was doing all the work, which is the
+ * exact failure SC 1.4.1 describes.
+ */
+const NAMED_PATH_SLOTS: Record<string, number> = {
+  'Set Goals': 0,
+  'Update Goals': 1,
+  'Check Goals': 2,
+  'Set Goals Edge Case': 3,
+  'Update Goals Edge Case': 4,
+}
+
+const slotColor = (slot: number, weight: 1000 | 1100) =>
+  step(PATH_NAMED_FAMILIES[slot % PATH_NAMED_FAMILIES.length], weight)
+
+const namedRegistry = (weight: 1000 | 1100) =>
+  Object.fromEntries(
+    Object.entries(NAMED_PATH_SLOTS).map(([name, slot]) => [
+      `named:${name}`,
+      slotColor(slot, weight),
+    ]),
+  )
 
 export const PATH_COLOR_REGISTRY: Record<string, string> = {
   'happy:Happy Path': PATH_TYPE_COLORS.happy,
   'unhappy:Sad Path': PATH_TYPE_COLORS.unhappy,
   'alternative:Alternate Path': PATH_TYPE_COLORS.alternative,
-  'named:Set Goals': named('indigo', 1100),
-  'named:Check Goals': named('purple', 1100),
-  'named:Update Goals': named('tomato', 1100),
-  'named:Set Goals Edge Case': named('gold', 1100),
-  'named:Update Goals Edge Case': named('crimson', 1100),
+  ...namedRegistry(1100),
 }
 
 export const PATH_ARROW_COLOR_REGISTRY: Record<string, string> = {
   'happy:Happy Path': PATH_TYPE_ARROW_COLORS.happy,
   'unhappy:Sad Path': PATH_TYPE_ARROW_COLORS.unhappy,
   'alternative:Alternate Path': PATH_TYPE_ARROW_COLORS.alternative,
-  'named:Set Goals': named('indigo', 1000),
-  'named:Check Goals': named('purple', 1000),
-  'named:Update Goals': named('tomato', 1000),
-  'named:Set Goals Edge Case': named('gold', 1000),
-  'named:Update Goals Edge Case': named('crimson', 1000),
+  ...namedRegistry(1000),
 }
 
 /** Hash fallback for a path with no registry entry. Step 1100, the badge weight. */
 const EXTENDED_PATH_COLORS = PATH_NAMED_FAMILIES.map((f) =>
-  named(f, 1100),
+  step(f, 1100),
 ) as readonly string[]
 
 /**
@@ -147,12 +166,23 @@ const EXTENDED_PATH_DASHES = [
 ] as const
 
 /**
- * Dash pattern for a path's arrows and section borders. Mirrors
- * {@link getPathColor}: registry paths get their type's pattern, and the two
- * open-ended types hash into {@link EXTENDED_PATH_DASHES}.
+ * Dash pattern for a path's arrows and section borders, paired with
+ * {@link getPathColor} through the same slot so the two never come apart.
+ *
+ * Named paths always read the open set: pinned slot if the name is known,
+ * hashed otherwise. The other types use their own pattern, except an
+ * `alternative` path nobody has pinned, which hashes like a named one.
  */
 export function getPathDashArray(path: PathColorInput): string | undefined {
-  if (path.path_type === 'alternative' || path.path_type === 'named') {
+  if (path.path_type === 'named') {
+    // A named path's identity is its name, so its pattern comes from its slot —
+    // pinned if we know it, hashed if we do not. Never the type default: every
+    // named path would share it, and colour would be the only thing telling
+    // them apart.
+    const slot = NAMED_PATH_SLOTS[path.name] ?? hashKey(getPathColorKey(path))
+    return EXTENDED_PATH_DASHES[slot % EXTENDED_PATH_DASHES.length]
+  }
+  if (path.path_type === 'alternative') {
     const key = getPathColorKey(path)
     if (!PATH_COLOR_REGISTRY[key]) {
       return EXTENDED_PATH_DASHES[hashKey(key) % EXTENDED_PATH_DASHES.length]
@@ -190,6 +220,7 @@ export function getPathColor(path: PathColorInput): string {
   if (known) return known
 
   if (path.path_type === 'alternative' || path.path_type === 'named') {
+    // Same index the dash is read from, so the pair holds.
     return EXTENDED_PATH_COLORS[hashKey(key) % EXTENDED_PATH_COLORS.length]
   }
 
