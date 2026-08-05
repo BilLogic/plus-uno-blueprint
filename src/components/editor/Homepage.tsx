@@ -92,9 +92,10 @@ export function Homepage() {
               type="button"
               onClick={enterCanvas}
               // The one primary action on the landing page, so it takes the
-              // brand fill. It used to hardcode the PLUS blue #0472A8, which
-              // predates the token system and did not move with the theme.
-              className="h-9 shrink-0 bg-primary px-3.5 font-heading font-semibold text-primary-foreground shadow-sm hover:bg-primary-hover active:bg-primary-pressed"
+              // brand fill — which is the Button's own `default` variant. It
+              // used to restate `bg-primary` and its hover here at a different
+              // alpha than the variant used, which is how the two drifted.
+              className="h-9 shrink-0 px-3.5 font-heading font-semibold shadow-sm"
             >
               View PLUS Blueprints
             </Button>

@@ -213,11 +213,17 @@
    *   --blueprint-cell-text         primary label
    *   --blueprint-cell-text-muted   secondary label
    *
-   * WHY STEPS AND NOT A MIX. `--primary-hover` mixes toward `--foreground`,
-   * because a brand fill is one colour and has no ramp to walk. A cell does:
-   * Radix tunes 5 → 6 → 7 as surface → hover → pressed, per family, per theme,
-   * with the chroma correction each hue needs. Reusing that is strictly better
-   * than a flat percentage, and it is why the two mechanisms differ.
+   * WHY TOKENS HERE AND NOWHERE ELSE. Supabase expresses state at the call
+   * site — `hover:bg-primary/90`, or a step of a numeric scale. Both need the
+   * resting colour to be known when the class is written. A cell's resting
+   * colour comes from its lane, which comes from data, so neither works: there
+   * is no static class to write. The lane rule below is the call site, and a
+   * custom property is the only way to hand a value to it.
+   *
+   * The *mechanism* is still Supabase's second form — step the scale. Radix
+   * tunes 5 → 6 → 7 as surface → hover → pressed, per family, per theme, with
+   * the chroma correction each hue needs, exactly as Supabase steps
+   * `brand-400` → `brand-600` for a button's hover border.
    *
    * Steps by role: 500/600/700 for lanes, 400/500/600 for tones — a pill sits a
    * step paler than the lane it lives in. Ring is 1100 in both: step 8, Radix's

@@ -8,12 +8,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-pressed",
+        // Supabase's shadcn button, verbatim: alpha on the resting token, no
+        // state token. Their own product Button reaches for the numeric brand
+        // scale instead (`bg-brand-400 dark:bg-brand-500 hover:bg-brand/80`) —
+        // both mechanisms are theirs, neither introduces a `--*-hover`.
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
         outline:
           "border-border/80 bg-background shadow-sm hover:bg-muted hover:text-foreground hover:shadow aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground aria-pressed:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_8%)] aria-pressed:text-secondary-foreground aria-pressed:shadow-sm aria-pressed:ring-2 aria-pressed:ring-ring/40",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground aria-pressed:bg-secondary/60 aria-pressed:text-secondary-foreground aria-pressed:shadow-sm aria-pressed:ring-2 aria-pressed:ring-ring/40",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:

@@ -62,7 +62,7 @@ function PathChecklist({ options }: { options: PathOption[] }) {
               onClick={() => togglePathKey(option.id)}
               // The check occupies the same 1rem slot the nav rows give their
               // chevron, so path names line up with phase names.
-              className="flex w-full min-w-0 items-center gap-1 rounded-md pl-1 text-left text-xs text-sidebar-foreground/85 transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+              className="flex w-full min-w-0 items-center gap-1 rounded-md pl-1 text-left text-xs text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <span className="flex size-4 shrink-0 items-center justify-center">
                 <Check

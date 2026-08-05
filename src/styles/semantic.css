@@ -167,41 +167,20 @@
       calc(var(--chroma) * 0.45) var(--primary-hue)
   );
   /* --- Interaction states ----------------------------------------------
-   * One mechanism for every interactive surface: mix the resting fill toward
-   * `--foreground`. That moves *away* from the background in both themes —
-   * darker on light, lighter on dark — so "more contrast under the pointer"
-   * holds without a per-theme value.
+   * There are none here, deliberately. Supabase's semantic.css defines no
+   * hover, pressed, selected or disabled colour: across their whole system
+   * exactly three state tokens exist, and all three are component tokens, not
+   * palette ones — `--background-selection`, `--background-overlay-hover` and
+   * `--border-button-hover`.
    *
-   * This replaces `hover:bg-primary/80`, which is what shadcn ships and what
-   * Supabase still uses. Alpha is the wrong tool: it makes the fill
-   * translucent, so the hover composites toward whatever sits behind it. A
-   * brand button hovers lighter on a white page and darker on a dark one — the
-   * direction flips with the background, and the fill loses saturation on the
-   * way. The call sites had also drifted to two different values, /80 and /90.
+   * State is expressed at the call site, by one of two means:
+   *   1. alpha on the resting token   `hover:bg-primary/90`
+   *   2. a step of a numeric scale    `bg-brand-400 hover:border-brand-600`
    *
-   * Percentages are shared so the whole app moves together. Pressed is roughly
-   * double hover, which is the ratio the Radix step pairings (5 → 6 → 7) work
-   * out to on a step-5 surface.
+   * We follow that. The one place a state token is unavoidable is the
+   * blueprint canvas, where the resting colour comes from data and so cannot
+   * be a static utility class — see blueprint.css.
    */
-  --state-hover-mix: 7%;
-  --state-pressed-mix: 14%;
-  --state-selected-mix: 10%;
-
-  --primary-hover: color-mix(
-    in oklab,
-    var(--primary),
-    var(--foreground) var(--state-hover-mix)
-  );
-  --primary-pressed: color-mix(
-    in oklab,
-    var(--primary),
-    var(--foreground) var(--state-pressed-mix)
-  );
-  --destructive-hover: color-mix(
-    in oklab,
-    var(--destructive),
-    var(--foreground) var(--state-hover-mix)
-  );
 
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
@@ -240,12 +219,13 @@
 
   /*
    * Sidebar selection language (nav plan D8). Hover and selected used to be
-   * the same `--sidebar-accent` fill, which is why a selected row was
-   * indistinguishable from a hovered one. Now: hover is the neutral
-   * elevation lift, selected is a brand tint plus a full-chroma left rail,
-   * and a row that merely *contains* the selection gets the marker dot.
+   * the same fill, which is why a selected row was indistinguishable from a
+   * hovered one. Now: hover keeps `--sidebar-accent`, the neutral elevation
+   * lift shadcn and Supabase both name; selected is a brand tint plus a
+   * full-chroma left rail; and a row that merely *contains* the selection
+   * gets the marker dot. There is no `--sidebar-hover` — Supabase has no such
+   * token, and ours was a verbatim alias of `--sidebar-accent`.
    */
-  --sidebar-hover: var(--accent);
   --sidebar-selected: oklch(from var(--ring) l c h / 0.16);
   --sidebar-selected-foreground: var(--foreground);
   --sidebar-selected-rail: var(--ring);
