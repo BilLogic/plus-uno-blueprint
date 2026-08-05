@@ -13,13 +13,19 @@ import {
  * resolve the tokens against the stylesheet.
  */
 describe('path identity', () => {
-  const types = ['happy', 'unhappy', 'exception', 'alternative', 'named'] as const
-
-
   it('gives every non-happy type a distinct dash pattern', () => {
-    const dashes = types.map((path_type) =>
-      getPathDashArray({ path_type, name: '' }),
-    )
+    // Only the closed types resolve to their own `PATH_TYPE_DASH` entry. A
+    // `named` path — and an `alternative` one with no registry entry — hashes
+    // into the open set instead, so asking for its "type dash" measures the
+    // hash rather than the type. Those are covered by the colour+dash pairing
+    // assertion in palette.test.ts.
+    const closed = [
+      { path_type: 'happy', name: 'Happy Path' },
+      { path_type: 'unhappy', name: 'Sad Path' },
+      { path_type: 'exception', name: 'Boom' },
+      { path_type: 'alternative', name: 'Alternate Path' },
+    ] as const
+    const dashes = closed.map(getPathDashArray)
     expect(dashes[0]).toBeUndefined() // happy stays solid
     const nonHappy = dashes.slice(1)
     expect(new Set(nonHappy).size).toBe(nonHappy.length)

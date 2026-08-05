@@ -49,44 +49,64 @@ export function getPathColorKey(path: PathColorInput): string {
  * Canonical path colors — shared across every scenario.
  * Keys match `getPathColorKey` (`path_type:Path Name`).
  */
+/**
+ * The families a path may be drawn from once its identity is a *name* rather
+ * than a type — the same seven the touchpoint tones use.
+ *
+ * Deliberately disjoint from the eight lane families, and `palette.test.ts`
+ * holds that. Before this, the open set drew on ten families including green,
+ * blue, violet and pink, so a named path could render as a 2px line in exactly
+ * the hue of the lane it crossed. Four of the five named paths on the live
+ * board did: `Check Goals` was violet over the violet frontstage-tech lane,
+ * `Update Goals` pink over the pink frontstage-action lane.
+ *
+ * Sharing the tone set rather than inventing a third one is safe because the
+ * two never render at the same weight: a tone is a step-400 pill fill, a path
+ * is a step-1100 line and badge. Seven hundred steps apart, they cannot be
+ * mistaken for each other, and there is one palette to learn instead of two.
+ *
+ * The order puts distant hues next to each other, so adjacent hashes do not
+ * land on neighbours.
+ */
+const PATH_NAMED_FAMILIES = [
+  'indigo',
+  'tomato',
+  'purple',
+  'gold',
+  'crimson',
+  'yellow',
+  'red',
+] as const
+
+const named = (family: string, step: 1000 | 1100) =>
+  `var(--color-${family}-${step})`
+
 export const PATH_COLOR_REGISTRY: Record<string, string> = {
   'happy:Happy Path': PATH_TYPE_COLORS.happy,
   'unhappy:Sad Path': PATH_TYPE_COLORS.unhappy,
   'alternative:Alternate Path': PATH_TYPE_COLORS.alternative,
-  'named:Set Goals': 'var(--color-indigo-1100)',
-  'named:Check Goals': 'var(--color-violet-1100)',
-  'named:Update Goals': 'var(--color-pink-1100)',
-  'named:Set Goals Edge Case': 'var(--color-purple-1100)',
-  'named:Update Goals Edge Case': 'var(--color-crimson-1100)',
+  'named:Set Goals': named('indigo', 1100),
+  'named:Check Goals': named('purple', 1100),
+  'named:Update Goals': named('tomato', 1100),
+  'named:Set Goals Edge Case': named('gold', 1100),
+  'named:Update Goals Edge Case': named('crimson', 1100),
 }
 
 export const PATH_ARROW_COLOR_REGISTRY: Record<string, string> = {
   'happy:Happy Path': PATH_TYPE_ARROW_COLORS.happy,
   'unhappy:Sad Path': PATH_TYPE_ARROW_COLORS.unhappy,
   'alternative:Alternate Path': PATH_TYPE_ARROW_COLORS.alternative,
-  'named:Set Goals': 'var(--color-indigo-1000)',
-  'named:Check Goals': 'var(--color-violet-1000)',
-  'named:Update Goals': 'var(--color-pink-1000)',
-  'named:Set Goals Edge Case': 'var(--color-purple-1000)',
-  'named:Update Goals Edge Case': 'var(--color-crimson-1000)',
+  'named:Set Goals': named('indigo', 1000),
+  'named:Check Goals': named('purple', 1000),
+  'named:Update Goals': named('tomato', 1000),
+  'named:Set Goals Edge Case': named('gold', 1000),
+  'named:Update Goals Edge Case': named('crimson', 1000),
 }
 
-/**
- * Hash fallback for paths with no registry entry. Ten families at step 1100,
- * ordered so adjacent hashes land on distant hues rather than neighbouring ones.
- */
-const EXTENDED_PATH_COLORS = [
-  'var(--color-indigo-1100)',
-  'var(--color-orange-1100)',
-  'var(--color-violet-1100)',
-  'var(--color-green-1100)',
-  'var(--color-pink-1100)',
-  'var(--color-blue-1100)',
-  'var(--color-tomato-1100)',
-  'var(--color-purple-1100)',
-  'var(--color-gold-1100)',
-  'var(--color-crimson-1100)',
-] as const
+/** Hash fallback for a path with no registry entry. Step 1100, the badge weight. */
+const EXTENDED_PATH_COLORS = PATH_NAMED_FAMILIES.map((f) =>
+  named(f, 1100),
+) as readonly string[]
 
 /**
  * Stroke pattern per path type — the non-colour half of path identity.
@@ -110,6 +130,11 @@ const PATH_TYPE_DASH: Record<PathType, string | undefined> = {
 /**
  * Extra patterns for the types that can have many distinct paths at once, hashed
  * the same way `EXTENDED_PATH_COLORS` is so a path's dash and colour stay paired.
+ *
+ * One per family in `PATH_NAMED_FAMILIES`. There used to be five against ten
+ * colours, which meant two open paths could share a dash — fine while colour is
+ * visible, and exactly the case SC 1.4.1 is about when it is not. Matching the
+ * lengths makes the pattern a real second channel rather than a decoration.
  */
 const EXTENDED_PATH_DASHES = [
   '7 4 2 4',
@@ -117,6 +142,8 @@ const EXTENDED_PATH_DASHES = [
   '2 4',
   '10 4 2 4 2 4',
   '5 5',
+  '3 3 9 3',
+  '14 4 3 4',
 ] as const
 
 /**

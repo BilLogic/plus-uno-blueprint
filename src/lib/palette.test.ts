@@ -2,7 +2,11 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { CELL_STEP } from '@/lib/blueprintCellStyle'
-import { PATH_TYPE_COLORS, getPathColor } from '@/lib/pathColorTheme'
+import {
+  PATH_TYPE_COLORS,
+  getPathColor,
+  getPathDashArray,
+} from '@/lib/pathColorTheme'
 
 /**
  * The app resolves every colour through `var()`, so nothing in the browser can
@@ -141,6 +145,20 @@ describe('path badges', () => {
     const b = getPathColor({ path_type: 'named', name: 'Beta' })
     expect(a === b).toBe(false)
   })
+
+  it('pairs a distinct dash with every family in the open set', () => {
+    // Colour and dash hash off the same key, so the pattern is a real second
+    // channel for SC 1.4.1 only if the two lists are the same length.
+    const seen = new Map<string, string | undefined>()
+    for (let i = 0; i < 40; i++) {
+      const path = { path_type: 'named' as const, name: `Path ${i}` }
+      const colour = getPathColor(path)
+      const dash = getPathDashArray(path)
+      if (seen.has(colour)) expect(seen.get(colour)).toBe(dash)
+      else seen.set(colour, dash)
+    }
+    expect(new Set(seen.values()).size).toBe(seen.size)
+  })
 })
 
 describe('lane roles and touchpoint tones stay disjoint', () => {
@@ -165,6 +183,20 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     expect(lanes.size).toBeGreaterThan(0)
     expect(tones.size).toBeGreaterThan(0)
     expect([...lanes].filter((f) => tones.has(f))).toEqual([])
+  })
+
+  it('keeps named paths off the lane families too', () => {
+    // A named path is drawn as a line across the lanes it touches. Before the
+    // open set moved onto the tone families, four of the five named paths on
+    // the live board rendered in the hue of a lane they crossed.
+    const lanes = familiesIn('lane')
+    const pathFamilies = new Set(
+      Array.from({ length: 40 }, (_, i) =>
+        getPathColor({ path_type: 'named', name: `Path ${i}` }),
+      ).map((token) => /--color-([a-z]+)-/.exec(token)![1]),
+    )
+    expect(pathFamilies.size).toBeGreaterThan(1)
+    expect([...pathFamilies].filter((f) => lanes.has(f))).toEqual([])
   })
 })
 
