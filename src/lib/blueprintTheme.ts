@@ -1,7 +1,7 @@
 import type { BlueprintLayer } from '@/types/blueprint'
 import {
   BLUEPRINT_CELL_BORDER_COLOR,
-  type BlueprintCellFamily,
+  type BlueprintLaneRole,
 } from '@/lib/blueprintCellStyle'
 import {
   shouldShowInteractionLineAfter,
@@ -129,24 +129,14 @@ export function getBlueprintPanelHoverCssVars(): Record<string, string> {
  * steps. `chartreuse` was `lime`; reading one next to the other invited the
  * reasonable conclusion that the board was off-palette. The names are gone.
  */
-export const BLUEPRINT_LANE_FAMILIES = [
-  'blue',
-  'lime',
-  'orange',
-  'violet',
-  'amber',
-  'green',
-  'pink',
-  'slate',
-] as const satisfies readonly BlueprintCellFamily[]
 
 export type BlueprintLayerStyle = {
-  /** Radix family backing this lane; steps of it supply every cell state. */
-  lane: BlueprintCellFamily
-  laneLabel: BlueprintCellFamily
+  /** What this lane is. blueprint.css turns the role into its steps. */
+  lane: BlueprintLaneRole
+  laneLabel: BlueprintLaneRole
   label: string
   accent: string
-  accentMuted: BlueprintCellFamily
+  accentMuted: BlueprintLaneRole
 }
 
 /**
@@ -205,7 +195,7 @@ export function getBlueprintLabelTextColor(
 }
 
 function cellStyleFromFill(
-  fill: BlueprintCellFamily,
+  fill: BlueprintLaneRole,
   label: string = BLUEPRINT_LABEL_TEXT.frontstage,
 ): BlueprintLayerStyle {
   return {
@@ -218,81 +208,63 @@ function cellStyleFromFill(
 }
 
 const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
-  Visual: cellStyleFromFill('slate'),
-  'Step Visual': cellStyleFromFill('slate'),
-  'Partner Action: Teacher': cellStyleFromFill(
-    'blue',
+  Visual: cellStyleFromFill('visual'),
+  'Step Visual': cellStyleFromFill('visual'),
+  'Partner Action: Teacher': cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Lead Tutor': cellStyleFromFill(
-    'green',
+  'Lead Tutor': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Regular Tutor': cellStyleFromFill(
-    'green',
+  'Regular Tutor': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Front Stage Tech': cellStyleFromFill(
-    'violet',
+  'Front Stage Tech': cellStyleFromFill('frontstage-tech',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
-  'Front Stage Actions': cellStyleFromFill(
-    'pink',
+  'Front Stage Actions': cellStyleFromFill('frontstage-action',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
-  'Tutor Resources': cellStyleFromFill(
-    'amber',
+  'Tutor Resources': cellStyleFromFill('support',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
-  'Back Stage Actions': cellStyleFromFill(
-    'pink',
+  'Back Stage Actions': cellStyleFromFill('frontstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Back Stage Tech': cellStyleFromFill(
-    'violet',
+  'Back Stage Tech': cellStyleFromFill('frontstage-tech',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Support Actions': cellStyleFromFill(
-    'amber',
+  'Support Actions': cellStyleFromFill('support',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Physical Evidence': cellStyleFromFill(
-    'blue',
+  'Physical Evidence': cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Customer Actions': cellStyleFromFill(
-    'green',
+  'Customer Actions': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Frontstage Actions': cellStyleFromFill(
-    'violet',
+  'Frontstage Actions': cellStyleFromFill('frontstage-tech',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
-  'Backstage Actions': cellStyleFromFill(
-    'orange',
+  'Backstage Actions': cellStyleFromFill('backstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Tech Support Actions': cellStyleFromFill(
-    'orange',
+  'Tech Support Actions': cellStyleFromFill('backstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Management Actions': cellStyleFromFill(
-    'orange',
+  'Management Actions': cellStyleFromFill('backstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Computer Systems': cellStyleFromFill(
-    'green',
+  'Computer Systems': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
 }
 
-const FRONTSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill(
-  'amber',
+const FRONTSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill('support',
   BLUEPRINT_LABEL_TEXT.frontstage,
 )
 
-const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill(
-  'amber',
+const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill('support',
   BLUEPRINT_LABEL_TEXT.backstage,
 )
 
@@ -302,32 +274,26 @@ const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill(
  * (name-keyed `LAYER_STYLES` above is the legacy fallback for pre-role content).
  */
 const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
-  visual: cellStyleFromFill('slate'),
-  step_visual: cellStyleFromFill('slate'),
-  journey_stage: cellStyleFromFill('slate'),
-  physical_evidence: cellStyleFromFill('blue'),
-  customer_actions: cellStyleFromFill(
-    'green',
+  visual: cellStyleFromFill('visual'),
+  step_visual: cellStyleFromFill('visual'),
+  journey_stage: cellStyleFromFill('visual'),
+  physical_evidence: cellStyleFromFill('evidence'),
+  customer_actions: cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  frontstage_tech: cellStyleFromFill(
-    'violet',
+  frontstage_tech: cellStyleFromFill('frontstage-tech',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
-  frontstage_actions: cellStyleFromFill(
-    'pink',
+  frontstage_actions: cellStyleFromFill('frontstage-action',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
-  backstage_actions: cellStyleFromFill(
-    'orange',
+  backstage_actions: cellStyleFromFill('backstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  backstage_tech: cellStyleFromFill(
-    'blue',
+  backstage_tech: cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  support_systems: cellStyleFromFill(
-    'amber',
+  support_systems: cellStyleFromFill('support',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
 }

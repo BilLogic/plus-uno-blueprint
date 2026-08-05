@@ -1,9 +1,8 @@
 import {
   BLUEPRINT_CELL_BORDER_COLOR,
-  cellToken,
-  type BlueprintCellFamily,
+  type TouchpointTone,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillFamily } from '@/lib/techPillColors'
+import { getTouchpointTone } from '@/lib/techPillColors'
 
 export type TechPillStyle = {
   backgroundColor: string
@@ -11,21 +10,21 @@ export type TechPillStyle = {
   borderColor: string
 }
 
-/** Step 400 — one paler than the step-500 lane a pill sits in. */
-const TECH_PILL_SURFACE_STEP = 400
-
-export function getTechPillFamilyFor(
+export function getTechPillToneFor(
   item: string,
-  chosen?: BlueprintCellFamily,
-): BlueprintCellFamily {
-  return getTechPillFamily(item, chosen)
+  chosen?: TouchpointTone,
+): TouchpointTone {
+  return getTouchpointTone(item, chosen)
 }
 
-export function getTechPillStyle(item: string): TechPillStyle {
-  const family = getTechPillFamily(item)
+/**
+ * Reads the properties the `[data-blueprint-tone]` rule already set, so a pill
+ * face rendered outside a Button matches its tone exactly.
+ */
+export function getTechPillStyle(): TechPillStyle {
   return {
-    backgroundColor: `var(--color-${family}-${TECH_PILL_SURFACE_STEP})`,
-    color: cellToken(family, 1200),
+    backgroundColor: 'var(--blueprint-cell-bg)',
+    color: 'var(--blueprint-cell-text)',
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
   }
 }

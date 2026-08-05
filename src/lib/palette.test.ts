@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { BLUEPRINT_LANE_FAMILIES } from '@/lib/blueprintTheme'
 import { CELL_STEP } from '@/lib/blueprintCellStyle'
 import { PATH_TYPE_COLORS, getPathColor } from '@/lib/pathColorTheme'
 
@@ -90,7 +89,17 @@ describe('palette', () => {
 })
 
 describe('blueprint cells', () => {
-  const lanes = BLUEPRINT_LANE_FAMILIES.map((f) => [f, f] as const)
+  // role → family, mirroring the [data-blueprint-lane] rules in blueprint.css.
+  const lanes: ReadonlyArray<readonly [string, string]> = [
+    ['visual', 'slate'],
+    ['evidence', 'blue'],
+    ['actor', 'green'],
+    ['frontstage-tech', 'violet'],
+    ['frontstage-action', 'pink'],
+    ['backstage-tech', 'lime'],
+    ['backstage-action', 'orange'],
+    ['support', 'amber'],
+  ]
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
     it.each(lanes)('%s: ring reads against its own surface', (_lane, family) => {
@@ -131,5 +140,30 @@ describe('path badges', () => {
     const a = getPathColor({ path_type: 'named', name: 'Alpha' })
     const b = getPathColor({ path_type: 'named', name: 'Beta' })
     expect(a === b).toBe(false)
+  })
+})
+
+describe('lane roles and touchpoint tones stay disjoint', () => {
+  const css = readFileSync(
+    fileURLToPath(new URL('../styles/blueprint.css', import.meta.url)),
+    'utf8',
+  )
+  const familiesIn = (attr: string) =>
+    new Set(
+      [
+        ...css.matchAll(
+          new RegExp(`\\[data-blueprint-${attr}='[a-z-]+'\\] \\{([^}]*)\\}`, 'g'),
+        ),
+      ].flatMap(([, body]) =>
+        [...body.matchAll(/--color-([a-z]+)-/g)].map(([, f]) => f),
+      ),
+    )
+
+  it('shares no family, so a pill can never read as its lane', () => {
+    const lanes = familiesIn('lane')
+    const tones = familiesIn('tone')
+    expect(lanes.size).toBeGreaterThan(0)
+    expect(tones.size).toBeGreaterThan(0)
+    expect([...lanes].filter((f) => tones.has(f))).toEqual([])
   })
 })

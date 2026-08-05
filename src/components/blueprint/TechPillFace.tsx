@@ -2,9 +2,9 @@ import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { buttonVariants } from '@/components/ui/button'
 import {
   blueprintCellButtonClassName,
-  blueprintLaneAttrs,
+  blueprintToneAttrs,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillFamilyFor } from '@/lib/techPillTheme'
+import { getTechPillToneFor } from '@/lib/techPillTheme'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
@@ -27,7 +27,7 @@ export function TechPillFace({
   opacity,
   asSpan = false,
 }: TechPillFaceProps) {
-  const family = getTechPillFamilyFor(item)
+  const tone = getTechPillToneFor(item)
 
   if (asSpan) {
     const style = {
@@ -43,7 +43,7 @@ export function TechPillFace({
           className,
         )}
         style={style}
-        {...blueprintLaneAttrs(family)}
+        {...blueprintToneAttrs(tone)}
       >
         {item}
       </span>
@@ -52,7 +52,8 @@ export function TechPillFace({
 
   return (
     <BlueprintCellButton
-      fill={family}
+      fill="frontstage-tech"
+      tone={tone}
       variant="pill"
       compact={compact}
       opacity={opacity}

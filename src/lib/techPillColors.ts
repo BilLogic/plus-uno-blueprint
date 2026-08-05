@@ -1,4 +1,4 @@
-import type { BlueprintCellFamily } from '@/lib/blueprintCellStyle'
+import type { TouchpointTone } from '@/lib/blueprintCellStyle'
 
 /**
  * DEFAULT family per touchpoint, not a styling decision.
@@ -7,7 +7,7 @@ import type { BlueprintCellFamily } from '@/lib/blueprintCellStyle'
  * "Zoom is blue" is a product fact, not a palette one. There is nowhere to
  * store that yet: a tech pill is a parsed substring of `cells.content`, so
  * there is no row to attach a colour to. Until a `touchpoints` table exists,
- * this map is the seed, and `getTechPillFamily` already takes the override that
+ * this map is the seed, and `getTouchpointTone` already takes the override that
  * will carry the stored value.
  *
  * A pill renders at step 400, one paler than the step-500 lane it sits in, so
@@ -15,31 +15,31 @@ import type { BlueprintCellFamily } from '@/lib/blueprintCellStyle'
  */
 export const TECH_PILL_COLORS = {
   'Clearance obtainment guide': 'gold',
-  'Dev Tools': 'blue',
-  Email: 'violet',
+  'Dev Tools': 'indigo',
+  Email: 'purple',
   Figma: 'purple',
-  'Google Docs/ Slides': 'pink',
-  'Google Form Application': 'amber',
+  'Google Docs/ Slides': 'crimson',
+  'Google Form Application': 'gold',
   'Google Quiz': 'red',
   'Google Quiz embedded in Notion': 'red',
-  'Google Quizzes': 'green',
-  Handshake: 'blue',
+  'Google Quizzes': 'tomato',
+  Handshake: 'indigo',
   'Handshake Employer Profile': 'indigo',
-  'Marketing Website': 'blue',
-  Notion: 'amber',
-  'On-campus booth': 'lime',
-  'PLUS App': 'lime',
+  'Marketing Website': 'indigo',
+  Notion: 'gold',
+  'On-campus booth': 'yellow',
+  'PLUS App': 'yellow',
   Posters: 'gold',
-  Slack: 'orange',
+  Slack: 'tomato',
   'Social Media': 'crimson',
   'Workday (Employee View)': 'indigo',
   'Workday (Employer View)': 'indigo',
   Workday: 'indigo',
-  Bank: 'green',
-  Zoom: 'blue',
+  Bank: 'tomato',
+  Zoom: 'indigo',
   'Zoom Recording': 'purple',
-  'Zoom/Pencil': 'blue',
-} as const satisfies Record<string, BlueprintCellFamily>
+  'Zoom/Pencil': 'indigo',
+} as const satisfies Record<string, TouchpointTone>
 
 export type TechPillName = keyof typeof TECH_PILL_COLORS
 
@@ -64,18 +64,15 @@ const LOWER_TO_CANONICAL = Object.fromEntries(
 ) as Record<string, TechPillName>
 
 /** Unknown tech names fall back to a deterministic family from this set. */
-const EXTENDED_FALLBACK_FAMILIES = [
-  'violet',
-  'green',
-  'pink',
-  'lime',
-  'purple',
-  'blue',
+const EXTENDED_FALLBACK_TONES = [
+  'indigo',
   'gold',
   'crimson',
-  'indigo',
-  'amber',
-] as const satisfies readonly BlueprintCellFamily[]
+  'purple',
+  'tomato',
+  'yellow',
+  'red',
+] as const satisfies readonly TouchpointTone[]
 
 function hashLabel(label: string): number {
   let hash = 0
@@ -100,16 +97,16 @@ export function normalizeTechPillLabel(label: string): string {
  * `chosen` wins when present — it is the seam the stored per-touchpoint colour
  * will arrive through, so adding the table later needs no restructuring here.
  */
-export function getTechPillFamily(
+export function getTouchpointTone(
   label: string,
-  chosen?: BlueprintCellFamily,
-): BlueprintCellFamily {
+  chosen?: TouchpointTone,
+): TouchpointTone {
   if (chosen) return chosen
   const canonical = normalizeTechPillLabel(label)
   const known = TECH_PILL_COLORS[canonical as TechPillName]
   if (known) return known
 
-  return EXTENDED_FALLBACK_FAMILIES[
-    hashLabel(canonical) % EXTENDED_FALLBACK_FAMILIES.length
+  return EXTENDED_FALLBACK_TONES[
+    hashLabel(canonical) % EXTENDED_FALLBACK_TONES.length
   ]
 }

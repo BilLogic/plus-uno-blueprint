@@ -2,36 +2,75 @@ import { cn } from '@/lib/utils'
 import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
 import type { CSSProperties } from 'react'
 
-/**
- * A blueprint cell is a Radix family, and its states are steps of that family.
+/*
+ * Blueprint colour vocabulary — two sets, deliberately disjoint.
  *
- * This file used to derive hover / pressed / ring tones from a hex fill in
- * JavaScript — HSL conversion, a lightness search, and a binary contrast solver
- * to force the ring past 3:1. The scale already answers all of it: the step for
- * each role is a fixed choice, checked once in `palette.test.ts` against the
- * stylesheet rather than recomputed per cell per render. That check covers dark
- * mode too, which the solver never saw — it took a hex fill, and dark mode
- * never produced one.
+ * A LANE ROLE says what a swim lane *is*: evidence, actor, frontstage tech. Not
+ * what colour it is. Naming lanes after hues is what made this hard to reason
+ * about — `chartreuse` told you nothing about a blueprint, and stopped even
+ * being true once fills became scale steps. A role survives a repalette.
  *
- * Values resolve through `var()`, so a cell is on the same tokens as the rest of
- * the app. Print stays light because colors.css scopes its `.dark` override to
- * `@media screen`.
+ * A TOUCHPOINT TONE is the colour someone picked for a tool. That one really is
+ * a colour choice — "Zoom is blue" is the blueprint owner's decision — so
+ * naming it after the hue is honest here where it was not for lanes.
+ *
+ * The two sets share no family, so a pill can never be mistaken for the lane it
+ * sits in, whichever tone is picked.
+ *
+ * Which family each maps to lives in blueprint.css, keyed on
+ * `data-blueprint-lane` / `data-blueprint-tone`. Nothing here assigns a colour.
  */
-export type BlueprintCellFamily =
-  | 'amber'
-  | 'blue'
+export type BlueprintLaneRole =
+  /** Screenshots and journey stage — the pictorial band. */
+  | 'visual'
+  /** Physical evidence: what the customer can see or hold. */
+  | 'evidence'
+  /** Customer and tutor actions — the people the service is for. */
+  | 'actor'
+  /** Systems the customer touches directly. */
+  | 'frontstage-tech'
+  /** Staff actions the customer can see. */
+  | 'frontstage-action'
+  /** Systems only staff touch. */
+  | 'backstage-tech'
+  /** Staff actions the customer cannot see. */
+  | 'backstage-action'
+  /** Support processes and resources behind the internal line. */
+  | 'support'
+
+export const BLUEPRINT_LANE_ROLES = [
+  'visual',
+  'evidence',
+  'actor',
+  'frontstage-tech',
+  'frontstage-action',
+  'backstage-tech',
+  'backstage-action',
+  'support',
+] as const satisfies readonly BlueprintLaneRole[]
+
+/**
+ * Tones a touchpoint colour can be set to. Disjoint from the families the lane
+ * roles use, so a pill never reads as a lane.
+ */
+export type TouchpointTone =
   | 'crimson'
   | 'gold'
-  | 'gray'
-  | 'green'
   | 'indigo'
-  | 'lime'
-  | 'orange'
-  | 'pink'
   | 'purple'
   | 'red'
-  | 'slate'
-  | 'violet'
+  | 'tomato'
+  | 'yellow'
+
+export const TOUCHPOINT_TONES = [
+  'crimson',
+  'gold',
+  'indigo',
+  'purple',
+  'red',
+  'tomato',
+  'yellow',
+] as const satisfies readonly TouchpointTone[]
 
 /** Steps a cell uses, by role. */
 export const CELL_STEP = {
@@ -53,11 +92,11 @@ export const CELL_STEP = {
   text: 1200,
 } as const
 
-export function cellToken(
-  family: BlueprintCellFamily,
-  step: (typeof CELL_STEP)[keyof typeof CELL_STEP],
-): string {
-  return `var(--color-${family}-${step})`
+/** Same, for a touchpoint pill and its chosen tone. */
+export function blueprintToneAttrs(
+  tone: TouchpointTone,
+): { 'data-blueprint-tone': TouchpointTone } {
+  return { 'data-blueprint-tone': tone }
 }
 
 /**
@@ -76,18 +115,22 @@ export const BLUEPRINT_CELL_BORDER_COLOR = 'var(--color-gray-1200)'
  * the stylesheet. Nothing here assigns a colour.
  */
 export function blueprintLaneAttrs(
-  family: BlueprintCellFamily,
-): { 'data-blueprint-lane': BlueprintCellFamily } {
-  return { 'data-blueprint-lane': family }
+  role: BlueprintLaneRole,
+): { 'data-blueprint-lane': BlueprintLaneRole } {
+  return { 'data-blueprint-lane': role }
 }
 
+/**
+ * Reads the properties the lane rule already set, rather than re-deriving them,
+ * so a surface rendered outside a Button still matches its lane exactly.
+ */
 export function getBlueprintCellSurfaceStyle(
-  family: BlueprintCellFamily,
+  _role: BlueprintLaneRole,
   extra?: CSSProperties,
 ): CSSProperties {
   return {
-    backgroundColor: cellToken(family, CELL_STEP.surface),
-    color: cellToken(family, CELL_STEP.text),
+    backgroundColor: 'var(--blueprint-cell-bg)',
+    color: 'var(--blueprint-cell-text)',
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
     ...extra,
   }

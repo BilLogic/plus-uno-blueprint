@@ -1,10 +1,6 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { getVisualCellButtonMaxHeight } from '@/lib/blueprintLayout'
-import {
-  CELL_STEP,
-  cellToken,
-  type BlueprintCellFamily,
-} from '@/lib/blueprintCellStyle'
+import type { BlueprintLaneRole } from '@/lib/blueprintCellStyle'
 import { hasEmbeddedVisualFrame } from '@/lib/visualWalkthrough'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
@@ -18,7 +14,7 @@ export type BlueprintStepVisualPicture = {
 type BlueprintStepVisualProps = {
   compact?: boolean
   className?: string
-  fill?: BlueprintCellFamily
+  fill?: BlueprintLaneRole
   selection?: BlueprintCellSelection
   cellId?: string
   stepIndex?: number
@@ -83,7 +79,7 @@ function VisualPictureStrip({
 export function BlueprintStepVisual({
   compact = false,
   className,
-  fill = 'slate',
+  fill = 'visual',
   selection,
   cellId,
   stepIndex,
@@ -110,7 +106,7 @@ export function BlueprintStepVisual({
           'h-[min(16rem,35vh)] min-h-[12.5rem]',
           className,
         )}
-        style={{ backgroundColor: cellToken(fill, CELL_STEP.surface) }}
+        style={{ backgroundColor: 'var(--blueprint-cell-bg)' }}
         role="img"
         aria-label={ariaLabel}
       >

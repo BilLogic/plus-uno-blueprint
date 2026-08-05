@@ -7,7 +7,9 @@ import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
   blueprintLaneAttrs,
-  type BlueprintCellFamily,
+  blueprintToneAttrs,
+  type TouchpointTone,
+  type BlueprintLaneRole,
 } from '@/lib/blueprintCellStyle'
 import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
@@ -16,8 +18,13 @@ import { cn } from '@/lib/utils'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
-  /** Radix family for this lane; its steps drive the background and states. */
-  fill: BlueprintCellFamily
+  /** What this lane is; blueprint.css turns the role into its steps. */
+  fill: BlueprintLaneRole
+  /**
+   * A touchpoint pill's chosen tone. Takes the place of the lane role when set —
+   * the two sets share no family, so a pill never reads as its lane.
+   */
+  tone?: TouchpointTone
   compact?: boolean
   className?: string
   style?: CSSProperties
@@ -46,6 +53,7 @@ type BlueprintCellButtonProps = {
  */
 export function BlueprintCellButton({
   fill,
+  tone,
   compact = false,
   className,
   style,
@@ -141,7 +149,7 @@ export function BlueprintCellButton({
       type="button"
       variant={buttonVariant}
       data-blueprint-cell-anchor=""
-      {...blueprintLaneAttrs(fill)}
+      {...(tone ? blueprintToneAttrs(tone) : blueprintLaneAttrs(fill))}
       {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
       data-step-index={stepIndex}
       {...(techPillLabel ? { 'data-blueprint-tech-pill': techPillLabel } : {})}

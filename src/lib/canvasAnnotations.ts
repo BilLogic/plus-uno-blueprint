@@ -1,4 +1,3 @@
-import { BLUEPRINT_LANE_FAMILIES } from '@/lib/blueprintTheme'
 
 export type CanvasAnnotationTool =
   | 'select'
@@ -75,13 +74,26 @@ export const ANNOTATION_STICKY_SIZE = { width: 160, height: 120 }
  * Annotation colours, derived from the lane set rather than listed four times.
  *
  * These were four hand-written arrays — pen, sticky, shape fill, outline — forty
- * entries that had drifted apart. They are the same eight hues at four steps:
+ * entries that had drifted apart. They are the same eight hues the lane roles
+ * use, at four steps, so an annotation sits inside the board's palette rather
+ * than beside it:
  * 900 is the vivid ink a stroke needs, 500 matches the cells a sticky sits
  * beside, 300 is pale enough that a filled shape does not hide the lane under
  * it, and 1100 is the text weight an outline needs to survive at 1.5px.
  */
+const ANNOTATION_FAMILIES = [
+  'slate',
+  'blue',
+  'green',
+  'violet',
+  'pink',
+  'lime',
+  'orange',
+  'amber',
+] as const
+
 const swatches = (step: 300 | 500 | 900 | 1100) =>
-  BLUEPRINT_LANE_FAMILIES.map((family) => `var(--color-${family}-${step})`)
+  ANNOTATION_FAMILIES.map((family) => `var(--color-${family}-${step})`)
 
 /** Sticky fills — step 500, the weight of the cells they sit beside. */
 export const ANNOTATION_STICKY_SWATCHES = [
