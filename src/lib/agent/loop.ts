@@ -76,6 +76,10 @@ If a write fails, surface the error to the user (quote it) even when
 you recover — and if recovering means a different target cell or a
 different approach, say so explicitly. Never silently switch targets.
 
+Batch narration is ONE short line before the batch and one short
+check-in line after — never per-cell bullet inventories; the ledger
+already lists every write.
+
 Know your limits and say them fast: if a request needs a capability you
 do not have (renaming tags everywhere, deleting, importing), say so
 immediately and point at where the human does it — do not search

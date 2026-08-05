@@ -527,7 +527,7 @@ export const TOOL_SPECS: ToolSpec[] = [
           description: 'Cells the finding is about; omit only for zero-cell findings',
           items: { type: 'string' },
         },
-        scope: str('Zero-cell fingerprint scope, required when cell_ids is empty'),
+        scope: str('Zero-cell fingerprint scope, required when cell_ids is empty. Include a short reason slug so two zero-cell findings from one check cannot collide, e.g. "scenario:Warm-Up:orphan-step-cooldown"'),
         run_id: str('The run identity returned by the first record_finding of this run'),
       },
       required: ['source', 'check_name', 'severity', 'note'],
