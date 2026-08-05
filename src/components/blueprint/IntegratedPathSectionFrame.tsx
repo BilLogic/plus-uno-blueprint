@@ -40,7 +40,7 @@ export function IntegratedPathSectionFrame({
     return (
       <div
         aria-hidden
-        className="blueprint-panel-section-frame pointer-events-none absolute rounded-xl"
+        className="pointer-events-none absolute rounded-xl"
         style={{
           top: -COMPARE_PATH_SECTION_TOP_INSET,
           left: -COMPARE_PATH_SECTION_INSET,
@@ -67,7 +67,7 @@ export function IntegratedPathSectionFrame({
           <div
             key={path.id}
             aria-hidden
-            className="blueprint-panel-section-frame pointer-events-none absolute rounded-xl"
+            className="pointer-events-none absolute rounded-xl"
             style={{
               top: -COMPARE_PATH_SECTION_TOP_INSET + offset,
               left: -COMPARE_PATH_SECTION_INSET + offset,

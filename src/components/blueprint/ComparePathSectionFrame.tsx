@@ -69,7 +69,7 @@ export function ComparePathSectionFrame({
     <>
       <div
         aria-hidden
-        className="blueprint-panel-section-frame pointer-events-none absolute rounded-xl"
+        className="pointer-events-none absolute rounded-xl"
         style={{
           ...inset,
           borderWidth,
