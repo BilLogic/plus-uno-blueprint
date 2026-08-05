@@ -66,11 +66,17 @@
   /* While focused, non-member cells drop hard toward the canvas (the slice
      tab wraps the normal blueprint view, so the grid keeps its own stacking
      contexts — no scrim plane, just per-cell dim + desaturate + grey).
-     Dimmed text may go near-unreadable; focused mode is about the members. */
+
+     0.6, not the 0.22 this used to be. Opacity composites the cell's black text
+     against the canvas along with its fill, so at 0.22 the text measured 1.61:1
+     against its own cell — content still on screen and still meant to be
+     legible, well under SC 1.4.3. Measured across the lane fills: 0.45 gives
+     ~3.0:1, 0.55 ~4.2:1, 0.6 ~5.0:1. The desaturate does the de-emphasis work
+     that the opacity used to overreach for, so members still dominate. */
   [data-slice-focus='focused']
     [data-blueprint-cell-anchor]:not([data-slice-member]) {
-    opacity: 0.22;
-    filter: saturate(0.35) grayscale(0.5);
+    opacity: 0.6;
+    filter: saturate(0.3) grayscale(0.55);
   }
 
   /* Sequence badges scale with the canvas transform; once the camera is far

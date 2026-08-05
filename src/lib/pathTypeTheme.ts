@@ -31,7 +31,7 @@ export function getPathTypeSectionBorderStyle(
   path?: Pick<PathColorInput, 'name'>,
 ): {
   borderColor: string
-  borderStyle: 'solid'
+  borderStyle: 'solid' | 'dashed'
   borderWidth: number
 } {
   if (path?.name) {
@@ -43,7 +43,8 @@ export function getPathTypeSectionBorderStyle(
 
   return {
     borderColor: PATH_TYPE_COLORS[pathType],
-    borderStyle: 'solid',
+    // Solid only for the happy path — matches the arrow dash vocabulary.
+    borderStyle: pathType === 'happy' ? 'solid' : 'dashed',
     borderWidth: PATH_TYPE_SECTION_BORDER_WIDTH,
   }
 }

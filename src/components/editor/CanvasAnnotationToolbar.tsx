@@ -212,7 +212,7 @@ function DrawSubpanel() {
             title={swatch}
             onClick={() => setPenColor(swatch)}
             className={cn(
-              'size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
+              'tap-target-24 size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
               penColor.toUpperCase() === swatch.toUpperCase() &&
                 !penOptionsDisabled &&
                 'ring-2 ring-primary ring-offset-1',

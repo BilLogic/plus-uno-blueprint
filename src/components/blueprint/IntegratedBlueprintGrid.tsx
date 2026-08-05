@@ -361,8 +361,12 @@ export function IntegratedBlueprintGrid({
   )
 
   if (embedded) {
+    // The legend is the only place a path's colour is tied to its name, so an
+    // embedded grid without it encodes paths by colour alone (SC 1.4.1). It sits
+    // above the body here too, just without the outer scroll chrome.
     return (
-      <div className={cn('w-max shrink-0', className)}>
+      <div className={cn('flex w-max shrink-0 flex-col gap-2', className)}>
+        {pathsLegend}
         {gridBody}
       </div>
     )

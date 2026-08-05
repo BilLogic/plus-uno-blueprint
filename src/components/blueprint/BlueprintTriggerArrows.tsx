@@ -22,6 +22,7 @@ import {
 import {
   getPathArrowColor,
   getPathColorKey,
+  getPathDashArrayFromKey,
   pathColorKeyToMarkerSuffix,
 } from '@/lib/pathColorTheme'
 import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
@@ -364,7 +365,7 @@ export function BlueprintTriggerArrows({
           <g key={segment.id} opacity={segment.opacity}>
             <path
               d={segment.d}
-              {...blueprintArrowPathProps(segment.arrowColor)}
+              {...blueprintArrowPathProps(segment.arrowColor, getPathDashArrayFromKey(segment.colorKey))}
               {...(segment.showMarker === false
                 ? {}
                 : segment.dualMarker

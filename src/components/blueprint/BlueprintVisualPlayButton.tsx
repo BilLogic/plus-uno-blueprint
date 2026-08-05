@@ -38,7 +38,7 @@ export function BlueprintVisualPlayButton({
     <button
       type="button"
       className={cn(
-        'inline-flex size-5 shrink-0 items-center justify-center text-foreground transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30',
+        'tap-target-24 inline-flex size-5 shrink-0 items-center justify-center text-foreground transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30',
         className,
       )}
       aria-label={

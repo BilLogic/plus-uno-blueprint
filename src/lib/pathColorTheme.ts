@@ -89,6 +89,67 @@ const EXTENDED_PATH_COLORS = [
   RADIX_LIGHT.crimson1100,
 ] as const
 
+/**
+ * Stroke pattern per path type — the non-colour half of path identity.
+ *
+ * Paths were distinguishable by hue alone, which fails SC 1.4.1 (use of colour)
+ * and is also just hard to read where two arrows cross. `undefined` means a
+ * solid stroke, kept for the happy path so the common case stays cleanest.
+ *
+ * Patterns are tuned for the 2px arrow stroke: shorter than ~2px reads as a
+ * dotted blur at overview zoom, longer than ~12px stops repeating within a
+ * short segment.
+ */
+const PATH_TYPE_DASH: Record<PathType, string | undefined> = {
+  happy: undefined,
+  unhappy: '7 4',
+  exception: '2 4',
+  alternative: '12 5',
+  named: '7 4 2 4',
+}
+
+/**
+ * Extra patterns for the types that can have many distinct paths at once, hashed
+ * the same way `EXTENDED_PATH_COLORS` is so a path's dash and colour stay paired.
+ */
+const EXTENDED_PATH_DASHES = [
+  '7 4 2 4',
+  '12 5',
+  '2 4',
+  '10 4 2 4 2 4',
+  '5 5',
+] as const
+
+/**
+ * Dash pattern for a path's arrows and section borders. Mirrors
+ * {@link getPathColor}: registry paths get their type's pattern, and the two
+ * open-ended types hash into {@link EXTENDED_PATH_DASHES}.
+ */
+export function getPathDashArray(path: PathColorInput): string | undefined {
+  if (path.path_type === 'alternative' || path.path_type === 'named') {
+    const key = getPathColorKey(path)
+    if (!PATH_COLOR_REGISTRY[key]) {
+      return EXTENDED_PATH_DASHES[hashKey(key) % EXTENDED_PATH_DASHES.length]
+    }
+  }
+  return PATH_TYPE_DASH[path.path_type]
+}
+
+/**
+ * Same, from the `${type}:${name}` key the arrow layers already carry on each
+ * segment. Bare `'happy'` (no colon) is the legacy default-path key.
+ */
+export function getPathDashArrayFromKey(colorKey: string): string | undefined {
+  const separator = colorKey.indexOf(':')
+  if (separator === -1) {
+    return PATH_TYPE_DASH[colorKey as PathType] ?? undefined
+  }
+  return getPathDashArray({
+    path_type: colorKey.slice(0, separator) as PathType,
+    name: colorKey.slice(separator + 1),
+  })
+}
+
 function hashKey(key: string): number {
   let hash = 0
   for (const char of key) {
@@ -121,14 +182,20 @@ export function getPathArrowColor(path: PathColorInput): string {
   return PATH_TYPE_ARROW_COLORS[path.path_type]
 }
 
+/**
+ * Frame around a path's section. Solid for the happy path, dashed for anything
+ * else, so the frame carries the same non-colour distinction the arrows do —
+ * CSS borders take a style keyword rather than a dash array, so this is the
+ * coarse version of {@link getPathDashArray}.
+ */
 export function getPathSectionBorderStyle(path: PathColorInput): {
   borderColor: string
-  borderStyle: 'solid'
+  borderStyle: 'solid' | 'dashed'
   borderWidth: number
 } {
   return {
     borderColor: getPathColor(path),
-    borderStyle: 'solid',
+    borderStyle: getPathDashArray(path) ? 'dashed' : 'solid',
     borderWidth: 3,
   }
 }

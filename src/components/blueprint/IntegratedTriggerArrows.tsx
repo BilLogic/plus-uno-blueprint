@@ -35,6 +35,7 @@ import {
 } from '@/lib/integratedForkArrowGeometry'
 import {
   getPathArrowColor,
+  getPathDashArrayFromKey,
   getPathColorKey,
   pathColorKeyToMarkerSuffix,
   type PathColorInput,
@@ -581,7 +582,7 @@ export function IntegratedTriggerArrows({
           <g key={segment.id} opacity={segment.opacity}>
             <path
               d={segment.d}
-              {...blueprintArrowPathProps(segment.arrowColor)}
+              {...blueprintArrowPathProps(segment.arrowColor, getPathDashArrayFromKey(segment.colorKey))}
               {...(segment.showMarker === false
                 ? {}
                 : segment.dualMarker
@@ -602,7 +603,7 @@ export function IntegratedTriggerArrows({
                 <g key={branch.id} opacity={branch.opacity}>
                   <path
                     d={branch.d}
-                    {...blueprintArrowPathProps(branch.arrowColor)}
+                    {...blueprintArrowPathProps(branch.arrowColor, getPathDashArrayFromKey(branch.colorKey))}
                     strokeWidth={getIntegratedForkBranchStrokeWidth(branch.opacity)}
                     markerEnd={`url(#${markerIds[branch.colorKey]})`}
                   />

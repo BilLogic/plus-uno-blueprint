@@ -76,13 +76,23 @@ export function BlueprintArrowMarkerDefs({
   )
 }
 
-export function blueprintArrowPathProps(arrowColor: string) {
+/**
+ * Shared stroke props for every blueprint arrow.
+ *
+ * `dashArray` carries the path's identity alongside its colour — see
+ * `getPathDashArrayFromKey`. Pass `undefined` for a solid stroke.
+ */
+export function blueprintArrowPathProps(
+  arrowColor: string,
+  dashArray?: string,
+) {
   return {
     fill: 'none' as const,
     stroke: arrowColor,
     strokeWidth: ARROW_STROKE_WIDTH,
     strokeLinecap: 'butt' as const,
     strokeLinejoin: 'miter' as const,
+    strokeDasharray: dashArray,
   }
 }
 
