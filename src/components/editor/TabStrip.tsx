@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Trash2, X } from 'lucide-react'
+import { AlertTriangle, Info, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HomeNavButton } from '@/components/editor/EditorChrome'
 import {
@@ -102,7 +102,8 @@ export function DeleteSliceDialog({
         </DialogHeader>
         {error ? (
           <div className="px-6 pt-4">
-            <Alert variant="warning">
+            {/* The delete failed — that is an error, not a caution about one. */}
+            <Alert variant="destructive">
               <AlertTriangle className="size-3.5" aria-hidden />
               <AlertDescription className="text-xs">{error}</AlertDescription>
             </Alert>
@@ -164,8 +165,11 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
 
   return (
     <div className="shrink-0 border-b border-border bg-sidebar px-2 py-1.5">
-      <Alert variant="warning" className="items-center">
-        <AlertTriangle className="size-3.5" aria-hidden />
+      {/* Nothing failed and nothing is at risk — the link is just stale. That
+          is information, and reserving warning for actual cautions is what
+          keeps a warning worth reading. */}
+      <Alert variant="info" className="items-center">
+        <Info className="size-3.5" aria-hidden />
         <AlertDescription className="text-xs">
           That link points to a slice that no longer exists — it may have been
           deleted.

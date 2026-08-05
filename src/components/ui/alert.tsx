@@ -17,6 +17,13 @@ const alertVariants = cva(
           "border-destructive-400 bg-destructive-200 text-foreground *:[svg]:rounded-sm *:[svg]:bg-destructive-600 *:[svg]:p-0.5 *:[svg]:text-destructive-200",
         warning:
           "border-warning-400 bg-warning-200 text-foreground *:[svg]:rounded-sm *:[svg]:bg-warning-600 *:[svg]:p-0.5 *:[svg]:text-warning-200",
+        // Same recipe, different mechanism: `info` and `success` have no
+        // numeric ramp, so the tinted surface is a 15% alpha of the role and
+        // the edge is the `--border-{role}` token, which is that role at 30%.
+        // The icon chip still takes the solid fill and its own on-colour.
+        info: "border-border-info bg-info/15 text-foreground *:[svg]:rounded-sm *:[svg]:bg-info *:[svg]:p-0.5 *:[svg]:text-info-foreground",
+        success:
+          "border-border-success bg-success/15 text-foreground *:[svg]:rounded-sm *:[svg]:bg-success *:[svg]:p-0.5 *:[svg]:text-success-foreground",
       },
     },
     defaultVariants: {

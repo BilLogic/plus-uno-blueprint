@@ -209,7 +209,8 @@ function AddSourceForm({
         onChange={(event) => setNote(event.target.value)}
       />
       {error ? (
-        <Alert variant="warning">
+        /* The source was not saved — an error, not a caution. */
+        <Alert variant="destructive">
           <AlertTriangle className="size-3.5" aria-hidden />
           <AlertDescription className="text-xs">{error}</AlertDescription>
         </Alert>
@@ -260,7 +261,8 @@ function EvidenceList({
 
   if (result.status === 'error') {
     return (
-      <Alert variant="warning">
+      /* The fetch failed and the list is empty — an error, not a caution. */
+      <Alert variant="destructive">
         <AlertTriangle className="size-3.5" aria-hidden />
         <AlertDescription className="text-xs">
           Evidence could not be loaded: {result.message}

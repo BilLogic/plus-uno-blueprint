@@ -46,6 +46,7 @@
   --color-border-destructive: var(--border-destructive);
   --color-border-warning: var(--border-warning);
   --color-border-info: var(--border-info);
+  --color-border-success: var(--border-success);
   --color-border-brand: var(--border-brand);
 
   /* Stepped semantic ramps — per-theme HSL literals from themes/{light,dark}.css.

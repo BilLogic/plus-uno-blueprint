@@ -314,10 +314,25 @@
       calc(c * 0.08) h
   );
 
-  /* Status border tokens for subtle / tinted surfaces */
+  /*
+   * Status border tokens for subtle / tinted surfaces.
+   *
+   * These are for a status role that has no numeric ramp. `destructive` and
+   * `warning` do have one — `alert.tsx` borders those variants with
+   * `-400`, a step tuned against its own `-200` fill — so their two tokens here
+   * are superseded in practice and kept because Supabase declares the same
+   * four. `info` and `success` have no ramp, so these are the only way to draw
+   * a tinted edge that tracks the role.
+   *
+   * `--border-success` is the one Supabase does not have, because they have no
+   * success role at all. It exists so every status role that can tint a surface
+   * borders it the same way, rather than success alone reaching for an inline
+   * alpha at the call site.
+   */
   --border-destructive: oklch(from var(--destructive) l c h / 30%);
   --border-warning: oklch(from var(--warning) l c h / 30%);
   --border-info: oklch(from var(--info) l c h / 30%);
+  --border-success: oklch(from var(--success) l c h / 30%);
   --border-brand: oklch(from var(--primary) l c h / 30%);
 
   /*
