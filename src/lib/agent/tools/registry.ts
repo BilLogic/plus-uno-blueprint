@@ -47,6 +47,17 @@ type Client = SupabaseClient<Database>
 
 const str = (description: string) => ({ type: 'string', description })
 
+/** The tools that mutate data — the loop enforces batch etiquette on these. */
+export const WRITE_TOOL_NAMES = new Set([
+  'add_step',
+  'add_lane',
+  'upsert_cell',
+  'update_cell_content',
+  'update_cell_spec',
+  'set_cell_dependency',
+  'rename_path',
+])
+
 export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'read_reference',
@@ -101,7 +112,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_change_history',
     description:
-      "This session's edit history — every change made in this browser session (human and agent), newest first, with what each did and whether it is revertible.",
+      "This session's edit history — every change made in this browser session (human and agent), newest first. When reporting it, distinguish user edits from agent edits and remind the user rows are revertible from the change sheet.",
     parameters: {
       type: 'object',
       properties: {
@@ -230,7 +241,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'set_cell_dependency',
     description:
-      'Connect two cells on the SAME path. kind "trigger" = source sets target in motion (drawn as an arrow); "needs" = source depends on target existing (panel-only). Only where it adds information.',
+      'Connect two cells on the SAME path. kind "trigger" = source sets target in motion (drawn as an arrow); "needs" = source depends on target existing (panel-only) — "only makes sense after X" / "depends on X" reads as needs. State which kind you chose and why in your reply. Arrows only where they add information.',
     parameters: {
       type: 'object',
       properties: {

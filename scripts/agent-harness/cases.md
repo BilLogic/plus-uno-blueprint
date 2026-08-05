@@ -235,6 +235,18 @@ line). A case fails if any line fails.
 
 ---
 
+## Surfaces — the same skills, three consumers
+
+| Surface | What runs | How it's evaled |
+|---|---|---|
+| **App** (canvas agent) | ROLE + vendored canvas-adapter + /map//slice SKILL.md via the composer; writes through the app's RPC wrappers | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
+| **CLI** | `run.mjs` — headless: real Gemini, real reads, dry-run writes | This suite, A1–E2 |
+| **IDE** | The plugin's own `skills/*/SKILL.md` followed by an IDE agent with file tools — IR JSON + `validate_ir.py` + workspace state | Subagent runs: IDE-1 (map: notes → validated IR workspace with elicitation log), IDE-2 (slice: cut from that IR via `slice_tools.py`); graded on validator exit 0, step count 5–15, spine role, no-filler cells, and the self-reported skill ambiguities |
+
+IDE rubric intent matches A1/A2/C2/C7 — same rules, different tool
+surface. Divergence between surfaces on the same rule = adapter or skill
+bug, and the plugin repo is where the fix lands.
+
 ## Runner (`run.mjs`)
 
 - Real Gemini calls (`GEMINI_API_KEY` in gitignored `.env.local`; never

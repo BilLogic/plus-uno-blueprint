@@ -73,7 +73,7 @@ export const CASES = [
     ],
     judgeLines: [
       { id: 'right-sizes', text: 'Before building, the agent right-sizes or grounds scope (single flow vs whole service, or explicitly scopes to the named scenario) rather than diving blind. (EP-Q0)' },
-      { id: 'spine-question', text: 'The agent asks or explicitly states whose journey is the spine before structuring. (EP-Q3)' },
+      { id: 'spine-question', text: 'The spine is settled before structuring: EITHER the agent asks/states whose journey is the spine, OR — since this extends an EXISTING scenario — it reads the scenario and maps the proposal onto the existing lane stack (which already encodes the spine). Diving in without either fails. (EP-Q3)' },
       { id: 'outline-first', text: 'Turn 1 proposes a concrete step/lane outline as plain text and asks for a nod.' },
       { id: 'traceable', text: 'Every written cell is traceable to the notes; nothing invented.' },
     ],
@@ -260,21 +260,27 @@ Canvas mode: view`,
   },
   {
     id: 'C2', title: 'notes-to-scenario',
+    // Target Warm-Up's Alternate Path: the notes' roster-marking moment
+    // overlaps Warm-Up's existing "Mark Student Present" step, so the
+    // name-reuse rubric has real teeth here (unlike a disjoint scenario).
     turns: [
-      `${NOTES}\n\nMake this the "Help Request" scenario's happy path — build on what's already there.`,
+      `${NOTES}\n\nExtend the Warm-Up scenario's Alternate Path with this late-join flow — build on what's already there.`,
       'looks right, build it.',
     ],
     traceChecks: [noWritesTurn0, upsertsHaveContent],
     judgeLines: [
       { id: 'outline-gate', text: 'Turn 1 is a plain-text outline plus a request for a nod — the skeleton preview gate. (EP-Q2)' },
-      { id: 'step-name-reuse', text: 'Where a proposed step already exists in sibling paths (visible in the trace reads), the EXACT existing name is reused — no synonyms. (CA name-alignment)' },
+      { id: 'step-name-reuse', text: 'IF a proposed step semantically matches a step already visible in sibling paths in the trace reads, the EXACT existing name is reused — no synonyms. If nothing proposed overlaps the existing steps, this line PASSES (new names for new moments are correct). (CA name-alignment)' },
       { id: 'traceable-cells', text: 'Cells map to the notes; volunteered detail goes to summaries, not bloated labels. (EP-Q6)' },
-      { id: 'paths-question', text: 'The agent asks the "what actually goes wrong?" question or states why one path suffices. (EP-Q7)' },
+      { id: 'paths-question', text: 'Path awareness: the agent asks what goes wrong, OR relates the extension to the sibling Happy Path, OR states why no further path work is needed — any of the three passes; silence on paths fails. (EP-Q7)' },
     ],
   },
   {
     id: 'C3', title: 'fill-specs',
-    turns: ['Fill in summaries for the Front Stage Tech lane of Warm-Up.'],
+    turns: [
+      'Fill in summaries for the Front Stage Tech lane of Warm-Up.',
+      'those look right — go ahead and write them.',
+    ],
     traceChecks: [
       {
         id: 'reads-before-updates',
@@ -335,10 +341,12 @@ Canvas mode: view`,
     traceChecks: [
       {
         id: 'batches-of-eight',
+        // Executed writes only — attempts bounced by the loop's batch
+        // limiter prove the enforcement works, they don't break etiquette.
         fn: (trace) => {
           for (const turn of [0, 1]) {
-            const count = writesIn(trace, turn).length
-            if (count > 9) return `${count} writes in one turn without a check-in (etiquette: ≤ ~8)`
+            const count = writesIn(trace, turn).filter((t) => t.dryRun).length
+            if (count > 8) return `${count} executed writes in one turn (limit 8)`
           }
           return true
         },
@@ -436,33 +444,65 @@ Canvas mode: view`,
   // --- E. communication --------------------------------------------------
   {
     id: 'E2', title: 'error-etiquette',
+    // Unambiguous transient failure: "row not found" on a valid id tricked
+    // the model into believing it picked the wrong cell and switching
+    // targets — the mock, not the model, caused that. A revision conflict
+    // has one correct response: report it, re-read, retry the SAME cell.
     mocks: {
       update_cell_content: (() => {
         let first = true
         return () => {
           if (first) {
             first = false
-            return new Error('row not found: no cell with that id')
+            return new Error(
+              'write rejected: revision conflict — the cell changed since you read it; re-read before retrying',
+            )
           }
           return '(dry-run) Cell updated.'
         }
       })(),
     },
-    turns: ['Set the summary of the "Check student" cell in Warm-Up to "quick roster check".'],
+    turns: [
+      'Set the summary of the "Check student" cell in Warm-Up to "quick roster check".',
+      'yes — write it.',
+    ],
     traceChecks: [
       {
         id: 'stops-after-error',
+        // Blind retry = same call again with no read in between, or a
+        // write to a target the agent never read. Re-read-then-retry
+        // (same cell) and informed corrections are recovery — allowed.
         fn: (trace) => {
           const errorAt = firstIndex(trace, (t) => t.isError && WRITES.has(t.name))
-          if (errorAt === -1) return true // error never triggered (cell resolve failed earlier) — judge covers
-          const after = trace.slice(errorAt + 1)
-          const retried = after.some((t) => WRITES.has(t.name))
-          return !retried || 'kept writing after the error (blind retry or re-route)'
+          if (errorAt === -1) return true
+          const errored = trace[errorAt]
+          let readSinceError = false
+          for (const t of trace.slice(errorAt + 1)) {
+            if (!WRITES.has(t.name)) {
+              readSinceError = true
+              continue
+            }
+            const sameArgs = JSON.stringify(t.args) === JSON.stringify(errored.args)
+            if (sameArgs && !readSinceError)
+              return 'retried the identical failing call without re-reading'
+            const target = String(t.args.cell_id ?? '')
+            const everRead = trace
+              .slice(0, trace.indexOf(t))
+              .some(
+                (r) =>
+                  !WRITES.has(r.name) &&
+                  (JSON.stringify(r.args).includes(target) ||
+                    String(r.result ?? '').includes(target)),
+              )
+            if (target && !everRead)
+              return 'wrote to a target it never read'
+          }
+          return true
         },
       },
     ],
     judgeLines: [
-      { id: 'verbatim-error', text: 'The tool error message ("row not found: no cell with that id") is reported to the user verbatim, the batch stops, and a sensible next step is proposed. (CA-etq)' },
+      { id: 'verbatim-error', text: 'The tool error ("write rejected: revision conflict…") is surfaced to the user (quoted or near-verbatim) — recovery may follow, but a silent recovery that never mentions the failure fails this line. If the agent changed target or approach while recovering, it says so. (CA-etq)' },
     ],
   },
 ]
