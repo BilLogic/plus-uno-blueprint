@@ -1,27 +1,36 @@
+import { useEffect } from 'react'
 import { useSyncExternalStore } from 'react'
 
 /**
- * The collapsed sidebar's expand control, and who is hosting it.
+ * What the collapsed sidebar's floating pill says, and who told it.
  *
- * Collapsing used to add a floating pill over the canvas — a second piece
- * of chrome that landed on top of the canvas's own navbar (the phase
- * menubar, the slice header band). Two stacked chrome layers is one too
- * many, so the control now DOCKS into whichever navbar is on screen and
- * the pill appears only when there is no navbar to dock into (the
- * overview and the landing page).
+ * Collapsing used to leave TWO chrome layers stacked: the pill floated
+ * over the canvas's own navbar (the phase menubar, the slice header
+ * band). The fix is not to dock the pill — it is to let the pill BE the
+ * navbar while collapsed. The navbars hand it their identity (and their
+ * primary action) and render nothing themselves, so there is exactly one
+ * header on screen at any width.
  *
  * A module store rather than context: the navbars live deep inside canvas
  * content, several providers away from the shell that owns the state, and
- * this is a two-field signal — not worth threading through every surface.
+ * this is a small signal — not worth threading through every surface.
  */
+export type CollapsedNavSummary = {
+  /** The one line the pill shows — phase name, slice title. */
+  title: string
+  /** Optional glyph the band prefixes its title with (◇ for slices). */
+  glyph?: string
+  /** The band's primary action, kept reachable while collapsed. */
+  action?: { label: string; onClick: () => void }
+}
+
 type CollapsedState = {
   collapsed: boolean
   expand: () => void
-  /** How many navbars are currently mounted and able to host the control. */
-  hosts: number
+  summary: CollapsedNavSummary | null
 }
 
-let state: CollapsedState = { collapsed: false, expand: () => {}, hosts: 0 }
+let state: CollapsedState = { collapsed: false, expand: () => {}, summary: null }
 const listeners = new Set<() => void>()
 
 function emit(): void {
@@ -36,14 +45,34 @@ export function setSidebarCollapsedState(
   emit()
 }
 
-/** A navbar mounts: it can host the expand control, so the pill stands down. */
-export function registerCollapsedNavHost(): () => void {
-  state = { ...state, hosts: state.hosts + 1 }
+function setCollapsedNavSummary(summary: CollapsedNavSummary | null): void {
+  if (state.summary === summary) return
+  state = { ...state, summary }
   emit()
-  return () => {
-    state = { ...state, hosts: Math.max(0, state.hosts - 1) }
-    emit()
-  }
+}
+
+/**
+ * Publish this navbar's identity to the pill while the sidebar is
+ * collapsed. Pass null when the band is visible (it speaks for itself) or
+ * has nothing to say. Clears on unmount so a stale title never outlives
+ * the surface that owned it.
+ */
+export function useCollapsedNavSummary(summary: CollapsedNavSummary | null): void {
+  const title = summary?.title ?? null
+  const glyph = summary?.glyph ?? null
+  const actionLabel = summary?.action?.label ?? null
+  const onClick = summary?.action?.onClick
+  useEffect(() => {
+    if (title === null) return
+    setCollapsedNavSummary({
+      title,
+      ...(glyph ? { glyph } : {}),
+      ...(actionLabel && onClick
+        ? { action: { label: actionLabel, onClick } }
+        : {}),
+    })
+    return () => setCollapsedNavSummary(null)
+  }, [title, glyph, actionLabel, onClick])
 }
 
 export function useSidebarCollapsedState(): CollapsedState {

@@ -1,11 +1,7 @@
-import { useEffect } from 'react'
-import { Home, PanelLeft } from 'lucide-react'
+import { Home, PanelLeft, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import {
-  registerCollapsedNavHost,
-  useSidebarCollapsedState,
-} from '@/contexts/sidebarCollapsedContext'
+import { useSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
 import { cn } from '@/lib/utils'
 
 const EDITOR_TITLE = 'Uno Blueprint'
@@ -108,43 +104,50 @@ export function WorkspaceBadges() {
 }
 
 /**
- * The expand control, docked into a canvas navbar while the sidebar is
- * collapsed. Rendering it inside the navbar (rather than floating a pill
- * over it) is the whole point: one chrome row, no overlap, and the
- * control sits exactly where the rail's collapse button was.
+ * The collapsed sidebar's remnant: a floating pill over the canvas
+ * (Figma's collapsed-file-chip). Clicking its toggle expands the sidebar
+ * back into flow — no hover-peek: one control, one behavior.
  *
- * Mounting also tells the pill to stand down — see
- * `registerCollapsedNavHost`.
- */
-export function DockedSidebarExpander({ className }: { className?: string }) {
-  const { collapsed, expand } = useSidebarCollapsedState()
-  useEffect(() => registerCollapsedNavHost(), [])
-  if (!collapsed) return null
-  return (
-    <SidebarCollapseButton
-      collapsed
-      onToggle={expand}
-      size="icon-sm"
-      className={cn('mr-1 shrink-0', className)}
-    />
-  )
-}
-
-/**
- * The collapsed sidebar's remnant when NO navbar is on screen (the
- * overview, the landing page): a floating pill over the canvas — Figma's
- * collapsed-file-chip. Clicking its toggle expands the sidebar back into
- * flow — no hover-peek: one control, one behavior.
+ * While collapsed the pill IS the navbar: whatever band would have
+ * rendered under it hands over its identity and primary action and draws
+ * nothing itself, so there is one header on screen instead of two
+ * stacked ones. The pill widens to fit rather than the title truncating
+ * to nothing — it is the only place that context lives at this width.
  */
 export function FloatingSidebarPill({ onExpand }: { onExpand: () => void }) {
+  const { summary } = useSidebarCollapsedState()
   return (
     <div
-      className="pointer-events-auto flex items-center gap-1 rounded-lg border border-border bg-background/95 py-1 pl-3 pr-1 shadow-md backdrop-blur-sm"
+      className="pointer-events-auto flex max-w-[min(36rem,calc(100vw-6rem))] items-center gap-1.5 rounded-lg border border-border bg-background/95 py-1 pl-3 pr-1 shadow-md backdrop-blur-sm"
       data-editor-sidebar-pill
     >
-      <p className="max-w-40 truncate text-xs font-medium text-foreground">
+      <p className="shrink-0 truncate text-xs font-medium text-foreground">
         {EDITOR_TITLE}
       </p>
+      {summary ? (
+        <>
+          <span className="shrink-0 text-border" aria-hidden>
+            /
+          </span>
+          <p className="min-w-0 truncate text-xs text-muted-foreground">
+            {summary.glyph ? (
+              <span aria-hidden>{summary.glyph} </span>
+            ) : null}
+            {summary.title}
+          </p>
+          {summary.action ? (
+            <Button
+              type="button"
+              size="sm"
+              className="ml-0.5 h-6 shrink-0 px-2 text-[0.7rem]"
+              onClick={summary.action.onClick}
+            >
+              <Play className="size-3" aria-hidden />
+              {summary.action.label}
+            </Button>
+          ) : null}
+        </>
+      ) : null}
       <SidebarCollapseButton collapsed onToggle={onExpand} size="icon-sm" />
     </div>
   )

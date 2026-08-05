@@ -8,11 +8,14 @@ import {
   BLUEPRINT_NAVBAR_BAR_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import {
+  useCollapsedNavSummary,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
+import {
   getSlideDisplayLabel,
   isSubslide,
   type NavItem,
 } from '@/types/nav'
-import { DockedSidebarExpander } from '@/components/editor/EditorChrome'
 import { cn } from '@/lib/utils'
 
 type SlideHeaderContentProps = {
@@ -100,6 +103,19 @@ export function SlideStickyHeader({
   className,
   ...contentProps
 }: SlideStickyHeaderProps) {
+  // Collapsed: the floating pill carries this header's identity instead —
+  // one chrome layer at any width. Path filters and the zoom readout are
+  // deliberately not folded in; they come back when the sidebar does.
+  const { collapsed } = useSidebarCollapsedState()
+  useCollapsedNavSummary(
+    collapsed
+      ? {
+          title: getSlideDisplayLabel(contentProps.slide, contentProps.slides),
+        }
+      : null,
+  )
+  if (collapsed) return null
+
   return (
     <div
       data-editor-navbar
@@ -110,7 +126,6 @@ export function SlideStickyHeader({
       )}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <DockedSidebarExpander />
       <PhaseMenubarHeader
         slide={contentProps.slide}
         slides={contentProps.slides}

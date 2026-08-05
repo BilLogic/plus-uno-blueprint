@@ -1,8 +1,11 @@
 import type { LucideIcon } from 'lucide-react'
-import { DockedSidebarExpander } from '@/components/editor/EditorChrome'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { SliceDetail } from '@/hooks/useSlice'
+import {
+  useCollapsedNavSummary,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
 import { cn } from '@/lib/utils'
 
 export type SliceHeaderPrimaryAction = {
@@ -44,6 +47,20 @@ export function SliceHeaderBand({
   const description = detail.slice.description?.trim()
   const PrimaryIcon = primaryAction.icon
 
+  // Collapsed: the floating pill is the only header on screen, so hand it
+  // this slice's identity and primary action and draw nothing here.
+  const { collapsed } = useSidebarCollapsedState()
+  useCollapsedNavSummary(
+    collapsed
+      ? {
+          title: detail.slice.title,
+          glyph: '◇',
+          action: { label: primaryAction.label, onClick: primaryAction.onClick },
+        }
+      : null,
+  )
+  if (collapsed) return null
+
   return (
     <div
       data-editor-navbar
@@ -54,7 +71,6 @@ export function SliceHeaderBand({
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
-      <DockedSidebarExpander />
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="min-w-0 truncate text-sm font-semibold">
