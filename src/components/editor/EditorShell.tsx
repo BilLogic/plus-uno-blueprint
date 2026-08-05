@@ -85,7 +85,7 @@ export function EditorShell() {
     setScenarioDisplayViewType,
   } = useEditor()
   const { activeTab, activateTab, openTab, closeTab } = useViewState()
-  const { canWrite } = useSupabase()
+  const { canAgent } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
   // Home reads as active only on the overview canvas itself, and only while
@@ -397,7 +397,7 @@ export function EditorShell() {
             setSidebarCollapsed(false)
           }
         }}
-        showAgent={canWrite}
+        showAgent={canAgent}
         topSlot={
           <SidebarCollapseButton collapsed={false} onToggle={toggleSidebar} />
         }

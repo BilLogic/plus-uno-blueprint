@@ -157,15 +157,16 @@ function isToday(iso: string): boolean {
 export function AgentPanel() {
   const sessions = useAgentSessions()
   const [openSessionId, setOpenSessionId] = useState<string | null>(null)
-  const { client, canWrite } = useSupabase()
+  const { client, canAgent } = useSupabase()
 
   // Persistence rides the authenticated client: locally everything lands in
-  // agent_sessions/agent_messages; read-only visitors stay on localStorage.
+  // agent_sessions/agent_messages (viewers included — chat is their whole
+  // surface); anonymous visitors stay on localStorage.
   useEffect(() => {
-    attachAgentPersistence(canWrite ? client : null)
-    if (canWrite && client) void hydrateAgentSessions()
+    attachAgentPersistence(canAgent ? client : null)
+    if (canAgent && client) void hydrateAgentSessions()
     return () => attachAgentPersistence(null)
-  }, [canWrite, client])
+  }, [canAgent, client])
 
   const openSession =
     openSessionId !== null
@@ -540,7 +541,7 @@ function AgentChatView({
   onBack: () => void
 }) {
   const settings = useAgentSettings()
-  const { client } = useSupabase()
+  const { client, canWrite } = useSupabase()
   const mode = useCanvasModeValue()
   const { activePathKeys } = usePathSelectionContext()
   const changes = useSyncExternalStore(subscribeToSession, sessionSnapshot)
@@ -637,6 +638,7 @@ function AgentChatView({
       text,
       skill,
       attachment: attached,
+      allowWrites: canWrite,
     })
   }
 
@@ -1003,7 +1005,7 @@ function DeleteSessionDialog({
  */
 export function AgentSettingsRailButton() {
   const settings = useAgentSettings()
-  const { client, session, canWrite } = useSupabase()
+  const { client, session, canAgent } = useSupabase()
   const [keyDraft, setKeyDraft] = useState('')
   const [emailDraft, setEmailDraft] = useState('')
   const [passwordDraft, setPasswordDraft] = useState('')
@@ -1159,7 +1161,7 @@ export function AgentSettingsRailButton() {
               </>
             )}
 
-            {canWrite ? (
+            {canAgent ? (
               <>
             <div className="my-0.5 border-t border-border/60" />
             <p className="text-xs font-medium text-foreground">Agent</p>

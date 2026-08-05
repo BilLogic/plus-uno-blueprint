@@ -37,6 +37,14 @@ type SupabaseContextValue = {
    * not". Getting those the wrong way round is the expensive mistake.
    */
   isEditPreview: boolean
+  /**
+   * Signed in with app_metadata.role === 'service' (set server-side; RLS's
+   * restrictive policies are the authority — this mirrors them for the UI).
+   * Non-service sessions view and use the agent read-only.
+   */
+  isServiceAccount: boolean
+  /** Any signed-in session may open the agent (viewers chat read-only). */
+  canAgent: boolean
 }
 
 const SupabaseContext = createContext<SupabaseContextValue | null>(null)
@@ -63,6 +71,11 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       if (!mounted) return
       setSession(data.session)
       setIsLoading(false)
+      // Roles live in the JWT, which is minted at sign-in — a session that
+      // predates a role change carries stale claims until refresh. One
+      // refresh per boot keeps app_metadata.role current for long-lived
+      // sessions (onAuthStateChange delivers the updated session).
+      if (data.session) void client.auth.refreshSession()
     })
 
     const {
@@ -114,6 +127,10 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
   const isEditPreview =
     hasDevAuthoringUi() && !isDevAuthoring && session === null
 
+  const isServiceAccount =
+    (session?.user.app_metadata as { role?: string } | undefined)?.role ===
+      'service' || isDevAuthoring
+
   const value = useMemo(
     () => ({
       client,
@@ -121,11 +138,24 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       session,
       isLoading,
       canWrite:
-        configured && (session !== null || isDevAuthoring || isEditPreview),
+        configured &&
+        ((session !== null && isServiceAccount) ||
+          isDevAuthoring ||
+          isEditPreview),
       isDevAuthoring,
       isEditPreview,
+      isServiceAccount,
+      canAgent: configured && (session !== null || isDevAuthoring),
     }),
-    [client, configured, session, isLoading, isDevAuthoring, isEditPreview],
+    [
+      client,
+      configured,
+      session,
+      isLoading,
+      isDevAuthoring,
+      isEditPreview,
+      isServiceAccount,
+    ],
   )
 
   return (

@@ -240,9 +240,16 @@ export async function sendToAgent(input: {
   skill?: AgentSkillCommand | null
   /** Canvas hand-off (annotation capture) folded into this message. */
   attachment?: AgentAttachment | null
+  /**
+   * Service-account session? Viewers (signed-in, non-service) get NO write
+   * tools — the specs are filtered out, a stray call is refused, and RLS
+   * would reject it anyway. View + navigate + annotate + answer only.
+   */
+  allowWrites?: boolean
 }): Promise<void> {
   const { client, sessionId, settings, contextNote, text, skill, attachment } =
     input
+  const allowWrites = input.allowWrites !== false
   const run = runFor(sessionId)
   if (run.running) return
   if (!hasKey(settings)) {
@@ -287,9 +294,15 @@ export async function sendToAgent(input: {
         .filter(Boolean)
         .join('\n')
       const result = await adapter.chat({
-        system: buildSystem(liveContext, skill),
+        system:
+          buildSystem(liveContext, skill) +
+          (allowWrites
+            ? ''
+            : '\n\n--- session tier ---\nThis session is VIEW-ONLY (not a service account): you have no write tools. Navigate, read, annotate, and answer with citations; when the user wants an edit, describe the exact change for a service account to make — never imply you made it.'),
         messages: run.messages,
-        tools: TOOL_SPECS,
+        tools: allowWrites
+          ? TOOL_SPECS
+          : TOOL_SPECS.filter((spec) => !WRITE_TOOL_NAMES.has(spec.name)),
         apiKey,
         model: modelFor(settings),
         signal: controller.signal,
@@ -309,6 +322,17 @@ export async function sendToAgent(input: {
       const results: AgentMessage = { role: 'tool', parts: [] }
       for (const call of calls) {
         if (controller.signal.aborted) throw new DOMException('stopped', 'AbortError')
+        if (WRITE_TOOL_NAMES.has(call.name) && !allowWrites) {
+          results.parts.push({
+            type: 'tool_result',
+            toolCallId: call.id,
+            name: call.name,
+            result:
+              'This session is view-only (not a service account) — no write tools exist here. Describe the change for a service account instead.',
+            isError: true,
+          })
+          continue
+        }
         if (
           WRITE_TOOL_NAMES.has(call.name) &&
           writesThisSend >= WRITE_BATCH_LIMIT
