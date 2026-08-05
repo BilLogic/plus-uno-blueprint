@@ -122,6 +122,26 @@ export const ANNOTATION_PEN_SWATCHES = [
   ANNOTATION_PAPER,
 ] as const
 
+/**
+ * Human name for a swatch, for its `aria-label` and tooltip.
+ *
+ * A swatch's *value* is the token string it paints with, because that string is
+ * what an annotation row stores. That is not a label: without this, every
+ * swatch announced itself to a screen reader, and showed on hover, as
+ * `var(--color-violet-900)`.
+ *
+ * One step per family appears in any single row, so the family alone names a
+ * swatch unambiguously. Ink and paper are checked first — they are slate-1200
+ * and gray-100, and "Slate" / "Gray" would say less than what they are for.
+ */
+export function annotationSwatchName(swatch: string): string {
+  if (swatch === ANNOTATION_INK) return 'Ink'
+  if (swatch === ANNOTATION_PAPER) return 'Paper'
+  const family = /--color-([a-z]+)-\d+/.exec(swatch)?.[1]
+  if (!family) return 'Custom'
+  return family.charAt(0).toUpperCase() + family.slice(1)
+}
+
 export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
 /**
  * Pen stroke weights in board units (same space as shape strokes).

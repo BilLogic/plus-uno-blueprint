@@ -55,7 +55,9 @@ export function SliceHeaderBand({
             <span aria-hidden>◇ </span>
             {detail.slice.title}
           </h2>
-          <Badge variant="secondary" className="shrink-0">
+          {/* A raw `slice_type` enum, not a written label — mono so it reads as
+              the stored value it is. */}
+          <Badge variant="secondary" className="shrink-0 font-mono">
             {detail.slice.slice_type}
           </Badge>
         </div>

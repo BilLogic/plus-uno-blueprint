@@ -44,6 +44,7 @@ import {
   type ShapeAnnotation,
   type StickyAnnotation,
   type TextAnnotation,
+  annotationSwatchName,
 } from '@/lib/canvasAnnotations'
 import {
   DropdownMenu,
@@ -463,7 +464,7 @@ function ShapeStyleBar({
               <ColorSwatch
                 key={`fill-${swatch}`}
                 color={swatch}
-                label={`Fill ${swatch}`}
+                label={`Fill ${annotationSwatchName(swatch)}`}
                 selected={shape.fillColor === swatch}
                 onSelect={() => {
                   onChange({ fillColor: swatch })
@@ -545,7 +546,7 @@ function ShapeStyleBar({
               <ColorSwatch
                 key={`stroke-${swatch}`}
                 color={swatch}
-                label={`Stroke ${swatch}`}
+                label={`Stroke ${annotationSwatchName(swatch)}`}
                 selected={shape.color === swatch}
                 onSelect={() => {
                   onChange({
@@ -634,7 +635,7 @@ function StickyStyleBar({
               <ColorSwatch
                 key={`sticky-${swatch}`}
                 color={swatch}
-                label={`Sticky ${swatch}`}
+                label={`Sticky ${annotationSwatchName(swatch)}`}
                 selected={sticky.color.toUpperCase() === swatch.toUpperCase()}
                 onSelect={() => {
                   onChange({ color: swatch })
@@ -803,7 +804,7 @@ function TextStyleBar({
               <ColorSwatch
                 key={`text-${swatch}`}
                 color={swatch}
-                label={`Text ${swatch}`}
+                label={`Text ${annotationSwatchName(swatch)}`}
                 selected={text.color.toUpperCase() === swatch.toUpperCase()}
                 onSelect={() => {
                   onChange({ color: swatch })

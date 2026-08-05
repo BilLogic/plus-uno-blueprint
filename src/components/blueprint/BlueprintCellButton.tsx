@@ -175,7 +175,7 @@ export function BlueprintCellButton({
         <span
           aria-hidden
           data-slice-sequence-badge=""
-          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-foreground text-[10px] font-semibold text-background shadow-sm"
+          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-foreground font-mono text-[10px] font-semibold text-background tabular-nums shadow-sm"
         >
           {sliceSequence}
         </span>

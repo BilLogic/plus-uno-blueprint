@@ -68,7 +68,9 @@ function EvidenceRow({ row }: { row: Evidence }) {
             className="flex w-fit min-w-0 items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ExternalLink className="size-3 shrink-0" aria-hidden />
-            <span className="truncate">{row.ref}</span>
+            {/* A citation ref or URL — machine data, and mono keeps a truncated
+                one scannable character by character. */}
+            <span className="truncate font-mono">{row.ref}</span>
           </a>
         ) : null}
         {row.excerpt ? (
@@ -166,7 +168,7 @@ function AddSourceForm({
       <select
         value={kind}
         aria-label="Source kind"
-        className="h-7 w-full rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
+        className="h-7 w-full rounded-md border border-border bg-background px-2 font-mono text-xs text-foreground outline-none focus:ring-1 focus:ring-ring"
         onChange={(event) => setKind(event.target.value as EvidenceKind)}
       >
         {EVIDENCE_KINDS.map((option) => (

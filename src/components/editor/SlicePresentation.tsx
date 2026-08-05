@@ -244,7 +244,7 @@ export function SlicePresentation({
 
           <div className="min-w-0 flex-1 overflow-y-auto px-2">
             <div className="flex min-h-full flex-col items-center justify-center gap-4 py-4 text-center">
-              <p className="text-[11px] font-medium tracking-[0.2em] text-muted-foreground/70 uppercase">
+              <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
                 Frame {clampedFrame + 1} of {frameCount}
               </p>
               {stageMedia.length > 0 ? (
@@ -422,7 +422,7 @@ function PresentationFilmstrip({
                       onClick={() => onSelect(index)}
                       title={cellSnippet(cell)}
                       className={cn(
-                        'flex size-10 shrink-0 items-center justify-center rounded-md border text-xs font-semibold transition-colors',
+                        'flex size-10 shrink-0 items-center justify-center rounded-md border font-mono text-xs font-semibold tabular-nums transition-colors',
                         active
                           ? 'border-foreground bg-foreground text-background'
                           : 'border-border bg-muted text-muted-foreground hover:bg-accent',

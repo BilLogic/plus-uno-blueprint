@@ -21,6 +21,7 @@ import {
   ANNOTATION_PAPER,
   ANNOTATION_PEN_SWATCHES,
   type CanvasAnnotationTool,
+  annotationSwatchName,
 } from '@/lib/canvasAnnotations'
 import { cn } from '@/lib/utils'
 
@@ -207,10 +208,10 @@ function DrawSubpanel() {
           <button
             key={swatch}
             type="button"
-            aria-label={`Pen color ${swatch}`}
+            aria-label={`Pen color ${annotationSwatchName(swatch)}`}
             aria-pressed={penColor.toUpperCase() === swatch.toUpperCase()}
             disabled={penOptionsDisabled}
-            title={swatch}
+            title={annotationSwatchName(swatch)}
             onClick={() => setPenColor(swatch)}
             className={cn(
               'tap-target-24 size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
