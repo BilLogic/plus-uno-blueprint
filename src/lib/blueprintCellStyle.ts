@@ -5,8 +5,25 @@ import type { CSSProperties } from 'react'
 export const BLUEPRINT_CELL_TEXT_COLOR = '#000000'
 export const BLUEPRINT_CELL_BORDER_COLOR = '#000000'
 
+/** Neutral used when a fill is not a hex colour — see {@link normalizeHex}. */
+const FALLBACK_FILL = '#EEEEEE'
+
+/**
+ * Uppercase 6-digit form of `hex`, expanding the 3-digit shorthand.
+ *
+ * Anything else returns {@link FALLBACK_FILL}. Cell fills come from blueprint
+ * rows, so a bad value is data, not a coding error: without this every
+ * `parseInt` below returns NaN, the hue/saturation math propagates it, and
+ * `toString(16)` yields `NaN` — the cell renders with no background and no ring
+ * at all, which reads as a rendering bug rather than a bad row.
+ */
 function normalizeHex(hex: string): string {
-  return hex.trim().toUpperCase()
+  const value = hex.trim().toUpperCase()
+  if (/^#[0-9A-F]{6}$/.test(value)) return value
+  if (/^#[0-9A-F]{3}$/.test(value)) {
+    return `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`
+  }
+  return FALLBACK_FILL
 }
 
 function hexToHsl(hex: string): [h: number, s: number, l: number] {
@@ -165,14 +182,37 @@ function saturationPreservingChroma(
   return Math.min(saturation, (saturation * reach(fromLightness)) / to)
 }
 
-/** Per-cell interaction tones — same hue as fill, tuned for hover/pressed/focus. */
-export function getBlueprintCellInteractionColors(fill: string): {
+type CellInteractionColors = {
   bg: string
   bgHover: string
   bgPressed: string
   ring: string
   ringSoft: string
-} {
+}
+
+/**
+ * Memo keyed on the fill hex.
+ *
+ * `solveRingLightness` runs a 20-step binary search with a WCAG luminance
+ * computation per probe, twice per call. That is ~20µs, which is nothing once
+ * but is paid per cell per render — around 6ms on a 300-cell board, a third of
+ * a frame. The input space is the eight palette fills plus whatever a blueprint
+ * overrides, so the map stays small and never needs eviction.
+ */
+const interactionColorCache = new Map<string, CellInteractionColors>()
+
+/** Per-cell interaction tones — same hue as fill, tuned for hover/pressed/focus. */
+export function getBlueprintCellInteractionColors(
+  fill: string,
+): CellInteractionColors {
+  const cached = interactionColorCache.get(fill)
+  if (cached) return cached
+  const computed = computeCellInteractionColors(fill)
+  interactionColorCache.set(fill, computed)
+  return computed
+}
+
+function computeCellInteractionColors(fill: string): CellInteractionColors {
   const [h, s, l] = hexToHsl(fill)
 
   // Neutral visual cells — keep grey family.
@@ -186,7 +226,12 @@ export function getBlueprintCellInteractionColors(fill: string): {
       bg: fill,
       bgHover: hslToHex(h, s, l * 0.94),
       bgPressed: hslToHex(h, Math.min(s + 6, 18), l * 0.86),
-      ring: hslToHex(h, saturationPreservingChroma(s, l, 42), 42),
+      ring: solveRingLightness(
+        h,
+        saturationPreservingChroma(s, l, 42),
+        42,
+        fill,
+      ),
       ringSoft: solveRingLightness(
         h,
         saturationPreservingChroma(s, l, 58),
@@ -212,7 +257,7 @@ export function getBlueprintCellInteractionColors(fill: string): {
     bg: fill,
     bgHover: hslToHex(h, hoverSat, hoverLightness),
     bgPressed: hslToHex(h, pressedSat, pressedLightness),
-    ring: hslToHex(h, ringSat, Math.max(l * 0.42, 26)),
+    ring: solveRingLightness(h, ringSat, Math.max(l * 0.42, 26), fill),
     ringSoft: solveRingLightness(h, ringSoftSat, Math.max(l * 0.54, 36), fill),
   }
 }
@@ -229,11 +274,6 @@ export function getBlueprintCellInteractionStyle(
     '--blueprint-cell-ring': colors.ring,
     '--blueprint-cell-ring-soft': colors.ringSoft,
   }
-}
-
-/** @deprecated Use getBlueprintCellInteractionColors().ring */
-export function getBlueprintCellRingColor(fill: string): string {
-  return getBlueprintCellInteractionColors(fill).ring
 }
 
 export function getBlueprintCellSurfaceStyle(

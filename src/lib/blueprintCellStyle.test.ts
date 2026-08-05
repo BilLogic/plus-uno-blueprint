@@ -20,7 +20,13 @@ describe('blueprint cell focus ring', () => {
   const fills = Object.entries(BLUEPRINT_CELL_PALETTE)
 
   it.each(fills)('%s (%s) clears SC 1.4.11 against its own fill', (_name, fill) => {
-    const { ringSoft } = getBlueprintCellInteractionColors(fill)
+    // Both rings render as visible outlines — `--blueprint-cell-ring` is the
+    // 2px slice-member outline in blueprint.css, `--blueprint-cell-ring-soft`
+    // the focus affordance — so both owe the fill 3:1.
+    const { ring, ringSoft } = getBlueprintCellInteractionColors(fill)
+    expect(getContrastRatio(ring, fill)).toBeGreaterThanOrEqual(
+      CELL_RING_MIN_CONTRAST,
+    )
     expect(getContrastRatio(ringSoft, fill)).toBeGreaterThanOrEqual(
       CELL_RING_MIN_CONTRAST,
     )

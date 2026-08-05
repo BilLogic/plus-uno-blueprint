@@ -112,9 +112,13 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
+    /* The fallback is a frozen literal, not `var(--foreground)`: this layer has
+       to print and project identically, and a theme token would invert the
+       scrim in dark. `getBlueprintCellInteractionStyle` always sets the hover
+       var, so the fallback only covers a cell rendered outside that helper. */
     background: color-mix(
       in srgb,
-      var(--blueprint-cell-bg-hover, var(--foreground)) 30%,
+      var(--blueprint-cell-bg-hover, #000000) 30%,
       transparent
     );
     content: '';
