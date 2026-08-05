@@ -94,6 +94,13 @@ import {
 } from '@/lib/agent/attachments'
 import { attachAgentPersistence } from '@/lib/agent/persistence'
 import {
+  clearAgentDraft,
+  setAgentDraft,
+  setOpenAgentSession,
+  useAgentDraft,
+  useOpenAgentSessionId,
+} from '@/lib/agent/panelState'
+import {
   AGENT_SKILL_COMMANDS,
   parseSkillDraft,
   skillMatchesQuery,
@@ -156,7 +163,10 @@ function isToday(iso: string): boolean {
  */
 export function AgentPanel() {
   const sessions = useAgentSessions()
-  const [openSessionId, setOpenSessionId] = useState<string | null>(null)
+  // Panel view state lives outside the component: both postures mount
+  // their own AgentPanel, and toggling ✦ unmounts it entirely — local
+  // state would drop you back to the session list every time.
+  const openSessionId = useOpenAgentSessionId()
   const { client, canAgent } = useSupabase()
 
   // Persistence rides the authenticated client: locally everything lands in
@@ -176,16 +186,16 @@ export function AgentPanel() {
   return openSession ? (
     <AgentChatView
       session={openSession}
-      onBack={() => setOpenSessionId(null)}
+      onBack={() => setOpenAgentSession(null)}
     />
   ) : (
     <AgentSessionsView
       sessions={sessions}
-      onOpen={(id) => setOpenSessionId(id)}
+      onOpen={(id) => setOpenAgentSession(id)}
       onCreate={() => {
         const session = createAgentSession()
         // ＋ drops straight into the conversation.
-        setOpenSessionId(session.id)
+        setOpenAgentSession(session.id)
       }}
     />
   )
@@ -546,10 +556,22 @@ function AgentChatView({
   const { activePathKeys } = usePathSelectionContext()
   const changes = useSyncExternalStore(subscribeToSession, sessionSnapshot)
   const keyed = hasKey(settings)
-  const [draft, setDraft] = useState('')
-  const [pendingSkill, setPendingSkill] = useState<AgentSkillCommand | null>(
-    null,
-  )
+  // Same reason as openSessionId, plus a bonus: drafts are per session, so
+  // switching conversations no longer eats what you were typing.
+  const storedDraft = useAgentDraft(session.id)
+  const draft = storedDraft.text
+  const pendingSkill = storedDraft.skillId
+    ? (AGENT_SKILL_COMMANDS.find(
+        (entry) => entry.id === storedDraft.skillId,
+      ) ?? null)
+    : null
+  const setDraft = (text: string) =>
+    setAgentDraft(session.id, { text, skillId: storedDraft.skillId })
+  const setPendingSkill = (command: AgentSkillCommand | null) =>
+    setAgentDraft(session.id, {
+      text: storedDraft.text,
+      skillId: command?.id ?? null,
+    })
   const attachment = usePendingAgentAttachment()
   const { events, running } = useAgentRun(session.id)
   const changeCount = useAgentChangeCount(session.id)
@@ -605,8 +627,7 @@ function AgentChatView({
 
   const pickSkill = (command: AgentSkillCommand) => {
     if (!command.content) return
-    setPendingSkill(command)
-    setDraft('')
+    setAgentDraft(session.id, { text: '', skillId: command.id })
   }
 
   const send = () => {
@@ -628,8 +649,7 @@ function AgentChatView({
       if (attached) setPendingAgentAttachment(attached)
       return
     }
-    setDraft('')
-    setPendingSkill(null)
+    clearAgentDraft(session.id)
     void sendToAgent({
       client,
       sessionId: session.id,
@@ -846,8 +866,10 @@ function AgentChatView({
                       )
                     : undefined
                   if (command?.content) {
-                    setPendingSkill(command)
-                    setDraft(token![2])
+                    setAgentDraft(session.id, {
+                      text: token![2],
+                      skillId: command.id,
+                    })
                     return
                   }
                 }

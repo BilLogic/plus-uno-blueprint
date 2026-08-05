@@ -140,8 +140,15 @@ export function EditorShell() {
     setSidebarCollapsed(false)
   }, [])
   useEffect(() => {
-    setSidebarCollapsedState({ collapsed: railOnly, expand: expandSidebar })
-  }, [railOnly, expandSidebar])
+    // NOT `railOnly`: presentation also collapses the sidebar, but it hides
+    // the pill too (full-bleed). Telling the bands they are collapsed there
+    // would strand a presentation with no header and no Return — the band
+    // must keep drawing itself when nothing else can carry it.
+    setSidebarCollapsedState({
+      collapsed: railOnly && !presenting,
+      expand: expandSidebar,
+    })
+  }, [railOnly, presenting, expandSidebar])
 
   // Hand the agent its navigation hands: open_phase / open_scenario tools
   // land on the same callbacks the sidebar rows use.

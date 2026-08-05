@@ -55,8 +55,15 @@ function load(): AgentPlacement {
         DOCK_MAX_RATIO,
       ),
       float: {
-        x: Number.isFinite(float.x) ? float.x : DEFAULTS.float.x,
-        y: Number.isFinite(float.y) ? float.y : DEFAULTS.float.y,
+        // Clamped on load, not just on resize: a box saved on a wide
+        // monitor would otherwise open offscreen on a laptop, and the
+        // resize listener never fires to rescue it.
+        x: Number.isFinite(float.x)
+          ? clamp(float.x, 8, Math.max(8, window.innerWidth - 120))
+          : DEFAULTS.float.x,
+        y: Number.isFinite(float.y)
+          ? clamp(float.y, 8, Math.max(8, window.innerHeight - 80))
+          : DEFAULTS.float.y,
         width: Math.max(FLOAT_MIN.width, float.width),
         height: Math.max(FLOAT_MIN.height, float.height),
       },
@@ -71,6 +78,16 @@ const listeners = new Set<() => void>()
 
 function emit(): void {
   listeners.forEach((listener) => listener())
+}
+
+/**
+ * Persistence is deliberately NOT part of `emit`: a drag emits on every
+ * pointermove, and a synchronous JSON.stringify + localStorage write per
+ * frame is a real cost for a value nobody reads until the next boot.
+ * Callers flush at the end of a gesture (and any non-drag change flushes
+ * immediately, since those are rare).
+ */
+export function persistAgentPlacement(): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -78,9 +95,65 @@ function emit(): void {
   }
 }
 
-export function setAgentPlacement(patch: Partial<AgentPlacement>): void {
-  state = { ...state, ...patch, float: { ...state.float, ...(patch.float ?? {}) } }
+export function setAgentPlacement(
+  patch: Partial<AgentPlacement>,
+  options?: { persist?: boolean },
+): void {
+  const next = {
+    ...state,
+    ...patch,
+    float: { ...state.float, ...(patch.float ?? {}) },
+  }
+  if (
+    next.mode === state.mode &&
+    next.open === state.open &&
+    next.dockRatio === state.dockRatio &&
+    next.float.x === state.float.x &&
+    next.float.y === state.float.y &&
+    next.float.width === state.float.width &&
+    next.float.height === state.float.height
+  ) {
+    return
+  }
+  state = next
   emit()
+  if (options?.persist !== false) persistAgentPlacement()
+}
+
+/**
+ * The live drag, shared by both mount points.
+ *
+ * The chat renders from two places (docked in the sidebar, floating over
+ * the canvas) and a drag-out flips which one is visible MID-GESTURE. Held
+ * as component state, the gesture would belong to the instance that is
+ * about to hide — which is why the drop-target ring never appeared on a
+ * drag-out. Transient by design: never persisted.
+ */
+export type AgentDragState = { active: boolean; overSidebar: boolean }
+
+let drag: AgentDragState = { active: false, overSidebar: false }
+const dragListeners = new Set<() => void>()
+
+export function setAgentDrag(next: AgentDragState): void {
+  if (drag.active === next.active && drag.overSidebar === next.overSidebar)
+    return
+  drag = next
+  dragListeners.forEach((listener) => listener())
+}
+
+export function getAgentDrag(): AgentDragState {
+  return drag
+}
+
+export function useAgentDrag(): AgentDragState {
+  return useSyncExternalStore(
+    (listener) => {
+      dragListeners.add(listener)
+      return () => dragListeners.delete(listener)
+    },
+    () => drag,
+    () => drag,
+  )
 }
 
 /** The rail's ✦: show/hide the agent wherever it currently lives. */
@@ -88,18 +161,9 @@ export function toggleAgentOpen(force?: boolean): void {
   setAgentPlacement({ open: force ?? !state.open })
 }
 
-/** Drag ended outside the sidebar — float it, landing where it was dropped. */
-export function floatAgentAt(x: number, y: number): void {
-  setAgentPlacement({ mode: 'floating', open: true, float: { ...state.float, x, y } })
-}
-
 /** Drag ended over the sidebar — dock it back. */
 export function dockAgent(): void {
   setAgentPlacement({ mode: 'docked', open: true })
-}
-
-export function getAgentPlacement(): AgentPlacement {
-  return state
 }
 
 export function useAgentPlacement(): AgentPlacement {

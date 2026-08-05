@@ -7,8 +7,11 @@ import {
   DOCK_MIN_RATIO,
   FLOAT_MIN,
   dockAgent,
+  persistAgentPlacement,
+  setAgentDrag,
   setAgentPlacement,
   toggleAgentOpen,
+  useAgentDrag,
   useAgentPlacement,
 } from '@/lib/agent/placement'
 import { cn } from '@/lib/utils'
@@ -93,14 +96,17 @@ function AgentDockChrome({
  */
 export function AgentDock({ visible }: { visible: boolean }) {
   const placement = useAgentPlacement()
-  const [dragging, setDragging] = useState(false)
-  const [overSidebar, setOverSidebar] = useState(false)
-  // Drag bookkeeping lives in refs, not state: `pointerup` has to read the
-  // CURRENT hover result, and a state value captured in the listener's
-  // closure is one render behind — which is exactly the drop that silently
-  // failed to dock.
-  const overSidebarRef = useRef(false)
+  // Drag state is SHARED (module store), not local: a drag-out flips which
+  // mount point is visible mid-gesture, so component state would strand the
+  // gesture on the instance that is about to hide.
+  const { active: dragging, overSidebar } = useAgentDrag()
   const dragOffset = useRef({ x: 0, y: 0 })
+  const [resizeFrom, setResizeFrom] = useState<{
+    x: number
+    y: number
+    width: number
+    height: number
+  } | null>(null)
   const placementRef = useRef(placement)
   useEffect(() => {
     placementRef.current = placement
@@ -116,7 +122,7 @@ export function AgentDock({ visible }: { visible: boolean }) {
     dragOffset.current = box
       ? { x: event.clientX - box.left, y: event.clientY - box.top }
       : { x: 40, y: 12 }
-    setDragging(true)
+    setAgentDrag({ active: true, overSidebar: false })
   }
 
   useEffect(() => {
@@ -129,8 +135,7 @@ export function AgentDock({ visible }: { visible: boolean }) {
         event.clientX <= rect.right &&
         event.clientY >= rect.top &&
         event.clientY <= rect.bottom
-      overSidebarRef.current = inside
-      setOverSidebar(inside)
+      setAgentDrag({ active: true, overSidebar: inside })
       return inside
     }
     const move = (event: PointerEvent) => {
@@ -138,15 +143,19 @@ export function AgentDock({ visible }: { visible: boolean }) {
       // appears under the pointer and keeps following, which is what a
       // drag-out is supposed to feel like.
       if (!hitTest(event)) {
-        setAgentPlacement({
-          mode: 'floating',
-          open: true,
-          float: {
-            ...placementRef.current.float,
-            x: Math.max(8, event.clientX - dragOffset.current.x),
-            y: Math.max(8, event.clientY - dragOffset.current.y),
+        setAgentPlacement(
+          {
+            mode: 'floating',
+            open: true,
+            float: {
+              ...placementRef.current.float,
+              x: Math.max(8, event.clientX - dragOffset.current.x),
+              y: Math.max(8, event.clientY - dragOffset.current.y),
+            },
           },
-        })
+          // Flushed once on pointerup — see persistAgentPlacement.
+          { persist: false },
+        )
       }
     }
     const up = (event: PointerEvent) => {
@@ -154,22 +163,77 @@ export function AgentDock({ visible }: { visible: boolean }) {
       // deliver its last position with the pointerup and no move in
       // between, and the drop still has to land where the pointer is.
       const inside = hitTest(event)
-      setDragging(false)
-      overSidebarRef.current = false
-      setOverSidebar(false)
+      setAgentDrag({ active: false, overSidebar: false })
       // Dropped on the sidebar: dock. Anywhere else: it is already
       // floating (the move handler switched it) and stays put.
       if (inside) dockAgent()
+      else persistAgentPlacement()
+    }
+    // A release the page never sees — over the OS taskbar, devtools, another
+    // app — would otherwise leave the window glued to the cursor with no
+    // button held. Blur and Escape are the escape hatches.
+    const abandon = () => {
+      setAgentDrag({ active: false, overSidebar: false })
+      persistAgentPlacement()
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') abandon()
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
     window.addEventListener('pointercancel', up)
+    window.addEventListener('blur', abandon)
+    window.addEventListener('keydown', onKeyDown)
     return () => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
       window.removeEventListener('pointercancel', up)
+      window.removeEventListener('blur', abandon)
+      window.removeEventListener('keydown', onKeyDown)
     }
   }, [dragging])
+
+  // Corner resize. State-flagged with effect-owned listeners (the pattern
+  // AgentDockDivider already uses) rather than listeners registered inside
+  // the pointerdown handler: those leak if the component unmounts mid-drag
+  // — closing the chat while resizing left an orphaned handler resurrecting
+  // the window on every mouse move.
+  useEffect(() => {
+    if (!resizeFrom) return
+    const move = (event: PointerEvent) => {
+      setAgentPlacement(
+        {
+          float: {
+            // x/y come from the store (setAgentPlacement merges over the
+            // live float), so a stale captured position cannot be written
+            // back on top of a newer one.
+            ...placementRef.current.float,
+            width: Math.max(
+              FLOAT_MIN.width,
+              resizeFrom.width + event.clientX - resizeFrom.x,
+            ),
+            height: Math.max(
+              FLOAT_MIN.height,
+              resizeFrom.height + event.clientY - resizeFrom.y,
+            ),
+          },
+        },
+        { persist: false },
+      )
+    }
+    const done = () => {
+      setResizeFrom(null)
+      persistAgentPlacement()
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', done)
+    window.addEventListener('pointercancel', done)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', done)
+      window.removeEventListener('pointercancel', done)
+    }
+  }, [resizeFrom])
 
   // Keep a floating window inside the viewport when it shrinks.
   useEffect(() => {
@@ -238,25 +302,12 @@ export function AgentDock({ visible }: { visible: boolean }) {
       <div
         onPointerDown={(event) => {
           event.preventDefault()
-          const startX = event.clientX
-          const startY = event.clientY
-          const startW = placement.float.width
-          const startH = placement.float.height
-          const move = (moveEvent: PointerEvent) => {
-            setAgentPlacement({
-              float: {
-                ...placement.float,
-                width: Math.max(FLOAT_MIN.width, startW + moveEvent.clientX - startX),
-                height: Math.max(FLOAT_MIN.height, startH + moveEvent.clientY - startY),
-              },
-            })
-          }
-          const up = () => {
-            window.removeEventListener('pointermove', move)
-            window.removeEventListener('pointerup', up)
-          }
-          window.addEventListener('pointermove', move)
-          window.addEventListener('pointerup', up)
+          setResizeFrom({
+            x: event.clientX,
+            y: event.clientY,
+            width: placement.float.width,
+            height: placement.float.height,
+          })
         }}
         className="absolute right-0 bottom-0 size-3.5 cursor-nwse-resize touch-none"
         aria-hidden
