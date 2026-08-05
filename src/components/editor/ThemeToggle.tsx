@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
+import { MOTION_MICRO_MS, prefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type ThemeToggleProps = {
@@ -44,13 +46,36 @@ export function ThemeToggle({ className, size = 'icon-xs' }: ThemeToggleProps) {
       aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
       disabled={!mounted}
     >
-      {!mounted ? (
-        <span className="size-3.5" aria-hidden />
-      ) : isDark ? (
-        <Sun className="size-3.5" aria-hidden />
-      ) : (
-        <Moon className="size-3.5" aria-hidden />
-      )}
+      {/*
+       * The icon swap is a mount/unmount, so the outgoing glyph needs an exit
+       * animation — the one thing a CSS transition cannot express, and the
+       * reason framer-motion is here rather than another keyframe. Duration is
+       * the shared micro-interaction value, and reduced motion collapses it to
+       * a plain swap.
+       */}
+      <span className="relative grid size-3.5 place-items-center">
+        <AnimatePresence initial={false} mode="popLayout">
+          {mounted ? (
+            <motion.span
+              key={isDark ? 'sun' : 'moon'}
+              className="absolute inset-0 grid place-items-center"
+              initial={{ opacity: 0, rotate: -90 }}
+              animate={{ opacity: 1, rotate: 0 }}
+              exit={{ opacity: 0, rotate: 90 }}
+              transition={{
+                duration: prefersReducedMotion() ? 0 : MOTION_MICRO_MS / 1000,
+                ease: 'easeOut',
+              }}
+            >
+              {isDark ? (
+                <Sun className="size-3.5" aria-hidden />
+              ) : (
+                <Moon className="size-3.5" aria-hidden />
+              )}
+            </motion.span>
+          ) : null}
+        </AnimatePresence>
+      </span>
     </Button>
   )
 }
