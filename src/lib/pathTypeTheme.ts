@@ -59,23 +59,6 @@ export function getPathTypeArrowColor(
   return PATH_TYPE_ARROW_COLORS[pathType]
 }
 
-export const PATH_TYPE_SWATCH_CLASSES: Record<PathType, string> = {
-  happy: 'bg-emerald-500',
-  unhappy: 'bg-amber-500',
-  exception: 'bg-red-500',
-  alternative: 'bg-blue-500',
-  named: 'bg-indigo-500',
-}
-
-/** Default Badge fill + label text per path type. */
-export const PATH_TYPE_BADGE_CLASSES: Record<PathType, string> = {
-  happy: 'bg-emerald-500 text-white',
-  unhappy: 'bg-amber-500 text-white',
-  exception: 'bg-red-500 text-white',
-  alternative: 'bg-blue-500 text-white',
-  named: 'bg-indigo-500 text-white',
-}
-
 /** Path-type suffix for compare labels — omitted when the name already implies the type. */
 export function getPathTypeSuffixIfNeeded(path: {
   name: string

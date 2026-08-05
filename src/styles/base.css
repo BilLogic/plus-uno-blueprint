@@ -1,0 +1,57 @@
+@layer base {
+  * {
+    /* Full alpha, not `outline-ring/50`. This is the default focus outline colour
+       for the 27 raw `<button>` elements that define no `focus-visible` rule of
+       their own; at 50% it composited to 1.76:1 and failed SC 1.4.11. Fixing
+       `--ring` alone does not reach here — the modifier is applied at this site. */
+    @apply border-border outline-ring;
+  }
+  body {
+    /* Required by shadcn Base UI drawer overlay on iOS Safari */
+    position: relative;
+    font-weight: var(--font-weight-normal);
+    @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+  :where(
+    a[href],
+    button:not(:disabled),
+    select:not(:disabled),
+    summary,
+    label[for],
+    input[type='button']:not(:disabled),
+    input[type='submit']:not(:disabled),
+    input[type='reset']:not(:disabled),
+    input[type='checkbox']:not(:disabled),
+    input[type='radio']:not(:disabled),
+    input[type='range']:not(:disabled),
+    input[type='file']:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    [role='link']:not([aria-disabled='true']),
+    [data-blueprint-cell-interactive]
+  ) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Navigational motion.
+ *
+ * One vocabulary, taken from the sidebar collapse (the motion that was
+ * already right): structural moves are 320 ms on cubic-bezier(0.22, 1,
+ * 0.36, 1), opacity crossfades are 200 ms ease-out with a 75 ms stagger
+ * between an out/in pair. The JS-side constants live in `lib/motion.ts`.
+ *
+ * These are CSS animations rather than JS-driven class flips so they need
+ * no rAF tick to start — the element simply mounts (or gains
+ * `data-leaving`) and the animation runs.

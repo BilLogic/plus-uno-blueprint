@@ -310,7 +310,7 @@ function ResizeHandles({
           aria-label={`Resize ${handle}`}
           data-annotation-editable=""
           data-resize-handle={handle}
-          className="pointer-events-auto absolute z-20 size-3 rounded-[2px] border-2 border-blue-500 bg-white shadow-none"
+          className="pointer-events-auto absolute z-20 size-3 rounded-[2px] border-2 border-blue-900 bg-white shadow-none"
           style={{
             cursor: RESIZE_CURSOR[handle],
             ...(handle.includes('n') ? { top: -6 } : { bottom: -6 }),
@@ -1020,7 +1020,7 @@ function ShapeAnnotationNode({
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
           selected &&
             !isEraser &&
-            'outline outline-2 outline-offset-0 outline-blue-500',
+            'outline outline-2 outline-offset-0 outline-blue-900',
           canDrag && !editing && 'cursor-grab active:cursor-grabbing',
           hasFill && 'shadow-sm',
           !selected && 'overflow-hidden',
@@ -1144,7 +1144,7 @@ function StickyAnnotationNode({
           'absolute box-border rounded-sm p-2 shadow-md',
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
           showChrome
-            ? 'border-2 border-blue-500'
+            ? 'border-2 border-blue-900'
             : 'border border-black/15',
           canDrag && !editing && 'cursor-grab active:cursor-grabbing',
         )}
@@ -1260,7 +1260,7 @@ function TextAnnotationNode({
         className={cn(
           'absolute min-w-[4rem] box-border',
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
-          showChrome && 'border-2 border-blue-500 bg-white',
+          showChrome && 'border-2 border-blue-900 bg-white',
           canDrag && !editing && 'cursor-grab active:cursor-grabbing',
         )}
         style={{

@@ -1,0 +1,148 @@
+@layer utilities {
+  /* Interactive overview / phase panels — pure CSS hover avoids stale React hover state. */
+  [data-phase-scenario-panel] {
+    background-color: #e8e8ed;
+    border-color: #d4d4da;
+  }
+
+  [data-scenario-panel-title-badge] {
+    background-color: #c2c2c8;
+    border-color: #c2c2c8;
+    color: #2c2c2e;
+  }
+
+  [data-phase-title-badge] {
+    background-color: #b6c7d2;
+    border-color: #b6c7d2;
+    color: #1c1c1e;
+  }
+
+  [data-canvas-phase-interactive] [data-phase-frame] {
+    background-color: #d9e4ea;
+    border-color: #b6c7d2;
+  }
+
+  [data-phase-scenario-panel]:hover:not([data-canvas-focus-active]),
+  [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active]) {
+    background-color: #dddfe4;
+    border-color: #babac4;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    --blueprint-panel-label-rail: #dddfe4;
+    --blueprint-panel-canvas: #f4f4f7;
+    --blueprint-panel-section-fill: #f4f4f7;
+    --blueprint-panel-divider-bg: #dddfe4;
+  }
+
+  [data-phase-scenario-panel]:hover:not([data-canvas-focus-active])
+    [data-scenario-panel-title-badge],
+  [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active])
+    [data-scenario-panel-title-badge] {
+    background-color: #b0b0b8;
+    border-color: #b0b0b8;
+  }
+
+  /* Cell fills stay at their role color when a panel is hovered/focused —
+     the old grey color-mix blend muddied role-based colors on click. */
+
+  /* The slice dim eases on opacity only. `filter` is applied but never
+     listed here on purpose: transitioning a filter repaints every
+     non-member cell on every frame of the ease, which the perf review
+     flagged explicitly. The desaturation lands on frame 1 under a cell that
+     is still near-opaque, so the pair still reads as one event. */
+  [data-blueprint-cell-anchor] {
+    transition-property: box-shadow, transform, opacity, background-color;
+    transition-duration: 180ms;
+  }
+
+  /* Slice focus — member rings persist whether or not the dim is up. Ring
+     takes the lane's role accent so members pop at overview zoom, plus a
+     soft shadow lift over the dimmed field. */
+  [data-slice-focus] [data-blueprint-cell-anchor][data-slice-member] {
+    outline: 2px solid var(--blueprint-cell-ring, var(--ring));
+    outline-offset: 1px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+  }
+
+  /* While focused, non-member cells drop hard toward the canvas (the slice
+     tab wraps the normal blueprint view, so the grid keeps its own stacking
+     contexts — no scrim plane, just per-cell dim + desaturate + grey).
+     Dimmed text may go near-unreadable; focused mode is about the members. */
+  [data-slice-focus='focused']
+    [data-blueprint-cell-anchor]:not([data-slice-member]) {
+    opacity: 0.22;
+    filter: saturate(0.35) grayscale(0.5);
+  }
+
+  /* Sequence badges scale with the canvas transform; once the camera is far
+     enough out that the numbers are illegible they read as noise. Fading
+     rather than `display: none` keeps the 0.25 threshold from popping —
+     crossing it now costs one 150 ms opacity animation, not a relayout. */
+  [data-slice-sequence-badge] {
+    transition: opacity 150ms ease-out;
+  }
+
+  [data-canvas-zoom-far] [data-slice-sequence-badge] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
+    background-color: var(
+      --blueprint-cell-bg-hover,
+      var(
+        --blueprint-cell-bg-panel,
+        var(--blueprint-cell-bg-origin, var(--blueprint-cell-bg))
+      )
+    );
+  }
+
+  [data-blueprint-cell-emphasis='connected'] {
+    position: relative;
+    box-shadow:
+      inset 0 0 0 1px
+        color-mix(
+          in srgb,
+          var(--blueprint-cell-ring-soft, var(--ring)) 42%,
+          transparent
+        ),
+      0 3px 8px rgb(0 0 0 / 0.1);
+  }
+
+  [data-blueprint-cell-emphasis='connected']::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: color-mix(
+      in srgb,
+      var(--blueprint-cell-bg-hover, var(--foreground)) 30%,
+      transparent
+    );
+    content: '';
+    pointer-events: none;
+  }
+
+  [data-canvas-phase-interactive]:hover:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:hover)
+    )
+    [data-phase-frame],
+  [data-canvas-phase-interactive]:focus-within:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:focus-within)
+    )
+    [data-phase-frame] {
+    background-color: #c5d6e0;
+    border-color: #9aadbe;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  [data-canvas-phase-interactive]:hover:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:hover)
+    )
+    [data-phase-title-badge],
+  [data-canvas-phase-interactive]:focus-within:not([data-canvas-focus-active]):not(
+      :has([data-phase-scenario-panel]:focus-within)
+    )
+    [data-phase-title-badge] {
+    background-color: #9aadbe;
+    border-color: #9aadbe;
+  }
+}

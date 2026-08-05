@@ -1,0 +1,162 @@
+/*
+ * Core semantic colour system. Mirrors packages/ui/build/css/source/semantic.css.
+ *
+ * Themes declare a small set of dial inputs; every semantic colour below is
+ * derived from them in OKLCH. Dials live in `themes/`, derivations live here —
+ * a name should never be declared in both (CI enforces this).
+ *
+ * SELECTOR LIST — the one place we diverge from Supabase, deliberately.
+ *
+ * Supabase declares this block once at `:root`, because their `[data-theme]`
+ * always sits on the root element. Ours does not: the presentation stage puts
+ * `.dark` on a *subtree* (SlicePresentation.tsx). Custom properties resolve
+ * their `var()`s at computed-value time, which happens BEFORE inheritance — so
+ * a descendant that re-declares a dial cannot retroactively re-derive anything
+ * declared only at `:root`. Every derivation must therefore be re-declared at
+ * each scope that can override a dial.
+ *
+ * `.light` is included for the same reason: it lets a subtree force light
+ * inside a dark ancestor.
+ */
+:root,
+.dark,
+.light {
+  /* --- Derived machinery ----------------------------------------------- */
+  --tone-span: calc(var(--foreground-l) - var(--surface));
+  --grey-c: var(--chroma);
+  --text-c: calc(var(--chroma) * 1.2);
+  --border-c: calc(var(--chroma) * 0.6);
+  --border-opacity: calc(0.06 + (var(--contrast) * var(--contrast) * 0.16));
+  --input-border-opacity: calc(0.1 + (var(--contrast) * var(--contrast) * 0.2));
+  --muted-text-t: calc(0.52 + var(--contrast) * 0.24);
+  --tertiary-text-t: calc(0.36 + var(--contrast) * 0.2);
+
+  /* --- Surfaces: canvas darkest → popover lightest --------------------- */
+  --canvas: oklch(var(--surface) var(--grey-c) var(--surface-hue));
+  --background: var(--canvas);
+  --sidebar: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.4) var(--grey-c)
+      var(--surface-hue)
+  );
+  --secondary: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.6) var(--grey-c)
+      var(--surface-hue)
+  );
+  --muted: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.6) var(--grey-c)
+      var(--surface-hue)
+  );
+  --accent: oklch(
+    calc(var(--surface) + var(--elevation-step) * 1.8) var(--grey-c)
+      var(--surface-hue)
+  );
+  /* Menubar + floating chrome */
+  --card: oklch(
+    calc(var(--surface) + var(--elevation-step) * 2.2) var(--grey-c)
+      var(--surface-hue)
+  );
+  /* Side panel / popovers */
+  --popover: oklch(
+    calc(var(--surface) + var(--elevation-step) * 2.8) var(--grey-c)
+      var(--surface-hue)
+  );
+
+  /* --- Text ----------------------------------------------------------- */
+  --foreground: oklch(var(--foreground-l) var(--text-c) var(--surface-hue));
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --secondary-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
+  --sidebar-foreground: var(--foreground);
+  --muted-foreground: oklch(
+    calc(var(--surface) + var(--tone-span) * var(--muted-text-t))
+      var(--text-c) var(--surface-hue)
+  );
+  --tertiary-foreground: oklch(
+    calc(var(--surface) + var(--tone-span) * var(--tertiary-text-t))
+      var(--text-c) var(--surface-hue)
+  );
+
+  /* --- Brand / primary (Supabase green — mode-stable) ------------------ */
+  --primary: oklch(0.76 0.15 var(--brand-hue));
+  --primary-foreground: oklch(0.2 calc(var(--chroma) * 0.45) var(--brand-hue));
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+
+  /* --- Borders & controls ---------------------------------------------- */
+  --border: oklch(
+    var(--foreground-l) var(--border-c) var(--surface-hue) /
+      var(--border-opacity)
+  );
+  --input: oklch(
+    var(--foreground-l) var(--border-c) var(--surface-hue) /
+      var(--input-border-opacity)
+  );
+  /*
+   * Full alpha, deliberately diverging from Supabase's `--primary / 55%`.
+   *
+   * `--ring` is consumed two ways in `ui/button.tsx`: as `focus-visible:border-ring`
+   * — the line that *carries* the focus affordance — and as `focus-visible:ring-3
+   * ring-ring/50`, a decorative glow. At 55% the border measured 1.85:1 against the
+   * light canvas, failing WCAG 2.2 SC 1.4.11 (non-text contrast, 3:1). The `/50` at
+   * the utility site still produces the softer glow, so one token serves both.
+   *
+   * Note this never renders over a blueprint cell: those resolve
+   * `--blueprint-cell-ring-soft`, which `getBlueprintCellInteractionStyle` always
+   * sets, so the fallback in `var(--blueprint-cell-ring-soft, var(--ring))` is
+   * unreachable. `--ring` only ever sits on app chrome.
+   */
+  --ring: oklch(0.76 0.15 var(--brand-hue));
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+
+  /*
+   * Sidebar selection language (nav plan D8). Hover and selected used to be
+   * the same `--sidebar-accent` fill, which is why a selected row was
+   * indistinguishable from a hovered one. Now: hover is the neutral
+   * elevation lift, selected is a brand tint plus a full-chroma left rail,
+   * and a row that merely *contains* the selection gets the marker dot.
+   */
+  --sidebar-hover: var(--accent);
+  --sidebar-selected: oklch(0.76 0.15 var(--brand-hue) / 0.2);
+  --sidebar-selected-foreground: var(--foreground);
+  --sidebar-selected-rail: oklch(0.76 0.15 var(--brand-hue));
+  --sidebar-ancestor: oklch(0.76 0.15 var(--brand-hue) / 0.55);
+
+  /* --- Status (Supabase expressive anchors) ---------------------------- */
+  /*
+   * `--success-hue` is pinned rather than tracking `--brand-hue`: success and the
+   * brand accent were byte-identical, so a success state and a brand fill were
+   * indistinguishable. 159 is the green this system was originally built around;
+   * it stays put when the brand hue moves.
+   */
+  --success-hue: 159;
+  --destructive: oklch(0.52 0.14 25);
+  --warning: oklch(0.68 0.14 75);
+  --success: oklch(0.7 0.15 var(--success-hue));
+  --info: oklch(0.54 0.14 288);
+
+  /* --- Charts (neutral ramp along the tone span) ----------------------- */
+  --chart-1: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.2) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-2: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.4) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-3: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.55) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-4: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.7) var(--grey-c)
+      var(--surface-hue)
+  );
+  --chart-5: oklch(
+    calc(var(--surface) + var(--tone-span) * 0.85) var(--grey-c)
+      var(--surface-hue)
+  );
+}

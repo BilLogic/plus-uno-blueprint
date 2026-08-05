@@ -116,7 +116,7 @@ function StrokeWeightButton({
             className={cn(
               'pointer-events-auto flex size-7 items-center justify-center rounded-md transition-colors',
               selected
-                ? 'bg-violet-100 text-foreground'
+                ? 'bg-violet-300 text-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
@@ -167,7 +167,7 @@ function DrawSubpanel() {
           onSelect={setTool}
           className={cn(
             tool === item.id &&
-              'bg-violet-100 text-foreground hover:bg-violet-100 hover:text-foreground',
+              'bg-violet-300 text-foreground hover:bg-violet-300 hover:text-foreground',
           )}
         />
       ))}
@@ -215,7 +215,7 @@ function DrawSubpanel() {
               'size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
               penColor.toUpperCase() === swatch.toUpperCase() &&
                 !penOptionsDisabled &&
-                'ring-2 ring-violet-400 ring-offset-1',
+                'ring-2 ring-violet-800 ring-offset-1',
               swatch.toUpperCase() === '#FFFFFF' && 'border-border',
             )}
             style={{ backgroundColor: swatch }}
@@ -272,7 +272,7 @@ export function CanvasAnnotationToolbar() {
                 className={cn(
                   'pointer-events-auto size-7 shrink-0 p-0 text-muted-foreground hover:text-foreground',
                   drawActive &&
-                    'bg-violet-100 text-foreground hover:bg-violet-100 hover:text-foreground',
+                    'bg-violet-300 text-foreground hover:bg-violet-300 hover:text-foreground',
                 )}
               >
                 <MainDrawIcon

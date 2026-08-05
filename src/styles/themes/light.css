@@ -1,0 +1,32 @@
+/*
+ * Light theme dials. Mirrors packages/ui/build/css/themes/light.css.
+ *
+ * Imported BEFORE themes/dark.css: `:root` and `.dark` have equal specificity,
+ * so when `.dark` sits on the root element the later import must win.
+ */
+:root,
+.light {
+  --helpers-os-appearance: Light;
+
+  --radius: 0.625rem;
+
+  --surface-hue: 34;
+  --brand-hue: 159;
+  --chroma: 0;
+  /* Soft-grey canvas, not pure white, so elevated surfaces have headroom to
+     brighten toward white. */
+  --surface: 0.985;
+  --foreground-l: 0.1;
+  --contrast: 0.53;
+  --elevation-step: 0.024;
+  /* Brand step scale — per-theme HSL literals, consumed by colors.css via
+     `hsl(var(--brand-N))`. Values taken from Supabase's light theme; Phase D
+     replaces them with the teal ramp. */
+  --brand-link: 153.4deg 86.5% 28.3%;
+  --brand-default: 152.9deg 60% 52.9%;
+  --brand-600: 156.5deg 86.5% 26.1%;
+  --brand-500: 155.3deg 78.4% 40%;
+  --brand-400: 151.3deg 66.9% 66.9%;
+  --brand-300: 147.5deg 72% 80.4%;
+  --brand-200: 147.6deg 72.5% 90%;
+}
