@@ -1,7 +1,7 @@
 ---
 title: Land the Supabase-aligned design system on the active feature line
 type: refactor
-status: active
+status: completed
 date: 2026-08-05
 ---
 

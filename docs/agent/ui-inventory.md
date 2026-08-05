@@ -17,13 +17,15 @@ triggers take `render={...}`). Verified against the directory 2026-08-04.
 | Session row actions | `context-menu.tsx` | rename/delete — right-click, like every sidebar row |
 | Rename / delete confirms | `dialog.tsx` | |
 | Empty / loading states | `skeleton.tsx` / `deferred-skeleton.tsx` | |
+| Status callouts | `alert.tsx` — `default`/`destructive`/`warning`/`info`/`success` | tinted surface + filled icon chip; copy stays `--foreground` |
+| Light/dark switch | `editor/ThemeToggle.tsx` (composes `button.tsx`) | next-themes; lives in the rail's bottom utilities group |
 
 Rule of thumb: a need that seems to lack a primitive usually has a
 precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 `SlicesSidebarSection` before assuming it's missing.
 
-Full DS directory today: accordion, alert, badge, breadcrumb, button,
-card, carousel, collapsible, context-menu, deferred-skeleton, dialog,
-drawer, dropdown-menu, input, menubar, navigation-menu, popover,
-separator, sheet, sidebar, skeleton, spinner, tabs, toggle-group,
-toggle, tooltip.
+Full DS directory today: accordion, alert, attachment, badge, breadcrumb,
+bubble, button, card, carousel, collapsible, context-menu,
+deferred-skeleton, dialog, drawer, dropdown-menu, input, marker, menubar,
+message, message-scroller, navigation-menu, popover, separator, sheet,
+sidebar, skeleton, spinner, tabs, toggle-group, toggle, tooltip.
