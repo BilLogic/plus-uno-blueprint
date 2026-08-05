@@ -196,126 +196,169 @@
 
 @layer utilities {
   /*
-   * LANE ROLES → steps. The only place a lane's colour is chosen.
+   * CELL SEMANTIC TOKENS — the full state set, per lane role.
    *
-   * TypeScript sets `data-blueprint-lane` and nothing else. Supabase never
-   * assigns a colour from JavaScript — `setProperty('--color…')` returns
-   * nothing across their repository — and neither do we.
+   * A cell is the app's most-used control, so it needs every state a control
+   * needs, not just a fill. Each role below defines the same ten properties;
+   * only the family changes. Nothing outside this file picks a colour.
    *
-   * The role names say what a lane is; the family is an implementation detail
-   * of this file. Repalette the board by editing eight lines here.
+   *   --blueprint-cell-bg           resting surface
+   *   --blueprint-cell-bg-origin    resting surface, kept for the panel chain
+   *   --blueprint-cell-bg-hover     pointer over
+   *   --blueprint-cell-bg-pressed   aria-pressed / active
+   *   --blueprint-cell-bg-selected  slice member, filter match
+   *   --blueprint-cell-border       cell edge within its own family
+   *   --blueprint-cell-ring         2px slice-member outline
+   *   --blueprint-cell-ring-soft    focus-visible ring
+   *   --blueprint-cell-text         primary label
+   *   --blueprint-cell-text-muted   secondary label
    *
-   * Steps: 500 is Radix's component surface, 600/700 its hover and pressed
-   * pairings, 1100 the ring, 1200 the text. The ring is NOT step 8 — Radix
-   * specifies that against the app background (steps 1–2), and on a step-5
-   * surface it measures 1.38:1 and fails SC 1.4.11.
+   * WHY STEPS AND NOT A MIX. `--primary-hover` mixes toward `--foreground`,
+   * because a brand fill is one colour and has no ramp to walk. A cell does:
+   * Radix tunes 5 → 6 → 7 as surface → hover → pressed, per family, per theme,
+   * with the chroma correction each hue needs. Reusing that is strictly better
+   * than a flat percentage, and it is why the two mechanisms differ.
+   *
+   * Steps by role: 500/600/700 for lanes, 400/500/600 for tones — a pill sits a
+   * step paler than the lane it lives in. Ring is 1100 in both: step 8, Radix's
+   * "border" step, is specified against the app background (steps 1–2) and
+   * measures 1.38:1 on a step-5 surface, failing SC 1.4.11. `--blueprint-cell-
+   * border` is step 8 because that IS a border, against the cell's own fill.
+   *
+   * Disabled and dimmed are deliberately absent: both are opacity, applied by
+   * the element, and giving them colours would let a dimmed cell drift away
+   * from the one it is dimming.
    */
   /* visual */
-  [data-blueprint-lane='visual'] {
+[data-blueprint-lane='visual'] {
     --blueprint-cell-bg-origin: var(--color-slate-500);
     --blueprint-cell-bg: var(--color-slate-500);
     --blueprint-cell-bg-hover: var(--color-slate-600);
     --blueprint-cell-bg-pressed: var(--color-slate-700);
+    --blueprint-cell-bg-selected: var(--color-slate-600);
+    --blueprint-cell-border: var(--color-slate-800);
     --blueprint-cell-ring: var(--color-slate-1100);
     --blueprint-cell-ring-soft: var(--color-slate-1100);
     --blueprint-cell-text: var(--color-slate-1200);
+    --blueprint-cell-text-muted: var(--color-slate-1100);
   }
 
   /* evidence */
-  [data-blueprint-lane='evidence'] {
+[data-blueprint-lane='evidence'] {
     --blueprint-cell-bg-origin: var(--color-blue-500);
     --blueprint-cell-bg: var(--color-blue-500);
     --blueprint-cell-bg-hover: var(--color-blue-600);
     --blueprint-cell-bg-pressed: var(--color-blue-700);
+    --blueprint-cell-bg-selected: var(--color-blue-600);
+    --blueprint-cell-border: var(--color-blue-800);
     --blueprint-cell-ring: var(--color-blue-1100);
     --blueprint-cell-ring-soft: var(--color-blue-1100);
     --blueprint-cell-text: var(--color-blue-1200);
+    --blueprint-cell-text-muted: var(--color-blue-1100);
   }
 
   /* actor */
-  [data-blueprint-lane='actor'] {
+[data-blueprint-lane='actor'] {
     --blueprint-cell-bg-origin: var(--color-green-500);
     --blueprint-cell-bg: var(--color-green-500);
     --blueprint-cell-bg-hover: var(--color-green-600);
     --blueprint-cell-bg-pressed: var(--color-green-700);
+    --blueprint-cell-bg-selected: var(--color-green-600);
+    --blueprint-cell-border: var(--color-green-800);
     --blueprint-cell-ring: var(--color-green-1100);
     --blueprint-cell-ring-soft: var(--color-green-1100);
     --blueprint-cell-text: var(--color-green-1200);
+    --blueprint-cell-text-muted: var(--color-green-1100);
   }
 
   /* frontstage-tech */
-  [data-blueprint-lane='frontstage-tech'] {
+[data-blueprint-lane='frontstage-tech'] {
     --blueprint-cell-bg-origin: var(--color-violet-500);
     --blueprint-cell-bg: var(--color-violet-500);
     --blueprint-cell-bg-hover: var(--color-violet-600);
     --blueprint-cell-bg-pressed: var(--color-violet-700);
+    --blueprint-cell-bg-selected: var(--color-violet-600);
+    --blueprint-cell-border: var(--color-violet-800);
     --blueprint-cell-ring: var(--color-violet-1100);
     --blueprint-cell-ring-soft: var(--color-violet-1100);
     --blueprint-cell-text: var(--color-violet-1200);
+    --blueprint-cell-text-muted: var(--color-violet-1100);
   }
 
   /* frontstage-action */
-  [data-blueprint-lane='frontstage-action'] {
+[data-blueprint-lane='frontstage-action'] {
     --blueprint-cell-bg-origin: var(--color-pink-500);
     --blueprint-cell-bg: var(--color-pink-500);
     --blueprint-cell-bg-hover: var(--color-pink-600);
     --blueprint-cell-bg-pressed: var(--color-pink-700);
+    --blueprint-cell-bg-selected: var(--color-pink-600);
+    --blueprint-cell-border: var(--color-pink-800);
     --blueprint-cell-ring: var(--color-pink-1100);
     --blueprint-cell-ring-soft: var(--color-pink-1100);
     --blueprint-cell-text: var(--color-pink-1200);
+    --blueprint-cell-text-muted: var(--color-pink-1100);
   }
 
   /* backstage-tech */
-  [data-blueprint-lane='backstage-tech'] {
+[data-blueprint-lane='backstage-tech'] {
     --blueprint-cell-bg-origin: var(--color-lime-500);
     --blueprint-cell-bg: var(--color-lime-500);
     --blueprint-cell-bg-hover: var(--color-lime-600);
     --blueprint-cell-bg-pressed: var(--color-lime-700);
+    --blueprint-cell-bg-selected: var(--color-lime-600);
+    --blueprint-cell-border: var(--color-lime-800);
     --blueprint-cell-ring: var(--color-lime-1100);
     --blueprint-cell-ring-soft: var(--color-lime-1100);
     --blueprint-cell-text: var(--color-lime-1200);
+    --blueprint-cell-text-muted: var(--color-lime-1100);
   }
 
   /* backstage-action */
-  [data-blueprint-lane='backstage-action'] {
+[data-blueprint-lane='backstage-action'] {
     --blueprint-cell-bg-origin: var(--color-orange-500);
     --blueprint-cell-bg: var(--color-orange-500);
     --blueprint-cell-bg-hover: var(--color-orange-600);
     --blueprint-cell-bg-pressed: var(--color-orange-700);
+    --blueprint-cell-bg-selected: var(--color-orange-600);
+    --blueprint-cell-border: var(--color-orange-800);
     --blueprint-cell-ring: var(--color-orange-1100);
     --blueprint-cell-ring-soft: var(--color-orange-1100);
     --blueprint-cell-text: var(--color-orange-1200);
+    --blueprint-cell-text-muted: var(--color-orange-1100);
   }
 
   /* support */
-  [data-blueprint-lane='support'] {
+[data-blueprint-lane='support'] {
     --blueprint-cell-bg-origin: var(--color-amber-500);
     --blueprint-cell-bg: var(--color-amber-500);
     --blueprint-cell-bg-hover: var(--color-amber-600);
     --blueprint-cell-bg-pressed: var(--color-amber-700);
+    --blueprint-cell-bg-selected: var(--color-amber-600);
+    --blueprint-cell-border: var(--color-amber-800);
     --blueprint-cell-ring: var(--color-amber-1100);
     --blueprint-cell-ring-soft: var(--color-amber-1100);
     --blueprint-cell-text: var(--color-amber-1200);
+    --blueprint-cell-text-muted: var(--color-amber-1100);
   }
 
   /*
-   * TOUCHPOINT TONES → steps.
+   * TOUCHPOINT TONES — the same ten properties, a step paler, and sharing no
+   * family with the roles above so a pill never reads as its lane.
    *
-   * A separate set, sharing no family with the lane roles above, so a pill can
-   * never read as the lane it sits in whichever tone is picked. Pills sit one
-   * step paler than a lane (400 against 500) for the same reason.
-   *
-   * These are named after the hue on purpose: a touchpoint's colour is chosen
-   * by whoever owns the blueprint, so the hue *is* the meaning here.
+   * Named after the hue on purpose: a touchpoint's colour is chosen by whoever
+   * owns the blueprint, so the hue is the meaning here.
    */
   [data-blueprint-tone='crimson'] {
     --blueprint-cell-bg-origin: var(--color-crimson-400);
     --blueprint-cell-bg: var(--color-crimson-400);
     --blueprint-cell-bg-hover: var(--color-crimson-500);
     --blueprint-cell-bg-pressed: var(--color-crimson-600);
+    --blueprint-cell-bg-selected: var(--color-crimson-500);
+    --blueprint-cell-border: var(--color-crimson-800);
     --blueprint-cell-ring: var(--color-crimson-1100);
     --blueprint-cell-ring-soft: var(--color-crimson-1100);
     --blueprint-cell-text: var(--color-crimson-1200);
+    --blueprint-cell-text-muted: var(--color-crimson-1100);
   }
 
   [data-blueprint-tone='gold'] {
@@ -323,9 +366,12 @@
     --blueprint-cell-bg: var(--color-gold-400);
     --blueprint-cell-bg-hover: var(--color-gold-500);
     --blueprint-cell-bg-pressed: var(--color-gold-600);
+    --blueprint-cell-bg-selected: var(--color-gold-500);
+    --blueprint-cell-border: var(--color-gold-800);
     --blueprint-cell-ring: var(--color-gold-1100);
     --blueprint-cell-ring-soft: var(--color-gold-1100);
     --blueprint-cell-text: var(--color-gold-1200);
+    --blueprint-cell-text-muted: var(--color-gold-1100);
   }
 
   [data-blueprint-tone='indigo'] {
@@ -333,9 +379,12 @@
     --blueprint-cell-bg: var(--color-indigo-400);
     --blueprint-cell-bg-hover: var(--color-indigo-500);
     --blueprint-cell-bg-pressed: var(--color-indigo-600);
+    --blueprint-cell-bg-selected: var(--color-indigo-500);
+    --blueprint-cell-border: var(--color-indigo-800);
     --blueprint-cell-ring: var(--color-indigo-1100);
     --blueprint-cell-ring-soft: var(--color-indigo-1100);
     --blueprint-cell-text: var(--color-indigo-1200);
+    --blueprint-cell-text-muted: var(--color-indigo-1100);
   }
 
   [data-blueprint-tone='purple'] {
@@ -343,9 +392,12 @@
     --blueprint-cell-bg: var(--color-purple-400);
     --blueprint-cell-bg-hover: var(--color-purple-500);
     --blueprint-cell-bg-pressed: var(--color-purple-600);
+    --blueprint-cell-bg-selected: var(--color-purple-500);
+    --blueprint-cell-border: var(--color-purple-800);
     --blueprint-cell-ring: var(--color-purple-1100);
     --blueprint-cell-ring-soft: var(--color-purple-1100);
     --blueprint-cell-text: var(--color-purple-1200);
+    --blueprint-cell-text-muted: var(--color-purple-1100);
   }
 
   [data-blueprint-tone='red'] {
@@ -353,9 +405,12 @@
     --blueprint-cell-bg: var(--color-red-400);
     --blueprint-cell-bg-hover: var(--color-red-500);
     --blueprint-cell-bg-pressed: var(--color-red-600);
+    --blueprint-cell-bg-selected: var(--color-red-500);
+    --blueprint-cell-border: var(--color-red-800);
     --blueprint-cell-ring: var(--color-red-1100);
     --blueprint-cell-ring-soft: var(--color-red-1100);
     --blueprint-cell-text: var(--color-red-1200);
+    --blueprint-cell-text-muted: var(--color-red-1100);
   }
 
   [data-blueprint-tone='tomato'] {
@@ -363,9 +418,12 @@
     --blueprint-cell-bg: var(--color-tomato-400);
     --blueprint-cell-bg-hover: var(--color-tomato-500);
     --blueprint-cell-bg-pressed: var(--color-tomato-600);
+    --blueprint-cell-bg-selected: var(--color-tomato-500);
+    --blueprint-cell-border: var(--color-tomato-800);
     --blueprint-cell-ring: var(--color-tomato-1100);
     --blueprint-cell-ring-soft: var(--color-tomato-1100);
     --blueprint-cell-text: var(--color-tomato-1200);
+    --blueprint-cell-text-muted: var(--color-tomato-1100);
   }
 
   [data-blueprint-tone='yellow'] {
@@ -373,8 +431,11 @@
     --blueprint-cell-bg: var(--color-yellow-400);
     --blueprint-cell-bg-hover: var(--color-yellow-500);
     --blueprint-cell-bg-pressed: var(--color-yellow-600);
+    --blueprint-cell-bg-selected: var(--color-yellow-500);
+    --blueprint-cell-border: var(--color-yellow-800);
     --blueprint-cell-ring: var(--color-yellow-1100);
     --blueprint-cell-ring-soft: var(--color-yellow-1100);
     --blueprint-cell-text: var(--color-yellow-1200);
+    --blueprint-cell-text-muted: var(--color-yellow-1100);
   }
 }

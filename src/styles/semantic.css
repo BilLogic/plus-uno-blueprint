@@ -166,6 +166,43 @@
     min(var(--surface), var(--foreground-lightness))
       calc(var(--chroma) * 0.45) var(--primary-hue)
   );
+  /* --- Interaction states ----------------------------------------------
+   * One mechanism for every interactive surface: mix the resting fill toward
+   * `--foreground`. That moves *away* from the background in both themes —
+   * darker on light, lighter on dark — so "more contrast under the pointer"
+   * holds without a per-theme value.
+   *
+   * This replaces `hover:bg-primary/80`, which is what shadcn ships and what
+   * Supabase still uses. Alpha is the wrong tool: it makes the fill
+   * translucent, so the hover composites toward whatever sits behind it. A
+   * brand button hovers lighter on a white page and darker on a dark one — the
+   * direction flips with the background, and the fill loses saturation on the
+   * way. The call sites had also drifted to two different values, /80 and /90.
+   *
+   * Percentages are shared so the whole app moves together. Pressed is roughly
+   * double hover, which is the ratio the Radix step pairings (5 → 6 → 7) work
+   * out to on a step-5 surface.
+   */
+  --state-hover-mix: 7%;
+  --state-pressed-mix: 14%;
+  --state-selected-mix: 10%;
+
+  --primary-hover: color-mix(
+    in oklab,
+    var(--primary),
+    var(--foreground) var(--state-hover-mix)
+  );
+  --primary-pressed: color-mix(
+    in oklab,
+    var(--primary),
+    var(--foreground) var(--state-pressed-mix)
+  );
+  --destructive-hover: color-mix(
+    in oklab,
+    var(--destructive),
+    var(--foreground) var(--state-hover-mix)
+  );
+
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
 

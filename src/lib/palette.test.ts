@@ -167,3 +167,67 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     expect([...lanes].filter((f) => tones.has(f))).toEqual([])
   })
 })
+
+describe('interaction states', () => {
+  const css = readFileSync(
+    fileURLToPath(new URL('../styles/blueprint.css', import.meta.url)),
+    'utf8',
+  )
+  /** Every `[data-blueprint-lane]` rule, as role → { property: family-step }. */
+  const laneRules = [
+    ...css.matchAll(/\[data-blueprint-lane='([a-z-]+)'\] \{([^}]*)\}/g),
+  ].map(([, role, body]) => ({
+    role,
+    props: Object.fromEntries(
+      [...body.matchAll(/(--blueprint-cell-[a-z-]+):\s*var\(--color-([a-z]+-\d+)\)/g)]
+        .map(([, prop, token]) => [prop, token]),
+    ) as Record<string, string>,
+  }))
+
+  const REQUIRED = [
+    '--blueprint-cell-bg',
+    '--blueprint-cell-bg-hover',
+    '--blueprint-cell-bg-pressed',
+    '--blueprint-cell-bg-selected',
+    '--blueprint-cell-border',
+    '--blueprint-cell-ring',
+    '--blueprint-cell-text',
+    '--blueprint-cell-text-muted',
+  ]
+
+  it('defines every state on every lane role', () => {
+    expect(laneRules).toHaveLength(8)
+    for (const { role, props } of laneRules) {
+      for (const key of REQUIRED) {
+        expect(`${role}:${key}`).toBe(props[key] ? `${role}:${key}` : 'MISSING')
+      }
+    }
+  })
+
+  describe.each(['light', 'dark'] as const)('%s', (theme) => {
+    it.each(laneRules.map((r) => [r.role, r] as const))(
+      '%s: hover and pressed each move further from rest',
+      (_role, { props }) => {
+        const at = (key: string) =>
+          THEMES[theme].get(props[key]) as [number, number, number]
+        const rest = at('--blueprint-cell-bg')
+        // A state nobody can see is not a state.
+        expect(contrast(rest, at('--blueprint-cell-bg-hover'))).toBeGreaterThan(1.03)
+        expect(
+          contrast(rest, at('--blueprint-cell-bg-pressed')),
+        ).toBeGreaterThan(contrast(rest, at('--blueprint-cell-bg-hover')))
+      },
+    )
+
+    it.each(laneRules.map((r) => [r.role, r] as const))(
+      '%s: text stays legible on the hover and pressed surfaces too',
+      (_role, { props }) => {
+        const at = (key: string) =>
+          THEMES[theme].get(props[key]) as [number, number, number]
+        const text = at('--blueprint-cell-text')
+        expect(contrast(text, at('--blueprint-cell-bg-hover'))).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(text, at('--blueprint-cell-bg-pressed'))).toBeGreaterThanOrEqual(4.5)
+      },
+    )
+  })
+})
