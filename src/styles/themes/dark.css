@@ -18,10 +18,8 @@
   --primary: oklch(0.76 0.15 var(--brand-hue));
   --primary-foreground: oklch(0.2 calc(var(--chroma) * 0.45) var(--brand-hue));
 
-  --destructive: oklch(0.75 0.14 25);
-  --warning: oklch(0.8 0.14 75);
-  --success: oklch(0.76 0.15 var(--success-hue));
-  --info: oklch(0.7 0.14 288);
+  /* No status overrides here: `--destructive`/`--warning`/`--success`/`--info`
+     read palette steps, and colors.css already re-points those under `.dark`. */
 
   /* Re-derived here for the same reason as the block above: a `.dark` subtree
      inherits already-substituted values, so anything reading a dial the subtree

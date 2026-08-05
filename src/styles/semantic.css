@@ -125,18 +125,38 @@
   --sidebar-selected-rail: oklch(0.76 0.15 var(--brand-hue));
   --sidebar-ancestor: oklch(0.76 0.15 var(--brand-hue) / 0.55);
 
-  /* --- Status (Supabase expressive anchors) ---------------------------- */
+  /* --- Status (derived from the palette, Supabase-style) ---------------- */
   /*
-   * `--success-hue` is pinned rather than tracking `--brand-hue`: success and the
-   * brand accent were byte-identical, so a success state and a brand fill were
-   * indistinguishable. 159 is the green this system was originally built around;
-   * it stays put when the brand hue moves.
+   * Sourced from colors.css rather than hand-picked OKLCH triples, which is how
+   * Supabase builds its status roles (`--warning-600: var(--colors-amber-1100)`).
+   * Two things fall out of that:
+   *
+   *  - Step 1100 is the Radix "low-contrast text" step, so these are safe as
+   *    `text-*` on their own surface — which is how all four are actually used.
+   *    A separate solid-fill weight would be step 900; add it when something
+   *    needs one, don't guess it now.
+   *  - Dark mode is free. `.dark` in colors.css already re-points every step to
+   *    the dark scale, so these need no override there (the previous per-theme
+   *    `--destructive`/`--warning`/... pairs are gone).
+   *
+   * These are also the reason colors.css uses `@theme static`: the source scan
+   * cannot see a `var()` reference from hand-written CSS.
    */
-  --success-hue: 159;
-  --destructive: oklch(0.52 0.14 25);
-  --warning: oklch(0.68 0.14 75);
-  --success: oklch(0.7 0.15 var(--success-hue));
-  --info: oklch(0.54 0.14 288);
+  --destructive: var(--color-red-1100);
+  --warning: var(--color-amber-1100);
+  --success: var(--color-green-1100);
+  --info: var(--color-blue-1100);
+
+  /*
+   * Selection chrome for canvas annotations (outline, resize handles).
+   *
+   * Blue step 900 rather than `--primary`: annotations sit on the frozen
+   * blueprint palette, whose lanes are already green/teal, so a brand-hue
+   * selection outline would compete with the cell fills it has to read against.
+   * Radix step 9 is the mode-stable "solid" step — light and dark are the same
+   * value here — so this stays put when the presentation stage flips to `.dark`.
+   */
+  --annotation-selected: var(--color-blue-900);
 
   /* --- Charts (neutral ramp along the tone span) ----------------------- */
   --chart-1: oklch(

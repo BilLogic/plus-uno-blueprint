@@ -10,16 +10,27 @@
  * are semantic — light/dark values live in the theme files (light.css /
  * dark.css), not here.
  *
- * The light half is declared in `@theme` (not `@theme inline`, and not `:root`)
- * so Tailwind generates bg-/text-/border-/ring- utilities for every step. It
- * must follow unset-tw-colors.css, which clears the built-in scales first.
+ * The light half is declared in `@theme static` (not `@theme inline`, and not
+ * `:root`) so Tailwind generates bg-/text-/border-/ring- utilities for every
+ * step. It must follow unset-tw-colors.css, which clears the built-in scales
+ * first.
+ *
+ * `static` matters: without it Tailwind only emits the theme variables whose
+ * utilities appear in source, and semantic.css reads several steps through
+ * `var()` in hand-written CSS, which the source scan cannot see. This is also
+ * what makes the scale a real primitive layer — hand-authored CSS can rely on
+ * any step existing.
  *
  * The dark half is a plain `.dark` rule rather than a second `@theme` block:
  * `@theme` always emits at `:root`, so it cannot be scoped. The generated
  * utilities reference `var(--color-*)`, so overriding the property is enough.
+ *
+ * COMPONENTS MUST NOT USE THESE DIRECTLY. Per Supabase's design-system rule,
+ * `.tsx` consumes semantic tokens only (`text-warning`, not `text-amber-1100`).
+ * The scale exists so semantic.css has something to derive from.
  */
 
-@theme {
+@theme static {
   --color-amber-100: hsl(39, 70%, 99%);
   --color-amber-200: hsl(40, 100%, 96.5%);
   --color-amber-300: hsl(44, 100%, 91.7%);
