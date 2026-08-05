@@ -22,15 +22,24 @@ const FILES = [
   'lane-vocabulary.md',
   'elicitation-protocol.md',
   'data-model.md',
+  'audit-playbook.md',
+  'whatif-playbook.md',
+  'check-gap-sweep.md',
+  'check-jargon-lint.md',
+  'check-channel-conflict.md',
+  'check-kpi-alignment.md',
+  'check-perceived-owner.md',
+  'check-value-ledger.md',
+  'check-fee-visibility.md',
 ]
 
 // The four-skill architecture: these SKILL.md files are the same ones IDE
 // humans get from the plugin; the app vendors them for the /slash triggers.
-// audit and whatif join this list when the plugin ships them (plan
-// 2026-07-29-004 phases 2–3).
 const SKILLS = [
   ['blueprint/SKILL.md', 'blueprint.md'],
   ['slice/SKILL.md', 'slice.md'],
+  ['audit/SKILL.md', 'audit.md'],
+  ['whatif/SKILL.md', 'whatif.md'],
 ]
 
 const check = process.argv.includes('--check')

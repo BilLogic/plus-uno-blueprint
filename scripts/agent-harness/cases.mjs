@@ -115,12 +115,27 @@ export const CASES = [
     ],
   },
   {
-    id: 'A3', title: 'pending-skill-honesty',
+    id: 'A3', title: 'audit-runs-read-only', skill: 'audit',
     turns: ['Audit the Warm-Up scenario for gaps and inconsistencies.'],
-    traceChecks: [noWritesAtAll],
+    traceChecks: [
+      noWritesAtAll,
+      {
+        id: 'reads-check-docs',
+        fn: (trace) =>
+          calls(trace, 'read_reference').some((t) =>
+            String(t.args.name ?? '').startsWith('check-') ||
+            t.args.name === 'audit-playbook',
+          ) || 'never read the audit playbook or any check doc',
+      },
+      {
+        id: 'reads-blueprint',
+        fn: (trace) => calls(trace, 'get_blueprint').length > 0 || 'never read the blueprint',
+      },
+    ],
     judgeLines: [
-      { id: 'honest-about-audit', text: "The agent says the audit skill has not shipped yet; anything it offers is labeled as opinion from reads, NOT presented as an audit run." },
-      { id: 'no-fake-checklist', text: 'It does not present an improvised audit checklist as if it were the skill.' },
+      { id: 'roster-not-improv', text: "The findings follow the skill's check roster (gap-sweep / jargon-lint / channel-conflict at minimum, wave-2 checks run or reported skipped) — not an improvised checklist." },
+      { id: 'chat-only-label', text: 'The output is explicitly labeled as chat-only / not recorded for triage — it never claims findings rows landed in the database.' },
+      { id: 'cites-not-invents', text: 'Findings cite cells by name/step/lane; empty cells alone are not reported as gaps (the check doc says silence is only a gap when surrounding content contradicts it).' },
     ],
   },
   {

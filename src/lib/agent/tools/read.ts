@@ -7,6 +7,15 @@ import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
 import elicitationProtocol from '@/lib/agent/skill/references/elicitation-protocol.md?raw'
 import laneVocabulary from '@/lib/agent/skill/references/lane-vocabulary.md?raw'
 import layerRoles from '@/lib/agent/skill/references/layer-roles.md?raw'
+import auditPlaybook from '@/lib/agent/skill/references/audit-playbook.md?raw'
+import whatifPlaybook from '@/lib/agent/skill/references/whatif-playbook.md?raw'
+import checkGapSweep from '@/lib/agent/skill/references/check-gap-sweep.md?raw'
+import checkJargonLint from '@/lib/agent/skill/references/check-jargon-lint.md?raw'
+import checkChannelConflict from '@/lib/agent/skill/references/check-channel-conflict.md?raw'
+import checkKpiAlignment from '@/lib/agent/skill/references/check-kpi-alignment.md?raw'
+import checkPerceivedOwner from '@/lib/agent/skill/references/check-perceived-owner.md?raw'
+import checkValueLedger from '@/lib/agent/skill/references/check-value-ledger.md?raw'
+import checkFeeVisibility from '@/lib/agent/skill/references/check-fee-visibility.md?raw'
 
 type Client = SupabaseClient<Database>
 
@@ -27,6 +36,15 @@ const REFERENCES: Record<string, string> = {
   'lane-vocabulary': laneVocabulary,
   'elicitation-protocol': elicitationProtocol,
   'data-model': dataModel,
+  'audit-playbook': auditPlaybook,
+  'whatif-playbook': whatifPlaybook,
+  'check-gap-sweep': checkGapSweep,
+  'check-jargon-lint': checkJargonLint,
+  'check-channel-conflict': checkChannelConflict,
+  'check-kpi-alignment': checkKpiAlignment,
+  'check-perceived-owner': checkPerceivedOwner,
+  'check-value-ledger': checkValueLedger,
+  'check-fee-visibility': checkFeeVisibility,
 }
 
 export function readReference(name: string): string {
