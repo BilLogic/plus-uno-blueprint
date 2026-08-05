@@ -77,6 +77,94 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
+/** WCAG 2.x relative luminance of a 6-digit sRGB hex. */
+function relativeLuminance(hex: string): number {
+  const normalized = normalizeHex(hex)
+  const channel = (offset: number) => {
+    const c = parseInt(normalized.slice(offset, offset + 2), 16) / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5)
+}
+
+export function getContrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a)
+  const lb = relativeLuminance(b)
+  const [hi, lo] = la > lb ? [la, lb] : [lb, la]
+  return (hi + 0.05) / (lo + 0.05)
+}
+
+/** Minimum contrast a focus ring owes its own cell — WCAG 2.2 SC 1.4.11. */
+export const CELL_RING_MIN_CONTRAST = 3
+
+/**
+ * Pick the lightness closest to `preferred` whose colour still clears
+ * `CELL_RING_MIN_CONTRAST` against `fill`.
+ *
+ * The ring drawn on a blueprint cell is the focus affordance on the app's
+ * most-used control, so it owes SC 1.4.11 against the fill it outlines. The
+ * previous fixed floor (`max(l * 0.54, 36)`) measured 1.86:1 on chartreuse and
+ * failed on five of the eight lane fills. Searching keeps the ring as close to
+ * the fill's own tone as the requirement allows, rather than forcing every lane
+ * to one pessimistic dark value.
+ *
+ * Darkens by default; lightens instead when the fill is dark enough that no
+ * darker tone can reach the target.
+ */
+function solveRingLightness(
+  hue: number,
+  saturation: number,
+  preferred: number,
+  fill: string,
+  target = CELL_RING_MIN_CONTRAST + 0.05,
+): string {
+  const at = (lightness: number) => hslToHex(hue, saturation, lightness)
+
+  if (getContrastRatio(at(preferred), fill) >= target) return at(preferred)
+
+  // `bound` is the extreme that definitely passes if anything does.
+  const darkenable = getContrastRatio(at(0), fill) >= target
+  const bound = darkenable ? 0 : 100
+  if (!darkenable && getContrastRatio(at(100), fill) < target) {
+    // Mid-luminance fill: neither extreme clears 3:1 at this saturation.
+    // Fall back to the higher-contrast extreme rather than returning a value
+    // that silently fails.
+    return getContrastRatio(at(0), fill) >= getContrastRatio(at(100), fill)
+      ? at(0)
+      : at(100)
+  }
+
+  let pass = bound
+  let fail = preferred
+  for (let i = 0; i < 20; i += 1) {
+    const mid = (pass + fail) / 2
+    if (getContrastRatio(at(mid), fill) >= target) pass = mid
+    else fail = mid
+  }
+  return at(pass)
+}
+
+/**
+ * Rescale an HSL saturation so the *absolute* channel spread survives a
+ * lightness change.
+ *
+ * HSL saturation is lightness-relative: the RGB spread it produces is
+ * `s * (1 - |2L - 1|)`. Carrying a near-grey's saturation down to a darker ring
+ * therefore amplifies it — 8% at L=95 is a 2/255 spread, but 8% at L=58 is
+ * 19/255. Since a near-grey's hue is itself a rounding artefact, that turned
+ * `#F2F2F4` into a blue-grey ring and `#F4F2F2` into a red-grey one, 240° apart.
+ */
+function saturationPreservingChroma(
+  saturation: number,
+  fromLightness: number,
+  toLightness: number,
+): number {
+  const reach = (l: number) => 1 - Math.abs((2 * l) / 100 - 1)
+  const to = reach(toLightness)
+  if (to <= 0) return saturation
+  return Math.min(saturation, (saturation * reach(fromLightness)) / to)
+}
+
 /** Per-cell interaction tones — same hue as fill, tuned for hover/pressed/focus. */
 export function getBlueprintCellInteractionColors(fill: string): {
   bg: string
@@ -87,14 +175,24 @@ export function getBlueprintCellInteractionColors(fill: string): {
 } {
   const [h, s, l] = hexToHsl(fill)
 
-  // Neutral visual cells — keep grey family
+  // Neutral visual cells — keep grey family.
+  //
+  // Saturation is clamped to the source rather than raised to a fixed 14/10.
+  // For a near-grey, `max - min` is a rounding artefact, so `h` is decided by
+  // ±1 in the last hex digit; raising chroma amplified that into a visible hue
+  // (#F2F2F4 produced a blue-grey ring, #F4F2F2 a red-grey one, 240° apart).
   if (s < 10) {
     return {
       bg: fill,
       bgHover: hslToHex(h, s, l * 0.94),
       bgPressed: hslToHex(h, Math.min(s + 6, 18), l * 0.86),
-      ring: hslToHex(h, 14, 42),
-      ringSoft: hslToHex(h, 10, 58),
+      ring: hslToHex(h, saturationPreservingChroma(s, l, 42), 42),
+      ringSoft: solveRingLightness(
+        h,
+        saturationPreservingChroma(s, l, 58),
+        58,
+        fill,
+      ),
     }
   }
 
@@ -115,7 +213,7 @@ export function getBlueprintCellInteractionColors(fill: string): {
     bgHover: hslToHex(h, hoverSat, hoverLightness),
     bgPressed: hslToHex(h, pressedSat, pressedLightness),
     ring: hslToHex(h, ringSat, Math.max(l * 0.42, 26)),
-    ringSoft: hslToHex(h, ringSoftSat, Math.max(l * 0.54, 36)),
+    ringSoft: solveRingLightness(h, ringSoftSat, Math.max(l * 0.54, 36), fill),
   }
 }
 

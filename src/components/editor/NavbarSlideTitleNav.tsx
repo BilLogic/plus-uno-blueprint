@@ -147,7 +147,11 @@ function NavItem({
       onClick={onSelect}
       className={cn(
         'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
-        'hover:bg-muted focus-visible:bg-muted focus-visible:outline-none',
+        // Focus was previously `focus-visible:bg-muted focus-visible:outline-none`
+        // — a background-only indicator. `--muted` computes past L=1 in the light
+        // theme and clamps to #FFFFFF, identical to this row's surround, so the
+        // focus state was invisible (SC 2.4.7).
+        'hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 focus-visible:outline-ring',
         nested ? 'text-xs' : 'text-[13px] font-medium',
         active ? 'text-foreground' : 'text-foreground/80',
       )}

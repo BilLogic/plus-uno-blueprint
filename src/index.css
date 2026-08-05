@@ -166,7 +166,21 @@
     var(--foreground-l) var(--border-c) var(--surface-hue) /
       var(--input-border-opacity)
   );
-  --ring: oklch(0.76 0.15 var(--brand-hue) / 0.55);
+  /*
+   * Full alpha, deliberately diverging from Supabase's `--primary / 55%`.
+   *
+   * `--ring` is consumed two ways in `ui/button.tsx`: as `focus-visible:border-ring`
+   * — the line that *carries* the focus affordance — and as `focus-visible:ring-3
+   * ring-ring/50`, a decorative glow. At 55% the border measured 1.85:1 against the
+   * light canvas, failing WCAG 2.2 SC 1.4.11 (non-text contrast, 3:1). The `/50` at
+   * the utility site still produces the softer glow, so one token serves both.
+   *
+   * Note this never renders over a blueprint cell: those resolve
+   * `--blueprint-cell-ring-soft`, which `getBlueprintCellInteractionStyle` always
+   * sets, so the fallback in `var(--blueprint-cell-ring-soft, var(--ring))` is
+   * unreachable. `--ring` only ever sits on app chrome.
+   */
+  --ring: oklch(0.76 0.15 var(--brand-hue));
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
   --sidebar-accent: var(--accent);
@@ -186,9 +200,16 @@
   --sidebar-ancestor: oklch(0.76 0.15 var(--brand-hue) / 0.55);
 
   /* --- Status (Supabase expressive anchors) ---------------------------- */
+  /*
+   * `--success-hue` is pinned rather than tracking `--brand-hue`: success and the
+   * brand accent were byte-identical, so a success state and a brand fill were
+   * indistinguishable. 159 is the green this system was originally built around;
+   * it stays put when the brand hue moves.
+   */
+  --success-hue: 159;
   --destructive: oklch(0.52 0.14 25);
   --warning: oklch(0.68 0.14 75);
-  --success: oklch(0.76 0.15 var(--brand-hue));
+  --success: oklch(0.7 0.15 var(--success-hue));
   --info: oklch(0.54 0.14 288);
 
   /* --- Charts (neutral ramp along the tone span) ----------------------- */
@@ -228,8 +249,13 @@
 
   --destructive: oklch(0.75 0.14 25);
   --warning: oklch(0.8 0.14 75);
-  --success: oklch(0.76 0.15 var(--brand-hue));
+  --success: oklch(0.76 0.15 var(--success-hue));
   --info: oklch(0.7 0.14 288);
+
+  /* Re-derived here for the same reason as the block above: a `.dark` subtree
+     inherits already-substituted values, so anything reading a dial the subtree
+     overrides must be re-declared. */
+  --ring: oklch(0.76 0.15 var(--brand-hue));
 }
 
 @layer utilities {
@@ -411,7 +437,11 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    /* Full alpha, not `outline-ring/50`. This is the default focus outline colour
+       for the 27 raw `<button>` elements that define no `focus-visible` rule of
+       their own; at 50% it composited to 1.76:1 and failed SC 1.4.11. Fixing
+       `--ring` alone does not reach here — the modifier is applied at this site. */
+    @apply border-border outline-ring;
   }
   body {
     /* Required by shadcn Base UI drawer overlay on iOS Safari */
