@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
+import { BLUEPRINT_LANE_FAMILIES } from '@/lib/blueprintTheme'
 import { CELL_STEP } from '@/lib/blueprintCellStyle'
 import { PATH_TYPE_COLORS, getPathColor } from '@/lib/pathColorTheme'
 
@@ -90,7 +90,7 @@ describe('palette', () => {
 })
 
 describe('blueprint cells', () => {
-  const lanes = Object.entries(BLUEPRINT_CELL_PALETTE)
+  const lanes = BLUEPRINT_LANE_FAMILIES.map((f) => [f, f] as const)
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
     it.each(lanes)('%s: ring reads against its own surface', (_lane, family) => {

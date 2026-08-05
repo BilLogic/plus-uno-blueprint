@@ -5,7 +5,6 @@ import {
   cellToken,
   type BlueprintCellFamily,
 } from '@/lib/blueprintCellStyle'
-import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
 import { hasEmbeddedVisualFrame } from '@/lib/visualWalkthrough'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
@@ -84,7 +83,7 @@ function VisualPictureStrip({
 export function BlueprintStepVisual({
   compact = false,
   className,
-  fill = BLUEPRINT_CELL_PALETTE.visual,
+  fill = 'slate',
   selection,
   cellId,
   stepIndex,

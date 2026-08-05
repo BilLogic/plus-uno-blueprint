@@ -1,3 +1,4 @@
+import { BLUEPRINT_LANE_FAMILIES } from '@/lib/blueprintTheme'
 
 export type CanvasAnnotationTool =
   | 'select'
@@ -71,53 +72,42 @@ export const ANNOTATION_DEFAULT_STROKE = 2.5
 export const ANNOTATION_STICKY_SIZE = { width: 160, height: 120 }
 
 /**
- * Sticky fills — step 500, the same weight as the blueprint cells they sit
- * beside, so a note reads as another object on the board rather than a
- * different material.
+ * Annotation colours, derived from the lane set rather than listed four times.
+ *
+ * These were four hand-written arrays — pen, sticky, shape fill, outline — forty
+ * entries that had drifted apart. They are the same eight hues at four steps:
+ * 900 is the vivid ink a stroke needs, 500 matches the cells a sticky sits
+ * beside, 300 is pale enough that a filled shape does not hide the lane under
+ * it, and 1100 is the text weight an outline needs to survive at 1.5px.
  */
+const swatches = (step: 300 | 500 | 900 | 1100) =>
+  BLUEPRINT_LANE_FAMILIES.map((family) => `var(--color-${family}-${step})`)
+
+/** Sticky fills — step 500, the weight of the cells they sit beside. */
 export const ANNOTATION_STICKY_SWATCHES = [
-  'var(--color-yellow-500)',
-  'var(--color-amber-500)',
-  'var(--color-lime-500)',
-  'var(--color-green-500)',
-  'var(--color-blue-500)',
-  'var(--color-indigo-500)',
-  'var(--color-violet-500)',
-  'var(--color-pink-500)',
-  'var(--color-red-500)',
-  'var(--color-orange-500)',
-  'var(--color-slate-500)',
+  ...swatches(500),
   ANNOTATION_PAPER,
 ] as const
 
-/**
- * Shape fills — step 300. One step paler than the cells, which is what lets a
- * filled rectangle sit over a lane without hiding it.
- */
+/** Shape fills — step 300, pale enough to sit over a lane without hiding it. */
 export const ANNOTATION_FILL_SWATCHES = [
-  'var(--color-amber-300)',
-  'var(--color-orange-300)',
-  'var(--color-red-300)',
-  'var(--color-pink-300)',
-  'var(--color-violet-300)',
-  'var(--color-blue-300)',
-  'var(--color-green-300)',
-  'var(--color-slate-300)',
+  ...swatches(300),
   ANNOTATION_PAPER,
   ANNOTATION_INK,
 ] as const
 
-/** Outline colours — step 1100, the text weight, so a 1.5px stroke still reads. */
+/** Outlines — step 1100, so a 1.5px stroke still reads. */
 export const ANNOTATION_STROKE_SWATCHES = [
   ANNOTATION_INK,
   ANNOTATION_PAPER,
-  'var(--color-red-1100)',
-  'var(--color-orange-1100)',
-  'var(--color-yellow-1100)',
-  'var(--color-green-1100)',
-  'var(--color-blue-1100)',
-  'var(--color-violet-1100)',
-  'var(--color-pink-1100)',
+  ...swatches(1100),
+] as const
+
+/** Pen ink — step 900, the vivid step. */
+export const ANNOTATION_PEN_SWATCHES = [
+  ANNOTATION_INK,
+  ...swatches(900),
+  ANNOTATION_PAPER,
 ] as const
 
 export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
@@ -126,25 +116,6 @@ export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
  * Thick is intentionally much heavier so it reads at overview zoom.
  */
 export const ANNOTATION_PEN_STROKE_WIDTHS = [3, 14] as const
-/**
- * Pen colors — Radix step 900, the solid fill step, plus ink and paper.
- *
- * These used to be Tailwind's 300-level tints (#FCA5A5, #FDBA74, …), which are
- * lighter than the step-500 cell fills they get drawn on: a pen stroke was
- * fainter than its own background. Step 9 is the vivid step, so every swatch now
- * reads against the board.
- */
-export const ANNOTATION_PEN_SWATCHES = [
-  'var(--color-slate-1200)',
-  'var(--color-slate-900)',
-  'var(--color-red-900)',
-  'var(--color-orange-900)',
-  'var(--color-amber-900)',
-  'var(--color-green-900)',
-  'var(--color-blue-900)',
-  'var(--color-violet-900)',
-  ANNOTATION_PAPER,
-] as const
 export const ANNOTATION_FONT_SIZES = [12, 14, 18, 24, 32, 48] as const
 export const ANNOTATION_MIN_SIZE = { width: 48, height: 40 } as const
 export const ANNOTATION_DEFAULT_FONT_SIZE = 14

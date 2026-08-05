@@ -14,8 +14,11 @@ export type TechPillStyle = {
 /** Step 400 — one paler than the step-500 lane a pill sits in. */
 const TECH_PILL_SURFACE_STEP = 400
 
-export function getTechPillFamilyFor(item: string): BlueprintCellFamily {
-  return getTechPillFamily(item)
+export function getTechPillFamilyFor(
+  item: string,
+  chosen?: BlueprintCellFamily,
+): BlueprintCellFamily {
+  return getTechPillFamily(item, chosen)
 }
 
 export function getTechPillStyle(item: string): TechPillStyle {

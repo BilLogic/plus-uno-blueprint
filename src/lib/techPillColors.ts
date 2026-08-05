@@ -1,13 +1,17 @@
 import type { BlueprintCellFamily } from '@/lib/blueprintCellStyle'
 
 /**
- * Stable Radix family per technology name — shared across every blueprint and
- * phase. Keys are canonical display labels (case-sensitive).
+ * DEFAULT family per touchpoint, not a styling decision.
  *
- * Families rather than fills: a pill renders at step 400, one step paler than
- * the step-500 lane it sits in, so it reads as an object on the cell rather
- * than as another cell. Several tools share a family — the previous per-tool
- * hexes drew distinctions that carried no meaning.
+ * A touchpoint's colour is meant to be chosen by whoever owns the blueprint —
+ * "Zoom is blue" is a product fact, not a palette one. There is nowhere to
+ * store that yet: a tech pill is a parsed substring of `cells.content`, so
+ * there is no row to attach a colour to. Until a `touchpoints` table exists,
+ * this map is the seed, and `getTechPillFamily` already takes the override that
+ * will carry the stored value.
+ *
+ * A pill renders at step 400, one paler than the step-500 lane it sits in, so
+ * it reads as an object on the cell rather than as another cell.
  */
 export const TECH_PILL_COLORS = {
   'Clearance obtainment guide': 'gold',
@@ -90,8 +94,17 @@ export function normalizeTechPillLabel(label: string): string {
   return TECH_LABEL_ALIASES[lower] ?? LOWER_TO_CANONICAL[lower] ?? trimmed
 }
 
-/** The Radix family a tech pill draws from. */
-export function getTechPillFamily(label: string): BlueprintCellFamily {
+/**
+ * The Radix family a tech pill draws from.
+ *
+ * `chosen` wins when present — it is the seam the stored per-touchpoint colour
+ * will arrive through, so adding the table later needs no restructuring here.
+ */
+export function getTechPillFamily(
+  label: string,
+  chosen?: BlueprintCellFamily,
+): BlueprintCellFamily {
+  if (chosen) return chosen
   const canonical = normalizeTechPillLabel(label)
   const known = TECH_PILL_COLORS[canonical as TechPillName]
   if (known) return known
