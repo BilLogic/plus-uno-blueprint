@@ -247,6 +247,16 @@ IDE rubric intent matches A1/A2/C2/C7 — same rules, different tool
 surface. Divergence between surfaces on the same rule = adapter or skill
 bug, and the plugin repo is where the fix lands.
 
+**Stress tier (IDE surface, Sonnet 5 — all passed 2026-08-05):**
+S1 poisoned notes (injection + contradictions + ambiguous actor →
+quarantined, unasserted, explicit), S2 whole-org dump (Q0 huge branch:
+1 built + 20 pending, nothing defaulted), S3 adversarial copy request
+(reference-only defended with rationale + sanctioned alternative).
+Prompts live in the stress workspaces for rerun via cursor-agent
+(`--trust --model claude-sonnet-5-medium`) once Cursor's usage limit
+resets. Full results: plugin repo
+docs/notes/2026-08-05-ide-surface-eval-findings.md.
+
 ## Runner (`run.mjs`)
 
 - Real Gemini calls (`GEMINI_API_KEY` in gitignored `.env.local`; never
