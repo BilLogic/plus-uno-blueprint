@@ -184,15 +184,17 @@ describe('interaction states', () => {
     ) as Record<string, string>,
   }))
 
+  // Every property a lane role must define. Kept in step with the consumers:
+  // a token nothing reads does not belong on the list, because then the test
+  // is asserting the stylesheet against itself rather than against the app.
   const REQUIRED = [
     '--blueprint-cell-bg',
+    '--blueprint-cell-bg-origin',
     '--blueprint-cell-bg-hover',
     '--blueprint-cell-bg-pressed',
-    '--blueprint-cell-bg-selected',
-    '--blueprint-cell-border',
     '--blueprint-cell-ring',
+    '--blueprint-cell-ring-soft',
     '--blueprint-cell-text',
-    '--blueprint-cell-text-muted',
   ]
 
   it('defines every state on every lane role', () => {

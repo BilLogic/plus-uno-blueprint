@@ -206,12 +206,17 @@
    *   --blueprint-cell-bg-origin    resting surface, kept for the panel chain
    *   --blueprint-cell-bg-hover     pointer over
    *   --blueprint-cell-bg-pressed   aria-pressed / active
-   *   --blueprint-cell-bg-selected  slice member, filter match
-   *   --blueprint-cell-border       cell edge within its own family
    *   --blueprint-cell-ring         2px slice-member outline
    *   --blueprint-cell-ring-soft    focus-visible ring
    *   --blueprint-cell-text         primary label
-   *   --blueprint-cell-text-muted   secondary label
+   *
+   * Seven, not ten. `-bg-selected`, `-text-muted` and `-border` were also
+   * defined here and nothing read any of them: selection is the ring, cells
+   * have no secondary label, and every cell draws the flat
+   * `BLUEPRINT_CELL_BORDER_COLOR` (gray-1200) regardless of family. Giving each
+   * family its own step-8 edge instead is a real improvement and a visible
+   * change to the board — so it is a decision to take, not a token to leave
+   * lying here unconsumed.
    *
    * WHY TOKENS HERE AND NOWHERE ELSE. Supabase expresses state at the call
    * site — `hover:bg-primary/90`, or a step of a numeric scale. Both need the
@@ -241,12 +246,9 @@
     --blueprint-cell-bg: var(--color-slate-500);
     --blueprint-cell-bg-hover: var(--color-slate-600);
     --blueprint-cell-bg-pressed: var(--color-slate-700);
-    --blueprint-cell-bg-selected: var(--color-slate-600);
-    --blueprint-cell-border: var(--color-slate-800);
     --blueprint-cell-ring: var(--color-slate-1100);
     --blueprint-cell-ring-soft: var(--color-slate-1100);
     --blueprint-cell-text: var(--color-slate-1200);
-    --blueprint-cell-text-muted: var(--color-slate-1100);
   }
 
   /* evidence */
@@ -255,12 +257,9 @@
     --blueprint-cell-bg: var(--color-blue-500);
     --blueprint-cell-bg-hover: var(--color-blue-600);
     --blueprint-cell-bg-pressed: var(--color-blue-700);
-    --blueprint-cell-bg-selected: var(--color-blue-600);
-    --blueprint-cell-border: var(--color-blue-800);
     --blueprint-cell-ring: var(--color-blue-1100);
     --blueprint-cell-ring-soft: var(--color-blue-1100);
     --blueprint-cell-text: var(--color-blue-1200);
-    --blueprint-cell-text-muted: var(--color-blue-1100);
   }
 
   /* actor */
@@ -269,12 +268,9 @@
     --blueprint-cell-bg: var(--color-green-500);
     --blueprint-cell-bg-hover: var(--color-green-600);
     --blueprint-cell-bg-pressed: var(--color-green-700);
-    --blueprint-cell-bg-selected: var(--color-green-600);
-    --blueprint-cell-border: var(--color-green-800);
     --blueprint-cell-ring: var(--color-green-1100);
     --blueprint-cell-ring-soft: var(--color-green-1100);
     --blueprint-cell-text: var(--color-green-1200);
-    --blueprint-cell-text-muted: var(--color-green-1100);
   }
 
   /* frontstage-tech */
@@ -283,12 +279,9 @@
     --blueprint-cell-bg: var(--color-violet-500);
     --blueprint-cell-bg-hover: var(--color-violet-600);
     --blueprint-cell-bg-pressed: var(--color-violet-700);
-    --blueprint-cell-bg-selected: var(--color-violet-600);
-    --blueprint-cell-border: var(--color-violet-800);
     --blueprint-cell-ring: var(--color-violet-1100);
     --blueprint-cell-ring-soft: var(--color-violet-1100);
     --blueprint-cell-text: var(--color-violet-1200);
-    --blueprint-cell-text-muted: var(--color-violet-1100);
   }
 
   /* frontstage-action */
@@ -297,12 +290,9 @@
     --blueprint-cell-bg: var(--color-pink-500);
     --blueprint-cell-bg-hover: var(--color-pink-600);
     --blueprint-cell-bg-pressed: var(--color-pink-700);
-    --blueprint-cell-bg-selected: var(--color-pink-600);
-    --blueprint-cell-border: var(--color-pink-800);
     --blueprint-cell-ring: var(--color-pink-1100);
     --blueprint-cell-ring-soft: var(--color-pink-1100);
     --blueprint-cell-text: var(--color-pink-1200);
-    --blueprint-cell-text-muted: var(--color-pink-1100);
   }
 
   /* backstage-tech */
@@ -311,12 +301,9 @@
     --blueprint-cell-bg: var(--color-lime-500);
     --blueprint-cell-bg-hover: var(--color-lime-600);
     --blueprint-cell-bg-pressed: var(--color-lime-700);
-    --blueprint-cell-bg-selected: var(--color-lime-600);
-    --blueprint-cell-border: var(--color-lime-800);
     --blueprint-cell-ring: var(--color-lime-1100);
     --blueprint-cell-ring-soft: var(--color-lime-1100);
     --blueprint-cell-text: var(--color-lime-1200);
-    --blueprint-cell-text-muted: var(--color-lime-1100);
   }
 
   /* backstage-action */
@@ -325,12 +312,9 @@
     --blueprint-cell-bg: var(--color-orange-500);
     --blueprint-cell-bg-hover: var(--color-orange-600);
     --blueprint-cell-bg-pressed: var(--color-orange-700);
-    --blueprint-cell-bg-selected: var(--color-orange-600);
-    --blueprint-cell-border: var(--color-orange-800);
     --blueprint-cell-ring: var(--color-orange-1100);
     --blueprint-cell-ring-soft: var(--color-orange-1100);
     --blueprint-cell-text: var(--color-orange-1200);
-    --blueprint-cell-text-muted: var(--color-orange-1100);
   }
 
   /* support */
@@ -339,12 +323,9 @@
     --blueprint-cell-bg: var(--color-amber-500);
     --blueprint-cell-bg-hover: var(--color-amber-600);
     --blueprint-cell-bg-pressed: var(--color-amber-700);
-    --blueprint-cell-bg-selected: var(--color-amber-600);
-    --blueprint-cell-border: var(--color-amber-800);
     --blueprint-cell-ring: var(--color-amber-1100);
     --blueprint-cell-ring-soft: var(--color-amber-1100);
     --blueprint-cell-text: var(--color-amber-1200);
-    --blueprint-cell-text-muted: var(--color-amber-1100);
   }
 
   /*
@@ -359,12 +340,9 @@
     --blueprint-cell-bg: var(--color-crimson-400);
     --blueprint-cell-bg-hover: var(--color-crimson-500);
     --blueprint-cell-bg-pressed: var(--color-crimson-600);
-    --blueprint-cell-bg-selected: var(--color-crimson-500);
-    --blueprint-cell-border: var(--color-crimson-800);
     --blueprint-cell-ring: var(--color-crimson-1100);
     --blueprint-cell-ring-soft: var(--color-crimson-1100);
     --blueprint-cell-text: var(--color-crimson-1200);
-    --blueprint-cell-text-muted: var(--color-crimson-1100);
   }
 
   [data-blueprint-tone='gold'] {
@@ -372,12 +350,9 @@
     --blueprint-cell-bg: var(--color-gold-400);
     --blueprint-cell-bg-hover: var(--color-gold-500);
     --blueprint-cell-bg-pressed: var(--color-gold-600);
-    --blueprint-cell-bg-selected: var(--color-gold-500);
-    --blueprint-cell-border: var(--color-gold-800);
     --blueprint-cell-ring: var(--color-gold-1100);
     --blueprint-cell-ring-soft: var(--color-gold-1100);
     --blueprint-cell-text: var(--color-gold-1200);
-    --blueprint-cell-text-muted: var(--color-gold-1100);
   }
 
   [data-blueprint-tone='indigo'] {
@@ -385,12 +360,9 @@
     --blueprint-cell-bg: var(--color-indigo-400);
     --blueprint-cell-bg-hover: var(--color-indigo-500);
     --blueprint-cell-bg-pressed: var(--color-indigo-600);
-    --blueprint-cell-bg-selected: var(--color-indigo-500);
-    --blueprint-cell-border: var(--color-indigo-800);
     --blueprint-cell-ring: var(--color-indigo-1100);
     --blueprint-cell-ring-soft: var(--color-indigo-1100);
     --blueprint-cell-text: var(--color-indigo-1200);
-    --blueprint-cell-text-muted: var(--color-indigo-1100);
   }
 
   [data-blueprint-tone='purple'] {
@@ -398,12 +370,9 @@
     --blueprint-cell-bg: var(--color-purple-400);
     --blueprint-cell-bg-hover: var(--color-purple-500);
     --blueprint-cell-bg-pressed: var(--color-purple-600);
-    --blueprint-cell-bg-selected: var(--color-purple-500);
-    --blueprint-cell-border: var(--color-purple-800);
     --blueprint-cell-ring: var(--color-purple-1100);
     --blueprint-cell-ring-soft: var(--color-purple-1100);
     --blueprint-cell-text: var(--color-purple-1200);
-    --blueprint-cell-text-muted: var(--color-purple-1100);
   }
 
   [data-blueprint-tone='red'] {
@@ -411,12 +380,9 @@
     --blueprint-cell-bg: var(--color-red-400);
     --blueprint-cell-bg-hover: var(--color-red-500);
     --blueprint-cell-bg-pressed: var(--color-red-600);
-    --blueprint-cell-bg-selected: var(--color-red-500);
-    --blueprint-cell-border: var(--color-red-800);
     --blueprint-cell-ring: var(--color-red-1100);
     --blueprint-cell-ring-soft: var(--color-red-1100);
     --blueprint-cell-text: var(--color-red-1200);
-    --blueprint-cell-text-muted: var(--color-red-1100);
   }
 
   [data-blueprint-tone='tomato'] {
@@ -424,12 +390,9 @@
     --blueprint-cell-bg: var(--color-tomato-400);
     --blueprint-cell-bg-hover: var(--color-tomato-500);
     --blueprint-cell-bg-pressed: var(--color-tomato-600);
-    --blueprint-cell-bg-selected: var(--color-tomato-500);
-    --blueprint-cell-border: var(--color-tomato-800);
     --blueprint-cell-ring: var(--color-tomato-1100);
     --blueprint-cell-ring-soft: var(--color-tomato-1100);
     --blueprint-cell-text: var(--color-tomato-1200);
-    --blueprint-cell-text-muted: var(--color-tomato-1100);
   }
 
   [data-blueprint-tone='yellow'] {
@@ -437,11 +400,8 @@
     --blueprint-cell-bg: var(--color-yellow-400);
     --blueprint-cell-bg-hover: var(--color-yellow-500);
     --blueprint-cell-bg-pressed: var(--color-yellow-600);
-    --blueprint-cell-bg-selected: var(--color-yellow-500);
-    --blueprint-cell-border: var(--color-yellow-800);
     --blueprint-cell-ring: var(--color-yellow-1100);
     --blueprint-cell-ring-soft: var(--color-yellow-1100);
     --blueprint-cell-text: var(--color-yellow-1200);
-    --blueprint-cell-text-muted: var(--color-yellow-1100);
   }
 }
