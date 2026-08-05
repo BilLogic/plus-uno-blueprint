@@ -29,6 +29,17 @@ export const RADIX_LIGHT = {
   slate300: '#F1F3F5',
   violet300: '#F5F2FF',
 
+  // Neutral ramp — board chrome (label rail, dividers, panel hovers). `slate`
+  // is the cool grey, `gray` the pure neutral; both ship in colors.css and the
+  // choice per token is whichever the previous literal sat closest to.
+  gray300: '#F3F3F3',
+  gray800: '#C7C7C7',
+  gray900: '#8F8F8F',
+  gray1200: '#171717',
+  slate600: '#DFE3E6',
+  slate700: '#D7DBDF',
+  slate800: '#C1C8CD',
+
   // Step 500 — cell surfaces and sticky notes.
   amber500: '#FFE3A2',
   indigo500: '#D9E2FC',

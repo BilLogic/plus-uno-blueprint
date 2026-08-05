@@ -5,46 +5,61 @@ import {
   shouldShowVisibilityLineAfter,
 } from '@/lib/blueprintLayout'
 
+/**
+ * Board chrome — the frame the blueprint is drawn in.
+ *
+ * Frozen (inlined via `style`, not read from a custom property) because the
+ * board must print and project identically in either theme. The values are no
+ * longer invented: each names a step from the neutral ramp in colors.css, so
+ * chrome and cells draw from one palette. Where the previous literal sat
+ * between two steps the nearer one wins, and relative ordering is preserved —
+ * a hover is still darker than its base.
+ *
+ * The `phaseSection*` family is the one deliberate exception. Those are a
+ * blue-tinted slate that separates overview phase frames from every neutral
+ * around them, and no shipped family lands there: Radix `blue` at that
+ * lightness is far more saturated. They stay literal.
+ */
 export const BLUEPRINT_THEME = {
   /** Blueprint content surface — path sections, cells, swim lanes. */
   canvas: '#FFFFFF',
-  canvasDark: '#1C1C1E',
+  canvasDark: RADIX_LIGHT.gray1200,
   /** Blueprint shell — label column, panel padding, compare chrome. */
-  labelRail: '#E8E8ED',
-  labelRailDark: '#1C1C1E',
-  canvasBorder: '#D4D4DA',
-  divider: '#AEAEB2',
-  dividerLabel: '#8E8E93',
+  labelRail: RADIX_LIGHT.slate500,
+  labelRailDark: RADIX_LIGHT.gray1200,
+  canvasBorder: RADIX_LIGHT.slate700,
+  divider: RADIX_LIGHT.slate800,
+  dividerLabel: RADIX_LIGHT.gray900,
   /** Figma-style interaction / visibility line tag. */
-  dividerTagBg: '#3A3A3C',
-  dividerLine: '#3A3A3C',
-  dividerBg: '#E8E8ED',
-  cellText: '#273036',
-  cellEmpty: '#C7C7CC',
-  headerText: '#1C1C1E',
+  dividerTagBg: RADIX_LIGHT.slate1200,
+  dividerLine: RADIX_LIGHT.slate1200,
+  dividerBg: RADIX_LIGHT.slate500,
+  cellText: RADIX_LIGHT.slate1200,
+  cellEmpty: RADIX_LIGHT.gray800,
+  headerText: RADIX_LIGHT.gray1200,
   /** Thin rules between swim lanes — light grey, visible on canvas and label rail. */
-  laneDivider: '#DCDCE1',
-  arrow: '#8E8E93',
+  laneDivider: RADIX_LIGHT.slate700,
+  arrow: RADIX_LIGHT.gray900,
   /** Side-by-side compare path sections (Figma-style grouping). */
   sectionFill: '#FFFFFF',
-  sectionBorder: '#D4D4DA',
-  /** Service overview canvas phase sections — slate blue tuned for #F4F4F4 viewport. */
+  sectionBorder: RADIX_LIGHT.slate700,
+  /** Service overview canvas phase sections — see the exception note above. */
   phaseSectionColor: '#B6C7D2',
   phaseSectionFill: '#D9E4EA',
   /** Outermost slide/canvas workspace — sits behind blueprint panels. */
-  viewportPad: '#F4F4F4',
+  viewportPad: RADIX_LIGHT.gray300,
   /** Scenario title badge on gray compare panels — darker than labelRail. */
-  panelScenarioBadgeFill: '#C2C2C8',
-  panelScenarioBadgeText: '#2C2C2E',
+  panelScenarioBadgeFill: RADIX_LIGHT.gray800,
+  panelScenarioBadgeText: RADIX_LIGHT.gray1200,
   /** Hover accents for interactive canvas chrome. */
   phaseSectionFillHover: '#C5D6E0',
   phaseSectionBorderHover: '#9AADBE',
   phaseSectionBadgeHover: '#9AADBE',
-  panelLabelRailHover: '#DDDFE4',
-  panelBorderHover: '#BABAC4',
-  panelScenarioBadgeFillHover: '#B0B0B8',
-  panelCanvasHover: '#F4F4F7',
-  panelSectionFillHover: '#F4F4F7',
+  panelLabelRailHover: RADIX_LIGHT.slate600,
+  panelBorderHover: RADIX_LIGHT.slate800,
+  panelScenarioBadgeFillHover: RADIX_LIGHT.gray900,
+  panelCanvasHover: RADIX_LIGHT.slate300,
+  panelSectionFillHover: RADIX_LIGHT.slate300,
 } as const
 
 /** Set on interactive compare panels; children inherit label-rail hover. */
