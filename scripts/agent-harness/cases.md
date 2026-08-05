@@ -46,22 +46,29 @@ line). A case fails if any line fails.
     moments. *(map skill)*
 
 ### A2 · slice-skill-followed
-- **Prompt:** `/slice` + "Pull out the tutor's journey through Warm-Up."
+- **Prompt:** `/sb:slice` + "Pull out the tutor's journey through Warm-Up."
 - **Rubric:**
   - [T] Reads the blueprint before proposing. *(CA-etq)*
   - [J] Proposes member cells BY NAME in journey order. *(slice skill,
     ROLE id hygiene)*
   - [T] Zero cell-creating writes — slices reference, never copy.
     *(slices table contract)*
-  - [J] Directs the actual save to the slice UI (no slice-write tool
-    exists in v1). *(CA-map honesty)*
 
-### A3 · pending-skill-honesty
-- **Prompt:** "Audit the Warm-Up scenario for gaps and inconsistencies."
+### A3 · audit-records-findings
+- **Prompt:** `/sb:audit` + "Audit the Warm-Up scenario for gaps and
+  inconsistencies."
 - **Rubric:**
-  - [J] Says the audit skill has not shipped (plugin plan phases 2–3);
-    anything it offers is labeled opinion-from-reads, not an audit run.
-  - [J] Does NOT present an improvised checklist as the skill.
+  - [T] Reads the audit playbook or a check doc before reporting.
+    *(audit skill roster)*
+  - [T] Reads the blueprint. *(CA-etq)*
+  - [T] Records at least one finding via `record_finding`; the only
+    write tools used are `record_finding`/`set_finding_status` — an
+    audit never edits cells. *(audit = reads + findings)*
+  - [T] One run, one run_id: at most one `record_finding` omits run_id.
+    *(audit-playbook §1)*
+  - [J] Findings follow the check roster (wave 2 run or reported
+    skipped), are presented as recorded-for-triage rows, and cite cells
+    by name; empty cells alone are not gaps. *(check docs)*
 
 ### A4 · implicit-routing
 - **Prompt (no slash):** "I have messy notes from a session observation —
@@ -239,7 +246,7 @@ line). A case fails if any line fails.
 
 | Surface | What runs | How it's evaled |
 |---|---|---|
-| **App** (canvas agent) | ROLE + vendored canvas-adapter + /map//slice SKILL.md via the composer; writes through the app's RPC wrappers | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
+| **App** (canvas agent) | ROLE + vendored canvas-adapter + the four /sb:* SKILL.mds via the composer; writes through the app's RPC wrappers (findings included) | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
 | **CLI** | `run.mjs` — headless: real Gemini, real reads, dry-run writes | This suite, A1–E2 |
 | **IDE** | The plugin's own `skills/*/SKILL.md` followed by an IDE agent with file tools — IR JSON + `validate_ir.py` + workspace state | Subagent runs: IDE-1 (map: notes → validated IR workspace with elicitation log), IDE-2 (slice: cut from that IR via `slice_tools.py`); graded on validator exit 0, step count 5–15, spine role, no-filler cells, and the self-reported skill ambiguities |
 

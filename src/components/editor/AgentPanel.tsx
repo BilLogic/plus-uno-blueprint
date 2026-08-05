@@ -96,6 +96,7 @@ import { attachAgentPersistence } from '@/lib/agent/persistence'
 import {
   AGENT_SKILL_COMMANDS,
   parseSkillDraft,
+  skillMatchesQuery,
   type AgentSkillCommand,
 } from '@/lib/agent/skills'
 import { listModels } from '@/lib/agent/providers/models'
@@ -596,7 +597,7 @@ function AgentChatView({
   const slashMatches =
     slashQuery !== null
       ? AGENT_SKILL_COMMANDS.filter((command) =>
-          command.id.startsWith(slashQuery),
+          skillMatchesQuery(command, slashQuery),
         )
       : []
   const slashOpen = slashMatches.length > 0
@@ -826,10 +827,13 @@ function AgentChatView({
                 // Typing a full command + space converts it into the chip
                 // on the spot — the token is recognized, not just text.
                 if (!pendingSkill) {
-                  const token = /^\/(\w+)\s([\s\S]*)$/.exec(value)
-                  const command = token
+                  const token = /^\/([\w:]+)\s([\s\S]*)$/.exec(value)
+                  const lowered = token?.[1].toLowerCase()
+                  const command = lowered
                     ? AGENT_SKILL_COMMANDS.find(
-                        (entry) => entry.id === token[1].toLowerCase(),
+                        (entry) =>
+                          entry.id === lowered ||
+                          entry.aliases.includes(lowered),
                       )
                     : undefined
                   if (command?.content) {

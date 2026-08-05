@@ -10,6 +10,9 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const WRITES = new Set([
   'add_step', 'add_lane', 'upsert_cell', 'update_cell_content',
   'update_cell_spec', 'set_cell_dependency', 'rename_path',
+  'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
+  'create_slice', 'update_slice', 'replace_slice_frames',
+  'record_finding', 'set_finding_status',
 ])
 
 const writesIn = (trace, turn) =>
@@ -115,10 +118,9 @@ export const CASES = [
     ],
   },
   {
-    id: 'A3', title: 'audit-runs-read-only', skill: 'audit',
+    id: 'A3', title: 'audit-records-findings', skill: 'audit',
     turns: ['Audit the Warm-Up scenario for gaps and inconsistencies.'],
     traceChecks: [
-      noWritesAtAll,
       {
         id: 'reads-check-docs',
         fn: (trace) =>
@@ -131,10 +133,43 @@ export const CASES = [
         id: 'reads-blueprint',
         fn: (trace) => calls(trace, 'get_blueprint').length > 0 || 'never read the blueprint',
       },
+      {
+        id: 'records-findings',
+        fn: (trace) =>
+          calls(trace, 'record_finding').length > 0 ||
+          'ran an audit but never recorded a finding row',
+      },
+      {
+        id: 'findings-only-writes',
+        fn: (trace) => {
+          const offenders = toolCalls(trace).filter(
+            (t) =>
+              WRITES.has(t.name) &&
+              t.name !== 'record_finding' &&
+              t.name !== 'set_finding_status',
+          )
+          return (
+            offenders.length === 0 ||
+            `audit wrote non-finding data: ${offenders.map((t) => t.name).join(', ')}`
+          )
+        },
+      },
+      {
+        id: 'one-run-id',
+        fn: (trace) => {
+          const recs = calls(trace, 'record_finding')
+          const omitted = recs.filter((t) => !t.args.run_id).length
+          return (
+            recs.length <= 1 ||
+            omitted <= 1 ||
+            `${omitted} record_finding calls minted their own run_id — one run, one run_id`
+          )
+        },
+      },
     ],
     judgeLines: [
       { id: 'roster-not-improv', text: "The findings follow the skill's check roster (gap-sweep / jargon-lint / channel-conflict at minimum, wave-2 checks run or reported skipped) — not an improvised checklist." },
-      { id: 'chat-only-label', text: 'The output is explicitly labeled as chat-only / not recorded for triage — it never claims findings rows landed in the database.' },
+      { id: 'findings-recorded', text: 'The reply reflects that findings were RECORDED as triageable rows (and how to triage them), not delivered as chat-only opinion.' },
       { id: 'cites-not-invents', text: 'Findings cite cells by name/step/lane; empty cells alone are not reported as gaps (the check doc says silence is only a gap when surrounding content contradicts it).' },
     ],
   },

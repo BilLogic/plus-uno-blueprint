@@ -120,17 +120,21 @@ you recover — and if recovering means a different target cell or a
 different approach, say so explicitly. Never silently switch targets.
 
 Know your limits and say them fast: if a request needs a capability you
-do not have (renaming tags everywhere, deleting, importing, creating
-scenarios), say so immediately and point at where the human does it —
-do not search exhaustively hoping a tool appears. Prefer the fewest
-reads that answer the question. All four blueprint skills are live here
-(/map /slice /audit /whatif) — but audit and whatif run READ-ONLY on
-this canvas: checks and traces run over your read tools, results land in
-chat labeled "chat-only — not recorded for triage", and no findings
-rows, variants, or change requests exist here (that is the IDE flow).
-Never present an off-skill improvisation as an audit or whatif run —
-follow the skill's roster and playbook (read_reference has the check
-docs) or label it plain opinion.
+do not have (renaming tags everywhere, deleting, importing), say so
+immediately and point at where the human does it — do not search
+exhaustively hoping a tool appears. Prefer the fewest reads that answer
+the question. All four blueprint skills are FULLY live here (/sb:map
+/sb:slice /sb:audit /sb:whatif; bare /audit etc. works too). Audit
+findings land as rows via record_finding (dedupe built in; reuse the
+returned run_id across one run) and are triaged with set_finding_status
+— the ledger is list_findings, so never leave audit results chat-only.
+Whatif keeps its variant conversational: analysis NEVER writes cells;
+record consequence findings (source whatif), and only after the user
+explicitly accepts do you promote — through the ordinary write tools,
+ordinary discipline (nod gate, batches, ledger) — then resolve the
+superseded whatif findings. Never present an off-skill improvisation as
+an audit or whatif run — follow the skill's roster and playbook
+(read_reference has the check docs) or label it plain opinion.
 
 Ids (UUIDs) are tool plumbing, never prose: keep them out of your
 replies. Point at things by NAME — cell content, step, lane, scenario —
@@ -151,7 +155,7 @@ function buildSystem(skillId, contextNote) {
   if (skillId) {
     const content = readFileSync(resolve(SKILLS_DIR, `${skillId}.md`), 'utf8')
     parts.push(
-      `\n\n--- active skill: /${skillId === 'blueprint' ? 'map' : skillId} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`,
+      `\n\n--- active skill: /sb:${skillId === 'blueprint' ? 'map' : skillId} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`,
     )
   }
   if (contextNote) parts.push(`\n\n--- current context ---\n${contextNote}`)
@@ -190,6 +194,9 @@ export const TOOL_SPECS = [
   { name: 'update_slice', description: "Edit a slice's fields.", parameters: { type: 'object', properties: { slice_id: str('Slice id'), title: str('omit to keep'), description: str('omit to keep'), actor: str('omit to keep'), slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'omit to keep' } }, required: ['slice_id'] } },
   { name: 'replace_slice_frames', description: "Replace a slice's frames wholesale — reorder/merge/split screens. Read the slice first; pass the complete new list.", parameters: { type: 'object', properties: { slice_id: str('Slice id'), frames: { type: 'array', description: 'Full replacement in order', items: { type: 'object', properties: { cells: { type: 'array', description: 'Cell ids', items: { type: 'string' } }, caption: str('omit for none'), narrative: str('omit for none') }, required: ['cells'] } } }, required: ['slice_id', 'frames'] } },
   { name: 'get_slice', description: 'One slice in full: fields + frames. Read before update_slice/replace_slice_frames.', parameters: { type: 'object', properties: { slice_id: str('Slice id') }, required: ['slice_id'] } },
+  { name: 'list_findings', description: 'The findings ledger: audit/whatif findings with status. Read before recording (see what is already open) and when the human asks to triage.', parameters: { type: 'object', properties: { status: { type: 'string', enum: ['open', 'resolved', 'dismissed', 'all'], description: 'Filter; default open' } } } },
+  { name: 'record_finding', description: 'Record one sb:audit / sb:whatif finding as a triageable row. Dedupe is built in: an open finding with the same fingerprint (check_name + cited cells) is updated in place, a dismissed one stays dismissed (the call reports it and writes nothing), a resolved one reopens as a new row. Omit run_id on the first finding of a run and reuse the returned run_id for the rest of that run. Cite cells by id; for a zero-cell finding pass scope instead (e.g. "scenario:Warm-Up").', parameters: { type: 'object', properties: { source: { type: 'string', enum: ['audit', 'whatif'], description: 'Which skill produced it' }, check_name: str('Roster check name, e.g. "gap-sweep"'), severity: { type: 'string', enum: ['info', 'warn', 'critical'], description: 'Per the check doc default unless evidence says otherwise' }, note: str('The finding itself — what is wrong, where, and why it matters. No raw ids in this text.'), cell_ids: { type: 'array', description: 'Cells the finding is about; omit only for zero-cell findings', items: { type: 'string' } }, scope: str('Zero-cell fingerprint scope, required when cell_ids is empty'), run_id: str('The run identity returned by the first record_finding of this run') }, required: ['source', 'check_name', 'severity', 'note'] } },
+  { name: 'set_finding_status', description: 'Triage a finding: resolved (fixed / no longer true) or dismissed (accepted as-is; dismissed findings never reopen), or open to reopen. This is the only edit humans or agents make to an existing finding.', parameters: { type: 'object', properties: { finding_id: str('Finding id from list_findings'), status: { type: 'string', enum: ['open', 'resolved', 'dismissed'], description: 'New status' } }, required: ['finding_id', 'status'] } },
   { name: 'open_cell_panel', description: "Open the cell detail side panel on the user's screen (scenario must be open).", parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
   { name: 'set_canvas_mode', description: "Switch the user's canvas between view and design mode.", parameters: { type: 'object', properties: { mode: { type: 'string', enum: ['view', 'design'], description: 'Target' } }, required: ['mode'] } },
   { name: 'set_sidebar', description: 'Collapse or expand the sidebar.', parameters: { type: 'object', properties: { collapsed: { type: 'boolean', description: 'true = collapse' } }, required: ['collapsed'] } },
@@ -203,6 +210,7 @@ const WRITE_TOOLS = new Set([
   'update_cell_spec', 'set_cell_dependency', 'rename_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'create_slice', 'update_slice', 'replace_slice_frames',
+  'record_finding', 'set_finding_status',
 ])
 
 async function realListScenarios() {
@@ -308,7 +316,10 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       // The rehearsal note matters: reads are REAL and will not reflect
       // this write — without it the model re-reads, concludes the write
       // failed, and retries (observed: doubled add_lane).
-      record.result = `Done (${name} accepted, ref dry-${dryCounter}). NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
+      record.result =
+        name === 'record_finding'
+          ? `Recorded ${args.severity ?? 'warn'} finding for ${args.check_name ?? '?'}. run_id ${args.run_id ?? `00000000-0000-4000-8000-00000000d${dryCounter}`}; reuse it for the rest of this run. NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
+          : `Done (${name} accepted, ref dry-${dryCounter}). NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
       return record.result
     }
     switch (name) {
@@ -330,6 +341,16 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
           .sort((a, b) => a.position - b.position)
           .map((f, i) => `frame ${i + 1}: cells [${(f.cell_ids ?? []).join(', ')}]${f.caption ? ` caption "${f.caption}"` : ''}`)
         record.result = `slice "${slice.title}" (${slice.id}) type=${slice.slice_type}\n${frames.join('\n') || '(no frames)'}`
+        return record.result
+      }
+      case 'list_findings': {
+        const filter = typeof args.status === 'string' ? args.status : 'open'
+        const rows = await rest(
+          `findings?select=id,source,check_name,severity,note,status,cell_ids,created_at&order=created_at.desc&limit=100${filter === 'all' ? '' : `&status=eq.${encodeURIComponent(filter)}`}`,
+        )
+        record.result = rows?.length
+          ? rows.map((r) => `${r.id} [${r.severity}] ${r.check_name} (${r.source}, ${r.status}, ${String(r.created_at).slice(0, 10)}) cells:${(r.cell_ids ?? []).length}${r.note ? ` — ${r.note}` : ''}`).join('\n')
+          : filter === 'all' ? 'No findings recorded yet.' : `No ${filter} findings.`
         return record.result
       }
       case 'open_cell_panel': record.result = 'Opened the cell detail panel.'; return record.result

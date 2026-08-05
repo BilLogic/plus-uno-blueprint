@@ -82,6 +82,8 @@ export const WRITE_TOOL_NAMES = new Set([
   'create_slice',
   'update_slice',
   'replace_slice_frames',
+  'record_finding',
+  'set_finding_status',
 ])
 
 export const TOOL_SPECS: ToolSpec[] = [
@@ -494,6 +496,56 @@ export const TOOL_SPECS: ToolSpec[] = [
       required: ['path_id', 'name'],
     },
   },
+  {
+    name: 'list_findings',
+    description:
+      'The findings ledger: audit/whatif findings with status. Read before recording (see what is already open) and when the human asks to triage.',
+    parameters: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['open', 'resolved', 'dismissed', 'all'],
+          description: 'Filter; default open',
+        },
+      },
+    },
+  },
+  {
+    name: 'record_finding',
+    description:
+      'Record one sb:audit / sb:whatif finding as a triageable row. Dedupe is built in: an open finding with the same fingerprint (check_name + cited cells) is updated in place, a dismissed one stays dismissed (the call reports it and writes nothing), a resolved one reopens as a new row. Omit run_id on the first finding of a run and reuse the returned run_id for the rest of that run. Cite cells by id; for a zero-cell finding pass scope instead (e.g. "scenario:Warm-Up").',
+    parameters: {
+      type: 'object',
+      properties: {
+        source: { type: 'string', enum: ['audit', 'whatif'], description: 'Which skill produced it' },
+        check_name: str('Roster check name, e.g. "gap-sweep"'),
+        severity: { type: 'string', enum: ['info', 'warn', 'critical'], description: 'Per the check doc default unless evidence says otherwise' },
+        note: str('The finding itself — what is wrong, where, and why it matters. No raw ids in this text.'),
+        cell_ids: {
+          type: 'array',
+          description: 'Cells the finding is about; omit only for zero-cell findings',
+          items: { type: 'string' },
+        },
+        scope: str('Zero-cell fingerprint scope, required when cell_ids is empty'),
+        run_id: str('The run identity returned by the first record_finding of this run'),
+      },
+      required: ['source', 'check_name', 'severity', 'note'],
+    },
+  },
+  {
+    name: 'set_finding_status',
+    description:
+      'Triage a finding: resolved (fixed / no longer true) or dismissed (accepted as-is; dismissed findings never reopen), or open to reopen. This is the only edit humans or agents make to an existing finding.',
+    parameters: {
+      type: 'object',
+      properties: {
+        finding_id: str('Finding id from list_findings'),
+        status: { type: 'string', enum: ['open', 'resolved', 'dismissed'], description: 'New status' },
+      },
+      required: ['finding_id', 'status'],
+    },
+  },
 ]
 
 // One lifecycle per deployment today; cached after the first ask.
@@ -509,6 +561,29 @@ async function lifecycleId(client: Client): Promise<string> {
   if (!data) throw new Error('No service lifecycle exists yet.')
   cachedLifecycleId = data.id
   return data.id
+}
+
+/**
+ * Finding identity, canvas dialect: check_name + sha256 of the sorted cited
+ * cell ids (cell_keys are written as the ids — sliceMutations precedent), or
+ * check_name + scope for zero-cell findings. Same shape as the IDE formula
+ * but a separate dedupe space, since the IDE hashes IR key-paths.
+ */
+async function findingFingerprint(
+  checkName: string,
+  cellIds: string[],
+  scope: string | undefined,
+): Promise<string> {
+  if (cellIds.length === 0) return `${checkName}:${scope ?? ''}`
+  const sorted = [...cellIds].sort().join('\n')
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(sorted),
+  )
+  const hex = Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
+  return `${checkName}:${hex}`
 }
 
 function s(args: Record<string, unknown>, key: string): string | undefined {
@@ -583,6 +658,28 @@ export async function dispatchTool(
             `frame ${index + 1}: cells [${(frame.cell_ids ?? []).join(', ')}]${frame.caption ? ` caption "${frame.caption}"` : ''}${frame.narrative ? ` narrative "${frame.narrative}"` : ''}`,
         )
       return `slice "${data.title}" (${data.id}) type=${data.slice_type}${data.actor ? ` actor=${data.actor}` : ''}\n${frames.join('\n') || '(no frames)'}`
+    }
+    case 'list_findings': {
+      const filter = s(args, 'status') ?? 'open'
+      let query = client
+        .from('findings')
+        .select('id, source, check_name, severity, note, status, cell_ids, created_at')
+        .order('created_at', { ascending: false })
+        .limit(100)
+      if (filter !== 'all')
+        query = query.eq('status', filter)
+      const { data, error } = await query
+      if (error) throw new Error(error.message)
+      if (!data || data.length === 0)
+        return filter === 'all'
+          ? 'No findings recorded yet.'
+          : `No ${filter} findings.`
+      return data
+        .map(
+          (row) =>
+            `${row.id} [${row.severity}] ${row.check_name} (${row.source}, ${row.status}, ${row.created_at.slice(0, 10)}) cells:${(row.cell_ids ?? []).length}${row.note ? ` — ${row.note}` : ''}`,
+        )
+        .join('\n')
     }
     // UI control + navigation: drives the interface, changes no data — no
     // attribution, no ledger entry. Same gestures the human has.
@@ -820,6 +917,73 @@ export async function dispatchTool(
         )
         await replaceSliceFrames(client, sliceId, frames)
         return `Replaced the slice's frames (${frames.length}).`
+      }
+      case 'record_finding': {
+        const source = args.source === 'whatif' ? 'whatif' : 'audit'
+        const checkName = need(args, 'check_name')
+        const severityArg = s(args, 'severity')
+        if (severityArg !== 'info' && severityArg !== 'warn' && severityArg !== 'critical')
+          throw new Error('severity must be info, warn, or critical.')
+        const note = need(args, 'note')
+        const cellIds = Array.isArray(args.cell_ids)
+          ? args.cell_ids.filter(
+              (value): value is string => typeof value === 'string',
+            )
+          : []
+        const scope = s(args, 'scope')
+        if (cellIds.length === 0 && !scope)
+          throw new Error('A zero-cell finding needs a scope (e.g. "scenario:Warm-Up").')
+        const runId = s(args, 'run_id') ?? crypto.randomUUID()
+        const fingerprint = await findingFingerprint(checkName, cellIds, scope)
+        const lifecycle = await lifecycleId(client)
+        const { data: existing, error: readError } = await client
+          .from('findings')
+          .select('id, status')
+          .eq('service_lifecycle_id', lifecycle)
+          .eq('fingerprint', fingerprint)
+          .order('updated_at', { ascending: false })
+        if (readError) throw new Error(readError.message)
+        const open = existing?.find((row) => row.status === 'open')
+        const dismissed = existing?.find((row) => row.status === 'dismissed')
+        if (open) {
+          const { error } = await client
+            .from('findings')
+            .update({ severity: severityArg, note, run_id: runId, cell_ids: cellIds, cell_keys: cellIds, source })
+            .eq('id', open.id)
+          if (error) throw new Error(error.message)
+          return `An open finding already had this fingerprint — updated it in place (dedupe). run_id ${runId}; reuse it for the rest of this run.`
+        }
+        if (dismissed)
+          return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. run_id ${runId}; reuse it for the rest of this run.`
+        const { error: insertError } = await client.from('findings').insert({
+          service_lifecycle_id: lifecycle,
+          run_id: runId,
+          source,
+          check_name: checkName,
+          severity: severityArg,
+          note,
+          cell_ids: cellIds,
+          cell_keys: cellIds,
+          fingerprint,
+        })
+        if (insertError) throw new Error(insertError.message)
+        const reopened = existing && existing.length > 0
+        return `Recorded ${severityArg} finding for ${checkName}${reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. run_id ${runId}; reuse it for the rest of this run.`
+      }
+      case 'set_finding_status': {
+        const status = s(args, 'status')
+        if (status !== 'open' && status !== 'resolved' && status !== 'dismissed')
+          throw new Error('status must be open, resolved, or dismissed.')
+        const findingId = need(args, 'finding_id')
+        const { data, error } = await client
+          .from('findings')
+          .update({ status })
+          .eq('id', findingId)
+          .select('id')
+        if (error) throw new Error(error.message)
+        if (!data || data.length === 0)
+          throw new Error(`No finding with id ${findingId}.`)
+        return `Finding is now ${status}.`
       }
       default:
         return `Tool "${name}" is not on the allow-list. Available tools are fixed; deletes do not exist here — removal is human-only.`
