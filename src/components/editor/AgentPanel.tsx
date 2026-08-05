@@ -761,7 +761,7 @@ function AgentChatView({
             ) : null}
           </div>
         ) : null}
-        <div className="relative flex items-center gap-1.5">
+        <div className="relative flex items-end gap-1.5">
           {/* The slash menu: type "/" to see the four skills — the same
               SKILL.md files IDE agents run, minus their file mechanics. */}
           {slashOpen ? (
@@ -801,7 +801,7 @@ function AgentChatView({
               being text), the input itself goes borderless. */}
           <div
             className={cn(
-              'flex h-7 min-w-0 flex-1 items-center gap-1 rounded-md border border-input bg-transparent px-2',
+              'flex min-h-7 min-w-0 flex-1 items-start gap-1 rounded-md border border-input bg-transparent px-2 py-1',
               'focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30',
               !keyed && 'opacity-50',
             )}
@@ -809,7 +809,7 @@ function AgentChatView({
             {pendingSkill ? (
               <Badge
                 variant="secondary"
-                className="shrink-0 gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-[10px] text-primary"
+                className="mt-0.5 shrink-0 gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-[10px] text-primary"
               >
                 {pendingSkill.label}
                 <button
@@ -887,7 +887,7 @@ function AgentChatView({
                     ? 'Message the agent… ("/" for skills)'
                     : 'Add a key in ⚙ first'
               }
-              className="min-h-6 min-w-0 flex-1 resize-none self-center border-0 bg-transparent px-0 py-0.5 text-xs leading-5 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-5 min-w-0 flex-1 resize-none border-0 bg-transparent px-0 py-0 text-xs leading-5 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Message the agent"
               disabled={!keyed}
             />

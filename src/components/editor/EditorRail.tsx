@@ -77,6 +77,7 @@ export function EditorRail({
   surface,
   onSelectSurface,
   showAgent,
+  agentActive,
   topSlot,
   bottomSlot,
 }: {
@@ -84,6 +85,12 @@ export function EditorRail({
   onSelectSurface: (surface: SidebarSurface) => void
   /** Deployed read-only builds hide the agent surface entirely. */
   showAgent: boolean
+  /**
+   * ✦ is a TOGGLE, not a surface swap — the chat docks under whichever
+   * panel is open (or floats), so Blueprints/Slices keeps its own
+   * highlight while the agent is showing.
+   */
+  agentActive?: boolean
   topSlot?: ReactNode
   bottomSlot?: ReactNode
 }) {
@@ -108,7 +115,7 @@ export function EditorRail({
             <RailButton
               key={id}
               label={label}
-              selected={surface === id}
+              selected={id === 'agent' ? agentActive === true : surface === id}
               onClick={() => onSelectSurface(id)}
             >
               <Icon className="size-4" aria-hidden />

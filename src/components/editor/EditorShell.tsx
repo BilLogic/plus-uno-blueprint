@@ -6,11 +6,9 @@ import {
   FloatingSidebarPill,
   SidebarCollapseButton,
 } from '@/components/editor/EditorChrome'
+import { AgentDock, AgentDockDivider } from '@/components/editor/AgentDock'
 import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
-import {
-  AgentPanel,
-  AgentSettingsRailButton,
-} from '@/components/editor/AgentPanel'
+import { AgentSettingsRailButton } from '@/components/editor/AgentPanel'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
@@ -28,6 +26,10 @@ import {
   registerAgentUiBridge,
   registerAgentUiContext,
 } from '@/lib/agent/uiBridge'
+import {
+  toggleAgentOpen,
+  useAgentPlacement,
+} from '@/lib/agent/placement'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 import { getSlideDisplayLabel } from '@/types/nav'
@@ -94,6 +96,9 @@ export function EditorShell() {
   const [surface, setSurface] = useState<SidebarSurface>(
     activeTabKind !== null ? 'slices' : 'blueprints',
   )
+  const agentPlacement = useAgentPlacement()
+  const agentDocked = agentPlacement.mode === 'docked' && agentPlacement.open
+  const panelColumnRef = useRef<HTMLDivElement>(null)
   const [lastTabKind, setLastTabKind] = useState(activeTabKind)
   if (lastTabKind !== activeTabKind) {
     setLastTabKind(activeTabKind)
@@ -134,7 +139,7 @@ export function EditorShell() {
         selectPhase,
         selectScenario,
         openAgentSurface: () => {
-          setSurface('agent')
+          toggleAgentOpen(true)
           setSidebarCollapsed(false)
         },
         setSidebarCollapsed: (collapsed) => {
@@ -162,6 +167,7 @@ export function EditorShell() {
       ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
       : 'Active tab: base blueprint view (no slice tab)',
     `Sidebar: ${surface} surface${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
+    `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
   ].join('\n')
   const shellContextRef = useRef(shellContext)
   useEffect(() => {
@@ -381,8 +387,13 @@ export function EditorShell() {
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-row">
       <EditorRail
         surface={surface}
+        agentActive={agentPlacement.open}
         onSelectSurface={(next) => {
-          setSurface(next)
+          // ✦ toggles the chat's presence; the other two still pick the
+          // panel underneath it, so "chat while looking at the nav" is
+          // the default posture rather than a swap away from it.
+          if (next === 'agent') toggleAgentOpen()
+          else setSurface(next)
           if (sidebarCollapsed) {
             suppressCanvasResizeRefit()
             setSidebarCollapsed(false)
@@ -394,7 +405,7 @@ export function EditorShell() {
         }
         bottomSlot={<AgentSettingsRailButton />}
       />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div ref={panelColumnRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SidebarProvider
           style={
             {
@@ -403,12 +414,10 @@ export function EditorShell() {
           }
           className="flex min-h-0 min-w-0 flex-1 flex-col"
         >
-          {surface === 'agent' ? (
-            <AgentPanel />
-          ) : (
-            <SlideModeSidebarNav surface={surface} />
-          )}
+          <SlideModeSidebarNav surface={surface === 'agent' ? 'blueprints' : surface} />
         </SidebarProvider>
+        {agentDocked ? <AgentDockDivider columnRef={panelColumnRef} /> : null}
+        <AgentDock visible={canAgent && agentDocked} />
       </div>
     </div>
   )
@@ -486,6 +495,15 @@ export function EditorShell() {
               />
             ) : null}
           </aside>
+
+          {/*
+            The floating posture: portalled to the body so the window
+            escapes the sidebar's clip. Hidden while presenting — a
+            full-bleed slice is not the place for a chat window.
+          */}
+          <AgentDock
+            visible={canAgent && agentPlacement.mode === 'floating' && !presenting}
+          />
 
           {/*
             Collapsed remnant: the floating pill over the canvas. Hidden

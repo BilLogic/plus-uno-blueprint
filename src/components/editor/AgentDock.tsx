@@ -1,0 +1,306 @@
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ChevronDown, GripHorizontal, X } from 'lucide-react'
+import { AgentPanel } from '@/components/editor/AgentPanel'
+import {
+  DOCK_MAX_RATIO,
+  DOCK_MIN_RATIO,
+  FLOAT_MIN,
+  dockAgent,
+  setAgentPlacement,
+  toggleAgentOpen,
+  useAgentPlacement,
+} from '@/lib/agent/placement'
+import { cn } from '@/lib/utils'
+
+/** The sidebar's box, or null when it is not on screen (collapsed). */
+function sidebarRect(): DOMRect | null {
+  const el = document.querySelector<HTMLElement>('[data-editor-sidebar]')
+  if (!el) return null
+  const box = el.getBoundingClientRect()
+  return box.width > 0 ? box : null
+}
+
+/**
+ * Chat chrome shared by both postures — a grab bar, a collapse, a close.
+ *
+ * The grab bar is the whole placement gesture: drag it out of the sidebar
+ * and the chat floats; drag it back over the sidebar and it docks again.
+ * One conversation, two homes — dragging never touches session state, so
+ * the transcript survives the move (it lives in the loop's module store).
+ */
+function AgentDockChrome({
+  floating,
+  dropTarget,
+  onDragStart,
+  children,
+}: {
+  floating: boolean
+  dropTarget: boolean
+  onDragStart: (event: React.PointerEvent<HTMLDivElement>) => void
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        'flex min-h-0 flex-1 flex-col overflow-hidden',
+        floating &&
+          'rounded-lg border border-border bg-popover shadow-lg ring-1 ring-black/[0.03]',
+        dropTarget && 'ring-2 ring-primary/50',
+      )}
+    >
+      <div
+        onPointerDown={onDragStart}
+        className={cn(
+          'group/agent-grab flex h-6 shrink-0 cursor-grab touch-none items-center gap-1 border-b border-border/60 px-1.5 active:cursor-grabbing',
+          floating ? 'bg-muted/40' : 'bg-transparent',
+        )}
+      >
+        <GripHorizontal
+          className="size-3 shrink-0 text-muted-foreground/50 group-hover/agent-grab:text-muted-foreground"
+          aria-hidden
+        />
+        <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-muted-foreground">
+          Agent
+        </span>
+        <button
+          type="button"
+          aria-label={floating ? 'Dock the agent to the sidebar' : 'Hide the agent'}
+          title={
+            floating
+              ? 'Dock to the sidebar (or drag the bar back over it)'
+              : 'Hide — drag the bar onto the canvas to float it'
+          }
+          onClick={() => (floating ? dockAgent() : toggleAgentOpen(false))}
+          className="rounded-sm p-0.5 text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+        >
+          {floating ? (
+            <ChevronDown className="size-3" aria-hidden />
+          ) : (
+            <X className="size-3" aria-hidden />
+          )}
+        </button>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+    </div>
+  )
+}
+
+/**
+ * The agent, docked under the active sidebar panel or floating over the
+ * canvas. Rendered once by the shell; the portal handles the floating case
+ * so the window escapes the sidebar's clip and stacking context.
+ */
+export function AgentDock({ visible }: { visible: boolean }) {
+  const placement = useAgentPlacement()
+  const [dragging, setDragging] = useState(false)
+  const [overSidebar, setOverSidebar] = useState(false)
+  // Drag bookkeeping lives in refs, not state: `pointerup` has to read the
+  // CURRENT hover result, and a state value captured in the listener's
+  // closure is one render behind — which is exactly the drop that silently
+  // failed to dock.
+  const overSidebarRef = useRef(false)
+  const dragOffset = useRef({ x: 0, y: 0 })
+  const placementRef = useRef(placement)
+  useEffect(() => {
+    placementRef.current = placement
+  })
+  const windowRef = useRef<HTMLDivElement>(null)
+
+  const floating = placement.mode === 'floating'
+
+  const onDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    const box = windowRef.current?.getBoundingClientRect()
+    dragOffset.current = box
+      ? { x: event.clientX - box.left, y: event.clientY - box.top }
+      : { x: 40, y: 12 }
+    setDragging(true)
+  }
+
+  useEffect(() => {
+    if (!dragging) return
+    const hitTest = (event: PointerEvent) => {
+      const rect = sidebarRect()
+      const inside =
+        rect !== null &&
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom
+      overSidebarRef.current = inside
+      setOverSidebar(inside)
+      return inside
+    }
+    const move = (event: PointerEvent) => {
+      // Leaving the sidebar mid-drag floats it immediately: the window
+      // appears under the pointer and keeps following, which is what a
+      // drag-out is supposed to feel like.
+      if (!hitTest(event)) {
+        setAgentPlacement({
+          mode: 'floating',
+          open: true,
+          float: {
+            ...placementRef.current.float,
+            x: Math.max(8, event.clientX - dragOffset.current.x),
+            y: Math.max(8, event.clientY - dragOffset.current.y),
+          },
+        })
+      }
+    }
+    const up = (event: PointerEvent) => {
+      // Re-run the hit test on the release point itself: a fast drag can
+      // deliver its last position with the pointerup and no move in
+      // between, and the drop still has to land where the pointer is.
+      const inside = hitTest(event)
+      setDragging(false)
+      overSidebarRef.current = false
+      setOverSidebar(false)
+      // Dropped on the sidebar: dock. Anywhere else: it is already
+      // floating (the move handler switched it) and stays put.
+      if (inside) dockAgent()
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+  }, [dragging])
+
+  // Keep a floating window inside the viewport when it shrinks.
+  useEffect(() => {
+    if (!floating) return
+    const clampToViewport = () => {
+      const box = placementRef.current.float
+      const maxX = window.innerWidth - 120
+      const maxY = window.innerHeight - 80
+      if (box.x > maxX || box.y > maxY) {
+        setAgentPlacement({
+          float: {
+            ...box,
+            x: Math.min(box.x, Math.max(8, maxX)),
+            y: Math.min(box.y, Math.max(8, maxY)),
+          },
+        })
+      }
+    }
+    window.addEventListener('resize', clampToViewport)
+    return () => window.removeEventListener('resize', clampToViewport)
+  }, [floating])
+
+  if (!visible || !placement.open) return null
+
+  const body = (
+    <AgentDockChrome
+      floating={floating}
+      dropTarget={dragging && overSidebar && floating}
+      onDragStart={onDragStart}
+    >
+      <AgentPanel />
+    </AgentDockChrome>
+  )
+
+  if (!floating) {
+    return (
+      <div
+        ref={windowRef}
+        className="flex min-h-0 flex-col border-t border-border/60"
+        style={{ height: `${placement.dockRatio * 100}%` }}
+        data-agent-dock="docked"
+      >
+        {body}
+      </div>
+    )
+  }
+
+  return createPortal(
+    <div
+      ref={windowRef}
+      data-agent-dock="floating"
+      className={cn(
+        'fixed z-40 flex flex-col',
+        dragging && 'select-none',
+      )}
+      style={{
+        left: placement.float.x,
+        top: placement.float.y,
+        width: placement.float.width,
+        height: placement.float.height,
+      }}
+    >
+      {body}
+      {/* Resize from the bottom-right, the corner every floating window
+          has trained people to reach for. */}
+      <div
+        onPointerDown={(event) => {
+          event.preventDefault()
+          const startX = event.clientX
+          const startY = event.clientY
+          const startW = placement.float.width
+          const startH = placement.float.height
+          const move = (moveEvent: PointerEvent) => {
+            setAgentPlacement({
+              float: {
+                ...placement.float,
+                width: Math.max(FLOAT_MIN.width, startW + moveEvent.clientX - startX),
+                height: Math.max(FLOAT_MIN.height, startH + moveEvent.clientY - startY),
+              },
+            })
+          }
+          const up = () => {
+            window.removeEventListener('pointermove', move)
+            window.removeEventListener('pointerup', up)
+          }
+          window.addEventListener('pointermove', move)
+          window.addEventListener('pointerup', up)
+        }}
+        className="absolute right-0 bottom-0 size-3.5 cursor-nwse-resize touch-none"
+        aria-hidden
+      />
+    </div>,
+    document.body,
+  )
+}
+
+/** Drag divider between the sidebar panel and the docked chat. */
+export function AgentDockDivider({ columnRef }: { columnRef: React.RefObject<HTMLDivElement | null> }) {
+  const [resizing, setResizing] = useState(false)
+  useEffect(() => {
+    if (!resizing) return
+    const move = (event: PointerEvent) => {
+      const box = columnRef.current?.getBoundingClientRect()
+      if (!box || box.height === 0) return
+      const ratio = (box.bottom - event.clientY) / box.height
+      setAgentPlacement({
+        dockRatio: Math.min(DOCK_MAX_RATIO, Math.max(DOCK_MIN_RATIO, ratio)),
+      })
+    }
+    const up = () => setResizing(false)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+  }, [resizing, columnRef])
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize the agent panel"
+      onPointerDown={(event) => {
+        event.preventDefault()
+        setResizing(true)
+      }}
+      className={cn(
+        'h-1 shrink-0 cursor-row-resize touch-none transition-colors',
+        resizing ? 'bg-border' : 'hover:bg-border/80',
+      )}
+    />
+  )
+}
