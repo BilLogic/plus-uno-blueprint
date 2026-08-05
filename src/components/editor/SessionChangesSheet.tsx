@@ -137,7 +137,9 @@ function useUndoHotkey(changes: ChangeEntry[]) {
             return `Reverted: ${describeChange(last)}`
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
-            throw new Error(`Undo failed and nothing changed: ${message}`)
+            throw new Error(`Undo failed and nothing changed: ${message}`, {
+              cause: error,
+            })
           }
         },
       }),
