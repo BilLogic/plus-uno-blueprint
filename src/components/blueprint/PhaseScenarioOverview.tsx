@@ -88,6 +88,7 @@ function PhaseScenarioConnector({ width }: { width: number }) {
   )
 }
 
+/** A phase frame on the overview canvas: its scenario panels plus the flow arrows between them. */
 export function PhaseScenarioOverview({
   phase,
   slides,

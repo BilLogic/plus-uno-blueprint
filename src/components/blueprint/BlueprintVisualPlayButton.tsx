@@ -14,6 +14,11 @@ type BlueprintVisualPlayButtonProps = {
   className?: string
 }
 
+/**
+ * Opens the visual walkthrough for a path. Renders nothing when the feature is
+ * off or when the surface sits outside a walkthrough provider (the homepage
+ * renders grids that way).
+ */
 export function BlueprintVisualPlayButton({
   blueprint,
   blueprints,

@@ -14,6 +14,10 @@ type SlideArtboardProps = {
   variant?: 'viewport' | 'canvas'
 }
 
+/**
+ * A slide rendered as a page thumbnail — used both in the viewport filmstrip
+ * and as a canvas node, which is what `variant` selects between.
+ */
 export function SlideArtboard({
   slide,
   isActive = false,

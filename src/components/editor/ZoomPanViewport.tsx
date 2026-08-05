@@ -27,6 +27,7 @@ type ZoomPanViewportProps = {
   onResetView?: () => void
 }
 
+/** Zoom/pan canvas wrapper. Provides the annotation context its layer and toolbar both read. */
 export function ZoomPanViewport(props: ZoomPanViewportProps) {
   return (
     <CanvasAnnotationProvider>

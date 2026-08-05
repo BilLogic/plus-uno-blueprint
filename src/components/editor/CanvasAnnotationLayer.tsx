@@ -1332,6 +1332,11 @@ function TextAnnotationNode({
   )
 }
 
+/**
+ * FigJam-style annotation surface over the canvas: pen strokes, shapes, text and
+ * stickies, plus their selection and resize chrome. Coordinates are board space,
+ * so `zoom` is only needed where a hit radius must stay constant on screen.
+ */
 export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
   const {
     tool,

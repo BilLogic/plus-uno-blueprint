@@ -91,6 +91,10 @@ type ServiceBlueprintGridProps = {
   showEmptyCells?: boolean
 }
 
+/**
+ * Single-path service blueprint — the classic swim-lane grid. Use
+ * `IntegratedBlueprintGrid` when several paths share one canvas.
+ */
 export function ServiceBlueprintGrid({
   data,
   className,

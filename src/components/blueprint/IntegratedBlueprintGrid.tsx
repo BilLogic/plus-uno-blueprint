@@ -111,6 +111,11 @@ function hasCellContent(
   return true
 }
 
+/**
+ * The multi-path blueprint: every path for a scenario drawn on one grid, with
+ * fork/merge arrows between shared steps. `embedded` drops the scroll chrome
+ * for callers that supply their own viewport.
+ */
 export function IntegratedBlueprintGrid({
   data,
   className,

@@ -14,6 +14,7 @@ type ScenarioParallelInfoTooltipProps = {
   iconClassName?: string
 }
 
+/** Info icon explaining that a scenario runs in parallel with others; renders nothing when it does not. */
 export function ScenarioParallelInfoTooltip({
   slide,
   className,

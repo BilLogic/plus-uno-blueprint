@@ -86,6 +86,7 @@ function SequenceNavPreview({
   )
 }
 
+/** Previous/next slide controls; renders nothing when the active slide is alone in its sequence. */
 export function EditorSequenceNav() {
   const { slides, activeSlideId, openDetail } = useEditor()
   const { prev, next } = getSlideSequenceNav(activeSlideId, slides)

@@ -118,6 +118,11 @@ function getIntegratedForkTrunkArrowColor(
   return straightBranch.arrowColor
 }
 
+/**
+ * Arrow overlay for the integrated grid: forward and wrap layers, fork trunks
+ * and branches, and the hand-tuned rail routes for the scenarios whose geometry
+ * the generic router cannot express.
+ */
 export function IntegratedTriggerArrows({
   triggers,
   cells,

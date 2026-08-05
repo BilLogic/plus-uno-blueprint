@@ -30,6 +30,12 @@ import {
 } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
+/**
+ * The app frame: sidebar, tab strip and whichever view the current tab selects.
+ *
+ * Owns sidebar collapse and the hover-peek rail. Both are timed against
+ * `suppressCanvasResizeRefit`, so the canvas does not refit mid-animation.
+ */
 export function EditorShell() {
   const { view, goHome, goLanding } = useEditor()
   const { activeTab, activateTab, openTab } = useViewState()

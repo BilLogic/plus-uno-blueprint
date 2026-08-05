@@ -8,6 +8,7 @@ type LayerCollapseToggleProps = {
   className?: string
 }
 
+/** Expand/collapse control for a swim lane, shown in the label rail. */
 export function LayerCollapseToggle({
   layerName,
   collapsed,

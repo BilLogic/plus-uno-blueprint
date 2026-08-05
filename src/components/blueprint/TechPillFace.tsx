@@ -16,6 +16,10 @@ type TechPillFaceProps = {
   asSpan?: boolean
 }
 
+/**
+ * Presentational half of a tech pill — the same face without the button
+ * behaviour, for read-only surfaces (`asSpan`) and for print.
+ */
 export function TechPillFace({
   item,
   compact = false,

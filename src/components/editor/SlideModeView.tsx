@@ -12,6 +12,7 @@ import { useViewState } from '@/contexts/viewStateStore'
 
 type SidebarMode = 'blueprints' | 'slices'
 
+/** Sidebar body for slide mode: the Blueprints/Slices tabs and their trees. */
 export function SlideModeSidebarNav() {
   const {
     slides,

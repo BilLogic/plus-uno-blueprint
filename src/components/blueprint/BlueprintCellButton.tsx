@@ -36,6 +36,14 @@ type BlueprintCellButtonProps = {
   'data-blueprint-tech-pill'?: string
 }
 
+/**
+ * A single blueprint cell face — the app's most-used control.
+ *
+ * Interaction tones (hover, pressed, both focus rings) are resolved from the
+ * cell's own `fill` rather than from `--ring`, because a shared ring colour
+ * cannot clear 3:1 against eight different lane fills. See
+ * `getBlueprintCellInteractionStyle`.
+ */
 export function BlueprintCellButton({
   fill,
   compact = false,

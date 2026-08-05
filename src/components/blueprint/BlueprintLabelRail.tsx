@@ -141,6 +141,7 @@ export function BlueprintDividerRow({
   )
 }
 
+/** One row of the left label column — a layer name plus its collapse toggle. */
 export function BlueprintLabelRow({
   row,
   layers,

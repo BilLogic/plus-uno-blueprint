@@ -51,6 +51,11 @@ type ResizableComparePanelProps = {
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
+/**
+ * Scenario panel on the overview canvas, resizable from its corner by pointer
+ * or keyboard. Grows to fit measured content unless the user overrides the
+ * size or `lockHeight` pins it.
+ */
 export function ResizableComparePanel({
   children,
   minWidth,

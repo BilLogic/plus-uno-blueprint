@@ -69,6 +69,11 @@ function isColoredTrigger(
   return 'path_type' in trigger
 }
 
+/**
+ * SVG arrow overlay for a single-path blueprint grid. Each segment carries its
+ * path's colour and dash pattern, so arrows stay distinguishable where they
+ * cross and in a monochrome print.
+ */
 export function BlueprintTriggerArrows({
   triggers,
   contentRef,

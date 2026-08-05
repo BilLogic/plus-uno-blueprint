@@ -145,6 +145,11 @@ function useCanvasTopOffset(active: boolean) {
   }, [active])
 }
 
+/**
+ * Side panel for the selected cell — its content, evidence, dependencies and
+ * the slices it belongs to. Anchors below the sticky slide header via a
+ * measured CSS variable so it never covers it.
+ */
 export function BlueprintCellDetailPanel() {
   const {
     selection: currentSelection,

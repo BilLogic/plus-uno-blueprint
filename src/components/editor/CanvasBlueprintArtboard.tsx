@@ -25,6 +25,7 @@ type CanvasBlueprintArtboardProps = {
   style?: CSSProperties
 }
 
+/** One scenario's blueprint as a node on the overview canvas, in whichever grid layout the slide calls for. */
 export function CanvasBlueprintArtboard({
   slide,
   slides,

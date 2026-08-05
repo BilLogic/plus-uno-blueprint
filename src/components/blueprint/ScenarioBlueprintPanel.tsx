@@ -55,6 +55,7 @@ type ScenarioBlueprintPanelProps = {
   focusActive?: boolean
 }
 
+/** One scenario's blueprint inside a compare panel — title badge, filters and grid. */
 export function ScenarioBlueprintPanel({
   slide,
   slides,
