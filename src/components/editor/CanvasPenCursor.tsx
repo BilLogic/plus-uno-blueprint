@@ -104,7 +104,11 @@ export function CanvasPenCursor() {
         style={{ width: CURSOR_SCREEN_PX, height: CURSOR_SCREEN_PX }}
         strokeWidth={2}
         absoluteStrokeWidth
-        color="#ffffff"
+        // Mode-invariant white, not `--color-gray-100`: the outline separates
+        // the cursor from whatever ink sits under it, and must not flip dark
+        // with the theme. `--colors-white` is global.css's fixed primitive —
+        // the same one Supabase keeps for exactly this kind of use.
+        color="hsl(var(--colors-white))"
         fill={fill}
       />
     </div>,
