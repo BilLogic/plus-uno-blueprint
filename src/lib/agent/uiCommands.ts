@@ -35,6 +35,12 @@ export function listAgentUiCommands(): string {
     .join('\n')
 }
 
+/** Presence probe — surfaces register commands while mounted, so "the cell
+ * panel's commands exist" IS "the cell panel is open". */
+export function hasAgentUiCommand(name: string): boolean {
+  return commands.has(name)
+}
+
 export function runAgentUiCommand(name: string, arg?: string): string {
   const command = commands.get(name)
   if (!command)

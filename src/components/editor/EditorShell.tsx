@@ -45,30 +45,24 @@ import { cn } from '@/lib/utils'
  * per surface.
  */
 const RAIL_WIDTH = 48
-const DEFAULT_ASIDE_WIDTH: Record<SidebarSurface, number> = {
-  blueprints: 288,
-  slices: 288,
-  agent: 368,
-}
+// ONE width for all three surfaces — Blueprints, Slices, and Agent share the
+// same panel column, and a width that jumps on every rail switch reads as
+// layout instability, not per-surface tailoring. Still drag-resizable; the
+// chosen width just applies everywhere and persists as a single value.
+const DEFAULT_ASIDE_WIDTH = 320
 const MIN_ASIDE_WIDTH = 240
 const MAX_ASIDE_WIDTH = 640
-const WIDTH_STORAGE_KEY = 'uno-sidebar-widths'
+const WIDTH_STORAGE_KEY = 'uno-sidebar-width'
 
-function loadAsideWidths(): Record<SidebarSurface, number> {
+function loadAsideWidth(): number {
   try {
     const raw = window.localStorage.getItem(WIDTH_STORAGE_KEY)
-    const parsed = raw ? (JSON.parse(raw) as Record<string, number>) : {}
-    const clamp = (value: unknown, fallback: number) =>
-      typeof value === 'number' && Number.isFinite(value)
-        ? Math.min(MAX_ASIDE_WIDTH, Math.max(MIN_ASIDE_WIDTH, value))
-        : fallback
-    return {
-      blueprints: clamp(parsed.blueprints, DEFAULT_ASIDE_WIDTH.blueprints),
-      slices: clamp(parsed.slices, DEFAULT_ASIDE_WIDTH.slices),
-      agent: clamp(parsed.agent, DEFAULT_ASIDE_WIDTH.agent),
-    }
+    const value = raw ? Number(raw) : Number.NaN
+    return Number.isFinite(value)
+      ? Math.min(MAX_ASIDE_WIDTH, Math.max(MIN_ASIDE_WIDTH, value))
+      : DEFAULT_ASIDE_WIDTH
   } catch {
-    return { ...DEFAULT_ASIDE_WIDTH }
+    return DEFAULT_ASIDE_WIDTH
   }
 }
 
@@ -278,11 +272,10 @@ export function EditorShell() {
     setSidebarCollapsed((collapsed) => !collapsed)
   }
 
-  // Per-surface drag-resize. During a drag the width transition is off —
+  // Shared drag-resize. During a drag the width transition is off —
   // easing against the pointer reads as lag, not motion.
-  const [asideWidths, setAsideWidths] = useState(loadAsideWidths)
+  const [asideWidth, setAsideWidth] = useState(loadAsideWidth)
   const [resizing, setResizing] = useState(false)
-  const asideWidth = asideWidths[surface]
   const startResize = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -298,20 +291,18 @@ export function EditorShell() {
       Math.max(MIN_ASIDE_WIDTH, Math.round(event.clientX)),
     )
     suppressCanvasResizeRefit()
-    setAsideWidths((widths) =>
-      widths[surface] === next ? widths : { ...widths, [surface]: next },
-    )
+    setAsideWidth((width) => (width === next ? width : next))
   }
   const endResize = () => {
     if (!resizing) return
     setResizing(false)
-    setAsideWidths((widths) => {
+    setAsideWidth((width) => {
       try {
-        window.localStorage.setItem(WIDTH_STORAGE_KEY, JSON.stringify(widths))
+        window.localStorage.setItem(WIDTH_STORAGE_KEY, String(width))
       } catch {
         // Width memory is a nicety; failing to store is fine.
       }
-      return widths
+      return width
     })
   }
 

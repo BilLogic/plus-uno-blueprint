@@ -822,7 +822,14 @@ function AgentChatView({
                 </button>
               </Badge>
             ) : null}
-            <Input
+            <textarea
+              rows={1}
+              ref={(node) => {
+                // Auto-grow: content height up to ~6 lines, then scroll.
+                if (!node) return
+                node.style.height = 'auto'
+                node.style.height = `${Math.min(node.scrollHeight, 120)}px`
+              }}
               value={draft}
               onChange={(event) => {
                 const value = event.target.value
@@ -880,7 +887,7 @@ function AgentChatView({
                     ? 'Message the agent… ("/" for skills)'
                     : 'Add a key in ⚙ first'
               }
-              className="h-6 min-w-0 flex-1 border-0 px-0 text-xs shadow-none focus-visible:border-0 focus-visible:ring-0"
+              className="min-h-6 min-w-0 flex-1 resize-none self-center border-0 bg-transparent px-0 py-0.5 text-xs leading-5 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Message the agent"
               disabled={!keyed}
             />

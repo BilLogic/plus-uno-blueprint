@@ -1,4 +1,4 @@
-import { getSharedCanvasMode } from '@/contexts/canvasModeContext'
+import { hasAgentUiCommand } from '@/lib/agent/uiCommands'
 import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
 
 /**
@@ -60,26 +60,31 @@ export function agentSetSidebar(collapsed: boolean): string {
 
 /**
  * Open the cell detail panel by driving the SAME gesture the human uses:
- * a click on the rendered cell (double-click in Design mode, where a
- * plain click gathers instead). No parallel code path to drift — if the
- * UI can open it, this can; if the cell isn't interactive (wrong view
- * level), neither can the human, and the message says what to do.
+ * a ⌘-click on the rendered cell (the grammar's "open detail, touch
+ * nothing" move, valid in every mode). No parallel code path to drift —
+ * and the result is VERIFIED, not assumed: the tool checks the panel
+ * actually mounted and says so honestly when it didn't.
  */
-export function agentOpenCellPanel(cellId: string): string {
+export async function agentOpenCellPanel(cellId: string): Promise<string> {
   const el = document.querySelector<HTMLElement>(
     `[data-blueprint-cell="${cellId}"][data-blueprint-cell-interactive]`,
   )
   if (!el)
     return 'That cell is not clickable on the current canvas — open its scenario first (open_scenario), then retry.'
   scrollBlueprintCellIntoView(cellId)
-  if (getSharedCanvasMode() === 'design') {
-    el.dispatchEvent(
-      new MouseEvent('dblclick', { bubbles: true, cancelable: true }),
-    )
-  } else {
-    el.click()
-  }
-  return 'Opened the cell detail panel.'
+  // ⌘-click is the grammar's "open detail, touch nothing" gesture — it works
+  // identically in view and design mode (a bare click PICKS when a picker is
+  // armed, and dblclick deliberately does nothing).
+  el.dispatchEvent(
+    new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }),
+  )
+  // Verify instead of assuming: the panel registers its UI commands while
+  // mounted, so their presence IS the panel being open. (Headless panes
+  // defer the open past document.hidden — don't false-fail there.)
+  await new Promise((done) => setTimeout(done, 250))
+  if (document.hidden || hasAgentUiCommand('cell_panel_close'))
+    return 'Opened the cell detail panel.'
+  return 'The click landed but the panel did not open. Likely causes: the hand (pan) tool is active — ask the user to switch tools — or the cell sits in a dimmed phase under focus mode. The panel is NOT open; do not claim it is.'
 }
 
 // The annotator lives with the annotation provider (it owns stroke state

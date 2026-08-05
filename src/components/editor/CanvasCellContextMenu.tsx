@@ -82,12 +82,15 @@ export function CanvasCellContextMenu() {
 
     const dismissAll = () => setMenu(null)
     window.addEventListener('contextmenu', onContextMenu)
-    window.addEventListener('pointerdown', dismiss)
+    // Capture phase: the pan/zoom viewport stops pointerdown propagation for
+    // its own drag handling, so a bubble-phase listener never hears clicks
+    // on the canvas — exactly where "click anywhere to dismiss" matters most.
+    window.addEventListener('pointerdown', dismiss, true)
     window.addEventListener('blur', dismissAll)
     window.addEventListener('keydown', onKeyDown)
     return () => {
       window.removeEventListener('contextmenu', onContextMenu)
-      window.removeEventListener('pointerdown', dismiss)
+      window.removeEventListener('pointerdown', dismiss, true)
       window.removeEventListener('blur', dismissAll)
       window.removeEventListener('keydown', onKeyDown)
     }
