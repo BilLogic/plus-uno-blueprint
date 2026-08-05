@@ -63,8 +63,11 @@ export function SliceHeaderBand({
           <p className="min-w-0 truncate text-xs text-muted-foreground">
             {description || '—'}
           </p>
+          {/* Warning reads as a tinted chip rather than amber body copy: step
+              600 is a fill weight and `--warning` is the solid-fill role —
+              neither clears 4.5:1 as text on the card. */}
           {missingCellCount > 0 && (
-            <span className="shrink-0 text-xs text-warning-600">
+            <span className="shrink-0 rounded border border-warning-400 bg-warning-200 px-1.5 py-0.5 text-xs text-foreground">
               {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
               longer in the blueprint
             </span>

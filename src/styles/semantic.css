@@ -152,12 +152,16 @@
   /* --- Brand / primary -------------------------------------------------- */
   /*
    * Mode-invariant and decoupled from `--chroma`, so the brand holds its
-   * identity even as neutrals desaturate. The anchor is the blue-green this
-   * product was specified around — oklch(0.874 0.1025 177.6) is #85ECD5 exactly.
-   * `--primary-foreground` is dark ink rather than white: at L 0.874 the fill is
-   * light, so white on it would fail SC 1.4.3 badly.
+   * identity even as neutrals desaturate.
+   *
+   * Hue 177.6 is the blue-green this product is specified around — it is the
+   * OKLCH hue of #85ECD5. Lightness stays at Supabase's 0.76 rather than that
+   * swatch's 0.874: the reference colour is a tint, and at L 0.874 a filled
+   * button is too pale to read as a control against a near-white canvas. The
+   * tint itself still exists in the ramp as `--brand-400`. `--primary-foreground`
+   * is dark ink, not white — white on this fill measures 2.03:1, dark ink 10.16.
    */
-  --primary: oklch(0.874 0.1025 var(--primary-hue));
+  --primary: oklch(0.76 0.13 var(--primary-hue));
   --primary-foreground: oklch(
     min(var(--surface), var(--foreground-lightness))
       calc(var(--chroma) * 0.45) var(--primary-hue)

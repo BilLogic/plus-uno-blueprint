@@ -19,17 +19,13 @@
   --surface-hue: 34;
   --chroma: 0;
   /*
-   * Soft-grey canvas so raised surfaces have headroom to brighten toward white.
-   *
-   * DELIBERATE DIVERGENCE: Supabase ships `--surface: 0.995` with a 0.024 step,
-   * which puts every rung past L=1 — card lands at 1.019 and clips, so their
-   * light ladder is flat and only the translucent overlays (muted / accent /
-   * tertiary) carry elevation. Ours keeps the same "higher = lighter" direction
-   * with room to move: 0.968 + 0.009 × {1, 1.5, 2} = 0.977 / 0.9815 / 0.986,
-   * all in range. Retune the step alongside `--surface`.
+   * Near-white canvas. Raised surfaces round up against L=1, so in light mode
+   * elevation is carried by the translucent `--muted` / `--accent` /
+   * `--tertiary` overlays rather than by the surface ladder — same as Supabase.
+   * Retune the step alongside `--surface`.
    */
-  --surface: 0.968;
-  --elevation-step: 0.009;
+  --surface: 0.995;
+  --elevation-step: 0.024;
   --contrast: 0.53;
   --foreground-lightness: 0.1;
   --muted-foreground-level: 0.65;
@@ -54,7 +50,7 @@
    * 500/600/link run dark enough to serve as text and links on the light canvas.
    */
   --brand-link: 171.2deg 100% 26%;
-  --brand-default: 166.6deg 73% 72.4%;
+  --brand-default: 169.5deg 61.3% 49.5%;
   --brand-600: 171.1deg 100% 24%;
   --brand-500: 170.3deg 74.8% 41.1%;
   --brand-400: 166.6deg 73% 72.4%;
@@ -63,14 +59,7 @@
 
   /* Warning / destructive tint ramps, taken from Supabase's light theme:
      200 = subtle surface, 500 = border, 600 = text. */
-  /*
-   * Radix amber-1100, not Supabase's `30.3deg 80.3% 47.8%`. Theirs measures
-   * 2.96:1 against `--warning-200` — the surface it is paired with in their own
-   * Alert — which fails SC 1.4.3 and even the 3:1 large-text floor. Radix step
-   * 11 is the step specified for text on a step-2/3 surface and measures 4.91:1
-   * on the same pair. Dark mode keeps Supabase's value, which measures 6.39:1.
-   */
-  --warning-600: 30deg 100% 34%;
+  --warning-600: 30.3deg 80.3% 47.8%;
   --warning-500: 36.3deg 85.7% 67.1%;
   --warning-400: 41.9deg 100% 81.8%;
   --warning-300: 44.3deg 100% 91.8%;

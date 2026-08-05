@@ -9,14 +9,14 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-card text-card-foreground",
-        // Tinted status surfaces use the stepped semantic ramps, which is what
-        // Supabase's own Alert does: 200 is the subtle fill, 500 the border,
-        // 600 the text. The solid `--warning` / `--destructive` roles are fill
-        // weights and would be too light to read as body copy here.
+        // Supabase's own recipe: tint the surface and the border, keep the copy
+        // at `--foreground`, and let the icon carry the status as a filled chip.
+        // Step 600 is a fill weight, not a text weight — reading body copy off
+        // it measures 2.96:1 on the step-200 surface.
         destructive:
-          "border-destructive-500 bg-destructive-200 text-destructive-600 *:data-[slot=alert-description]:text-destructive-600/90 *:[svg]:text-current",
+          "border-destructive-400 bg-destructive-200 text-foreground *:[svg]:rounded-sm *:[svg]:bg-destructive-600 *:[svg]:p-0.5 *:[svg]:text-destructive-200",
         warning:
-          "border-warning-500 bg-warning-200 text-warning-600 *:data-[slot=alert-description]:text-warning-600/90 *:[svg]:text-current",
+          "border-warning-400 bg-warning-200 text-foreground *:[svg]:rounded-sm *:[svg]:bg-warning-600 *:[svg]:p-0.5 *:[svg]:text-warning-200",
       },
     },
     defaultVariants: {
