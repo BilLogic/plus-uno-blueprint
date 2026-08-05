@@ -1,11 +1,18 @@
 ---
 title: 'Fix focus contrast, mirror Supabase's CSS architecture, rebrand to teal, ship light/dark'
 type: refactor
-status: active
+status: completed
 date: 2026-08-04
 ---
 
 # ♻️ Fix focus contrast, mirror Supabase's CSS architecture, rebrand to teal, ship light/dark
+
+> **Executed** on `claude/blueprint-design-system-57db6a`, commits `49e6c5a..40f5255`
+> (35 commits, 2026-08-04/05). All phases A–G shipped: A in `3bf1db2`/`f59f230`,
+> B across `65a94b6..5b13701`/`4b3cf7e`, C–D in `a169838..a33fa79`/`6aee01e`,
+> E in `bb98719`/`7bbc42a`, F across the canvas refactors, G in `9899f1b`/`218cf0b`.
+> Checkboxes below are left as written; this note is the execution record.
+> Merged to `main` via docs/plans/2026-08-05-002-refactor-design-system-frontend-migration-plan.md.
 
 ## Enhancement Summary
 

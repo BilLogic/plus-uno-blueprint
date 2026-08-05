@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
@@ -45,7 +45,12 @@ export function useSupabaseQuery<T>(
 ): QueryResult<T> {
   const { client, configured } = useSupabase()
   const fetcherRef = useRef(fetcher)
-  fetcherRef.current = fetcher
+  // Committed in an effect, not the render body: a discarded concurrent
+  // render must not leave its fetcher in the ref. `queryFn` only reads the
+  // ref at fetch time, which is always post-commit.
+  useEffect(() => {
+    fetcherRef.current = fetcher
+  })
 
   const noDb = !configured || !client
 
