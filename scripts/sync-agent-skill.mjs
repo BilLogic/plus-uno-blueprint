@@ -31,12 +31,14 @@ const FILES = [
   'check-perceived-owner.md',
   'check-value-ledger.md',
   'check-fee-visibility.md',
+  'slice-playbook.md',
+  'slice-templates.md',
 ]
 
 // The four-skill architecture: these SKILL.md files are the same ones IDE
 // humans get from the plugin; the app vendors them for the /slash triggers.
 const SKILLS = [
-  ['blueprint/SKILL.md', 'blueprint.md'],
+  ['map/SKILL.md', 'blueprint.md'],
   ['slice/SKILL.md', 'slice.md'],
   ['audit/SKILL.md', 'audit.md'],
   ['whatif/SKILL.md', 'whatif.md'],
