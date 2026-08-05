@@ -16,6 +16,23 @@ const writesIn = (trace, turn) =>
   trace.filter((t) => WRITES.has(t.name) && (turn === undefined || t.turn === turn))
 const calls = (trace, name) => trace.filter((t) => t.name === name)
 const firstIndex = (trace, predicate) => trace.findIndex(predicate)
+/** Real tool calls only — __text narration events excluded. */
+const toolCalls = (trace) => trace.filter((t) => t.name !== '__text')
+/** Deterministic narrate-before-write: some model text precedes the first write of the turn. */
+const narratesBeforeWrites = (turn) => ({
+  id: `narration-precedes-writes-turn-${turn + 1}`,
+  fn: (trace) => {
+    const firstWrite = firstIndex(
+      trace,
+      (t) => t.turn === turn && WRITES.has(t.name),
+    )
+    if (firstWrite === -1) return true // no writes that turn — nothing to gate
+    const narrated = trace
+      .slice(0, firstWrite)
+      .some((t) => t.turn === turn && t.name === '__text')
+    return narrated || 'first write of the turn landed with zero narration before it'
+  },
+})
 
 const noWritesTurn0 = {
   id: 'no-writes-before-nod',
@@ -121,7 +138,9 @@ export const CASES = [
       noWritesAtAll,
       {
         id: 'no-flailing',
-        fn: (trace) => trace.length <= 4 || `${trace.length} tool calls of flailing`,
+        fn: (trace) =>
+          toolCalls(trace).length <= 4 ||
+          `${toolCalls(trace).length} tool calls of flailing`,
       },
     ],
     judgeLines: [
@@ -252,9 +271,10 @@ Canvas mode: view`,
         id: 'exactly-one-add-lane',
         fn: (trace) => calls(trace, 'add_lane').length === 1 || `${calls(trace, 'add_lane').length} add_lane calls`,
       },
+      narratesBeforeWrites(1),
     ],
     judgeLines: [
-      { id: 'narrates-batch', text: 'One short narration line precedes the write batch; the agent does not ask permission per cell.' },
+      { id: 'narrates-batch', text: 'The narration before the write batch is short (about one line); the agent does not ask permission per cell.' },
       { id: 'coinage-stated', text: 'If a new owner tag or unusual layer_role was coined, the agent says so explicitly; otherwise it reuses existing vocabulary.' },
     ],
   },
@@ -397,7 +417,9 @@ Canvas mode: view`,
       noWritesAtAll,
       {
         id: 'no-anomalous-calls',
-        fn: (trace) => trace.length <= 3 || `${trace.length} tool calls after a single-cell summary ask`,
+        fn: (trace) =>
+          toolCalls(trace).length <= 3 ||
+          `${toolCalls(trace).length} tool calls after a single-cell summary ask`,
       },
     ],
     judgeLines: [
@@ -479,7 +501,7 @@ Canvas mode: view`,
           let readSinceError = false
           for (const t of trace.slice(errorAt + 1)) {
             if (!WRITES.has(t.name)) {
-              readSinceError = true
+              if (t.name !== '__text') readSinceError = true // narration ≠ a read
               continue
             }
             const sameArgs = JSON.stringify(t.args) === JSON.stringify(errored.args)

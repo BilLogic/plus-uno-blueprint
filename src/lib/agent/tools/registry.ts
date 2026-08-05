@@ -106,7 +106,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_ui_state',
     description:
-      'What the user is looking at RIGHT NOW: view level, selected phase/scenario, active tab, open cell panel, Design-mode selection. Call after navigating, or whenever "this/here/what I selected" needs grounding.',
+      'What the user is looking at RIGHT NOW: view level, selected phase/scenario, active tab, open cell panel, Design-mode selection. Call after navigating, or whenever "this/here/what I selected" needs grounding. When the user asks what they are looking at, relay EVERY line — view level included, not just the selection.',
     parameters: { type: 'object', properties: {} },
   },
   {
