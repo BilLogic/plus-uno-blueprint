@@ -1,44 +1,44 @@
 @layer utilities {
   /* Interactive overview / phase panels — pure CSS hover avoids stale React hover state. */
   [data-phase-scenario-panel] {
-    background-color: #e6e8eb;
-    border-color: #d7dbdf;
+    background-color: var(--color-slate-500);
+    border-color: var(--color-slate-700);
   }
 
   [data-scenario-panel-title-badge] {
-    background-color: #c7c7c7;
-    border-color: #c7c7c7;
-    color: #171717;
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-800);
+    color: var(--color-gray-1200);
   }
 
   [data-phase-title-badge] {
-    background-color: #b6c7d2;
-    border-color: #b6c7d2;
-    color: #171717;
+    background-color: var(--color-slate-800);
+    border-color: var(--color-slate-800);
+    color: var(--color-gray-1200);
   }
 
   [data-canvas-phase-interactive] [data-phase-frame] {
-    background-color: #d9e4ea;
-    border-color: #b6c7d2;
+    background-color: var(--color-slate-700);
+    border-color: var(--color-slate-800);
   }
 
   [data-phase-scenario-panel]:hover:not([data-canvas-focus-active]),
   [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active]) {
-    background-color: #dfe3e6;
-    border-color: #c1c8cd;
+    background-color: var(--color-slate-600);
+    border-color: var(--color-slate-800);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    --blueprint-panel-label-rail: #dfe3e6;
-    --blueprint-panel-canvas: #f1f3f5;
-    --blueprint-panel-section-fill: #f1f3f5;
-    --blueprint-panel-divider-bg: #dfe3e6;
+    --blueprint-panel-label-rail: var(--color-slate-600);
+    --blueprint-panel-canvas: var(--color-slate-300);
+    --blueprint-panel-section-fill: var(--color-slate-300);
+    --blueprint-panel-divider-bg: var(--color-slate-600);
   }
 
   [data-phase-scenario-panel]:hover:not([data-canvas-focus-active])
     [data-scenario-panel-title-badge],
   [data-phase-scenario-panel]:focus-within:not([data-canvas-focus-active])
     [data-scenario-panel-title-badge] {
-    background-color: #8f8f8f;
-    border-color: #8f8f8f;
+    background-color: var(--color-gray-900);
+    border-color: var(--color-gray-900);
   }
 
   /* Cell fills stay at their role color when a panel is hovered/focused —
@@ -118,13 +118,13 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    /* The fallback is a frozen literal, not `var(--foreground)`: this layer has
-       to print and project identically, and a theme token would invert the
-       scrim in dark. `getBlueprintCellInteractionStyle` always sets the hover
-       var, so the fallback only covers a cell rendered outside that helper. */
+    /* `--color-gray-1200`, not `var(--foreground)`: the scrim should darken the
+       cell it sits on in either theme, and `--foreground` inverts.
+       `getBlueprintCellInteractionStyle` always sets the hover var, so the
+       fallback only covers a cell rendered outside that helper. */
     background: color-mix(
       in srgb,
-      var(--blueprint-cell-bg-hover, #000000) 30%,
+      var(--blueprint-cell-bg-hover, var(--color-gray-1200)) 30%,
       transparent
     );
     content: '';
@@ -139,8 +139,8 @@
       :has([data-phase-scenario-panel]:focus-within)
     )
     [data-phase-frame] {
-    background-color: #c5d6e0;
-    border-color: #9aadbe;
+    background-color: var(--color-slate-800);
+    border-color: var(--color-slate-900);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   }
 
@@ -152,7 +152,7 @@
       :has([data-phase-scenario-panel]:focus-within)
     )
     [data-phase-title-badge] {
-    background-color: #9aadbe;
-    border-color: #9aadbe;
+    background-color: var(--color-slate-900);
+    border-color: var(--color-slate-900);
   }
 }

@@ -2,270 +2,94 @@ import { cn } from '@/lib/utils'
 import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
 import type { CSSProperties } from 'react'
 
-export const BLUEPRINT_CELL_TEXT_COLOR = '#000000'
-export const BLUEPRINT_CELL_BORDER_COLOR = '#000000'
-
-/** Neutral used when a fill is not a hex colour — see {@link normalizeHex}. */
-const FALLBACK_FILL = '#EEEEEE'
-
 /**
- * Uppercase 6-digit form of `hex`, expanding the 3-digit shorthand.
+ * A blueprint cell is a Radix family, and its states are steps of that family.
  *
- * Anything else returns {@link FALLBACK_FILL}. Cell fills come from blueprint
- * rows, so a bad value is data, not a coding error: without this every
- * `parseInt` below returns NaN, the hue/saturation math propagates it, and
- * `toString(16)` yields `NaN` — the cell renders with no background and no ring
- * at all, which reads as a rendering bug rather than a bad row.
+ * This file used to derive hover / pressed / ring tones from a hex fill in
+ * JavaScript — HSL conversion, a lightness search, and a binary contrast solver
+ * to force the ring past 3:1. The scale already answers all of it: the step for
+ * each role is a fixed choice, checked once in `palette.test.ts` against the
+ * stylesheet rather than recomputed per cell per render. That check covers dark
+ * mode too, which the solver never saw — it took a hex fill, and dark mode
+ * never produced one.
+ *
+ * Values resolve through `var()`, so a cell is on the same tokens as the rest of
+ * the app. Print stays light because colors.css scopes its `.dark` override to
+ * `@media screen`.
  */
-function normalizeHex(hex: string): string {
-  const value = hex.trim().toUpperCase()
-  if (/^#[0-9A-F]{6}$/.test(value)) return value
-  if (/^#[0-9A-F]{3}$/.test(value)) {
-    return `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`
-  }
-  return FALLBACK_FILL
-}
+export type BlueprintCellFamily =
+  | 'amber'
+  | 'blue'
+  | 'crimson'
+  | 'gold'
+  | 'gray'
+  | 'green'
+  | 'indigo'
+  | 'lime'
+  | 'orange'
+  | 'pink'
+  | 'purple'
+  | 'red'
+  | 'slate'
+  | 'violet'
 
-function hexToHsl(hex: string): [h: number, s: number, l: number] {
-  const normalized = normalizeHex(hex)
-  const r = parseInt(normalized.slice(1, 3), 16) / 255
-  const g = parseInt(normalized.slice(3, 5), 16) / 255
-  const b = parseInt(normalized.slice(5, 7), 16) / 255
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  let h = 0
-  let s = 0
-  const l = (max + min) / 2
+/** Steps a cell uses, by role. */
+export const CELL_STEP = {
+  /** Resting surface. */
+  surface: 500,
+  hover: 600,
+  pressed: 700,
+  /**
+   * Step 11, not the step-8 "border" step.
+   *
+   * Radix specifies step 8 as a border against the *app background* (steps 1–2).
+   * On a step-5 surface — which is what a cell is — it measures 1.38:1 at worst
+   * and fails SC 1.4.11 outright. Step 11 is the lowest step that clears 3:1
+   * against step 5 across every family in both themes; worst case 3.60:1
+   * (light/lime). `palette.test.ts` holds that line.
+   */
+  ring: 1100,
+  /** High-contrast text. */
+  text: 1200,
+} as const
 
-  if (max !== min) {
-    const d = max - min
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-    switch (max) {
-      case r:
-        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
-        break
-      case g:
-        h = ((b - r) / d + 2) / 6
-        break
-      default:
-        h = ((r - g) / d + 4) / 6
-        break
-    }
-  }
-
-  return [h * 360, s * 100, l * 100]
-}
-
-function hslToHex(h: number, s: number, l: number): string {
-  const sat = s / 100
-  const light = l / 100
-  const c = (1 - Math.abs(2 * light - 1)) * sat
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = light - c / 2
-  let r = 0
-  let g = 0
-  let b = 0
-
-  if (h < 60) {
-    r = c
-    g = x
-  } else if (h < 120) {
-    r = x
-    g = c
-  } else if (h < 180) {
-    g = c
-    b = x
-  } else if (h < 240) {
-    g = x
-    b = c
-  } else if (h < 300) {
-    r = x
-    b = c
-  } else {
-    r = c
-    b = x
-  }
-
-  const toHex = (channel: number) =>
-    Math.round((channel + m) * 255)
-      .toString(16)
-      .padStart(2, '0')
-
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-}
-
-/** WCAG 2.x relative luminance of a 6-digit sRGB hex. */
-function relativeLuminance(hex: string): number {
-  const normalized = normalizeHex(hex)
-  const channel = (offset: number) => {
-    const c = parseInt(normalized.slice(offset, offset + 2), 16) / 255
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-  }
-  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5)
-}
-
-export function getContrastRatio(a: string, b: string): number {
-  const la = relativeLuminance(a)
-  const lb = relativeLuminance(b)
-  const [hi, lo] = la > lb ? [la, lb] : [lb, la]
-  return (hi + 0.05) / (lo + 0.05)
-}
-
-/** Minimum contrast a focus ring owes its own cell — WCAG 2.2 SC 1.4.11. */
-export const CELL_RING_MIN_CONTRAST = 3
-
-/**
- * Pick the lightness closest to `preferred` whose colour still clears
- * `CELL_RING_MIN_CONTRAST` against `fill`.
- *
- * The ring drawn on a blueprint cell is the focus affordance on the app's
- * most-used control, so it owes SC 1.4.11 against the fill it outlines. The
- * previous fixed floor (`max(l * 0.54, 36)`) measured 1.86:1 on chartreuse and
- * failed on five of the eight lane fills. Searching keeps the ring as close to
- * the fill's own tone as the requirement allows, rather than forcing every lane
- * to one pessimistic dark value.
- *
- * Darkens by default; lightens instead when the fill is dark enough that no
- * darker tone can reach the target.
- */
-function solveRingLightness(
-  hue: number,
-  saturation: number,
-  preferred: number,
-  fill: string,
-  target = CELL_RING_MIN_CONTRAST + 0.05,
+export function cellToken(
+  family: BlueprintCellFamily,
+  step: (typeof CELL_STEP)[keyof typeof CELL_STEP],
 ): string {
-  const at = (lightness: number) => hslToHex(hue, saturation, lightness)
-
-  if (getContrastRatio(at(preferred), fill) >= target) return at(preferred)
-
-  // `bound` is the extreme that definitely passes if anything does.
-  const darkenable = getContrastRatio(at(0), fill) >= target
-  const bound = darkenable ? 0 : 100
-  if (!darkenable && getContrastRatio(at(100), fill) < target) {
-    // Mid-luminance fill: neither extreme clears 3:1 at this saturation.
-    // Fall back to the higher-contrast extreme rather than returning a value
-    // that silently fails.
-    return getContrastRatio(at(0), fill) >= getContrastRatio(at(100), fill)
-      ? at(0)
-      : at(100)
-  }
-
-  let pass = bound
-  let fail = preferred
-  for (let i = 0; i < 20; i += 1) {
-    const mid = (pass + fail) / 2
-    if (getContrastRatio(at(mid), fill) >= target) pass = mid
-    else fail = mid
-  }
-  return at(pass)
+  return `var(--color-${family}-${step})`
 }
 
 /**
- * Rescale an HSL saturation so the *absolute* channel spread survives a
- * lightness change.
- *
- * HSL saturation is lightness-relative: the RGB spread it produces is
- * `s * (1 - |2L - 1|)`. Carrying a near-grey's saturation down to a darker ring
- * therefore amplifies it — 8% at L=95 is a 2/255 spread, but 8% at L=58 is
- * 19/255. Since a near-grey's hue is itself a rounding artefact, that turned
- * `#F2F2F4` into a blue-grey ring and `#F4F2F2` into a red-grey one, 240° apart.
+ * The grid's rules stay one neutral across every lane — a per-family border
+ * would make a row of differently-tinted cells read as ragged rather than as
+ * one table.
  */
-function saturationPreservingChroma(
-  saturation: number,
-  fromLightness: number,
-  toLightness: number,
-): number {
-  const reach = (l: number) => 1 - Math.abs((2 * l) / 100 - 1)
-  const to = reach(toLightness)
-  if (to <= 0) return saturation
-  return Math.min(saturation, (saturation * reach(fromLightness)) / to)
-}
+export const BLUEPRINT_CELL_BORDER_COLOR = 'var(--color-gray-1200)'
 
-type CellInteractionColors = {
+/** Per-cell interaction tones — same family as the fill, stepped for each state. */
+export function getBlueprintCellInteractionColors(
+  family: BlueprintCellFamily,
+): {
   bg: string
   bgHover: string
   bgPressed: string
   ring: string
   ringSoft: string
-}
-
-/**
- * Memo keyed on the fill hex.
- *
- * `solveRingLightness` runs a 20-step binary search with a WCAG luminance
- * computation per probe, twice per call. That is ~20µs, which is nothing once
- * but is paid per cell per render — around 6ms on a 300-cell board, a third of
- * a frame. The input space is the eight palette fills plus whatever a blueprint
- * overrides, so the map stays small and never needs eviction.
- */
-const interactionColorCache = new Map<string, CellInteractionColors>()
-
-/** Per-cell interaction tones — same hue as fill, tuned for hover/pressed/focus. */
-export function getBlueprintCellInteractionColors(
-  fill: string,
-): CellInteractionColors {
-  const cached = interactionColorCache.get(fill)
-  if (cached) return cached
-  const computed = computeCellInteractionColors(fill)
-  interactionColorCache.set(fill, computed)
-  return computed
-}
-
-function computeCellInteractionColors(fill: string): CellInteractionColors {
-  const [h, s, l] = hexToHsl(fill)
-
-  // Neutral visual cells — keep grey family.
-  //
-  // Saturation is clamped to the source rather than raised to a fixed 14/10.
-  // For a near-grey, `max - min` is a rounding artefact, so `h` is decided by
-  // ±1 in the last hex digit; raising chroma amplified that into a visible hue
-  // (#F2F2F4 produced a blue-grey ring, #F4F2F2 a red-grey one, 240° apart).
-  if (s < 10) {
-    return {
-      bg: fill,
-      bgHover: hslToHex(h, s, l * 0.94),
-      bgPressed: hslToHex(h, Math.min(s + 6, 18), l * 0.86),
-      ring: solveRingLightness(
-        h,
-        saturationPreservingChroma(s, l, 42),
-        42,
-        fill,
-      ),
-      ringSoft: solveRingLightness(
-        h,
-        saturationPreservingChroma(s, l, 58),
-        58,
-        fill,
-      ),
-    }
-  }
-
-  const isVivid = s > 45 && l < 82
-  const hoverLightness = isVivid ? l * 0.88 : l > 88 ? l * 0.91 : l * 0.93
-  const pressedLightness = isVivid ? l * 0.78 : l > 88 ? l * 0.84 : l * 0.86
-  const hoverSat = isVivid
-    ? Math.min(s * 1.04, 90)
-    : Math.min(s * 1.1, 92)
-  const pressedSat = isVivid
-    ? Math.min(s * 1.08, 92)
-    : Math.min(s * 1.16, 94)
-  const ringSat = Math.min(s * 1.3, 88)
-  const ringSoftSat = Math.min(s * 1.18, 82)
-
+} {
   return {
-    bg: fill,
-    bgHover: hslToHex(h, hoverSat, hoverLightness),
-    bgPressed: hslToHex(h, pressedSat, pressedLightness),
-    ring: solveRingLightness(h, ringSat, Math.max(l * 0.42, 26), fill),
-    ringSoft: solveRingLightness(h, ringSoftSat, Math.max(l * 0.54, 36), fill),
+    bg: cellToken(family, CELL_STEP.surface),
+    bgHover: cellToken(family, CELL_STEP.hover),
+    bgPressed: cellToken(family, CELL_STEP.pressed),
+    ring: cellToken(family, CELL_STEP.ring),
+    ringSoft: cellToken(family, CELL_STEP.ring),
   }
 }
 
 export function getBlueprintCellInteractionStyle(
-  fill: string,
+  family: BlueprintCellFamily,
 ): Record<string, string> {
-  const colors = getBlueprintCellInteractionColors(fill)
+  const colors = getBlueprintCellInteractionColors(family)
   return {
     '--blueprint-cell-bg-origin': colors.bg,
     '--blueprint-cell-bg': colors.bg,
@@ -277,12 +101,12 @@ export function getBlueprintCellInteractionStyle(
 }
 
 export function getBlueprintCellSurfaceStyle(
-  fill: string,
+  family: BlueprintCellFamily,
   extra?: CSSProperties,
 ): CSSProperties {
   return {
-    backgroundColor: fill,
-    color: BLUEPRINT_CELL_TEXT_COLOR,
+    backgroundColor: cellToken(family, CELL_STEP.surface),
+    color: cellToken(family, CELL_STEP.text),
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
     ...extra,
   }

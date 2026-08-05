@@ -1,5 +1,8 @@
 import type { BlueprintLayer } from '@/types/blueprint'
-import { RADIX_LIGHT } from '@/lib/radixLight'
+import {
+  BLUEPRINT_CELL_BORDER_COLOR,
+  type BlueprintCellFamily,
+} from '@/lib/blueprintCellStyle'
 import {
   shouldShowInteractionLineAfter,
   shouldShowVisibilityLineAfter,
@@ -8,58 +11,56 @@ import {
 /**
  * Board chrome — the frame the blueprint is drawn in.
  *
- * Frozen (inlined via `style`, not read from a custom property) because the
- * board must print and project identically in either theme. The values are no
- * longer invented: each names a step from the neutral ramp in colors.css, so
- * chrome and cells draw from one palette. Where the previous literal sat
- * between two steps the nearer one wins, and relative ordering is preserved —
- * a hover is still darker than its base.
+ * Every value references a step in colors.css. `slate` is the cool grey and
+ * `gray` the pure neutral, chosen per token by which one the previous literal
+ * sat closest to; relative ordering is preserved where it carries meaning, so a
+ * hover is still darker than its base.
  *
- * The `phaseSection*` family is the one deliberate exception. Those are a
- * blue-tinted slate that separates overview phase frames from every neutral
- * around them, and no shipped family lands there: Radix `blue` at that
- * lightness is far more saturated. They stay literal.
+ * These are inlined through `style` rather than applied as classes because the
+ * board composes them into gradients and SVG attributes, but they are `var()`
+ * either way — the board is on the same tokens as the rest of the app, and
+ * follows the theme with it.
  */
 export const BLUEPRINT_THEME = {
   /** Blueprint content surface — path sections, cells, swim lanes. */
-  canvas: '#FFFFFF',
-  canvasDark: RADIX_LIGHT.gray1200,
+  canvas: 'var(--color-gray-100)',
+  canvasDark: 'var(--color-gray-1200)',
   /** Blueprint shell — label column, panel padding, compare chrome. */
-  labelRail: RADIX_LIGHT.slate500,
-  labelRailDark: RADIX_LIGHT.gray1200,
-  canvasBorder: RADIX_LIGHT.slate700,
-  divider: RADIX_LIGHT.slate800,
-  dividerLabel: RADIX_LIGHT.gray900,
+  labelRail: 'var(--color-slate-500)',
+  labelRailDark: 'var(--color-gray-1200)',
+  canvasBorder: 'var(--color-slate-700)',
+  divider: 'var(--color-slate-800)',
+  dividerLabel: 'var(--color-gray-900)',
   /** Figma-style interaction / visibility line tag. */
-  dividerTagBg: RADIX_LIGHT.slate1200,
-  dividerLine: RADIX_LIGHT.slate1200,
-  dividerBg: RADIX_LIGHT.slate500,
-  cellText: RADIX_LIGHT.slate1200,
-  cellEmpty: RADIX_LIGHT.gray800,
-  headerText: RADIX_LIGHT.gray1200,
+  dividerTagBg: 'var(--color-slate-1200)',
+  dividerLine: 'var(--color-slate-1200)',
+  dividerBg: 'var(--color-slate-500)',
+  cellText: 'var(--color-slate-1200)',
+  cellEmpty: 'var(--color-gray-800)',
+  headerText: 'var(--color-gray-1200)',
   /** Thin rules between swim lanes — light grey, visible on canvas and label rail. */
-  laneDivider: RADIX_LIGHT.slate700,
-  arrow: RADIX_LIGHT.gray900,
+  laneDivider: 'var(--color-slate-700)',
+  arrow: 'var(--color-gray-900)',
   /** Side-by-side compare path sections (Figma-style grouping). */
-  sectionFill: '#FFFFFF',
-  sectionBorder: RADIX_LIGHT.slate700,
+  sectionFill: 'var(--color-gray-100)',
+  sectionBorder: 'var(--color-slate-700)',
   /** Service overview canvas phase sections — see the exception note above. */
-  phaseSectionColor: '#B6C7D2',
-  phaseSectionFill: '#D9E4EA',
+  phaseSectionColor: 'var(--color-slate-800)',
+  phaseSectionFill: 'var(--color-slate-700)',
   /** Outermost slide/canvas workspace — sits behind blueprint panels. */
-  viewportPad: RADIX_LIGHT.gray300,
+  viewportPad: 'var(--color-gray-300)',
   /** Scenario title badge on gray compare panels — darker than labelRail. */
-  panelScenarioBadgeFill: RADIX_LIGHT.gray800,
-  panelScenarioBadgeText: RADIX_LIGHT.gray1200,
+  panelScenarioBadgeFill: 'var(--color-gray-800)',
+  panelScenarioBadgeText: 'var(--color-gray-1200)',
   /** Hover accents for interactive canvas chrome. */
-  phaseSectionFillHover: '#C5D6E0',
-  phaseSectionBorderHover: '#9AADBE',
-  phaseSectionBadgeHover: '#9AADBE',
-  panelLabelRailHover: RADIX_LIGHT.slate600,
-  panelBorderHover: RADIX_LIGHT.slate800,
-  panelScenarioBadgeFillHover: RADIX_LIGHT.gray900,
-  panelCanvasHover: RADIX_LIGHT.slate300,
-  panelSectionFillHover: RADIX_LIGHT.slate300,
+  phaseSectionFillHover: 'var(--color-slate-800)',
+  phaseSectionBorderHover: 'var(--color-slate-900)',
+  phaseSectionBadgeHover: 'var(--color-slate-900)',
+  panelLabelRailHover: 'var(--color-slate-600)',
+  panelBorderHover: 'var(--color-slate-800)',
+  panelScenarioBadgeFillHover: 'var(--color-gray-900)',
+  panelCanvasHover: 'var(--color-slate-300)',
+  panelSectionFillHover: 'var(--color-slate-300)',
 } as const
 
 /** Set on interactive compare panels; children inherit label-rail hover. */
@@ -107,45 +108,44 @@ export function getBlueprintPanelHoverCssVars(): Record<string, string> {
 }
 
 /**
- * Layer fills — Radix step 500 across seven hues plus a neutral.
+ * Lane identity — the Radix family each swim lane is drawn from. The steps of
+ * that family then supply the surface, hover, pressed, ring and text (see
+ * `CELL_STEP`), so a lane is one name rather than five values.
  *
- * Previously eight hand-picked pastels with no shared construction, which left
- * them unevenly saturated: chartreuse was vivid enough to read as a highlight
- * while powder blue was nearly white. Step 500 is the Radix "component
- * surface" step, so every lane now sits at the same perceptual weight and every
- * one of them clears 15:1 against the black cell text.
- *
- * The key names are kept — they are the vocabulary the lane map and Figma both
- * use — but each now points at a scale step rather than a one-off value. Lime
- * exists in colors.css only for `chartreuse`: the families Supabase ships leave
- * a gap between amber (40°) and green (140°), and folding that lane into yellow
- * would have put it next to `cream`.
+ * The keys are the vocabulary the lane map and Figma share, which is why they
+ * survive the move from hex to family. `lime` exists in colors.css only for
+ * `chartreuse`: the families Supabase ships leave a gap between amber (40°) and
+ * green (140°), and folding that lane into yellow would seat it next to `cream`.
  */
 export const BLUEPRINT_CELL_PALETTE = {
-  powderBlue: RADIX_LIGHT.blue500,
-  chartreuse: RADIX_LIGHT.lime500,
-  peach: RADIX_LIGHT.orange500,
-  lavender: RADIX_LIGHT.violet500,
-  cream: RADIX_LIGHT.amber500,
-  mint: RADIX_LIGHT.green500,
-  blush: RADIX_LIGHT.pink500,
-  visual: RADIX_LIGHT.slate500,
-  charcoal: '#000000',
-} as const
+  powderBlue: 'blue',
+  chartreuse: 'lime',
+  peach: 'orange',
+  lavender: 'violet',
+  cream: 'amber',
+  mint: 'green',
+  blush: 'pink',
+  visual: 'slate',
+  charcoal: 'gray',
+} as const satisfies Record<string, BlueprintCellFamily>
 
 export type BlueprintLayerStyle = {
-  lane: string
-  laneLabel: string
+  /** Radix family backing this lane; steps of it supply every cell state. */
+  lane: BlueprintCellFamily
+  laneLabel: BlueprintCellFamily
   label: string
   accent: string
-  accentMuted: string
+  accentMuted: BlueprintCellFamily
 }
 
-/** Label column text tones — reference blueprint swimlane labels. */
+/**
+ * Label column text tones — step 1200, the high-contrast text step, in a family
+ * that echoes the section's lanes. Previously three invented dark hexes.
+ */
 export const BLUEPRINT_LABEL_TEXT = {
-  frontstage: '#2D5A58',
-  customerFacing: '#5C4E62',
-  backstage: '#4F4B47',
+  frontstage: 'var(--color-green-1200)',
+  customerFacing: 'var(--color-purple-1200)',
+  backstage: 'var(--color-gold-1200)',
 } as const
 
 export type BlueprintLabelSection =
@@ -194,15 +194,14 @@ export function getBlueprintLabelTextColor(
 }
 
 function cellStyleFromFill(
-  fill: string,
+  fill: BlueprintCellFamily,
   label: string = BLUEPRINT_LABEL_TEXT.frontstage,
 ): BlueprintLayerStyle {
-  const { charcoal } = BLUEPRINT_CELL_PALETTE
   return {
     lane: fill,
     laneLabel: fill,
     label,
-    accent: charcoal,
+    accent: BLUEPRINT_CELL_BORDER_COLOR,
     accentMuted: fill,
   }
 }

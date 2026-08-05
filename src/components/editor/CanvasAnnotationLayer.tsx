@@ -26,6 +26,7 @@ import {
   ANNOTATION_FILL_SWATCHES,
   ANNOTATION_FONT_SIZES,
   ANNOTATION_INK,
+  isPaleAnnotationSwatch,
   ANNOTATION_STICKY_BG,
   ANNOTATION_STICKY_SIZE,
   ANNOTATION_STICKY_SWATCHES,
@@ -209,18 +210,7 @@ function ColorSwatch({
   onSelect: () => void
   empty?: boolean
 }) {
-  const isLight =
-    !empty &&
-    color &&
-    (color.toUpperCase() === '#FFFFFF' ||
-      color.toUpperCase() === '#FEF3C7' ||
-      color.toUpperCase() === '#FFEDD5' ||
-      color.toUpperCase() === '#E5E7EB' ||
-      color.toUpperCase() === '#DBEAFE' ||
-      color.toUpperCase() === '#D1FAE5' ||
-      color.toUpperCase() === '#EDE9FE' ||
-      color.toUpperCase() === '#FCE7F3' ||
-      color.toUpperCase() === '#FEE2E2')
+  const isLight = !empty && isPaleAnnotationSwatch(color)
 
   return (
     <button
@@ -499,15 +489,15 @@ function ShapeStyleBar({
             >
               <span
                 className="block h-px w-3.5 rounded-full"
-                style={{ backgroundColor: strokePreview ?? '#d4d4d4' }}
+                style={{ backgroundColor: strokePreview ?? 'var(--color-gray-700)' }}
               />
               <span
                 className="block h-[2px] w-3.5 rounded-full"
-                style={{ backgroundColor: strokePreview ?? '#d4d4d4' }}
+                style={{ backgroundColor: strokePreview ?? 'var(--color-gray-700)' }}
               />
               <span
                 className="block h-[3px] w-3.5 rounded-full"
-                style={{ backgroundColor: strokePreview ?? '#d4d4d4' }}
+                style={{ backgroundColor: strokePreview ?? 'var(--color-gray-700)' }}
               />
             </span>
             <ChevronDown className="size-3 opacity-80" aria-hidden />
@@ -2047,7 +2037,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
               data-annotation-id={annotation.id}
               d={pointsToPath(annotation.points)}
               fill="none"
-              stroke={annotation.color}
+              style={{ stroke: annotation.color }}
               strokeWidth={annotation.strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -2060,7 +2050,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
           <path
             d={pointsToPath(draft.points)}
             fill="none"
-            stroke={draft.color}
+            style={{ stroke: draft.color }}
             strokeWidth={draft.strokeWidth}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -2074,7 +2064,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
             width={draftShape.width}
             height={draftShape.height}
             fill="none"
-            stroke={ANNOTATION_INK}
+            style={{ stroke: ANNOTATION_INK }}
             strokeWidth={ANNOTATION_DEFAULT_STROKE}
             strokeDasharray="4 3"
           />
@@ -2087,7 +2077,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
             rx={draftShape.width / 2}
             ry={draftShape.height / 2}
             fill="none"
-            stroke={ANNOTATION_INK}
+            style={{ stroke: ANNOTATION_INK }}
             strokeWidth={ANNOTATION_DEFAULT_STROKE}
             strokeDasharray="4 3"
           />

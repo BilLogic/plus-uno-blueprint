@@ -1,5 +1,3 @@
-import { getContrastRatio } from '@/lib/blueprintCellStyle'
-import { RADIX_LIGHT } from '@/lib/radixLight'
 
 export type CanvasAnnotationTool =
   | 'select'
@@ -66,9 +64,9 @@ export type CanvasAnnotation =
   | TextAnnotation
   | StickyAnnotation
 
-export const ANNOTATION_INK: string = RADIX_LIGHT.slate1200
-export const ANNOTATION_PAPER: string = '#FFFFFF'
-export const ANNOTATION_STICKY_BG: string = RADIX_LIGHT.yellow500
+export const ANNOTATION_INK: string = 'var(--color-slate-1200)'
+export const ANNOTATION_PAPER: string = 'var(--color-gray-100)'
+export const ANNOTATION_STICKY_BG: string = 'var(--color-yellow-500)'
 export const ANNOTATION_DEFAULT_STROKE = 2.5
 export const ANNOTATION_STICKY_SIZE = { width: 160, height: 120 }
 
@@ -78,17 +76,17 @@ export const ANNOTATION_STICKY_SIZE = { width: 160, height: 120 }
  * different material.
  */
 export const ANNOTATION_STICKY_SWATCHES = [
-  RADIX_LIGHT.yellow500,
-  RADIX_LIGHT.amber500,
-  RADIX_LIGHT.lime500,
-  RADIX_LIGHT.green500,
-  RADIX_LIGHT.blue500,
-  RADIX_LIGHT.indigo500,
-  RADIX_LIGHT.violet500,
-  RADIX_LIGHT.pink500,
-  RADIX_LIGHT.red500,
-  RADIX_LIGHT.orange500,
-  RADIX_LIGHT.slate500,
+  'var(--color-yellow-500)',
+  'var(--color-amber-500)',
+  'var(--color-lime-500)',
+  'var(--color-green-500)',
+  'var(--color-blue-500)',
+  'var(--color-indigo-500)',
+  'var(--color-violet-500)',
+  'var(--color-pink-500)',
+  'var(--color-red-500)',
+  'var(--color-orange-500)',
+  'var(--color-slate-500)',
   ANNOTATION_PAPER,
 ] as const
 
@@ -97,14 +95,14 @@ export const ANNOTATION_STICKY_SWATCHES = [
  * filled rectangle sit over a lane without hiding it.
  */
 export const ANNOTATION_FILL_SWATCHES = [
-  RADIX_LIGHT.amber300,
-  RADIX_LIGHT.orange300,
-  RADIX_LIGHT.red300,
-  RADIX_LIGHT.pink300,
-  RADIX_LIGHT.violet300,
-  RADIX_LIGHT.blue300,
-  RADIX_LIGHT.green300,
-  RADIX_LIGHT.slate300,
+  'var(--color-amber-300)',
+  'var(--color-orange-300)',
+  'var(--color-red-300)',
+  'var(--color-pink-300)',
+  'var(--color-violet-300)',
+  'var(--color-blue-300)',
+  'var(--color-green-300)',
+  'var(--color-slate-300)',
   ANNOTATION_PAPER,
   ANNOTATION_INK,
 ] as const
@@ -113,13 +111,13 @@ export const ANNOTATION_FILL_SWATCHES = [
 export const ANNOTATION_STROKE_SWATCHES = [
   ANNOTATION_INK,
   ANNOTATION_PAPER,
-  RADIX_LIGHT.red1100,
-  RADIX_LIGHT.orange1100,
-  RADIX_LIGHT.yellow1100,
-  RADIX_LIGHT.green1100,
-  RADIX_LIGHT.blue1100,
-  RADIX_LIGHT.violet1100,
-  RADIX_LIGHT.pink1100,
+  'var(--color-red-1100)',
+  'var(--color-orange-1100)',
+  'var(--color-yellow-1100)',
+  'var(--color-green-1100)',
+  'var(--color-blue-1100)',
+  'var(--color-violet-1100)',
+  'var(--color-pink-1100)',
 ] as const
 
 export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
@@ -137,14 +135,14 @@ export const ANNOTATION_PEN_STROKE_WIDTHS = [3, 14] as const
  * reads against the board.
  */
 export const ANNOTATION_PEN_SWATCHES = [
-  RADIX_LIGHT.slate1200,
-  RADIX_LIGHT.slate900,
-  RADIX_LIGHT.red900,
-  RADIX_LIGHT.orange900,
-  RADIX_LIGHT.amber900,
-  RADIX_LIGHT.green900,
-  RADIX_LIGHT.blue900,
-  RADIX_LIGHT.violet900,
+  'var(--color-slate-1200)',
+  'var(--color-slate-900)',
+  'var(--color-red-900)',
+  'var(--color-orange-900)',
+  'var(--color-amber-900)',
+  'var(--color-green-900)',
+  'var(--color-blue-900)',
+  'var(--color-violet-900)',
   ANNOTATION_PAPER,
 ] as const
 export const ANNOTATION_FONT_SIZES = [12, 14, 18, 24, 32, 48] as const
@@ -168,18 +166,26 @@ export function annotationFontSizeLabel(fontSize: number): string {
 }
 
 /**
- * Text on a filled shape — whichever of ink and paper reads better on the fill.
- *
- * Measured rather than matched against a hardcoded set of dark hexes: that set
- * listed three specific values, so any fill outside it silently got dark ink,
- * including a dark one added later.
+ * Text on a filled shape. Every fill in `ANNOTATION_FILL_SWATCHES` is step 300
+ * or paper except the ink one, so this is a membership test rather than a
+ * contrast computation — which is also what lets the fills stay `var()`.
  */
+/**
+ * True when a swatch needs a visible outline to be seen against the toolbar.
+ *
+ * Every fill swatch is step 300 or paper except the ink one, so this is a
+ * membership test rather than a luminance computation — which is what lets the
+ * swatches stay `var()` tokens.
+ */
+export function isPaleAnnotationSwatch(
+  color: string | null | undefined,
+): boolean {
+  return Boolean(color) && color !== ANNOTATION_INK
+}
+
 export function annotationTextOnFill(fillColor: string | null): string {
   if (!fillColor) return ANNOTATION_INK
-  return getContrastRatio(ANNOTATION_INK, fillColor) >=
-    getContrastRatio(ANNOTATION_PAPER, fillColor)
-    ? ANNOTATION_INK
-    : ANNOTATION_PAPER
+  return fillColor === ANNOTATION_INK ? ANNOTATION_PAPER : ANNOTATION_INK
 }
 
 export function createAnnotationId(): string {

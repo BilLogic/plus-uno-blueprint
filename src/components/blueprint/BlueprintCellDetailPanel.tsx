@@ -53,7 +53,7 @@ import {
   scrollBlueprintTechPillIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
-import { BLUEPRINT_CELL_TEXT_COLOR } from '@/lib/blueprintCellStyle'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
 import {
   getBlueprintLayerStyle,
@@ -524,7 +524,7 @@ export function BlueprintCellDetailPanel() {
       className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
       style={{
         backgroundColor: laneChipStyle.lane,
-        color: BLUEPRINT_CELL_TEXT_COLOR,
+        color: BLUEPRINT_THEME.cellText,
       }}
       title={selection.layerName}
     >

@@ -1,36 +1,41 @@
-import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
+import type { BlueprintCellFamily } from '@/lib/blueprintCellStyle'
 
 /**
- * Stable fill color per technology name — shared across every blueprint and phase.
- * Keys are canonical display labels (case-sensitive).
+ * Stable Radix family per technology name — shared across every blueprint and
+ * phase. Keys are canonical display labels (case-sensitive).
+ *
+ * Families rather than fills: a pill renders at step 400, one step paler than
+ * the step-500 lane it sits in, so it reads as an object on the cell rather
+ * than as another cell. Several tools share a family — the previous per-tool
+ * hexes drew distinctions that carried no meaning.
  */
 export const TECH_PILL_COLORS = {
-  'Clearance obtainment guide': '#F0E8D8',
-  'Dev Tools': '#D8E8F0',
-  Email: '#EDE0F5',
-  Figma: '#E4D4F8',
-  'Google Docs/ Slides': '#F8E0E8',
-  'Google Form Application': '#F0E0C8',
-  'Google Quiz': '#F8D8D8',
-  'Google Quiz embedded in Notion': '#F8D8D8',
-  'Google Quizzes': '#D8F0E0',
-  Handshake: '#D0E8F5',
-  'Handshake Employer Profile': '#C8E0F0',
-  'Marketing Website': '#D6F4FF',
-  Notion: '#F8E8D4',
-  'On-campus booth': '#E8F0D8',
-  'PLUS App': BLUEPRINT_CELL_PALETTE.chartreuse,
-  Posters: '#F5E8C8',
-  Slack: BLUEPRINT_CELL_PALETTE.peach,
-  'Social Media': '#F8D0E0',
-  'Workday (Employee View)': '#D0E4F0',
-  'Workday (Employer View)': '#D0E4F0',
-  Workday: '#D0E4F0',
-  Bank: BLUEPRINT_CELL_PALETTE.mint,
-  Zoom: BLUEPRINT_CELL_PALETTE.powderBlue,
-  'Zoom Recording': '#E8D8F0',
-  'Zoom/Pencil': BLUEPRINT_CELL_PALETTE.powderBlue,
-} as const satisfies Record<string, string>
+  'Clearance obtainment guide': 'gold',
+  'Dev Tools': 'blue',
+  Email: 'violet',
+  Figma: 'purple',
+  'Google Docs/ Slides': 'pink',
+  'Google Form Application': 'amber',
+  'Google Quiz': 'red',
+  'Google Quiz embedded in Notion': 'red',
+  'Google Quizzes': 'green',
+  Handshake: 'blue',
+  'Handshake Employer Profile': 'indigo',
+  'Marketing Website': 'blue',
+  Notion: 'amber',
+  'On-campus booth': 'lime',
+  'PLUS App': 'lime',
+  Posters: 'gold',
+  Slack: 'orange',
+  'Social Media': 'crimson',
+  'Workday (Employee View)': 'indigo',
+  'Workday (Employer View)': 'indigo',
+  Workday: 'indigo',
+  Bank: 'green',
+  Zoom: 'blue',
+  'Zoom Recording': 'purple',
+  'Zoom/Pencil': 'blue',
+} as const satisfies Record<string, BlueprintCellFamily>
 
 export type TechPillName = keyof typeof TECH_PILL_COLORS
 
@@ -54,19 +59,19 @@ const LOWER_TO_CANONICAL = Object.fromEntries(
   ]),
 ) as Record<string, TechPillName>
 
-/** Unknown tech names fall back to a deterministic color from this extended set. */
-const EXTENDED_FALLBACK_COLORS = [
-  BLUEPRINT_CELL_PALETTE.lavender,
-  BLUEPRINT_CELL_PALETTE.mint,
-  BLUEPRINT_CELL_PALETTE.blush,
-  '#E8F4E0',
-  '#F4E8F0',
-  '#E0F4F0',
-  '#F0F0E0',
-  '#F0E4E8',
-  '#E4F0F8',
-  '#F8F0E0',
-] as const
+/** Unknown tech names fall back to a deterministic family from this set. */
+const EXTENDED_FALLBACK_FAMILIES = [
+  'violet',
+  'green',
+  'pink',
+  'lime',
+  'purple',
+  'blue',
+  'gold',
+  'crimson',
+  'indigo',
+  'amber',
+] as const satisfies readonly BlueprintCellFamily[]
 
 function hashLabel(label: string): number {
   let hash = 0
@@ -85,12 +90,13 @@ export function normalizeTechPillLabel(label: string): string {
   return TECH_LABEL_ALIASES[lower] ?? LOWER_TO_CANONICAL[lower] ?? trimmed
 }
 
-export function getTechPillFill(label: string): string {
+/** The Radix family a tech pill draws from. */
+export function getTechPillFamily(label: string): BlueprintCellFamily {
   const canonical = normalizeTechPillLabel(label)
   const known = TECH_PILL_COLORS[canonical as TechPillName]
   if (known) return known
 
-  return EXTENDED_FALLBACK_COLORS[
-    hashLabel(canonical) % EXTENDED_FALLBACK_COLORS.length
+  return EXTENDED_FALLBACK_FAMILIES[
+    hashLabel(canonical) % EXTENDED_FALLBACK_FAMILIES.length
   ]
 }

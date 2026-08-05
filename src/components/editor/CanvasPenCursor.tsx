@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Eraser, Pencil } from 'lucide-react'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { ANNOTATION_INK, ANNOTATION_PAPER } from '@/lib/canvasAnnotations'
 
 /** Fixed on-screen tool cursor size (px). */
 const CURSOR_SCREEN_PX = 32
@@ -83,10 +84,11 @@ export function CanvasPenCursor() {
   if (!cursorTool || typeof document === 'undefined') return null
 
   const Icon = cursorTool === 'eraser' ? Eraser : Pencil
+  // A white pen would be invisible as a cursor tint, so it falls back to ink.
   const fill =
-    cursorTool === 'pen' && penColor.toUpperCase() !== '#FFFFFF'
+    cursorTool === 'pen' && penColor !== ANNOTATION_PAPER
       ? penColor
-      : '#111827'
+      : ANNOTATION_INK
 
   return createPortal(
     <div

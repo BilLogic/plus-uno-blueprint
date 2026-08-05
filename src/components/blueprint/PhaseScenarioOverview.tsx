@@ -73,13 +73,13 @@ function PhaseScenarioConnector({ width }: { width: number }) {
             orient="auto"
             markerUnits="userSpaceOnUse"
           >
-            <path d="M 0 0 L 10 5 L 0 10 Z" fill={BLUEPRINT_THEME.arrow} />
+            <path d="M 0 0 L 10 5 L 0 10 Z" style={{ fill: BLUEPRINT_THEME.arrow }} />
           </marker>
         </defs>
         <path
           d={`M 0 12 H ${width - 8}`}
           fill="none"
-          stroke={BLUEPRINT_THEME.arrow}
+          style={{ stroke: BLUEPRINT_THEME.arrow }}
           strokeWidth={2}
           markerEnd={`url(#${markerId})`}
         />

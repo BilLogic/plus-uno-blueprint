@@ -1,4 +1,3 @@
-import { RADIX_LIGHT } from '@/lib/radixLight'
 import type { PathType } from '@/types/database'
 
 export type PathColorInput = {
@@ -10,22 +9,22 @@ export type PathColorInput = {
  * Primary accent per path type — also used as defaults for unnamed paths.
  *
  * Radix step 1100, not the Tailwind v3 defaults these used to be (#10B981 and
- * friends). The step matters: `getPathBadgeStyle` renders `#FFFFFF` on this
- * fill, and the old values measured 2.0–2.9:1 against white — the amber one
- * worst. Step 11 is the step Radix specifies for text weight, and every entry
- * here clears 4.98:1 on white.
+ * friends). The step matters: `getPathBadgeStyle` renders white on this fill,
+ * and the old values measured 2.0–2.9:1 against white — the amber one worst.
+ * Step 11 is Radix's text weight; `palette.test.ts` measures every entry
+ * against the stylesheet to keep that true.
  *
  * `unhappy` is orange rather than amber for the same reason: amber's step 9/10
  * are near-yellow and unusable under white text, so the whole family would have
  * had to be read at a different step from every other path type.
  */
 export const PATH_TYPE_COLORS: Record<PathType, string> = {
-  happy: RADIX_LIGHT.green1100,
-  unhappy: RADIX_LIGHT.orange1100,
-  exception: RADIX_LIGHT.red1100,
-  alternative: RADIX_LIGHT.blue1100,
+  happy: 'var(--color-green-1100)',
+  unhappy: 'var(--color-orange-1100)',
+  exception: 'var(--color-red-1100)',
+  alternative: 'var(--color-blue-1100)',
   /** Fallback only — named paths should use per-title registry colors. */
-  named: RADIX_LIGHT.indigo1100,
+  named: 'var(--color-indigo-1100)',
 }
 
 /**
@@ -34,11 +33,11 @@ export const PATH_TYPE_COLORS: Record<PathType, string> = {
  * being the same value. Same family per path type as `PATH_TYPE_COLORS`.
  */
 export const PATH_TYPE_ARROW_COLORS: Record<PathType, string> = {
-  happy: RADIX_LIGHT.green1000,
-  unhappy: RADIX_LIGHT.orange1000,
-  exception: RADIX_LIGHT.red1000,
-  alternative: RADIX_LIGHT.blue1000,
-  named: RADIX_LIGHT.indigo1000,
+  happy: 'var(--color-green-1000)',
+  unhappy: 'var(--color-orange-1000)',
+  exception: 'var(--color-red-1000)',
+  alternative: 'var(--color-blue-1000)',
+  named: 'var(--color-indigo-1000)',
 }
 
 /** Stable identity for path colors across scenarios (same type + name → same color). */
@@ -54,22 +53,22 @@ export const PATH_COLOR_REGISTRY: Record<string, string> = {
   'happy:Happy Path': PATH_TYPE_COLORS.happy,
   'unhappy:Sad Path': PATH_TYPE_COLORS.unhappy,
   'alternative:Alternate Path': PATH_TYPE_COLORS.alternative,
-  'named:Set Goals': RADIX_LIGHT.indigo1100,
-  'named:Check Goals': RADIX_LIGHT.violet1100,
-  'named:Update Goals': RADIX_LIGHT.pink1100,
-  'named:Set Goals Edge Case': RADIX_LIGHT.purple1100,
-  'named:Update Goals Edge Case': RADIX_LIGHT.crimson1100,
+  'named:Set Goals': 'var(--color-indigo-1100)',
+  'named:Check Goals': 'var(--color-violet-1100)',
+  'named:Update Goals': 'var(--color-pink-1100)',
+  'named:Set Goals Edge Case': 'var(--color-purple-1100)',
+  'named:Update Goals Edge Case': 'var(--color-crimson-1100)',
 }
 
 export const PATH_ARROW_COLOR_REGISTRY: Record<string, string> = {
   'happy:Happy Path': PATH_TYPE_ARROW_COLORS.happy,
   'unhappy:Sad Path': PATH_TYPE_ARROW_COLORS.unhappy,
   'alternative:Alternate Path': PATH_TYPE_ARROW_COLORS.alternative,
-  'named:Set Goals': RADIX_LIGHT.indigo1000,
-  'named:Check Goals': RADIX_LIGHT.violet1000,
-  'named:Update Goals': RADIX_LIGHT.pink1000,
-  'named:Set Goals Edge Case': RADIX_LIGHT.purple1000,
-  'named:Update Goals Edge Case': RADIX_LIGHT.crimson1000,
+  'named:Set Goals': 'var(--color-indigo-1000)',
+  'named:Check Goals': 'var(--color-violet-1000)',
+  'named:Update Goals': 'var(--color-pink-1000)',
+  'named:Set Goals Edge Case': 'var(--color-purple-1000)',
+  'named:Update Goals Edge Case': 'var(--color-crimson-1000)',
 }
 
 /**
@@ -77,16 +76,16 @@ export const PATH_ARROW_COLOR_REGISTRY: Record<string, string> = {
  * ordered so adjacent hashes land on distant hues rather than neighbouring ones.
  */
 const EXTENDED_PATH_COLORS = [
-  RADIX_LIGHT.indigo1100,
-  RADIX_LIGHT.orange1100,
-  RADIX_LIGHT.violet1100,
-  RADIX_LIGHT.green1100,
-  RADIX_LIGHT.pink1100,
-  RADIX_LIGHT.blue1100,
-  RADIX_LIGHT.tomato1100,
-  RADIX_LIGHT.purple1100,
-  RADIX_LIGHT.gold1100,
-  RADIX_LIGHT.crimson1100,
+  'var(--color-indigo-1100)',
+  'var(--color-orange-1100)',
+  'var(--color-violet-1100)',
+  'var(--color-green-1100)',
+  'var(--color-pink-1100)',
+  'var(--color-blue-1100)',
+  'var(--color-tomato-1100)',
+  'var(--color-purple-1100)',
+  'var(--color-gold-1100)',
+  'var(--color-crimson-1100)',
 ] as const
 
 /**
@@ -206,7 +205,7 @@ export function getPathBadgeStyle(path: PathColorInput): {
 } {
   return {
     backgroundColor: getPathColor(path),
-    color: '#FFFFFF',
+    color: 'var(--color-gray-100)',
   }
 }
 

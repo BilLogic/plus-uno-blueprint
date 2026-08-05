@@ -3,7 +3,7 @@ import {
   buildTechPillSelection,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
-import { getTechPillStyle } from '@/lib/techPillTheme'
+import { getTechPillFamilyFor } from '@/lib/techPillTheme'
 
 type BlueprintTechPillProps = {
   item: string
@@ -29,7 +29,7 @@ export function BlueprintTechPill({
 }: BlueprintTechPillProps) {
   return (
     <BlueprintCellButton
-      fill={getTechPillStyle(item).backgroundColor}
+      fill={getTechPillFamilyFor(item)}
       selection={buildTechPillSelection(selectionContext, item)}
       cellId={selectionContext.cellId}
       stepIndex={stepIndex}

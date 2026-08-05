@@ -5,21 +5,16 @@ import {
   getPathDashArrayFromKey,
   getPathSectionBorderStyle,
 } from '@/lib/pathColorTheme'
-import { getContrastRatio } from '@/lib/blueprintCellStyle'
 
 /**
  * Path identity has to survive both a monochrome print and a viewer who cannot
  * separate the hues (SC 1.4.1), so every path carries a stroke pattern as well
- * as a colour — and the badge renders white text on the colour, so the colour
- * itself owes 4.5:1.
+ * as a colour. The colour side is measured in `palette.test.ts`, which can
+ * resolve the tokens against the stylesheet.
  */
 describe('path identity', () => {
   const types = ['happy', 'unhappy', 'exception', 'alternative', 'named'] as const
 
-  it.each(types)('%s badge colour clears 4.5:1 against white', (pathType) => {
-    const color = getPathColor({ path_type: pathType, name: 'Unregistered' })
-    expect(getContrastRatio(color, '#FFFFFF')).toBeGreaterThanOrEqual(4.5)
-  })
 
   it('gives every non-happy type a distinct dash pattern', () => {
     const dashes = types.map((path_type) =>

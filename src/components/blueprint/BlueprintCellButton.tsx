@@ -7,6 +7,7 @@ import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
   getBlueprintCellInteractionStyle,
+  type BlueprintCellFamily,
 } from '@/lib/blueprintCellStyle'
 import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
@@ -15,8 +16,8 @@ import { cn } from '@/lib/utils'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
-  /** Layer or pill pastel fill — drives button background while keeping shadcn interaction states. */
-  fill: string
+  /** Radix family for this lane; its steps drive the background and states. */
+  fill: BlueprintCellFamily
   compact?: boolean
   className?: string
   style?: CSSProperties
@@ -40,9 +41,8 @@ type BlueprintCellButtonProps = {
  * A single blueprint cell face — the app's most-used control.
  *
  * Interaction tones (hover, pressed, both focus rings) are resolved from the
- * cell's own `fill` rather than from `--ring`, because a shared ring colour
- * cannot clear 3:1 against eight different lane fills. See
- * `getBlueprintCellInteractionStyle`.
+ * cell's own family rather than from `--ring`, so it reads against whichever
+ * lane the cell sits in. See `CELL_STEP` for which step each state uses and why.
  */
 export function BlueprintCellButton({
   fill,

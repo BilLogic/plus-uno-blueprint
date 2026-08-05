@@ -18,6 +18,7 @@ import {
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import {
   ANNOTATION_PEN_STROKE_WIDTHS,
+  ANNOTATION_PAPER,
   ANNOTATION_PEN_SWATCHES,
   type CanvasAnnotationTool,
 } from '@/lib/canvasAnnotations'
@@ -216,7 +217,7 @@ function DrawSubpanel() {
               penColor.toUpperCase() === swatch.toUpperCase() &&
                 !penOptionsDisabled &&
                 'ring-2 ring-primary ring-offset-1',
-              swatch.toUpperCase() === '#FFFFFF' && 'border-border',
+              swatch === ANNOTATION_PAPER && 'border-border',
             )}
             style={{ backgroundColor: swatch }}
           />

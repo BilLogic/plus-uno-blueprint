@@ -330,6 +330,31 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  /*
+   * Named measures, mirroring what Supabase actually registers.
+   *
+   * They keep Tailwind's spacing scale and add a handful of tokens for the
+   * measures that recur across an app — panel radius, content column, listbox
+   * width. The `--spacing-*` / `--sizing-*` / `--borderradius-*` block in
+   * global.css is their Figma token export and is unconsumed there too; it is
+   * the designers' source of truth, not the app's.
+   */
+  --radius-panel: 6px;
+  --spacing-content: 21px;
+  --spacing-card: var(--card-padding-x);
+  --width-listbox: 320px;
+  --breakpoint-xs: 480px;
+
+  /*
+   * Shadows on the elevation ratios, so `shadow-*` means the same thing the
+   * surface ladder does instead of being an unrelated Tailwind default.
+   */
+  --shadow-panel: 0 1px 2px oklch(from var(--foreground) l c h / 0.06);
+  --shadow-card: 0 2px 6px oklch(from var(--foreground) l c h / 0.08);
+  --shadow-popover:
+    0 8px 24px oklch(from var(--foreground) l c h / 0.12),
+    0 2px 6px oklch(from var(--foreground) l c h / 0.06);
+
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);

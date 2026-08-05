@@ -618,7 +618,7 @@ export function IntegratedTriggerArrows({
                 <path
                   d={group.trunkPath}
                   fill="none"
-                  stroke={group.trunkArrowColor}
+                  style={{ stroke: group.trunkArrowColor }}
                   strokeWidth={getIntegratedForkTrunkStrokeWidth(nodeOpacity)}
                   strokeLinecap="round"
                 />
@@ -626,13 +626,13 @@ export function IntegratedTriggerArrows({
                   cx={group.circle.cx}
                   cy={group.circle.cy}
                   r={nodeHaloRadius}
-                  fill={nodeHaloFill}
+                  style={{ fill: nodeHaloFill }}
                 />
                 <circle
                   cx={group.circle.cx}
                   cy={group.circle.cy}
                   r={nodeRadius}
-                  fill={nodeFill}
+                  style={{ fill: nodeFill }}
                 />
               </g>
             </g>

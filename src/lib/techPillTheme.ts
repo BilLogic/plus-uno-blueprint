@@ -1,8 +1,9 @@
 import {
   BLUEPRINT_CELL_BORDER_COLOR,
-  BLUEPRINT_CELL_TEXT_COLOR,
+  cellToken,
+  type BlueprintCellFamily,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillFill } from '@/lib/techPillColors'
+import { getTechPillFamily } from '@/lib/techPillColors'
 
 export type TechPillStyle = {
   backgroundColor: string
@@ -10,10 +11,18 @@ export type TechPillStyle = {
   borderColor: string
 }
 
+/** Step 400 — one paler than the step-500 lane a pill sits in. */
+const TECH_PILL_SURFACE_STEP = 400
+
+export function getTechPillFamilyFor(item: string): BlueprintCellFamily {
+  return getTechPillFamily(item)
+}
+
 export function getTechPillStyle(item: string): TechPillStyle {
+  const family = getTechPillFamily(item)
   return {
-    backgroundColor: getTechPillFill(item),
-    color: BLUEPRINT_CELL_TEXT_COLOR,
+    backgroundColor: `var(--color-${family}-${TECH_PILL_SURFACE_STEP})`,
+    color: cellToken(family, 1200),
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
   }
 }

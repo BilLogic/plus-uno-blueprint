@@ -4,7 +4,7 @@ import {
   blueprintCellButtonClassName,
   getBlueprintCellInteractionStyle,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillStyle } from '@/lib/techPillTheme'
+import { getTechPillFamilyFor } from '@/lib/techPillTheme'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
@@ -27,11 +27,11 @@ export function TechPillFace({
   opacity,
   asSpan = false,
 }: TechPillFaceProps) {
-  const fill = getTechPillStyle(item).backgroundColor
+  const family = getTechPillFamilyFor(item)
 
   if (asSpan) {
     const style = {
-      ...getBlueprintCellInteractionStyle(fill),
+      ...getBlueprintCellInteractionStyle(family),
       ...(opacity != null && opacity < 1 ? { opacity } : undefined),
     } as CSSProperties
 
@@ -52,7 +52,7 @@ export function TechPillFace({
 
   return (
     <BlueprintCellButton
-      fill={fill}
+      fill={family}
       variant="pill"
       compact={compact}
       opacity={opacity}
