@@ -5,6 +5,9 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
+    // Without this, TS5101 aborts the whole run BEFORE checking any file —
+    // `tsc --noEmit` silently passes while typechecking nothing.
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

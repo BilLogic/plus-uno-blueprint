@@ -14,8 +14,16 @@ export type AgentUiCommand = {
   name: string
   /** Shown to the model verbatim — say what it does and what `arg` means. */
   description: string
+  /**
+   * True when firing this command CHANGES DATA rather than just the view.
+   * Undo is the case that matters: it reverts through the same delete RPCs
+   * the tool surface deliberately withholds, so it has to count as a write
+   * — batch-limited, attributed, and refused for a view-only session —
+   * instead of slipping through as "interface only".
+   */
+  mutates?: boolean
   /** Return a short human-readable result; throw for failures. */
-  run: (arg?: string) => string
+  run: (arg?: string) => string | Promise<string>
 }
 
 const commands = new Map<string, AgentUiCommand>()
@@ -30,7 +38,10 @@ export function registerAgentUiCommand(command: AgentUiCommand): () => void {
 export function listAgentUiCommands(): string {
   if (commands.size === 0) return 'No UI commands are available right now.'
   return [...commands.values()]
-    .map((command) => `${command.name} — ${command.description}`)
+    .map(
+      (command) =>
+        `${command.name} — ${command.description}${command.mutates ? ' [changes data]' : ''}`,
+    )
     .sort()
     .join('\n')
 }
@@ -41,9 +52,17 @@ export function hasAgentUiCommand(name: string): boolean {
   return commands.has(name)
 }
 
-export function runAgentUiCommand(name: string, arg?: string): string {
+/** Does this command change data? Unknown commands are treated as safe. */
+export function agentUiCommandMutates(name: string): boolean {
+  return commands.get(name)?.mutates === true
+}
+
+export async function runAgentUiCommand(
+  name: string,
+  arg?: string,
+): Promise<string> {
   const command = commands.get(name)
   if (!command)
     return `No UI command "${name}" is available right now. list_ui_commands has the live list — commands come and go with the surfaces that own them.`
-  return command.run(arg)
+  return await command.run(arg)
 }

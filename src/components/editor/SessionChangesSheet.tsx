@@ -120,15 +120,25 @@ function useUndoHotkey(changes: ChangeEntry[]) {
       registerAgentUiCommand({
         name: 'undo_last_change',
         description:
-          'Undo the newest revertible change of this session (same as ⌘Z). One at a time.',
-        run: () => {
+          "Undo the newest revertible change of this session (same as ⌘Z). One at a time. Note this reverts whatever is newest — INCLUDING the human's own edit if theirs came last; say whose change you are undoing before firing it.",
+        // Reverting a creation runs delete_cell / delete_scenario /
+        // delete_path. That is data, not interface — so it counts as a
+        // write everywhere writes are counted.
+        mutates: true,
+        run: async () => {
           if (revertsInFlight.size > 0) return 'An undo is already in flight — wait for it.'
           const last = changes.findLast((entry) => entry.revert)
           if (!last) return 'Nothing revertible in this session.'
-          void revertEntry(client, last).catch((error) => {
-            console.error('[authoring] agent undo failed:', error)
-          })
-          return `Reverting: ${describeChange(last)}`
+          // Awaited, not fire-and-forget: a rejected revert used to reach
+          // the console only, while the model was told it had succeeded
+          // and reported that to the user.
+          try {
+            await revertEntry(client, last)
+            return `Reverted: ${describeChange(last)}`
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error)
+            throw new Error(`Undo failed and nothing changed: ${message}`)
+          }
         },
       }),
       registerAgentUiCommand({

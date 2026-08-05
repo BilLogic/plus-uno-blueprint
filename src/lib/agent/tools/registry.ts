@@ -33,6 +33,7 @@ import {
   type CellContentUpdate,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
+import { findingFingerprint } from '@/lib/findingFingerprint'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import type { ToolSpec } from '@/lib/agent/providers/provider'
 import {
@@ -197,7 +198,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'ui_command',
     description:
-      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only — never data.',
+      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only, with ONE exception the list marks "[changes data]": undo_last_change reverts through the delete path, counts against your write batch, and undoes whatever is newest — including the human\'s own edit. Say whose change you are undoing before firing it.',
     parameters: {
       type: 'object',
       properties: {
@@ -563,29 +564,6 @@ async function lifecycleId(client: Client): Promise<string> {
   return data.id
 }
 
-/**
- * Finding identity, canvas dialect: check_name + sha256 of the sorted cited
- * cell ids (cell_keys are written as the ids — sliceMutations precedent), or
- * check_name + scope for zero-cell findings. Same shape as the IDE formula
- * but a separate dedupe space, since the IDE hashes IR key-paths.
- */
-async function findingFingerprint(
-  checkName: string,
-  cellIds: string[],
-  scope: string | undefined,
-): Promise<string> {
-  if (cellIds.length === 0) return `${checkName}:${scope ?? ''}`
-  const sorted = [...cellIds].sort().join('\n')
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    new TextEncoder().encode(sorted),
-  )
-  const hex = Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-  return `${checkName}:${hex}`
-}
-
 function s(args: Record<string, unknown>, key: string): string | undefined {
   const value = args[key]
   return typeof value === 'string' && value.trim() !== '' ? value : undefined
@@ -692,7 +670,7 @@ export async function dispatchTool(
     case 'list_ui_commands':
       return listAgentUiCommands()
     case 'ui_command':
-      return runAgentUiCommand(need(args, 'command'), s(args, 'arg'))
+      return await runAgentUiCommand(need(args, 'command'), s(args, 'arg'))
     case 'open_cell_panel':
       return agentOpenCellPanel(need(args, 'cell_id'))
     case 'set_canvas_mode': {
