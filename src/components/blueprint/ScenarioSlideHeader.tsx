@@ -19,6 +19,7 @@ type ScenarioSlideHeaderProps = {
   className?: string
 }
 
+/** Sticky header above a scenario grid: title badge, description tooltip and path filters. */
 export function ScenarioSlideHeader({
   title,
   slide,

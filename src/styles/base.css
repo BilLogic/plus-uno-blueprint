@@ -1,0 +1,104 @@
+@layer base {
+  * {
+    /* Full alpha, not `outline-ring/50`. This is the default focus outline colour
+       for the 27 raw `<button>` elements that define no `focus-visible` rule of
+       their own; at 50% it composited to 1.76:1 and failed SC 1.4.11. Fixing
+       `--ring` alone does not reach here — the modifier is applied at this site. */
+    @apply border-border outline-ring;
+  }
+  /*
+   * The mono seam, filled. Supabase's `--font-mono` reads
+   * `var(--font-source-code-pro, …)` and their app injects the loaded face
+   * here; this is that injection, pointing at the @fontsource family name.
+   *
+   * `--font-sans` has no matching line on purpose: its default in theme.css is
+   * already Ubuntu Sans, so the seam stays open for an embedding app to
+   * override rather than being spent on our own default.
+   */
+  :root {
+    --font-source-code-pro: 'Source Code Pro Variable', 'Source Code Pro';
+  }
+  body {
+    /* Required by shadcn Base UI drawer overlay on iOS Safari */
+    position: relative;
+    @apply bg-background text-foreground;
+  }
+  :where(
+    a[href],
+    button:not(:disabled),
+    select:not(:disabled),
+    summary,
+    label[for],
+    input[type='button']:not(:disabled),
+    input[type='submit']:not(:disabled),
+    input[type='reset']:not(:disabled),
+    input[type='checkbox']:not(:disabled),
+    input[type='radio']:not(:disabled),
+    input[type='range']:not(:disabled),
+    input[type='file']:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    [role='link']:not([aria-disabled='true']),
+    [data-blueprint-cell-interactive]
+  ) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  /*
+   * Baseline focus ring.
+   *
+   * The app has 41 raw `<button>` elements; twelve files' worth define no
+   * `focus-visible` rule at all, and seventeen sites set `focus-visible:
+   * outline-none` with nothing in its place — a keyboard user lands on them
+   * with no visible indicator (SC 2.4.7). This is the same recipe `ui/button.tsx`
+   * uses, so the two agree by construction rather than by convention.
+   *
+   * Wrapped in `:where()`, which contributes zero specificity: any component
+   * that declares its own `focus-visible:ring-*` still wins. Adding a shared
+   * constant to 41 call sites would have left the next raw button uncovered.
+   */
+  :where(
+    a[href],
+    button:not(:disabled),
+    summary,
+    [role='button']:not([aria-disabled='true']),
+    [role='tab'],
+    [tabindex]:not([tabindex='-1'])
+  ):focus-visible {
+    @apply border-ring ring-3 ring-ring/50 outline-none;
+  }
+
+  /*
+   * Windows High Contrast / forced-colors. The system replaces every colour, so
+   * anything carrying meaning through a background or a ring alone disappears.
+   * Re-state those affordances with system keywords, which forced-colors keeps.
+   */
+  @media (forced-colors: active) {
+    :where(
+      a[href],
+      button:not(:disabled),
+      summary,
+      [role='button'],
+      [role='tab'],
+      [tabindex]:not([tabindex='-1'])
+    ):focus-visible {
+      outline: 3px solid Highlight;
+      outline-offset: 2px;
+    }
+    [aria-pressed='true'],
+    [aria-selected='true'],
+    [data-state='active'],
+    [data-state='checked'] {
+      forced-color-adjust: none;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+    /* Blueprint cells identify their lane by fill alone; keep the border so the
+       grid still reads as a grid when the fills are flattened. */
+    [data-blueprint-cell-interactive] {
+      border: 1px solid CanvasText;
+    }
+  }
+}

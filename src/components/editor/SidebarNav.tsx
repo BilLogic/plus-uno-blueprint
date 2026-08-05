@@ -73,7 +73,7 @@ export function NavRowAction({
       className={cn(
         CHEVRON_SLOT_CLASS,
         CHEVRON_REVEAL_CLASS,
-        'shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
+        'shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
         'focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
         '[@media(pointer:coarse)]:opacity-100',
       )}
@@ -167,7 +167,7 @@ export function NavRow({
         'group/nav-row relative flex w-full min-w-0 items-center gap-1 rounded-md pl-1 transition-colors',
         selected
           ? 'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
-          : 'hover:bg-sidebar-hover',
+          : 'hover:bg-sidebar-accent',
         className,
       )}
     >
@@ -181,7 +181,7 @@ export function NavRow({
           className={cn(
             CHEVRON_SLOT_CLASS,
             CHEVRON_REVEAL_CLASS,
-            'hover:bg-sidebar-hover focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+            'hover:bg-sidebar-accent focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
           )}
         >
           <NavChevron open={open} />
@@ -246,7 +246,7 @@ export function NavSection({
           aria-controls={panelId}
           className={cn(
             'flex min-w-0 flex-1 items-center gap-1 rounded-md pl-1 text-left transition-colors',
-            'hover:bg-sidebar-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+            'hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
           )}
         >
           <span className={cn(CHEVRON_SLOT_CLASS, CHEVRON_REVEAL_CLASS)}>

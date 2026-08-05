@@ -51,6 +51,11 @@ type ResizableComparePanelProps = {
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
+/**
+ * Scenario panel on the overview canvas, resizable from its corner by pointer
+ * or keyboard. Grows to fit measured content unless the user overrides the
+ * size or `lockHeight` pins it.
+ */
 export function ResizableComparePanel({
   children,
   minWidth,
@@ -195,6 +200,43 @@ export function ResizableComparePanel({
     [resolvedMinHeight, resolvedMinWidth, size.height, size.width],
   )
 
+  /**
+   * Keyboard equivalent of the drag (SC 2.1.1, and SC 2.5.7 dragging movements).
+   * Arrows nudge, Shift jumps, Home returns to the measured default by clearing
+   * the user override rather than guessing a size.
+   */
+  const handleResizeKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>) => {
+      const step = event.shiftKey ? 64 : 16
+      const nudge = (dx: number, dy: number) => {
+        event.preventDefault()
+        setUserSize({
+          width: Math.max(resolvedMinWidth, size.width + dx),
+          height: Math.max(resolvedMinHeight, size.height + dy),
+        })
+      }
+
+      switch (event.key) {
+        case 'ArrowRight':
+          return nudge(step, 0)
+        case 'ArrowLeft':
+          return nudge(-step, 0)
+        case 'ArrowDown':
+          return nudge(0, step)
+        case 'ArrowUp':
+          return nudge(0, -step)
+        case 'Home':
+          // Zeroing the override falls back to the measured target size, which
+          // is what `size` maxes against — see the `Math.max` pair above.
+          event.preventDefault()
+          return setUserSize({ width: 0, height: 0 })
+        default:
+          return
+      }
+    },
+    [resolvedMinHeight, resolvedMinWidth, size.height, size.width],
+  )
+
   const scrollInsetY = getComparePanelScrollInsetY(scrollChrome)
   const panelRef = useRef<HTMLDivElement>(null)
   const interactive = Boolean(onNavigate)
@@ -313,6 +355,7 @@ export function ResizableComparePanel({
             height: COMPARE_RESIZE_HANDLE_SIZE + 8,
           }}
           onPointerDown={handleResizePointerDown}
+          onKeyDown={handleResizeKeyDown}
         >
           <svg
             viewBox="0 0 12 12"

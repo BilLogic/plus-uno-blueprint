@@ -35,6 +35,7 @@ import {
 } from '@/lib/integratedForkArrowGeometry'
 import {
   getPathArrowColor,
+  getPathDashArrayFromKey,
   getPathColorKey,
   pathColorKeyToMarkerSuffix,
   type PathColorInput,
@@ -117,6 +118,11 @@ function getIntegratedForkTrunkArrowColor(
   return straightBranch.arrowColor
 }
 
+/**
+ * Arrow overlay for the integrated grid: forward and wrap layers, fork trunks
+ * and branches, and the hand-tuned rail routes for the scenarios whose geometry
+ * the generic router cannot express.
+ */
 export function IntegratedTriggerArrows({
   triggers,
   cells,
@@ -581,7 +587,7 @@ export function IntegratedTriggerArrows({
           <g key={segment.id} opacity={segment.opacity}>
             <path
               d={segment.d}
-              {...blueprintArrowPathProps(segment.arrowColor)}
+              {...blueprintArrowPathProps(segment.arrowColor, getPathDashArrayFromKey(segment.colorKey))}
               {...(segment.showMarker === false
                 ? {}
                 : segment.dualMarker
@@ -602,7 +608,7 @@ export function IntegratedTriggerArrows({
                 <g key={branch.id} opacity={branch.opacity}>
                   <path
                     d={branch.d}
-                    {...blueprintArrowPathProps(branch.arrowColor)}
+                    {...blueprintArrowPathProps(branch.arrowColor, getPathDashArrayFromKey(branch.colorKey))}
                     strokeWidth={getIntegratedForkBranchStrokeWidth(branch.opacity)}
                     markerEnd={`url(#${markerIds[branch.colorKey]})`}
                   />
@@ -612,7 +618,7 @@ export function IntegratedTriggerArrows({
                 <path
                   d={group.trunkPath}
                   fill="none"
-                  stroke={group.trunkArrowColor}
+                  style={{ stroke: group.trunkArrowColor }}
                   strokeWidth={getIntegratedForkTrunkStrokeWidth(nodeOpacity)}
                   strokeLinecap="round"
                 />
@@ -620,13 +626,13 @@ export function IntegratedTriggerArrows({
                   cx={group.circle.cx}
                   cy={group.circle.cy}
                   r={nodeHaloRadius}
-                  fill={nodeHaloFill}
+                  style={{ fill: nodeHaloFill }}
                 />
                 <circle
                   cx={group.circle.cx}
                   cy={group.circle.cy}
                   r={nodeRadius}
-                  fill={nodeFill}
+                  style={{ fill: nodeFill }}
                 />
               </g>
             </g>

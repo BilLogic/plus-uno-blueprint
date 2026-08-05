@@ -9,6 +9,7 @@ type EditorZoomIndicatorProps = {
   className?: string
 }
 
+/** Current canvas zoom with a reset control; pointer-transparent except the button. */
 export function EditorZoomIndicator({
   onResetView,
   className,

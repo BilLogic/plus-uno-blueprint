@@ -92,6 +92,10 @@ type ServiceBlueprintGridProps = {
   showEmptyCells?: boolean
 }
 
+/**
+ * Single-path service blueprint — the classic swim-lane grid. Use
+ * `IntegratedBlueprintGrid` when several paths share one canvas.
+ */
 export function ServiceBlueprintGrid({
   data,
   className,
@@ -188,7 +192,7 @@ export function ServiceBlueprintGrid({
       <div
         ref={scrollContainerRef}
         className={cn(
-          'rounded-lg blueprint-scroll blueprint-panel-surface',
+          'rounded-lg blueprint-scroll ',
           fitVertically
             ? 'min-h-0 flex-1 overflow-auto'
             : 'shrink-0 overflow-x-auto',
@@ -209,7 +213,7 @@ export function ServiceBlueprintGrid({
         >
           <div
             ref={gridBodyRef}
-            className="blueprint-panel-surface relative flex shrink-0 flex-col gap-0 overflow-visible"
+            className="relative flex shrink-0 flex-col gap-0 overflow-visible"
             style={{
               minHeight: gridBodyMinHeight,
               backgroundColor: blueprintPanelCanvasColor(),
@@ -443,7 +447,7 @@ function BlueprintSwimLane({
       data-layer-id={layerId}
       data-layer-name={layer.name}
       className={cn(
-        'blueprint-panel-surface flex shrink-0 overflow-visible rounded-sm',
+        'flex shrink-0 overflow-visible rounded-sm',
         showDividerBelow && 'border-b',
       )}
       style={{
@@ -456,7 +460,7 @@ function BlueprintSwimLane({
     >
       <div
         className={cn(
-          'blueprint-panel-surface blueprint-panel-label-surface sticky left-0 z-10 flex shrink-0 flex-col self-start border-r',
+          'sticky left-0 z-10 flex shrink-0 flex-col self-start border-r',
           compact ? 'px-3.5' : 'pl-5 pr-3',
         )}
         style={{

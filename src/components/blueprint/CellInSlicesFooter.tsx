@@ -72,7 +72,7 @@ export function CellInSlicesFooter({ cellId }: CellInSlicesFooterProps) {
               >
                 <span aria-hidden>◇</span>
                 <span className="min-w-0 flex-1 truncate">{slice.title}</span>
-                <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-[10px] leading-tight text-muted-foreground">
+                <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px font-mono text-[10px] leading-tight text-muted-foreground">
                   {slice.slice_type}
                 </span>
               </button>

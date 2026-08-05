@@ -1,0 +1,52 @@
+/*
+ * Stylesheet entry. Mirrors packages/config/tailwind.config.css.
+ *
+ * This file contains imports and nothing else — every at-rule lives in an
+ * imported file. `@import` must precede all other at-rules, so keeping the
+ * entry pure removes a whole class of ordering mistake.
+ */
+@import 'tailwindcss';
+/* JS plugins. Tailwind v4 supports `@plugin` for both v3-style JS plugins and
+ * v4-native packages. */
+@plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+/* The two faces the stacks in theme.css name first. Both variable, so each is
+ * one file across its whole weight axis. */
+@import '@fontsource-variable/ubuntu-sans';
+@import '@fontsource-variable/source-code-pro';
+
+/*
+ * Define the semantic system first, then override its core inputs per theme.
+ * This order is significant because :root and a single class selector have
+ * equal specificity, so source order breaks the tie. (Comment adapted from
+ * Supabase's own entry, where the same constraint applies.)
+ */
+@import './global.css';
+@import './semantic.css';
+@import './compat.css';
+@import './themes/light.css';
+@import './themes/dark.css';
+
+/* Reset Tailwind's built-in colour tokens before re-defining our own. */
+@import './unset-tw-colors.css';
+@import './colors.css';
+@import './theme.css';
+
+@import './animations.css';
+@import './utilities.css';
+@import './tailwind-plugins/hit-area.css';
+@import './variants.css';
+@import './base.css';
+@import './blueprint.css';
+@import './print.css';
+
+/*
+ * Typography prose overrides live in a focused JS config because
+ * @tailwindcss/typography reads its theme.typography options from the JS
+ * config — not from CSS @theme tokens. Mirrors Supabase's
+ * packages/config/typography.config.js. See:
+ * https://github.com/tailwindlabs/tailwindcss-typography#customizing-the-css
+ */
+@config './typography.config.js';

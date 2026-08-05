@@ -1,8 +1,8 @@
 import {
   BLUEPRINT_CELL_BORDER_COLOR,
-  BLUEPRINT_CELL_TEXT_COLOR,
+  type TouchpointTone,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillFill } from '@/lib/techPillColors'
+import { getTouchpointTone } from '@/lib/techPillColors'
 
 export type TechPillStyle = {
   backgroundColor: string
@@ -10,10 +10,21 @@ export type TechPillStyle = {
   borderColor: string
 }
 
-export function getTechPillStyle(item: string): TechPillStyle {
+export function getTechPillToneFor(
+  item: string,
+  chosen?: TouchpointTone,
+): TouchpointTone {
+  return getTouchpointTone(item, chosen)
+}
+
+/**
+ * Reads the properties the `[data-blueprint-tone]` rule already set, so a pill
+ * face rendered outside a Button matches its tone exactly.
+ */
+export function getTechPillStyle(): TechPillStyle {
   return {
-    backgroundColor: getTechPillFill(item),
-    color: BLUEPRINT_CELL_TEXT_COLOR,
+    backgroundColor: 'var(--background-blueprint-cell)',
+    color: 'var(--foreground-blueprint-cell)',
     borderColor: BLUEPRINT_CELL_BORDER_COLOR,
   }
 }

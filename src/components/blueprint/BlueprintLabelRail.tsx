@@ -40,7 +40,7 @@ export function BlueprintStickyLabelBackdrop({
   return (
     <div
       aria-hidden
-      className="pointer-events-none sticky left-0 z-[35] blueprint-panel-label-surface"
+      className="pointer-events-none sticky left-0 z-[35]"
       style={{
         gridColumn: 1,
         gridRow: `${rowStart} / ${rowCount + rowStart}`,
@@ -123,7 +123,7 @@ export function BlueprintDividerRow({
     >
       <div
         aria-hidden
-        className="sticky left-0 top-0 z-0 blueprint-panel-label-surface"
+        className="sticky left-0 top-0 z-0"
         style={{
           width: labelWidth,
           height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
@@ -146,6 +146,7 @@ import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cellsInLane } from '@/lib/canvasCellQuery'
 
+/** One row of the left label column — a layer name plus its collapse toggle. */
 export function BlueprintLabelRow({
   row,
   layers,
@@ -205,7 +206,7 @@ export function BlueprintLabelRow({
     <div
       className={cn(
         'sticky left-0 isolate flex h-full min-h-0 flex-col overflow-hidden',
-        'z-40 border-r blueprint-panel-label-surface',
+        'z-40 border-r ',
       )}
       style={{
         ...style,

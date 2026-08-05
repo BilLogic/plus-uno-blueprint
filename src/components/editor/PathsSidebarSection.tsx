@@ -118,7 +118,7 @@ function PathChecklist({
             scenarioId={scenarioId}
           >
           <div
-            className="group/path-row flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-sidebar-hover"
+            className="group/path-row flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-sidebar-accent"
           >
             <button
               type="button"

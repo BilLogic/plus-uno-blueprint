@@ -26,7 +26,7 @@ export const INTEGRATED_FORK_THEME = {
   trunkWidthDimmed: 1.5,
   /** Branch-node disc — subtle, matches blueprint chrome. */
   nodeRadius: 4,
-  nodeFill: '#AEAEB2',
+  nodeFill: 'var(--color-slate-800)',
   /** Canvas knock-out ring so the node reads on busy lanes. */
   nodeHaloRadius: 6.5,
   nodeHaloFill: BLUEPRINT_THEME.canvas,

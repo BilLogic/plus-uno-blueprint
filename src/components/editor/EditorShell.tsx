@@ -9,6 +9,7 @@ import {
 import { AgentDock, AgentDockDivider } from '@/components/editor/AgentDock'
 import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
 import { AgentSettingsRailButton } from '@/components/editor/AgentPanel'
+import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
@@ -42,10 +43,8 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
- * Aside = rail (48px) + content panel. The agent surface gets a wider
- * default — transcripts need line length a nav tree doesn't — and every
- * surface is drag-resizable from the aside's right edge, remembered
- * per surface.
+ * Aside = rail (48px) + content panel, drag-resizable from the aside's
+ * right edge with one persisted width shared by every surface.
  */
 const RAIL_WIDTH = 48
 // ONE width for all three surfaces — Blueprints, Slices, and Agent share the
@@ -69,6 +68,12 @@ function loadAsideWidth(): number {
   }
 }
 
+/**
+ * The app frame: sidebar, tab strip and whichever view the current tab selects.
+ *
+ * Owns sidebar collapse and the hover-peek rail. Both are timed against
+ * `suppressCanvasResizeRefit`, so the canvas does not refit mid-animation.
+ */
 export function EditorShell() {
   const {
     view,
@@ -422,7 +427,15 @@ export function EditorShell() {
         topSlot={
           <SidebarCollapseButton collapsed={false} onToggle={toggleSidebar} />
         }
-        bottomSlot={<AgentSettingsRailButton />}
+        bottomSlot={
+          <>
+            {/* Theme is a utility toggle, not a surface — it lives in the
+                rail's bottom group with the other toggles, not in the
+                collapsed pill, which is already the app's tightest 32px. */}
+            <ThemeToggle size="icon-sm" />
+            <AgentSettingsRailButton />
+          </>
+        }
       />
       <div ref={panelColumnRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
         <SidebarProvider

@@ -26,6 +26,7 @@ import {
   ANNOTATION_FILL_SWATCHES,
   ANNOTATION_FONT_SIZES,
   ANNOTATION_INK,
+  isPaleAnnotationSwatch,
   ANNOTATION_STICKY_BG,
   ANNOTATION_STICKY_SIZE,
   ANNOTATION_STICKY_SWATCHES,
@@ -43,6 +44,7 @@ import {
   type ShapeAnnotation,
   type StickyAnnotation,
   type TextAnnotation,
+  annotationSwatchName,
 } from '@/lib/canvasAnnotations'
 import {
   DropdownMenu,
@@ -209,18 +211,7 @@ function ColorSwatch({
   onSelect: () => void
   empty?: boolean
 }) {
-  const isLight =
-    !empty &&
-    color &&
-    (color.toUpperCase() === '#FFFFFF' ||
-      color.toUpperCase() === '#FEF3C7' ||
-      color.toUpperCase() === '#FFEDD5' ||
-      color.toUpperCase() === '#E5E7EB' ||
-      color.toUpperCase() === '#DBEAFE' ||
-      color.toUpperCase() === '#D1FAE5' ||
-      color.toUpperCase() === '#EDE9FE' ||
-      color.toUpperCase() === '#FCE7F3' ||
-      color.toUpperCase() === '#FEE2E2')
+  const isLight = !empty && isPaleAnnotationSwatch(color)
 
   return (
     <button
@@ -310,7 +301,7 @@ function ResizeHandles({
           aria-label={`Resize ${handle}`}
           data-annotation-editable=""
           data-resize-handle={handle}
-          className="pointer-events-auto absolute z-20 size-3 rounded-[2px] border-2 border-blue-500 bg-white shadow-none"
+          className="pointer-events-auto absolute z-20 size-3 rounded-[2px] border-2 border-annotation-selected bg-white shadow-none"
           style={{
             cursor: RESIZE_CURSOR[handle],
             ...(handle.includes('n') ? { top: -6 } : { bottom: -6 }),
@@ -473,7 +464,7 @@ function ShapeStyleBar({
               <ColorSwatch
                 key={`fill-${swatch}`}
                 color={swatch}
-                label={`Fill ${swatch}`}
+                label={`Fill ${annotationSwatchName(swatch)}`}
                 selected={shape.fillColor === swatch}
                 onSelect={() => {
                   onChange({ fillColor: swatch })
@@ -499,15 +490,15 @@ function ShapeStyleBar({
             >
               <span
                 className="block h-px w-3.5 rounded-full"
-                style={{ backgroundColor: strokePreview ?? '#d4d4d4' }}
+                style={{ backgroundColor: strokePreview ?? 'var(--color-gray-700)' }}
               />
               <span
                 className="block h-[2px] w-3.5 rounded-full"
-                style={{ backgroundColor: strokePreview ?? '#d4d4d4' }}
+                style={{ backgroundColor: strokePreview ?? 'var(--color-gray-700)' }}
               />
               <span
                 className="block h-[3px] w-3.5 rounded-full"
-                style={{ backgroundColor: strokePreview ?? '#d4d4d4' }}
+                style={{ backgroundColor: strokePreview ?? 'var(--color-gray-700)' }}
               />
             </span>
             <ChevronDown className="size-3 opacity-80" aria-hidden />
@@ -555,7 +546,7 @@ function ShapeStyleBar({
               <ColorSwatch
                 key={`stroke-${swatch}`}
                 color={swatch}
-                label={`Stroke ${swatch}`}
+                label={`Stroke ${annotationSwatchName(swatch)}`}
                 selected={shape.color === swatch}
                 onSelect={() => {
                   onChange({
@@ -644,7 +635,7 @@ function StickyStyleBar({
               <ColorSwatch
                 key={`sticky-${swatch}`}
                 color={swatch}
-                label={`Sticky ${swatch}`}
+                label={`Sticky ${annotationSwatchName(swatch)}`}
                 selected={sticky.color.toUpperCase() === swatch.toUpperCase()}
                 onSelect={() => {
                   onChange({ color: swatch })
@@ -813,7 +804,7 @@ function TextStyleBar({
               <ColorSwatch
                 key={`text-${swatch}`}
                 color={swatch}
-                label={`Text ${swatch}`}
+                label={`Text ${annotationSwatchName(swatch)}`}
                 selected={text.color.toUpperCase() === swatch.toUpperCase()}
                 onSelect={() => {
                   onChange({ color: swatch })
@@ -1020,7 +1011,7 @@ function ShapeAnnotationNode({
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
           selected &&
             !isEraser &&
-            'outline outline-2 outline-offset-0 outline-blue-500',
+            'outline outline-2 outline-offset-0 outline-annotation-selected',
           canDrag && !editing && 'cursor-grab active:cursor-grabbing',
           hasFill && 'shadow-sm',
           !selected && 'overflow-hidden',
@@ -1144,7 +1135,7 @@ function StickyAnnotationNode({
           'absolute box-border rounded-sm p-2 shadow-md',
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
           showChrome
-            ? 'border-2 border-blue-500'
+            ? 'border-2 border-annotation-selected'
             : 'border border-black/15',
           canDrag && !editing && 'cursor-grab active:cursor-grabbing',
         )}
@@ -1260,7 +1251,7 @@ function TextAnnotationNode({
         className={cn(
           'absolute min-w-[4rem] box-border',
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
-          showChrome && 'border-2 border-blue-500 bg-white',
+          showChrome && 'border-2 border-annotation-selected bg-white',
           canDrag && !editing && 'cursor-grab active:cursor-grabbing',
         )}
         style={{
@@ -1332,6 +1323,11 @@ function TextAnnotationNode({
   )
 }
 
+/**
+ * FigJam-style annotation surface over the canvas: pen strokes, shapes, text and
+ * stickies, plus their selection and resize chrome. Coordinates are board space,
+ * so `zoom` is only needed where a hit radius must stay constant on screen.
+ */
 export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
   const {
     tool,
@@ -2042,7 +2038,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
               data-annotation-id={annotation.id}
               d={pointsToPath(annotation.points)}
               fill="none"
-              stroke={annotation.color}
+              style={{ stroke: annotation.color }}
               strokeWidth={annotation.strokeWidth}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -2055,7 +2051,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
           <path
             d={pointsToPath(draft.points)}
             fill="none"
-            stroke={draft.color}
+            style={{ stroke: draft.color }}
             strokeWidth={draft.strokeWidth}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -2069,7 +2065,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
             width={draftShape.width}
             height={draftShape.height}
             fill="none"
-            stroke={ANNOTATION_INK}
+            style={{ stroke: ANNOTATION_INK }}
             strokeWidth={ANNOTATION_DEFAULT_STROKE}
             strokeDasharray="4 3"
           />
@@ -2082,7 +2078,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
             rx={draftShape.width / 2}
             ry={draftShape.height / 2}
             fill="none"
-            stroke={ANNOTATION_INK}
+            style={{ stroke: ANNOTATION_INK }}
             strokeWidth={ANNOTATION_DEFAULT_STROKE}
             strokeDasharray="4 3"
           />

@@ -1,3 +1,4 @@
+
 export type CanvasAnnotationTool =
   | 'select'
   /**
@@ -68,53 +69,83 @@ export type CanvasAnnotation =
   | TextAnnotation
   | StickyAnnotation
 
-export const ANNOTATION_INK = '#111827'
-export const ANNOTATION_STICKY_BG = '#FACC15'
+export const ANNOTATION_INK: string = 'var(--color-slate-1200)'
+export const ANNOTATION_PAPER: string = 'var(--color-gray-100)'
+export const ANNOTATION_STICKY_BG: string = 'var(--color-yellow-500)'
 export const ANNOTATION_DEFAULT_STROKE = 2.5
 export const ANNOTATION_STICKY_SIZE = { width: 160, height: 120 }
 
-/** FigJam-style sticky pastel fills. */
+/**
+ * Annotation colours, derived from the lane set rather than listed four times.
+ *
+ * These were four hand-written arrays — pen, sticky, shape fill, outline — forty
+ * entries that had drifted apart. They are the same eight hues the lane roles
+ * use, at four steps, so an annotation sits inside the board's palette rather
+ * than beside it:
+ * 900 is the vivid ink a stroke needs, 500 matches the cells a sticky sits
+ * beside, 300 is pale enough that a filled shape does not hide the lane under
+ * it, and 1100 is the text weight an outline needs to survive at 1.5px.
+ */
+const ANNOTATION_FAMILIES = [
+  'slate',
+  'blue',
+  'green',
+  'violet',
+  'pink',
+  'lime',
+  'orange',
+  'amber',
+] as const
+
+const swatches = (step: 300 | 500 | 900 | 1100) =>
+  ANNOTATION_FAMILIES.map((family) => `var(--color-${family}-${step})`)
+
+/** Sticky fills — step 500, the weight of the cells they sit beside. */
 export const ANNOTATION_STICKY_SWATCHES = [
-  '#FACC15',
-  '#FDE68A',
-  '#86EFAC',
-  '#6EE7B7',
-  '#93C5FD',
-  '#A5B4FC',
-  '#C4B5FD',
-  '#F9A8D4',
-  '#FDA4AF',
-  '#FDBA74',
-  '#E5E7EB',
-  '#FFFFFF',
+  ...swatches(500),
+  ANNOTATION_PAPER,
 ] as const
 
-/** Soft fills — readable over board content without overpowering it. */
+/** Shape fills — step 300, pale enough to sit over a lane without hiding it. */
 export const ANNOTATION_FILL_SWATCHES = [
-  '#FEF3C7',
-  '#FFEDD5',
-  '#FEE2E2',
-  '#FCE7F3',
-  '#EDE9FE',
-  '#DBEAFE',
-  '#D1FAE5',
-  '#E5E7EB',
-  '#FFFFFF',
-  '#111827',
+  ...swatches(300),
+  ANNOTATION_PAPER,
+  ANNOTATION_INK,
 ] as const
 
-/** Strong outline colors. */
+/** Outlines — step 1100, so a 1.5px stroke still reads. */
 export const ANNOTATION_STROKE_SWATCHES = [
-  '#111827',
-  '#FFFFFF',
-  '#DC2626',
-  '#EA580C',
-  '#CA8A04',
-  '#16A34A',
-  '#2563EB',
-  '#7C3AED',
-  '#DB2777',
+  ANNOTATION_INK,
+  ANNOTATION_PAPER,
+  ...swatches(1100),
 ] as const
+
+/** Pen ink — step 900, the vivid step. */
+export const ANNOTATION_PEN_SWATCHES = [
+  ANNOTATION_INK,
+  ...swatches(900),
+  ANNOTATION_PAPER,
+] as const
+
+/**
+ * Human name for a swatch, for its `aria-label` and tooltip.
+ *
+ * A swatch's *value* is the token string it paints with, because that string is
+ * what an annotation row stores. That is not a label: without this, every
+ * swatch announced itself to a screen reader, and showed on hover, as
+ * `var(--color-violet-900)`.
+ *
+ * One step per family appears in any single row, so the family alone names a
+ * swatch unambiguously. Ink and paper are checked first — they are slate-1200
+ * and gray-100, and "Slate" / "Gray" would say less than what they are for.
+ */
+export function annotationSwatchName(swatch: string): string {
+  if (swatch === ANNOTATION_INK) return 'Ink'
+  if (swatch === ANNOTATION_PAPER) return 'Paper'
+  const family = /--color-([a-z]+)-\d+/.exec(swatch)?.[1]
+  if (!family) return 'Custom'
+  return family.charAt(0).toUpperCase() + family.slice(1)
+}
 
 export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
 /**
@@ -122,18 +153,6 @@ export const ANNOTATION_STROKE_WIDTHS = [1.5, 2.5, 4] as const
  * Thick is intentionally much heavier so it reads at overview zoom.
  */
 export const ANNOTATION_PEN_STROKE_WIDTHS = [3, 14] as const
-/** Soft board-friendly pen colors (FigJam-like). */
-export const ANNOTATION_PEN_SWATCHES = [
-  '#111827',
-  '#6B7280',
-  '#FCA5A5',
-  '#FDBA74',
-  '#FDE047',
-  '#86EFAC',
-  '#93C5FD',
-  '#C4B5FD',
-  '#FFFFFF',
-] as const
 export const ANNOTATION_FONT_SIZES = [12, 14, 18, 24, 32, 48] as const
 export const ANNOTATION_MIN_SIZE = { width: 48, height: 40 } as const
 export const ANNOTATION_DEFAULT_FONT_SIZE = 14
@@ -154,11 +173,27 @@ export function annotationFontSizeLabel(fontSize: number): string {
   return ANNOTATION_FONT_SIZE_LABELS[fontSize] ?? `${fontSize}px`
 }
 
-/** Text on a filled shape — light fills get dark text, dark fills get white. */
+/**
+ * Text on a filled shape. Every fill in `ANNOTATION_FILL_SWATCHES` is step 300
+ * or paper except the ink one, so this is a membership test rather than a
+ * contrast computation — which is also what lets the fills stay `var()`.
+ */
+/**
+ * True when a swatch needs a visible outline to be seen against the toolbar.
+ *
+ * Every fill swatch is step 300 or paper except the ink one, so this is a
+ * membership test rather than a luminance computation — which is what lets the
+ * swatches stay `var()` tokens.
+ */
+export function isPaleAnnotationSwatch(
+  color: string | null | undefined,
+): boolean {
+  return Boolean(color) && color !== ANNOTATION_INK
+}
+
 export function annotationTextOnFill(fillColor: string | null): string {
   if (!fillColor) return ANNOTATION_INK
-  const darkFills = new Set(['#111827', '#1F2937', '#0F172A'])
-  return darkFills.has(fillColor.toUpperCase()) ? '#FFFFFF' : ANNOTATION_INK
+  return fillColor === ANNOTATION_INK ? ANNOTATION_PAPER : ANNOTATION_INK
 }
 
 export function createAnnotationId(): string {

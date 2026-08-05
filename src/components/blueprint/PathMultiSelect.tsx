@@ -97,6 +97,7 @@ function PathNotionPill({
   )
 }
 
+/** Single-path toggle in the compact filter toolbar — swatch, label, pressed state. */
 export function PathToolbarButton({
   path,
   checked,
@@ -186,6 +187,7 @@ function PathCheckbox({
   )
 }
 
+/** Checkbox list of a scenario's paths, used to filter what the grid draws. */
 export function PathMultiSelect({
   paths,
   selectedPathIds,

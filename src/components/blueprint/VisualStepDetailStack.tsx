@@ -17,6 +17,7 @@ type VisualStepDetailStackProps = {
   className?: string
 }
 
+/** The screenshots for one step, stacked for the side panel or laid out in a row for presentation. */
 export function VisualStepDetailStack({
   entries,
   orientation = 'vertical',

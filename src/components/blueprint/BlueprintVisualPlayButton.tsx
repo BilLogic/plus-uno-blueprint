@@ -14,6 +14,11 @@ type BlueprintVisualPlayButtonProps = {
   className?: string
 }
 
+/**
+ * Opens the visual walkthrough for a path. Renders nothing when the feature is
+ * off or when the surface sits outside a walkthrough provider (the homepage
+ * renders grids that way).
+ */
 export function BlueprintVisualPlayButton({
   blueprint,
   blueprints,
@@ -38,7 +43,7 @@ export function BlueprintVisualPlayButton({
     <button
       type="button"
       className={cn(
-        'inline-flex size-5 shrink-0 items-center justify-center text-foreground transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30',
+        'tap-target-24 inline-flex size-5 shrink-0 items-center justify-center text-foreground transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30',
         className,
       )}
       aria-label={

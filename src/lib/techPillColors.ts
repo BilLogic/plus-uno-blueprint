@@ -1,36 +1,45 @@
-import { BLUEPRINT_CELL_PALETTE } from '@/lib/blueprintTheme'
+import type { TouchpointTone } from '@/lib/blueprintCellStyle'
 
 /**
- * Stable fill color per technology name — shared across every blueprint and phase.
- * Keys are canonical display labels (case-sensitive).
+ * DEFAULT family per touchpoint, not a styling decision.
+ *
+ * A touchpoint's colour is meant to be chosen by whoever owns the blueprint —
+ * "Zoom is blue" is a product fact, not a palette one. There is nowhere to
+ * store that yet: a tech pill is a parsed substring of `cells.content`, so
+ * there is no row to attach a colour to. Until a `touchpoints` table exists,
+ * this map is the seed, and `getTouchpointTone` already takes the override that
+ * will carry the stored value.
+ *
+ * A pill renders at step 400, one paler than the step-500 lane it sits in, so
+ * it reads as an object on the cell rather than as another cell.
  */
 export const TECH_PILL_COLORS = {
-  'Clearance obtainment guide': '#F0E8D8',
-  'Dev Tools': '#D8E8F0',
-  Email: '#EDE0F5',
-  Figma: '#E4D4F8',
-  'Google Docs/ Slides': '#F8E0E8',
-  'Google Form Application': '#F0E0C8',
-  'Google Quiz': '#F8D8D8',
-  'Google Quiz embedded in Notion': '#F8D8D8',
-  'Google Quizzes': '#D8F0E0',
-  Handshake: '#D0E8F5',
-  'Handshake Employer Profile': '#C8E0F0',
-  'Marketing Website': '#D6F4FF',
-  Notion: '#F8E8D4',
-  'On-campus booth': '#E8F0D8',
-  'PLUS App': BLUEPRINT_CELL_PALETTE.chartreuse,
-  Posters: '#F5E8C8',
-  Slack: BLUEPRINT_CELL_PALETTE.peach,
-  'Social Media': '#F8D0E0',
-  'Workday (Employee View)': '#D0E4F0',
-  'Workday (Employer View)': '#D0E4F0',
-  Workday: '#D0E4F0',
-  Bank: BLUEPRINT_CELL_PALETTE.mint,
-  Zoom: BLUEPRINT_CELL_PALETTE.powderBlue,
-  'Zoom Recording': '#E8D8F0',
-  'Zoom/Pencil': BLUEPRINT_CELL_PALETTE.powderBlue,
-} as const satisfies Record<string, string>
+  'Clearance obtainment guide': 'gold',
+  'Dev Tools': 'indigo',
+  Email: 'purple',
+  Figma: 'purple',
+  'Google Docs/ Slides': 'crimson',
+  'Google Form Application': 'gold',
+  'Google Quiz': 'red',
+  'Google Quiz embedded in Notion': 'red',
+  'Google Quizzes': 'tomato',
+  Handshake: 'indigo',
+  'Handshake Employer Profile': 'indigo',
+  'Marketing Website': 'indigo',
+  Notion: 'gold',
+  'On-campus booth': 'yellow',
+  'PLUS App': 'yellow',
+  Posters: 'gold',
+  Slack: 'tomato',
+  'Social Media': 'crimson',
+  'Workday (Employee View)': 'indigo',
+  'Workday (Employer View)': 'indigo',
+  Workday: 'indigo',
+  Bank: 'tomato',
+  Zoom: 'indigo',
+  'Zoom Recording': 'purple',
+  'Zoom/Pencil': 'indigo',
+} as const satisfies Record<string, TouchpointTone>
 
 export type TechPillName = keyof typeof TECH_PILL_COLORS
 
@@ -54,19 +63,16 @@ const LOWER_TO_CANONICAL = Object.fromEntries(
   ]),
 ) as Record<string, TechPillName>
 
-/** Unknown tech names fall back to a deterministic color from this extended set. */
-const EXTENDED_FALLBACK_COLORS = [
-  BLUEPRINT_CELL_PALETTE.lavender,
-  BLUEPRINT_CELL_PALETTE.mint,
-  BLUEPRINT_CELL_PALETTE.blush,
-  '#E8F4E0',
-  '#F4E8F0',
-  '#E0F4F0',
-  '#F0F0E0',
-  '#F0E4E8',
-  '#E4F0F8',
-  '#F8F0E0',
-] as const
+/** Unknown tech names fall back to a deterministic family from this set. */
+const EXTENDED_FALLBACK_TONES = [
+  'indigo',
+  'gold',
+  'crimson',
+  'purple',
+  'tomato',
+  'yellow',
+  'red',
+] as const satisfies readonly TouchpointTone[]
 
 function hashLabel(label: string): number {
   let hash = 0
@@ -85,12 +91,22 @@ export function normalizeTechPillLabel(label: string): string {
   return TECH_LABEL_ALIASES[lower] ?? LOWER_TO_CANONICAL[lower] ?? trimmed
 }
 
-export function getTechPillFill(label: string): string {
+/**
+ * The Radix family a tech pill draws from.
+ *
+ * `chosen` wins when present — it is the seam the stored per-touchpoint colour
+ * will arrive through, so adding the table later needs no restructuring here.
+ */
+export function getTouchpointTone(
+  label: string,
+  chosen?: TouchpointTone,
+): TouchpointTone {
+  if (chosen) return chosen
   const canonical = normalizeTechPillLabel(label)
   const known = TECH_PILL_COLORS[canonical as TechPillName]
   if (known) return known
 
-  return EXTENDED_FALLBACK_COLORS[
-    hashLabel(canonical) % EXTENDED_FALLBACK_COLORS.length
+  return EXTENDED_FALLBACK_TONES[
+    hashLabel(canonical) % EXTENDED_FALLBACK_TONES.length
   ]
 }

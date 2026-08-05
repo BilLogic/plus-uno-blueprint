@@ -9,7 +9,10 @@ import { clickOpensDetail, clickPicks, pickModeForClick } from '@/lib/cellPickGr
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
-  getBlueprintCellInteractionStyle,
+  blueprintLaneAttrs,
+  blueprintToneAttrs,
+  type TouchpointTone,
+  type BlueprintLaneRole,
 } from '@/lib/blueprintCellStyle'
 import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
@@ -18,8 +21,13 @@ import { cn } from '@/lib/utils'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
-  /** Layer or pill pastel fill — drives button background while keeping shadcn interaction states. */
-  fill: string
+  /** What this lane is; blueprint.css turns the role into its steps. */
+  fill: BlueprintLaneRole
+  /**
+   * A touchpoint pill's chosen tone. Takes the place of the lane role when set —
+   * the two sets share no family, so a pill never reads as its lane.
+   */
+  tone?: TouchpointTone
   compact?: boolean
   className?: string
   style?: CSSProperties
@@ -39,8 +47,16 @@ type BlueprintCellButtonProps = {
   'data-blueprint-tech-pill'?: string
 }
 
+/**
+ * A single blueprint cell face — the app's most-used control.
+ *
+ * Interaction tones (hover, pressed, both focus rings) are resolved from the
+ * cell's own family rather than from `--ring`, so it reads against whichever
+ * lane the cell sits in. See `CELL_STEP` for which step each state uses and why.
+ */
 export function BlueprintCellButton({
   fill,
+  tone,
   compact = false,
   className,
   style,
@@ -182,7 +198,6 @@ export function BlueprintCellButton({
 
 
   const surfaceStyle = {
-    ...getBlueprintCellInteractionStyle(fill),
     ...(opacity != null && opacity < 1 ? { opacity } : undefined),
     ...style,
   } as CSSProperties
@@ -194,6 +209,7 @@ export function BlueprintCellButton({
       type="button"
       variant={buttonVariant}
       data-blueprint-cell-anchor=""
+      {...(tone ? blueprintToneAttrs(tone) : blueprintLaneAttrs(fill))}
       {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
       data-step-index={stepIndex}
       {...(techPillLabel ? { 'data-blueprint-tech-pill': techPillLabel } : {})}
@@ -232,7 +248,7 @@ export function BlueprintCellButton({
         <span
           aria-hidden
           data-slice-sequence-badge=""
-          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-foreground text-[10px] font-semibold text-background shadow-sm"
+          className="absolute -top-2 -left-2 z-10 grid size-5 place-items-center rounded-full bg-foreground font-mono text-[10px] font-semibold text-background tabular-nums shadow-sm"
         >
           {sliceSequence}
         </span>

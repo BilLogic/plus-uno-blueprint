@@ -13,6 +13,7 @@ type SidebarCollapseButtonProps = {
   size?: 'icon-sm' | 'icon-xs'
 }
 
+/** Collapse/expand the sidebar. The chevron rotates on the shared structural ease. */
 export function SidebarCollapseButton({
   collapsed,
   onToggle,
@@ -48,6 +49,7 @@ type HomeNavButtonProps = {
   size?: 'icon-sm' | 'icon-xs'
 }
 
+/** Route back to the overview canvas from the tab strip. */
 export function HomeNavButton({
   isActive = false,
   onClick,

@@ -77,7 +77,9 @@ export function SliceHeaderBand({
             <span aria-hidden>◇ </span>
             {detail.slice.title}
           </h2>
-          <Badge variant="secondary" className="shrink-0">
+          {/* A raw `slice_type` enum, not a written label — mono so it reads as
+              the stored value it is. */}
+          <Badge variant="secondary" className="shrink-0 font-mono">
             {detail.slice.slice_type}
           </Badge>
         </div>
@@ -85,8 +87,11 @@ export function SliceHeaderBand({
           <p className="min-w-0 truncate text-xs text-muted-foreground">
             {description || '—'}
           </p>
+          {/* Warning reads as a tinted chip rather than amber body copy: step
+              600 is a fill weight and `--warning` is the solid-fill role —
+              neither clears 4.5:1 as text on the card. */}
           {missingCellCount > 0 && (
-            <span className="shrink-0 text-xs text-amber-600 dark:text-amber-400">
+            <span className="shrink-0 rounded border border-warning-400 bg-warning-200 px-1.5 py-0.5 text-xs text-foreground">
               {missingCellCount} {missingCellCount === 1 ? 'cell' : 'cells'} no
               longer in the blueprint
             </span>

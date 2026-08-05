@@ -60,6 +60,7 @@ function WalkthroughStepSlide({
   )
 }
 
+/** Full-screen step-by-step walkthrough of a path's visuals, driven by the walkthrough context. */
 export function VisualWalkthroughModal() {
   const { session, isOpen, closeWalkthrough, goToStep } = useVisualWalkthrough()
   const [api, setApi] = useState<CarouselApi>()

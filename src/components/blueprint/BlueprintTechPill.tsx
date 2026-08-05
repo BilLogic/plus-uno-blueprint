@@ -3,7 +3,7 @@ import {
   buildTechPillSelection,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
-import { getTechPillStyle } from '@/lib/techPillTheme'
+import { getTechPillToneFor } from '@/lib/techPillTheme'
 
 type BlueprintTechPillProps = {
   item: string
@@ -15,6 +15,10 @@ type BlueprintTechPillProps = {
   sliceSequenceBadge?: boolean
 }
 
+/**
+ * One tech/tool pill inside a Tech-layer cell. Pills share their cell's id, so
+ * only the first carries the slice sequence badge.
+ */
 export function BlueprintTechPill({
   item,
   selectionContext,
@@ -25,7 +29,8 @@ export function BlueprintTechPill({
 }: BlueprintTechPillProps) {
   return (
     <BlueprintCellButton
-      fill={getTechPillStyle(item).backgroundColor}
+      fill="frontstage-tech"
+      tone={getTechPillToneFor(item)}
       selection={buildTechPillSelection(selectionContext, item)}
       cellId={selectionContext.cellId}
       stepIndex={stepIndex}

@@ -2,9 +2,9 @@ import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { buttonVariants } from '@/components/ui/button'
 import {
   blueprintCellButtonClassName,
-  getBlueprintCellInteractionStyle,
+  blueprintToneAttrs,
 } from '@/lib/blueprintCellStyle'
-import { getTechPillStyle } from '@/lib/techPillTheme'
+import { getTechPillToneFor } from '@/lib/techPillTheme'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
@@ -16,6 +16,10 @@ type TechPillFaceProps = {
   asSpan?: boolean
 }
 
+/**
+ * Presentational half of a tech pill — the same face without the button
+ * behaviour, for read-only surfaces (`asSpan`) and for print.
+ */
 export function TechPillFace({
   item,
   compact = false,
@@ -23,11 +27,10 @@ export function TechPillFace({
   opacity,
   asSpan = false,
 }: TechPillFaceProps) {
-  const fill = getTechPillStyle(item).backgroundColor
+  const tone = getTechPillToneFor(item)
 
   if (asSpan) {
     const style = {
-      ...getBlueprintCellInteractionStyle(fill),
       ...(opacity != null && opacity < 1 ? { opacity } : undefined),
     } as CSSProperties
 
@@ -40,6 +43,7 @@ export function TechPillFace({
           className,
         )}
         style={style}
+        {...blueprintToneAttrs(tone)}
       >
         {item}
       </span>
@@ -48,7 +52,8 @@ export function TechPillFace({
 
   return (
     <BlueprintCellButton
-      fill={fill}
+      fill="frontstage-tech"
+      tone={tone}
       variant="pill"
       compact={compact}
       opacity={opacity}

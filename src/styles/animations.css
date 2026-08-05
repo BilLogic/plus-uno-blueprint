@@ -1,0 +1,100 @@
+@keyframes editor-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes editor-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes editor-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes editor-stage-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes editor-filmstrip-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes editor-filmstrip-out {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Tab / landing ⇄ canvas switches. Only the active surface is mounted, so
+   this is a fade-through: the incoming surface fades up after the same
+   75 ms stagger the sidebar crossfade uses. */
+[data-editor-content] {
+  animation: editor-fade-in 200ms ease-out 75ms both;
+}
+
+/* Presentation enter — sidebar collapses (320 ms, owned by the shell) ∥
+   stage fades up (200 ms) ∥ filmstrip slides up (200 ms). The 75 ms offset
+   lines the pair up with the surface crossfade above. */
+[data-presentation-root] [data-presentation-stage] {
+  animation: editor-stage-in 200ms ease-out 75ms both;
+}
+
+[data-presentation-root] [data-presentation-filmstrip] {
+  animation: editor-filmstrip-in 200ms ease-out 75ms both;
+}
+
+/* Presentation exit — the same three in reverse, same durations. The shell
+   holds the tab switch for the full 320 ms so this actually plays instead
+   of being cut off by the unmount; the band fades last so the dark surface
+   lands on the incoming tab rather than snapping to it. */
+[data-presentation-root][data-leaving] [data-presentation-stage] {
+  animation: editor-stage-out 200ms ease-out both;
+}
+
+[data-presentation-root][data-leaving] [data-presentation-filmstrip] {
+  animation: editor-filmstrip-out 200ms ease-out both;
+}
+
+[data-presentation-root][data-leaving] {
+  animation: editor-fade-out 200ms ease-out 120ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-editor-content],
+  [data-presentation-root],
+  [data-presentation-root] [data-presentation-stage],
+  [data-presentation-root] [data-presentation-filmstrip] {
+    animation: none !important;
+  }
+}

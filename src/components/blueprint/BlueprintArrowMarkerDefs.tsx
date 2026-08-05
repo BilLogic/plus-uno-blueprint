@@ -49,7 +49,7 @@ export function BlueprintArrowMarkerDefs({
         >
           <path
             d={`M 0 ${mid - half} L ${tip} ${mid} L 0 ${mid + half} Z`}
-            fill={markerColors[key]}
+            style={{ fill: markerColors[key] }}
           />
         </marker>
       ))}
@@ -68,7 +68,7 @@ export function BlueprintArrowMarkerDefs({
         >
           <path
             d={`M 0 ${mid - half} L ${tip} ${mid} L 0 ${mid + half} Z`}
-            fill={markerColors[key]}
+            style={{ fill: markerColors[key] }}
           />
         </marker>
       ))}
@@ -76,13 +76,27 @@ export function BlueprintArrowMarkerDefs({
   )
 }
 
-export function blueprintArrowPathProps(arrowColor: string) {
+/**
+ * Shared stroke props for every blueprint arrow.
+ *
+ * `dashArray` carries the path's identity alongside its colour — see
+ * `getPathDashArrayFromKey`. Pass `undefined` for a solid stroke.
+ */
+export function blueprintArrowPathProps(
+  arrowColor: string,
+  dashArray?: string,
+) {
   return {
     fill: 'none' as const,
-    stroke: arrowColor,
     strokeWidth: ARROW_STROKE_WIDTH,
     strokeLinecap: 'butt' as const,
     strokeLinejoin: 'miter' as const,
+    /*
+     * `stroke` goes through `style`, not the presentation attribute: attribute
+     * values are not part of the cascade, so a `var()` in one never resolves.
+     * Path colours are tokens now, so this is the only form that works.
+     */
+    style: { stroke: arrowColor, strokeDasharray: dashArray },
   }
 }
 

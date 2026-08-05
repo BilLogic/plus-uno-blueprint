@@ -188,6 +188,11 @@ type ServiceOverviewViewProps = {
   floatingChrome?: ReactNode
 }
 
+/**
+ * The overview canvas — every phase and scenario on one zoomable board.
+ * `renderHeader` and `floatingChrome` let an embedding tab (slice focus) swap
+ * the docked header and add its own canvas-anchored controls.
+ */
 export function ServiceOverviewView({
   skeletonHoldKey,
   soloScenarioId,

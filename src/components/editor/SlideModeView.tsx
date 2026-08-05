@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { SidebarContent } from '@/components/ui/sidebar'
 import { useViewState } from '@/contexts/viewStateStore'
 
+/** Sidebar body for slide mode: the blueprint and slice trees. */
 export function SlideModeSidebarNav({
   surface,
 }: {

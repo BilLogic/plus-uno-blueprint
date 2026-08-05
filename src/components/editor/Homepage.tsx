@@ -85,13 +85,17 @@ export function Homepage() {
       <div className="mx-auto flex w-full max-w-5xl flex-col px-8 py-10 sm:px-10 sm:py-12 lg:py-14">
         <header className="flex flex-col gap-3 pb-10">
           <div className="flex items-start justify-between gap-4">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-[2.25rem] sm:leading-tight">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-[2.25rem] sm:leading-tight">
               Uno Blueprint
             </h1>
             <Button
               type="button"
               onClick={enterCanvas}
-              className="h-9 shrink-0 bg-[#0472A8] px-3.5 font-heading font-semibold text-white shadow-sm hover:bg-[#036090] focus-visible:border-[#0472A8] focus-visible:ring-[#0472A8]/40"
+              // The one primary action on the landing page, so it takes the
+              // brand fill — which is the Button's own `default` variant. It
+              // used to restate `bg-primary` and its hover here at a different
+              // alpha than the variant used, which is how the two drifted.
+              className="h-9 shrink-0 px-3.5 font-semibold shadow-sm"
             >
               View PLUS Blueprints
             </Button>
@@ -155,7 +159,7 @@ export function Homepage() {
                 />
               </div>
               <div className="flex min-w-0 flex-col gap-2">
-                <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                   PLUS Personalized Learning
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -180,7 +184,7 @@ export function Homepage() {
                 />
               </div>
               <div className="flex min-w-0 flex-col gap-2">
-                <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                   Tutors
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -204,7 +208,7 @@ export function Homepage() {
                 className="h-auto w-full max-w-xl rounded-xl border border-border bg-white object-contain"
               />
               <div className="flex min-w-0 flex-col gap-2">
-                <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                   Service blueprints
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">

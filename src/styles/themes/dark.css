@@ -1,0 +1,52 @@
+/*
+ * Dark theme dials. Mirrors packages/ui/build/css/themes/dark.css.
+ *
+ * Imported AFTER themes/light.css so that `.dark` on the root element beats the
+ * `:root` light defaults — the two have equal specificity, so source order is
+ * what decides.
+ *
+ * No status overrides here beyond the lightness anchors: `--warning`,
+ * `--destructive`, `--info` and `--success` are derived in semantic.css from
+ * `--*-lightness` + `--expressive-chroma`, so a dial is all this file owes them.
+ */
+.dark {
+  --helpers-os-appearance: Dark;
+
+  --hue: 177.6;
+  /* `--surface-hue` is left at its `var(--hue)` default: dark surfaces carry a
+     trace of the brand hue, which is what `--chroma: 0.005` is for. */
+  --chroma: 0.005;
+  --surface: 0.19;
+  --elevation-step: 0.025;
+  --contrast: 0.5;
+  --foreground-lightness: 0.95;
+  --muted-foreground-level: 0.8;
+  --tertiary-foreground-level: 0.65;
+
+  --warning-lightness: 0.8;
+  --destructive-lightness: 0.75;
+  --info-lightness: 0.7;
+  --success-lightness: 0.76;
+
+  /* Stepped numeric scales — inverted relative to light (200 darkest,
+     600 lightest), same construction as themes/light.css. */
+  --brand-link: 168.2deg 62.6% 58.3%;
+  --brand-default: 169.5deg 61.3% 49.5%;
+  --brand-600: 168.2deg 62.6% 58.3%;
+  --brand-500: 170.5deg 100% 18.2%;
+  --brand-400: 169.9deg 93% 11.4%;
+  --brand-300: 168.6deg 70.6% 9.9%;
+  --brand-200: 167.2deg 52.8% 8.3%;
+
+  --warning-600: 38.9deg 100% 42.9%;
+  --warning-500: 34.8deg 90.9% 21.6%;
+  --warning-400: 33.2deg 100% 14.5%;
+  --warning-300: 32.3deg 100% 10.2%;
+  --warning-200: 36.6deg 100% 8%;
+  --destructive-default: 10.2deg 77.9% 53.9%;
+  --destructive-600: 9.7deg 85.2% 62.9%;
+  --destructive-500: 7.9deg 71.6% 29%;
+  --destructive-400: 6.7deg 60% 20.6%;
+  --destructive-300: 7.5deg 51.3% 15.3%;
+  --destructive-200: 10.9deg 23.4% 9.2%;
+}

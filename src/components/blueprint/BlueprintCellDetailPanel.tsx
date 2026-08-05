@@ -63,7 +63,7 @@ import {
   scrollBlueprintTechPillIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
-import { BLUEPRINT_CELL_TEXT_COLOR } from '@/lib/blueprintCellStyle'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
 import {
   getBlueprintLayerStyle,
@@ -216,6 +216,11 @@ class CellDetailErrorBoundary extends Component<
   }
 }
 
+/**
+ * Side panel for the selected cell — its content, evidence, dependencies and
+ * the slices it belongs to. Anchors below the sticky slide header via a
+ * measured CSS variable so it never covers it.
+ */
 export function BlueprintCellDetailPanel() {
   return (
     <CellDetailErrorBoundary>
@@ -690,7 +695,7 @@ function BlueprintCellDetailPanelBody() {
               className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
               style={{
                 backgroundColor: draftLaneStyle.lane,
-                color: BLUEPRINT_CELL_TEXT_COLOR,
+                color: 'var(--foreground-blueprint-cell)',
               }}
             >
               {draft.layerName}
@@ -845,7 +850,7 @@ function BlueprintCellDetailPanelBody() {
       className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
       style={{
         backgroundColor: laneChipStyle.lane,
-        color: BLUEPRINT_CELL_TEXT_COLOR,
+        color: BLUEPRINT_THEME.cellText,
       }}
       title={selection.layerName}
     >

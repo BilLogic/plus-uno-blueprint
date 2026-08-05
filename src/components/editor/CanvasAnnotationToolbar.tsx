@@ -26,8 +26,10 @@ import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
 import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
 import {
   ANNOTATION_PEN_STROKE_WIDTHS,
+  ANNOTATION_PAPER,
   ANNOTATION_PEN_SWATCHES,
   type CanvasAnnotationTool,
+  annotationSwatchName,
 } from '@/lib/canvasAnnotations'
 import { cn } from '@/lib/utils'
 
@@ -127,7 +129,7 @@ function StrokeWeightButton({
             className={cn(
               'pointer-events-auto flex size-7 items-center justify-center rounded-md transition-colors',
               selected
-                ? 'bg-violet-100 text-foreground'
+                ? 'bg-primary/15 text-foreground'
                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
@@ -178,7 +180,7 @@ function DrawSubpanel() {
           onSelect={setTool}
           className={cn(
             tool === item.id &&
-              'bg-violet-100 text-foreground hover:bg-violet-100 hover:text-foreground',
+              'bg-primary/15 text-foreground hover:bg-primary/15 hover:text-foreground',
           )}
         />
       ))}
@@ -217,17 +219,17 @@ function DrawSubpanel() {
           <button
             key={swatch}
             type="button"
-            aria-label={`Pen color ${swatch}`}
+            aria-label={`Pen color ${annotationSwatchName(swatch)}`}
             aria-pressed={penColor.toUpperCase() === swatch.toUpperCase()}
             disabled={penOptionsDisabled}
-            title={swatch}
+            title={annotationSwatchName(swatch)}
             onClick={() => setPenColor(swatch)}
             className={cn(
-              'size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
+              'tap-target-24 size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
               penColor.toUpperCase() === swatch.toUpperCase() &&
                 !penOptionsDisabled &&
-                'ring-2 ring-violet-400 ring-offset-1',
-              swatch.toUpperCase() === '#FFFFFF' && 'border-border',
+                'ring-2 ring-primary ring-offset-1',
+              swatch === ANNOTATION_PAPER && 'border-border',
             )}
             style={{ backgroundColor: swatch }}
           />
@@ -237,6 +239,7 @@ function DrawSubpanel() {
   )
 }
 
+/** Floating tool palette for the annotation layer — tool, stroke weight, colour, clear. */
 export function CanvasAnnotationToolbar() {
   const { tool, setTool, annotations, clearAnnotations } =
     useCanvasAnnotations()

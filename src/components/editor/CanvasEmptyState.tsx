@@ -65,10 +65,14 @@ export function CanvasEmptyState({
         className={cn(
           'flex flex-col justify-center',
           isCanvas && 'max-w-sm gap-2',
+          // Board chrome, not app chrome: the empty state sits on the frozen
+          // blueprint palette, so its fallbacks are board tokens rather than
+          // hexes (`--secondary` when no panel override is set) and its border
+          // hairline is `--border` like every other hairline.
           isPanel &&
-            'w-full flex-1 gap-1.5 rounded-xl border border-dashed border-black/10 bg-[color:var(--blueprint-panel-section-fill,#f4f4f7)] px-5 py-6',
+            'w-full flex-1 gap-1.5 rounded-xl border border-dashed border-border bg-[color:var(--background-blueprint-panel-section,var(--secondary))] px-5 py-6',
           isPhase &&
-            'w-full flex-1 gap-1.5 rounded-xl border border-dashed border-black/10 bg-white/60 px-6 py-7',
+            'w-full flex-1 gap-1.5 rounded-xl border border-dashed border-border bg-[color:var(--background-blueprint-panel-canvas,var(--secondary))] px-6 py-7',
         )}
       >
         <p

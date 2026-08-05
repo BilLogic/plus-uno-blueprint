@@ -219,7 +219,7 @@ function SessionRow({
       onClick={onOpen}
       className={cn(
         'group/session flex w-full min-w-0 items-center gap-1.5 rounded-md py-1.5 pl-1.5 pr-2 text-left transition-colors',
-        'hover:bg-sidebar-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+        'hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
       )}
     >
       <Sparkles
@@ -1113,7 +1113,7 @@ export function AgentSettingsRailButton() {
                   <button
                     type="button"
                     aria-label="Agent settings"
-                    className="flex size-9 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                    className="flex size-9 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                   >
                     <Settings className="size-4" aria-hidden />
                   </button>
