@@ -9,33 +9,44 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
- * Figma's sidebar IA: the rail picks a *surface* — what the content panel
- * shows — never a canvas mode. A third surface (Agent) is why the old
- * horizontal Blueprints|Slices segmented control retired: three labels ate
- * the panel's width; three icons cost 48px once.
+ * Figma's sidebar IA, in two groups that mean two different things.
+ *
+ * TOP — the panel surfaces (Blueprints, Slices). A radio group: exactly
+ * one is showing, and the selected one wears the left rail bar, which is
+ * this app's "you are here" mark.
+ *
+ * BOTTOM — the toggles (Agent chat, Settings). The chat is a companion,
+ * not a surface: it docks *under* whichever panel is open, or floats over
+ * the canvas, and turning it on takes nothing away. Sitting it in the
+ * radio group made it look mutually exclusive with the panel it actually
+ * accompanies, so it moved down with the other utilities and wears a
+ * filled tint + presence dot instead of the rail bar.
  */
 export type SidebarSurface = 'blueprints' | 'slices' | 'agent'
 
 export const EDITOR_RAIL_WIDTH_CLASS = 'w-12'
 
-const SURFACES: Array<{
-  id: SidebarSurface
+const PANEL_SURFACES: Array<{
+  id: Exclude<SidebarSurface, 'agent'>
   label: string
   icon: typeof LayoutGrid
 }> = [
   { id: 'blueprints', label: 'Blueprints', icon: LayoutGrid },
   { id: 'slices', label: 'Slices', icon: Diamond },
-  { id: 'agent', label: 'Agent', icon: Sparkles },
 ]
 
 function RailButton({
   label,
   selected,
+  toggled,
   onClick,
   children,
 }: {
   label: string
+  /** Radio member: wears the left rail bar. */
   selected?: boolean
+  /** Toggle: wears a tint and a presence dot, never the rail bar. */
+  toggled?: boolean
   onClick: () => void
   children: ReactNode
 }) {
@@ -46,14 +57,18 @@ function RailButton({
           <button
             type="button"
             aria-label={label}
-            aria-pressed={selected}
+            aria-pressed={toggled ?? selected}
             onClick={onClick}
             className={cn(
               'relative flex size-9 items-center justify-center rounded-md transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-              selected
-                ? 'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
-                : 'text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
+              selected &&
+                'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail',
+              toggled &&
+                'bg-sidebar-selected/70 text-sidebar-selected-foreground after:absolute after:right-1 after:top-1 after:size-1.5 after:rounded-full after:bg-primary',
+              !selected &&
+                !toggled &&
+                'text-sidebar-foreground/60 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground',
             )}
           >
             {children}
@@ -110,19 +125,29 @@ export function EditorRail({
             <div className="my-0.5 h-px w-6 shrink-0 bg-border/60" aria-hidden />
           </>
         ) : null}
-        {SURFACES.filter((entry) => entry.id !== 'agent' || showAgent).map(
-          ({ id, label, icon: Icon }) => (
-            <RailButton
-              key={id}
-              label={label}
-              selected={id === 'agent' ? agentActive === true : surface === id}
-              onClick={() => onSelectSurface(id)}
-            >
-              <Icon className="size-4" aria-hidden />
-            </RailButton>
-          ),
-        )}
+        {PANEL_SURFACES.map(({ id, label, icon: Icon }) => (
+          <RailButton
+            key={id}
+            label={label}
+            selected={surface === id}
+            onClick={() => onSelectSurface(id)}
+          >
+            <Icon className="size-4" aria-hidden />
+          </RailButton>
+        ))}
         <div className="flex-1" aria-hidden />
+        {showAgent ? (
+          <>
+            <RailButton
+              label={agentActive ? 'Hide the agent' : 'Show the agent'}
+              toggled={agentActive === true}
+              onClick={() => onSelectSurface('agent')}
+            >
+              <Sparkles className="size-4" aria-hidden />
+            </RailButton>
+            <div className="my-0.5 h-px w-6 shrink-0 bg-border/60" aria-hidden />
+          </>
+        ) : null}
         {bottomSlot}
       </nav>
     </TooltipProvider>

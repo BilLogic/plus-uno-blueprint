@@ -12,6 +12,7 @@ import {
   isSubslide,
   type NavItem,
 } from '@/types/nav'
+import { DockedSidebarExpander } from '@/components/editor/EditorChrome'
 import { cn } from '@/lib/utils'
 
 type SlideHeaderContentProps = {
@@ -102,15 +103,20 @@ export function SlideStickyHeader({
   return (
     <div
       data-editor-navbar
-      className={cn('relative', BLUEPRINT_NAVBAR_BAR_CLASS, className)}
+      className={cn(
+        'relative flex items-center',
+        BLUEPRINT_NAVBAR_BAR_CLASS,
+        className,
+      )}
       onPointerDown={(e) => e.stopPropagation()}
     >
+      <DockedSidebarExpander />
       <PhaseMenubarHeader
         slide={contentProps.slide}
         slides={contentProps.slides}
         paths={contentProps.paths}
         selectedPathIds={contentProps.selectedPathIds}
-        className={BLUEPRINT_MENUBAR_FLAT_CLASS}
+        className={cn('min-w-0 flex-1', BLUEPRINT_MENUBAR_FLAT_CLASS)}
       />
       <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
         <NavbarZoomIndicator />

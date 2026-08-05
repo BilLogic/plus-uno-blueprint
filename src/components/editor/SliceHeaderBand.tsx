@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { DockedSidebarExpander } from '@/components/editor/EditorChrome'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { SliceDetail } from '@/hooks/useSlice'
@@ -53,6 +54,7 @@ export function SliceHeaderBand({
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
+      <DockedSidebarExpander />
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="min-w-0 truncate text-sm font-semibold">

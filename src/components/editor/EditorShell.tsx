@@ -18,6 +18,10 @@ import { TabStrip } from '@/components/editor/TabStrip'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
+  setSidebarCollapsedState,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
+import {
   tabKey,
   useViewState,
   type TabDescriptor,
@@ -130,6 +134,18 @@ export function EditorShell() {
     // Entering and leaving presentation both resize the canvas container.
     suppressCanvasResizeRefit()
   }, [presenting])
+
+  // Publish the collapsed state so canvas navbars can host the expand
+  // control themselves — see sidebarCollapsedContext for why the pill is
+  // now the fallback rather than the default.
+  const expandSidebar = useCallback(() => {
+    suppressCanvasResizeRefit()
+    setSidebarCollapsed(false)
+  }, [])
+  useEffect(() => {
+    setSidebarCollapsedState({ collapsed: railOnly, expand: expandSidebar })
+  }, [railOnly, expandSidebar])
+  const { hosts: collapsedNavHosts } = useSidebarCollapsedState()
 
   // Hand the agent its navigation hands: open_phase / open_scenario tools
   // land on the same callbacks the sidebar rows use.
@@ -510,7 +526,7 @@ export function EditorShell() {
             while presenting (full-bleed; Return is the way back). Its
             toggle is the same single control the rail carries expanded.
           */}
-          {railOnly && !presenting ? (
+          {railOnly && !presenting && collapsedNavHosts === 0 ? (
             <div className="pointer-events-none absolute left-3 top-3 z-30">
               <FloatingSidebarPill onExpand={toggleSidebar} />
             </div>

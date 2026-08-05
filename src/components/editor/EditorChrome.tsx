@@ -1,6 +1,11 @@
+import { useEffect } from 'react'
 import { Home, PanelLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import {
+  registerCollapsedNavHost,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
 import { cn } from '@/lib/utils'
 
 const EDITOR_TITLE = 'Uno Blueprint'
@@ -103,8 +108,32 @@ export function WorkspaceBadges() {
 }
 
 /**
- * The collapsed sidebar's remnant: a floating pill over the canvas (Figma's
- * collapsed-file-chip). Clicking its toggle expands the sidebar back into
+ * The expand control, docked into a canvas navbar while the sidebar is
+ * collapsed. Rendering it inside the navbar (rather than floating a pill
+ * over it) is the whole point: one chrome row, no overlap, and the
+ * control sits exactly where the rail's collapse button was.
+ *
+ * Mounting also tells the pill to stand down — see
+ * `registerCollapsedNavHost`.
+ */
+export function DockedSidebarExpander({ className }: { className?: string }) {
+  const { collapsed, expand } = useSidebarCollapsedState()
+  useEffect(() => registerCollapsedNavHost(), [])
+  if (!collapsed) return null
+  return (
+    <SidebarCollapseButton
+      collapsed
+      onToggle={expand}
+      size="icon-sm"
+      className={cn('mr-1 shrink-0', className)}
+    />
+  )
+}
+
+/**
+ * The collapsed sidebar's remnant when NO navbar is on screen (the
+ * overview, the landing page): a floating pill over the canvas — Figma's
+ * collapsed-file-chip. Clicking its toggle expands the sidebar back into
  * flow — no hover-peek: one control, one behavior.
  */
 export function FloatingSidebarPill({ onExpand }: { onExpand: () => void }) {
