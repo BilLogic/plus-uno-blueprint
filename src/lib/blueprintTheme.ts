@@ -20,47 +20,51 @@ import {
  * board composes them into gradients and SVG attributes, but they are `var()`
  * either way — the board is on the same tokens as the rest of the app, and
  * follows the theme with it.
+ *
+ * THIRTEEN, NOT THIRTY. Seventeen keys used to sit here that nothing read.
+ *
+ * Fourteen were the phase-frame, scenario-badge and panel-hover chrome, stale
+ * since that chrome moved into `blueprint.css` as real CSS rules —
+ * `[data-phase-scenario-panel]`, `[data-phase-title-badge]` and friends own
+ * those colours now, and a hover in CSS cannot consult a TypeScript constant.
+ * Two more, `canvasDark` and `labelRailDark`, were a JavaScript answer to a
+ * question CSS had already taken over: the theme flips in the stylesheet, so
+ * nothing here has to pick its own dark variant. The last three were the panel
+ * hover values, whose only reader was a helper the CSS rule replaced.
+ *
+ * The rule that keeps it at thirteen: if a colour can be expressed as a CSS
+ * rule, it belongs in `blueprint.css`. What stays is only what the board
+ * composes at runtime into a gradient stop or an SVG attribute, where there is
+ * no selector to write.
+ *
+ * Two of the thirteen name a semantic token rather than a primitive, because a
+ * semantic one says the same thing: the board's content surface *is* the app's
+ * canvas, measured at Δ4/255 from `--canvas` in both themes. The other eleven
+ * stay on primitives on purpose — they are a slate-tinted grey ladder with no
+ * equivalent in the neutral semantic set (the nearest match to `divider` is off
+ * by Δ97), and minting eleven semantic names to describe one board's chrome
+ * would grow the token vocabulary to fit a single consumer.
  */
 export const BLUEPRINT_THEME = {
   /** Blueprint content surface — path sections, cells, swim lanes. */
-  canvas: 'var(--color-gray-100)',
-  canvasDark: 'var(--color-gray-1200)',
+  canvas: 'var(--canvas)',
   /** Blueprint shell — label column, panel padding, compare chrome. */
   labelRail: 'var(--color-slate-500)',
-  labelRailDark: 'var(--color-gray-1200)',
   canvasBorder: 'var(--color-slate-700)',
   divider: 'var(--color-slate-800)',
   dividerLabel: 'var(--color-gray-900)',
   /** Figma-style interaction / visibility line tag. */
   dividerTagBg: 'var(--color-slate-1200)',
-  dividerLine: 'var(--color-slate-1200)',
   dividerBg: 'var(--color-slate-500)',
   cellText: 'var(--color-slate-1200)',
-  cellEmpty: 'var(--color-gray-800)',
   headerText: 'var(--color-gray-1200)',
   /** Thin rules between swim lanes — light grey, visible on canvas and label rail. */
   laneDivider: 'var(--color-slate-700)',
   arrow: 'var(--color-gray-900)',
   /** Side-by-side compare path sections (Figma-style grouping). */
-  sectionFill: 'var(--color-gray-100)',
-  sectionBorder: 'var(--color-slate-700)',
-  /** Service overview canvas phase sections — see the exception note above. */
-  phaseSectionColor: 'var(--color-slate-800)',
-  phaseSectionFill: 'var(--color-slate-700)',
+  sectionFill: 'var(--canvas)',
   /** Outermost slide/canvas workspace — sits behind blueprint panels. */
   viewportPad: 'var(--color-gray-300)',
-  /** Scenario title badge on gray compare panels — darker than labelRail. */
-  panelScenarioBadgeFill: 'var(--color-gray-800)',
-  panelScenarioBadgeText: 'var(--color-gray-1200)',
-  /** Hover accents for interactive canvas chrome. */
-  phaseSectionFillHover: 'var(--color-slate-800)',
-  phaseSectionBorderHover: 'var(--color-slate-900)',
-  phaseSectionBadgeHover: 'var(--color-slate-900)',
-  panelLabelRailHover: 'var(--color-slate-600)',
-  panelBorderHover: 'var(--color-slate-800)',
-  panelScenarioBadgeFillHover: 'var(--color-gray-900)',
-  panelCanvasHover: 'var(--color-slate-300)',
-  panelSectionFillHover: 'var(--color-slate-300)',
 } as const
 
 /** Set on interactive compare panels; children inherit label-rail hover. */
@@ -70,8 +74,6 @@ export const BLUEPRINT_PANEL_CANVAS_VAR = '--background-blueprint-panel-canvas'
 export const BLUEPRINT_PANEL_SECTION_FILL_VAR = '--background-blueprint-panel-section'
 /** Divider row backgrounds (interaction / visibility bands). */
 export const BLUEPRINT_PANEL_DIVIDER_BG_VAR = '--background-blueprint-panel-divider'
-/** Cell tint strength when an interactive panel is hovered (0–1). */
-export const BLUEPRINT_PANEL_CELL_HOVER_VAR = '--background-blueprint-panel-cell-hover'
 
 export function blueprintPanelLabelRailColor(
   fallback: string = BLUEPRINT_THEME.labelRail,
@@ -97,15 +99,13 @@ export function blueprintPanelDividerBgColor(
   return `var(${BLUEPRINT_PANEL_DIVIDER_BG_VAR}, ${fallback})`
 }
 
-export function getBlueprintPanelHoverCssVars(): Record<string, string> {
-  return {
-    [BLUEPRINT_PANEL_LABEL_RAIL_VAR]: BLUEPRINT_THEME.panelLabelRailHover,
-    [BLUEPRINT_PANEL_CANVAS_VAR]: BLUEPRINT_THEME.panelCanvasHover,
-    [BLUEPRINT_PANEL_SECTION_FILL_VAR]: BLUEPRINT_THEME.panelSectionFillHover,
-    [BLUEPRINT_PANEL_DIVIDER_BG_VAR]: BLUEPRINT_THEME.panelLabelRailHover,
-    [BLUEPRINT_PANEL_CELL_HOVER_VAR]: '1',
-  }
-}
+/*
+ * There is no `getBlueprintPanelHoverCssVars()` any more. It set the four vars
+ * above from React state on hover; `blueprint.css` now sets them in the
+ * `[data-phase-scenario-panel]:hover` rule, which is both fewer moving parts
+ * and the reason the old React version was removed — a pure-CSS hover cannot
+ * go stale the way a hover held in state can.
+ */
 
 /**
  * Lane identity — the Radix family each swim lane is drawn from. The steps of

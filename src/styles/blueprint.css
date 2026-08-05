@@ -27,11 +27,10 @@
  *   --ring-blueprint-cell                    outline + focus   "
  *   --ring-blueprint-cell-soft               "                 "
  *   --background-blueprint-cell-panel        opt-in override   set by BlueprintStepVisual
- *   --background-blueprint-panel-label-rail  panel hover       set by getBlueprintPanelHoverCssVars
+ *   --background-blueprint-panel-label-rail  panel hover       set by the hover rule below
  *   --background-blueprint-panel-canvas      "                 "
  *   --background-blueprint-panel-section     "                 "
  *   --background-blueprint-panel-divider     "                 "
- *   --background-blueprint-panel-cell-hover  hover strength    "
  *
  * None of them are declared at `:root`, deliberately. Every consumer reads them
  * as `var(--…-blueprint-…, fallback)`, and a root declaration would make the
