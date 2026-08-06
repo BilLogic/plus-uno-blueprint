@@ -5,9 +5,10 @@
  * already right — so structural moves, crossfades and camera eases all read
  * as the same system rather than as per-screen inventions.
  *
- * The CSS side of these numbers lives in `index.css` (`@keyframes` for the
- * presentation stage/filmstrip and the tab crossfade); the values here are
- * for the JS that has to wait for them.
+ * The CSS side of these numbers lives in `styles/animations.css` as the
+ * `--motion-*` tokens (plus `--ease-structural` in `@theme`); the values here
+ * are for the JS that has to wait for them. A drift test pins the two files
+ * to each other — change both or the suite fails.
  */
 
 /** Structural width/size changes (sidebar collapse, presentation wipe). */

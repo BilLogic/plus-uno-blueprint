@@ -73,9 +73,163 @@ function mergeSteps(
   return integratedSteps
 }
 
+/**
+ * Classify every occupied slot across the compared paths — the primitive all
+ * of the comparison view stands on ("this cell in path A and that cell in
+ * path B are the same thing").
+ *
+ * Position-and-lane matching: two cells are counterparts when they sit at
+ * the same (lane, step) slot. Same trimmed text ⇒ `shared`; different text
+ * ⇒ `divergent`; slot occupied by exactly one path ⇒ `only`. A slot where
+ * some but not all paths have a cell is a disagreement about *existence*
+ * and classifies as divergent-plus-only rather than shared.
+ *
+ * Returns the cells to keep (shared slots collapse to one copy, preferring
+ * `primaryPathId`) and a remap of dropped duplicate ids onto the kept copy —
+ * the caller re-points arrows through it, which is what makes arrows from
+ * different paths visually fork *out of* the shared spine.
+ */
+export function classifyCompareCells(
+  cells: IntegratedBlueprintCell[],
+  selectedPathIds: string[],
+  primaryPathId: string,
+): { cells: IntegratedBlueprintCell[]; remap: Map<string, string> } {
+  const selected = new Set(selectedPathIds)
+  const inScope = cells.filter((cell) => selected.has(cell.path_id))
+
+  const slots = new Map<string, IntegratedBlueprintCell[]>()
+  for (const cell of inScope) {
+    const key = `${cell.layer_id}::${cell.step_id}`
+    const list = slots.get(key)
+    if (list) list.push(cell)
+    else slots.set(key, [cell])
+  }
+
+  const kept: IntegratedBlueprintCell[] = []
+  const remap = new Map<string, string>()
+
+  for (const slotCells of slots.values()) {
+    const byPath = new Map<string, IntegratedBlueprintCell[]>()
+    for (const cell of slotCells) {
+      const list = byPath.get(cell.path_id)
+      if (list) list.push(cell)
+      else byPath.set(cell.path_id, [cell])
+    }
+
+    if (byPath.size === 1) {
+      for (const cell of slotCells) kept.push({ ...cell, compare: 'only' })
+      continue
+    }
+
+    // A path's "text" at a slot is the sorted multiset of its cells' trimmed
+    // contents — tech lanes hold one cell per touchpoint, so a slot is equal
+    // only when the whole set of touchpoints is.
+    const signatureOf = (list: IntegratedBlueprintCell[]) =>
+      list
+        .map((cell) => cell.content.trim())
+        .sort()
+        .join('\u0000')
+    const signatures = [...byPath.values()].map(signatureOf)
+    const allSelectedPresent = byPath.size === selected.size
+    const allEqual = signatures.every((entry) => entry === signatures[0])
+
+    if (allSelectedPresent && allEqual) {
+      const keeper =
+        byPath.get(primaryPathId) ?? byPath.values().next().value!
+      for (const cell of keeper) kept.push({ ...cell, compare: 'shared' })
+      // Counterpart matching for arrow re-pointing: same slot, same sorted
+      // rank — exact because the signatures are equal.
+      const keeperSorted = [...keeper].sort((a, b) =>
+        a.content.trim().localeCompare(b.content.trim()),
+      )
+      for (const list of byPath.values()) {
+        if (list === keeper) continue
+        const sorted = [...list].sort((a, b) =>
+          a.content.trim().localeCompare(b.content.trim()),
+        )
+        sorted.forEach((cell, index) => {
+          remap.set(cell.id, keeperSorted[index].id)
+        })
+      }
+      continue
+    }
+
+    for (const cell of slotCells) kept.push({ ...cell, compare: 'divergent' })
+  }
+
+  return { cells: kept, remap }
+}
+
+/**
+ * Compare-mode step alignment: two steps are the same *column* when their
+ * names match, even though each path carries its own step rows.
+ *
+ * Merging by id (the integrated view's default) only unifies paths that
+ * physically share `steps` rows — duplicated paths do, independently
+ * authored ones do not. Without this, comparing two paths that both have a
+ * "Set goals" column rendered it twice, every slot classified "only", and
+ * the merged spine read as nonsense. Names pair by occurrence order, so a
+ * path with two "Discovers PLUS" columns maps its first onto the other
+ * path's first, second onto second.
+ *
+ * Returns the unified step list plus an alias map (`pathId:stepId` → the
+ * unified step id) the cell pass translates through.
+ */
+function mergeStepsByName(
+  blueprints: BlueprintData[],
+  primary: BlueprintData,
+): { steps: IntegratedBlueprintStep[]; alias: Map<string, string> } {
+  const unified: IntegratedBlueprintStep[] = []
+  const alias = new Map<string, string>()
+  const normalize = (name: string) => name.trim().toLowerCase()
+
+  const append = (blueprint: BlueprintData) => {
+    // Occurrence counter per name, so repeated step names pair in order.
+    const seen = new Map<string, number>()
+    for (const step of [...blueprint.steps].sort(
+      (a, b) => a.column_position - b.column_position,
+    )) {
+      const name = normalize(step.name)
+      const occurrence = seen.get(name) ?? 0
+      seen.set(name, occurrence + 1)
+
+      const match = unified.filter(
+        (entry) => normalize(entry.name) === name,
+      )[occurrence]
+      if (match) {
+        match.pathStepIds[blueprint.path.id] = step.id
+        alias.set(`${blueprint.path.id}:${step.id}`, match.id)
+        continue
+      }
+
+      const created: IntegratedBlueprintStep = {
+        id: step.id,
+        name: step.name,
+        column_position: unified.length + 1,
+        pathStepIds: { [blueprint.path.id]: step.id },
+      }
+      unified.push(created)
+      alias.set(`${blueprint.path.id}:${step.id}`, created.id)
+    }
+  }
+
+  append(primary)
+  for (const blueprint of blueprints) {
+    if (blueprint.path.id === primary.path.id) continue
+    append(blueprint)
+  }
+
+  unified.forEach((step, index) => {
+    step.column_position = index + 1
+  })
+
+  return { steps: unified, alias }
+}
+
 export function mergeIntegratedBlueprint(
   blueprints: BlueprintData[],
   selectedPathIds: string[],
+  options: { compare?: boolean } = {},
 ): IntegratedBlueprintData | null {
   if (blueprints.length === 0) return null
 
@@ -84,7 +238,25 @@ export function mergeIntegratedBlueprint(
     (a, b) => a.row_position - b.row_position,
   )
   const layerNameToId = new Map(layers.map((layer) => [layer.name, layer.id]))
-  const steps = mergeSteps(blueprints, primary)
+  const comparing = Boolean(options.compare) && selectedPathIds.length >= 2
+  // Compare merges the *selected* paths' steps only. Folding every path's
+  // steps in appended trailing columns nothing selected ever occupies —
+  // a six-path scenario comparing two of them grew a board three times as
+  // wide as its cells.
+  const compareBlueprints = comparing
+    ? blueprints.filter((blueprint) =>
+        selectedPathIds.includes(blueprint.path.id),
+      )
+    : blueprints
+  const namedMerge =
+    comparing && compareBlueprints.length > 0
+      ? mergeStepsByName(
+          compareBlueprints,
+          pickPrimaryBlueprint(compareBlueprints),
+        )
+      : null
+  const steps = namedMerge?.steps ?? mergeSteps(blueprints, primary)
+  const stepAlias = namedMerge?.alias ?? null
 
   const integratedStepIds = new Set(steps.map((step) => step.id))
   const integratedStepById = new Map(steps.map((step) => [step.id, step]))
@@ -98,11 +270,14 @@ export function mergeIntegratedBlueprint(
         cell.step_id,
         blueprint.path.id,
       )
+      // Compare mode: the cell's own step id translates onto the unified
+      // (name-aligned) column it belongs to.
+      const aliasedStepId =
+        stepAlias?.get(`${blueprint.path.id}:${resolvedStepId}`) ??
+        resolvedStepId
       const step =
-        blueprint.steps.find((entry) => entry.id === resolvedStepId) ??
-        (integratedStepIds.has(resolvedStepId)
-          ? integratedStepById.get(resolvedStepId)
-          : undefined)
+        integratedStepById.get(aliasedStepId) ??
+        blueprint.steps.find((entry) => entry.id === resolvedStepId)
       if (!layer || !step) continue
 
       const integratedLayerId = layerNameToId.get(layer.name)
@@ -134,16 +309,65 @@ export function mergeIntegratedBlueprint(
     }
   }
 
+  /*
+    Compare mode: classify slots, collapse the shared spine to one copy, and
+    re-point every arrow that referenced a dropped duplicate onto the kept
+    copy. That re-pointing is what the arrows are *for* here — an arrow
+    leaving the shared spine into a path-colored band is the divergence,
+    drawn as a vector.
+  */
+  let finalCells = cells
+  let compareRemap: Map<string, string> | null = null
+  if (comparing) {
+    const classified = classifyCompareCells(
+      cells,
+      selectedPathIds,
+      primary.path.id,
+    )
+    finalCells = classified.cells
+    compareRemap = classified.remap
+  }
+  const compareByCellId = comparing
+    ? new Map(finalCells.map((cell) => [cell.id, cell.compare]))
+    : null
+
   const triggers: IntegratedBlueprintTrigger[] = []
+  const seenTriggerEdges = new Set<string>()
   for (const blueprint of blueprints) {
     for (const trigger of blueprint.triggers) {
-      const sourceCellId = cellIdByPathCell.get(
+      let sourceCellId = cellIdByPathCell.get(
         `${blueprint.path.id}:${trigger.source_cell_id}`,
       )
-      const targetCellId = cellIdByPathCell.get(
+      let targetCellId = cellIdByPathCell.get(
         `${blueprint.path.id}:${trigger.target_cell_id}`,
       )
       if (!sourceCellId || !targetCellId) continue
+      if (compareRemap) {
+        sourceCellId = compareRemap.get(sourceCellId) ?? sourceCellId
+        targetCellId = compareRemap.get(targetCellId) ?? targetCellId
+        if (!compareByCellId?.has(sourceCellId) || !compareByCellId.has(targetCellId)) {
+          continue
+        }
+        // Two paths drawing the identical arrow between two shared cells is
+        // one fact — draw it once.
+        const edgeKey = `${sourceCellId}->${targetCellId}`
+        if (seenTriggerEdges.has(edgeKey)) continue
+        seenTriggerEdges.add(edgeKey)
+      }
+
+      const sourceCompare = compareByCellId?.get(sourceCellId)
+      const targetCompare = compareByCellId?.get(targetCellId)
+      const touchesDivergence =
+        sourceCompare === 'divergent' ||
+        sourceCompare === 'only' ||
+        targetCompare === 'divergent' ||
+        targetCompare === 'only'
+
+      // Compare mode draws ONLY the arrows that point out a divergence.
+      // Spine-to-spine arrows are the flow both paths agree on — context the
+      // side-by-side view already shows — and keeping them (even faded)
+      // turned the merged grid into arrow spaghetti.
+      if (comparing && !touchesDivergence) continue
 
       triggers.push({
         id: `integrated-trigger-${blueprint.path.id}-${trigger.id}`,
@@ -151,7 +375,9 @@ export function mergeIntegratedBlueprint(
         target_cell_id: targetCellId,
         path_id: blueprint.path.id,
         path_type: blueprint.path.path_type,
-        opacity: pathOpacity(blueprint.path.id, selectedPathIds),
+        opacity: comparing
+          ? 1
+          : pathOpacity(blueprint.path.id, selectedPathIds),
       })
     }
   }
@@ -166,7 +392,7 @@ export function mergeIntegratedBlueprint(
     })),
     layers,
     steps,
-    cells,
+    cells: finalCells,
     triggers,
   }
 }

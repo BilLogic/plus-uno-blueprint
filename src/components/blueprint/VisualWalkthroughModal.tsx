@@ -78,6 +78,7 @@ export function VisualWalkthroughModal() {
 
   useEffect(() => {
     if (!api) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs initial state from the embla carousel (external subscription) before wiring its events
     onSelect(api)
     api.on('reInit', onSelect)
     api.on('select', onSelect)
@@ -89,6 +90,7 @@ export function VisualWalkthroughModal() {
 
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- rewinds to step 0 when the modal closes, alongside tearing down the key listener below
       setStepIndex(0)
       return
     }
@@ -141,7 +143,7 @@ export function VisualWalkthroughModal() {
                 Presentation for {pathName || 'this path'}
               </DialogDescription>
               <Breadcrumb className="min-w-0">
-                <BreadcrumbList className="flex-nowrap gap-0.5 text-[11px] leading-tight text-muted-foreground">
+                <BreadcrumbList className="flex-nowrap gap-0.5 text-2xs leading-tight text-muted-foreground">
                   {phaseName ? (
                     <>
                       <BreadcrumbItem className="min-w-0">

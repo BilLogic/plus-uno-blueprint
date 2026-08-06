@@ -242,18 +242,35 @@ export function getSameRowObstructingCells(
   return obstructing
 }
 
-/** Top/bottom center anchors for same-column gutter detours. */
+/**
+ * Anchors for same-column gutter detours: exit at the source's top/bottom
+ * center, but enter horizontally at the target's left edge, vertically
+ * centered on the target's own card. The detour's final segment approaches
+ * from the gutter side, so a top/bottom-center (vertical-entry) anchor would
+ * leave the chevron riding along the target's top edge — for stacked pill
+ * targets that puts the head in the gap between neighbouring pills.
+ */
 export function getVerticalGutterDetourAnchors(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
 ): CellAnchor {
-  return getVerticalCellAnchors(sourceEl, targetEl, root)
+  const { source } = getVerticalCellAnchors(sourceEl, targetEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+
+  return {
+    source,
+    target: {
+      // Inset so the chevron tip sits on the target's left edge, not through it.
+      x: targetBox.left - ARROW_CHEVRON_SIZE,
+      y: targetBox.top + targetBox.height / 2,
+    },
+  }
 }
 
 /**
- * Same-column connector routed through the left column gutter; exits and
- * enters at top/bottom center of each cell.
+ * Same-column connector routed through the left column gutter; exits at the
+ * source's top/bottom center and enters the target's left edge.
  */
 export function buildVerticalGutterDetourPath(
   source: Point,

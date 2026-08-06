@@ -12,7 +12,7 @@
 .dark {
   --helpers-os-appearance: Dark;
 
-  --hue: 177.6;
+  --hue: 183;
   /* `--surface-hue` is left at its `var(--hue)` default: dark surfaces carry a
      trace of the brand hue, which is what `--chroma: 0.005` is for. */
   --chroma: 0.005;

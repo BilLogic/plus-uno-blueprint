@@ -1,10 +1,16 @@
 import {
+  createContext,
   Fragment,
+  useContext,
   useMemo,
   useRef,
   type RefObject,
 } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
+import { getPathColor } from '@/lib/pathColorTheme'
+import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
+import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandles'
+import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
@@ -30,7 +36,7 @@ import {
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
-import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
+import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   getBlueprintLayerStyle,
@@ -61,7 +67,8 @@ import {
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
-import type { BlueprintData } from '@/types/blueprint'
+import type { BlueprintData, BlueprintCell } from '@/types/blueprint'
+import type { CompareStatus } from '@/types/integratedBlueprint'
 
 /** Left gutter on the white board so the play control clears Visual cells. */
 const VISUAL_PLAY_GUTTER = 28
@@ -80,7 +87,20 @@ type SideBySideCompareGridProps = {
   /** Shared swimlane board height for phase overview alignment. */
   fixedSwimlaneBodyHeight?: number
   fillSwimlaneHeight?: boolean
+  /**
+   * Compare highlight pass: a verdict per cell id. Shared cells dim,
+   * only-in-one cells wear their path's ring, divergent cells add a ≠
+   * badge. The layout does not move — this is paint, not structure.
+   */
+  compareStatusByCellId?: ReadonlyMap<string, CompareStatus>
 }
+
+/**
+ * File-local channel for the highlight verdicts — the map would otherwise
+ * thread through four components that have no other use for it.
+ */
+const CompareHighlightContext =
+  createContext<ReadonlyMap<string, CompareStatus> | null>(null)
 
 type CompareRowSpec = BlueprintLabelRowSpec
 
@@ -105,6 +125,7 @@ export function SideBySideCompareGrid({
   sectionTitleDescription,
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
+  compareStatusByCellId,
 }: SideBySideCompareGridProps) {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
   const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
@@ -130,7 +151,7 @@ export function SideBySideCompareGrid({
           getCompareRowTrackCss(row),
         )
         .join(' '),
-    [fillSwimlaneHeight, rows],
+    [rows],
   )
 
   const gridTemplateColumns = useMemo(
@@ -155,6 +176,7 @@ export function SideBySideCompareGrid({
   }
 
   return (
+    <CompareHighlightContext.Provider value={compareStatusByCellId ?? null}>
     <div
       className={cn('w-max shrink-0', className)}
       style={getCompareBoardWrapperPadding()}
@@ -221,6 +243,7 @@ export function SideBySideCompareGrid({
           ))}
       </div>
     </div>
+    </CompareHighlightContext.Provider>
   )
 }
 
@@ -271,6 +294,15 @@ function ComparePathColumn({
         gridTemplateRows: 'subgrid',
       }}
     >
+      <BlueprintColumnHandles
+        steps={blueprint.steps}
+        bodyRef={columnRef}
+        pathId={blueprint.path.id}
+      />
+      {/* Lanes are scenario-wide, so one set of handles is enough — the
+          first path column carries them (the grid reserves columns 1–2 for
+          the label rail), the rest would only double the targets. */}
+      {columnIndex === 2 ? <BlueprintLaneHandles bodyRef={columnRef} /> : null}
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}
@@ -358,6 +390,9 @@ function CompareCardRow({
             'data-blueprint-swimlane': '',
             'data-blueprint-row': '',
             'data-layer-id': row.layer.id,
+            // Lets a picked cell name its lane without the selection
+            // carrying the whole blueprint (see lib/canvasCellQuery).
+            'data-layer-name': row.layer.name,
           }
         : {})}
       {...(isDivider
@@ -495,13 +530,21 @@ function CompareLayerRow({
       ) : null}
       {blueprint.steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
+        // Tech slots hold one cell per touchpoint since the split.
+        const slotCells = isPillLayer
+          ? getCellsAt(cellLookup, blueprintLayer.id, step.id)
+          : undefined
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? resolveVisualStepPictureEntries(blueprint, step.id)
           : undefined
         const showCell = isVisualLayer
           ? (visualPictures?.length ?? 0) > 0
-          : hasCellContent(cell?.content, variant)
+          : isPillLayer
+            ? (slotCells ?? []).some((entry) =>
+                hasCellContent(entry.content, variant),
+              )
+            : hasCellContent(cell?.content, variant)
 
         return (
           <Fragment key={`${layer.id}-${step.id}`}>
@@ -518,6 +561,7 @@ function CompareLayerRow({
                 compact={compact}
                 flushBottom={flushBottom}
                 visualPictures={visualPictures}
+                slotCells={slotCells}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer)
                     ? {
@@ -541,13 +585,19 @@ function CompareLayerRow({
                 }
               />
             ) : (
-              <div
-                aria-hidden
-                className="shrink-0 self-stretch"
-                style={{
-                  width: STEP_COLUMN_WIDTH,
-                  minWidth: STEP_COLUMN_WIDTH,
-                }}
+              // Empty in Edit mode is not nothing: it is where a cell can go.
+              // Outside Edit it stays the inert spacer it has always been.
+              <BlueprintEmptyCellSlot
+                pathId={blueprint.path.id}
+                layerId={blueprintLayer.id}
+                stepId={step.id}
+                layerName={layer.name}
+                stepName={step.name}
+                stepIndex={stepIndex}
+                scenarioName={scenarioName}
+                phaseName={phaseName}
+                width={STEP_COLUMN_WIDTH}
+                selfStretch
               />
             )}
             {stepIndex < blueprint.steps.length - 1 && (
@@ -587,6 +637,7 @@ function CompareCellBlock({
   flushBottom,
   selectionContext,
   visualPictures,
+  slotCells,
 }: {
   cellId?: string
   stepIndex: number
@@ -597,7 +648,28 @@ function CompareCellBlock({
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
+  /** Every cell in a tech slot — one per touchpoint since the split. */
+  slotCells?: BlueprintCell[]
 }) {
+  const highlight = useContext(CompareHighlightContext)
+  /*
+    The highlight pass. Verdicts paint, never move: shared cells recede to
+    context, a cell only one path has wears that path's color as a ring,
+    and a divergent counterpart adds the ≠ badge. Visual-lane cells are
+    synthetic (no real id) and stay out of it.
+  */
+  const compareStatus =
+    highlight && cellId && variant !== 'visual'
+      ? (highlight.get(cellId) ?? null)
+      : null
+  const pathAccent =
+    compareStatus && selectionContext
+      ? getPathColor({
+          path_type: selectionContext.pathType,
+          name: selectionContext.pathName,
+        })
+      : null
+
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
     compact ? 'pt-3' : 'pt-4',
@@ -618,7 +690,17 @@ function CompareCellBlock({
     'relative z-[1] flex shrink-0 items-stretch',
     shellPadding,
     isVisual && 'min-h-0 overflow-hidden',
+    compareStatus === 'shared' &&
+      'opacity-40 saturate-[.6] transition-[opacity,filter]',
   )
+  const compareRing =
+    compareStatus === 'only' || compareStatus === 'divergent'
+      ? {
+          outline: `2px solid ${pathAccent ?? 'var(--primary)'}`,
+          outlineOffset: -2,
+          borderRadius: 12,
+        }
+      : undefined
 
   const innerContent =
     variant === 'visual' ? (
@@ -646,15 +728,41 @@ function CompareCellBlock({
           compact ? 'gap-2' : 'gap-2.5',
         )}
       >
-        {getTechPillItems(content).map((item, index) =>
+        {(slotCells && slotCells.length > 0
+          ? slotCells.flatMap((slotCell) =>
+              getTechPillItems(slotCell.content ?? '').map((item) => ({
+                item,
+                slotCell,
+              })),
+            )
+          : getTechPillItems(content).map((item) => ({
+              item,
+              slotCell: undefined,
+            }))
+        ).map(({ item, slotCell }, index, all) =>
           selectionContext ? (
             <BlueprintTechPill
-              key={`${item}-${index}`}
+              key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
-              selectionContext={selectionContext}
+              // Identity is the split's point: each pill carries its own
+              // cell in the selection it hands to the panel and the picker.
+              selectionContext={
+                slotCell
+                  ? {
+                      ...selectionContext,
+                      cellId: slotCell.id,
+                      cellContent: slotCell.content ?? '',
+                      cellPicture: slotCell.picture ?? null,
+                      cellDescription: slotCell.description ?? null,
+                      cellLinks: slotCell.links,
+                    }
+                  : selectionContext
+              }
               stepIndex={stepIndex}
               compact={compact}
-              sliceSequenceBadge={index === 0}
+              sliceSequenceBadge={
+                index === 0 || slotCell?.id !== all[index - 1]?.slotCell?.id
+              }
             />
           ) : (
             <TechPillFace
@@ -683,7 +791,17 @@ function CompareCellBlock({
     )
 
   return (
-    <div className={shellClassName} style={shellStyle}>
+    <div className={shellClassName} style={{ ...shellStyle, ...compareRing }}>
+      {compareStatus === 'divergent' ? (
+        <span
+          aria-hidden
+          title="Differs from its counterpart in the other path"
+          className="absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full text-2xs font-semibold text-white shadow-sm"
+          style={{ backgroundColor: pathAccent ?? 'var(--primary)' }}
+        >
+          ≠
+        </span>
+      ) : null}
       {innerContent}
     </div>
   )

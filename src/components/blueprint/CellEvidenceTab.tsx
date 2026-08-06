@@ -19,7 +19,8 @@ import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useEvidence } from '@/hooks/useEvidence'
+import { invalidateEvidence, useEvidence } from '@/hooks/useEvidence'
+import { addEvidence } from '@/lib/evidenceMutations'
 import { resolveFirstLifecycleId } from '@/lib/lifecycle'
 import { safeExternalHref } from '@/lib/sliceCells'
 import type { Database, Evidence } from '@/types/database'
@@ -65,7 +66,7 @@ function EvidenceRow({ row }: { row: Evidence }) {
             href={refHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-fit min-w-0 items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex w-fit min-w-0 items-center gap-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ExternalLink className="size-3 shrink-0" aria-hidden />
             {/* A citation ref or URL — machine data, and mono keeps a truncated
@@ -74,12 +75,12 @@ function EvidenceRow({ row }: { row: Evidence }) {
           </a>
         ) : null}
         {row.excerpt ? (
-          <p className="border-l-2 border-border pl-2 text-[11px] leading-snug text-muted-foreground italic">
+          <p className="border-l-2 border-border pl-2 text-2xs leading-snug text-muted-foreground italic">
             {row.excerpt}
           </p>
         ) : null}
         {row.note ? (
-          <p className="text-[11px] leading-snug text-muted-foreground">
+          <p className="text-2xs leading-snug text-muted-foreground">
             {row.note}
           </p>
         ) : null}
@@ -128,19 +129,20 @@ function AddSourceForm({
     setError(null)
     try {
       const lifecycleId = await resolveFirstLifecycleId(client)
-      const { error: insertError } = await client.from('evidence').insert({
-        service_lifecycle_id: lifecycleId,
-        cell_id: cellId,
+      // Through the ledger wrapper, like every other write — an added source
+      // shows in the session log and can be taken back.
+      await addEvidence(client, {
+        serviceLifecycleId: lifecycleId,
+        cellId,
         // TODO(map-skill): id placeholder — real IR key-paths come from
         // the skill.
-        cell_key: cellId,
+        cellKey: cellId,
         kind,
         title: title.trim(),
         ref: ref.trim() || null,
         excerpt: excerpt.trim() || null,
         note: note.trim() || null,
       })
-      if (insertError) throw new Error(insertError.message)
       setOpen(false)
       setTitle('')
       setRef('')
@@ -256,8 +258,7 @@ function EvidenceList({
   client: SupabaseClient<Database>
   cellId: string
 }) {
-  const [reloadToken, setReloadToken] = useState(0)
-  const result = useEvidence(cellId, reloadToken)
+  const result = useEvidence(cellId)
 
   if (result.status === 'error') {
     return (
@@ -301,7 +302,7 @@ function EvidenceList({
         <AddSourceForm
           client={client}
           cellId={cellId}
-          onAdded={() => setReloadToken((token) => token + 1)}
+          onAdded={() => invalidateEvidence(cellId)}
         />
       </div>
     </DeferredSkeleton>

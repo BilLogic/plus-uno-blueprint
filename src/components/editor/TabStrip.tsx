@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
 import { AlertTriangle, Info, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { HomeNavButton } from '@/components/editor/EditorChrome'
+import { HomeNavButton, WorkspaceBadges } from '@/components/editor/EditorChrome'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -190,6 +196,20 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
 }
 
 /**
+ * Edge fades for the tab row, keyed on scroll position. A mask on the
+ * scroll container itself: masks resolve against the element's box, not the
+ * scrolled content, so the fade stays pinned to whichever edge has more
+ * tabs behind it. A gradient mask is the whole affordance — a scroll-area
+ * component would add a scrollbar this strip deliberately does not show.
+ */
+const TABLIST_FADE_BOTH =
+  '[mask-image:linear-gradient(to_right,transparent,black_1.5rem,black_calc(100%-1.5rem),transparent)]'
+const TABLIST_FADE_LEFT =
+  '[mask-image:linear-gradient(to_right,transparent,black_1.5rem)]'
+const TABLIST_FADE_RIGHT =
+  '[mask-image:linear-gradient(to_right,black_calc(100%-1.5rem),transparent)]'
+
+/**
  * Tab strip above the shell main area. Holds Home plus the slice / present
  * tabs (the base blueprint view is not a tab), and always renders: Home lives
  * here rather than in the sidebar so it never competes with the disclosure
@@ -204,10 +224,13 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
 export function TabStrip({
   isOverview,
   onHome,
+  onBase,
 }: {
   /** The overview canvas is the current view, with no tab covering it. */
   isOverview: boolean
   onHome: () => void
+  /** Activate the base blueprint view (deactivate any tab). */
+  onBase: () => void
 }) {
   const {
     tabs,
@@ -225,6 +248,75 @@ export function TabStrip({
     id: string
     title: string
   } | null>(null)
+
+  // Overflow affordance: which edges of the tab row currently hide tabs.
+  // Scroll position is DOM state, so it is read from the DOM (onScroll +
+  // ResizeObserver) rather than derived — there is nothing to derive from.
+  const tablistRef = useRef<HTMLDivElement>(null)
+  const [fade, setFade] = useState({ left: false, right: false })
+  const updateFade = useCallback(() => {
+    const el = tablistRef.current
+    if (!el) return
+    const left = el.scrollLeft > 1
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+    setFade((prev) =>
+      prev.left === left && prev.right === right ? prev : { left, right },
+    )
+  }, [])
+  useEffect(() => {
+    updateFade()
+    const el = tablistRef.current
+    if (!el) return
+    // Both the strip resizing and tabs opening/closing change scrollWidth.
+    const observer = new ResizeObserver(updateFade)
+    observer.observe(el)
+    for (const child of el.children) observer.observe(child)
+    return () => observer.disconnect()
+  }, [updateFade, tabs.length])
+
+  /**
+   * WAI-ARIA tabs keyboard pattern with automatic activation: arrows move
+   * focus AND activate, matching the click handlers (a click activates
+   * immediately — switching views here is a cheap state change). Roving
+   * tabindex lives on `aria-selected`, which automatic activation keeps in
+   * lockstep with focus. Order in the DOM is [base, ...tabs], same as the
+   * key list built here.
+   */
+  const handleTablistKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const { key } = event
+    if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'Home' && key !== 'End') {
+      return
+    }
+    const tabButtons = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+    )
+    if (tabButtons.length === 0) return
+    const focused = tabButtons.indexOf(
+      document.activeElement as HTMLButtonElement,
+    )
+    const selected = tabButtons.findIndex(
+      (button) => button.getAttribute('aria-selected') === 'true',
+    )
+    const from = focused >= 0 ? focused : Math.max(selected, 0)
+    const last = tabButtons.length - 1
+    const next =
+      key === 'Home'
+        ? 0
+        : key === 'End'
+          ? last
+          : // Arrows wrap, per the pattern.
+            (from + (key === 'ArrowRight' ? 1 : -1) + tabButtons.length) %
+            tabButtons.length
+    event.preventDefault()
+    tabButtons[next].focus()
+    const keys: Array<ReturnType<typeof tabKey> | null> = [
+      null,
+      ...tabs.map(tabKey),
+    ]
+    const nextKey = keys[next]
+    if (nextKey === null) onBase()
+    else activateTab(nextKey)
+  }
 
   // The boot deep link's slice, captured before `resolvePending` clears it.
   const [bootSliceId] = useState(() =>
@@ -265,18 +357,60 @@ export function TabStrip({
     <>
       {notice}
       {seed}
-      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar px-2 py-1.5">
-        <HomeNavButton
-          isActive={isOverview}
-          onClick={onHome}
-          size="icon-sm"
-          className="mr-1"
-        />
+      <div className="flex shrink-0 items-center gap-1 border-b border-border bg-sidebar pr-2 py-1.5">
+        {/* Home occupies the same 48px column as the rail below, centered,
+            so the icon stack reads as one continuous left edge. The tabs then
+            start exactly where the sidebar panel starts. */}
+        <div className="flex w-12 shrink-0 items-center justify-center">
+          <HomeNavButton
+            isActive={isOverview}
+            onClick={onHome}
+            size="icon-sm"
+          />
+        </div>
         <div
+          ref={tablistRef}
           role="tablist"
           aria-label="Open views"
-          className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto"
+          onKeyDown={handleTablistKeyDown}
+          onScroll={updateFade}
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-1 overflow-x-auto',
+            fade.left && fade.right
+              ? TABLIST_FADE_BOTH
+              : fade.left
+                ? TABLIST_FADE_LEFT
+                : fade.right
+                  ? TABLIST_FADE_RIGHT
+                  : null,
+          )}
         >
+          {/* The workspace is a PERMANENT tab, not a title: same chrome as
+              slice tabs, active whenever no tab covers the base view, and —
+              deliberately — no close button. It replaces the old clickable
+              heading, which read as a bug. */}
+          <div
+            className={cn(
+              'flex shrink-0 items-center rounded-md border text-xs',
+              activeKey === null
+                ? 'border-border bg-background shadow-sm'
+                : 'border-transparent hover:bg-accent',
+            )}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeKey === null}
+              tabIndex={activeKey === null ? 0 : -1}
+              onClick={onBase}
+              className={cn(
+                'max-w-56 truncate px-2.5 py-1 font-medium',
+                activeKey === null ? 'text-foreground' : 'text-muted-foreground',
+              )}
+            >
+              Uno Blueprint
+            </button>
+          </div>
       {tabs.map((tab) => {
         const key = tabKey(tab)
         const active = key === activeKey
@@ -295,6 +429,7 @@ export function TabStrip({
               type="button"
               role="tab"
               aria-selected={active}
+              tabIndex={active ? 0 : -1}
               onClick={() => activateTab(key)}
               className={cn(
                 'max-w-56 truncate px-2.5 py-1 font-medium',
@@ -307,6 +442,10 @@ export function TabStrip({
               type="button"
               aria-label={`Close ${label}`}
               onClick={() => closeTab(key)}
+              // Out of the tab order: the tablist is one roving stop per the
+              // ARIA tabs pattern, and close stays reachable via the row's
+              // context menu (and pointer).
+              tabIndex={-1}
               className="mr-1 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="size-3" />
@@ -336,6 +475,11 @@ export function TabStrip({
           </ContextMenu>
         )
       })}
+        </div>
+        {/* Environment badges (authoring / edit preview) keep their home in
+            the top nav, at the quiet end of the strip. */}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <WorkspaceBadges />
         </div>
         <DeleteSliceDialog
           slice={deleteTarget}

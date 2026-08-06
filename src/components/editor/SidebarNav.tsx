@@ -31,17 +31,64 @@ const CHEVRON_SLOT_CLASS =
 
 /** Hidden at rest, revealed by hovering or focusing anywhere in the row. */
 const CHEVRON_REVEAL_CLASS =
-  'opacity-0 transition-opacity duration-150 group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100 motion-reduce:transition-none'
+  'opacity-0 transition-opacity duration-(--motion-micro) group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100 motion-reduce:transition-none'
 
 /** Child rows indent by exactly one chevron slot. */
 export const NAV_CHILD_INDENT_CLASS = 'pl-4'
+
+/**
+ * A hover-revealed action at the right of a row or section header — the `+`
+ * that creates a child, the `⋯` that opens a row menu.
+ *
+ * Revealed rather than permanent, and headers are no exception: a sidebar with
+ * a `+` on every row is a column of plus signs, and this list is read far more
+ * often than it is added to. It wears the same reveal the chevron does, so the
+ * two appear together and the row has one hover state rather than two.
+ *
+ * Coarse pointers have no hover to reveal it with, so there it is always shown.
+ * Keyboard focus reveals it through `group-focus-within`, and it stays in the
+ * tab order either way — an affordance that only exists under a mouse is not an
+ * affordance for everyone.
+ */
+export function NavRowAction({
+  label,
+  onClick,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={(event) => {
+        // The whole row is a button; without this the create would also
+        // navigate to whatever it was attached to.
+        event.stopPropagation()
+        onClick()
+      }}
+      className={cn(
+        CHEVRON_SLOT_CLASS,
+        CHEVRON_REVEAL_CLASS,
+        'shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        'focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+        '[@media(pointer:coarse)]:opacity-100',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
 
 function NavChevron({ open }: { open: boolean }) {
   return (
     <ChevronRight
       aria-hidden
       className={cn(
-        'size-3.5 text-sidebar-foreground/60 transition-transform duration-200 ease-out motion-reduce:transition-none',
+        'size-3.5 text-sidebar-foreground/60 transition-transform duration-(--motion-fade) ease-out motion-reduce:transition-none',
         open && 'rotate-90',
       )}
     />
@@ -58,7 +105,12 @@ type NavRowProps = {
   onSelect?: () => void
   /** Camera/tab target: accent fill + left rail. */
   selected?: boolean
-  /** Contains the selection, or is open-but-inactive: marker dot only. */
+  /**
+   * Contains the selection. No longer drawn: the highlighted scenario one
+   * line below already says it, and two markers for one fact read as two
+   * facts. Kept in the type so call sites keep stating it, which is what
+   * guards against `selected` and `ancestor` ever both being true.
+   */
   ancestor?: boolean
   /** Accessible name for the chevron ("Expand X" / "Collapse X"). */
   toggleLabel?: string
@@ -68,6 +120,8 @@ type NavRowProps = {
   rowId?: string
   /** Emphasis for top-level rows; children read one step quieter. */
   size?: 'md' | 'sm'
+  /** Hover-revealed action at the right edge — the `+` that creates a child. */
+  trailing?: ReactNode
   className?: string
 }
 
@@ -84,11 +138,11 @@ export function NavRow({
   onToggle,
   onSelect,
   selected = false,
-  ancestor = false,
   toggleLabel,
   panelId,
   rowId,
   size = 'md',
+  trailing,
   className,
 }: NavRowProps) {
   const expandable = open !== undefined && onToggle !== undefined
@@ -114,9 +168,6 @@ export function NavRow({
         selected
           ? 'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
           : 'hover:bg-sidebar-accent',
-        !selected &&
-          ancestor &&
-          'before:absolute before:top-1/2 before:left-0.5 before:size-1 before:-translate-y-1/2 before:rounded-full before:bg-sidebar-ancestor',
         className,
       )}
     >
@@ -158,6 +209,7 @@ export function NavRow({
         ) : null}
         {label}
       </button>
+      {trailing}
     </div>
   )
 }
@@ -200,7 +252,7 @@ export function NavSection({
           <span className={cn(CHEVRON_SLOT_CLASS, CHEVRON_REVEAL_CLASS)}>
             <NavChevron open={open} />
           </span>
-          <span className="min-w-0 flex-1 truncate py-1.5 text-[11px] font-medium tracking-wider text-sidebar-foreground/60 uppercase">
+          <span className="min-w-0 flex-1 truncate py-1.5 text-2xs font-medium tracking-wider text-sidebar-foreground/60 uppercase">
             {title}
           </span>
         </CollapsibleTrigger>

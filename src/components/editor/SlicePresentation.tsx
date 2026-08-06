@@ -7,8 +7,10 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react'
+import { SlicePresentationLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
-import { DelayedSpinner } from '@/components/ui/spinner'
+import { Button } from '@/components/ui/button'
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
@@ -161,9 +163,14 @@ export function SlicePresentation({
     blueprintsLoading
   ) {
     return (
-      <div className="dark flex h-full bg-background">
-        <DelayedSpinner />
-      </div>
+      <DeferredSkeleton
+        loading
+        holdKey={`present-tab:${sliceId}`}
+        skeleton={<SlicePresentationLoadingSkeleton />}
+        className="h-full min-h-0"
+      >
+        {null}
+      </DeferredSkeleton>
     )
   }
 
@@ -244,7 +251,7 @@ export function SlicePresentation({
 
           <div className="min-w-0 flex-1 overflow-y-auto px-2">
             <div className="flex min-h-full flex-col items-center justify-center gap-4 py-4 text-center">
-              <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
+              <p className="font-mono text-2xs font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
                 Frame {clampedFrame + 1} of {frameCount}
               </p>
               {stageMedia.length > 0 ? (
@@ -352,15 +359,18 @@ function FrameNavButton({
 }) {
   const Icon = direction === 'prev' ? ChevronLeft : ChevronRight
   return (
-    <button
+    // Ghost Button with the bespoke rail geometry kept verbatim (w-10 +
+    // py-6 is the hit area presenters aim at from across the room).
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === 'prev' ? 'Previous frame' : 'Next frame'}
-      className="flex w-10 shrink-0 items-center justify-center self-center rounded-md border border-border bg-card py-6 text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+      className="h-auto w-10 shrink-0 self-center rounded-md border-border bg-card px-0 py-6 text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground disabled:opacity-30 dark:hover:bg-accent"
     >
       <Icon className="size-5" />
-    </button>
+    </Button>
   )
 }
 
@@ -401,36 +411,45 @@ function PresentationFilmstrip({
                 active ? 'border-foreground' : 'border-border',
               )}
             >
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => onSelect(index)}
                 className={cn(
-                  'max-w-48 truncate text-left text-xs font-medium',
-                  active ? 'text-foreground' : 'text-muted-foreground',
+                  // h-auto/p-0 keeps the raw button's exact text hit area.
+                  'h-auto max-w-48 justify-start rounded-sm border-0 p-0 text-xs font-medium hover:bg-transparent dark:hover:bg-transparent',
+                  active
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
-                {item.caption ?? `Frame ${index + 1}`}
-              </button>
+                <span className="min-w-0 truncate">
+                  {item.caption ?? `Frame ${index + 1}`}
+                </span>
+              </Button>
               <div className="flex gap-1.5">
                 {item.cell_ids.map((cellId, cellIndex) => {
                   const order = (orderOffsets[index] ?? 0) + cellIndex + 1
                   const cell = cellById.get(resolveBlueprintCellId(cellId))
                   return (
-                    <button
+                    <Button
                       key={`${cellId}-${order}`}
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onSelect(index)}
                       title={cellSnippet(cell)}
                       className={cn(
-                        'flex size-10 shrink-0 items-center justify-center rounded-md border font-mono text-xs font-semibold tabular-nums transition-colors',
+                        // size-10 squares, exactly the raw buttons' hit area.
+                        'size-10 shrink-0 rounded-md border font-mono text-xs font-semibold tabular-nums',
                         active
-                          ? 'border-foreground bg-foreground text-background'
-                          : 'border-border bg-muted text-muted-foreground hover:bg-accent',
+                          ? 'border-foreground bg-foreground text-background hover:bg-foreground hover:text-background dark:hover:bg-foreground'
+                          : 'border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-accent',
                         !cell && 'border-dashed opacity-60',
                       )}
                     >
                       {order}
-                    </button>
+                    </Button>
                   )
                 })}
               </div>
@@ -463,7 +482,7 @@ function PresentationMiniMap({
   return (
     <div
       aria-hidden
-      className="absolute right-3 bottom-2 z-10 rounded-md border border-border bg-card/80 p-1.5 opacity-40 transition-opacity duration-150 hover:opacity-100"
+      className="absolute right-3 bottom-2 z-10 rounded-md border border-border bg-card/80 p-1.5 opacity-40 transition-opacity duration-(--motion-micro) hover:opacity-100"
     >
       <div className="flex flex-col gap-px">
         {layers.map((layer) => (

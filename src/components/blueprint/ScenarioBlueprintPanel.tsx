@@ -4,6 +4,7 @@ import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePa
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { useEditor } from '@/contexts/EditorContext'
+import { comparePathCells } from '@/lib/comparePathCells'
 import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
@@ -82,14 +83,30 @@ export function ScenarioBlueprintPanel({
   const phaseName = parentPhase
     ? getSlideDisplayLabel(parentPhase, slides)
     : undefined
-  const displayViewType =
+  const storedViewType =
     displayViewTypeProp ?? getScenarioDisplayViewType(slide)
-  const useIntegratedLayout =
-    displayViewType === 'integrated' &&
-    paths.length > 0 &&
-    selectedPathIds.length > 0
+  // Compare needs two sides. The toggle hides below 2 selected paths, but
+  // the stored override survives — falling back here keeps a scenario from
+  // being stranded in a compare it can no longer leave.
+  const displayViewType =
+    storedViewType === 'integrated' && selectedPathIds.length < 2
+      ? 'side-by-side'
+      : storedViewType
+  /*
+    Compare v2 is a *highlight pass over side-by-side*, not a merged grid.
+    The merged spine (ideation idea 1) shipped first and failed reading:
+    collapsing shared cells destroyed the row rhythm that makes a blueprint
+    scannable, and re-pointed arrows read as noise. The stored 'integrated'
+    view type now means "side-by-side, painted": identical cells dim,
+    unique cells wear their path's ring, divergent counterparts get a ≠
+    badge. Nothing moves; the differences are all that changes ink.
+  */
+  const compareHighlight =
+    displayViewType === 'integrated' && selectedPathIds.length >= 2
+  const useIntegratedLayout = false
   const useSideBySideLayout =
-    displayViewType === 'side-by-side' && selectedPathIds.length > 0
+    (displayViewType === 'side-by-side' || displayViewType === 'integrated') &&
+    selectedPathIds.length > 0
   const useSinglePathLayout =
     displayViewType === 'single' && selectedPathIds.length > 0
 
@@ -117,8 +134,20 @@ export function ScenarioBlueprintPanel({
   )
 
   const integratedBlueprint = useMemo(
-    () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds),
+    () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds, { compare: true }),
     [allBlueprints, selectedPathIds],
+  )
+
+  const compareStatusByCellId = useMemo(
+    () =>
+      compareHighlight
+        ? comparePathCells(
+            itemsInSelectionOrder(selectedPathIds, (id) =>
+              blueprintsByPathId.get(id),
+            ),
+          )
+        : undefined,
+    [blueprintsByPathId, compareHighlight, selectedPathIds],
   )
 
   const showIntegratedGrid =
@@ -153,14 +182,14 @@ export function ScenarioBlueprintPanel({
   const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
 
   const comparePanelProps = {
+    // Both compare-grid estimates run hot: the width one still counts
+    // per-path nesting the merged grid no longer draws, and the height one
+    // predates classification collapsing stacked slots. A floor set from a
+    // hot estimate is dead gray space — the measured content rules instead.
     minWidth: showIntegratedGrid
-      ? getIntegratedPanelWidth(
-          integratedBlueprint!.steps.length,
-          false,
-          integratedPathCount,
-        )
+      ? undefined
       : getComparePanelWidth(visibleBlueprints),
-    minHeight: panelHeight,
+    minHeight: showIntegratedGrid ? undefined : panelHeight,
     defaultWidth: showIntegratedGrid
       ? getIntegratedPanelWidth(
           integratedBlueprint!.steps.length,
@@ -184,7 +213,7 @@ export function ScenarioBlueprintPanel({
   if (loading && visibleBlueprints.length === 0 && !showIntegratedGrid) {
     return (
       <div
-        className="flex flex-col gap-2 transition-[opacity,filter] duration-300 ease-out"
+        className="flex flex-col gap-2 transition-[opacity,filter] duration-(--motion-fade) ease-out"
         data-focus-slide-id={slide.id}
         data-canvas-focus-dimmed={dimmed ? '' : undefined}
         style={dimmed ? { opacity: 0.3, filter: 'saturate(0.5)' } : undefined}
@@ -206,7 +235,7 @@ export function ScenarioBlueprintPanel({
 
     return (
       <div
-        className="flex min-h-[280px] min-w-[320px] items-center justify-center rounded-lg border border-dashed p-8 text-center transition-[opacity,filter] duration-300 ease-out"
+        className="flex min-h-[280px] min-w-[320px] items-center justify-center rounded-lg border border-dashed p-8 text-center transition-[opacity,filter] duration-(--motion-fade) ease-out"
         data-focus-slide-id={slide.id}
         data-canvas-focus-dimmed={dimmed ? '' : undefined}
         style={dimmed ? { opacity: 0.3, filter: 'saturate(0.5)' } : undefined}
@@ -255,6 +284,7 @@ export function ScenarioBlueprintPanel({
           sectionTitleDescription={sectionTitleDescription}
           fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
           fillSwimlaneHeight={fillSwimlaneHeight}
+          compareStatusByCellId={compareStatusByCellId}
         />
       </ResizableComparePanel>
     )

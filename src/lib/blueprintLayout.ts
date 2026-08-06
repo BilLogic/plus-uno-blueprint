@@ -455,7 +455,7 @@ export const BLUEPRINT_HEADER_HEIGHT_COMPACT = 32
 export const BLUEPRINT_LAYER_ROW_GAP = 0
 /** Padding around the grid body for arrow overlay bleed (matches ARROW_VIEWPORT_PAD). */
 export const BLUEPRINT_GRID_VIEWPORT_PAD = 13
-/** CanvasBlueprintArtboard inner wrapper (p-2). */
+/** Artboard inner wrapper (p-2; formerly CanvasBlueprintArtboard). */
 export const BLUEPRINT_CANVAS_INNER_PADDING = 16
 /** mb-2 below the compact path header row. */
 export const BLUEPRINT_COMPACT_HEADER_GAP = 8
@@ -541,12 +541,18 @@ export function getMaxPillCountInLayer(
   data: BlueprintData,
   layerId: string,
 ): number {
-  let max = 0
+  // Summed per *slot*, not maxed per cell: since the split a slot holds one
+  // cell per touchpoint, and a row sized to the tallest single cell would be
+  // one pill tall over a stack of three.
+  const perStep = new Map<string, number>()
   for (const cell of data.cells) {
     if (cell.layer_id === layerId && cell.content?.trim()) {
-      max = Math.max(max, parseCellContentItems(cell.content).length)
+      const count = parseCellContentItems(cell.content).length
+      perStep.set(cell.step_id, (perStep.get(cell.step_id) ?? 0) + count)
     }
   }
+  let max = 0
+  for (const total of perStep.values()) max = Math.max(max, total)
   return max
 }
 

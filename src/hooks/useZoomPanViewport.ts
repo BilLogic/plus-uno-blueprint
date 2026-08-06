@@ -91,6 +91,47 @@ function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 }
 
+/**
+ * True when something between `target` and `container` can still scroll in
+ * the direction of this wheel delta — in which case the wheel belongs to it,
+ * not to the camera. At-the-end counts as "cannot": a list scrolled to its
+ * bottom hands further downward wheel to the canvas, which is how native
+ * scroll chaining behaves everywhere else.
+ */
+function scrollableAncestorCanConsume(
+  target: Node,
+  container: HTMLElement,
+  deltaX: number,
+  deltaY: number,
+): boolean {
+  let node: Node | null = target
+  while (node && node !== container) {
+    if (node instanceof HTMLElement) {
+      const style = getComputedStyle(node)
+      const scrollsY =
+        node.scrollHeight > node.clientHeight &&
+        /auto|scroll/.test(style.overflowY)
+      const scrollsX =
+        node.scrollWidth > node.clientWidth &&
+        /auto|scroll/.test(style.overflowX)
+      if (scrollsY && deltaY !== 0) {
+        const atTop = node.scrollTop <= 0
+        const atBottom =
+          node.scrollTop + node.clientHeight >= node.scrollHeight - 1
+        if ((deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom)) return true
+      }
+      if (scrollsX && deltaX !== 0) {
+        const atLeft = node.scrollLeft <= 0
+        const atRight =
+          node.scrollLeft + node.clientWidth >= node.scrollWidth - 1
+        if ((deltaX < 0 && !atLeft) || (deltaX > 0 && !atRight)) return true
+      }
+    }
+    node = node.parentNode
+  }
+  return false
+}
+
 /** Sub-pixel camera deltas aren't worth a React commit. */
 function isSameTransform(
   a: { pan: { x: number; y: number }; zoom: number },
@@ -201,6 +242,30 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       fitAnimationRef.current = requestAnimationFrame(step)
     },
     [cancelFitAnimation, commitTransform, fitDurationMs],
+  )
+
+  /**
+   * Publish the live transform to React once the gesture goes quiet.
+   *
+   * Trailing rather than leading: during a pinch nothing reads `zoom` that
+   * cannot wait, and the point is to keep React out of the gesture entirely.
+   */
+  const syncTimer = useRef<number | null>(null)
+  const syncZoomToReact = useCallback(() => {
+    if (syncTimer.current !== null) window.clearTimeout(syncTimer.current)
+    syncTimer.current = window.setTimeout(() => {
+      syncTimer.current = null
+      const { pan: p, zoom: z } = transformRef.current
+      setPan(p)
+      setZoom(z)
+    }, 80)
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (syncTimer.current !== null) window.clearTimeout(syncTimer.current)
+    },
+    [],
   )
 
   const zoomAtPoint = useCallback(
@@ -375,6 +440,19 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     const onResize = () => {
       if (userAdjustedViewRef.current) return
 
+      // A fit that is still owed takes priority over every policy below: the
+      // resetKey fit retries twice by frame and once at 150ms, and on a heavy
+      // mount all three fire before the grid has laid out — after which this
+      // observer used to be the only agent left, and the refit branch never
+      // ran it. A viewport that has never framed anything has nothing to
+      // preserve; re-centering a camera that does not exist yet is not a
+      // policy question. This is how Edit mode ended up permanently at
+      // identity zoom over an empty corner.
+      if (pendingFitRef.current) {
+        runPendingFit(false)
+        return
+      }
+
       if (refitOnResize) {
         // Checked as the resize is observed, not when the debounce fires:
         // the chrome window closes before a 200 ms debounce would elapse.
@@ -408,20 +486,83 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     suppressResizeRefit,
   ])
 
+  /**
+   * Pinch to zoom, two fingers to pan.
+   *
+   * Bound on **window, in the capture phase**, and then filtered by hit test —
+   * not on the container. Three failures came out of binding it to the
+   * container, and they all look identical to the person using it (the canvas
+   * simply does not move):
+   *
+   * 1. The effect reads `containerRef.current` once. If it runs before that
+   *    node exists the listener is never attached, and since the deps are all
+   *    stable it is never retried — the canvas is permanently unzoomable.
+   * 2. Anything between the pointer and the container that handles `wheel`
+   *    first wins, and the overlays on this canvas are numerous and change.
+   * 3. A pointer over a child that is not a DOM descendant of the container —
+   *    a portalled overlay drawn on top of the canvas — never bubbles to it.
+   *
+   * Capture on window has none of those failure modes: it runs before every
+   * other handler, needs no ref at attach time, and asks
+   * `elementFromPoint`-style containment rather than trusting the event path.
+   *
+   * `{ passive: false }` is what makes `preventDefault` legal here, and
+   * preventing the default is the whole job on macOS — an unprevented
+   * ctrl+wheel is a browser page-zoom, which is why an unzoomable canvas often
+   * came with the *page* zooming instead.
+   */
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-
     const onWheel = (e: WheelEvent) => {
+      const el = containerRef.current
+      if (!el) return
+      const target = e.target
+      if (!(target instanceof Node) || !el.contains(target)) {
+        // Not the canvas — but an unprevented ctrl+wheel is still a browser
+        // *page* zoom, and a pinch that strays two pixels onto a popover or
+        // the toolbar must not permanently rescale the whole app. Page zoom
+        // persists across everything and is exactly what "the zoom keeps
+        // shifting" feels like. Swallow the page zoom; apply nothing.
+        if (e.ctrlKey) e.preventDefault()
+        return
+      }
+
+      // macOS sends pinch as ctrl+wheel; ⌘+wheel is the mouse equivalent.
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault()
+        // Immediate: a second viewport's window listener must not also apply
+        // the same tick, squaring the scale factor.
+        e.stopImmediatePropagation()
         const scaleFactor = Math.exp(-e.deltaY * 0.01)
-        zoomAtPoint(e.clientX, e.clientY, scaleFactor, true)
+        /*
+          `syncReact: false` — and this is the whole bug.
+
+          A pinch is not one event, it is sixty a second. Syncing React on
+          each one re-rendered the entire canvas subtree, which on a
+          four-hundred-cell blueprint is far more work than a frame has time
+          for, so the main thread saturated and the camera appeared not to
+          move at all. A single ⌘+wheel tick always worked, which is exactly
+          why this looked like "zoom is broken on the trackpad only".
+
+          The pan branch below has always passed `false` for the same reason.
+          The transform is written straight to the element either way; React
+          state only carries `zoom` for chrome that reads it, and that can
+          arrive one frame after the fingers stop.
+        */
+        zoomAtPoint(e.clientX, e.clientY, scaleFactor, false)
+        syncZoomToReact()
         return
       }
 
       if (e.deltaX !== 0 || e.deltaY !== 0) {
+        // A scrollable *inside* the canvas that can still consume this delta
+        // keeps it — an overflowing cell body, a text editor. Hijacking those
+        // scrolls pans the whole canvas while the text under the pointer
+        // sits unread, which is the exact jank this handler exists to fight.
+        if (scrollableAncestorCanConsume(target, el, e.deltaX, e.deltaY)) {
+          return
+        }
         e.preventDefault()
+        e.stopImmediatePropagation()
         cancelFitAnimation()
         userAdjustedViewRef.current = true
         const { pan: p, zoom: z } = transformRef.current
@@ -433,12 +574,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           z,
           false,
         )
+        // Pan must publish too, on the same trailing debounce as zoom —
+        // otherwise React's copy of the camera is the camera of ten minutes
+        // ago, and the next feature to read it inherits a stale-state bug.
+        syncZoomToReact()
       }
     }
 
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [cancelFitAnimation, commitTransform, zoomAtPoint])
+    window.addEventListener('wheel', onWheel, {
+      passive: false,
+      capture: true,
+    })
+    return () =>
+      window.removeEventListener('wheel', onWheel, { capture: true })
+  }, [cancelFitAnimation, commitTransform, syncZoomToReact, zoomAtPoint])
 
   const handlePointerDown = useCallback(
     (e: PointerEvent) => {
@@ -476,13 +625,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [commitTransform, isPanning],
   )
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    setIsPanning(false)
-    containerRef.current?.releasePointerCapture(e.pointerId)
-  }, [])
+  const handlePointerUp = useCallback(
+    (e: PointerEvent) => {
+      setIsPanning(false)
+      containerRef.current?.releasePointerCapture(e.pointerId)
+      // The drag committed straight to the element the whole way; publish the
+      // final camera to React so its copy is not the one from before the drag.
+      syncZoomToReact()
+    },
+    [syncZoomToReact],
+  )
 
   useEffect(() => {
     if (panEnabled) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- timing-sensitive pan/zoom state: cancels an in-flight drag the moment panning is disabled
     setIsPanning(false)
   }, [panEnabled])
 
@@ -499,6 +655,45 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     const rect = el.getBoundingClientRect()
     zoomAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2, 1 / 1.2)
   }, [zoomAtPoint])
+
+  /**
+   * Keyboard zoom, because on some setups there is otherwise none.
+   *
+   * Zoom had exactly two gestures: `cmd`+wheel, and clicking a blueprint in
+   * View mode to fit the camera to it. Design mode gives that click to the cell
+   * picker, so a mouse without a pinch gesture could not zoom in Design mode
+   * **at all**. `zoomIn`/`zoomOut`/`fitToView` already existed here and were
+   * bound to nothing; this binds them.
+   *
+   * Guarded on the event target so it never steals `⌘−` from a text field, and
+   * on `⌘` so a bare `-` still types a hyphen.
+   */
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return
+      const target = event.target
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return
+      }
+      // `=` is the unshifted key most people press for "+".
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault()
+        zoomIn()
+      } else if (event.key === '-' || event.key === '_') {
+        event.preventDefault()
+        zoomOut()
+      } else if (event.key === '0') {
+        event.preventDefault()
+        fitToView({ animate: true })
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [fitToView, zoomIn, zoomOut])
 
   return {
     containerRef,

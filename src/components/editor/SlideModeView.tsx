@@ -1,19 +1,27 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { SlideNavLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { useEditor } from '@/contexts/EditorContext'
 import { PathsSidebarSection } from '@/components/editor/PathsSidebarSection'
-import { NavSection } from '@/components/editor/SidebarNav'
+import { NavRowAction, NavSection } from '@/components/editor/SidebarNav'
+import { CreatePhaseDialog } from '@/components/editor/CreatePhaseDialog'
+import { CreateBlueprintDialog } from '@/components/editor/CreateBlueprintDialog'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { findFirstLifecycleId } from '@/lib/lifecycle'
 import { SlicesSidebarSection } from '@/components/editor/SlicesSidebarSection'
 import { SlideNav } from '@/components/editor/SlideNav'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { SidebarContent } from '@/components/ui/sidebar'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useViewState } from '@/contexts/viewStateStore'
 
-type SidebarMode = 'blueprints' | 'slices'
-
-/** Sidebar body for slide mode: the Blueprints/Slices tabs and their trees. */
-export function SlideModeSidebarNav() {
+/** Sidebar body for slide mode: the blueprint and slice trees. */
+export function SlideModeSidebarNav({
+  surface,
+}: {
+  /** Which nav surface the rail selected — this component renders both non-agent ones. */
+  surface: 'blueprints' | 'slices'
+}) {
   const {
     slides,
     selectPhase,
@@ -27,21 +35,35 @@ export function SlideModeSidebarNav() {
     expandedPhaseIds,
     setPhaseExpanded,
   } = useEditor()
-  const { activeKey, activeTab, activateTab } = useViewState()
+  const { activeKey, activateTab } = useViewState()
+  const { client, canWrite } = useSupabase()
+  const canvasMode = useCanvasModeValue()
+  // Creating is authoring, so the sidebar's `+`s belong to Edit mode — in
+  // View the sidebar navigates and nothing more.
+  const authoring = canWrite && canvasMode === 'design'
   const [phasesOpen, setPhasesOpen] = useState(true)
+  const [phaseDialogOpen, setPhaseDialogOpen] = useState(false)
+  const [scenarioPhaseId, setScenarioPhaseId] = useState<string | null>(null)
 
-  // Segmented sidebar mode — defaults to Blueprints, auto-switches to
-  // Slices when a slice/present tab activates (initializer covers remounts
-  // while a tab is already active, e.g. returning from a presentation).
-  const activeTabKind = activeTab?.kind ?? null
-  const [mode, setMode] = useState<SidebarMode>(
-    activeTabKind !== null ? 'slices' : 'blueprints',
-  )
-  const [lastTabKind, setLastTabKind] = useState(activeTabKind)
-  if (lastTabKind !== activeTabKind) {
-    setLastTabKind(activeTabKind)
-    if (activeTabKind !== null) setMode('slices')
-  }
+  // The service a new phase would belong to. Resolved once and cached at
+  // module level by `findFirstLifecycleId`, so this is a state read rather
+  // than a query in the common case.
+  const [lifecycleId, setLifecycleId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!client || !canWrite) return
+    let cancelled = false
+    void findFirstLifecycleId(client)
+      .then((id) => {
+        if (!cancelled) setLifecycleId(id)
+      })
+      .catch(() => {
+        // A missing lifecycle simply means no `+` on the section header;
+        // the rest of the sidebar is unaffected.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [canWrite, client])
 
   // The phase/scenario nav always drives the app-level (base blueprint
   // view) editor state. When a tab is active that would be invisible, so
@@ -61,25 +83,27 @@ export function SlideModeSidebarNav() {
     [activateTab, activeKey, selectScenario],
   )
   return (
-    <SidebarContent className="px-2 pt-0.5 pb-1">
-      <Tabs
-        value={mode}
-        onValueChange={(value) => setMode(value as SidebarMode)}
-        className="px-1 pb-1"
-      >
-        <TabsList className="h-7 w-full">
-          <TabsTrigger value="blueprints" className="text-xs">
-            Blueprints
-          </TabsTrigger>
-          <TabsTrigger value="slices" className="text-xs">
-            Slices
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {mode === 'blueprints' ? (
+    <SidebarContent className="px-2 pt-1 pb-1">
+      {surface === 'blueprints' ? (
         <>
-          <NavSection title="Phases" open={phasesOpen} onOpenChange={setPhasesOpen}>
+          <NavSection
+            title="Phases"
+            open={phasesOpen}
+            onOpenChange={setPhasesOpen}
+            trailing={
+              authoring && lifecycleId ? (
+                <NavRowAction
+                  label="New phase"
+                  onClick={() => {
+                    setPhasesOpen(true)
+                    setPhaseDialogOpen(true)
+                  }}
+                >
+                  <Plus className="size-3" aria-hidden />
+                </NavRowAction>
+              ) : undefined
+            }
+          >
             {slidesError && (
               <Alert variant="destructive" className="mb-2">
                 <AlertTitle className="text-xs">Phases</AlertTitle>
@@ -101,6 +125,7 @@ export function SlideModeSidebarNav() {
                 isHome={view !== 'detail'}
                 expandedPhaseIds={expandedPhaseIds}
                 onSetExpanded={setPhaseExpanded}
+                onAddScenario={authoring ? setScenarioPhaseId : undefined}
               />
             )}
           </NavSection>
@@ -113,6 +138,25 @@ export function SlideModeSidebarNav() {
             "outside the mode tabs" placement.
           */}
           <PathsSidebarSection />
+
+          <CreatePhaseDialog
+            lifecycleId={lifecycleId}
+            open={phaseDialogOpen}
+            onOpenChange={setPhaseDialogOpen}
+            onCreated={selectPhase}
+          />
+
+          {/*
+            The phase is already chosen — it is the row the `+` was on — so the
+            dialog opens with it fixed rather than asking again.
+          */}
+          <CreateBlueprintDialog
+            open={scenarioPhaseId !== null}
+            fixedPhaseId={scenarioPhaseId}
+            onOpenChange={(open) => {
+              if (!open) setScenarioPhaseId(null)
+            }}
+          />
         </>
       ) : (
         <SlicesSidebarSection />

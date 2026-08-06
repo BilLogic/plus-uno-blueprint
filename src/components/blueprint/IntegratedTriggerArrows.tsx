@@ -479,7 +479,7 @@ export function IntegratedTriggerArrows({
       width: Math.max(content.scrollWidth, content.offsetWidth, 1),
       height: Math.max(content.scrollHeight, content.offsetHeight, 1),
     })
-  }, [contentRef, forkMeta, forkTriggerIds, layer, pathById, triggers])
+  }, [cells, contentRef, forkMeta, forkTriggerIds, layer, pathById, steps, triggers])
 
   useEffect(() => {
     updateArrows()

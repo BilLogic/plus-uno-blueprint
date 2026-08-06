@@ -10,9 +10,12 @@
 
   --radius: 0.625rem;
 
-  /* Brand hue. oklch(… 177.6) is the blue-green this product is specified
-     around — `--brand-400` below is #85ECD5 exactly. */
-  --hue: 177.6;
+  /* Brand hue. 183 is the matcha-ceramic pivot (2026-08-06): sampled from
+     the reference glaze (H 190–200) and pulled back toward the original
+     #85ECD5 teal (H 177.6) so it still reads as this product's brand. The
+     numeric --brand-* ramp below still sits at the old hue — 5.4° apart,
+     under the 10° drift threshold; re-derive it when it's next touched. */
+  --hue: 183;
   /* Warm grey canvas, decoupled from the brand hue (`--surface-hue` defaults to
      `--hue`; overriding it is the point of splitting the two). Moot while
      `--chroma` is 0, but it is what a tinted light theme would turn. */

@@ -1,4 +1,4 @@
-import { Fragment, useId, useMemo, useRef } from 'react'
+import { Fragment, useCallback, useId, useMemo, useRef } from 'react'
 import {
   getScenarioSwimlaneBodyHeight,
   ScenarioBlueprintPanel,
@@ -106,6 +106,21 @@ export function PhaseScenarioOverview({
 }: PhaseScenarioOverviewProps) {
   const { getScenarioDisplayViewType, openDetail } = useEditor()
   const isOverview = variant === 'overview'
+
+  /*
+    Per-scenario override beats the phase-uniform prop. The prop is the
+    overview filter's shared default — but the Compare toggle sets a view
+    for *one* scenario, and a phase-level 'side-by-side' silently clobbering
+    it is exactly how a toggle looks broken while its state is correct.
+  */
+  const resolveViewType = useCallback(
+    (scenario: NavItem): SlideViewType => {
+      const perScenario = getScenarioDisplayViewType(scenario)
+      if (perScenario !== 'side-by-side') return perScenario
+      return displayViewTypeProp ?? perScenario
+    },
+    [displayViewTypeProp, getScenarioDisplayViewType],
+  )
   const scenarioGap = isOverview ? OVERVIEW_SCENARIO_GAP : DEFAULT_SCENARIO_GAP
 
   const renderScenarioSeparator = (index: number, total: number) => {
@@ -140,8 +155,7 @@ export function PhaseScenarioOverview({
         ? getSelectedPathIdsProp(scenario.id, paths)
         : defaultSelectedPathIds(paths)
       return getScenarioSwimlaneBodyHeight({
-        displayViewType:
-          displayViewTypeProp ?? getScenarioDisplayViewType(scenario),
+        displayViewType: resolveViewType(scenario),
         paths,
         selectedPathIds,
         blueprintsByPathId,
@@ -154,9 +168,8 @@ export function PhaseScenarioOverview({
     scenarios,
     pathsByScenario,
     blueprintsByPathId,
-    getScenarioDisplayViewType,
     getSelectedPathIdsProp,
-    displayViewTypeProp,
+    resolveViewType,
   ])
 
   const sharedPanelHeight = useMemo(() => {
@@ -185,7 +198,10 @@ export function PhaseScenarioOverview({
       return selectedPathIds.join(',')
     })
     .join('|')
-  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${displayViewTypeProp ?? ''}:${selectedPathsMeasureKey}`
+  const viewTypesMeasureKey = scenarios
+    .map((scenario) => resolveViewType(scenario))
+    .join(',')
+  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}`
   const rowPanelHeight = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
@@ -194,16 +210,23 @@ export function PhaseScenarioOverview({
   )
 
   if (scenarios.length === 0) {
+    // Scenario creation lives on the phase row's `+` in the sidebar (the row
+    // knows which phase it means) — no create callback reaches this canvas
+    // frame, so the empty state teaches the route instead of offering one.
     return (
       <div
         className={cn(
-          'flex min-h-[240px] items-center justify-center rounded-lg border border-dashed p-8 text-center',
+          'flex min-h-[220px] min-w-[min(36rem,65vw)] items-stretch',
           className,
         )}
+        data-phase-scenario-overview=""
+        data-phase-empty=""
       >
-        <p className="text-sm text-muted-foreground">
-          No scenarios in this phase yet.
-        </p>
+        <CanvasEmptyState
+          variant="phase"
+          title="No scenarios in this phase yet"
+          description="Scenarios are the journeys this phase plays out. Add one with the + on this phase's row in the sidebar (Edit mode)."
+        />
       </div>
     )
   }
@@ -286,7 +309,7 @@ export function PhaseScenarioOverview({
               lockedPanelHeight={rowPanelHeight}
               fixedSwimlaneBodyHeight={sharedSwimlaneBodyHeight}
               lockPanelHeight={alignPanelHeights}
-              displayViewType={displayViewTypeProp}
+              displayViewType={resolveViewType(scenario)}
               onNavigate={() => openDetail(scenario.id)}
               dimmed={
                 dimAllScenarios ||

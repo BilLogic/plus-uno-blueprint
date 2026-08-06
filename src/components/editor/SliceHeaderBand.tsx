@@ -2,6 +2,10 @@ import type { LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { SliceDetail } from '@/hooks/useSlice'
+import {
+  useCollapsedNavSummary,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
 import { cn } from '@/lib/utils'
 
 export type SliceHeaderPrimaryAction = {
@@ -29,15 +33,33 @@ export function SliceHeaderBand({
   detail,
   missingCellCount = 0,
   primaryAction,
+  secondaryAction,
   className,
 }: {
   detail: SliceDetail
   missingCellCount?: number
   primaryAction: SliceHeaderPrimaryAction
+  /** Ghost action left of the primary — Edit in the focus tab. */
+  secondaryAction?: SliceHeaderPrimaryAction
   className?: string
 }) {
+  const SecondaryIcon = secondaryAction?.icon
   const description = detail.slice.description?.trim()
   const PrimaryIcon = primaryAction.icon
+
+  // Collapsed: the floating pill is the only header on screen, so hand it
+  // this slice's identity and primary action and draw nothing here.
+  const { collapsed } = useSidebarCollapsedState()
+  useCollapsedNavSummary(
+    collapsed
+      ? {
+          title: detail.slice.title,
+          glyph: '◇',
+          action: { label: primaryAction.label, onClick: primaryAction.onClick },
+        }
+      : null,
+  )
+  if (collapsed) return null
 
   return (
     <div
@@ -76,6 +98,19 @@ export function SliceHeaderBand({
           )}
         </div>
       </div>
+
+      {secondaryAction && SecondaryIcon ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="shrink-0 gap-1.5"
+          onClick={secondaryAction.onClick}
+        >
+          <SecondaryIcon className="size-3" aria-hidden />
+          {secondaryAction.label}
+        </Button>
+      ) : null}
 
       <Button
         type="button"

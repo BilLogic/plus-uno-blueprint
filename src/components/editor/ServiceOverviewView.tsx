@@ -17,7 +17,7 @@ import {
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { ServiceOverviewCanvasSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { ServiceOverviewStickyHeader } from '@/components/editor/ServiceOverviewMenubarHeader'
+import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
 import {
@@ -317,11 +317,16 @@ export function ServiceOverviewView({
     () => [...blueprintsByPathId.values()],
     [blueprintsByPathId],
   )
-  // Cells open the detail panel only when zoomed into a phase/scenario
-  // (detail view, including detail-scoped slice tabs). At overview zoom the
-  // cells stay inert, so clicks fall through to the scenario/phase panels
-  // and navigate instead of opening the panel.
-  const cellDetailEnabled = isBlueprintCellDetailEnabled() && isDetail
+  // Cells open the detail panel only when a SCENARIO is the focus — either
+  // selected in the base view or scoped by a slice tab (soloScenarioId).
+  // Everywhere wider (overview zoom, a phase's row of boards) cells stay
+  // inert, so clicks fall through to the scenario/phase panels and navigate.
+  // Phase-level detail used to qualify, which reintroduced the "panel opens
+  // from the zoomed-out view" bug this gate exists to prevent.
+  const cellDetailEnabled =
+    isBlueprintCellDetailEnabled() &&
+    isDetail &&
+    (focusedScenarioId !== null || soloScenarioId != null)
 
   const focusedHeader = useMemo(() => {
     if (!isDetail) return null
@@ -378,9 +383,10 @@ export function ServiceOverviewView({
               paths={focusedHeader.paths}
               selectedPathIds={focusedHeader.selectedPathIds}
             />
-          ) : (
-            <ServiceOverviewStickyHeader />
-          )}
+          ) : // Overview: no navbar. The workspace tab in the top nav already
+          // names the view; a bar holding only a repeated title read as a
+          // broken fragment. The zoom pill floats over the canvas instead.
+          null}
           <div
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
             data-slide-canvas
@@ -388,6 +394,11 @@ export function ServiceOverviewView({
             {floatingChrome ? (
               <div className="pointer-events-none absolute right-4 bottom-4 z-30 [&>*]:pointer-events-auto">
                 {floatingChrome}
+              </div>
+            ) : null}
+            {!focusedHeader && !renderHeader ? (
+              <div className="pointer-events-none absolute right-4 top-3 z-30 flex items-center">
+                <NavbarZoomIndicator />
               </div>
             ) : null}
             {noPathsSelected ? (
@@ -403,7 +414,12 @@ export function ServiceOverviewView({
                 fitTopInset={fitInsets.topInset}
                 fitBottomInset={fitInsets.bottomInset}
                 animateFit={!skipCanvasFitAnimation && contentSettled}
-                showSequenceNav={isDetail && !soloScenarioId}
+                // Off. The prev/next phase pair sat at the bottom corners
+                // flanking the tool bar, which made three bottom controls
+                // that look alike and do unrelated things — and the sidebar
+                // already navigates phases, with the whole list visible
+                // rather than one neighbour at a time.
+                showSequenceNav={false}
                 onResetView={isDetail ? goHome : undefined}
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import type { BlueprintData } from '@/types/blueprint'
 import {
@@ -17,6 +18,7 @@ import {
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
+import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 
 export type BlueprintCellPreviewHover = {
@@ -30,6 +32,13 @@ type BlueprintCellDetailContextValue = {
   selection: BlueprintCellSelection | null
   selectCell: (selection: BlueprintCellSelection) => void
   clearSelection: () => void
+  /**
+   * A cell being *created*: the panel opens on this target with an empty
+   * form, and nothing is written until Save. Mutually exclusive with
+   * `selection` — a draft is not a cell yet.
+   */
+  draftCell: DraftCellTarget | null
+  openDraftCell: (draft: DraftCellTarget) => void
   isOpen: boolean
   selectedCellIds: ReadonlySet<string>
   directlyConnectedCellIds: ReadonlySet<string>
@@ -60,21 +69,45 @@ export function BlueprintCellDetailProvider({
   blueprints = [],
 }: BlueprintCellDetailProviderProps) {
   const [selection, setSelection] = useState<BlueprintCellSelection | null>(null)
+  const [draftCell, setDraftCell] = useState<DraftCellTarget | null>(null)
   const [previewHover, setPreviewHover] =
     useState<BlueprintCellPreviewHover | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset-on-key: clears three pieces of selection state together when the workspace changes
     setSelection(null)
+    setDraftCell(null)
     setPreviewHover(null)
   }, [resetKey])
 
+  // Tell the agent's UI-context collector which cell the human has open in
+  // the side panel — the panel mounts under the canvas, out of the agent
+  // panel's React reach, so this goes through the module bridge.
+  useEffect(() => {
+    if (!selection) return
+    return registerAgentUiContext('cell-panel', () => {
+      const cells = selection.paths
+        .map((entry) => `${entry.pathName}: ${entry.cellId}`)
+        .join('; ')
+      return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — layer "${selection.layerName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
+    })
+  }, [selection])
+
   const selectCell = useCallback((next: BlueprintCellSelection) => {
     setSelection(next)
+    setDraftCell(null)
+    setPreviewHover(null)
+  }, [])
+
+  const openDraftCell = useCallback((next: DraftCellTarget) => {
+    setDraftCell(next)
+    setSelection(null)
     setPreviewHover(null)
   }, [])
 
   const clearSelection = useCallback(() => {
     setSelection(null)
+    setDraftCell(null)
     setPreviewHover(null)
   }, [])
 
@@ -143,7 +176,9 @@ export function BlueprintCellDetailProvider({
       selection,
       selectCell,
       clearSelection,
-      isOpen: enabled && selection !== null,
+      draftCell,
+      openDraftCell,
+      isOpen: enabled && (selection !== null || draftCell !== null),
       selectedCellIds: cellEmphasis.selectedCellIds,
       directlyConnectedCellIds: cellEmphasis.directlyConnectedCellIds,
       setPreviewHover,
@@ -154,6 +189,8 @@ export function BlueprintCellDetailProvider({
       selection,
       selectCell,
       clearSelection,
+      draftCell,
+      openDraftCell,
       cellEmphasis,
     ],
   )

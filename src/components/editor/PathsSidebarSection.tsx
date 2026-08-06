@@ -1,8 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Plus } from 'lucide-react'
 import { useEditor } from '@/contexts/EditorContext'
 import { usePathSelectionContext } from '@/hooks/usePathSelection'
-import { NavSection } from '@/components/editor/SidebarNav'
+import { NavRowAction, NavSection } from '@/components/editor/SidebarNav'
+import { CreateVersionDialog } from '@/components/editor/CreateVersionDialog'
+import { StructureRowContextMenu } from '@/components/editor/StructureRowMenu'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { useScenarioPaths } from '@/hooks/useScenarioPaths'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -20,15 +25,59 @@ import type { PathOption } from '@/components/blueprint/PathMultiSelect'
  * Local open state (rather than a `defaultValue`) survives the section
  * hiding and coming back within one mount.
  */
-function PathsSection({ children }: { children: ReactNode }) {
+function PathsSection({
+  children,
+  trailing,
+}: {
+  children: ReactNode
+  trailing?: ReactNode
+}) {
   const [open, setOpen] = useState(true)
 
   return (
     <>
       <Separator className="my-1.5" />
-      <NavSection title="Paths" open={open} onOpenChange={setOpen}>
+      <NavSection
+        title="Paths"
+        open={open}
+        onOpenChange={setOpen}
+        trailing={trailing}
+      >
         {children}
       </NavSection>
+    </>
+  )
+}
+
+/**
+ * The header `+`, and the dialog behind it.
+ *
+ * Scoped to the selected scenario, which is the only reason this section is on
+ * screen at all — a path belongs to exactly one scenario, so there is nothing
+ * to disambiguate and no picker to offer.
+ */
+function NewPathAction({ scenarioId }: { scenarioId: string }) {
+  const { canWrite } = useSupabase()
+  const mode = useCanvasModeValue()
+  const [open, setOpen] = useState(false)
+  const paths = useScenarioPaths(canWrite ? scenarioId : null)
+  const data = paths.status === 'ready' ? paths.data : null
+
+  // Edit mode only — creating is authoring.
+  if (!canWrite || !data || mode !== 'design') return null
+
+  return (
+    <>
+      <NavRowAction label={`New path in ${data.scenarioName}`} onClick={() => setOpen(true)}>
+        <Plus className="size-3" aria-hidden />
+      </NavRowAction>
+      <CreateVersionDialog
+        scenarioId={scenarioId}
+        scenarioName={data.scenarioName}
+        versions={data.versions}
+        open={open}
+        onOpenChange={setOpen}
+      />
     </>
   )
 }
@@ -47,7 +96,13 @@ function PathsLoadingRows() {
   )
 }
 
-function PathChecklist({ options }: { options: PathOption[] }) {
+function PathChecklist({
+  options,
+  scenarioId,
+}: {
+  options: PathOption[]
+  scenarioId?: string
+}) {
   const { activePathKeys, togglePathKey } = usePathSelectionContext()
 
   return (
@@ -56,17 +111,37 @@ function PathChecklist({ options }: { options: PathOption[] }) {
         const selected = activePathKeys.includes(option.id)
         return (
           <li key={option.id}>
+          <StructureRowContextMenu
+            kind="path"
+            id={option.id}
+            name={option.name}
+            scenarioId={scenarioId}
+          >
+          <div
+            className="group/path-row flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-sidebar-accent"
+          >
             <button
               type="button"
               aria-pressed={selected}
               onClick={() => togglePathKey(option.id)}
               // The check occupies the same 1rem slot the nav rows give their
-              // chevron, so path names line up with phase names.
-              className="flex w-full min-w-0 items-center gap-1 rounded-md pl-1 text-left text-xs text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              // chevron, so path names line up with phase names. A selected
+              // path also carries weight and full ink — the check alone was
+              // easy to miss at a glance, and this is the row that says what
+              // the canvas is currently showing.
+              className={cn(
+                'flex min-w-0 flex-1 items-center gap-1 rounded-md pl-1 text-left text-xs transition-colors',
+                selected
+                  ? 'font-medium text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground/85 group-hover/path-row:text-sidebar-accent-foreground',
+              )}
             >
               <span className="flex size-4 shrink-0 items-center justify-center">
                 <Check
-                  className={cn('size-3.5', !selected && 'invisible')}
+                  className={cn(
+                    'size-3.5',
+                    selected ? 'text-primary' : 'invisible',
+                  )}
                   aria-hidden
                 />
               </span>
@@ -74,6 +149,8 @@ function PathChecklist({ options }: { options: PathOption[] }) {
                 {option.name}
               </span>
             </button>
+          </div>
+          </StructureRowContextMenu>
           </li>
         )
       })}
@@ -102,7 +179,7 @@ function ScenarioPathsChecklist({ scenarioId }: { scenarioId: string }) {
   // The scenario's paths land in the catalog once its canvas loads.
   if (options.length === 0) return <PathsLoadingRows />
 
-  return <PathChecklist options={options} />
+  return <PathChecklist options={options} scenarioId={scenarioId} />
 }
 
 /**
@@ -146,7 +223,7 @@ export function PathsSidebarSection() {
 
   if (view === 'detail' && selectedScenarioId !== null) {
     return (
-      <PathsSection>
+      <PathsSection trailing={<NewPathAction scenarioId={selectedScenarioId} />}>
         <ScenarioPathsChecklist scenarioId={selectedScenarioId} />
       </PathsSection>
     )

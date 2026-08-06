@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    // No baseUrl: removed in TypeScript 7. `paths` resolves relative to this
+    // file, which is what the mapping already assumed.
     "paths": {
       "@/*": ["./src/*"]
     },

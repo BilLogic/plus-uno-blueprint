@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useRef } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
+import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
@@ -7,6 +8,7 @@ import {
   BlueprintDividerRow,
 } from '@/components/blueprint/BlueprintLabelRail'
 import { BlueprintTriggerArrows } from '@/components/blueprint/BlueprintTriggerArrows'
+import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import {
   ComparePathSectionFrame,
   SERVICE_PATH_SECTION_INSET,
@@ -47,7 +49,7 @@ import {
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
-import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
+import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   BLUEPRINT_THEME,
@@ -72,7 +74,7 @@ import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
-import type { BlueprintData } from '@/types/blueprint'
+import type { BlueprintCell, BlueprintData } from '@/types/blueprint'
 
 type ServiceBlueprintGridProps = {
   data: BlueprintData
@@ -125,15 +127,8 @@ export function ServiceBlueprintGrid({
     )
   const playGutter = showPlay ? VISUAL_PLAY_GUTTER : 0
 
-  if (steps.length === 0 && layers.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        This path has no layers or steps yet.
-      </p>
-    )
-  }
-
-  const gridMinWidth = getBlueprintGridMinWidth(steps.length)
+  // Hooks must run unconditionally — these sit above the empty-grid early
+  // return, and both are pure computations so hoisting changes nothing.
   const naturalGridBodyMinHeight = useMemo(
     () =>
       getBlueprintGridMinHeight(data, {
@@ -151,6 +146,16 @@ export function ServiceBlueprintGrid({
     const serviceInset = SERVICE_PATH_SECTION_INSET * 2
     return fixedSwimlaneBodyHeight - compareInset + serviceInset
   }, [fixedSwimlaneBodyHeight, naturalGridBodyMinHeight])
+
+  if (steps.length === 0 && layers.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        This path has no layers or steps yet.
+      </p>
+    )
+  }
+
+  const gridMinWidth = getBlueprintGridMinWidth(steps.length)
 
   const scrollMinHeight =
     gridBodyMinHeight + ARROW_VIEWPORT_PAD * 2
@@ -380,7 +385,12 @@ export function ServiceBlueprintGrid({
           </div>
 
           {layers.length === 0 && steps.length > 0 && (
-            <p className="p-6 text-sm text-muted-foreground">No layers defined.</p>
+            <CanvasEmptyState
+              variant="panel"
+              className="h-auto w-full"
+              title="No layers defined"
+              description="Layers are this blueprint's swimlanes. They arrive with the blueprint import — or ask the agent with /sb:map to add them."
+            />
           )}
         </div>
       </div>
@@ -437,11 +447,14 @@ function BlueprintSwimLane({
     ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
     : 0
 
+  // `data-layer-name` lets a selected cell say which lane it is in without the
+  // selection having to carry the whole blueprint (see lib/canvasCellQuery).
   return (
     <div
       data-blueprint-swimlane=""
       data-blueprint-row=""
       data-layer-id={layerId}
+      data-layer-name={layer.name}
       className={cn(
         'flex shrink-0 overflow-visible rounded-sm',
         showDividerBelow && 'border-b',
@@ -543,13 +556,23 @@ function BlueprintSwimLane({
             ) : null}
       {steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, layerId, step.id)
+        // A tech slot can hold several cells — one per touchpoint — and each
+        // renders as its own pill with its own identity. Everything else
+        // keeps asking for "the" cell.
+        const slotCells = isPillLayer
+          ? getCellsAt(cellLookup, layerId, step.id)
+          : undefined
         const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
         const visualPictures = isVisualLayer
           ? resolveVisualStepPictureEntries(blueprint, step.id)
           : undefined
         const showCell = isVisualLayer
           ? (visualPictures?.length ?? 0) > 0 || showEmptyCells
-          : hasCellContent(cell?.content, variant) || showEmptyCells
+          : isPillLayer
+            ? (slotCells ?? []).some((entry) =>
+                hasCellContent(entry.content, variant),
+              ) || showEmptyCells
+            : hasCellContent(cell?.content, variant) || showEmptyCells
 
         return (
           <Fragment key={`${layerId}-${step.id}`}>
@@ -573,6 +596,7 @@ function BlueprintSwimLane({
                 rowMinHeight={rowMinHeight}
                 flushBottom={flushBottom}
                 visualPictures={visualPictures}
+                slotCells={slotCells}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLayer || showEmptyCells)
                     ? {
@@ -600,15 +624,19 @@ function BlueprintSwimLane({
                 }
               />
             ) : (
-              <div
-                aria-hidden
-                className="shrink-0"
-                style={{
-                  width: STEP_COLUMN_WIDTH,
-                  minWidth: STEP_COLUMN_WIDTH,
-                  maxWidth: STEP_COLUMN_WIDTH,
-                  minHeight: rowMinHeight,
-                }}
+              // Empty in Edit mode is not nothing: it is where a cell can go.
+              // Outside Edit it stays the inert spacer it has always been.
+              <BlueprintEmptyCellSlot
+                pathId={blueprint.path.id}
+                layerId={layerId}
+                stepId={step.id}
+                layerName={layerName}
+                stepName={step.name}
+                stepIndex={stepIndex}
+                scenarioName={scenarioName}
+                phaseName={phaseName}
+                width={STEP_COLUMN_WIDTH}
+                minHeight={rowMinHeight}
               />
             )}
             {stepIndex < steps.length - 1 && (
@@ -657,6 +685,7 @@ function BlueprintCellBlock({
   flushBottom,
   selectionContext,
   visualPictures,
+  slotCells,
 }: {
   stepIndex: number
   cellId?: string
@@ -670,14 +699,34 @@ function BlueprintCellBlock({
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
+  /** Every cell in a tech slot — one per touchpoint since the split. */
+  slotCells?: BlueprintCell[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
     compact ? 'pt-3' : 'pt-4',
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
-  const pillItems =
-    variant === 'pills' && content ? getTechPillItems(content) : []
+  /*
+    One pill per (cell, item). Since the split a tech slot holds one cell
+    per touchpoint, so this is one pill per cell — but a cell whose content
+    still parses to several items (pre-split data, or hand-typed lists)
+    renders them all, attributed to that cell. Nothing is dropped either way.
+  */
+  const pillEntries =
+    variant === 'pills'
+      ? (slotCells && slotCells.length > 0
+          ? slotCells
+          : content !== undefined
+            ? [{ id: cellId, content, picture: null, description: null, links: [] }]
+            : []
+        ).flatMap((slotCell) =>
+          getTechPillItems(slotCell.content ?? '').map((item) => ({
+            item,
+            cell: slotCell,
+          })),
+        )
+      : []
 
   const shellStyle = {
     width,
@@ -727,15 +776,28 @@ function BlueprintCellBlock({
           !fitVertically && 'min-h-[80px] justify-center',
         )}
       >
-        {pillItems.map((item, index) =>
+        {pillEntries.map(({ item, cell: slotCell }, index) =>
           selectionContext ? (
             <BlueprintTechPill
-              key={`${item}-${index}`}
+              key={`${slotCell.id ?? 'anon'}-${item}-${index}`}
               item={item}
-              selectionContext={selectionContext}
+              // Each pill speaks for its own cell: identity is the whole
+              // point of the split, and the selection context must carry the
+              // touchpoint's id, not the slot's first.
+              selectionContext={{
+                ...selectionContext,
+                cellId: slotCell.id ?? selectionContext.cellId,
+                cellContent: slotCell.content ?? '',
+                cellPicture: slotCell.picture ?? null,
+                cellDescription: slotCell.description ?? null,
+                cellLinks: slotCell.links,
+              }}
               stepIndex={stepIndex}
               compact={compact}
-              sliceSequenceBadge={index === 0}
+              sliceSequenceBadge={
+                index === 0 ||
+                slotCell.id !== pillEntries[index - 1]?.cell.id
+              }
             />
           ) : (
             <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />

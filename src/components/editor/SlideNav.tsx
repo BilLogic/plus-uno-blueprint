@@ -1,5 +1,11 @@
 import { useEffect } from 'react'
-import { NavChildren, NavRow } from '@/components/editor/SidebarNav'
+import { Plus } from 'lucide-react'
+import {
+  NavChildren,
+  NavRow,
+  NavRowAction,
+} from '@/components/editor/SidebarNav'
+import { StructureRowContextMenu } from '@/components/editor/StructureRowMenu'
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,6 +36,11 @@ type SlideNavProps = {
   onSelectPhase: (phaseId: string) => void
   onSelectScenario: (scenarioId: string) => void
   onSetExpanded: (phaseId: string, open: boolean) => void
+  /**
+   * Start a new scenario inside a phase. Absent for sessions that cannot
+   * write, which is what hides the `+` rather than disabling it.
+   */
+  onAddScenario?: (phaseId: string) => void
   /** Bumped by every nav click; re-scrolls the selected row into view. */
   focusNonce: number
 }
@@ -46,6 +57,7 @@ export function SlideNav({
   onSelectPhase,
   onSelectScenario,
   onSetExpanded,
+  onAddScenario,
   focusNonce,
 }: SlideNavProps) {
   const mains = getMainSlides(slides)
@@ -89,6 +101,10 @@ export function SlideNav({
 
         return (
           <div key={main.id}>
+            {/* Rename lives on right-click now — the row's hover state is
+                the affordance, not a per-row ⋯ button. The `+` stays: it is
+                an action right-click cannot imply. */}
+            <StructureRowContextMenu kind="phase" id={main.id} name={mainLabel}>
             <NavRow
               rowId={main.id}
               label={mainLabel}
@@ -107,7 +123,21 @@ export function SlideNav({
               }}
               selected={isSelected}
               ancestor={isAncestor}
+              trailing={
+                onAddScenario ? (
+                  <NavRowAction
+                    label={`New scenario in ${mainLabel}`}
+                    onClick={() => {
+                      onSetExpanded(main.id, true)
+                      onAddScenario(main.id)
+                    }}
+                  >
+                    <Plus className="size-3" aria-hidden />
+                  </NavRowAction>
+                ) : undefined
+              }
             />
+            </StructureRowContextMenu>
             {hasChildren ? (
               <PhaseScenarios
                 panelId={panelId}
@@ -152,13 +182,19 @@ function PhaseScenarios({
         <NavChildren>
           {items.map((item) => (
             <li key={item.id}>
-              <NavRow
-                rowId={item.id}
-                label={item.label}
-                onSelect={() => onSelect(item.id)}
-                selected={item.selected}
-                size="sm"
-              />
+              <StructureRowContextMenu
+                kind="scenario"
+                id={item.id}
+                name={item.label}
+              >
+                <NavRow
+                  rowId={item.id}
+                  label={item.label}
+                  onSelect={() => onSelect(item.id)}
+                  selected={item.selected}
+                  size="sm"
+                />
+              </StructureRowContextMenu>
             </li>
           ))}
         </NavChildren>

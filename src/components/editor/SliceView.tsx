@@ -6,16 +6,21 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react'
-import { Play } from 'lucide-react'
+import { Check, Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
-import { PendingCanvasLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import {
+  PendingCanvasLoadingSkeleton,
+  SliceTabLoadingSkeleton,
+} from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
+import { SliceEditSession } from '@/components/editor/SliceEditSession'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { DelayedSpinner } from '@/components/ui/spinner'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { EditorDetailScope } from '@/contexts/EditorContext'
+import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
+import { useCanvasMode } from '@/contexts/canvasModeContext'
 import { SliceMembershipContext } from '@/contexts/sliceMembershipContext'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
@@ -42,6 +47,18 @@ type SliceViewProps = {
  * (BlueprintCellButton reads SliceMembershipContext).
  */
 export function SliceView({ sliceId }: SliceViewProps) {
+  // The provider sits above the surface, not inside the viewport, because the
+  // slice tab itself has to know the mode: in Design mode the tab *is* the
+  // editor, so the frame strip and the picker mount here rather than behind a
+  // separate Edit button.
+  return (
+    <CanvasModeProvider>
+      <SliceSurface sliceId={sliceId} />
+    </CanvasModeProvider>
+  )
+}
+
+function SliceSurface({ sliceId }: SliceViewProps) {
   const { openTab } = useViewState()
   const {
     result,
@@ -69,6 +86,11 @@ export function SliceView({ sliceId }: SliceViewProps) {
   )
 
   const [focused, setFocused] = useState(true)
+  const canvasMode = useCanvasMode()
+  // Design mode is edit mode. Two overlapping "clicks mean something else"
+  // states was one too many.
+  const editing = canvasMode?.mode === 'design'
+  const setMode = canvasMode?.setMode
 
   // Click vs drag discrimination: a drag-pan also fires a click on pointer
   // up, which must not toggle the focus dim. Track the pointer-down origin
@@ -109,8 +131,20 @@ export function SliceView({ sliceId }: SliceViewProps) {
     [],
   )
 
+  // Stage 0 — even the slice detail is still in flight, so the header band
+  // has nothing to paint. The tab-shaped skeleton (band + canvas rectangle)
+  // shares the surface's hold key, so stages 1–2 below inherit it unbroken.
   if (result.status === 'loading') {
-    return <DelayedSpinner />
+    return (
+      <DeferredSkeleton
+        loading
+        holdKey={skeletonHoldKey}
+        skeleton={<SliceTabLoadingSkeleton />}
+        className="h-full min-h-0"
+      >
+        {null}
+      </DeferredSkeleton>
+    )
   }
 
   if (!detail) {
@@ -139,11 +173,19 @@ export function SliceView({ sliceId }: SliceViewProps) {
       // Every cell reads as missing until the blueprint lands — the notice
       // stays out of the band rather than flashing a false count.
       missingCellCount={blueprint ? resolution.missingCellIds.length : 0}
-      primaryAction={{
-        label: 'Present',
-        icon: Play,
-        onClick: () => openTab({ kind: 'present', sliceId }),
-      }}
+      primaryAction={
+        editing
+          ? {
+              label: 'Done',
+              icon: Check,
+              onClick: () => setMode?.('view'),
+            }
+          : {
+              label: 'Present',
+              icon: Play,
+              onClick: () => openTab({ kind: 'present', sliceId }),
+            }
+      }
     />
   )
 
@@ -171,35 +213,49 @@ export function SliceView({ sliceId }: SliceViewProps) {
     )
   }
 
+  const canvas = (
+    <div
+      className="relative flex h-full min-h-0 min-w-0 flex-col"
+      // Editing lifts the dim: you cannot pick a cell you cannot see, and
+      // the slice's own members are already marked by their badges.
+      data-slice-focus={focused && !editing ? 'focused' : 'idle'}
+      onPointerDownCapture={handleFocusPointerDownCapture}
+      onClickCapture={editing ? undefined : handleFocusClickCapture}
+    >
+      <EditorDetailScope slideId={scenarioId}>
+        <VisualWalkthroughShell>
+          <div
+            className="absolute inset-0 flex min-h-0 flex-col"
+            data-editor-view
+          >
+            <ServiceOverviewView
+              skeletonHoldKey={skeletonHoldKey}
+              soloScenarioId={scenarioId}
+              renderHeader={() => header}
+              floatingChrome={
+                <div className="rounded-full border border-border bg-card px-1 shadow-sm">
+                  <NavbarZoomIndicator />
+                </div>
+              }
+            />
+          </div>
+        </VisualWalkthroughShell>
+      </EditorDetailScope>
+      {!focused && !editing && (
+        <SliceRefocusPill onRefocus={() => setFocused(true)} />
+      )}
+    </div>
+  )
+
   return (
     <SliceMembershipContext.Provider value={membership}>
-      <div
-        className="relative flex h-full min-h-0 min-w-0 flex-col"
-        data-slice-focus={focused ? 'focused' : 'idle'}
-        onPointerDownCapture={handleFocusPointerDownCapture}
-        onClickCapture={handleFocusClickCapture}
-      >
-        <EditorDetailScope slideId={scenarioId}>
-          <VisualWalkthroughShell>
-            <div
-              className="absolute inset-0 flex min-h-0 flex-col"
-              data-editor-view
-            >
-              <ServiceOverviewView
-                skeletonHoldKey={skeletonHoldKey}
-                soloScenarioId={scenarioId}
-                renderHeader={() => header}
-                floatingChrome={
-                  <div className="rounded-full border border-border bg-card px-1 shadow-sm">
-                    <NavbarZoomIndicator />
-                  </div>
-                }
-              />
-            </div>
-          </VisualWalkthroughShell>
-        </EditorDetailScope>
-        {!focused && <SliceRefocusPill onRefocus={() => setFocused(true)} />}
-      </div>
+      {editing ? (
+        <SliceEditSession detail={detail} onClose={() => setMode?.('view')}>
+          {canvas}
+        </SliceEditSession>
+      ) : (
+        canvas
+      )}
     </SliceMembershipContext.Provider>
   )
 }

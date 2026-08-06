@@ -45,6 +45,12 @@ export type BlueprintCell = {
   picture: string | null
   description: string | null
   links: CellLink[]
+  /**
+   * Order within a slot (one lane, one step). Tech lanes hold one cell per
+   * touchpoint; everything else holds a single cell at 0. Optional because
+   * rows predating the split never carry it — absent reads as 0.
+   */
+  slot_position?: number
 }
 
 export type BlueprintCellTrigger = {

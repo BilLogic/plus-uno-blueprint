@@ -53,6 +53,7 @@ import {
   getBlueprintLayerZone,
   type BlueprintLayerStyle,
 } from '@/lib/blueprintTheme'
+import { getPathColor } from '@/lib/pathColorTheme'
 import type { BlueprintData } from '@/types/blueprint'
 import { cn } from '@/lib/utils'
 import {
@@ -155,14 +156,6 @@ export function IntegratedBlueprintGrid({
     [selectedPathIds, paths],
   )
 
-  if (steps.length === 0 && layers.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No integrated blueprint data yet.
-      </p>
-    )
-  }
-
   const layoutOptions = useMemo(
     () => ({
       fitVertically: fillSwimlaneHeight,
@@ -187,7 +180,6 @@ export function IntegratedBlueprintGrid({
     data,
     compact,
     collapsedLayerIds,
-    fillSwimlaneHeight,
     fixedSwimlaneBodyHeight,
     layoutOptions,
   ])
@@ -199,7 +191,7 @@ export function IntegratedBlueprintGrid({
           getCompareRowTrackCss(row),
         )
         .join(' '),
-    [fillSwimlaneHeight, rows],
+    [rows],
   )
 
   const activePathCount = Math.max(1, activePaths.length)
@@ -224,6 +216,16 @@ export function IntegratedBlueprintGrid({
       ),
     [layers, data, compact, collapsedLayerIds, layoutOptions],
   )
+
+  // Below every hook — an early return above them made the hook order
+  // conditional, which React forbids.
+  if (steps.length === 0 && layers.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No integrated blueprint data yet.
+      </p>
+    )
+  }
 
   const scrollMinHeight = gridBodyMinHeight + ARROW_VIEWPORT_PAD * 2
 
@@ -819,6 +821,71 @@ function IntegratedCellSlot({
   const sortedCells = [...slotCells].sort(
     (a, b) => b.opacity - a.opacity,
   )
+
+  /*
+    Compare mode, divergent slot: the cell splits into a stack — one band per
+    path inside the one cell outline, color-keyed by path. This is the diff
+    itself, so it never uses the overlay trick below (which draws cells on
+    top of each other and lets the top one win).
+  */
+  const divergentPaths = (() => {
+    if (!sortedCells.some((cell) => cell.compare === 'divergent')) return null
+    const byPath = new Map<string, IntegratedBlueprintCell[]>()
+    for (const cell of sortedCells) {
+      const list = byPath.get(cell.path_id)
+      if (list) list.push(cell)
+      else byPath.set(cell.path_id, [cell])
+    }
+    return byPath
+  })()
+
+  if (divergentPaths && divergentPaths.size > 1) {
+    return (
+      <div
+        className={cn(
+          'relative flex min-w-0 shrink-0 flex-col items-stretch self-stretch',
+          fitVertically && 'h-full',
+        )}
+        style={shellStyle}
+        data-compare-divergent=""
+      >
+        {[...divergentPaths.entries()].map(([pathId, pathCells]) => (
+          <div
+            key={pathId}
+            className="flex min-h-0 min-w-0 flex-1 flex-col"
+            style={{
+              borderLeft: `3px solid ${getPathColor({
+                path_type: pathCells[0].path_type,
+                name: pathNameById.get(pathId) ?? '',
+              })}`,
+            }}
+          >
+            {pathCells.map((cell) => (
+              <IntegratedCellBlock
+                key={cell.id}
+                step={step}
+                stepIndex={stepIndex}
+                layerName={layer.name}
+                cell={cell}
+                laneStyle={laneStyle}
+                variant={variant}
+                compact={compact}
+                fitVertically={fitVertically}
+                flushBottom={flushBottom}
+                stacked={false}
+                banded
+                scenarioName={scenarioName}
+                phaseName={phaseName}
+                pathNameById={pathNameById}
+                pathDescriptionById={pathDescriptionById}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const stacked = sortedCells.length > 1
   const sizingCell = stacked
     ? pickTallestIntegratedCell(layer, sortedCells, compact)
@@ -886,6 +953,7 @@ function IntegratedCellBlock({
   fitVertically,
   flushBottom,
   stacked,
+  banded = false,
   scenarioName,
   phaseName,
   pathNameById,
@@ -901,28 +969,53 @@ function IntegratedCellBlock({
   fitVertically?: boolean
   flushBottom?: boolean
   stacked?: boolean
+  /** Divergent band inside a compare slot — tighter padding, no side inset. */
+  banded?: boolean
   scenarioName?: string
   phaseName?: string
   pathNameById: Map<string, string>
   pathDescriptionById: Map<string, string | null>
 }) {
   const displayOpacity = getIntegratedCellDisplayOpacity(cell, step)
-  const shellPadding = cn(
-    compact ? 'px-3' : 'px-3.5',
-    compact ? 'pt-3' : 'pt-4',
-    flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
-  )
-  const width = STEP_COLUMN_WIDTH
-  const shellStyle = {
-    width,
-    minWidth: width,
-    maxWidth: width,
-  }
+  const shellPadding = banded
+    ? 'pl-1.5 pr-0.5 py-1'
+    : cn(
+        compact ? 'px-3' : 'px-3.5',
+        compact ? 'pt-3' : 'pt-4',
+        flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
+      )
+  const width = banded ? undefined : STEP_COLUMN_WIDTH
+  const shellStyle =
+    width === undefined
+      ? undefined
+      : {
+          width,
+          minWidth: width,
+          maxWidth: width,
+        }
+  // The compare vocabulary: the spine recedes, the differences carry their
+  // path's color — a left border, the same mark the divergent bands wear,
+  // so "belongs to this path" reads one way everywhere. (The dashed outline
+  // this replaces read as "broken", not "unique to a path".)
+  const compareClass =
+    cell.compare === 'shared' ? 'opacity-80 saturate-[.55]' : undefined
+  const onlyOutline =
+    cell.compare === 'only'
+      ? {
+          borderLeft: `3px solid ${getPathColor({
+            path_type: cell.path_type,
+            name: pathNameById.get(cell.path_id) ?? '',
+          })}`,
+        }
+      : undefined
   const shellClass = cn(
-    stacked
-      ? 'absolute inset-0 flex min-h-0 min-w-0 items-stretch overflow-visible'
-      : 'relative z-[1] flex shrink-0 items-stretch self-stretch min-w-0',
+    banded
+      ? 'flex min-h-0 min-w-0 flex-1 items-stretch'
+      : stacked
+        ? 'absolute inset-0 flex min-h-0 min-w-0 items-stretch overflow-visible'
+        : 'relative z-[1] flex shrink-0 items-stretch self-stretch min-w-0',
     shellPadding,
+    compareClass,
   )
 
   const selectionContext: BlueprintCellSelectionContext | undefined =
@@ -1012,7 +1105,7 @@ function IntegratedCellBlock({
   return (
     <div
       className={shellClass}
-      style={{ ...shellStyle, ...stackedStyle }}
+      style={{ ...shellStyle, ...stackedStyle, ...onlyOutline }}
     >
       {innerContent}
     </div>

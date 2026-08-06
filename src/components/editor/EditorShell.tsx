@@ -3,26 +3,38 @@ import { useEditor } from '@/contexts/EditorContext'
 import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
-  EditorSidebarWorkspaceHeader,
+  FloatingSidebarPill,
   SidebarCollapseButton,
 } from '@/components/editor/EditorChrome'
-import {
-  EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS,
-  EDITOR_SIDEBAR_WIDTH_CLASS,
-  EDITOR_SIDEBAR_WIDTH_PX,
-} from '@/components/editor/EditorSidebarRail'
+import { AgentDock, AgentDockDivider } from '@/components/editor/AgentDock'
+import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
+import { AgentSettingsRailButton } from '@/components/editor/AgentPanel'
+import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { SlideModeSidebarNav } from '@/components/editor/SlideModeView'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { SliceView } from '@/components/editor/SliceView'
 import { TabStrip } from '@/components/editor/TabStrip'
 import { SidebarProvider } from '@/components/ui/sidebar'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { setSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
 import {
   tabKey,
   useViewState,
   type TabDescriptor,
 } from '@/contexts/viewStateStore'
+import {
+  registerAgentUiBridge,
+  registerAgentUiContext,
+} from '@/lib/agent/uiBridge'
+import {
+  toggleAgentOpen,
+  useAgentPlacement,
+} from '@/lib/agent/placement'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
+import { getSlideDisplayLabel } from '@/types/nav'
 import {
   MOTION_STRUCTURAL_EASE,
   MOTION_STRUCTURAL_MS,
@@ -31,28 +43,73 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
+ * Aside = rail (48px) + content panel, drag-resizable from the aside's
+ * right edge with one persisted width shared by every surface.
+ */
+const RAIL_WIDTH = 48
+// ONE width for all three surfaces — Blueprints, Slices, and Agent share the
+// same panel column, and a width that jumps on every rail switch reads as
+// layout instability, not per-surface tailoring. Still drag-resizable; the
+// chosen width just applies everywhere and persists as a single value.
+const DEFAULT_ASIDE_WIDTH = 320
+const MIN_ASIDE_WIDTH = 240
+const MAX_ASIDE_WIDTH = 640
+const WIDTH_STORAGE_KEY = 'uno-sidebar-width'
+
+function loadAsideWidth(): number {
+  try {
+    const raw = window.localStorage.getItem(WIDTH_STORAGE_KEY)
+    const value = raw ? Number(raw) : Number.NaN
+    return Number.isFinite(value)
+      ? Math.min(MAX_ASIDE_WIDTH, Math.max(MIN_ASIDE_WIDTH, value))
+      : DEFAULT_ASIDE_WIDTH
+  } catch {
+    return DEFAULT_ASIDE_WIDTH
+  }
+}
+
+/**
  * The app frame: sidebar, tab strip and whichever view the current tab selects.
  *
  * Owns sidebar collapse and the hover-peek rail. Both are timed against
  * `suppressCanvasResizeRefit`, so the canvas does not refit mid-animation.
  */
 export function EditorShell() {
-  const { view, goHome, goLanding } = useEditor()
-  const { activeTab, activateTab, openTab } = useViewState()
+  const {
+    view,
+    goHome,
+    selectPhase,
+    selectScenario,
+    selectedPhaseId,
+    selectedScenarioId,
+    slides,
+    togglePhaseExpanded,
+    setScenarioDisplayViewType,
+  } = useEditor()
+  const { activeTab, activateTab, openTab, closeTab } = useViewState()
+  const { canAgent } = useSupabase()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  // Hovering the collapsed rail peeks the panel back as an overlay. It floats
-  // above the canvas rather than pushing it, so peeking never resizes the
-  // stage — which is what makes it usable during a presentation.
-  const [railHovered, setRailHovered] = useState(false)
   const isLanding = view === 'landing'
   // Home reads as active only on the overview canvas itself, and only while
   // no tab is covering it.
   const isOverview = view === 'home' && activeTab === null
 
-  // The sidebar stays expanded (and functional) while a slice tab is
-  // active — the Paths filter now lives there, and phase clicks return to
-  // the base view via the nav wiring.
   const activeTabKind = activeTab?.kind ?? null
+
+  // The rail picks a surface. Slice/present tab activation auto-selects ◇,
+  // exactly as the old horizontal tabs did (initializer covers remounts
+  // while a tab is already active, e.g. returning from a presentation).
+  const [surface, setSurface] = useState<SidebarSurface>(
+    activeTabKind !== null ? 'slices' : 'blueprints',
+  )
+  const agentPlacement = useAgentPlacement()
+  const agentDocked = agentPlacement.mode === 'docked' && agentPlacement.open
+  const panelColumnRef = useRef<HTMLDivElement>(null)
+  const [lastTabKind, setLastTabKind] = useState(activeTabKind)
+  if (lastTabKind !== activeTabKind) {
+    setLastTabKind(activeTabKind)
+    if (activeTabKind !== null) setSurface('slices')
+  }
 
   // Leaving presentation runs before the tab actually switches: tabs unmount
   // on switch, so the exit animation has to play while the present tab is
@@ -68,37 +125,215 @@ export function EditorShell() {
     [],
   )
 
-  // Presentation is full-bleed: the sidebar collapses to its icon rail on
-  // the same 320 ms width ease as every other collapse — it never unmounts,
-  // which is what used to make entering presentation snap. The user can still
-  // pin it open from the rail while presenting; the pin is per-presentation.
+  // Presentation is full-bleed: the whole sidebar collapses (the pill hides
+  // too — Return is the way back), on the same 320 ms width ease as a manual
+  // collapse. It never unmounts, which is what keeps entering smooth.
   const presenting = activeTabKind === 'present' && !leavingPresent
-  const [presentPinned, setPresentPinned] = useState(false)
-  // Reset during render rather than in an effect: leaving presentation must
-  // not paint one frame with a stale pin.
-  const [wasPresenting, setWasPresenting] = useState(presenting)
-  if (wasPresenting !== presenting) {
-    setWasPresenting(presenting)
-    if (!presenting) setPresentPinned(false)
-  }
 
-  const railOnly = presenting ? !presentPinned : sidebarCollapsed
-  // Peeked = the panel is showing as an overlay over the canvas rather than
-  // in flow. Only reachable from the collapsed rail.
-  const peeked = railOnly && railHovered
+  const railOnly = presenting || sidebarCollapsed
 
   useEffect(() => {
     // Entering and leaving presentation both resize the canvas container.
     suppressCanvasResizeRefit()
   }, [presenting])
 
+  // Publish the collapsed state so canvas navbars can host the expand
+  // control themselves — see sidebarCollapsedContext for why the pill is
+  // now the fallback rather than the default.
+  const expandSidebar = useCallback(() => {
+    suppressCanvasResizeRefit()
+    setSidebarCollapsed(false)
+  }, [])
+  useEffect(() => {
+    // NOT `railOnly`: presentation also collapses the sidebar, but it hides
+    // the pill too (full-bleed). Telling the bands they are collapsed there
+    // would strand a presentation with no header and no Return — the band
+    // must keep drawing itself when nothing else can carry it.
+    setSidebarCollapsedState({
+      collapsed: railOnly && !presenting,
+      expand: expandSidebar,
+    })
+  }, [railOnly, presenting, expandSidebar])
+
+  // Hand the agent its navigation hands: open_phase / open_scenario tools
+  // land on the same callbacks the sidebar rows use.
+  useEffect(
+    () =>
+      registerAgentUiBridge({
+        selectPhase,
+        selectScenario,
+        openAgentSurface: () => {
+          toggleAgentOpen(true)
+          setSidebarCollapsed(false)
+        },
+        setSidebarCollapsed: (collapsed) => {
+          suppressCanvasResizeRefit()
+          setSidebarCollapsed(collapsed)
+        },
+      }),
+    [selectPhase, selectScenario],
+  )
+
+  // The read side: what the shell itself knows about what's on screen.
+  // Ref-refreshed each render, registered once — the collector always sees
+  // the latest without effect churn.
+  const phaseSlide = slides.find((slide) => slide.id === selectedPhaseId)
+  const scenarioSlide = slides.find((slide) => slide.id === selectedScenarioId)
+  const shellContext = [
+    `View level: ${view}${view === 'home' ? ' (zoomed-out overview of all phases)' : ''}`,
+    phaseSlide
+      ? `Selected phase: "${getSlideDisplayLabel(phaseSlide, slides)}" (${phaseSlide.id})`
+      : 'Selected phase: none',
+    scenarioSlide
+      ? `Selected scenario: "${getSlideDisplayLabel(scenarioSlide, slides)}" (${scenarioSlide.id})`
+      : 'Selected scenario: none',
+    activeTab
+      ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
+      : 'Active tab: base blueprint view (no slice tab)',
+    `Sidebar: ${surface} surface${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
+    `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
+  ].join('\n')
+  const shellContextRef = useRef(shellContext)
+  useEffect(() => {
+    shellContextRef.current = shellContext
+  })
+  useEffect(
+    () => registerAgentUiContext('shell', () => shellContextRef.current),
+    [],
+  )
+
+  // Agent parity: the shell-level controls (tabs, presentation, phase
+  // accordion, compare toggle). Ref-snapshotted so registration is stable
+  // while the handlers stay current.
+  type ShellCommands = {
+    goOverview: () => void
+    activateBase: () => void
+    openSliceTab: (sliceId: string, present: boolean) => void
+    closeSliceTab: (sliceId: string) => void
+    exitPresent: () => string
+    togglePhase: (phaseId: string) => void
+    setScenarioView: (view: 'side-by-side' | 'integrated') => string
+  }
+  const shellCommandsRef = useRef<ShellCommands>({
+    goOverview: () => {},
+    activateBase: () => {},
+    openSliceTab: () => {},
+    closeSliceTab: () => {},
+    exitPresent: () => 'Shell not ready yet.',
+    togglePhase: () => {},
+    setScenarioView: () => 'Shell not ready yet.',
+  })
+  useEffect(() => {
+    const commands = shellCommandsRef
+    const unregister = [
+      registerAgentUiCommand({
+        name: 'go_overview',
+        description: 'Back to the zoomed-out overview of all phases (Home).',
+        run: () => {
+          commands.current.goOverview()
+          return 'On the overview.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'activate_base_tab',
+        description: 'Bring the base blueprint view forward (deactivate any slice tab).',
+        run: () => {
+          commands.current.activateBase()
+          return 'Base blueprint view is active.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'open_slice_tab',
+        description: 'Open a slice in a tab. arg: slice id (list_slices).',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: slice id')
+          commands.current.openSliceTab(arg, false)
+          return 'Slice tab opened.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'present_slice',
+        description: 'Start presenting a slice full-bleed. arg: slice id.',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: slice id')
+          commands.current.openSliceTab(arg, true)
+          return 'Presenting the slice.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'exit_presentation',
+        description: 'Leave the running presentation back onto its slice tab.',
+        run: () => commands.current.exitPresent(),
+      }),
+      registerAgentUiCommand({
+        name: 'close_slice_tab',
+        description: 'Close a slice\'s open tab(s). arg: slice id.',
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: slice id')
+          commands.current.closeSliceTab(arg)
+          return 'Tab closed.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'toggle_phase_expanded',
+        description: "Expand/collapse a phase's accordion in the sidebar. arg: phase id.",
+        run: (arg) => {
+          if (!arg) throw new Error('arg required: phase id')
+          commands.current.togglePhase(arg)
+          return 'Toggled the phase accordion.'
+        },
+      }),
+      registerAgentUiCommand({
+        name: 'set_scenario_view',
+        description: 'Switch the SELECTED scenario between its two displays. arg: side-by-side | integrated (integrated = the Compare view; needs 2+ visible paths).',
+        run: (arg) =>
+          commands.current.setScenarioView(
+            arg === 'integrated' ? 'integrated' : 'side-by-side',
+          ),
+      }),
+    ]
+    return () => unregister.forEach((fn) => fn())
+  }, [])
+
   const toggleSidebar = () => {
     // The width ease resizes the canvas container for 320 ms. That is
     // chrome moving, not the user navigating — the camera holds still.
     suppressCanvasResizeRefit()
-    setRailHovered(false)
-    if (presenting) setPresentPinned((pinned) => !pinned)
-    else setSidebarCollapsed((collapsed) => !collapsed)
+    setSidebarCollapsed((collapsed) => !collapsed)
+  }
+
+  // Shared drag-resize. During a drag the width transition is off —
+  // easing against the pointer reads as lag, not motion.
+  const [asideWidth, setAsideWidth] = useState(loadAsideWidth)
+  const [resizing, setResizing] = useState(false)
+  const startResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setResizing(true)
+    suppressCanvasResizeRefit()
+  }
+  const moveResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!resizing) return
+    // The aside is flush with the window's left edge, so the pointer's x IS
+    // the aside width.
+    const next = Math.min(
+      MAX_ASIDE_WIDTH,
+      Math.max(MIN_ASIDE_WIDTH, Math.round(event.clientX)),
+    )
+    suppressCanvasResizeRefit()
+    setAsideWidth((width) => (width === next ? width : next))
+  }
+  const endResize = () => {
+    if (!resizing) return
+    setResizing(false)
+    setAsideWidth((width) => {
+      try {
+        window.localStorage.setItem(WIDTH_STORAGE_KEY, String(width))
+      } catch {
+        // Width memory is a nicety; failing to store is fine.
+      }
+      return width
+    })
   }
 
   /**
@@ -125,7 +360,7 @@ export function EditorShell() {
     [openTab],
   )
 
-  // Home (now in the tab strip) is the route back to the birds-eye overview
+  // Home (in the tab strip) is the route back to the birds-eye overview
   // canvas — it deactivates any tab, clears the selection and animates the
   // fit, exactly like Escape and the workspace breadcrumb. `goHome` (not
   // `enterCanvas`) so every overview return has the same feel.
@@ -134,11 +369,34 @@ export function EditorShell() {
     goHome()
   }
 
-  // The orientation landing page moved onto the workspace title.
-  const goLandingBase = () => {
-    activateTab(null)
-    goLanding()
+  // Latest handlers for the registered shell commands (declared above);
+  // assigned below everything they close over, inside an every-render
+  // effect (refs are not written during render).
+  const shellCommands: ShellCommands = {
+    goOverview,
+    activateBase: () => activateTab(null),
+    openSliceTab: (sliceId, present) =>
+      openTab({ kind: present ? 'present' : 'slice', sliceId }),
+    closeSliceTab: (sliceId) => {
+      closeTab(tabKey({ kind: 'slice', sliceId }))
+      closeTab(tabKey({ kind: 'present', sliceId }))
+    },
+    exitPresent: () => {
+      if (activeTab?.kind !== 'present') return 'Not presenting right now.'
+      exitPresentation(activeTab.sliceId)
+      return 'Left the presentation onto the slice tab.'
+    },
+    togglePhase: (phaseId) => togglePhaseExpanded(phaseId),
+    setScenarioView: (viewType) => {
+      const scenario = slides.find((slide) => slide.id === selectedScenarioId)
+      if (!scenario) return 'No scenario is selected — open one first.'
+      setScenarioDisplayViewType(scenario.id, viewType)
+      return `Scenario view set to ${viewType === 'integrated' ? 'Compare' : 'Side by side'}.`
+    },
   }
+  useEffect(() => {
+    shellCommandsRef.current = shellCommands
+  })
 
   // What counts as a content switch for the crossfade. Navigation *inside*
   // the base canvas (home ⇄ detail) is a camera move, not a screen change,
@@ -149,113 +407,172 @@ export function EditorShell() {
       ? 'landing'
       : 'blueprint'
 
-  return (
-    <div
-      className="relative flex h-svh overflow-hidden bg-background"
-      data-editor-shell
-    >
-      <aside
-        className={cn(
-          'relative z-20 flex shrink-0 flex-col border-r border-border bg-sidebar',
-          // Only clip while the panel is in flow: a peek overlay has to escape
-          // the rail's 48 px.
-          peeked ? 'overflow-visible' : 'overflow-hidden',
-          railOnly
-            ? EDITOR_SIDEBAR_COLLAPSED_WIDTH_CLASS
-            : EDITOR_SIDEBAR_WIDTH_CLASS,
-        )}
-        style={{
-          transitionProperty: 'width',
-          transitionDuration: `${MOTION_STRUCTURAL_MS}ms`,
-          transitionTimingFunction: MOTION_STRUCTURAL_EASE,
+  const sidebarBody = (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-row">
+      <EditorRail
+        surface={surface}
+        agentActive={agentPlacement.open}
+        onSelectSurface={(next) => {
+          // ✦ toggles the chat's presence; the other two still pick the
+          // panel underneath it, so "chat while looking at the nav" is
+          // the default posture rather than a swap away from it.
+          if (next === 'agent') toggleAgentOpen()
+          else setSurface(next)
+          if (sidebarCollapsed) {
+            suppressCanvasResizeRefit()
+            setSidebarCollapsed(false)
+          }
         }}
-        data-editor-sidebar=""
-        data-collapsed={railOnly ? '' : undefined}
-        aria-label="Workspace navigation"
-        onMouseEnter={() => setRailHovered(true)}
-        onMouseLeave={() => setRailHovered(false)}
-      >
-        {/*
-          Fixed-width expanded panel. In flow it is clipped by the animating
-          aside, so open/close reads as a wipe rather than a mount/unmount;
-          peeked from the rail it lifts out as an overlay (same 200 ms fade,
-          8 px slide) and leaves the canvas exactly where it is.
-        */}
-        <div
-          className={cn(
-            'flex h-full min-h-0 w-60 flex-col',
-            'transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none',
-            peeked &&
-              'absolute inset-y-0 left-0 z-30 border-r border-border bg-sidebar shadow-lg',
-            railOnly && !peeked
-              ? 'pointer-events-none -translate-x-2 opacity-0'
-              : 'translate-x-0 opacity-100 delay-75',
-          )}
-          aria-hidden={railOnly && !peeked}
+        showAgent={canAgent}
+        topSlot={
+          <SidebarCollapseButton collapsed={false} onToggle={toggleSidebar} />
+        }
+        bottomSlot={
+          <>
+            {/* Theme is a utility toggle, not a surface — it lives in the
+                rail's bottom group with the other toggles, not in the
+                collapsed pill, which is already the app's tightest 32px. */}
+            <ThemeToggle size="icon-sm" />
+            <AgentSettingsRailButton />
+          </>
+        }
+      />
+      <div ref={panelColumnRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <SidebarProvider
+          style={
+            {
+              '--sidebar-width': `${asideWidth - RAIL_WIDTH}px`,
+            } as CSSProperties
+          }
+          className="flex min-h-0 min-w-0 flex-1 flex-col"
         >
-          <SidebarProvider
-            style={
-              {
-                '--sidebar-width': EDITOR_SIDEBAR_WIDTH_PX,
-              } as CSSProperties
-            }
-            className="flex min-h-0 min-w-0 flex-1 flex-col"
-          >
-            <EditorSidebarWorkspaceHeader
-              sidebarCollapsed={railOnly}
-              onToggleSidebar={toggleSidebar}
-              isLanding={isLanding}
-              onWorkspaceTitle={goLandingBase}
-            />
-            <SlideModeSidebarNav />
-          </SidebarProvider>
-        </div>
-
-        {/*
-          Collapsed icon rail — crossfades in as the panel closes. Its toggle
-          is what pins the peeked panel open (in presentation too: that button
-          used to be removed there, which left no way back to the nav).
-        */}
-        <div
-          className={cn(
-            'absolute inset-y-0 left-0 z-10 flex w-12 flex-col items-center gap-1 px-1 py-2',
-            'transition-opacity duration-200 ease-out',
-            railOnly ? 'opacity-100 delay-75' : 'pointer-events-none opacity-0',
-          )}
-          aria-hidden={!railOnly}
-        >
-          <SidebarCollapseButton
-            collapsed
-            onToggle={toggleSidebar}
-            size="icon-sm"
-          />
-        </div>
-      </aside>
-
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <TabStrip isOverview={isOverview} onHome={goOverview} />
-        <div className="relative min-h-0 min-w-0 flex-1">
-          {/*
-            Only the active tab's content mounts, so switching is a
-            fade-through rather than a true crossfade: the keyed wrapper
-            remounts and the incoming surface fades up over 200 ms after the
-            75 ms stagger the sidebar already uses.
-          */}
-          <div
-            key={contentKey}
-            className="absolute inset-0"
-            data-editor-content=""
-          >
-            <ActiveTabContent
-              tab={activeTab}
-              isLanding={isLanding}
-              leavingPresent={leavingPresent}
-              onReturn={exitPresentation}
-            />
-          </div>
-        </div>
-      </main>
+          <SlideModeSidebarNav surface={surface === 'agent' ? 'blueprints' : surface} />
+        </SidebarProvider>
+        {agentDocked ? <AgentDockDivider columnRef={panelColumnRef} /> : null}
+        <AgentDock visible={canAgent && agentDocked} />
+      </div>
     </div>
+  )
+
+  return (
+    // The base surface's mode, hoisted to include the sidebar.
+    //
+    // It used to wrap only the canvas, which left the sidebar unable to answer
+    // "are we editing?" — so its `+` and `⋯` were on in View mode, offering to
+    // create and rename things on a surface whose whole premise is that it
+    // changes nothing. A slice tab still mounts its own provider inside this
+    // one and shadows it, which is what keeps the two surfaces independent.
+    <CanvasModeProvider>
+      <div
+        className="relative flex h-svh flex-col overflow-hidden bg-background"
+        data-editor-shell
+      >
+        {/* Full-width top nav: workspace identity, Home, open tabs. */}
+        <TabStrip
+          isOverview={isOverview}
+          onHome={goOverview}
+          onBase={() => activateTab(null)}
+        />
+
+        <div className="relative flex min-h-0 min-w-0 flex-1">
+          <aside
+            className={cn(
+              'relative z-20 shrink-0 overflow-hidden bg-sidebar',
+              !railOnly && 'border-r border-border',
+            )}
+            style={{
+              width: railOnly ? 0 : asideWidth,
+              transitionProperty: resizing ? 'none' : 'width',
+              transitionDuration: `${MOTION_STRUCTURAL_MS}ms`,
+              transitionTimingFunction: MOTION_STRUCTURAL_EASE,
+            }}
+            data-editor-sidebar=""
+            data-collapsed={railOnly ? '' : undefined}
+            aria-label="Workspace navigation"
+          >
+            {/*
+              Fixed-width sidebar body (rail + panel). In flow it is clipped
+              by the animating aside, so open/close reads as a wipe rather
+              than a mount/unmount.
+            */}
+            <div
+              className={cn(
+                'flex h-full min-h-0 flex-row',
+                'transition-[opacity,transform] duration-(--motion-fade) ease-out motion-reduce:transition-none',
+                railOnly
+                  ? 'pointer-events-none -translate-x-2 opacity-0'
+                  : 'translate-x-0 opacity-100 delay-75',
+              )}
+              style={{ width: asideWidth }}
+              aria-hidden={railOnly}
+            >
+              {sidebarBody}
+            </div>
+            {/* Drag the aside's right edge to resize; width is remembered
+                per surface. Hidden while collapsed — there is no edge. */}
+            {!railOnly ? (
+              <div
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize sidebar"
+                onPointerDown={startResize}
+                onPointerMove={moveResize}
+                onPointerUp={endResize}
+                onPointerCancel={endResize}
+                className={cn(
+                  'absolute inset-y-0 right-0 z-30 w-1.5 cursor-col-resize',
+                  'hover:bg-border/80 active:bg-border',
+                  resizing && 'bg-border',
+                )}
+              />
+            ) : null}
+          </aside>
+
+          {/*
+            The floating posture: portalled to the body so the window
+            escapes the sidebar's clip. Hidden while presenting — a
+            full-bleed slice is not the place for a chat window.
+          */}
+          <AgentDock
+            visible={canAgent && agentPlacement.mode === 'floating' && !presenting}
+          />
+
+          {/*
+            Collapsed remnant: the floating pill over the canvas. Hidden
+            while presenting (full-bleed; Return is the way back). Its
+            toggle is the same single control the rail carries expanded.
+          */}
+          {railOnly && !presenting ? (
+            <div className="pointer-events-none absolute left-3 top-3 z-30">
+              <FloatingSidebarPill onExpand={toggleSidebar} />
+            </div>
+          ) : null}
+
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <div className="relative min-h-0 min-w-0 flex-1">
+              {/*
+                Only the active tab's content mounts, so switching is a
+                fade-through rather than a true crossfade: the keyed wrapper
+                remounts and the incoming surface fades up over 200 ms after
+                the 75 ms stagger the sidebar already uses.
+              */}
+              <div
+                key={contentKey}
+                className="absolute inset-0"
+                data-editor-content=""
+              >
+                <ActiveTabContent
+                  tab={activeTab}
+                  isLanding={isLanding}
+                  leavingPresent={leavingPresent}
+                  onReturn={exitPresentation}
+                />
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </CanvasModeProvider>
   )
 }
 
@@ -275,6 +592,8 @@ function ActiveTabContent({
     return isLanding ? (
       <Homepage />
     ) : (
+      // No provider here: the base surface's mode is the shell's, so the
+      // sidebar and this canvas are always in the same one.
       <VisualWalkthroughShell>
         <div
           className="absolute inset-0 flex min-h-0 flex-col"

@@ -3,7 +3,7 @@ import {
   buildTechPillSelection,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
-import { getTechPillToneFor } from '@/lib/techPillTheme'
+import { getTouchpointTone } from '@/lib/techPillColors'
 
 type BlueprintTechPillProps = {
   item: string
@@ -30,7 +30,7 @@ export function BlueprintTechPill({
   return (
     <BlueprintCellButton
       fill="frontstage-tech"
-      tone={getTechPillToneFor(item)}
+      tone={getTouchpointTone(item)}
       selection={buildTechPillSelection(selectionContext, item)}
       cellId={selectionContext.cellId}
       stepIndex={stepIndex}

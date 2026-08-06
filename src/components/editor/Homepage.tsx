@@ -95,7 +95,7 @@ export function Homepage() {
               // brand fill — which is the Button's own `default` variant. It
               // used to restate `bg-primary` and its hover here at a different
               // alpha than the variant used, which is how the two drifted.
-              className="h-9 shrink-0 px-3.5 font-semibold shadow-sm"
+              className="h-9 shrink-0 px-3.5 font-semibold"
             >
               View PLUS Blueprints
             </Button>
@@ -127,7 +127,7 @@ export function Homepage() {
                 value={tab.value}
                 className={cn(
                   'h-auto flex-none rounded-none px-0 pb-3 pt-0 text-sm font-medium',
-                  'text-muted-foreground transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                  'text-muted-foreground transition-colors duration-(--motion-structural) ease-structural',
                   'hover:text-foreground data-active:text-foreground',
                   // Hide the default after-underline; we animate a shared indicator instead.
                   'after:hidden',
@@ -140,7 +140,7 @@ export function Homepage() {
               aria-hidden
               className={cn(
                 'pointer-events-none absolute bottom-[-1px] h-0.5 bg-foreground',
-                'transition-[left,width,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                'transition-[left,width,opacity] duration-(--motion-structural) ease-structural motion-reduce:transition-none',
                 indicator.ready ? 'opacity-100' : 'opacity-0',
               )}
               style={{ left: indicator.left, width: indicator.width }}
@@ -155,7 +155,7 @@ export function Homepage() {
                   alt="PLUS"
                   width={80}
                   height={80}
-                  className="size-16 rounded-[1.15rem] sm:size-20"
+                  className="size-16 rounded-2xl sm:size-20"
                 />
               </div>
               <div className="flex min-w-0 flex-col gap-2">

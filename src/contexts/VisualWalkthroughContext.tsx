@@ -122,6 +122,7 @@ export function VisualWalkthroughProvider({
   )
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset-on-key: any open walkthrough must close when the workspace changes
     closeWalkthrough()
   }, [resetKey, closeWalkthrough])
 

@@ -155,13 +155,23 @@
    * identity even as neutrals desaturate.
    *
    * Hue 177.6 is the blue-green this product is specified around — it is the
-   * OKLCH hue of #85ECD5. Lightness stays at Supabase's 0.76 rather than that
-   * swatch's 0.874: the reference colour is a tint, and at L 0.874 a filled
-   * button is too pale to read as a control against a near-white canvas. The
-   * tint itself still exists in the ramp as `--brand-400`. `--primary-foreground`
-   * is dark ink, not white — white on this fill measures 2.03:1, dark ink 10.16.
+   * OKLCH hue of #85ECD5. The reference colour is a tint: at its L 0.874 a
+   * filled button is too pale to read as a control against a near-white
+   * canvas. The tint itself still exists in the ramp as `--brand-400`.
+   * `--primary-foreground` is dark ink, not white — white on this fill
+   * measures ~2:1, dark ink 9.49.
    */
-  --primary: oklch(0.76 0.13 var(--primary-hue));
+  /* Matcha-ceramic tuning (2026-08-06). The earlier pass chased Supabase's
+   * chroma punch and landed too dark and too loud; this one is calibrated
+   * against a matcha glaze reference instead — lighter (L 0.78) and muted
+   * (C 0.09, ~60% of the sRGB ceiling here), on the brand hue dial. The
+   * quiet fill is the point: identity comes from the hue, weight from the
+   * new 1px `--primary-border` edge rather than saturation.
+   * Dark ink on it measures 10.69:1. */
+  --primary: oklch(0.78 0.09 var(--primary-hue));
+  /* The Supabase button treatment: flat fill, one shade-darker hairline.
+   * Derived, so it tracks any future retune of --primary. */
+  --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c * 1.25) h);
   --primary-foreground: oklch(
     min(var(--surface), var(--foreground-lightness))
       calc(var(--chroma) * 0.45) var(--primary-hue)
@@ -363,3 +373,6 @@
     from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.85) c h
   );
 }
+
+/* No P3 chroma boost for the matcha primary: the muted fill is deliberate,
+ * and a wide-gamut deepening would fight it. Removed 2026-08-06. */

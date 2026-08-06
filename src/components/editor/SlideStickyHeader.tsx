@@ -8,6 +8,10 @@ import {
   BLUEPRINT_NAVBAR_BAR_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import {
+  useCollapsedNavSummary,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
+import {
   getSlideDisplayLabel,
   isSubslide,
   type NavItem,
@@ -99,10 +103,27 @@ export function SlideStickyHeader({
   className,
   ...contentProps
 }: SlideStickyHeaderProps) {
+  // Collapsed: the floating pill carries this header's identity instead —
+  // one chrome layer at any width. Path filters and the zoom readout are
+  // deliberately not folded in; they come back when the sidebar does.
+  const { collapsed } = useSidebarCollapsedState()
+  useCollapsedNavSummary(
+    collapsed
+      ? {
+          title: getSlideDisplayLabel(contentProps.slide, contentProps.slides),
+        }
+      : null,
+  )
+  if (collapsed) return null
+
   return (
     <div
       data-editor-navbar
-      className={cn('relative', BLUEPRINT_NAVBAR_BAR_CLASS, className)}
+      className={cn(
+        'relative flex items-center',
+        BLUEPRINT_NAVBAR_BAR_CLASS,
+        className,
+      )}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <PhaseMenubarHeader
@@ -110,7 +131,7 @@ export function SlideStickyHeader({
         slides={contentProps.slides}
         paths={contentProps.paths}
         selectedPathIds={contentProps.selectedPathIds}
-        className={BLUEPRINT_MENUBAR_FLAT_CLASS}
+        className={cn('min-w-0 flex-1', BLUEPRINT_MENUBAR_FLAT_CLASS)}
       />
       <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
         <NavbarZoomIndicator />

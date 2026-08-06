@@ -22,6 +22,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-border: var(--primary-border);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -310,11 +311,10 @@
   --color-sidebar-selected-rail: var(--sidebar-selected-rail);
   --color-sidebar-ancestor: var(--sidebar-ancestor);
   /*
-   * Font stacks, in Supabase's shape. The inner `var(--font-sans, …)` is their
-   * injection seam: `@theme inline` never emits the property, so the utility
-   * compiles to `font-family: var(--font-sans, Ubuntu Sans Variable, …)` and
-   * resolves against whatever `--font-sans` an embedding app declares at
-   * `:root`. Unset, the default applies.
+   * Font stacks, in Supabase's shape: an injection seam variable first, the
+   * full fallback chain after it, generic always last. An embedding app
+   * declares `--app-font-sans` (or `--font-source-code-pro`) at `:root` to
+   * swap the face; unset, the defaults apply.
    *
    * The default is the one thing that differs from theirs, and it has to:
    * their default is Circular, which is a licensed face we cannot ship. Ubuntu
@@ -324,17 +324,31 @@
    * No heading font, no type-scale overrides, no weight overrides: Supabase
    * defines none, and headings are this stack at a heavier weight.
    */
-  --font-sans: var(
-    --font-sans,
-    'Ubuntu Sans Variable',
-    'Ubuntu Sans',
-    Ubuntu,
-    Helvetica Neue,
-    Helvetica,
-    Arial,
-    sans-serif
-  );
-  --font-mono: var(--font-source-code-pro, Source Code Pro, Office Code Pro, Menlo, monospace);
+  /*
+   * The fallback chain sits OUTSIDE the var() slot on purpose. Inside it,
+   * the entire list lives in the var's fallback position — so the moment the
+   * seam variable is defined, every fallback (including the generic!) is
+   * discarded, and a face that fails to load renders as the browser default
+   * serif. Outside, var() substitutes into a comma list and the system
+   * faces + generic always survive. (Found live: `font-mono` computed to
+   * just "Source Code Pro Variable","Source Code Pro" — Times on any load
+   * failure.)
+   */
+  /*
+   * The seam is `--app-font-sans`, NOT `--font-sans` itself: this file's
+   * `@theme inline` block DOES emit these as custom properties on :root, so
+   * a self-referential `--font-sans: var(--font-sans, …)` is a custom-property
+   * cycle — invalid at computed-value time, and it silently discards an
+   * embedder's own `--font-sans` whenever this sheet sorts later in the
+   * cascade. A distinctly named seam (mirroring `--font-source-code-pro` on
+   * the mono side) cannot cycle.
+   */
+  --font-sans:
+    var(--app-font-sans, 'Ubuntu Sans Variable'), 'Ubuntu Sans', Ubuntu,
+    'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono:
+    var(--font-source-code-pro, 'Source Code Pro Variable'), 'Source Code Pro',
+    'Office Code Pro', Menlo, monospace;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -355,10 +369,27 @@
   --width-listbox: 320px;
   --breakpoint-xs: 480px;
 
-  /* No --shadow-* tokens, deliberately: Supabase defines none anywhere and
-     uses Tailwind's default shadow scale at call sites. So do we. */
+  /* Shadows stay on Tailwind's default scale (Supabase defines no --shadow-*
+     tokens either), with one addition: --shadow-floating, the shared shadow
+     for toolbars/menus floating over the canvas. */
+  --shadow-floating: 0 8px 28px rgb(0 0 0 / 0.3);
 
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Sub-xs type steps. Tailwind's scale bottoms out at text-xs (12px); the
+ * editor's dense chrome (badges, kickers, axis labels) uses 11px and 10px
+ * constantly, so the two sizes are named rather than repeated as
+ * text-[11px]/text-[10px] literals. No --text-*--line-height on purpose:
+ * the utilities set font-size only, exactly like the arbitrary values they
+ * replaced — call sites keep their own leading-* / inherited line-height.
+ * A plain @theme block (not `inline`) because these are literal values, not
+ * indirections into semantic tokens.
+ */
+@theme {
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-3xs: 0.625rem; /* 10px */
 }

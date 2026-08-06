@@ -119,11 +119,21 @@
     filter: saturate(0.3) grayscale(0.55);
   }
 
+  /* A cell picked for a slice being authored. Deliberately the primary
+     accent rather than the lane ring used for saved membership: while
+     picking, "in this draft" and "in some saved slice" are different states
+     that can both be true on the same cell. */
+  [data-blueprint-cell-anchor][data-slice-picked] {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+
   /* Sequence badges scale with the canvas transform; once the camera is far
      enough out that the numbers are illegible they read as noise. Fading
      rather than `display: none` keeps the 0.25 threshold from popping —
      crossing it now costs one 150 ms opacity animation, not a relayout. */
-  [data-slice-sequence-badge] {
+  [data-slice-sequence-badge],
+  [data-slice-pick-badge] {
     transition: opacity 150ms ease-out;
   }
 
@@ -131,6 +141,10 @@
     opacity: 0;
     pointer-events: none;
   }
+
+  /* Pick badges deliberately survive the far-zoom threshold: while building
+     a slice the numbers are the whole point, and picking from a zoomed-out
+     view is the normal way to span a wide scenario. */
 
   [data-blueprint-cell-anchor][data-blueprint-cell-preview-hover] {
     background-color: var(

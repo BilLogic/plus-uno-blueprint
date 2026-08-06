@@ -30,6 +30,9 @@ type SelectHandlers = {
 
 type RowDirection = 'prev' | 'next' | 'both' | 'up' | 'down' | 'related'
 
+/** Indents wrapped detail lines under the label: DirectionIcon width (size-3, 12px) + the row's 7px gap. */
+const detailIndentClass = 'pl-[19px]'
+
 /** Which list(s) a connection came from — drives the direction glyph. */
 type RowFlow = 'in' | 'out' | 'both'
 
@@ -87,7 +90,7 @@ function DependencyRow({
 
   return (
     <li className="group border-b border-border/35 last:border-0">
-      <div className="flex flex-col gap-0.5 px-2 py-1.5 text-xs leading-snug transition-colors group-hover:bg-neutral-100 group-focus-within:bg-neutral-100 dark:group-hover:bg-foreground/[0.08] dark:group-focus-within:bg-foreground/[0.08]">
+      <div className="flex flex-col gap-0.5 px-2 py-1.5 text-xs leading-snug transition-colors group-hover:bg-accent group-focus-within:bg-accent">
         <button
           type="button"
           className="flex min-w-0 flex-col items-stretch gap-0.5 text-left text-foreground/85 transition-colors hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
@@ -110,24 +113,24 @@ function DependencyRow({
               </span>
             </span>
             {connection.linkLabel ? (
-              <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-[10px] leading-tight text-muted-foreground">
+              <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-3xs leading-tight text-muted-foreground">
                 {connection.linkLabel}
               </span>
             ) : null}
           </span>
           {connection.contentPreview && !connection.isTech ? (
-            <span className="truncate pl-[19px] text-[11px] text-muted-foreground">
+            <span className={cn('truncate text-2xs text-muted-foreground', detailIndentClass)}>
               {connection.contentPreview}
             </span>
           ) : null}
           {connection.linkNote ? (
-            <span className="pl-[19px] text-[11px] leading-snug text-muted-foreground italic">
+            <span className={cn('text-2xs leading-snug text-muted-foreground italic', detailIndentClass)}>
               {connection.linkNote}
             </span>
           ) : null}
         </button>
         {connection.isTech && connection.techItems.length > 0 ? (
-          <span className="flex flex-wrap gap-1 pt-0.5 pl-[19px]">
+          <span className={cn('flex flex-wrap gap-1 pt-0.5', detailIndentClass)}>
             {connection.techItems.map((item) => (
               <button
                 key={item}
@@ -146,7 +149,7 @@ function DependencyRow({
                   item={item}
                   compact
                   asSpan
-                  className="!w-fit max-w-full !px-2 !py-0.5 !text-[10px] !font-normal leading-none text-foreground/75"
+                  className="!w-fit max-w-full !px-2 !py-0.5 !text-3xs !font-normal leading-none text-foreground/75"
                 />
               </button>
             ))}
@@ -166,7 +169,7 @@ function DependencyGroup({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+      <p className="text-3xs font-semibold tracking-wide text-muted-foreground uppercase">
         {title}
       </p>
       <ul className="flex flex-col">{children}</ul>
@@ -305,7 +308,7 @@ export function CellDependencySections({
                     item={entry.item}
                     compact
                     asSpan
-                    className="!w-fit max-w-full !px-2 !py-0.5 !text-[10px] !font-normal leading-none text-foreground/75"
+                    className="!w-fit max-w-full !px-2 !py-0.5 !text-3xs !font-normal leading-none text-foreground/75"
                   />
                 </button>
               ))}

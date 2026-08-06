@@ -36,3 +36,18 @@ export function useCanvasAnnotations() {
   }
   return context
 }
+
+/**
+ * The annotation state, or null outside the canvas.
+ *
+ * For components that render both inside the canvas and in portalled chrome —
+ * the detail drawer draws tech pills with the same `BlueprintCellButton` the
+ * grid uses, and the drawer lives outside `CanvasAnnotationProvider`. The
+ * throwing variant above turned that into an app-wide white screen: one pill
+ * inside the drawer, one throw during render, no boundary in between. A
+ * component that can legitimately live on either side of the provider must
+ * read the context as a question, not an assertion.
+ */
+export function useCanvasAnnotationsOptional() {
+  return useContext(CanvasAnnotationContext)
+}

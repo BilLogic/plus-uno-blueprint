@@ -203,6 +203,7 @@ function useNavSelectionState(slides: NavItem[]) {
     // Slides may not have loaded yet — retry on the next slides change.
     if (!parentId) return
     autoExpandedForRef.current = selectedScenarioId
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-expand keyed on the ref above; a render-phase version would re-open collapsed phases on refetch
     setExpandedPhaseIds((current) => withPhaseExpanded(current, parentId, true))
   }, [selectedScenarioId, slides])
 
@@ -231,6 +232,7 @@ function useNavSelectionState(slides: NavItem[]) {
         return
       }
       const parentId = scenario.parentId ?? null
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reconciles the selection against externally-fetched slides; guarded so it settles in one pass
       if (parentId !== selectedPhaseId) setSelectedPhaseId(parentId)
       return
     }
@@ -332,14 +334,28 @@ export function EditorProvider({ children }: EditorProviderProps) {
 
   const nav = useNavSelectionState(slides)
 
+  /*
+    Per-scenario display override, session-local. Side-by-side is the
+    default reading view; 'integrated' is the comparison lens (the header
+    toggle calls it Compare) — one merged grid where the shared spine
+    collapses and only the differences carry color.
+  */
+  const [viewTypeOverrides, setViewTypeOverrides] = useState<
+    Record<string, SlideViewType>
+  >({})
+
   const getScenarioDisplayViewType = useCallback(
-    (_slide: NavItem): SlideViewType => 'side-by-side',
-    [],
+    (slide: NavItem): SlideViewType =>
+      viewTypeOverrides[slide.id] ?? 'side-by-side',
+    [viewTypeOverrides],
   )
 
   const setScenarioDisplayViewType = useCallback(
-    (_scenarioId: string, _viewType: SlideViewType) => {
-      // Integrated view is disabled; display is always side-by-side.
+    (scenarioId: string, viewType: SlideViewType) => {
+      setViewTypeOverrides((current) => ({
+        ...current,
+        [scenarioId]: viewType,
+      }))
     },
     [],
   )
@@ -378,6 +394,18 @@ export function useEditor() {
     throw new Error('useEditor must be used within EditorProvider')
   }
   return context
+}
+
+/**
+ * True while the canvas is focused on one scenario — the only place the
+ * grid's structural affordances (insert handles, empty-cell `+`) belong.
+ * At the overview, twenty blueprints render at 6% zoom; an insert handle
+ * there is an unaimed weapon. Null-safe for surfaces outside the editor
+ * provider (a slice tab), which are never at scenario level.
+ */
+export function useAtScenarioLevel(): boolean {
+  const context = useContext(EditorContext)
+  return context?.view === 'detail' && context.selectedScenarioId !== null
 }
 
 type EditorDetailScopeProps = {

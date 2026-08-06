@@ -1,15 +1,22 @@
+import { Columns2, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
   BLUEPRINT_MENUBAR_HEADER_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@/components/editor/SegmentedControl'
 import { Menubar } from '@/components/ui/menubar'
+import { useEditor } from '@/contexts/EditorContext'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
   isSubslide,
   type NavItem,
+  type SlideViewType,
 } from '@/types/nav'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +46,42 @@ function resolveHeaderDescription(
   )
 }
 
+/**
+ * Side by side ⇄ Compare, on the bar that holds the scenario title.
+ *
+ * Visible only while two or more paths are selected — with one path there
+ * is nothing to compare and the control would be a question with no answer.
+ * Same track-and-raised-square vocabulary as the View/Edit switch.
+ */
+function CompareViewToggle({ slide }: { slide: NavItem }) {
+  const { getScenarioDisplayViewType, setScenarioDisplayViewType } = useEditor()
+  const current = getScenarioDisplayViewType(slide)
+
+  const segments: Array<{
+    value: SlideViewType
+    label: string
+    icon: typeof Columns2
+  }> = [
+    { value: 'side-by-side', label: 'Side by side', icon: Columns2 },
+    { value: 'integrated', label: 'Compare', icon: GitCompareArrows },
+  ]
+
+  return (
+    <SegmentedControl
+      aria-label="Path display"
+      value={current}
+      onValueChange={(value) => setScenarioDisplayViewType(slide.id, value)}
+    >
+      {segments.map(({ value, label, icon: Icon }) => (
+        <SegmentedControlItem key={value} value={value} className="px-2">
+          <Icon className="size-3.5" aria-hidden />
+          {label}
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
+  )
+}
+
 /** Phase or scenario title bar using the shadcn Menubar component. */
 export function PhaseMenubarHeader({
   slide,
@@ -51,6 +94,7 @@ export function PhaseMenubarHeader({
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
   const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
+  const showCompareToggle = isScenario && selectedPathIds.length >= 2
 
   return (
     <Menubar
@@ -68,6 +112,13 @@ export function PhaseMenubarHeader({
           className="shrink-0"
         />
       </div>
+      {/* Beside the title, not flex-end: the bar's right edge belongs to the
+          absolutely-positioned zoom / Reset View chrome. */}
+      {showCompareToggle ? (
+        <div className="ml-3 shrink-0">
+          <CompareViewToggle slide={slide} />
+        </div>
+      ) : null}
     </Menubar>
   )
 }

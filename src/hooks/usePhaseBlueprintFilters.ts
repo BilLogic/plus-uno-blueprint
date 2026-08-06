@@ -40,7 +40,10 @@ export function usePhaseBlueprintFilters({
   getScenarioDisplayViewType,
   setScenarioDisplayViewType,
 }: UsePhaseBlueprintFiltersOptions): PhaseBlueprintFilters {
-  const activeScenarioIds = enabled ? scenarioIds : []
+  const activeScenarioIds = useMemo(
+    () => (enabled ? scenarioIds : []),
+    [enabled, scenarioIds],
+  )
   const {
     pathsByScenario,
     blueprintsByPathId,

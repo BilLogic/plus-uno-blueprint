@@ -1,21 +1,34 @@
 import { useCallback } from 'react'
-import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
+import {
+  invalidateQueries,
+  useSupabaseQuery,
+  type QueryResult,
+} from '@/hooks/useSupabaseQuery'
 import type { Evidence } from '@/types/database'
 
 /**
- * Evidence rows for one cell, newest first. Mount only for authenticated
- * sessions with the Evidence tab open — evidence SELECT is restricted, so an
- * anonymous fetch would return an empty set that must never be rendered as
- * "all assumptions". Bump `reloadToken` after inserting a source.
+ * Drop the cached evidence for one cell and refetch mounted readers. Call
+ * after inserting or deleting a source. (This replaced a component-local
+ * reload token baked into the key: the token reset to 0 on remount, so with
+ * staleTime Infinity a reopened panel served the pre-insert list forever,
+ * and every dead token generation stayed cached.)
  */
-export function useEvidence(
-  cellId: string,
-  reloadToken = 0,
-): QueryResult<Evidence[]> {
+export function invalidateEvidence(cellId: string): void {
+  invalidateQueries(`evidence:${cellId}`)
+}
+
+/**
+ * Evidence rows for one cell, newest first. Evidence is deliberately
+ * public-readable (decision 2026-08-06, access-model plan): the research
+ * behind a published blueprint ships with it, and anon SELECT is granted by
+ * policy. Mount with the Evidence tab open; call `invalidateEvidence` after
+ * a write.
+ */
+export function useEvidence(cellId: string): QueryResult<Evidence[]> {
   const fallback = useCallback(() => null, [])
 
   return useSupabaseQuery<Evidence[]>(
-    `evidence:${cellId}:${reloadToken}`,
+    `evidence:${cellId}`,
     async (client) => {
       const { data, error } = await client
         .from('evidence')

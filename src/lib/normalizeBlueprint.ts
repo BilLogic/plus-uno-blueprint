@@ -242,18 +242,48 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
   })
 }
 
-export function buildCellLookup(cells: BlueprintCell[]): Map<string, BlueprintCell> {
-  const map = new Map<string, BlueprintCell>()
+/**
+ * Cells by slot. A slot — one lane, one step — holds a *list*: tech lanes
+ * carry one cell per touchpoint (`slot_position` orders them), and the old
+ * single-cell map silently dropped every sibling but the last, which is the
+ * kind of data loss that never throws. Non-tech lanes still hold one.
+ */
+export function buildCellLookup(
+  cells: BlueprintCell[],
+): Map<string, BlueprintCell[]> {
+  const map = new Map<string, BlueprintCell[]>()
   for (const cell of cells) {
-    map.set(`${cell.layer_id}:${cell.step_id}`, cell)
+    const key = `${cell.layer_id}:${cell.step_id}`
+    const slot = map.get(key)
+    if (slot) slot.push(cell)
+    else map.set(key, [cell])
+  }
+  for (const slot of map.values()) {
+    slot.sort(
+      (left, right) => (left.slot_position ?? 0) - (right.slot_position ?? 0),
+    )
   }
   return map
 }
 
+/** Every cell in the slot, in `slot_position` order. */
+export function getCellsAt(
+  lookup: Map<string, BlueprintCell[]>,
+  layerId: string,
+  stepId: string,
+): BlueprintCell[] {
+  return lookup.get(`${layerId}:${stepId}`) ?? []
+}
+
+/**
+ * The slot's first cell — the right question for non-tech lanes, which hold
+ * at most one, and for anything that needs "the" cell of a slot (arrows,
+ * upserts, walkthroughs target slot position 0).
+ */
 export function getCellAt(
-  lookup: Map<string, BlueprintCell>,
+  lookup: Map<string, BlueprintCell[]>,
   layerId: string,
   stepId: string,
 ): BlueprintCell | undefined {
-  return lookup.get(`${layerId}:${stepId}`)
+  return lookup.get(`${layerId}:${stepId}`)?.[0]
 }
