@@ -103,3 +103,17 @@ API-invisible?".
 The remaining `authenticated`-can-execute WARNs on the ~17 authoring RPCs are
 the funnel working as designed; this document is their standing exception
 record.
+
+## Couplings recorded by the security review (2026-08-06)
+
+- **Evidence insert policy is `with check (true)`** — `created_by`/`added_by`/
+  `id` are client-supplied defaults, not constraints, and
+  `restoreEvidenceRow`'s verbatim reinsert now *depends* on that laxity.
+  When the Author persona tightens, do NOT add
+  `with check (created_by = auth.uid())` — it would silently break evidence
+  undo. Move restore into a SECURITY DEFINER RPC that re-checks tier and
+  preserves authorship server-side, in the same change.
+- **`evidence.cell_id` has no FK** — delete-cell-then-revert-evidence can
+  reinsert orphaned rows that `evidence_counts` counts but no panel shows.
+  Fix alongside the restore RPC (FK `on delete cascade`, or a nonexistence
+  check in the RPC).
