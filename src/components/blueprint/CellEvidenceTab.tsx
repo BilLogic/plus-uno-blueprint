@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateEvidence, useEvidence } from '@/hooks/useEvidence'
+import { addEvidence } from '@/lib/evidenceMutations'
 import { resolveFirstLifecycleId } from '@/lib/lifecycle'
 import { safeExternalHref } from '@/lib/sliceCells'
 import type { Database, Evidence } from '@/types/database'
@@ -128,19 +129,20 @@ function AddSourceForm({
     setError(null)
     try {
       const lifecycleId = await resolveFirstLifecycleId(client)
-      const { error: insertError } = await client.from('evidence').insert({
-        service_lifecycle_id: lifecycleId,
-        cell_id: cellId,
+      // Through the ledger wrapper, like every other write — an added source
+      // shows in the session log and can be taken back.
+      await addEvidence(client, {
+        serviceLifecycleId: lifecycleId,
+        cellId,
         // TODO(map-skill): id placeholder — real IR key-paths come from
         // the skill.
-        cell_key: cellId,
+        cellKey: cellId,
         kind,
         title: title.trim(),
         ref: ref.trim() || null,
         excerpt: excerpt.trim() || null,
         note: note.trim() || null,
       })
-      if (insertError) throw new Error(insertError.message)
       setOpen(false)
       setTitle('')
       setRef('')

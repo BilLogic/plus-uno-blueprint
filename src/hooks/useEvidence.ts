@@ -18,10 +18,11 @@ export function invalidateEvidence(cellId: string): void {
 }
 
 /**
- * Evidence rows for one cell, newest first. Mount only for authenticated
- * sessions with the Evidence tab open — evidence SELECT is restricted, so an
- * anonymous fetch would return an empty set that must never be rendered as
- * "all assumptions". Call `invalidateEvidence` after inserting a source.
+ * Evidence rows for one cell, newest first. Evidence is deliberately
+ * public-readable (decision 2026-08-06, access-model plan): the research
+ * behind a published blueprint ships with it, and anon SELECT is granted by
+ * policy. Mount with the Evidence tab open; call `invalidateEvidence` after
+ * a write.
  */
 export function useEvidence(cellId: string): QueryResult<Evidence[]> {
   const fallback = useCallback(() => null, [])

@@ -184,6 +184,18 @@ export function describeChange(entry: ChangeEntry): string {
       return 'Edited a cell’s resources'
     case 'update_cell_spec':
       return 'Specified function & form'
+    case 'add_evidence': {
+      const title =
+        typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
+      return title ? `Added evidence “${title}”` : 'Added an evidence source'
+    }
+    case 'delete_evidence': {
+      const title =
+        typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
+      return title
+        ? `Removed evidence “${title}”`
+        : 'Removed an evidence source'
+    }
     case 'rename_owner_tag': {
       const from = typeof entry.args.from === 'string' ? entry.args.from : ''
       const to = typeof entry.args.to === 'string' ? entry.args.to : ''

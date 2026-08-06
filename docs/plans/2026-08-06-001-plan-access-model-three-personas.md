@@ -83,11 +83,23 @@ surface?"; DEFINER-function lint = "is this function part of the funnel and
 does it self-check?"; RLS-no-policy = "is this table deliberately
 API-invisible?".
 
-## Blocked on your call
+## Decisions (aligned with owner, 2026-08-06)
 
-- [ ] F3: are raw evidence rows publishable to visitors, or counts only?
-- [ ] Approve: `evidence_counts` → INVOKER (paired with F3 decision)
-- [ ] Approve: revoke `flag_founding_service_accounts` from anon/authenticated
-- [ ] Approve: `SET search_path` across the RPC funnel + `search_blueprint`
-- [ ] Approve: enable leaked-password protection
-- [ ] F4: evidence update/delete into the RPC funnel, or documented exception?
+- [x] F3: raw evidence rows are **publishable** — research ships with the
+      blueprint. Anon SELECT stays; `useEvidence` docstring corrected.
+- [x] `evidence_counts` → `security_invoker = true` (flag was gratuitous once
+      F3 kept rows public). Applied: migration `advisor_hardening_2026_08_06`.
+      ERROR advisor cleared.
+- [x] `flag_founding_service_accounts`: EXECUTE revoked **from PUBLIC** (the
+      per-role revoke was a no-op — the grant flowed from PUBLIC), re-granted
+      to `service_role` only. Verified via `has_function_privilege`.
+- [x] `search_path`: audit found every function already pinned except
+      `search_blueprint` — now pinned too.
+- [ ] Leaked-password protection: no management-API tool available here —
+      **owner flips it in the dashboard** (Auth → Providers → Email).
+- [x] F4: evidence writes go into the RPC funnel with ledger + revert —
+      owner called the gap dangerous; implemented rather than documented.
+
+The remaining `authenticated`-can-execute WARNs on the ~17 authoring RPCs are
+the funnel working as designed; this document is their standing exception
+record.

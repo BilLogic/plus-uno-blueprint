@@ -6,10 +6,12 @@ import {
   type CellContentUpdate,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec, type CellSpecUpdate } from '@/lib/cellSpecMutations'
+import { deleteEvidence, restoreEvidenceRow } from '@/lib/evidenceMutations'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
 
 type Client = SupabaseClient<Database>
+type EvidenceRowType = Database['public']['Tables']['evidence']['Row']
 
 function stringArg(args: Record<string, unknown>, key: string): string {
   const value = args[key]
@@ -73,6 +75,19 @@ export async function executeRevert(
       if (!data || data.length === 0) {
         throw new Error('That cell no longer exists — nothing to revert onto.')
       }
+      return
+    }
+    case 'delete_evidence': {
+      // Undo of "added a source": remove the row it created.
+      const evidenceId = stringArg(revert.args, 'evidence_id')
+      await deleteEvidence(client, evidenceId, undefined, { record: false })
+      return
+    }
+    case 'restore_evidence_row': {
+      // Undo of "deleted a source": reinsert the captured row verbatim,
+      // original id included, so references to it come back intact.
+      const row = revert.args.row as EvidenceRowType
+      await restoreEvidenceRow(client, row)
       return
     }
     case 'rename_owner_tag_scoped': {
