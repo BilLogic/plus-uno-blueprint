@@ -126,15 +126,8 @@ export function ServiceBlueprintGrid({
     )
   const playGutter = showPlay ? VISUAL_PLAY_GUTTER : 0
 
-  if (steps.length === 0 && layers.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        This path has no layers or steps yet.
-      </p>
-    )
-  }
-
-  const gridMinWidth = getBlueprintGridMinWidth(steps.length)
+  // Hooks must run unconditionally — these sit above the empty-grid early
+  // return, and both are pure computations so hoisting changes nothing.
   const naturalGridBodyMinHeight = useMemo(
     () =>
       getBlueprintGridMinHeight(data, {
@@ -152,6 +145,16 @@ export function ServiceBlueprintGrid({
     const serviceInset = SERVICE_PATH_SECTION_INSET * 2
     return fixedSwimlaneBodyHeight - compareInset + serviceInset
   }, [fixedSwimlaneBodyHeight, naturalGridBodyMinHeight])
+
+  if (steps.length === 0 && layers.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        This path has no layers or steps yet.
+      </p>
+    )
+  }
+
+  const gridMinWidth = getBlueprintGridMinWidth(steps.length)
 
   const scrollMinHeight =
     gridBodyMinHeight + ARROW_VIEWPORT_PAD * 2

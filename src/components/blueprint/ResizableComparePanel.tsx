@@ -87,6 +87,7 @@ export function ResizableComparePanel({
 
   useEffect(() => {
     if (lockHeight) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset of the user's drag-resize when the fit key or defaults change; part of the panel's measurement flow
     setUserSize({ width: 0, height: 0 })
   }, [fitContentKey, defaultWidth, defaultHeight, lockHeight])
 

@@ -180,7 +180,6 @@ export function IntegratedBlueprintGrid({
     data,
     compact,
     collapsedLayerIds,
-    fillSwimlaneHeight,
     fixedSwimlaneBodyHeight,
     layoutOptions,
   ])
@@ -192,7 +191,7 @@ export function IntegratedBlueprintGrid({
           getCompareRowTrackCss(row),
         )
         .join(' '),
-    [fillSwimlaneHeight, rows],
+    [rows],
   )
 
   const activePathCount = Math.max(1, activePaths.length)

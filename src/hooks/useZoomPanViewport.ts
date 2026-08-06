@@ -638,6 +638,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
   useEffect(() => {
     if (panEnabled) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- timing-sensitive pan/zoom state: cancels an in-flight drag the moment panning is disabled
     setIsPanning(false)
   }, [panEnabled])
 

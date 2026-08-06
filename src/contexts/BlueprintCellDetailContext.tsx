@@ -74,6 +74,7 @@ export function BlueprintCellDetailProvider({
     useState<BlueprintCellPreviewHover | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset-on-key: clears three pieces of selection state together when the workspace changes
     setSelection(null)
     setDraftCell(null)
     setPreviewHover(null)

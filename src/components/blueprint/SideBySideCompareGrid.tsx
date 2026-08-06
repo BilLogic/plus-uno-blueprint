@@ -151,7 +151,7 @@ export function SideBySideCompareGrid({
           getCompareRowTrackCss(row),
         )
         .join(' '),
-    [fillSwimlaneHeight, rows],
+    [rows],
   )
 
   const gridTemplateColumns = useMemo(

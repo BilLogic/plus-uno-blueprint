@@ -22,6 +22,34 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Underscore-prefixed names are deliberate discards (destructure-and-drop
+      // fields, intentionally unused params kept for signature parity).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+  {
+    // Context modules and these components deliberately co-export their
+    // hooks/constants beside the component (the standard shadcn/context-module
+    // pattern). Vite HMR still works — it just falls back to a full reload for
+    // these modules — so fast-refresh purity is not worth splitting the files.
+    files: [
+      'src/contexts/**/*.{ts,tsx}',
+      'src/components/blueprint/BlueprintArrowMarkerDefs.tsx',
+      'src/components/blueprint/PathDescriptionTooltip.tsx',
+      'src/components/blueprint/PathMultiSelect.tsx',
+      'src/components/blueprint/ScenarioBlueprintPanel.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   },
   {
     // Generated shadcn design-system files export variants and hooks beside

@@ -1431,7 +1431,6 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
       eraserPendingRef.current = null
     },
     // Mount/unmount only — refs keep listeners current.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   )
 

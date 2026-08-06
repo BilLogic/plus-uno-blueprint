@@ -18,6 +18,7 @@ export function useAlignedPhaseRowPanelHeight(
   )
 
   useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- layout-measurement flow: re-baselines to the shared height before the measuring effect below raises it
     setRowPanelHeight(sharedPanelHeight)
   }, [sharedPanelHeight])
 

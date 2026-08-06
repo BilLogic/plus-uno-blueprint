@@ -202,6 +202,7 @@ function CellPanelEditorForm({
   // after mount so the portal lands below the scroll region.
   const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot DOM lookup of the portal host; it only exists after the panel's first commit
     setFooterHost(document.getElementById(CELL_PANEL_FOOTER_ID))
   }, [])
   /*

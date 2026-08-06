@@ -38,8 +38,8 @@ vocabulary).
 
 - `npm test` — vitest; collects `src/**/*.test.ts` and
   `scripts/tests/**/*.test.mjs` automatically (no registration list).
-- `npm run lint` — baseline is tracked (currently ~57 problems); do not
-  regress it, fixing nearby noise is welcome.
+- `npm run lint` — baseline is ZERO problems and must stay zero; any
+  problem you introduce is yours to fix before merging.
 - `npm run build` — the real type-check (`npx tsc --noEmit` trips on a
   deprecated tsconfig option; use the build).
 

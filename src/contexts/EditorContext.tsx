@@ -203,6 +203,7 @@ function useNavSelectionState(slides: NavItem[]) {
     // Slides may not have loaded yet — retry on the next slides change.
     if (!parentId) return
     autoExpandedForRef.current = selectedScenarioId
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-expand keyed on the ref above; a render-phase version would re-open collapsed phases on refetch
     setExpandedPhaseIds((current) => withPhaseExpanded(current, parentId, true))
   }, [selectedScenarioId, slides])
 
@@ -231,6 +232,7 @@ function useNavSelectionState(slides: NavItem[]) {
         return
       }
       const parentId = scenario.parentId ?? null
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reconciles the selection against externally-fetched slides; guarded so it settles in one pass
       if (parentId !== selectedPhaseId) setSelectedPhaseId(parentId)
       return
     }
@@ -401,7 +403,6 @@ export function useEditor() {
  * there is an unaimed weapon. Null-safe for surfaces outside the editor
  * provider (a slice tab), which are never at scenario level.
  */
-// eslint-disable-next-line react-refresh/only-export-components -- same trade the file already makes for useEditor above
 export function useAtScenarioLevel(): boolean {
   const context = useContext(EditorContext)
   return context?.view === 'detail' && context.selectedScenarioId !== null
