@@ -964,7 +964,10 @@ function AgentChatView({
                 }
                 if (
                   slashOpen &&
-                  (event.key === 'Enter' || event.key === 'Tab')
+                  (event.key === 'Enter' || event.key === 'Tab') &&
+                  // Shift+Enter stays a newline even mid-menu — same
+                  // exemption the closed-menu send path makes below.
+                  !event.shiftKey
                 ) {
                   event.preventDefault()
                   const highlighted = slashPickable.find(
@@ -974,6 +977,10 @@ function AgentChatView({
                   return
                 }
                 if (slashOpen && event.key === 'Escape') {
+                  // Mark the event consumed: the canvas selection listener
+                  // skips defaultPrevented Escapes, and closing this menu
+                  // must not also wipe a cell selection.
+                  event.preventDefault()
                   setDraft('')
                   return
                 }

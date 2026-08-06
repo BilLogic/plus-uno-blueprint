@@ -85,8 +85,18 @@ export async function executeRevert(
     }
     case 'restore_evidence_row': {
       // Undo of "deleted a source": reinsert the captured row verbatim,
-      // original id included, so references to it come back intact.
+      // original id included, so references to it come back intact. The
+      // ledger is in-memory today, but the shape check costs nothing and
+      // pins the contract if persistence ever lands.
       const row = revert.args.row as EvidenceRowType
+      if (
+        !row ||
+        typeof row !== 'object' ||
+        typeof row.id !== 'string' ||
+        typeof row.title !== 'string'
+      ) {
+        throw new Error('This change’s captured evidence row is malformed.')
+      }
       await restoreEvidenceRow(client, row)
       return
     }

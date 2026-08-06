@@ -442,6 +442,10 @@ export function TabStrip({
               type="button"
               aria-label={`Close ${label}`}
               onClick={() => closeTab(key)}
+              // Out of the tab order: the tablist is one roving stop per the
+              // ARIA tabs pattern, and close stays reachable via the row's
+              // context menu (and pointer).
+              tabIndex={-1}
               className="mr-1 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="size-3" />

@@ -63,6 +63,10 @@ async function revertEntry(
     if (cellId) {
       invalidateQueries(`cell-content:${cellId}`)
       invalidateQueries(`cell-spec:${cellId}`)
+      // Evidence caches under its own key with explicit-only revalidation;
+      // without this, undoing "Added evidence" keeps rendering the deleted
+      // row in an open Evidence tab for the rest of the session.
+      invalidateQueries(`evidence:${cellId}`)
     }
   } finally {
     revertsInFlight.delete(entry.id)

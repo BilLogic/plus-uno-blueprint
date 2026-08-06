@@ -8,12 +8,23 @@ type Client = SupabaseClient<Database>
 type EvidenceRow = Database['public']['Tables']['evidence']['Row']
 type EvidenceInsert = Database['public']['Tables']['evidence']['Insert']
 
+/** Mirrors the DB CHECK constraint — a bad kind fails at compile time. */
+export type EvidenceKind =
+  | 'interview'
+  | 'survey'
+  | 'analytics'
+  | 'doc'
+  | 'meeting'
+  | 'decision'
+  | 'observation'
+  | 'other'
+
 export type EvidenceDraft = {
   serviceLifecycleId: string
   cellId: string
   /** IR key-path placeholder until the map skill mints real ones. */
   cellKey: string
-  kind: string
+  kind: EvidenceKind
   title: string
   ref: string | null
   excerpt: string | null
@@ -84,7 +95,13 @@ export async function deleteEvidence(
   if (options.record !== false) {
     recordChange(
       'delete_evidence',
-      { evidence_id: evidenceId, title: previous?.title ?? '' },
+      {
+        evidence_id: evidenceId,
+        title: previous?.title ?? '',
+        // The revert path invalidates this cell's evidence query — without
+        // it the delete side of the undo pair is uninvalidatable.
+        cell_id: previous?.cell_id ?? null,
+      },
       previous
         ? { fn: 'restore_evidence_row', args: { row: previous } }
         : undefined,
