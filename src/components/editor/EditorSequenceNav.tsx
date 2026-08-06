@@ -44,7 +44,7 @@ function SequenceNavPreview({
     >
       <span
         className={cn(
-          'w-full truncate text-[10px] font-normal text-muted-foreground',
+          'w-full truncate text-3xs font-normal text-muted-foreground',
           !phaseLabel && 'invisible',
         )}
         aria-hidden={!phaseLabel}
@@ -65,6 +65,9 @@ function SequenceNavPreview({
       data-canvas-nav=""
       className={cn(
         'pointer-events-auto absolute bottom-3 z-30 h-auto max-w-40 gap-1.5 py-1.5',
+        // Frozen board palette, not app chrome: the nav floats over the
+        // always-light canvas, so it stays white in dark mode and its hover
+        // stays on the neutral ramp — `hover:bg-accent` would flip dark here.
         'border-border/80 bg-white text-foreground shadow-sm',
         'hover:bg-neutral-100 hover:text-foreground',
         'dark:bg-white dark:text-foreground dark:hover:bg-neutral-200',

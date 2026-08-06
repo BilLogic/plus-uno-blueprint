@@ -25,6 +25,7 @@ import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
 import {
   CANVAS_REGION_SELECTOR,
+  CELL_DETAIL_PANEL_BOTTOM_CLASS,
   CELL_DETAIL_PANEL_TOP_CLASS,
   CELL_DETAIL_PANEL_TOP_GAP_PX,
   CELL_DETAIL_PANEL_TOP_VAR,
@@ -658,7 +659,8 @@ function BlueprintCellDetailPanelBody() {
           data-cell-detail-panel=""
           className={cn(
             CELL_DETAIL_PANEL_TOP_CLASS,
-            '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+            CELL_DETAIL_PANEL_BOTTOM_CLASS,
+            '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
             expanded ? 'w-[40rem]' : 'w-[20rem]',
           )}
           onPointerDown={(event) => event.stopPropagation()}
@@ -669,7 +671,7 @@ function BlueprintCellDetailPanelBody() {
               <DrawerTitle className="text-sm font-bold tracking-tight">
                 New cell
               </DrawerTitle>
-              <DrawerDescription className="text-[11px] text-muted-foreground">
+              <DrawerDescription className="text-2xs text-muted-foreground">
                 {[
                   draft.phaseName,
                   draft.scenarioName,
@@ -692,7 +694,7 @@ function BlueprintCellDetailPanelBody() {
           </DrawerHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
             <span
-              className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
+              className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
               style={{
                 backgroundColor: draftLaneStyle.lane,
                 color: 'var(--foreground-blueprint-cell)',
@@ -800,7 +802,7 @@ function BlueprintCellDetailPanelBody() {
 
   const cellBreadcrumb = (
     <Breadcrumb className="min-w-0">
-      <BreadcrumbList className="flex-nowrap gap-0.5 text-[11px] leading-tight text-muted-foreground">
+      <BreadcrumbList className="flex-nowrap gap-0.5 text-2xs leading-tight text-muted-foreground">
         {phaseName ? (
           <>
             <BreadcrumbItem className="min-w-0">
@@ -847,7 +849,7 @@ function BlueprintCellDetailPanelBody() {
     cellContent.split('\n')[0]?.trim() || selection.layerName
   const laneChip = laneChipStyle ? (
     <span
-      className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[10px] font-medium leading-tight"
+      className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
       style={{
         backgroundColor: laneChipStyle.lane,
         color: BLUEPRINT_THEME.cellText,
@@ -871,7 +873,7 @@ function BlueprintCellDetailPanelBody() {
     <TechPillFace
       item={techDetailLabel!}
       compact
-      className="w-fit shrink-0 !px-2 !py-0.5 !text-[10px] leading-none"
+      className="w-fit shrink-0 !px-2 !py-0.5 !text-3xs leading-none"
     />
   ) : null
 
@@ -929,22 +931,22 @@ function BlueprintCellDetailPanelBody() {
                     alt=""
                     className={cn(
                       CELL_DETAIL_PICTURE_CLASS,
-                      'transition-[filter,opacity] duration-200',
+                      'transition-[filter,opacity] duration-(--motion-fade)',
                       'group-hover:opacity-80 group-hover:grayscale-[15%]',
                     )}
                   />
                   <span
                     className={cn(
                       'absolute inset-0 z-10 flex items-center justify-center',
-                      'bg-black/55 opacity-0 transition-opacity duration-200',
+                      'bg-black/55 opacity-0 transition-opacity duration-(--motion-fade)',
                       'group-hover:opacity-100',
                     )}
                     aria-hidden
                   >
                     <span
                       className={cn(
-                        'inline-flex items-center gap-1.5 text-[11px] font-semibold text-white',
-                        'transition-opacity duration-200',
+                        'inline-flex items-center gap-1.5 text-2xs font-semibold text-white',
+                        'transition-opacity duration-(--motion-fade)',
                       )}
                     >
                       View in Figma
@@ -1050,7 +1052,8 @@ function BlueprintCellDetailPanelBody() {
         data-cell-detail-panel=""
         className={cn(
           CELL_DETAIL_PANEL_TOP_CLASS,
-          '!right-4 !bottom-[61px] !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+          CELL_DETAIL_PANEL_BOTTOM_CLASS,
+          '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
           expanded ? 'w-[40rem]' : 'w-[20rem]',
         )}
         onPointerDown={(event) => event.stopPropagation()}
@@ -1118,7 +1121,7 @@ function BlueprintCellDetailPanelBody() {
                     <TabsTrigger
                       key={value}
                       value={value}
-                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-[11px] font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-2xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
                     >
                       <TabIcon className="size-3" aria-hidden />
                       {label}

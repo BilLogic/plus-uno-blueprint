@@ -91,7 +91,7 @@ export function ScenarioSlideHeader({
           <p
             className={cn(
               'font-medium uppercase tracking-wide text-muted-foreground',
-              compact ? 'text-[10px]' : 'text-xs',
+              compact ? 'text-3xs' : 'text-xs',
             )}
           >
             {phaseLabel}

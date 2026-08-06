@@ -250,7 +250,7 @@ export function SessionChangesSheet() {
             <p className="font-medium text-foreground">
               {changes.length} unsaved change{changes.length === 1 ? '' : 's'}
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-2xs text-muted-foreground">
               Already saved to the database — this list is how you can still
               take them back.
             </p>
@@ -259,7 +259,7 @@ export function SessionChangesSheet() {
           <div className="max-h-64 overflow-y-auto py-1">
             {groups.map((group) => (
               <div key={group.pathId ?? 'service'} className="px-1 py-1">
-                <p className="px-2 py-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                <p className="px-2 py-1 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
                   {pathLabel(group.pathId)}
                 </p>
                 {group.entries.map((entry) => (
@@ -272,7 +272,7 @@ export function SessionChangesSheet() {
           <div className="flex items-center gap-2 border-t border-border/60 px-3 py-2">
             {confirming ? (
               <>
-                <p className="min-w-0 flex-1 text-[11px] text-foreground">
+                <p className="min-w-0 flex-1 text-2xs text-foreground">
                   Deletes in this session can no longer be undone.
                 </p>
                 <Button
@@ -286,7 +286,7 @@ export function SessionChangesSheet() {
                 </Button>
               </>
             ) : (
-              <p className="min-w-0 flex-1 text-[11px] text-muted-foreground">
+              <p className="min-w-0 flex-1 text-2xs text-muted-foreground">
                 {destructive
                   ? 'This session includes a delete.'
                   : 'Everything here can still be found in the list.'}
@@ -345,7 +345,7 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
             same revert, same Save gate; the badge is the entire distinction. */}
         {entry.author === 'agent' ? (
           <span
-            className="shrink-0 text-[10px] text-primary"
+            className="shrink-0 text-3xs text-primary"
             title="Made by the agent"
             aria-label="Made by the agent"
           >
@@ -383,7 +383,7 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
         ) : null}
       </div>
       {error ? (
-        <p className="mt-0.5 text-[10px] text-destructive">{error}</p>
+        <p className="mt-0.5 text-3xs text-destructive">{error}</p>
       ) : null}
     </div>
   )

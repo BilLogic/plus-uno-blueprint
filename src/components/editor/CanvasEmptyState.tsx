@@ -70,9 +70,9 @@ export function CanvasEmptyState({
           // hexes (`--secondary` when no panel override is set) and its border
           // hairline is `--border` like every other hairline.
           isPanel &&
-            'w-full flex-1 gap-1.5 rounded-xl border border-dashed border-border bg-[color:var(--background-blueprint-panel-section,var(--secondary))] px-5 py-6',
+            'w-full flex-1 gap-1.5 rounded-2xl border border-dashed border-border bg-[color:var(--background-blueprint-panel-section,var(--secondary))] px-5 py-6',
           isPhase &&
-            'w-full flex-1 gap-1.5 rounded-xl border border-dashed border-border bg-[color:var(--background-blueprint-panel-canvas,var(--secondary))] px-6 py-7',
+            'w-full flex-1 gap-1.5 rounded-2xl border border-dashed border-border bg-[color:var(--background-blueprint-panel-canvas,var(--secondary))] px-6 py-7',
         )}
       >
         <p
@@ -88,7 +88,7 @@ export function CanvasEmptyState({
             'text-muted-foreground',
             isCanvas
               ? 'text-xs leading-relaxed'
-              : 'max-w-[18rem] text-[11px] leading-snug',
+              : 'max-w-[18rem] text-2xs leading-snug',
           )}
         >
           {description}

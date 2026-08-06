@@ -141,7 +141,7 @@ export function SliceFrameEditor({
         type="button"
         aria-expanded={!collapsed}
         onClick={() => setCollapsed((value) => !value)}
-        className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[11px] font-medium text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-2xs font-medium text-muted-foreground hover:text-foreground"
       >
         <ChevronDown
           className={cn(
@@ -203,7 +203,7 @@ export function SliceFrameEditor({
                 className="size-3 shrink-0 text-muted-foreground/50"
                 aria-hidden
               />
-              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-[10px] font-semibold text-background">
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-3xs font-semibold text-background">
                 {index + 1}
               </span>
               <Input
@@ -248,7 +248,7 @@ export function SliceFrameEditor({
                     })
                   }}
                   className={cn(
-                    'group/chip flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-[11px] active:cursor-grabbing',
+                    'group/chip flex cursor-grab items-center gap-1.5 rounded-md bg-muted/60 px-1.5 py-1 text-2xs active:cursor-grabbing',
                     cellDrop?.frame === index &&
                       cellDrop.index === cellIndex &&
                       'shadow-[0_-2px_0_0_var(--primary)]',
@@ -266,7 +266,7 @@ export function SliceFrameEditor({
                   </span>
                   {/* The cell's words, not the tail of its key. `070110` is
                       an address; nobody recognises their content by address. */}
-                  <span className="min-w-0 flex-1 truncate text-[11px] text-foreground/80">
+                  <span className="min-w-0 flex-1 truncate text-2xs text-foreground/80">
                     {describeCell(cell).label}
                   </span>
                   <Button
@@ -304,7 +304,7 @@ export function SliceFrameEditor({
                   ),
                 )
               }
-              className="w-full shrink-0 resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-[11px] outline-none focus-visible:border-ring"
+              className="w-full shrink-0 resize-none rounded-md border border-input bg-transparent px-1.5 py-1 text-2xs outline-none focus-visible:border-ring"
             />
 
             <SliceStoryboardField
@@ -314,7 +314,7 @@ export function SliceFrameEditor({
             />
 
             {frameProblems.length > 0 ? (
-              <p className="text-[10px] text-destructive">
+              <p className="text-3xs text-destructive">
                 {frameProblems[0].message}
               </p>
             ) : null}

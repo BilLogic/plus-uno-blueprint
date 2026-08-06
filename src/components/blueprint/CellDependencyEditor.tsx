@@ -114,7 +114,7 @@ export function CellDependencyEditor({
               key={entry.id}
               className="flex items-center gap-2 text-xs text-foreground/80"
             >
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium">
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-3xs font-medium">
                 {DEPENDENCY_KIND_LABELS[entry.kind as DependencyKind] ??
                   entry.kind}
               </span>
@@ -151,7 +151,7 @@ export function CellDependencyEditor({
               aria-pressed={active}
               onClick={() => setDraft((current) => ({ ...current, kind }))}
               className={cn(
-                'flex h-6 items-center rounded-md px-2.5 text-[11px] font-medium transition-colors',
+                'flex h-6 items-center rounded-md px-2.5 text-2xs font-medium transition-colors',
                 active
                   ? 'bg-background text-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',

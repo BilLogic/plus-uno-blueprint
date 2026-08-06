@@ -356,10 +356,27 @@
   --width-listbox: 320px;
   --breakpoint-xs: 480px;
 
-  /* No --shadow-* tokens, deliberately: Supabase defines none anywhere and
-     uses Tailwind's default shadow scale at call sites. So do we. */
+  /* Shadows stay on Tailwind's default scale (Supabase defines no --shadow-*
+     tokens either), with one addition: --shadow-floating, the shared shadow
+     for toolbars/menus floating over the canvas. */
+  --shadow-floating: 0 8px 28px rgb(0 0 0 / 0.3);
 
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Sub-xs type steps. Tailwind's scale bottoms out at text-xs (12px); the
+ * editor's dense chrome (badges, kickers, axis labels) uses 11px and 10px
+ * constantly, so the two sizes are named rather than repeated as
+ * text-[11px]/text-[10px] literals. No --text-*--line-height on purpose:
+ * the utilities set font-size only, exactly like the arbitrary values they
+ * replaced — call sites keep their own leading-* / inherited line-height.
+ * A plain @theme block (not `inline`) because these are literal values, not
+ * indirections into semantic tokens.
+ */
+@theme {
+  --text-2xs: 0.6875rem; /* 11px */
+  --text-3xs: 0.625rem; /* 10px */
 }

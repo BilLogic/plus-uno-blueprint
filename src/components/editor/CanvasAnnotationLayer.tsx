@@ -322,7 +322,7 @@ const SHAPE_TOOLBAR_TRIGGER_CLASS =
   'flex h-8 items-center gap-0.5 rounded-full px-2 text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40'
 
 const SHAPE_TOOLBAR_MENU_CLASS =
-  'border-0 bg-neutral-900 text-white shadow-[0_8px_28px_rgba(0,0,0,0.35)] ring-1 ring-white/10'
+  'border-0 bg-neutral-900 text-white shadow-floating ring-1 ring-white/10'
 
 const SHAPE_TOOLBAR_ITEM_CLASS =
   'gap-2 text-white focus:bg-white/10 focus:text-white data-[highlighted]:bg-white/10 data-[highlighted]:text-white'
@@ -344,7 +344,7 @@ function ShapeToolbarTooltip({
       <TooltipContent
         side="top"
         sideOffset={8}
-        className="rounded-md bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-[0_4px_14px_rgba(0,0,0,0.25)] **:!bg-neutral-900 **:!fill-neutral-900"
+        className="rounded-md bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-floating **:!bg-neutral-900 **:!fill-neutral-900"
       >
         {label}
       </TooltipContent>
@@ -374,7 +374,7 @@ function ShapeStyleBar({
     <div
       data-annotation-editable=""
       data-annotation-chrome=""
-      className="pointer-events-auto absolute z-50 flex h-10 items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+      className="pointer-events-auto absolute z-50 flex h-10 items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 shadow-floating"
       style={chromeAnchorStyle(shape.x, shape.y, shape.width, zoom)}
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.preventDefault()}
@@ -447,7 +447,7 @@ function ShapeStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
+          <div className="mb-1.5 text-3xs font-semibold tracking-wide text-white/55 uppercase">
             Fill
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -513,7 +513,7 @@ function ShapeStyleBar({
           onMouseDown={(e) => e.preventDefault()}
         >
           <div className="mb-1.5 flex items-center justify-between gap-3">
-            <span className="text-[10px] font-semibold tracking-wide text-white/55 uppercase">
+            <span className="text-3xs font-semibold tracking-wide text-white/55 uppercase">
               Stroke
             </span>
             {shape.color ? (
@@ -529,7 +529,7 @@ function ShapeStyleBar({
                 ))}
               </div>
             ) : (
-              <span className="text-[10px] text-white/55">None</span>
+              <span className="text-3xs text-white/55">None</span>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -600,7 +600,7 @@ function StickyStyleBar({
     <div
       data-annotation-editable=""
       data-annotation-chrome=""
-      className="pointer-events-auto absolute z-50 flex h-10 items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+      className="pointer-events-auto absolute z-50 flex h-10 items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 shadow-floating"
       style={chromeAnchorStyle(sticky.x, sticky.y, sticky.width, zoom)}
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.preventDefault()}
@@ -627,7 +627,7 @@ function StickyStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
+          <div className="mb-1.5 text-3xs font-semibold tracking-wide text-white/55 uppercase">
             Color
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -769,7 +769,7 @@ function TextStyleBar({
     <div
       data-annotation-editable=""
       data-annotation-chrome=""
-      className="pointer-events-auto absolute z-50 flex h-10 items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+      className="pointer-events-auto absolute z-50 flex h-10 items-center gap-0.5 rounded-full bg-neutral-900 px-1.5 shadow-floating"
       style={chromeAnchorStyle(text.x, text.y, width, zoom)}
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.preventDefault()}
@@ -796,7 +796,7 @@ function TextStyleBar({
           data-annotation-chrome=""
           onMouseDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1.5 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
+          <div className="mb-1.5 text-3xs font-semibold tracking-wide text-white/55 uppercase">
             Color
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -1007,7 +1007,7 @@ function ShapeAnnotationNode({
         data-annotation-id={annotation.id}
         data-annotation-editable=""
         className={cn(
-          'absolute box-border flex flex-col items-center justify-center p-2.5 transition-[box-shadow,outline-color] duration-150',
+          'absolute box-border flex flex-col items-center justify-center p-2.5 transition-[box-shadow,outline-color] duration-(--motion-micro)',
           canInteract ? 'pointer-events-auto' : 'pointer-events-none',
           selected &&
             !isEraser &&

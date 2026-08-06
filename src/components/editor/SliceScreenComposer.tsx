@@ -243,7 +243,7 @@ export function SliceScreenComposer({
             )}
           >
             <div className="mb-1.5 flex items-center gap-1.5">
-              <span className="shrink-0 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              <span className="shrink-0 text-3xs font-semibold tracking-wide text-muted-foreground uppercase">
                 Screen {screenIndex + 1}
               </span>
               {/*
@@ -304,7 +304,7 @@ export function SliceScreenComposer({
                           {described.label}
                         </span>
                         {described.lane ? (
-                          <span className="block truncate text-[10px] text-muted-foreground">
+                          <span className="block truncate text-3xs text-muted-foreground">
                             {described.lane}
                           </span>
                         ) : null}
@@ -342,7 +342,7 @@ export function SliceScreenComposer({
         <div
           data-drop-slot={`${screens.length}:0`}
           className={cn(
-            'flex h-9 items-center justify-center rounded-lg border border-dashed text-[11px] transition-colors',
+            'flex h-9 items-center justify-center rounded-lg border border-dashed text-2xs transition-colors',
             slot?.screen === screens.length
               ? 'border-primary text-primary'
               : 'border-border text-muted-foreground',

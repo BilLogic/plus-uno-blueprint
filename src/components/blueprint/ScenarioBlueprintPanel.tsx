@@ -213,7 +213,7 @@ export function ScenarioBlueprintPanel({
   if (loading && visibleBlueprints.length === 0 && !showIntegratedGrid) {
     return (
       <div
-        className="flex flex-col gap-2 transition-[opacity,filter] duration-300 ease-out"
+        className="flex flex-col gap-2 transition-[opacity,filter] duration-(--motion-fade) ease-out"
         data-focus-slide-id={slide.id}
         data-canvas-focus-dimmed={dimmed ? '' : undefined}
         style={dimmed ? { opacity: 0.3, filter: 'saturate(0.5)' } : undefined}
@@ -235,7 +235,7 @@ export function ScenarioBlueprintPanel({
 
     return (
       <div
-        className="flex min-h-[280px] min-w-[320px] items-center justify-center rounded-lg border border-dashed p-8 text-center transition-[opacity,filter] duration-300 ease-out"
+        className="flex min-h-[280px] min-w-[320px] items-center justify-center rounded-lg border border-dashed p-8 text-center transition-[opacity,filter] duration-(--motion-fade) ease-out"
         data-focus-slide-id={slide.id}
         data-canvas-focus-dimmed={dimmed ? '' : undefined}
         style={dimmed ? { opacity: 0.3, filter: 'saturate(0.5)' } : undefined}

@@ -262,7 +262,7 @@ function SessionRow({
         {session.title}
       </span>
       {changeCount > 0 ? (
-        <span className="shrink-0 text-[10px] tabular-nums text-sidebar-foreground/50">
+        <span className="shrink-0 text-3xs tabular-nums text-sidebar-foreground/50">
           ✦ {changeCount} chg
         </span>
       ) : null}
@@ -343,7 +343,7 @@ function AgentSessionsView({
             aria-label="Filter sessions"
           />
         ) : (
-          <p className="min-w-0 flex-1 truncate pl-1 text-[11px] font-medium tracking-wider text-sidebar-foreground/60 uppercase">
+          <p className="min-w-0 flex-1 truncate pl-1 text-2xs font-medium tracking-wider text-sidebar-foreground/60 uppercase">
             Sessions
           </p>
         )}
@@ -376,7 +376,7 @@ function AgentSessionsView({
       </div>
 
       {pendingAttachment ? (
-        <p className="mx-2 mb-1 rounded-md bg-muted px-2 py-1.5 text-[11px] text-muted-foreground">
+        <p className="mx-2 mb-1 rounded-md bg-muted px-2 py-1.5 text-2xs text-muted-foreground">
           ✎ {pendingAttachment.label} ready — open or start a session to send
           them.
         </p>
@@ -465,7 +465,7 @@ function CollapsedAssistantRow({ text }: { text: string }) {
         render={
           <button
             type="button"
-            className="group/collapsed flex w-full min-w-0 items-center gap-1 rounded-sm py-0.5 text-left text-[11px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="group/collapsed flex w-full min-w-0 items-center gap-1 rounded-sm py-0.5 text-left text-2xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ChevronRight
               className={cn(
@@ -514,12 +514,12 @@ function TranscriptRow({
             {event.skill || event.attachmentLabel ? (
               <div className="mb-0.5 flex justify-end gap-1">
                 {event.skill ? (
-                  <Badge variant="secondary" className="font-mono text-[10px]">
+                  <Badge variant="secondary" className="font-mono text-3xs">
                     /{event.skill}
                   </Badge>
                 ) : null}
                 {event.attachmentLabel ? (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-3xs">
                     ✎ {event.attachmentLabel}
                   </Badge>
                 ) : null}
@@ -549,7 +549,7 @@ function TranscriptRow({
       return (
         <Marker
           className={cn(
-            'text-[11px]',
+            'text-2xs',
             event.isError && 'text-destructive',
           )}
         >
@@ -568,7 +568,7 @@ function TranscriptRow({
       )
     case 'status':
       return (
-        <Marker variant="separator" className="text-[11px] italic">
+        <Marker variant="separator" className="text-2xs italic">
           <MarkerContent>{event.text}</MarkerContent>
         </Marker>
       )
@@ -726,7 +726,7 @@ function AgentChatView({
           />
         </button>
         {changeCount > 0 ? (
-          <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+          <span className="shrink-0 text-3xs tabular-nums text-muted-foreground">
             ✦ {changeCount} chg
           </span>
         ) : null}
@@ -797,7 +797,7 @@ function AgentChatView({
                   <AttachmentTitle className="text-xs">
                     {attachment.label}
                   </AttachmentTitle>
-                  <AttachmentDescription className="text-[10px]">
+                  <AttachmentDescription className="text-3xs">
                     {attachment.lines.join(' · ')}
                   </AttachmentDescription>
                 </AttachmentContent>
@@ -824,12 +824,12 @@ function AgentChatView({
                   type="button"
                   disabled={!command.content}
                   onClick={() => pickSkill(command)}
-                  className="flex w-full items-baseline gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
+                  className="flex w-full items-baseline gap-2 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
                 >
                   <span className="shrink-0 font-mono text-xs text-foreground">
                     {command.label}
                   </span>
-                  <span className="min-w-0 flex-1 text-[11px] leading-snug text-muted-foreground">
+                  <span className="min-w-0 flex-1 text-2xs leading-snug text-muted-foreground">
                     {command.description}
                   </span>
                 </button>
@@ -861,14 +861,14 @@ function AgentChatView({
             {pendingSkill ? (
               <Badge
                 variant="secondary"
-                className="mt-0.5 shrink-0 gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-[10px] text-primary"
+                className="mt-0.5 shrink-0 gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-3xs text-primary"
               >
                 {pendingSkill.label}
                 <button
                   type="button"
                   aria-label="Remove skill"
                   onClick={() => setPendingSkill(null)}
-                  className="rounded-sm p-0.5 hover:bg-primary/15"
+                  className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
                 >
                   <X className="size-2.5" aria-hidden />
                 </button>
@@ -1162,7 +1162,7 @@ export function AgentSettingsRailButton() {
             <p className="text-xs font-medium text-foreground">Admin</p>
             {session ? (
               <div className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate text-2xs text-muted-foreground">
                   {session.user.email ?? 'Signed in'}
                 </span>
                 <Button
@@ -1211,11 +1211,11 @@ export function AgentSettingsRailButton() {
                   </Button>
                 </div>
                 {authError ? (
-                  <p className="text-[10px] leading-snug text-destructive">
+                  <p className="text-3xs leading-snug text-destructive">
                     {authError}
                   </p>
                 ) : (
-                  <p className="text-[10px] leading-snug text-muted-foreground">
+                  <p className="text-3xs leading-snug text-muted-foreground">
                     Signing in unlocks editing and the agent on this device.
                   </p>
                 )}
@@ -1228,7 +1228,7 @@ export function AgentSettingsRailButton() {
             <p className="text-xs font-medium text-foreground">Agent</p>
 
             <div className="flex items-center gap-2">
-              <span className="w-16 shrink-0 text-[11px] text-muted-foreground">
+              <span className="w-16 shrink-0 text-2xs text-muted-foreground">
                 Provider
               </span>
               <DropdownMenu>
@@ -1256,7 +1256,7 @@ export function AgentSettingsRailButton() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-16 shrink-0 text-[11px] text-muted-foreground">
+              <span className="w-16 shrink-0 text-2xs text-muted-foreground">
                 Model
               </span>
               <DropdownMenu>
@@ -1289,7 +1289,7 @@ export function AgentSettingsRailButton() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="w-16 shrink-0 text-[11px] text-muted-foreground">
+              <span className="w-16 shrink-0 text-2xs text-muted-foreground">
                 API key
               </span>
               <Input
@@ -1315,7 +1315,7 @@ export function AgentSettingsRailButton() {
               </Button>
             </div>
 
-            <p className="text-[10px] leading-snug text-muted-foreground">
+            <p className="text-3xs leading-snug text-muted-foreground">
               Stored in this browser only — never the repo or a server. A key
               kept in the browser is readable by anyone with devtools on this
               machine; use a personal key, not a shared or production one.

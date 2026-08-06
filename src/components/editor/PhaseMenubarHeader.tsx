@@ -77,7 +77,7 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
             aria-pressed={active}
             onClick={() => setScenarioDisplayViewType(slide.id, value)}
             className={cn(
-              'flex h-6 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium transition-colors',
+              'flex h-6 items-center gap-1.5 rounded-md px-2 text-2xs font-medium transition-colors',
               active
                 ? 'bg-background text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',

@@ -180,7 +180,7 @@ export function SliceStoryboardField({
         variant="ghost"
         size="sm"
         disabled={busy}
-        className="h-6 justify-start px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
+        className="h-6 justify-start px-1.5 text-3xs text-muted-foreground hover:text-foreground"
         onClick={() => inputRef.current?.click()}
       >
         {busy ? (
@@ -192,7 +192,7 @@ export function SliceStoryboardField({
       </Button>
 
       {problem ? (
-        <p className="text-[10px] text-destructive">{problem}</p>
+        <p className="text-3xs text-destructive">{problem}</p>
       ) : null}
     </div>
   )

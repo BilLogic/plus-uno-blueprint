@@ -140,7 +140,7 @@ export function Homepage() {
               aria-hidden
               className={cn(
                 'pointer-events-none absolute bottom-[-1px] h-0.5 bg-foreground',
-                'transition-[left,width,opacity] duration-(--motion-structural) ease-structural',
+                'transition-[left,width,opacity] duration-(--motion-structural) ease-structural motion-reduce:transition-none',
                 indicator.ready ? 'opacity-100' : 'opacity-0',
               )}
               style={{ left: indicator.left, width: indicator.width }}
@@ -155,7 +155,7 @@ export function Homepage() {
                   alt="PLUS"
                   width={80}
                   height={80}
-                  className="size-16 rounded-[1.15rem] sm:size-20"
+                  className="size-16 rounded-2xl sm:size-20"
                 />
               </div>
               <div className="flex min-w-0 flex-col gap-2">

@@ -196,7 +196,7 @@ export function CreateSliceSheet({
               five-way toggle made the author classify something the picking
               had already decided.
             */}
-            <p className="truncate text-[11px] text-muted-foreground">
+            <p className="truncate text-2xs text-muted-foreground">
               {describeSliceType(sliceType, cellCount)}
             </p>
           </div>

@@ -244,7 +244,7 @@ export function SlicePresentation({
 
           <div className="min-w-0 flex-1 overflow-y-auto px-2">
             <div className="flex min-h-full flex-col items-center justify-center gap-4 py-4 text-center">
-              <p className="font-mono text-[11px] font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
+              <p className="font-mono text-2xs font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
                 Frame {clampedFrame + 1} of {frameCount}
               </p>
               {stageMedia.length > 0 ? (
@@ -463,7 +463,7 @@ function PresentationMiniMap({
   return (
     <div
       aria-hidden
-      className="absolute right-3 bottom-2 z-10 rounded-md border border-border bg-card/80 p-1.5 opacity-40 transition-opacity duration-150 hover:opacity-100"
+      className="absolute right-3 bottom-2 z-10 rounded-md border border-border bg-card/80 p-1.5 opacity-40 transition-opacity duration-(--motion-micro) hover:opacity-100"
     >
       <div className="flex flex-col gap-px">
         {layers.map((layer) => (

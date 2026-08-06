@@ -53,7 +53,7 @@ function Field({
   children: React.ReactNode
 }) {
   const labelText = (
-    <span className="w-fit text-[11px] font-medium text-muted-foreground">
+    <span className="w-fit text-2xs font-medium text-muted-foreground">
       {label}
       {required ? <span className="ml-0.5 text-destructive">*</span> : null}
     </span>

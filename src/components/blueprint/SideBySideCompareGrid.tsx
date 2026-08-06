@@ -796,7 +796,7 @@ function CompareCellBlock({
         <span
           aria-hidden
           title="Differs from its counterpart in the other path"
-          className="absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full text-[11px] font-semibold text-white shadow-sm"
+          className="absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full text-2xs font-semibold text-white shadow-sm"
           style={{ backgroundColor: pathAccent ?? 'var(--primary)' }}
         >
           ≠

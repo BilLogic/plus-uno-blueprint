@@ -498,7 +498,7 @@ export function EditorShell() {
             <div
               className={cn(
                 'flex h-full min-h-0 flex-row',
-                'transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none',
+                'transition-[opacity,transform] duration-(--motion-fade) ease-out motion-reduce:transition-none',
                 railOnly
                   ? 'pointer-events-none -translate-x-2 opacity-0'
                   : 'translate-x-0 opacity-100 delay-75',

@@ -31,7 +31,7 @@ const CHEVRON_SLOT_CLASS =
 
 /** Hidden at rest, revealed by hovering or focusing anywhere in the row. */
 const CHEVRON_REVEAL_CLASS =
-  'opacity-0 transition-opacity duration-150 group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100 motion-reduce:transition-none'
+  'opacity-0 transition-opacity duration-(--motion-micro) group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100 motion-reduce:transition-none'
 
 /** Child rows indent by exactly one chevron slot. */
 export const NAV_CHILD_INDENT_CLASS = 'pl-4'
@@ -88,7 +88,7 @@ function NavChevron({ open }: { open: boolean }) {
     <ChevronRight
       aria-hidden
       className={cn(
-        'size-3.5 text-sidebar-foreground/60 transition-transform duration-200 ease-out motion-reduce:transition-none',
+        'size-3.5 text-sidebar-foreground/60 transition-transform duration-(--motion-fade) ease-out motion-reduce:transition-none',
         open && 'rotate-90',
       )}
     />
@@ -252,7 +252,7 @@ export function NavSection({
           <span className={cn(CHEVRON_SLOT_CLASS, CHEVRON_REVEAL_CLASS)}>
             <NavChevron open={open} />
           </span>
-          <span className="min-w-0 flex-1 truncate py-1.5 text-[11px] font-medium tracking-wider text-sidebar-foreground/60 uppercase">
+          <span className="min-w-0 flex-1 truncate py-1.5 text-2xs font-medium tracking-wider text-sidebar-foreground/60 uppercase">
             {title}
           </span>
         </CollapsibleTrigger>

@@ -150,7 +150,7 @@ export function CanvasPhaseSection({
     <section
       ref={sectionRef}
       className={cn(
-        'relative inline-flex w-max flex-col items-start transition-[opacity,filter] duration-300 ease-out',
+        'relative inline-flex w-max flex-col items-start transition-[opacity,filter] duration-(--motion-fade) ease-out',
         dimmed &&
           'opacity-30 saturate-50 [&_[data-blueprint-cell-interactive]]:pointer-events-none',
         navigable &&

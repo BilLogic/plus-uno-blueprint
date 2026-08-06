@@ -153,7 +153,7 @@ export function CanvasDesignTools() {
               ? 'Click cells to add them'
               : 'Make slice'}
             {picked.length > 0 ? (
-              <span className="rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums">
+              <span className="rounded-full bg-primary/15 px-1.5 text-3xs font-semibold tabular-nums">
                 {picked.length}
               </span>
             ) : null}
@@ -209,7 +209,7 @@ export function CanvasDesignTools() {
         <Tooltip>
           <TooltipTrigger
             render={
-              <span className="pointer-events-auto flex shrink-0 cursor-help items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+              <span className="pointer-events-auto flex shrink-0 cursor-help items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-3xs font-medium text-amber-700 dark:text-amber-400">
                 <span className="size-1.5 rounded-full bg-amber-500" aria-hidden />
                 preview — nothing saves
               </span>

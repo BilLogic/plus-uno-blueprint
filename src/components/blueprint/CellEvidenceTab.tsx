@@ -65,7 +65,7 @@ function EvidenceRow({ row }: { row: Evidence }) {
             href={refHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex w-fit min-w-0 items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+            className="flex w-fit min-w-0 items-center gap-1 text-2xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ExternalLink className="size-3 shrink-0" aria-hidden />
             {/* A citation ref or URL — machine data, and mono keeps a truncated
@@ -74,12 +74,12 @@ function EvidenceRow({ row }: { row: Evidence }) {
           </a>
         ) : null}
         {row.excerpt ? (
-          <p className="border-l-2 border-border pl-2 text-[11px] leading-snug text-muted-foreground italic">
+          <p className="border-l-2 border-border pl-2 text-2xs leading-snug text-muted-foreground italic">
             {row.excerpt}
           </p>
         ) : null}
         {row.note ? (
-          <p className="text-[11px] leading-snug text-muted-foreground">
+          <p className="text-2xs leading-snug text-muted-foreground">
             {row.note}
           </p>
         ) : null}

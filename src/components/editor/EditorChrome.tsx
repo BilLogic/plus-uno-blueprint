@@ -83,7 +83,7 @@ export function WorkspaceBadges() {
           looks exactly like the read-only app otherwise. Say so. */}
       {isDevAuthoring ? (
         <span
-          className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400"
+          className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-3xs font-medium text-amber-700 dark:text-amber-400"
           title="Local authoring key in use — writes go to the live database"
         >
           authoring
@@ -95,7 +95,7 @@ export function WorkspaceBadges() {
           you do here lands". */}
       {isEditPreview ? (
         <span
-          className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+          className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-3xs font-medium text-muted-foreground"
           title="Edit UI preview — no authoring key, so writes will be refused"
         >
           edit preview

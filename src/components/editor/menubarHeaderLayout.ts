@@ -21,6 +21,13 @@ export const CELL_DETAIL_PANEL_TOP_CLASS =
 /** Gap between the canvas top edge and the panel — matches its right inset. */
 export const CELL_DETAIL_PANEL_TOP_GAP_PX = 16
 
+/**
+ * Cell-detail drawer bottom offset — the top pattern's counterpart. Keeps the
+ * drawer clear of the bottom canvas chrome (the annotation toolbar band) with
+ * the same 16px breathing room as CELL_DETAIL_PANEL_TOP_GAP_PX.
+ */
+export const CELL_DETAIL_PANEL_BOTTOM_CLASS = '!bottom-[61px]'
+
 /** The canvas region the panel measures against. */
 export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
 
