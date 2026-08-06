@@ -95,7 +95,7 @@ export function Homepage() {
               // brand fill — which is the Button's own `default` variant. It
               // used to restate `bg-primary` and its hover here at a different
               // alpha than the variant used, which is how the two drifted.
-              className="h-9 shrink-0 px-3.5 font-semibold shadow-sm"
+              className="h-9 shrink-0 px-3.5 font-semibold"
             >
               View PLUS Blueprints
             </Button>

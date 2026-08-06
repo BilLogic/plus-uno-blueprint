@@ -8,11 +8,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Supabase's shadcn button, verbatim: alpha on the resting token, no
-        // state token. Their own product Button reaches for the numeric brand
-        // scale instead (`bg-brand-400 dark:bg-brand-500 hover:bg-brand/80`) —
-        // both mechanisms are theirs, neither introduces a `--*-hover`.
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        // Supabase's button treatment: flat matcha fill, one shade-darker
+        // 1px edge, tighter radius, no drop shadow — the border carries the
+        // weight the muted fill gave up. Hover still rides alpha on the
+        // resting token; no `--*-hover` state token exists.
+        default:
+          "rounded-md border-primary-border bg-primary text-primary-foreground shadow-none hover:bg-primary/90",
         outline:
           "border-border/80 bg-background shadow-sm hover:bg-muted hover:text-foreground hover:shadow aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

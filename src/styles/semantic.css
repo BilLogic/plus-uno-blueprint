@@ -161,14 +161,17 @@
    * `--primary-foreground` is dark ink, not white — white on this fill
    * measures ~2:1, dark ink 9.49.
    */
-  /* L/C tuned against Supabase's brand (#3ECF8E = oklch 0.762 0.154 159.4).
-   * Their C is unreachable at our hue — teal's sRGB chroma ceiling at this
-   * lightness is ~0.137, green's is ~0.174 — so instead of chasing their C we
-   * match their *punch*: drop L two points and ride the ceiling (99%
-   * utilization), which lifts colourfulness-per-lightness from 0.171 to 0.182
-   * against their 0.202, the closest sRGB allows without a hue drift.
-   * Dark ink on it measures 9.49:1. */
-  --primary: oklch(0.74 0.135 var(--primary-hue));
+  /* Matcha-ceramic tuning (2026-08-06). The earlier pass chased Supabase's
+   * chroma punch and landed too dark and too loud; this one is calibrated
+   * against a matcha glaze reference instead — lighter (L 0.78) and muted
+   * (C 0.09, ~60% of the sRGB ceiling here), on the brand hue dial. The
+   * quiet fill is the point: identity comes from the hue, weight from the
+   * new 1px `--primary-border` edge rather than saturation.
+   * Dark ink on it measures 10.69:1. */
+  --primary: oklch(0.78 0.09 var(--primary-hue));
+  /* The Supabase button treatment: flat fill, one shade-darker hairline.
+   * Derived, so it tracks any future retune of --primary. */
+  --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c * 1.25) h);
   --primary-foreground: oklch(
     min(var(--surface), var(--foreground-lightness))
       calc(var(--chroma) * 0.45) var(--primary-hue)
@@ -371,17 +374,5 @@
   );
 }
 
-/*
- * Wide-gamut displays get the chroma sRGB couldn't hold: the P3 ceiling at
- * L 0.74 / H 177.6 is 0.185, so 0.158 (85%) deepens the brand fill without
- * living on the boundary. Same L, same H — only colourfulness moves, so the
- * ink-contrast measurements on the base token still hold. A standalone block
- * rather than a nested @media so declarations never trail a nested rule.
- */
-@media (color-gamut: p3) {
-  :root,
-  .dark,
-  .light {
-    --primary: oklch(0.74 0.158 var(--primary-hue));
-  }
-}
+/* No P3 chroma boost for the matcha primary: the muted fill is deliberate,
+ * and a wide-gamut deepening would fight it. Removed 2026-08-06. */
