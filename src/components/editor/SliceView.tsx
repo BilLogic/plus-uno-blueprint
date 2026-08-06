@@ -8,13 +8,15 @@ import {
 } from 'react'
 import { Check, Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
-import { PendingCanvasLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import {
+  PendingCanvasLoadingSkeleton,
+  SliceTabLoadingSkeleton,
+} from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { SliceEditSession } from '@/components/editor/SliceEditSession'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { DelayedSpinner } from '@/components/ui/spinner'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { EditorDetailScope } from '@/contexts/EditorContext'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
@@ -129,8 +131,20 @@ function SliceSurface({ sliceId }: SliceViewProps) {
     [],
   )
 
+  // Stage 0 — even the slice detail is still in flight, so the header band
+  // has nothing to paint. The tab-shaped skeleton (band + canvas rectangle)
+  // shares the surface's hold key, so stages 1–2 below inherit it unbroken.
   if (result.status === 'loading') {
-    return <DelayedSpinner />
+    return (
+      <DeferredSkeleton
+        loading
+        holdKey={skeletonHoldKey}
+        skeleton={<SliceTabLoadingSkeleton />}
+        className="h-full min-h-0"
+      >
+        {null}
+      </DeferredSkeleton>
+    )
   }
 
   if (!detail) {

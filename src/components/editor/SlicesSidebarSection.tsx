@@ -155,8 +155,13 @@ export function SlicesSidebarSection() {
 
   if (groups.length === 0) {
     return (
-      <p className="px-3 py-1.5 text-xs text-sidebar-foreground/50">
-        No slices yet.
+      // Teaching tone, matching the agent panel's empty states: say what a
+      // slice is and the two real routes to one (the Edit-mode Make slice
+      // flow in CanvasDesignTools, or the agent's /sb:slice skill).
+      <p className="px-3 py-1.5 text-xs leading-relaxed text-sidebar-foreground/50">
+        No slices yet — a slice is a stakeholder view cut from the blueprint.
+        In Edit mode, pick cells on the canvas and press Make slice, or ask
+        the agent with /sb:slice.
       </p>
     )
   }

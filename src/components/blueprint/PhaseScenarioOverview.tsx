@@ -210,16 +210,23 @@ export function PhaseScenarioOverview({
   )
 
   if (scenarios.length === 0) {
+    // Scenario creation lives on the phase row's `+` in the sidebar (the row
+    // knows which phase it means) — no create callback reaches this canvas
+    // frame, so the empty state teaches the route instead of offering one.
     return (
       <div
         className={cn(
-          'flex min-h-[240px] items-center justify-center rounded-lg border border-dashed p-8 text-center',
+          'flex min-h-[220px] min-w-[min(36rem,65vw)] items-stretch',
           className,
         )}
+        data-phase-scenario-overview=""
+        data-phase-empty=""
       >
-        <p className="text-sm text-muted-foreground">
-          No scenarios in this phase yet.
-        </p>
+        <CanvasEmptyState
+          variant="phase"
+          title="No scenarios in this phase yet"
+          description="Scenarios are the journeys this phase plays out. Add one with the + on this phase's row in the sidebar (Edit mode)."
+        />
       </div>
     )
   }

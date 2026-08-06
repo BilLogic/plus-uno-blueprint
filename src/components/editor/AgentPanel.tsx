@@ -22,6 +22,11 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  Command,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
@@ -656,6 +661,31 @@ function AgentChatView({
         )
       : []
   const slashOpen = slashMatches.length > 0
+  // Arrow keys and hover move one highlight through the *pickable* matches
+  // (cmdk drives hover via onValueChange; the arrows below drive the rest).
+  // Derived-with-a-guard, the house pattern: as typing reshapes the matches,
+  // a highlight that fell out of them snaps back to the first pickable one.
+  const slashPickable = slashMatches.filter((command) => command.content)
+  const [slashHighlight, setSlashHighlight] = useState('')
+  const nextHighlight = slashPickable.some(
+    (command) => command.id === slashHighlight,
+  )
+    ? slashHighlight
+    : (slashPickable[0]?.id ?? '')
+  if (slashOpen && nextHighlight !== slashHighlight) {
+    setSlashHighlight(nextHighlight)
+  }
+  const moveSlashHighlight = (delta: number) => {
+    if (slashPickable.length === 0) return
+    const index = slashPickable.findIndex(
+      (command) => command.id === nextHighlight,
+    )
+    const next =
+      slashPickable[
+        (index + delta + slashPickable.length) % slashPickable.length
+      ]
+    setSlashHighlight(next.id)
+  }
 
   const pickSkill = (command: AgentSkillCommand) => {
     if (!command.content) return
@@ -817,23 +847,37 @@ function AgentChatView({
           {/* The slash menu: type "/" to see the four skills — the same
               SKILL.md files IDE agents run, minus their file mechanics. */}
           {slashOpen ? (
-            <div className="absolute bottom-full left-0 z-20 mb-1.5 w-72 rounded-md border border-border bg-popover p-1 shadow-md">
-              {slashMatches.map((command) => (
-                <button
-                  key={command.id}
-                  type="button"
-                  disabled={!command.content}
-                  onClick={() => pickSkill(command)}
-                  className="flex w-full items-baseline gap-2 rounded-sm px-2 py-1.5 text-left transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
-                >
-                  <span className="shrink-0 font-mono text-xs text-foreground">
-                    {command.label}
-                  </span>
-                  <span className="min-w-0 flex-1 text-2xs leading-snug text-muted-foreground">
-                    {command.description}
-                  </span>
-                </button>
-              ))}
+            <div className="absolute bottom-full left-0 z-20 mb-1.5 w-72 rounded-md border border-border bg-popover shadow-md">
+              {/* The composer's textarea keeps focus and does the typing, so
+                  the Command runs headless: filtering stays ours (the same
+                  skillMatchesQuery the send path uses → shouldFilter=false)
+                  and selection is controlled, fed by the arrow keys in the
+                  textarea's onKeyDown and by cmdk's own hover tracking. */}
+              <Command
+                shouldFilter={false}
+                value={nextHighlight}
+                onValueChange={setSlashHighlight}
+                className="bg-transparent"
+              >
+                <CommandList>
+                  {slashMatches.map((command) => (
+                    <CommandItem
+                      key={command.id}
+                      value={command.id}
+                      disabled={!command.content}
+                      onSelect={() => pickSkill(command)}
+                      className="items-baseline gap-2"
+                    >
+                      <span className="shrink-0 font-mono text-xs text-foreground">
+                        {command.label}
+                      </span>
+                      <span className="min-w-0 flex-1 text-2xs leading-snug text-muted-foreground">
+                        {command.description}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
             </div>
           ) : null}
           {running ? (
@@ -908,13 +952,25 @@ function AgentChatView({
                 setDraft(value)
               }}
               onKeyDown={(event) => {
+                if (slashOpen && event.key === 'ArrowDown') {
+                  event.preventDefault()
+                  moveSlashHighlight(1)
+                  return
+                }
+                if (slashOpen && event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  moveSlashHighlight(-1)
+                  return
+                }
                 if (
                   slashOpen &&
                   (event.key === 'Enter' || event.key === 'Tab')
                 ) {
                   event.preventDefault()
-                  const first = slashMatches.find((command) => command.content)
-                  if (first) pickSkill(first)
+                  const highlighted = slashPickable.find(
+                    (command) => command.id === nextHighlight,
+                  )
+                  if (highlighted) pickSkill(highlighted)
                   return
                 }
                 if (slashOpen && event.key === 'Escape') {

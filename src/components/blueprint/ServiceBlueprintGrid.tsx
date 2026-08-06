@@ -8,6 +8,7 @@ import {
   BlueprintDividerRow,
 } from '@/components/blueprint/BlueprintLabelRail'
 import { BlueprintTriggerArrows } from '@/components/blueprint/BlueprintTriggerArrows'
+import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import {
   ComparePathSectionFrame,
   SERVICE_PATH_SECTION_INSET,
@@ -384,7 +385,12 @@ export function ServiceBlueprintGrid({
           </div>
 
           {layers.length === 0 && steps.length > 0 && (
-            <p className="p-6 text-sm text-muted-foreground">No layers defined.</p>
+            <CanvasEmptyState
+              variant="panel"
+              className="h-auto w-full"
+              title="No layers defined"
+              description="Layers are this blueprint's swimlanes. They arrive with the blueprint import — or ask the agent with /sb:map to add them."
+            />
           )}
         </div>
       </div>

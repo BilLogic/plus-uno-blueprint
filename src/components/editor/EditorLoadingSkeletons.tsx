@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import {
   OVERVIEW_CANVAS_PADDING_X,
   OVERVIEW_CANVAS_PADDING_Y,
@@ -176,6 +177,111 @@ export function PendingCanvasLoadingSkeleton({
       aria-label="Loading canvas"
     >
       <Skeleton className="size-full rounded-2xl" />
+      <span className="sr-only">Loading…</span>
+    </div>
+  )
+}
+
+/**
+ * SliceHeaderBand placeholder — the container classes are the real band's
+ * (`SliceHeaderBand.tsx`), so the header→content boundary sits at the same
+ * pixel when the slice detail lands: title row (text-sm line + type badge),
+ * subtitle line, primary action (`size="sm"` → h-7) on the far right.
+ */
+export function SliceHeaderBandSkeleton() {
+  return (
+    <div
+      aria-hidden
+      className="flex w-full shrink-0 items-center gap-3 border-b border-border bg-sidebar px-4 py-2"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-44 max-w-full" />
+          <Skeleton className="h-5 w-14 rounded-full" />
+        </div>
+        <div className="mt-0.5 flex items-center">
+          <Skeleton className="h-4 w-64 max-w-full" />
+        </div>
+      </div>
+      <Skeleton className="h-7 w-24 shrink-0" />
+    </div>
+  )
+}
+
+/**
+ * Slice focus tab, stage 0 of its loading waterfall — before the slice
+ * detail has landed, so even SliceHeaderBand has nothing to paint. Same
+ * band + viewport-pad column as the loaded tab, with the canvas rectangle
+ * held by PendingCanvasLoadingSkeleton — the later stages (scenario →
+ * blueprints) share the tab's hold key and inherit one unbroken placeholder.
+ */
+export function SliceTabLoadingSkeleton() {
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
+      <SliceHeaderBandSkeleton />
+      <div
+        className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
+        style={{ backgroundColor: BLUEPRINT_THEME.viewportPad }}
+      >
+        <PendingCanvasLoadingSkeleton />
+      </div>
+    </div>
+  )
+}
+
+/** Filmstrip frame shapes — varied square counts so the strip reads organic. */
+const PRESENTATION_SKELETON_FRAMES = [2, 3, 1]
+
+/**
+ * Presentation tab placeholder — header band, stage (frame counter, media
+ * area, caption + narrative lines, cell-chip row) and filmstrip, at the
+ * loaded stage's own paddings. The root pins `.dark` exactly as the real
+ * stage does, so the skeleton paints in stage tokens whatever the app theme.
+ */
+export function SlicePresentationLoadingSkeleton() {
+  return (
+    <div
+      className="dark flex h-full min-h-0 flex-col bg-background"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading presentation"
+    >
+      <SliceHeaderBandSkeleton />
+      <div className="relative flex min-h-0 flex-1 flex-col" aria-hidden>
+        <div className="flex min-h-0 flex-1 items-stretch gap-2 px-4 pt-5">
+          {/* Prev/next rails: w-10 + py-6 around a size-5 icon → 68px tall. */}
+          <Skeleton className="h-[68px] w-10 shrink-0 self-center" />
+          <div className="flex min-w-0 flex-1 flex-col items-center justify-center gap-4 px-2 py-4">
+            <Skeleton className="h-3 w-28 rounded-full" />
+            <Skeleton className="h-[38vh] w-full max-w-xl rounded-lg" />
+            <Skeleton className="h-7 w-80 max-w-full" />
+            <Skeleton className="h-4 w-96 max-w-full" />
+          </div>
+          <Skeleton className="h-[68px] w-10 shrink-0 self-center" />
+        </div>
+        {/* Cell-chip row at the bottom of the stage. */}
+        <div className="flex shrink-0 flex-wrap items-center justify-center gap-2 px-24 pt-3 pb-4">
+          <Skeleton className="h-6 w-36 rounded-full" />
+          <Skeleton className="h-6 w-28 rounded-full" />
+        </div>
+      </div>
+      <div className="shrink-0 border-t border-border px-6 py-4" aria-hidden>
+        <div className="mx-auto flex w-max items-start gap-6">
+          {PRESENTATION_SKELETON_FRAMES.map((squares, frame) => (
+            <div
+              key={frame}
+              className="flex shrink-0 flex-col gap-2 border-t-2 border-border pt-2"
+            >
+              <Skeleton className="h-4 w-24" />
+              <div className="flex gap-1.5">
+                {Array.from({ length: squares }, (_, square) => (
+                  <Skeleton key={square} className="size-10" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       <span className="sr-only">Loading…</span>
     </div>
   )

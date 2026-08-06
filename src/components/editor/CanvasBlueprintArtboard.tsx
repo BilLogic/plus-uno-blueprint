@@ -1,5 +1,6 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
 import { IntegratedBlueprintGrid } from '@/components/blueprint/IntegratedBlueprintGrid'
+import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { BLUEPRINT_CANVAS_COMPARE_GAP } from '@/lib/blueprintLayout'
 import { cn } from '@/lib/utils'
@@ -140,9 +141,12 @@ export function CanvasBlueprintArtboard({
             ))}
           </div>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
-            <span className="text-xs text-muted-foreground">No blueprint data</span>
-          </div>
+          <CanvasEmptyState
+            variant="panel"
+            className="h-auto w-full flex-1"
+            title="No blueprint data"
+            description="This scenario has no blueprint for the selected paths yet — import one, or ask the agent with /sb:map to draft it."
+          />
         )}
       </div>
     </div>
