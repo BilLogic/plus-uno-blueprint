@@ -321,6 +321,15 @@ function ResizeHandles({
 const SHAPE_TOOLBAR_TRIGGER_CLASS =
   'flex h-8 items-center gap-0.5 rounded-full px-2 text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40'
 
+/**
+ * The round icon-only slot in the floating style bars (currently every
+ * bar's Delete): SHAPE_TOOLBAR_TRIGGER_CLASS's fixed-square sibling — same
+ * white-on-dark hover and focus ring, but a centered `size-8` circle with
+ * no label gutter.
+ */
+const SHAPE_TOOLBAR_ICON_BUTTON_CLASS =
+  'flex size-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40'
+
 const SHAPE_TOOLBAR_MENU_CLASS =
   'border-0 bg-neutral-900 text-white shadow-floating ring-1 ring-white/10'
 
@@ -571,7 +580,7 @@ function ShapeStyleBar({
           type="button"
           aria-label="Delete shape"
           onClick={onDelete}
-          className="flex size-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          className={SHAPE_TOOLBAR_ICON_BUTTON_CLASS}
         >
           <Trash2 className="size-3.5" aria-hidden />
         </button>
@@ -728,7 +737,7 @@ function StickyStyleBar({
           type="button"
           aria-label="Delete sticky"
           onClick={onDelete}
-          className="flex size-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          className={SHAPE_TOOLBAR_ICON_BUTTON_CLASS}
         >
           <Trash2 className="size-3.5" aria-hidden />
         </button>
@@ -940,7 +949,7 @@ function TextStyleBar({
           type="button"
           aria-label="Delete text"
           onClick={onDelete}
-          className="flex size-8 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+          className={SHAPE_TOOLBAR_ICON_BUTTON_CLASS}
         >
           <Trash2 className="size-3.5" aria-hidden />
         </button>

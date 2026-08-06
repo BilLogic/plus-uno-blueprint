@@ -21,6 +21,10 @@ import {
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { AnnotationCaptureMenu } from '@/components/editor/AnnotationCaptureMenu'
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@/components/editor/SegmentedControl'
 import { ToolFamilyMenu, type FamilyTool } from '@/components/editor/ToolFamilyMenu'
 import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
 import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
@@ -420,46 +424,31 @@ function CanvasModeSwitch({
       A track holding two squares, not two loose buttons: the inset well and
       the shared gutter are what say "these two are one control and one of them
       is on". Without the track the active square reads as a button that
-      happens to be coloured.
+      happens to be coloured. SegmentedControl carries the track and the
+      raised-square treatment; the notes that shaped it (the literal tint, the
+      Figma-style raised white square with the brand colour in the icon) live
+      with the component.
     */}
-    <div
-      role="group"
+    <SegmentedControl
       aria-label="Canvas mode"
-      // A literal tint rather than `bg-muted`: this bar is already `bg-card`,
-      // which resolves to the same near-white, so the token left the track
-      // invisible and the two squares looked loose again.
-      className="pointer-events-auto flex shrink-0 items-center gap-0.5 rounded-lg bg-black/[0.055] p-0.5 dark:bg-white/10"
+      value={mode}
+      onValueChange={onChange}
+      className="pointer-events-auto"
     >
       {segments.map(({ value, label, icon: Icon }) => (
         <Tooltip key={value}>
           <TooltipTrigger
             render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
+              <SegmentedControlItem
+                value={value}
                 aria-label={label}
-                aria-pressed={mode === value}
-                onClick={() => onChange(value)}
-                // Figma's bottom bar exactly: square-ish slots side by side,
-                // and the active one is a filled brand square, not a paler
-                // grey — "which mode am I in" has to read from across the
-                // room, and neutral-on-neutral does not.
-                // Figma's own segmented control: the track is the recessed
-                // grey, the active slot is a *raised white square* and the
-                // brand colour lives in its icon. Filling the whole square
-                // with brand made it read as a primary button that happened
-                // to sit in a toolbar, which is the opposite of "one of these
-                // two is currently on".
-                className={cn(
-                  'size-6 rounded-md p-0',
-                  mode === value
-                    ? 'bg-background text-primary shadow-sm ring-1 ring-black/5 hover:bg-background hover:text-primary'
-                    : 'text-muted-foreground hover:bg-transparent hover:text-foreground',
-                )}
+                // Square icon-only slots, Figma's bottom bar exactly — and a
+                // hairline ring on the raised square so it holds its edge
+                // against the toolbar's busier neighbours.
+                className="size-6 p-0 aria-pressed:ring-1 aria-pressed:ring-black/5"
               >
                 <Icon className="size-3.5" aria-hidden />
-              </Button>
+              </SegmentedControlItem>
             }
           />
           <TooltipContent side="top" className="text-xs">
@@ -474,7 +463,7 @@ function CanvasModeSwitch({
           </TooltipContent>
         </Tooltip>
       ))}
-    </div>
+    </SegmentedControl>
     </TooltipProvider>
   )
 }

@@ -5,6 +5,10 @@ import {
   BLUEPRINT_MENUBAR_HEADER_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@/components/editor/SegmentedControl'
 import { Menubar } from '@/components/ui/menubar'
 import { useEditor } from '@/contexts/EditorContext'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
@@ -63,32 +67,18 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
   ]
 
   return (
-    <div
-      role="group"
+    <SegmentedControl
       aria-label="Path display"
-      className="flex shrink-0 items-center gap-0.5 rounded-lg bg-black/[0.055] p-0.5 dark:bg-white/10"
+      value={current}
+      onValueChange={(value) => setScenarioDisplayViewType(slide.id, value)}
     >
-      {segments.map(({ value, label, icon: Icon }) => {
-        const active = current === value
-        return (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={active}
-            onClick={() => setScenarioDisplayViewType(slide.id, value)}
-            className={cn(
-              'flex h-6 items-center gap-1.5 rounded-md px-2 text-2xs font-medium transition-colors',
-              active
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Icon className="size-3.5" aria-hidden />
-            {label}
-          </button>
-        )
-      })}
-    </div>
+      {segments.map(({ value, label, icon: Icon }) => (
+        <SegmentedControlItem key={value} value={value} className="px-2">
+          <Icon className="size-3.5" aria-hidden />
+          {label}
+        </SegmentedControlItem>
+      ))}
+    </SegmentedControl>
   )
 }
 

@@ -356,30 +356,31 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
           {describeChange(entry)}
         </span>
         {cellId ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             aria-label="Show me where"
             title="Show me where"
             onClick={() => scrollBlueprintCellIntoView(cellId)}
-            className="shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/change:opacity-100 focus-visible:opacity-100 hover:text-foreground"
+            className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
           >
-            <Crosshair className="size-3" aria-hidden />
-          </button>
+            <Crosshair aria-hidden />
+          </Button>
         ) : null}
         {entry.revert ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             aria-label="Revert this change"
             title="Revert this change"
             disabled={busy}
             onClick={() => void revert()}
-            className="shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/change:opacity-100 focus-visible:opacity-100 hover:text-foreground disabled:opacity-40"
+            className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
           >
-            <Undo2
-              className={cn('size-3', busy && 'animate-pulse')}
-              aria-hidden
-            />
-          </button>
+            <Undo2 className={cn(busy && 'animate-pulse')} aria-hidden />
+          </Button>
         ) : null}
       </div>
       {error ? (
