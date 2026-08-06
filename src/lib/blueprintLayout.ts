@@ -455,7 +455,7 @@ export const BLUEPRINT_HEADER_HEIGHT_COMPACT = 32
 export const BLUEPRINT_LAYER_ROW_GAP = 0
 /** Padding around the grid body for arrow overlay bleed (matches ARROW_VIEWPORT_PAD). */
 export const BLUEPRINT_GRID_VIEWPORT_PAD = 13
-/** CanvasBlueprintArtboard inner wrapper (p-2). */
+/** Artboard inner wrapper (p-2; formerly CanvasBlueprintArtboard). */
 export const BLUEPRINT_CANVAS_INNER_PADDING = 16
 /** mb-2 below the compact path header row. */
 export const BLUEPRINT_COMPACT_HEADER_GAP = 8

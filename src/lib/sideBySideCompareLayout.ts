@@ -991,7 +991,7 @@ export function getIntegratedCanvasArtboardSize(
     data.paths.length,
   )
 
-  /** Matches Tailwind `p-3` on CanvasBlueprintArtboard. */
+  /** Matches Tailwind `p-3` on the artboard frame (formerly CanvasBlueprintArtboard). */
   const canvasArtboardPadding = 24
 
   return {
