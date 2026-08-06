@@ -1,3 +1,23 @@
+/*
+ * Motion tokens — the CSS half of the vocabulary in src/lib/motion.ts.
+ * Same five numbers, one per motion class; scripts/tests/motion-tokens
+ * pins the two files together so they cannot drift apart silently.
+ * `--ease-structural` is a Tailwind @theme key, so `ease-structural` is a
+ * utility; durations are plain vars because Tailwind v4 has no duration
+ * namespace — consume them as `duration-(--motion-structural)`.
+ */
+@theme {
+  --ease-structural: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  --motion-structural: 320ms;
+  --motion-fade: 200ms;
+  --motion-fade-stagger: 75ms;
+  --motion-camera: 420ms;
+  --motion-micro: 150ms;
+}
+
 @keyframes editor-fade-in {
   from {
     opacity: 0;
@@ -60,18 +80,18 @@
    this is a fade-through: the incoming surface fades up after the same
    75 ms stagger the sidebar crossfade uses. */
 [data-editor-content] {
-  animation: editor-fade-in 200ms ease-out 75ms both;
+  animation: editor-fade-in var(--motion-fade) ease-out var(--motion-fade-stagger) both;
 }
 
 /* Presentation enter — sidebar collapses (320 ms, owned by the shell) ∥
    stage fades up (200 ms) ∥ filmstrip slides up (200 ms). The 75 ms offset
    lines the pair up with the surface crossfade above. */
 [data-presentation-root] [data-presentation-stage] {
-  animation: editor-stage-in 200ms ease-out 75ms both;
+  animation: editor-stage-in var(--motion-fade) ease-out var(--motion-fade-stagger) both;
 }
 
 [data-presentation-root] [data-presentation-filmstrip] {
-  animation: editor-filmstrip-in 200ms ease-out 75ms both;
+  animation: editor-filmstrip-in var(--motion-fade) ease-out var(--motion-fade-stagger) both;
 }
 
 /* Presentation exit — the same three in reverse, same durations. The shell
@@ -79,15 +99,15 @@
    of being cut off by the unmount; the band fades last so the dark surface
    lands on the incoming tab rather than snapping to it. */
 [data-presentation-root][data-leaving] [data-presentation-stage] {
-  animation: editor-stage-out 200ms ease-out both;
+  animation: editor-stage-out var(--motion-fade) ease-out both;
 }
 
 [data-presentation-root][data-leaving] [data-presentation-filmstrip] {
-  animation: editor-filmstrip-out 200ms ease-out both;
+  animation: editor-filmstrip-out var(--motion-fade) ease-out both;
 }
 
 [data-presentation-root][data-leaving] {
-  animation: editor-fade-out 200ms ease-out 120ms both;
+  animation: editor-fade-out var(--motion-fade) ease-out 120ms both;
 }
 
 @media (prefers-reduced-motion: reduce) {
