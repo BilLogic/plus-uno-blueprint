@@ -155,13 +155,20 @@
    * identity even as neutrals desaturate.
    *
    * Hue 177.6 is the blue-green this product is specified around — it is the
-   * OKLCH hue of #85ECD5. Lightness stays at Supabase's 0.76 rather than that
-   * swatch's 0.874: the reference colour is a tint, and at L 0.874 a filled
-   * button is too pale to read as a control against a near-white canvas. The
-   * tint itself still exists in the ramp as `--brand-400`. `--primary-foreground`
-   * is dark ink, not white — white on this fill measures 2.03:1, dark ink 10.16.
+   * OKLCH hue of #85ECD5. The reference colour is a tint: at its L 0.874 a
+   * filled button is too pale to read as a control against a near-white
+   * canvas. The tint itself still exists in the ramp as `--brand-400`.
+   * `--primary-foreground` is dark ink, not white — white on this fill
+   * measures ~2:1, dark ink 9.49.
    */
-  --primary: oklch(0.76 0.13 var(--primary-hue));
+  /* L/C tuned against Supabase's brand (#3ECF8E = oklch 0.762 0.154 159.4).
+   * Their C is unreachable at our hue — teal's sRGB chroma ceiling at this
+   * lightness is ~0.137, green's is ~0.174 — so instead of chasing their C we
+   * match their *punch*: drop L two points and ride the ceiling (99%
+   * utilization), which lifts colourfulness-per-lightness from 0.171 to 0.182
+   * against their 0.202, the closest sRGB allows without a hue drift.
+   * Dark ink on it measures 9.49:1. */
+  --primary: oklch(0.74 0.135 var(--primary-hue));
   --primary-foreground: oklch(
     min(var(--surface), var(--foreground-lightness))
       calc(var(--chroma) * 0.45) var(--primary-hue)
@@ -362,4 +369,19 @@
   --chart-5: oklch(
     from var(--foreground) calc(var(--surface) + var(--tone-span) * 0.85) c h
   );
+}
+
+/*
+ * Wide-gamut displays get the chroma sRGB couldn't hold: the P3 ceiling at
+ * L 0.74 / H 177.6 is 0.185, so 0.158 (85%) deepens the brand fill without
+ * living on the boundary. Same L, same H — only colourfulness moves, so the
+ * ink-contrast measurements on the base token still hold. A standalone block
+ * rather than a nested @media so declarations never trail a nested rule.
+ */
+@media (color-gamut: p3) {
+  :root,
+  .dark,
+  .light {
+    --primary: oklch(0.74 0.158 var(--primary-hue));
+  }
 }
