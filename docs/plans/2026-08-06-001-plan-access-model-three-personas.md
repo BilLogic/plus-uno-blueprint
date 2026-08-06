@@ -95,8 +95,9 @@ API-invisible?".
       to `service_role` only. Verified via `has_function_privilege`.
 - [x] `search_path`: audit found every function already pinned except
       `search_blueprint` — now pinned too.
-- [ ] Leaked-password protection: no management-API tool available here —
-      **owner flips it in the dashboard** (Auth → Providers → Email).
+- [x] Leaked-password protection: **dropped** — requires a paid Auth tier
+      this project doesn't have (owner decision 2026-08-06). Revisit only if
+      the project upgrades.
 - [x] F4: evidence writes go into the RPC funnel with ledger + revert —
       owner called the gap dangerous; implemented rather than documented.
 
