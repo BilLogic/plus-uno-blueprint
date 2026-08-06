@@ -53,9 +53,17 @@ type SupabaseProviderProps = {
   children: ReactNode
 }
 
+/*
+ * Module singleton, not useMemo: StrictMode's double render re-runs memo
+ * initializers, and two GoTrueClients on one storage key is undefined
+ * behavior (and a console warning on every load). One client per page is
+ * the actual contract — same reasoning as lib/queryClient.ts.
+ */
+const sharedClient = createSupabaseClient()
+
 export function SupabaseProvider({ children }: SupabaseProviderProps) {
   const configured = isSupabaseConfigured()
-  const client = useMemo(() => createSupabaseClient(), [])
+  const client = sharedClient
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(configured)
 
