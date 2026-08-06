@@ -325,17 +325,22 @@
    * No heading font, no type-scale overrides, no weight overrides: Supabase
    * defines none, and headings are this stack at a heavier weight.
    */
-  --font-sans: var(
-    --font-sans,
-    'Ubuntu Sans Variable',
-    'Ubuntu Sans',
-    Ubuntu,
-    Helvetica Neue,
-    Helvetica,
-    Arial,
-    sans-serif
-  );
-  --font-mono: var(--font-source-code-pro, Source Code Pro, Office Code Pro, Menlo, monospace);
+  /*
+   * The fallback chain sits OUTSIDE the var() slot on purpose. Inside it,
+   * the entire list lives in the var's fallback position — so the moment the
+   * seam variable is defined, every fallback (including the generic!) is
+   * discarded, and a face that fails to load renders as the browser default
+   * serif. Outside, var() substitutes into a comma list and the system
+   * faces + generic always survive. (Found live: `font-mono` computed to
+   * just "Source Code Pro Variable","Source Code Pro" — Times on any load
+   * failure.)
+   */
+  --font-sans:
+    var(--font-sans, 'Ubuntu Sans Variable'), 'Ubuntu Sans', Ubuntu,
+    'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono:
+    var(--font-source-code-pro, 'Source Code Pro Variable'), 'Source Code Pro',
+    'Office Code Pro', Menlo, monospace;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
