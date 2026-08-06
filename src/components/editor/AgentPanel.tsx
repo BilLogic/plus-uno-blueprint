@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -56,7 +64,31 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller'
-import { AgentMarkdown } from '@/components/editor/AgentMarkdown'
+/*
+ * Lazy: AgentMarkdown is the only importer of react-markdown's unified
+ * toolchain, and transcripts only render once the agent surface is open —
+ * no reason for the landing page to pay for a markdown parser. The fallback
+ * is the raw text, so a slow chunk shows content, not a spinner.
+ */
+const AgentMarkdownLazy = lazy(() =>
+  import('@/components/editor/AgentMarkdown').then((m) => ({
+    default: m.AgentMarkdown,
+  })),
+)
+
+function AgentMarkdown(props: { text: string; className?: string }) {
+  return (
+    <Suspense
+      fallback={
+        <p className={cn('whitespace-pre-wrap', props.className)}>
+          {props.text}
+        </p>
+      }
+    >
+      <AgentMarkdownLazy {...props} />
+    </Suspense>
+  )
+}
 import { NavSection } from '@/components/editor/SidebarNav'
 import { Badge } from '@/components/ui/badge'
 import {
