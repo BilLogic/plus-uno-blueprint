@@ -94,8 +94,9 @@ type ServiceBlueprintGridProps = {
 }
 
 /**
- * Single-path service blueprint — the classic swim-lane grid. Use
- * `IntegratedBlueprintGrid` when several paths share one canvas.
+ * Single-path service blueprint — the classic swim-lane grid. Several
+ * selected paths render as `BlueprintPathBand` arrangements instead
+ * (`SideBySideCompareGrid` in overview rows, `StackedCompareGrid` focused).
  */
 export function ServiceBlueprintGrid({
   data,

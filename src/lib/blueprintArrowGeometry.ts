@@ -216,6 +216,43 @@ export function getSameColumnObstructingCells(
   return obstructing
 }
 
+/**
+ * Cells whose card overlaps a rectangle, ignoring the arrow's own endpoints.
+ *
+ * The step-index-keyed helpers above answer "what sits between these two
+ * cells"; this one answers "is this stretch of the canvas actually empty",
+ * which is what a route needs before it commits to travelling through a
+ * column. The merged compare canvas made the distinction matter: a slot
+ * stacks one sub-cell per path, so the space below a cell inside its own
+ * column is no longer reliably free.
+ */
+export function getCellsOverlappingRect(
+  root: HTMLElement,
+  rect: { left: number; right: number; top: number; bottom: number },
+  exclude: readonly HTMLElement[],
+): HTMLElement[] {
+  if (rect.bottom <= rect.top || rect.right <= rect.left) return []
+
+  const overlapping: HTMLElement[] = []
+  root.querySelectorAll<HTMLElement>('[data-blueprint-cell]').forEach((el) => {
+    if (
+      exclude.some(
+        (other) => other === el || other.contains(el) || el.contains(other),
+      )
+    ) {
+      return
+    }
+
+    const box = getCellContentBox(el, root)
+    if (box.right <= rect.left || box.left >= rect.right) return
+    if (box.top >= rect.bottom || box.top + box.height <= rect.top) return
+
+    overlapping.push(el)
+  })
+
+  return overlapping
+}
+
 /** Cells in the same lane row whose columns sit strictly between source and target. */
 export function getSameRowObstructingCells(
   sourceEl: HTMLElement,
@@ -266,6 +303,58 @@ export function getVerticalGutterDetourAnchors(
       y: targetBox.top + targetBox.height / 2,
     },
   }
+}
+
+/**
+ * Two cells in one column, connected side-on through whichever column gutter
+ * has room: out of one card's left (or right) edge, along the gutter, into
+ * the other card's matching edge. Nothing between the two cards is crossed,
+ * and both ends read as arrivals because each head sits on a card edge.
+ *
+ * Returns '' when neither gutter clears the cards (an edge column of a
+ * one-column board): no arrow at all beats one drawn through a cell's text.
+ */
+export function buildSameColumnGutterDetourPath(
+  upperEl: HTMLElement,
+  lowerEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const upperBox = getCellContentBox(upperEl, root)
+  const lowerBox = getCellContentBox(lowerEl, root)
+  const upperY = upperBox.top + upperBox.height / 2
+  const lowerY = lowerBox.top + lowerBox.height / 2
+  const stepIndex = parseStepIndex(upperEl) ?? 0
+
+  const leftGutterX = getVerticalRouteGutterX(root, stepIndex, upperEl)
+  const leftEntryX = Math.min(upperBox.left, lowerBox.left) - ARROW_CHEVRON_SIZE
+  if (leftGutterX < leftEntryX) {
+    return buildRoundedPolylinePath(
+      [
+        { x: upperBox.left - ARROW_CHEVRON_SIZE, y: upperY },
+        { x: leftGutterX, y: upperY },
+        { x: leftGutterX, y: lowerY },
+        { x: lowerBox.left - ARROW_CHEVRON_SIZE, y: lowerY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+  }
+
+  const rightGutterX = getVerticalRouteRightGutterX(root, stepIndex, upperEl)
+  const rightEntryX =
+    Math.max(upperBox.right, lowerBox.right) + ARROW_CHEVRON_SIZE
+  if (rightGutterX > rightEntryX) {
+    return buildRoundedPolylinePath(
+      [
+        { x: upperBox.right + ARROW_CHEVRON_SIZE, y: upperY },
+        { x: rightGutterX, y: upperY },
+        { x: rightGutterX, y: lowerY },
+        { x: lowerBox.right + ARROW_CHEVRON_SIZE, y: lowerY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+  }
+
+  return ''
 }
 
 /**
@@ -475,9 +564,10 @@ export function getRegularTutorInLaneLoopRouteY(
     }
   }
 
-  const sourceBox = getCellContentBox(sourceEl, root)
-  const targetBox = getCellContentBox(targetEl, root)
-  const cellTop = Math.min(sourceBox.top, targetBox.top)
+  const cellTop = Math.min(
+    getLaneContentTop(sourceEl, root),
+    getLaneContentTop(targetEl, root),
+  )
   return cellTop - REGULAR_TUTOR_LOOP_TOP_INSET
 }
 
@@ -502,13 +592,12 @@ export function buildRegularTutorInLaneTopWrapPath(
   const lineEndY = target.y - ARROW_CHEVRON_SIZE
   if (lineEndY <= routeY) return ''
 
+  const exitLeg = buildWrapColumnLeg(sourceEl, root, routeY, 'exit', 'above')
+  const enterLeg = buildWrapColumnLeg(targetEl, root, routeY, 'enter', 'above')
+  if (!exitLeg || !enterLeg) return ''
+
   return buildRoundedPolylinePath(
-    [
-      source,
-      { x: source.x, y: routeY },
-      { x: target.x, y: routeY },
-      { x: target.x, y: lineEndY },
-    ],
+    [...exitLeg, ...enterLeg],
     ARROW_CORNER_RADIUS,
   )
 }
@@ -519,15 +608,60 @@ export type WrapCorridorBounds = {
   end: number
 }
 
+/** Bottom edge of the lowest cell card in a lane row (the source's own if alone). */
+function getLaneContentBottom(
+  row: Element | null,
+  root: HTMLElement,
+  sourceEl: HTMLElement,
+  sourceBox: LayoutBox,
+): number {
+  let bottom = sourceBox.top + sourceBox.height
+  if (!row) return bottom
+  for (const el of row.querySelectorAll<HTMLElement>('[data-blueprint-cell]')) {
+    if (el === sourceEl || el.contains(sourceEl) || sourceEl.contains(el)) {
+      continue
+    }
+    const box = getCellContentBox(el, root)
+    bottom = Math.max(bottom, box.top + box.height)
+  }
+  return bottom
+}
+
+/**
+ * Top edge of the highest cell card in a cell's lane row — the mirror of
+ * `getLaneContentBottom`, for the rails that run ABOVE a lane. A stacked slot
+ * makes a lower sub-cell's own top useless as a rail reference: the rail has
+ * to clear the sub-cells above it too.
+ */
+function getLaneContentTop(cellEl: HTMLElement, root: HTMLElement): number {
+  const box = getCellContentBox(cellEl, root)
+  const row = getLayerRow(cellEl)
+  let top = box.top
+  if (!row) return top
+  for (const el of row.querySelectorAll<HTMLElement>('[data-blueprint-cell]')) {
+    if (el === cellEl || el.contains(cellEl) || cellEl.contains(el)) continue
+    top = Math.min(top, getCellContentBox(el, root).top)
+  }
+  return top
+}
+
 /** Vertical span between a lane row bottom and the next wrap corridor or interaction line. */
 export function getWrapCorridorBounds(
   sourceEl: HTMLElement,
   root: HTMLElement,
 ): WrapCorridorBounds | null {
   const sourceBox = getCellContentBox(sourceEl, root)
-  const corridorStart = sourceBox.top + sourceBox.height
-
   const row = sourceEl.closest('[data-blueprint-row]')
+  /*
+    The corridor starts below EVERY cell in the lane, not just below the
+    source. A wrap runs the width of the lane, so any cell it passes over
+    bounds it — and in the merged compare canvas a slot stacks one sub-cell
+    per path, so the source's own bottom edge is routinely mid-lane, with
+    another path's sub-cell sitting under it. Reading the source alone put
+    the loop-back straight through that sub-cell's text.
+  */
+  const corridorStart = getLaneContentBottom(row, root, sourceEl, sourceBox)
+
   if (row) {
     const inlineCorridor = row.querySelector<HTMLElement>(
       '[data-blueprint-wrap-corridor="below"]',
@@ -788,6 +922,15 @@ export function buildBidirectionalVerticalArrowPath(
   const upperEl = aAbove ? cellAEl : cellBEl
   const lowerEl = aAbove ? cellBEl : cellAEl
   const anchors = getVerticalCellAnchors(upperEl, lowerEl, root)
+
+  // A cell between the two (merged stacks a sub-cell per path inside one
+  // slot) means the straight run would strike through its text. Detour
+  // through a column gutter instead, entering both cards side-on so each
+  // head still lands on the cell it belongs to.
+  if (getSameColumnObstructingCells(upperEl, lowerEl, root).length > 0) {
+    return buildSameColumnGutterDetourPath(upperEl, lowerEl, root)
+  }
+
   const y1 = anchors.source.y + ARROW_CHEVRON_SIZE
   const y2 = anchors.target.y - ARROW_CHEVRON_SIZE
   if (y2 <= y1) return ''
@@ -1709,10 +1852,11 @@ export function getDiscoveryRailY(
   targetEl: HTMLElement,
   root: HTMLElement,
 ): number {
-  const sourceBox = getCellContentBox(sourceEl, root)
-  const targetBox = getCellContentBox(targetEl, root)
+  // Lane-wide tops, not the two cards' own: a merged slot stacks a sub-cell
+  // per path, so a rail measured off a lower sub-cell would run through the
+  // ones above it.
   return (
-    Math.min(sourceBox.top, targetBox.top) -
+    Math.min(getLaneContentTop(sourceEl, root), getLaneContentTop(targetEl, root)) -
     BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN / 2
   )
 }
@@ -2222,13 +2366,12 @@ export function buildOverheadWrapArrowPath(
   // Wrap runs right → left; target must sit in an earlier column.
   if (target.x >= source.x) return ''
 
+  const exitLeg = buildWrapColumnLeg(sourceEl, root, railY, 'exit', 'above')
+  const enterLeg = buildWrapColumnLeg(targetEl, root, railY, 'enter', 'above')
+  if (!exitLeg || !enterLeg) return ''
+
   return buildRoundedPolylinePath(
-    [
-      source,
-      { x: source.x, y: railY },
-      { x: target.x, y: railY },
-      { x: target.x, y: lineEndY },
-    ],
+    [...exitLeg, ...enterLeg],
     ARROW_CORNER_RADIUS,
   )
 }
@@ -2277,17 +2420,94 @@ export function buildWrapArrowPath(
     return ''
   }
 
-  const lineEndY = target.y + ARROW_CHEVRON_SIZE
+  /*
+    The drop to the corridor and the rise back out both travel INSIDE a step
+    column, which the merged canvas no longer guarantees is empty below a
+    card: a divergent slot stacks one sub-cell per path, so a wrap leaving the
+    upper sub-cell used to descend straight through the lower one's text.
+    Where that happens the vertical leg moves into the column's gutter and
+    meets the card side-on instead.
+  */
+  const exitLeg = buildWrapColumnLeg(sourceEl, root, corridorY, 'exit')
+  const enterLeg = buildWrapColumnLeg(targetEl, root, corridorY, 'enter')
+  // No clear leg on one side (a blocked column with no usable gutter — an
+  // edge column of a one-column board). Drawing the straight leg anyway
+  // would strike through the sub-cell under the card, so drop the arrow.
+  if (!exitLeg || !enterLeg) return ''
 
   return buildRoundedPolylinePath(
-    [
-      source,
-      { x: source.x, y: corridorY },
-      { x: target.x, y: corridorY },
-      { x: target.x, y: lineEndY },
-    ],
+    [...exitLeg, ...enterLeg],
     ARROW_CORNER_RADIUS,
   )
+}
+
+/**
+ * One end of a wrap: the points that take the route between a card and the
+ * corridor it runs along — `below` the lane for a loop under it, `above` for
+ * an overhead rail. Straight up or down the column when that stretch of the
+ * column is clear, otherwise out of the card's side, into the gutter, and
+ * along there.
+ *
+ * A wrap runs right → left, so the source leaves by its left edge and the
+ * target is met on its right edge — the detour never doubles back.
+ */
+export function buildWrapColumnLeg(
+  cellEl: HTMLElement,
+  root: HTMLElement,
+  corridorY: number,
+  end: 'exit' | 'enter',
+  side: 'below' | 'above' = 'below',
+): Point[] | null {
+  const box = getCellContentBox(cellEl, root)
+  const centerX = (box.left + box.right) / 2
+  const edgeY = side === 'below' ? box.top + box.height : box.top
+  const blocked =
+    getCellsOverlappingRect(
+      root,
+      {
+        left: box.left,
+        right: box.right,
+        top: Math.min(edgeY, corridorY),
+        bottom: Math.max(edgeY, corridorY),
+      },
+      [cellEl],
+    ).length > 0
+
+  if (!blocked) {
+    const tipY =
+      side === 'below' ? edgeY + ARROW_CHEVRON_SIZE : edgeY - ARROW_CHEVRON_SIZE
+    return end === 'exit'
+      ? [
+          { x: centerX, y: edgeY },
+          { x: centerX, y: corridorY },
+        ]
+      : [
+          { x: centerX, y: corridorY },
+          { x: centerX, y: tipY },
+        ]
+  }
+
+  const stepIndex = parseStepIndex(cellEl) ?? 0
+  const midY = box.top + box.height / 2
+  if (end === 'exit') {
+    const gutterX = getVerticalRouteGutterX(root, stepIndex, cellEl)
+    const entryX = box.left - ARROW_CHEVRON_SIZE
+    if (gutterX >= entryX) return null
+    return [
+      { x: entryX, y: midY },
+      { x: gutterX, y: midY },
+      { x: gutterX, y: corridorY },
+    ]
+  }
+
+  const gutterX = getVerticalRouteRightGutterX(root, stepIndex, cellEl)
+  const entryX = box.right + ARROW_CHEVRON_SIZE
+  if (gutterX <= entryX) return null
+  return [
+    { x: gutterX, y: corridorY },
+    { x: gutterX, y: midY },
+    { x: entryX, y: midY },
+  ]
 }
 
 /** Forward gap arrow, same-column vertical connector, or backward wrap. */
@@ -2472,7 +2692,12 @@ export function buildArrowPath(
     targetStep !== null &&
     targetStep > sourceStep &&
     isBeforeStudentsJoinColumnGapCell(sourceCellId) &&
-    isBeforeStudentsJoinColumnGapCell(targetCellId)
+    isBeforeStudentsJoinColumnGapCell(targetCellId) &&
+    // This route runs at one Y straight through every column it spans, which
+    // only reads as a skip because the columns it skips are empty in that
+    // lane. Merged fills them (each path contributes a sub-cell), so hand it
+    // back to the generic detour when anything is actually in the way.
+    getSameRowObstructingCells(sourceEl, targetEl).length === 0
   ) {
     return buildSpanningColumnGapArrowPath(sourceEl, targetEl, root)
   }

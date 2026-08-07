@@ -10,7 +10,9 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
+import { CompareDifferencesSurface } from '@/components/blueprint/CompareDifferencesSurface'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
 import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
@@ -30,6 +32,10 @@ import {
   CELL_DETAIL_PANEL_TOP_GAP_PX,
   CELL_DETAIL_PANEL_TOP_VAR,
 } from '@/components/editor/menubarHeaderLayout'
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@/components/editor/SegmentedControl'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -47,9 +53,16 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useBlueprintCellDetail } from '@/contexts/BlueprintCellDetailContext'
+import {
+  useBlueprintCellDetail,
+  type BlueprintPanelSurface,
+} from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import {
+  setCompareLedgerOpen,
+  useCompareReviewState,
+} from '@/lib/compareReviewStore'
 import {
   buildBlueprintCellSelectionForId,
   getBlueprintCellConnections,
@@ -80,8 +93,10 @@ import {
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
+import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
 import type { DependencyEndpoint } from '@/lib/dependencyValidation'
 import type { BlueprintCell, CellLink } from '@/types/blueprint'
+import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
 /**
  * Where a cell sits, said so that two cells never say the same thing.
@@ -218,6 +233,93 @@ class CellDetailErrorBoundary extends Component<
 }
 
 /**
+ * The one drawer shell every surface of the panel renders through. Each
+ * render branch (details, draft, placeholder, differences) returns this at
+ * the same tree position, so React reconciles them as the SAME drawer —
+ * a surface switch is a content swap inside the open drawer, never a
+ * close-reopen.
+ */
+function PanelDrawerShell({
+  open,
+  expanded,
+  onCloseRequest,
+  onClosed,
+  children,
+}: {
+  open: boolean
+  expanded: boolean
+  onCloseRequest: () => void
+  onClosed: () => void
+  children: ReactNode
+}) {
+  return (
+    <Drawer
+      open={open}
+      onOpenChange={(next) => {
+        // Only close *requests* (✕, Escape, swipe) arrive here, and with
+        // `open` derived from panelState they can only fire while the panel
+        // is open — the delayed-callback-wipes-new-selection class of bug
+        // died with the second owner.
+        if (!next && !panelEditorBusy()) onCloseRequest()
+      }}
+      onOpenChangeComplete={(next) => {
+        if (!next) onClosed()
+      }}
+      modal={false}
+      disablePointerDismissal
+      swipeDirection="right"
+    >
+      <DrawerContent
+        data-cell-detail-panel=""
+        className={cn(
+          CELL_DETAIL_PANEL_TOP_CLASS,
+          CELL_DETAIL_PANEL_BOTTOM_CLASS,
+          '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+          expanded ? 'w-[40rem]' : 'w-[20rem]',
+        )}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        {children}
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
+/**
+ * The Details │ Differences switch — TOP-LEVEL panel chrome (the two
+ * surfaces are siblings of the whole panel), rendered from two call sites:
+ * the details branch's own header row and the differences DrawerHeader. ONE
+ * component, because two verbatim copies drifted apart once already.
+ *
+ * No count on the Differences tab: counts live in exactly two places
+ * app-wide now — the menubar Diff pill and each ledger group's trailing
+ * number.
+ */
+function PanelSurfaceSwitcher({
+  value,
+  onValueChange,
+}: {
+  value: BlueprintPanelSurface
+  onValueChange: (surface: BlueprintPanelSurface) => void
+}) {
+  return (
+    <SegmentedControl
+      aria-label="Panel surface"
+      value={value}
+      onValueChange={onValueChange}
+    >
+      <SegmentedControlItem value="details" className="px-2">
+        Details
+      </SegmentedControlItem>
+      <SegmentedControlItem value="differences" className="px-2">
+        Differences
+      </SegmentedControlItem>
+    </SegmentedControl>
+  )
+}
+
+/**
  * Side panel for the selected cell — its content, evidence, dependencies and
  * the slices it belongs to. Anchors below the sticky slide header via a
  * measured CSS variable so it never covers it.
@@ -230,6 +332,19 @@ export function BlueprintCellDetailPanel() {
   )
 }
 
+/**
+ * The one snapshot of what the drawer was showing, kept only so the exit
+ * animation glides out with content — a ledger-only close animates the
+ * ledger, a cell close animates the cell. Cleared when the exit animation
+ * completes; while the panel is open it mirrors the live state exactly, so
+ * a mid-close reopen can never strand a stale flag.
+ */
+type PanelClosingSnapshot = {
+  selection: BlueprintCellSelection | null
+  draft: DraftCellTarget | null
+  surface: BlueprintPanelSurface
+}
+
 function BlueprintCellDetailPanelBody() {
   const {
     selection: currentSelection,
@@ -238,12 +353,29 @@ function BlueprintCellDetailPanelBody() {
     blueprints,
     selectCell,
     draftCell,
+    panelState,
+    setPanelSurface,
   } =
     useBlueprintCellDetail()
-  const [closingSelection, setClosingSelection] = useState(currentSelection)
-  const [closingDraft, setClosingDraft] = useState(draftCell)
+  const [closing, setClosing] = useState<PanelClosingSnapshot | null>(
+    panelState
+      ? {
+          selection: currentSelection,
+          draft: draftCell,
+          surface: panelState.surface,
+        }
+      : null,
+  )
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
+  /**
+   * One-shot "← Back to Differences" chip: set when the ledger's ⇱ opens a
+   * cell in Details, cleared when used — and whenever the panel leaves
+   * Details, so it can never go stale.
+   */
+  const [returnToDifferences, setReturnToDifferences] = useState(false)
+  const compareRegistration = useCompareReviewState().registration
+  const comparing = compareRegistration !== null
 
   // Agent parity: the panel's own controls, registered while it is open.
   useEffect(() => {
@@ -282,12 +414,14 @@ function BlueprintCellDetailPanelBody() {
   // View mode presents everything read-only; every edit affordance in this
   // panel — pencils, Add dependency, resource editing — is Edit-mode only.
   const canEdit = useCanvasModeValue() === 'design' && canWrite
-  const selection = currentSelection ?? closingSelection
-  const draft = draftCell ?? closingDraft
-  useCanvasTopOffset(currentSelection !== null || draftCell !== null)
+  const selection = currentSelection ?? closing?.selection ?? null
+  const draft = draftCell ?? closing?.draft ?? null
+  const activeSurface: BlueprintPanelSurface | null =
+    panelState?.surface ?? closing?.surface ?? null
+  useCanvasTopOffset(panelState !== null)
 
   /*
-    The drawer's `open` is derived from the selection, full stop.
+    The drawer's `open` is derived from `panelState`, full stop.
 
     It used to be its own state, synced from the selection by an effect,
     through a requestAnimationFrame, and back again through base-ui's async
@@ -299,27 +433,38 @@ function BlueprintCellDetailPanelBody() {
     it. Minutes later a delayed close callback would wipe a selection it
     had never met.
 
-    `closingSelection` survives only to keep the *content* rendered during
-    the exit animation, and is cleared when that animation completes.
+    `closing` survives only to keep the *content* rendered during the exit
+    animation, and is cleared when that animation completes. panelState is
+    the SINGLE owner — never OR a second boolean into this.
   */
-  const drawerOpen = currentSelection !== null || draftCell !== null
+  const drawerOpen = panelState !== null
 
   /*
-    The closing snapshots exist only to keep content rendered during the
-    exit animation. Each one must clear when the *other* kind opens: the
-    render gates read `selection = current ?? closingSelection`, so a stale
-    closing snapshot from a still-animating close would win over a freshly
-    opened draft — the panel would glide back in wearing the old cell, and
-    since the drawer never finishes closing, nothing would ever clear it.
-    Guarded render-phase sets, the codebase's derive-during-render idiom.
+    While the panel is open the snapshot mirrors the live state exactly —
+    ONE snapshot for everything the drawer renders (selection, draft,
+    surface), so a stale half from a still-animating close can never win
+    over freshly opened content. Guarded render-phase set, the codebase's
+    derive-during-render idiom.
   */
-  if (currentSelection && closingSelection !== currentSelection) {
-    setClosingSelection(currentSelection)
-    setClosingDraft(null)
+  if (
+    panelState &&
+    (closing?.selection !== currentSelection ||
+      closing.draft !== draftCell ||
+      closing.surface !== panelState.surface)
+  ) {
+    setClosing({
+      selection: currentSelection,
+      draft: draftCell,
+      surface: panelState.surface,
+    })
   }
-  if (draftCell && closingDraft !== draftCell) {
-    setClosingDraft(draftCell)
-    setClosingSelection(null)
+
+  // One-shot hygiene for the return chip (guarded render-phase set).
+  if (
+    returnToDifferences &&
+    (activeSurface !== 'details' || !comparing)
+  ) {
+    setReturnToDifferences(false)
   }
 
   // A new cell always opens on Dependencies (state reset during render).
@@ -345,6 +490,14 @@ function BlueprintCellDetailPanelBody() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [clearSelection, isOpen])
+
+  // Mirror "the ledger is showing" into the compare store so surfaces with
+  // no React path to this panel (get_ui_state, the strip) can read it.
+  const ledgerShowing = panelState?.surface === 'differences'
+  useEffect(() => {
+    setCompareLedgerOpen(ledgerShowing)
+    return () => setCompareLedgerOpen(false)
+  }, [ledgerShowing])
 
   const pathEntry = selection?.paths[0]
   const resolvedCellId = pathEntry?.cellId
@@ -620,6 +773,104 @@ function BlueprintCellDetailPanelBody() {
     return resolveVisualStepPictureEntries(blueprint, stepId)
   }, [blueprints, pathEntry?.pathId, selection?.stepId])
 
+  // Fully closed and the exit animation has completed — nothing to render.
+  if (activeSurface === null) return null
+
+  const handleClosed = () => setClosing(null)
+
+  /*
+    The Details │ Differences switcher — the two surfaces are true siblings
+    of the whole panel, so their switch is TOP-LEVEL chrome, above every
+    branch's own header. Rendered only while a comparison is live; outside
+    compare the panel is exactly what it was before v3.
+  */
+  const surfaceSwitcher = comparing ? (
+    <div className="flex shrink-0 items-center border-b border-border/60 px-4 py-2">
+      <PanelSurfaceSwitcher
+        value={activeSurface}
+        onValueChange={setPanelSurface}
+      />
+    </div>
+  ) : null
+
+  const handleOpenCellFromDifferences = (
+    nextSelection: BlueprintCellSelection,
+  ) => {
+    setReturnToDifferences(true)
+    selectCell(nextSelection)
+  }
+
+  /*
+    The Differences surface — the compare ledger, a true sibling of the
+    cell-detail view inside the same drawer. Needs no selection.
+  */
+  if (activeSurface === 'differences') {
+    return (
+      <PanelDrawerShell
+        open={drawerOpen}
+        expanded={expanded}
+        onCloseRequest={clearSelection}
+        onClosed={handleClosed}
+      >
+        <DrawerHeader className="flex-row items-center justify-between gap-2 border-b border-border/60 px-4 py-2 text-left">
+          <DrawerTitle className="sr-only">Path differences</DrawerTitle>
+          <DrawerDescription className="sr-only">
+            Every difference between the compared paths, grouped by step
+          </DrawerDescription>
+          {comparing ? (
+            <PanelSurfaceSwitcher
+              value="differences"
+              onValueChange={setPanelSurface}
+            />
+          ) : (
+            <span className="text-sm font-bold tracking-tight">
+              Differences
+            </span>
+          )}
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
+              aria-pressed={expanded}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              {expanded ? <PanelRightClose /> : <PanelRightOpen />}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Close differences"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
+          </div>
+        </DrawerHeader>
+        {compareRegistration ? (
+          <div className="flex min-h-0 flex-1 flex-col pt-3">
+            <CompareDifferencesSurface
+              registration={compareRegistration}
+              onOpenCell={handleOpenCellFromDifferences}
+            />
+          </div>
+        ) : (
+          // Reachable only during the exit animation after a comparison
+          // ended — the provider is already routing panelState away.
+          <div className="flex min-h-0 flex-1 items-center justify-center px-6 pb-8">
+            <p className="text-center text-xs text-muted-foreground">
+              No comparison is active.
+            </p>
+          </div>
+        )}
+      </PanelDrawerShell>
+    )
+  }
+
   /*
     Draft creation: the panel opens on an empty slot's target and nothing is
     written until Save. Closing the drawer (✕, Escape, Cancel) discards the
@@ -640,81 +891,102 @@ function BlueprintCellDetailPanelBody() {
     )
 
     return (
-      <Drawer
+      <PanelDrawerShell
         open={drawerOpen}
-        onOpenChange={(open) => {
-          if (!open && !panelEditorBusy()) clearSelection()
-        }}
-        onOpenChangeComplete={(open) => {
-          if (!open) {
-            setClosingSelection(null)
-            setClosingDraft(null)
-          }
-        }}
-        modal={false}
-        disablePointerDismissal
-        swipeDirection="right"
+        expanded={expanded}
+        onCloseRequest={clearSelection}
+        onClosed={handleClosed}
       >
-        <DrawerContent
-          data-cell-detail-panel=""
-          className={cn(
-            CELL_DETAIL_PANEL_TOP_CLASS,
-            CELL_DETAIL_PANEL_BOTTOM_CLASS,
-            '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
-            expanded ? 'w-[40rem]' : 'w-[20rem]',
-          )}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
-            <div className="min-w-0 flex-1">
-              <DrawerTitle className="text-sm font-bold tracking-tight">
-                New cell
-              </DrawerTitle>
-              <DrawerDescription className="text-2xs text-muted-foreground">
-                {[
-                  draft.phaseName,
-                  draft.scenarioName,
-                  `${draft.stepIndex + 1}. ${draft.stepName}`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </DrawerDescription>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Discard new cell"
-              onClick={clearSelection}
-            >
-              <X />
-            </Button>
-          </DrawerHeader>
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
-            <span
-              className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
-              style={{
-                backgroundColor: draftLaneStyle.lane,
-                color: 'var(--foreground-blueprint-cell)',
-              }}
-            >
-              {draft.layerName}
-            </span>
-            <CellPanelEditor cellId={null} draft={draft} onDone={clearSelection} />
+        {surfaceSwitcher}
+        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
+          <div className="min-w-0 flex-1">
+            <DrawerTitle className="text-sm font-bold tracking-tight">
+              New cell
+            </DrawerTitle>
+            <DrawerDescription className="text-2xs text-muted-foreground">
+              {[
+                draft.phaseName,
+                draft.scenarioName,
+                `${draft.stepIndex + 1}. ${draft.stepName}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </DrawerDescription>
           </div>
-          {/* The editor portals Create/Cancel here — panel-level footing. */}
-          <div
-            id={CELL_PANEL_FOOTER_ID}
-            className="shrink-0 border-t border-border/60 px-4 py-3 empty:hidden"
-          />
-        </DrawerContent>
-      </Drawer>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="Discard new cell"
+            onClick={clearSelection}
+          >
+            <X />
+          </Button>
+        </DrawerHeader>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
+          <span
+            className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
+            style={{
+              backgroundColor: draftLaneStyle.lane,
+              color: 'var(--foreground-blueprint-cell)',
+            }}
+          >
+            {draft.layerName}
+          </span>
+          <CellPanelEditor cellId={null} draft={draft} onDone={clearSelection} />
+        </div>
+        {/* The editor portals Create/Cancel here — panel-level footing. */}
+        <div
+          id={CELL_PANEL_FOOTER_ID}
+          className="shrink-0 border-t border-border/60 px-4 py-3 empty:hidden"
+        />
+      </PanelDrawerShell>
     )
   }
 
-  if (!selection) return null
+  /*
+    Details surface with nothing selected — a ledger-era state: the drawer
+    can sit open on Details after a surface switch with no cell picked.
+    A quiet placeholder rather than a vanished drawer.
+  */
+  if (!selection) {
+    return (
+      <PanelDrawerShell
+        open={drawerOpen}
+        expanded={expanded}
+        onCloseRequest={clearSelection}
+        onClosed={handleClosed}
+      >
+        {surfaceSwitcher}
+        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
+          <div className="min-w-0 flex-1">
+            <DrawerTitle className="text-sm font-bold tracking-tight">
+              Cell details
+            </DrawerTitle>
+            <DrawerDescription className="sr-only">
+              No cell selected
+            </DrawerDescription>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            aria-label="Close cell details"
+            onClick={clearSelection}
+          >
+            <X />
+          </Button>
+        </DrawerHeader>
+        <div className="flex min-h-0 flex-1 items-center justify-center px-6 pb-8">
+          <p className="text-center text-xs text-muted-foreground">
+            No cell selected — click a cell on the board.
+          </p>
+        </div>
+      </PanelDrawerShell>
+    )
+  }
 
   const isVisualLayer = Boolean(
     selectedLayer && shouldUseVisualContent(selectedLayer),
@@ -1029,36 +1301,28 @@ function BlueprintCellDetailPanelBody() {
   )
 
   return (
-    <Drawer
+    <PanelDrawerShell
       open={drawerOpen}
-      onOpenChange={(open) => {
-        // Only close *requests* (✕, Escape, swipe) arrive here, and with
-        // `open` derived from the selection they can only fire while a
-        // selection exists — the delayed-callback-wipes-new-selection class
-        // of bug died with the second owner.
-        if (!open && !panelEditorBusy()) clearSelection()
-      }}
-      onOpenChangeComplete={(open) => {
-        if (!open) {
-          setClosingSelection(null)
-          setClosingDraft(null)
-        }
-      }}
-      modal={false}
-      disablePointerDismissal
-      swipeDirection="right"
+      expanded={expanded}
+      onCloseRequest={clearSelection}
+      onClosed={handleClosed}
     >
-      <DrawerContent
-        data-cell-detail-panel=""
-        className={cn(
-          CELL_DETAIL_PANEL_TOP_CLASS,
-          CELL_DETAIL_PANEL_BOTTOM_CLASS,
-          '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
-          expanded ? 'w-[40rem]' : 'w-[20rem]',
-        )}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => event.stopPropagation()}
-      >
+        {surfaceSwitcher}
+        {returnToDifferences && comparing ? (
+          <div className="shrink-0 px-4 pt-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md text-2xs text-muted-foreground transition-colors duration-(--motion-micro) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              onClick={() => {
+                setReturnToDifferences(false)
+                setPanelSurface('differences')
+              }}
+            >
+              <ArrowLeft className="size-3" aria-hidden />
+              Back to Differences
+            </button>
+          </div>
+        ) : null}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="sr-only">Cell details</DrawerTitle>
@@ -1191,7 +1455,6 @@ function BlueprintCellDetailPanelBody() {
             <CellInSlicesFooter cellId={pathEntry?.cellId ?? null} />
           </>
         )}
-      </DrawerContent>
-    </Drawer>
+    </PanelDrawerShell>
   )
 }

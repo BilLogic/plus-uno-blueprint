@@ -8,18 +8,22 @@ import { ORG_NAME } from '@/config'
  */
 export type EditorView = 'landing' | 'home' | 'detail'
 
-/** How blueprint paths are laid out on a scenario slide. */
-export type SlideViewType = 'single' | 'side-by-side' | 'integrated'
+/**
+ * How blueprint paths are laid out on a scenario slide — CLIENT vocabulary.
+ * The DB keeps `side-by-side`/`integrated`; the two meet only in
+ * `src/lib/viewTypeVocabulary.ts`. `'merged'` is session-only, never persisted.
+ */
+export type SlideViewType = 'single' | 'stacked' | 'merged'
 
-export const SLIDE_VIEW_TYPES: SlideViewType[] = ['single', 'side-by-side', 'integrated']
+export const SLIDE_VIEW_TYPES: SlideViewType[] = ['single', 'stacked', 'merged']
 
-/** Options shown in the scenario view type control (integrated disabled). */
-export const SCENARIO_VIEW_TYPE_OPTIONS: SlideViewType[] = ['side-by-side']
+/** Options shown in the scenario view type control (merged is session-only). */
+export const SCENARIO_VIEW_TYPE_OPTIONS: SlideViewType[] = ['stacked']
 
 export const SLIDE_VIEW_TYPE_LABELS: Record<SlideViewType, string> = {
   single: 'Single',
-  'side-by-side': 'Side by side',
-  integrated: 'Integrated',
+  stacked: 'Stacked',
+  merged: 'Merged',
 }
 
 export type NavItem = {
@@ -141,7 +145,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 1,
     label: 'Discovery',
     parentId: 'a0000000-0000-4000-8000-000000000101',
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description: 'Potential tutors discover plus',
   },
   {
@@ -149,7 +153,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 2,
     label: 'Interview & Offer',
     parentId: 'a0000000-0000-4000-8000-000000000101',
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description: 'Potential Tutors Interview for role and receive an offer.',
   },
   {
@@ -164,7 +168,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 1,
     label: 'Tech Setup',
     parentId: 'a0000000-0000-4000-8000-000000000102',
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'The tutor sets up necessary tech and obtains required clearances.',
   },
@@ -173,7 +177,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 2,
     label: 'Onboarding Modules',
     parentId: 'a0000000-0000-4000-8000-000000000102',
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description: 'The tutor completes required onboarding modules.',
   },
   {
@@ -181,7 +185,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 3,
     label: 'Lesson Modules',
     parentId: 'a0000000-0000-4000-8000-000000000102',
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'The tutor goes through required lessons before joining a tutoring session.',
   },
@@ -190,7 +194,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 4,
     label: 'Session Sign Up',
     parentId: 'a0000000-0000-4000-8000-000000000102',
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'The tutor signs up for recurring sessions for the semester.',
   },
@@ -200,21 +204,21 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 1,
     label: 'Standard Scheduling',
     parentId: PRE_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000127',
     index: 2,
     label: 'Fill-in Request',
     parentId: PRE_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000128',
     index: 3,
     label: 'Call-off Request',
     parentId: PRE_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
   },
   {
     id: IN_SESSION_ID,
@@ -228,7 +232,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 1,
     label: 'Before Students Join',
     parentId: IN_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Teachers and tutors prepare the session before students join.',
   },
@@ -237,7 +241,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 2,
     label: 'Student Just Joined',
     parentId: IN_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Teachers and tutors welcome students as they join the session.',
   },
@@ -246,7 +250,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 3,
     label: 'Warm-Up',
     parentId: IN_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Tutors greet and move students to breakout rooms as the session begins.',
   },
@@ -255,7 +259,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 4,
     label: 'Goal Setting',
     parentId: IN_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Tutors guide students through goal setting in breakout sessions.',
   },
@@ -264,7 +268,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 5,
     label: 'Help Request',
     parentId: IN_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Tutors receive and resolve student help requests during the session.',
   },
@@ -273,7 +277,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 6,
     label: 'Wrap-Up',
     parentId: IN_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
   },
@@ -289,7 +293,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 1,
     label: 'Reporting an Issue',
     parentId: POST_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description:
       'Tutors report session issues to the tutor supervisor team after the session.',
   },
@@ -298,7 +302,7 @@ export const FALLBACK_NAV: NavItem[] = [
     index: 2,
     label: 'Reporting Hours',
     parentId: POST_SESSION_ID,
-    viewType: 'side-by-side',
+    viewType: 'stacked',
     description: 'Tutors log their tutoring hours after the session.',
   },
 ]
@@ -322,11 +326,12 @@ export function getBlueprintScenarioId(slide: NavItem): string | undefined {
 }
 
 export function getSlideViewType(slide: NavItem): SlideViewType {
-  // Integrated view is disabled app-wide; treat it as side-by-side.
-  if (slide.viewType === 'integrated') return 'side-by-side'
+  // `slide.viewType` is already client vocabulary: the raw DB value is mapped
+  // at the read seam (`phasesToSlides` via `viewTypeVocabulary`), where a
+  // persisted 'integrated' keeps coercing to the plain stacked view.
   if (slide.viewType) return slide.viewType
-  if (isSubslide(slide)) return 'side-by-side'
-  if (hasBlueprintFallback(slide.id)) return 'side-by-side'
+  if (isSubslide(slide)) return 'stacked'
+  if (hasBlueprintFallback(slide.id)) return 'stacked'
   return 'single'
 }
 
@@ -351,7 +356,7 @@ export function isIntegratedBlueprintSlide(_slide: NavItem): boolean {
 }
 
 export function isSideBySideBlueprintSlide(slide: NavItem): boolean {
-  return isSubslide(slide) && getSlideViewType(slide) === 'side-by-side'
+  return isSubslide(slide) && getSlideViewType(slide) === 'stacked'
 }
 
 export function getMainSlides(slides: NavItem[] = FALLBACK_NAV): NavItem[] {

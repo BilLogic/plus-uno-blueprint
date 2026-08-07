@@ -22,6 +22,12 @@ import {
 const COLORS_CSS = fileURLToPath(
   new URL('../styles/colors.css', import.meta.url),
 )
+const SEMANTIC_CSS = fileURLToPath(
+  new URL('../styles/semantic.css', import.meta.url),
+)
+const LIGHT_THEME_CSS = fileURLToPath(
+  new URL('../styles/themes/light.css', import.meta.url),
+)
 
 type Rgb = [number, number, number]
 
@@ -44,6 +50,66 @@ function hslToRgb(h: number, s: number, l: number): Rgb {
               ? [x, 0, c]
               : [c, 0, x]
   return [r + m, g + m, b + m]
+}
+
+/**
+ * OKLCH → linear sRGB (Björn Ottosson's matrices). The brand tokens are the
+ * one part of the system authored in OKLCH rather than picked off the HSL
+ * ramps, so they need their own resolver; `resolve()` below only speaks
+ * `--color-family-step`.
+ */
+function oklchToLinearSrgb(l: number, c: number, hDeg: number): Rgb {
+  const h = (hDeg * Math.PI) / 180
+  const a = c * Math.cos(h)
+  const b = c * Math.sin(h)
+  const lc = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const mc = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const sc = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
+  return [
+    4.0767416621 * lc - 3.3077115913 * mc + 0.2309699292 * sc,
+    -1.2684380046 * lc + 2.6097574011 * mc - 0.3413193965 * sc,
+    -0.0041960863 * lc - 0.7034186147 * mc + 1.707614701 * sc,
+  ]
+}
+
+const inSrgbGamut = (rgb: Rgb) => rgb.every((v) => v >= -1e-6 && v <= 1 + 1e-6)
+
+/**
+ * The other direction: gamma-encoded sRGB → OKLCH hue in degrees. Needed
+ * because the `--brand-*` ramp is authored as HSL literals, so its OKLCH hue
+ * — the thing `--primary` has to agree with — is not readable off the page.
+ */
+function oklchHue([r, g, b]: Rgb): number {
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+  const [R, G, B] = [lin(r), lin(g), lin(b)]
+  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B)
+  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B)
+  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B)
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+  return ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360
+}
+
+/** Gamma-encoded sRGB, so these values can meet the `Rgb` the solver expects. */
+function oklch(l: number, c: number, hDeg: number): Rgb {
+  return oklchToLinearSrgb(l, c, hDeg).map((v) => {
+    const clamped = Math.min(1, Math.max(0, v))
+    return clamped <= 0.0031308
+      ? 12.92 * clamped
+      : 1.055 * clamped ** (1 / 2.4) - 0.055
+  }) as Rgb
+}
+
+/** Largest in-gamut chroma at this lightness and hue, to 4dp. */
+function chromaCeiling(l: number, hDeg: number): number {
+  let lo = 0
+  let hi = 0.5
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2
+    if (inSrgbGamut(oklchToLinearSrgb(l, mid, hDeg))) lo = mid
+    else hi = mid
+  }
+  return lo
 }
 
 function relativeLuminance([r, g, b]: Rgb): number {
@@ -89,6 +155,119 @@ describe('palette', () => {
     // A format change that broke the regex would otherwise make every
     // assertion below pass against an empty map.
     expect(THEMES[theme].size).toBeGreaterThan(180)
+  })
+})
+
+describe('brand fill', () => {
+  // `--primary` and everything derived from it are authored in OKLCH against
+  // the theme's `--hue` dial. Nothing here can be read off the HSL ramps, so
+  // this block resolves the declarations on disk and measures them directly —
+  // the fill is the most-tuned colour in the system and has been retuned three
+  // times, twice into a state someone had to walk back.
+  const semantic = readFileSync(SEMANTIC_CSS, 'utf8')
+  const light = readFileSync(LIGHT_THEME_CSS, 'utf8')
+
+  const dial = (css: string, name: string) => {
+    const match = new RegExp(`--${name}:\\s*([\\d.]+)`).exec(css)
+    if (!match) throw new Error(`dial not found: --${name}`)
+    return Number(match[1])
+  }
+
+  const HUE = dial(light, 'hue')
+  const SURFACE = dial(light, 'surface')
+  const FOREGROUND_LIGHTNESS = dial(light, 'foreground-lightness')
+  const CHROMA = dial(light, 'chroma')
+
+  // --primary: oklch(<l> <c> var(--primary-hue))
+  const declared =
+    /--primary:\s*oklch\(\s*([\d.]+)\s+([\d.]+)\s+var\(--primary-hue\)\s*\)/.exec(
+      semantic,
+    )
+  if (!declared) throw new Error('--primary is no longer a literal L C hue')
+  const L = Number(declared[1])
+  const C = Number(declared[2])
+
+  const canvas = oklch(SURFACE, 0, dial(light, 'surface-hue'))
+
+  it('states its own lightness and chroma, so a retune has to come here', () => {
+    // A drive-by edit that moves either number lands on this assertion first
+    // and has to read the tuning history above the declaration to change it.
+    expect({ L, C }).toEqual({ L: 0.83, C: 0.135 })
+  })
+
+  it('sits on the brand ramp rather than beside it', () => {
+    // The 2026-08-06 pass left the hue dial 5.4° off the `--brand-*` ramp,
+    // which put the filled button on a cyaner green than every other brand
+    // surface in the app. The ramp is authored as HSL literals whose OKLCH
+    // hue is 177.6 at every step — so this compares the dial against the
+    // ramp as CONVERTED, not against the HSL numbers on the page, which read
+    // 163–171 and are not a hue reference.
+    const brandHues = [...light.matchAll(/--brand-(\d00):\s*([\d.]+)deg\s+([\d.]+)%\s+([\d.]+)%/g)]
+      .map(([, , h, s, l]) => oklchHue(hslToRgb(Number(h), Number(s), Number(l))))
+    expect(brandHues.length).toBeGreaterThanOrEqual(5)
+    for (const hue of brandHues) expect(Math.abs(hue - HUE)).toBeLessThan(0.2)
+  })
+
+  it('leaves the fill itself un-gamut-mapped', () => {
+    // Headroom is the whole reason the chroma is set as a fraction of the
+    // ceiling rather than at it: the browser silently chroma-reduces anything
+    // past the ceiling, which would make the declared value a lie and freeze
+    // any future retune in place.
+    const ceiling = chromaCeiling(L, HUE)
+    expect(C).toBeLessThan(ceiling)
+    expect(inSrgbGamut(oklchToLinearSrgb(L, C, HUE))).toBe(true)
+  })
+
+  it('stays saturated enough to read as a control, not a wash', () => {
+    // The 2026-08-06 pass sat at ~65% of the ceiling and read muddy next to
+    // Supabase's #3ECF8E, which runs ~88.6% of the ceiling at its own L/H.
+    // We now run 88.1% of ours — matched as a RATIO, because the absolute
+    // chroma that reads right moves with the lightness and the hue.
+    expect(C / chromaCeiling(L, HUE)).toBeGreaterThan(0.85)
+    expect(C / chromaCeiling(L, HUE)).toBeLessThan(0.95)
+  })
+
+  it('is brighter than the pass the user called dull and dark', () => {
+    // 2026-08-07b. Directional, not a re-statement of the literal above: the
+    // fill has been walked down (0.874 → 0.78) and back up, and the floor is
+    // what stops the next "tone it down" pass from landing under 0.78 again.
+    // The ceiling keeps it below --brand-400's L 0.874, which read as a
+    // pastel chip rather than a control.
+    expect(L).toBeGreaterThan(0.8)
+    expect(L).toBeLessThan(0.87)
+  })
+
+  it('carries its dark ink at AAA', () => {
+    // --primary-foreground: oklch(min(surface, fg-lightness) chroma*0.45 hue)
+    const ink = oklch(
+      Math.min(SURFACE, FOREGROUND_LIGHTNESS),
+      CHROMA * 0.45,
+      HUE,
+    )
+    expect(contrast(oklch(L, C, HUE), ink)).toBeGreaterThanOrEqual(7)
+  })
+
+  it('keeps the focus ring legible on the canvas', () => {
+    // SC 1.4.11. --ring: oklch(from var(--primary) 0.58 calc(c * 1.3) h) — and
+    // c * 1.3 has been over the ceiling at L 0.58 across every retune, so what
+    // actually renders is the gamut-mapped value. Measure that, not the
+    // requested one, or this test passes on a colour no browser draws.
+    const ringL = 0.58
+    const ring = oklch(ringL, Math.min(C * 1.3, chromaCeiling(ringL, HUE)), HUE)
+    expect(contrast(ring, canvas)).toBeGreaterThanOrEqual(3)
+  })
+
+  it('keeps the button hairline darker than the fill it edges', () => {
+    // --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c*1.25) h).
+    // The ×1.25 is gamut-mapped away at this hue, so the edge is carried by the
+    // lightness step alone — which means the lightness step is what has to hold.
+    const borderL = L - 0.12
+    const border = oklch(
+      borderL,
+      Math.min(C * 1.25, chromaCeiling(borderL, HUE)),
+      HUE,
+    )
+    expect(contrast(border, oklch(L, C, HUE))).toBeGreaterThan(1.4)
   })
 })
 
@@ -300,5 +479,31 @@ describe('interaction states', () => {
         expect(contrast(text, at('--background-blueprint-cell-pressed'))).toBeGreaterThanOrEqual(4.5)
       },
     )
+  })
+})
+
+describe('compare diff-column tint', () => {
+  const css = readFileSync(
+    fileURLToPath(new URL('../styles/blueprint.css', import.meta.url)),
+    'utf8',
+  )
+
+  // Compare v3's only canvas diff paint. Pinned to the tier-4 contract
+  // (--{property}-blueprint-{part}) and to the semantic warning family —
+  // "warning says THAT paths differ, path accents say WHO differs" — so a
+  // refactor cannot quietly swap it to a raw color-* or a path accent.
+  it('washes divergent columns with the semantic warning family', () => {
+    const tints = [
+      ...css.matchAll(
+        /--background-blueprint-diffcolumn:\s*color-mix\(\s*in oklab,\s*var\(--warning\)\s*(\d+)%,\s*transparent\s*\)/g,
+      ),
+    ].map(([, percent]) => Number(percent))
+
+    // One faint column wash + one stronger header tint.
+    expect(tints).toHaveLength(2)
+    const [column, header] = tints
+    expect(header).toBeGreaterThan(column)
+    // Light per-column highlight, not paint: both stay washes.
+    expect(header).toBeLessThanOrEqual(25)
   })
 })

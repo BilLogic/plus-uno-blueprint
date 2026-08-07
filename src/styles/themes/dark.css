@@ -12,7 +12,9 @@
 .dark {
   --helpers-os-appearance: Dark;
 
-  --hue: 183;
+  /* Same dial, same value as light — see the note in themes/light.css. The
+     brand hue is mode-invariant, so these two must move together. */
+  --hue: 177.6;
   /* `--surface-hue` is left at its `var(--hue)` default: dark surfaces carry a
      trace of the brand hue, which is what `--chroma: 0.005` is for. */
   --chroma: 0.005;

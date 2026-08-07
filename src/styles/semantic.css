@@ -159,16 +159,70 @@
    * filled button is too pale to read as a control against a near-white
    * canvas. The tint itself still exists in the ramp as `--brand-400`.
    * `--primary-foreground` is dark ink, not white — white on this fill
-   * measures ~2:1, dark ink 9.49.
+   * measures ~1.4:1, dark ink 12.90.
    */
-  /* Matcha-ceramic tuning (2026-08-06). The earlier pass chased Supabase's
-   * chroma punch and landed too dark and too loud; this one is calibrated
-   * against a matcha glaze reference instead — lighter (L 0.78) and muted
-   * (C 0.09, ~60% of the sRGB ceiling here), on the brand hue dial. The
-   * quiet fill is the point: identity comes from the hue, weight from the
-   * new 1px `--primary-border` edge rather than saturation.
-   * Dark ink on it measures 10.69:1. */
-  --primary: oklch(0.78 0.09 var(--primary-hue));
+  /* Retune history, compressed — each pass and the one fact it established:
+   *   2026-08-05  L 0.874 (= --brand-400). Read as a pastel chip, not a
+   *               control, against the near-white canvas. Established that
+   *               the ramp's own 400 step is too pale to be the fill.
+   *   2026-08-06  "matcha ceramic": L 0.78 / C 0.09, and the hue dial pushed
+   *               to 183. Established that LIGHTNESS was what made the
+   *               pre-matcha pass too heavy — but it dropped chroma at the
+   *               same time, which was collateral, and it moved the hue off
+   *               the brand ramp, which was a mistake (see below).
+   *   2026-08-07a C 0.09 → 0.12 at the same L. Established the chroma target:
+   *               match Supabase's utilisation of the sRGB ceiling at its own
+   *               L/H (#3ECF8E is oklch(0.762 0.154 159.4), 88.6% of its
+   *               ceiling) rather than any absolute chroma number.
+   *
+   * Brand-alignment + brightening pass (2026-08-07b). Two things were still
+   * wrong, and they had the same root:
+   *
+   * 1. HUE. The 2026-08-06 pivot to 183 left `--primary` 5.4° off the
+   *    `--brand-*` ramp, which sits at OKLCH hue 177.6 at every step. That
+   *    gap is small in the abstract and load-bearing in practice, because
+   *    `--primary` is the only brand surface derived from the hue dial:
+   *    every other brand usage in the app reads a ramp step, so the filled
+   *    button was the one element wearing a cyaner green than the brand it
+   *    belongs to. The dial is now 177.6 (themes/light.css, themes/dark.css)
+   *    and `--primary` is on the ramp's hue by construction.
+   *
+   * 2. LIGHTNESS. L 0.78 was chosen as a correction to 0.874 and overshot.
+   *    Now L 0.83 — brighter, but still 0.044 below the brand-400 step that
+   *    read as a chip, and the 1px `--primary-border` edge that did not exist
+   *    in the 0.874 pass is what lets the fill be lighter without going soft.
+   *
+   * Chroma follows the established target: at L 0.83 / H 177.6 the sRGB
+   * ceiling is C 0.1532, and 0.135 is 88.1% of it — Supabase's utilisation,
+   * with headroom so the fill itself is never gamut-mapped. Rendered:
+   * #48E4C7 (was #46D0BF). Dark ink on it measures 12.90:1 in light theme,
+   * 11.56:1 against dark-theme ink — both well past AAA's 7:1.
+   *
+   * `--primary` stays a computed triple rather than becoming `var(--brand-400)`
+   * the way Supabase's primary variant is `bg-brand-400 dark:bg-brand-500`.
+   * Two reasons, both structural: the ramp INVERTS between themes (light 400
+   * is L 0.874, dark 400 is L 0.306), while `--primary` is mode-invariant and
+   * feeds a single `--primary-foreground` that resolves to dark ink in both —
+   * dark ink on the dark theme's 400 would be ~1.5:1. And light 400 sits at
+   * only 63% of its chroma ceiling, which is the dullness this pass exists to
+   * fix. Aliasing would mean rebuilding the fill as a per-theme pair with a
+   * flipping on-colour; the drift the alias would have prevented is instead
+   * prevented by pinning the hue dial to the ramp.
+   *
+   * Derived tokens, all measured after CSS Color 4 gamut mapping:
+   *   --primary-border  wants C 0.1688 at L 0.71, ceiling 0.1311 → maps to
+   *     the ceiling, as it did before. The ×1.25 buys no chroma; the edge is
+   *     carried entirely by the −0.12 lightness step, 1.52:1 against the fill.
+   *   --ring  still ceiling-bound (wants 0.1755 at L 0.58, ceiling 0.1071),
+   *     so the chroma bump does not reach it — but the hue move does, so it
+   *     and its dependants (--sidebar-selected, --sidebar-selected-rail,
+   *     --sidebar-ancestor) shift 5.4° with the brand rather than staying
+   *     put. #008F7A, 4.00:1 on the light canvas and 4.55:1 on the dark one,
+   *     clearing SC 1.4.11's 3:1 in both.
+   * The multipliers are left as ratios rather than clamped to a literal:
+   * a hardcoded ceiling would be wrong the moment `--hue` moves, and the
+   * browser's chroma reduction is already the behaviour we want. */
+  --primary: oklch(0.83 0.135 var(--primary-hue));
   /* The Supabase button treatment: flat fill, one shade-darker hairline.
    * Derived, so it tracks any future retune of --primary. */
   --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c * 1.25) h);
@@ -249,6 +303,13 @@
    *
    * Warning sits at 75 (amber) rather than nearer yellow: yellow cannot darken
    * without going olive, so it loses contrast on light surfaces.
+   *
+   * Left unpinned through the 2026-08-07b brand move (--primary-hue 183 →
+   * 177.6). The pull is 15% of the distance from this reference, so a 5.4°
+   * brand move rotates each status hue by 0.81° — warning 78.6 → 77.79,
+   * destructive 28.6 → 27.79, info 291.6 → 290.79, none of them near a clamp
+   * bound. Decoupling to hold those three sub-degree deltas would cost the
+   * property the harmony math exists for: status hues that follow the brand.
    */
   --brand-hue-reference: 159;
   --status-hue-pull: 0.15;
@@ -374,5 +435,17 @@
   );
 }
 
-/* No P3 chroma boost for the matcha primary: the muted fill is deliberate,
- * and a wide-gamut deepening would fight it. Removed 2026-08-06. */
+/* No P3 chroma boost for the primary — but the reason changed on 2026-08-07.
+ *
+ * The old reason ("the muted fill is deliberate") stopped being true when the
+ * saturation pass took C from 0.09 to 0.12; it now runs 0.135, 88.1% of the
+ * sRGB ceiling. The fill is not deliberately quiet, so that reason is retired.
+ *
+ * The reason it still doesn't get one: `--primary-border` and `--ring` are
+ * both already pinned to the sRGB ceiling at their lightnesses (see the note
+ * on `--primary`). Widening only `--primary` in a P3 block would push the fill
+ * past an edge and a focus ring that cannot follow it, inverting the
+ * relationship the pair is built on — the edge would read *less* saturated
+ * than the fill it is supposed to anchor. A P3 pass that is worth doing has to
+ * move the whole brand triplet together, and that is a deliberate piece of
+ * work, not a one-line boost. */

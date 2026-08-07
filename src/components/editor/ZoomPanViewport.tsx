@@ -6,6 +6,7 @@ import { CanvasSelectionProvider } from '@/components/editor/CanvasSelectionProv
 import { CanvasPenCursor } from '@/components/editor/CanvasPenCursor'
 import { EditorSequenceNav } from '@/components/editor/EditorSequenceNav'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
+import { registerFocusCells } from '@/lib/canvasFocusCells'
 import { CanvasAnnotationProvider } from '@/contexts/CanvasAnnotationProvider'
 import { usePublishCanvasZoomChrome } from '@/contexts/CanvasZoomChromeContext'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
@@ -27,6 +28,12 @@ type ZoomPanViewportProps = {
   refitOnResize?: boolean
   /** Shows a "Reset View" action in the canvas navbar (focus mode). */
   onResetView?: () => void
+  /**
+   * Registers this viewport's `focusCells` in the module registry under
+   * this key (the focused scenario's slide id) — the fly-to-cell pipeline
+   * for the difference ledger, the divergence strip and agent commands.
+   */
+  focusCellsKey?: string
 }
 
 /** Zoom/pan canvas wrapper. Provides the annotation context its layer and toolbar both read. */
@@ -52,6 +59,7 @@ function ZoomPanViewportInner({
   showSequenceNav = true,
   refitOnResize = true,
   onResetView,
+  focusCellsKey,
 }: ZoomPanViewportProps) {
   const { isAnnotating } = useCanvasAnnotations()
   const {
@@ -63,6 +71,7 @@ function ZoomPanViewportInner({
     zoomIn,
     zoomOut,
     fitToView,
+    focusCells,
   } = useZoomPanViewport({
     resetKey,
     panIgnoreSelector,
@@ -78,6 +87,14 @@ function ZoomPanViewportInner({
   })
 
   usePublishCanvasZoomChrome(onResetView)
+
+  // Cross-tree fly-to-cell: portalled surfaces (ledger drawer, agent
+  // commands) resolve this at call time from the module registry —
+  // `focusCells` is identity-stable, so this re-registers only on key moves.
+  useEffect(() => {
+    if (!focusCellsKey) return
+    return registerFocusCells(focusCellsKey, focusCells)
+  }, [focusCells, focusCellsKey])
 
   // Agent parity: camera controls (otherwise keyboard-only ⌘+/⌘−/⌘0).
   useEffect(() => {

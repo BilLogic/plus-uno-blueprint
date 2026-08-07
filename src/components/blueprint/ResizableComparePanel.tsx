@@ -25,6 +25,14 @@ import { cn } from '@/lib/utils'
 
 type ResizableComparePanelProps = {
   children: ReactNode
+  /**
+   * Panel-chrome bar (the divergence strip) docked above the content.
+   * Rendered OUTSIDE `contentMeasureRef` on purpose: measuring it would
+   * feed its own height back into the panel size — a measure loop.
+   */
+  chromeBar?: ReactNode
+  /** The chrome bar's fixed height, added to the panel's target height. */
+  chromeBarHeight?: number
   minWidth?: number
   minHeight?: number
   defaultWidth?: number
@@ -58,6 +66,8 @@ type ResizableComparePanelProps = {
  */
 export function ResizableComparePanel({
   children,
+  chromeBar,
+  chromeBarHeight = 0,
   minWidth,
   minHeight,
   defaultWidth,
@@ -140,11 +150,15 @@ export function ResizableComparePanel({
     resolvedMinWidth,
     measuredPanelWidth ?? defaultWidth ?? resolvedMinWidth,
   )
-  const targetHeight = Math.max(
-    resolvedMinHeight,
-    lockHeight ? (defaultHeight ?? resolvedMinHeight) : 0,
-    measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
-  )
+  // The chrome bar (divergence strip) sits outside the measured content, so
+  // its fixed height is added here rather than observed — no measure loop.
+  const chromeHeight = chromeBar ? chromeBarHeight : 0
+  const targetHeight =
+    Math.max(
+      resolvedMinHeight,
+      lockHeight ? (defaultHeight ?? resolvedMinHeight) : 0,
+      measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
+    ) + chromeHeight
   const size = {
     width: Math.max(targetWidth, userSize.width),
     height: lockHeight ? targetHeight : Math.max(targetHeight, userSize.height),
@@ -324,6 +338,7 @@ export function ResizableComparePanel({
         }
         onPointerDown={(e) => e.stopPropagation()}
       >
+      {chromeBar}
       <div
         ref={scrollContainerRef}
         className={cn(

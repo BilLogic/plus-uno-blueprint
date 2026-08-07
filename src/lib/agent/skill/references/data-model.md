@@ -34,7 +34,7 @@ erDiagram
 
   service_lifecycles { uuid id PK  text name  text description }
   phases { uuid id PK  uuid service_lifecycle_id FK  text name  text description  int order_position  uuid loops_to_phase_id FK "optional self-reference" }
-  service_scenarios { uuid id PK  uuid phase_id FK  text name  text description  int order_position  text view_type "single | side-by-side | integrated" }
+  service_scenarios { uuid id PK  uuid phase_id FK  text name  text description  int order_position  text view_type "DB tokens: single | side-by-side | integrated (UI: single | stacked | merged)" }
   paths { uuid id PK  uuid service_scenario_id FK  text name  text description  text note "optional, e.g. parallel-scenario context"  text path_type "happy | unhappy | exception | alternative" }
   steps { uuid id PK  uuid service_scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
   path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int column_position "unique per (path_id, column_position)" }
@@ -60,10 +60,15 @@ erDiagram
 ## Enums
 
 - `service_scenarios.view_type`: `single` \| `side-by-side` \| `integrated`
+  — these are the STORED (DB) tokens; the UI vocabulary is `single` \|
+  `stacked` \| `merged`, mapped in `src/lib/viewTypeVocabulary.ts`
   - `single`: one path at a time (path picker)
-  - `side-by-side`: labeled variant comparison — any two labeled variants
-    ("as designed" vs "reality" is just the default labeling)
-  - `integrated`: runtime merge of all the scenario's paths into one grid
+  - `side-by-side` (UI: "Stacked"): labeled variant comparison — any two
+    labeled variants ("as designed" vs "reality" is just the default labeling)
+  - `integrated`: legacy value; persisted rows coerce to the plain Stacked
+    view on read. The UI's "Merged" canvas (the compared paths drawn as one
+    combined blueprint) is session-only and is never written back as
+    `integrated`
 - `paths.path_type`: `happy` \| `unhappy` \| `exception` \| `alternative`
 
 ## Integrity trigger (why import order matters)

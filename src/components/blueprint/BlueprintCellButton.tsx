@@ -5,7 +5,12 @@ import {
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasAnnotationsOptional } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
-import { clickOpensDetail, clickPicks, pickModeForClick } from '@/lib/cellPickGrammar'
+import {
+  clickOpensDetail,
+  clickPicks,
+  detailClickCloses,
+  pickModeForClick,
+} from '@/lib/cellPickGrammar'
 import { useSliceMembership } from '@/contexts/sliceMembershipContext'
 import {
   blueprintCellButtonClassName,
@@ -174,7 +179,8 @@ export function BlueprintCellButton({
       The grammar lives in one place — `cellPickGrammar` — and the branch
       order here is the whole of it: ⌘/ctrl reads, everything else picks
       (when there is a picker), and a bare click on a canvas with no picker
-      opens, because that is all a click can mean there.
+      opens the panel — or closes it, when the panel is already showing this
+      exact cell.
 
       Double-click deliberately does nothing special. In a toggle grammar,
       click-in click-out *is* a fast double-click — the two are
@@ -191,6 +197,33 @@ export function BlueprintCellButton({
 
     if (pickCellId && pick && clickPicks(event, pick.plainClick)) {
       pick.pick(pickCellId, pickModeForClick(event, pick.gathers ?? false))
+      return
+    }
+    /*
+      A bare click on the cell the panel is already showing closes it. The
+      close goes through `closePanel` — the SAME single owner the ✕ and
+      Escape use — rather than a second "is it open" fact living out here;
+      `panelState` stays the one thing that knows. All four non-toggling
+      cases (⌘-click, synthetic clicks, the Differences surface, an open
+      draft) are decided inside `detailClickCloses`, next to the rest of the
+      click grammar, so this branch is just which verb to call.
+    */
+    if (
+      detailClickCloses({
+        event: {
+          shiftKey: event.shiftKey,
+          metaKey: event.metaKey,
+          ctrlKey: event.ctrlKey,
+          // The native flag, not React's mirror of it: this is the one field
+          // separating a person's click from the agent's dispatched one.
+          isTrusted: event.nativeEvent.isTrusted,
+        },
+        openSurface: detail!.panelState?.surface ?? null,
+        current: detail!.selection,
+        next: selection!,
+      })
+    ) {
+      detail!.closePanel()
       return
     }
     detail!.selectCell(selection!)

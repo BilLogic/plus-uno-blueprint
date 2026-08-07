@@ -10,12 +10,21 @@
 
   --radius: 0.625rem;
 
-  /* Brand hue. 183 is the matcha-ceramic pivot (2026-08-06): sampled from
-     the reference glaze (H 190–200) and pulled back toward the original
-     #85ECD5 teal (H 177.6) so it still reads as this product's brand. The
-     numeric --brand-* ramp below still sits at the old hue — 5.4° apart,
-     under the 10° drift threshold; re-derive it when it's next touched. */
-  --hue: 183;
+  /* Brand hue, and the one place it is declared. 177.6 is the OKLCH hue of
+     #85ECD5 — this product's specified blue-green — and it is also, exactly,
+     the hue of every step of the `--brand-*` ramp below (the ramp is OKLCH
+     points at 177.6 written out as HSL, so its HSL hue numbers read 163–171
+     while its OKLCH hue is 177.6 throughout; do not read the HSL triples as
+     a hue reference).
+
+     2026-08-06 moved this to 183 as a "matcha-ceramic pivot" and noted the
+     resulting 5.4° gap from the ramp as sub-threshold drift. It was not
+     harmless: `--primary` is the ONLY brand surface derived from this dial,
+     so the gap put the filled button on a cyaner hue than every other brand
+     usage in the app, which is what "the button looks off but the brand
+     looks fine" was. Closed on 2026-08-07 by moving the dial back onto the
+     ramp rather than re-deriving the ramp onto the dial. */
+  --hue: 177.6;
   /* Warm grey canvas, decoupled from the brand hue (`--surface-hue` defaults to
      `--hue`; overriding it is the point of splitting the two). Moot while
      `--chroma` is 0, but it is what a tinted light theme would turn. */

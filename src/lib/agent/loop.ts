@@ -86,7 +86,19 @@ export type TranscriptEvent =
       attachmentLabel?: string
     }
   | { kind: 'assistant'; text: string }
-  | { kind: 'tool'; name: string; summary: string; isError: boolean }
+  | {
+      kind: 'tool'
+      name: string
+      summary: string
+      isError: boolean
+      /**
+       * What the row expands to show. Presentation only — nothing reads
+       * these back into the conversation, and they are absent on rows
+       * rehydrated from `agent_messages`, which renders the row flat.
+       */
+      args?: string
+      result?: string
+    }
   | { kind: 'status'; text: string }
 
 type SessionRun = {
@@ -141,11 +153,21 @@ export function stopAgent(sessionId: string): void {
   runs.get(sessionId)?.controller?.abort()
 }
 
+/** The event minus its view-only fields — what agent_messages stores. */
+function persistable(event: TranscriptEvent): TranscriptEvent {
+  if (event.kind !== 'tool') return event
+  const { args: _args, result: _result, ...rest } = event
+  return rest
+}
+
 function push(sessionId: string, event: TranscriptEvent): void {
   const run = runFor(sessionId)
   run.events.push(event)
   // Best-effort write-through; a no-op without an authenticated client.
-  persistEvent(sessionId, run.events.length - 1, event)
+  // The tool row's expandable detail is deliberately NOT persisted: it is a
+  // presentation affordance for the live run, and the stored payload shape
+  // stays exactly what it has always been.
+  persistEvent(sessionId, run.events.length - 1, persistable(event))
   emit()
 }
 
@@ -175,6 +197,21 @@ export async function hydrateAgentTranscript(sessionId: string): Promise<void> {
     return []
   })
   emit()
+}
+
+/**
+ * Transcript-row detail text. Capped: a row is a reviewer's peek at the
+ * payload, not a place to hold a megabyte of tool output in memory.
+ */
+const DETAIL_LIMIT = 2000
+
+function detailText(value: unknown): string {
+  const text =
+    typeof value === 'string' ? value : JSON.stringify(value, null, 2)
+  if (!text) return ''
+  return text.length > DETAIL_LIMIT
+    ? `${text.slice(0, DETAIL_LIMIT)}\n… (${text.length - DETAIL_LIMIT} more characters)`
+    : text
 }
 
 /** One-line label for a tool call — the transcript's change-row text. */
@@ -332,6 +369,8 @@ export async function sendToAgent(input: {
             name: call.name,
             summary: callSummary(call),
             isError: false,
+            args: detailText(call.args),
+            result: detailText(output),
           })
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
@@ -347,6 +386,8 @@ export async function sendToAgent(input: {
             name: call.name,
             summary: message,
             isError: true,
+            args: detailText(call.args),
+            result: detailText(`Error: ${message}`),
           })
         }
       }

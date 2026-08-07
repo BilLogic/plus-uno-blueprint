@@ -10,7 +10,10 @@ triggers take `render={...}`). Verified against the directory 2026-08-04.
 | Session groups (Today/Earlier) | `SidebarNav` NavSection (composes `collapsible.tsx`) | the sidebar's one disclosure vocabulary |
 | Session fuzzy search | `input.tsx` + subsequence filter | OwnerTagSelect's filter-as-you-type pattern; add shadcn `command` only if this proves insufficient |
 | Chat header (‹ back · title · count) | `button.tsx` | nothing else in the header — transcript owns the height |
-| Transcript tool-call rows | `collapsible.tsx` + `badge.tsx` | ✦ badge; reuse `describeChange` vocabulary |
+| Transcript tool-call rows | `collapsible.tsx` + `marker.tsx` | collapsed = the quiet one-liner; open = arguments + result. Same disclosure vocabulary as a collapsed assistant turn. The payload is live-run only — nothing extra is persisted |
+| Composer field | `input-group.tsx` (`InputGroup` + `InputGroupTextarea` + `InputGroupAddon`) | the group owns the border AND the single focus ring; the control stays borderless. NEVER hand-roll `border + focus-within:ring` around a bare textarea — that is the box-around-a-box. `field-sizing-content` auto-grows it, so no imperative height writes |
+| Slash (`/sb:*`) menu | `popover.tsx` anchored to the composer + `command.tsx` (`shouldFilter={false}`) | MUST be portalled: cmdk's `scrollIntoView` walks every scrollable ancestor, `overflow:hidden` included, and would scroll the dock chrome. Size to `w-(--anchor-width)`, never a fixed width — the docked panel is 272px. `initialFocus={false}` keeps typing in the textarea |
+| Streaming | `spinner.tsx`/`Loader2` inside a `marker.tsx` row with `role="status"` | a transcript row, not a loose glyph appended after the list |
 | Stop / send | `button.tsx` + `spinner.tsx` | |
 | Provider + model pickers | `dropdown-menu.tsx` | model list fetched live from the provider; curated fallback |
 | Key entry (⚙) | `popover.tsx` + `input.tsx` type=password | masked after save; localStorage only |
@@ -24,8 +27,43 @@ Rule of thumb: a need that seems to lack a primitive usually has a
 precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 `SlicesSidebarSection` before assuming it's missing.
 
-Full DS directory today: accordion, alert, attachment, badge, breadcrumb,
-bubble, button, card, carousel, collapsible, context-menu,
-deferred-skeleton, dialog, drawer, dropdown-menu, input, marker, menubar,
-message, message-scroller, navigation-menu, popover, separator, sheet,
-sidebar, skeleton, spinner, tabs, toggle-group, toggle, tooltip.
+## Compare review cockpit (Compare v3, Phases 3–4b)
+
+| Need | Primitive | Note |
+|---|---|---|
+| Stacked ⇄ Merged mode toggle | `editor/SegmentedControl` in `PhaseMenubarHeader` | Two canvases over one compare model. Stacked = `StackedCompareGrid` (one band per path). Merged = `MergedCompareGrid`: ONE combined blueprint — one lane rail, one canonical step axis, per-slot merge (agreeing slot → one bare cell; divergent → each path's cell(s) stacked with a colour+dash path rail and short label; every sub-cell keeps its own cellId, so selection/focus are unchanged). Entering Merged also applies the reading preset (fold + Differences surface); leaving unfolds. Same via agent `set_scenario_view merged` — one seam in `ScenarioBlueprintPanel` |
+| Details │ Differences surface switch | `editor/SegmentedControl` (composes `toggle-group.tsx`) | ONE `PanelSurfaceSwitcher` in `BlueprintCellDetailPanel`, two call sites; top-level panel chrome, only while ≥2 paths compared. NO count on the tab |
+| Difference ledger step groups | `accordion.tsx`, controlled | one group per divergent STEP ("Step N · label"), one open at a time; open state = the compare store's `activeStepKey`, shared with the strip and `jump_divergence`. One step group + no detail-only renders flat |
+| Ledger group count | trailing number at the END of the group header row | post-filter, right-aligned. With the menubar Diff pill these are the app's ONLY two difference counts — no totals in the panel header, none on the panel tab |
+| Ledger filter | `popover.tsx` + pressed chips | lane + verdict + STEP facets (divergent steps only, canonical order), empty = all; same grammar as `differences_filter` |
+| Zone numbering ①②③ | `blueprint/CompareZoneChip` | strip only. A zone is a divergence RUN (topology); the ledger's grain is the step, and its group header already says "Step N", so no chip there |
+| Divergence strip | `blueprint/CompareDivergenceStrip` | SVG braid, segment buttons (≥44px hits), sidebar-selection idiom for the segment containing the active step; `◀/▶` walk divergent STEPS, a segment activates its run's first step; navigation only |
+| Fly-to-cell + counterpart pulse | `lib/canvasFocusCells` registry → `useZoomPanViewport.focusCells` | resolve at call time by scenario id; pulse = `[data-blueprint-cell-pulse]`, reduced-motion aware |
+| Cross-surface compare state | `lib/compareReviewStore` (module store + `useSyncExternalStore`) | model registration, active zone, ledger filters, ledger-open flag, fold state |
+| `[⇤ Fold]` menubar toggle | `button.tsx` ghost + `aria-pressed` + `tooltip.tsx` | pressed styling is ghost's OWN `aria-pressed:` rule (brand-tint `bg-sidebar-selected`, re-asserted on hover) — never hand-written at the call site; disabled at 0 differences or 0 foldable columns; tooltip carries the "Fold N shared steps" count |
+| `[Diff N]` menubar toggle | `button.tsx` ghost + `aria-pressed` + counter pill | `Diff` lucide icon + the word "Diff" + a `rounded-full` mono pill; pressed = panel open on Differences, and clicking then closes the panel via the context's atomic `closePanel` |
+| Folded pleats | `blueprint/BlueprintPathBand` `ComparePleatCell` + `tooltip.tsx` | one fixed 28px track per shared run fragment (pin-split, `lib/compareFold`); click expands; `gridTemplateColumns` never animates |
+| Pinned-column explainer | `Link2` glyph in the column header + `tooltip.tsx` | one-hop pin rule (`computePinnedColumns`) — "kept expanded — feeds a divergent step" |
+| Fly-to while folded | `lib/compareZoneNavigation.focusCompareCells` | THE compare focus gesture: auto-expands the target's pleat, waits two rAFs, aborts on a newer generation |
+
+Agent parity for these surfaces: ui commands `differences_open`,
+`differences_close`, `panel_surface <details|differences>`,
+`differences_filter <lane:"…" verdict:… step:"…">`, `jump_divergence
+<next|prev|step number>`, `collapse_shared <true|false|empty toggles>`,
+`toggle_pleat <columnKey or 1-based pleat index>`; read tool
+`get_compare_diff` (headless `buildCompareModel` — grounds step numbers,
+lane/step names, columnKeys and cell ids); `get_ui_state` gains a `compare`
+line (mode, paths, counts, active step, ledger open + filters, fold
+state).
+
+Full DS directory today (re-listed 2026-08-07): accordion, alert,
+attachment, badge, breadcrumb, bubble, button, card, carousel,
+collapsible, command, context-menu, deferred-skeleton, dialog, drawer,
+dropdown-menu, input, input-group, marker, menubar, message,
+message-scroller, navigation-menu, popover, separator, sheet, sidebar,
+skeleton, spinner, tabs, textarea, toggle-group, toggle, tooltip.
+
+The chat primitives (`bubble`, `marker`, `message`, `message-scroller`)
+are all built for `text-sm`. That is the transcript's ONE ladder — do not
+re-open the `text-xs`/`text-2xs`/`text-3xs` override war inside it.
+`text-2xs` and below belong to panel chrome, not to the conversation.

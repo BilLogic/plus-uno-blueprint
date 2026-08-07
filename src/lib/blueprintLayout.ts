@@ -46,6 +46,26 @@ export function shouldUsePillCellContent(layer: LayerRoleSource): boolean {
   )
 }
 
+/** Which face a lane's cells wear — pill stack, step visual, or plain cell. */
+export type BlueprintCellVariant = 'default' | 'pills' | 'visual'
+
+/**
+ * Whether a cell has anything to draw for its lane's variant. A visual cell
+ * is decided by its pictures upstream, a pill cell by having at least one
+ * parsable item, a plain cell by non-blank content.
+ */
+export function hasBlueprintCellContent(
+  content: string | undefined,
+  variant: BlueprintCellVariant,
+): boolean {
+  if (variant === 'visual') return true
+  if (!content?.trim()) return false
+  if (variant === 'pills') {
+    return parseCellContentItems(content).length > 0
+  }
+  return true
+}
+
 export function shouldUseVisualContent(layer: LayerRoleSource): boolean {
   const role = getLayerRole(layer)
   return (

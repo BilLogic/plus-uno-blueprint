@@ -1,8 +1,6 @@
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
 import {
-  BLUEPRINT_CANVAS_INNER_PADDING,
   BLUEPRINT_ARTBOARD_HEIGHT_BUFFER,
-  BLUEPRINT_ARTBOARD_WIDTH_BUFFER,
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
   BLUEPRINT_HEADER_HEIGHT_COMPACT,
   BLUEPRINT_LAYER_ROW_GAP,
@@ -14,16 +12,15 @@ import {
   INTERACTION_LINE_LABEL,
   INTERNAL_INTERACTION_LINE_LABEL,
   VISIBILITY_LINE_LABEL,
-  getCellContentMinHeight,
   getLayerRowMinHeight,
   getStepColumnsWidth,
+  STEP_COLUMN_GAP,
   layerHasOverheadArrowCorridor,
   layerHasWrapCorridorBelow,
   shouldShowInteractionLineAfter,
   shouldShowInternalInteractionLineAfter,
   shouldShowLaneDividerAfter,
   shouldShowVisibilityLineAfter,
-  type ArtboardSize,
 } from '@/lib/blueprintLayout'
 import {
   COMPARE_LAYER_COLLAPSED_HEIGHT,
@@ -33,44 +30,15 @@ import {
   isParallelSessionLeadBottomWrapTrigger,
   isParallelSessionPartnerWrapTrigger,
 } from '@/data/parallelSessionPartnerLead'
-import { deriveSourceBlueprintsFromIntegrated, mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
-import { PATH_TYPE_SECTION_BORDER_WIDTH } from '@/lib/pathTypeTheme'
 import type { PathListItem } from '@/lib/pathSelection'
 import { itemsInSelectionOrder } from '@/lib/pathSelection'
 import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
 import type {
   IntegratedBlueprintCell,
-  IntegratedBlueprintData,
   IntegratedBlueprintStep,
   IntegratedBlueprintTrigger,
 } from '@/types/integratedBlueprint'
 import type { SlideViewType } from '@/types/nav'
-
-export type IntegratedLayoutOptions = {
-  fitVertically?: boolean
-  /** When set, row heights match side-by-side compare for the same paths. */
-  sourceBlueprints?: BlueprintData[]
-  selectedPathIds?: string[]
-}
-
-function resolveIntegratedSourceBlueprints(
-  data: IntegratedBlueprintData,
-  options?: IntegratedLayoutOptions,
-): BlueprintData[] {
-  let blueprints =
-    options?.sourceBlueprints && options.sourceBlueprints.length > 0
-      ? options.sourceBlueprints
-      : deriveSourceBlueprintsFromIntegrated(data)
-
-  if (options?.selectedPathIds && options.selectedPathIds.length > 0) {
-    const selected = new Set(options.selectedPathIds)
-    blueprints = blueprints.filter((blueprint) =>
-      selected.has(blueprint.path.id),
-    )
-  }
-
-  return blueprints
-}
 
 export type ComparePathArrowData = {
   triggers: IntegratedBlueprintTrigger[]
@@ -78,10 +46,20 @@ export type ComparePathArrowData = {
   steps: IntegratedBlueprintStep[]
 }
 
+/**
+ * One path's arrow inputs. `foldedStepIds` (from the compare model + fold
+ * state, never the DOM) drops any trigger with an endpoint inside a
+ * collapsed pleat HERE, at the data level — a declared drop, so the overlay
+ * never silently misses a DOM anchor the fold removed.
+ */
 export function getComparePathArrowData(
   blueprint: BlueprintData,
+  foldedStepIds?: ReadonlySet<string>,
 ): ComparePathArrowData {
   const { path, cells, triggers, steps } = blueprint
+  const keepTrigger = (stepId: string | undefined) =>
+    stepId === undefined || !foldedStepIds?.has(stepId)
+  const stepIdByCellId = new Map(cells.map((cell) => [cell.id, cell.step_id]))
 
   return {
     steps: steps.map((step) => ({
@@ -100,14 +78,22 @@ export function getComparePathArrowData(
       links: cell.links,
       opacity: 1,
     })),
-    triggers: triggers.map((trigger) => ({
-      id: trigger.id,
-      source_cell_id: trigger.source_cell_id,
-      target_cell_id: trigger.target_cell_id,
-      path_id: path.id,
-      path_type: path.path_type,
-      opacity: 1,
-    })),
+    triggers: triggers
+      .filter(
+        (trigger) =>
+          foldedStepIds === undefined ||
+          foldedStepIds.size === 0 ||
+          (keepTrigger(stepIdByCellId.get(trigger.source_cell_id)) &&
+            keepTrigger(stepIdByCellId.get(trigger.target_cell_id))),
+      )
+      .map((trigger) => ({
+        id: trigger.id,
+        source_cell_id: trigger.source_cell_id,
+        target_cell_id: trigger.target_cell_id,
+        path_id: path.id,
+        path_type: path.path_type,
+        opacity: 1,
+      })),
   }
 }
 
@@ -271,15 +257,6 @@ export type ScenarioSwimlaneLayoutInput = {
   collapsedLayerIds?: ReadonlySet<string>
 }
 
-function getScenarioBlueprints(
-  paths: PathListItem[],
-  blueprintsByPathId: Map<string, BlueprintData>,
-): BlueprintData[] {
-  return paths
-    .map((path) => blueprintsByPathId.get(path.id))
-    .filter((blueprint): blueprint is BlueprintData => blueprint !== undefined)
-}
-
 export function buildSideBySideLabelRowSpecs(
   blueprints: BlueprintData[],
   compact = false,
@@ -342,38 +319,25 @@ export function buildSideBySideLabelRowSpecs(
   return specs
 }
 
-/** Shared row specs for integrated and side-by-side scenario/phase panels. */
+/** Shared row specs for scenario/phase compare panels. */
 export function getScenarioSwimlaneRowSpecs(
   options: ScenarioSwimlaneLayoutInput,
 ): BlueprintLabelRowSpec[] {
   const {
     displayViewType,
-    paths,
     selectedPathIds,
     blueprintsByPathId,
     compact = false,
     collapsedLayerIds = new Set(),
   } = options
 
-  const allBlueprints = getScenarioBlueprints(paths, blueprintsByPathId)
-
-  if (displayViewType === 'integrated' && allBlueprints.length > 0) {
-    if (selectedPathIds.length === 0) return []
-
-    const integrated = mergeIntegratedBlueprint(allBlueprints, selectedPathIds)
-    if (integrated) {
-      return buildIntegratedLabelRowSpecs(
-        integrated.layers,
-        integrated,
-        compact,
-        collapsedLayerIds,
-        { sourceBlueprints: allBlueprints, selectedPathIds },
-      )
-    }
-  }
-
+  // 'merged' shares the compare row anatomy — overview rows render it as
+  // stacked anyway, and the focused stacked arrangement reuses these specs
+  // per band.
   const useCompareLayout =
-    (displayViewType === 'side-by-side' || displayViewType === 'single') &&
+    (displayViewType === 'stacked' ||
+      displayViewType === 'merged' ||
+      displayViewType === 'single') &&
     selectedPathIds.length > 0
 
   if (useCompareLayout) {
@@ -440,7 +404,7 @@ export function resolveBlueprintLayer(
 
 /**
  * Structural blueprint shape for in-lane loop detection — satisfied by both
- * `BlueprintData` (single path) and `IntegratedBlueprintData` (merged paths).
+ * `BlueprintData` (a single path's blueprint).
  */
 type InLaneLoopLayoutSource = {
   layers: BlueprintLayer[]
@@ -668,27 +632,127 @@ export function getComparePanelHeight(
   )
 }
 
-export function getSideBySideCompareArtboardSize(
-  blueprints: BlueprintData[],
-  options?: { compact?: boolean },
-): ArtboardSize {
-  const compact = options?.compact ?? false
-  if (blueprints.length === 0) {
-    return { width: 960, height: 540 }
-  }
+/* ---------------------------------------------------------------------------
+ * Stacked arrangement (focused scenario view): one canonical step-column
+ * axis, one full band per path stacked top-to-bottom. Estimates only — the
+ * panel's measurement overrides once content renders.
+ * ------------------------------------------------------------------------ */
 
-  return {
-    width:
-      getCompareGridWidth(blueprints, compact) +
-      BLUEPRINT_CANVAS_INNER_PADDING * 2 +
-      BLUEPRINT_ARTBOARD_WIDTH_BUFFER,
-    height: Math.max(
-      480,
-      getCompareGridHeight(blueprints, compact) +
-        BLUEPRINT_CANVAS_INNER_PADDING * 2 +
-        BLUEPRINT_ARTBOARD_HEIGHT_BUFFER,
-    ),
-  }
+/** Vertical gap between stacked path bands — room for both bands' section
+ *  frame insets (20 + 20) plus the lower band's title badge overhang. */
+export const COMPARE_STACKED_BAND_GAP = 64
+/** Fixed track width of one folded pleat (Phase 4a) — a whole run of shared
+ *  columns compresses to this. */
+export const COMPARE_PLEAT_TRACK_WIDTH = 28
+/** Gap between the step-header row and the first band's rows. */
+export const COMPARE_STACKED_HEADER_GAP = 36
+
+/** One band's box height: its lane-row tracks plus the row gaps between them
+ *  (section-frame insets live in the band gaps, not the band box). */
+export function getStackedCompareBandBodyHeight(
+  rows: SwimlaneRowSpec[],
+): number {
+  const trackHeights = rows.reduce(
+    (sum, row) => sum + getCompareRowTrackHeight(row),
+    0,
+  )
+  return trackHeights + Math.max(0, rows.length - 1) * BLUEPRINT_LAYER_ROW_GAP
+}
+
+/** Stacked board width for a canonical column count: rail + step columns. */
+export function getStackedCompareGridWidth(columnCount: number): number {
+  return (
+    COMPARE_LABEL_WIDTH +
+    STEP_COLUMN_GAP +
+    getStepColumnsWidth(Math.max(1, columnCount)) +
+    COMPARE_PANEL_PADDING +
+    COMPARE_PANEL_PADDING_RIGHT
+  )
+}
+
+export function getStackedCompareGridHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+  collapsedLayerIds: ReadonlySet<string> = new Set(),
+): number {
+  if (blueprints.length === 0) return COMPARE_MIN_PANEL_HEIGHT
+  const rows = buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds)
+  const bandBody = getStackedCompareBandBodyHeight(rows)
+
+  return (
+    COMPARE_STEP_HEADER_HEIGHT +
+    COMPARE_STACKED_HEADER_GAP +
+    blueprints.length * bandBody +
+    Math.max(0, blueprints.length - 1) * COMPARE_STACKED_BAND_GAP +
+    COMPARE_PATH_SECTION_BOTTOM_INSET +
+    COMPARE_PANEL_PADDING * 2
+  )
+}
+
+export function getStackedComparePanelWidth(columnCount: number): number {
+  return (
+    getStackedCompareGridWidth(columnCount) +
+    ARROW_VIEWPORT_PAD * 2 +
+    (COMPARE_PANEL_PADDING_RIGHT - COMPARE_PANEL_PADDING)
+  )
+}
+
+export function getStackedComparePanelHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+): number {
+  return (
+    getStackedCompareGridHeight(blueprints, compact) +
+    getComparePanelScrollPaddingY()
+  )
+}
+
+/* ---------------------------------------------------------------------------
+ * Merged arrangement (focused scenario view): ONE band on the same canonical
+ * step axis, whose slots swell vertically wherever the paths disagree.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Merged lane rows must GROW: a divergent slot stacks one cell per path
+ * inside a single row, so a fixed `Npx` track (what the stacked bands use)
+ * would clip the swell. `minmax(Npx, auto)` keeps the shared floor — a lane
+ * with no divergence measures exactly as it does in Stacked.
+ */
+export function getMergedCompareRowTrackCss(row: CompareRowHeightSpec): string {
+  return `minmax(${getCompareRowTrackHeight(row)}px, auto)`
+}
+
+/**
+ * Merged is about one band tall. The swell over divergent slots is
+ * deliberately NOT estimated: the panel measures rendered content and the
+ * measurement replaces this floor, and a hot estimate here would be dead
+ * gray space on a board that happens to agree everywhere.
+ */
+export function getMergedCompareGridHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+  collapsedLayerIds: ReadonlySet<string> = new Set(),
+): number {
+  if (blueprints.length === 0) return COMPARE_MIN_PANEL_HEIGHT
+  const rows = buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds)
+
+  return (
+    COMPARE_STEP_HEADER_HEIGHT +
+    COMPARE_STACKED_HEADER_GAP +
+    getStackedCompareBandBodyHeight(rows) +
+    COMPARE_PATH_SECTION_BOTTOM_INSET +
+    COMPARE_PANEL_PADDING * 2
+  )
+}
+
+export function getMergedComparePanelHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+): number {
+  return (
+    getMergedCompareGridHeight(blueprints, compact) +
+    getComparePanelScrollPaddingY()
+  )
 }
 
 export function layerHasDiscoveryRailCorridorAbove(
@@ -714,288 +778,4 @@ export function layerHasInternalInteractionLine(
   layers?: BlueprintLayer[],
 ): boolean {
   return shouldShowInternalInteractionLineAfter(layer, layers)
-}
-
-/**
- * Compare mode: a divergent slot renders one band per path stacked
- * vertically inside the slot, so the row must be as tall as its tallest
- * *stack*, not its tallest single cell. Rows grow to give the bands room
- * rather than squeezing them into the single-cell estimate.
- */
-function getCompareStackedRowExtra(
-  layer: BlueprintLayer,
-  data: IntegratedBlueprintData,
-  compact: boolean,
-): number {
-  let tallest = 0
-  const slots = new Map<string, Map<string, number>>()
-  for (const cell of data.cells) {
-    if (cell.layer_id !== layer.id || cell.compare !== 'divergent') continue
-    const slotKey = cell.step_id
-    const perPath = slots.get(slotKey) ?? new Map<string, number>()
-    const height =
-      (perPath.get(cell.path_id) ?? 0) +
-      getCellContentMinHeight(layer, cell.content, compact)
-    perPath.set(cell.path_id, height)
-    slots.set(slotKey, perPath)
-  }
-  for (const perPath of slots.values()) {
-    let stack = 0
-    for (const height of perPath.values()) stack += height
-    tallest = Math.max(tallest, stack)
-  }
-  return tallest
-}
-
-export function getIntegratedLayerRowHeight(
-  layer: BlueprintLayer,
-  data: IntegratedBlueprintData,
-  compact = false,
-  options?: IntegratedLayoutOptions,
-): number {
-  const stackedExtra = getCompareStackedRowExtra(layer, data, compact)
-  const sourceBlueprints = resolveIntegratedSourceBlueprints(data, options)
-  if (sourceBlueprints.length > 0) {
-    const base = getSharedLayerRowHeight(layer, sourceBlueprints, compact)
-    if (stackedExtra === 0) return base
-    return Math.max(
-      base,
-      getCompareCellShellMinHeight(
-        stackedExtra + getCompareCellShellPaddingY(compact),
-        compact,
-      ),
-    )
-  }
-
-  return getCompareCellShellMinHeight(
-    getCompareCellShellPaddingY(compact) +
-      (compact ? BLUEPRINT_ROW_MIN_HEIGHT : BLUEPRINT_ROW_MIN_HEIGHT - 16),
-    compact,
-  )
-}
-
-export function buildIntegratedLabelRowSpecs(
-  layers: BlueprintLayer[],
-  data: IntegratedBlueprintData,
-  compact = false,
-  collapsedLayerIds: ReadonlySet<string> = new Set(),
-  options?: IntegratedLayoutOptions,
-): BlueprintLabelRowSpec[] {
-  const specs: BlueprintLabelRowSpec[] = []
-  const sourceBlueprints = resolveIntegratedSourceBlueprints(data, options)
-
-  for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-    const layer = layers[layerIndex]
-    const collapsed = isBlueprintLayerCollapsed(layer.id, collapsedLayerIds)
-
-    specs.push({
-      key: layer.id,
-      kind: 'layer',
-      layer,
-      label: layer.name,
-      collapsed,
-      height: collapsed
-        ? COMPARE_LAYER_COLLAPSED_HEIGHT
-        : getIntegratedLayerRowHeight(layer, data, compact, options),
-      wrapCorridorAbove:
-        !collapsed &&
-        layerHasOverheadArrowCorridor(
-          layer,
-          sourceBlueprints.length > 0 ? sourceBlueprints : undefined,
-          sourceBlueprints.length > 0 ? undefined : data.triggers,
-        ),
-      wrapCorridorBelow:
-        !collapsed &&
-        layerHasWrapCorridorBelow(
-          layer,
-          sourceBlueprints.length > 0 ? sourceBlueprints : undefined,
-          sourceBlueprints.length > 0 ? undefined : data.triggers,
-        ),
-      inLaneLoopCorridorAbove:
-        !collapsed &&
-        layerHasInLaneLoopCorridor(
-          layer,
-          sourceBlueprints.length > 0 ? sourceBlueprints : [data],
-        ),
-      showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
-    })
-
-    if (!collapsed && layerHasInteractionLine(layer)) {
-      specs.push({
-        key: `${layer.id}-interaction`,
-        kind: 'interaction',
-        label: INTERACTION_LINE_LABEL,
-        height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-      })
-    }
-
-    if (!collapsed && layerHasVisibilityLine(layer, layers)) {
-      specs.push({
-        key: `${layer.id}-visibility`,
-        kind: 'visibility',
-        label: VISIBILITY_LINE_LABEL,
-        height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-      })
-    }
-
-    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
-      specs.push({
-        key: `${layer.id}-internal-interaction`,
-        kind: 'internalInteraction',
-        label: INTERNAL_INTERACTION_LINE_LABEL,
-        height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-      })
-    }
-  }
-
-  return specs
-}
-
-export function getIntegratedGridBodyHeight(
-  layers: BlueprintLayer[],
-  data: IntegratedBlueprintData,
-  compact = false,
-  collapsedLayerIds: ReadonlySet<string> = new Set(),
-  options?: IntegratedLayoutOptions,
-): number {
-  const rows = buildIntegratedLabelRowSpecs(
-    layers,
-    data,
-    compact,
-    collapsedLayerIds,
-    options,
-  )
-  const trackHeights = rows.reduce(
-    (sum, row) => sum + getCompareRowTrackHeight(row),
-    0,
-  )
-  const rowGaps = Math.max(0, rows.length - 1) * BLUEPRINT_LAYER_ROW_GAP
-
-  return (
-    COMPARE_PATH_SECTION_TOP_INSET +
-    trackHeights +
-    rowGaps +
-    COMPARE_PATH_SECTION_BOTTOM_INSET
-  )
-}
-
-export function getIntegratedPathNestWidthCompensation(pathCount: number): number {
-  return Math.max(0, pathCount - 1) * PATH_TYPE_SECTION_BORDER_WIDTH
-}
-
-export function getIntegratedContentCardWidth(
-  stepCount: number,
-  compact = false,
-  pathCount = 1,
-): number {
-  return (
-    getCompareCardWidth(stepCount, compact) +
-    getIntegratedPathNestWidthCompensation(pathCount)
-  )
-}
-
-export function getIntegratedGridMinWidth(
-  stepCount: number,
-  compact = false,
-  pathCount = 1,
-): number {
-  return (
-    COMPARE_LABEL_WIDTH +
-    COMPARE_CARD_GAP +
-    getIntegratedContentCardWidth(stepCount, compact, pathCount) +
-    COMPARE_PANEL_PADDING +
-    COMPARE_PANEL_PADDING_RIGHT
-  )
-}
-
-export function getIntegratedDividerBandWidth(
-  stepCount: number,
-  compact = false,
-  pathCount = 1,
-): number {
-  return (
-    COMPARE_LABEL_WIDTH +
-    COMPARE_CARD_GAP +
-    getIntegratedContentCardWidth(stepCount, compact, pathCount)
-  )
-}
-
-export function getIntegratedGridHeight(
-  layers: BlueprintLayer[],
-  data: IntegratedBlueprintData,
-  compact = false,
-  collapsedLayerIds: ReadonlySet<string> = new Set(),
-  options?: IntegratedLayoutOptions,
-): number {
-  return (
-    getIntegratedGridBodyHeight(
-      layers,
-      data,
-      compact,
-      collapsedLayerIds,
-      options,
-    ) +
-    COMPARE_PANEL_PADDING * 2
-  )
-}
-
-export function getIntegratedPanelWidth(
-  stepCount: number,
-  compact = false,
-  pathCount = 1,
-): number {
-  return (
-    getIntegratedGridMinWidth(stepCount, compact, pathCount) +
-    ARROW_VIEWPORT_PAD * 2 +
-    (COMPARE_PANEL_PADDING_RIGHT - COMPARE_PANEL_PADDING)
-  )
-}
-
-export function getIntegratedPanelHeight(
-  layers: BlueprintLayer[],
-  data: IntegratedBlueprintData,
-  compact = false,
-  collapsedLayerIds: ReadonlySet<string> = new Set(),
-  options?: IntegratedLayoutOptions,
-): number {
-  return (
-    getIntegratedGridHeight(
-      layers,
-      data,
-      compact,
-      collapsedLayerIds,
-      options,
-    ) + getComparePanelScrollPaddingY()
-  )
-}
-
-/** Canvas artboard size sized to fit a compact integrated blueprint grid. */
-export function getIntegratedCanvasArtboardSize(
-  data: IntegratedBlueprintData,
-  options?: {
-    compact?: boolean
-    collapsedLayerIds?: ReadonlySet<string>
-  },
-): ArtboardSize {
-  const compact = options?.compact ?? false
-  const layers = [...data.layers].sort((a, b) => a.row_position - b.row_position)
-  const panelHeight = getIntegratedPanelHeight(
-    layers,
-    data,
-    compact,
-    options?.collapsedLayerIds ?? new Set(),
-  )
-  const panelWidth = getIntegratedPanelWidth(
-    data.steps.length,
-    compact,
-    data.paths.length,
-  )
-
-  /** Matches Tailwind `p-3` on the artboard frame (formerly CanvasBlueprintArtboard). */
-  const canvasArtboardPadding = 24
-
-  return {
-    width: panelWidth + canvasArtboardPadding * 2,
-    height: Math.max(480, panelHeight + canvasArtboardPadding * 2),
-  }
 }

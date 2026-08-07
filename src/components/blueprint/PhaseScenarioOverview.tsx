@@ -110,14 +110,20 @@ export function PhaseScenarioOverview({
   /*
     Per-scenario override beats the phase-uniform prop. The prop is the
     overview filter's shared default — but the Compare toggle sets a view
-    for *one* scenario, and a phase-level 'side-by-side' silently clobbering
+    for *one* scenario, and a phase-level 'stacked' silently clobbering
     it is exactly how a toggle looks broken while its state is correct.
+
+    'merged' coerces to 'stacked' here: it is a focused-scenario mode, and
+    overview rows render only the horizontal arrangement.
   */
   const resolveViewType = useCallback(
     (scenario: NavItem): SlideViewType => {
       const perScenario = getScenarioDisplayViewType(scenario)
-      if (perScenario !== 'side-by-side') return perScenario
-      return displayViewTypeProp ?? perScenario
+      const resolved =
+        perScenario !== 'stacked'
+          ? perScenario
+          : (displayViewTypeProp ?? perScenario)
+      return resolved === 'merged' ? 'stacked' : resolved
     },
     [displayViewTypeProp, getScenarioDisplayViewType],
   )
@@ -201,7 +207,7 @@ export function PhaseScenarioOverview({
   const viewTypesMeasureKey = scenarios
     .map((scenario) => resolveViewType(scenario))
     .join(',')
-  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}`
+  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? ''}`
   const rowPanelHeight = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
@@ -296,6 +302,13 @@ export function PhaseScenarioOverview({
     >
       {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
+        /*
+          The focused scenario leaves the overview's shared-row contract:
+          without the locked height / phase-uniform view type it becomes the
+          FOCUSED SCENARIO VIEW, where compared paths stack as vertical
+          bands. Its dimmed siblings keep the horizontal row layout.
+        */
+        const isFocusedScenario = focusedScenarioId === scenario.id
 
         return (
           <Fragment key={scenario.id}>
@@ -306,10 +319,14 @@ export function PhaseScenarioOverview({
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={rowPanelHeight}
-              fixedSwimlaneBodyHeight={sharedSwimlaneBodyHeight}
-              lockPanelHeight={alignPanelHeights}
-              displayViewType={resolveViewType(scenario)}
+              lockedPanelHeight={isFocusedScenario ? undefined : rowPanelHeight}
+              fixedSwimlaneBodyHeight={
+                isFocusedScenario ? undefined : sharedSwimlaneBodyHeight
+              }
+              lockPanelHeight={isFocusedScenario ? false : alignPanelHeights}
+              displayViewType={
+                isFocusedScenario ? undefined : resolveViewType(scenario)
+              }
               onNavigate={() => openDetail(scenario.id)}
               dimmed={
                 dimAllScenarios ||

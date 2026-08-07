@@ -1,4 +1,5 @@
-import { Columns2, GitCompareArrows } from 'lucide-react'
+import { useMemo } from 'react'
+import { Columns2, Diff, FoldHorizontal, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
@@ -10,7 +11,21 @@ import {
   SegmentedControlItem,
 } from '@/components/editor/SegmentedControl'
 import { Menubar } from '@/components/ui/menubar'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
+import { countFoldableCompareColumns } from '@/lib/compareFold'
+import { countCompareDifferences } from '@/lib/compareLedger'
+import {
+  setCompareFolded,
+  useCompareReviewState,
+} from '@/lib/compareReviewStore'
+import { computePinnedColumns } from '@/lib/compareSlots'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
@@ -47,7 +62,7 @@ function resolveHeaderDescription(
 }
 
 /**
- * Side by side ⇄ Compare, on the bar that holds the scenario title.
+ * Stacked ⇄ Merged, on the bar that holds the scenario title.
  *
  * Visible only while two or more paths are selected — with one path there
  * is nothing to compare and the control would be a question with no answer.
@@ -62,8 +77,8 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
     label: string
     icon: typeof Columns2
   }> = [
-    { value: 'side-by-side', label: 'Side by side', icon: Columns2 },
-    { value: 'integrated', label: 'Compare', icon: GitCompareArrows },
+    { value: 'stacked', label: 'Stacked', icon: Columns2 },
+    { value: 'merged', label: 'Merged', icon: GitCompareArrows },
   ]
 
   return (
@@ -79,6 +94,137 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
         </SegmentedControlItem>
       ))}
     </SegmentedControl>
+  )
+}
+
+/**
+ * The `[⇤ Fold]` toggle (Phase 4a) — opt-in compression of shared step
+ * runs into pleats, in whichever compare mode is showing (the fold state
+ * is mode-agnostic by design). Disabled at zero differences (S7 — nothing
+ * to pull adjacent) and when the pin rule leaves no foldable shared
+ * column. Turning fold off clears the per-pleat expansions.
+ */
+function CompareFoldToggle({ slide }: { slide: NavItem }) {
+  const { registration, fold } = useCompareReviewState()
+  const active =
+    registration && registration.slideId === slide.id ? registration : null
+  const foldableCount = useMemo(
+    () =>
+      active
+        ? countFoldableCompareColumns(
+            active.model,
+            computePinnedColumns(active.model, active.blueprints),
+          )
+        : 0,
+    [active],
+  )
+  if (!active) return null
+  const differenceCount = countCompareDifferences(active.model)
+  const disabled = differenceCount === 0 || foldableCount === 0
+  const foldLabel = `Fold ${foldableCount} shared step${foldableCount === 1 ? '' : 's'}`
+  const toggle = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      disabled={disabled}
+      aria-pressed={fold.folded}
+      aria-label={fold.folded ? 'Unfold shared steps' : foldLabel}
+      // Pressed styling is the ghost variant's own `aria-pressed:` rule —
+      // the brand-tint selected fill. Hand-writing `bg-muted` here was the
+      // bug: it is ghost's hover fill, so pressed and hovered looked alike.
+      className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
+      onClick={() => setCompareFolded(!fold.folded)}
+    >
+      <FoldHorizontal className="size-3.5" aria-hidden />
+      Fold
+    </Button>
+  )
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex" />}>
+        {toggle}
+      </TooltipTrigger>
+      <TooltipContent>
+        {disabled
+          ? differenceCount === 0
+            ? 'Paths are identical — nothing to fold around'
+            : 'Every shared step feeds a divergent one — nothing folds'
+          : fold.folded
+            ? 'Unfold shared steps'
+            : foldLabel}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+/**
+ * The `[Diff N]` button — the menubar entry to the difference ledger, beside
+ * the compare toggles. A real toggle: pressed while the panel is open ON the
+ * Differences surface, and clicking it then CLOSES the panel (the panel's own
+ * atomic clear, never a second owner of "is the panel open"). Hidden below 2
+ * selected paths (the compare cluster gate), disabled at zero because "open
+ * the empty ledger" is a dead end.
+ *
+ * The count is a pill, not prose — it is one of exactly two counts in the
+ * app (this and each ledger group's trailing number), so it has to read as a
+ * value rather than a label.
+ */
+function CompareDifferencesChip({ slide }: { slide: NavItem }) {
+  const { registration } = useCompareReviewState()
+  const cellDetail = useBlueprintCellDetailOptional()
+  if (!registration || registration.slideId !== slide.id || !cellDetail) {
+    return null
+  }
+  const count = countCompareDifferences(registration.model)
+  const open = cellDetail.panelState?.surface === 'differences'
+  const chip = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      disabled={count === 0}
+      aria-pressed={open}
+      aria-label={
+        count === 0
+          ? 'No differences between the compared paths'
+          : open
+            ? 'Close the difference ledger'
+            : `Open the difference ledger (${count} differences)`
+      }
+      className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
+      onClick={() => (open ? cellDetail.closePanel() : cellDetail.openDifferences())}
+    >
+      <Diff className="size-3.5" aria-hidden />
+      Diff
+      <span
+        aria-hidden
+        className={cn(
+          'ml-0.5 rounded-full px-1.5 py-px font-mono text-3xs leading-none tabular-nums',
+          // Resting: neutral. Pressed: brand tint one step stronger than the
+          // button's own selected fill, so the pill stays legible on it.
+          open
+            ? 'bg-sidebar-selected-rail/20 text-foreground'
+            : 'bg-muted text-foreground',
+        )}
+      >
+        {count}
+      </span>
+    </Button>
+  )
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex" />}>
+        {chip}
+      </TooltipTrigger>
+      <TooltipContent>
+        {count === 0
+          ? 'Paths are identical — nothing to list'
+          : open
+            ? 'Close the difference ledger'
+            : 'Open the difference ledger'}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -115,8 +261,10 @@ export function PhaseMenubarHeader({
       {/* Beside the title, not flex-end: the bar's right edge belongs to the
           absolutely-positioned zoom / Reset View chrome. */}
       {showCompareToggle ? (
-        <div className="ml-3 shrink-0">
+        <div className="ml-3 flex shrink-0 items-center gap-1.5">
           <CompareViewToggle slide={slide} />
+          <CompareFoldToggle slide={slide} />
+          <CompareDifferencesChip slide={slide} />
         </div>
       ) : null}
     </Menubar>

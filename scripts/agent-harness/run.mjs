@@ -119,6 +119,7 @@ export const TOOL_SPECS = [
   { name: 'list_scenarios', description: 'List every phase and its scenarios, with ids.', parameters: { type: 'object', properties: {} } },
   { name: 'get_blueprint', description: 'Full grid of one scenario: paths, steps, lanes, cells (ids included). Read before writing into a scenario.', parameters: { type: 'object', properties: { scenario_id: str('Scenario id') }, required: ['scenario_id'] } },
   { name: 'get_cell', description: 'One cell in full.', parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
+  { name: 'get_compare_diff', description: "Structured comparison of a scenario's paths: canonical columns, numbered divergence zones, differing slots with per-path quotes and cell ids, detail-only group.", parameters: { type: 'object', properties: { scenario_id: str('Scenario id'), path_ids: { type: 'array', description: 'Optional subset (2+) of path ids, in comparison order', items: { type: 'string' } } }, required: ['scenario_id'] } },
   { name: 'list_slices', description: 'List existing slices.', parameters: { type: 'object', properties: {} } },
   { name: 'list_owner_tags', description: 'Owner tag vocabulary. ALWAYS read before writing owner fields.', parameters: { type: 'object', properties: {} } },
   { name: 'get_ui_state', description: 'What the user is looking at RIGHT NOW. When the user asks what they are looking at, relay EVERY line — view level included, not just the selection.', parameters: { type: 'object', properties: {} } },
@@ -277,6 +278,11 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'list_scenarios': record.result = await realListScenarios(); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'get_cell': record.result = await realGetCell(args.cell_id); return record.result
+      case 'get_compare_diff':
+        // The compare model is a client-bundle computation (compareSlots.ts);
+        // the harness has no bundler, so rehearsal falls back to the raw grids.
+        record.result = 'get_compare_diff is unavailable in this rehearsal environment — read get_blueprint and compare the paths by hand (steps align across paths by name).'
+        return record.result
       case 'list_owner_tags': record.result = await realListOwnerTags(); return record.result
       case 'list_slices': record.result = await realListSlices(); return record.result
       case 'get_slice': {
