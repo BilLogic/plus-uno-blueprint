@@ -13,19 +13,39 @@ import type { SliceDeletionImpact } from '@/lib/sliceMutations'
 /**
  * Everything the confirm dialog can delete.
  *
- * `DeletionKind` is the set of kinds `deletion_impact` understands server-side;
- * a slice is not one of them and must not be added there (see
- * `sliceDeletionImpact`). Widening happens here, at the UI's vocabulary, so
- * that one dialog can be the only way anything structural is deleted.
+ * **Deliberately narrower than `DeletionKind`.** That type is the set of kinds
+ * `deletion_impact` will answer for; this one is the set whose counts are
+ * actually TRUE of the delete that follows, and `lane` and `step` are not in
+ * it:
+ *
+ *   * `deletion_impact('lane', id)` counts the cells of ONE `layers` row, but
+ *     `remove_lane(scenario_id, lane_name)` deletes every same-named lane
+ *     across every path of the scenario. A 12-cell dialog would precede a
+ *     36-cell delete — it undercounts.
+ *   * `deletion_impact('step', id)` counts the cells of that step across every
+ *     path, but `remove_step(path_id, step_id)` deletes only the ones on the
+ *     path it is given. It overcounts.
+ *
+ * Two mismatches in opposite directions, neither of which any caller has ever
+ * exercised — nothing passes `lane` or `step`. The type advertised them
+ * anyway, which is all a future caller needs to ship a confirm dialog whose
+ * numbers are wrong in the one place numbers are the entire point. Making them
+ * unrepresentable is chosen over correcting the two SQL predicates because the
+ * correction cannot be verified without a migration apply, while this ships
+ * with the branch — and because when someone does want a lane delete, the
+ * compile error lands exactly on the pair of functions that has to be made to
+ * agree first.
+ *
+ * A slice, conversely, is NOT a `DeletionKind` and must never be added there:
+ * `deletion_impact` answers "how much of the BLUEPRINT dies", and a slice
+ * delete destroys none of it (see `sliceDeletionImpact`).
  */
-export type DeletableKind = DeletionKind | 'slice'
+export type DeletableKind = Extract<DeletionKind, 'scenario' | 'path'> | 'slice'
 
-/** Nouns for the confirm sentence. `steps` read as "step", `layers` as "lane". */
+/** Nouns for the confirm sentence. */
 export const DELETION_NOUNS: Record<DeletableKind, string> = {
   scenario: 'scenario',
   path: 'path',
-  step: 'step',
-  lane: 'lane',
   slice: 'slice',
 }
 
@@ -143,13 +163,24 @@ export function summarizeImpact(impact: DeletionImpact): ImpactSummary {
     )
   }
 
-  return {
-    facts,
-    warnings,
-    reassurances: [
-      'Archived to the recovery table first — nothing is destroyed without a copy behind it.',
-    ],
-  }
+  // The reassurance is qualified — not merely softened — when the warning
+  // above it has already said some slices cannot be put back. "Nothing is
+  // destroyed without a copy behind it" printed directly under "these slices
+  // cannot be restored by undo" is a dialog contradicting itself in adjacent
+  // lines, and the sentence people believe is the reassuring one. The archive
+  // fact is still true and still worth stating; what is not true is the
+  // "nothing" — the blueprint rows come back, the slice frames pointing at
+  // them do not.
+  const reassurances =
+    unrecoverable.length > 0
+      ? [
+          'The blueprint rows are archived to the recovery table first and can be restored — but not the slice frames named above.',
+        ]
+      : [
+          'Archived to the recovery table first — nothing is destroyed without a copy behind it.',
+        ]
+
+  return { facts, warnings, reassurances }
 }
 
 /**

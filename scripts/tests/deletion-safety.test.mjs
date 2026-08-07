@@ -80,6 +80,34 @@ test('unrecoverable slices are called out separately', () => {
   assert.ok(warnings.some((line) => /cannot be restored by undo/.test(line)))
 })
 
+/**
+ * The dialog must not contradict itself in adjacent lines. "Nothing is
+ * destroyed without a copy behind it" printed directly under "these slices
+ * cannot be restored by undo" is two opposite claims, and the reassuring one
+ * is the one that gets believed.
+ */
+test('the archive reassurance is qualified when some slices cannot come back', () => {
+  const unqualified = summarizeImpact({
+    label: 'Clean',
+    cell_count: 3,
+    dependency_count: 0,
+    affected_slices: [{ slice_id: '1', title: 'Keyed', cell_keys: ['k1'] }],
+  })
+  assert.ok(unqualified.reassurances.some((line) => /nothing is destroyed/i.test(line)))
+
+  const qualified = summarizeImpact({
+    label: 'Lossy',
+    cell_count: 3,
+    dependency_count: 0,
+    affected_slices: [{ slice_id: '1', title: 'Old', cell_keys: [null] }],
+  })
+  assert.ok(qualified.warnings.some((line) => /cannot be restored by undo/.test(line)))
+  assert.ok(!qualified.reassurances.some((line) => /nothing is destroyed/i.test(line)))
+  assert.ok(
+    qualified.reassurances.some((line) => /not the slice frames named above/.test(line)),
+  )
+})
+
 test('no arrows means no arrow count', () => {
   const summary = summarizeImpact({
     label: 'Step 1',
@@ -117,9 +145,23 @@ test('a slice delete admits it has no archive behind it', () => {
 })
 
 test('every deletable kind has a noun for the confirm sentence', () => {
-  for (const kind of ['scenario', 'path', 'step', 'lane', 'slice']) {
+  for (const kind of ['scenario', 'path', 'slice']) {
     assert.equal(typeof DELETION_NOUNS[kind], 'string')
     assert.ok(DELETION_NOUNS[kind].length > 0)
+  }
+})
+
+/**
+ * `lane` and `step` are deliberately NOT deletable through this dialog: their
+ * `deletion_impact` branch counts something other than what their delete
+ * removes (lane undercounts across paths, step overcounts across paths). The
+ * type makes them unrepresentable; this holds the vocabulary to it, so
+ * re-adding a noun without first reconciling the two SQL predicates fails
+ * here rather than shipping a dialog with the wrong numbers in it.
+ */
+test('the kinds whose impact does not match their delete are not deletable', () => {
+  for (const kind of ['lane', 'step']) {
+    assert.equal(DELETION_NOUNS[kind], undefined)
   }
 })
 

@@ -13,13 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateStructure } from '@/hooks/useSupabaseQuery'
-import {
-  deletionImpact,
-  deletePath,
-  deleteScenario,
-  removeLane,
-  removeStep,
-} from '@/lib/authoringRpc'
+import { deletionImpact, deletePath, deleteScenario } from '@/lib/authoringRpc'
 import { deleteSlice, sliceDeletionImpact } from '@/lib/sliceMutations'
 import {
   DELETION_NOUNS,
@@ -31,14 +25,16 @@ import {
 } from '@/lib/deletionSafety'
 
 export type DeletionTarget = {
+  /**
+   * `DeletableKind` is narrower than the set `deletion_impact` answers for, on
+   * purpose — `lane` and `step` count something other than what their delete
+   * removes. See `deletionSafety.ts`.
+   */
   kind: DeletableKind
-  /** The row to delete. For a lane this is the lane id used to read impact. */
+  /** The row to delete. */
   id: string
   /** Typed to confirm, and shown throughout. */
   label: string
-  /** Lane and step deletes are scoped by their parent. */
-  scenarioId?: string
-  pathId?: string
 }
 
 /** The impact read for a target, whichever source that kind's counts come from. */
@@ -149,16 +145,6 @@ export function DeleteStructureDialog({
           break
         case 'path':
           archiveId = await deletePath(client, target.id)
-          break
-        case 'step':
-          if (!target.pathId) throw new Error('A step delete needs its path.')
-          archiveId = await removeStep(client, target.pathId, target.id)
-          break
-        case 'lane':
-          if (!target.scenarioId) {
-            throw new Error('A lane delete needs its blueprint.')
-          }
-          archiveId = await removeLane(client, target.scenarioId, target.label)
           break
         case 'slice':
           // Frames cascade in the database; there is no archive row to return.

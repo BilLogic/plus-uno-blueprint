@@ -196,7 +196,6 @@ export function StructureRowContextMenu({
                     kind: kind === 'scenario' ? 'scenario' : 'path',
                     id,
                     label: name,
-                    scenarioId,
                   })
                 }
               >
