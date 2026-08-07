@@ -10,7 +10,10 @@ triggers take `render={...}`). Verified against the directory 2026-08-04.
 | Session groups (Today/Earlier) | `SidebarNav` NavSection (composes `collapsible.tsx`) | the sidebar's one disclosure vocabulary |
 | Session fuzzy search | `input.tsx` + subsequence filter | OwnerTagSelect's filter-as-you-type pattern; add shadcn `command` only if this proves insufficient |
 | Chat header (‹ back · title · count) | `button.tsx` | nothing else in the header — transcript owns the height |
-| Transcript tool-call rows | `collapsible.tsx` + `badge.tsx` | ✦ badge; reuse `describeChange` vocabulary |
+| Transcript tool-call rows | `collapsible.tsx` + `marker.tsx` | collapsed = the quiet one-liner; open = arguments + result. Same disclosure vocabulary as a collapsed assistant turn. The payload is live-run only — nothing extra is persisted |
+| Composer field | `input-group.tsx` (`InputGroup` + `InputGroupTextarea` + `InputGroupAddon`) | the group owns the border AND the single focus ring; the control stays borderless. NEVER hand-roll `border + focus-within:ring` around a bare textarea — that is the box-around-a-box. `field-sizing-content` auto-grows it, so no imperative height writes |
+| Slash (`/sb:*`) menu | `popover.tsx` anchored to the composer + `command.tsx` (`shouldFilter={false}`) | MUST be portalled: cmdk's `scrollIntoView` walks every scrollable ancestor, `overflow:hidden` included, and would scroll the dock chrome. Size to `w-(--anchor-width)`, never a fixed width — the docked panel is 272px. `initialFocus={false}` keeps typing in the textarea |
+| Streaming | `spinner.tsx`/`Loader2` inside a `marker.tsx` row with `role="status"` | a transcript row, not a loose glyph appended after the list |
 | Stop / send | `button.tsx` + `spinner.tsx` | |
 | Provider + model pickers | `dropdown-menu.tsx` | model list fetched live from the provider; curated fallback |
 | Key entry (⚙) | `popover.tsx` + `input.tsx` type=password | masked after save; localStorage only |
@@ -53,8 +56,14 @@ lane/step names, columnKeys and cell ids); `get_ui_state` gains a `compare`
 line (mode, paths, counts, active step, ledger open + filters, fold
 state).
 
-Full DS directory today: accordion, alert, attachment, badge, breadcrumb,
-bubble, button, card, carousel, collapsible, context-menu,
-deferred-skeleton, dialog, drawer, dropdown-menu, input, marker, menubar,
-message, message-scroller, navigation-menu, popover, separator, sheet,
-sidebar, skeleton, spinner, tabs, toggle-group, toggle, tooltip.
+Full DS directory today (re-listed 2026-08-07): accordion, alert,
+attachment, badge, breadcrumb, bubble, button, card, carousel,
+collapsible, command, context-menu, deferred-skeleton, dialog, drawer,
+dropdown-menu, input, input-group, marker, menubar, message,
+message-scroller, navigation-menu, popover, separator, sheet, sidebar,
+skeleton, spinner, tabs, textarea, toggle-group, toggle, tooltip.
+
+The chat primitives (`bubble`, `marker`, `message`, `message-scroller`)
+are all built for `text-sm`. That is the transcript's ONE ladder — do not
+re-open the `text-xs`/`text-2xs`/`text-3xs` override war inside it.
+`text-2xs` and below belong to panel chrome, not to the conversation.
