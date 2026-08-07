@@ -421,17 +421,16 @@ export function usePathSelectionsByScenario(
     [pathsByScenario],
   )
 
-  const scopeKey = useMemo(
-    () => (scopeIds ? [...scopeIds].sort().join('|') : ''),
-    [scopeIds],
-  )
-
   useLayoutEffect(() => {
     syncScenarioPaths(pathsByScenario, scopeIds)
-    // `pathsKey`/`scopeKey` are the value-identity of the two objects above;
-    // the objects themselves are rebuilt on every parent render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathsKey, scopeKey, syncScenarioPaths])
+    // `pathsByScenario` by identity, deliberately, and not `pathsKey` alone:
+    // that key is built from path *ids*, so a rename leaves it unchanged and
+    // the effect would never re-run — the catalog would keep the old name for
+    // the life of the session, which is exactly the staleness the signature
+    // comparison in `mergeCatalog` exists to catch. The refetched map is a new
+    // object, so identity is the signal that new data arrived. `syncScenarioPaths`
+    // is idempotent and bails when nothing changed, so the extra runs are free.
+  }, [pathsByScenario, pathsKey, scopeIds, syncScenarioPaths])
 
   return {
     selections,
