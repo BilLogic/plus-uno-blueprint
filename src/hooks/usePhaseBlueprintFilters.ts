@@ -77,9 +77,13 @@ export function usePhaseBlueprintFilters({
 
     const viewTypes = activeScenarioIds.map((scenarioId) => {
       const scenario = slides.find((slide) => slide.id === scenarioId)
-      return scenario
+      const scenarioViewType = scenario
         ? getScenarioDisplayViewType(scenario)
         : ('stacked' as SlideViewType)
+      // 'merged' is a focused-scenario mode; overview rows render stacked.
+      return scenarioViewType === 'merged'
+        ? ('stacked' as SlideViewType)
+        : scenarioViewType
     })
 
     return viewTypes.every((type) => type === viewTypes[0])

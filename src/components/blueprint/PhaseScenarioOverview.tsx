@@ -112,12 +112,18 @@ export function PhaseScenarioOverview({
     overview filter's shared default — but the Compare toggle sets a view
     for *one* scenario, and a phase-level 'stacked' silently clobbering
     it is exactly how a toggle looks broken while its state is correct.
+
+    'merged' coerces to 'stacked' here: it is a focused-scenario mode, and
+    overview rows render only the horizontal arrangement.
   */
   const resolveViewType = useCallback(
     (scenario: NavItem): SlideViewType => {
       const perScenario = getScenarioDisplayViewType(scenario)
-      if (perScenario !== 'stacked') return perScenario
-      return displayViewTypeProp ?? perScenario
+      const resolved =
+        perScenario !== 'stacked'
+          ? perScenario
+          : (displayViewTypeProp ?? perScenario)
+      return resolved === 'merged' ? 'stacked' : resolved
     },
     [displayViewTypeProp, getScenarioDisplayViewType],
   )
