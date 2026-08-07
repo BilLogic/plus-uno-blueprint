@@ -890,13 +890,14 @@ function AgentChatView({
             <MessageScrollerContent className="gap-3">
               {events.length === 0 ? (
                 keyed ? (
-                  <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
-                    <span>Ready ({modelFor(settings)}).</span>
-                    <span className="inline-flex items-center gap-1">
-                      Writes land live on the canvas and in the change sheet as
-                      <Sparkles className="size-3" aria-hidden />
-                      rows — each one revertible.
-                    </span>
+                  <p className="text-sm text-muted-foreground">
+                    Ready ({modelFor(settings)}). Writes land live on the
+                    canvas and in the change sheet as{' '}
+                    <Sparkles
+                      className="inline size-3 align-[-0.1em]"
+                      aria-hidden
+                    />{' '}
+                    rows — each one revertible.
                   </p>
                 ) : (
                   <div className="flex flex-col items-start gap-2">
