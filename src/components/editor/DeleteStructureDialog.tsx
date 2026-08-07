@@ -49,10 +49,7 @@ function readImpact(
   if (target.kind === 'slice') {
     return sliceDeletionImpact(client, target.id).then(summarizeSliceImpact)
   }
-  const kind = target.kind
-  return deletionImpact(client, kind, target.id).then((impact) =>
-    summarizeImpact(kind, impact),
-  )
+  return deletionImpact(client, target.kind, target.id).then(summarizeImpact)
 }
 
 /**
@@ -232,7 +229,7 @@ export function DeleteStructureDialog({
                 {impact.facts.map((fact) => (
                   <div
                     key={fact.noun}
-                    className="flex-1 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2"
+                    className="min-w-28 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2"
                   >
                     <div className="text-xl leading-none font-semibold tabular-nums text-destructive">
                       {fact.count}
@@ -271,7 +268,7 @@ export function DeleteStructureDialog({
                 className="text-xs font-medium text-foreground"
               >
                 Type{' '}
-                <span className="rounded-sm bg-background px-1 py-0.5 font-mono ring-1 ring-border ring-inset">
+                <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-foreground">
                   {target.label}
                 </span>{' '}
                 to confirm

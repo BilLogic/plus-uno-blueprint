@@ -122,10 +122,7 @@ export type ImpactSummary = {
  * destroys — including the arrows that die with the cells. A dialog that named
  * only the cells would be undercounting by design.
  */
-export function summarizeImpact(
-  kind: DeletionKind,
-  impact: DeletionImpact,
-): ImpactSummary {
+export function summarizeImpact(impact: DeletionImpact): ImpactSummary {
   const facts: ImpactFact[] = [{ count: impact.cell_count, noun: 'cell' }]
   if (impact.dependency_count > 0) {
     facts.push({ count: impact.dependency_count, noun: 'arrow' })
@@ -150,7 +147,7 @@ export function summarizeImpact(
     facts,
     warnings,
     reassurances: [
-      `Deleting a ${DELETION_NOUNS[kind]} archives everything above; the arrows and cells listed here go with it.`,
+      'Archived to the recovery table first — nothing is destroyed without a copy behind it.',
     ],
   }
 }

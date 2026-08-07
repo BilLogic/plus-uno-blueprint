@@ -54,7 +54,7 @@ test('a slice with no keys at all is unrecoverable, not recoverable', () => {
 })
 
 test('the impact counts cells and arrows, and names affected slices', () => {
-  const summary = summarizeImpact('lane', {
+  const summary = summarizeImpact({
     label: 'Regular Tutor',
     cell_count: 6,
     dependency_count: 4,
@@ -70,7 +70,7 @@ test('the impact counts cells and arrows, and names affected slices', () => {
 })
 
 test('unrecoverable slices are called out separately', () => {
-  const { warnings } = summarizeImpact('scenario', {
+  const { warnings } = summarizeImpact({
     label: 'Discovery',
     cell_count: 2,
     dependency_count: 0,
@@ -81,7 +81,7 @@ test('unrecoverable slices are called out separately', () => {
 })
 
 test('no arrows means no arrow count', () => {
-  const summary = summarizeImpact('step', {
+  const summary = summarizeImpact({
     label: 'Step 1',
     cell_count: 1,
     dependency_count: 0,
