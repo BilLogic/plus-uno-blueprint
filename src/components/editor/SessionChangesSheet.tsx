@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useEffect, useState } from 'react'
-import { Check, Crosshair, Undo2 } from 'lucide-react'
+import { Check, Crosshair, History, Undo2 } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import {
@@ -7,11 +7,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
@@ -154,7 +149,7 @@ function useUndoHotkey(changes: ChangeEntry[]) {
           "Accept the session's changes (clears the change sheet). Refused when the session holds destructive changes — those need the human's own confirm.",
         run: () => {
           if (sessionHasDestructive(changes))
-            return 'This session contains destructive changes — the human must confirm those in the Save changes sheet themselves.'
+            return 'This session contains destructive changes — the human must confirm those in the Changes sheet themselves.'
           clearSession()
           return 'Changes kept; the change sheet is clear.'
         },
@@ -178,13 +173,20 @@ function useUndoHotkey(changes: ChangeEntry[]) {
 export function SessionChangesSheet() {
   const changes = useSessionChanges()
   const detail = useBlueprintCellDetailOptional()
-  const [confirming, setConfirming] = useState(false)
+  const { client } = useSupabase()
+  /** `'save'` = the destructive-save gate; `'revert'` = the Revert all gate. */
+  const [confirming, setConfirming] = useState<'save' | 'revert' | null>(null)
+  const [reverting, setReverting] = useState(false)
+  /** What Revert all could not take back — named, never silently dropped. */
+  const [leftBehind, setLeftBehind] = useState<string[]>([])
   useUndoHotkey(changes)
 
   if (changes.length === 0) return null
 
   const destructive = sessionHasDestructive(changes)
   const groups = groupChanges(changes)
+  const revertible = changes.filter((entry) => entry.revert)
+  const unrevertible = changes.length - revertible.length
 
   // A path id is only nameable if the canvas has that blueprint loaded. When it
   // does not — the change was made somewhere since navigated away from — the
@@ -196,12 +198,52 @@ export function SessionChangesSheet() {
   }
 
   const save = () => {
-    if (destructive && !confirming) {
-      setConfirming(true)
+    if (destructive && confirming !== 'save') {
+      setConfirming('save')
       return
     }
     clearSession()
-    setConfirming(false)
+    setConfirming(null)
+  }
+
+  /**
+   * Take back everything this session can take back.
+   *
+   * Newest first, one at a time, through the very same `revertEntry` the row
+   * button and ⌘Z use — so the in-flight guard, the `forgetChange`, and every
+   * cache invalidation are the ones already proven. Sequential rather than
+   * `Promise.all` because these inverses are ordered: a cell added into a lane
+   * added in the same session has to go before the lane does.
+   *
+   * Entries with no captured inverse (a `delete_slice` has no archive to
+   * restore from) are not reverted and not dropped — they stay in the list and
+   * get named underneath it. A revert that throws is treated the same way: the
+   * run continues, and the failure is reported by name rather than leaving the
+   * user to diff the list against their memory.
+   */
+  const revertAll = async () => {
+    if (!client || reverting) return
+    setConfirming(null)
+    setLeftBehind([])
+    setReverting(true)
+    const failed: string[] = []
+    try {
+      for (const entry of [...changes].reverse()) {
+        if (!entry.revert) {
+          failed.push(describeChange(entry))
+          continue
+        }
+        try {
+          await revertEntry(client, entry)
+        } catch (error) {
+          console.error('[authoring] revert all failed on an entry:', error)
+          failed.push(describeChange(entry))
+        }
+      }
+    } finally {
+      setReverting(false)
+    }
+    setLeftBehind(failed)
   }
 
   /*
@@ -215,30 +257,26 @@ export function SessionChangesSheet() {
   return (
     <>
       <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Review and save ${changes.length} changes`}
-                    className="pointer-events-auto h-7 shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
-                  >
-                    <Check className="size-3.5" aria-hidden />
-                    Save changes
-                    <span className="tabular-nums">{changes.length}</span>
-                  </Button>
-                }
-              />
-            }
-          />
-          <TooltipContent side="top" className="text-xs">
-            Review what changed, then save
-          </TooltipContent>
-        </Tooltip>
+        {/*
+          No tooltip. "Changes 2" beside a history icon already says what the
+          button is, and the only thing a tooltip could add — "opens a list" —
+          is what one click teaches for good.
+        */}
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label={`Review ${changes.length} changes`}
+              className="pointer-events-auto h-7 shrink-0 gap-1.5 border border-primary/30 bg-primary/10 px-2.5 text-xs text-primary hover:bg-primary/15 hover:text-primary"
+            >
+              <History className="size-3.5" aria-hidden />
+              Changes
+              <span className="tabular-nums">{changes.length}</span>
+            </Button>
+          }
+        />
 
         {/*
           Upward, like everything anchored to this bar: it sits on the bottom
@@ -253,20 +291,32 @@ export function SessionChangesSheet() {
         >
           <div className="border-b border-border/60 px-3 py-2">
             <p className="font-medium text-foreground">
-              {changes.length} unsaved change{changes.length === 1 ? '' : 's'}
+              {changes.length} change{changes.length === 1 ? '' : 's'}
             </p>
+            {/*
+              The one thing the interface cannot teach by itself: these writes
+              already landed, so Save is not a write — it is the moment the way
+              back closes. Everything else the header used to say (that a list
+              is a list, that reverting is possible) the rows demonstrate.
+            */}
             <p className="mt-0.5 text-2xs text-muted-foreground">
-              Already saved to the database — this list is how you can still
-              take them back.
+              Already saved — Save just clears the list.
             </p>
           </div>
 
           <div className="max-h-64 overflow-y-auto py-1">
             {groups.map((group) => (
               <div key={group.pathId ?? 'service'} className="px-1 py-1">
-                <p className="px-2 py-1 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
-                  {pathLabel(group.pathId)}
-                </p>
+                {/*
+                  The group label separates; with one group there is nothing to
+                  separate it from, and "THIS SERVICE" over the entire list is a
+                  heading for the obvious.
+                */}
+                {groups.length > 1 ? (
+                  <p className="px-2 py-1 text-3xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {pathLabel(group.pathId)}
+                  </p>
+                ) : null}
                 {group.entries.map((entry) => (
                   <ChangeRow key={entry.id} entry={entry} />
                 ))}
@@ -274,39 +324,110 @@ export function SessionChangesSheet() {
             ))}
           </div>
 
+          {/*
+            Three footers, one row. Idle offers both exits; each confirm state
+            replaces the whole row so there is never a live Save sitting beside
+            a question about reverting.
+          */}
           <div className="flex items-center gap-2 border-t border-border/60 px-3 py-2">
-            {confirming ? (
+            {confirming === 'revert' ? (
               <>
                 <p className="min-w-0 flex-1 text-2xs text-foreground">
-                  Deletes in this session can no longer be undone.
+                  Take back {revertible.length} change
+                  {revertible.length === 1 ? '' : 's'}?
+                  {unrevertible > 0
+                    ? ` ${unrevertible} can’t be taken back.`
+                    : ''}
                 </p>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-xs"
-                  onClick={() => setConfirming(false)}
+                  className="h-7 shrink-0 px-2 text-xs"
+                  onClick={() => setConfirming(null)}
                 >
                   Cancel
                 </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 shrink-0 px-2.5 text-xs"
+                  onClick={() => void revertAll()}
+                >
+                  Revert all
+                </Button>
+              </>
+            ) : confirming === 'save' ? (
+              <>
+                <p className="min-w-0 flex-1 text-2xs text-foreground">
+                  Deletes become permanent.
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 shrink-0 px-2 text-xs"
+                  onClick={() => setConfirming(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+                  onClick={save}
+                >
+                  <Check className="size-3.5" aria-hidden />
+                  Keep changes
+                </Button>
               </>
             ) : (
-              <p className="min-w-0 flex-1 text-2xs text-muted-foreground">
-                {destructive
-                  ? 'This session includes a delete.'
-                  : 'Everything here can still be found in the list.'}
-              </p>
+              <>
+                <div className="min-w-0 flex-1" />
+                {revertible.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground"
+                    disabled={reverting}
+                    onClick={() => setConfirming('revert')}
+                  >
+                    <Undo2
+                      className={cn('size-3.5', reverting && 'animate-pulse')}
+                      aria-hidden
+                    />
+                    {reverting ? 'Reverting…' : 'Revert all'}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-7 shrink-0 gap-1.5 px-2.5 text-xs"
+                  disabled={reverting}
+                  onClick={save}
+                >
+                  <Check className="size-3.5" aria-hidden />
+                  Save
+                </Button>
+              </>
             )}
-            <Button
-              type="button"
-              size="sm"
-              className="h-7 shrink-0 gap-1.5 px-2.5 text-xs"
-              onClick={save}
-            >
-              <Check className="size-3.5" aria-hidden />
-              {confirming ? 'Keep changes' : 'Save'}
-            </Button>
           </div>
+
+          {/*
+            Only ever rendered when something survived Revert all — the entries
+            it names are still in the list above, so this says which of the
+            remaining rows are there because they could not go, not because the
+            run stopped early.
+          */}
+          {leftBehind.length > 0 ? (
+            <div className="border-t border-border/60 px-3 py-2">
+              <p className="text-2xs text-destructive">
+                Not taken back: {leftBehind.join('; ')}
+              </p>
+            </div>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
