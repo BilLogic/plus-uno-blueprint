@@ -201,7 +201,7 @@ export function PhaseScenarioOverview({
   const viewTypesMeasureKey = scenarios
     .map((scenario) => resolveViewType(scenario))
     .join(',')
-  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}`
+  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? ''}`
   const rowPanelHeight = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
@@ -296,6 +296,13 @@ export function PhaseScenarioOverview({
     >
       {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
+        /*
+          The focused scenario leaves the overview's shared-row contract:
+          without the locked height / phase-uniform view type it becomes the
+          FOCUSED SCENARIO VIEW, where compared paths stack as vertical
+          bands. Its dimmed siblings keep the horizontal row layout.
+        */
+        const isFocusedScenario = focusedScenarioId === scenario.id
 
         return (
           <Fragment key={scenario.id}>
@@ -306,10 +313,14 @@ export function PhaseScenarioOverview({
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={rowPanelHeight}
-              fixedSwimlaneBodyHeight={sharedSwimlaneBodyHeight}
-              lockPanelHeight={alignPanelHeights}
-              displayViewType={resolveViewType(scenario)}
+              lockedPanelHeight={isFocusedScenario ? undefined : rowPanelHeight}
+              fixedSwimlaneBodyHeight={
+                isFocusedScenario ? undefined : sharedSwimlaneBodyHeight
+              }
+              lockPanelHeight={isFocusedScenario ? false : alignPanelHeights}
+              displayViewType={
+                isFocusedScenario ? undefined : resolveViewType(scenario)
+              }
               onNavigate={() => openDetail(scenario.id)}
               dimmed={
                 dimAllScenarios ||

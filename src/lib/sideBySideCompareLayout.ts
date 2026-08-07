@@ -17,6 +17,7 @@ import {
   getCellContentMinHeight,
   getLayerRowMinHeight,
   getStepColumnsWidth,
+  STEP_COLUMN_GAP,
   layerHasOverheadArrowCorridor,
   layerHasWrapCorridorBelow,
   shouldShowInteractionLineAfter,
@@ -665,6 +666,78 @@ export function getComparePanelHeight(
 ): number {
   return (
     getCompareGridHeight(blueprints, compact) + getComparePanelScrollPaddingY()
+  )
+}
+
+/* ---------------------------------------------------------------------------
+ * Stacked arrangement (focused scenario view): one canonical step-column
+ * axis, one full band per path stacked top-to-bottom. Estimates only — the
+ * panel's measurement overrides once content renders.
+ * ------------------------------------------------------------------------ */
+
+/** Vertical gap between stacked path bands — room for both bands' section
+ *  frame insets (20 + 20) plus the lower band's title badge overhang. */
+export const COMPARE_STACKED_BAND_GAP = 64
+/** Gap between the step-header row and the first band's rows. */
+export const COMPARE_STACKED_HEADER_GAP = 36
+
+/** One band's box height: its lane-row tracks plus the row gaps between them
+ *  (section-frame insets live in the band gaps, not the band box). */
+export function getStackedCompareBandBodyHeight(
+  rows: SwimlaneRowSpec[],
+): number {
+  const trackHeights = rows.reduce(
+    (sum, row) => sum + getCompareRowTrackHeight(row),
+    0,
+  )
+  return trackHeights + Math.max(0, rows.length - 1) * BLUEPRINT_LAYER_ROW_GAP
+}
+
+/** Stacked board width for a canonical column count: rail + step columns. */
+export function getStackedCompareGridWidth(columnCount: number): number {
+  return (
+    COMPARE_LABEL_WIDTH +
+    STEP_COLUMN_GAP +
+    getStepColumnsWidth(Math.max(1, columnCount)) +
+    COMPARE_PANEL_PADDING +
+    COMPARE_PANEL_PADDING_RIGHT
+  )
+}
+
+export function getStackedCompareGridHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+  collapsedLayerIds: ReadonlySet<string> = new Set(),
+): number {
+  if (blueprints.length === 0) return COMPARE_MIN_PANEL_HEIGHT
+  const rows = buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds)
+  const bandBody = getStackedCompareBandBodyHeight(rows)
+
+  return (
+    COMPARE_STEP_HEADER_HEIGHT +
+    COMPARE_STACKED_HEADER_GAP +
+    blueprints.length * bandBody +
+    Math.max(0, blueprints.length - 1) * COMPARE_STACKED_BAND_GAP +
+    COMPARE_PATH_SECTION_BOTTOM_INSET +
+    COMPARE_PANEL_PADDING * 2
+  )
+}
+
+export function getStackedComparePanelWidth(columnCount: number): number {
+  return (
+    getStackedCompareGridWidth(columnCount) +
+    ARROW_VIEWPORT_PAD * 2 +
+    (COMPARE_PANEL_PADDING_RIGHT - COMPARE_PANEL_PADDING)
+  )
+}
+
+export function getStackedComparePanelHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+): number {
+  return (
+    getStackedCompareGridHeight(blueprints, compact) +
+    getComparePanelScrollPaddingY()
   )
 }
 

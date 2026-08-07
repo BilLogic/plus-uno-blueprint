@@ -6,6 +6,12 @@ import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCel
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
+import {
+  BlueprintDividerRow,
+  BlueprintLabelRow,
+  BlueprintStickyLabelBackdrop,
+  BlueprintSwimLaneDivider,
+} from '@/components/blueprint/BlueprintLabelRail'
 import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSectionFrame'
 import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
@@ -170,6 +176,69 @@ export function BlueprintPathBand({
         compact={compact}
         showPathTypeBadge={showPathTypeBadge}
       />
+      {arrangement.kind === 'row' ? (
+        <>
+          {/* Divergent columns tint the full band height — the v3 diff
+              signal is column-level; cells themselves never carry paint.
+              `relative` so the tint paints above the absolutely-positioned
+              section frame while staying under the z-[1] cells. */}
+          {arrangement.columns.map((column, columnIndex) =>
+            column.divergent ? (
+              <div
+                key={`tint-${column.key}`}
+                aria-hidden
+                data-blueprint-compare-diffcolumn=""
+                className="pointer-events-none relative rounded-md"
+                style={{
+                  gridColumn: columnIndex + 2,
+                  gridRow: '1 / -1',
+                  marginLeft: -STEP_COLUMN_GAP / 2,
+                  marginRight: -STEP_COLUMN_GAP / 2,
+                }}
+              />
+            ) : null,
+          )}
+          {/* The label rail re-emits per band: every band names its own
+              lanes, in DOM order matching the path order. */}
+          <BlueprintStickyLabelBackdrop rowCount={rows.length} />
+          {rows.map((row, rowIndex) =>
+            row.kind === 'interaction' ||
+            row.kind === 'visibility' ||
+            row.kind === 'internalInteraction' ? (
+              <BlueprintDividerRow
+                key={`rail-${row.key}`}
+                rowIndex={rowIndex}
+                label={row.label}
+                lineStyle={
+                  row.kind === 'interaction'
+                    ? 'dashed'
+                    : row.kind === 'internalInteraction'
+                      ? 'dotted'
+                      : 'solid'
+                }
+              />
+            ) : (
+              <Fragment key={`rail-${row.key}`}>
+                <BlueprintLabelRow
+                  row={row}
+                  layers={layers}
+                  compact={compact}
+                  onToggleLayer={arrangement.onToggleLayer}
+                  style={{
+                    gridColumn: 1,
+                    gridRow: rowIndex + 1,
+                    alignSelf: 'start',
+                    height: '100%',
+                  }}
+                />
+                {row.showDividerBelow ? (
+                  <BlueprintSwimLaneDivider rowIndex={rowIndex} />
+                ) : null}
+              </Fragment>
+            ),
+          )}
+        </>
+      ) : null}
       <IntegratedTriggerArrows
         layer="forward"
         triggers={arrowData.triggers}

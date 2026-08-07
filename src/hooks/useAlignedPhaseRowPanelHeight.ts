@@ -35,6 +35,10 @@ export function useAlignedPhaseRowPanelHeight(
       )
       let maxPanelHeight = sharedPanelHeight
       contentNodes.forEach((node) => {
+        // The focused scenario opts out of the shared-row contract (it
+        // renders the stacked arrangement at content height) — it must not
+        // drive its dimmed siblings' locked height.
+        if (node.closest('[data-canvas-focus-active]')) return
         // Layout height only — `scrollHeight` also counts arrow overlays and
         // path frames bleeding past the board, which shows up as gray surplus.
         maxPanelHeight = Math.max(maxPanelHeight, node.offsetHeight + scrollPad)
