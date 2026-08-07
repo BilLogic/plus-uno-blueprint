@@ -66,8 +66,9 @@ erDiagram
   - `side-by-side` (UI: "Stacked"): labeled variant comparison — any two
     labeled variants ("as designed" vs "reality" is just the default labeling)
   - `integrated`: legacy value; persisted rows coerce to the plain Stacked
-    view on read. The UI's "Merged" compare lens is session-only and is
-    never written back as `integrated`
+    view on read. The UI's "Merged" canvas (the compared paths drawn as one
+    combined blueprint) is session-only and is never written back as
+    `integrated`
 - `paths.path_type`: `happy` \| `unhappy` \| `exception` \| `alternative`
 
 ## Integrity trigger (why import order matters)

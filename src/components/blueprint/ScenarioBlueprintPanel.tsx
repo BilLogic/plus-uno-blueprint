@@ -246,8 +246,15 @@ export function ScenarioBlueprintPanel({
       const activeIndex = stepGroups.findIndex(
         (group) => group.columnKey === state.activeStepKey,
       )
+      // Mode is a real canvas fact, not a preset: describe what the reader
+      // is looking at so the agent never says "Merged view" without saying
+      // that the paths are drawn as ONE blueprint.
+      const modeLine =
+        registration.viewMode === 'merged'
+          ? 'Merged view — the paths are combined into ONE blueprint: one lane rail, one step axis, shared cells drawn once, and divergent slots stacking each path\'s version (each still its own clickable cell)'
+          : 'Stacked view — one full band per path on a shared step axis'
       return [
-        `Comparing ${names} in ${registration.viewMode} view (scenario "${registration.scenarioName}"):`,
+        `Comparing ${names} in ${modeLine} (scenario "${registration.scenarioName}"):`,
         `${countCompareDifferences(registration.model)} differences across ${stepGroups.length} divergent steps.`,
         activeIndex >= 0
           ? `Active step ${stepGroups[activeIndex].headerLabel} (${activeIndex + 1} of ${stepGroups.length}).`

@@ -17,7 +17,7 @@ Third attempt at path comparison. The two shipped attempts failed in opposite wa
 | **Stacked view** | Paths as vertical bands on one shared step axis; divergent step columns lightly highlighted | Phase 2b |
 | **Difference Ledger** | Floating-panel surface (sibling of cell details) enumerating every difference as zone-grouped diff tables | Phase 3 |
 | **Divergence strip** | ~48px braid above the panel, both modes: fork/rejoin topology + zone navigation | Phase 3 |
-| **Merged view** | **Reading preset** (gate verdict): entering Merged auto-folds shared runs + opens the Differences ledger — a focused-compare posture over the stacked canvas. The branch canvas FAILED its data gate (below) and is archived as a conditional design | Phase 4b |
+| **Merged view** | **One combined blueprint**: the compared paths merged PER SLOT onto one lane rail + one canonical step axis — slots the paths agree on drawn once, divergent slots stacking each path's version with a colour+dash path rail. Entering Merged also applies the reading preset (auto-fold + Differences ledger). The *branch-geometry* canvas failed its data gate (below) and stays archived; the per-slot merge is gate-independent | Phase 4b |
 
 Controls live in one menubar cluster beside the slide title (≥2 paths selected):
 
@@ -26,7 +26,9 @@ Warm-Up ⓘ   [ Stacked ▣ │ Merged ▢ ]   [⇤ Fold]   [≠ 12]        ⊕ 
               mode toggle              fold shared  opens ledger
 ```
 
-**The gate on Merged — MEASURED 2026-08-07, verdict FAIL.** With Phase 1 normalization live, `buildCompareModel` over every fallback pair (16 pairs, `src/lib/compareGate.report.test.ts`): median pair = 2 spine segments at **13% coverage** (gate needs ≥30%); only 2/16 pairs pass (Warm-Up Happy/Alternate 33%, Set Goals vs its Edge Case 31%). The branch canvas is therefore **not built** — archived below as a conditional design (re-run the gate if data hygiene improves; per-pair enablement for the two passing pairs is a possible future). **Merged ships instead as a reading preset**: flipping to Merged folds shared runs and opens the Differences surface — one gesture into review posture; flipping back to Stacked unfolds. All instruments (fold, ledger, strip, column tint) remain available in both modes; the preset is the only mode difference.
+**The gate on Merged — MEASURED 2026-08-07, verdict FAIL — and what it did and did not rule out.** With Phase 1 normalization live, `buildCompareModel` over every fallback pair (16 pairs, `src/lib/compareGate.report.test.ts`): median pair = 2 spine segments at **13% coverage** (gate needs ≥30%); only 2/16 pairs pass (Warm-Up Happy/Alternate 33%, Set Goals vs its Edge Case 31%). What the gate ruled out is **branch GEOMETRY** — spine segments, fork/rejoin connectors, bypass routing — all of which need long shared RUNS of columns to read as anything but noise. It did not rule out combining the paths at all.
+
+**Merged therefore ships as a PER-SLOT merge, which is gate-independent**: it needs no shared runs, only agreement inside individual slots, so it works at any divergence ratio (including the degenerate 0% case, where it simply reads as every slot split). One grid, one lane rail, one canonical step axis (the same `buildCompareDisplayTracks` tracks Stacked uses, so fold/pleats/pin-rule/divergent-column tint carry over unchanged); per slot, either ONE cell (every path present and agreeing on content) or each present path's cell(s) stacked vertically inside that slot behind a path-coloured + path-dashed rail and a short path label. Cell height grows only where the paths disagree — that vertical swell IS the diff signal, so no paint is added beyond the existing column tint. Every sub-cell keeps its own real `cellId` and stays individually clickable, so the existing 1:1 selection machinery (`selectionContext`, `data-blueprint-cell`, focusCells/pulse, agent `focus_cell`/`open_cell_panel`) needs no disambiguation. The reading preset rides along: entering Merged also folds shared runs and opens the Differences surface; leaving unfolds. All instruments (fold, ledger, strip, column tint) work in both modes.
 
 ## Locked decisions
 
@@ -35,7 +37,10 @@ Warm-Up ⓘ   [ Stacked ▣ │ Merged ▢ ]   [⇤ Fold]   [≠ 12]        ⊕ 
 | Mode names | **Stacked / Merged** (client tokens `'stacked'`/`'merged'`; `'merged'` never persisted; DB keeps `'side-by-side'`/`'integrated'`, mapped at two seams via new `viewTypeVocabulary.ts`) |
 | Layout | Vertical stacking replaces horizontal side-by-side (focused scenario view only; overview rows keep old horizontal rendering, no compare affordances) |
 | Diff signal, Stacked | **Light per-column highlight** on divergent steps (header tint + faint column tint). No per-cell paint anywhere — v2's cell outlines are retired |
-| Diff signal, Merged | **Geometry only** (fork = the highlight); zero background paint |
+| Diff signal, Merged | **Per-slot vertical swell** (a slot is taller exactly where the paths disagree) + path rails on the disagreeing sub-cells; no background paint beyond the shared column tint |
+| Merged combine unit | **The slot** (lane × canonical column), never the run — a per-slot merge needs no spine coverage, which is why it is independent of the 4b geometry gate |
+| Merged cell identity | Each sub-cell keeps its own real `cellId`; no composite/merged ids, so selection, focus/pulse and the agent's cell tools are untouched |
+| Merged authoring | Reading view: no edit-mode drop targets (an N-path empty slot has no single sensible target) and no column/lane resize handles. Authoring stays in Stacked |
 | Signal contract | Ledger `[≠ N]` count is the **authoritative** completeness instrument; canvas geometry is a lossy overview (see taxonomy V7/V8/V9/V12) |
 | Panel | Ledger = **sibling surface of the whole cell-detail panel** (`Details │ Differences` top-level switcher); inner cell tabs untouched |
 | Ledger layout | Zone-grouped **diff tables** (lane rows × path columns). 2+ zones → accordion, one open; exactly 1 zone → flat table |
@@ -82,28 +87,28 @@ Real chrome: paths picked in the left sidebar's PATHS section (unchanged); compa
      ▁Pay▁ = tinted step header    ┊···┊ = faint column tint (no per-cell marks)
 ```
 
-**S2 — Merged (if gate passes).** Shared cells once on a spine; divergent runs fork into path-framed blocks; primary path stays on the spine baseline.
+**S2 — Merged (SHIPPED).** ONE blueprint. One lane rail (labels rendered once), one canonical step axis, one neutral board frame carrying the compared paths' badges. Per slot: agreement → one bare cell; disagreement → each present path's cell stacked inside that slot with a path rail (colour + dash) and short label.
 
 ```
 │  Warm-Up ⓘ  [ Stacked ▢ │ Merged ▣ ] [⇤ Fold] [≠ 12]              ⊕ ⊖ ⌂    │
 │──────────────────────────────────────────────────────────────────────────── │
 │  │ ━①╌╌╌●━━━②╌●━━  ◀ zone 1/2 ▶ │  strip (nav only)                        │
-│                                                                             │
-│   spine (shared, once)      ① branches            spine                     │
-│  ┌───────────────────┐  ╔═Happy════════════╗  ┌─────────┐                   │
-│  │FS [Browse][Selct] │──║FS[Pay   ][Confm] ║──│FS [Ship]│── …               │
-│  │BS [      ][Stock✓]│┐ ║BS[Charge][Email] ║ ┌│BS [Pack]│                   │
-│  └───────────────────┘│ ╚══════════════════╝ │└─────────┘                   │
-│                       │ ╔═Crisis═══════════╗ │                              │
-│                       └─║FS[Pay ✗ ][Calld] ║─┘                              │
-│                         ║BS[Callbk][Log  ] ║                                │
-│                         ╚══════════════════╝                                │
+│      ┌ HP Happy Path · AP Alternate Path ────────────────────────────────┐   │
+│               Step 3          Step 4          Step 5                         │
+│           ┌────────────┐ ┌────────────┐ ┌────────────┐                       │
+│  Reg Tut  │ Ask student│ │▏HP Checks  │ │ Leave room │   ← shared: one cell, │
+│           │ to share   │ │▏   all stu…│ │ (shared)   │     no rail           │
+│           │ (shared)   │ ├────────────┤ │            │                       │
+│           │            │ │▏AP Manually│ │            │   ← divergent: swell  │
+│           │            │ │▏   assign …│ │            │     + path rails      │
+│           └────────────┘ └────────────┘ └────────────┘                       │
 ```
 
-- spine = neutral band with its own material (hairline border, slightly recessed) — an object, not an absence
-- branch block = existing `ComparePathSectionFrame` (path color + dash + badge), **swatch-only lane rails** (text rail on spine only)
-- connectors = 3px frame-weight, **no arrowheads**, orthogonal routing through a fixed fork gutter — never confusable with trigger arrows
-- fork badge = drawn zone chip (mono digit in circle), same component on strip and ledger
+- board frame = **neutral** (it belongs to no path); the compared paths are named on its top edge, each badge carrying the short label its cell rails use (`HP`, `AP`)
+- rail = 3px left edge in the path's colour AND its dash pattern (never colour alone — SC 1.4.1), plus the short label
+- an 'only in one path' slot is just a slot with one railed sub-cell — the other paths contribute nothing and the slot is simply shorter
+- absent in every path → empty slot; divergent columns still carry the column tint, and folded runs still collapse to pleats
+- arrows: one overlay per path over the one container; a hidden path's endpoint on a shared cell is remapped onto the drawn cell, and a wholly-shared arrow is drawn once (both at the data layer, like the folded-arrow drop)
 
 **S3 — Ledger, collapsed (zone triage).**
 
@@ -157,9 +162,11 @@ Real chrome: paths picked in the left sidebar's PATHS section (unchanged); compa
 3. Open `①` → camera flies; diff table gives the words, lane × path (R4).
 4. `[⇤ Fold]` if wanted → pleats compress shared runs, differences pulled adjacent (R2).
 5. `▶` steps zone to zone; strip, canvas, and open ledger group stay in sync (R3).
-6. **Merged** (if built): same instruments over the branch canvas — the strip's braid at full scale, counterpart cells stacked one frame apart.
+6. **Merged**: same instruments over ONE blueprint — agreements collapse to single cells, and the two versions of a difference sit one above the other in the same slot (R4 without leaving the canvas). Entering it also folds + opens the ledger.
 
-## Merged view — branch anatomy (ARCHIVED: gate failed 2026-08-07 — kept as the conditional design)
+## Merged view — branch anatomy (ARCHIVED: the *geometry* gate failed 2026-08-07 — kept as the conditional design)
+
+> History, not the shipped design. What shipped is the per-slot merge described in the Summary and S2 above; this section is the branch-GEOMETRY design the data gate ruled out. The two are not alternatives to the same question: branch geometry needs long shared runs, a per-slot merge needs none, so the gate result below constrains this section only.
 
 `CompareModel.runs` maps 1:1 onto canvas segments: shared run → **spine segment** (one band, cells rendered once — identical by definition), divergent run → **branch cluster** (one mini-band per path, only that run's columns, full lane rows inside). 'Only'-runs: the owning path gets a block; other paths' connectors pass straight through as a visible **bypass** (tooltip: "Happy Path: no additional steps here"; click focuses the cluster).
 
@@ -187,7 +194,7 @@ Fork condition: `content` differs OR presence differs. Precedence: presence + co
 
 ### The Phase 4b gate — result
 
-**FAIL (2026-08-07).** `src/lib/compareGate.report.test.ts` over all 16 fallback pairs, post-normalization: median 13% spine coverage vs 30% required; passing pairs 2/16. Live corroboration: Warm-Up's shared columns are almost all *pinned* (one-hop edges into divergent cells — 6 of 7), so even fold compression is thin. Consequence: the branch canvas stays unbuilt; the `Merged` toggle ships as the reading preset (auto-fold + ledger open). The gate report stays in the suite — re-run it after significant blueprint restructuring; if the median crosses the bar, this section's design is ready to build as specced.
+**FAIL (2026-08-07).** `src/lib/compareGate.report.test.ts` over all 16 fallback pairs, post-normalization: median 13% spine coverage vs 30% required; passing pairs 2/16. Live corroboration: Warm-Up's shared columns are almost all *pinned* (one-hop edges into divergent cells — 6 of 7), so even fold compression is thin. Consequence: **the branch canvas stays unbuilt** and this section stays archived. The `Merged` toggle ships the per-slot merge instead (`MergedCompareGrid`), which is unaffected by the measurement — it aligns slots, not runs. The gate report stays in the suite — re-run it after significant blueprint restructuring; if the median crosses the bar, this section's design is ready to build as specced (as an addition to the per-slot merge's geometry, not a replacement for the combine).
 
 ## Architecture
 
@@ -238,6 +245,15 @@ export function computePinnedColumns(model, blueprints): ReadonlySet<string>
 - Estimators: width = rail + one canonical card; height = Σ bands + gaps; view mode in `compareFitContentKey`, **fold state NOT in it** (panel's ResizeObserver already handles content shrink; key-reset would nuke the user's drag-resize per pleat toggle). Soft cap 4 bands; no virtualization.
 - Deletions, enumerated: `IntegratedBlueprintGrid.tsx`, `IntegratedPathSectionFrame.tsx`, `mergeIntegratedBlueprint.ts`, `integratedForkArrowGeometry.ts`, the dead `useIntegratedLayout` branch + always-computed merge call, highlight-pass gating. `IntegratedTriggerArrows.tsx` survives, renamed; its mapper gains `kind: 'trigger'|'needs'`.
 
+### Merged grid (Phase 4b — `MergedCompareGrid`)
+
+- Same parent grid as Stacked: one canonical column axis (`useCompareGridAxis` → `buildCompareGridTracks` → `buildCompareDisplayTracks`), one step-header row, pleats and divergent tint from the shared `CompareTrackDecorations`. Rows use `minmax(Npx, auto)` (`getMergedCompareRowTrackCss`) — a fixed track would clip the swell; a lane with no divergence still measures exactly as in Stacked.
+- ONE band, so the lane rail (`BlueprintLabelRail` components) and the lane-row shell (`CompareLaneRowShell`, extracted from `BlueprintPathBand`) render once. The board frame is neutral with path badges on its top edge — it belongs to no path.
+- Slot assembly is pure and unit-tested (`src/lib/compareMergedGrid.ts`): `assembleMergedSlot(pathIds, candidates)` → `shared | split | empty`, sub-cells in path selection order. The merge signature is the **content** field signature, so a detail-only (V7) difference merges into one cell on the canvas and is reported only by the ledger — matching the fork condition. Presence is half the condition: 2-of-3 paths agreeing is still a `split`. A visual lane merges on its picture set instead (its face comes from the walkthrough layers, not its own text).
+- Cells are the same `CompareCellBlock` Stacked draws (also extracted), plus an optional `pathRail` (colour + dash + short label from `buildComparePathShortLabels`).
+- Arrows: one overlay pair per path over the single container. Because a shared slot draws only the first path's cell, `buildMergedArrowRemap` rewrites hidden paths' endpoints onto the drawn cell and drops a wholly-shared arrow for every path but the first — data-level, like the Phase 4a folded-arrow drop, which still applies on top.
+- Estimators: width = Stacked's (same axis); height = one band (`getMergedComparePanelHeight`). The swell is deliberately not estimated — the panel's measurement replaces the floor.
+
 ### Panel & ledger (Phase 3)
 
 - **One owner:** `panelState: { surface: 'details' | 'differences' } | null` in `BlueprintCellDetailContext`. `drawerOpen = panelState !== null`; cell click → `{surface:'details'}` + selection; menubar `[≠ N]` → `{surface:'differences'}` (no selection needed); Details with no selection = quiet placeholder. **One** closing snapshot of panelState + rendered content (the `onOpenChange` comment at `BlueprintCellDetailPanel.tsx:~1035` is a tombstone for the last multi-owner design — never OR two booleans). Surface switch = content swap, never close-reopen; `closePanel()` clears atomically; clears on `resetKey` and on path selection dropping below 2.
@@ -280,7 +296,7 @@ Pleats: fixed-width column, flat `--muted` + single 1px crease (rib texture cut 
 | **2b** | Stacked grid rewrite: shared band renderer, subgrid inversion, spacers, estimators, arrow hardening, **column highlight**, enumerated deletions, overview scope-down | build+lint clean; Ecoeled visual pass (row rhythm) |
 | **3** | Panel: `panelState` refactor → ledger surface (accordion policy, diff tables, filter) + **strip (both modes)** + `focusCells` pipeline + agent commands + `get_compare_diff` | drawer bounce tests; ledger opens from Stacked |
 | **4a** | Fold in both modes (pleats, pin rule wiring, data-level arrow filtering, menubar toggle, shared state) | pleat toggle = one frame, no camera shimmy |
-| **4b** | Gate measured: **FAIL** (median 13% vs 30%). Merged ships as the **reading preset**: entering Merged sets fold=true + opens the Differences surface; leaving restores unfolded. Branch canvas archived (see anatomy section) with the gate report kept runnable | gate report in suite; preset smoke-tested |
+| **4b** | Geometry gate measured: **FAIL** (median 13% vs 30%) → branch canvas archived. Merged ships as the **per-slot merged grid** (`MergedCompareGrid` + pure `compareMergedGrid` assembly/arrow remap, shared axis via `useCompareGridAxis`/`compareGridTracks`), plus the reading preset (fold + Differences on entry) | gate report in suite; merged grid live-checked; pure-lib tests for slot assembly, ordering and arrow remap |
 | **5** | A11y polish: keyboard scoping, roles/labels, reduced-motion audit, empty states | — |
 
 1 → 2a → 2b → 3 → 4a ordered; 4b after gate; focus pipeline (3) must precede fold auto-expand (4a).
@@ -295,14 +311,15 @@ Pleats: fixed-width column, flat `--muted` + single 1px crease (rib texture cut 
 - [ ] Strip/canvas/ledger/`jump_divergence` share ①②③ indices; ◀/▶ keeps all three in sync
 - [ ] One-hop pin rule unit-tested; pinned columns show the explainer; fold disabled at zero differences
 - [ ] `get_compare_diff` works headless; all commands registered in their surface's phase; `get_ui_state` compare line present; uiBridge probe correct for ledger-only open
-- [ ] Merged = reading preset: flipping to Merged folds shared runs + opens the Differences surface; flipping to Stacked unfolds; agent `set_scenario_view merged` applies the same preset (branch canvas: archived, gate FAIL recorded)
+- [ ] Merged = ONE blueprint: one lane rail, one canonical step axis, agreeing slots drawn once with no rail, divergent slots stacking each present path's cell(s) with colour+dash rail + short label, empty slots inert; fold/pleats/pin glyph/column tint all still work; every sub-cell individually clickable into Details; no edit-mode drop targets in merged
+- [ ] Flipping to Merged also folds shared runs + opens the Differences surface; flipping to Stacked unfolds; agent `set_scenario_view merged` lands on the same seam (branch GEOMETRY canvas: archived, gate FAIL recorded)
 - [ ] `npm test` green, `npm run lint` zero, `npm run build` clean; pleat toggle one frame; reduced-motion respected
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Real data 67–95% divergent — Merged's regime may not exist | Phase 4b data gate; Stacked+strip+ledger ship first and may suffice |
+| Real data 67–95% divergent — Merged's regime may not exist | Phase 4b data gate killed branch *geometry*; the shipped per-slot merge has no such regime (it degrades to "every slot split", which is still one lane rail and one axis) |
 | Name-based alignment fabricates topology | Phase 1 normalization + near-match, tests pinned on real rename cases |
 | Subgrid inversion breaks row rhythm (v1's failure mode) | Bands keep full lane structure; rename split out of the PR; Ecoeled visual pass |
 | Drawer refactor destabilizes cell flow | `panelState` lands first with bounce tests; single owner = less state than today |
@@ -322,4 +339,4 @@ Review/check-off (session store keyed `(slotKey, signatureHash, pathIdSet)` — 
 
 ## Appendix — decision history (compressed)
 
-2026-08-06: concepts A+C chosen from ideation; vertical stacking; ledger as panel sibling (corrected from inner-tab reading); deepen round (8 agents: drawer single-owner, two-seam rename, agent read tool, race/perf fixes, simplicity cuts). Naming churned Review → Diff → Merged (final). Zones-on-stacked concept explored, then superseded. 2026-08-07: Merged pivoted to true branch canvas; review machinery cut; accordion policy + filter settled; fold both modes + menubar cluster (user-picked layout); 3-lens critique panel → Ecoeled divergence measurements → Merged gated, normalization prerequisite, strip in both modes, signal contract demoted to ledger-authoritative.
+2026-08-06: concepts A+C chosen from ideation; vertical stacking; ledger as panel sibling (corrected from inner-tab reading); deepen round (8 agents: drawer single-owner, two-seam rename, agent read tool, race/perf fixes, simplicity cuts). Naming churned Review → Diff → Merged (final). Zones-on-stacked concept explored, then superseded. 2026-08-07: Merged pivoted to true branch canvas; review machinery cut; accordion policy + filter settled; fold both modes + menubar cluster (user-picked layout); 3-lens critique panel → Ecoeled divergence measurements → Merged gated, normalization prerequisite, strip in both modes, signal contract demoted to ledger-authoritative. 2026-08-07 (later): "Merged = reading preset" rejected by the user as two separated blueprints stacked (that is Stacked's job) — Merged re-specced and shipped as a PER-SLOT merge into one blueprint, chosen over the archived branch geometry because it needs no spine runs (gate-independent) and because each sub-cell keeps its own cellId, so no selection disambiguation is needed.
