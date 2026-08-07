@@ -18,6 +18,7 @@ import { SliceView } from '@/components/editor/SliceView'
 import { TabStrip } from '@/components/editor/TabStrip'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { useCellDeepLink } from '@/hooks/useCellDeepLink'
 import { setSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
 import {
   tabKey,
@@ -88,6 +89,10 @@ export function EditorShell() {
   } = useEditor()
   const { activeTab, activateTab, openTab, closeTab } = useViewState()
   const { canAgent } = useSupabase()
+  // `?cell=` boot deep link — the receiving end of the share link uno-bot
+  // hands back with a cited cell. Mounted here because it needs the editor's
+  // navigation and the boot URL state, and both live at this level.
+  useCellDeepLink()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const isLanding = view === 'landing'
   // Home reads as active only on the overview canvas itself, and only while

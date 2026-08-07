@@ -2,12 +2,19 @@
  * URL view state — the one module that owns the view query-param names.
  *
  * Params: `slice` (slice id), `mode` (`present` only; absence of `mode` with a
- * `slice` param means slice focus view), `frame` (presentation frame index).
+ * `slice` param means slice focus view), `frame` (presentation frame index),
+ * `cell` (cell id — opens the base blueprint with that cell's panel showing).
  * Unknown params are ignored on parse and dropped on serialize.
+ *
+ * `cell` is the share link an outside tool hands back: uno-bot's
+ * blueprint_search cites a cell and attaches `…/?cell=<id>` so a Slack or IDE
+ * reader can open the exact cell it quoted. It belongs to the BASE view — a
+ * slice tab is a different reading of the blueprint, so `slice` wins and `cell`
+ * is dropped when both appear rather than opening a panel behind a tab.
  */
 
 export type UrlViewState =
-  | { kind: 'blueprint' }
+  | { kind: 'blueprint'; cellId?: string }
   | { kind: 'slice'; sliceId: string }
   | { kind: 'present'; sliceId: string; frame: number }
 
@@ -31,6 +38,9 @@ export function parseUrlViewState(search: string): UrlViewState | null {
     return { kind: 'slice', sliceId }
   }
 
+  const cellId = params.get('cell')
+  if (cellId) return { kind: 'blueprint', cellId }
+
   return null
 }
 
@@ -40,6 +50,7 @@ export function serializeUrlViewState(state: UrlViewState): string {
 
   switch (state.kind) {
     case 'blueprint':
+      if (state.cellId) params.set('cell', state.cellId)
       break
     case 'slice':
       params.set('slice', state.sliceId)

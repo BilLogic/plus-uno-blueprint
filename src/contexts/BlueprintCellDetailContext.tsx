@@ -30,6 +30,7 @@ import {
   subscribeCompareReview,
 } from '@/lib/compareReviewStore'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
+import { setOpenCellId } from '@/lib/openCellStore'
 
 export type BlueprintCellPreviewHover = {
   cellId: string
@@ -136,6 +137,16 @@ export function BlueprintCellDetailProvider({
         .join('; ')
       return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — layer "${selection.layerName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
     })
+  }, [selection])
+
+  // Publish the open cell so the URL can carry it (`?cell=`) — that address is
+  // the share link, and the same one uno-bot builds when it cites this cell.
+  // First path only: a multi-path selection is one cell read across variants,
+  // and the first entry is the one the panel opens on.
+  useEffect(() => {
+    const cellId = selection?.paths[0]?.cellId ?? null
+    setOpenCellId(cellId)
+    return () => setOpenCellId(null)
   }, [selection])
 
   const selectCell = useCallback((next: BlueprintCellSelection) => {
