@@ -117,16 +117,21 @@ export function IntegratedTriggerArrows({
     }
 
     const nextSimple: SimpleSegment[] = []
+    // ONE DOM sweep per update: every per-trigger querySelector below used to
+    // rescan the whole band (O(triggers × cells)); the index kills that.
+    const cellElById = new Map<string, HTMLElement>()
+    for (const el of content.querySelectorAll<HTMLElement>(
+      '[data-blueprint-cell]',
+    )) {
+      const id = el.getAttribute('data-blueprint-cell')
+      if (id !== null && !cellElById.has(id)) cellElById.set(id, el)
+    }
     const { resolveTriggers, otherTriggers: railInputTriggers } =
       partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
 
     for (const trigger of resolveTriggers) {
-      const sourceEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.source_cell_id}"]`,
-      )
-      const targetEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.target_cell_id}"]`,
-      )
+      const sourceEl = cellElById.get(trigger.source_cell_id)
+      const targetEl = cellElById.get(trigger.target_cell_id)
       if (!sourceEl || !targetEl) continue
 
       const wrap = isWrapTrigger(
@@ -217,9 +222,7 @@ export function IntegratedTriggerArrows({
       >()
 
       for (const trigger of triggersInGroup) {
-        const sourceEl = content.querySelector<HTMLElement>(
-          `[data-blueprint-cell="${trigger.source_cell_id}"]`,
-        )
+        const sourceEl = cellElById.get(trigger.source_cell_id)
         if (!sourceEl) continue
 
         const existing = byPathId.get(trigger.path_id)
@@ -241,12 +244,8 @@ export function IntegratedTriggerArrows({
         const targetEl =
           triggersInGroup
             .filter((trigger) => trigger.path_id === pathId)
-            .map((trigger) =>
-              content.querySelector<HTMLElement>(
-                `[data-blueprint-cell="${trigger.target_cell_id}"]`,
-              ),
-            )
-            .find((el): el is HTMLElement => el !== null) ?? group.targetEl
+            .map((trigger) => cellElById.get(trigger.target_cell_id))
+            .find((el): el is HTMLElement => el !== undefined) ?? group.targetEl
 
         const d = buildApplicationRegularTutorRailBusPath(
           pathGroup.sourceEls,
@@ -269,12 +268,8 @@ export function IntegratedTriggerArrows({
       findBidirectionalTriggerPairs(remaining)
 
     for (const pair of pairs) {
-      const cellAEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${pair.cellAId}"]`,
-      )
-      const cellBEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${pair.cellBId}"]`,
-      )
+      const cellAEl = cellElById.get(pair.cellAId)
+      const cellBEl = cellElById.get(pair.cellBId)
       if (!cellAEl || !cellBEl) continue
 
       const wrap = isWrapTrigger(
@@ -301,12 +296,8 @@ export function IntegratedTriggerArrows({
     }
 
     for (const trigger of unpaired) {
-      const sourceEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.source_cell_id}"]`,
-      )
-      const targetEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.target_cell_id}"]`,
-      )
+      const sourceEl = cellElById.get(trigger.source_cell_id)
+      const targetEl = cellElById.get(trigger.target_cell_id)
       if (!sourceEl || !targetEl) continue
 
       const wrap = isWrapTrigger(
@@ -351,26 +342,31 @@ export function IntegratedTriggerArrows({
     if (!content) return
 
     const scrollParent = scrollContainerRef.current ?? content
-    const observer = new ResizeObserver(() => updateArrows())
+
+    // One rAF coalescer for every geometry-invalidating signal — the
+    // ResizeObserver included. Resizes arrive in bursts during band
+    // relayout, and a synchronous update per notification re-measured the
+    // whole overlay several times a frame.
+    let raf = 0
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(updateArrows)
+    }
+
+    const observer = new ResizeObserver(scheduleUpdate)
     observer.observe(content)
     if (scrollParent !== content) {
       observer.observe(scrollParent)
     }
 
-    let raf = 0
-    const onScrollOrResize = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(updateArrows)
-    }
-
-    scrollParent.addEventListener('scroll', onScrollOrResize, { passive: true })
-    window.addEventListener('resize', onScrollOrResize)
+    scrollParent.addEventListener('scroll', scheduleUpdate, { passive: true })
+    window.addEventListener('resize', scheduleUpdate)
 
     return () => {
       cancelAnimationFrame(raf)
       observer.disconnect()
-      scrollParent.removeEventListener('scroll', onScrollOrResize)
-      window.removeEventListener('resize', onScrollOrResize)
+      scrollParent.removeEventListener('scroll', scheduleUpdate)
+      window.removeEventListener('resize', scheduleUpdate)
     }
   }, [contentRef, scrollContainerRef, updateArrows])
 
