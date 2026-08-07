@@ -86,7 +86,13 @@ export function StructureRowContextMenu({
   children,
 }: {
   kind: StructureKind
-  id: string
+  /**
+   * The row's real uuid. `null` means the caller cannot name one row — the
+   * overview path list folds same-named paths from several scenarios into a
+   * single entry — and the menu then does not open at all, rather than
+   * offering a rename that would fail at the database.
+   */
+  id: string | null
   name: string
   /**
    * The phase a scenario row belongs to. Without it the row can still be
@@ -109,7 +115,8 @@ export function StructureRowContextMenu({
 
   // Edit mode only. Renaming and deleting are authoring, and View mode's
   // whole premise is that nothing on screen changes anything.
-  if (!canWrite || !client || mode !== 'design') return <>{children}</>
+  if (!canWrite || !client || mode !== 'design' || id === null)
+    return <>{children}</>
 
   const canDelete =
     kind !== 'phase' && deletionReadiness(archiveAvailable).canDelete

@@ -15,8 +15,14 @@ export function collectOverviewPathOptions(
   for (const paths of pathsByScenario.values()) {
     for (const path of paths) {
       const key = getOverviewPathKey(path)
-      if (!byKey.has(key)) {
-        byKey.set(key, { ...path, id: key })
+      const existing = byKey.get(key)
+      if (existing) {
+        // Same name and type in another scenario — one filter row, but both
+        // real rows recorded, so a caller that needs to *write* can tell that
+        // this option is ambiguous rather than guessing at the first uuid.
+        existing.pathIds?.push(path.id)
+      } else {
+        byKey.set(key, { ...path, id: key, pathIds: [path.id] })
       }
     }
   }

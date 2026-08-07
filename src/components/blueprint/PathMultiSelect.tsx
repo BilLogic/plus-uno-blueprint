@@ -5,10 +5,22 @@ import { cn } from '@/lib/utils'
 import type { PathType } from '@/types/database'
 
 export type PathOption = {
+  /**
+   * The *filter* key, not a row id. Overview filtering folds paths that share
+   * a name and type across scenarios into one option, so this is
+   * `${path_type}:${name}` — never a uuid. Anything that writes to a path row
+   * wants `pathIds` instead.
+   */
   id: string
   name: string
   description: string | null
   path_type: PathType
+  /**
+   * The real path uuids folded into this option, in the order they were
+   * collected. Present only on options built by `collectOverviewPathOptions`;
+   * absent where a single concrete path is handed straight to the picker.
+   */
+  pathIds?: string[]
 }
 
 const MAX_PATHS_PER_COLUMN = 2

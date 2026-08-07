@@ -109,11 +109,19 @@ function PathChecklist({
     <ul className="flex flex-col gap-0.5">
       {options.map((option) => {
         const selected = activePathKeys.includes(option.id)
+        // `option.id` is the filter key (`happy:Happy Path`), which every
+        // authoring RPC would reject as a uuid. The row menu gets the real
+        // path row — and only when the option names exactly one, which is
+        // the scenario-scoped case. The catalog-wide safety valve folds
+        // same-named paths from several scenarios into one row, and there is
+        // no honest answer to "rename which one", so it carries no menu.
+        const pathId =
+          option.pathIds?.length === 1 ? option.pathIds[0] : null
         return (
           <li key={option.id}>
           <StructureRowContextMenu
             kind="path"
-            id={option.id}
+            id={pathId}
             name={option.name}
             scenarioId={scenarioId}
           >
