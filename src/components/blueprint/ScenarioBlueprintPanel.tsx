@@ -3,6 +3,10 @@ import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePa
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
+import {
+  CompareDivergenceStrip,
+  COMPARE_STRIP_HEIGHT,
+} from '@/components/blueprint/CompareDivergenceStrip'
 import { useEditor } from '@/contexts/EditorContext'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
@@ -11,6 +15,7 @@ import {
   deriveCompareZones,
   parseCompareLedgerFilter,
 } from '@/lib/compareLedger'
+import { jumpToCompareZone } from '@/lib/compareZoneNavigation'
 import {
   clearCompareFilters,
   getCompareReviewState,
@@ -195,6 +200,48 @@ export function ScenarioBlueprintPanel({
           : 'Ledger filter: none.',
       ].join(' ')
     })
+    const unregisterJump = registerAgentUiCommand({
+      name: 'jump_divergence',
+      description:
+        'Fly the camera to a divergence zone of the compared paths and mark it active (strip + ledger stay in sync). arg: next | prev | <zone number> — the same ①②③ indices the strip and ledger show.',
+      run: (arg) => {
+        const state = getCompareReviewState()
+        const registration = state.registration
+        if (!registration) return 'No comparison is active.'
+        const zones = deriveCompareZones(registration.model)
+        if (zones.length === 0)
+          return 'The compared paths have no divergence zones — they are identical on the canvas.'
+        const input = arg?.trim() ?? ''
+        let target: number
+        if (input === '' || input === 'next') {
+          target =
+            state.activeZone === null
+              ? 1
+              : Math.min(state.activeZone + 1, zones.length)
+        } else if (input === 'prev') {
+          target =
+            state.activeZone === null
+              ? zones.length
+              : Math.max(state.activeZone - 1, 1)
+        } else {
+          const parsedIndex = Number(input)
+          if (
+            !Number.isInteger(parsedIndex) ||
+            parsedIndex < 1 ||
+            parsedIndex > zones.length
+          )
+            return `No zone "${input}" — zones run 1 to ${zones.length}. arg: next | prev | <zone number>.`
+          target = parsedIndex
+        }
+        const zone = zones[target - 1]
+        const outcome = jumpToCompareZone(zone, registration.slideId)
+        return `Zone ${target} of ${zones.length} (${zone.stepRangeLabel} · ${zone.titleLabel}, ${zone.slots.length} differences)${
+          outcome?.kind === 'flown'
+            ? ' — camera flown to it.'
+            : " — marked active, but its cells are not on the current canvas."
+        }`
+      },
+    })
     const unregisterFilter = registerAgentUiCommand({
       name: 'differences_filter',
       description:
@@ -218,6 +265,7 @@ export function ScenarioBlueprintPanel({
     })
     return () => {
       unregisterFilter()
+      unregisterJump()
       unregisterContext()
       unregisterStore()
     }
@@ -332,6 +380,17 @@ export function ScenarioBlueprintPanel({
     return (
       <ResizableComparePanel
         {...comparePanelProps}
+        // Strip in both compare modes (stacked + merged), navigation only.
+        chromeBar={
+          compareModel ? (
+            <CompareDivergenceStrip
+              model={compareModel}
+              blueprints={visibleBlueprints}
+              slideId={slide.id}
+            />
+          ) : undefined
+        }
+        chromeBarHeight={COMPARE_STRIP_HEIGHT}
         fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
       >
         {useStackedArrangement ? (
