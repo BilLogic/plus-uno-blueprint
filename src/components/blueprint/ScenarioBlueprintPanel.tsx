@@ -4,7 +4,7 @@ import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePa
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { useEditor } from '@/contexts/EditorContext'
-import { comparePathCells } from '@/lib/comparePathCells'
+import { buildCompareModel, type CompareBlueprints } from '@/lib/compareSlots'
 import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
@@ -138,17 +138,15 @@ export function ScenarioBlueprintPanel({
     [allBlueprints, selectedPathIds],
   )
 
-  const compareStatusByCellId = useMemo(
-    () =>
-      compareHighlight
-        ? comparePathCells(
-            itemsInSelectionOrder(selectedPathIds, (id) =>
-              blueprintsByPathId.get(id),
-            ),
-          )
-        : undefined,
-    [blueprintsByPathId, compareHighlight, selectedPathIds],
-  )
+  const compareStatusByCellId = useMemo(() => {
+    if (!compareHighlight) return undefined
+    const compared = itemsInSelectionOrder(selectedPathIds, (id) =>
+      blueprintsByPathId.get(id),
+    )
+    if (compared.length < 2) return undefined
+    const model = buildCompareModel(compared as CompareBlueprints)
+    return new Map(Object.entries(model.cellStatus))
+  }, [blueprintsByPathId, compareHighlight, selectedPathIds])
 
   const showIntegratedGrid =
     useIntegratedLayout && integratedBlueprint !== null

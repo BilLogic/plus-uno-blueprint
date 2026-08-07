@@ -1,5 +1,6 @@
 import type { BlueprintLayer, BlueprintStep, CellLink } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
+import type { CompareStatus } from '@/lib/compareSlots'
 
 export const INTEGRATED_UNSELECTED_OPACITY = 0.18
 
@@ -20,13 +21,10 @@ export function getIntegratedCellDisplayOpacity(
 
 /**
  * How a cell relates to its counterparts across the compared paths.
- *
- * `shared` — every compared path holds this cell with the same text; one
- * copy is drawn, desaturated, as the spine. `divergent` — the paths disagree
- * here; each path's cell renders as a color-keyed band. `only` — exactly one
- * path has anything in this slot; hatched outline in that path's color.
+ * Canonical definition lives in `@/lib/compareSlots` (Compare v3's model);
+ * re-exported here for the surviving integrated-vocabulary consumers.
  */
-export type CompareStatus = 'shared' | 'divergent' | 'only'
+export type { CompareStatus } from '@/lib/compareSlots'
 
 export type IntegratedBlueprintCell = {
   id: string
