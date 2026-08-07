@@ -59,7 +59,6 @@ import {
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { countCompareDifferences } from '@/lib/compareLedger'
 import {
   setCompareLedgerOpen,
   useCompareReviewState,
@@ -284,6 +283,39 @@ function PanelDrawerShell({
         {children}
       </DrawerContent>
     </Drawer>
+  )
+}
+
+/**
+ * The Details │ Differences switch — TOP-LEVEL panel chrome (the two
+ * surfaces are siblings of the whole panel), rendered from two call sites:
+ * the details branch's own header row and the differences DrawerHeader. ONE
+ * component, because two verbatim copies drifted apart once already.
+ *
+ * No count on the Differences tab: counts live in exactly two places
+ * app-wide now — the menubar Diff pill and each ledger group's trailing
+ * number.
+ */
+function PanelSurfaceSwitcher({
+  value,
+  onValueChange,
+}: {
+  value: BlueprintPanelSurface
+  onValueChange: (surface: BlueprintPanelSurface) => void
+}) {
+  return (
+    <SegmentedControl
+      aria-label="Panel surface"
+      value={value}
+      onValueChange={onValueChange}
+    >
+      <SegmentedControlItem value="details" className="px-2">
+        Details
+      </SegmentedControlItem>
+      <SegmentedControlItem value="differences" className="px-2">
+        Differences
+      </SegmentedControlItem>
+    </SegmentedControl>
   )
 }
 
@@ -752,26 +784,12 @@ function BlueprintCellDetailPanelBody() {
     branch's own header. Rendered only while a comparison is live; outside
     compare the panel is exactly what it was before v3.
   */
-  const compareCount = compareRegistration
-    ? countCompareDifferences(compareRegistration.model)
-    : 0
   const surfaceSwitcher = comparing ? (
     <div className="flex shrink-0 items-center border-b border-border/60 px-4 py-2">
-      <SegmentedControl
-        aria-label="Panel surface"
+      <PanelSurfaceSwitcher
         value={activeSurface}
-        onValueChange={(value) => setPanelSurface(value)}
-      >
-        <SegmentedControlItem value="details" className="px-2">
-          Details
-        </SegmentedControlItem>
-        <SegmentedControlItem value="differences" className="px-2">
-          Differences
-          <span className="font-mono text-3xs tabular-nums" aria-label={`${compareCount} differences`}>
-            ●{compareCount}
-          </span>
-        </SegmentedControlItem>
-      </SegmentedControl>
+        onValueChange={setPanelSurface}
+      />
     </div>
   ) : null
 
@@ -797,28 +815,13 @@ function BlueprintCellDetailPanelBody() {
         <DrawerHeader className="flex-row items-center justify-between gap-2 border-b border-border/60 px-4 py-2 text-left">
           <DrawerTitle className="sr-only">Path differences</DrawerTitle>
           <DrawerDescription className="sr-only">
-            Every difference between the compared paths, grouped by
-            divergence zone
+            Every difference between the compared paths, grouped by step
           </DrawerDescription>
           {comparing ? (
-            <SegmentedControl
-              aria-label="Panel surface"
+            <PanelSurfaceSwitcher
               value="differences"
-              onValueChange={(value) => setPanelSurface(value)}
-            >
-              <SegmentedControlItem value="details" className="px-2">
-                Details
-              </SegmentedControlItem>
-              <SegmentedControlItem value="differences" className="px-2">
-                Differences
-                <span
-                  className="font-mono text-3xs tabular-nums"
-                  aria-label={`${compareCount} differences`}
-                >
-                  ●{compareCount}
-                </span>
-              </SegmentedControlItem>
-            </SegmentedControl>
+              onValueChange={setPanelSurface}
+            />
           ) : (
             <span className="text-sm font-bold tracking-tight">
               Differences
