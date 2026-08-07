@@ -454,4 +454,34 @@
       transparent
     );
   }
+
+  /*
+   * FOCUS PULSE — brief emphasis ring after a fly-to-cell (the counterpart
+   * highlight from ledger rows, the divergence strip and agent focus).
+   * Attribute set/cleared by pulseBlueprintCells; duration built from the
+   * camera motion token so the ring fades as the camera settles. Reduced
+   * motion keeps a static ring for the same window instead of animating.
+   */
+  [data-blueprint-cell-pulse] {
+    animation: blueprint-cell-pulse calc(var(--motion-camera) * 3) ease-out both;
+  }
+
+  @keyframes blueprint-cell-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in oklab, var(--ring) 65%, transparent);
+    }
+    35% {
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--ring) 55%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 8px color-mix(in oklab, var(--ring) 0%, transparent);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-blueprint-cell-pulse] {
+      animation: none;
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 55%, transparent);
+    }
+  }
 }

@@ -423,6 +423,7 @@ export function ServiceOverviewView({
                 onResetView={isDetail ? goHome : undefined}
                 className="absolute inset-0"
                 panIgnoreSelector={OVERVIEW_PAN_IGNORE}
+                focusCellsKey={focusedScenarioId ?? soloScenarioId ?? undefined}
               >
                 <DeferredSkeleton
                   loading={!overviewReady}

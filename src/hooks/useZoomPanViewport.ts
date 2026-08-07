@@ -7,6 +7,10 @@ import {
   type PointerEvent,
 } from 'react'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
+import {
+  pulseBlueprintCells,
+  type FocusCellsResult,
+} from '@/lib/canvasFocusCells'
 import { prefersReducedMotion } from '@/lib/motion'
 import {
   BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN,
@@ -642,6 +646,77 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     setIsPanning(false)
   }, [panEnabled])
 
+  /**
+   * Monotonic focus generation: each `focusCells` call claims a new token,
+   * and any deferred work from an earlier call (the pulse cleanup, future
+   * expand-then-fly measures) aborts when it wakes up stale — ▶-spam must
+   * never land three animations on top of each other.
+   */
+  const focusGenerationRef = useRef(0)
+
+  /**
+   * The single cell-focus pipeline: fly the camera to the FIRST resolvable
+   * target and pulse every matched cell (counterpart emphasis included).
+   * Returns `{kind:'miss'}` with the unresolvable ids instead of silently
+   * doing nothing — callers (ledger rows, strip, agent commands) report it.
+   *
+   * Reads the camera from `transformRef.current`, never the React copies —
+   * those trail the live transform by up to ~80ms (see syncZoomToReact) and
+   * a fly computed from them lands beside the target, not on it.
+   */
+  const focusCells = useCallback(
+    (cellIds: string[], opts?: { animate?: boolean }): FocusCellsResult => {
+      const container = containerRef.current
+      const content = contentRef.current
+      if (!container || !content) {
+        return { kind: 'miss', missing: [...cellIds] }
+      }
+
+      focusGenerationRef.current += 1
+      const found: HTMLElement[] = []
+      const missing: string[] = []
+      for (const cellId of cellIds) {
+        const el = content.querySelector<HTMLElement>(
+          `[data-blueprint-cell="${CSS.escape(cellId)}"]`,
+        )
+        if (el) found.push(el)
+        else missing.push(cellId)
+      }
+      if (found.length === 0) return { kind: 'miss', missing }
+
+      cancelFitAnimation()
+      // The debounced recenterToView must not yank the camera back after
+      // the fly — same suppression the resize handler honors (~line 441).
+      userAdjustedViewRef.current = true
+
+      const { zoom: currentZoom } = transformRef.current
+      const safeZoom = currentZoom || 1
+      const contentRect = content.getBoundingClientRect()
+      const targetRect = found[0].getBoundingClientRect()
+      // Content-space center of the first target.
+      const worldX =
+        (targetRect.left - contentRect.left + targetRect.width / 2) / safeZoom
+      const worldY =
+        (targetRect.top - contentRect.top + targetRect.height / 2) / safeZoom
+
+      // Readable-zoom clamp: keep the camera the user chose when it can
+      // already read a cell; only zoom in from far-out overview scales.
+      const nextZoom = safeZoom >= 0.5 ? safeZoom : clampZoom(0.7)
+      const nextPan = {
+        x: container.clientWidth / 2 - worldX * nextZoom,
+        y: container.clientHeight / 2 - worldY * nextZoom,
+      }
+
+      const animate = (opts?.animate ?? true) && !prefersReducedMotion()
+      if (animate) animateTransform(nextPan, nextZoom)
+      else commitTransform(nextPan, nextZoom, true)
+
+      pulseBlueprintCells(found)
+      return { kind: 'flown' }
+    },
+    [animateTransform, cancelFitAnimation, commitTransform],
+  )
+
   const zoomIn = useCallback(() => {
     const el = containerRef.current
     if (!el) return
@@ -702,6 +777,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     zoom,
     isPanning,
     fitToView,
+    focusCells,
     resetView,
     zoomIn,
     zoomOut,
