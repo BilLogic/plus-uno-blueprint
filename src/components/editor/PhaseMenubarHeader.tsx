@@ -121,6 +121,7 @@ function CompareFoldToggle({ slide }: { slide: NavItem }) {
   if (!active) return null
   const differenceCount = countCompareDifferences(active.model)
   const disabled = differenceCount === 0 || foldableCount === 0
+  const foldLabel = `Fold ${foldableCount} shared step${foldableCount === 1 ? '' : 's'}`
   const toggle = (
     <Button
       type="button"
@@ -128,11 +129,7 @@ function CompareFoldToggle({ slide }: { slide: NavItem }) {
       size="sm"
       disabled={disabled}
       aria-pressed={fold.folded}
-      aria-label={
-        fold.folded
-          ? 'Unfold shared steps'
-          : `Fold ${foldableCount} shared steps`
-      }
+      aria-label={fold.folded ? 'Unfold shared steps' : foldLabel}
       className={cn(
         'h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground',
         fold.folded && 'bg-muted text-foreground',
@@ -155,7 +152,7 @@ function CompareFoldToggle({ slide }: { slide: NavItem }) {
             : 'Every shared step feeds a divergent one — nothing folds'
           : fold.folded
             ? 'Unfold shared steps'
-            : `Fold ${foldableCount} shared steps`}
+            : foldLabel}
       </TooltipContent>
     </Tooltip>
   )
