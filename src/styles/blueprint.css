@@ -422,3 +422,36 @@
     --foreground-blueprint-cell: var(--color-yellow-1200);
   }
 }
+
+@layer utilities {
+  /*
+   * COMPARE DIFF-COLUMN TINT — Compare v3's only canvas diff paint.
+   *
+   * "Agreement is grey, divergence is color": a canonical step column whose
+   * verdict is not 'shared' gets a light warning-family wash — a stronger
+   * tint on the step header, a faint full-height wash down the column.
+   * Column-level only, by decision: no per-cell outlines, no dimming, no ≠
+   * badges (v2's cell paint is retired). Warning says THAT paths differ;
+   * path accents stay reserved for WHO differs.
+   *
+   * color-mix against transparent instead of a raw alpha step so the wash
+   * tracks the semantic --warning through both themes (a 3–4% flat alpha
+   * disappears on the dark canvas; these ride the theme's own lightness).
+   */
+  [data-blueprint-compare-diffcolumn] {
+    --background-blueprint-diffcolumn: color-mix(
+      in oklab,
+      var(--warning) 8%,
+      transparent
+    );
+    background-color: var(--background-blueprint-diffcolumn);
+  }
+
+  [data-blueprint-compare-diffcolumn='header'] {
+    --background-blueprint-diffcolumn: color-mix(
+      in oklab,
+      var(--warning) 18%,
+      transparent
+    );
+  }
+}
