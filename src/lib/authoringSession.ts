@@ -69,6 +69,10 @@ export type WriteFn =
   | 'remove_lane'
   | 'delete_cell'
   | 'delete_slice'
+  | 'create_slice'
+  | 'duplicate_slice'
+  | 'update_slice_meta'
+  | 'replace_slice_frames'
 
 export type ChangeEntry = {
   id: string
@@ -254,6 +258,24 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   delete_cell: () => 'Deleted a cell',
   delete_slice: (entry) =>
     titled(entry) ? `Deleted slice “${titled(entry)}”` : 'Deleted a slice',
+  create_slice: (entry) =>
+    titled(entry) ? `Added slice “${titled(entry)}”` : 'Added a slice',
+  duplicate_slice: (entry) =>
+    titled(entry)
+      ? `Duplicated a slice as “${titled(entry)}”`
+      : 'Duplicated a slice',
+  update_slice_meta: (entry) =>
+    titled(entry) ? `Edited slice “${titled(entry)}”` : 'Edited a slice',
+  // Named by the count, because "replaced the frames" is the one description
+  // here that hides its own size: this write deletes every frame the slice
+  // had, and going from twelve to one is the case the row exists to surface.
+  replace_slice_frames: (entry) => {
+    const count =
+      typeof entry.args.frame_count === 'number' ? entry.args.frame_count : null
+    return count === null
+      ? 'Rebuilt a slice’s frames'
+      : `Rebuilt a slice’s frames (${count} now)`
+  },
 }
 
 export function describeChange(entry: ChangeEntry): string {

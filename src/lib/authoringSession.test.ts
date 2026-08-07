@@ -29,37 +29,47 @@ test('no read RPC can be recorded as a change', () => {
  * so this cannot fail to compile — but it can fail at runtime if the record is
  * ever built dynamically, and the list below doubles as the readable inventory
  * of what the sheet can say.
+ *
+ * Keyed (`satisfies Record<WriteFn, true>`) rather than a `WriteFn[]`, because
+ * an array of the union's members happily accepts a SHORT array: adding an
+ * operation and forgetting to list it here left the new sentence untested and
+ * the omission invisible. Keyed, the omission does not compile — the same
+ * argument `DESCRIBERS` itself makes.
  */
-const EVERY_WRITE: WriteFn[] = [
-  'create_phase',
-  'create_scenario',
-  'create_path',
-  'duplicate_path',
-  'duplicate_scenario',
-  'rename_phase',
-  'rename_scenario',
-  'rename_path',
-  'rename_owner_tag',
-  'add_step',
-  'add_lane',
-  'upsert_cell',
-  'update_cell_content',
-  'update_cell_resources',
-  'update_cell_spec',
-  'add_evidence',
-  'delete_evidence',
-  'set_cell_dependency',
-  'clear_cell_dependency',
-  'reorder_steps',
-  'set_path_steps',
-  'reorder_lanes',
-  'delete_scenario',
-  'delete_path',
-  'remove_step',
-  'remove_lane',
-  'delete_cell',
-  'delete_slice',
-]
+const EVERY_WRITE = Object.keys({
+  create_phase: true,
+  create_scenario: true,
+  create_path: true,
+  duplicate_path: true,
+  duplicate_scenario: true,
+  rename_phase: true,
+  rename_scenario: true,
+  rename_path: true,
+  rename_owner_tag: true,
+  add_step: true,
+  add_lane: true,
+  upsert_cell: true,
+  update_cell_content: true,
+  update_cell_resources: true,
+  update_cell_spec: true,
+  add_evidence: true,
+  delete_evidence: true,
+  set_cell_dependency: true,
+  clear_cell_dependency: true,
+  reorder_steps: true,
+  set_path_steps: true,
+  reorder_lanes: true,
+  delete_scenario: true,
+  delete_path: true,
+  remove_step: true,
+  remove_lane: true,
+  delete_cell: true,
+  delete_slice: true,
+  create_slice: true,
+  duplicate_slice: true,
+  update_slice_meta: true,
+  replace_slice_frames: true,
+} satisfies Record<WriteFn, true>) as WriteFn[]
 
 test('every recordable operation reads as a sentence, not an identifier', () => {
   for (const fn of EVERY_WRITE) {

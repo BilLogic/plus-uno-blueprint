@@ -7,11 +7,18 @@ import {
 } from '@/lib/cellContentMutations'
 import { updateCellSpec, type CellSpecUpdate } from '@/lib/cellSpecMutations'
 import { deleteEvidence, restoreEvidenceRow } from '@/lib/evidenceMutations'
+import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
 
 type Client = SupabaseClient<Database>
 type EvidenceRowType = Database['public']['Tables']['evidence']['Row']
+type SliceItemRow = Database['public']['Tables']['slice_items']['Row']
+/** The subset of `slices` that `updateSliceMeta` writes, and so restores. */
+type SliceMetaFields = Pick<
+  Database['public']['Tables']['slices']['Row'],
+  'title' | 'description' | 'slice_type' | 'actor' | 'origin'
+>
 
 function stringArg(args: Record<string, unknown>, key: string): string {
   const value = args[key]
@@ -98,6 +105,73 @@ export async function executeRevert(
         throw new Error('This change’s captured evidence row is malformed.')
       }
       await restoreEvidenceRow(client, row)
+      return
+    }
+    case 'restore_slice_frames': {
+      // Undo of "rebuilt a slice's frames": clear whatever is there now and
+      // put the captured rows back verbatim, original ids included, so a
+      // frame's identity survives the round trip. Same shape check and same
+      // reasoning as `restore_evidence_row` above.
+      const sliceId = stringArg(revert.args, 'slice_id')
+      const rows = revert.args.rows
+      if (!Array.isArray(rows)) {
+        throw new Error('This change’s captured frames are malformed.')
+      }
+      const cleared = await client
+        .from('slice_items')
+        .delete()
+        .eq('slice_id', sliceId)
+      if (cleared.error) throw toAuthoringError(cleared.error)
+      // An empty capture is a real answer, not a failure: the slice genuinely
+      // had no frames before the write, so putting none back IS the inverse.
+      if (rows.length === 0) return
+      const restored = await client
+        .from('slice_items')
+        .insert(rows as SliceItemRow[])
+      if (restored.error) throw toAuthoringError(restored.error)
+      return
+    }
+    case 'delete_slice_row': {
+      // Undo of "added a slice" / "duplicated a slice": remove the row it
+      // created. `slice_items` cascade, so the frames go with it — which is
+      // why neither of those operations needs a frame capture of its own.
+      //
+      // A direct delete rather than `deleteSlice`: that wrapper records a
+      // `delete_slice` entry, and undoing "Added a slice" must not append
+      // "Deleted a slice" to the list the row was just removed from.
+      const sliceId = stringArg(revert.args, 'slice_id')
+      const { data, error } = await client
+        .from('slices')
+        .delete()
+        .eq('id', sliceId)
+        .select('id')
+      if (error) throw toAuthoringError(error)
+      requireRowsWritten(data, 'slice')
+      return
+    }
+    case 'restore_slice_meta': {
+      // Undo of a slice field edit. Writes `origin` back too: the forward
+      // write promotes `generated` to `customized` as a side effect, and an
+      // inverse that left the promotion standing would mark a slice as
+      // hand-edited when the edit has been taken back.
+      const sliceId = stringArg(revert.args, 'slice_id')
+      const row = revert.args.row as SliceMetaFields | undefined
+      if (!row || typeof row !== 'object' || typeof row.title !== 'string') {
+        throw new Error('This change’s captured slice fields are malformed.')
+      }
+      const { data, error } = await client
+        .from('slices')
+        .update({
+          title: row.title,
+          description: row.description,
+          slice_type: row.slice_type,
+          actor: row.actor,
+          origin: row.origin,
+        })
+        .eq('id', sliceId)
+        .select('id')
+      if (error) throw toAuthoringError(error)
+      requireRowsWritten(data, 'slice')
       return
     }
     case 'rename_owner_tag_scoped': {
