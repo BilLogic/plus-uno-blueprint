@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import {
   deletionImpact,
   deletePath,
@@ -165,15 +165,7 @@ export function DeleteStructureDialog({
           await deleteSlice(client, target.id, target.label)
           break
       }
-      invalidateQueries('lifecycle-phases')
-      invalidateQueries('slices')
-      // A deleted slice's own detail cache is keyed separately; path deletes
-      // must clear the paths catalog, lane removals the lane picker. Prefix
-      // matches are no-ops for the kinds they do not apply to.
-      invalidateQueries('slice:')
-      invalidateQueries('scenario-paths')
-      invalidateQueries('lane-sources')
-      invalidateQueries('canvas-blueprints')
+      invalidateStructure()
       onOpenChange(false)
       onDeleted?.(archiveId)
     } catch (deleteError) {

@@ -29,7 +29,7 @@ import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useArchiveAvailable } from '@/hooks/useArchiveAvailable'
 import { useScenarioPaths } from '@/hooks/useScenarioPaths'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import {
   duplicatePath,
   duplicateScenario,
@@ -142,12 +142,7 @@ export function StructureRowContextMenu({
           sourceScenarioId: id,
           name: copyName,
         })
-      invalidateQueries('lifecycle-phases')
-      invalidateQueries('scenario-paths')
-      // …and the canvas' own read, which is what the board and the sidebar
-      // PATHS list are drawn from. Without it a duplicate is invisible until
-      // reload (staleTime is Infinity — revalidation is explicit-only).
-      invalidateQueries('canvas-blueprints')
+      invalidateStructure()
     } catch {
       // The row menu has nowhere to show prose; the session log records
       // nothing because nothing happened. The rename dialog handles its own.
@@ -399,14 +394,7 @@ function RenameDialog({
         })
       else
         await renamePath(client, { pathId: id, name, previousName: currentName })
-      invalidateQueries('lifecycle-phases')
-      // The paths catalog caches under its own key; without this the
-      // duplicate-source list and name-uniqueness check go stale forever
-      // (staleTime is Infinity — revalidation is explicit-only).
-      invalidateQueries('scenario-paths')
-      // The board and the sidebar PATHS rows read from the canvas query, so
-      // without this the row keeps its old name until the next reload.
-      invalidateQueries('canvas-blueprints')
+      invalidateStructure()
       onOpenChange(false)
     } catch (renameError) {
       onError(

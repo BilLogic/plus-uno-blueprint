@@ -11,7 +11,7 @@ import { useAtScenarioLevel, useEditor } from '@/contexts/EditorContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { addLane } from '@/lib/authoringRpc'
 
 type Boundary = { at: number; y: number }
@@ -121,13 +121,7 @@ export function BlueprintLaneHandles({
         name: trimmed,
         atRow: naming.at,
       })
-      invalidateQueries('lifecycle-phases')
-      // The canvas reads blueprints under its own key.
-      invalidateQueries('canvas-blueprints')
-      // Create Blueprint's lane picker caches the lane list under its own
-      // key too — staleTime is Infinity, so it only refreshes on explicit
-      // invalidation.
-      invalidateQueries('lane-sources')
+      invalidateStructure()
       setNaming(null)
       setName('')
     } catch (laneError) {

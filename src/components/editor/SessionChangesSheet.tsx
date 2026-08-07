@@ -21,7 +21,7 @@ import {
 } from '@/lib/authoringSession'
 import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
 import { executeRevert } from '@/lib/revertChange'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateQueries, invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { cn } from '@/lib/utils'
 
@@ -40,20 +40,65 @@ function useSessionChanges(): ChangeEntry[] {
  */
 const revertsInFlight = new Set<string>()
 
+/**
+ * A Revert all run is under way.
+ *
+ * Separate from the set above because that set is keyed per entry, and during
+ * a revert-all exactly one id is ever in it — the one currently awaiting. So
+ * it cannot answer "is anything reverting?", which is the question both other
+ * entry points have to ask. ⌘Z asking `revertsInFlight.size > 0` was right by
+ * accident (the run always has one in flight); the row button asked only its
+ * own local `busy` and was admitted straight through the middle of a run.
+ */
+let revertAllRunning = false
+
+/** True while any revert path is executing — the one gate all three share. */
+function isRevertInFlight(): boolean {
+  return revertAllRunning || revertsInFlight.size > 0
+}
+
+/**
+ * What one call to `revertEntry` did. `'already-in-flight'` is not a success:
+ * the entry was neither reverted nor removed, so a caller that read a
+ * resolved promise as "done" would drop it from its own report and leave the
+ * user believing a change was taken back that is still there.
+ */
+type RevertOutcome = 'reverted' | 'already-in-flight'
+
+/**
+ * One entry a Revert all run did not take back.
+ *
+ * The id, not the prose, is what is stored: the report is filtered against the
+ * live list at render, so it can never name a row that is no longer there. And
+ * the reason travels with it — "had no inverse" and "had one and it threw" are
+ * different facts about what to do next (the first is permanent, the second
+ * often succeeds once its blocker is gone), and they rendered identically when
+ * only the label was kept and the error went to the console.
+ */
+type LeftBehind = {
+  id: string
+  label: string
+  reason: string
+  kind: 'no-inverse' | 'failed'
+}
+
 /** Revert one entry and clean up after it — shared by the row and ⌘Z. */
 async function revertEntry(
   client: NonNullable<ReturnType<typeof useSupabase>['client']>,
   entry: ChangeEntry,
-): Promise<void> {
-  if (revertsInFlight.has(entry.id)) return
+): Promise<RevertOutcome> {
+  if (revertsInFlight.has(entry.id)) return 'already-in-flight'
   revertsInFlight.add(entry.id)
   try {
     await executeRevert(client, entry)
     // The change is gone from the database, so it leaves the list — and the
     // grid re-reads, because every revert is structural or content-bearing.
     forgetChange(entry.id)
-    invalidateQueries('lifecycle-phases')
-    invalidateQueries('canvas-blueprints')
+    // The full structural set, the same one every other mutation site sends.
+    // Two keys was this path's own subset, and it is why reverting a
+    // duplicated path left the copy in the sidebar's PATHS list with an id
+    // that 404s until a reload.
+    invalidateStructure()
     const cellId =
       typeof entry.args.cell_id === 'string' ? entry.args.cell_id : null
     if (cellId) {
@@ -64,6 +109,7 @@ async function revertEntry(
       // row in an open Evidence tab for the rest of the session.
       invalidateQueries(`evidence:${cellId}`)
     }
+    return 'reverted'
   } finally {
     revertsInFlight.delete(entry.id)
   }
@@ -99,8 +145,9 @@ function useUndoHotkey(changes: ChangeEntry[]) {
       if (isEditableTarget(event.target)) return
       // One undo at a time. Key repeat fires long before the network
       // resolves; letting each press grab "the next entry" would rip
-      // through the whole session on one held key.
-      if (revertsInFlight.size > 0) return
+      // through the whole session on one held key — and a press landing
+      // inside a Revert all run would race the run's own iteration.
+      if (isRevertInFlight()) return
       const last = changes.findLast((entry) => entry.revert)
       if (!last) return
       event.preventDefault()
@@ -126,14 +173,17 @@ function useUndoHotkey(changes: ChangeEntry[]) {
         // write everywhere writes are counted.
         mutates: true,
         run: async () => {
-          if (revertsInFlight.size > 0) return 'An undo is already in flight — wait for it.'
+          if (isRevertInFlight())
+            return 'An undo is already in flight — wait for it.'
           const last = changes.findLast((entry) => entry.revert)
           if (!last) return 'Nothing revertible in this session.'
           // Awaited, not fire-and-forget: a rejected revert used to reach
           // the console only, while the model was told it had succeeded
           // and reported that to the user.
           try {
-            await revertEntry(client, last)
+            const outcome = await revertEntry(client, last)
+            if (outcome === 'already-in-flight')
+              return 'That change was already being taken back — nothing else happened.'
             return `Reverted: ${describeChange(last)}`
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
@@ -178,15 +228,40 @@ export function SessionChangesSheet() {
   const [confirming, setConfirming] = useState<'save' | 'revert' | null>(null)
   const [reverting, setReverting] = useState(false)
   /** What Revert all could not take back — named, never silently dropped. */
-  const [leftBehind, setLeftBehind] = useState<string[]>([])
+  const [leftBehind, setLeftBehind] = useState<LeftBehind[]>([])
   useUndoHotkey(changes)
 
-  if (changes.length === 0) return null
+  /*
+    The sheet unmounts nothing when the ledger empties — the early return
+    below is after every hook, so this component's state outlives the list it
+    describes. Left alone, opening "Take back 3 changes?" and then emptying
+    the ledger (Save, ⌘Z, or a successful Revert all) meant the next unrelated
+    edit re-rendered the sheet *already armed*: a live red Revert all over a
+    change the person had just made. Reset in render, the house pattern
+    (BlueprintCellDetailPanel, DeleteStructureDialog, StructureRowMenu).
+  */
+  const empty = changes.length === 0
+  const [lastChanges, setLastChanges] = useState(changes)
+  if (lastChanges !== changes) {
+    setLastChanges(changes)
+    // Any session mutation retires the report: it named the state of one run,
+    // and a list that has moved on since is not that state.
+    if (leftBehind.length > 0) setLeftBehind([])
+    if (empty) setConfirming(null)
+  }
+
+  if (empty) return null
 
   const destructive = sessionHasDestructive(changes)
   const groups = groupChanges(changes)
   const revertible = changes.filter((entry) => entry.revert)
   const unrevertible = changes.length - revertible.length
+  // The report may only name rows that are still on screen above it. Its whole
+  // job is to say which of the remaining rows are there because they could not
+  // go — a line about a row that is gone says the opposite of the truth.
+  const stillHere = leftBehind.filter((item) =>
+    changes.some((entry) => entry.id === item.id),
+  )
 
   // A path id is only nameable if the canvas has that blueprint loaded. When it
   // does not — the change was made somewhere since navigated away from — the
@@ -218,32 +293,71 @@ export function SessionChangesSheet() {
    * Entries with no captured inverse (a `delete_slice` has no archive to
    * restore from) are not reverted and not dropped — they stay in the list and
    * get named underneath it. A revert that throws is treated the same way: the
-   * run continues, and the failure is reported by name rather than leaving the
-   * user to diff the list against their memory.
+   * run continues, and the failure is reported by name and by reason rather
+   * than leaving the user to diff the list against their memory.
+   *
+   * The list is re-read from the store on every iteration rather than captured
+   * once. A captured array goes stale the moment anything else touches the
+   * ledger mid-run — a row revert admitted concurrently, or a background agent
+   * write landing — and the loop would then run an inverse against an entry
+   * that had already been taken back and forgotten. For two edits to one cell
+   * that writes an intermediate value nobody chose, with an empty ledger and
+   * no way back; for a creation it throws and reports a change as "not taken
+   * back" when it was. Re-reading makes those entries simply absent.
    */
   const revertAll = async () => {
-    if (!client || reverting) return
+    if (!client || reverting || isRevertInFlight()) return
     setConfirming(null)
     setLeftBehind([])
     setReverting(true)
-    const failed: string[] = []
+    revertAllRunning = true
+    const failed: LeftBehind[] = []
+    const seen = new Set<string>()
     try {
-      for (const entry of [...changes].reverse()) {
+      for (;;) {
+        // Newest first, and only entries this run has not already answered
+        // for — the failures stay in the list, so they would otherwise be
+        // the loop's own termination bug.
+        const entry = sessionSnapshot().findLast((item) => !seen.has(item.id))
+        if (!entry) break
+        seen.add(entry.id)
         if (!entry.revert) {
-          failed.push(describeChange(entry))
+          failed.push({
+            id: entry.id,
+            label: describeChange(entry),
+            reason: 'nothing was recorded that could undo it',
+            kind: 'no-inverse',
+          })
           continue
         }
         try {
-          await revertEntry(client, entry)
+          const outcome = await revertEntry(client, entry)
+          if (outcome === 'already-in-flight') {
+            failed.push({
+              id: entry.id,
+              label: describeChange(entry),
+              reason: 'it was already being taken back somewhere else',
+              kind: 'failed',
+            })
+          }
         } catch (error) {
           console.error('[authoring] revert all failed on an entry:', error)
-          failed.push(describeChange(entry))
+          failed.push({
+            id: entry.id,
+            label: describeChange(entry),
+            reason: error instanceof Error ? error.message : String(error),
+            kind: 'failed',
+          })
         }
       }
     } finally {
+      // In the finally, all of it: anything thrown outside the inner try used
+      // to skip the report entirely and surface as an unhandled rejection —
+      // the spinner stopped, nothing was said, and it read as success.
+      revertAllRunning = false
       setReverting(false)
+      setLeftBehind(failed)
     }
-    setLeftBehind(failed)
   }
 
   /*
@@ -318,7 +432,7 @@ export function SessionChangesSheet() {
                   </p>
                 ) : null}
                 {group.entries.map((entry) => (
-                  <ChangeRow key={entry.id} entry={entry} />
+                  <ChangeRow key={entry.id} entry={entry} reverting={reverting} />
                 ))}
               </div>
             ))}
@@ -353,7 +467,11 @@ export function SessionChangesSheet() {
                   variant="destructive"
                   size="sm"
                   className="h-7 shrink-0 px-2.5 text-xs"
-                  onClick={() => void revertAll()}
+                  onClick={() =>
+                    void revertAll().catch((error: unknown) => {
+                      console.error('[authoring] revert all failed:', error)
+                    })
+                  }
                 >
                   Revert all
                 </Button>
@@ -421,11 +539,15 @@ export function SessionChangesSheet() {
             remaining rows are there because they could not go, not because the
             run stopped early.
           */}
-          {leftBehind.length > 0 ? (
-            <div className="border-t border-border/60 px-3 py-2">
-              <p className="text-2xs text-destructive">
-                Not taken back: {leftBehind.join('; ')}
-              </p>
+          {stillHere.length > 0 ? (
+            <div className="flex flex-col gap-1 border-t border-border/60 px-3 py-2">
+              {stillHere.map((item) => (
+                <p key={item.id} className="text-2xs text-destructive">
+                  {item.kind === 'no-inverse'
+                    ? `Couldn’t be taken back — ${item.label}: ${item.reason}.`
+                    : `Failed — ${item.label}: ${item.reason}`}
+                </p>
+              ))}
             </div>
           ) : null}
         </DropdownMenuContent>
@@ -434,7 +556,19 @@ export function SessionChangesSheet() {
   )
 }
 
-function ChangeRow({ entry }: { entry: ChangeEntry }) {
+function ChangeRow({
+  entry,
+  /**
+   * A Revert all run is under way. The row must refuse *visibly* — greyed out
+   * rather than silently ignoring the click — because the run is walking this
+   * same list and a row revert admitted alongside it is the double-execute
+   * this component's whole in-flight guard exists to prevent.
+   */
+  reverting,
+}: {
+  entry: ChangeEntry
+  reverting: boolean
+}) {
   const { client } = useSupabase()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -446,11 +580,18 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
         : null
 
   const revert = async () => {
-    if (!client || busy) return
+    // `isRevertInFlight()` and not just `busy`: `disabled` closes the pointer
+    // path but not a programmatic one, and the module-level gate is the only
+    // thing that knows about the other two entry points.
+    if (!client || busy || reverting || isRevertInFlight()) return
     setBusy(true)
     setError(null)
     try {
-      await revertEntry(client, entry)
+      const outcome = await revertEntry(client, entry)
+      if (outcome === 'already-in-flight') {
+        setError('That change is already being taken back.')
+        setBusy(false)
+      }
     } catch (revertError) {
       setError(
         revertError instanceof Error ? revertError.message : String(revertError),
@@ -502,7 +643,7 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
               variant="ghost"
               size="icon-xs"
               aria-label="Revert this change"
-              disabled={busy}
+              disabled={busy || reverting}
               onClick={() => void revert()}
               className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
             >

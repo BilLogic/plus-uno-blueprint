@@ -5,7 +5,7 @@ import { useAtScenarioLevel } from '@/contexts/EditorContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { addStep } from '@/lib/authoringRpc'
 
 type Step = { id: string; name: string }
@@ -138,8 +138,7 @@ export function BlueprintColumnHandles({
       // is named in place on the canvas; a dialog here would be a modal asking
       // for the one thing that is easiest to type where it lands.
       await addStep(client, { pathId, name: '', atPosition: at })
-      invalidateQueries('lifecycle-phases')
-      invalidateQueries('canvas-blueprints')
+      invalidateStructure()
     } catch (error) {
       console.error('[authoring] add_step failed:', error)
     } finally {
