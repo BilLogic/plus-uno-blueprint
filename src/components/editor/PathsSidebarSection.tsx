@@ -69,7 +69,7 @@ function NewPathAction({ scenarioId }: { scenarioId: string }) {
   return (
     <>
       <NavRowAction label={`New path in ${data.scenarioName}`} onClick={() => setOpen(true)}>
-        <Plus className="size-3" aria-hidden />
+        <Plus className="size-3.5" aria-hidden />
       </NavRowAction>
       <CreateVersionDialog
         scenarioId={scenarioId}
