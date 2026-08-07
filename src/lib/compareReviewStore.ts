@@ -82,13 +82,24 @@ export function useCompareReviewState(): CompareReviewState {
 }
 
 /**
+ * The last slideId that registered, surviving unregistration. "Scenario
+ * changed" must be judged against this, not `state.registration`: a mode
+ * switch (or blueprint refetch) re-registers the SAME scenario through an
+ * effect cleanup that has already nulled the live registration, and
+ * judging against the null would wrongly treat every re-register as a new
+ * scenario — wiping the fold that is contracted to survive mode switches.
+ */
+let lastRegisteredSlideId: string | null = null
+
+/**
  * Publish the focused scenario's compare context. Zone + filters reset when
  * the scenario changes — they are per-comparison state, not preferences.
  */
 export function registerCompareReview(
   registration: CompareReviewRegistration,
 ): () => void {
-  const scenarioChanged = state.registration?.slideId !== registration.slideId
+  const scenarioChanged = lastRegisteredSlideId !== registration.slideId
+  lastRegisteredSlideId = registration.slideId
   state = {
     ...state,
     registration,
@@ -101,12 +112,14 @@ export function registerCompareReview(
   emit()
   return () => {
     if (state.registration !== registration) return
+    // Fold deliberately survives here: this cleanup also runs mid-flight
+    // during a same-scenario re-register (mode switch, refetch), and the
+    // register above owns the reset decision via `scenarioChanged`.
     state = {
       ...state,
       registration: null,
       activeZone: null,
       filters: EMPTY_FILTERS,
-      fold: EMPTY_COMPARE_FOLD_STATE,
     }
     emit()
   }

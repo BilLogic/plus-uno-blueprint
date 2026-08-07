@@ -285,7 +285,7 @@ export function EditorShell() {
       }),
       registerAgentUiCommand({
         name: 'set_scenario_view',
-        description: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (merged = the compare lens; needs 2+ visible paths). Legacy aliases accepted: side-by-side = stacked, integrated = merged.',
+        description: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (merged = the compare lens; needs 2+ visible paths). Entering merged applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged.',
         run: (arg) =>
           // 'side-by-side'/'integrated' are the pre-v3 tokens, kept as
           // documented aliases so older prompts and transcripts still work.

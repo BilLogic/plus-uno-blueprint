@@ -7,6 +7,7 @@ import {
   CompareDivergenceStrip,
   COMPARE_STRIP_HEIGHT,
 } from '@/components/blueprint/CompareDivergenceStrip'
+import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
@@ -166,6 +167,38 @@ export function ScenarioBlueprintPanel({
     if (visibleBlueprints.length !== selectedPathIds.length) return null
     return buildCompareModel(visibleBlueprints as CompareBlueprints)
   }, [selectedPathIds.length, useStackedArrangement, visibleBlueprints])
+
+  /*
+    Merged = READING PRESET (Phase 4b — the branch canvas failed its data
+    gate, median 13% spine coverage vs 30%). Entering Merged folds the
+    shared runs and opens the Differences surface — one gesture into
+    review posture; leaving unfolds (which clears expandedPleats per the
+    fold semantics). The panel is deliberately left alone on exit — the
+    user may still be reading the ledger. A preset, not a lock: after
+    entry, fold and panel stay fully user-controllable.
+
+    This is THE one seam for the preset: both entry paths — the menubar
+    CompareViewToggle and the agent's `set_scenario_view merged` — mutate
+    the EditorContext view override, and both land here as a
+    `displayViewType` transition. Gating the tracked mode on
+    `compareModel` makes degenerate cases (<2 paths, half-loaded pair,
+    overview rows) a natural no-op, and the null-reset means re-entering
+    compare does not replay a stale transition.
+  */
+  const cellDetail = useBlueprintCellDetailOptional()
+  const openDifferences = cellDetail?.openDifferences
+  const compareMode = compareModel ? displayViewType : null
+  const previousCompareModeRef = useRef<SlideViewType | null>(null)
+  useEffect(() => {
+    const previous = previousCompareModeRef.current
+    previousCompareModeRef.current = compareMode
+    if (previous === 'stacked' && compareMode === 'merged') {
+      setCompareFolded(true)
+      openDifferences?.()
+    } else if (previous === 'merged' && compareMode === 'stacked') {
+      setCompareFolded(false)
+    }
+  }, [compareMode, openDifferences])
 
   /*
     Publish THE compare context (model + blueprints + scenario identity) to

@@ -70,7 +70,6 @@ describe('Phase 4b data gate', () => {
     const sorted = [...results].sort((a, b) => a.spineCoverage - b.spineCoverage)
     const median = sorted[Math.floor(sorted.length / 2)]
 
-    // eslint-disable-next-line no-console
     console.log(
       [
         '',

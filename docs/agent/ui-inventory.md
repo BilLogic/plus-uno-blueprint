@@ -24,10 +24,11 @@ Rule of thumb: a need that seems to lack a primitive usually has a
 precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 `SlicesSidebarSection` before assuming it's missing.
 
-## Compare review cockpit (Compare v3, Phases 3–4a)
+## Compare review cockpit (Compare v3, Phases 3–4b)
 
 | Need | Primitive | Note |
 |---|---|---|
+| Stacked ⇄ Merged mode toggle | `editor/SegmentedControl` in `PhaseMenubarHeader` | Merged = reading preset (Phase 4b, branch-canvas gate FAIL): entering folds shared runs + opens the Differences surface; leaving unfolds. Same via agent `set_scenario_view merged` — one seam in `ScenarioBlueprintPanel` |
 | Details │ Differences surface switch | `editor/SegmentedControl` (composes `toggle-group.tsx`) | top-level panel chrome, only while ≥2 paths compared; mono count badge |
 | Difference ledger zone groups | `accordion.tsx`, controlled | one open at a time; open state = the compare store's active zone, shared with the strip and `jump_divergence` |
 | Ledger filter | `popover.tsx` + pressed chips | lane + verdict facets, empty = all; same grammar as `differences_filter` |
