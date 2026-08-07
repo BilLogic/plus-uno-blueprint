@@ -132,7 +132,7 @@ export function SlideNav({
                       onAddScenario(main.id)
                     }}
                   >
-                    <Plus className="size-3" aria-hidden />
+                    <Plus className="size-3.5" aria-hidden />
                   </NavRowAction>
                 ) : undefined
               }
@@ -143,6 +143,7 @@ export function SlideNav({
                 panelId={panelId}
                 open={isOpen}
                 onOpenChange={(open) => onSetExpanded(main.id, open)}
+                phaseId={main.id}
                 items={children.map((child) => ({
                   id: child.id,
                   label: getSlideDisplayLabel(child, slides),
@@ -167,12 +168,15 @@ function PhaseScenarios({
   panelId,
   open,
   onOpenChange,
+  phaseId,
   items,
   onSelect,
 }: {
   panelId: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Where a sibling created from a scenario's right-click menu lands. */
+  phaseId: string
   items: Array<{ id: string; label: string; selected: boolean }>
   onSelect: (scenarioId: string) => void
 }) {
@@ -186,6 +190,7 @@ function PhaseScenarios({
                 kind="scenario"
                 id={item.id}
                 name={item.label}
+                phaseId={phaseId}
               >
                 <NavRow
                   rowId={item.id}

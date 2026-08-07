@@ -141,6 +141,10 @@ function deriveRevert(
           }
         : undefined
     }
+    case 'duplicate_scenario':
+      return typeof data === 'string'
+        ? { fn: 'delete_scenario', args: { scenario_id: data } }
+        : undefined
     case 'create_path':
     case 'duplicate_path':
       return typeof data === 'string'
@@ -204,6 +208,26 @@ export function createScenario(
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
     path_name: input.pathName ?? 'Happy Path',
+  })
+}
+
+/**
+ * Copy a whole blueprint into its own phase — columns, every path, every
+ * lane, every cell, and every arrow whose both ends are inside it.
+ *
+ * There is no client-side composition that produces this: `duplicatePath` is
+ * scoped to its source's scenario and `createScenario` mints empty columns.
+ * See `20260807120000_duplicate_scenario.sql` for exactly what is and is not
+ * copied — notably `cell_key`, which is authored and so is left null on the
+ * copies, the same as every other app-created cell.
+ */
+export function duplicateScenario(
+  client: Client,
+  input: { sourceScenarioId: string; name: string },
+): Promise<string> {
+  return call<string>(client, 'duplicate_scenario', {
+    source_scenario_id: input.sourceScenarioId,
+    name: input.name,
   })
 }
 
