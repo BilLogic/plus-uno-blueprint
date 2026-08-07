@@ -24,6 +24,25 @@ Rule of thumb: a need that seems to lack a primitive usually has a
 precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 `SlicesSidebarSection` before assuming it's missing.
 
+## Compare review cockpit (Compare v3, Phase 3)
+
+| Need | Primitive | Note |
+|---|---|---|
+| Details │ Differences surface switch | `editor/SegmentedControl` (composes `toggle-group.tsx`) | top-level panel chrome, only while ≥2 paths compared; mono count badge |
+| Difference ledger zone groups | `accordion.tsx`, controlled | one open at a time; open state = the compare store's active zone, shared with the strip and `jump_divergence` |
+| Ledger filter | `popover.tsx` + pressed chips | lane + verdict facets, empty = all; same grammar as `differences_filter` |
+| Zone numbering ①②③ | `blueprint/CompareZoneChip` | ONE drawn chip (mono digit in a circle) — strip, ledger, agent args all mean the same index |
+| Divergence strip | `blueprint/CompareDivergenceStrip` | SVG braid, segment buttons (≥44px hits), sidebar-selection idiom for the active zone; navigation only |
+| Fly-to-cell + counterpart pulse | `lib/canvasFocusCells` registry → `useZoomPanViewport.focusCells` | resolve at call time by scenario id; pulse = `[data-blueprint-cell-pulse]`, reduced-motion aware |
+| Cross-surface compare state | `lib/compareReviewStore` (module store + `useSyncExternalStore`) | model registration, active zone, ledger filters, ledger-open flag |
+
+Agent parity for these surfaces: ui commands `differences_open`,
+`differences_close`, `panel_surface <details|differences>`,
+`differences_filter <lane:"…" verdict:…>`, `jump_divergence
+<next|prev|n>`; read tool `get_compare_diff` (headless `buildCompareModel`
+— grounds zone indices, lane names and cell ids); `get_ui_state` gains a
+`compare` line (mode, paths, counts, active zone, ledger open + filters).
+
 Full DS directory today: accordion, alert, attachment, badge, breadcrumb,
 bubble, button, card, carousel, collapsible, context-menu,
 deferred-skeleton, dialog, drawer, dropdown-menu, input, marker, menubar,
