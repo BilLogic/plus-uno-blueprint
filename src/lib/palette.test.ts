@@ -74,6 +74,22 @@ function oklchToLinearSrgb(l: number, c: number, hDeg: number): Rgb {
 
 const inSrgbGamut = (rgb: Rgb) => rgb.every((v) => v >= -1e-6 && v <= 1 + 1e-6)
 
+/**
+ * The other direction: gamma-encoded sRGB → OKLCH hue in degrees. Needed
+ * because the `--brand-*` ramp is authored as HSL literals, so its OKLCH hue
+ * — the thing `--primary` has to agree with — is not readable off the page.
+ */
+function oklchHue([r, g, b]: Rgb): number {
+  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+  const [R, G, B] = [lin(r), lin(g), lin(b)]
+  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B)
+  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B)
+  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B)
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+  return ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360
+}
+
 /** Gamma-encoded sRGB, so these values can meet the `Rgb` the solver expects. */
 function oklch(l: number, c: number, hDeg: number): Rgb {
   return oklchToLinearSrgb(l, c, hDeg).map((v) => {
@@ -176,13 +192,27 @@ describe('brand fill', () => {
   it('states its own lightness and chroma, so a retune has to come here', () => {
     // A drive-by edit that moves either number lands on this assertion first
     // and has to read the tuning history above the declaration to change it.
-    expect({ L, C }).toEqual({ L: 0.78, C: 0.12 })
+    expect({ L, C }).toEqual({ L: 0.83, C: 0.135 })
+  })
+
+  it('sits on the brand ramp rather than beside it', () => {
+    // The 2026-08-06 pass left the hue dial 5.4° off the `--brand-*` ramp,
+    // which put the filled button on a cyaner green than every other brand
+    // surface in the app. The ramp is authored as HSL literals whose OKLCH
+    // hue is 177.6 at every step — so this compares the dial against the
+    // ramp as CONVERTED, not against the HSL numbers on the page, which read
+    // 163–171 and are not a hue reference.
+    const brandHues = [...light.matchAll(/--brand-(\d00):\s*([\d.]+)deg\s+([\d.]+)%\s+([\d.]+)%/g)]
+      .map(([, , h, s, l]) => oklchHue(hslToRgb(Number(h), Number(s), Number(l))))
+    expect(brandHues.length).toBeGreaterThanOrEqual(5)
+    for (const hue of brandHues) expect(Math.abs(hue - HUE)).toBeLessThan(0.2)
   })
 
   it('leaves the fill itself un-gamut-mapped', () => {
-    // Headroom is the whole reason 0.12 was picked over 0.13: the browser
-    // silently chroma-reduces anything past the ceiling, which would make the
-    // declared value a lie and freeze any future retune in place.
+    // Headroom is the whole reason the chroma is set as a fraction of the
+    // ceiling rather than at it: the browser silently chroma-reduces anything
+    // past the ceiling, which would make the declared value a lie and freeze
+    // any future retune in place.
     const ceiling = chromaCeiling(L, HUE)
     expect(C).toBeLessThan(ceiling)
     expect(inSrgbGamut(oklchToLinearSrgb(L, C, HUE))).toBe(true)
@@ -190,8 +220,21 @@ describe('brand fill', () => {
 
   it('stays saturated enough to read as a control, not a wash', () => {
     // The 2026-08-06 pass sat at ~65% of the ceiling and read muddy next to
-    // Supabase's #3ECF8E, which runs ~88% of the ceiling at its own L/H.
-    expect(C / chromaCeiling(L, HUE)).toBeGreaterThan(0.8)
+    // Supabase's #3ECF8E, which runs ~88.6% of the ceiling at its own L/H.
+    // We now run 88.1% of ours — matched as a RATIO, because the absolute
+    // chroma that reads right moves with the lightness and the hue.
+    expect(C / chromaCeiling(L, HUE)).toBeGreaterThan(0.85)
+    expect(C / chromaCeiling(L, HUE)).toBeLessThan(0.95)
+  })
+
+  it('is brighter than the pass the user called dull and dark', () => {
+    // 2026-08-07b. Directional, not a re-statement of the literal above: the
+    // fill has been walked down (0.874 → 0.78) and back up, and the floor is
+    // what stops the next "tone it down" pass from landing under 0.78 again.
+    // The ceiling keeps it below --brand-400's L 0.874, which read as a
+    // pastel chip rather than a control.
+    expect(L).toBeGreaterThan(0.8)
+    expect(L).toBeLessThan(0.87)
   })
 
   it('carries its dark ink at AAA', () => {
@@ -206,8 +249,8 @@ describe('brand fill', () => {
 
   it('keeps the focus ring legible on the canvas', () => {
     // SC 1.4.11. --ring: oklch(from var(--primary) 0.58 calc(c * 1.3) h) — and
-    // c * 1.3 has been over the ceiling at L 0.58 since before this retune, so
-    // what actually renders is the gamut-mapped value. Measure that, not the
+    // c * 1.3 has been over the ceiling at L 0.58 across every retune, so what
+    // actually renders is the gamut-mapped value. Measure that, not the
     // requested one, or this test passes on a colour no browser draws.
     const ringL = 0.58
     const ring = oklch(ringL, Math.min(C * 1.3, chromaCeiling(ringL, HUE)), HUE)
