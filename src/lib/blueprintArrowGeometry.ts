@@ -305,56 +305,210 @@ export function getVerticalGutterDetourAnchors(
   }
 }
 
+/** Which column gutter a same-column connector brackets through. */
+export type SameColumnSide = 'left' | 'right'
+
+export type SameColumnSideRoute = {
+  side: SameColumnSide
+  gutterX: number
+}
+
+/**
+ * Is the whole bracket — both side stubs and the gutter run between them —
+ * clear of every other card? Each leg is tested as a band `ARROW_DETOUR_CLEARANCE`
+ * either side of the drawn line, so a route that merely grazes a card is
+ * rejected too.
+ */
+function isSameColumnSideRouteClear(
+  root: HTMLElement,
+  side: SameColumnSide,
+  gutterX: number,
+  legs: readonly { box: LayoutBox; y: number }[],
+  exclude: readonly HTMLElement[],
+): boolean {
+  for (const leg of legs) {
+    const stubRect =
+      side === 'left'
+        ? { left: gutterX, right: leg.box.left }
+        : { left: leg.box.right, right: gutterX }
+    if (
+      getCellsOverlappingRect(
+        root,
+        {
+          ...stubRect,
+          top: leg.y - ARROW_DETOUR_CLEARANCE,
+          bottom: leg.y + ARROW_DETOUR_CLEARANCE,
+        },
+        exclude,
+      ).length > 0
+    ) {
+      return false
+    }
+  }
+
+  const ys = legs.map((leg) => leg.y)
+  return (
+    getCellsOverlappingRect(
+      root,
+      {
+        left: gutterX - ARROW_DETOUR_CLEARANCE,
+        right: gutterX + ARROW_DETOUR_CLEARANCE,
+        top: Math.min(...ys) - ARROW_DETOUR_CLEARANCE,
+        bottom: Math.max(...ys) + ARROW_DETOUR_CLEARANCE,
+      },
+      exclude,
+    ).length === 0
+  )
+}
+
+/**
+ * The gutter a pair of same-column cells can be bracketed through, or null when
+ * neither side is usable. Both gutters are considered; the nearer one wins so
+ * the detour stays short, and left breaks a tie.
+ *
+ * Deliberately symmetric in its two cells — every input is a min/max over the
+ * pair, never "the source's" anything — so a pair resolves to the same side
+ * whichever end is the source, and the shape is stable across renders.
+ */
+export function resolveSameColumnSideRoute(
+  cellAEl: HTMLElement,
+  cellBEl: HTMLElement,
+  root: HTMLElement,
+): SameColumnSideRoute | null {
+  const boxA = getCellContentBox(cellAEl, root)
+  const boxB = getCellContentBox(cellBEl, root)
+  const stepIndex = parseStepIndex(cellAEl) ?? parseStepIndex(cellBEl) ?? 0
+  const legs = [
+    { box: boxA, y: boxA.top + boxA.height / 2 },
+    { box: boxB, y: boxB.top + boxB.height / 2 },
+  ]
+  const exclude = [cellAEl, cellBEl]
+
+  const cardLeft = Math.min(boxA.left, boxB.left)
+  const cardRight = Math.max(boxA.right, boxB.right)
+  const leftmostEl = boxA.left <= boxB.left ? cellAEl : cellBEl
+  const rightmostEl = boxA.right >= boxB.right ? cellAEl : cellBEl
+
+  const candidates: (SameColumnSideRoute & { reach: number })[] = []
+
+  const leftGutterX = getVerticalRouteGutterX(root, stepIndex, leftmostEl)
+  if (leftGutterX < cardLeft - ARROW_CHEVRON_SIZE) {
+    candidates.push({
+      side: 'left',
+      gutterX: leftGutterX,
+      reach: cardLeft - leftGutterX,
+    })
+  }
+
+  const rightGutterX = getVerticalRouteRightGutterX(
+    root,
+    stepIndex,
+    rightmostEl,
+  )
+  if (rightGutterX > cardRight + ARROW_CHEVRON_SIZE) {
+    candidates.push({
+      side: 'right',
+      gutterX: rightGutterX,
+      reach: rightGutterX - cardRight,
+    })
+  }
+
+  candidates.sort(
+    (a, b) => a.reach - b.reach || (a.side === 'left' ? -1 : 1),
+  )
+
+  for (const candidate of candidates) {
+    if (
+      isSameColumnSideRouteClear(
+        root,
+        candidate.side,
+        candidate.gutterX,
+        legs,
+        exclude,
+      )
+    ) {
+      return { side: candidate.side, gutterX: candidate.gutterX }
+    }
+  }
+
+  return null
+}
+
+/** The x a side route's stub meets a card on, chevron-inset for arrival ends. */
+function getSameColumnSideStubX(
+  box: LayoutBox,
+  side: SameColumnSide,
+  arrival: boolean,
+): number {
+  const inset = arrival ? ARROW_CHEVRON_SIZE : 0
+  return side === 'left' ? box.left - inset : box.right + inset
+}
+
 /**
  * Two cells in one column, connected side-on through whichever column gutter
  * has room: out of one card's left (or right) edge, along the gutter, into
  * the other card's matching edge. Nothing between the two cards is crossed,
  * and both ends read as arrivals because each head sits on a card edge.
  *
- * Returns '' when neither gutter clears the cards (an edge column of a
- * one-column board): no arrow at all beats one drawn through a cell's text.
+ * Returns '' when neither gutter is clear (an edge column of a one-column
+ * board, or a gutter another card leans into): no arrow at all beats one
+ * drawn through a cell's text.
  */
 export function buildSameColumnGutterDetourPath(
   upperEl: HTMLElement,
   lowerEl: HTMLElement,
   root: HTMLElement,
 ): string {
+  const route = resolveSameColumnSideRoute(upperEl, lowerEl, root)
+  if (!route) return ''
+
   const upperBox = getCellContentBox(upperEl, root)
   const lowerBox = getCellContentBox(lowerEl, root)
   const upperY = upperBox.top + upperBox.height / 2
   const lowerY = lowerBox.top + lowerBox.height / 2
-  const stepIndex = parseStepIndex(upperEl) ?? 0
 
-  const leftGutterX = getVerticalRouteGutterX(root, stepIndex, upperEl)
-  const leftEntryX = Math.min(upperBox.left, lowerBox.left) - ARROW_CHEVRON_SIZE
-  if (leftGutterX < leftEntryX) {
-    return buildRoundedPolylinePath(
-      [
-        { x: upperBox.left - ARROW_CHEVRON_SIZE, y: upperY },
-        { x: leftGutterX, y: upperY },
-        { x: leftGutterX, y: lowerY },
-        { x: lowerBox.left - ARROW_CHEVRON_SIZE, y: lowerY },
-      ],
-      ARROW_CORNER_RADIUS,
-    )
-  }
+  return buildRoundedPolylinePath(
+    [
+      { x: getSameColumnSideStubX(upperBox, route.side, true), y: upperY },
+      { x: route.gutterX, y: upperY },
+      { x: route.gutterX, y: lowerY },
+      { x: getSameColumnSideStubX(lowerBox, route.side, true), y: lowerY },
+    ],
+    ARROW_CORNER_RADIUS,
+  )
+}
 
-  const rightGutterX = getVerticalRouteRightGutterX(root, stepIndex, upperEl)
-  const rightEntryX =
-    Math.max(upperBox.right, lowerBox.right) + ARROW_CHEVRON_SIZE
-  if (rightGutterX > rightEntryX) {
-    return buildRoundedPolylinePath(
-      [
-        { x: upperBox.right + ARROW_CHEVRON_SIZE, y: upperY },
-        { x: rightGutterX, y: upperY },
-        { x: rightGutterX, y: lowerY },
-        { x: lowerBox.right + ARROW_CHEVRON_SIZE, y: lowerY },
-      ],
-      ARROW_CORNER_RADIUS,
-    )
-  }
+/**
+ * One-way version of the same bracket: a short stub out of the *side* of the
+ * source card, down (or up) the adjacent gutter, and into the matching side of
+ * the target. Preferred over the top/bottom gutter detour for same-column
+ * connectors, which had to leave through a cell edge that another card was
+ * often sitting against and so swung far out into the gutter to get around it.
+ *
+ * Returns '' when no side is clear, so callers can fall back.
+ */
+export function buildSameColumnSideAttachedPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+): string {
+  const route = resolveSameColumnSideRoute(sourceEl, targetEl, root)
+  if (!route) return ''
 
-  return ''
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const targetBox = getCellContentBox(targetEl, root)
+  const sourceY = sourceBox.top + sourceBox.height / 2
+  const targetY = targetBox.top + targetBox.height / 2
+
+  return buildRoundedPolylinePath(
+    [
+      { x: getSameColumnSideStubX(sourceBox, route.side, false), y: sourceY },
+      { x: route.gutterX, y: sourceY },
+      { x: route.gutterX, y: targetY },
+      { x: getSameColumnSideStubX(targetBox, route.side, true), y: targetY },
+    ],
+    ARROW_CORNER_RADIUS,
+  )
 }
 
 /**
@@ -2662,6 +2816,16 @@ export function buildArrowPath(
       root,
     )
     if (obstructing.length > 0) {
+      // Side-on first: a stub out of the card's own left/right edge and a run
+      // down the adjacent gutter hugs the column, where leaving through the
+      // top/bottom edge has to swing around whatever is stacked against it.
+      const sideAttached = buildSameColumnSideAttachedPath(
+        sourceEl,
+        targetEl,
+        root,
+      )
+      if (sideAttached) return sideAttached
+
       const gutterX = getVerticalRouteGutterX(root, sourceStep, sourceEl)
       const detourAnchors = getVerticalGutterDetourAnchors(
         sourceEl,
