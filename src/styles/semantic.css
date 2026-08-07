@@ -168,7 +168,34 @@
    * quiet fill is the point: identity comes from the hue, weight from the
    * new 1px `--primary-border` edge rather than saturation.
    * Dark ink on it measures 10.69:1. */
-  --primary: oklch(0.78 0.09 var(--primary-hue));
+  /* Saturation pass (2026-08-07), C 0.09 → 0.12 at the SAME L 0.78 and the
+   * same hue dial. Re-reading the note above: what made the pre-matcha pass
+   * "too dark and too loud" was the LIGHTNESS, and the matcha pass corrected
+   * it by dropping both L and C together. Only the L drop was load-bearing;
+   * the C drop was collateral, and it left the fill reading muddy next to
+   * Supabase's #3ECF8E (≈ oklch(0.77 0.148 162)) — theirs is 87.6% of the
+   * sRGB chroma ceiling at its own L/H, ours was 64.8% of ours. So this pass
+   * restores the punch without touching the lightness that was the actual
+   * problem: at L 0.78 / H 183 the sRGB ceiling is C 0.1389, and 0.12 is
+   * 86.4% of it — the same relative saturation Supabase runs, with headroom
+   * left so the fill itself never gets gamut-mapped. Dark ink on it now
+   * measures 10.83:1 (light theme; 9.71:1 against dark-theme ink).
+   *
+   * Derived tokens, all measured after CSS Color 4 gamut mapping:
+   *   --primary-border  wants C 0.1500 at L 0.66, where the ceiling is
+   *     0.1175, so it now maps to the ceiling. The ×1.25 no longer buys
+   *     chroma — the edge is carried entirely by the −0.12 lightness step
+   *     (1.55:1 against the fill, up from 1.53:1). Intent holds; the
+   *     multiplier is now decorative at this hue.
+   *   --ring  was ALREADY ceiling-bound before this pass (wants 0.1170 at
+   *     L 0.58 where the ceiling is 0.1033), so it and everything derived
+   *     from it — --sidebar-selected, --sidebar-selected-rail,
+   *     --sidebar-ancestor — are byte-for-byte unchanged by this retune.
+   *     Still 4.01:1 on the light canvas, clearing SC 1.4.11's 3:1.
+   * The multipliers are left as ratios rather than clamped to a literal:
+   * a hardcoded ceiling would be wrong the moment `--hue` moves, and the
+   * browser's chroma reduction is already the behaviour we want. */
+  --primary: oklch(0.78 0.12 var(--primary-hue));
   /* The Supabase button treatment: flat fill, one shade-darker hairline.
    * Derived, so it tracks any future retune of --primary. */
   --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c * 1.25) h);
@@ -374,5 +401,17 @@
   );
 }
 
-/* No P3 chroma boost for the matcha primary: the muted fill is deliberate,
- * and a wide-gamut deepening would fight it. Removed 2026-08-06. */
+/* No P3 chroma boost for the primary — but the reason changed on 2026-08-07.
+ *
+ * The old reason ("the muted fill is deliberate") stopped being true when the
+ * saturation pass took C from 0.09 to 0.12, 86.4% of the sRGB ceiling. The
+ * fill is no longer deliberately quiet, so that justification is retired.
+ *
+ * The reason it still doesn't get one: `--primary-border` and `--ring` are
+ * both already pinned to the sRGB ceiling at their lightnesses (see the note
+ * on `--primary`). Widening only `--primary` in a P3 block would push the fill
+ * past an edge and a focus ring that cannot follow it, inverting the
+ * relationship the pair is built on — the edge would read *less* saturated
+ * than the fill it is supposed to anchor. A P3 pass that is worth doing has to
+ * move the whole brand triplet together, and that is a deliberate piece of
+ * work, not a one-line boost. */

@@ -22,6 +22,12 @@ import {
 const COLORS_CSS = fileURLToPath(
   new URL('../styles/colors.css', import.meta.url),
 )
+const SEMANTIC_CSS = fileURLToPath(
+  new URL('../styles/semantic.css', import.meta.url),
+)
+const LIGHT_THEME_CSS = fileURLToPath(
+  new URL('../styles/themes/light.css', import.meta.url),
+)
 
 type Rgb = [number, number, number]
 
@@ -44,6 +50,50 @@ function hslToRgb(h: number, s: number, l: number): Rgb {
               ? [x, 0, c]
               : [c, 0, x]
   return [r + m, g + m, b + m]
+}
+
+/**
+ * OKLCH → linear sRGB (Björn Ottosson's matrices). The brand tokens are the
+ * one part of the system authored in OKLCH rather than picked off the HSL
+ * ramps, so they need their own resolver; `resolve()` below only speaks
+ * `--color-family-step`.
+ */
+function oklchToLinearSrgb(l: number, c: number, hDeg: number): Rgb {
+  const h = (hDeg * Math.PI) / 180
+  const a = c * Math.cos(h)
+  const b = c * Math.sin(h)
+  const lc = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const mc = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const sc = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
+  return [
+    4.0767416621 * lc - 3.3077115913 * mc + 0.2309699292 * sc,
+    -1.2684380046 * lc + 2.6097574011 * mc - 0.3413193965 * sc,
+    -0.0041960863 * lc - 0.7034186147 * mc + 1.707614701 * sc,
+  ]
+}
+
+const inSrgbGamut = (rgb: Rgb) => rgb.every((v) => v >= -1e-6 && v <= 1 + 1e-6)
+
+/** Gamma-encoded sRGB, so these values can meet the `Rgb` the solver expects. */
+function oklch(l: number, c: number, hDeg: number): Rgb {
+  return oklchToLinearSrgb(l, c, hDeg).map((v) => {
+    const clamped = Math.min(1, Math.max(0, v))
+    return clamped <= 0.0031308
+      ? 12.92 * clamped
+      : 1.055 * clamped ** (1 / 2.4) - 0.055
+  }) as Rgb
+}
+
+/** Largest in-gamut chroma at this lightness and hue, to 4dp. */
+function chromaCeiling(l: number, hDeg: number): number {
+  let lo = 0
+  let hi = 0.5
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2
+    if (inSrgbGamut(oklchToLinearSrgb(l, mid, hDeg))) lo = mid
+    else hi = mid
+  }
+  return lo
 }
 
 function relativeLuminance([r, g, b]: Rgb): number {
@@ -89,6 +139,92 @@ describe('palette', () => {
     // A format change that broke the regex would otherwise make every
     // assertion below pass against an empty map.
     expect(THEMES[theme].size).toBeGreaterThan(180)
+  })
+})
+
+describe('brand fill', () => {
+  // `--primary` and everything derived from it are authored in OKLCH against
+  // the theme's `--hue` dial. Nothing here can be read off the HSL ramps, so
+  // this block resolves the declarations on disk and measures them directly —
+  // the fill is the most-tuned colour in the system and has been retuned three
+  // times, twice into a state someone had to walk back.
+  const semantic = readFileSync(SEMANTIC_CSS, 'utf8')
+  const light = readFileSync(LIGHT_THEME_CSS, 'utf8')
+
+  const dial = (css: string, name: string) => {
+    const match = new RegExp(`--${name}:\\s*([\\d.]+)`).exec(css)
+    if (!match) throw new Error(`dial not found: --${name}`)
+    return Number(match[1])
+  }
+
+  const HUE = dial(light, 'hue')
+  const SURFACE = dial(light, 'surface')
+  const FOREGROUND_LIGHTNESS = dial(light, 'foreground-lightness')
+  const CHROMA = dial(light, 'chroma')
+
+  // --primary: oklch(<l> <c> var(--primary-hue))
+  const declared =
+    /--primary:\s*oklch\(\s*([\d.]+)\s+([\d.]+)\s+var\(--primary-hue\)\s*\)/.exec(
+      semantic,
+    )
+  if (!declared) throw new Error('--primary is no longer a literal L C hue')
+  const L = Number(declared[1])
+  const C = Number(declared[2])
+
+  const canvas = oklch(SURFACE, 0, dial(light, 'surface-hue'))
+
+  it('states its own lightness and chroma, so a retune has to come here', () => {
+    // A drive-by edit that moves either number lands on this assertion first
+    // and has to read the tuning history above the declaration to change it.
+    expect({ L, C }).toEqual({ L: 0.78, C: 0.12 })
+  })
+
+  it('leaves the fill itself un-gamut-mapped', () => {
+    // Headroom is the whole reason 0.12 was picked over 0.13: the browser
+    // silently chroma-reduces anything past the ceiling, which would make the
+    // declared value a lie and freeze any future retune in place.
+    const ceiling = chromaCeiling(L, HUE)
+    expect(C).toBeLessThan(ceiling)
+    expect(inSrgbGamut(oklchToLinearSrgb(L, C, HUE))).toBe(true)
+  })
+
+  it('stays saturated enough to read as a control, not a wash', () => {
+    // The 2026-08-06 pass sat at ~65% of the ceiling and read muddy next to
+    // Supabase's #3ECF8E, which runs ~88% of the ceiling at its own L/H.
+    expect(C / chromaCeiling(L, HUE)).toBeGreaterThan(0.8)
+  })
+
+  it('carries its dark ink at AAA', () => {
+    // --primary-foreground: oklch(min(surface, fg-lightness) chroma*0.45 hue)
+    const ink = oklch(
+      Math.min(SURFACE, FOREGROUND_LIGHTNESS),
+      CHROMA * 0.45,
+      HUE,
+    )
+    expect(contrast(oklch(L, C, HUE), ink)).toBeGreaterThanOrEqual(7)
+  })
+
+  it('keeps the focus ring legible on the canvas', () => {
+    // SC 1.4.11. --ring: oklch(from var(--primary) 0.58 calc(c * 1.3) h) — and
+    // c * 1.3 has been over the ceiling at L 0.58 since before this retune, so
+    // what actually renders is the gamut-mapped value. Measure that, not the
+    // requested one, or this test passes on a colour no browser draws.
+    const ringL = 0.58
+    const ring = oklch(ringL, Math.min(C * 1.3, chromaCeiling(ringL, HUE)), HUE)
+    expect(contrast(ring, canvas)).toBeGreaterThanOrEqual(3)
+  })
+
+  it('keeps the button hairline darker than the fill it edges', () => {
+    // --primary-border: oklch(from var(--primary) calc(l - 0.12) calc(c*1.25) h).
+    // The ×1.25 is gamut-mapped away at this hue, so the edge is carried by the
+    // lightness step alone — which means the lightness step is what has to hold.
+    const borderL = L - 0.12
+    const border = oklch(
+      borderL,
+      Math.min(C * 1.25, chromaCeiling(borderL, HUE)),
+      HUE,
+    )
+    expect(contrast(border, oklch(L, C, HUE))).toBeGreaterThan(1.4)
   })
 })
 
