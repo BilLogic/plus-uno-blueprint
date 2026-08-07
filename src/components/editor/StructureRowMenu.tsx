@@ -112,6 +112,8 @@ export function StructureRowContextMenu({
   const [deleting, setDeleting] = useState<DeletionTarget | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** Separate from `error`, which belongs to the rename dialog's own field. */
+  const [duplicateError, setDuplicateError] = useState<string | null>(null)
 
   // Edit mode only. Renaming and deleting are authoring, and View mode's
   // whole premise is that nothing on screen changes anything.
@@ -143,9 +145,16 @@ export function StructureRowContextMenu({
           name: copyName,
         })
       invalidateStructure()
-    } catch {
-      // The row menu has nowhere to show prose; the session log records
-      // nothing because nothing happened. The rename dialog handles its own.
+    } catch (duplicateFailure) {
+      // Never swallowed. The bare `catch {}` that used to sit here made a
+      // refused duplicate — a tier guard, a name collision — indistinguishable
+      // from a menu item that does not work: the click closed the menu and
+      // nothing appeared, anywhere.
+      setDuplicateError(
+        duplicateFailure instanceof Error
+          ? duplicateFailure.message
+          : String(duplicateFailure),
+      )
     } finally {
       setBusy(false)
     }
@@ -234,6 +243,34 @@ export function StructureRowContextMenu({
           if (!open) setDeleting(null)
         }}
       />
+
+      <Dialog
+        open={duplicateError !== null}
+        onOpenChange={(open) => {
+          if (!open) setDuplicateError(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Couldn’t duplicate this {kind}</DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive">
+            <AlertTriangle className="size-3.5" aria-hidden />
+            <AlertDescription className="text-xs">
+              {duplicateError}
+            </AlertDescription>
+          </Alert>
+          <DialogFooter>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setDuplicateError(null)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

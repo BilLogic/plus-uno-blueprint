@@ -23,7 +23,7 @@ type PathSelectionState = {
 }
 
 type PathSelectionContextValue = {
-  /** Registered paths per scenario id (read-only; merged, never pruned). */
+  /** Registered paths per scenario id (read-only; merged, pruned by scope). */
   catalog: PathCatalog
   /** Selected path identities (`path_type:name`) — shared across overview/phase/scenario. */
   activePathKeys: string[]
@@ -41,8 +41,15 @@ type PathSelectionContextValue = {
   /** Toggle by scenario path UUID — resolves to a path key, then updates globally. */
   togglePathSelection: (scenarioId: string, pathId: string) => void
   setSelectedPathIds: (scenarioId: string, pathIds: string[]) => void
-  /** Register/update paths for scenarios and apply the active path keys. */
-  syncScenarioPaths: (pathsByScenario: Map<string, PathListItem[]>) => void
+  /**
+   * Register/update paths for scenarios and apply the active path keys.
+   * `scope` — the scenario ids the caller asked about — additionally prunes
+   * any of those that came back with no paths, i.e. that no longer exist.
+   */
+  syncScenarioPaths: (
+    pathsByScenario: Map<string, PathListItem[]>,
+    scope?: readonly string[],
+  ) => void
 }
 
 const PathSelectionContext = createContext<PathSelectionContextValue | null>(
@@ -90,32 +97,73 @@ function toggleKeyInList(keys: string[], pathKey: string): string[] {
   return [...keys, pathKey]
 }
 
+/**
+ * Every field of a path, in a stable order.
+ *
+ * The comparison used to name three of the five fields, so `description` and
+ * `note` edits never reached the catalog and the sidebar kept rendering the
+ * old text for the life of the session. Deriving the signature from the whole
+ * record instead of a hand-written field list means adding a sixth field
+ * cannot silently reopen that — the field is compared because it exists.
+ */
+function pathSignature(path: PathListItem): string {
+  return JSON.stringify(
+    Object.keys(path)
+      .sort()
+      .map((key) => [key, path[key as keyof PathListItem]]),
+  )
+}
+
+function samePaths(a: PathListItem[] | undefined, b: PathListItem[]): boolean {
+  return (
+    a !== undefined &&
+    a.length === b.length &&
+    a.every((path, index) => {
+      const other = b[index]
+      return other !== undefined && pathSignature(path) === pathSignature(other)
+    })
+  )
+}
+
 function mergeCatalog(
   prev: PathCatalog,
   pathsByScenario: Map<string, PathListItem[]>,
+  /** The scenarios the caller asked about — see the prune below. */
+  scope?: readonly string[],
 ): { catalog: PathCatalog; changed: boolean } {
   let changed = false
   const catalog = { ...prev }
 
   for (const [scenarioId, paths] of pathsByScenario) {
     if (paths.length === 0) continue
-    const prevPaths = prev[scenarioId]
-    // Identity AND label. Comparing ids alone made a rename invisible: the
-    // refetched row has the same id, so the catalog kept the old name and the
-    // sidebar PATHS row read stale until a reload. `path_type` rides along
-    // because the filter key is `${path_type}:${name}` — change either and
-    // the selection keys have to be recomputed.
-    const same =
-      prevPaths &&
-      prevPaths.length === paths.length &&
-      prevPaths.every(
-        (path, index) =>
-          path.id === paths[index]?.id &&
-          path.name === paths[index]?.name &&
-          path.path_type === paths[index]?.path_type,
-      )
-    if (!same) {
+    if (!samePaths(prev[scenarioId], paths)) {
       catalog[scenarioId] = paths
+      changed = true
+    }
+  }
+
+  /*
+    The prune, and why it needs `scope`.
+
+    Without one, a deleted scenario — or a duplicate that was reverted — stays
+    in the catalog for the life of the session: it keeps emitting selections,
+    keeps offering its dead paths to the PATHS filter and to the agent's
+    `toggle_path_filter`, and can be picked as the happy-path default.
+
+    But absence from `pathsByScenario` does not mean "gone". Every caller syncs
+    a *view's worth* of scenarios (one phase, or the overview), and two of them
+    can be mounted at once — so pruning everything absent would have one view
+    empty the other's selections and make its paths vanish from the board.
+
+    `scope` is the caller naming the scenarios it asked about. A scenario in
+    that set with no entry in the map has no paths, which for these queries
+    means it no longer exists. Nothing outside the set is touched.
+  */
+  if (scope) {
+    for (const scenarioId of scope) {
+      if (pathsByScenario.get(scenarioId)?.length) continue
+      if (!(scenarioId in catalog)) continue
+      delete catalog[scenarioId]
       changed = true
     }
   }
@@ -131,11 +179,12 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
   })
 
   const syncScenarioPaths = useCallback(
-    (pathsByScenario: Map<string, PathListItem[]>) => {
+    (pathsByScenario: Map<string, PathListItem[]>, scope?: readonly string[]) => {
       setState((prev) => {
         const { catalog, changed: catalogChanged } = mergeCatalog(
           prev.catalog,
           pathsByScenario,
+          scope,
         )
         // Stay uninitialized until the catalog has paths — an empty first sync
         // must not lock in "nothing selected" and skip the happy-path default.
@@ -347,6 +396,12 @@ export function usePathSelectionContext() {
 /** Shared per-scenario selections — same store for overview, phase, and scenario. */
 export function usePathSelectionsByScenario(
   pathsByScenario: Map<string, PathListItem[]>,
+  /**
+   * The scenarios this view asked about. Passing it lets the store prune the
+   * ones that came back empty — a deleted scenario, or a duplicate that was
+   * reverted — instead of carrying them for the rest of the session.
+   */
+  scopeIds?: readonly string[],
 ) {
   const {
     selections,
@@ -366,9 +421,17 @@ export function usePathSelectionsByScenario(
     [pathsByScenario],
   )
 
+  const scopeKey = useMemo(
+    () => (scopeIds ? [...scopeIds].sort().join('|') : ''),
+    [scopeIds],
+  )
+
   useLayoutEffect(() => {
-    syncScenarioPaths(pathsByScenario)
-  }, [pathsByScenario, pathsKey, syncScenarioPaths])
+    syncScenarioPaths(pathsByScenario, scopeIds)
+    // `pathsKey`/`scopeKey` are the value-identity of the two objects above;
+    // the objects themselves are rebuilt on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathsKey, scopeKey, syncScenarioPaths])
 
   return {
     selections,

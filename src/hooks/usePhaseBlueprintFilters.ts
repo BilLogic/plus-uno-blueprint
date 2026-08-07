@@ -50,8 +50,11 @@ export function usePhaseBlueprintFilters({
     loading,
   } = useCanvasBlueprints(activeScenarioIds)
 
+  // `activeScenarioIds` is the scope: the store may prune any of these that
+  // came back with no paths, which is how a deleted — or reverted-duplicate —
+  // scenario leaves the catalog instead of outliving the session in it.
   const { getSelectedPathIds, togglePathKey, activePathKeys } =
-    usePathSelectionsByScenario(pathsByScenario)
+    usePathSelectionsByScenario(pathsByScenario, activeScenarioIds)
 
   const filterPaths = useMemo(
     () => collectOverviewPathOptions(pathsByScenario),

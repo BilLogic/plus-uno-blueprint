@@ -174,6 +174,71 @@ const hysteresisProbe = async (name) => {
   return flips
 }
 
+
+// ---- targeted hysteresis probe --------------------------------------------
+// Blocks the gutter a bracket connector is using, then unblocks it. A monotone
+// router flips back the instant the obstruction clears; a sticky one keeps the
+// side it moved to. Sides observed: [initial, blocked, unblocked].
+const blockerProbe = async (name) => {
+  const trace = await page.evaluate(async () => {
+    const A = window.__arrowAudit
+    const frame = () => new Promise((r) => requestAnimationFrame(r))
+    const settle = async () => {
+      window.dispatchEvent(new Event('resize'))
+      for (let i = 0; i < 4; i++) await frame()
+    }
+    const sides = () =>
+      A.arrowPaths().map(({ el }) => A.sideOf(el))
+
+    const before = sides()
+    const makeBlocker = (x, y) => {
+      const b = document.createElement('div')
+      b.setAttribute('data-blueprint-cell', '__probe-blocker')
+      b.style.cssText = `position:absolute;left:${x - 12}px;top:${y - 24}px;width:24px;height:48px;pointer-events:none;`
+      const a = document.createElement('div')
+      a.setAttribute('data-blueprint-cell-anchor', '')
+      a.style.cssText = 'position:absolute;inset:0;'
+      b.appendChild(a)
+      return b
+    }
+
+    const candidates = before
+      .map((side, i) => ({ side, i }))
+      .filter((c) => c.side === 'left' || c.side === 'right')
+
+    for (const { i: idx } of candidates.slice(0, 25)) {
+      const entry = A.arrowPaths()[idx]
+      const ctm = entry.el.getScreenCTM()
+      if (!ctm) continue
+      const L = entry.el.getTotalLength()
+      const mid = A.pointAt(entry.el, ctm, L / 2)
+      const root = entry.el.closest('svg').parentElement
+      const rootRect = root.getBoundingClientRect()
+
+      const blocker = makeBlocker(mid.x - rootRect.left, mid.y - rootRect.top)
+      root.appendChild(blocker)
+      await settle()
+      const blocked = sides()[idx]
+      blocker.remove()
+      await settle()
+      const unblocked = sides()[idx]
+
+      if (blocked !== before[idx]) {
+        return { index: idx, initial: before[idx], blocked, unblocked, tried: true }
+      }
+    }
+    return { index: -1, initial: null, blocked: null, unblocked: null, tried: false }
+  })
+  if (!trace || !trace.tried) {
+    console.log(`[${LABEL}] BLOCKER ${name}: no connector responded to a blocked gutter`)
+    return
+  }
+  const stuck = trace.blocked === trace.unblocked
+  console.log(
+    `[${LABEL}] BLOCKER ${name}: path#${trace.index} ${trace.initial} -> ${trace.blocked} (blocked) -> ${trace.unblocked} (cleared) :: ${stuck ? 'HELD its side' : 'FLIPPED BACK'}`,
+  )
+}
+
 await page.addInitScript(HELPERS)
 await page.reload({ waitUntil: 'networkidle' })
 await page.waitForTimeout(3500)
@@ -201,6 +266,7 @@ for (const view of ['Stacked', 'Merged']) {
   totalCrossings += await crossingAudit(`In-session/Warm-Up ${view}`)
   await perfProbe(`In-session/Warm-Up ${view}`)
   await hysteresisProbe(`In-session/Warm-Up ${view}`)
+  await blockerProbe(`In-session/Warm-Up ${view}`)
   totalCrossings += await crossingAudit(`In-session/Warm-Up ${view} (post-toggles)`)
 }
 
