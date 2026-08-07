@@ -16,7 +16,11 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { validateResourceUrl } from '../../src/lib/resourceUrl.ts'
-import { updateCellResources } from '../../src/lib/cellContentMutations.ts'
+import {
+  updateCellContent,
+  updateCellResources,
+} from '../../src/lib/cellContentMutations.ts'
+import { updateCellSpec } from '../../src/lib/cellSpecMutations.ts'
 
 test('bare host is upgraded to https', () => {
   const result = validateResourceUrl('figma.com/file/abc')
@@ -43,8 +47,15 @@ test('empty and malformed are refused', () => {
   assert.equal(validateResourceUrl('https://').ok, false)
 })
 
-/** Minimal stand-in for the PostgREST builder chain, capturing the payload. */
-function fakeClient() {
+/**
+ * Minimal stand-in for the PostgREST builder chain, capturing the payload.
+ *
+ * `rows` is what `.select()` resolves with — the whole point of the second
+ * test group below. PostgREST answers a matched-nothing update with
+ * `{ data: [], error: null }`, so an empty array here is a *successful*
+ * response that wrote nothing.
+ */
+function fakeClient(rows = [{ id: 'cell-1' }]) {
   const captured = {}
   return {
     captured,
@@ -55,7 +66,12 @@ function fakeClient() {
           return {
             eq(column, value) {
               captured.eq = [column, value]
-              return Promise.resolve({ error: null })
+              return {
+                select(columns) {
+                  captured.select = columns
+                  return Promise.resolve({ data: rows, error: null })
+                },
+              }
             },
           }
         },
@@ -115,4 +131,65 @@ test('one bad URL aborts the whole write', async () => {
   // Nothing may reach the database when any entry is invalid — a partial
   // write would drop the good link's sibling without saying so.
   assert.equal(client.captured.values, undefined)
+})
+
+/*
+ * Zero rows is a real answer.
+ *
+ * `.update(...).eq('id', …)` against a row that is gone returns 200 with an
+ * empty array and `error: null`. Checking `error` alone reports it as a
+ * success — which is how "edit cell C, then delete the path that cascades C,
+ * then Revert all" told the user the edit had been taken back, dropped the
+ * entry from the ledger, and left the new text waiting to reappear with the
+ * restored path.
+ */
+test('a content write that matches no row throws instead of succeeding', async () => {
+  const client = fakeClient([])
+  await assert.rejects(
+    () =>
+      updateCellContent(
+        client,
+        'cell-gone',
+        { content: 'New text', description: '', owner: '', perceivedOwner: '' },
+        undefined,
+        { record: false },
+      ),
+    /no longer exists/,
+  )
+  assert.equal(client.captured.select, 'id', '.select() is what makes it visible')
+})
+
+test('a spec write that matches no row throws instead of succeeding', async () => {
+  const client = fakeClient([])
+  await assert.rejects(
+    () =>
+      updateCellSpec(
+        client,
+        'cell-gone',
+        { function: 'Reassure', form: 'Card', valueProps: [] },
+        undefined,
+        { record: false },
+      ),
+    /no longer exists/,
+  )
+})
+
+test('a resources write that matches no row throws instead of succeeding', async () => {
+  const client = fakeClient([])
+  await assert.rejects(
+    () => updateCellResources(client, 'cell-gone', [], []),
+    /no longer exists/,
+  )
+})
+
+test('a content write that matches its row still resolves', async () => {
+  const client = fakeClient()
+  await updateCellContent(
+    client,
+    'cell-1',
+    { content: 'New text', description: '', owner: '', perceivedOwner: '' },
+    undefined,
+    { record: false },
+  )
+  assert.equal(client.captured.values.content, 'New text')
 })

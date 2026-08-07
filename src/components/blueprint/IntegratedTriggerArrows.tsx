@@ -18,6 +18,7 @@ import {
   groupDiscoveryRailTriggers,
   isWrapTrigger,
   partitionReportingAnIssueFsaStep1ToResolveTriggers,
+  runArrowMeasurementPass,
 } from '@/lib/blueprintArrowGeometry'
 import {
   getPathArrowColor,
@@ -68,6 +69,16 @@ type SimpleSegment = {
   dualMarker?: boolean
 }
 
+/** Identity of a rendered segment list — cheaper than re-rendering to find out. */
+function serializeSegments(segments: readonly SimpleSegment[]): string {
+  return segments
+    .map(
+      (segment) =>
+        `${segment.id}|${segment.d}|${segment.colorKey}|${segment.arrowColor}|${segment.opacity}|${segment.showMarker ?? ''}|${segment.dualMarker ?? ''}`,
+    )
+    .join('\n')
+}
+
 function resolveSegmentStyle(
   pathId: string,
   pathById: Map<string, IntegratedPathRef>,
@@ -109,232 +120,254 @@ export function IntegratedTriggerArrows({
     [paths],
   )
 
+  // Every notification that reaches this component re-runs the measurement, so
+  // both setters bail out when nothing actually moved. Without that, a single
+  // ResizeObserver notification produces a new state identity, which re-renders,
+  // which (with an unmemoised prop upstream) rebuilds the observer, whose
+  // `observe()` fires immediately — a self-sustaining rAF loop.
+  const measureSize = useCallback(() => {
+    const content = contentRef.current
+    if (!content) return
+
+    const width = Math.max(content.scrollWidth, content.offsetWidth, 1)
+    const height = Math.max(content.scrollHeight, content.offsetHeight, 1)
+    setSize((prev) =>
+      prev.width === width && prev.height === height
+        ? prev
+        : { width, height },
+    )
+  }, [contentRef])
+
   const updateArrows = useCallback(() => {
     const content = contentRef.current
     if (!content || triggers.length === 0) {
-      setSimpleSegments([])
+      setSimpleSegments((prev) => (prev.length === 0 ? prev : []))
       return
     }
 
-    const nextSimple: SimpleSegment[] = []
-    // ONE DOM sweep per update: every per-trigger querySelector below used to
-    // rescan the whole band (O(triggers × cells)); the index kills that.
-    const cellElById = new Map<string, HTMLElement>()
-    for (const el of content.querySelectorAll<HTMLElement>(
-      '[data-blueprint-cell]',
-    )) {
-      const id = el.getAttribute('data-blueprint-cell')
-      if (id !== null && !cellElById.has(id)) cellElById.set(id, el)
-    }
-    const { resolveTriggers, otherTriggers: railInputTriggers } =
-      partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
-
-    for (const trigger of resolveTriggers) {
-      const sourceEl = cellElById.get(trigger.source_cell_id)
-      const targetEl = cellElById.get(trigger.target_cell_id)
-      if (!sourceEl || !targetEl) continue
-
-      const wrap = isWrapTrigger(
-        sourceEl,
-        targetEl,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
-      )
-      if (layer === 'forward' && wrap) continue
-      if (layer === 'wrap' && !wrap) continue
-
-      const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
-        sourceEl,
-        targetEl,
-        content,
-      )
-      if (!d) continue
-
-      const style = resolveSegmentStyle(trigger.path_id, pathById)
-      nextSimple.push({
-        id: trigger.id,
-        d,
-        colorKey: style.colorKey,
-        arrowColor: style.arrowColor,
-        opacity: trigger.opacity,
-      })
-    }
-
-    const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
-      railInputTriggers,
-      content,
-    )
-
-    for (const group of fanOutGroups) {
-      const sampleTrigger = triggers.find((entry) =>
-        group.branches.some((branch) => branch.triggerId === entry.id),
-      )
-      const trunkStyle = resolveSegmentStyle(
-        sampleTrigger?.path_id ?? '',
-        pathById,
-      )
-      const targetEls = group.branches.map((branch) => branch.targetEl)
-      const trunk = buildOverheadRailFanOutTrunkPath(
-        group.sourceEl,
-        targetEls,
-        content,
-      )
-      if (trunk) {
-        nextSimple.push({
-          id: `${group.sourceCellId}-trunk`,
-          d: trunk,
-          colorKey: trunkStyle.colorKey,
-          arrowColor: trunkStyle.arrowColor,
-          opacity: 1,
-          showMarker: false,
-        })
+    const nextSimple = runArrowMeasurementPass(() => {
+      const segments: SimpleSegment[] = []
+      // ONE DOM sweep per update: every per-trigger querySelector below used to
+      // rescan the whole band (O(triggers × cells)); the index kills that.
+      const cellElById = new Map<string, HTMLElement>()
+      for (const el of content.querySelectorAll<HTMLElement>(
+        '[data-blueprint-cell]',
+      )) {
+        const id = el.getAttribute('data-blueprint-cell')
+        if (id !== null && !cellElById.has(id)) cellElById.set(id, el)
       }
+      const { resolveTriggers, otherTriggers: railInputTriggers } =
+        partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
 
-      for (const branch of group.branches) {
-        const trigger = triggers.find(
-          (entry) => entry.id === branch.triggerId,
-        )
-        const branchStyle = resolveSegmentStyle(trigger?.path_id ?? '', pathById)
-        const d = buildOverheadRailFanOutDropPath(
-          group.sourceEl,
-          branch.targetEl,
-          content,
-        )
-        if (!d) continue
-
-        nextSimple.push({
-          id: branch.triggerId,
-          d,
-          colorKey: branchStyle.colorKey,
-          arrowColor: branchStyle.arrowColor,
-          opacity: trigger?.opacity ?? 1,
-        })
-      }
-    }
-
-    for (const group of busGroups) {
-      const triggersInGroup = triggers.filter((trigger) =>
-        group.triggerIds.includes(trigger.id),
-      )
-      const byPathId = new Map<
-        string,
-        { sourceEls: HTMLElement[]; opacity: number; triggerIds: string[] }
-      >()
-
-      for (const trigger of triggersInGroup) {
+      for (const trigger of resolveTriggers) {
         const sourceEl = cellElById.get(trigger.source_cell_id)
-        if (!sourceEl) continue
+        const targetEl = cellElById.get(trigger.target_cell_id)
+        if (!sourceEl || !targetEl) continue
 
-        const existing = byPathId.get(trigger.path_id)
-        if (existing) {
-          existing.sourceEls.push(sourceEl)
-          existing.triggerIds.push(trigger.id)
-          existing.opacity = Math.max(existing.opacity, trigger.opacity)
-        } else {
-          byPathId.set(trigger.path_id, {
-            sourceEls: [sourceEl],
-            opacity: trigger.opacity,
-            triggerIds: [trigger.id],
-          })
-        }
-      }
+        const wrap = isWrapTrigger(
+          sourceEl,
+          targetEl,
+          trigger.source_cell_id,
+          trigger.target_cell_id,
+        )
+        if (layer === 'forward' && wrap) continue
+        if (layer === 'wrap' && !wrap) continue
 
-      for (const [pathId, pathGroup] of byPathId) {
-        const style = resolveSegmentStyle(pathId, pathById)
-        const targetEl =
-          triggersInGroup
-            .filter((trigger) => trigger.path_id === pathId)
-            .map((trigger) => cellElById.get(trigger.target_cell_id))
-            .find((el): el is HTMLElement => el !== undefined) ?? group.targetEl
-
-        const d = buildApplicationRegularTutorRailBusPath(
-          pathGroup.sourceEls,
+        const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
+          sourceEl,
           targetEl,
           content,
         )
         if (!d) continue
 
-        nextSimple.push({
-          id: `${group.targetCellId}-${pathId}`,
+        const style = resolveSegmentStyle(trigger.path_id, pathById)
+        segments.push({
+          id: trigger.id,
           d,
           colorKey: style.colorKey,
           arrowColor: style.arrowColor,
-          opacity: pathGroup.opacity,
+          opacity: trigger.opacity,
         })
       }
-    }
 
-    const { pairs, remaining: unpaired } =
-      findBidirectionalTriggerPairs(remaining)
-
-    for (const pair of pairs) {
-      const cellAEl = cellElById.get(pair.cellAId)
-      const cellBEl = cellElById.get(pair.cellBId)
-      if (!cellAEl || !cellBEl) continue
-
-      const wrap = isWrapTrigger(
-        cellAEl,
-        cellBEl,
-        pair.cellAId,
-        pair.cellBId,
-      )
-      if (layer === 'forward' && wrap) continue
-      if (layer === 'wrap' && !wrap) continue
-
-      const d = buildBidirectionalArrowPath(cellAEl, cellBEl, content)
-      if (!d) continue
-
-      const style = resolveSegmentStyle(pair.first.path_id, pathById)
-      nextSimple.push({
-        id: `${pair.first.id}-${pair.second.id}`,
-        d,
-        colorKey: style.colorKey,
-        arrowColor: style.arrowColor,
-        opacity: pair.first.opacity ?? 1,
-        dualMarker: true,
-      })
-    }
-
-    for (const trigger of unpaired) {
-      const sourceEl = cellElById.get(trigger.source_cell_id)
-      const targetEl = cellElById.get(trigger.target_cell_id)
-      if (!sourceEl || !targetEl) continue
-
-      const wrap = isWrapTrigger(
-        sourceEl,
-        targetEl,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
-      )
-      if (layer === 'forward' && wrap) continue
-      if (layer === 'wrap' && !wrap) continue
-
-      const d = buildArrowPath(
-        sourceEl,
-        targetEl,
+      const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
+        railInputTriggers,
         content,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
-        trigger.id,
       )
-      if (!d) continue
 
-      const style = resolveSegmentStyle(trigger.path_id, pathById)
-      nextSimple.push({
-        id: trigger.id,
-        d,
-        colorKey: style.colorKey,
-        arrowColor: style.arrowColor,
-        opacity: trigger.opacity,
-      })
-    }
+      for (const group of fanOutGroups) {
+        const sampleTrigger = triggers.find((entry) =>
+          group.branches.some((branch) => branch.triggerId === entry.id),
+        )
+        const trunkStyle = resolveSegmentStyle(
+          sampleTrigger?.path_id ?? '',
+          pathById,
+        )
+        const targetEls = group.branches.map((branch) => branch.targetEl)
+        const trunk = buildOverheadRailFanOutTrunkPath(
+          group.sourceEl,
+          targetEls,
+          content,
+        )
+        if (trunk) {
+          segments.push({
+            id: `${group.sourceCellId}-trunk`,
+            d: trunk,
+            colorKey: trunkStyle.colorKey,
+            arrowColor: trunkStyle.arrowColor,
+            opacity: 1,
+            showMarker: false,
+          })
+        }
 
-    setSimpleSegments(nextSimple)
-    setSize({
-      width: Math.max(content.scrollWidth, content.offsetWidth, 1),
-      height: Math.max(content.scrollHeight, content.offsetHeight, 1),
+        for (const branch of group.branches) {
+          const trigger = triggers.find(
+            (entry) => entry.id === branch.triggerId,
+          )
+          const branchStyle = resolveSegmentStyle(trigger?.path_id ?? '', pathById)
+          const d = buildOverheadRailFanOutDropPath(
+            group.sourceEl,
+            branch.targetEl,
+            content,
+          )
+          if (!d) continue
+
+          segments.push({
+            id: branch.triggerId,
+            d,
+            colorKey: branchStyle.colorKey,
+            arrowColor: branchStyle.arrowColor,
+            opacity: trigger?.opacity ?? 1,
+          })
+        }
+      }
+
+      for (const group of busGroups) {
+        const triggersInGroup = triggers.filter((trigger) =>
+          group.triggerIds.includes(trigger.id),
+        )
+        const byPathId = new Map<
+          string,
+          { sourceEls: HTMLElement[]; opacity: number; triggerIds: string[] }
+        >()
+
+        for (const trigger of triggersInGroup) {
+          const sourceEl = cellElById.get(trigger.source_cell_id)
+          if (!sourceEl) continue
+
+          const existing = byPathId.get(trigger.path_id)
+          if (existing) {
+            existing.sourceEls.push(sourceEl)
+            existing.triggerIds.push(trigger.id)
+            existing.opacity = Math.max(existing.opacity, trigger.opacity)
+          } else {
+            byPathId.set(trigger.path_id, {
+              sourceEls: [sourceEl],
+              opacity: trigger.opacity,
+              triggerIds: [trigger.id],
+            })
+          }
+        }
+
+        for (const [pathId, pathGroup] of byPathId) {
+          const style = resolveSegmentStyle(pathId, pathById)
+          const targetEl =
+            triggersInGroup
+              .filter((trigger) => trigger.path_id === pathId)
+              .map((trigger) => cellElById.get(trigger.target_cell_id))
+              .find((el): el is HTMLElement => el !== undefined) ?? group.targetEl
+
+          const d = buildApplicationRegularTutorRailBusPath(
+            pathGroup.sourceEls,
+            targetEl,
+            content,
+          )
+          if (!d) continue
+
+          segments.push({
+            id: `${group.targetCellId}-${pathId}`,
+            d,
+            colorKey: style.colorKey,
+            arrowColor: style.arrowColor,
+            opacity: pathGroup.opacity,
+          })
+        }
+      }
+
+      const { pairs, remaining: unpaired } =
+        findBidirectionalTriggerPairs(remaining)
+
+      for (const pair of pairs) {
+        const cellAEl = cellElById.get(pair.cellAId)
+        const cellBEl = cellElById.get(pair.cellBId)
+        if (!cellAEl || !cellBEl) continue
+
+        const wrap = isWrapTrigger(
+          cellAEl,
+          cellBEl,
+          pair.cellAId,
+          pair.cellBId,
+        )
+        if (layer === 'forward' && wrap) continue
+        if (layer === 'wrap' && !wrap) continue
+
+        const d = buildBidirectionalArrowPath(cellAEl, cellBEl, content)
+        if (!d) continue
+
+        const style = resolveSegmentStyle(pair.first.path_id, pathById)
+        segments.push({
+          id: `${pair.first.id}-${pair.second.id}`,
+          d,
+          colorKey: style.colorKey,
+          arrowColor: style.arrowColor,
+          opacity: pair.first.opacity ?? 1,
+          dualMarker: true,
+        })
+      }
+
+      for (const trigger of unpaired) {
+        const sourceEl = cellElById.get(trigger.source_cell_id)
+        const targetEl = cellElById.get(trigger.target_cell_id)
+        if (!sourceEl || !targetEl) continue
+
+        const wrap = isWrapTrigger(
+          sourceEl,
+          targetEl,
+          trigger.source_cell_id,
+          trigger.target_cell_id,
+        )
+        if (layer === 'forward' && wrap) continue
+        if (layer === 'wrap' && !wrap) continue
+
+        const d = buildArrowPath(
+          sourceEl,
+          targetEl,
+          content,
+          trigger.source_cell_id,
+          trigger.target_cell_id,
+          trigger.id,
+        )
+        if (!d) continue
+
+        const style = resolveSegmentStyle(trigger.path_id, pathById)
+        segments.push({
+          id: trigger.id,
+          d,
+          colorKey: style.colorKey,
+          arrowColor: style.arrowColor,
+          opacity: trigger.opacity,
+        })
+      }
+
+      return segments
     })
-  }, [contentRef, layer, pathById, triggers])
+
+    const nextKey = serializeSegments(nextSimple)
+    setSimpleSegments((prev) =>
+      serializeSegments(prev) === nextKey ? prev : nextSimple,
+    )
+    measureSize()
+  }, [contentRef, layer, measureSize, pathById, triggers])
 
   useEffect(() => {
     updateArrows()
@@ -353,22 +386,35 @@ export function IntegratedTriggerArrows({
       raf = requestAnimationFrame(updateArrows)
     }
 
+    // Scrolling is NOT a geometry signal: every box the routers read is
+    // root-relative, so scrolling changes no path and no overlay extent. Only
+    // the scroll extent itself is worth re-reading, and that is four property
+    // reads rather than a full re-route of the band.
+    let sizeRaf = 0
+    const scheduleSizeUpdate = () => {
+      cancelAnimationFrame(sizeRaf)
+      sizeRaf = requestAnimationFrame(measureSize)
+    }
+
     const observer = new ResizeObserver(scheduleUpdate)
     observer.observe(content)
     if (scrollParent !== content) {
       observer.observe(scrollParent)
     }
 
-    scrollParent.addEventListener('scroll', scheduleUpdate, { passive: true })
+    scrollParent.addEventListener('scroll', scheduleSizeUpdate, {
+      passive: true,
+    })
     window.addEventListener('resize', scheduleUpdate)
 
     return () => {
       cancelAnimationFrame(raf)
+      cancelAnimationFrame(sizeRaf)
       observer.disconnect()
-      scrollParent.removeEventListener('scroll', scheduleUpdate)
+      scrollParent.removeEventListener('scroll', scheduleSizeUpdate)
       window.removeEventListener('resize', scheduleUpdate)
     }
-  }, [contentRef, scrollContainerRef, updateArrows])
+  }, [contentRef, measureSize, scrollContainerRef, updateArrows])
 
   const svgStyle = useMemo(
     () => ({

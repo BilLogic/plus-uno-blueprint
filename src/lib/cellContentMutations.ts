@@ -3,6 +3,7 @@ import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
 import { recordChange } from '@/lib/authoringSession'
 import { toAuthoringError } from '@/lib/authoringErrors'
+import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 
@@ -48,7 +49,7 @@ export async function updateCellContent(
     throw new Error('A cell needs text — an empty one reads as a gap in the grid.')
   }
 
-  const { error } = await client
+  const { data, error } = await client
     .from('cells')
     .update({
       content,
@@ -59,7 +60,13 @@ export async function updateCellContent(
       perceived_owner: update.perceivedOwner.trim() || null,
     })
     .eq('id', cellId)
+    .select('id')
   if (error) throw toAuthoringError(error)
+  // `.select('id')` + this check, not `error === null`: a matched-nothing
+  // update is a 200 with an empty array. Without it, editing a cell whose
+  // path was since deleted "succeeds", and its revert reports "taken back"
+  // having written nothing.
+  requireRowsWritten(data, 'cell')
   // Direct table write, so `call()` never sees it — logged here for the same
   // reason and with the same after-success placement.
   if (options.record !== false) {
@@ -106,11 +113,13 @@ export async function updateCellResources(
   }
 
   const preserved = existing.filter((link) => link.type !== URL_LINK_TYPE)
-  const { error } = await client
+  const { data, error } = await client
     .from('cells')
     .update({ links: [...preserved, ...rebuilt] as unknown as Json })
     .eq('id', cellId)
+    .select('id')
   if (error) throw toAuthoringError(error)
+  requireRowsWritten(data, 'cell')
   recordChange(
     'update_cell_resources',
     { cell_id: cellId },
