@@ -193,8 +193,8 @@ export function DeleteStructureDialog({
           </DialogTitle>
           <DialogDescription>
             {target.kind === 'slice'
-              ? 'A slice has no recovery archive. Once it is gone, its frames and their captions are gone with it.'
-              : 'This cannot be undone from the browser’s history. The archive keeps a copy, but slices that lose frames are only put back if their cells still have stored keys.'}
+              ? 'Slices have no archive — this one goes for good.'
+              : 'Not revertible from the change list. The archive keeps a copy.'}
           </DialogDescription>
         </DialogHeader>
 

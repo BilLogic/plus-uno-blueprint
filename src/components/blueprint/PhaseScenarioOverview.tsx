@@ -231,7 +231,7 @@ export function PhaseScenarioOverview({
         <CanvasEmptyState
           variant="phase"
           title="No scenarios in this phase yet"
-          description="Scenarios are the journeys this phase plays out. Add one with the + on this phase's row in the sidebar (Edit mode)."
+          description="Add one with the + on this phase's row in the sidebar (Edit mode)."
         />
       </div>
     )

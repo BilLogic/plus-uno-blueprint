@@ -363,7 +363,7 @@ export function ResizableComparePanel({
         </div>
       </div>
       {!lockHeight ? (
-        <IconTooltip label="Drag to resize — arrow keys also work">
+        <IconTooltip label="Arrow keys resize this too">
           <button
             type="button"
             aria-label="Resize comparison panel"

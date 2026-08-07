@@ -191,7 +191,7 @@ export function CanvasDesignTools() {
             }
           />
           <TooltipContent side="top" className="text-xs">
-            Clear the selection — the only thing that does (Esc)
+            Clear the selection (Esc)
           </TooltipContent>
         </Tooltip>
       ) : null}

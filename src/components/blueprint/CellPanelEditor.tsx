@@ -493,7 +493,7 @@ function CellPanelEditorForm({
 
       {blocked ? (
         <p className="text-xs text-muted-foreground">
-          · A cell needs text — an empty one reads as a gap in the grid.
+          A cell needs text.
         </p>
       ) : null}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}

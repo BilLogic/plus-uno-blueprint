@@ -439,10 +439,8 @@ function AgentSessionsView({
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {sessions.length === 0 ? (
           <p className="px-1.5 pt-2 text-xs text-muted-foreground">
-            No sessions yet —{' '}
-            <Plus className="inline size-3 align-[-0.1em]" aria-label="New session" />{' '}
-            starts one. A session is one conversation plus the changes it
-            made.
+            No sessions yet. A session is one conversation plus the changes
+            it made.
           </p>
         ) : searching ? (
           // A filter answers "where is it", so groups get out of the way.
@@ -899,12 +897,12 @@ function AgentChatView({
                 keyed ? (
                   <p className="text-sm text-muted-foreground">
                     Ready ({modelFor(settings)}). Writes land live on the
-                    canvas and in the change sheet as{' '}
+                    canvas as{' '}
                     <Sparkles
                       className="inline size-3 align-[-0.1em]"
                       aria-hidden
                     />{' '}
-                    rows — each one revertible.
+                    rows in Changes — each revertible.
                   </p>
                 ) : (
                   <div className="flex flex-col items-start gap-2">
@@ -1274,8 +1272,8 @@ function DeleteSessionDialog({
           </DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
-          Removes the conversation. Changes it already made to the blueprint
-          stay — revert those from the change sheet.
+          Changes it already made to the blueprint stay — revert those from
+          Changes.
         </p>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
@@ -1556,9 +1554,9 @@ export function AgentSettingsRailButton() {
             </div>
 
             <p className="text-3xs leading-snug text-muted-foreground">
-              Stored in this browser only — never the repo or a server. A key
-              kept in the browser is readable by anyone with devtools on this
-              machine; use a personal key, not a shared or production one.
+              Stored in this browser only, never the repo or a server — and
+              readable by anyone with devtools on this machine. Use a personal
+              key.
             </p>
               </>
             ) : null}

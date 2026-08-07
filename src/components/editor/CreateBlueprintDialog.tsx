@@ -177,8 +177,7 @@ export function CreateBlueprintDialog({
         <DialogHeader>
           <DialogTitle>New scenario</DialogTitle>
           <DialogDescription>
-            An empty grid to fill in — lanes down the side, steps across.
-            Both can be changed afterwards.
+            Lanes down the side, steps across — both changeable afterwards.
           </DialogDescription>
         </DialogHeader>
 
