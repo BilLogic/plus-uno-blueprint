@@ -170,10 +170,22 @@ function deriveRevert(
         ? { fn: 'remove_step', args: { path_id: args.path_id, step_id: data } }
         : undefined
     case 'add_lane':
-      return {
-        fn: 'remove_lane',
-        args: { scenario_id: args.scenario_id, lane_name: args.name },
-      }
+      // By identity, like every other inverse here. The name-keyed
+      // `remove_lane(scenario_id, lane_name)` this replaces held only under
+      // clean LIFO: rename the lane and it matched nothing; rename a
+      // *different* lane into that name and it deleted that one instead —
+      // across every path of the scenario, cells included.
+      //
+      // The fallback is the old inverse, and it is load-bearing until
+      // `20260807130000_add_lane_returns_ids.sql` is applied: before that
+      // migration `add_lane` returns void, so there are no ids to key on and
+      // a name-keyed undo is better than none.
+      return Array.isArray(data) && data.length > 0
+        ? { fn: 'remove_lanes', args: { lane_ids: data } }
+        : {
+            fn: 'remove_lane',
+            args: { scenario_id: args.scenario_id, lane_name: args.name },
+          }
     case 'upsert_cell':
       // The app only calls upsert_cell on empty slots, so the upsert was a
       // create and deleting it is a true inverse. If an update path ever
@@ -351,12 +363,16 @@ export function addStep(
  * Add a lane to **every version** of a blueprint. `atRow` inserts; omitted
  * appends.
  *
- * Scenario-scoped, not version-scoped, and returns nothing rather than an id:
- * the call creates one `layers` row per version, so there is no single id to
- * hand back, and adding a lane to one version alone would misalign the rows in
+ * Scenario-scoped, not version-scoped: the call creates one `layers` row per
+ * version, and adding a lane to one version alone would misalign the rows in
  * the side-by-side view. Re-read the grid afterwards.
+ *
+ * Returns every id it created — an array and not a scalar for that same
+ * reason. The ids are what the captured inverse keys on; see `deriveRevert`.
+ * Empty against a database without `20260807130000`, where this still
+ * returns void.
  */
-export function addLane(
+export async function addLane(
   client: Client,
   input: {
     scenarioId: string
@@ -364,13 +380,14 @@ export function addLane(
     layerRole?: string | null
     atRow?: number
   },
-): Promise<void> {
-  return call<void>(client, 'add_lane', {
+): Promise<string[]> {
+  const created = await call<string[] | null>(client, 'add_lane', {
     scenario_id: input.scenarioId,
     name: input.name,
     layer_role: input.layerRole ?? null,
     at_row: input.atRow ?? null,
   })
+  return created ?? []
 }
 
 /**

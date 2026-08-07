@@ -55,6 +55,10 @@ const HELPERS = () => {
       const a = this.pointAt(el, ctm, 0)
       const b = this.pointAt(el, ctm, L)
       const m = this.pointAt(el, ctm, L / 2)
+      // Same-column bracket only: both ends on the same edge of one column,
+      // vertically apart, with the run bulging out past them into a gutter.
+      if (Math.abs(a.x - b.x) > 60) return 'other'
+      if (Math.abs(a.y - b.y) < 20) return 'other'
       if (m.x < Math.min(a.x, b.x) - 4) return 'left'
       if (m.x > Math.max(a.x, b.x) + 4) return 'right'
       return 'inline'
@@ -190,11 +194,10 @@ const blockerProbe = async (name) => {
     const sides = () =>
       A.arrowPaths().map(({ el }) => A.sideOf(el))
 
-    const before = sides()
     const makeBlocker = (x, y) => {
       const b = document.createElement('div')
       b.setAttribute('data-blueprint-cell', '__probe-blocker')
-      b.style.cssText = `position:absolute;left:${x - 12}px;top:${y - 24}px;width:24px;height:48px;pointer-events:none;`
+      b.style.cssText = `position:absolute;left:${x - 14}px;top:${y - 30}px;width:28px;height:60px;pointer-events:none;`
       const a = document.createElement('div')
       a.setAttribute('data-blueprint-cell-anchor', '')
       a.style.cssText = 'position:absolute;inset:0;'
@@ -202,40 +205,117 @@ const blockerProbe = async (name) => {
       return b
     }
 
-    const candidates = before
-      .map((side, i) => ({ side, i }))
-      .filter((c) => c.side === 'left' || c.side === 'right')
+    const brackets = A.arrowPaths().filter(({ el }) => {
+      const s = A.sideOf(el)
+      return s === 'left' || s === 'right'
+    })
 
-    for (const { i: idx } of candidates.slice(0, 25)) {
-      const entry = A.arrowPaths()[idx]
-      const ctm = entry.el.getScreenCTM()
-      if (!ctm) continue
-      const L = entry.el.getTotalLength()
-      const mid = A.pointAt(entry.el, ctm, L / 2)
-      const root = entry.el.closest('svg').parentElement
+    const report = []
+    for (const { el } of brackets.slice(0, 12)) {
+      const side0 = A.sideOf(el)
+      const ctm = el.getScreenCTM()
+      const mid = A.pointAt(el, ctm, el.getTotalLength() / 2)
+      const root = el.closest('svg').parentElement
       const rootRect = root.getBoundingClientRect()
-
       const blocker = makeBlocker(mid.x - rootRect.left, mid.y - rootRect.top)
       root.appendChild(blocker)
       await settle()
-      const blocked = sides()[idx]
+      const side1 = el.isConnected ? A.sideOf(el) : 'gone'
       blocker.remove()
       await settle()
-      const unblocked = sides()[idx]
-
-      if (blocked !== before[idx]) {
-        return { index: idx, initial: before[idx], blocked, unblocked, tried: true }
-      }
+      const side2 = el.isConnected ? A.sideOf(el) : 'gone'
+      report.push(`${side0}>${side1}>${side2}`)
     }
-    return { index: -1, initial: null, blocked: null, unblocked: null, tried: false }
+    return { report }
   })
-  if (!trace || !trace.tried) {
-    console.log(`[${LABEL}] BLOCKER ${name}: no connector responded to a blocked gutter`)
+  if (!trace) {
+    console.log(`[${LABEL}] BLOCKER ${name}: no bracket connectors`)
     return
   }
-  const stuck = trace.blocked === trace.unblocked
+  const flipBacks = trace.report.filter((r) => {
+    const [a, b, c] = r.split('>')
+    return b !== a && c === a
+  }).length
+  console.log(`[${LABEL}] BLOCKER ${name}: initial>blocked>cleared per connector: ${trace.report.join(' , ')}`)
+  console.log(`[${LABEL}] BLOCKER ${name}: moved-then-flipped-back = ${flipBacks} of ${trace.report.length}`)
+}
+
+
+// ---- unit-level side-stickiness probe --------------------------------------
+// Drives resolveSameColumnSideRoute directly against real cells: resolve, block
+// the gutter it chose, resolve again, unblock, resolve again.
+const unitProbe = async (name) => {
+  const out = await page.evaluate(async () => {
+    const mod = await import('/src/lib/blueprintArrowGeometry.ts')
+    const roots = [...document.querySelectorAll('svg[shape-rendering="geometricPrecision"]')]
+      .map((svg) => svg.parentElement)
+    const seen = new Set()
+    const results = []
+
+    for (const root of roots) {
+      if (seen.has(root)) continue
+      seen.add(root)
+      const cells = [...root.querySelectorAll('[data-blueprint-cell]')].filter(
+        (el) => el.getBoundingClientRect().height > 4,
+      )
+      const byStep = new Map()
+      for (const el of cells) {
+        const k = el.dataset.stepIndex
+        if (k === undefined) continue
+        if (!byStep.has(k)) byStep.set(k, [])
+        byStep.get(k).push(el)
+      }
+      for (const group of byStep.values()) {
+        for (let i = 0; i < group.length && results.length < 8; i++) {
+          for (let j = i + 1; j < group.length; j++) {
+            const a = group[i]
+            const b = group[j]
+            if (a.contains(b) || b.contains(a)) continue
+            const first = mod.resolveSameColumnSideRoute(a, b, root)
+            if (!first) continue
+
+            const boxA = mod.getCellContentBox(a, root)
+            const boxB = mod.getCellContentBox(b, root)
+            const yA = boxA.top + boxA.height / 2
+            const yB = boxB.top + boxB.height / 2
+            const blocker = document.createElement('div')
+            blocker.setAttribute('data-blueprint-cell', '__probe-blocker')
+            blocker.style.cssText = `position:absolute;left:${first.gutterX - 6}px;top:${Math.min(yA, yB) - 4}px;width:12px;height:${Math.abs(yA - yB) + 8}px;pointer-events:none;`
+            const anchor = document.createElement('div')
+            anchor.setAttribute('data-blueprint-cell-anchor', '')
+            anchor.style.cssText = 'position:absolute;inset:0;'
+            blocker.appendChild(anchor)
+            root.appendChild(blocker)
+
+            const blocked = mod.resolveSameColumnSideRoute(a, b, root)
+            blocker.remove()
+            const cleared = mod.resolveSameColumnSideRoute(a, b, root)
+
+            results.push({
+              initial: first.side,
+              blocked: blocked ? blocked.side : 'none',
+              cleared: cleared ? cleared.side : 'none',
+            })
+            break
+          }
+        }
+      }
+      if (results.length >= 8) break
+    }
+    return results
+  })
+
+  if (!out.length) {
+    console.log(`[${LABEL}] UNIT ${name}: no resolvable same-column pair`)
+    return
+  }
+  const moved = out.filter((r) => r.blocked !== r.initial && r.blocked !== 'none')
+  const flippedBack = moved.filter((r) => r.cleared === r.initial).length
   console.log(
-    `[${LABEL}] BLOCKER ${name}: path#${trace.index} ${trace.initial} -> ${trace.blocked} (blocked) -> ${trace.unblocked} (cleared) :: ${stuck ? 'HELD its side' : 'FLIPPED BACK'}`,
+    `[${LABEL}] UNIT ${name}: ${out.map((r) => `${r.initial}>${r.blocked}>${r.cleared}`).join(' , ')}`,
+  )
+  console.log(
+    `[${LABEL}] UNIT ${name}: moved-when-blocked=${moved.length}/${out.length}, of those flipped back when cleared=${flippedBack}`,
   )
 }
 
@@ -267,6 +347,7 @@ for (const view of ['Stacked', 'Merged']) {
   await perfProbe(`In-session/Warm-Up ${view}`)
   await hysteresisProbe(`In-session/Warm-Up ${view}`)
   await blockerProbe(`In-session/Warm-Up ${view}`)
+  await unitProbe(`In-session/Warm-Up ${view}`)
   totalCrossings += await crossingAudit(`In-session/Warm-Up ${view} (post-toggles)`)
 }
 

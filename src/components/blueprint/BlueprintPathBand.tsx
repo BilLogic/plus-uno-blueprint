@@ -118,6 +118,9 @@ export function BlueprintPathBand({
     () => getComparePathArrowData(blueprint, foldedStepIds),
     [blueprint, foldedStepIds],
   )
+  // A fresh array literal here re-runs the overlay's whole observer setup on
+  // every render, and `observe()` fires immediately — which renders again.
+  const arrowPaths = useMemo(() => [blueprint.path], [blueprint.path])
   const showPlay =
     isBlueprintVisualWalkthroughEnabled() &&
     buildVisualWalkthroughSession(blueprint).steps.length > 0
@@ -239,7 +242,7 @@ export function BlueprintPathBand({
         triggers={arrowData.triggers}
         cells={arrowData.cells}
         steps={arrowData.steps}
-        paths={[blueprint.path]}
+        paths={arrowPaths}
         contentRef={bandRef}
         scrollContainerRef={resolvedScrollRef}
       />
@@ -266,7 +269,7 @@ export function BlueprintPathBand({
         triggers={arrowData.triggers}
         cells={arrowData.cells}
         steps={arrowData.steps}
-        paths={[blueprint.path]}
+        paths={arrowPaths}
         contentRef={bandRef}
         scrollContainerRef={resolvedScrollRef}
       />
