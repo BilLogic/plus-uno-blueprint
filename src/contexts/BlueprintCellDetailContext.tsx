@@ -10,7 +10,10 @@ import {
   type ReactNode,
 } from 'react'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
-import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
+import type {
+  BlueprintCellSelection,
+  BlueprintPanelSurface,
+} from '@/types/blueprintCellDetail'
 import type { BlueprintData } from '@/types/blueprint'
 import {
   getBlueprintCellConnections,
@@ -33,12 +36,10 @@ export type BlueprintCellPreviewHover = {
   techItem?: string | null
 }
 
-/**
- * Which sibling surface the floating panel is showing. `details` is the
- * cell detail view (selection or draft); `differences` is the compare
- * ledger, which needs no selection at all.
- */
-export type BlueprintPanelSurface = 'details' | 'differences'
+// Re-exported from `@/types/blueprintCellDetail`, where it moved so that pure
+// helpers can name a surface without importing React. Existing imports of
+// `BlueprintPanelSurface` from this module keep resolving.
+export type { BlueprintPanelSurface }
 
 export type BlueprintPanelState = { surface: BlueprintPanelSurface }
 

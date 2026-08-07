@@ -63,6 +63,13 @@ export function agentSetSidebar(collapsed: boolean): string {
  * nothing" move, valid in every mode). No parallel code path to drift —
  * and the result is VERIFIED, not assumed: the tool checks the panel
  * actually mounted and says so honestly when it didn't.
+ *
+ * Sharing the human's handler means sharing its toggle: a bare click on the
+ * cell the panel is already showing now CLOSES it. This stays an open, not a
+ * toggle, and `detailClickCloses` refuses twice over — ⌘-click is never the
+ * close gesture, and the dispatched event's `isTrusted` is false. Opening a
+ * cell that is already open must leave it open; an agent asked to show
+ * something and hiding it instead is the worst possible reading of the tool.
  */
 export async function agentOpenCellPanel(cellId: string): Promise<string> {
   const el = document.querySelector<HTMLElement>(
