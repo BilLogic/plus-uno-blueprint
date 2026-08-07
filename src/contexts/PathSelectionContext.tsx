@@ -100,10 +100,20 @@ function mergeCatalog(
   for (const [scenarioId, paths] of pathsByScenario) {
     if (paths.length === 0) continue
     const prevPaths = prev[scenarioId]
+    // Identity AND label. Comparing ids alone made a rename invisible: the
+    // refetched row has the same id, so the catalog kept the old name and the
+    // sidebar PATHS row read stale until a reload. `path_type` rides along
+    // because the filter key is `${path_type}:${name}` — change either and
+    // the selection keys have to be recomputed.
     const same =
       prevPaths &&
       prevPaths.length === paths.length &&
-      prevPaths.every((path, index) => path.id === paths[index]?.id)
+      prevPaths.every(
+        (path, index) =>
+          path.id === paths[index]?.id &&
+          path.name === paths[index]?.name &&
+          path.path_type === paths[index]?.path_type,
+      )
     if (!same) {
       catalog[scenarioId] = paths
       changed = true

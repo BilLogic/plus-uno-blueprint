@@ -144,6 +144,10 @@ export function StructureRowContextMenu({
         })
       invalidateQueries('lifecycle-phases')
       invalidateQueries('scenario-paths')
+      // …and the canvas' own read, which is what the board and the sidebar
+      // PATHS list are drawn from. Without it a duplicate is invisible until
+      // reload (staleTime is Infinity — revalidation is explicit-only).
+      invalidateQueries('canvas-blueprints')
     } catch {
       // The row menu has nowhere to show prose; the session log records
       // nothing because nothing happened. The rename dialog handles its own.
@@ -400,6 +404,9 @@ function RenameDialog({
       // duplicate-source list and name-uniqueness check go stale forever
       // (staleTime is Infinity — revalidation is explicit-only).
       invalidateQueries('scenario-paths')
+      // The board and the sidebar PATHS rows read from the canvas query, so
+      // without this the row keeps its old name until the next reload.
+      invalidateQueries('canvas-blueprints')
       onOpenChange(false)
     } catch (renameError) {
       onError(

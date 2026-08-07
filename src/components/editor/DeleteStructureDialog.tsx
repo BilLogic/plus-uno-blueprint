@@ -173,6 +173,7 @@ export function DeleteStructureDialog({
       invalidateQueries('slice:')
       invalidateQueries('scenario-paths')
       invalidateQueries('lane-sources')
+      invalidateQueries('canvas-blueprints')
       onOpenChange(false)
       onDeleted?.(archiveId)
     } catch (deleteError) {
@@ -194,7 +195,7 @@ export function DeleteStructureDialog({
           <DialogDescription>
             {target.kind === 'slice'
               ? 'Slices have no archive — this one goes for good.'
-              : 'Not revertible from the change list. The archive keeps a copy.'}
+              : 'Not revertible from the change list.'}
           </DialogDescription>
         </DialogHeader>
 
