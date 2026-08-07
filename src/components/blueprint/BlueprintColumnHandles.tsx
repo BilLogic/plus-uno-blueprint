@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState, type RefObject } from 'react'
 import { Plus } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { useAtScenarioLevel } from '@/contexts/EditorContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
@@ -155,74 +156,81 @@ export function BlueprintColumnHandles({
     >
       {insertable
         ? boundaries.map((boundary) => (
-            <button
+            <IconTooltip
               key={`insert-${boundary.at}`}
-              type="button"
-              title={
+              label={
                 boundary.at === 0
                   ? 'Insert a step before this one'
                   : boundary.at === columns.length
                     ? 'Add a step at the end'
                     : 'Insert a step here'
               }
-              aria-label={`Insert a step at position ${boundary.at + 1}`}
-              disabled={busyAt !== null}
-              onClick={(event) => {
-                event.stopPropagation()
-                void insertAt(boundary.at)
-              }}
-              className="group/insert pointer-events-auto absolute z-40 flex justify-center"
-              style={{
-                left: boundary.x - INSERT_HIT_HALF_PX,
-                width: INSERT_HIT_HALF_PX * 2,
-                top: -32,
-                height: bodyHeight + 32,
-              }}
             >
-              {/* The line is the preview: it shows exactly where the column
-                  lands, full height, before anything is written. */}
-              <span
-                aria-hidden
-                className="absolute inset-y-0 w-px bg-primary opacity-0 transition-opacity group-hover/insert:opacity-100 group-focus-visible/insert:opacity-100"
-              />
-              <span
-                aria-hidden
-                className="absolute top-0 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-sm transition-opacity group-hover/insert:opacity-100 group-focus-visible/insert:opacity-100"
+              <button
+                type="button"
+                aria-label={`Insert a step at position ${boundary.at + 1}`}
+                disabled={busyAt !== null}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  void insertAt(boundary.at)
+                }}
+                className="group/insert pointer-events-auto absolute z-40 flex justify-center"
+                style={{
+                  left: boundary.x - INSERT_HIT_HALF_PX,
+                  width: INSERT_HIT_HALF_PX * 2,
+                  top: -32,
+                  height: bodyHeight + 32,
+                }}
               >
-                <Plus className="size-2.5" />
-              </span>
-            </button>
+                {/* The line is the preview: it shows exactly where the column
+                    lands, full height, before anything is written. */}
+                <span
+                  aria-hidden
+                  className="absolute inset-y-0 w-px bg-primary opacity-0 transition-opacity group-hover/insert:opacity-100 group-focus-visible/insert:opacity-100"
+                />
+                <span
+                  aria-hidden
+                  className="absolute top-0 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-sm transition-opacity group-hover/insert:opacity-100 group-focus-visible/insert:opacity-100"
+                >
+                  <Plus className="size-2.5" />
+                </span>
+              </button>
+            </IconTooltip>
           ))
         : null}
 
       {columns.map((column, stepIndex) => (
-        <button
+        <IconTooltip
           key={steps[stepIndex]?.id ?? stepIndex}
-          type="button"
-          title={`Select the ${steps[stepIndex]?.name ?? 'column'} column`}
-          onClick={(event) => {
-            // Scoped to *this* column's blueprint, not the whole canvas: the
-            // overview shows every scenario at once, and a handle that
-            // selected step 1 across all of them would be selecting cells the
-            // user cannot even see.
-            const body = bodyRef.current
-            if (!body) return
-            const cells = Array.from(
-              body.querySelectorAll(
-                `[data-blueprint-cell][data-blueprint-cell-interactive][data-step-index="${stepIndex}"]`,
-              ),
-            )
-              .map((cell) => cell.getAttribute('data-blueprint-cell'))
-              .filter((id): id is string => id !== null)
-            if (cells.length === 0) return
-            event.stopPropagation()
-            pick.pickMany(cells, event.shiftKey ? 'toggle' : 'add')
-          }}
-          className="pointer-events-auto absolute truncate rounded-md border border-dashed border-border/70 bg-card/90 px-2 py-1 text-2xs font-medium text-muted-foreground shadow-sm transition-colors hover:border-primary hover:text-foreground"
-          style={{ left: column.left, width: column.width, top: -32 }}
+          label={`Select the ${steps[stepIndex]?.name ?? 'column'} column`}
         >
-          {steps[stepIndex]?.name ?? `Step ${stepIndex + 1}`}
-        </button>
+          <button
+            type="button"
+            aria-label={`Select the ${steps[stepIndex]?.name ?? 'column'} column`}
+            onClick={(event) => {
+              // Scoped to *this* column's blueprint, not the whole canvas: the
+              // overview shows every scenario at once, and a handle that
+              // selected step 1 across all of them would be selecting cells the
+              // user cannot even see.
+              const body = bodyRef.current
+              if (!body) return
+              const cells = Array.from(
+                body.querySelectorAll(
+                  `[data-blueprint-cell][data-blueprint-cell-interactive][data-step-index="${stepIndex}"]`,
+                ),
+              )
+                .map((cell) => cell.getAttribute('data-blueprint-cell'))
+                .filter((id): id is string => id !== null)
+              if (cells.length === 0) return
+              event.stopPropagation()
+              pick.pickMany(cells, event.shiftKey ? 'toggle' : 'add')
+            }}
+            className="pointer-events-auto absolute truncate rounded-md border border-dashed border-border/70 bg-card/90 px-2 py-1 text-2xs font-medium text-muted-foreground shadow-sm transition-colors hover:border-primary hover:text-foreground"
+            style={{ left: column.left, width: column.width, top: -32 }}
+          >
+            {steps[stepIndex]?.name ?? `Step ${stepIndex + 1}`}
+          </button>
+        </IconTooltip>
       ))}
     </div>
   )

@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react'
 import { SlicePresentationLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { Button } from '@/components/ui/button'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
@@ -358,19 +359,22 @@ function FrameNavButton({
   onClick: () => void
 }) {
   const Icon = direction === 'prev' ? ChevronLeft : ChevronRight
+  const label = direction === 'prev' ? 'Previous frame' : 'Next frame'
   return (
-    // Ghost Button with the bespoke rail geometry kept verbatim (w-10 +
-    // py-6 is the hit area presenters aim at from across the room).
-    <Button
-      type="button"
-      variant="ghost"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={direction === 'prev' ? 'Previous frame' : 'Next frame'}
-      className="h-auto w-10 shrink-0 self-center rounded-md border-border bg-card px-0 py-6 text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground disabled:opacity-30 dark:hover:bg-accent"
-    >
-      <Icon className="size-5" />
-    </Button>
+    <IconTooltip label={label} side={direction === 'prev' ? 'right' : 'left'}>
+      {/* Ghost Button with the bespoke rail geometry kept verbatim (w-10 +
+          py-6 is the hit area presenters aim at from across the room). */}
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={label}
+        className="h-auto w-10 shrink-0 self-center rounded-md border-border bg-card px-0 py-6 text-muted-foreground shadow-sm hover:bg-accent hover:text-foreground disabled:opacity-30 dark:hover:bg-accent"
+      >
+        <Icon className="size-5" />
+      </Button>
+    </IconTooltip>
   )
 }
 
@@ -432,24 +436,28 @@ function PresentationFilmstrip({
                   const order = (orderOffsets[index] ?? 0) + cellIndex + 1
                   const cell = cellById.get(resolveBlueprintCellId(cellId))
                   return (
-                    <Button
+                    <IconTooltip
                       key={`${cellId}-${order}`}
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onSelect(index)}
-                      title={cellSnippet(cell)}
-                      className={cn(
-                        // size-10 squares, exactly the raw buttons' hit area.
-                        'size-10 shrink-0 rounded-md border font-mono text-xs font-semibold tabular-nums',
-                        active
-                          ? 'border-foreground bg-foreground text-background hover:bg-foreground hover:text-background dark:hover:bg-foreground'
-                          : 'border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-accent',
-                        !cell && 'border-dashed opacity-60',
-                      )}
+                      label={cellSnippet(cell)}
                     >
-                      {order}
-                    </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onSelect(index)}
+                        aria-label={cellSnippet(cell)}
+                        className={cn(
+                          // size-10 squares, exactly the raw buttons' hit area.
+                          'size-10 shrink-0 rounded-md border font-mono text-xs font-semibold tabular-nums',
+                          active
+                            ? 'border-foreground bg-foreground text-background hover:bg-foreground hover:text-background dark:hover:bg-foreground'
+                            : 'border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground dark:hover:bg-accent',
+                          !cell && 'border-dashed opacity-60',
+                        )}
+                      >
+                        {order}
+                      </Button>
+                    </IconTooltip>
                   )
                 })}
               </div>

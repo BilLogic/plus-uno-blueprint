@@ -3,6 +3,7 @@ import {
   BlueprintDividerRailLabelLine,
 } from '@/components/blueprint/BlueprintDividerTag'
 import { LayerCollapseToggle } from '@/components/blueprint/LayerCollapseToggle'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
   BLUEPRINT_DIVIDER_LINE_END_INSET,
@@ -242,15 +243,16 @@ export function BlueprintLabelRow({
         )}
       >
         {laneSelectable ? (
-          <button
-            type="button"
-            onClick={selectLane}
-            title={`Select the ${row.label} lane`}
-            className="group/lane min-w-0 flex-1 cursor-pointer rounded-sm text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words underline-offset-4 hover:underline"
-            style={{ color: labelColor }}
-          >
-            {row.label}
-          </button>
+          <IconTooltip label={`Select the ${row.label} lane`}>
+            <button
+              type="button"
+              onClick={selectLane}
+              className="group/lane min-w-0 flex-1 cursor-pointer rounded-sm text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words underline-offset-4 hover:underline"
+              style={{ color: labelColor }}
+            >
+              {row.label}
+            </button>
+          </IconTooltip>
         ) : (
           <span
             className="min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"

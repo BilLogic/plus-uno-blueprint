@@ -5,6 +5,7 @@ import {
   type RefObject,
 } from 'react'
 import { Plus } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Input } from '@/components/ui/input'
 import { useAtScenarioLevel, useEditor } from '@/contexts/EditorContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -149,22 +150,24 @@ export function BlueprintLaneHandles({
             height: INSERT_HIT_HALF_PX * 2,
           }}
         >
-          <button
-            type="button"
-            aria-label={`Insert a lane here`}
-            onClick={() => {
-              setNaming(boundary)
-              setName('')
-              setError(null)
-              requestAnimationFrame(() => inputRef.current?.focus())
-            }}
-            className="flex w-full items-center gap-1 opacity-0 transition-opacity group-hover/lane-insert:opacity-100 focus-visible:opacity-100"
-          >
-            <span className="ml-1 grid size-4 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
-              <Plus className="size-3" aria-hidden />
-            </span>
-            <span className="h-px flex-1 bg-primary/60" />
-          </button>
+          <IconTooltip label="Insert a lane here">
+            <button
+              type="button"
+              aria-label={`Insert a lane here`}
+              onClick={() => {
+                setNaming(boundary)
+                setName('')
+                setError(null)
+                requestAnimationFrame(() => inputRef.current?.focus())
+              }}
+              className="flex w-full items-center gap-1 opacity-0 transition-opacity group-hover/lane-insert:opacity-100 focus-visible:opacity-100"
+            >
+              <span className="ml-1 grid size-4 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                <Plus className="size-3" aria-hidden />
+              </span>
+              <span className="h-px flex-1 bg-primary/60" />
+            </button>
+          </IconTooltip>
         </div>
       ))}
 

@@ -23,6 +23,7 @@ import {
   CellPanelEditor,
 } from '@/components/blueprint/CellPanelEditor'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
 import {
@@ -828,27 +829,34 @@ function BlueprintCellDetailPanelBody() {
             </span>
           )}
           <div className="flex shrink-0 items-center gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
-              aria-pressed={expanded}
-              onClick={() => setExpanded((value) => !value)}
+            <IconTooltip
+              label={expanded ? 'Narrow the panel' : 'Widen the panel'}
+              side="left"
             >
-              {expanded ? <PanelRightClose /> : <PanelRightOpen />}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Close differences"
-              onClick={clearSelection}
-            >
-              <X />
-            </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
+                aria-pressed={expanded}
+                onClick={() => setExpanded((value) => !value)}
+              >
+                {expanded ? <PanelRightClose /> : <PanelRightOpen />}
+              </Button>
+            </IconTooltip>
+            <IconTooltip label="Close the difference ledger" side="left">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label="Close differences"
+                onClick={clearSelection}
+              >
+                <X />
+              </Button>
+            </IconTooltip>
           </div>
         </DrawerHeader>
         {compareRegistration ? (
@@ -913,16 +921,18 @@ function BlueprintCellDetailPanelBody() {
                 .join(' · ')}
             </DrawerDescription>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Discard new cell"
-            onClick={clearSelection}
-          >
-            <X />
-          </Button>
+          <IconTooltip label="Discard this new cell" side="left">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Discard new cell"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
+          </IconTooltip>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
           <span
@@ -968,16 +978,18 @@ function BlueprintCellDetailPanelBody() {
               No cell selected
             </DrawerDescription>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Close cell details"
-            onClick={clearSelection}
-          >
-            <X />
-          </Button>
+          <IconTooltip label="Close cell details" side="left">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Close cell details"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
+          </IconTooltip>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 items-center justify-center px-6 pb-8">
           <p className="text-center text-xs text-muted-foreground">
@@ -1332,27 +1344,34 @@ function BlueprintCellDetailPanelBody() {
             {cellBreadcrumb}
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
-              aria-pressed={expanded}
-              onClick={() => setExpanded((value) => !value)}
+            <IconTooltip
+              label={expanded ? 'Narrow the panel' : 'Widen the panel'}
+              side="left"
             >
-              {expanded ? <PanelRightClose /> : <PanelRightOpen />}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Close cell details"
-              onClick={clearSelection}
-            >
-              <X />
-            </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
+                aria-pressed={expanded}
+                onClick={() => setExpanded((value) => !value)}
+              >
+                {expanded ? <PanelRightClose /> : <PanelRightOpen />}
+              </Button>
+            </IconTooltip>
+            <IconTooltip label="Close cell details" side="left">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label="Close cell details"
+                onClick={clearSelection}
+              >
+                <X />
+              </Button>
+            </IconTooltip>
           </div>
         </DrawerHeader>
 

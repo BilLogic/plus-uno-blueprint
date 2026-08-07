@@ -104,6 +104,7 @@ function AgentMarkdown(props: { text: string; className?: string }) {
     </Suspense>
   )
 }
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { NavSection } from '@/components/editor/SidebarNav'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -393,32 +394,36 @@ function AgentSessionsView({
             Sessions
           </p>
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label={searchOpen ? 'Close session filter' : 'Filter sessions'}
-          aria-pressed={searchOpen}
-          className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            setSearchOpen((open) => {
-              if (open) setQuery('')
-              return !open
-            })
-          }}
-        >
-          <Search className="size-3.5" aria-hidden />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label="New session"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={onCreate}
-        >
-          <Plus className="size-3.5" aria-hidden />
-        </Button>
+        <IconTooltip label="Filter sessions by name" side="bottom">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={searchOpen ? 'Close session filter' : 'Filter sessions'}
+            aria-pressed={searchOpen}
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setSearchOpen((open) => {
+                if (open) setQuery('')
+                return !open
+              })
+            }}
+          >
+            <Search className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
+        <IconTooltip label="Start a new session" side="bottom">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="New session"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={onCreate}
+          >
+            <Plus className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
       </div>
 
       {pendingAttachment ? (
@@ -847,16 +852,18 @@ function AgentChatView({
       {/* Header: back + title + change count. Nothing else — the
           transcript owns the rest of the height. */}
       <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border/60 px-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label="Back to sessions"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={onBack}
-        >
-          <ChevronLeft className="size-3.5" aria-hidden />
-        </Button>
+        <IconTooltip label="Back to sessions" side="bottom">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Back to sessions"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={onBack}
+          >
+            <ChevronLeft className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
         {/* The title is editable in place — auto-names are a default, not
             a decision. */}
         <button
@@ -1049,16 +1056,17 @@ function AgentChatView({
         </Popover>
         <div ref={composerRowRef} className="flex items-end gap-1.5">
           {running ? (
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="outline"
-              aria-label="Stop"
-              title="Stop — whatever landed stays, revertible"
-              onClick={() => stopAgent(session.id)}
-            >
-              <Square className="size-3" aria-hidden />
-            </Button>
+            <IconTooltip label="Stop — whatever landed stays, revertible">
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="outline"
+                aria-label="Stop"
+                onClick={() => stopAgent(session.id)}
+              >
+                <Square className="size-3" aria-hidden />
+              </Button>
+            </IconTooltip>
           ) : null}
           {/* ONE field, the DS's own: InputGroup draws the border and the
               focus treatment (a single soft ring on the control, the same
@@ -1075,14 +1083,16 @@ function AgentChatView({
                   className="gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-2xs text-primary"
                 >
                   {pendingSkill.label}
-                  <button
-                    type="button"
-                    aria-label="Remove skill"
-                    onClick={() => setPendingSkill(null)}
-                    className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
-                  >
-                    <X className="size-2.5" aria-hidden />
-                  </button>
+                  <IconTooltip label="Drop the skill from this message">
+                    <button
+                      type="button"
+                      aria-label="Remove skill"
+                      onClick={() => setPendingSkill(null)}
+                      className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
+                    >
+                      <X className="size-2.5" aria-hidden />
+                    </button>
+                  </IconTooltip>
                 </Badge>
               </InputGroupAddon>
             ) : null}
@@ -1174,20 +1184,22 @@ function AgentChatView({
               disabled={!keyed}
             />
           </InputGroup>
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="default"
-            aria-label="Send"
-            disabled={
-              !keyed ||
-              running ||
-              (draft.trim() === '' && !pendingSkill && !attachment)
-            }
-            onClick={send}
-          >
-            <SendHorizontal className="size-3.5" aria-hidden />
-          </Button>
+          <IconTooltip label="Send">
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="default"
+              aria-label="Send"
+              disabled={
+                !keyed ||
+                running ||
+                (draft.trim() === '' && !pendingSkill && !attachment)
+              }
+              onClick={send}
+            >
+              <SendHorizontal className="size-3.5" aria-hidden />
+            </Button>
+          </IconTooltip>
         </div>
       </div>
     </div>

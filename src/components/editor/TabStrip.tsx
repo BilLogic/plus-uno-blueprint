@@ -8,6 +8,7 @@ import {
 import { AlertTriangle, Info, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HomeNavButton, WorkspaceBadges } from '@/components/editor/EditorChrome'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -180,16 +181,18 @@ function MissingSliceNotice({ onDismiss }: { onDismiss: () => void }) {
           That link points to a slice that no longer exists — it may have been
           deleted.
         </AlertDescription>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          className="absolute top-1.5 right-1.5"
-          aria-label="Dismiss"
-          onClick={onDismiss}
-        >
-          <X className="size-3" />
-        </Button>
+        <IconTooltip label="Dismiss this notice" side="left">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="absolute top-1.5 right-1.5"
+            aria-label="Dismiss"
+            onClick={onDismiss}
+          >
+            <X className="size-3" />
+          </Button>
+        </IconTooltip>
       </Alert>
     </div>
   )
@@ -438,18 +441,20 @@ export function TabStrip({
             >
               {label}
             </button>
-            <button
-              type="button"
-              aria-label={`Close ${label}`}
-              onClick={() => closeTab(key)}
-              // Out of the tab order: the tablist is one roving stop per the
-              // ARIA tabs pattern, and close stays reachable via the row's
-              // context menu (and pointer).
-              tabIndex={-1}
-              className="mr-1 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-3" />
-            </button>
+            <IconTooltip label={`Close ${label}`} side="bottom">
+              <button
+                type="button"
+                aria-label={`Close ${label}`}
+                onClick={() => closeTab(key)}
+                // Out of the tab order: the tablist is one roving stop per the
+                // ARIA tabs pattern, and close stays reachable via the row's
+                // context menu (and pointer).
+                tabIndex={-1}
+                className="mr-1 rounded-sm p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X className="size-3" />
+              </button>
+            </IconTooltip>
           </div>
         )
 

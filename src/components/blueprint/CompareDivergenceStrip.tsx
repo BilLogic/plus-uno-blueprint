@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CompareZoneChip } from '@/components/blueprint/CompareZoneChip'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import {
   deriveCompareStepGroups,
@@ -207,101 +208,107 @@ export function CompareDivergenceStrip({
 
           const zone = segment.zone
           const isActive = activeZone === zone.index
+          const zoneLabel = `Zone ${zone.index}: ${zone.stepRangeLabel} · ${zone.titleLabel}, ${zone.slots.length} differences`
           return (
-            <button
-              key={segment.key}
-              type="button"
-              aria-label={`Zone ${zone.index}: ${zone.stepRangeLabel} · ${zone.titleLabel}, ${zone.slots.length} differences`}
-              aria-pressed={isActive}
-              className={cn(
-                // ≥44px hit rect: the strip is 48px tall and the segment is
-                // full-height; min-width keeps narrow zones tappable.
-                'relative h-full min-w-11 rounded-sm transition-colors duration-(--motion-micro)',
-                'hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-                isActive && 'bg-(--sidebar-selected)',
-              )}
-              style={{ width: `${widthPct}%` }}
-              onClick={() => {
-                const group = firstStepOfZone(zone.index)
-                if (group) void jumpToCompareStep(group, slideId)
-              }}
-            >
-              <svg
-                className="absolute inset-y-0 left-1 right-1 h-full w-[calc(100%-0.5rem)]"
-                aria-hidden
+            <IconTooltip key={segment.key} label={zoneLabel}>
+              <button
+                type="button"
+                aria-label={zoneLabel}
+                aria-pressed={isActive}
+                className={cn(
+                  // ≥44px hit rect: the strip is 48px tall and the segment is
+                  // full-height; min-width keeps narrow zones tappable.
+                  'relative h-full min-w-11 rounded-sm transition-colors duration-(--motion-micro)',
+                  'hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                  isActive && 'bg-(--sidebar-selected)',
+                )}
+                style={{ width: `${widthPct}%` }}
+                onClick={() => {
+                  const group = firstStepOfZone(zone.index)
+                  if (group) void jumpToCompareStep(group, slideId)
+                }}
               >
-                {blueprints.map((blueprint, pathIndex) => {
-                  const offset =
-                    (pathIndex - (blueprints.length - 1) / 2) * TRACK_SPREAD
-                  return (
-                    <line
-                      key={blueprint.path.id}
-                      x1="0"
-                      y1={TRACK_CENTER_Y + offset}
-                      x2="100%"
-                      y2={TRACK_CENTER_Y + offset}
-                      stroke={getPathArrowColor(blueprint.path)}
-                      strokeWidth={2}
-                      strokeDasharray={getPathDashArray(blueprint.path)}
-                      strokeLinecap="round"
-                    />
-                  )
-                })}
-              </svg>
-              {/* Fork diamond entering the zone, rejoin circle leaving it —
-                  strip-only vocabulary, background fill on a neutral stroke. */}
-              <span
-                aria-hidden
-                className="absolute left-0 size-1.5 rotate-45 border border-(--muted-foreground) bg-background"
-                style={{ top: TRACK_CENTER_Y - 3, translate: '-50% 0' }}
-              />
-              <span
-                aria-hidden
-                className="absolute right-0 size-1.5 rounded-full border border-(--muted-foreground) bg-background"
-                style={{ top: TRACK_CENTER_Y - 3, translate: '50% 0' }}
-              />
-              <CompareZoneChip
-                index={zone.index}
-                active={isActive}
-                className="absolute left-1/2 top-1 -translate-x-1/2"
-              />
-              {isActive ? (
+                <svg
+                  className="absolute inset-y-0 left-1 right-1 h-full w-[calc(100%-0.5rem)]"
+                  aria-hidden
+                >
+                  {blueprints.map((blueprint, pathIndex) => {
+                    const offset =
+                      (pathIndex - (blueprints.length - 1) / 2) * TRACK_SPREAD
+                    return (
+                      <line
+                        key={blueprint.path.id}
+                        x1="0"
+                        y1={TRACK_CENTER_Y + offset}
+                        x2="100%"
+                        y2={TRACK_CENTER_Y + offset}
+                        stroke={getPathArrowColor(blueprint.path)}
+                        strokeWidth={2}
+                        strokeDasharray={getPathDashArray(blueprint.path)}
+                        strokeLinecap="round"
+                      />
+                    )
+                  })}
+                </svg>
+                {/* Fork diamond entering the zone, rejoin circle leaving it —
+                    strip-only vocabulary, background fill on a neutral stroke. */}
                 <span
                   aria-hidden
-                  className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-(--sidebar-selected-rail)"
+                  className="absolute left-0 size-1.5 rotate-45 border border-(--muted-foreground) bg-background"
+                  style={{ top: TRACK_CENTER_Y - 3, translate: '-50% 0' }}
                 />
-              ) : null}
-            </button>
+                <span
+                  aria-hidden
+                  className="absolute right-0 size-1.5 rounded-full border border-(--muted-foreground) bg-background"
+                  style={{ top: TRACK_CENTER_Y - 3, translate: '50% 0' }}
+                />
+                <CompareZoneChip
+                  index={zone.index}
+                  active={isActive}
+                  className="absolute left-1/2 top-1 -translate-x-1/2"
+                />
+                {isActive ? (
+                  <span
+                    aria-hidden
+                    className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-(--sidebar-selected-rail)"
+                  />
+                ) : null}
+              </button>
+            </IconTooltip>
           )
         })}
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="size-6 text-muted-foreground hover:text-foreground"
-          aria-label="Previous divergent step"
-          disabled={activeStepIndex === 0}
-          onClick={() => stepTo(-1)}
-        >
-          <ChevronLeft className="size-3.5" aria-hidden />
-        </Button>
+        <IconTooltip label="Previous divergent step">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="size-6 text-muted-foreground hover:text-foreground"
+            aria-label="Previous divergent step"
+            disabled={activeStepIndex === 0}
+            onClick={() => stepTo(-1)}
+          >
+            <ChevronLeft className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
         <span className="font-mono text-2xs tabular-nums text-muted-foreground">
           step {activeStepIndex >= 0 ? activeStepIndex + 1 : '–'}/
           {stepGroups.length}
         </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="size-6 text-muted-foreground hover:text-foreground"
-          aria-label="Next divergent step"
-          disabled={activeStepIndex === stepGroups.length - 1}
-          onClick={() => stepTo(1)}
-        >
-          <ChevronRight className="size-3.5" aria-hidden />
-        </Button>
+        <IconTooltip label="Next divergent step">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="size-6 text-muted-foreground hover:text-foreground"
+            aria-label="Next divergent step"
+            disabled={activeStepIndex === stepGroups.length - 1}
+            onClick={() => stepTo(1)}
+          >
+            <ChevronRight className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
       </div>
     </div>
   )

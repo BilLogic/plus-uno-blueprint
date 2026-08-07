@@ -1,11 +1,7 @@
 import type { ReactNode } from 'react'
 import { Diamond, LayoutGrid, Sparkles } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { IconTooltip } from '@/components/editor/IconTooltip'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 
 /**
@@ -51,34 +47,27 @@ function RailButton({
   children: ReactNode
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <button
-            type="button"
-            aria-label={label}
-            aria-pressed={toggled ?? selected}
-            onClick={onClick}
-            className={cn(
-              'relative flex size-9 items-center justify-center rounded-md transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-              selected &&
-                'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail',
-              toggled &&
-                'bg-sidebar-selected/70 text-sidebar-selected-foreground after:absolute after:right-1 after:top-1 after:size-1.5 after:rounded-full after:bg-primary',
-              !selected &&
-                !toggled &&
-                'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-            )}
-          >
-            {children}
-          </button>
-        }
-      />
-      <TooltipContent side="right" className="text-xs">
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <IconTooltip label={label} side="right">
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={toggled ?? selected}
+        onClick={onClick}
+        className={cn(
+          'relative flex size-9 items-center justify-center rounded-md transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+          selected &&
+            'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail',
+          toggled &&
+            'bg-sidebar-selected/70 text-sidebar-selected-foreground after:absolute after:right-1 after:top-1 after:size-1.5 after:rounded-full after:bg-primary',
+          !selected &&
+            !toggled &&
+            'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        )}
+      >
+        {children}
+      </button>
+    </IconTooltip>
   )
 }
 

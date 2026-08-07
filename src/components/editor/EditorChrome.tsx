@@ -1,4 +1,5 @@
 import { Home, PanelLeft, Play } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
@@ -21,24 +22,29 @@ export function SidebarCollapseButton({
   size = 'icon-xs',
 }: SidebarCollapseButtonProps) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size={size}
-      className={cn(
-        'shrink-0 text-muted-foreground hover:text-foreground',
-        className,
-      )}
-      onClick={onToggle}
-      aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+    <IconTooltip
+      label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'}
+      side="right"
     >
-      <PanelLeft
+      <Button
+        type="button"
+        variant="ghost"
+        size={size}
         className={cn(
-          'size-3.5 transition-transform duration-(--motion-structural) ease-structural',
-          !collapsed && 'rotate-180',
+          'shrink-0 text-muted-foreground hover:text-foreground',
+          className,
         )}
-      />
-    </Button>
+        onClick={onToggle}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <PanelLeft
+          className={cn(
+            'size-3.5 transition-transform duration-(--motion-structural) ease-structural',
+            !collapsed && 'rotate-180',
+          )}
+        />
+      </Button>
+    </IconTooltip>
   )
 }
 
@@ -57,21 +63,23 @@ export function HomeNavButton({
   size = 'icon-xs',
 }: HomeNavButtonProps) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size={size}
-      className={cn(
-        'shrink-0 text-muted-foreground hover:text-foreground',
-        isActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
-        className,
-      )}
-      onClick={onClick}
-      aria-label="Home"
-      aria-current={isActive ? 'page' : undefined}
-    >
-      <Home className="size-3.5" />
-    </Button>
+    <IconTooltip label="Back to the overview canvas" side="bottom">
+      <Button
+        type="button"
+        variant="ghost"
+        size={size}
+        className={cn(
+          'shrink-0 text-muted-foreground hover:text-foreground',
+          isActive && 'bg-sidebar-accent text-sidebar-accent-foreground',
+          className,
+        )}
+        onClick={onClick}
+        aria-label="Home"
+        aria-current={isActive ? 'page' : undefined}
+      >
+        <Home className="size-3.5" />
+      </Button>
+    </IconTooltip>
   )
 }
 

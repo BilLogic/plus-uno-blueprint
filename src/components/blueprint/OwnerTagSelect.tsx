@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Pencil, X } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -169,16 +170,18 @@ export function OwnerTagSelect({
                     if (event.key === 'Escape') setRenaming(null)
                   }}
                 />
-                <Button
-                  type="button"
-                  size="icon-xs"
-                  variant="ghost"
-                  aria-label={`Rename ${tag} everywhere`}
-                  disabled={busy}
-                  onClick={() => void renameEverywhere(tag, renameText)}
-                >
-                  <Check className="size-3" />
-                </Button>
+                <IconTooltip label={`Rename ${tag} everywhere`}>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label={`Rename ${tag} everywhere`}
+                    disabled={busy}
+                    onClick={() => void renameEverywhere(tag, renameText)}
+                  >
+                    <Check className="size-3" />
+                  </Button>
+                </IconTooltip>
               </div>
             ) : (
               <div
@@ -195,18 +198,19 @@ export function OwnerTagSelect({
                     <Check className="size-3 shrink-0 text-primary" aria-hidden />
                   ) : null}
                 </button>
-                <button
-                  type="button"
-                  aria-label={`Rename ${tag}`}
-                  title="Rename everywhere"
-                  className="mr-1 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/tag:opacity-100 focus-visible:opacity-100 hover:text-foreground"
-                  onClick={() => {
-                    setRenaming(tag)
-                    setRenameText(tag)
-                  }}
-                >
-                  <Pencil className="size-3" aria-hidden />
-                </button>
+                <IconTooltip label="Rename everywhere">
+                  <button
+                    type="button"
+                    aria-label={`Rename ${tag}`}
+                    className="mr-1 shrink-0 rounded-sm p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover/tag:opacity-100 focus-visible:opacity-100 hover:text-foreground"
+                    onClick={() => {
+                      setRenaming(tag)
+                      setRenameText(tag)
+                    }}
+                  >
+                    <Pencil className="size-3" aria-hidden />
+                  </button>
+                </IconTooltip>
               </div>
             ),
           )}

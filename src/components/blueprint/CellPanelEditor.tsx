@@ -8,6 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellContent } from '@/hooks/useCellContent'
@@ -449,21 +450,25 @@ function CellPanelEditorForm({
                   )
                 }
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Remove value"
-                className="shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={() =>
-                  set(
-                    'valueProps',
-                    form.valueProps.filter((_, itemIndex) => itemIndex !== index),
-                  )
-                }
-              >
-                <X className="size-3" />
-              </Button>
+              <IconTooltip label="Remove this value">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Remove value"
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={() =>
+                    set(
+                      'valueProps',
+                      form.valueProps.filter(
+                        (_, itemIndex) => itemIndex !== index,
+                      ),
+                    )
+                  }
+                >
+                  <X className="size-3" />
+                </Button>
+              </IconTooltip>
             </div>
           ))}
           <Button

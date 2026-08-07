@@ -2,6 +2,7 @@ import { useState, type DragEvent } from 'react'
 import { ChevronDown, GripVertical, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { SliceStoryboardField } from '@/components/editor/SliceStoryboardField'
 import { cn } from '@/lib/utils'
 import { describeCell } from '@/lib/canvasCellQuery'
@@ -269,21 +270,23 @@ export function SliceFrameEditor({
                   <span className="min-w-0 flex-1 truncate text-2xs text-foreground/80">
                     {describeCell(cell).label}
                   </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label="Remove cell from slice"
-                    // Revealed on chip hover — a permanent ✕ per row is the
-                    // loudest thing on a card that is mostly read.
-                    className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/chip:opacity-100 focus-visible:opacity-100 hover:text-foreground"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      removeCell(index, cell)
-                    }}
-                  >
-                    <X className="size-2.5" />
-                  </Button>
+                  <IconTooltip label="Take this cell out of the screen">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="Remove cell from slice"
+                      // Revealed on chip hover — a permanent ✕ per row is the
+                      // loudest thing on a card that is mostly read.
+                      className="shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/chip:opacity-100 focus-visible:opacity-100 hover:text-foreground"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        removeCell(index, cell)
+                      }}
+                    >
+                      <X className="size-2.5" />
+                    </Button>
+                  </IconTooltip>
                 </li>
               ))}
             </ul>
@@ -323,19 +326,21 @@ export function SliceFrameEditor({
                 cell between screens IS both. Delete is the only action a
                 drag cannot express, revealed on hover. */}
             <div className="flex items-center opacity-0 transition-opacity group-hover/frame:opacity-100 focus-within:opacity-100">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                aria-label={`Delete screen ${index + 1}`}
-                className="ml-auto text-muted-foreground hover:text-destructive"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  update(frames.filter((_, itemIndex) => itemIndex !== index))
-                }}
-              >
-                <Trash2 className="size-3" />
-              </Button>
+              <IconTooltip label={`Delete screen ${index + 1}`}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Delete screen ${index + 1}`}
+                  className="ml-auto text-muted-foreground hover:text-destructive"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    update(frames.filter((_, itemIndex) => itemIndex !== index))
+                  }}
+                >
+                  <Trash2 className="size-3" />
+                </Button>
+              </IconTooltip>
             </div>
           </div>
         )

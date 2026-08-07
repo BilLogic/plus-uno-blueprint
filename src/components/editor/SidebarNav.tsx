@@ -5,11 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { cn } from '@/lib/utils'
 
 /**
@@ -88,34 +84,27 @@ export function NavRowAction({
   children: ReactNode
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <button
-            type="button"
-            aria-label={label}
-            onClick={(event) => {
-              // The whole row is a button; without this the create would also
-              // navigate to whatever it was attached to.
-              event.stopPropagation()
-              onClick()
-            }}
-            className={cn(
-              ROW_ACTION_SLOT_CLASS,
-              CHEVRON_REVEAL_CLASS,
-              'text-sidebar-foreground/50 transition-[opacity,color] hover:text-sidebar-selected-rail',
-              'focus-visible:text-sidebar-selected-rail focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-              '[@media(pointer:coarse)]:opacity-100',
-            )}
-          >
-            {children}
-          </button>
-        }
-      />
-      <TooltipContent side="right" className="text-xs">
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <IconTooltip label={label} side="right">
+      <button
+        type="button"
+        aria-label={label}
+        onClick={(event) => {
+          // The whole row is a button; without this the create would also
+          // navigate to whatever it was attached to.
+          event.stopPropagation()
+          onClick()
+        }}
+        className={cn(
+          ROW_ACTION_SLOT_CLASS,
+          CHEVRON_REVEAL_CLASS,
+          'text-sidebar-foreground/50 transition-[opacity,color] hover:text-sidebar-selected-rail',
+          'focus-visible:text-sidebar-selected-rail focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+          '[@media(pointer:coarse)]:opacity-100',
+        )}
+      >
+        {children}
+      </button>
+    </IconTooltip>
   )
 }
 

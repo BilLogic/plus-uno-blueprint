@@ -22,6 +22,8 @@ triggers take `render={...}`). Verified against the directory 2026-08-04.
 | Empty / loading states | `skeleton.tsx` / `deferred-skeleton.tsx` | |
 | Status callouts | `alert.tsx` — `default`/`destructive`/`warning`/`info`/`success` | tinted surface + filled icon chip; copy stays `--foreground` |
 | Light/dark switch | `editor/ThemeToggle.tsx` (composes `button.tsx`) | next-themes; lives in the rail's bottom utilities group |
+| ANY icon-only button | `editor/IconTooltip.tsx` (composes `tooltip.tsx`) | THE wrapper — `<IconTooltip label="…"><button aria-label="…"/></IconTooltip>`. The child keeps its own `aria-label`: a tooltip is not an accessible name. Copy says what it DOES ("Start a new session"), never what it is. No local `TooltipProvider` — one is mounted app-wide in `App.tsx` at 200 ms; wrap in your own only to change the delay. Never a native `title` |
+| Sidebar row `+` / `⋯` | `SidebarNav` `NavRowAction` (composes `IconTooltip`) | 24px target, 14px glyph, and NO fill of its own — the row it sits in already has one. Prominence is the ink: `--sidebar-foreground/50` at rest → `--sidebar-selected-rail` on hover/focus |
 
 Rule of thumb: a need that seems to lack a primitive usually has a
 precedent — check `OwnerTagSelect`, `SessionChangesSheet`,

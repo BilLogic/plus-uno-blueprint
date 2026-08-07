@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useAtScenarioLevel } from '@/contexts/EditorContext'
@@ -69,39 +70,40 @@ export function BlueprintEmptyCellSlot({
   }
 
   return (
-    <button
-      type="button"
-      aria-label="Add a cell here"
-      title="Add a cell here"
-      onClick={(event) => {
-        event.stopPropagation()
-        detail.openDraftCell({
-          pathId,
-          layerId,
-          stepId,
-          layerName,
-          stepName,
-          stepIndex,
-          scenarioName,
-          phaseName,
-        })
-      }}
-      data-blueprint-empty-slot=""
-      className={cn(
-        'group/slot shrink-0 rounded-md border border-dashed border-transparent',
-        stretch,
-        'grid place-items-center transition-colors',
-        'hover:border-primary/50 hover:bg-primary/5',
-        'focus-visible:border-primary/50 focus-visible:outline-none',
-      )}
-      style={style}
-    >
-      <span
-        aria-hidden
-        className="grid size-4 place-items-center rounded-full bg-primary/80 text-primary-foreground opacity-0 transition-opacity group-hover/slot:opacity-100 group-focus-visible/slot:opacity-100"
+    <IconTooltip label="Add a cell here">
+      <button
+        type="button"
+        aria-label="Add a cell here"
+        onClick={(event) => {
+          event.stopPropagation()
+          detail.openDraftCell({
+            pathId,
+            layerId,
+            stepId,
+            layerName,
+            stepName,
+            stepIndex,
+            scenarioName,
+            phaseName,
+          })
+        }}
+        data-blueprint-empty-slot=""
+        className={cn(
+          'group/slot shrink-0 rounded-md border border-dashed border-transparent',
+          stretch,
+          'grid place-items-center transition-colors',
+          'hover:border-primary/50 hover:bg-primary/5',
+          'focus-visible:border-primary/50 focus-visible:outline-none',
+        )}
+        style={style}
       >
-        <Plus className="size-2.5" />
-      </span>
-    </button>
+        <span
+          aria-hidden
+          className="grid size-4 place-items-center rounded-full bg-primary/80 text-primary-foreground opacity-0 transition-opacity group-hover/slot:opacity-100 group-focus-visible/slot:opacity-100"
+        >
+          <Plus className="size-2.5" />
+        </span>
+      </button>
+    </IconTooltip>
   )
 }

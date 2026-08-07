@@ -1,5 +1,6 @@
 import { useSyncExternalStore, useEffect, useState } from 'react'
 import { Check, Crosshair, Undo2 } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -360,31 +361,33 @@ function ChangeRow({ entry }: { entry: ChangeEntry }) {
           {describeChange(entry)}
         </span>
         {cellId ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label="Show me where"
-            title="Show me where"
-            onClick={() => scrollBlueprintCellIntoView(cellId)}
-            className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
-          >
-            <Crosshair aria-hidden />
-          </Button>
+          <IconTooltip label="Scroll the board to this cell">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Show me where"
+              onClick={() => scrollBlueprintCellIntoView(cellId)}
+              className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
+            >
+              <Crosshair aria-hidden />
+            </Button>
+          </IconTooltip>
         ) : null}
         {entry.revert ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label="Revert this change"
-            title="Revert this change"
-            disabled={busy}
-            onClick={() => void revert()}
-            className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
-          >
-            <Undo2 className={cn(busy && 'animate-pulse')} aria-hidden />
-          </Button>
+          <IconTooltip label="Revert this change">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Revert this change"
+              disabled={busy}
+              onClick={() => void revert()}
+              className="text-muted-foreground opacity-0 group-hover/change:opacity-100 focus-visible:opacity-100"
+            >
+              <Undo2 className={cn(busy && 'animate-pulse')} aria-hidden />
+            </Button>
+          </IconTooltip>
         ) : null}
       </div>
       {error ? (

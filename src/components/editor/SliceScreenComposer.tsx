@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { GripVertical, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { describeCell } from '@/lib/canvasCellQuery'
 import { cn } from '@/lib/utils'
 import type { DraftFrame } from '@/lib/sliceValidation'
@@ -284,18 +285,20 @@ export function SliceScreenComposer({
                         start anywhere turns every misjudged click into a
                         move.
                       */}
-                      <button
-                        type="button"
-                        aria-label={`Drag to move ${described.label}`}
-                        onPointerDown={(event) => {
-                          event.preventDefault()
-                          setDragging(cell)
-                          setPointer({ x: event.clientX, y: event.clientY })
-                        }}
-                        className="shrink-0 cursor-grab touch-none text-muted-foreground/60 hover:text-foreground active:cursor-grabbing"
-                      >
-                        <GripVertical className="size-3" aria-hidden />
-                      </button>
+                      <IconTooltip label="Drag to reorder">
+                        <button
+                          type="button"
+                          aria-label={`Drag to move ${described.label}`}
+                          onPointerDown={(event) => {
+                            event.preventDefault()
+                            setDragging(cell)
+                            setPointer({ x: event.clientX, y: event.clientY })
+                          }}
+                          className="shrink-0 cursor-grab touch-none text-muted-foreground/60 hover:text-foreground active:cursor-grabbing"
+                        >
+                          <GripVertical className="size-3" aria-hidden />
+                        </button>
+                      </IconTooltip>
                       <span className="grid size-4 shrink-0 place-items-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
                         {running}
                       </span>
@@ -309,16 +312,20 @@ export function SliceScreenComposer({
                           </span>
                         ) : null}
                       </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={`Remove ${described.label}`}
-                        className="shrink-0 text-muted-foreground hover:text-foreground"
-                        onClick={() => removeCell(screenIndex, cell)}
+                      <IconTooltip
+                        label={`Take ${described.label} out of this screen`}
                       >
-                        <X className="size-3" />
-                      </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={`Remove ${described.label}`}
+                          className="shrink-0 text-muted-foreground hover:text-foreground"
+                          onClick={() => removeCell(screenIndex, cell)}
+                        >
+                          <X className="size-3" />
+                        </Button>
+                      </IconTooltip>
                     </div>
 
                     {/* The end of the screen needs its own slot, or the last
