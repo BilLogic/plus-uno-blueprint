@@ -1,13 +1,5 @@
-import {
-  createContext,
-  Fragment,
-  useContext,
-  useMemo,
-  useRef,
-  type RefObject,
-} from 'react'
+import { Fragment, useMemo, useRef, type RefObject } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
-import { getPathColor } from '@/lib/pathColorTheme'
 import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
 import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandles'
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
@@ -68,7 +60,6 @@ import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import type { BlueprintData, BlueprintCell } from '@/types/blueprint'
-import type { CompareStatus } from '@/types/integratedBlueprint'
 
 /** Left gutter on the white board so the play control clears Visual cells. */
 const VISUAL_PLAY_GUTTER = 28
@@ -87,20 +78,7 @@ type SideBySideCompareGridProps = {
   /** Shared swimlane board height for phase overview alignment. */
   fixedSwimlaneBodyHeight?: number
   fillSwimlaneHeight?: boolean
-  /**
-   * Compare highlight pass: a verdict per cell id. Shared cells dim,
-   * only-in-one cells wear their path's ring, divergent cells add a ≠
-   * badge. The layout does not move — this is paint, not structure.
-   */
-  compareStatusByCellId?: ReadonlyMap<string, CompareStatus>
 }
-
-/**
- * File-local channel for the highlight verdicts — the map would otherwise
- * thread through four components that have no other use for it.
- */
-const CompareHighlightContext =
-  createContext<ReadonlyMap<string, CompareStatus> | null>(null)
 
 type CompareRowSpec = BlueprintLabelRowSpec
 
@@ -125,7 +103,6 @@ export function SideBySideCompareGrid({
   sectionTitleDescription,
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
-  compareStatusByCellId,
 }: SideBySideCompareGridProps) {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
   const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
@@ -176,7 +153,6 @@ export function SideBySideCompareGrid({
   }
 
   return (
-    <CompareHighlightContext.Provider value={compareStatusByCellId ?? null}>
     <div
       className={cn('w-max shrink-0', className)}
       style={getCompareBoardWrapperPadding()}
@@ -243,7 +219,6 @@ export function SideBySideCompareGrid({
           ))}
       </div>
     </div>
-    </CompareHighlightContext.Provider>
   )
 }
 
@@ -651,25 +626,6 @@ function CompareCellBlock({
   /** Every cell in a tech slot — one per touchpoint since the split. */
   slotCells?: BlueprintCell[]
 }) {
-  const highlight = useContext(CompareHighlightContext)
-  /*
-    The highlight pass. Verdicts paint, never move: shared cells recede to
-    context, a cell only one path has wears that path's color as a ring,
-    and a divergent counterpart adds the ≠ badge. Visual-lane cells are
-    synthetic (no real id) and stay out of it.
-  */
-  const compareStatus =
-    highlight && cellId && variant !== 'visual'
-      ? (highlight.get(cellId) ?? null)
-      : null
-  const pathAccent =
-    compareStatus && selectionContext
-      ? getPathColor({
-          path_type: selectionContext.pathType,
-          name: selectionContext.pathName,
-        })
-      : null
-
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
     compact ? 'pt-3' : 'pt-4',
@@ -690,17 +646,7 @@ function CompareCellBlock({
     'relative z-[1] flex shrink-0 items-stretch',
     shellPadding,
     isVisual && 'min-h-0 overflow-hidden',
-    compareStatus === 'shared' &&
-      'opacity-40 saturate-[.6] transition-[opacity,filter]',
   )
-  const compareRing =
-    compareStatus === 'only' || compareStatus === 'divergent'
-      ? {
-          outline: `2px solid ${pathAccent ?? 'var(--primary)'}`,
-          outlineOffset: -2,
-          borderRadius: 12,
-        }
-      : undefined
 
   const innerContent =
     variant === 'visual' ? (
@@ -791,17 +737,7 @@ function CompareCellBlock({
     )
 
   return (
-    <div className={shellClassName} style={{ ...shellStyle, ...compareRing }}>
-      {compareStatus === 'divergent' ? (
-        <span
-          aria-hidden
-          title="Differs from its counterpart in the other path"
-          className="absolute -top-2 -right-2 z-10 grid size-5 place-items-center rounded-full text-2xs font-semibold text-white shadow-sm"
-          style={{ backgroundColor: pathAccent ?? 'var(--primary)' }}
-        >
-          ≠
-        </span>
-      ) : null}
+    <div className={shellClassName} style={shellStyle}>
       {innerContent}
     </div>
   )

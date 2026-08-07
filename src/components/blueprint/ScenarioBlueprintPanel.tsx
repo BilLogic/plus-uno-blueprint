@@ -4,7 +4,6 @@ import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePa
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { useEditor } from '@/contexts/EditorContext'
-import { buildCompareModel, type CompareBlueprints } from '@/lib/compareSlots'
 import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
@@ -92,17 +91,6 @@ export function ScenarioBlueprintPanel({
     storedViewType === 'merged' && selectedPathIds.length < 2
       ? 'stacked'
       : storedViewType
-  /*
-    Compare v2 is a *highlight pass over the stacked layout*, not a merged
-    grid. The merged spine (ideation idea 1) shipped first and failed
-    reading: collapsing shared cells destroyed the row rhythm that makes a
-    blueprint scannable, and re-pointed arrows read as noise. The session
-    'merged' view type now means "stacked, painted": identical cells dim,
-    unique cells wear their path's ring, divergent counterparts get a ≠
-    badge. Nothing moves; the differences are all that changes ink.
-  */
-  const compareHighlight =
-    displayViewType === 'merged' && selectedPathIds.length >= 2
   const useIntegratedLayout = false
   const useSideBySideLayout =
     (displayViewType === 'stacked' || displayViewType === 'merged') &&
@@ -137,16 +125,6 @@ export function ScenarioBlueprintPanel({
     () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds, { compare: true }),
     [allBlueprints, selectedPathIds],
   )
-
-  const compareStatusByCellId = useMemo(() => {
-    if (!compareHighlight) return undefined
-    const compared = itemsInSelectionOrder(selectedPathIds, (id) =>
-      blueprintsByPathId.get(id),
-    )
-    if (compared.length < 2) return undefined
-    const model = buildCompareModel(compared as CompareBlueprints)
-    return new Map(Object.entries(model.cellStatus))
-  }, [blueprintsByPathId, compareHighlight, selectedPathIds])
 
   const showIntegratedGrid =
     useIntegratedLayout && integratedBlueprint !== null
@@ -282,7 +260,6 @@ export function ScenarioBlueprintPanel({
           sectionTitleDescription={sectionTitleDescription}
           fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
           fillSwimlaneHeight={fillSwimlaneHeight}
-          compareStatusByCellId={compareStatusByCellId}
         />
       </ResizableComparePanel>
     )
