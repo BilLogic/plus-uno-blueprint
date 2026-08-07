@@ -17,7 +17,7 @@ Third attempt at path comparison. The two shipped attempts failed in opposite wa
 | **Stacked view** | Paths as vertical bands on one shared step axis; divergent step columns lightly highlighted | Phase 2b |
 | **Difference Ledger** | Floating-panel surface (sibling of cell details) enumerating every difference as zone-grouped diff tables | Phase 3 |
 | **Divergence strip** | ~48px braid above the panel, both modes: fork/rejoin topology + zone navigation | Phase 3 |
-| **Merged view** | Branch canvas: shared cells drawn once on a spine, divergent runs fork into parallel blocks | Phase 4b — **gated** (see below) |
+| **Merged view** | **Reading preset** (gate verdict): entering Merged auto-folds shared runs + opens the Differences ledger — a focused-compare posture over the stacked canvas. The branch canvas FAILED its data gate (below) and is archived as a conditional design | Phase 4b |
 
 Controls live in one menubar cluster beside the slide title (≥2 paths selected):
 
@@ -26,7 +26,7 @@ Warm-Up ⓘ   [ Stacked ▣ │ Merged ▢ ]   [⇤ Fold]   [≠ 12]        ⊕ 
               mode toggle              fold shared  opens ledger
 ```
 
-**The gate on Merged:** a critique pass measured the real Ecoeled blueprints — compared pairs are **67–95% divergent**, mostly outside the regime where branch geometry beats Stacked+strip. So Merged builds only if, after Phase 1's alignment normalization, the median compared pair yields ≥2 spine segments covering ≥30% of columns. Until then it's a documented design, not a commitment. Stacked + ledger + strip serve the reviewer jobs on the data that exists.
+**The gate on Merged — MEASURED 2026-08-07, verdict FAIL.** With Phase 1 normalization live, `buildCompareModel` over every fallback pair (16 pairs, `src/lib/compareGate.report.test.ts`): median pair = 2 spine segments at **13% coverage** (gate needs ≥30%); only 2/16 pairs pass (Warm-Up Happy/Alternate 33%, Set Goals vs its Edge Case 31%). The branch canvas is therefore **not built** — archived below as a conditional design (re-run the gate if data hygiene improves; per-pair enablement for the two passing pairs is a possible future). **Merged ships instead as a reading preset**: flipping to Merged folds shared runs and opens the Differences surface — one gesture into review posture; flipping back to Stacked unfolds. All instruments (fold, ledger, strip, column tint) remain available in both modes; the preset is the only mode difference.
 
 ## Locked decisions
 
@@ -159,7 +159,7 @@ Real chrome: paths picked in the left sidebar's PATHS section (unchanged); compa
 5. `▶` steps zone to zone; strip, canvas, and open ledger group stay in sync (R3).
 6. **Merged** (if built): same instruments over the branch canvas — the strip's braid at full scale, counterpart cells stacked one frame apart.
 
-## Merged view — branch anatomy (gated design)
+## Merged view — branch anatomy (ARCHIVED: gate failed 2026-08-07 — kept as the conditional design)
 
 `CompareModel.runs` maps 1:1 onto canvas segments: shared run → **spine segment** (one band, cells rendered once — identical by definition), divergent run → **branch cluster** (one mini-band per path, only that run's columns, full lane rows inside). 'Only'-runs: the owning path gets a block; other paths' connectors pass straight through as a visible **bypass** (tooltip: "Happy Path: no additional steps here"; click focuses the cluster).
 
@@ -185,9 +185,9 @@ Comprehension guards (from critique): primary path's block on the spine baseline
 
 Fork condition: `content` differs OR presence differs. Precedence: presence + content variance fuse when adjacent; V7 rides along as a table row if its column is already in a cluster.
 
-### The Phase 4b gate
+### The Phase 4b gate — result
 
-Measured on the real Ecoeled fallback data (`src/data/`): compared pairs are 67–95% divergent; the typical spine is one column. **Gate: Merged builds only if, post-normalization, the median compared pair yields ≥2 spine segments covering ≥30% of columns.** Evaluated after Phase 3 dogfood (the check is just `buildCompareModel` over live scenarios). If it fails, Merged stays a documented concept and the toggle doesn't ship.
+**FAIL (2026-08-07).** `src/lib/compareGate.report.test.ts` over all 16 fallback pairs, post-normalization: median 13% spine coverage vs 30% required; passing pairs 2/16. Live corroboration: Warm-Up's shared columns are almost all *pinned* (one-hop edges into divergent cells — 6 of 7), so even fold compression is thin. Consequence: the branch canvas stays unbuilt; the `Merged` toggle ships as the reading preset (auto-fold + ledger open). The gate report stays in the suite — re-run it after significant blueprint restructuring; if the median crosses the bar, this section's design is ready to build as specced.
 
 ## Architecture
 
@@ -280,7 +280,7 @@ Pleats: fixed-width column, flat `--muted` + single 1px crease (rib texture cut 
 | **2b** | Stacked grid rewrite: shared band renderer, subgrid inversion, spacers, estimators, arrow hardening, **column highlight**, enumerated deletions, overview scope-down | build+lint clean; Ecoeled visual pass (row rhythm) |
 | **3** | Panel: `panelState` refactor → ledger surface (accordion policy, diff tables, filter) + **strip (both modes)** + `focusCells` pipeline + agent commands + `get_compare_diff` | drawer bounce tests; ledger opens from Stacked |
 | **4a** | Fold in both modes (pleats, pin rule wiring, data-level arrow filtering, menubar toggle, shared state) | pleat toggle = one frame, no camera shimmy |
-| **4b** | **Merged branch canvas — only if the data gate passes** (median pair ≥2 spine segments covering ≥30% of columns, post-normalization, measured on live Ecoeled). Dev-flagged; priced as its own Phase-2b-sized effort (second geometry model: block layout, DOM-measured strip positions, cross-block arrows, connectors, coachmark) | the data gate, then Ecoeled visual pass |
+| **4b** | Gate measured: **FAIL** (median 13% vs 30%). Merged ships as the **reading preset**: entering Merged sets fold=true + opens the Differences surface; leaving restores unfolded. Branch canvas archived (see anatomy section) with the gate report kept runnable | gate report in suite; preset smoke-tested |
 | **5** | A11y polish: keyboard scoping, roles/labels, reduced-motion audit, empty states | — |
 
 1 → 2a → 2b → 3 → 4a ordered; 4b after gate; focus pipeline (3) must precede fold auto-expand (4a).
@@ -295,7 +295,7 @@ Pleats: fixed-width column, flat `--muted` + single 1px crease (rib texture cut 
 - [ ] Strip/canvas/ledger/`jump_divergence` share ①②③ indices; ◀/▶ keeps all three in sync
 - [ ] One-hop pin rule unit-tested; pinned columns show the explainer; fold disabled at zero differences
 - [ ] `get_compare_diff` works headless; all commands registered in their surface's phase; `get_ui_state` compare line present; uiBridge probe correct for ledger-only open
-- [ ] If 4b builds: spine cells render once, primary path on baseline, connectors non-arrow vocabulary, V2 `=` de-emphasis, V5 aligned-x preservation, coachmark + vs-badges
+- [ ] Merged = reading preset: flipping to Merged folds shared runs + opens the Differences surface; flipping to Stacked unfolds; agent `set_scenario_view merged` applies the same preset (branch canvas: archived, gate FAIL recorded)
 - [ ] `npm test` green, `npm run lint` zero, `npm run build` clean; pleat toggle one frame; reduced-motion respected
 
 ## Risks
