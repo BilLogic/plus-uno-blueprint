@@ -64,6 +64,34 @@ test('an unknown operation still appears rather than vanishing', () => {
   assert.equal(describeChange(entry('some_new_rpc', {})), 'some new rpc')
 })
 
+test('every operation the ledger records reads as a sentence', () => {
+  // The failure this pins: `duplicate_scenario` shipped with no case and fell
+  // to the old switch's default, so the sheet listed the raw function name —
+  // "duplicate scenario" — which reads plausible enough that nobody caught it.
+  // `describeChange` is now a Record over the `WriteFn` union, so a missing
+  // case does not compile; this checks the two that were siblings.
+  assert.equal(
+    describeChange(entry('duplicate_scenario', { name: 'Warm-Up (copy)' })),
+    'Duplicated a blueprint as “Warm-Up (copy)”',
+  )
+  assert.equal(
+    describeChange(entry('duplicate_path', { name: 'Happy Path (copy)' })),
+    'Duplicated a path as “Happy Path (copy)”',
+  )
+})
+
+test('a duplicated blueprint groups with the blueprint it copied', () => {
+  // duplicate_scenario's args carry `source_scenario_id` and nothing else the
+  // grouper knew about, so the row landed in the no-path bucket — away from
+  // every other change to the same blueprint.
+  const groups = groupChanges([
+    entry('add_lane', { scenario_id: 's1' }),
+    entry('duplicate_scenario', { source_scenario_id: 's1', name: 'Copy' }),
+  ])
+  assert.equal(groups.length, 1)
+  assert.equal(groups[0].pathId, 's1')
+})
+
 test('a blank name is not quoted as an empty string', () => {
   assert.equal(describeChange(entry('add_lane', { name: '   ' })), 'Added lane')
 })
@@ -111,7 +139,7 @@ test('a destructive session is flagged, an additive one is not', () => {
   )
 })
 
-/**
+/*
  * Reads are not changes.
  *
  * `deletion_impact` used to go through the same seam as every write, so merely
@@ -119,26 +147,15 @@ test('a destructive session is flagged, an additive one is not', () => {
  * count climbed with nothing changed, and because a read has no inverse the row
  * showed no revert control — which read as per-change revert being gone.
  *
- * The seam in `authoringRpc.ts` routes these through `read()` now. This is the
- * backstop at the ledger's own door, so a future read wired to `call()` by
- * mistake still cannot pollute the list.
+ * That was fixed at the seam (`read()` in `authoringRpc.ts`). The ledger also
+ * carried a name-based deny-list as a backstop, which the two tests that used
+ * to sit here pinned; it is gone, because a deny-list that silently drops
+ * whatever it matches can only ever *lose* a write once a future operation
+ * reuses one of those names. The guarantee is now made by the `WriteFn` union
+ * at `recordChange`'s own signature, and pinned as a type-level check in
+ * `src/lib/authoringSession.test.ts` — a read name handed to the ledger does
+ * not compile.
  */
-test('a read is never recorded as a change', () => {
-  clearSession()
-  recordChange('deletion_impact', { kind: 'scenario', target_id: 's1' })
-  recordChange('cell_natural_key', { cell_id: 'c1' })
-  recordChange('slices_referencing', { cell_ids: ['c1'] })
-  assert.deepEqual(sessionSnapshot(), [])
-})
-
-test('reads do not consume ids, so real changes keep numbering cleanly', () => {
-  clearSession()
-  recordChange('deletion_impact', { kind: 'scenario', target_id: 's1' })
-  recordChange('add_step', { path_id: 'p1', name: 'Greet' })
-  const list = sessionSnapshot()
-  assert.equal(list.length, 1)
-  assert.equal(list[0].fn, 'add_step')
-})
 
 test('a slice delete is named and counts as destructive', () => {
   assert.equal(

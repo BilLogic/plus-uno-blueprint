@@ -1,7 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { toAuthoringError } from '@/lib/authoringErrors'
-import { recordChange, type RevertSpec } from '@/lib/authoringSession'
+import {
+  recordChange,
+  type RevertSpec,
+  type WriteFn,
+} from '@/lib/authoringSession'
 
 type Client = SupabaseClient<Database>
 
@@ -109,7 +113,7 @@ async function invoke<T>(
  */
 async function call<T>(
   client: Client,
-  fn: string,
+  fn: WriteFn,
   args: Record<string, unknown>,
   revert?: RevertSpec,
 ): Promise<T> {
@@ -130,6 +134,13 @@ async function call<T>(
  * as "per-change revert is gone" rather than "this row was never a change".
  *
  * Anything added below that only asks the database a question belongs here.
+ *
+ * This seam is the whole boundary now. The ledger used to carry a second,
+ * name-based deny-list of read RPCs and silently drop anything matching it —
+ * which could only ever *lose* a write, the moment a future operation reused
+ * one of those names. It is gone: `call()` and `recordChange()` take a
+ * `WriteFn`, so handing either a read's name does not compile, which is the
+ * same guarantee made earlier and louder.
  */
 function read<T>(
   client: Client,
@@ -149,7 +160,7 @@ function read<T>(
  * have no inverse RPC and stay non-revertible per row.
  */
 function deriveRevert(
-  fn: string,
+  fn: WriteFn,
   args: Record<string, unknown>,
   data: unknown,
 ): RevertSpec | undefined {
