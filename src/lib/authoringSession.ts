@@ -30,10 +30,54 @@ export type RevertSpec = {
   args: Record<string, unknown>
 }
 
+/**
+ * Every operation that can land in the ledger — the authoring RPCs plus the
+ * direct-table mutations that log themselves.
+ *
+ * A union rather than `string` so that adding an operation and forgetting to
+ * teach `describeChange` about it is a **compile error** instead of a row in
+ * the sheet reading "duplicate scenario" — the lowercased function name, which
+ * is exactly what shipped when `duplicate_scenario` was added beside
+ * `duplicate_path` and only one of the two got a case.
+ */
+export type WriteFn =
+  | 'create_phase'
+  | 'create_scenario'
+  | 'create_path'
+  | 'duplicate_path'
+  | 'duplicate_scenario'
+  | 'rename_phase'
+  | 'rename_scenario'
+  | 'rename_path'
+  | 'rename_owner_tag'
+  | 'add_step'
+  | 'add_lane'
+  | 'upsert_cell'
+  | 'update_cell_content'
+  | 'update_cell_resources'
+  | 'update_cell_spec'
+  | 'add_evidence'
+  | 'delete_evidence'
+  | 'set_cell_dependency'
+  | 'clear_cell_dependency'
+  | 'reorder_steps'
+  | 'set_path_steps'
+  | 'reorder_lanes'
+  | 'delete_scenario'
+  | 'delete_path'
+  | 'remove_step'
+  | 'remove_lane'
+  | 'delete_cell'
+  | 'delete_slice'
+  | 'create_slice'
+  | 'duplicate_slice'
+  | 'update_slice_meta'
+  | 'replace_slice_frames'
+
 export type ChangeEntry = {
   id: string
   /** The RPC that ran, e.g. `add_step`. */
-  fn: string
+  fn: WriteFn
   /** Exactly what was sent. Ids, not names — names are resolved at render. */
   args: Record<string, unknown>
   at: number
@@ -58,21 +102,28 @@ export function setAgentAttribution(sessionId: string | null): void {
   agentAttribution = sessionId === null ? null : { sessionId }
 }
 
+/**
+ * The agent session a write happening right now would be attributed to, or
+ * null when the human is driving.
+ *
+ * Read by the scoped revert (`revert_my_changes`): it needs to know *whose*
+ * entries to take back, and the attribution the dispatcher already set is the
+ * one authority on that. The alternative — passing the session id in as a
+ * command argument — would let the model name someone else's session.
+ */
+export function currentAgentSessionId(): string | null {
+  return agentAttribution?.sessionId ?? null
+}
+
 /** Operations that cannot be taken back once the session is saved. */
 const DESTRUCTIVE = new Set([
   'delete_scenario',
   'delete_path',
   'delete_cell',
+  'delete_slice',
   'remove_step',
   'remove_lane',
 ])
-
-/**
- * Operations with no inverse at all. `Discard all` reverts around these and
- * names them rather than refusing to run — one un-revertible change must not
- * kill the escape hatch for everything else.
- */
-const IRREVERSIBLE = new Set<string>([])
 
 let entries: ChangeEntry[] = []
 let listeners: Array<() => void> = []
@@ -95,7 +146,7 @@ export function sessionSnapshot(): ChangeEntry[] {
 }
 
 export function recordChange(
-  fn: string,
+  fn: WriteFn,
   args: Record<string, unknown>,
   revert?: RevertSpec,
 ): void {
@@ -135,9 +186,19 @@ export function sessionHasDestructive(list: readonly ChangeEntry[]): boolean {
   return list.some((entry) => DESTRUCTIVE.has(entry.fn))
 }
 
-export function isIrreversible(entry: ChangeEntry): boolean {
-  return IRREVERSIBLE.has(entry.fn)
-}
+/*
+ * There is deliberately no by-operation "irreversible" predicate. There used
+ * to be an empty `Set` of operation names and an `isIrreversible(entry)` over
+ * it, whose doc described behaviour the code could not exhibit — the set being
+ * empty, it answered false for everything, including the deletes it named.
+ *
+ * Revertibility is not a property of the operation, it is a property of the
+ * ENTRY: the same `upsert_cell` is revertible when its id came back and not
+ * when it did not, and `update_cell_content` is revertible only if the caller
+ * captured a before-state. So `!entry.revert` — what `revertAll` and the row
+ * button already ask — is the whole predicate, and a second, coarser one
+ * beside it could only ever disagree with it.
+ */
 
 /**
  * One human sentence per change.
@@ -153,81 +214,93 @@ function renameTo(entry: ChangeEntry): string {
   return name ? ` to “${name}”` : ''
 }
 
-export function describeChange(entry: ChangeEntry): string {
+/** A quoted `name` argument, or nothing when the call carried none. */
+function named(entry: ChangeEntry): string {
   const name = typeof entry.args.name === 'string' ? entry.args.name.trim() : ''
-  const quoted = name ? ` “${name}”` : ''
+  return name ? ` “${name}”` : ''
+}
 
-  switch (entry.fn) {
-    case 'create_phase':
-      return `Added phase${quoted}`
-    case 'create_scenario':
-      return `Added scenario${quoted}`
-    case 'create_path':
-      return `Added path${quoted}`
-    case 'duplicate_path':
-      return `Duplicated a path as${quoted || ' a copy'}`
-    case 'rename_phase':
-      return `Renamed a phase${renameTo(entry)}`
-    case 'rename_scenario':
-      return `Renamed a scenario${renameTo(entry)}`
-    case 'rename_path':
-      return `Renamed a path${renameTo(entry)}`
-    case 'add_step':
-      return name ? `Added step${quoted}` : 'Added a step'
-    case 'add_lane':
-      return `Added lane${quoted}`
-    case 'upsert_cell':
-      return 'Added a cell'
-    case 'update_cell_content':
-      return 'Edited a cell’s text'
-    case 'update_cell_resources':
-      return 'Edited a cell’s resources'
-    case 'update_cell_spec':
-      return 'Specified function & form'
-    case 'add_evidence': {
-      const title =
-        typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
-      return title ? `Added evidence “${title}”` : 'Added an evidence source'
-    }
-    case 'delete_evidence': {
-      const title =
-        typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
-      return title
-        ? `Removed evidence “${title}”`
-        : 'Removed an evidence source'
-    }
-    case 'rename_owner_tag': {
-      const from = typeof entry.args.from === 'string' ? entry.args.from : ''
-      const to = typeof entry.args.to === 'string' ? entry.args.to : ''
-      return from && to
-        ? `Renamed owner tag “${from}” to “${to}”`
-        : 'Renamed an owner tag'
-    }
-    case 'set_cell_dependency':
-      return 'Connected two cells'
-    case 'clear_cell_dependency':
-      return 'Removed a connection'
-    case 'reorder_steps':
-    case 'set_path_steps':
-      return 'Reordered the steps'
-    case 'reorder_lanes':
-      return 'Reordered the lanes'
-    case 'delete_scenario':
-      return 'Deleted a scenario'
-    case 'delete_path':
-      return 'Deleted a path'
-    case 'remove_step':
-      return 'Deleted a step'
-    case 'remove_lane':
-      return 'Deleted a lane'
-    case 'delete_cell':
-      return 'Deleted a cell'
-    default:
-      // A new RPC that nobody taught this function about still shows up in the
-      // list. Silence would be worse: an untracked change is the one case the
-      // sheet exists to prevent.
-      return entry.fn.replace(/_/g, ' ')
-  }
+function titled(entry: ChangeEntry): string {
+  return typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
+}
+
+/**
+ * One sentence per operation, keyed by operation.
+ *
+ * A `Record<WriteFn, …>` and not a `switch`: the switch's `default` turned a
+ * forgotten case into a plausible-looking row ("duplicate scenario") that no
+ * reviewer would read as a bug. Here, adding a member to `WriteFn` without
+ * adding its sentence does not compile.
+ */
+const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
+  create_phase: (entry) => `Added phase${named(entry)}`,
+  create_scenario: (entry) => `Added scenario${named(entry)}`,
+  create_path: (entry) => `Added path${named(entry)}`,
+  duplicate_path: (entry) =>
+    `Duplicated a path as${named(entry) || ' a copy'}`,
+  duplicate_scenario: (entry) =>
+    `Duplicated a blueprint as${named(entry) || ' a copy'}`,
+  rename_phase: (entry) => `Renamed a phase${renameTo(entry)}`,
+  rename_scenario: (entry) => `Renamed a scenario${renameTo(entry)}`,
+  rename_path: (entry) => `Renamed a path${renameTo(entry)}`,
+  rename_owner_tag: (entry) => {
+    const from = typeof entry.args.from === 'string' ? entry.args.from : ''
+    const to = typeof entry.args.to === 'string' ? entry.args.to : ''
+    return from && to
+      ? `Renamed owner tag “${from}” to “${to}”`
+      : 'Renamed an owner tag'
+  },
+  add_step: (entry) => (named(entry) ? `Added step${named(entry)}` : 'Added a step'),
+  add_lane: (entry) => `Added lane${named(entry)}`,
+  upsert_cell: () => 'Added a cell',
+  update_cell_content: () => 'Edited a cell’s text',
+  update_cell_resources: () => 'Edited a cell’s resources',
+  update_cell_spec: () => 'Specified function & form',
+  add_evidence: (entry) =>
+    titled(entry) ? `Added evidence “${titled(entry)}”` : 'Added an evidence source',
+  delete_evidence: (entry) =>
+    titled(entry)
+      ? `Removed evidence “${titled(entry)}”`
+      : 'Removed an evidence source',
+  set_cell_dependency: () => 'Connected two cells',
+  clear_cell_dependency: () => 'Removed a connection',
+  reorder_steps: () => 'Reordered the steps',
+  set_path_steps: () => 'Reordered the steps',
+  reorder_lanes: () => 'Reordered the lanes',
+  delete_scenario: () => 'Deleted a scenario',
+  delete_path: () => 'Deleted a path',
+  remove_step: () => 'Deleted a step',
+  remove_lane: () => 'Deleted a lane',
+  delete_cell: () => 'Deleted a cell',
+  delete_slice: (entry) =>
+    titled(entry) ? `Deleted slice “${titled(entry)}”` : 'Deleted a slice',
+  create_slice: (entry) =>
+    titled(entry) ? `Added slice “${titled(entry)}”` : 'Added a slice',
+  duplicate_slice: (entry) =>
+    titled(entry)
+      ? `Duplicated a slice as “${titled(entry)}”`
+      : 'Duplicated a slice',
+  update_slice_meta: (entry) =>
+    titled(entry) ? `Edited slice “${titled(entry)}”` : 'Edited a slice',
+  // Named by the count, because "replaced the frames" is the one description
+  // here that hides its own size: this write deletes every frame the slice
+  // had, and going from twelve to one is the case the row exists to surface.
+  replace_slice_frames: (entry) => {
+    const count =
+      typeof entry.args.frame_count === 'number' ? entry.args.frame_count : null
+    return count === null
+      ? 'Rebuilt a slice’s frames'
+      : `Rebuilt a slice’s frames (${count} now)`
+  },
+}
+
+export function describeChange(entry: ChangeEntry): string {
+  const describe: ((entry: ChangeEntry) => string) | undefined =
+    DESCRIBERS[entry.fn]
+  // Unreachable through the type, kept for the untyped edges (a persisted
+  // ledger, a hand-built entry in a test). Silence would be worse: an
+  // untracked change is the one case the sheet exists to prevent.
+  return describe ? describe(entry) : String(entry.fn).replace(/_/g, ' ')
 }
 
 /**
@@ -243,8 +316,15 @@ export function groupChanges(
 ): Array<{ pathId: string | null; entries: ChangeEntry[] }> {
   const groups: Array<{ pathId: string | null; entries: ChangeEntry[] }> = []
   for (const entry of list) {
+    // The order is narrowest-first: a call that names a path belongs with that
+    // path, and only a call that names none falls back to its scenario.
+    // `source_scenario_id` is `duplicate_scenario`'s — without it the row
+    // landed in the no-path bucket, away from the blueprint it copied.
     const raw =
-      entry.args.path_id ?? entry.args.source_path_id ?? entry.args.scenario_id
+      entry.args.path_id ??
+      entry.args.source_path_id ??
+      entry.args.scenario_id ??
+      entry.args.source_scenario_id
     const pathId = typeof raw === 'string' ? raw : null
     const existing = groups.find((group) => group.pathId === pathId)
     if (existing) existing.entries.push(entry)

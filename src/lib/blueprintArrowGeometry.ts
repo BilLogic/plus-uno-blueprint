@@ -202,16 +202,16 @@ export function getSameColumnObstructingCells(
   const columnRight = Math.max(sourceBox.right, targetBox.right)
 
   const obstructing: HTMLElement[] = []
-  root.querySelectorAll<HTMLElement>('[data-blueprint-cell]').forEach((el) => {
-    if (el === sourceEl || el === targetEl) return
-    if (parseStepIndex(el) !== stepIndex) return
+  for (const el of queryBlueprintCells(root, root)) {
+    if (el === sourceEl || el === targetEl) continue
+    if (parseStepIndex(el) !== stepIndex) continue
 
     const box = getCellContentBox(el, root)
-    if (box.right <= columnLeft || box.left >= columnRight) return
-    if (box.top >= gapBottom || box.top + box.height <= gapTop) return
+    if (box.right <= columnLeft || box.left >= columnRight) continue
+    if (box.top >= gapBottom || box.top + box.height <= gapTop) continue
 
     obstructing.push(el)
-  })
+  }
 
   return obstructing
 }
@@ -234,21 +234,21 @@ export function getCellsOverlappingRect(
   if (rect.bottom <= rect.top || rect.right <= rect.left) return []
 
   const overlapping: HTMLElement[] = []
-  root.querySelectorAll<HTMLElement>('[data-blueprint-cell]').forEach((el) => {
+  for (const el of queryBlueprintCells(root, root)) {
     if (
       exclude.some(
         (other) => other === el || other.contains(el) || el.contains(other),
       )
     ) {
-      return
+      continue
     }
 
     const box = getCellContentBox(el, root)
-    if (box.right <= rect.left || box.left >= rect.right) return
-    if (box.top >= rect.bottom || box.top + box.height <= rect.top) return
+    if (box.right <= rect.left || box.left >= rect.right) continue
+    if (box.top >= rect.bottom || box.top + box.height <= rect.top) continue
 
     overlapping.push(el)
-  })
+  }
 
   return overlapping
 }
@@ -305,56 +305,309 @@ export function getVerticalGutterDetourAnchors(
   }
 }
 
+/** Which column gutter a same-column connector brackets through. */
+export type SameColumnSide = 'left' | 'right'
+
+export type SameColumnSideRoute = {
+  side: SameColumnSide
+  gutterX: number
+}
+
+/**
+ * Is the whole bracket — both side stubs and the gutter run between them —
+ * clear of every other card? Each leg is tested as a band `ARROW_DETOUR_CLEARANCE`
+ * either side of the drawn line, so a route that merely grazes a card is
+ * rejected too.
+ */
+function isSameColumnSideRouteClear(
+  root: HTMLElement,
+  side: SameColumnSide,
+  gutterX: number,
+  legs: readonly { box: LayoutBox; y: number }[],
+  exclude: readonly HTMLElement[],
+): boolean {
+  for (const leg of legs) {
+    const stubRect =
+      side === 'left'
+        ? { left: gutterX, right: leg.box.left }
+        : { left: leg.box.right, right: gutterX }
+    if (
+      getCellsOverlappingRect(
+        root,
+        {
+          ...stubRect,
+          top: leg.y - ARROW_DETOUR_CLEARANCE,
+          bottom: leg.y + ARROW_DETOUR_CLEARANCE,
+        },
+        exclude,
+      ).length > 0
+    ) {
+      return false
+    }
+  }
+
+  const ys = legs.map((leg) => leg.y)
+  return (
+    getCellsOverlappingRect(
+      root,
+      {
+        left: gutterX - ARROW_DETOUR_CLEARANCE,
+        right: gutterX + ARROW_DETOUR_CLEARANCE,
+        top: Math.min(...ys) - ARROW_DETOUR_CLEARANCE,
+        bottom: Math.max(...ys) + ARROW_DETOUR_CLEARANCE,
+      },
+      exclude,
+    ).length === 0
+  )
+}
+
+const SAME_COLUMN_SIDE_TIE_BREAK: Record<SameColumnSide, number> = {
+  left: 0,
+  right: 1,
+}
+
+type RememberedSideRoute = {
+  side: SameColumnSide
+  cellAEl: HTMLElement
+  cellBEl: HTMLElement
+}
+
+/**
+ * The side each connected pair settled on, so a pair that already has one keeps
+ * it. See `resolveSameColumnSideRoute` for why.
+ */
+const rememberedSideRoutes = new Map<string, RememberedSideRoute>()
+
+/** Order-independent key for a pair of cells. */
+function getSameColumnPairKey(
+  cellAEl: HTMLElement,
+  cellBEl: HTMLElement,
+): string | null {
+  const idA = cellAEl.getAttribute('data-blueprint-cell')
+  const idB = cellBEl.getAttribute('data-blueprint-cell')
+  if (!idA || !idB) return null
+  return idA <= idB ? `${idA}->${idB}` : `${idB}->${idA}`
+}
+
+/**
+ * Forget pairs whose cells have left the DOM — a collapsed lane, a switched
+ * scenario, a re-rendered board. Without this the memory would both pin a stale
+ * side onto a cell id that came back in a different place and hold detached
+ * nodes alive.
+ */
+function pruneRememberedSideRoutes(): void {
+  for (const [key, entry] of rememberedSideRoutes) {
+    if (!entry.cellAEl.isConnected || !entry.cellBEl.isConnected) {
+      rememberedSideRoutes.delete(key)
+    }
+  }
+}
+
+/** Drop every remembered side — for tests and hard board resets. */
+export function clearRememberedSameColumnSideRoutes(): void {
+  rememberedSideRoutes.clear()
+}
+
+/**
+ * The gutter a pair of same-column cells can be bracketed through, or null when
+ * neither side is usable. Both gutters are considered; the nearer one wins so
+ * the detour stays short, and left breaks a tie.
+ *
+ * Deliberately symmetric in its two cells — every input is a min/max over the
+ * pair, never "the source's" anything — so a pair resolves to the same side
+ * whichever end is the source, and the shape is stable across renders.
+ *
+ * The choice is also *sticky*. Clearance is a step function over every
+ * neighbour's box: a card sliding a pixel across the clearance band flips the
+ * preference, and this runs from a ResizeObserver, so a fold toggle or a font
+ * settle would swing the connector from one gutter to the other and back
+ * mid-relayout. So a pair that already has a side keeps it for as long as that
+ * side is still clear, and the "which is nearer" preference is only ever
+ * consulted for a pair that has no side yet. Hysteresis, not debouncing: the
+ * arrow still moves the instant its gutter is genuinely blocked.
+ */
+export function resolveSameColumnSideRoute(
+  cellAEl: HTMLElement,
+  cellBEl: HTMLElement,
+  root: HTMLElement,
+): SameColumnSideRoute | null {
+  const boxA = getCellContentBox(cellAEl, root)
+  const boxB = getCellContentBox(cellBEl, root)
+  const stepA = parseStepIndex(cellAEl)
+  const stepB = parseStepIndex(cellBEl)
+  const stepIndex =
+    stepA !== null && stepB !== null
+      ? Math.min(stepA, stepB)
+      : (stepA ?? stepB ?? 0)
+  const legs = [
+    { box: boxA, y: boxA.top + boxA.height / 2 },
+    { box: boxB, y: boxB.top + boxB.height / 2 },
+  ]
+  const exclude = [cellAEl, cellBEl]
+
+  const cardLeft = Math.min(boxA.left, boxB.left)
+  const cardRight = Math.max(boxA.right, boxB.right)
+  const leftmostEl = boxA.left <= boxB.left ? cellAEl : cellBEl
+  const rightmostEl = boxA.right >= boxB.right ? cellAEl : cellBEl
+
+  const candidates: (SameColumnSideRoute & { reach: number })[] = []
+
+  const leftGutterX = getVerticalRouteGutterX(root, stepIndex, leftmostEl)
+  if (leftGutterX < cardLeft - ARROW_CHEVRON_SIZE) {
+    candidates.push({
+      side: 'left',
+      gutterX: leftGutterX,
+      reach: cardLeft - leftGutterX,
+    })
+  }
+
+  const rightGutterX = getVerticalRouteRightGutterX(
+    root,
+    stepIndex,
+    rightmostEl,
+  )
+  if (rightGutterX > cardRight + ARROW_CHEVRON_SIZE) {
+    candidates.push({
+      side: 'right',
+      gutterX: rightGutterX,
+      reach: rightGutterX - cardRight,
+    })
+  }
+
+  candidates.sort(
+    (a, b) =>
+      a.reach - b.reach ||
+      SAME_COLUMN_SIDE_TIE_BREAK[a.side] - SAME_COLUMN_SIDE_TIE_BREAK[b.side],
+  )
+
+  const isClear = (candidate: SameColumnSideRoute) =>
+    isSameColumnSideRouteClear(
+      root,
+      candidate.side,
+      candidate.gutterX,
+      legs,
+      exclude,
+    )
+
+  const pairKey = getSameColumnPairKey(cellAEl, cellBEl)
+  const remembered = pairKey
+    ? rememberedSideRoutes.get(pairKey)?.side
+    : undefined
+
+  if (remembered !== undefined) {
+    const held = candidates.find(
+      (candidate) => candidate.side === remembered,
+    )
+    if (held && isClear(held)) {
+      return { side: held.side, gutterX: held.gutterX }
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (isClear(candidate)) {
+      if (pairKey) {
+        rememberedSideRoutes.set(pairKey, {
+          side: candidate.side,
+          cellAEl,
+          cellBEl,
+        })
+      }
+      return { side: candidate.side, gutterX: candidate.gutterX }
+    }
+  }
+
+  return null
+}
+
+/** The x a side route's stub meets a card on, chevron-inset for arrival ends. */
+function getSameColumnSideStubX(
+  box: LayoutBox,
+  side: SameColumnSide,
+  arrival: boolean,
+): number {
+  const inset = arrival ? ARROW_CHEVRON_SIZE : 0
+  return side === 'left' ? box.left - inset : box.right + inset
+}
+
+/**
+ * The bracket itself: out of one card's left (or right) edge, along the column
+ * gutter, into the other card's matching edge. `fromIsArrival` is the only
+ * difference between the one-way and double-headed forms — an arriving end is
+ * chevron-inset off the card, a departing end sits on it.
+ */
+function buildSameColumnBracketPath(
+  fromEl: HTMLElement,
+  toEl: HTMLElement,
+  root: HTMLElement,
+  fromIsArrival: boolean,
+  route: SameColumnSideRoute | null,
+): string {
+  if (!route) return ''
+
+  const fromBox = getCellContentBox(fromEl, root)
+  const toBox = getCellContentBox(toEl, root)
+  const fromY = fromBox.top + fromBox.height / 2
+  const toY = toBox.top + toBox.height / 2
+
+  return buildRoundedPolylinePath(
+    [
+      {
+        x: getSameColumnSideStubX(fromBox, route.side, fromIsArrival),
+        y: fromY,
+      },
+      { x: route.gutterX, y: fromY },
+      { x: route.gutterX, y: toY },
+      { x: getSameColumnSideStubX(toBox, route.side, true), y: toY },
+    ],
+    ARROW_CORNER_RADIUS,
+  )
+}
+
 /**
  * Two cells in one column, connected side-on through whichever column gutter
- * has room: out of one card's left (or right) edge, along the gutter, into
- * the other card's matching edge. Nothing between the two cards is crossed,
- * and both ends read as arrivals because each head sits on a card edge.
+ * has room. Nothing between the two cards is crossed, and both ends read as
+ * arrivals because each head sits on a card edge.
  *
- * Returns '' when neither gutter clears the cards (an edge column of a
- * one-column board): no arrow at all beats one drawn through a cell's text.
+ * Returns '' when neither gutter is clear (an edge column of a one-column
+ * board, or a gutter another card leans into): no arrow at all beats one
+ * drawn through a cell's text.
+ *
+ * `route` is optional so a caller that has already resolved the pair's side can
+ * hand it down instead of paying for the clearance sweeps twice.
  */
 export function buildSameColumnGutterDetourPath(
   upperEl: HTMLElement,
   lowerEl: HTMLElement,
   root: HTMLElement,
+  route: SameColumnSideRoute | null = resolveSameColumnSideRoute(
+    upperEl,
+    lowerEl,
+    root,
+  ),
 ): string {
-  const upperBox = getCellContentBox(upperEl, root)
-  const lowerBox = getCellContentBox(lowerEl, root)
-  const upperY = upperBox.top + upperBox.height / 2
-  const lowerY = lowerBox.top + lowerBox.height / 2
-  const stepIndex = parseStepIndex(upperEl) ?? 0
+  return buildSameColumnBracketPath(upperEl, lowerEl, root, true, route)
+}
 
-  const leftGutterX = getVerticalRouteGutterX(root, stepIndex, upperEl)
-  const leftEntryX = Math.min(upperBox.left, lowerBox.left) - ARROW_CHEVRON_SIZE
-  if (leftGutterX < leftEntryX) {
-    return buildRoundedPolylinePath(
-      [
-        { x: upperBox.left - ARROW_CHEVRON_SIZE, y: upperY },
-        { x: leftGutterX, y: upperY },
-        { x: leftGutterX, y: lowerY },
-        { x: lowerBox.left - ARROW_CHEVRON_SIZE, y: lowerY },
-      ],
-      ARROW_CORNER_RADIUS,
-    )
-  }
-
-  const rightGutterX = getVerticalRouteRightGutterX(root, stepIndex, upperEl)
-  const rightEntryX =
-    Math.max(upperBox.right, lowerBox.right) + ARROW_CHEVRON_SIZE
-  if (rightGutterX > rightEntryX) {
-    return buildRoundedPolylinePath(
-      [
-        { x: upperBox.right + ARROW_CHEVRON_SIZE, y: upperY },
-        { x: rightGutterX, y: upperY },
-        { x: rightGutterX, y: lowerY },
-        { x: lowerBox.right + ARROW_CHEVRON_SIZE, y: lowerY },
-      ],
-      ARROW_CORNER_RADIUS,
-    )
-  }
-
-  return ''
+/**
+ * One-way version of the same bracket: a short stub out of the *side* of the
+ * source card, down (or up) the adjacent gutter, and into the matching side of
+ * the target. Preferred over the top/bottom gutter detour for same-column
+ * connectors, which had to leave through a cell edge that another card was
+ * often sitting against and so swung far out into the gutter to get around it.
+ *
+ * Returns '' when no side is clear, so callers can fall back.
+ */
+export function buildSameColumnSideAttachedPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+  route: SameColumnSideRoute | null = resolveSameColumnSideRoute(
+    sourceEl,
+    targetEl,
+    root,
+  ),
+): string {
+  return buildSameColumnBracketPath(sourceEl, targetEl, root, false, route)
 }
 
 /**
@@ -448,28 +701,132 @@ export function isWrapTrigger(
   )
 }
 
+type RootMetrics = {
+  left: number
+  top: number
+  scaleX: number
+  scaleY: number
+}
+
+type MeasurementPass = {
+  root: HTMLElement | null
+  rootMetrics: RootMetrics | null
+  elementBoxes: Map<HTMLElement, LayoutBox>
+  contentBoxes: Map<HTMLElement, LayoutBox>
+  cellsByScope: Map<Element, HTMLElement[]>
+}
+
+let activeMeasurementPass: MeasurementPass | null = null
+
+/**
+ * One overlay update resolves every arrow on the band, and the routers overlap
+ * heavily in what they measure: a route-clearance test alone sweeps every card
+ * on the board three times per candidate gutter, and each sweep used to call
+ * `getBoundingClientRect` per anchor plus once for the root. Every one of those
+ * is a forced reflow.
+ *
+ * Wrapping an update in a pass makes each element measured exactly once for the
+ * duration. Safe because a pass only ever reads layout — nothing inside mutates
+ * the DOM, so no cached box can go stale mid-pass. Passes nest (the two arrow
+ * layers each run their own) and a pass that sees a different root than the one
+ * it started on drops its caches rather than mixing two coordinate spaces.
+ */
+export function runArrowMeasurementPass<T>(run: () => T): T {
+  const previous = activeMeasurementPass
+  activeMeasurementPass = {
+    root: null,
+    rootMetrics: null,
+    elementBoxes: new Map(),
+    contentBoxes: new Map(),
+    cellsByScope: new Map(),
+  }
+  pruneRememberedSideRoutes()
+  try {
+    return run()
+  } finally {
+    activeMeasurementPass = previous
+  }
+}
+
+/** The active pass, with its caches reset if the root coordinate space changed. */
+function getMeasurementPass(root: HTMLElement): MeasurementPass | null {
+  const pass = activeMeasurementPass
+  if (!pass) return null
+  if (pass.root !== root) {
+    pass.root = root
+    pass.rootMetrics = null
+    pass.elementBoxes.clear()
+    pass.contentBoxes.clear()
+    pass.cellsByScope.clear()
+  }
+  return pass
+}
+
+function measureRoot(root: HTMLElement): RootMetrics {
+  const rootRect = root.getBoundingClientRect()
+  return {
+    left: rootRect.left,
+    top: rootRect.top,
+    scaleX: root.offsetWidth > 0 ? rootRect.width / root.offsetWidth : 1,
+    scaleY: root.offsetHeight > 0 ? rootRect.height / root.offsetHeight : 1,
+  }
+}
+
+/** Cell elements under a scope (the root, or one lane row), once per pass. */
+function queryBlueprintCells(
+  scope: Element,
+  root: HTMLElement,
+): readonly HTMLElement[] {
+  const pass = getMeasurementPass(root)
+  const cached = pass?.cellsByScope.get(scope)
+  if (cached) return cached
+
+  const cells = Array.from(
+    scope.querySelectorAll<HTMLElement>('[data-blueprint-cell]'),
+  )
+  pass?.cellsByScope.set(scope, cells)
+  return cells
+}
+
 /** Layout box relative to the grid root (viewport-corrected for canvas zoom). */
 export function getElementLayoutBox(
   el: HTMLElement,
   root: HTMLElement,
 ): LayoutBox {
-  const elRect = el.getBoundingClientRect()
-  const rootRect = root.getBoundingClientRect()
-  const scaleX =
-    root.offsetWidth > 0 ? rootRect.width / root.offsetWidth : 1
-  const scaleY =
-    root.offsetHeight > 0 ? rootRect.height / root.offsetHeight : 1
+  const pass = getMeasurementPass(root)
+  const cached = pass?.elementBoxes.get(el)
+  if (cached) return cached
 
-  return {
-    left: (elRect.left - rootRect.left) / scaleX,
-    right: (elRect.right - rootRect.left) / scaleX,
-    top: (elRect.top - rootRect.top) / scaleY,
-    height: elRect.height / scaleY,
+  const elRect = el.getBoundingClientRect()
+  const rootMetrics =
+    pass?.rootMetrics ?? measureRoot(root)
+  if (pass) pass.rootMetrics = rootMetrics
+
+  const box = {
+    left: (elRect.left - rootMetrics.left) / rootMetrics.scaleX,
+    right: (elRect.right - rootMetrics.left) / rootMetrics.scaleX,
+    top: (elRect.top - rootMetrics.top) / rootMetrics.scaleY,
+    height: elRect.height / rootMetrics.scaleY,
   }
+  pass?.elementBoxes.set(el, box)
+  return box
 }
 
 /** Inner content box — union of visible cell card edges in the lane. */
 export function getCellContentBox(
+  cellEl: HTMLElement,
+  root: HTMLElement,
+): LayoutBox {
+  const pass = getMeasurementPass(root)
+  const cached = pass?.contentBoxes.get(cellEl)
+  if (cached) return cached
+
+  const box = measureCellContentBox(cellEl, root)
+  pass?.contentBoxes.set(cellEl, box)
+  return box
+}
+
+function measureCellContentBox(
   cellEl: HTMLElement,
   root: HTMLElement,
 ): LayoutBox {
@@ -617,7 +974,7 @@ function getLaneContentBottom(
 ): number {
   let bottom = sourceBox.top + sourceBox.height
   if (!row) return bottom
-  for (const el of row.querySelectorAll<HTMLElement>('[data-blueprint-cell]')) {
+  for (const el of queryBlueprintCells(row, root)) {
     if (el === sourceEl || el.contains(sourceEl) || sourceEl.contains(el)) {
       continue
     }
@@ -638,7 +995,7 @@ function getLaneContentTop(cellEl: HTMLElement, root: HTMLElement): number {
   const row = getLayerRow(cellEl)
   let top = box.top
   if (!row) return top
-  for (const el of row.querySelectorAll<HTMLElement>('[data-blueprint-cell]')) {
+  for (const el of queryBlueprintCells(row, root)) {
     if (el === cellEl || el.contains(cellEl) || cellEl.contains(el)) continue
     top = Math.min(top, getCellContentBox(el, root).top)
   }
@@ -2662,6 +3019,19 @@ export function buildArrowPath(
       root,
     )
     if (obstructing.length > 0) {
+      // Side-on first: a stub out of the card's own left/right edge and a run
+      // down the adjacent gutter hugs the column, where leaving through the
+      // top/bottom edge has to swing around whatever is stacked against it.
+      const sideRoute = resolveSameColumnSideRoute(sourceEl, targetEl, root)
+      if (sideRoute) {
+        return buildSameColumnSideAttachedPath(
+          sourceEl,
+          targetEl,
+          root,
+          sideRoute,
+        )
+      }
+
       const gutterX = getVerticalRouteGutterX(root, sourceStep, sourceEl)
       const detourAnchors = getVerticalGutterDetourAnchors(
         sourceEl,

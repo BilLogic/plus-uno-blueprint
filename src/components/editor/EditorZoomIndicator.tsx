@@ -24,7 +24,6 @@ export function EditorZoomIndicator({
         variant="ghost"
         size="sm"
         aria-label="Reset view"
-        title="Reset view"
         onClick={onResetView}
         className="pointer-events-auto h-5 shrink-0 gap-1 px-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
       >

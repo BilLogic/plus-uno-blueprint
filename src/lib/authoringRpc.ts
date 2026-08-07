@@ -1,7 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { toAuthoringError } from '@/lib/authoringErrors'
-import { recordChange, type RevertSpec } from '@/lib/authoringSession'
+import {
+  recordChange,
+  type RevertSpec,
+  type WriteFn,
+} from '@/lib/authoringSession'
 
 type Client = SupabaseClient<Database>
 
@@ -80,12 +84,15 @@ export type ViewType = 'single' | 'side-by-side' | 'integrated'
  * post-date the last type generation; the parameter and return types above are
  * the contract until `generate_typescript_types` is re-run against the applied
  * migration.
+ *
+ * Shared by both seams below. It records nothing on its own — recording is the
+ * one thing that distinguishes a write from a read, so it is the one thing
+ * that must be chosen explicitly at every call site.
  */
-async function call<T>(
+async function invoke<T>(
   client: Client,
   fn: string,
   args: Record<string, unknown>,
-  revert?: RevertSpec,
 ): Promise<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see doc above
   const { data, error } = await (client.rpc as any)(fn, args)
@@ -94,11 +101,53 @@ async function call<T>(
     console.error(`[authoring] ${fn} failed:`, authoring.raw)
     throw authoring
   }
-  // Logged here and only here, *after* the call succeeded. That placement is
-  // what makes the session list trustworthy: it records writes that actually
-  // landed, so it can never claim a change the database does not have.
-  recordChange(fn, args, revert ?? deriveRevert(fn, args, data))
   return data as T
+}
+
+/**
+ * A **write**: run it, then log it to the session ledger.
+ *
+ * Logged here and only here, *after* the call succeeded. That placement is
+ * what makes the session list trustworthy: it records writes that actually
+ * landed, so it can never claim a change the database does not have.
+ */
+async function call<T>(
+  client: Client,
+  fn: WriteFn,
+  args: Record<string, unknown>,
+  revert?: RevertSpec,
+): Promise<T> {
+  const data = await invoke<T>(client, fn, args)
+  recordChange(fn, args, revert ?? deriveRevert(fn, args, data))
+  return data
+}
+
+/**
+ * A **read**: run it and log nothing.
+ *
+ * Not an optimisation — a correctness rule. A read has no inverse by
+ * definition, so routing one through `call()` puts a row in the unsaved-changes
+ * list that can never carry a revert control. That is exactly what happened to
+ * `deletion_impact`: merely opening a delete dialog logged a change named
+ * "deletion impact", the counter climbed without anything having changed, and
+ * because the row had no inverse the sheet showed no revert on it — which read
+ * as "per-change revert is gone" rather than "this row was never a change".
+ *
+ * Anything added below that only asks the database a question belongs here.
+ *
+ * This seam is the whole boundary now. The ledger used to carry a second,
+ * name-based deny-list of read RPCs and silently drop anything matching it —
+ * which could only ever *lose* a write, the moment a future operation reused
+ * one of those names. It is gone: `call()` and `recordChange()` take a
+ * `WriteFn`, so handing either a read's name does not compile, which is the
+ * same guarantee made earlier and louder.
+ */
+function read<T>(
+  client: Client,
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  return invoke<T>(client, fn, args)
 }
 
 /**
@@ -111,7 +160,7 @@ async function call<T>(
  * have no inverse RPC and stay non-revertible per row.
  */
 function deriveRevert(
-  fn: string,
+  fn: WriteFn,
   args: Record<string, unknown>,
   data: unknown,
 ): RevertSpec | undefined {
@@ -121,10 +170,22 @@ function deriveRevert(
         ? { fn: 'remove_step', args: { path_id: args.path_id, step_id: data } }
         : undefined
     case 'add_lane':
-      return {
-        fn: 'remove_lane',
-        args: { scenario_id: args.scenario_id, lane_name: args.name },
-      }
+      // By identity, like every other inverse here. The name-keyed
+      // `remove_lane(scenario_id, lane_name)` this replaces held only under
+      // clean LIFO: rename the lane and it matched nothing; rename a
+      // *different* lane into that name and it deleted that one instead —
+      // across every path of the scenario, cells included.
+      //
+      // The fallback is the old inverse, and it is load-bearing until
+      // `20260807130000_add_lane_returns_ids.sql` is applied: before that
+      // migration `add_lane` returns void, so there are no ids to key on and
+      // a name-keyed undo is better than none.
+      return Array.isArray(data) && data.length > 0
+        ? { fn: 'remove_lanes', args: { lane_ids: data } }
+        : {
+            fn: 'remove_lane',
+            args: { scenario_id: args.scenario_id, lane_name: args.name },
+          }
     case 'upsert_cell':
       // The app only calls upsert_cell on empty slots, so the upsert was a
       // create and deleting it is a true inverse. If an update path ever
@@ -141,6 +202,10 @@ function deriveRevert(
           }
         : undefined
     }
+    case 'duplicate_scenario':
+      return typeof data === 'string'
+        ? { fn: 'delete_scenario', args: { scenario_id: data } }
+        : undefined
     case 'create_path':
     case 'duplicate_path':
       return typeof data === 'string'
@@ -204,6 +269,26 @@ export function createScenario(
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
     path_name: input.pathName ?? 'Happy Path',
+  })
+}
+
+/**
+ * Copy a whole blueprint into its own phase — columns, every path, every
+ * lane, every cell, and every arrow whose both ends are inside it.
+ *
+ * There is no client-side composition that produces this: `duplicatePath` is
+ * scoped to its source's scenario and `createScenario` mints empty columns.
+ * See `20260807120000_duplicate_scenario.sql` for exactly what is and is not
+ * copied — notably `cell_key`, which is authored and so is left null on the
+ * copies, the same as every other app-created cell.
+ */
+export function duplicateScenario(
+  client: Client,
+  input: { sourceScenarioId: string; name: string },
+): Promise<string> {
+  return call<string>(client, 'duplicate_scenario', {
+    source_scenario_id: input.sourceScenarioId,
+    name: input.name,
   })
 }
 
@@ -278,12 +363,16 @@ export function addStep(
  * Add a lane to **every version** of a blueprint. `atRow` inserts; omitted
  * appends.
  *
- * Scenario-scoped, not version-scoped, and returns nothing rather than an id:
- * the call creates one `layers` row per version, so there is no single id to
- * hand back, and adding a lane to one version alone would misalign the rows in
+ * Scenario-scoped, not version-scoped: the call creates one `layers` row per
+ * version, and adding a lane to one version alone would misalign the rows in
  * the side-by-side view. Re-read the grid afterwards.
+ *
+ * Returns every id it created — an array and not a scalar for that same
+ * reason. The ids are what the captured inverse keys on; see `deriveRevert`.
+ * Empty against a database without `20260807130000`, where this still
+ * returns void.
  */
-export function addLane(
+export async function addLane(
   client: Client,
   input: {
     scenarioId: string
@@ -291,13 +380,14 @@ export function addLane(
     layerRole?: string | null
     atRow?: number
   },
-): Promise<void> {
-  return call<void>(client, 'add_lane', {
+): Promise<string[]> {
+  const created = await call<string[] | null>(client, 'add_lane', {
     scenario_id: input.scenarioId,
     name: input.name,
     layer_role: input.layerRole ?? null,
     at_row: input.atRow ?? null,
   })
+  return created ?? []
 }
 
 /**
@@ -474,7 +564,7 @@ export function deletionImpact(
   kind: DeletionKind,
   targetId: string,
 ): Promise<DeletionImpact> {
-  return call<DeletionImpact>(client, 'deletion_impact', {
+  return read<DeletionImpact>(client, 'deletion_impact', {
     kind,
     target_id: targetId,
   })
@@ -516,33 +606,13 @@ export function deleteCell(client: Client, cellId: string): Promise<string> {
   return call<string>(client, 'delete_cell', { cell_id: cellId })
 }
 
-// ---------------------------------------------------------------------------
-// Reads that support the above
-// ---------------------------------------------------------------------------
-
-/**
- * The authored key of a cell — `lifecycle/scenario/path/layer/step`.
- *
- * Slices bind to cells through these rather than through ids, because a
- * scenario re-import deletes and recreates every `cells` row. The id changes;
- * the key does not.
- *
- * **Null is a real answer**, not an error: it means the cell's key was never
- * written, so nothing that references it can be recovered by key. Do not
- * substitute a derived guess — a key that matches nothing is worse than an
- * absent one, because it looks like a successful match.
+/*
+ * There are no client wrappers for `cell_natural_key` or
+ * `slices_referencing`. Both existed here with zero callers and never had any:
+ * the app only ever needs them THROUGH `deletion_impact`, which calls
+ * `slices_referencing` itself and returns the keys inside `affected_slices` —
+ * so a wrapper here was a second way to ask a question already answered, with
+ * no caller to keep it honest. The SQL functions stay; they are the ones doing
+ * the work, and `authoringSession.test.ts` still names both as reads that must
+ * never become members of `WriteFn`.
  */
-export function cellNaturalKey(
-  client: Client,
-  cellId: string,
-): Promise<string | null> {
-  return call<string | null>(client, 'cell_natural_key', { cell_id: cellId })
-}
-
-/** Which slices reference any of these cells. */
-export function slicesReferencing(
-  client: Client,
-  cellIds: string[],
-): Promise<AffectedSlice[]> {
-  return call<AffectedSlice[]>(client, 'slices_referencing', { cell_ids: cellIds })
-}

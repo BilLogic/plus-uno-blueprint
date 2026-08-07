@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, GripHorizontal, X } from 'lucide-react'
 import { AgentPanel } from '@/components/editor/AgentPanel'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   DOCK_MAX_RATIO,
   DOCK_MIN_RATIO,
@@ -68,23 +69,27 @@ function AgentDockChrome({
         <span className="min-w-0 flex-1 truncate text-2xs font-medium text-muted-foreground">
           Agent
         </span>
-        <button
-          type="button"
-          aria-label={floating ? 'Dock the agent to the sidebar' : 'Hide the agent'}
-          title={
+        <IconTooltip
+          label={
             floating
               ? 'Dock to the sidebar (or drag the bar back over it)'
               : 'Hide — drag the bar onto the canvas to float it'
           }
-          onClick={() => (floating ? dockAgent() : toggleAgentOpen(false))}
-          className="rounded-sm p-0.5 text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+          side="bottom"
         >
-          {floating ? (
-            <ChevronDown className="size-3" aria-hidden />
-          ) : (
-            <X className="size-3" aria-hidden />
-          )}
-        </button>
+          <button
+            type="button"
+            aria-label={floating ? 'Dock the agent to the sidebar' : 'Hide the agent'}
+            onClick={() => (floating ? dockAgent() : toggleAgentOpen(false))}
+            className="rounded-sm p-0.5 text-muted-foreground/70 hover:bg-muted hover:text-foreground"
+          >
+            {floating ? (
+              <ChevronDown className="size-3" aria-hidden />
+            ) : (
+              <X className="size-3" aria-hidden />
+            )}
+          </button>
+        </IconTooltip>
       </div>
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>
     </div>

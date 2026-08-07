@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useSupabaseQuery, invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { useSupabaseQuery, invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
 import { createScenario } from '@/lib/authoringRpc'
 import { clientToDbViewType } from '@/lib/viewTypeVocabulary'
@@ -152,7 +152,7 @@ export function CreateBlueprintDialog({
         stepCount: draft.stepCount,
         pathName: draft.pathName,
       })
-      invalidateQueries('lifecycle-phases')
+      invalidateStructure()
       setDraft(EMPTY_DRAFT)
       onOpenChange(false)
       onCreated?.(created.scenario_id)
@@ -177,8 +177,7 @@ export function CreateBlueprintDialog({
         <DialogHeader>
           <DialogTitle>New scenario</DialogTitle>
           <DialogDescription>
-            An empty grid to fill in — lanes down the side, steps across.
-            Both can be changed afterwards.
+            Lanes down the side, steps across — both changeable afterwards.
           </DialogDescription>
         </DialogHeader>
 

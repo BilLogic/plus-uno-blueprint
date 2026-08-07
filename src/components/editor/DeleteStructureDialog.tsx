@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
+import { AlertTriangle, RotateCw } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,31 +12,28 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
-import {
-  deletionImpact,
-  deletePath,
-  deleteScenario,
-  removeLane,
-  removeStep,
-  type DeletionImpact,
-  type DeletionKind,
-} from '@/lib/authoringRpc'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
+import { deletePath, deleteScenario } from '@/lib/authoringRpc'
+import { deleteSlice } from '@/lib/sliceMutations'
 import {
   DELETION_NOUNS,
   confirmationMatches,
-  describeImpact,
+  readDeletionImpact,
+  type DeletableKind,
+  type ImpactSummary,
 } from '@/lib/deletionSafety'
 
 export type DeletionTarget = {
-  kind: DeletionKind
-  /** The row to delete. For a lane this is the lane id used to read impact. */
+  /**
+   * `DeletableKind` is narrower than the set `deletion_impact` answers for, on
+   * purpose — `lane` and `step` count something other than what their delete
+   * removes. See `deletionSafety.ts`.
+   */
+  kind: DeletableKind
+  /** The row to delete. */
   id: string
   /** Typed to confirm, and shown throughout. */
   label: string
-  /** Lane and step deletes are scoped by their parent. */
-  scenarioId?: string
-  pathId?: string
 }
 
 /**
@@ -50,6 +47,10 @@ export type DeletionTarget = {
  * Typing the name is the gate. It is the one interaction that cannot be done
  * by reflex, which is the point — everything here is unrecoverable except
  * through the archive, and some of it is unrecoverable full stop.
+ *
+ * **This is the only confirmation UI for deleting anything structural**,
+ * slices included. A second, lighter dialog for one kind is how a product
+ * teaches that some deletes are casual, and none of these are.
  */
 export function DeleteStructureDialog({
   target,
@@ -60,13 +61,19 @@ export function DeleteStructureDialog({
   target: DeletionTarget | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onDeleted?: (archiveId: string) => void
+  /** `archiveId` is null for kinds with no archive behind them (slices). */
+  onDeleted?: (archiveId: string | null) => void
 }) {
   const { client } = useSupabase()
-  const [impact, setImpact] = useState<DeletionImpact | null>(null)
+  const inputId = useId()
+  const [impact, setImpact] = useState<ImpactSummary | null>(null)
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  /** The impact read failed — the gate cannot open, but Try again can. */
+  const [readError, setReadError] = useState<string | null>(null)
+  /** The delete itself failed. Distinct: the gate stays open, retry is Delete. */
+  const [writeError, setWriteError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   // Reset during render rather than in the effect. Opening the dialog on a
   // second target must not paint one frame carrying the first target's counts
@@ -77,27 +84,34 @@ export function DeleteStructureDialog({
   if (lastSession !== session) {
     setLastSession(session)
     setImpact(null)
-    setError(null)
+    setReadError(null)
+    setWriteError(null)
     setTyped('')
+    setAttempt(0)
   }
 
+  const targetKind = target?.kind
+  const targetId = target?.id
   useEffect(() => {
-    if (!open || !target || !client) return
+    if (!open || !client || targetKind === undefined || targetId === undefined) {
+      return
+    }
     let cancelled = false
-    deletionImpact(client, target.kind, target.id)
+    // Depends on the target's *fields*, not its object identity: callers build
+    // this object inline, and re-reading on every parent render would cancel
+    // each read before it resolved and leave the gate permanently shut.
+    readDeletionImpact(client, targetKind, targetId)
       .then((result) => {
         if (!cancelled) setImpact(result)
       })
-      .catch((readError: unknown) => {
+      .catch((error: unknown) => {
         if (cancelled) return
-        setError(
-          readError instanceof Error ? readError.message : String(readError),
-        )
+        setReadError(error instanceof Error ? error.message : String(error))
       })
     return () => {
       cancelled = true
     }
-  }, [client, open, target])
+  }, [client, open, targetKind, targetId, attempt])
 
   if (!target) return null
 
@@ -110,9 +124,9 @@ export function DeleteStructureDialog({
   const handleDelete = async () => {
     if (!client || !ready) return
     setBusy(true)
-    setError(null)
+    setWriteError(null)
     try {
-      let archiveId: string
+      let archiveId: string | null = null
       switch (target.kind) {
         case 'scenario':
           archiveId = await deleteScenario(client, target.id)
@@ -120,28 +134,16 @@ export function DeleteStructureDialog({
         case 'path':
           archiveId = await deletePath(client, target.id)
           break
-        case 'step':
-          if (!target.pathId) throw new Error('A step delete needs its path.')
-          archiveId = await removeStep(client, target.pathId, target.id)
-          break
-        case 'lane':
-          if (!target.scenarioId) {
-            throw new Error('A lane delete needs its blueprint.')
-          }
-          archiveId = await removeLane(client, target.scenarioId, target.label)
+        case 'slice':
+          // Frames cascade in the database; there is no archive row to return.
+          await deleteSlice(client, target.id, target.label)
           break
       }
-      invalidateQueries('lifecycle-phases')
-      invalidateQueries('slices')
-      // Path deletes must clear the paths catalog, lane removals the lane
-      // picker; prefix matches are no-ops for the other kinds this dialog
-      // handles.
-      invalidateQueries('scenario-paths')
-      invalidateQueries('lane-sources')
+      invalidateStructure()
       onOpenChange(false)
       onDeleted?.(archiveId)
     } catch (deleteError) {
-      setError(
+      setWriteError(
         deleteError instanceof Error ? deleteError.message : String(deleteError),
       )
     } finally {
@@ -151,67 +153,151 @@ export function DeleteStructureDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete {noun} “{target.label}”?</DialogTitle>
+          <DialogTitle>
+            Delete {noun} “{target.label}”?
+          </DialogTitle>
           <DialogDescription>
-            This cannot be undone from the browser’s history. The archive keeps
-            a copy, but slices that lose frames are only put back if their cells
-            still have stored keys.
+            {target.kind === 'slice'
+              ? 'Slices have no archive — this one goes for good.'
+              : 'Not revertible from the change list.'}
           </DialogDescription>
         </DialogHeader>
 
+        {/* One scale for the whole body: px-6 to match the header and footer,
+            py-4 to match their rhythm, gap-4 between the two blocks that make
+            up the decision — what it costs, and the gate. */}
         <div
-          className="flex max-h-[50vh] flex-col gap-3 overflow-y-auto px-6"
+          className="flex max-h-[50vh] flex-col gap-4 overflow-y-auto px-6 py-4"
           data-delete-impact=""
         >
-          {impact === null && !error ? (
+          {impact === null && readError === null ? (
             <p className="text-xs text-muted-foreground">
               Counting what this would remove…
             </p>
           ) : null}
 
-          {impact ? (
-            <ul className="flex flex-col gap-1.5 text-sm text-foreground/80">
-              {describeImpact(target.kind, impact).map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          ) : null}
-
-          {impact ? (
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-foreground">
-                Type <span className="font-mono">{target.label}</span> to confirm
-              </span>
-              <Input
-                value={typed}
-                autoFocus
-                onChange={(event) => setTyped(event.target.value)}
-              />
-            </label>
-          ) : null}
-
-          {error ? (
+          {readError !== null ? (
             <Alert variant="destructive">
               <AlertTriangle className="size-4" aria-hidden />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                Could not read what this would remove, so there is nothing to
+                confirm against. {readError}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+
+          {impact ? (
+            <div className="flex flex-col gap-2.5">
+              {/* The counts, set apart from prose. These are the consequence;
+                  in a sentence they read as decoration. */}
+              <div className="flex gap-2">
+                {impact.facts.map((fact) => (
+                  <div
+                    key={fact.noun}
+                    className="min-w-28 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2"
+                  >
+                    <div className="text-xl leading-none font-semibold tabular-nums text-destructive">
+                      {fact.count}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {fact.noun}
+                      {fact.count === 1 ? '' : 's'} deleted
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {impact.warnings.length > 0 ? (
+                <ul className="flex flex-col gap-1 text-xs text-foreground/80">
+                  {impact.warnings.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {impact.reassurances.map((line) => (
+                <p key={line} className="text-xs text-muted-foreground">
+                  {line}
+                </p>
+              ))}
+            </div>
+          ) : null}
+
+          {impact ? (
+            /* The gate gets its own surface. It is the one thing in this
+               dialog that has to be done deliberately, and a bare label above
+               a full-bleed input did not look like a step. */
+            <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3">
+              <label
+                htmlFor={inputId}
+                className="text-xs font-medium text-foreground"
+              >
+                Type{' '}
+                <span className="rounded-sm border border-border bg-background px-1.5 py-0.5 font-mono text-foreground">
+                  {target.label}
+                </span>{' '}
+                to confirm
+              </label>
+              <Input
+                id={inputId}
+                value={typed}
+                autoFocus
+                autoComplete="off"
+                spellCheck={false}
+                className="bg-background font-mono"
+                onChange={(event) => setTyped(event.target.value)}
+              />
+            </div>
+          ) : null}
+
+          {writeError !== null ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="size-4" aria-hidden />
+              <AlertDescription>{writeError}</AlertDescription>
             </Alert>
           ) : null}
         </div>
 
-        <DialogFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
+        <DialogFooter className="sm:justify-end">
           <Button
             type="button"
-            variant="destructive"
-            disabled={!ready}
-            onClick={handleDelete}
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
           >
-            {busy ? 'Deleting…' : `Delete ${noun}`}
+            Cancel
           </Button>
+          {readError !== null ? (
+            // A disabled Delete here would be a dead end with no explanation
+            // of what to do next. The failure was the READ, so the action on
+            // offer is the read again.
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setReadError(null)
+                setAttempt((n) => n + 1)
+              }}
+            >
+              <RotateCw aria-hidden />
+              Try again
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              disabled={!ready}
+              onClick={() => {
+                void handleDelete()
+              }}
+            >
+              {busy ? 'Deleting…' : `Delete ${noun}`}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

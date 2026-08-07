@@ -99,7 +99,7 @@ export function SlideModeSidebarNav({
                     setPhaseDialogOpen(true)
                   }}
                 >
-                  <Plus className="size-3" aria-hidden />
+                  <Plus className="size-3.5" aria-hidden />
                 </NavRowAction>
               ) : undefined
             }

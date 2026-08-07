@@ -42,7 +42,7 @@ function RestoreDefaultPathsButton() {
 export function CanvasEmptyState({
   className,
   title = 'No paths selected',
-  description = 'Pick a path under Paths in the sidebar to populate the canvas.',
+  description = 'Pick one under Paths in the sidebar.',
   variant = 'canvas',
   showRestoreAction,
 }: CanvasEmptyStateProps) {

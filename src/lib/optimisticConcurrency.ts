@@ -58,3 +58,27 @@ export function readWriteOutcome<T>(
   if (rows.length === 0) return { status: 'conflict' }
   return { status: 'ok', row: rows[0] }
 }
+
+/**
+ * The same zero-rows rule for writes that have no conflict branch to take.
+ *
+ * `.update(...).eq('id', …)` on a row that is gone returns `error: null` and
+ * an empty array — a success by every check the call site makes. That is how
+ * a cell edit whose cell was since deleted (a path delete cascades its cells)
+ * reported "saved", and how its revert reported "taken back" while writing
+ * nothing and dropping the entry from the ledger. Zero rows is a real answer,
+ * so it is raised rather than returned: there is no state in which the caller
+ * should carry on as if the write landed.
+ *
+ * Requires `.select(...)` on the query — without it there are no rows to
+ * count and this check is a no-op that reads like a guarantee. The PostgREST
+ * error is left to the caller, which knows whether it wants `toAuthoringError`.
+ */
+export function requireRowsWritten(
+  data: unknown[] | null,
+  subject: string,
+): void {
+  if (!data || data.length === 0) {
+    throw new Error(`That ${subject} no longer exists — nothing was written.`)
+  }
+}

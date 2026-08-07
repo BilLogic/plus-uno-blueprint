@@ -7,6 +7,7 @@ import {
   createPhase,
   createScenario,
   duplicatePath,
+  duplicateScenario,
   renamePath,
   setCellDependency,
   upsertCell,
@@ -20,6 +21,7 @@ import type { SliceType } from '@/lib/sliceValidation'
 import { asUpdatedAtToken } from '@/lib/optimisticConcurrency'
 import { setSharedCanvasMode } from '@/contexts/canvasModeContext'
 import {
+  agentUiCommandMutates,
   listAgentUiCommands,
   runAgentUiCommand,
 } from '@/lib/agent/uiCommands'
@@ -45,10 +47,12 @@ import {
   agentSetSidebar,
   collectAgentUiContext,
 } from '@/lib/agent/uiBridge'
+import type { DeletableKind } from '@/lib/deletionSafety'
 import {
   getBlueprint,
   getCell,
   getCompareDiff,
+  getDeletionImpact,
   listOwnerTags,
   listScenarios,
   listSlices,
@@ -81,6 +85,7 @@ export const WRITE_TOOL_NAMES = new Set([
   'create_scenario',
   'create_path',
   'duplicate_path',
+  'duplicate_scenario',
   'create_slice',
   'update_slice',
   'replace_slice_frames',
@@ -217,7 +222,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'ui_command',
     description:
-      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only, with ONE exception the list marks "[changes data]": undo_last_change reverts through the delete path, counts against your write batch, and undoes whatever is newest — including the human\'s own edit. Say whose change you are undoing before firing it.',
+      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only, EXCEPT the ones the list marks "[changes data]" — those count against your write batch. Today: undo_last_change (reverts whatever is newest, INCLUDING the human\'s own edit if theirs came last — say whose change you are undoing before firing it), revert_my_changes (only your own edits from this session; prefer it whenever the user says "undo what you did"), and keep_all_changes (clears the change sheet and with it every revert in the session — nothing can be taken back afterwards). Reverting the whole session is human-only; revert_all_changes exists to say so.',
     parameters: {
       type: 'object',
       properties: {
@@ -338,6 +343,37 @@ export const TOOL_SPECS: ToolSpec[] = [
         copy_cells: { type: 'boolean', description: 'Default true' },
       },
       required: ['source_path_id', 'name'],
+    },
+  },
+  {
+    name: 'duplicate_scenario',
+    description:
+      'Copy a WHOLE blueprint into the same phase — its columns, every path, every lane, every cell, and every arrow with both ends inside it. One call, two arguments, but it writes far more rows than that suggests: duplicating a 5-path blueprint is hundreds of inserts. Say roughly how big the source is and get a nod first. Fully revertible (its inverse deletes the copy). The UI names copies "X (copy)" — use the same form unless the human asks for a different name, so the sidebar reads consistently however the copy was made. Copied cells get no cell_key, so they cannot be bound into a slice until one is authored.',
+    parameters: {
+      type: 'object',
+      properties: {
+        source_scenario_id: str('Scenario id from list_scenarios'),
+        name: str('Name for the copy; the UI convention is "<source name> (copy)"'),
+      },
+      required: ['source_scenario_id', 'name'],
+    },
+  },
+  {
+    name: 'get_deletion_impact',
+    description:
+      'What deleting something would destroy — cell and arrow counts, which slices lose frames, which of those undo cannot put back, and what survives. A pure read: it deletes nothing, and no delete tool exists for you. Use it to answer "what happens if I remove this?" BEFORE the human opens the confirm dialog. Relay the warning and reassurance sentences VERBATIM; they are worded to not overstate what comes back.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: {
+          type: 'string',
+          enum: ['scenario', 'path', 'slice'],
+          description:
+            'What is being deleted. Only these three: lane and step deletes exist in the database but their impact counts do not match what they remove, so they are not offered here or in the UI.',
+        },
+        target_id: str('Id of the scenario, path, or slice'),
+      },
+      required: ['kind', 'target_id'],
     },
   },
   {
@@ -622,6 +658,19 @@ export async function dispatchTool(
     }
     case 'get_cell':
       return getCell(client, need(args, 'cell_id'))
+    case 'get_deletion_impact': {
+      const kind = s(args, 'kind')
+      // Validated against the UI's vocabulary, not the RPC's: `lane` and
+      // `step` are answerable server-side but their counts do not match what
+      // their delete removes, so quoting them would put a wrong number in
+      // front of a human about to delete. See `deletionSafety.ts`.
+      if (kind !== 'scenario' && kind !== 'path' && kind !== 'slice') {
+        throw new Error(
+          'kind must be scenario, path, or slice — lane and step impacts do not match their deletes and are not offered.',
+        )
+      }
+      return getDeletionImpact(client, kind as DeletableKind, need(args, 'target_id'))
+    }
     case 'list_slices':
       return listSlices(client)
     case 'list_owner_tags':
@@ -696,8 +745,25 @@ export async function dispatchTool(
       return agentFocusCell(need(args, 'cell_id'))
     case 'list_ui_commands':
       return listAgentUiCommands()
-    case 'ui_command':
-      return await runAgentUiCommand(need(args, 'command'), s(args, 'arg'))
+    case 'ui_command': {
+      const command = need(args, 'command')
+      // A command the registry marks `[changes data]` runs under the same
+      // attribution as a write tool. Two reasons, both discovered by the
+      // scoped revert: it is how `revert_my_changes` knows which entries are
+      // its own, and a mutating command that repainted nothing left the canvas
+      // showing state the database no longer had. The non-mutating majority
+      // stays outside, where an interface command belongs.
+      if (!agentUiCommandMutates(command)) {
+        return await runAgentUiCommand(command, s(args, 'arg'))
+      }
+      setAgentAttribution(agentSessionId)
+      try {
+        return await runAgentUiCommand(command, s(args, 'arg'))
+      } finally {
+        setAgentAttribution(null)
+        invalidateQueries('')
+      }
+    }
     case 'open_cell_panel':
       return agentOpenCellPanel(need(args, 'cell_id'))
     case 'set_canvas_mode': {
@@ -864,6 +930,13 @@ export async function dispatchTool(
           copyCells: args.copy_cells !== false,
         })
         return `Duplicated path (${id}).`
+      }
+      case 'duplicate_scenario': {
+        const id = await duplicateScenario(client, {
+          sourceScenarioId: need(args, 'source_scenario_id'),
+          name: need(args, 'name'),
+        })
+        return `Duplicated the blueprint (${id}). Re-read it for the copy's own path, lane, step and cell ids — none of them are the source's, and the copied cells have no cell_key.`
       }
       case 'create_slice': {
         const cellIds = Array.isArray(args.cell_ids)

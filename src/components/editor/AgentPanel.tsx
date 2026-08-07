@@ -104,6 +104,7 @@ function AgentMarkdown(props: { text: string; className?: string }) {
     </Suspense>
   )
 }
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { NavSection } from '@/components/editor/SidebarNav'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -393,32 +394,36 @@ function AgentSessionsView({
             Sessions
           </p>
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label={searchOpen ? 'Close session filter' : 'Filter sessions'}
-          aria-pressed={searchOpen}
-          className="text-muted-foreground hover:text-foreground"
-          onClick={() => {
-            setSearchOpen((open) => {
-              if (open) setQuery('')
-              return !open
-            })
-          }}
-        >
-          <Search className="size-3.5" aria-hidden />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label="New session"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={onCreate}
-        >
-          <Plus className="size-3.5" aria-hidden />
-        </Button>
+        <IconTooltip label="Filter sessions by name" side="bottom">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={searchOpen ? 'Close session filter' : 'Filter sessions'}
+            aria-pressed={searchOpen}
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setSearchOpen((open) => {
+                if (open) setQuery('')
+                return !open
+              })
+            }}
+          >
+            <Search className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
+        <IconTooltip label="Start a new session" side="bottom">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="New session"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={onCreate}
+          >
+            <Plus className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
       </div>
 
       {pendingAttachment ? (
@@ -434,10 +439,8 @@ function AgentSessionsView({
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {sessions.length === 0 ? (
           <p className="px-1.5 pt-2 text-xs text-muted-foreground">
-            No sessions yet —{' '}
-            <Plus className="inline size-3 align-[-0.1em]" aria-label="New session" />{' '}
-            starts one. A session is one conversation plus the changes it
-            made.
+            No sessions yet. A session is one conversation plus the changes
+            it made.
           </p>
         ) : searching ? (
           // A filter answers "where is it", so groups get out of the way.
@@ -847,16 +850,18 @@ function AgentChatView({
       {/* Header: back + title + change count. Nothing else — the
           transcript owns the rest of the height. */}
       <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border/60 px-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
-          aria-label="Back to sessions"
-          className="text-muted-foreground hover:text-foreground"
-          onClick={onBack}
-        >
-          <ChevronLeft className="size-3.5" aria-hidden />
-        </Button>
+        <IconTooltip label="Back to sessions" side="bottom">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Back to sessions"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={onBack}
+          >
+            <ChevronLeft className="size-3.5" aria-hidden />
+          </Button>
+        </IconTooltip>
         {/* The title is editable in place — auto-names are a default, not
             a decision. */}
         <button
@@ -892,12 +897,12 @@ function AgentChatView({
                 keyed ? (
                   <p className="text-sm text-muted-foreground">
                     Ready ({modelFor(settings)}). Writes land live on the
-                    canvas and in the change sheet as{' '}
+                    canvas as{' '}
                     <Sparkles
                       className="inline size-3 align-[-0.1em]"
                       aria-hidden
                     />{' '}
-                    rows — each one revertible.
+                    rows in Changes — each revertible.
                   </p>
                 ) : (
                   <div className="flex flex-col items-start gap-2">
@@ -1049,16 +1054,17 @@ function AgentChatView({
         </Popover>
         <div ref={composerRowRef} className="flex items-end gap-1.5">
           {running ? (
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="outline"
-              aria-label="Stop"
-              title="Stop — whatever landed stays, revertible"
-              onClick={() => stopAgent(session.id)}
-            >
-              <Square className="size-3" aria-hidden />
-            </Button>
+            <IconTooltip label="Stop — whatever landed stays, revertible">
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="outline"
+                aria-label="Stop"
+                onClick={() => stopAgent(session.id)}
+              >
+                <Square className="size-3" aria-hidden />
+              </Button>
+            </IconTooltip>
           ) : null}
           {/* ONE field, the DS's own: InputGroup draws the border and the
               focus treatment (a single soft ring on the control, the same
@@ -1075,14 +1081,16 @@ function AgentChatView({
                   className="gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-2xs text-primary"
                 >
                   {pendingSkill.label}
-                  <button
-                    type="button"
-                    aria-label="Remove skill"
-                    onClick={() => setPendingSkill(null)}
-                    className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
-                  >
-                    <X className="size-2.5" aria-hidden />
-                  </button>
+                  <IconTooltip label="Drop the skill from this message">
+                    <button
+                      type="button"
+                      aria-label="Remove skill"
+                      onClick={() => setPendingSkill(null)}
+                      className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
+                    >
+                      <X className="size-2.5" aria-hidden />
+                    </button>
+                  </IconTooltip>
                 </Badge>
               </InputGroupAddon>
             ) : null}
@@ -1174,20 +1182,22 @@ function AgentChatView({
               disabled={!keyed}
             />
           </InputGroup>
-          <Button
-            type="button"
-            size="icon-sm"
-            variant="default"
-            aria-label="Send"
-            disabled={
-              !keyed ||
-              running ||
-              (draft.trim() === '' && !pendingSkill && !attachment)
-            }
-            onClick={send}
-          >
-            <SendHorizontal className="size-3.5" aria-hidden />
-          </Button>
+          <IconTooltip label="Send">
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="default"
+              aria-label="Send"
+              disabled={
+                !keyed ||
+                running ||
+                (draft.trim() === '' && !pendingSkill && !attachment)
+              }
+              onClick={send}
+            >
+              <SendHorizontal className="size-3.5" aria-hidden />
+            </Button>
+          </IconTooltip>
         </div>
       </div>
     </div>
@@ -1262,8 +1272,8 @@ function DeleteSessionDialog({
           </DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
-          Removes the conversation. Changes it already made to the blueprint
-          stay — revert those from the change sheet.
+          Changes it already made to the blueprint stay — revert those from
+          Changes.
         </p>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
@@ -1544,9 +1554,9 @@ export function AgentSettingsRailButton() {
             </div>
 
             <p className="text-3xs leading-snug text-muted-foreground">
-              Stored in this browser only — never the repo or a server. A key
-              kept in the browser is readable by anyone with devtools on this
-              machine; use a personal key, not a shared or production one.
+              Stored in this browser only, never the repo or a server — and
+              readable by anyone with devtools on this machine. Use a personal
+              key.
             </p>
               </>
             ) : null}

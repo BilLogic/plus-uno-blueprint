@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import {
@@ -161,17 +162,19 @@ export function SliceStoryboardField({
             alt=""
             className="aspect-[4/3] w-full object-cover"
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label="Remove storyboard image"
-            disabled={busy}
-            className="absolute top-1 right-1 bg-background/80 text-muted-foreground hover:text-destructive"
-            onClick={handleRemove}
-          >
-            <X className="size-2.5" />
-          </Button>
+          <IconTooltip label="Remove the storyboard image" side="left">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label="Remove storyboard image"
+              disabled={busy}
+              className="absolute top-1 right-1 bg-background/80 text-muted-foreground hover:text-destructive"
+              onClick={handleRemove}
+            >
+              <X className="size-2.5" />
+            </Button>
+          </IconTooltip>
         </div>
       ) : null}
 

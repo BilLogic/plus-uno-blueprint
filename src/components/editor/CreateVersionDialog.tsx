@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { createPath, duplicatePath } from '@/lib/authoringRpc'
 import {
   PATH_TYPES,
@@ -93,11 +93,7 @@ export function CreateVersionDialog({
               pathType: draft.pathType,
               laneSourcePathId: draft.sourcePathId,
             })
-      invalidateQueries('lifecycle-phases')
-      // Also the paths catalog: this dialog's own duplicate-source list and
-      // name-uniqueness check read it, and staleTime Infinity means only an
-      // explicit invalidation refreshes it.
-      invalidateQueries('scenario-paths')
+      invalidateStructure()
       setDraft(EMPTY)
       onOpenChange(false)
       onCreated?.(pathId)

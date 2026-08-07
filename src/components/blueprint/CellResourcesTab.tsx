@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ExternalLink, Plus, X } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -178,18 +179,22 @@ function CellResourcesEditor({
                 setResource(index, { url: event.target.value })
               }
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Remove resource ${index + 1}`}
-              onClick={() => {
-                setSaved(false)
-                setResources((current) => current.filter((_, i) => i !== index))
-              }}
-            >
-              <X className="size-3" />
-            </Button>
+            <IconTooltip label="Remove this resource">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Remove resource ${index + 1}`}
+                onClick={() => {
+                  setSaved(false)
+                  setResources((current) =>
+                    current.filter((_, i) => i !== index),
+                  )
+                }}
+              >
+                <X className="size-3" />
+              </Button>
+            </IconTooltip>
           </div>
           {urlProblems[index] ? (
             <p className="pl-1 text-xs text-destructive">

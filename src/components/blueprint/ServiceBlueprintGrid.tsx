@@ -390,7 +390,7 @@ export function ServiceBlueprintGrid({
               variant="panel"
               className="h-auto w-full"
               title="No layers defined"
-              description="Layers are this blueprint's swimlanes. They arrive with the blueprint import — or ask the agent with /sb:map to add them."
+              description="Layers arrive with the blueprint import — or ask the agent with /sb:map."
             />
           )}
         </div>

@@ -16,7 +16,7 @@ const LOADING_RESULT = { status: 'loading' } as const
 
 const NOT_CONFIGURED_MESSAGE = 'Supabase is not configured'
 
-export { invalidateQueries } from '@/lib/queryClient'
+export { invalidateQueries, invalidateStructure } from '@/lib/queryClient'
 
 /**
  * One shared query state machine for read hooks (thin hooks like `useSlices`

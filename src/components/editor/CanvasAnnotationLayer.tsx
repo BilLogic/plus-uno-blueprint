@@ -57,11 +57,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { cn } from '@/lib/utils'
 
 type DraftPen = {
@@ -214,31 +210,32 @@ function ColorSwatch({
   const isLight = !empty && isPaleAnnotationSwatch(color)
 
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={cn(
-        'relative size-6 shrink-0 rounded-full border transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-        empty
-          ? 'border-border bg-[linear-gradient(45deg,#d4d4d8_25%,transparent_25%,transparent_75%,#d4d4d8_75%),linear-gradient(45deg,#d4d4d8_25%,#fafafa_25%,#fafafa_75%,#d4d4d8_75%)] bg-[length:6px_6px] bg-[position:0_0,3px_3px]'
-          : 'border-black/10 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]',
-        selected && 'scale-110 ring-2 ring-foreground/80 ring-offset-1',
-      )}
-      style={empty ? undefined : { backgroundColor: color }}
-    >
-      {selected ? (
-        <Check
-          className={cn(
-            'absolute inset-0 m-auto size-3 stroke-[2.5]',
-            empty || isLight ? 'text-neutral-800' : 'text-white',
-          )}
-          aria-hidden
-        />
-      ) : null}
-    </button>
+    <IconTooltip label={label}>
+      <button
+        type="button"
+        aria-label={label}
+        aria-pressed={selected}
+        onClick={onSelect}
+        className={cn(
+          'relative size-6 shrink-0 rounded-full border transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+          empty
+            ? 'border-border bg-[linear-gradient(45deg,#d4d4d8_25%,transparent_25%,transparent_75%,#d4d4d8_75%),linear-gradient(45deg,#d4d4d8_25%,#fafafa_25%,#fafafa_75%,#d4d4d8_75%)] bg-[length:6px_6px] bg-[position:0_0,3px_3px]'
+            : 'border-black/10 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]',
+          selected && 'scale-110 ring-2 ring-foreground/80 ring-offset-1',
+        )}
+        style={empty ? undefined : { backgroundColor: color }}
+      >
+        {selected ? (
+          <Check
+            className={cn(
+              'absolute inset-0 m-auto size-3 stroke-[2.5]',
+              empty || isLight ? 'text-neutral-800' : 'text-white',
+            )}
+            aria-hidden
+          />
+        ) : null}
+      </button>
+    </IconTooltip>
   )
 }
 
@@ -254,32 +251,33 @@ function StrokeWidthSwatch({
   dark?: boolean
 }) {
   return (
-    <button
-      type="button"
-      aria-label={`Outline weight ${width}px`}
-      title={`${width}px`}
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={cn(
-        'flex size-6 shrink-0 items-center justify-center rounded-md border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        dark
-          ? selected
-            ? 'border-white/25 bg-white/15'
-            : 'hover:bg-white/10'
-          : selected
-            ? 'border-border bg-muted'
-            : 'hover:bg-muted',
-      )}
-    >
-      <span
+    <IconTooltip label={`${width}px`}>
+      <button
+        type="button"
+        aria-label={`Outline weight ${width}px`}
+        aria-pressed={selected}
+        onClick={onSelect}
         className={cn(
-          'block w-3.5 rounded-full',
-          dark ? 'bg-white' : 'bg-foreground',
+          'flex size-6 shrink-0 items-center justify-center rounded-md border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          dark
+            ? selected
+              ? 'border-white/25 bg-white/15'
+              : 'hover:bg-white/10'
+            : selected
+              ? 'border-border bg-muted'
+              : 'hover:bg-muted',
         )}
-        style={{ height: Math.min(width, 4) }}
-        aria-hidden
-      />
-    </button>
+      >
+        <span
+          className={cn(
+            'block w-3.5 rounded-full',
+            dark ? 'bg-white' : 'bg-foreground',
+          )}
+          style={{ height: Math.min(width, 4) }}
+          aria-hidden
+        />
+      </button>
+    </IconTooltip>
   )
 }
 
@@ -340,6 +338,12 @@ function ShapeToolbarDivider() {
   return <div className="mx-0.5 h-4 w-px shrink-0 bg-white/20" aria-hidden />
 }
 
+/**
+ * `IconTooltip` on this file's own dark plane. These bars float over the
+ * canvas in neutral-900, so the popup and its arrow (`**:` selectors) are
+ * repainted to match — the one place in the app that overrides the tooltip
+ * surface, and the reason `IconTooltip` takes a className at all.
+ */
 function ShapeToolbarTooltip({
   label,
   children,
@@ -348,16 +352,14 @@ function ShapeToolbarTooltip({
   children: ReactElement
 }) {
   return (
-    <Tooltip>
-      <TooltipTrigger render={children} />
-      <TooltipContent
-        side="top"
-        sideOffset={8}
-        className="rounded-md bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-white shadow-floating **:!bg-neutral-900 **:!fill-neutral-900"
-      >
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <IconTooltip
+      label={label}
+      side="top"
+      sideOffset={8}
+      className="rounded-md bg-neutral-900 px-2.5 py-1.5 font-medium text-white shadow-floating **:!bg-neutral-900 **:!fill-neutral-900"
+    >
+      {children}
+    </IconTooltip>
   )
 }
 

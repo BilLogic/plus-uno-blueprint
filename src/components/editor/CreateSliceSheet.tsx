@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { SliceScreenComposer } from '@/components/editor/SliceScreenComposer'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -178,16 +179,18 @@ export function CreateSliceSheet({
       >
         <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2">
           {step === 'name' ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Back to screens"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={() => setStep('screens')}
-            >
-              <ArrowLeft className="size-3.5" />
-            </Button>
+            <IconTooltip label="Back to screens" side="bottom">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label="Back to screens"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={() => setStep('screens')}
+              >
+                <ArrowLeft className="size-3.5" />
+              </Button>
+            </IconTooltip>
           ) : null}
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium text-foreground">New slice</p>

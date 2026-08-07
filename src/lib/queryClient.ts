@@ -43,3 +43,32 @@ export function invalidateQueries(prefix: string): void {
     predicate: (query) => String(query.queryKey[0] ?? '').startsWith(prefix),
   })
 }
+
+/**
+ * Every cache a structural write can invalidate — phases, scenarios, paths,
+ * lanes, cells, arrows, slices.
+ *
+ * One list rather than a hand-rolled subset at each mutation site. The subsets
+ * had already drifted five ways: the delete dialog cleared six keys, the
+ * rename and create-version paths four, the duplicate menu three, and the
+ * session sheet's revert two — so reverting a `duplicate_path` left a ghost
+ * row in the paths catalog whose id 404s, and `staleTime: Infinity` means a
+ * missed key stays stale until a reload rather than until the next refetch.
+ *
+ * Over-invalidating is a refetch of data that is already correct; missing a
+ * key is a screen that lies. Prefix matches are no-ops for the kinds they do
+ * not apply to, so the whole set is cheap enough to always send.
+ */
+const STRUCTURE_KEYS = [
+  'lifecycle-phases',
+  'canvas-blueprints',
+  'scenario-paths',
+  'lane-sources',
+  'slices',
+  // A slice's own detail is keyed separately, and a cascade can empty it.
+  'slice:',
+] as const
+
+export function invalidateStructure(): void {
+  for (const prefix of STRUCTURE_KEYS) invalidateQueries(prefix)
+}

@@ -1,4 +1,5 @@
 import { ChevronDown, Check, type LucideIcon } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -117,19 +118,21 @@ export function ToolFamilyMenu({
         {/* Absent, not disabled, while this family holds the tool — see the
             note above the component. */}
         {inFamily ? null : (
-          <DropdownMenuTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label={`${label} tools`}
-                className="h-7 w-4 shrink-0 rounded-l-none px-0 text-muted-foreground hover:text-foreground"
-              >
-                <ChevronDown className="size-3" aria-hidden />
-              </Button>
-            }
-          />
+          <IconTooltip label={`${label} tools`}>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`${label} tools`}
+                  className="h-7 w-4 shrink-0 rounded-l-none px-0 text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronDown className="size-3" aria-hidden />
+                </Button>
+              }
+            />
+          </IconTooltip>
         )}
       </div>
 

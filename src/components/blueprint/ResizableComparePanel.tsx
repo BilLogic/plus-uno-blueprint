@@ -8,6 +8,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
 import {
   COMPARE_MIN_PANEL_HEIGHT,
@@ -362,26 +363,28 @@ export function ResizableComparePanel({
         </div>
       </div>
       {!lockHeight ? (
-        <button
-          type="button"
-          aria-label="Resize comparison panel"
-          className="absolute bottom-1 right-1 z-20 flex cursor-se-resize items-end justify-end rounded-sm p-1 text-muted-foreground/60 hover:bg-muted/70 hover:text-foreground"
-          style={{
-            width: COMPARE_RESIZE_HANDLE_SIZE + 8,
-            height: COMPARE_RESIZE_HANDLE_SIZE + 8,
-          }}
-          onPointerDown={handleResizePointerDown}
-          onKeyDown={handleResizeKeyDown}
-        >
-          <svg
-            viewBox="0 0 12 12"
-            className="size-3"
-            aria-hidden
-            fill="currentColor"
+        <IconTooltip label="Arrow keys resize this too">
+          <button
+            type="button"
+            aria-label="Resize comparison panel"
+            className="absolute bottom-1 right-1 z-20 flex cursor-se-resize items-end justify-end rounded-sm p-1 text-muted-foreground/60 hover:bg-muted/70 hover:text-foreground"
+            style={{
+              width: COMPARE_RESIZE_HANDLE_SIZE + 8,
+              height: COMPARE_RESIZE_HANDLE_SIZE + 8,
+            }}
+            onPointerDown={handleResizePointerDown}
+            onKeyDown={handleResizeKeyDown}
           >
-            <path d="M12 12H8V10H10V8H12V12ZM12 8H10V6H8V4H10V6H12V8ZM8 8H6V6H8V8Z" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 12 12"
+              className="size-3"
+              aria-hidden
+              fill="currentColor"
+            >
+              <path d="M12 12H8V10H10V8H12V12ZM12 8H10V6H8V4H10V6H12V8ZM8 8H6V6H8V8Z" />
+            </svg>
+          </button>
+        </IconTooltip>
       ) : null}
       </div>
     </div>

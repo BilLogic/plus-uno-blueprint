@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { AnnotationCaptureMenu } from '@/components/editor/AnnotationCaptureMenu'
 import {
   SegmentedControl,
@@ -220,23 +221,23 @@ function DrawSubpanel() {
         )}
       >
         {ANNOTATION_PEN_SWATCHES.map((swatch) => (
-          <button
-            key={swatch}
-            type="button"
-            aria-label={`Pen color ${annotationSwatchName(swatch)}`}
-            aria-pressed={penColor.toUpperCase() === swatch.toUpperCase()}
-            disabled={penOptionsDisabled}
-            title={annotationSwatchName(swatch)}
-            onClick={() => setPenColor(swatch)}
-            className={cn(
-              'tap-target-24 size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
-              penColor.toUpperCase() === swatch.toUpperCase() &&
-                !penOptionsDisabled &&
-                'ring-2 ring-primary ring-offset-1',
-              swatch === ANNOTATION_PAPER && 'border-border',
-            )}
-            style={{ backgroundColor: swatch }}
-          />
+          <IconTooltip key={swatch} label={annotationSwatchName(swatch)}>
+            <button
+              type="button"
+              aria-label={`Pen color ${annotationSwatchName(swatch)}`}
+              aria-pressed={penColor.toUpperCase() === swatch.toUpperCase()}
+              disabled={penOptionsDisabled}
+              onClick={() => setPenColor(swatch)}
+              className={cn(
+                'tap-target-24 size-4 shrink-0 rounded-full border border-black/10 transition-transform hover:scale-110',
+                penColor.toUpperCase() === swatch.toUpperCase() &&
+                  !penOptionsDisabled &&
+                  'ring-2 ring-primary ring-offset-1',
+                swatch === ANNOTATION_PAPER && 'border-border',
+              )}
+              style={{ backgroundColor: swatch }}
+            />
+          </IconTooltip>
         ))}
       </div>
     </div>

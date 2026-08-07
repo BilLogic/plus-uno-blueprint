@@ -1,4 +1,12 @@
-import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authoringRpc'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  deletionImpact,
+  type AffectedSlice,
+  type DeletionImpact,
+  type DeletionKind,
+} from '@/lib/authoringRpc'
+import { sliceDeletionImpact, type SliceDeletionImpact } from '@/lib/sliceMutations'
+import type { Database } from '@/types/database'
 
 /**
  * What a delete would destroy, and whether it could be undone.
@@ -9,12 +17,43 @@ import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authorin
  * table destroys imported blueprint content with nothing behind it.
  */
 
-/** Nouns for the confirm sentence. `steps` read as "step", `layers` as "lane". */
-export const DELETION_NOUNS: Record<DeletionKind, string> = {
+/**
+ * Everything the confirm dialog can delete.
+ *
+ * **Deliberately narrower than `DeletionKind`.** That type is the set of kinds
+ * `deletion_impact` will answer for; this one is the set whose counts are
+ * actually TRUE of the delete that follows, and `lane` and `step` are not in
+ * it:
+ *
+ *   * `deletion_impact('lane', id)` counts the cells of ONE `layers` row, but
+ *     `remove_lane(scenario_id, lane_name)` deletes every same-named lane
+ *     across every path of the scenario. A 12-cell dialog would precede a
+ *     36-cell delete — it undercounts.
+ *   * `deletion_impact('step', id)` counts the cells of that step across every
+ *     path, but `remove_step(path_id, step_id)` deletes only the ones on the
+ *     path it is given. It overcounts.
+ *
+ * Two mismatches in opposite directions, neither of which any caller has ever
+ * exercised — nothing passes `lane` or `step`. The type advertised them
+ * anyway, which is all a future caller needs to ship a confirm dialog whose
+ * numbers are wrong in the one place numbers are the entire point. Making them
+ * unrepresentable is chosen over correcting the two SQL predicates because the
+ * correction cannot be verified without a migration apply, while this ships
+ * with the branch — and because when someone does want a lane delete, the
+ * compile error lands exactly on the pair of functions that has to be made to
+ * agree first.
+ *
+ * A slice, conversely, is NOT a `DeletionKind` and must never be added there:
+ * `deletion_impact` answers "how much of the BLUEPRINT dies", and a slice
+ * delete destroys none of it (see `sliceDeletionImpact`).
+ */
+export type DeletableKind = Extract<DeletionKind, 'scenario' | 'path'> | 'slice'
+
+/** Nouns for the confirm sentence. */
+export const DELETION_NOUNS: Record<DeletableKind, string> = {
   scenario: 'scenario',
   path: 'path',
-  step: 'step',
-  lane: 'lane',
+  slice: 'slice',
 }
 
 export type DeletionReadiness =
@@ -81,43 +120,119 @@ export function splitByRecoverability(slices: AffectedSlice[]): FrameLoss {
 }
 
 /**
- * The sentences the confirm dialog shows, in the order they should be read.
+ * One countable consequence — "9 cells", "4 arrows".
  *
+ * Split into count and noun rather than pre-formatted prose so the dialog can
+ * set the number apart from the word. The number IS the consequence; buried
+ * mid-sentence it reads as decoration, which is how a confirm dialog ends up
+ * being clicked through.
+ */
+export type ImpactFact = { count: number; noun: string }
+
+/**
+ * What the confirm dialog shows: the counts, and the sentences that qualify
+ * them.
+ *
+ * `facts` are always destroyed. `warnings` are consequences that need a clause
+ * to be honest — which slices lose frames, and which of those undo cannot put
+ * back. `reassurances` name what deliberately survives, and exist because the
+ * most important fact about deleting a slice is that the blueprint is untouched.
+ */
+export type ImpactSummary = {
+  facts: ImpactFact[]
+  warnings: string[]
+  reassurances: string[]
+}
+
+/**
  * Counts come from `deletion_impact`, which counts what the cascade actually
  * destroys — including the arrows that die with the cells. A dialog that named
  * only the cells would be undercounting by design.
  */
-export function describeImpact(
-  kind: DeletionKind,
-  impact: DeletionImpact,
-): string[] {
-  const lines: string[] = []
-  const noun = DELETION_NOUNS[kind]
-
-  lines.push(
-    `Deleting this ${noun} removes ${plural(impact.cell_count, 'cell')}.`,
-  )
+export function summarizeImpact(impact: DeletionImpact): ImpactSummary {
+  const facts: ImpactFact[] = [{ count: impact.cell_count, noun: 'cell' }]
   if (impact.dependency_count > 0) {
-    lines.push(
-      `${plural(impact.dependency_count, 'arrow')} connected to those cells will go with them.`,
-    )
+    facts.push({ count: impact.dependency_count, noun: 'arrow' })
   }
 
+  const warnings: string[] = []
   const { recoverable, unrecoverable } = splitByRecoverability(
     impact.affected_slices,
   )
   if (recoverable.length > 0) {
-    lines.push(
+    warnings.push(
       `${plural(recoverable.length, 'slice')} will lose frames: ${names(recoverable)}.`,
     )
   }
   if (unrecoverable.length > 0) {
-    lines.push(
+    warnings.push(
       `${plural(unrecoverable.length, 'slice')} cannot be restored by undo, because some of their cells have no stored key: ${names(unrecoverable)}.`,
     )
   }
 
-  return lines
+  // The reassurance is qualified — not merely softened — when the warning
+  // above it has already said some slices cannot be put back. "Nothing is
+  // destroyed without a copy behind it" printed directly under "these slices
+  // cannot be restored by undo" is a dialog contradicting itself in adjacent
+  // lines, and the sentence people believe is the reassuring one. The archive
+  // fact is still true and still worth stating; what is not true is the
+  // "nothing" — the blueprint rows come back, the slice frames pointing at
+  // them do not.
+  const reassurances =
+    unrecoverable.length > 0
+      ? [
+          'The blueprint rows are archived to the recovery table first and can be restored — but not the slice frames named above.',
+        ]
+      : [
+          'Archived to the recovery table first — nothing is destroyed without a copy behind it.',
+        ]
+
+  return { facts, warnings, reassurances }
+}
+
+/**
+ * A slice delete is the one case where the reassurance is the headline: the
+ * frames die, the blueprint does not. No archive exists for slices, so the
+ * warning says so plainly rather than implying the same recovery the
+ * structural kinds get.
+ */
+export function summarizeSliceImpact(impact: SliceDeletionImpact): ImpactSummary {
+  return {
+    facts: [{ count: impact.frame_count, noun: 'frame' }],
+    warnings: [
+      'There is no archive for slices — once this is deleted it cannot be restored, and the change list will not offer a revert for it.',
+    ],
+    reassurances: [
+      impact.referenced_cell_count > 0
+        ? `The ${plural(impact.referenced_cell_count, 'blueprint cell')} this slice points at stay exactly as they are.`
+        : 'No blueprint cells are touched.',
+    ],
+  }
+}
+
+/**
+ * The impact for a target, from whichever source that kind's counts come from.
+ *
+ * **The one branch.** It lived inside `DeleteStructureDialog`, which meant the
+ * only way to find out what a delete would cost was to open the dialog — so
+ * the agent, which is not allowed to delete anything, also could not TELL a
+ * user what a delete would cost. Both surfaces now call this, so the numbers
+ * the agent quotes and the numbers the dialog shows cannot drift; a second
+ * implementation for the agent would have been a second chance to undercount.
+ *
+ * A pure read: `deletion_impact` goes through `authoringRpc`'s `read()` seam
+ * and `sliceDeletionImpact` is two selects, so nothing here reaches the
+ * session ledger. That is what makes it safe to expose to the agent at all.
+ */
+export function readDeletionImpact(
+  client: SupabaseClient<Database>,
+  kind: DeletableKind,
+  targetId: string,
+): Promise<ImpactSummary> {
+  if (kind === 'slice') {
+    return sliceDeletionImpact(client, targetId).then(summarizeSliceImpact)
+  }
+  return deletionImpact(client, kind, targetId).then(summarizeImpact)
 }
 
 /**

@@ -160,8 +160,8 @@ export function SlicesSidebarSection() {
       // flow in CanvasDesignTools, or the agent's /sb:slice skill).
       <p className="px-3 py-1.5 text-xs leading-relaxed text-sidebar-foreground/50">
         No slices yet — a slice is a stakeholder view cut from the blueprint.
-        In Edit mode, pick cells on the canvas and press Make slice, or ask
-        the agent with /sb:slice.
+        In Edit mode, pick cells and press Make slice, or ask the agent with
+        /sb:slice.
       </p>
     )
   }

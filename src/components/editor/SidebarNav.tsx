@@ -5,6 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { cn } from '@/lib/utils'
 
 /**
@@ -37,6 +38,15 @@ const CHEVRON_REVEAL_CLASS =
 export const NAV_CHILD_INDENT_CLASS = 'pl-4'
 
 /**
+ * Hit target for a row action. 24px square — the accessible minimum for a
+ * control this dense — inside a 28–30px row, so it fills the row's height
+ * without forcing it taller. The glyph inside stays small (`size-3.5`); the
+ * target is bigger than the mark, which is the point.
+ */
+const ROW_ACTION_SLOT_CLASS =
+  'flex size-6 shrink-0 items-center justify-center rounded-md'
+
+/**
  * A hover-revealed action at the right of a row or section header — the `+`
  * that creates a child, the `⋯` that opens a row menu.
  *
@@ -45,10 +55,24 @@ export const NAV_CHILD_INDENT_CLASS = 'pl-4'
  * often than it is added to. It wears the same reveal the chevron does, so the
  * two appear together and the row has one hover state rather than two.
  *
+ * **No fill of its own.** The row it sits in already lights up on hover, and a
+ * second surface inside that one is the box-in-a-box the composer taught us to
+ * stop drawing. Prominence comes from the *glyph*: quiet
+ * `--sidebar-foreground/50` at rest, `--sidebar-selected-rail` — the brand hue
+ * the sidebar already uses for "this one" on the selection rail — on hover and
+ * on keyboard focus. It is the only saturated ink in the sidebar, so it reads
+ * instantly on both the light and the dark sidebar surface without adding a
+ * plane. Focus additionally draws the standard ring, which is an outline
+ * rather than a fill and so stacks nothing.
+ *
  * Coarse pointers have no hover to reveal it with, so there it is always shown.
  * Keyboard focus reveals it through `group-focus-within`, and it stays in the
  * tab order either way — an affordance that only exists under a mouse is not an
  * affordance for everyone.
+ *
+ * The label is both the `aria-label` and the tooltip: an icon-only button has
+ * to say what it does to everyone, and a `title` says it to neither promptly
+ * nor with the DS's typography.
  */
 export function NavRowAction({
   label,
@@ -60,26 +84,27 @@ export function NavRowAction({
   children: ReactNode
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={(event) => {
-        // The whole row is a button; without this the create would also
-        // navigate to whatever it was attached to.
-        event.stopPropagation()
-        onClick()
-      }}
-      className={cn(
-        CHEVRON_SLOT_CLASS,
-        CHEVRON_REVEAL_CLASS,
-        'shrink-0 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        'focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-        '[@media(pointer:coarse)]:opacity-100',
-      )}
-    >
-      {children}
-    </button>
+    <IconTooltip label={label} side="right">
+      <button
+        type="button"
+        aria-label={label}
+        onClick={(event) => {
+          // The whole row is a button; without this the create would also
+          // navigate to whatever it was attached to.
+          event.stopPropagation()
+          onClick()
+        }}
+        className={cn(
+          ROW_ACTION_SLOT_CLASS,
+          CHEVRON_REVEAL_CLASS,
+          'text-sidebar-foreground/50 transition-[opacity,color] hover:text-sidebar-selected-rail',
+          'focus-visible:text-sidebar-selected-rail focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+          '[@media(pointer:coarse)]:opacity-100',
+        )}
+      >
+        {children}
+      </button>
+    </IconTooltip>
   )
 }
 
@@ -164,7 +189,7 @@ export function NavRow({
     <div
       data-nav-row={rowId}
       className={cn(
-        'group/nav-row relative flex w-full min-w-0 items-center gap-1 rounded-md pl-1 transition-colors',
+        'group/nav-row relative flex w-full min-w-0 items-center gap-1 rounded-md pl-1 pr-1 transition-colors',
         selected
           ? 'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
           : 'hover:bg-sidebar-accent',

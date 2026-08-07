@@ -5,12 +5,13 @@ import {
   type RefObject,
 } from 'react'
 import { Plus } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Input } from '@/components/ui/input'
 import { useAtScenarioLevel, useEditor } from '@/contexts/EditorContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { addLane } from '@/lib/authoringRpc'
 
 type Boundary = { at: number; y: number }
@@ -120,13 +121,7 @@ export function BlueprintLaneHandles({
         name: trimmed,
         atRow: naming.at,
       })
-      invalidateQueries('lifecycle-phases')
-      // The canvas reads blueprints under its own key.
-      invalidateQueries('canvas-blueprints')
-      // Create Blueprint's lane picker caches the lane list under its own
-      // key too — staleTime is Infinity, so it only refreshes on explicit
-      // invalidation.
-      invalidateQueries('lane-sources')
+      invalidateStructure()
       setNaming(null)
       setName('')
     } catch (laneError) {
@@ -149,22 +144,24 @@ export function BlueprintLaneHandles({
             height: INSERT_HIT_HALF_PX * 2,
           }}
         >
-          <button
-            type="button"
-            aria-label={`Insert a lane here`}
-            onClick={() => {
-              setNaming(boundary)
-              setName('')
-              setError(null)
-              requestAnimationFrame(() => inputRef.current?.focus())
-            }}
-            className="flex w-full items-center gap-1 opacity-0 transition-opacity group-hover/lane-insert:opacity-100 focus-visible:opacity-100"
-          >
-            <span className="ml-1 grid size-4 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
-              <Plus className="size-3" aria-hidden />
-            </span>
-            <span className="h-px flex-1 bg-primary/60" />
-          </button>
+          <IconTooltip label="Insert a lane here">
+            <button
+              type="button"
+              aria-label={`Insert a lane here`}
+              onClick={() => {
+                setNaming(boundary)
+                setName('')
+                setError(null)
+                requestAnimationFrame(() => inputRef.current?.focus())
+              }}
+              className="flex w-full items-center gap-1 opacity-0 transition-opacity group-hover/lane-insert:opacity-100 focus-visible:opacity-100"
+            >
+              <span className="ml-1 grid size-4 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                <Plus className="size-3" aria-hidden />
+              </span>
+              <span className="h-px flex-1 bg-primary/60" />
+            </button>
+          </IconTooltip>
         </div>
       ))}
 

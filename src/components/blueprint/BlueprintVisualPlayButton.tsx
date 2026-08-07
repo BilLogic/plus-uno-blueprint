@@ -1,5 +1,6 @@
 import { Play } from 'lucide-react'
 import { useContext } from 'react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { VisualWalkthroughContext } from '@/contexts/VisualWalkthroughContext'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { pickWalkthroughBlueprint } from '@/lib/visualWalkthrough'
@@ -38,32 +39,33 @@ export function BlueprintVisualPlayButton({
   if (!walkthrough) return null
 
   const { openWalkthrough } = walkthrough
+  const playLabel = pathLabel
+    ? `Play ${pathLabel} visual walkthrough`
+    : 'Play visual walkthrough'
 
   return (
-    <button
-      type="button"
-      className={cn(
-        'tap-target-24 inline-flex size-5 shrink-0 items-center justify-center text-foreground transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30',
-        className,
-      )}
-      aria-label={
-        pathLabel
-          ? `Play ${pathLabel} visual walkthrough`
-          : 'Play visual walkthrough'
-      }
-      disabled={!activeBlueprint}
-      onClick={(event) => {
-        event.stopPropagation()
-        if (activeBlueprint) {
-          // Presentation is scoped to the path whose play control was clicked.
-          openWalkthrough(activeBlueprint, [activeBlueprint], {
-            scenarioName,
-            phaseName,
-          })
-        }
-      }}
-    >
-      <Play className="size-3.5 fill-current" aria-hidden />
-    </button>
+    <IconTooltip label={playLabel}>
+      <button
+        type="button"
+        className={cn(
+          'tap-target-24 inline-flex size-5 shrink-0 items-center justify-center text-foreground transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-30',
+          className,
+        )}
+        aria-label={playLabel}
+        disabled={!activeBlueprint}
+        onClick={(event) => {
+          event.stopPropagation()
+          if (activeBlueprint) {
+            // Presentation is scoped to the path whose play control was clicked.
+            openWalkthrough(activeBlueprint, [activeBlueprint], {
+              scenarioName,
+              phaseName,
+            })
+          }
+        }}
+      >
+        <Play className="size-3.5 fill-current" aria-hidden />
+      </button>
+    </IconTooltip>
   )
 }

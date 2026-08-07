@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   Carousel,
   CarouselContent,
@@ -207,8 +208,12 @@ export function VisualWalkthroughModal() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-3 size-8 rounded-full" />
-              <CarouselNext className="right-3 size-8 rounded-full" />
+              <IconTooltip label="Previous step">
+                <CarouselPrevious className="left-3 size-8 rounded-full" />
+              </IconTooltip>
+              <IconTooltip label="Next step">
+                <CarouselNext className="right-3 size-8 rounded-full" />
+              </IconTooltip>
             </Carousel>
           </div>
 
@@ -219,18 +224,19 @@ export function VisualWalkthroughModal() {
               aria-label="Steps"
             >
               {session.steps.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  role="tab"
-                  aria-selected={index === stepIndex}
-                  aria-label={`Go to step ${index + 1}`}
-                  className={cn(
-                    'h-1.5 rounded-full bg-muted-foreground/25 transition-all',
-                    index === stepIndex ? 'w-5 bg-foreground/70' : 'w-1.5',
-                  )}
-                  onClick={() => api?.scrollTo(index)}
-                />
+                <IconTooltip key={index} label={`Go to step ${index + 1}`}>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={index === stepIndex}
+                    aria-label={`Go to step ${index + 1}`}
+                    className={cn(
+                      'h-1.5 rounded-full bg-muted-foreground/25 transition-all',
+                      index === stepIndex ? 'w-5 bg-foreground/70' : 'w-1.5',
+                    )}
+                    onClick={() => api?.scrollTo(index)}
+                  />
+                </IconTooltip>
               ))}
             </div>
           </DialogFooter>

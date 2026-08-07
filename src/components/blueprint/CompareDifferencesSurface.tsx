@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react'
 import { Filter, Info, PanelRight } from 'lucide-react'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -136,19 +137,23 @@ const CompareDiffRow = memo(function CompareDiffRow({
         )
       })}
       <div className="flex justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="size-5 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-(--motion-micro) group-hover/diffrow:opacity-100 group-focus-within/diffrow:opacity-100 focus-visible:opacity-100 hover:text-foreground"
-          aria-label={`Open ${slot.laneLabel} at ${slot.columnLabel} in Details`}
-          onClick={(event) => {
-            event.stopPropagation()
-            onOpenSlotCell(slot)
-          }}
+        <IconTooltip
+          label={`Open ${slot.laneLabel} at ${slot.columnLabel} in Details`}
         >
-          <PanelRight className="size-3" aria-hidden />
-        </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="size-5 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-(--motion-micro) group-hover/diffrow:opacity-100 group-focus-within/diffrow:opacity-100 focus-visible:opacity-100 hover:text-foreground"
+            aria-label={`Open ${slot.laneLabel} at ${slot.columnLabel} in Details`}
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpenSlotCell(slot)
+            }}
+          >
+            <PanelRight className="size-3" aria-hidden />
+          </Button>
+        </IconTooltip>
       </div>
     </div>
   )

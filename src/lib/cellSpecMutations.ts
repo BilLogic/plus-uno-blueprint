@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { ValueProp } from '@/lib/valueProps'
 import type { Database, Json } from '@/types/database'
 
@@ -36,7 +37,7 @@ export async function updateCellSpec(
     .map((entry) => ({ for: entry.for.trim(), value: entry.value.trim() }))
     .filter((entry) => entry.for || entry.value)
 
-  const { error } = await client
+  const { data, error } = await client
     .from('cells')
     .update({
       function: update.function.trim() || null,
@@ -44,7 +45,11 @@ export async function updateCellSpec(
       value_props: (valueProps.length > 0 ? valueProps : null) as Json,
     })
     .eq('id', cellId)
+    .select('id')
   if (error) throw new Error(error.message)
+  // See `requireRowsWritten`: a zero-row update is a 200, and reverting one
+  // would drop the entry from the ledger having written nothing.
+  requireRowsWritten(data, 'cell')
   // Direct table write — `call()` never sees it, so it logs itself.
   if (options.record !== false) {
     recordChange(

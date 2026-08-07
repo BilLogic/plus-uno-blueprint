@@ -4,6 +4,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from '@/components/editor/SegmentedControl'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -122,16 +123,20 @@ export function CellDependencyEditor({
                   entry.kind}
               </span>
               <span className="min-w-0 flex-1 truncate">{entry.targetLabel}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Remove connection to ${entry.targetLabel}`}
-                disabled={busy}
-                onClick={() => handleRemove(entry.id)}
+              <IconTooltip
+                label={`Remove the connection to ${entry.targetLabel}`}
               >
-                <X className="size-3" />
-              </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Remove connection to ${entry.targetLabel}`}
+                  disabled={busy}
+                  onClick={() => handleRemove(entry.id)}
+                >
+                  <X className="size-3" />
+                </Button>
+              </IconTooltip>
             </li>
           ))}
         </ul>

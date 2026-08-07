@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { createPhase } from '@/lib/authoringRpc'
 
 /**
@@ -53,7 +53,7 @@ export function CreatePhaseDialog({
     setError(null)
     try {
       const phaseId = await createPhase(client, { lifecycleId, name: trimmed })
-      invalidateQueries('lifecycle-phases')
+      invalidateStructure()
       setName('')
       onOpenChange(false)
       onCreated?.(phaseId)
