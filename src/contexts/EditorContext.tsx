@@ -335,10 +335,9 @@ export function EditorProvider({ children }: EditorProviderProps) {
   const nav = useNavSelectionState(slides)
 
   /*
-    Per-scenario display override, session-local. Side-by-side is the
-    default reading view; 'integrated' is the comparison lens (the header
-    toggle calls it Compare) — one merged grid where the shared spine
-    collapses and only the differences carry color.
+    Per-scenario display override, session-local. Stacked is the default
+    reading view; 'merged' is the comparison lens (the header toggle calls
+    it Merged) — session-only, never persisted to the DB.
   */
   const [viewTypeOverrides, setViewTypeOverrides] = useState<
     Record<string, SlideViewType>
@@ -346,7 +345,7 @@ export function EditorProvider({ children }: EditorProviderProps) {
 
   const getScenarioDisplayViewType = useCallback(
     (slide: NavItem): SlideViewType =>
-      viewTypeOverrides[slide.id] ?? 'side-by-side',
+      viewTypeOverrides[slide.id] ?? 'stacked',
     [viewTypeOverrides],
   )
 

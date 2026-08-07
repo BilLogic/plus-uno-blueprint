@@ -212,7 +212,7 @@ export function EditorShell() {
     closeSliceTab: (sliceId: string) => void
     exitPresent: () => string
     togglePhase: (phaseId: string) => void
-    setScenarioView: (view: 'side-by-side' | 'integrated') => string
+    setScenarioView: (view: 'stacked' | 'merged') => string
   }
   const shellCommandsRef = useRef<ShellCommands>({
     goOverview: () => {},
@@ -285,10 +285,12 @@ export function EditorShell() {
       }),
       registerAgentUiCommand({
         name: 'set_scenario_view',
-        description: 'Switch the SELECTED scenario between its two displays. arg: side-by-side | integrated (integrated = the Compare view; needs 2+ visible paths).',
+        description: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (merged = the compare lens; needs 2+ visible paths). Legacy aliases accepted: side-by-side = stacked, integrated = merged.',
         run: (arg) =>
+          // 'side-by-side'/'integrated' are the pre-v3 tokens, kept as
+          // documented aliases so older prompts and transcripts still work.
           commands.current.setScenarioView(
-            arg === 'integrated' ? 'integrated' : 'side-by-side',
+            arg === 'merged' || arg === 'integrated' ? 'merged' : 'stacked',
           ),
       }),
     ]
@@ -391,7 +393,7 @@ export function EditorShell() {
       const scenario = slides.find((slide) => slide.id === selectedScenarioId)
       if (!scenario) return 'No scenario is selected — open one first.'
       setScenarioDisplayViewType(scenario.id, viewType)
-      return `Scenario view set to ${viewType === 'integrated' ? 'Compare' : 'Side by side'}.`
+      return `Scenario view set to ${viewType === 'merged' ? 'Merged' : 'Stacked'}.`
     },
   }
   useEffect(() => {

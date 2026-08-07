@@ -357,7 +357,7 @@ export function getScenarioSwimlaneRowSpecs(
 
   const allBlueprints = getScenarioBlueprints(paths, blueprintsByPathId)
 
-  if (displayViewType === 'integrated' && allBlueprints.length > 0) {
+  if (displayViewType === 'merged' && allBlueprints.length > 0) {
     if (selectedPathIds.length === 0) return []
 
     const integrated = mergeIntegratedBlueprint(allBlueprints, selectedPathIds)
@@ -373,7 +373,7 @@ export function getScenarioSwimlaneRowSpecs(
   }
 
   const useCompareLayout =
-    (displayViewType === 'side-by-side' || displayViewType === 'single') &&
+    (displayViewType === 'stacked' || displayViewType === 'single') &&
     selectedPathIds.length > 0
 
   if (useCompareLayout) {

@@ -47,7 +47,7 @@ function resolveHeaderDescription(
 }
 
 /**
- * Side by side ⇄ Compare, on the bar that holds the scenario title.
+ * Stacked ⇄ Merged, on the bar that holds the scenario title.
  *
  * Visible only while two or more paths are selected — with one path there
  * is nothing to compare and the control would be a question with no answer.
@@ -62,8 +62,8 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
     label: string
     icon: typeof Columns2
   }> = [
-    { value: 'side-by-side', label: 'Side by side', icon: Columns2 },
-    { value: 'integrated', label: 'Compare', icon: GitCompareArrows },
+    { value: 'stacked', label: 'Stacked', icon: Columns2 },
+    { value: 'merged', label: 'Merged', icon: GitCompareArrows },
   ]
 
   return (

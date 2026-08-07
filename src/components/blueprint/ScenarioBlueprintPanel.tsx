@@ -89,23 +89,23 @@ export function ScenarioBlueprintPanel({
   // the stored override survives — falling back here keeps a scenario from
   // being stranded in a compare it can no longer leave.
   const displayViewType =
-    storedViewType === 'integrated' && selectedPathIds.length < 2
-      ? 'side-by-side'
+    storedViewType === 'merged' && selectedPathIds.length < 2
+      ? 'stacked'
       : storedViewType
   /*
-    Compare v2 is a *highlight pass over side-by-side*, not a merged grid.
-    The merged spine (ideation idea 1) shipped first and failed reading:
-    collapsing shared cells destroyed the row rhythm that makes a blueprint
-    scannable, and re-pointed arrows read as noise. The stored 'integrated'
-    view type now means "side-by-side, painted": identical cells dim,
+    Compare v2 is a *highlight pass over the stacked layout*, not a merged
+    grid. The merged spine (ideation idea 1) shipped first and failed
+    reading: collapsing shared cells destroyed the row rhythm that makes a
+    blueprint scannable, and re-pointed arrows read as noise. The session
+    'merged' view type now means "stacked, painted": identical cells dim,
     unique cells wear their path's ring, divergent counterparts get a ≠
     badge. Nothing moves; the differences are all that changes ink.
   */
   const compareHighlight =
-    displayViewType === 'integrated' && selectedPathIds.length >= 2
+    displayViewType === 'merged' && selectedPathIds.length >= 2
   const useIntegratedLayout = false
   const useSideBySideLayout =
-    (displayViewType === 'side-by-side' || displayViewType === 'integrated') &&
+    (displayViewType === 'stacked' || displayViewType === 'merged') &&
     selectedPathIds.length > 0
   const useSinglePathLayout =
     displayViewType === 'single' && selectedPathIds.length > 0

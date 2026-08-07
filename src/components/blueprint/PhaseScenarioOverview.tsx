@@ -110,13 +110,13 @@ export function PhaseScenarioOverview({
   /*
     Per-scenario override beats the phase-uniform prop. The prop is the
     overview filter's shared default — but the Compare toggle sets a view
-    for *one* scenario, and a phase-level 'side-by-side' silently clobbering
+    for *one* scenario, and a phase-level 'stacked' silently clobbering
     it is exactly how a toggle looks broken while its state is correct.
   */
   const resolveViewType = useCallback(
     (scenario: NavItem): SlideViewType => {
       const perScenario = getScenarioDisplayViewType(scenario)
-      if (perScenario !== 'side-by-side') return perScenario
+      if (perScenario !== 'stacked') return perScenario
       return displayViewTypeProp ?? perScenario
     },
     [displayViewTypeProp, getScenarioDisplayViewType],
