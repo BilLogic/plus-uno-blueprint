@@ -1,4 +1,5 @@
-import { Columns2, GitCompareArrows } from 'lucide-react'
+import { useMemo } from 'react'
+import { Columns2, FoldHorizontal, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
@@ -18,8 +19,13 @@ import {
 } from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
+import { countFoldableCompareColumns } from '@/lib/compareFold'
 import { countCompareDifferences } from '@/lib/compareLedger'
-import { useCompareReviewState } from '@/lib/compareReviewStore'
+import {
+  setCompareFolded,
+  useCompareReviewState,
+} from '@/lib/compareReviewStore'
+import { computePinnedColumns } from '@/lib/compareSlots'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
@@ -88,6 +94,70 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
         </SegmentedControlItem>
       ))}
     </SegmentedControl>
+  )
+}
+
+/**
+ * The `[⇤ Fold]` toggle (Phase 4a) — opt-in compression of shared step
+ * runs into pleats, in whichever compare mode is showing (the fold state
+ * is mode-agnostic by design). Disabled at zero differences (S7 — nothing
+ * to pull adjacent) and when the pin rule leaves no foldable shared
+ * column. Turning fold off clears the per-pleat expansions.
+ */
+function CompareFoldToggle({ slide }: { slide: NavItem }) {
+  const { registration, fold } = useCompareReviewState()
+  const active =
+    registration && registration.slideId === slide.id ? registration : null
+  const foldableCount = useMemo(
+    () =>
+      active
+        ? countFoldableCompareColumns(
+            active.model,
+            computePinnedColumns(active.model, active.blueprints),
+          )
+        : 0,
+    [active],
+  )
+  if (!active) return null
+  const differenceCount = countCompareDifferences(active.model)
+  const disabled = differenceCount === 0 || foldableCount === 0
+  const toggle = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      disabled={disabled}
+      aria-pressed={fold.folded}
+      aria-label={
+        fold.folded
+          ? 'Unfold shared steps'
+          : `Fold ${foldableCount} shared steps`
+      }
+      className={cn(
+        'h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground',
+        fold.folded && 'bg-muted text-foreground',
+      )}
+      onClick={() => setCompareFolded(!fold.folded)}
+    >
+      <FoldHorizontal className="size-3.5" aria-hidden />
+      Fold
+    </Button>
+  )
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex" />}>
+        {toggle}
+      </TooltipTrigger>
+      <TooltipContent>
+        {disabled
+          ? differenceCount === 0
+            ? 'Paths are identical — nothing to fold around'
+            : 'Every shared step feeds a divergent one — nothing folds'
+          : fold.folded
+            ? 'Unfold shared steps'
+            : `Fold ${foldableCount} shared steps`}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -170,6 +240,7 @@ export function PhaseMenubarHeader({
       {showCompareToggle ? (
         <div className="ml-3 flex shrink-0 items-center gap-1.5">
           <CompareViewToggle slide={slide} />
+          <CompareFoldToggle slide={slide} />
           <CompareDifferencesChip slide={slide} />
         </div>
       ) : null}

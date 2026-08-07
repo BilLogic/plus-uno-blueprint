@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useRef, type RefObject } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
 import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandles'
@@ -35,6 +36,12 @@ import {
   type BlueprintLayerStyle,
 } from '@/lib/blueprintTheme'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  COMPARE_PLEAT_TRACK_WIDTH,
   type BlueprintLabelRowSpec,
   getComparePathArrowData,
   resolveBlueprintLayer,
@@ -69,10 +76,19 @@ export type PathBandArrangement =
   | {
       kind: 'row'
       gridRow: number
-      columns: readonly StackedBandColumn[]
+      tracks: readonly StackedBandTrack[]
       rowTrackCss: string
       marginTop?: number
       onToggleLayer?: (layerId: string) => void
+      /** Pleat click — expands that pleat in the shared fold state. */
+      onExpandPleat?: (pleatKey: string) => void
+      /**
+       * THIS path's step ids hidden inside collapsed pleats — derived from
+       * the compare model + fold state upstream (never the DOM). Arrows
+       * with an endpoint on one of these steps are dropped at the data
+       * level before the overlay ever sees them.
+       */
+      foldedStepIds?: ReadonlySet<string>
     }
 
 /** One canonical step column of the stacked arrangement. */
@@ -83,7 +99,26 @@ export type StackedBandColumn = {
   stepIdByPath: Readonly<Record<string, string>>
   /** Column-level verdict !== 'shared' (drives the light column tint). */
   divergent: boolean
+  /** Pin rule (one-hop edge to a divergent cell) — never folds; Link2 glyph. */
+  pinned: boolean
 }
+
+/**
+ * One track of the stacked arrangement's column axis: a normal step column,
+ * or a pleat — a whole run of folded shared columns compressed to one
+ * fixed-width track (Phase 4a).
+ */
+export type StackedBandTrack =
+  | ({ kind: 'column' } & StackedBandColumn)
+  | {
+      kind: 'pleat'
+      /** The fold fragment's key (its first columnKey). */
+      key: string
+      /** How many shared columns this pleat hides — the `▸ N` label. */
+      columnCount: number
+      /** Tooltip copy: "N identical steps: First → Last". */
+      title: string
+    }
 
 type BlueprintPathBandProps = {
   blueprint: BlueprintData
@@ -119,10 +154,31 @@ export function BlueprintPathBand({
   const bandRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
   const resolvedScrollRef = scrollContainerRef ?? fallbackScrollRef
-  const arrowData = useMemo(
-    () => getComparePathArrowData(blueprint),
-    [blueprint],
-  )
+  const foldedStepIds =
+    arrangement.kind === 'row' ? arrangement.foldedStepIds : undefined
+  const arrowData = useMemo(() => {
+    const data = getComparePathArrowData(blueprint)
+    if (!foldedStepIds || foldedStepIds.size === 0) return data
+    // Declared drop (Phase 4a): while shared runs are folded, an arrow with
+    // either endpoint inside a collapsed pleat is filtered HERE, at the data
+    // level — the overlay never receives the trigger, so there is no silent
+    // querySelector miss against a DOM anchor the fold removed. Which steps
+    // are folded came from the compare model + fold state, not the DOM.
+    const stepIdByCellId = new Map(
+      data.cells.map((cell) => [cell.id, cell.step_id]),
+    )
+    return {
+      ...data,
+      triggers: data.triggers.filter((trigger) => {
+        const sourceStep = stepIdByCellId.get(trigger.source_cell_id)
+        const targetStep = stepIdByCellId.get(trigger.target_cell_id)
+        return !(
+          (sourceStep !== undefined && foldedStepIds.has(sourceStep)) ||
+          (targetStep !== undefined && foldedStepIds.has(targetStep))
+        )
+      }),
+    }
+  }, [blueprint, foldedStepIds])
   const showPlay =
     isBlueprintVisualWalkthroughEnabled() &&
     buildVisualWalkthroughSession(blueprint).steps.length > 0
@@ -181,16 +237,24 @@ export function BlueprintPathBand({
           {/* Divergent columns tint the full band height — the v3 diff
               signal is column-level; cells themselves never carry paint.
               `relative` so the tint paints above the absolutely-positioned
-              section frame while staying under the z-[1] cells. */}
-          {arrangement.columns.map((column, columnIndex) =>
-            column.divergent ? (
+              section frame while staying under the z-[1] cells. Pleat
+              tracks render the pleat cell at the same x in EVERY band. */}
+          {arrangement.tracks.map((track, trackIndex) =>
+            track.kind === 'pleat' ? (
+              <ComparePleatCell
+                key={`pleat-${track.key}`}
+                track={track}
+                gridColumn={trackIndex + 2}
+                onExpand={arrangement.onExpandPleat}
+              />
+            ) : track.divergent ? (
               <div
-                key={`tint-${column.key}`}
+                key={`tint-${track.key}`}
                 aria-hidden
                 data-blueprint-compare-diffcolumn=""
                 className="pointer-events-none relative rounded-md"
                 style={{
-                  gridColumn: columnIndex + 2,
+                  gridColumn: trackIndex + 2,
                   gridRow: '1 / -1',
                   marginLeft: -STEP_COLUMN_GAP / 2,
                   marginRight: -STEP_COLUMN_GAP / 2,
@@ -261,8 +325,8 @@ export function BlueprintPathBand({
           fillSwimlaneHeight={fillSwimlaneHeight}
           playGutter={playGutter}
           showPlay={showPlay}
-          stackedColumns={
-            arrangement.kind === 'row' ? arrangement.columns : undefined
+          stackedTracks={
+            arrangement.kind === 'row' ? arrangement.tracks : undefined
           }
         />
       ))}
@@ -290,7 +354,7 @@ function CompareCardRow({
   fillSwimlaneHeight = false,
   playGutter = 0,
   showPlay = false,
-  stackedColumns,
+  stackedTracks,
 }: {
   row: BlueprintLabelRowSpec
   rowIndex: number
@@ -302,7 +366,7 @@ function CompareCardRow({
   fillSwimlaneHeight?: boolean
   playGutter?: number
   showPlay?: boolean
-  stackedColumns?: readonly StackedBandColumn[]
+  stackedTracks?: readonly StackedBandTrack[]
 }) {
   const isDivider =
     row.kind === 'interaction' ||
@@ -345,7 +409,7 @@ function CompareCardRow({
       style={{
         gridRow: rowIndex + 1,
         // Stacked bands span the rail column too; cells start at track 2.
-        ...(stackedColumns ? { gridColumn: '2 / -1' } : {}),
+        ...(stackedTracks ? { gridColumn: '2 / -1' } : {}),
         backgroundColor: isDivider ? undefined : 'transparent',
       }}
       {...(isDivider ? { role: 'separator' as const } : {})}
@@ -383,7 +447,7 @@ function CompareCardRow({
               fillSwimlaneHeight={fillSwimlaneHeight}
               playGutter={playGutter}
               showPlay={showPlay}
-              stackedColumns={stackedColumns}
+              stackedTracks={stackedTracks}
             />
           )
         ) : isDivider ? (
@@ -412,7 +476,7 @@ function CompareLayerRow({
   fillSwimlaneHeight = false,
   playGutter = 0,
   showPlay = false,
-  stackedColumns,
+  stackedTracks,
 }: {
   blueprint: BlueprintData
   layer: BlueprintData['layers'][number]
@@ -423,7 +487,7 @@ function CompareLayerRow({
   fillSwimlaneHeight?: boolean
   playGutter?: number
   showPlay?: boolean
-  stackedColumns?: readonly StackedBandColumn[]
+  stackedTracks?: readonly StackedBandTrack[]
 }) {
   const blueprintLayer = useMemo(
     () => resolveBlueprintLayer(layer, blueprint),
@@ -446,7 +510,7 @@ function CompareLayerRow({
   const flushBottom = layerPrecedesBlueprintDivider(layer, layers)
   const isVisualLayer = shouldUseVisualContent(layer)
   const renderPlay =
-    showPlay && isVisualLayer && (playGutter > 0 || stackedColumns !== undefined)
+    showPlay && isVisualLayer && (playGutter > 0 || stackedTracks !== undefined)
 
   const renderStepCell = (step: BlueprintStep, stepIndex: number) => {
     const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
@@ -527,7 +591,7 @@ function CompareLayerRow({
       style={{
         // Stacked bands keep cells on the canonical tracks, so the play
         // control hangs in the rail gap to their left instead of a gutter.
-        left: stackedColumns ? -(STEP_COLUMN_GAP + 2) : 6,
+        left: stackedTracks ? -(STEP_COLUMN_GAP + 2) : 6,
         top: compact ? 10 : 14,
       }}
     >
@@ -539,7 +603,7 @@ function CompareLayerRow({
     </div>
   ) : null
 
-  if (stackedColumns) {
+  if (stackedTracks) {
     // Stacked arrangement: same fixed cell widths and gaps as the canonical
     // column tracks, so a flex row lines up with the parent grid exactly.
     // Columns this path lacks hold inert spacers (not `BlueprintEmptyCellSlot`
@@ -556,14 +620,47 @@ function CompareLayerRow({
         style={{ backgroundColor: 'transparent' }}
       >
         {playButton}
-        {stackedColumns.map((column, columnIndex) => {
-          const stepId = column.stepIdByPath[pathId]
+        {stackedTracks.map((track, trackIndex) => {
+          const gapSpacer = (stepIndex?: number) =>
+            trackIndex < stackedTracks.length - 1 ? (
+              <div
+                aria-hidden
+                className="shrink-0"
+                style={{ width: STEP_COLUMN_GAP, minWidth: STEP_COLUMN_GAP }}
+                {...(stepIndex !== undefined &&
+                stepIndex < blueprint.steps.length - 1
+                  ? { 'data-step-gap': stepIndex }
+                  : {})}
+              />
+            ) : null
+
+          if (track.kind === 'pleat') {
+            // The pleat itself is one full-band-height cell rendered by the
+            // band (see BlueprintPathBand); lane rows just keep its track's
+            // width so the flex row stays on the parent grid's tracks.
+            return (
+              <Fragment key={`pleat-${track.key}`}>
+                <div
+                  aria-hidden
+                  data-compare-pleat-spacer=""
+                  className="shrink-0"
+                  style={{
+                    width: COMPARE_PLEAT_TRACK_WIDTH,
+                    minWidth: COMPARE_PLEAT_TRACK_WIDTH,
+                  }}
+                />
+                {gapSpacer()}
+              </Fragment>
+            )
+          }
+
+          const stepId = track.stepIdByPath[pathId]
           const step = stepId !== undefined ? stepById.get(stepId) : undefined
           const stepIndex =
             stepId !== undefined ? stepIndexById.get(stepId) : undefined
 
           return (
-            <Fragment key={column.key}>
+            <Fragment key={track.key}>
               {step !== undefined && stepIndex !== undefined ? (
                 renderStepCell(step, stepIndex)
               ) : (
@@ -577,17 +674,7 @@ function CompareLayerRow({
                   }}
                 />
               )}
-              {columnIndex < stackedColumns.length - 1 && (
-                <div
-                  aria-hidden
-                  className="shrink-0"
-                  style={{ width: STEP_COLUMN_GAP, minWidth: STEP_COLUMN_GAP }}
-                  {...(stepIndex !== undefined &&
-                  stepIndex < blueprint.steps.length - 1
-                    ? { 'data-step-gap': stepIndex }
-                    : {})}
-                />
-              )}
+              {gapSpacer(stepIndex)}
             </Fragment>
           )
         })}
@@ -621,6 +708,62 @@ function CompareLayerRow({
         </Fragment>
       ))}
     </div>
+  )
+}
+
+/**
+ * One collapsed pleat, full band height — flat `--muted` with a single 1px
+ * center crease (rib texture deliberately cut: it moirés under zoom),
+ * chevron + mono count at the top, step range in the tooltip. Clicking
+ * expands the pleat (adds it to the shared fold state's expandedPleats).
+ *
+ * The track-width change it triggers is INSTANT — `gridTemplateColumns`
+ * is never animated (a full-subgrid relayout per frame, with arrows drawn
+ * against intermediate geometry); only this cell's own chevron/opacity
+ * may transition, on `--motion-micro`, and reduced motion drops even that.
+ */
+function ComparePleatCell({
+  track,
+  gridColumn,
+  onExpand,
+}: {
+  track: Extract<StackedBandTrack, { kind: 'pleat' }>
+  gridColumn: number
+  onExpand?: (pleatKey: string) => void
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            data-compare-pleat={track.key}
+            aria-expanded={false}
+            aria-label={`${track.title} — expand`}
+            onClick={() => onExpand?.(track.key)}
+            className={cn(
+              'group/pleat relative z-[1] flex flex-col items-center gap-1 overflow-hidden rounded-md bg-muted pt-2',
+              'text-muted-foreground hover:text-foreground',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+            )}
+            style={{ gridColumn, gridRow: '1 / -1' }}
+          />
+        }
+      >
+        <span
+          aria-hidden
+          className="absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-border"
+        />
+        <ChevronRight
+          aria-hidden
+          className="relative size-3 shrink-0 opacity-70 transition-opacity duration-(--motion-micro) group-hover/pleat:opacity-100 motion-reduce:transition-none"
+        />
+        <span className="relative shrink-0 font-mono text-2xs tabular-nums">
+          {track.columnCount}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{track.title}</TooltipContent>
+    </Tooltip>
   )
 }
 

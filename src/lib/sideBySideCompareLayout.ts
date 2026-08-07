@@ -623,6 +623,9 @@ export function getComparePanelHeight(
 /** Vertical gap between stacked path bands — room for both bands' section
  *  frame insets (20 + 20) plus the lower band's title badge overhang. */
 export const COMPARE_STACKED_BAND_GAP = 64
+/** Fixed track width of one folded pleat (Phase 4a) — a whole run of shared
+ *  columns compresses to this. */
+export const COMPARE_PLEAT_TRACK_WIDTH = 28
 /** Gap between the step-header row and the first band's rows. */
 export const COMPARE_STACKED_HEADER_GAP = 36
 
