@@ -98,6 +98,9 @@ export function CreateVersionDialog({
       // name-uniqueness check read it, and staleTime Infinity means only an
       // explicit invalidation refreshes it.
       invalidateQueries('scenario-paths')
+      // …and the canvas query, which is what the board and the sidebar PATHS
+      // rows read. Without it a new path is invisible until a reload.
+      invalidateQueries('canvas-blueprints')
       setDraft(EMPTY)
       onOpenChange(false)
       onCreated?.(pathId)
