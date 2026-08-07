@@ -174,6 +174,13 @@ describe('buildCompareModel — alignment and verdicts', () => {
       'three#0',
     ])
     expect(model.columns[1].verdict).toBe('only')
+    // The stacked grid places cells by these ids: present paths carry their
+    // own step id per canonical column, absent paths are simply missing.
+    expect(model.columns[0].stepIdByPath).toEqual({
+      a: 'a-step-0',
+      b: 'b-step-0',
+    })
+    expect(model.columns[1].stepIdByPath).toEqual({ b: 'b-step-1' })
   })
 
   it('near-matches a substantively-similar renamed step instead of splitting it', () => {

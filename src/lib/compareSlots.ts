@@ -59,6 +59,9 @@ export interface CompareColumn {
   readonly columnKey: string
   readonly label: string
   readonly perPathPresent: Readonly<Record<string, boolean>>
+  /** Each present path's step id backing this canonical column — the stacked
+   *  grid places cells with it; absent paths are simply missing. */
+  readonly stepIdByPath: Readonly<Record<string, string>>
   readonly verdict: CompareStatus
   /** Path ids grouped by equal column-level signature; absent paths form their own group. */
   readonly agreementGroups: ReadonlyArray<readonly string[]>
@@ -405,6 +408,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
       columnKey: seed.key,
       label: seed.label,
       perPathPresent,
+      stepIdByPath: Object.fromEntries(seed.stepIdByPath),
       verdict,
       agreementGroups,
     }
