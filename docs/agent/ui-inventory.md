@@ -24,7 +24,7 @@ Rule of thumb: a need that seems to lack a primitive usually has a
 precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 `SlicesSidebarSection` before assuming it's missing.
 
-## Compare review cockpit (Compare v3, Phase 3)
+## Compare review cockpit (Compare v3, Phases 3–4a)
 
 | Need | Primitive | Note |
 |---|---|---|
@@ -34,14 +34,21 @@ precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 | Zone numbering ①②③ | `blueprint/CompareZoneChip` | ONE drawn chip (mono digit in a circle) — strip, ledger, agent args all mean the same index |
 | Divergence strip | `blueprint/CompareDivergenceStrip` | SVG braid, segment buttons (≥44px hits), sidebar-selection idiom for the active zone; navigation only |
 | Fly-to-cell + counterpart pulse | `lib/canvasFocusCells` registry → `useZoomPanViewport.focusCells` | resolve at call time by scenario id; pulse = `[data-blueprint-cell-pulse]`, reduced-motion aware |
-| Cross-surface compare state | `lib/compareReviewStore` (module store + `useSyncExternalStore`) | model registration, active zone, ledger filters, ledger-open flag |
+| Cross-surface compare state | `lib/compareReviewStore` (module store + `useSyncExternalStore`) | model registration, active zone, ledger filters, ledger-open flag, fold state |
+| `[⇤ Fold]` menubar toggle | `button.tsx` ghost + `aria-pressed` + `tooltip.tsx` | disabled at 0 differences or 0 foldable columns; tooltip carries the "Fold N shared steps" count |
+| Folded pleats | `blueprint/BlueprintPathBand` `ComparePleatCell` + `tooltip.tsx` | one fixed 28px track per shared run fragment (pin-split, `lib/compareFold`); click expands; `gridTemplateColumns` never animates |
+| Pinned-column explainer | `Link2` glyph in the column header + `tooltip.tsx` | one-hop pin rule (`computePinnedColumns`) — "kept expanded — feeds a divergent step" |
+| Fly-to while folded | `lib/compareZoneNavigation.focusCompareCells` | THE compare focus gesture: auto-expands the target's pleat, waits two rAFs, aborts on a newer generation |
 
 Agent parity for these surfaces: ui commands `differences_open`,
 `differences_close`, `panel_surface <details|differences>`,
 `differences_filter <lane:"…" verdict:…>`, `jump_divergence
-<next|prev|n>`; read tool `get_compare_diff` (headless `buildCompareModel`
-— grounds zone indices, lane names and cell ids); `get_ui_state` gains a
-`compare` line (mode, paths, counts, active zone, ledger open + filters).
+<next|prev|n>`, `collapse_shared <true|false|empty toggles>`,
+`toggle_pleat <columnKey or 1-based pleat index>`; read tool
+`get_compare_diff` (headless `buildCompareModel` — grounds zone indices,
+lane names, columnKeys and cell ids); `get_ui_state` gains a `compare`
+line (mode, paths, counts, active zone, ledger open + filters, fold
+state).
 
 Full DS directory today: accordion, alert, attachment, badge, breadcrumb,
 bubble, button, card, carousel, collapsible, context-menu,

@@ -17,12 +17,25 @@ import {
 } from '@/lib/compareLedger'
 import { jumpToCompareZone } from '@/lib/compareZoneNavigation'
 import {
+  compareFoldPleatTitle,
+  computeFoldableRunFragments,
+  countFoldableCompareColumns,
+  isCompareFoldAvailable,
+  resolveCompareFoldFragment,
+} from '@/lib/compareFold'
+import {
   clearCompareFilters,
   getCompareReviewState,
   registerCompareReview,
   setCompareFilters,
+  setCompareFolded,
+  toggleComparePleat,
 } from '@/lib/compareReviewStore'
-import { buildCompareModel, type CompareBlueprints } from '@/lib/compareSlots'
+import {
+  buildCompareModel,
+  computePinnedColumns,
+  type CompareBlueprints,
+} from '@/lib/compareSlots'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
   getComparePanelHeight,
@@ -198,13 +211,22 @@ export function ScenarioBlueprintPanel({
         filterBits.length > 0
           ? `Ledger filter: ${filterBits.join('; ')}.`
           : 'Ledger filter: none.',
+        state.fold.folded
+          ? `Shared steps FOLDED${
+              state.fold.expandedPleats.size > 0
+                ? `, ${state.fold.expandedPleats.size} pleat${
+                    state.fold.expandedPleats.size === 1 ? '' : 's'
+                  } expanded`
+                : ''
+            }.`
+          : 'Shared steps unfolded.',
       ].join(' ')
     })
     const unregisterJump = registerAgentUiCommand({
       name: 'jump_divergence',
       description:
         'Fly the camera to a divergence zone of the compared paths and mark it active (strip + ledger stay in sync). arg: next | prev | <zone number> — the same ①②③ indices the strip and ledger show.',
-      run: (arg) => {
+      run: async (arg) => {
         const state = getCompareReviewState()
         const registration = state.registration
         if (!registration) return 'No comparison is active.'
@@ -234,7 +256,7 @@ export function ScenarioBlueprintPanel({
           target = parsedIndex
         }
         const zone = zones[target - 1]
-        const outcome = jumpToCompareZone(zone, registration.slideId)
+        const outcome = await jumpToCompareZone(zone, registration.slideId)
         return `Zone ${target} of ${zones.length} (${zone.stepRangeLabel} · ${zone.titleLabel}, ${zone.slots.length} differences)${
           outcome?.kind === 'flown'
             ? ' — camera flown to it.'
@@ -263,7 +285,66 @@ export function ScenarioBlueprintPanel({
         return `Ledger filtered — ${bits.join('; ') || 'no facets'}.`
       },
     })
+    const unregisterCollapseShared = registerAgentUiCommand({
+      name: 'collapse_shared',
+      description:
+        'Fold the shared (identical) step columns of the compared paths into pleats, or unfold them — the same [⇤ Fold] toggle in the menubar, in either compare mode. arg: true | false | empty toggles. Unavailable at zero differences or when the pin rule keeps every shared column expanded.',
+      run: (arg) => {
+        const state = getCompareReviewState()
+        const registration = state.registration
+        if (!registration) return 'No comparison is active.'
+        const pinned = computePinnedColumns(
+          registration.model,
+          registration.blueprints,
+        )
+        if (!isCompareFoldAvailable(registration.model, pinned)) {
+          return countCompareDifferences(registration.model) === 0
+            ? 'Fold is unavailable — the compared paths are identical, there is nothing to fold around.'
+            : 'Fold is unavailable — every shared column feeds a divergent step (pinned), so nothing would fold.'
+        }
+        const input = (arg ?? '').trim().toLowerCase()
+        let next: boolean
+        if (input === '') next = !state.fold.folded
+        else if (input === 'true') next = true
+        else if (input === 'false') next = false
+        else return `Could not parse "${arg}" — arg: true | false | empty toggles.`
+        if (next === state.fold.folded) {
+          return `Shared steps were already ${next ? 'folded' : 'unfolded'}.`
+        }
+        setCompareFolded(next)
+        return next
+          ? `Shared steps folded — ${countFoldableCompareColumns(registration.model, pinned)} columns compressed into pleats.`
+          : 'Shared steps unfolded.'
+      },
+    })
+    const unregisterTogglePleat = registerAgentUiCommand({
+      name: 'toggle_pleat',
+      description:
+        'Expand or re-collapse one pleat of folded shared steps. arg: a columnKey inside the pleat (see get_compare_diff) or the 1-based pleat index, left to right. Requires the fold to be on (collapse_shared).',
+      run: (arg) => {
+        const state = getCompareReviewState()
+        const registration = state.registration
+        if (!registration) return 'No comparison is active.'
+        if (!state.fold.folded)
+          return 'Shared steps are not folded — run collapse_shared first.'
+        const input = (arg ?? '').trim()
+        if (input === '')
+          return 'toggle_pleat needs an arg: a columnKey inside the pleat, or the 1-based pleat index.'
+        const fragments = computeFoldableRunFragments(
+          registration.model,
+          computePinnedColumns(registration.model, registration.blueprints),
+        )
+        const fragment = resolveCompareFoldFragment(fragments, input)
+        if (!fragment)
+          return `No pleat matches "${input}" — there are ${fragments.length} pleats; pass an index 1 to ${fragments.length} or a columnKey inside one.`
+        const wasExpanded = state.fold.expandedPleats.has(fragment.key)
+        toggleComparePleat(fragment.key)
+        return `Pleat ${fragments.indexOf(fragment) + 1} (${compareFoldPleatTitle(fragment)}) ${wasExpanded ? 're-collapsed' : 'expanded'}.`
+      },
+    })
     return () => {
+      unregisterTogglePleat()
+      unregisterCollapseShared()
       unregisterFilter()
       unregisterJump()
       unregisterContext()

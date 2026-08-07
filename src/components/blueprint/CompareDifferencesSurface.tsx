@@ -14,7 +14,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { buildBlueprintCellSelectionForId } from '@/lib/blueprintCellConnections'
-import { resolveFocusCells } from '@/lib/canvasFocusCells'
+import { focusCompareCells } from '@/lib/compareZoneNavigation'
 import {
   compareSlotFocusCellIds,
   compareZoneFocusCellIds,
@@ -284,7 +284,9 @@ export function CompareDifferencesSurface({
 
   const flyTo = (cellIds: string[]) => {
     if (cellIds.length === 0) return
-    resolveFocusCells(registration.slideId)?.(cellIds)
+    // The shared compare gesture: auto-expands a pleat first when the
+    // target is folded, so zone-fly and row-fly work while folded.
+    void focusCompareCells(cellIds, registration.slideId)
   }
 
   const openZone = (zone: CompareZone | null) => {

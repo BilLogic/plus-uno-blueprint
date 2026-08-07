@@ -75,7 +75,7 @@ export function CompareDivergenceStrip({
             : zones.length
           : Math.min(Math.max(current + direction, 1), zones.length)
       const zone = zones[target - 1]
-      if (zone) jumpToCompareZone(zone, slideId)
+      if (zone) void jumpToCompareZone(zone, slideId)
     }
   }, [activeZone, slideId, zones])
 
@@ -196,7 +196,7 @@ export function CompareDivergenceStrip({
                 isActive && 'bg-(--sidebar-selected)',
               )}
               style={{ width: `${widthPct}%` }}
-              onClick={() => jumpToCompareZone(zone, slideId)}
+              onClick={() => void jumpToCompareZone(zone, slideId)}
             >
               <svg
                 className="absolute inset-y-0 left-1 right-1 h-full w-[calc(100%-0.5rem)]"
