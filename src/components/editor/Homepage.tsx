@@ -95,7 +95,12 @@ export function Homepage() {
               // brand fill — which is the Button's own `default` variant. It
               // used to restate `bg-primary` and its hover here at a different
               // alpha than the variant used, which is how the two drifted.
-              className="h-9 shrink-0 px-3.5 font-semibold"
+              //
+              // No `font-semibold` either: this carried 600 while the Button
+              // base carried 500, so the app's most-looked-at button was two
+              // steps heavier than the system it is supposed to demonstrate.
+              // Size and the brand fill already make it the primary action.
+              className="h-9 shrink-0 px-3.5"
             >
               View PLUS Blueprints
             </Button>
