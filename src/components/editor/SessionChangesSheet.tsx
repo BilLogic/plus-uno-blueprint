@@ -111,6 +111,17 @@ async function revertEntry(
       // row in an open Evidence tab for the rest of the session.
       invalidateQueries(`evidence:${cellId}`)
     }
+    // Slices cache under their own keys, which `invalidateStructure` does not
+    // touch. Without this, undoing a frame rewrite left the slice tab and the
+    // open frame editor rendering the frames the database no longer had — the
+    // same class of failure the `evidence:` line above was added for, and one
+    // only reachable now that a slice write HAS a revert.
+    const sliceId =
+      typeof entry.args.slice_id === 'string' ? entry.args.slice_id : null
+    if (sliceId) {
+      invalidateQueries('slices')
+      invalidateQueries(`slice:${sliceId}`)
+    }
     return 'reverted'
   } finally {
     revertsInFlight.delete(entry.id)
