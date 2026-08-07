@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePanel'
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
+import { MergedCompareGrid } from '@/components/blueprint/MergedCompareGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
 import {
@@ -42,6 +43,7 @@ import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
   getComparePanelHeight,
   getComparePanelWidth,
+  getMergedComparePanelHeight,
   getPanelHeightFromSwimlaneBody,
   getStackedComparePanelHeight,
   getStackedComparePanelWidth,
@@ -170,21 +172,23 @@ export function ScenarioBlueprintPanel({
   }, [selectedPathIds.length, useStackedArrangement, visibleBlueprints])
 
   /*
-    Merged = READING PRESET (Phase 4b — the branch canvas failed its data
-    gate, median 13% spine coverage vs 30%). Entering Merged folds the
-    shared runs and opens the Differences surface — one gesture into
-    review posture; leaving unfolds (which clears expandedPleats per the
-    fold semantics). The panel is deliberately left alone on exit — the
-    user may still be reading the ledger. A preset, not a lock: after
-    entry, fold and panel stay fully user-controllable.
+    Merged = ONE COMBINED BLUEPRINT (Phase 4b). `MergedCompareGrid` renders
+    the compared paths as a single grid — one lane rail, one canonical step
+    axis, shared slots drawn once, divergent slots stacking each path's
+    version — so the mode is a real canvas change, not a reading posture.
 
-    This is THE one seam for the preset: both entry paths — the menubar
-    CompareViewToggle and the agent's `set_scenario_view merged` — mutate
-    the EditorContext view override, and both land here as a
-    `displayViewType` transition. Gating the tracked mode on
-    `compareModel` makes degenerate cases (<2 paths, half-loaded pair,
-    overview rows) a natural no-op, and the null-reset means re-entering
-    compare does not replay a stale transition.
+    The reading PRESET rides along unchanged: entering Merged also folds the
+    shared runs (the step axis still compresses) and opens the Differences
+    ledger, so one gesture lands in review posture; leaving unfolds. A
+    preset, not a lock: after entry, fold and panel stay user-controllable.
+
+    This is THE one seam for it: both entry paths — the menubar
+    CompareViewToggle and the agent's `set_scenario_view merged` — mutate the
+    EditorContext view override, and both land here as a `displayViewType`
+    transition. Gating the tracked mode on `compareModel` makes degenerate
+    cases (<2 paths, half-loaded pair, overview rows) a natural no-op, and
+    the null-reset means re-entering compare does not replay a stale
+    transition.
   */
   const cellDetail = useBlueprintCellDetailOptional()
   const openDifferences = cellDetail?.openDifferences
@@ -422,6 +426,14 @@ export function ScenarioBlueprintPanel({
     visibleBlueprints,
   ])
 
+  /*
+    Merged only renders once the model exists — it IS a comparison, so a
+    single path or a half-loaded pair has nothing to merge and falls back to
+    the stacked bands (which read fine with one band).
+  */
+  const mergedModel =
+    useStackedArrangement && displayViewType === 'merged' ? compareModel : null
+
   // Arrangement is part of the key: switching stacked bands ⇄ overview row
   // re-measures instead of keeping the other arrangement's size.
   const compareFitContentKey = `${slide.id}:${selectedPathIds.join(',')}:${displayViewType}:${useStackedArrangement ? 'bands' : 'row'}:${paths.length}`
@@ -442,9 +454,13 @@ export function ScenarioBlueprintPanel({
       ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight, {
           lockHeight: lockPanelHeight,
         })
-      : useStackedArrangement
-        ? getStackedComparePanelHeight(visibleBlueprints)
-        : getComparePanelHeight(visibleBlueprints))
+      : mergedModel !== null
+        ? // Merged is about one band tall; the swell over divergent slots
+          // comes from the panel's measurement, not from this floor.
+          getMergedComparePanelHeight(visibleBlueprints)
+        : useStackedArrangement
+          ? getStackedComparePanelHeight(visibleBlueprints)
+          : getComparePanelHeight(visibleBlueprints))
 
   const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
 
@@ -537,7 +553,15 @@ export function ScenarioBlueprintPanel({
         chromeBarHeight={COMPARE_STRIP_HEIGHT}
         fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
       >
-        {useStackedArrangement ? (
+        {mergedModel !== null ? (
+          <MergedCompareGrid
+            blueprints={visibleBlueprints}
+            model={mergedModel}
+            scrollContainerRef={scrollContainerRef}
+            scenarioName={scenarioName}
+            phaseName={phaseName}
+          />
+        ) : useStackedArrangement ? (
           <StackedCompareGrid
             blueprints={visibleBlueprints}
             model={compareModel}

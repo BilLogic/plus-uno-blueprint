@@ -46,10 +46,20 @@ export type ComparePathArrowData = {
   steps: IntegratedBlueprintStep[]
 }
 
+/**
+ * One path's arrow inputs. `foldedStepIds` (from the compare model + fold
+ * state, never the DOM) drops any trigger with an endpoint inside a
+ * collapsed pleat HERE, at the data level — a declared drop, so the overlay
+ * never silently misses a DOM anchor the fold removed.
+ */
 export function getComparePathArrowData(
   blueprint: BlueprintData,
+  foldedStepIds?: ReadonlySet<string>,
 ): ComparePathArrowData {
   const { path, cells, triggers, steps } = blueprint
+  const keepTrigger = (stepId: string | undefined) =>
+    stepId === undefined || !foldedStepIds?.has(stepId)
+  const stepIdByCellId = new Map(cells.map((cell) => [cell.id, cell.step_id]))
 
   return {
     steps: steps.map((step) => ({
@@ -68,14 +78,22 @@ export function getComparePathArrowData(
       links: cell.links,
       opacity: 1,
     })),
-    triggers: triggers.map((trigger) => ({
-      id: trigger.id,
-      source_cell_id: trigger.source_cell_id,
-      target_cell_id: trigger.target_cell_id,
-      path_id: path.id,
-      path_type: path.path_type,
-      opacity: 1,
-    })),
+    triggers: triggers
+      .filter(
+        (trigger) =>
+          foldedStepIds === undefined ||
+          foldedStepIds.size === 0 ||
+          (keepTrigger(stepIdByCellId.get(trigger.source_cell_id)) &&
+            keepTrigger(stepIdByCellId.get(trigger.target_cell_id))),
+      )
+      .map((trigger) => ({
+        id: trigger.id,
+        source_cell_id: trigger.source_cell_id,
+        target_cell_id: trigger.target_cell_id,
+        path_id: path.id,
+        path_type: path.path_type,
+        opacity: 1,
+      })),
   }
 }
 
@@ -685,6 +703,54 @@ export function getStackedComparePanelHeight(
 ): number {
   return (
     getStackedCompareGridHeight(blueprints, compact) +
+    getComparePanelScrollPaddingY()
+  )
+}
+
+/* ---------------------------------------------------------------------------
+ * Merged arrangement (focused scenario view): ONE band on the same canonical
+ * step axis, whose slots swell vertically wherever the paths disagree.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Merged lane rows must GROW: a divergent slot stacks one cell per path
+ * inside a single row, so a fixed `Npx` track (what the stacked bands use)
+ * would clip the swell. `minmax(Npx, auto)` keeps the shared floor — a lane
+ * with no divergence measures exactly as it does in Stacked.
+ */
+export function getMergedCompareRowTrackCss(row: CompareRowHeightSpec): string {
+  return `minmax(${getCompareRowTrackHeight(row)}px, auto)`
+}
+
+/**
+ * Merged is about one band tall. The swell over divergent slots is
+ * deliberately NOT estimated: the panel measures rendered content and the
+ * measurement replaces this floor, and a hot estimate here would be dead
+ * gray space on a board that happens to agree everywhere.
+ */
+export function getMergedCompareGridHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+  collapsedLayerIds: ReadonlySet<string> = new Set(),
+): number {
+  if (blueprints.length === 0) return COMPARE_MIN_PANEL_HEIGHT
+  const rows = buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds)
+
+  return (
+    COMPARE_STEP_HEADER_HEIGHT +
+    COMPARE_STACKED_HEADER_GAP +
+    getStackedCompareBandBodyHeight(rows) +
+    COMPARE_PATH_SECTION_BOTTOM_INSET +
+    COMPARE_PANEL_PADDING * 2
+  )
+}
+
+export function getMergedComparePanelHeight(
+  blueprints: BlueprintData[],
+  compact = false,
+): number {
+  return (
+    getMergedCompareGridHeight(blueprints, compact) +
     getComparePanelScrollPaddingY()
   )
 }

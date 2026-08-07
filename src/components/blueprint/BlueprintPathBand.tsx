@@ -1,12 +1,13 @@
 import { Fragment, useMemo, useRef, type RefObject } from 'react'
-import { ChevronRight } from 'lucide-react'
-import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintColumnHandles } from '@/components/blueprint/BlueprintColumnHandles'
 import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandles'
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
-import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
-import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
-import { TechPillFace } from '@/components/blueprint/TechPillFace'
+import { CompareLaneRowShell } from '@/components/blueprint/CompareLaneRowShell'
+import { CompareCellBlock } from '@/components/blueprint/CompareCellBlock'
+import {
+  ComparePleatCell,
+  CompareDiffColumnTint,
+} from '@/components/blueprint/CompareTrackDecorations'
 import {
   BlueprintDividerRow,
   BlueprintLabelRow,
@@ -17,29 +18,20 @@ import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSecti
 import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import {
-  BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_LAYER_ROW_GAP,
-  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
-  BLUEPRINT_WRAP_CORRIDOR_MARGIN,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
+  hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
-  getVisualCellButtonMaxHeight,
   shouldUsePillCellContent,
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
-import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   getBlueprintLayerStyle,
   getBlueprintLayerZone,
-  type BlueprintLayerStyle,
 } from '@/lib/blueprintTheme'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import type { CompareGridTrack } from '@/lib/compareGridTracks'
 import {
   COMPARE_PLEAT_TRACK_WIDTH,
   type BlueprintLabelRowSpec,
@@ -47,15 +39,10 @@ import {
   resolveBlueprintLayer,
 } from '@/lib/sideBySideCompareLayout'
 import { cn } from '@/lib/utils'
-import {
-  buildBlueprintCellSelection,
-  getTechPillItems,
-  type BlueprintCellSelectionContext,
-} from '@/lib/blueprintCellSelection'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
-import type { BlueprintData, BlueprintCell, BlueprintStep } from '@/types/blueprint'
+import type { BlueprintData, BlueprintStep } from '@/types/blueprint'
 
 /** Left gutter on the white board so the play control clears Visual cells. */
 const VISUAL_PLAY_GUTTER = 28
@@ -76,7 +63,7 @@ export type PathBandArrangement =
   | {
       kind: 'row'
       gridRow: number
-      tracks: readonly StackedBandTrack[]
+      tracks: readonly CompareGridTrack[]
       rowTrackCss: string
       marginTop?: number
       onToggleLayer?: (layerId: string) => void
@@ -89,35 +76,6 @@ export type PathBandArrangement =
        * level before the overlay ever sees them.
        */
       foldedStepIds?: ReadonlySet<string>
-    }
-
-/** One canonical step column of the stacked arrangement. */
-export type StackedBandColumn = {
-  key: string
-  label: string
-  /** This column's backing step id per path — absent path ⇒ inert spacer. */
-  stepIdByPath: Readonly<Record<string, string>>
-  /** Column-level verdict !== 'shared' (drives the light column tint). */
-  divergent: boolean
-  /** Pin rule (one-hop edge to a divergent cell) — never folds; Link2 glyph. */
-  pinned: boolean
-}
-
-/**
- * One track of the stacked arrangement's column axis: a normal step column,
- * or a pleat — a whole run of folded shared columns compressed to one
- * fixed-width track (Phase 4a).
- */
-export type StackedBandTrack =
-  | ({ kind: 'column' } & StackedBandColumn)
-  | {
-      kind: 'pleat'
-      /** The fold fragment's key (its first columnKey). */
-      key: string
-      /** How many shared columns this pleat hides — the `▸ N` label. */
-      columnCount: number
-      /** Tooltip copy: "N identical steps: First → Last". */
-      title: string
     }
 
 type BlueprintPathBandProps = {
@@ -156,29 +114,10 @@ export function BlueprintPathBand({
   const resolvedScrollRef = scrollContainerRef ?? fallbackScrollRef
   const foldedStepIds =
     arrangement.kind === 'row' ? arrangement.foldedStepIds : undefined
-  const arrowData = useMemo(() => {
-    const data = getComparePathArrowData(blueprint)
-    if (!foldedStepIds || foldedStepIds.size === 0) return data
-    // Declared drop (Phase 4a): while shared runs are folded, an arrow with
-    // either endpoint inside a collapsed pleat is filtered HERE, at the data
-    // level — the overlay never receives the trigger, so there is no silent
-    // querySelector miss against a DOM anchor the fold removed. Which steps
-    // are folded came from the compare model + fold state, not the DOM.
-    const stepIdByCellId = new Map(
-      data.cells.map((cell) => [cell.id, cell.step_id]),
-    )
-    return {
-      ...data,
-      triggers: data.triggers.filter((trigger) => {
-        const sourceStep = stepIdByCellId.get(trigger.source_cell_id)
-        const targetStep = stepIdByCellId.get(trigger.target_cell_id)
-        return !(
-          (sourceStep !== undefined && foldedStepIds.has(sourceStep)) ||
-          (targetStep !== undefined && foldedStepIds.has(targetStep))
-        )
-      }),
-    }
-  }, [blueprint, foldedStepIds])
+  const arrowData = useMemo(
+    () => getComparePathArrowData(blueprint, foldedStepIds),
+    [blueprint, foldedStepIds],
+  )
   const showPlay =
     isBlueprintVisualWalkthroughEnabled() &&
     buildVisualWalkthroughSession(blueprint).steps.length > 0
@@ -248,17 +187,9 @@ export function BlueprintPathBand({
                 onExpand={arrangement.onExpandPleat}
               />
             ) : track.divergent ? (
-              <div
+              <CompareDiffColumnTint
                 key={`tint-${track.key}`}
-                aria-hidden
-                data-blueprint-compare-diffcolumn=""
-                className="pointer-events-none relative rounded-md"
-                style={{
-                  gridColumn: trackIndex + 2,
-                  gridRow: '1 / -1',
-                  marginLeft: -STEP_COLUMN_GAP / 2,
-                  marginRight: -STEP_COLUMN_GAP / 2,
-                }}
+                gridColumn={trackIndex + 2}
               />
             ) : null,
           )}
@@ -366,103 +297,29 @@ function CompareCardRow({
   fillSwimlaneHeight?: boolean
   playGutter?: number
   showPlay?: boolean
-  stackedTracks?: readonly StackedBandTrack[]
+  stackedTracks?: readonly CompareGridTrack[]
 }) {
-  const isDivider =
-    row.kind === 'interaction' ||
-    row.kind === 'visibility' ||
-    row.kind === 'internalInteraction'
-  const isLayerRow = row.kind === 'layer'
-  const corridorAbove = row.wrapCorridorAbove
-    ? BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
-    : 0
-  const corridorBelow = row.wrapCorridorBelow
-    ? BLUEPRINT_WRAP_CORRIDOR_MARGIN
-    : 0
-  const inLaneLoopCorridorAbove = row.inLaneLoopCorridorAbove
-    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
-    : 0
-
   return (
-    <div
-      {...(isLayerRow && row.layer
-        ? {
-            'data-blueprint-swimlane': '',
-            'data-blueprint-row': '',
-            'data-layer-id': row.layer.id,
-            // Lets a picked cell name its lane without the selection
-            // carrying the whole blueprint (see lib/canvasCellQuery).
-            'data-layer-name': row.layer.name,
-          }
-        : {})}
-      {...(isDivider
-        ? {
-            'data-blueprint-divider':
-              row.kind === 'interaction' ? 'interaction' : 'visibility',
-          }
-        : {})}
-      className={cn(
-        'flex h-full min-h-0 flex-col',
-        isDivider && 'relative z-[1] overflow-hidden bg-transparent',
-        isLayerRow && 'overflow-visible',
-      )}
-      style={{
-        gridRow: rowIndex + 1,
-        // Stacked bands span the rail column too; cells start at track 2.
-        ...(stackedTracks ? { gridColumn: '2 / -1' } : {}),
-        backgroundColor: isDivider ? undefined : 'transparent',
-      }}
-      {...(isDivider ? { role: 'separator' as const } : {})}
+    <CompareLaneRowShell
+      row={row}
+      rowIndex={rowIndex}
+      cellTracksOnly={stackedTracks !== undefined}
     >
-      {corridorAbove > 0 && (
-        <div aria-hidden className="shrink-0" style={{ height: corridorAbove }} />
-      )}
-      <div
-        className={cn(
-          'min-h-0',
-          isDivider
-            ? 'flex h-full items-center overflow-hidden'
-            : 'flex flex-1 flex-col',
-        )}
-      >
-        {inLaneLoopCorridorAbove > 0 && (
-          <div
-            aria-hidden
-            data-blueprint-loop-corridor="above"
-            className="shrink-0"
-            style={{ height: inLaneLoopCorridorAbove }}
-          />
-        )}
-        {row.kind === 'layer' && row.layer ? (
-          row.collapsed ? (
-            <div className="h-full" aria-hidden />
-          ) : (
-            <CompareLayerRow
-              blueprint={blueprint}
-              layer={row.layer}
-              layers={layers}
-              compact={compact}
-              scenarioName={scenarioName}
-              phaseName={phaseName}
-              fillSwimlaneHeight={fillSwimlaneHeight}
-              playGutter={playGutter}
-              showPlay={showPlay}
-              stackedTracks={stackedTracks}
-            />
-          )
-        ) : isDivider ? (
-          <div className="h-full" aria-hidden />
-        ) : null}
-      </div>
-      {corridorBelow > 0 && (
-        <div
-          aria-hidden
-          data-blueprint-wrap-corridor="below"
-          className="shrink-0"
-          style={{ height: corridorBelow }}
+      {row.layer ? (
+        <CompareLayerRow
+          blueprint={blueprint}
+          layer={row.layer}
+          layers={layers}
+          compact={compact}
+          scenarioName={scenarioName}
+          phaseName={phaseName}
+          fillSwimlaneHeight={fillSwimlaneHeight}
+          playGutter={playGutter}
+          showPlay={showPlay}
+          stackedTracks={stackedTracks}
         />
-      )}
-    </div>
+      ) : null}
+    </CompareLaneRowShell>
   )
 }
 
@@ -487,7 +344,7 @@ function CompareLayerRow({
   fillSwimlaneHeight?: boolean
   playGutter?: number
   showPlay?: boolean
-  stackedTracks?: readonly StackedBandTrack[]
+  stackedTracks?: readonly CompareGridTrack[]
 }) {
   const blueprintLayer = useMemo(
     () => resolveBlueprintLayer(layer, blueprint),
@@ -526,9 +383,9 @@ function CompareLayerRow({
       ? (visualPictures?.length ?? 0) > 0
       : isPillLayer
         ? (slotCells ?? []).some((entry) =>
-            hasCellContent(entry.content, variant),
+            hasBlueprintCellContent(entry.content, variant),
           )
-        : hasCellContent(cell?.content, variant)
+        : hasBlueprintCellContent(cell?.content, variant)
 
     if (!showCell) {
       // Empty in Edit mode is not nothing: it is where a cell can go.
@@ -707,215 +564,6 @@ function CompareLayerRow({
           )}
         </Fragment>
       ))}
-    </div>
-  )
-}
-
-/**
- * One collapsed pleat, full band height — flat `--muted` with a single 1px
- * center crease (rib texture deliberately cut: it moirés under zoom),
- * chevron + mono count at the top, step range in the tooltip. Clicking
- * expands the pleat (adds it to the shared fold state's expandedPleats).
- *
- * The track-width change it triggers is INSTANT — `gridTemplateColumns`
- * is never animated (a full-subgrid relayout per frame, with arrows drawn
- * against intermediate geometry); only this cell's own chevron/opacity
- * may transition, on `--motion-micro`, and reduced motion drops even that.
- */
-function ComparePleatCell({
-  track,
-  gridColumn,
-  onExpand,
-}: {
-  track: Extract<StackedBandTrack, { kind: 'pleat' }>
-  gridColumn: number
-  onExpand?: (pleatKey: string) => void
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <button
-            type="button"
-            data-compare-pleat={track.key}
-            aria-expanded={false}
-            aria-label={`${track.title} — expand`}
-            onClick={() => onExpand?.(track.key)}
-            className={cn(
-              'group/pleat relative z-[1] flex flex-col items-center gap-1 overflow-hidden rounded-md bg-muted pt-2',
-              'text-muted-foreground hover:text-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-            )}
-            style={{ gridColumn, gridRow: '1 / -1' }}
-          />
-        }
-      >
-        <span
-          aria-hidden
-          className="absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-border"
-        />
-        <ChevronRight
-          aria-hidden
-          className="relative size-3 shrink-0 opacity-70 transition-opacity duration-(--motion-micro) group-hover/pleat:opacity-100 motion-reduce:transition-none"
-        />
-        <span className="relative shrink-0 font-mono text-2xs tabular-nums">
-          {track.columnCount}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent>{track.title}</TooltipContent>
-    </Tooltip>
-  )
-}
-
-function hasCellContent(
-  content: string | undefined,
-  variant: 'default' | 'pills' | 'visual',
-): boolean {
-  if (variant === 'visual') return true
-  if (!content?.trim()) return false
-  if (variant === 'pills') {
-    return parseCellContentItems(content).length > 0
-  }
-  return true
-}
-
-function CompareCellBlock({
-  cellId,
-  stepIndex,
-  content,
-  laneStyle,
-  variant,
-  compact,
-  flushBottom,
-  selectionContext,
-  visualPictures,
-  slotCells,
-}: {
-  cellId?: string
-  stepIndex: number
-  content?: string
-  laneStyle: BlueprintLayerStyle
-  variant: 'default' | 'pills' | 'visual'
-  compact?: boolean
-  flushBottom?: boolean
-  selectionContext?: BlueprintCellSelectionContext
-  visualPictures?: Array<{ picture: string; label: string }>
-  /** Every cell in a tech slot — one per touchpoint since the split. */
-  slotCells?: BlueprintCell[]
-}) {
-  const shellPadding = cn(
-    compact ? 'px-3' : 'px-3.5',
-    compact ? 'pt-3' : 'pt-4',
-    flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
-  )
-  const width = STEP_COLUMN_WIDTH
-  const isVisual = variant === 'visual'
-  const shellVerticalPad = compact ? 24 : 32
-  const shellStyle = {
-    width,
-    minWidth: width,
-    maxWidth: width,
-    ...(isVisual
-      ? { maxHeight: getVisualCellButtonMaxHeight(compact) + shellVerticalPad }
-      : undefined),
-  }
-  const shellClassName = cn(
-    'relative z-[1] flex shrink-0 items-stretch',
-    shellPadding,
-    isVisual && 'min-h-0 overflow-hidden',
-  )
-
-  const innerContent =
-    variant === 'visual' ? (
-      <div className="relative flex h-full min-h-0 max-h-full w-full flex-1 overflow-hidden">
-        <BlueprintStepVisual
-          compact={compact}
-          fill={laneStyle.lane}
-          pictures={visualPictures}
-          selection={
-            selectionContext
-              ? buildBlueprintCellSelection(selectionContext)
-              : undefined
-          }
-          cellId={cellId}
-          stepIndex={stepIndex}
-          className="flex-1"
-        />
-      </div>
-    ) : variant === 'pills' ? (
-      <div
-        {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
-        data-step-index={stepIndex}
-        className={cn(
-          'flex w-full flex-1 flex-col items-stretch',
-          compact ? 'gap-2' : 'gap-2.5',
-        )}
-      >
-        {(slotCells && slotCells.length > 0
-          ? slotCells.flatMap((slotCell) =>
-              getTechPillItems(slotCell.content ?? '').map((item) => ({
-                item,
-                slotCell,
-              })),
-            )
-          : getTechPillItems(content).map((item) => ({
-              item,
-              slotCell: undefined,
-            }))
-        ).map(({ item, slotCell }, index, all) =>
-          selectionContext ? (
-            <BlueprintTechPill
-              key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
-              item={item}
-              // Identity is the split's point: each pill carries its own
-              // cell in the selection it hands to the panel and the picker.
-              selectionContext={
-                slotCell
-                  ? {
-                      ...selectionContext,
-                      cellId: slotCell.id,
-                      cellContent: slotCell.content ?? '',
-                      cellPicture: slotCell.picture ?? null,
-                      cellDescription: slotCell.description ?? null,
-                      cellLinks: slotCell.links,
-                    }
-                  : selectionContext
-              }
-              stepIndex={stepIndex}
-              compact={compact}
-              sliceSequenceBadge={
-                index === 0 || slotCell?.id !== all[index - 1]?.slotCell?.id
-              }
-            />
-          ) : (
-            <TechPillFace
-              key={`${item}-${index}`}
-              item={item}
-              compact={compact}
-              className="shrink-0"
-            />
-          ),
-        )}
-      </div>
-    ) : (
-      <BlueprintCellButton
-        fill={laneStyle.lane}
-        compact={compact}
-        selection={
-          selectionContext
-            ? buildBlueprintCellSelection(selectionContext)
-            : undefined
-        }
-        cellId={cellId}
-        stepIndex={stepIndex}
-      >
-        <p className="w-full whitespace-pre-wrap">{content}</p>
-      </BlueprintCellButton>
-    )
-
-  return (
-    <div className={shellClassName} style={shellStyle}>
-      {innerContent}
     </div>
   )
 }
