@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
@@ -19,12 +20,25 @@ import {
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
+import {
+  getCompareReviewState,
+  subscribeCompareReview,
+} from '@/lib/compareReviewStore'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 
 export type BlueprintCellPreviewHover = {
   cellId: string
   techItem?: string | null
 }
+
+/**
+ * Which sibling surface the floating panel is showing. `details` is the
+ * cell detail view (selection or draft); `differences` is the compare
+ * ledger, which needs no selection at all.
+ */
+export type BlueprintPanelSurface = 'details' | 'differences'
+
+export type BlueprintPanelState = { surface: BlueprintPanelSurface }
 
 type BlueprintCellDetailContextValue = {
   enabled: boolean
@@ -39,6 +53,18 @@ type BlueprintCellDetailContextValue = {
    */
   draftCell: DraftCellTarget | null
   openDraftCell: (draft: DraftCellTarget) => void
+  /**
+   * THE single owner of "is the panel open, and on which surface".
+   * `null` = closed. Everything else derives: `isOpen`, the drawer's
+   * `open`, the surface switcher. Never OR a second boolean into it.
+   */
+  panelState: BlueprintPanelState | null
+  /** Open the Differences (compare ledger) surface — no selection required. */
+  openDifferences: () => void
+  /** Swap surfaces inside the open drawer — content swap, never close-reopen. */
+  setPanelSurface: (surface: BlueprintPanelSurface) => void
+  /** Close the panel: clears panelState + selection + draft atomically. */
+  closePanel: () => void
   isOpen: boolean
   selectedCellIds: ReadonlySet<string>
   directlyConnectedCellIds: ReadonlySet<string>
@@ -70,15 +96,31 @@ export function BlueprintCellDetailProvider({
 }: BlueprintCellDetailProviderProps) {
   const [selection, setSelection] = useState<BlueprintCellSelection | null>(null)
   const [draftCell, setDraftCell] = useState<DraftCellTarget | null>(null)
+  const [panelState, setPanelState] = useState<BlueprintPanelState | null>(null)
   const [previewHover, setPreviewHover] =
     useState<BlueprintCellPreviewHover | null>(null)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset-on-key: clears three pieces of selection state together when the workspace changes
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset-on-key: clears the panel state together when the workspace changes
     setSelection(null)
     setDraftCell(null)
+    setPanelState(null)
     setPreviewHover(null)
   }, [resetKey])
+
+  // The Differences surface only means something while a comparison is live
+  // (≥2 selected paths in the focused scenario view). When that stops being
+  // true — a path deselected, the scenario left compare — the surface falls
+  // back: details if a cell is selected, closed otherwise. Render-phase
+  // guarded set, the codebase's derive-during-render idiom.
+  const compareActive =
+    useSyncExternalStore(
+      subscribeCompareReview,
+      () => getCompareReviewState().registration,
+    ) !== null
+  if (panelState?.surface === 'differences' && !compareActive) {
+    setPanelState(selection ? { surface: 'details' } : null)
+  }
 
   // Tell the agent's UI-context collector which cell the human has open in
   // the side panel — the panel mounts under the canvas, out of the agent
@@ -96,19 +138,35 @@ export function BlueprintCellDetailProvider({
   const selectCell = useCallback((next: BlueprintCellSelection) => {
     setSelection(next)
     setDraftCell(null)
+    setPanelState({ surface: 'details' })
     setPreviewHover(null)
   }, [])
 
   const openDraftCell = useCallback((next: DraftCellTarget) => {
     setDraftCell(next)
     setSelection(null)
+    setPanelState({ surface: 'details' })
     setPreviewHover(null)
   }, [])
 
+  /**
+   * Close the panel: panelState, selection and draft clear atomically —
+   * `clearSelection` kept its historical name because every existing caller
+   * means "close the panel" by it.
+   */
   const clearSelection = useCallback(() => {
     setSelection(null)
     setDraftCell(null)
+    setPanelState(null)
     setPreviewHover(null)
+  }, [])
+
+  const openDifferences = useCallback(() => {
+    setPanelState({ surface: 'differences' })
+  }, [])
+
+  const setPanelSurface = useCallback((surface: BlueprintPanelSurface) => {
+    setPanelState({ surface })
   }, [])
 
   const cellEmphasis = useMemo(() => {
@@ -178,7 +236,11 @@ export function BlueprintCellDetailProvider({
       clearSelection,
       draftCell,
       openDraftCell,
-      isOpen: enabled && (selection !== null || draftCell !== null),
+      panelState,
+      openDifferences,
+      setPanelSurface,
+      closePanel: clearSelection,
+      isOpen: enabled && panelState !== null,
       selectedCellIds: cellEmphasis.selectedCellIds,
       directlyConnectedCellIds: cellEmphasis.directlyConnectedCellIds,
       setPreviewHover,
@@ -191,6 +253,9 @@ export function BlueprintCellDetailProvider({
       clearSelection,
       draftCell,
       openDraftCell,
+      panelState,
+      openDifferences,
+      setPanelSurface,
       cellEmphasis,
     ],
   )

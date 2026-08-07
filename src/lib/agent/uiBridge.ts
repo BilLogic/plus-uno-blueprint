@@ -1,4 +1,3 @@
-import { hasAgentUiCommand } from '@/lib/agent/uiCommands'
 import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
 
 /**
@@ -78,11 +77,15 @@ export async function agentOpenCellPanel(cellId: string): Promise<string> {
   el.dispatchEvent(
     new MouseEvent('click', { bubbles: true, cancelable: true, metaKey: true }),
   )
-  // Verify instead of assuming: the panel registers its UI commands while
-  // mounted, so their presence IS the panel being open. (Headless panes
-  // defer the open past document.hidden — don't false-fail there.)
+  // Verify instead of assuming: the cell-detail context registers its
+  // selection-scoped `cell-panel` UI-context contributor only while a cell
+  // is actually selected, so its presence IS "the panel opened on a cell".
+  // The panel's UI *commands* are the wrong probe now that the drawer can
+  // be open on the ledger with no selection — they would false-positive.
+  // (Headless panes defer the open past document.hidden — don't false-fail
+  // there.)
   await new Promise((done) => setTimeout(done, 250))
-  if (document.hidden || hasAgentUiCommand('cell_panel_close'))
+  if (document.hidden || hasAgentUiContext('cell-panel'))
     return 'Opened the cell detail panel.'
   return 'The click landed but the panel did not open. Likely causes: the hand (pan) tool is active — ask the user to switch tools — or the cell sits in a dimmed phase under focus mode. The panel is NOT open; do not claim it is.'
 }
@@ -126,6 +129,12 @@ export function registerAgentUiContext(
   return () => {
     if (contributors.get(key) === contributor) contributors.delete(key)
   }
+}
+
+/** Presence probe — contributors register while their surface state exists,
+ * so "the `cell-panel` contributor exists" IS "a cell is open in the panel". */
+export function hasAgentUiContext(key: string): boolean {
+  return contributors.has(key)
 }
 
 /** All registered contributors' lines, empty string when nothing reports. */
