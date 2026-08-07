@@ -1,10 +1,13 @@
 import { resolveFocusCells, type FocusCellsResult } from '@/lib/canvasFocusCells'
 import { computePleatsToExpandForCells } from '@/lib/compareFold'
-import { compareZoneFocusCellIds, type CompareZone } from '@/lib/compareLedger'
+import {
+  compareStepFocusCellIds,
+  type CompareStepGroup,
+} from '@/lib/compareLedger'
 import {
   expandComparePleat,
   getCompareReviewState,
-  setCompareActiveZone,
+  setCompareActiveStep,
 } from '@/lib/compareReviewStore'
 import { computePinnedColumns } from '@/lib/compareSlots'
 
@@ -59,16 +62,17 @@ export async function focusCompareCells(
 }
 
 /**
- * The one zone-activation gesture, shared by the divergence strip's
- * segments/stepper and the `jump_divergence` agent command: mark the zone
- * active in the store (the ledger's open accordion group derives from it)
- * and fly the camera to the zone's first divergent cells. Returns the
- * camera outcome, or null when no viewport serves the scenario.
+ * The one step-activation gesture, shared by the ledger accordion, the
+ * divergence strip's segments/stepper and the `jump_divergence` agent
+ * command: mark the step active in the store (the ledger's open group and
+ * the strip's highlighted segment both derive from it) and fly the camera to
+ * that step's differing cells. Returns the camera outcome, or null when no
+ * viewport serves the scenario.
  */
-export function jumpToCompareZone(
-  zone: CompareZone,
+export function jumpToCompareStep(
+  group: CompareStepGroup,
   slideId: string,
 ): Promise<FocusCellsResult | null> {
-  setCompareActiveZone(zone.index)
-  return focusCompareCells(compareZoneFocusCellIds(zone), slideId)
+  setCompareActiveStep(group.columnKey)
+  return focusCompareCells(compareStepFocusCellIds(group), slideId)
 }

@@ -11,7 +11,7 @@ import type { CompareModel, CompareStatus } from '@/lib/compareSlots'
  *
  * The compare model is computed once in `ScenarioBlueprintPanel` and its
  * consumers are scattered across React trees that share no provider: the
- * menubar `[≠ N]` chip, the portalled difference-ledger drawer, the
+ * menubar `[Diff N]` button, the portalled difference-ledger drawer, the
  * divergence strip on the canvas, and the agent's `get_ui_state`
  * contributor. Module-level store + `useSyncExternalStore` is the house
  * pattern for exactly this shape (see `CanvasModeProvider`,
@@ -35,12 +35,20 @@ export type CompareDifferencesFilters = {
   lanes: readonly string[]
   /** Verdicts to keep; empty = all. */
   verdicts: readonly CompareStatus[]
+  /** Canonical columnKeys; empty = all steps. */
+  steps: readonly string[]
 }
 
 export type CompareReviewState = {
   registration: CompareReviewRegistration | null
-  /** 1-based divergence-zone index shared by strip, ledger and agent. */
-  activeZone: number | null
+  /**
+   * The active DIVERGENT STEP, as a canonical columnKey — the one navigation
+   * cursor shared by the ledger's open accordion group, the strip's
+   * highlighted segment (the run containing this step) and
+   * `jump_divergence`. Finer than the old zone index: a run of six divergent
+   * steps is six stops, not one.
+   */
+  activeStepKey: string | null
   filters: CompareDifferencesFilters
   /** Mirrored by the panel while the Differences surface is showing. */
   ledgerOpen: boolean
@@ -51,11 +59,15 @@ export type CompareReviewState = {
   fold: CompareFoldState
 }
 
-const EMPTY_FILTERS: CompareDifferencesFilters = { lanes: [], verdicts: [] }
+const EMPTY_FILTERS: CompareDifferencesFilters = {
+  lanes: [],
+  verdicts: [],
+  steps: [],
+}
 
 let state: CompareReviewState = {
   registration: null,
-  activeZone: null,
+  activeStepKey: null,
   filters: EMPTY_FILTERS,
   ledgerOpen: false,
   fold: EMPTY_COMPARE_FOLD_STATE,
@@ -92,8 +104,9 @@ export function useCompareReviewState(): CompareReviewState {
 let lastRegisteredSlideId: string | null = null
 
 /**
- * Publish the focused scenario's compare context. Zone + filters reset when
- * the scenario changes — they are per-comparison state, not preferences.
+ * Publish the focused scenario's compare context. The active step + filters
+ * reset when the scenario changes — they are per-comparison state, not
+ * preferences.
  */
 export function registerCompareReview(
   registration: CompareReviewRegistration,
@@ -103,7 +116,7 @@ export function registerCompareReview(
   state = {
     ...state,
     registration,
-    activeZone: scenarioChanged ? null : state.activeZone,
+    activeStepKey: scenarioChanged ? null : state.activeStepKey,
     filters: scenarioChanged ? EMPTY_FILTERS : state.filters,
     // Fold survives mode switches (same slideId re-registers) but resets
     // with the scenario — it is per-comparison state, not a preference.
@@ -118,16 +131,17 @@ export function registerCompareReview(
     state = {
       ...state,
       registration: null,
-      activeZone: null,
+      activeStepKey: null,
       filters: EMPTY_FILTERS,
     }
     emit()
   }
 }
 
-export function setCompareActiveZone(zone: number | null) {
-  if (state.activeZone === zone) return
-  state = { ...state, activeZone: zone }
+/** The one write path for the navigation cursor; null = nothing active. */
+export function setCompareActiveStep(columnKey: string | null) {
+  if (state.activeStepKey === columnKey) return
+  state = { ...state, activeStepKey: columnKey }
   emit()
 }
 

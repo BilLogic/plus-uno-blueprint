@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import {
   countCompareDifferences,
+  deriveCompareStepGroups,
   deriveCompareZones,
   getDetailOnlyCompareSlots,
   isDetailOnlyCompareSlot,
@@ -159,9 +160,9 @@ function compareSlotLine(
 /**
  * Headless compare: fetches the scenario's blueprints through the same
  * query the panel uses, runs `buildCompareModel`, and serializes slots /
- * zones / columns as compact text. This grounds every other compare
- * argument the agent can pass — zone indices for jump_divergence, lane
- * names for differences_filter, cell ids for focus/annotate.
+ * step groups / columns as compact text. This grounds every other compare
+ * argument the agent can pass — step numbers for jump_divergence, lane and
+ * step names for differences_filter, cell ids for focus/annotate.
  */
 export async function getCompareDiff(
   client: Client,
@@ -195,6 +196,7 @@ export async function getCompareDiff(
 
   const model = buildCompareModel(blueprints as CompareBlueprints)
   const zones = deriveCompareZones(model)
+  const stepGroups = deriveCompareStepGroups(model)
   const detailOnly = getDetailOnlyCompareSlots(model)
 
   const lines: string[] = [
@@ -206,14 +208,19 @@ export async function getCompareDiff(
       .join(' | ')}`,
     `${countCompareDifferences(model)} differences · ${zones.length} zones · ${detailOnly.length} detail-only`,
   ]
-  for (const zone of zones) {
+  // Grouped by STEP — the ledger's grain and jump_divergence's argument;
+  // each group names the divergence zone (run) it sits in, which is the
+  // grain the strip draws.
+  for (const group of stepGroups) {
     lines.push(
-      `Zone ${zone.index} — ${zone.stepRangeLabel} · ${zone.titleLabel} (${zone.slots.length} differences):`,
+      `${group.headerLabel} (zone ${group.zoneIndex}, ${group.slots.length} difference${
+        group.slots.length === 1 ? '' : 's'
+      }):`,
     )
-    for (const slot of zone.slots) lines.push(compareSlotLine(slot, blueprints))
+    for (const slot of group.slots) lines.push(compareSlotLine(slot, blueprints))
   }
   if (detailOnly.length > 0) {
-    lines.push(`Detail-only differences (${detailOnly.length}) — no canvas zone:`)
+    lines.push(`Detail-only differences (${detailOnly.length}) — no canvas step:`)
     for (const slot of detailOnly) lines.push(compareSlotLine(slot, blueprints))
   }
   const shared = model.slots.filter(

@@ -1,6 +1,5 @@
 import { memo, useMemo, useState } from 'react'
 import { Filter, Info, PanelRight } from 'lucide-react'
-import { CompareZoneChip } from '@/components/blueprint/CompareZoneChip'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -14,18 +13,18 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { buildBlueprintCellSelectionForId } from '@/lib/blueprintCellConnections'
-import { focusCompareCells } from '@/lib/compareZoneNavigation'
+import { focusCompareCells, jumpToCompareStep } from '@/lib/compareZoneNavigation'
 import {
   compareSlotFocusCellIds,
-  compareZoneFocusCellIds,
+  countActiveCompareFilters,
   countCompareDifferences,
-  deriveCompareZones,
+  deriveCompareStepGroups,
   filterCompareSlots,
   getDetailOnlyCompareSlots,
-  type CompareZone,
+  type CompareStepGroup,
 } from '@/lib/compareLedger'
 import {
-  setCompareActiveZone,
+  setCompareActiveStep,
   setCompareFilters,
   useCompareReviewState,
   type CompareReviewRegistration,
@@ -242,21 +241,29 @@ function FilterChip({
 
 /**
  * The Differences surface — Compare v3's ledger, the authoritative
- * enumeration of every difference between the compared paths. Zone-grouped
- * diff tables (lane rows × path columns); 2+ zones accordion with one open
- * at a time, exactly 1 zone flat; detail-only (description/links) diffs in
- * an unnumbered group below the zones. Opening a zone flies the camera to
- * it — accordion + fly is ONE gesture.
+ * enumeration of every difference between the compared paths.
+ *
+ * One accordion group PER STEP (canonical column) that has a canvas
+ * difference, in canonical order, one open at a time; detail-only
+ * (description/links) diffs in a trailing unnumbered group. A single step
+ * group with nothing after it renders flat — accordion chrome around one
+ * group is furniture. Opening a group flies the camera to that step's cells:
+ * accordion + fly is ONE gesture, through the shared active-step cursor the
+ * divergence strip reads too.
+ *
+ * Counts: exactly one per group, at the END of its header row, post-filter.
+ * There is no total anywhere on this surface — the menubar Diff pill owns
+ * that number.
  */
 export function CompareDifferencesSurface({
   registration,
   onOpenCell,
 }: CompareDifferencesSurfaceProps) {
-  const { activeZone, filters } = useCompareReviewState()
+  const { activeStepKey, filters } = useCompareReviewState()
   const [detailOpen, setDetailOpen] = useState(false)
 
   const model = registration.model
-  const zones = useMemo(() => deriveCompareZones(model), [model])
+  const stepGroups = useMemo(() => deriveCompareStepGroups(model), [model])
   const detailOnlySlots = useMemo(() => getDetailOnlyCompareSlots(model), [model])
   const totalCount = useMemo(() => countCompareDifferences(model), [model])
 
@@ -285,14 +292,19 @@ export function CompareDifferencesSurface({
   const flyTo = (cellIds: string[]) => {
     if (cellIds.length === 0) return
     // The shared compare gesture: auto-expands a pleat first when the
-    // target is folded, so zone-fly and row-fly work while folded.
+    // target is folded, so step-fly and row-fly work while folded.
     void focusCompareCells(cellIds, registration.slideId)
   }
 
-  const openZone = (zone: CompareZone | null) => {
+  const openStepGroup = (group: CompareStepGroup | null) => {
     setDetailOpen(false)
-    setCompareActiveZone(zone?.index ?? null)
-    if (zone) flyTo(compareZoneFocusCellIds(zone))
+    if (!group) {
+      setCompareActiveStep(null)
+      return
+    }
+    // The one step-activation gesture — same path the strip and
+    // `jump_divergence` take, so the cursor never forks.
+    void jumpToCompareStep(group, registration.slideId)
   }
 
   const handleFocusSlot = (slot: CompareSlot) => {
@@ -317,33 +329,49 @@ export function CompareDifferencesSurface({
     }
   }
 
-  const activeFilterCount = filters.lanes.length + filters.verdicts.length
-  const filteredZoneSlots = (zone: CompareZone) =>
-    filterCompareSlots(zone.slots, filters)
+  const activeFilterCount = countActiveCompareFilters(filters)
+  const filteredStepSlots = (group: CompareStepGroup) =>
+    filterCompareSlots(group.slots, filters)
   const filteredDetailSlots = filterCompareSlots(detailOnlySlots, filters)
 
   const toggleLane = (laneKey: string) => {
     setCompareFilters({
+      ...filters,
       lanes: filters.lanes.includes(laneKey)
         ? filters.lanes.filter((key) => key !== laneKey)
         : [...filters.lanes, laneKey],
-      verdicts: filters.verdicts,
     })
   }
   const toggleVerdict = (verdict: CompareStatus) => {
     setCompareFilters({
-      lanes: filters.lanes,
+      ...filters,
       verdicts: filters.verdicts.includes(verdict)
         ? filters.verdicts.filter((entry) => entry !== verdict)
         : [...filters.verdicts, verdict],
     })
   }
+  const toggleStep = (columnKey: string) => {
+    setCompareFilters({
+      ...filters,
+      steps: filters.steps.includes(columnKey)
+        ? filters.steps.filter((key) => key !== columnKey)
+        : [...filters.steps, columnKey],
+    })
+  }
 
-  const zoneGroupLabel = (zone: CompareZone) => (
+  /*
+    Group header row: label first, the group's single post-filter count last
+    and right-aligned. No zone chip — the header already says "Step N", and a
+    second number beside it was the repetition the user called out. The strip
+    keeps its chips: there, ①②③ is the run topology, not a step.
+  */
+  const groupHeader = (label: string, count: number, title?: string) => (
     <span className="flex min-w-0 flex-1 items-center gap-1.5">
-      <CompareZoneChip index={zone.index} active={activeZone === zone.index} />
-      <span className="min-w-0 truncate text-2xs font-medium text-foreground">
-        {zone.stepRangeLabel} · {zone.titleLabel}
+      <span
+        className="min-w-0 truncate text-2xs font-medium text-foreground"
+        title={title}
+      >
+        {label}
       </span>
       <span
         className={cn(
@@ -351,39 +379,24 @@ export function CompareDifferencesSurface({
           MONO_NUM_CLASS,
         )}
       >
-        {filteredZoneSlots(zone).length}
+        {count}
       </span>
     </span>
   )
 
-  const detailGroupLabel = (
-    <span className="flex min-w-0 flex-1 items-center gap-1.5">
-      <span className="min-w-0 truncate text-2xs font-medium text-foreground">
-        Detail-only differences
-      </span>
-      <span
-        className={cn(
-          'ml-auto shrink-0 pl-2 text-2xs text-muted-foreground',
-          MONO_NUM_CLASS,
-        )}
-      >
-        {filteredDetailSlots.length}
-      </span>
-    </span>
-  )
-
-  // Controlled accordion: the store owns the zone (①②③ shared with strip
-  // and jump_divergence); `detailOpen` is surface-local. One open at a time.
+  // Controlled accordion: the store owns the active step (shared with the
+  // strip and jump_divergence); `detailOpen` is surface-local. One at a time.
   const accordionValue: string[] =
-    activeZone !== null
-      ? [`zone-${activeZone}`]
+    activeStepKey !== null && stepGroups.some((g) => g.columnKey === activeStepKey)
+      ? [`step-${activeStepKey}`]
       : detailOpen
         ? ['detail']
         : []
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4 blueprint-scroll">
-      {/* Header: who is being compared, how many differences, filter. */}
+      {/* Header: who is being compared, the filter, the comparison's limits.
+          Deliberately countless — see the surface docblock. */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -453,25 +466,31 @@ export function CompareDifferencesSurface({
                   onToggle={() => toggleVerdict('only')}
                 />
               </div>
+              {/* Steps facet: divergent steps only, in canonical order — a
+                  filter for a step with no differences filters to nothing. */}
+              {stepGroups.length > 0 ? (
+                <>
+                  <p className="pt-1 text-3xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Steps
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {stepGroups.map((group) => (
+                      <FilterChip
+                        key={group.columnKey}
+                        label={`${group.step} · ${group.label}`}
+                        pressed={filters.steps.includes(group.columnKey)}
+                        onToggle={() => toggleStep(group.columnKey)}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : null}
               <p className="pt-1 text-3xs text-muted-foreground">
                 Nothing selected = everything shown.
               </p>
             </PopoverContent>
           </Popover>
         </div>
-        <p className="text-2xs text-muted-foreground">
-          <span className={MONO_NUM_CLASS}>{totalCount}</span>{' '}
-          {totalCount === 1 ? 'difference' : 'differences'} ·{' '}
-          <span className={MONO_NUM_CLASS}>{zones.length}</span>{' '}
-          {zones.length === 1 ? 'zone' : 'zones'}
-          {detailOnlySlots.length > 0 ? (
-            <>
-              {' '}
-              · <span className={MONO_NUM_CLASS}>{detailOnlySlots.length}</span>{' '}
-              detail-only
-            </>
-          ) : null}
-        </p>
         <p className="flex items-center gap-1 text-3xs text-muted-foreground/80">
           <Info className="size-3 shrink-0" aria-hidden />
           triggers/needs are not compared
@@ -483,14 +502,18 @@ export function CompareDifferencesSurface({
           Paths identical across{' '}
           <span className={MONO_NUM_CLASS}>{model.columns.length}</span> steps.
         </p>
-      ) : zones.length === 1 && detailOnlySlots.length === 0 ? (
-        /* Exactly one zone, nothing else: flat table, no accordion chrome. */
+      ) : stepGroups.length === 1 && detailOnlySlots.length === 0 ? (
+        /* Exactly one step, nothing else: flat table, no accordion chrome. */
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-1.5 border-b border-border/60 pb-1.5">
-            {zoneGroupLabel(zones[0])}
+            {groupHeader(
+              stepGroups[0].headerLabel,
+              filteredStepSlots(stepGroups[0]).length,
+              stepGroups[0].label,
+            )}
           </div>
           <DiffTable
-            slots={filteredZoneSlots(zones[0])}
+            slots={filteredStepSlots(stepGroups[0])}
             registration={registration}
             onFocusSlot={handleFocusSlot}
             onOpenSlotCell={handleOpenSlotCell}
@@ -504,27 +527,31 @@ export function CompareDifferencesSurface({
             const next = (value[0] as string | undefined) ?? null
             if (next === 'detail') {
               setDetailOpen(true)
-              setCompareActiveZone(null)
+              setCompareActiveStep(null)
               return
             }
             if (next === null) {
-              setDetailOpen(false)
-              setCompareActiveZone(null)
+              openStepGroup(null)
               return
             }
-            const zoneIndex = Number(next.replace('zone-', ''))
-            const zone = zones.find((entry) => entry.index === zoneIndex) ?? null
-            openZone(zone)
+            const columnKey = next.slice('step-'.length)
+            openStepGroup(
+              stepGroups.find((group) => group.columnKey === columnKey) ?? null,
+            )
           }}
         >
-          {zones.map((zone) => (
-            <AccordionItem key={zone.index} value={`zone-${zone.index}`}>
+          {stepGroups.map((group) => (
+            <AccordionItem key={group.columnKey} value={`step-${group.columnKey}`}>
               <AccordionTrigger className="gap-1.5 py-2 hover:no-underline">
-                {zoneGroupLabel(zone)}
+                {groupHeader(
+                  group.headerLabel,
+                  filteredStepSlots(group).length,
+                  group.label,
+                )}
               </AccordionTrigger>
               <AccordionContent>
                 <DiffTable
-                  slots={filteredZoneSlots(zone)}
+                  slots={filteredStepSlots(group)}
                   registration={registration}
                   onFocusSlot={handleFocusSlot}
                   onOpenSlotCell={handleOpenSlotCell}
@@ -536,7 +563,10 @@ export function CompareDifferencesSurface({
           {detailOnlySlots.length > 0 ? (
             <AccordionItem value="detail">
               <AccordionTrigger className="gap-1.5 py-2 hover:no-underline">
-                {detailGroupLabel}
+                {groupHeader(
+                  'Detail-only differences',
+                  filteredDetailSlots.length,
+                )}
               </AccordionTrigger>
               <AccordionContent>
                 <DiffTable

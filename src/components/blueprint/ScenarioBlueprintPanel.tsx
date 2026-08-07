@@ -13,10 +13,11 @@ import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   countCompareDifferences,
-  deriveCompareZones,
+  deriveCompareStepGroups,
   parseCompareLedgerFilter,
+  resolveCompareStepKeys,
 } from '@/lib/compareLedger'
-import { jumpToCompareZone } from '@/lib/compareZoneNavigation'
+import { jumpToCompareStep } from '@/lib/compareZoneNavigation'
 import {
   compareFoldPleatTitle,
   computeFoldableRunFragments,
@@ -223,7 +224,7 @@ export function ScenarioBlueprintPanel({
       const state = getCompareReviewState()
       const registration = state.registration
       if (!registration) return null
-      const zones = deriveCompareZones(registration.model)
+      const stepGroups = deriveCompareStepGroups(registration.model)
       const names = registration.blueprints
         .map((blueprint) => `"${blueprint.path.name}"`)
         .join(' vs ')
@@ -232,12 +233,21 @@ export function ScenarioBlueprintPanel({
         filterBits.push(`lanes ${state.filters.lanes.join(', ')}`)
       if (state.filters.verdicts.length > 0)
         filterBits.push(`verdicts ${state.filters.verdicts.join(', ')}`)
+      if (state.filters.steps.length > 0) {
+        const labels = stepGroups
+          .filter((group) => state.filters.steps.includes(group.columnKey))
+          .map((group) => group.headerLabel)
+        filterBits.push(`steps ${labels.join(', ')}`)
+      }
+      const activeIndex = stepGroups.findIndex(
+        (group) => group.columnKey === state.activeStepKey,
+      )
       return [
         `Comparing ${names} in ${registration.viewMode} view (scenario "${registration.scenarioName}"):`,
-        `${countCompareDifferences(registration.model)} differences across ${zones.length} divergence zones.`,
-        state.activeZone !== null
-          ? `Active zone ${state.activeZone} of ${zones.length}.`
-          : `No zone active.`,
+        `${countCompareDifferences(registration.model)} differences across ${stepGroups.length} divergent steps.`,
+        activeIndex >= 0
+          ? `Active step ${stepGroups[activeIndex].headerLabel} (${activeIndex + 1} of ${stepGroups.length}).`
+          : 'No step active.',
         state.ledgerOpen
           ? 'Difference ledger is OPEN.'
           : 'Difference ledger is closed.',
@@ -258,63 +268,83 @@ export function ScenarioBlueprintPanel({
     const unregisterJump = registerAgentUiCommand({
       name: 'jump_divergence',
       description:
-        'Fly the camera to a divergence zone of the compared paths and mark it active (strip + ledger stay in sync). arg: next | prev | <zone number> — the same ①②③ indices the strip and ledger show.',
+        "Fly the camera to a divergent STEP of the compared paths and mark it active (strip + ledger stay in sync — the ledger opens that step's group). arg: next | prev | <step number> — the canonical step number the ledger shows as \"Step N\".",
       run: async (arg) => {
         const state = getCompareReviewState()
         const registration = state.registration
         if (!registration) return 'No comparison is active.'
-        const zones = deriveCompareZones(registration.model)
-        if (zones.length === 0)
-          return 'The compared paths have no divergence zones — they are identical on the canvas.'
+        const stepGroups = deriveCompareStepGroups(registration.model)
+        if (stepGroups.length === 0)
+          return 'The compared paths have no divergent steps — they are identical on the canvas.'
+        const currentIndex = stepGroups.findIndex(
+          (group) => group.columnKey === state.activeStepKey,
+        )
         const input = arg?.trim() ?? ''
-        let target: number
+        let targetIndex: number
         if (input === '' || input === 'next') {
-          target =
-            state.activeZone === null
-              ? 1
-              : Math.min(state.activeZone + 1, zones.length)
+          targetIndex =
+            currentIndex < 0
+              ? 0
+              : Math.min(currentIndex + 1, stepGroups.length - 1)
         } else if (input === 'prev') {
-          target =
-            state.activeZone === null
-              ? zones.length
-              : Math.max(state.activeZone - 1, 1)
+          targetIndex =
+            currentIndex < 0 ? stepGroups.length - 1 : Math.max(currentIndex - 1, 0)
         } else {
-          const parsedIndex = Number(input)
-          if (
-            !Number.isInteger(parsedIndex) ||
-            parsedIndex < 1 ||
-            parsedIndex > zones.length
-          )
-            return `No zone "${input}" — zones run 1 to ${zones.length}. arg: next | prev | <zone number>.`
-          target = parsedIndex
+          const parsedStep = Number(input)
+          const found = stepGroups.findIndex((group) => group.step === parsedStep)
+          if (!Number.isInteger(parsedStep) || found < 0)
+            return `No divergent step "${input}" — divergent steps are ${stepGroups
+              .map((group) => group.step)
+              .join(', ')}. arg: next | prev | <step number>.`
+          targetIndex = found
         }
-        const zone = zones[target - 1]
-        const outcome = await jumpToCompareZone(zone, registration.slideId)
-        return `Zone ${target} of ${zones.length} (${zone.stepRangeLabel} · ${zone.titleLabel}, ${zone.slots.length} differences)${
+        const group = stepGroups[targetIndex]
+        const outcome = await jumpToCompareStep(group, registration.slideId)
+        return `${group.headerLabel} — divergent step ${targetIndex + 1} of ${stepGroups.length}, ${group.slots.length} difference${
+          group.slots.length === 1 ? '' : 's'
+        }${
           outcome?.kind === 'flown'
             ? ' — camera flown to it.'
-            : " — marked active, but its cells are not on the current canvas."
+            : ' — marked active, but its cells are not on the current canvas.'
         }`
       },
     })
     const unregisterFilter = registerAgentUiCommand({
       name: 'differences_filter',
       description:
-        'Filter the difference ledger. arg grammar: lane:"Front Stage" verdict:divergent — space-separated, multi-select per key; verdicts: divergent | only; empty arg clears the filter.',
+        'Filter the difference ledger. arg grammar: lane:"Front Stage" verdict:divergent step:"Pay" — space-separated, multi-select per key; verdicts: divergent | only; steps are matched by step name; empty arg clears the filter.',
       run: (arg) => {
         const input = arg?.trim() ?? ''
         if (input === '') {
           clearCompareFilters()
           return 'Ledger filter cleared — showing every difference.'
         }
+        const registration = getCompareReviewState().registration
+        if (!registration) return 'No comparison is active.'
         const parsed = parseCompareLedgerFilter(input)
         if (parsed.errors.length > 0)
-          return `Could not parse: ${parsed.errors.join(', ')}. Grammar: lane:"<lane name>" verdict:<divergent|only>. Nothing was changed.`
-        setCompareFilters({ lanes: parsed.lanes, verdicts: parsed.verdicts })
+          return `Could not parse: ${parsed.errors.join(', ')}. Grammar: lane:"<lane name>" verdict:<divergent|only> step:"<step name>". Nothing was changed.`
+        const resolvedSteps = resolveCompareStepKeys(
+          registration.model,
+          parsed.stepNames,
+        )
+        if (resolvedSteps.unknown.length > 0)
+          return `No such step${
+            resolvedSteps.unknown.length === 1 ? '' : 's'
+          }: ${resolvedSteps.unknown.join(', ')}. Steps in this comparison: ${registration.model.columns
+            .map((column) => column.label)
+            .join(', ')}. Nothing was changed.`
+        setCompareFilters({
+          lanes: parsed.lanes,
+          verdicts: parsed.verdicts,
+          steps: resolvedSteps.steps,
+        })
         const bits: string[] = []
         if (parsed.lanes.length > 0) bits.push(`lanes: ${parsed.lanes.join(', ')}`)
         if (parsed.verdicts.length > 0)
           bits.push(`verdicts: ${parsed.verdicts.join(', ')}`)
+        if (parsed.stepNames.length > 0)
+          bits.push(`steps: ${parsed.stepNames.join(', ')}`)
         return `Ledger filtered — ${bits.join('; ') || 'no facets'}.`
       },
     })

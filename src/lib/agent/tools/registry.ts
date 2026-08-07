@@ -116,7 +116,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_compare_diff',
     description:
-      "Structured comparison of a scenario's paths: canonical columns with verdicts, numbered divergence zones (the same ①②③ the strip/ledger/jump_divergence use), every differing slot with per-path quotes and cell ids, and the detail-only (description/links) group. Read before driving the compare UI or answering \"what differs\". Triggers/needs edges are not compared.",
+      "Structured comparison of a scenario's paths: canonical columns with verdicts, one group per divergent STEP (the same \"Step N\" the ledger groups by and jump_divergence takes) tagged with the divergence zone ①②③ the strip draws, every differing slot with per-path quotes and cell ids, and the detail-only (description/links) group. Read before driving the compare UI or answering \"what differs\". Triggers/needs edges are not compared.",
     parameters: {
       type: 'object',
       properties: {

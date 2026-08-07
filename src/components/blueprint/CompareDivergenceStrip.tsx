@@ -2,9 +2,14 @@ import { useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { CompareZoneChip } from '@/components/blueprint/CompareZoneChip'
 import { Button } from '@/components/ui/button'
-import { deriveCompareZones, type CompareZone } from '@/lib/compareLedger'
+import {
+  deriveCompareStepGroups,
+  deriveCompareZones,
+  type CompareStepGroup,
+  type CompareZone,
+} from '@/lib/compareLedger'
 import { useCompareReviewState } from '@/lib/compareReviewStore'
-import { jumpToCompareZone } from '@/lib/compareZoneNavigation'
+import { jumpToCompareStep } from '@/lib/compareZoneNavigation'
 import type { CompareModel } from '@/lib/compareSlots'
 import { getPathArrowColor, getPathDashArray } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
@@ -29,9 +34,15 @@ type StripSegment = {
  * rejoin topology, rendered in the compare panel chrome in BOTH modes.
  * NAVIGATION ONLY (locked decision): a neutral 3px spine where the paths
  * agree, per-path colored+dashed 2px tracks where they split, zone chips on
- * divergent segments, and a `◀ zone 1/2 ▶` stepper. Clicking a segment or
- * stepping flies the camera and syncs the ledger's open group through the
- * shared active-zone state.
+ * divergent segments, and a `◀ step 1/6 ▶` stepper.
+ *
+ * TWO grains meet here. The SEGMENTS stay run-shaped — that is the topology
+ * the braid draws, and a segment is one fork-and-rejoin. The CURSOR is a
+ * divergent STEP (`activeStepKey`), which is what the ledger groups by and
+ * what ◀/▶ walk: at this data's divergence ratios a run can be six steps
+ * wide, and stepping run-by-run skipped five of them. So: activating a
+ * segment opens the FIRST step group inside that run, and the segment
+ * containing the active step is the highlighted one.
  */
 export function CompareDivergenceStrip({
   model,
@@ -42,8 +53,20 @@ export function CompareDivergenceStrip({
   blueprints: readonly BlueprintData[]
   slideId: string
 }) {
-  const { activeZone } = useCompareReviewState()
+  const { activeStepKey } = useCompareReviewState()
   const zones = useMemo(() => deriveCompareZones(model), [model])
+  const stepGroups = useMemo(() => deriveCompareStepGroups(model), [model])
+
+  const activeStepIndex = stepGroups.findIndex(
+    (group) => group.columnKey === activeStepKey,
+  )
+  const activeStep = activeStepIndex >= 0 ? stepGroups[activeStepIndex] : null
+  /** The segment to highlight: the run the active step sits inside. */
+  const activeZone = activeStep?.zoneIndex ?? null
+
+  /** A segment activates its run's FIRST divergent step. */
+  const firstStepOfZone = (zoneIndex: number): CompareStepGroup | undefined =>
+    stepGroups.find((group) => group.zoneIndex === zoneIndex)
 
   const segments = useMemo<StripSegment[]>(
     () =>
@@ -66,18 +89,20 @@ export function CompareDivergenceStrip({
 
   const stepTo = useMemo(() => {
     return (direction: 1 | -1) => {
-      if (zones.length === 0) return
-      const current = activeZone
+      if (stepGroups.length === 0) return
       const target =
-        current === null
+        activeStepIndex < 0
           ? direction === 1
-            ? 1
-            : zones.length
-          : Math.min(Math.max(current + direction, 1), zones.length)
-      const zone = zones[target - 1]
-      if (zone) void jumpToCompareZone(zone, slideId)
+            ? 0
+            : stepGroups.length - 1
+          : Math.min(
+              Math.max(activeStepIndex + direction, 0),
+              stepGroups.length - 1,
+            )
+      const group = stepGroups[target]
+      if (group) void jumpToCompareStep(group, slideId)
     }
-  }, [activeZone, slideId, zones])
+  }, [activeStepIndex, slideId, stepGroups])
 
   /*
     ◀/▶ from the keyboard, but only while the CANVAS has focus — evaluated
@@ -196,7 +221,10 @@ export function CompareDivergenceStrip({
                 isActive && 'bg-(--sidebar-selected)',
               )}
               style={{ width: `${widthPct}%` }}
-              onClick={() => void jumpToCompareZone(zone, slideId)}
+              onClick={() => {
+                const group = firstStepOfZone(zone.index)
+                if (group) void jumpToCompareStep(group, slideId)
+              }}
             >
               <svg
                 className="absolute inset-y-0 left-1 right-1 h-full w-[calc(100%-0.5rem)]"
@@ -253,22 +281,23 @@ export function CompareDivergenceStrip({
           variant="ghost"
           size="icon-sm"
           className="size-6 text-muted-foreground hover:text-foreground"
-          aria-label="Previous divergence zone"
-          disabled={activeZone !== null && activeZone <= 1}
+          aria-label="Previous divergent step"
+          disabled={activeStepIndex === 0}
           onClick={() => stepTo(-1)}
         >
           <ChevronLeft className="size-3.5" aria-hidden />
         </Button>
         <span className="font-mono text-2xs tabular-nums text-muted-foreground">
-          zone {activeZone ?? '–'}/{zones.length}
+          step {activeStepIndex >= 0 ? activeStepIndex + 1 : '–'}/
+          {stepGroups.length}
         </span>
         <Button
           type="button"
           variant="ghost"
           size="icon-sm"
           className="size-6 text-muted-foreground hover:text-foreground"
-          aria-label="Next divergence zone"
-          disabled={activeZone !== null && activeZone >= zones.length}
+          aria-label="Next divergent step"
+          disabled={activeStepIndex === stepGroups.length - 1}
           onClick={() => stepTo(1)}
         >
           <ChevronRight className="size-3.5" aria-hidden />

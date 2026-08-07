@@ -3,13 +3,17 @@ import type { BlueprintCell, BlueprintData } from '@/types/blueprint'
 import { buildCompareModel, type CompareBlueprints } from '@/lib/compareSlots'
 import {
   compareSlotFocusCellIds,
-  compareZoneFocusCellIds,
+  compareStepFocusCellIds,
+  countActiveCompareFilters,
   countCompareDifferences,
+  deriveCompareStepGroups,
   deriveCompareZones,
+  EMPTY_COMPARE_LEDGER_FILTER,
   filterCompareSlots,
   getDetailOnlyCompareSlots,
   isDetailOnlyCompareSlot,
   parseCompareLedgerFilter,
+  resolveCompareStepKeys,
 } from '@/lib/compareLedger'
 
 type CellSpec = {
@@ -212,10 +216,28 @@ describe('parseCompareLedgerFilter', () => {
     expect(parsed.errors).toEqual(['verdict:shared', 'banana'])
   })
 
+  it('parses step tokens alongside lanes and verdicts', () => {
+    const parsed = parseCompareLedgerFilter(
+      'step:"The Pay." verdict:only lane:frontstage step:Rate step:Rate',
+    )
+    // Normalized like lanes, de-duplicated, order of first appearance.
+    expect(parsed.stepNames).toEqual(['pay', 'rate'])
+    expect(parsed.verdicts).toEqual(['only'])
+    expect(parsed.lanes).toEqual(['frontstage'])
+    expect(parsed.errors).toEqual([])
+  })
+
+  it('rejects an empty step value', () => {
+    const parsed = parseCompareLedgerFilter('step:""')
+    expect(parsed.stepNames).toEqual([])
+    expect(parsed.errors).toEqual(['step:""'])
+  })
+
   it('empty input clears everything', () => {
     const parsed = parseCompareLedgerFilter('')
     expect(parsed.lanes).toEqual([])
     expect(parsed.verdicts).toEqual([])
+    expect(parsed.stepNames).toEqual([])
     expect(parsed.errors).toEqual([])
   })
 })
@@ -225,30 +247,144 @@ describe('filterCompareSlots', () => {
     const model = fixture()
     const zones = deriveCompareZones(model)
     const slots = zones[0].slots
-    expect(filterCompareSlots(slots, { lanes: [], verdicts: [] })).toHaveLength(
-      slots.length,
-    )
+    expect(
+      filterCompareSlots(slots, EMPTY_COMPARE_LEDGER_FILTER),
+    ).toHaveLength(slots.length)
     const backStageOnly = filterCompareSlots(slots, {
+      ...EMPTY_COMPARE_LEDGER_FILTER,
       lanes: ['back stage'],
-      verdicts: [],
     })
     expect(backStageOnly).toHaveLength(1)
     expect(backStageOnly[0].laneLabel).toBe('Back Stage')
     expect(
-      filterCompareSlots(slots, { lanes: ['back stage'], verdicts: ['only'] }),
+      filterCompareSlots(slots, {
+        ...EMPTY_COMPARE_LEDGER_FILTER,
+        lanes: ['back stage'],
+        verdicts: ['only'],
+      }),
     ).toHaveLength(0)
+  })
+
+  it('gates on the step facet by columnKey, and intersects with lanes', () => {
+    const model = fixture()
+    const groups = deriveCompareStepGroups(model)
+    const payKey = groups.find((group) => group.label === 'Pay')!.columnKey
+    const payOnly = filterCompareSlots(model.slots, {
+      ...EMPTY_COMPARE_LEDGER_FILTER,
+      steps: [payKey],
+    })
+    // Both Pay slots (Front Stage + Back Stage), nothing from other columns.
+    expect(payOnly).toHaveLength(2)
+    expect(new Set(payOnly.map((slot) => slot.columnLabel))).toEqual(
+      new Set(['Pay']),
+    )
+    expect(
+      filterCompareSlots(model.slots, {
+        ...EMPTY_COMPARE_LEDGER_FILTER,
+        steps: [payKey],
+        lanes: ['back stage'],
+      }),
+    ).toHaveLength(1)
+  })
+})
+
+describe('countActiveCompareFilters', () => {
+  it('sums every facet value', () => {
+    expect(countActiveCompareFilters(EMPTY_COMPARE_LEDGER_FILTER)).toBe(0)
+    expect(
+      countActiveCompareFilters({
+        lanes: ['front stage'],
+        verdicts: ['divergent'],
+        steps: ['pay#0', 'rate#0'],
+      }),
+    ).toBe(4)
+  })
+})
+
+describe('deriveCompareStepGroups', () => {
+  it('one group per divergent column, canonical order, labelled Step N', () => {
+    const groups = deriveCompareStepGroups(fixture())
+    // Pay (2) and Confirm (3) are one RUN but three groups' worth of steps:
+    // per-step grouping splits what deriveCompareZones fuses.
+    expect(groups.map((group) => group.headerLabel)).toEqual([
+      'Step 2 · Pay',
+      'Step 3 · Confirm',
+      'Step 5 · Rate',
+    ])
+    expect(groups.map((group) => group.step)).toEqual([2, 3, 5])
+  })
+
+  it('carries the containing zone index so the strip can highlight its run', () => {
+    const groups = deriveCompareStepGroups(fixture())
+    // Pay + Confirm are zone ①; Rate is zone ②.
+    expect(groups.map((group) => group.zoneIndex)).toEqual([1, 1, 2])
+  })
+
+  it("splits a run's slots by column, keeping model order inside a group", () => {
+    const groups = deriveCompareStepGroups(fixture())
+    const pay = groups[0]
+    expect(pay.slots.map((slot) => slot.laneLabel)).toEqual([
+      'Front Stage',
+      'Back Stage',
+    ])
+    expect(groups[1].slots).toHaveLength(1)
+    expect(groups[2].slots).toHaveLength(1)
+  })
+
+  it('gives a detail-only column no step group (V7)', () => {
+    const groups = deriveCompareStepGroups(fixture())
+    // Ship differs only by description — it belongs to the trailing group.
+    expect(groups.some((group) => group.label === 'Ship')).toBe(false)
+    expect(getDetailOnlyCompareSlots(fixture())[0].columnLabel).toBe('Ship')
+  })
+
+  it('accounts for every difference exactly once, with detail-only', () => {
+    const model = fixture()
+    const grouped = deriveCompareStepGroups(model).reduce(
+      (sum, group) => sum + group.slots.length,
+      0,
+    )
+    expect(grouped + getDetailOnlyCompareSlots(model).length).toBe(
+      countCompareDifferences(model),
+    )
+  })
+})
+
+describe('resolveCompareStepKeys', () => {
+  it('resolves normalized step names to canonical columnKeys', () => {
+    const model = fixture()
+    const parsed = parseCompareLedgerFilter('step:"Pay" step:rate')
+    expect(parsed.stepNames).toEqual(['pay', 'rate'])
+    const resolved = resolveCompareStepKeys(model, parsed.stepNames)
+    expect(resolved.unknown).toEqual([])
+    expect(resolved.steps).toHaveLength(2)
+    const labels = resolved.steps.map(
+      (key) => model.columns.find((column) => column.columnKey === key)!.label,
+    )
+    expect(labels).toEqual(['Pay', 'Rate'])
+  })
+
+  it('reports names that match no column', () => {
+    const resolved = resolveCompareStepKeys(fixture(), ['refund'])
+    expect(resolved.steps).toEqual([])
+    expect(resolved.unknown).toEqual(['refund'])
   })
 })
 
 describe('focus cell id derivation', () => {
   it('leads with the first present path and includes all counterparts', () => {
-    const model = fixture()
-    const zones = deriveCompareZones(model)
-    const ids = compareZoneFocusCellIds(zones[0])
+    const zones = deriveCompareZones(fixture())
+    const ids = compareSlotFocusCellIds(zones[0].slots[0])
     expect(ids.length).toBe(2)
     expect(ids[0].startsWith('A-cell')).toBe(true)
     expect(ids[1].startsWith('B-cell')).toBe(true)
-    const slotIds = compareSlotFocusCellIds(zones[0].slots[0])
-    expect(slotIds).toEqual(ids)
+  })
+
+  it('a step group targets every differing cell at that column', () => {
+    const groups = deriveCompareStepGroups(fixture())
+    // Pay: two lanes × two paths = four cells; the camera flies to the
+    // first, the rest pulse as counterparts.
+    expect(compareStepFocusCellIds(groups[0])).toHaveLength(4)
+    expect(compareStepFocusCellIds(groups[2])).toHaveLength(2)
   })
 })

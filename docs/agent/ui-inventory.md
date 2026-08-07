@@ -29,26 +29,28 @@ precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 | Need | Primitive | Note |
 |---|---|---|
 | Stacked ⇄ Merged mode toggle | `editor/SegmentedControl` in `PhaseMenubarHeader` | Merged = reading preset (Phase 4b, branch-canvas gate FAIL): entering folds shared runs + opens the Differences surface; leaving unfolds. Same via agent `set_scenario_view merged` — one seam in `ScenarioBlueprintPanel` |
-| Details │ Differences surface switch | `editor/SegmentedControl` (composes `toggle-group.tsx`) | top-level panel chrome, only while ≥2 paths compared; mono count badge |
-| Difference ledger zone groups | `accordion.tsx`, controlled | one open at a time; open state = the compare store's active zone, shared with the strip and `jump_divergence` |
-| Ledger filter | `popover.tsx` + pressed chips | lane + verdict facets, empty = all; same grammar as `differences_filter` |
-| Zone numbering ①②③ | `blueprint/CompareZoneChip` | ONE drawn chip (mono digit in a circle) — strip, ledger, agent args all mean the same index |
-| Divergence strip | `blueprint/CompareDivergenceStrip` | SVG braid, segment buttons (≥44px hits), sidebar-selection idiom for the active zone; navigation only |
+| Details │ Differences surface switch | `editor/SegmentedControl` (composes `toggle-group.tsx`) | ONE `PanelSurfaceSwitcher` in `BlueprintCellDetailPanel`, two call sites; top-level panel chrome, only while ≥2 paths compared. NO count on the tab |
+| Difference ledger step groups | `accordion.tsx`, controlled | one group per divergent STEP ("Step N · label"), one open at a time; open state = the compare store's `activeStepKey`, shared with the strip and `jump_divergence`. One step group + no detail-only renders flat |
+| Ledger group count | trailing number at the END of the group header row | post-filter, right-aligned. With the menubar Diff pill these are the app's ONLY two difference counts — no totals in the panel header, none on the panel tab |
+| Ledger filter | `popover.tsx` + pressed chips | lane + verdict + STEP facets (divergent steps only, canonical order), empty = all; same grammar as `differences_filter` |
+| Zone numbering ①②③ | `blueprint/CompareZoneChip` | strip only. A zone is a divergence RUN (topology); the ledger's grain is the step, and its group header already says "Step N", so no chip there |
+| Divergence strip | `blueprint/CompareDivergenceStrip` | SVG braid, segment buttons (≥44px hits), sidebar-selection idiom for the segment containing the active step; `◀/▶` walk divergent STEPS, a segment activates its run's first step; navigation only |
 | Fly-to-cell + counterpart pulse | `lib/canvasFocusCells` registry → `useZoomPanViewport.focusCells` | resolve at call time by scenario id; pulse = `[data-blueprint-cell-pulse]`, reduced-motion aware |
 | Cross-surface compare state | `lib/compareReviewStore` (module store + `useSyncExternalStore`) | model registration, active zone, ledger filters, ledger-open flag, fold state |
-| `[⇤ Fold]` menubar toggle | `button.tsx` ghost + `aria-pressed` + `tooltip.tsx` | disabled at 0 differences or 0 foldable columns; tooltip carries the "Fold N shared steps" count |
+| `[⇤ Fold]` menubar toggle | `button.tsx` ghost + `aria-pressed` + `tooltip.tsx` | pressed styling is ghost's OWN `aria-pressed:` rule (brand-tint `bg-sidebar-selected`, re-asserted on hover) — never hand-written at the call site; disabled at 0 differences or 0 foldable columns; tooltip carries the "Fold N shared steps" count |
+| `[Diff N]` menubar toggle | `button.tsx` ghost + `aria-pressed` + counter pill | `Diff` lucide icon + the word "Diff" + a `rounded-full` mono pill; pressed = panel open on Differences, and clicking then closes the panel via the context's atomic `closePanel` |
 | Folded pleats | `blueprint/BlueprintPathBand` `ComparePleatCell` + `tooltip.tsx` | one fixed 28px track per shared run fragment (pin-split, `lib/compareFold`); click expands; `gridTemplateColumns` never animates |
 | Pinned-column explainer | `Link2` glyph in the column header + `tooltip.tsx` | one-hop pin rule (`computePinnedColumns`) — "kept expanded — feeds a divergent step" |
 | Fly-to while folded | `lib/compareZoneNavigation.focusCompareCells` | THE compare focus gesture: auto-expands the target's pleat, waits two rAFs, aborts on a newer generation |
 
 Agent parity for these surfaces: ui commands `differences_open`,
 `differences_close`, `panel_surface <details|differences>`,
-`differences_filter <lane:"…" verdict:…>`, `jump_divergence
-<next|prev|n>`, `collapse_shared <true|false|empty toggles>`,
+`differences_filter <lane:"…" verdict:… step:"…">`, `jump_divergence
+<next|prev|step number>`, `collapse_shared <true|false|empty toggles>`,
 `toggle_pleat <columnKey or 1-based pleat index>`; read tool
-`get_compare_diff` (headless `buildCompareModel` — grounds zone indices,
-lane names, columnKeys and cell ids); `get_ui_state` gains a `compare`
-line (mode, paths, counts, active zone, ledger open + filters, fold
+`get_compare_diff` (headless `buildCompareModel` — grounds step numbers,
+lane/step names, columnKeys and cell ids); `get_ui_state` gains a `compare`
+line (mode, paths, counts, active step, ledger open + filters, fold
 state).
 
 Full DS directory today: accordion, alert, attachment, badge, breadcrumb,
