@@ -18,8 +18,17 @@ const buttonVariants = cva(
           "border-border/80 bg-background shadow-sm hover:bg-muted hover:text-foreground hover:shadow aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground aria-pressed:bg-secondary/60 aria-pressed:text-secondary-foreground aria-pressed:shadow-sm aria-pressed:ring-2 aria-pressed:ring-ring/40",
+        // Pressed ≠ hover. A ghost toggle's hover fill is `--muted`, the
+        // neutral elevation; its PRESSED state is the app's *selected*
+        // vocabulary — the `--sidebar-selected` brand tint (semantic.css
+        // "Sidebar selection language"), same as `data-active` rows in
+        // `sidebar.tsx` and the rail's selected buttons. The
+        // `aria-pressed:hover:` pair is the specificity-tie trick from
+        // `sidebar.tsx`: a one-variant `hover:` rule ties with a one-variant
+        // `aria-pressed:` rule, so without it hovering a pressed toggle
+        // collapses it back to the hover fill.
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground aria-pressed:bg-sidebar-selected aria-pressed:font-medium aria-pressed:text-foreground aria-pressed:hover:bg-sidebar-selected aria-pressed:hover:text-foreground dark:hover:bg-muted/50",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",

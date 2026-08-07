@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Columns2, FoldHorizontal, GitCompareArrows } from 'lucide-react'
+import { Columns2, Diff, FoldHorizontal, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
@@ -130,10 +130,10 @@ function CompareFoldToggle({ slide }: { slide: NavItem }) {
       disabled={disabled}
       aria-pressed={fold.folded}
       aria-label={fold.folded ? 'Unfold shared steps' : foldLabel}
-      className={cn(
-        'h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground',
-        fold.folded && 'bg-muted text-foreground',
-      )}
+      // Pressed styling is the ghost variant's own `aria-pressed:` rule —
+      // the brand-tint selected fill. Hand-writing `bg-muted` here was the
+      // bug: it is ghost's hover fill, so pressed and hovered looked alike.
+      className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
       onClick={() => setCompareFolded(!fold.folded)}
     >
       <FoldHorizontal className="size-3.5" aria-hidden />
@@ -159,10 +159,16 @@ function CompareFoldToggle({ slide }: { slide: NavItem }) {
 }
 
 /**
- * The `[≠ N]` differences chip — the menubar entry to the difference
- * ledger, beside the compare toggle. N is the ledger's authoritative
- * count; hidden below 2 selected paths (the compare cluster gate),
- * disabled at zero because "open the empty ledger" is a dead end.
+ * The `[Diff N]` button — the menubar entry to the difference ledger, beside
+ * the compare toggles. A real toggle: pressed while the panel is open ON the
+ * Differences surface, and clicking it then CLOSES the panel (the panel's own
+ * atomic clear, never a second owner of "is the panel open"). Hidden below 2
+ * selected paths (the compare cluster gate), disabled at zero because "open
+ * the empty ledger" is a dead end.
+ *
+ * The count is a pill, not prose — it is one of exactly two counts in the
+ * app (this and each ledger group's trailing number), so it has to read as a
+ * value rather than a label.
  */
 function CompareDifferencesChip({ slide }: { slide: NavItem }) {
   const { registration } = useCompareReviewState()
@@ -171,21 +177,39 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
     return null
   }
   const count = countCompareDifferences(registration.model)
+  const open = cellDetail.panelState?.surface === 'differences'
   const chip = (
     <Button
       type="button"
       variant="ghost"
       size="sm"
       disabled={count === 0}
+      aria-pressed={open}
       aria-label={
         count === 0
           ? 'No differences between the compared paths'
-          : `Open the difference ledger (${count} differences)`
+          : open
+            ? 'Close the difference ledger'
+            : `Open the difference ledger (${count} differences)`
       }
-      className="h-6 gap-1 px-2 font-mono text-2xs tabular-nums text-muted-foreground hover:text-foreground"
-      onClick={cellDetail.openDifferences}
+      className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
+      onClick={() => (open ? cellDetail.closePanel() : cellDetail.openDifferences())}
     >
-      ≠ {count}
+      <Diff className="size-3.5" aria-hidden />
+      Diff
+      <span
+        aria-hidden
+        className={cn(
+          'ml-0.5 rounded-full px-1.5 py-px font-mono text-3xs leading-none tabular-nums',
+          // Resting: neutral. Pressed: brand tint one step stronger than the
+          // button's own selected fill, so the pill stays legible on it.
+          open
+            ? 'bg-sidebar-selected-rail/20 text-foreground'
+            : 'bg-muted text-foreground',
+        )}
+      >
+        {count}
+      </span>
     </Button>
   )
   return (
@@ -196,7 +220,9 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
       <TooltipContent>
         {count === 0
           ? 'Paths are identical — nothing to list'
-          : 'Open the difference ledger'}
+          : open
+            ? 'Close the difference ledger'
+            : 'Open the difference ledger'}
       </TooltipContent>
     </Tooltip>
   )
