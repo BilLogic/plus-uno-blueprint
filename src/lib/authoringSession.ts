@@ -112,13 +112,6 @@ const DESTRUCTIVE = new Set([
   'remove_lane',
 ])
 
-/**
- * Operations with no inverse at all. `Discard all` reverts around these and
- * names them rather than refusing to run — one un-revertible change must not
- * kill the escape hatch for everything else.
- */
-const IRREVERSIBLE = new Set<string>([])
-
 let entries: ChangeEntry[] = []
 let listeners: Array<() => void> = []
 let counter = 0
@@ -180,9 +173,19 @@ export function sessionHasDestructive(list: readonly ChangeEntry[]): boolean {
   return list.some((entry) => DESTRUCTIVE.has(entry.fn))
 }
 
-export function isIrreversible(entry: ChangeEntry): boolean {
-  return IRREVERSIBLE.has(entry.fn)
-}
+/*
+ * There is deliberately no by-operation "irreversible" predicate. There used
+ * to be an empty `Set` of operation names and an `isIrreversible(entry)` over
+ * it, whose doc described behaviour the code could not exhibit — the set being
+ * empty, it answered false for everything, including the deletes it named.
+ *
+ * Revertibility is not a property of the operation, it is a property of the
+ * ENTRY: the same `upsert_cell` is revertible when its id came back and not
+ * when it did not, and `update_cell_content` is revertible only if the caller
+ * captured a before-state. So `!entry.revert` — what `revertAll` and the row
+ * button already ask — is the whole predicate, and a second, coarser one
+ * beside it could only ever disagree with it.
+ */
 
 /**
  * One human sentence per change.

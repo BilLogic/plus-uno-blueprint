@@ -606,33 +606,13 @@ export function deleteCell(client: Client, cellId: string): Promise<string> {
   return call<string>(client, 'delete_cell', { cell_id: cellId })
 }
 
-// ---------------------------------------------------------------------------
-// Reads that support the above
-// ---------------------------------------------------------------------------
-
-/**
- * The authored key of a cell — `lifecycle/scenario/path/layer/step`.
- *
- * Slices bind to cells through these rather than through ids, because a
- * scenario re-import deletes and recreates every `cells` row. The id changes;
- * the key does not.
- *
- * **Null is a real answer**, not an error: it means the cell's key was never
- * written, so nothing that references it can be recovered by key. Do not
- * substitute a derived guess — a key that matches nothing is worse than an
- * absent one, because it looks like a successful match.
+/*
+ * There are no client wrappers for `cell_natural_key` or
+ * `slices_referencing`. Both existed here with zero callers and never had any:
+ * the app only ever needs them THROUGH `deletion_impact`, which calls
+ * `slices_referencing` itself and returns the keys inside `affected_slices` —
+ * so a wrapper here was a second way to ask a question already answered, with
+ * no caller to keep it honest. The SQL functions stay; they are the ones doing
+ * the work, and `authoringSession.test.ts` still names both as reads that must
+ * never become members of `WriteFn`.
  */
-export function cellNaturalKey(
-  client: Client,
-  cellId: string,
-): Promise<string | null> {
-  return read<string | null>(client, 'cell_natural_key', { cell_id: cellId })
-}
-
-/** Which slices reference any of these cells. */
-export function slicesReferencing(
-  client: Client,
-  cellIds: string[],
-): Promise<AffectedSlice[]> {
-  return read<AffectedSlice[]>(client, 'slices_referencing', { cell_ids: cellIds })
-}

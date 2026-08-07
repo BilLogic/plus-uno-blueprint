@@ -212,7 +212,7 @@ export type CompareSlotPathEntry =
   | { present: false }                                    // absence has no signature — no lying empty string
 
 export interface CompareSlot {
-  readonly slotKey: string                                // makeSlotKey(laneKey, columnKey), ' '-joined
+  readonly slotKey: string                                // makeSlotKey(laneKey, columnKey), '\u0000'-joined
   readonly columnKey: string; readonly laneKey: string
   readonly verdict: CompareStatus
   readonly perPath: Readonly<Record<string, CompareSlotPathEntry>>
@@ -231,7 +231,7 @@ export function computePinnedColumns(model, blueprints): ReadonlySet<string>
 ```
 
 - **Alignment normalization (prerequisite):** widen `normalize()` — strip punctuation + leading articles, add a near-match rename pass. Tests pinned on real Ecoeled rename cases (quotes / trailing period / "the"). Without it, trivial renames fabricate phantom clusters in both modes.
-- Signature = content + description + links (`type+label+url`, not `pictures`); ` ` separators. Owner deferred to v3.1 (needs `PATH_BLUEPRINT_SELECT` widening; `sb:audit` already checks ownership). Multiset slots: sorted-content pairing; field-level diffs on 1:1 slots only.
+- Signature = content + description + links (`type+label+url`, not `pictures`); `\u0000` separators. Owner deferred to v3.1 (needs `PATH_BLUEPRINT_SELECT` widening; `sb:audit` already checks ownership). Multiset slots: sorted-content pairing; field-level diffs on 1:1 slots only.
 - Consumers: Stacked highlight ← `columns` · ledger ← `slots` · strip + Merged canvas ← `runs` · fly-pulse ← `cellStatus`. Fix while porting: O(columns²) `includes` at `comparePathCells.ts:36` → `Set`.
 - **Recompute discipline:** one `useMemo` in `ScenarioBlueprintPanel` keyed on memoized `visibleBlueprints`; distributed via one context (consumers never call `buildCompareModel` themselves). Gate returns `null` until all selected blueprints are loaded **from the same refetch generation** (a half-refreshed pair fabricates flash divergences).
 
