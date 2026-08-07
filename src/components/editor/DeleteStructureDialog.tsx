@@ -13,13 +13,12 @@ import {
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateStructure } from '@/hooks/useSupabaseQuery'
-import { deletionImpact, deletePath, deleteScenario } from '@/lib/authoringRpc'
-import { deleteSlice, sliceDeletionImpact } from '@/lib/sliceMutations'
+import { deletePath, deleteScenario } from '@/lib/authoringRpc'
+import { deleteSlice } from '@/lib/sliceMutations'
 import {
   DELETION_NOUNS,
   confirmationMatches,
-  summarizeImpact,
-  summarizeSliceImpact,
+  readDeletionImpact,
   type DeletableKind,
   type ImpactSummary,
 } from '@/lib/deletionSafety'
@@ -35,17 +34,6 @@ export type DeletionTarget = {
   id: string
   /** Typed to confirm, and shown throughout. */
   label: string
-}
-
-/** The impact read for a target, whichever source that kind's counts come from. */
-function readImpact(
-  client: NonNullable<ReturnType<typeof useSupabase>['client']>,
-  target: DeletionTarget,
-): Promise<ImpactSummary> {
-  if (target.kind === 'slice') {
-    return sliceDeletionImpact(client, target.id).then(summarizeSliceImpact)
-  }
-  return deletionImpact(client, target.kind, target.id).then(summarizeImpact)
 }
 
 /**
@@ -112,7 +100,7 @@ export function DeleteStructureDialog({
     // Depends on the target's *fields*, not its object identity: callers build
     // this object inline, and re-reading on every parent render would cancel
     // each read before it resolved and leave the gate permanently shut.
-    readImpact(client, { kind: targetKind, id: targetId, label: '' })
+    readDeletionImpact(client, targetKind, targetId)
       .then((result) => {
         if (!cancelled) setImpact(result)
       })

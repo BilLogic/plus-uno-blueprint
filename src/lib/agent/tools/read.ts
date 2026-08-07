@@ -10,6 +10,11 @@ import {
 import { buildCompareModel, type CompareBlueprints, type CompareSlot } from '@/lib/compareSlots'
 import { normalizeBlueprint, type RawPath } from '@/lib/normalizeBlueprint'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
+import {
+  DELETION_NOUNS,
+  readDeletionImpact,
+  type DeletableKind,
+} from '@/lib/deletionSafety'
 import type { BlueprintData } from '@/types/blueprint'
 import canvasAdapter from '@/lib/agent/skill/references/canvas-adapter.md?raw'
 import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
@@ -286,4 +291,46 @@ export async function listOwnerTags(client: Client): Promise<string> {
   }
   if (tags.size === 0) return 'No owner tags in use yet.'
   return [...tags].sort().join(', ')
+}
+
+/**
+ * What a delete would cost, in the words the confirm dialog uses.
+ *
+ * The agent cannot delete anything — no delete is on the allow-list, by
+ * design — but it was also unable to SAY what a delete would cost, which made
+ * "what happens if I remove this path?" a question it had to decline or guess
+ * at. The impact RPCs are side-effect-free reads (that is what this branch
+ * proves), so answering is free.
+ *
+ * `readDeletionImpact` is the very function `DeleteStructureDialog` calls, and
+ * the facts/warnings/reassurances are rendered VERBATIM. Deliberately not
+ * paraphrased: the warning about slices undo cannot restore, and the qualified
+ * archive reassurance beside it, were written word by word to not overstate
+ * what comes back. An agent rewording them in its own voice is exactly how the
+ * "nothing is destroyed" over-promise gets reintroduced on a second surface.
+ */
+export async function getDeletionImpact(
+  client: Client,
+  kind: DeletableKind,
+  targetId: string,
+): Promise<string> {
+  const summary = await readDeletionImpact(client, kind, targetId)
+  const lines = [
+    `Deleting this ${DELETION_NOUNS[kind]} would destroy:`,
+    ...summary.facts.map(
+      (fact) => `  ${fact.count} ${fact.noun}${fact.count === 1 ? '' : 's'}`,
+    ),
+  ]
+  // Verbatim, one per line, under headings that say which kind of sentence
+  // each is — a warning read as a reassurance is the failure mode here.
+  if (summary.warnings.length > 0) {
+    lines.push('Warnings:', ...summary.warnings.map((line) => `  ${line}`))
+  }
+  if (summary.reassurances.length > 0) {
+    lines.push('What survives:', ...summary.reassurances.map((line) => `  ${line}`))
+  }
+  lines.push(
+    'Relay these sentences as they are. You cannot perform this delete — only the human can, through the confirm dialog, by typing the name.',
+  )
+  return lines.join('\n')
 }

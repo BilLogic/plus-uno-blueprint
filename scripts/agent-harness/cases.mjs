@@ -11,6 +11,7 @@ const WRITES = new Set([
   'add_step', 'add_lane', 'upsert_cell', 'update_cell_content',
   'update_cell_spec', 'set_cell_dependency', 'rename_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
+  'duplicate_scenario',
   'create_slice', 'update_slice', 'replace_slice_frames',
   'record_finding', 'set_finding_status',
 ])

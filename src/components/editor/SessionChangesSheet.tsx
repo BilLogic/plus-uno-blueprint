@@ -1,4 +1,4 @@
-import { useSyncExternalStore, useEffect, useState } from 'react'
+import { useSyncExternalStore, useEffect, useRef, useState } from 'react'
 import { Check, Crosshair, History, Undo2 } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
@@ -9,8 +9,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
+import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import {
   clearSession,
+  currentAgentSessionId,
   describeChange,
   forgetChange,
   groupChanges,
@@ -196,17 +198,119 @@ function useUndoHotkey(changes: ChangeEntry[]) {
       registerAgentUiCommand({
         name: 'keep_all_changes',
         description:
-          "Accept the session's changes (clears the change sheet). Refused when the session holds destructive changes — those need the human's own confirm.",
+          "Accept the session's changes (clears the change sheet). This DISCARDS every captured revert — after it, nothing in the session can be taken back. Refused when the session holds destructive changes; those need the human's own confirm.",
+        // It writes no rows, which is why this was unmarked — and why the
+        // omission mattered. Clearing the ledger is the only thing standing
+        // between the user and permanent loss of every revert in the session:
+        // it is strictly less recoverable than the undo beside it, which IS
+        // marked. Marked, it counts against the write batch, is refused for a
+        // view-only session, and the live list tells the model it changes
+        // data before it fires.
+        mutates: true,
         run: () => {
           if (sessionHasDestructive(changes))
             return 'This session contains destructive changes — the human must confirm those in the Changes sheet themselves.'
           clearSession()
-          return 'Changes kept; the change sheet is clear.'
+          return 'Changes kept; the change sheet is clear. Every revert in it is now gone — nothing from this session can be taken back.'
         },
+      }),
+      registerAgentUiCommand({
+        name: 'revert_my_changes',
+        description:
+          "Take back the changes YOU made in this agent session, newest first, leaving the human's own edits and other sessions' edits alone. Reports what it took back and names anything it could not, with the reason. Prefer this over firing undo_last_change repeatedly — that walks the whole session including the human's edits, in no guaranteed order, and reports nothing.",
+        mutates: true,
+        run: () => revertAgentSession(client),
+      }),
+      registerAgentUiCommand({
+        name: 'revert_all_changes',
+        description:
+          "WITHHELD, and listed here so you can see that it is: reverting the WHOLE session — the human's own edits included — is a human-only control (Revert all, in the Changes sheet). Firing this explains that and does nothing. Use revert_my_changes for your own edits.",
+        run: () =>
+          'Reverting the whole session is human-only: it would take back the human’s own edits as well as yours, and that decision is theirs to make in the Changes sheet (the Revert all button, which asks first). Nothing was changed. revert_my_changes takes back only what you did — tell the user that is what you can offer.',
       }),
     ]
     return () => unregister.forEach((fn) => fn())
   }, [changes, client])
+}
+
+/**
+ * Take back this agent session's own entries, newest first.
+ *
+ * Deliberately NOT `revertAll` with a filter — it walks the same shape but
+ * over a different set, and shares the parts that matter: `revertEntry` (so
+ * the in-flight guard, `forgetChange` and every cache invalidation are the
+ * proven ones), the module-level run flag (so a row button or ⌘Z landing
+ * mid-run is refused rather than double-executing an inverse), and the
+ * re-read-from-the-store loop (a captured array goes stale the moment a
+ * concurrent revert or a human save touches the ledger).
+ *
+ * The scope comes from `currentAgentSessionId()` — the attribution the tool
+ * dispatcher set — and not from an argument, so the model cannot name a
+ * session that is not its own.
+ */
+async function revertAgentSession(
+  client: NonNullable<ReturnType<typeof useSupabase>['client']>,
+): Promise<string> {
+  const sessionId = currentAgentSessionId()
+  if (!sessionId)
+    return 'This command is only available to the agent, and no agent session is attributed right now.'
+  if (isRevertInFlight()) return 'A revert is already in flight — wait for it.'
+
+  const mine = (entry: ChangeEntry) =>
+    entry.author === 'agent' && entry.agentSessionId === sessionId
+  if (!sessionSnapshot().some(mine))
+    return 'You have not made any changes in this session, so there is nothing of yours to take back.'
+
+  const reverted: string[] = []
+  const leftBehind: string[] = []
+  const seen = new Set<string>()
+  revertAllRunning = true
+  try {
+    for (;;) {
+      // Newest first, mine only, and only ones this run has not answered for
+      // — the failures stay in the ledger, so they would otherwise be the
+      // loop's own termination bug.
+      const entry = sessionSnapshot().findLast(
+        (item) => mine(item) && !seen.has(item.id),
+      )
+      if (!entry) break
+      seen.add(entry.id)
+      const label = describeChange(entry)
+      if (!entry.revert) {
+        leftBehind.push(`${label} — nothing was recorded that could undo it`)
+        continue
+      }
+      try {
+        const outcome = await revertEntry(client, entry)
+        if (outcome === 'already-in-flight') {
+          leftBehind.push(`${label} — it was already being taken back elsewhere`)
+        } else {
+          reverted.push(label)
+        }
+      } catch (error) {
+        leftBehind.push(
+          `${label} — ${error instanceof Error ? error.message : String(error)}`,
+        )
+      }
+    }
+  } finally {
+    revertAllRunning = false
+  }
+
+  // Both halves, always. "Reverted 4 changes" with two silent failures is the
+  // report that gets relayed to the user as if the slate were clean.
+  const lines = [
+    reverted.length > 0
+      ? `Took back ${reverted.length} of your change${reverted.length === 1 ? '' : 's'}:\n${reverted.map((line) => `  ${line}`).join('\n')}`
+      : 'Took back none of your changes.',
+  ]
+  if (leftBehind.length > 0) {
+    lines.push(
+      `Could NOT take back ${leftBehind.length}, still in the change list:\n${leftBehind.map((line) => `  ${line}`).join('\n')}`,
+    )
+  }
+  lines.push("The human's own edits were not touched.")
+  return lines.join('\n')
 }
 
 /**
@@ -230,6 +334,36 @@ export function SessionChangesSheet() {
   /** What Revert all could not take back — named, never silently dropped. */
   const [leftBehind, setLeftBehind] = useState<LeftBehind[]>([])
   useUndoHotkey(changes)
+
+  /*
+    Agent parity: `get_ui_state` gains a `changes` line.
+
+    Without it the agent could LIST the session (get_change_history) but not
+    see the state of the control that governs it — so it could not tell that a
+    confirm was already armed, or that a revert run was under way, and
+    "reverting…" plus a second revert request is the collision the module-level
+    gate has to refuse. It reports even at zero, because "no unsaved changes"
+    is a fact worth grounding an answer on.
+
+    Ref-snapshotted, registered once: the contributor must stay stable across
+    renders (re-registering every render would churn the map) while still
+    reading current values. Same shape as EditorShell's `shell` contributor.
+  */
+  const changesContext = [
+    `changes: ${changes.length} in this session`,
+    `${changes.filter((entry) => entry.revert).length} revertible`,
+    `${changes.filter((entry) => entry.author === 'agent').length} made by an agent`,
+    confirming === null ? 'no confirm armed' : `confirm armed: ${confirming}`,
+    reverting ? 'a revert run is IN FLIGHT' : 'no revert in flight',
+  ].join(', ')
+  const changesContextRef = useRef(changesContext)
+  useEffect(() => {
+    changesContextRef.current = changesContext
+  })
+  useEffect(
+    () => registerAgentUiContext('changes', () => changesContextRef.current),
+    [],
+  )
 
   /*
     The sheet unmounts nothing when the ledger empties — the early return

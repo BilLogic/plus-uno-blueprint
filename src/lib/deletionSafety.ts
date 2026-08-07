@@ -1,5 +1,12 @@
-import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authoringRpc'
-import type { SliceDeletionImpact } from '@/lib/sliceMutations'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  deletionImpact,
+  type AffectedSlice,
+  type DeletionImpact,
+  type DeletionKind,
+} from '@/lib/authoringRpc'
+import { sliceDeletionImpact, type SliceDeletionImpact } from '@/lib/sliceMutations'
+import type { Database } from '@/types/database'
 
 /**
  * What a delete would destroy, and whether it could be undone.
@@ -201,6 +208,31 @@ export function summarizeSliceImpact(impact: SliceDeletionImpact): ImpactSummary
         : 'No blueprint cells are touched.',
     ],
   }
+}
+
+/**
+ * The impact for a target, from whichever source that kind's counts come from.
+ *
+ * **The one branch.** It lived inside `DeleteStructureDialog`, which meant the
+ * only way to find out what a delete would cost was to open the dialog — so
+ * the agent, which is not allowed to delete anything, also could not TELL a
+ * user what a delete would cost. Both surfaces now call this, so the numbers
+ * the agent quotes and the numbers the dialog shows cannot drift; a second
+ * implementation for the agent would have been a second chance to undercount.
+ *
+ * A pure read: `deletion_impact` goes through `authoringRpc`'s `read()` seam
+ * and `sliceDeletionImpact` is two selects, so nothing here reaches the
+ * session ledger. That is what makes it safe to expose to the agent at all.
+ */
+export function readDeletionImpact(
+  client: SupabaseClient<Database>,
+  kind: DeletableKind,
+  targetId: string,
+): Promise<ImpactSummary> {
+  if (kind === 'slice') {
+    return sliceDeletionImpact(client, targetId).then(summarizeSliceImpact)
+  }
+  return deletionImpact(client, kind, targetId).then(summarizeImpact)
 }
 
 /**

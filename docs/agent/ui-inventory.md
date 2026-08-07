@@ -58,6 +58,36 @@ lane/step names, columnKeys and cell ids); `get_ui_state` gains a `compare`
 line (mode, paths, counts, active step, ledger open + filters, fold
 state).
 
+## Session ledger, deletion & duplication
+
+| Need | Primitive | Note |
+|---|---|---|
+| Unsaved-changes review | `SessionChangesSheet` — `dropdown-menu.tsx` opened by the `Changes N` trigger | ONE control: the counter IS the trigger, and Save lives inside the list so keeping requires seeing what is kept. Rows carry per-change revert (`IconTooltip` + `Undo2`); the footer carries the Save gate, the Revert all gate, and the left-behind report. Never a second lighter list |
+| Destructive confirm | `DeleteStructureDialog` — `dialog.tsx` + `input.tsx` gate | THE only confirmation for deleting anything structural, slices included. Counts are READ (`readDeletionImpact`) before the gate can open, never estimated client-side. Kinds: `scenario`, `path`, `slice` only — `lane`/`step` impacts do not match their deletes (`deletionSafety.ts`) and are unrepresentable in `DeletableKind` |
+| Duplicate / rename / delete on a structural row | `StructureRowMenu` — `context-menu.tsx` | right-click, like every sidebar row. Copies are named `"X (copy)"` — parentheses survive truncation better than a trailing word |
+
+Agent parity for these surfaces: write tools `duplicate_path` and
+`duplicate_scenario` (the second writes hundreds of rows from two
+arguments, and its description says so plus the `"X (copy)"` naming
+convention, so both surfaces agree); write tools `create_slice`,
+`update_slice`, `replace_slice_frames` — all four slice writes now land
+in the ledger with a captured inverse, so an agent frame rewrite shows a
+revertible row like a human's; read tool `get_deletion_impact
+<scenario|path|slice> <id>` dispatching the SAME `readDeletionImpact`
+branch the dialog uses and relaying `ImpactSummary`'s facts, warnings
+and reassurances **verbatim** (rewording them is how the "nothing is
+destroyed" over-promise returns on a second surface); ui commands
+`undo_last_change`, `revert_my_changes` (scoped to the firing agent
+session's own entries, reusing `revertEntry` and reporting what it could
+not take back), `keep_all_changes` (marked `[changes data]` — it
+discards every captured revert, which is less recoverable than the undo
+beside it), and `revert_all_changes`, which **refuses and explains**:
+the unscoped Revert-all stays human-only, but the withholding is
+discoverable in `list_ui_commands` rather than silent. `get_ui_state`
+gains a `changes` line (count, revertible count, agent-authored count,
+whether a confirm is armed, whether a revert run is in flight). Every
+delete itself remains withheld — removal is human-only.
+
 Full DS directory today (re-listed 2026-08-07): accordion, alert,
 attachment, badge, breadcrumb, bubble, button, card, carousel,
 collapsible, command, context-menu, deferred-skeleton, dialog, drawer,

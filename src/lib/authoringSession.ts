@@ -102,6 +102,19 @@ export function setAgentAttribution(sessionId: string | null): void {
   agentAttribution = sessionId === null ? null : { sessionId }
 }
 
+/**
+ * The agent session a write happening right now would be attributed to, or
+ * null when the human is driving.
+ *
+ * Read by the scoped revert (`revert_my_changes`): it needs to know *whose*
+ * entries to take back, and the attribution the dispatcher already set is the
+ * one authority on that. The alternative — passing the session id in as a
+ * command argument — would let the model name someone else's session.
+ */
+export function currentAgentSessionId(): string | null {
+  return agentAttribution?.sessionId ?? null
+}
+
 /** Operations that cannot be taken back once the session is saved. */
 const DESTRUCTIVE = new Set([
   'delete_scenario',
