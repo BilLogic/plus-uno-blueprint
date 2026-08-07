@@ -63,8 +63,28 @@ const DESTRUCTIVE = new Set([
   'delete_scenario',
   'delete_path',
   'delete_cell',
+  'delete_slice',
   'remove_step',
   'remove_lane',
+])
+
+/**
+ * Operations that ask the database a question and change nothing.
+ *
+ * The seam in `authoringRpc.ts` already routes these through `read()` rather
+ * than `call()`, so in normal operation nothing offers them here. This set is
+ * the backstop at the ledger's own door, and it is what purges the phantom
+ * rows a build before this one recorded: a read has no inverse, so an entry for
+ * one can only ever render as an unrevertible "change" that never happened.
+ *
+ * Rejecting at the door rather than filtering at render is deliberate — a
+ * filtered entry still counts toward "2 unsaved changes" everywhere else that
+ * reads the snapshot, and the counter was half the reported symptom.
+ */
+const READ_ONLY = new Set([
+  'deletion_impact',
+  'cell_natural_key',
+  'slices_referencing',
 ])
 
 /**
@@ -99,6 +119,7 @@ export function recordChange(
   args: Record<string, unknown>,
   revert?: RevertSpec,
 ): void {
+  if (READ_ONLY.has(fn)) return
   counter += 1
   entries = [
     ...entries,
@@ -222,6 +243,11 @@ export function describeChange(entry: ChangeEntry): string {
       return 'Deleted a lane'
     case 'delete_cell':
       return 'Deleted a cell'
+    case 'delete_slice': {
+      const title =
+        typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
+      return title ? `Deleted slice “${title}”` : 'Deleted a slice'
+    }
     default:
       // A new RPC that nobody taught this function about still shows up in the
       // list. Silence would be worse: an untracked change is the one case the

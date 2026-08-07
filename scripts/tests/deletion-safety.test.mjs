@@ -12,10 +12,12 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import {
+  DELETION_NOUNS,
   confirmationMatches,
   deletionReadiness,
-  describeImpact,
   splitByRecoverability,
+  summarizeImpact,
+  summarizeSliceImpact,
 } from '../../src/lib/deletionSafety.ts'
 
 test('deleting is unavailable without the archive', () => {
@@ -51,8 +53,8 @@ test('a slice with no keys at all is unrecoverable, not recoverable', () => {
   assert.deepEqual(unrecoverable.map((s) => s.title), ['No keys'])
 })
 
-test('the impact names cells, arrows and affected slices', () => {
-  const lines = describeImpact('lane', {
+test('the impact counts cells and arrows, and names affected slices', () => {
+  const summary = summarizeImpact('lane', {
     label: 'Regular Tutor',
     cell_count: 6,
     dependency_count: 4,
@@ -60,31 +62,65 @@ test('the impact names cells, arrows and affected slices', () => {
       { slice_id: '1', title: 'Warm-up journey', cell_keys: ['k1'] },
     ],
   })
-  assert.match(lines[0], /removes 6 cells/)
-  assert.match(lines[1], /4 arrows/)
-  assert.match(lines[2], /1 slice will lose frames: “Warm-up journey”/)
+  assert.deepEqual(summary.facts, [
+    { count: 6, noun: 'cell' },
+    { count: 4, noun: 'arrow' },
+  ])
+  assert.match(summary.warnings[0], /1 slice will lose frames: “Warm-up journey”/)
 })
 
 test('unrecoverable slices are called out separately', () => {
-  const lines = describeImpact('scenario', {
+  const { warnings } = summarizeImpact('scenario', {
     label: 'Discovery',
     cell_count: 2,
     dependency_count: 0,
     affected_slices: [{ slice_id: '1', title: 'Old', cell_keys: [null] }],
   })
-  assert.ok(!lines.some((line) => /will lose frames/.test(line)))
-  assert.ok(lines.some((line) => /cannot be restored by undo/.test(line)))
+  assert.ok(!warnings.some((line) => /will lose frames/.test(line)))
+  assert.ok(warnings.some((line) => /cannot be restored by undo/.test(line)))
 })
 
-test('no arrows means no arrow sentence', () => {
-  const lines = describeImpact('step', {
+test('no arrows means no arrow count', () => {
+  const summary = summarizeImpact('step', {
     label: 'Step 1',
     cell_count: 1,
     dependency_count: 0,
     affected_slices: [],
   })
-  assert.equal(lines.length, 1)
-  assert.match(lines[0], /removes 1 cell\./)
+  assert.deepEqual(summary.facts, [{ count: 1, noun: 'cell' }])
+  assert.deepEqual(summary.warnings, [])
+})
+
+/**
+ * A slice delete must never lead with a cell count. Cells are the one thing it
+ * does NOT destroy, and putting their number in the destruction column is the
+ * scariest possible way to say "nothing happens to these".
+ */
+test('a slice delete counts frames, and says the cells survive', () => {
+  const summary = summarizeSliceImpact({
+    label: 'Tutor journey',
+    frame_count: 5,
+    referenced_cell_count: 12,
+  })
+  assert.deepEqual(summary.facts, [{ count: 5, noun: 'frame' }])
+  assert.ok(summary.reassurances.some((line) => /12 blueprint cells/.test(line)))
+  assert.ok(summary.reassurances.some((line) => /stay exactly as they are/.test(line)))
+})
+
+test('a slice delete admits it has no archive behind it', () => {
+  const { warnings } = summarizeSliceImpact({
+    label: 'Empty',
+    frame_count: 0,
+    referenced_cell_count: 0,
+  })
+  assert.ok(warnings.some((line) => /no archive for slices/.test(line)))
+})
+
+test('every deletable kind has a noun for the confirm sentence', () => {
+  for (const kind of ['scenario', 'path', 'step', 'lane', 'slice']) {
+    assert.equal(typeof DELETION_NOUNS[kind], 'string')
+    assert.ok(DELETION_NOUNS[kind].length > 0)
+  }
 })
 
 test('the confirmation is exact and case-sensitive', () => {

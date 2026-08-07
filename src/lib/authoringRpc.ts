@@ -80,12 +80,15 @@ export type ViewType = 'single' | 'side-by-side' | 'integrated'
  * post-date the last type generation; the parameter and return types above are
  * the contract until `generate_typescript_types` is re-run against the applied
  * migration.
+ *
+ * Shared by both seams below. It records nothing on its own — recording is the
+ * one thing that distinguishes a write from a read, so it is the one thing
+ * that must be chosen explicitly at every call site.
  */
-async function call<T>(
+async function invoke<T>(
   client: Client,
   fn: string,
   args: Record<string, unknown>,
-  revert?: RevertSpec,
 ): Promise<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see doc above
   const { data, error } = await (client.rpc as any)(fn, args)
@@ -94,11 +97,46 @@ async function call<T>(
     console.error(`[authoring] ${fn} failed:`, authoring.raw)
     throw authoring
   }
-  // Logged here and only here, *after* the call succeeded. That placement is
-  // what makes the session list trustworthy: it records writes that actually
-  // landed, so it can never claim a change the database does not have.
-  recordChange(fn, args, revert ?? deriveRevert(fn, args, data))
   return data as T
+}
+
+/**
+ * A **write**: run it, then log it to the session ledger.
+ *
+ * Logged here and only here, *after* the call succeeded. That placement is
+ * what makes the session list trustworthy: it records writes that actually
+ * landed, so it can never claim a change the database does not have.
+ */
+async function call<T>(
+  client: Client,
+  fn: string,
+  args: Record<string, unknown>,
+  revert?: RevertSpec,
+): Promise<T> {
+  const data = await invoke<T>(client, fn, args)
+  recordChange(fn, args, revert ?? deriveRevert(fn, args, data))
+  return data
+}
+
+/**
+ * A **read**: run it and log nothing.
+ *
+ * Not an optimisation — a correctness rule. A read has no inverse by
+ * definition, so routing one through `call()` puts a row in the unsaved-changes
+ * list that can never carry a revert control. That is exactly what happened to
+ * `deletion_impact`: merely opening a delete dialog logged a change named
+ * "deletion impact", the counter climbed without anything having changed, and
+ * because the row had no inverse the sheet showed no revert on it — which read
+ * as "per-change revert is gone" rather than "this row was never a change".
+ *
+ * Anything added below that only asks the database a question belongs here.
+ */
+function read<T>(
+  client: Client,
+  fn: string,
+  args: Record<string, unknown>,
+): Promise<T> {
+  return invoke<T>(client, fn, args)
 }
 
 /**
@@ -498,7 +536,7 @@ export function deletionImpact(
   kind: DeletionKind,
   targetId: string,
 ): Promise<DeletionImpact> {
-  return call<DeletionImpact>(client, 'deletion_impact', {
+  return read<DeletionImpact>(client, 'deletion_impact', {
     kind,
     target_id: targetId,
   })
@@ -560,7 +598,7 @@ export function cellNaturalKey(
   client: Client,
   cellId: string,
 ): Promise<string | null> {
-  return call<string | null>(client, 'cell_natural_key', { cell_id: cellId })
+  return read<string | null>(client, 'cell_natural_key', { cell_id: cellId })
 }
 
 /** Which slices reference any of these cells. */
@@ -568,5 +606,5 @@ export function slicesReferencing(
   client: Client,
   cellIds: string[],
 ): Promise<AffectedSlice[]> {
-  return call<AffectedSlice[]>(client, 'slices_referencing', { cell_ids: cellIds })
+  return read<AffectedSlice[]>(client, 'slices_referencing', { cell_ids: cellIds })
 }

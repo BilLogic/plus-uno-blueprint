@@ -110,3 +110,44 @@ test('a destructive session is flagged, an additive one is not', () => {
     true,
   )
 })
+
+/**
+ * Reads are not changes.
+ *
+ * `deletion_impact` used to go through the same seam as every write, so merely
+ * opening a delete dialog logged a row named "deletion impact": the unsaved
+ * count climbed with nothing changed, and because a read has no inverse the row
+ * showed no revert control — which read as per-change revert being gone.
+ *
+ * The seam in `authoringRpc.ts` routes these through `read()` now. This is the
+ * backstop at the ledger's own door, so a future read wired to `call()` by
+ * mistake still cannot pollute the list.
+ */
+test('a read is never recorded as a change', () => {
+  clearSession()
+  recordChange('deletion_impact', { kind: 'scenario', target_id: 's1' })
+  recordChange('cell_natural_key', { cell_id: 'c1' })
+  recordChange('slices_referencing', { cell_ids: ['c1'] })
+  assert.deepEqual(sessionSnapshot(), [])
+})
+
+test('reads do not consume ids, so real changes keep numbering cleanly', () => {
+  clearSession()
+  recordChange('deletion_impact', { kind: 'scenario', target_id: 's1' })
+  recordChange('add_step', { path_id: 'p1', name: 'Greet' })
+  const list = sessionSnapshot()
+  assert.equal(list.length, 1)
+  assert.equal(list[0].fn, 'add_step')
+})
+
+test('a slice delete is named and counts as destructive', () => {
+  assert.equal(
+    describeChange(entry('delete_slice', { slice_id: 's1', title: 'Tutor journey' })),
+    'Deleted slice “Tutor journey”',
+  )
+  assert.equal(
+    describeChange(entry('delete_slice', { slice_id: 's1', title: null })),
+    'Deleted a slice',
+  )
+  assert.equal(sessionHasDestructive([entry('delete_slice', {})]), true)
+})

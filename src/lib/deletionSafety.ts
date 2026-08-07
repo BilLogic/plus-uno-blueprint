@@ -1,4 +1,5 @@
 import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authoringRpc'
+import type { SliceDeletionImpact } from '@/lib/sliceMutations'
 
 /**
  * What a delete would destroy, and whether it could be undone.
@@ -9,12 +10,23 @@ import type { AffectedSlice, DeletionImpact, DeletionKind } from '@/lib/authorin
  * table destroys imported blueprint content with nothing behind it.
  */
 
+/**
+ * Everything the confirm dialog can delete.
+ *
+ * `DeletionKind` is the set of kinds `deletion_impact` understands server-side;
+ * a slice is not one of them and must not be added there (see
+ * `sliceDeletionImpact`). Widening happens here, at the UI's vocabulary, so
+ * that one dialog can be the only way anything structural is deleted.
+ */
+export type DeletableKind = DeletionKind | 'slice'
+
 /** Nouns for the confirm sentence. `steps` read as "step", `layers` as "lane". */
-export const DELETION_NOUNS: Record<DeletionKind, string> = {
+export const DELETION_NOUNS: Record<DeletableKind, string> = {
   scenario: 'scenario',
   path: 'path',
   step: 'step',
   lane: 'lane',
+  slice: 'slice',
 }
 
 export type DeletionReadiness =
@@ -81,43 +93,86 @@ export function splitByRecoverability(slices: AffectedSlice[]): FrameLoss {
 }
 
 /**
- * The sentences the confirm dialog shows, in the order they should be read.
+ * One countable consequence — "9 cells", "4 arrows".
  *
+ * Split into count and noun rather than pre-formatted prose so the dialog can
+ * set the number apart from the word. The number IS the consequence; buried
+ * mid-sentence it reads as decoration, which is how a confirm dialog ends up
+ * being clicked through.
+ */
+export type ImpactFact = { count: number; noun: string }
+
+/**
+ * What the confirm dialog shows: the counts, and the sentences that qualify
+ * them.
+ *
+ * `facts` are always destroyed. `warnings` are consequences that need a clause
+ * to be honest — which slices lose frames, and which of those undo cannot put
+ * back. `reassurances` name what deliberately survives, and exist because the
+ * most important fact about deleting a slice is that the blueprint is untouched.
+ */
+export type ImpactSummary = {
+  facts: ImpactFact[]
+  warnings: string[]
+  reassurances: string[]
+}
+
+/**
  * Counts come from `deletion_impact`, which counts what the cascade actually
  * destroys — including the arrows that die with the cells. A dialog that named
  * only the cells would be undercounting by design.
  */
-export function describeImpact(
+export function summarizeImpact(
   kind: DeletionKind,
   impact: DeletionImpact,
-): string[] {
-  const lines: string[] = []
-  const noun = DELETION_NOUNS[kind]
-
-  lines.push(
-    `Deleting this ${noun} removes ${plural(impact.cell_count, 'cell')}.`,
-  )
+): ImpactSummary {
+  const facts: ImpactFact[] = [{ count: impact.cell_count, noun: 'cell' }]
   if (impact.dependency_count > 0) {
-    lines.push(
-      `${plural(impact.dependency_count, 'arrow')} connected to those cells will go with them.`,
-    )
+    facts.push({ count: impact.dependency_count, noun: 'arrow' })
   }
 
+  const warnings: string[] = []
   const { recoverable, unrecoverable } = splitByRecoverability(
     impact.affected_slices,
   )
   if (recoverable.length > 0) {
-    lines.push(
+    warnings.push(
       `${plural(recoverable.length, 'slice')} will lose frames: ${names(recoverable)}.`,
     )
   }
   if (unrecoverable.length > 0) {
-    lines.push(
+    warnings.push(
       `${plural(unrecoverable.length, 'slice')} cannot be restored by undo, because some of their cells have no stored key: ${names(unrecoverable)}.`,
     )
   }
 
-  return lines
+  return {
+    facts,
+    warnings,
+    reassurances: [
+      `Deleting a ${DELETION_NOUNS[kind]} archives everything above; the arrows and cells listed here go with it.`,
+    ],
+  }
+}
+
+/**
+ * A slice delete is the one case where the reassurance is the headline: the
+ * frames die, the blueprint does not. No archive exists for slices, so the
+ * warning says so plainly rather than implying the same recovery the
+ * structural kinds get.
+ */
+export function summarizeSliceImpact(impact: SliceDeletionImpact): ImpactSummary {
+  return {
+    facts: [{ count: impact.frame_count, noun: 'frame' }],
+    warnings: [
+      'There is no archive for slices — once this is deleted it cannot be restored, and the change list will not offer a revert for it.',
+    ],
+    reassurances: [
+      impact.referenced_cell_count > 0
+        ? `The ${plural(impact.referenced_cell_count, 'blueprint cell')} this slice points at stay exactly as they are.`
+        : 'No blueprint cells are touched.',
+    ],
+  }
 }
 
 /**

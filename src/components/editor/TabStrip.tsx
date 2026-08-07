@@ -5,7 +5,7 @@ import {
   useState,
   type KeyboardEvent,
 } from 'react'
-import { AlertTriangle, Info, Trash2, X } from 'lucide-react'
+import { Info, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HomeNavButton, WorkspaceBadges } from '@/components/editor/EditorChrome'
 import { IconTooltip } from '@/components/editor/IconTooltip'
@@ -15,15 +15,8 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { DeleteStructureDialog } from '@/components/editor/DeleteStructureDialog'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
@@ -33,9 +26,7 @@ import {
 } from '@/contexts/viewStateStore'
 import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { useSlices } from '@/hooks/useSlices'
-import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
-import { deleteSlice } from '@/lib/sliceMutations'
 import { cn } from '@/lib/utils'
 import type { Slice } from '@/types/database'
 
@@ -51,8 +42,16 @@ function availableSlices(result: ReturnType<typeof useSlices>): Slice[] {
 }
 
 /**
- * Confirm-and-delete dialog shared by the tab strip and sidebar context
- * menus. Deletes the slice (frames cascade) and closes its tabs.
+ * Deleting a slice, from the tab strip or the sidebar.
+ *
+ * A thin adapter over `DeleteStructureDialog`, not a dialog of its own. This
+ * used to be a second, lighter confirmation — one sentence and a Delete button,
+ * no typed name and no count of what was about to go — which meant the app
+ * taught two different lessons about how serious a delete is depending on which
+ * thing you were deleting. There is now one gate, and it is the strict one.
+ *
+ * The only thing that stays here is the consequence a slice delete has and the
+ * others do not: its open tabs have to close behind it.
  */
 export function DeleteSliceDialog({
   slice,
@@ -63,82 +62,17 @@ export function DeleteSliceDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const { client } = useSupabase()
   const { closeTabsForSlice } = useViewState()
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleDelete = async () => {
-    if (!client || !slice || busy) return
-    setBusy(true)
-    setError(null)
-    try {
-      await deleteSlice(client, slice.id)
-      // Drop the cached slice list ('slices:*') and the deleted slice's
-      // detail ('slice:<id>') so every mounted list refetches.
-      invalidateQueries('slices')
-      invalidateQueries('slice:')
-      closeTabsForSlice(slice.id)
-      onOpenChange(false)
-    } catch (deleteError) {
-      setError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : String(deleteError),
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
 
   return (
-    <Dialog
+    <DeleteStructureDialog
+      target={
+        slice ? { kind: 'slice', id: slice.id, label: slice.title } : null
+      }
       open={open}
-      onOpenChange={(next) => {
-        onOpenChange(next)
-        if (!next) setError(null)
-      }}
-    >
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Delete slice</DialogTitle>
-          <DialogDescription>
-            “{slice?.title ?? 'This slice'}” and its frames will be deleted.
-            Blueprint cells are never touched.
-          </DialogDescription>
-        </DialogHeader>
-        {error ? (
-          <div className="px-6 pt-4">
-            {/* The delete failed — that is an error, not a caution about one. */}
-            <Alert variant="destructive">
-              <AlertTriangle className="size-3.5" aria-hidden />
-              <AlertDescription className="text-xs">{error}</AlertDescription>
-            </Alert>
-          </div>
-        ) : null}
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            disabled={busy}
-            onClick={() => {
-              void handleDelete()
-            }}
-          >
-            {busy ? 'Deleting…' : 'Delete slice'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      onOpenChange={onOpenChange}
+      onDeleted={() => closeTabsForSlice(slice?.id ?? '')}
+    />
   )
 }
 
