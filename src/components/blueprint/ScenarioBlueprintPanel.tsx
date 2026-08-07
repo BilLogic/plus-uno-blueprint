@@ -257,7 +257,6 @@ export function ScenarioBlueprintPanel({
           scenarioName={scenarioName}
           phaseName={phaseName}
           sectionTitleLabel={sectionTitleLabel}
-          sectionTitleDescription={sectionTitleDescription}
           fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
           fillSwimlaneHeight={fillSwimlaneHeight}
         />
