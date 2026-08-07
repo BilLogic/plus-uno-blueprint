@@ -1,30 +1,18 @@
-import type { BlueprintLayer, BlueprintStep, CellLink } from '@/types/blueprint'
+import type { BlueprintStep, CellLink } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
-import type { CompareStatus } from '@/lib/compareSlots'
 
-export const INTEGRATED_UNSELECTED_OPACITY = 0.18
+/*
+ * What survives of the integrated-grid vocabulary: the path-tagged shapes the
+ * arrow overlay (`IntegratedTriggerArrows`) and its per-band mapper
+ * (`getComparePathArrowData`) exchange. The merged grid itself — and the
+ * `IntegratedBlueprintData` container, its opacity rules and the
+ * `mergeIntegratedBlueprint` builder — retired with Compare v3's stacked
+ * arrangement.
+ */
 
 export type IntegratedBlueprintStep = BlueprintStep & {
   pathStepIds: Record<string, string>
 }
-
-/** Opacity for an integrated cell from path filter + whether the path uses this step column. */
-export function getIntegratedCellDisplayOpacity(
-  cell: IntegratedBlueprintCell,
-  integratedStep: IntegratedBlueprintStep,
-): number {
-  if (!(cell.path_id in integratedStep.pathStepIds)) {
-    return INTEGRATED_UNSELECTED_OPACITY
-  }
-  return cell.opacity
-}
-
-/**
- * How a cell relates to its counterparts across the compared paths.
- * Canonical definition lives in `@/lib/compareSlots` (Compare v3's model);
- * re-exported here for the surviving integrated-vocabulary consumers.
- */
-export type { CompareStatus } from '@/lib/compareSlots'
 
 export type IntegratedBlueprintCell = {
   id: string
@@ -37,8 +25,6 @@ export type IntegratedBlueprintCell = {
   description: string | null
   links: CellLink[]
   opacity: number
-  /** Set only in compare mode. */
-  compare?: CompareStatus
 }
 
 export type IntegratedBlueprintTrigger = {
@@ -48,18 +34,4 @@ export type IntegratedBlueprintTrigger = {
   path_id: string
   path_type: PathType
   opacity: number
-}
-
-export type IntegratedBlueprintData = {
-  paths: Array<{
-    id: string
-    name: string
-    description: string | null
-    note: string | null
-    path_type: PathType
-  }>
-  layers: BlueprintLayer[]
-  steps: IntegratedBlueprintStep[]
-  cells: IntegratedBlueprintCell[]
-  triggers: IntegratedBlueprintTrigger[]
 }

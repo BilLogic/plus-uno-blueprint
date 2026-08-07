@@ -1,18 +1,14 @@
 import { useMemo, useRef, type RefObject } from 'react'
-import { IntegratedBlueprintGrid } from '@/components/blueprint/IntegratedBlueprintGrid'
 import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePanel'
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
 import { useEditor } from '@/contexts/EditorContext'
 import { buildCompareModel, type CompareBlueprints } from '@/lib/compareSlots'
-import { mergeIntegratedBlueprint } from '@/lib/mergeIntegratedBlueprint'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
   getComparePanelHeight,
   getComparePanelWidth,
-  getIntegratedPanelHeight,
-  getIntegratedPanelWidth,
   getPanelHeightFromSwimlaneBody,
   getStackedComparePanelHeight,
   getStackedComparePanelWidth,
@@ -95,7 +91,6 @@ export function ScenarioBlueprintPanel({
     storedViewType === 'merged' && selectedPathIds.length < 2
       ? 'stacked'
       : storedViewType
-  const useIntegratedLayout = false
   const useSideBySideLayout =
     (displayViewType === 'stacked' || displayViewType === 'merged') &&
     selectedPathIds.length > 0
@@ -113,14 +108,6 @@ export function ScenarioBlueprintPanel({
     displayViewTypeProp !== undefined
   const useStackedArrangement = useSideBySideLayout && !isOverviewConstrained
 
-  const allBlueprints = useMemo(
-    () =>
-      paths
-        .map((path) => blueprintsByPathId.get(path.id))
-        .filter((blueprint): blueprint is BlueprintData => blueprint !== undefined),
-    [paths, blueprintsByPathId],
-  )
-
   const visibleBlueprints = useMemo(
     () =>
       useSideBySideLayout || useSinglePathLayout
@@ -136,11 +123,6 @@ export function ScenarioBlueprintPanel({
     ],
   )
 
-  const integratedBlueprint = useMemo(
-    () => mergeIntegratedBlueprint(allBlueprints, selectedPathIds, { compare: true }),
-    [allBlueprints, selectedPathIds],
-  )
-
   /*
     THE compare model — computed once here, distributed via props; consumers
     never call `buildCompareModel` themselves. Gated null until every
@@ -153,9 +135,6 @@ export function ScenarioBlueprintPanel({
     if (visibleBlueprints.length !== selectedPathIds.length) return null
     return buildCompareModel(visibleBlueprints as CompareBlueprints)
   }, [selectedPathIds.length, useStackedArrangement, visibleBlueprints])
-
-  const showIntegratedGrid =
-    useIntegratedLayout && integratedBlueprint !== null
 
   // Arrangement is part of the key: switching stacked bands ⇄ overview row
   // re-measures instead of keeping the other arrangement's size.
@@ -171,47 +150,29 @@ export function ScenarioBlueprintPanel({
     : null
   const showPathTypeBadge = Boolean(sectionTitleLabel)
 
-  const integratedPathCount = Math.max(1, selectedPathIds.length)
   const panelHeight =
     lockedPanelHeight ??
     (fixedSwimlaneBodyHeight !== undefined
       ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight, {
           lockHeight: lockPanelHeight,
         })
-      : showIntegratedGrid
-        ? getIntegratedPanelHeight(
-            integratedBlueprint!.layers,
-            integratedBlueprint!,
-            false,
-            new Set(),
-            { sourceBlueprints: allBlueprints, selectedPathIds },
-          )
-        : useStackedArrangement
-          ? getStackedComparePanelHeight(visibleBlueprints)
-          : getComparePanelHeight(visibleBlueprints))
+      : useStackedArrangement
+        ? getStackedComparePanelHeight(visibleBlueprints)
+        : getComparePanelHeight(visibleBlueprints))
 
   const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
 
   const comparePanelProps = {
-    // Both compare-grid estimates run hot: the width one still counts
-    // per-path nesting the merged grid no longer draws, and the height one
-    // predates classification collapsing stacked slots. A floor set from a
-    // hot estimate is dead gray space — the measured content rules instead.
-    minWidth: showIntegratedGrid
-      ? undefined
-      : useStackedArrangement
-        ? getStackedComparePanelWidth(stackedColumnCount)
-        : getComparePanelWidth(visibleBlueprints),
-    minHeight: showIntegratedGrid ? undefined : panelHeight,
-    defaultWidth: showIntegratedGrid
-      ? getIntegratedPanelWidth(
-          integratedBlueprint!.steps.length,
-          false,
-          integratedPathCount,
-        )
-      : useStackedArrangement
-        ? getStackedComparePanelWidth(stackedColumnCount)
-        : getComparePanelWidth(visibleBlueprints),
+    // Compare-grid estimates run hot (the height one predates
+    // classification collapsing stacked slots). A floor set from a hot
+    // estimate is dead gray space — the measured content rules instead.
+    minWidth: useStackedArrangement
+      ? getStackedComparePanelWidth(stackedColumnCount)
+      : getComparePanelWidth(visibleBlueprints),
+    minHeight: panelHeight,
+    defaultWidth: useStackedArrangement
+      ? getStackedComparePanelWidth(stackedColumnCount)
+      : getComparePanelWidth(visibleBlueprints),
     defaultHeight: panelHeight,
     lockHeight: lockPanelHeight,
     onNavigate,
@@ -234,7 +195,7 @@ export function ScenarioBlueprintPanel({
     visibleBlueprints.length < selectedPathIds.length
 
   if (
-    (loading && visibleBlueprints.length === 0 && !showIntegratedGrid) ||
+    (loading && visibleBlueprints.length === 0) ||
     stackedStillLoading
   ) {
     return (
@@ -252,7 +213,7 @@ export function ScenarioBlueprintPanel({
     )
   }
 
-  if (!showIntegratedGrid && visibleBlueprints.length === 0) {
+  if (visibleBlueprints.length === 0) {
     // Selected filter paths don't exist here — omit the card entirely so only
     // scenarios that contain the path remain in the phase row.
     if (selectedPathIds.length === 0 && paths.length > 0) {
@@ -270,28 +231,6 @@ export function ScenarioBlueprintPanel({
           No blueprint data for this scenario yet.
         </p>
       </div>
-    )
-  }
-
-  if (showIntegratedGrid) {
-    return (
-      <ResizableComparePanel
-        {...comparePanelProps}
-        fitContentKey={`${compareFitContentKey}:${integratedBlueprint.cells.length}`}
-      >
-        <IntegratedBlueprintGrid
-          data={integratedBlueprint}
-          embedded
-          scrollContainerRef={scrollContainerRef}
-          selectedPathIds={selectedPathIds}
-          scenarioName={scenarioName}
-          phaseName={phaseName}
-          walkthroughBlueprints={allBlueprints}
-          fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
-          fillSwimlaneHeight={fillSwimlaneHeight}
-          showPathTypeBadge={showPathTypeBadge}
-        />
-      </ResizableComparePanel>
     )
   }
 
