@@ -47,6 +47,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupTextarea,
+} from '@/components/ui/input-group'
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -59,7 +64,12 @@ import {
 } from '@/components/ui/tooltip'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
-import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker'
+import {
+  Marker,
+  MarkerContent,
+  MarkerIcon,
+  markerVariants,
+} from '@/components/ui/marker'
 import { Message, MessageContent } from '@/components/ui/message'
 import {
   MessageScroller,
@@ -238,6 +248,36 @@ export function AgentPanel() {
   )
 }
 
+/**
+ * "N changes this session" — the ledger count, spoken once, in one place.
+ * The ✦ used to be a literal character in the copy; it is the Sparkles icon
+ * everywhere else in the app, so it is the Sparkles icon here too.
+ */
+function ChangeCount({
+  count,
+  className,
+}: {
+  count: number
+  className?: string
+}) {
+  return (
+    <span
+      className={cn(
+        'flex shrink-0 items-center gap-0.5 text-2xs tabular-nums',
+        className,
+      )}
+      title={`${count} change${count === 1 ? '' : 's'} from this session`}
+    >
+      <Sparkles className="size-2.5" aria-hidden />
+      {count}
+      <span className="sr-only">
+        {' '}
+        change{count === 1 ? '' : 's'} from this session
+      </span>
+    </span>
+  )
+}
+
 function SessionRow({
   session,
   onOpen,
@@ -267,9 +307,10 @@ function SessionRow({
         {session.title}
       </span>
       {changeCount > 0 ? (
-        <span className="shrink-0 text-3xs tabular-nums text-sidebar-foreground/50">
-          ✦ {changeCount} chg
-        </span>
+        <ChangeCount
+          count={changeCount}
+          className="text-sidebar-foreground/50"
+        />
       ) : null}
     </button>
   )
@@ -381,17 +422,22 @@ function AgentSessionsView({
       </div>
 
       {pendingAttachment ? (
-        <p className="mx-2 mb-1 rounded-md bg-muted px-2 py-1.5 text-2xs text-muted-foreground">
-          ✎ {pendingAttachment.label} ready — open or start a session to send
-          them.
+        <p className="mx-2 mb-1 flex items-start gap-1.5 rounded-md bg-muted px-2 py-1.5 text-2xs text-muted-foreground">
+          <Pencil className="mt-px size-3 shrink-0" aria-hidden />
+          <span>
+            {pendingAttachment.label} ready — open or start a session to send
+            them.
+          </span>
         </p>
       ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {sessions.length === 0 ? (
           <p className="px-1.5 pt-2 text-xs text-muted-foreground">
-            No sessions yet — ＋ starts one. A session is one conversation
-            plus the changes it made.
+            No sessions yet —{' '}
+            <Plus className="inline size-3 align-[-0.1em]" aria-label="New session" />{' '}
+            starts one. A session is one conversation plus the changes it
+            made.
           </p>
         ) : searching ? (
           // A filter answers "where is it", so groups get out of the way.
@@ -470,7 +516,7 @@ function CollapsedAssistantRow({ text }: { text: string }) {
         render={
           <button
             type="button"
-            className="group/collapsed flex w-full min-w-0 items-center gap-1 rounded-sm py-0.5 text-left text-2xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="group/collapsed flex w-full min-w-0 items-center gap-1 rounded-sm py-0.5 text-left text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ChevronRight
               className={cn(
@@ -487,7 +533,7 @@ function CollapsedAssistantRow({ text }: { text: string }) {
       />
       <CollapsibleContent>
         <div className="pl-4">
-          <AgentMarkdown text={text} className="text-xs text-foreground/80" />
+          <AgentMarkdown text={text} className="text-foreground/80" />
         </div>
       </CollapsibleContent>
     </Collapsible>
@@ -495,6 +541,93 @@ function CollapsedAssistantRow({ text }: { text: string }) {
 }
 
 const COLLAPSE_THRESHOLD = 200
+
+type ToolEvent = Extract<TranscriptEvent, { kind: 'tool' }>
+
+/** One labelled payload block inside an opened tool row. */
+function ToolDetail({ label, body }: { label: string; body: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-2xs font-medium tracking-wider text-muted-foreground uppercase">
+        {label}
+      </p>
+      <pre className="mt-0.5 max-h-40 overflow-auto rounded-md bg-muted px-2 py-1.5 font-mono text-xs leading-snug whitespace-pre-wrap text-foreground/80">
+        {body}
+      </pre>
+    </div>
+  )
+}
+
+/**
+ * A tool call. Collapsed it is the same quiet one-liner it always was; open
+ * it shows the arguments the agent sent and what came back — the same
+ * disclosure vocabulary as CollapsedAssistantRow, so a reviewer only has to
+ * learn one gesture. Rows rehydrated from a previous browser session carry
+ * no payload and stay flat.
+ */
+function ToolRow({ event }: { event: ToolEvent }) {
+  const [open, setOpen] = useState(false)
+  const expandable = Boolean(event.args || event.result)
+  const face = (
+    <>
+      <MarkerIcon>
+        {event.isError ? (
+          <XCircle aria-hidden />
+        ) : (
+          <CheckCircle2 aria-hidden />
+        )}
+      </MarkerIcon>
+      <MarkerContent className={cn(!open && 'truncate')}>
+        <span className="font-mono">{event.name}</span>
+        {event.summary ? (
+          <span className="ml-1.5 text-muted-foreground">{event.summary}</span>
+        ) : null}
+      </MarkerContent>
+    </>
+  )
+
+  if (!expandable) {
+    return (
+      <Marker className={cn(event.isError && 'text-destructive')}>
+        {face}
+      </Marker>
+    )
+  }
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              markerVariants({ variant: 'default' }),
+              'cursor-pointer rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              event.isError && 'text-destructive',
+            )}
+          >
+            {face}
+            <ChevronRight
+              className={cn(
+                'ml-auto size-3 shrink-0 opacity-60 transition-transform',
+                open && 'rotate-90',
+              )}
+              aria-hidden
+            />
+          </button>
+        }
+      />
+      <CollapsibleContent>
+        <div className="mt-1 ml-6 flex flex-col gap-1.5">
+          {event.args ? <ToolDetail label="Arguments" body={event.args} /> : null}
+          {event.result ? (
+            <ToolDetail label="Result" body={event.result} />
+          ) : null}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
 
 function TranscriptRow({
   event,
@@ -519,19 +652,20 @@ function TranscriptRow({
             {event.skill || event.attachmentLabel ? (
               <div className="mb-0.5 flex justify-end gap-1">
                 {event.skill ? (
-                  <Badge variant="secondary" className="font-mono text-3xs">
+                  <Badge variant="secondary" className="font-mono">
                     /{event.skill}
                   </Badge>
                 ) : null}
                 {event.attachmentLabel ? (
-                  <Badge variant="outline" className="text-3xs">
-                    ✎ {event.attachmentLabel}
+                  <Badge variant="outline">
+                    <Pencil aria-hidden />
+                    {event.attachmentLabel}
                   </Badge>
                 ) : null}
               </div>
             ) : null}
             <Bubble variant="tinted">
-              <BubbleContent className="text-xs whitespace-pre-wrap">
+              <BubbleContent className="whitespace-pre-wrap">
                 {event.text}
               </BubbleContent>
             </Bubble>
@@ -544,36 +678,17 @@ function TranscriptRow({
           <MessageContent>
             <Bubble variant="ghost">
               <BubbleContent className="text-foreground/90">
-                <AgentMarkdown text={event.text} className="text-xs" />
+                <AgentMarkdown text={event.text} />
               </BubbleContent>
             </Bubble>
           </MessageContent>
         </Message>
       )
     case 'tool':
-      return (
-        <Marker
-          className={cn(
-            'text-2xs',
-            event.isError && 'text-destructive',
-          )}
-        >
-          <MarkerIcon>
-            {event.isError ? (
-              <XCircle className="size-3.5" aria-hidden />
-            ) : (
-              <CheckCircle2 className="size-3.5" aria-hidden />
-            )}
-          </MarkerIcon>
-          <MarkerContent>
-            <span className="font-mono">{event.name}</span>
-            {event.summary ? <span className="ml-1.5">{event.summary}</span> : null}
-          </MarkerContent>
-        </Marker>
-      )
+      return <ToolRow event={event} />
     case 'status':
       return (
-        <Marker variant="separator" className="text-2xs italic">
+        <Marker variant="separator" className="italic">
           <MarkerContent>{event.text}</MarkerContent>
         </Marker>
       )
@@ -613,6 +728,9 @@ function AgentChatView({
   const { events, running } = useAgentRun(session.id)
   const changeCount = useAgentChangeCount(session.id)
   const [renaming, setRenaming] = useState(false)
+  // The slash menu is a portalled popover; this is what it anchors to (and
+  // what --anchor-width measures).
+  const composerRowRef = useRef<HTMLDivElement>(null)
   // Only the latest answer renders full-width; earlier assistant turns are
   // working notes and collapse (see CollapsedAssistantRow).
   const lastAssistantIndex = events.reduce(
@@ -756,9 +874,7 @@ function AgentChatView({
           />
         </button>
         {changeCount > 0 ? (
-          <span className="shrink-0 text-3xs tabular-nums text-muted-foreground">
-            ✦ {changeCount} chg
-          </span>
+          <ChangeCount count={changeCount} className="text-muted-foreground" />
         ) : null}
       </div>
 
@@ -766,47 +882,66 @@ function AgentChatView({
           replies, jump-to-latest. */}
       <MessageScrollerProvider>
         <MessageScroller className="relative min-h-0 flex-1">
-        <MessageScrollerViewport className="p-3">
-          <MessageScrollerContent className="flex flex-col gap-2.5">
-        {events.length === 0 ? (
-          keyed ? (
-            <p className="text-xs text-muted-foreground">
-              Ready ({modelFor(settings)}). Writes land live on the canvas
-              and in the change sheet as ✦ rows — each one revertible.
-            </p>
-          ) : (
-            <div className="flex flex-col items-start gap-2">
-              <p className="text-xs text-muted-foreground">
-                No provider key yet — the key stays in this browser only.
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-6 text-xs"
-                onClick={openAgentSettings}
-              >
-                Add API key…
-              </Button>
-            </div>
-          )
-        ) : (
-          // Index keys are safe here: the transcript is append-only.
-          events.map((event, index) => (
-            <MessageScrollerItem key={index} scrollAnchor={index === events.length - 1}>
-              <TranscriptRow
-                event={event}
-                intermediate={
-                  event.kind === 'assistant' && index !== lastAssistantIndex
-                }
-              />
-            </MessageScrollerItem>
-          ))
-        )}
-        {running ? (
-          <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-hidden />
-        ) : null}
-          </MessageScrollerContent>
-        </MessageScrollerViewport>
+          {/* One rhythm: the viewport's p-3 is the transcript's gutter and
+              the composer's too, so both columns share a left edge; rows sit
+              on a gap-3 baseline and a NEW user turn opens a wider gap, so
+              turns read as turns without a second bubble treatment. */}
+          <MessageScrollerViewport className="p-3">
+            <MessageScrollerContent className="gap-3">
+              {events.length === 0 ? (
+                keyed ? (
+                  <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
+                    <span>Ready ({modelFor(settings)}).</span>
+                    <span className="inline-flex items-center gap-1">
+                      Writes land live on the canvas and in the change sheet as
+                      <Sparkles className="size-3" aria-hidden />
+                      rows — each one revertible.
+                    </span>
+                  </p>
+                ) : (
+                  <div className="flex flex-col items-start gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      No provider key yet — the key stays in this browser only.
+                    </p>
+                    <Button size="xs" variant="outline" onClick={openAgentSettings}>
+                      Add API key…
+                    </Button>
+                  </div>
+                )
+              ) : (
+                // Index keys are safe here: the transcript is append-only.
+                events.map((event, index) => (
+                  <MessageScrollerItem
+                    key={index}
+                    // While a run streams, the working row below is the
+                    // anchor — otherwise the last event is.
+                    scrollAnchor={!running && index === events.length - 1}
+                    className={cn(event.kind === 'user' && index > 0 && 'mt-3')}
+                  >
+                    <TranscriptRow
+                      event={event}
+                      intermediate={
+                        event.kind === 'assistant' && index !== lastAssistantIndex
+                      }
+                    />
+                  </MessageScrollerItem>
+                ))
+              )}
+              {/* A transcript row, not a loose glyph: it keeps the list's
+                  rhythm, and it announces itself instead of spinning in
+                  silence. */}
+              {running ? (
+                <MessageScrollerItem scrollAnchor>
+                  <Marker role="status" aria-live="polite">
+                    <MarkerIcon>
+                      <Loader2 className="animate-spin" aria-hidden />
+                    </MarkerIcon>
+                    <MarkerContent>Working…</MarkerContent>
+                  </Marker>
+                </MessageScrollerItem>
+              ) : null}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
           <MessageScrollerButton />
         </MessageScroller>
       </MessageScrollerProvider>
@@ -818,7 +953,10 @@ function AgentChatView({
         }}
       />
 
-      <div className="shrink-0 border-t border-border/60 p-2">
+      {/* No border-t: the field draws its own edge, and a rule immediately
+          above it read as a second line stacked on the first. The viewport's
+          scroll fade already says "the transcript continues up there". */}
+      <div className="shrink-0 p-3 pt-2">
         {attachment ? (
           <div className="mb-1.5 flex flex-col gap-1.5">
             {attachment ? (
@@ -827,7 +965,7 @@ function AgentChatView({
                   <AttachmentTitle className="text-xs">
                     {attachment.label}
                   </AttachmentTitle>
-                  <AttachmentDescription className="text-3xs">
+                  <AttachmentDescription className="text-2xs">
                     {attachment.lines.join(' · ')}
                   </AttachmentDescription>
                 </AttachmentContent>
@@ -843,43 +981,72 @@ function AgentChatView({
             ) : null}
           </div>
         ) : null}
-        <div className="relative flex items-end gap-1.5">
-          {/* The slash menu: type "/" to see the four skills — the same
-              SKILL.md files IDE agents run, minus their file mechanics. */}
-          {slashOpen ? (
-            <div className="absolute bottom-full left-0 z-20 mb-1.5 w-72 rounded-md border border-border bg-popover shadow-md">
-              {/* The composer's textarea keeps focus and does the typing, so
-                  the Command runs headless: filtering stays ours (the same
-                  skillMatchesQuery the send path uses → shouldFilter=false)
-                  and selection is controlled, fed by the arrow keys in the
-                  textarea's onKeyDown and by cmdk's own hover tracking. */}
-              <Command
-                shouldFilter={false}
-                value={nextHighlight}
-                onValueChange={setSlashHighlight}
-                className="bg-transparent"
-              >
-                <CommandList>
-                  {slashMatches.map((command) => (
-                    <CommandItem
-                      key={command.id}
-                      value={command.id}
-                      disabled={!command.content}
-                      onSelect={() => pickSkill(command)}
-                      className="items-baseline gap-2"
-                    >
-                      <span className="shrink-0 font-mono text-xs text-foreground">
-                        {command.label}
-                      </span>
-                      <span className="min-w-0 flex-1 text-2xs leading-snug text-muted-foreground">
-                        {command.description}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandList>
-              </Command>
-            </div>
-          ) : null}
+        {/* The slash menu: type "/" to see the four skills — the same
+            SKILL.md files IDE agents run, minus their file mechanics.
+            PORTALLED, anchored to the composer row. Two reasons, both
+            defects it used to cause as an absolutely-positioned child:
+            cmdk scrolls the highlighted item into view on every value
+            change, and scrollIntoView walks EVERY scrollable ancestor —
+            an overflow:hidden box included — which was silently scrolling
+            the dock chrome and the sidebar aside; and a fixed w-72 menu
+            does not fit a 272px docked panel, so it got clipped. A portal
+            has no hidden-overflow ancestors, and --anchor-width sizes it
+            to the field. */}
+        <Popover
+          open={slashOpen}
+          // Purely derived from the draft: nothing but the text can open or
+          // close it, so an outside press is a no-op rather than a state
+          // that disagrees with what is typed. Escape is handled in the
+          // textarea, where it also clears the draft.
+          onOpenChange={() => undefined}
+        >
+          <PopoverContent
+            anchor={composerRowRef}
+            side="top"
+            align="start"
+            sideOffset={6}
+            // The textarea keeps focus the whole time — it is still the
+            // thing being typed into, and the arrow keys live there.
+            initialFocus={false}
+            finalFocus={false}
+            className="w-(--anchor-width) max-w-(--available-width) gap-0 p-1"
+            aria-label="Agent skills"
+          >
+            {/* The composer's textarea keeps focus and does the typing, so
+                the Command runs headless: filtering stays ours (the same
+                skillMatchesQuery the send path uses → shouldFilter=false)
+                and selection is controlled, fed by the arrow keys in the
+                textarea's onKeyDown and by cmdk's own hover tracking. The
+                popup already supplies the surface and the radius, so the
+                Command contributes neither. */}
+            <Command
+              shouldFilter={false}
+              value={nextHighlight}
+              onValueChange={setSlashHighlight}
+              className="rounded-lg! bg-transparent p-0"
+            >
+              <CommandList>
+                {slashMatches.map((command) => (
+                  <CommandItem
+                    key={command.id}
+                    value={command.id}
+                    disabled={!command.content}
+                    onSelect={() => pickSkill(command)}
+                    className="items-baseline gap-2 text-xs"
+                  >
+                    <span className="shrink-0 font-mono text-foreground">
+                      {command.label}
+                    </span>
+                    <span className="min-w-0 flex-1 leading-snug text-muted-foreground">
+                      {command.description}
+                    </span>
+                  </CommandItem>
+                ))}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        <div ref={composerRowRef} className="flex items-end gap-1.5">
           {running ? (
             <Button
               type="button"
@@ -892,40 +1059,38 @@ function AgentChatView({
               <Square className="size-3" aria-hidden />
             </Button>
           ) : null}
-          {/* One bordered field: the recognized /command sits INSIDE it as
-              an accent chip (Claude's grammar — the token visibly stopped
-              being text), the input itself goes borderless. */}
-          <div
-            className={cn(
-              'flex min-h-7 min-w-0 flex-1 items-start gap-1 rounded-md border border-input bg-transparent px-2 py-1',
-              'focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30',
-              !keyed && 'opacity-50',
-            )}
-          >
+          {/* ONE field, the DS's own: InputGroup draws the border and the
+              focus treatment (a single soft ring on the control, the same
+              geometry every other input in the app has), and the recognized
+              /command rides in an addon INSIDE it as an accent chip
+              (Claude's grammar — the token visibly stopped being text).
+              The old hand-rolled wrapper stacked a 1px border and a 2px ring
+              on a borderless textarea: the box-around-a-box. */}
+          <InputGroup className="min-h-8 flex-1">
             {pendingSkill ? (
-              <Badge
-                variant="secondary"
-                className="mt-0.5 shrink-0 gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-3xs text-primary"
-              >
-                {pendingSkill.label}
-                <button
-                  type="button"
-                  aria-label="Remove skill"
-                  onClick={() => setPendingSkill(null)}
-                  className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
+              <InputGroupAddon align="inline-start" className="self-start py-1.5">
+                <Badge
+                  variant="secondary"
+                  className="gap-0.5 border-primary/25 bg-primary/10 pr-0.5 font-mono text-2xs text-primary"
                 >
-                  <X className="size-2.5" aria-hidden />
-                </button>
-              </Badge>
+                  {pendingSkill.label}
+                  <button
+                    type="button"
+                    aria-label="Remove skill"
+                    onClick={() => setPendingSkill(null)}
+                    className="rounded-sm p-0.5 transition-colors hover:bg-primary/15"
+                  >
+                    <X className="size-2.5" aria-hidden />
+                  </button>
+                </Badge>
+              </InputGroupAddon>
             ) : null}
-            <textarea
+            <InputGroupTextarea
               rows={1}
-              ref={(node) => {
-                // Auto-grow: content height up to ~6 lines, then scroll.
-                if (!node) return
-                node.style.height = 'auto'
-                node.style.height = `${Math.min(node.scrollHeight, 120)}px`
-              }}
+              // No imperative height write: the DS Textarea is
+              // `field-sizing-content`, so the browser grows it. max-h caps
+              // it at ~6 lines and then it scrolls, as before.
+              className="max-h-30 min-h-7 py-1.5 leading-5"
               value={draft}
               onChange={(event) => {
                 const value = event.target.value
@@ -1002,13 +1167,12 @@ function AgentChatView({
                   ? pendingSkill.description
                   : keyed
                     ? 'Message the agent… ("/" for skills)'
-                    : 'Add a key in ⚙ first'
+                    : 'Add an API key in agent settings first'
               }
-              className="min-h-5 min-w-0 flex-1 resize-none border-0 bg-transparent px-0 py-0 text-xs leading-5 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Message the agent"
               disabled={!keyed}
             />
-          </div>
+          </InputGroup>
           <Button
             type="button"
             size="icon-sm"

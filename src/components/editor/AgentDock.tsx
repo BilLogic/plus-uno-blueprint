@@ -47,8 +47,10 @@ function AgentDockChrome({
     <div
       className={cn(
         'flex min-h-0 flex-1 flex-col overflow-hidden',
-        floating &&
-          'rounded-lg border border-border bg-popover shadow-lg ring-1 ring-black/[0.03]',
+        // ONE edge treatment: the token border carries it, the shadow does
+        // the lift. A ring on top of the border read as a second outline
+        // (and `ring-black/…` was a raw colour literal besides).
+        floating && 'rounded-lg border border-border bg-popover shadow-lg',
         dropTarget && 'ring-2 ring-primary/50',
       )}
     >
