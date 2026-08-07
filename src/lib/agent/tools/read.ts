@@ -1,7 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
+import {
+  countCompareDifferences,
+  deriveCompareZones,
+  getDetailOnlyCompareSlots,
+  isDetailOnlyCompareSlot,
+} from '@/lib/compareLedger'
+import { buildCompareModel, type CompareBlueprints, type CompareSlot } from '@/lib/compareSlots'
 import { normalizeBlueprint, type RawPath } from '@/lib/normalizeBlueprint'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
+import type { BlueprintData } from '@/types/blueprint'
 import canvasAdapter from '@/lib/agent/skill/references/canvas-adapter.md?raw'
 import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
 import elicitationProtocol from '@/lib/agent/skill/references/elicitation-protocol.md?raw'
@@ -127,6 +135,94 @@ export async function getBlueprint(
     sections.push(lines.join('\n'))
   }
   return sections.join('\n\n')
+}
+
+function compareSlotLine(
+  slot: CompareSlot,
+  blueprints: readonly BlueprintData[],
+): string {
+  const fields =
+    slot.differingFields.length > 0
+      ? ` (fields: ${slot.differingFields.join(', ')})`
+      : ''
+  const perPath = blueprints
+    .map((blueprint) => {
+      const entry = slot.perPath[blueprint.path.id]
+      if (!entry?.present) return `${blueprint.path.name}: —`
+      const quoted = entry.contents.map((content) => `"${content}"`).join(' + ')
+      return `${blueprint.path.name}: ${quoted} (${entry.cellIds.join(', ')})`
+    })
+    .join(' | ')
+  return `  [${slot.verdict}] lane "${slot.laneLabel}" @ step "${slot.columnLabel}"${fields}: ${perPath}`
+}
+
+/**
+ * Headless compare: fetches the scenario's blueprints through the same
+ * query the panel uses, runs `buildCompareModel`, and serializes slots /
+ * zones / columns as compact text. This grounds every other compare
+ * argument the agent can pass — zone indices for jump_divergence, lane
+ * names for differences_filter, cell ids for focus/annotate.
+ */
+export async function getCompareDiff(
+  client: Client,
+  scenarioId: string,
+  pathIds?: string[],
+): Promise<string> {
+  const { data, error } = await client
+    .from('paths')
+    .select(PATH_BLUEPRINT_SELECT)
+    .eq('service_scenario_id', scenarioId)
+  if (error) throw new Error(error.message)
+  const rows = (data ?? []) as unknown as RawPath[]
+  if (rows.length === 0) return 'No paths in this scenario.'
+
+  let blueprints = rows.map((raw) => normalizeBlueprint(raw))
+  if (pathIds && pathIds.length > 0) {
+    const wanted = blueprints.filter((blueprint) =>
+      pathIds.includes(blueprint.path.id),
+    )
+    // Keep the caller's order — column insertion follows the first path.
+    blueprints = pathIds
+      .map((id) => wanted.find((blueprint) => blueprint.path.id === id))
+      .filter((blueprint): blueprint is BlueprintData => Boolean(blueprint))
+  }
+  if (blueprints.length < 2)
+    return `Comparison needs at least two paths; this scenario ${
+      pathIds && pathIds.length > 0 ? 'selection' : ''
+    } resolves to ${blueprints.length}. Path ids here: ${rows
+      .map((raw) => (raw as { id?: string }).id)
+      .join(', ')}.`
+
+  const model = buildCompareModel(blueprints as CompareBlueprints)
+  const zones = deriveCompareZones(model)
+  const detailOnly = getDetailOnlyCompareSlots(model)
+
+  const lines: string[] = [
+    `Comparing ${blueprints
+      .map((blueprint) => `"${blueprint.path.name}" (${blueprint.path.id})`)
+      .join(' vs ')}`,
+    `Canonical columns: ${model.columns
+      .map((column, index) => `${index + 1}."${column.label}" ${column.verdict}`)
+      .join(' | ')}`,
+    `${countCompareDifferences(model)} differences · ${zones.length} zones · ${detailOnly.length} detail-only`,
+  ]
+  for (const zone of zones) {
+    lines.push(
+      `Zone ${zone.index} — ${zone.stepRangeLabel} · ${zone.titleLabel} (${zone.slots.length} differences):`,
+    )
+    for (const slot of zone.slots) lines.push(compareSlotLine(slot, blueprints))
+  }
+  if (detailOnly.length > 0) {
+    lines.push(`Detail-only differences (${detailOnly.length}) — no canvas zone:`)
+    for (const slot of detailOnly) lines.push(compareSlotLine(slot, blueprints))
+  }
+  const shared = model.slots.filter(
+    (slot) => slot.verdict === 'shared' && !isDetailOnlyCompareSlot(slot),
+  ).length
+  lines.push(
+    `${shared} shared slots. Note: triggers/needs edges are not compared.`,
+  )
+  return lines.join('\n')
 }
 
 export async function getCell(client: Client, cellId: string): Promise<string> {

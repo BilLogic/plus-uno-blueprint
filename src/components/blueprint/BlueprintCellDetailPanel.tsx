@@ -10,7 +10,9 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
+import { CompareDifferencesSurface } from '@/components/blueprint/CompareDifferencesSurface'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
 import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
@@ -30,6 +32,10 @@ import {
   CELL_DETAIL_PANEL_TOP_GAP_PX,
   CELL_DETAIL_PANEL_TOP_VAR,
 } from '@/components/editor/menubarHeaderLayout'
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@/components/editor/SegmentedControl'
 import { Button } from '@/components/ui/button'
 import {
   Drawer,
@@ -53,6 +59,11 @@ import {
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { countCompareDifferences } from '@/lib/compareLedger'
+import {
+  setCompareLedgerOpen,
+  useCompareReviewState,
+} from '@/lib/compareReviewStore'
 import {
   buildBlueprintCellSelectionForId,
   getBlueprintCellConnections,
@@ -311,6 +322,7 @@ function BlueprintCellDetailPanelBody() {
     selectCell,
     draftCell,
     panelState,
+    setPanelSurface,
   } =
     useBlueprintCellDetail()
   const [closing, setClosing] = useState<PanelClosingSnapshot | null>(
@@ -324,6 +336,14 @@ function BlueprintCellDetailPanelBody() {
   )
   const [expanded, setExpanded] = useState(false)
   const [activeTab, setActiveTab] = useState<PanelTab>('dependencies')
+  /**
+   * One-shot "← Back to Differences" chip: set when the ledger's ⇱ opens a
+   * cell in Details, cleared when used — and whenever the panel leaves
+   * Details, so it can never go stale.
+   */
+  const [returnToDifferences, setReturnToDifferences] = useState(false)
+  const compareRegistration = useCompareReviewState().registration
+  const comparing = compareRegistration !== null
 
   // Agent parity: the panel's own controls, registered while it is open.
   useEffect(() => {
@@ -407,6 +427,14 @@ function BlueprintCellDetailPanelBody() {
     })
   }
 
+  // One-shot hygiene for the return chip (guarded render-phase set).
+  if (
+    returnToDifferences &&
+    (activeSurface !== 'details' || !comparing)
+  ) {
+    setReturnToDifferences(false)
+  }
+
   // A new cell always opens on Dependencies (state reset during render).
   // The arrow editor closes with it — a half-typed arrow carried onto a
   // different cell would be pointing away from somewhere nobody is looking.
@@ -430,6 +458,14 @@ function BlueprintCellDetailPanelBody() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [clearSelection, isOpen])
+
+  // Mirror "the ledger is showing" into the compare store so surfaces with
+  // no React path to this panel (get_ui_state, the strip) can read it.
+  const ledgerShowing = panelState?.surface === 'differences'
+  useEffect(() => {
+    setCompareLedgerOpen(ledgerShowing)
+    return () => setCompareLedgerOpen(false)
+  }, [ledgerShowing])
 
   const pathEntry = selection?.paths[0]
   const resolvedCellId = pathEntry?.cellId
@@ -711,6 +747,42 @@ function BlueprintCellDetailPanelBody() {
   const handleClosed = () => setClosing(null)
 
   /*
+    The Details │ Differences switcher — the two surfaces are true siblings
+    of the whole panel, so their switch is TOP-LEVEL chrome, above every
+    branch's own header. Rendered only while a comparison is live; outside
+    compare the panel is exactly what it was before v3.
+  */
+  const compareCount = compareRegistration
+    ? countCompareDifferences(compareRegistration.model)
+    : 0
+  const surfaceSwitcher = comparing ? (
+    <div className="flex shrink-0 items-center border-b border-border/60 px-4 py-2">
+      <SegmentedControl
+        aria-label="Panel surface"
+        value={activeSurface}
+        onValueChange={(value) => setPanelSurface(value)}
+      >
+        <SegmentedControlItem value="details" className="px-2">
+          Details
+        </SegmentedControlItem>
+        <SegmentedControlItem value="differences" className="px-2">
+          Differences
+          <span className="font-mono text-3xs tabular-nums" aria-label={`${compareCount} differences`}>
+            ●{compareCount}
+          </span>
+        </SegmentedControlItem>
+      </SegmentedControl>
+    </div>
+  ) : null
+
+  const handleOpenCellFromDifferences = (
+    nextSelection: BlueprintCellSelection,
+  ) => {
+    setReturnToDifferences(true)
+    selectCell(nextSelection)
+  }
+
+  /*
     The Differences surface — the compare ledger, a true sibling of the
     cell-detail view inside the same drawer. Needs no selection.
   */
@@ -722,31 +794,76 @@ function BlueprintCellDetailPanelBody() {
         onCloseRequest={clearSelection}
         onClosed={handleClosed}
       >
-        <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
-          <div className="min-w-0 flex-1">
-            <DrawerTitle className="text-sm font-bold tracking-tight">
+        <DrawerHeader className="flex-row items-center justify-between gap-2 border-b border-border/60 px-4 py-2 text-left">
+          <DrawerTitle className="sr-only">Path differences</DrawerTitle>
+          <DrawerDescription className="sr-only">
+            Every difference between the compared paths, grouped by
+            divergence zone
+          </DrawerDescription>
+          {comparing ? (
+            <SegmentedControl
+              aria-label="Panel surface"
+              value="differences"
+              onValueChange={(value) => setPanelSurface(value)}
+            >
+              <SegmentedControlItem value="details" className="px-2">
+                Details
+              </SegmentedControlItem>
+              <SegmentedControlItem value="differences" className="px-2">
+                Differences
+                <span
+                  className="font-mono text-3xs tabular-nums"
+                  aria-label={`${compareCount} differences`}
+                >
+                  ●{compareCount}
+                </span>
+              </SegmentedControlItem>
+            </SegmentedControl>
+          ) : (
+            <span className="text-sm font-bold tracking-tight">
               Differences
-            </DrawerTitle>
-            <DrawerDescription className="sr-only">
-              Differences between the compared paths
-            </DrawerDescription>
+            </span>
+          )}
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label={expanded ? 'Collapse panel' : 'Expand panel'}
+              aria-pressed={expanded}
+              onClick={() => setExpanded((value) => !value)}
+            >
+              {expanded ? <PanelRightClose /> : <PanelRightOpen />}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="Close differences"
+              onClick={clearSelection}
+            >
+              <X />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Close differences"
-            onClick={clearSelection}
-          >
-            <X />
-          </Button>
         </DrawerHeader>
-        <div className="flex min-h-0 flex-1 items-center justify-center px-6 pb-8">
-          <p className="text-center text-xs text-muted-foreground">
-            No comparison is active.
-          </p>
-        </div>
+        {compareRegistration ? (
+          <div className="flex min-h-0 flex-1 flex-col pt-3">
+            <CompareDifferencesSurface
+              registration={compareRegistration}
+              onOpenCell={handleOpenCellFromDifferences}
+            />
+          </div>
+        ) : (
+          // Reachable only during the exit animation after a comparison
+          // ended — the provider is already routing panelState away.
+          <div className="flex min-h-0 flex-1 items-center justify-center px-6 pb-8">
+            <p className="text-center text-xs text-muted-foreground">
+              No comparison is active.
+            </p>
+          </div>
+        )}
       </PanelDrawerShell>
     )
   }
@@ -777,6 +894,7 @@ function BlueprintCellDetailPanelBody() {
         onCloseRequest={clearSelection}
         onClosed={handleClosed}
       >
+        {surfaceSwitcher}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="text-sm font-bold tracking-tight">
@@ -837,6 +955,7 @@ function BlueprintCellDetailPanelBody() {
         onCloseRequest={clearSelection}
         onClosed={handleClosed}
       >
+        {surfaceSwitcher}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="text-sm font-bold tracking-tight">
@@ -1185,6 +1304,22 @@ function BlueprintCellDetailPanelBody() {
       onCloseRequest={clearSelection}
       onClosed={handleClosed}
     >
+        {surfaceSwitcher}
+        {returnToDifferences && comparing ? (
+          <div className="shrink-0 px-4 pt-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 rounded-md text-2xs text-muted-foreground transition-colors duration-(--motion-micro) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              onClick={() => {
+                setReturnToDifferences(false)
+                setPanelSurface('differences')
+              }}
+            >
+              <ArrowLeft className="size-3" aria-hidden />
+              Back to Differences
+            </button>
+          </div>
+        ) : null}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
             <DrawerTitle className="sr-only">Cell details</DrawerTitle>

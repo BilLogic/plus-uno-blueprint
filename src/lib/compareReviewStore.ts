@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react'
 import type { BlueprintData } from '@/types/blueprint'
 import type { CompareModel, CompareStatus } from '@/lib/compareSlots'
 
@@ -63,6 +64,11 @@ export function subscribeCompareReview(listener: () => void): () => void {
 
 export function getCompareReviewState(): CompareReviewState {
   return state
+}
+
+/** React subscription — the state object is replaced on every change. */
+export function useCompareReviewState(): CompareReviewState {
+  return useSyncExternalStore(subscribeCompareReview, getCompareReviewState)
 }
 
 /**

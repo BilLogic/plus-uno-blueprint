@@ -218,6 +218,24 @@ describe('buildCompareModel — fields and multisets', () => {
     expect(slot.differingFields).toEqual(['description'])
   })
 
+  it('keeps detail-only divergence off the canvas: column shared, no fork (V7)', () => {
+    const a = makeBlueprint(
+      'a',
+      ['Pay'],
+      [{ lane: 'FS', step: 'Pay', content: 'Pay', description: 'via card' }],
+    )
+    const b = makeBlueprint(
+      'b',
+      ['Pay'],
+      [{ lane: 'FS', step: 'Pay', content: 'Pay', description: 'via invoice' }],
+    )
+    const model = buildCompareModel(pair(a, b))
+    // Fork condition is content-or-presence: a description-only difference
+    // must not tint the column or split a run — it is ledger-only.
+    expect(model.columns[0].verdict).toBe('shared')
+    expect(model.runs).toEqual([{ kind: 'shared', columnKeys: ['pay#0'] }])
+  })
+
   it('treats multiset slots (extra cell) as content-divergent', () => {
     const a = makeBlueprint(
       'a',

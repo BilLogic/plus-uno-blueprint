@@ -84,6 +84,22 @@ export interface CompareModel {
 /** ≥2 paths is a compile-time contract; the compare surfaces only mount past the toggle gate. */
 export type CompareBlueprints = [BlueprintData, BlueprintData, ...BlueprintData[]]
 
+/**
+ * Taxonomy V7 — a divergence with no canvas zone: every path present,
+ * content identical, only description/links differ. Slot verdict stays
+ * `divergent` (the ledger's "Detail-only differences" group and the `[≠ N]`
+ * count include it), but the CANVAS must not mark it: the fork condition is
+ * "content differs OR presence differs", so column verdicts and runs treat
+ * a detail-only slot as agreement.
+ */
+export function isDetailOnlyCompareSlot(slot: CompareSlot): boolean {
+  return (
+    slot.verdict === 'divergent' &&
+    !slot.differingFields.includes('content') &&
+    Object.values(slot.perPath).every((entry) => entry.present)
+  )
+}
+
 const KEY_SEPARATOR = '\u0000'
 
 /** Lane/column composite key. Never a printable separator — lane names may contain anything. */
@@ -379,7 +395,9 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
       verdict = 'only'
     } else if (
       presentPathCount === pathCount &&
-      columnSlots.every((slot) => slot.verdict === 'shared')
+      columnSlots.every(
+        (slot) => slot.verdict === 'shared' || isDetailOnlyCompareSlot(slot),
+      )
     ) {
       verdict = 'shared'
     } else {

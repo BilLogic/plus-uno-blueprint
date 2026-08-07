@@ -48,6 +48,7 @@ import {
 import {
   getBlueprint,
   getCell,
+  getCompareDiff,
   listOwnerTags,
   listScenarios,
   listSlices,
@@ -109,6 +110,24 @@ export const TOOL_SPECS: ToolSpec[] = [
     parameters: {
       type: 'object',
       properties: { scenario_id: str('Scenario id from list_scenarios') },
+      required: ['scenario_id'],
+    },
+  },
+  {
+    name: 'get_compare_diff',
+    description:
+      "Structured comparison of a scenario's paths: canonical columns with verdicts, numbered divergence zones (the same ①②③ the strip/ledger/jump_divergence use), every differing slot with per-path quotes and cell ids, and the detail-only (description/links) group. Read before driving the compare UI or answering \"what differs\". Triggers/needs edges are not compared.",
+    parameters: {
+      type: 'object',
+      properties: {
+        scenario_id: str('Scenario id from list_scenarios'),
+        path_ids: {
+          type: 'array',
+          description:
+            'Optional subset (2+) of the scenario\'s path ids, in comparison order; omit to compare every path',
+          items: { type: 'string' },
+        },
+      },
       required: ['scenario_id'],
     },
   },
@@ -593,6 +612,14 @@ export async function dispatchTool(
       return listScenarios(client)
     case 'get_blueprint':
       return getBlueprint(client, need(args, 'scenario_id'))
+    case 'get_compare_diff': {
+      const pathIds = Array.isArray(args.path_ids)
+        ? args.path_ids.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : undefined
+      return getCompareDiff(client, need(args, 'scenario_id'), pathIds)
+    }
     case 'get_cell':
       return getCell(client, need(args, 'cell_id'))
     case 'list_slices':

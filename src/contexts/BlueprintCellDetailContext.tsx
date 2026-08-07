@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -20,6 +21,7 @@ import {
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   getCompareReviewState,
   subscribeCompareReview,
@@ -168,6 +170,74 @@ export function BlueprintCellDetailProvider({
   const setPanelSurface = useCallback((surface: BlueprintPanelSurface) => {
     setPanelState({ surface })
   }, [])
+
+  // Latest panel facts for the agent commands below — the commands register
+  // once per (enabled, compareActive) and read the live state at fire time.
+  const latestRef = useRef({ panelState, selection })
+  useEffect(() => {
+    latestRef.current = { panelState, selection }
+  })
+
+  // Agent parity for the panel surfaces (registry norm: a surface ships
+  // with its commands). differences_* exist only while a comparison is
+  // live, so list_ui_commands reflects real availability.
+  useEffect(() => {
+    if (!enabled) return
+    const unregister: Array<() => void> = [
+      registerAgentUiCommand({
+        name: 'panel_surface',
+        description:
+          "Switch the open floating panel's surface. arg: details | differences",
+        run: (arg) => {
+          const { panelState: current, selection: liveSelection } =
+            latestRef.current
+          if (current === null)
+            return 'The panel is closed — open a cell (open_cell_panel) or the ledger (differences_open) first.'
+          const surface = arg === 'differences' ? 'differences' : 'details'
+          if (
+            surface === 'differences' &&
+            getCompareReviewState().registration === null
+          )
+            return 'No comparison is active — the Differences surface needs 2+ selected paths in a focused scenario.'
+          setPanelState({ surface })
+          return `Panel is on the ${surface} surface${
+            surface === 'details' && !liveSelection ? ' (no cell selected)' : ''
+          }.`
+        },
+      }),
+    ]
+    if (compareActive) {
+      unregister.push(
+        registerAgentUiCommand({
+          name: 'differences_open',
+          description:
+            'Open the difference ledger (the Differences surface of the floating panel) enumerating every difference between the compared paths.',
+          run: () => {
+            setPanelState({ surface: 'differences' })
+            return 'Difference ledger is open.'
+          },
+        }),
+        registerAgentUiCommand({
+          name: 'differences_close',
+          description:
+            'Close the difference ledger — falls back to cell details when a cell is selected, otherwise closes the panel.',
+          run: () => {
+            const { panelState: current, selection: liveSelection } =
+              latestRef.current
+            if (current?.surface !== 'differences')
+              return 'The difference ledger is not open.'
+            if (liveSelection) {
+              setPanelState({ surface: 'details' })
+              return "Ledger closed — back on the selected cell's details."
+            }
+            setPanelState(null)
+            return 'Ledger closed.'
+          },
+        }),
+      )
+    }
+    return () => unregister.forEach((fn) => fn())
+  }, [enabled, compareActive])
 
   const cellEmphasis = useMemo(() => {
     const selectedCellIds = new Set<string>()

@@ -10,7 +10,16 @@ import {
   SegmentedControlItem,
 } from '@/components/editor/SegmentedControl'
 import { Menubar } from '@/components/ui/menubar'
+import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
+import { countCompareDifferences } from '@/lib/compareLedger'
+import { useCompareReviewState } from '@/lib/compareReviewStore'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
@@ -82,6 +91,50 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
   )
 }
 
+/**
+ * The `[≠ N]` differences chip — the menubar entry to the difference
+ * ledger, beside the compare toggle. N is the ledger's authoritative
+ * count; hidden below 2 selected paths (the compare cluster gate),
+ * disabled at zero because "open the empty ledger" is a dead end.
+ */
+function CompareDifferencesChip({ slide }: { slide: NavItem }) {
+  const { registration } = useCompareReviewState()
+  const cellDetail = useBlueprintCellDetailOptional()
+  if (!registration || registration.slideId !== slide.id || !cellDetail) {
+    return null
+  }
+  const count = countCompareDifferences(registration.model)
+  const chip = (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      disabled={count === 0}
+      aria-label={
+        count === 0
+          ? 'No differences between the compared paths'
+          : `Open the difference ledger (${count} differences)`
+      }
+      className="h-6 gap-1 px-2 font-mono text-2xs tabular-nums text-muted-foreground hover:text-foreground"
+      onClick={cellDetail.openDifferences}
+    >
+      ≠ {count}
+    </Button>
+  )
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span className="inline-flex" />}>
+        {chip}
+      </TooltipTrigger>
+      <TooltipContent>
+        {count === 0
+          ? 'Paths are identical — nothing to list'
+          : 'Open the difference ledger'}
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
 /** Phase or scenario title bar using the shadcn Menubar component. */
 export function PhaseMenubarHeader({
   slide,
@@ -115,8 +168,9 @@ export function PhaseMenubarHeader({
       {/* Beside the title, not flex-end: the bar's right edge belongs to the
           absolutely-positioned zoom / Reset View chrome. */}
       {showCompareToggle ? (
-        <div className="ml-3 shrink-0">
+        <div className="ml-3 flex shrink-0 items-center gap-1.5">
           <CompareViewToggle slide={slide} />
+          <CompareDifferencesChip slide={slide} />
         </div>
       ) : null}
     </Menubar>

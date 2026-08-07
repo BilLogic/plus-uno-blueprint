@@ -1,9 +1,22 @@
-import { useMemo, useRef, type RefObject } from 'react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePanel'
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
 import { useEditor } from '@/contexts/EditorContext'
+import { registerAgentUiContext } from '@/lib/agent/uiBridge'
+import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
+import {
+  countCompareDifferences,
+  deriveCompareZones,
+  parseCompareLedgerFilter,
+} from '@/lib/compareLedger'
+import {
+  clearCompareFilters,
+  getCompareReviewState,
+  registerCompareReview,
+  setCompareFilters,
+} from '@/lib/compareReviewStore'
 import { buildCompareModel, type CompareBlueprints } from '@/lib/compareSlots'
 import { itemsInSelectionOrder, type PathListItem } from '@/lib/pathSelection'
 import {
@@ -135,6 +148,87 @@ export function ScenarioBlueprintPanel({
     if (visibleBlueprints.length !== selectedPathIds.length) return null
     return buildCompareModel(visibleBlueprints as CompareBlueprints)
   }, [selectedPathIds.length, useStackedArrangement, visibleBlueprints])
+
+  /*
+    Publish THE compare context (model + blueprints + scenario identity) to
+    the cross-surface store — the menubar [≠ N] chip, the portalled ledger
+    drawer and the agent all read from it. Exactly one panel qualifies at a
+    time (only the focused scenario leaves the overview's shared-row
+    contract), so the registration is effectively a singleton. Agent parity
+    ships with the surface: differences_filter + the get_ui_state 'compare'
+    line register alongside.
+  */
+  useEffect(() => {
+    if (!compareModel) return
+    const unregisterStore = registerCompareReview({
+      slideId: slide.id,
+      scenarioName,
+      phaseName,
+      viewMode: displayViewType,
+      model: compareModel,
+      blueprints: visibleBlueprints,
+    })
+    const unregisterContext = registerAgentUiContext('compare', () => {
+      const state = getCompareReviewState()
+      const registration = state.registration
+      if (!registration) return null
+      const zones = deriveCompareZones(registration.model)
+      const names = registration.blueprints
+        .map((blueprint) => `"${blueprint.path.name}"`)
+        .join(' vs ')
+      const filterBits: string[] = []
+      if (state.filters.lanes.length > 0)
+        filterBits.push(`lanes ${state.filters.lanes.join(', ')}`)
+      if (state.filters.verdicts.length > 0)
+        filterBits.push(`verdicts ${state.filters.verdicts.join(', ')}`)
+      return [
+        `Comparing ${names} in ${registration.viewMode} view (scenario "${registration.scenarioName}"):`,
+        `${countCompareDifferences(registration.model)} differences across ${zones.length} divergence zones.`,
+        state.activeZone !== null
+          ? `Active zone ${state.activeZone} of ${zones.length}.`
+          : `No zone active.`,
+        state.ledgerOpen
+          ? 'Difference ledger is OPEN.'
+          : 'Difference ledger is closed.',
+        filterBits.length > 0
+          ? `Ledger filter: ${filterBits.join('; ')}.`
+          : 'Ledger filter: none.',
+      ].join(' ')
+    })
+    const unregisterFilter = registerAgentUiCommand({
+      name: 'differences_filter',
+      description:
+        'Filter the difference ledger. arg grammar: lane:"Front Stage" verdict:divergent — space-separated, multi-select per key; verdicts: divergent | only; empty arg clears the filter.',
+      run: (arg) => {
+        const input = arg?.trim() ?? ''
+        if (input === '') {
+          clearCompareFilters()
+          return 'Ledger filter cleared — showing every difference.'
+        }
+        const parsed = parseCompareLedgerFilter(input)
+        if (parsed.errors.length > 0)
+          return `Could not parse: ${parsed.errors.join(', ')}. Grammar: lane:"<lane name>" verdict:<divergent|only>. Nothing was changed.`
+        setCompareFilters({ lanes: parsed.lanes, verdicts: parsed.verdicts })
+        const bits: string[] = []
+        if (parsed.lanes.length > 0) bits.push(`lanes: ${parsed.lanes.join(', ')}`)
+        if (parsed.verdicts.length > 0)
+          bits.push(`verdicts: ${parsed.verdicts.join(', ')}`)
+        return `Ledger filtered — ${bits.join('; ') || 'no facets'}.`
+      },
+    })
+    return () => {
+      unregisterFilter()
+      unregisterContext()
+      unregisterStore()
+    }
+  }, [
+    compareModel,
+    displayViewType,
+    phaseName,
+    scenarioName,
+    slide.id,
+    visibleBlueprints,
+  ])
 
   // Arrangement is part of the key: switching stacked bands ⇄ overview row
   // re-measures instead of keeping the other arrangement's size.
