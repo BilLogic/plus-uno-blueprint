@@ -88,7 +88,7 @@ export function useCellDeepLink(): void {
     const attempt = () => {
       if (cancelled) return
       const mounted = document.querySelector(
-        `[data-blueprint-cell="${cellId}"][data-blueprint-cell-interactive]`,
+        `[data-blueprint-cell="${CSS.escape(cellId)}"][data-blueprint-cell-interactive]`,
       )
       if (mounted) {
         void agentOpenCellPanel(cellId)

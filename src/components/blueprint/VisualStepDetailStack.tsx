@@ -48,6 +48,8 @@ export function VisualStepDetailStack({
             <img
               src={entry.picture}
               alt=""
+              loading="lazy"
+              decoding="async"
               className={cn(
                 PICTURE_CLASS,
                 hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',
@@ -89,6 +91,8 @@ export function VisualStepDetailStack({
             <img
               src={entry.picture}
               alt=""
+              loading="lazy"
+              decoding="async"
               className={cn(
                 PICTURE_CLASS,
                 hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',

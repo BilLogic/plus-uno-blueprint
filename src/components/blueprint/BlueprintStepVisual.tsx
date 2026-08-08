@@ -58,6 +58,8 @@ function VisualPictureStrip({
             <img
               src={entry.picture}
               alt=""
+              loading="lazy"
+              decoding="async"
               className={cn(
                 'max-h-full max-w-full rounded-sm object-contain object-center',
                 hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',

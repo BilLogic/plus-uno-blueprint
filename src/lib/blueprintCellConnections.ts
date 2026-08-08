@@ -313,7 +313,7 @@ export function buildBlueprintCellSelectionForId(
 
 export function scrollBlueprintCellIntoView(cellId: string): void {
   const element = document.querySelector<HTMLElement>(
-    `[data-blueprint-cell="${cellId}"]`,
+    `[data-blueprint-cell="${CSS.escape(cellId)}"]`,
   )
   element?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
 }

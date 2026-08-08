@@ -73,7 +73,7 @@ export function agentSetSidebar(collapsed: boolean): string {
  */
 export async function agentOpenCellPanel(cellId: string): Promise<string> {
   const el = document.querySelector<HTMLElement>(
-    `[data-blueprint-cell="${cellId}"][data-blueprint-cell-interactive]`,
+    `[data-blueprint-cell="${CSS.escape(cellId)}"][data-blueprint-cell-interactive]`,
   )
   if (!el)
     return 'That cell is not clickable on the current canvas — open its scenario first (open_scenario), then retry.'

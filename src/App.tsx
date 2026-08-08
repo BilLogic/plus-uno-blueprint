@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from 'next-themes'
+import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { EditorShell } from '@/components/editor/EditorShell'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { EditorProvider } from '@/contexts/EditorContext'
@@ -24,7 +25,9 @@ function App() {
             <ViewStateProvider>
               <PathSelectionProvider>
                 <TooltipProvider delay={200}>
-                  <EditorShell />
+                  <EditorErrorBoundary>
+                    <EditorShell />
+                  </EditorErrorBoundary>
                 </TooltipProvider>
               </PathSelectionProvider>
             </ViewStateProvider>
