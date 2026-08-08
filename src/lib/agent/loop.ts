@@ -11,9 +11,11 @@ import type {
 } from '@/lib/agent/providers/provider'
 import {
   dispatchTool,
+  MOBILE_READ_TOOL_NAMES,
   TOOL_SPECS,
   WRITE_TOOL_NAMES,
 } from '@/lib/agent/tools/registry'
+import { isMobileViewport } from '@/hooks/useMobileShell'
 import { collectAgentUiContext } from '@/lib/agent/uiBridge'
 import { agentUiCommandMutates } from '@/lib/agent/uiCommands'
 import type { AgentAttachment } from '@/lib/agent/attachments'
@@ -286,6 +288,12 @@ export async function sendToAgent(input: {
   let writesThisSend = 0
   const WRITE_BATCH_LIMIT = 8
 
+  // The mobile shell is view-only for EVERY tier, service accounts included
+  // — the agent there gets the reading roster and nothing else. Sampled per
+  // send: a viewport change mid-conversation applies from the next message.
+  // UX gate only; the server-side RPC tier enforcement is the real wall.
+  const mobileReading = isMobileViewport()
+
   try {
     for (let round = 0; round < MAX_ROUNDS; round += 1) {
       // Rebuilt every round: the live UI context changes as the agent's own
@@ -298,11 +306,17 @@ export async function sendToAgent(input: {
           buildSystem(liveContext, skill) +
           (allowWrites
             ? ''
-            : '\n\n--- session tier ---\nThis session is VIEW-ONLY (not a service account): you have no write tools. Navigate, read, annotate, and answer with citations; when the user wants an edit, describe the exact change for a service account to make — never imply you made it.'),
+            : '\n\n--- session tier ---\nThis session is VIEW-ONLY (not a service account): you have no write tools. Navigate, read, annotate, and answer with citations; when the user wants an edit, describe the exact change for a service account to make — never imply you made it.') +
+          (mobileReading
+            ? '\n\n--- mobile shell ---\nThe user is on the MOBILE app, which is view-only for everyone — your tools are navigation and reading only (no writes, no annotations, no canvas mode switch). The mobile view is a vertical journey reader: scrolling down moves forward through the steps; a Map view shows the 2-D board. When the user wants an edit, explain it is made on desktop — never imply you made it.'
+            : ''),
         messages: run.messages,
-        tools: allowWrites
+        tools: (allowWrites
           ? TOOL_SPECS
-          : TOOL_SPECS.filter((spec) => !WRITE_TOOL_NAMES.has(spec.name)),
+          : TOOL_SPECS.filter((spec) => !WRITE_TOOL_NAMES.has(spec.name))
+        ).filter(
+          (spec) => !mobileReading || MOBILE_READ_TOOL_NAMES.has(spec.name),
+        ),
         apiKey,
         model: modelFor(settings),
         signal: controller.signal,
@@ -330,6 +344,17 @@ export async function sendToAgent(input: {
           agentUiCommandMutates(String(call.args.command ?? '')))
       for (const call of calls) {
         if (controller.signal.aborted) throw new DOMException('stopped', 'AbortError')
+        if (mobileReading && !MOBILE_READ_TOOL_NAMES.has(call.name)) {
+          results.parts.push({
+            type: 'tool_result',
+            toolCallId: call.id,
+            name: call.name,
+            result:
+              'The mobile shell is view-only — only the reading and navigation tools exist here. Editing happens on desktop; describe the change instead.',
+            isError: true,
+          })
+          continue
+        }
         if (isWrite(call) && !allowWrites) {
           results.parts.push({
             type: 'tool_result',

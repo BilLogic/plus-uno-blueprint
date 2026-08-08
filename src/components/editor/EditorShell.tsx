@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useEditor } from '@/contexts/EditorContext'
+import { MobileShell } from '@/components/mobile/MobileShell'
+import { useMobileShell } from '@/hooks/useMobileShell'
 import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
@@ -70,12 +72,24 @@ function loadAsideWidth(): number {
 }
 
 /**
+ * The shell gate: one breakpoint decides which app this is. Below `md`
+ * (767px) the phone gets the view-only mobile shell — journey reader, touch
+ * map, sheets. At or above it, the desktop shell below, untouched. The
+ * check is synchronous (`matchMedia` via `useSyncExternalStore`), so a
+ * phone never mounts the desktop canvas for even one frame.
+ */
+export function EditorShell() {
+  const mobile = useMobileShell()
+  return mobile ? <MobileShell /> : <DesktopEditorShell />
+}
+
+/**
  * The app frame: sidebar, tab strip and whichever view the current tab selects.
  *
  * Owns sidebar collapse and the hover-peek rail. Both are timed against
  * `suppressCanvasResizeRefit`, so the canvas does not refit mid-animation.
  */
-export function EditorShell() {
+function DesktopEditorShell() {
   const {
     view,
     goHome,

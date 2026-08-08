@@ -59,6 +59,7 @@ import {
   type BlueprintPanelSurface,
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useMobileShell } from '@/hooks/useMobileShell'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   setCompareLedgerOpen,
@@ -253,6 +254,11 @@ function PanelDrawerShell({
   onClosed: () => void
   children: ReactNode
 }) {
+  // Same drawer, two postures: the desktop right-pinned card, or — below
+  // md — a bottom sheet the width of the phone. One component, mirroring
+  // the AgentDock docked/floating precedent; the reconciliation guarantee
+  // above (same tree position) holds in both postures.
+  const mobile = useMobileShell()
   return (
     <Drawer
       open={open}
@@ -268,15 +274,19 @@ function PanelDrawerShell({
       }}
       modal={false}
       disablePointerDismissal
-      swipeDirection="right"
+      swipeDirection={mobile ? 'down' : 'right'}
     >
       <DrawerContent
         data-cell-detail-panel=""
         className={cn(
-          CELL_DETAIL_PANEL_TOP_CLASS,
-          CELL_DETAIL_PANEL_BOTTOM_CLASS,
-          '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
-          expanded ? 'w-[40rem]' : 'w-[20rem]',
+          mobile
+            ? '!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[70svh] w-auto rounded-t-2xl rounded-b-none border-t border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
+            : cn(
+                CELL_DETAIL_PANEL_TOP_CLASS,
+                CELL_DETAIL_PANEL_BOTTOM_CLASS,
+                '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
+                expanded ? 'w-[40rem]' : 'w-[20rem]',
+              ),
         )}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}

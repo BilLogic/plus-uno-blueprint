@@ -593,29 +593,105 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       window.removeEventListener('wheel', onWheel, { capture: true })
   }, [cancelFitAnimation, commitTransform, syncZoomToReact, zoomAtPoint])
 
-  const handlePointerDown = useCallback(
-    (e: PointerEvent) => {
-      if (!panEnabled) return
-      if (e.button !== 0) return
-      const target = e.target as HTMLElement
-      if (panIgnoreSelector && target.closest(panIgnoreSelector)) return
+  /**
+   * Touch gestures ride the SAME Pointer Events as mouse pan — no parallel
+   * TouchEvent code path. Every touch pointer is tracked in a map; one
+   * finger pans (same rules as a mouse drag), and the moment a second
+   * finger lands the gesture becomes a pinch: zoom by the ratio of pinch
+   * distances through `zoomAtPoint` (centered on the midpoint), pan by the
+   * midpoint's drift. The container's `touch-none` is what makes this
+   * possible — it keeps the browser from claiming the gesture and
+   * cancelling the pointer stream.
+   *
+   * Refs, not state: a pinch is sixty events a second, and the transform
+   * writes straight to the element exactly like the wheel path above.
+   */
+  const touchPoints = useRef(new Map<number, { x: number; y: number }>())
+  const pinchStart = useRef<{ dist: number; x: number; y: number } | null>(null)
 
+  const beginPan = useCallback(
+    (clientX: number, clientY: number) => {
       cancelFitAnimation()
       userAdjustedViewRef.current = true
-      containerRef.current?.setPointerCapture(e.pointerId)
       setIsPanning(true)
       panStart.current = {
-        x: e.clientX,
-        y: e.clientY,
+        x: clientX,
+        y: clientY,
         panX: transformRef.current.pan.x,
         panY: transformRef.current.pan.y,
       }
     },
-    [cancelFitAnimation, panEnabled, panIgnoreSelector],
+    [cancelFitAnimation],
+  )
+
+  const handlePointerDown = useCallback(
+    (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        touchPoints.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+        if (touchPoints.current.size === 2) {
+          // Second finger: whatever was happening becomes a pinch — even if
+          // either finger sits on a cell. Capture both so the stream cannot
+          // be stolen mid-gesture.
+          setIsPanning(false)
+          const [a, b] = [...touchPoints.current.values()]
+          pinchStart.current = {
+            dist: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)),
+            x: (a.x + b.x) / 2,
+            y: (a.y + b.y) / 2,
+          }
+          for (const id of touchPoints.current.keys()) {
+            try {
+              containerRef.current?.setPointerCapture(id)
+            } catch {
+              // A pointer that lifted between the map write and here.
+            }
+          }
+          cancelFitAnimation()
+          userAdjustedViewRef.current = true
+          return
+        }
+      }
+      if (!panEnabled) return
+      if (e.button !== 0) return
+      const target = e.target as HTMLElement
+      // A single finger (or the mouse) on an interactive child is a tap on
+      // it, not a pan — same rule either way. No capture on a plain touch
+      // down, so the tap's click survives untouched.
+      if (panIgnoreSelector && target.closest(panIgnoreSelector)) return
+
+      try {
+        containerRef.current?.setPointerCapture(e.pointerId)
+      } catch {
+        // Capture is an assist, not a precondition — a pointer the browser
+        // no longer recognizes must not veto the pan itself.
+      }
+      beginPan(e.clientX, e.clientY)
+    },
+    [beginPan, cancelFitAnimation, panEnabled, panIgnoreSelector],
   )
 
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
+      if (e.pointerType === 'touch' && touchPoints.current.has(e.pointerId)) {
+        touchPoints.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+        const pinch = pinchStart.current
+        if (pinch && touchPoints.current.size >= 2) {
+          const [a, b] = [...touchPoints.current.values()]
+          const dist = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y))
+          const midX = (a.x + b.x) / 2
+          const midY = (a.y + b.y) / 2
+          zoomAtPoint(midX, midY, dist / pinch.dist, false)
+          const { pan: p, zoom: z } = transformRef.current
+          commitTransform(
+            { x: p.x + (midX - pinch.x), y: p.y + (midY - pinch.y) },
+            z,
+            false,
+          )
+          pinchStart.current = { dist, x: midX, y: midY }
+          syncZoomToReact()
+          return
+        }
+      }
       if (!isPanning) return
       commitTransform(
         {
@@ -626,18 +702,34 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         false,
       )
     },
-    [commitTransform, isPanning],
+    [commitTransform, isPanning, syncZoomToReact, zoomAtPoint],
   )
 
   const handlePointerUp = useCallback(
     (e: PointerEvent) => {
-      setIsPanning(false)
-      containerRef.current?.releasePointerCapture(e.pointerId)
+      let continuesAsPan = false
+      if (e.pointerType === 'touch') {
+        touchPoints.current.delete(e.pointerId)
+        if (touchPoints.current.size < 2) pinchStart.current = null
+        if (touchPoints.current.size === 1 && panEnabled) {
+          // Pinch released down to one finger: hand the gesture back to a
+          // pan from where that finger is, instead of a dead stop.
+          const [rest] = [...touchPoints.current.values()]
+          beginPan(rest.x, rest.y)
+          continuesAsPan = true
+        }
+      }
+      if (!continuesAsPan) setIsPanning(false)
+      try {
+        containerRef.current?.releasePointerCapture(e.pointerId)
+      } catch {
+        // Never captured (a plain tap) — nothing to release.
+      }
       // The drag committed straight to the element the whole way; publish the
       // final camera to React so its copy is not the one from before the drag.
       syncZoomToReact()
     },
-    [syncZoomToReact],
+    [beginPan, panEnabled, syncZoomToReact],
   )
 
   useEffect(() => {
@@ -786,6 +878,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       onPointerMove: handlePointerMove,
       onPointerUp: handlePointerUp,
       onPointerLeave: handlePointerUp,
+      // Touch streams can be cancelled by the OS (edge gestures, alerts) —
+      // without this a cancelled pinch strands ghost pointers in the map.
+      onPointerCancel: handlePointerUp,
     },
   }
 }

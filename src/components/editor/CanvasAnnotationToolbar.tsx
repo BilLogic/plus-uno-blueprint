@@ -29,6 +29,7 @@ import {
 import { ToolFamilyMenu, type FamilyTool } from '@/components/editor/ToolFamilyMenu'
 import { CanvasDesignTools } from '@/components/editor/CanvasDesignTools'
 import { useCanvasMode, type CanvasMode } from '@/contexts/canvasModeContext'
+import { useMobileShell } from '@/hooks/useMobileShell'
 import {
   ANNOTATION_PEN_STROKE_WIDTHS,
   ANNOTATION_PAPER,
@@ -248,6 +249,9 @@ function DrawSubpanel() {
 export function CanvasAnnotationToolbar() {
   const { tool, setTool, annotations, clearAnnotations } =
     useCanvasAnnotations()
+  // The mobile shell is view-only for every tier — Edit is absent there,
+  // same treatment as a session that cannot write.
+  const mobileShell = useMobileShell()
 
   // The family menus remember their own face, so the toolbar no longer has to
   // track "which draw tool was last used" on their behalf.
@@ -373,8 +377,9 @@ export function CanvasAnnotationToolbar() {
 
         {/* Edit is not a tool, so it sits after a divider at the far end
             rather than in the tool run — and it is absent, never disabled,
-            for sessions that cannot write. */}
-        {canvasMode?.available ? (
+            for sessions that cannot write, and on the mobile shell, where
+            every session is view-only. */}
+        {canvasMode?.available && !mobileShell ? (
           <>
             <ToolbarDivider />
             <CanvasModeSwitch

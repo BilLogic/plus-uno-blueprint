@@ -46,30 +46,33 @@ function setMembers(source, name) {
   return new Set([...body.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]))
 }
 
+// Specs and rosters moved to specs.ts (pure data); dispatch stays in
+// registry.ts. The parity checks read each from where it lives.
+const specs = read('src/lib/agent/tools/specs.ts')
 const registry = read('src/lib/agent/tools/registry.ts')
 const harness = read('scripts/agent-harness/run.mjs')
 const cases = read('scripts/agent-harness/cases.mjs')
 
 test('harness mirrors the app tool surface', () => {
-  const app = specNames(registry)
+  const app = specNames(specs)
   const mirror = specNames(harness)
   const missing = [...app].filter((name) => !mirror.has(name))
   const extra = [...mirror].filter((name) => !app.has(name))
   assert.deepEqual(
     { missing, extra },
     { missing: [], extra: [] },
-    'scripts/agent-harness/run.mjs TOOL_SPECS drifted from registry.ts',
+    'scripts/agent-harness/run.mjs TOOL_SPECS drifted from specs.ts',
   )
 })
 
 test('all three write-tool sets agree', () => {
-  const app = setMembers(registry, 'WRITE_TOOL_NAMES')
+  const app = setMembers(specs, 'WRITE_TOOL_NAMES')
   const mirror = setMembers(harness, 'WRITE_TOOLS')
   const rubric = setMembers(cases, 'WRITES')
   assert.deepEqual(
     [...mirror].sort(),
     [...app].sort(),
-    "run.mjs WRITE_TOOLS drifted from registry.ts WRITE_TOOL_NAMES",
+    "run.mjs WRITE_TOOLS drifted from specs.ts WRITE_TOOL_NAMES",
   )
   // cases.mjs may legitimately track MORE than the write set is not true —
   // it must match, or "zero writes" checks silently stop covering a tool.
@@ -81,7 +84,7 @@ test('all three write-tool sets agree', () => {
 })
 
 test('every write tool is dispatchable', () => {
-  const app = setMembers(registry, 'WRITE_TOOL_NAMES')
+  const app = setMembers(specs, 'WRITE_TOOL_NAMES')
   for (const name of app) {
     assert.ok(
       registry.includes(`case '${name}':`),
