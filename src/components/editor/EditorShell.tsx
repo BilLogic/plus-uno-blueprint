@@ -2,6 +2,12 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { useEditor } from '@/contexts/EditorContext'
 import { MobileShell } from '@/components/mobile/MobileShell'
 import { useMobileShell } from '@/hooks/useMobileShell'
+import {
+  RAIL_WIDTH,
+  SIDEBAR_DEFAULT_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+} from '@/lib/layoutTokens'
 import { Homepage } from '@/components/editor/Homepage'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
@@ -46,17 +52,11 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
- * Aside = rail (48px) + content panel, drag-resizable from the aside's
- * right edge with one persisted width shared by every surface.
+ * Aside = rail + content panel, drag-resizable from the aside's right edge
+ * with one persisted width shared by every surface. Dimensions live in
+ * `lib/layoutTokens` — one home for every shell width the runtime does
+ * math on.
  */
-const RAIL_WIDTH = 48
-// ONE width for all three surfaces — Blueprints, Slices, and Agent share the
-// same panel column, and a width that jumps on every rail switch reads as
-// layout instability, not per-surface tailoring. Still drag-resizable; the
-// chosen width just applies everywhere and persists as a single value.
-const DEFAULT_ASIDE_WIDTH = 320
-const MIN_ASIDE_WIDTH = 240
-const MAX_ASIDE_WIDTH = 640
 const WIDTH_STORAGE_KEY = 'uno-sidebar-width'
 
 function loadAsideWidth(): number {
@@ -64,10 +64,10 @@ function loadAsideWidth(): number {
     const raw = window.localStorage.getItem(WIDTH_STORAGE_KEY)
     const value = raw ? Number(raw) : Number.NaN
     return Number.isFinite(value)
-      ? Math.min(MAX_ASIDE_WIDTH, Math.max(MIN_ASIDE_WIDTH, value))
-      : DEFAULT_ASIDE_WIDTH
+      ? Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, value))
+      : SIDEBAR_DEFAULT_WIDTH
   } catch {
-    return DEFAULT_ASIDE_WIDTH
+    return SIDEBAR_DEFAULT_WIDTH
   }
 }
 
@@ -338,8 +338,8 @@ function DesktopEditorShell() {
     // The aside is flush with the window's left edge, so the pointer's x IS
     // the aside width.
     const next = Math.min(
-      MAX_ASIDE_WIDTH,
-      Math.max(MIN_ASIDE_WIDTH, Math.round(event.clientX)),
+      SIDEBAR_MAX_WIDTH,
+      Math.max(SIDEBAR_MIN_WIDTH, Math.round(event.clientX)),
     )
     suppressCanvasResizeRefit()
     setAsideWidth((width) => (width === next ? width : next))

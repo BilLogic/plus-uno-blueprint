@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { AGENT_FLOAT_DEFAULT, AGENT_FLOAT_MIN } from '@/lib/layoutTokens'
 
 /**
  * Where the agent chat lives — and the fact that it is ONE surface with two
@@ -27,13 +28,15 @@ const STORAGE_KEY = 'uno-agent-placement'
 
 export const DOCK_MIN_RATIO = 0.2
 export const DOCK_MAX_RATIO = 0.8
-export const FLOAT_MIN = { width: 280, height: 240 }
+export const FLOAT_MIN = AGENT_FLOAT_MIN
 
 const DEFAULTS: AgentPlacement = {
   mode: 'docked',
   open: false,
   dockRatio: 0.5,
-  float: { x: 360, y: 96, width: 380, height: 460 },
+  // Copied, not aliased — persistence merges could otherwise write through
+  // to the shared token object.
+  float: { ...AGENT_FLOAT_DEFAULT },
 }
 
 function clamp(value: number, min: number, max: number): number {

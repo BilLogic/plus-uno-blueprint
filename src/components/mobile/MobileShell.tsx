@@ -184,12 +184,18 @@ export function MobileShell() {
           </DropdownMenu>
         </header>
 
-        {/* The two readings of the board. Keyed so switching cross-fades —
-            the fold, honoring reduced motion via motion-reduce. */}
+        {/* The two readings of the board, keyed so switching remounts. The
+            fold is directional: the Map arrives by growing from a miniature
+            (diving INTO the board — and it lands on the semantic-zoom block
+            tier, which IS the miniature), the reader rises from below (the
+            journey unrolling). Reduced motion swaps instantly. */}
         <main className="relative min-h-0 flex-1">
           <div
             key={surface + (selectedScenarioId ?? 'none')}
-            className="absolute inset-0 animate-in fade-in duration-200 motion-reduce:animate-none"
+            className={cn(
+              'absolute inset-0 animate-in fade-in duration-200 motion-reduce:animate-none',
+              surface === 'map' ? 'zoom-in-95' : 'slide-in-from-bottom-4',
+            )}
           >
             {surface === 'map' ? (
               <VisualWalkthroughShell>

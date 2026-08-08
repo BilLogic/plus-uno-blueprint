@@ -7,6 +7,18 @@
 > presenting full-bleed from the nav sheet. Item 5 half-done: the semantic-zoom
 > block tier shipped on desktop; the fold still cross-fades. Remaining: 4
 > (width tokens), 6 (real-device smoke), 7 (tablet band).
+>
+> Update 2026-08-08 (third pass): item 4 SHIPPED — shell widths the runtime
+> does math on live in `src/lib/layoutTokens.ts` (rail, sidebar min/default/
+> max, agent float box), widths that only feed classes live in theme.css
+> (`--width-cell-panel`, `--width-cell-panel-expanded`); verified computed
+> 320px unchanged. Item 5's fold is now directional (Map grows from the
+> miniature, reader rises from below; reduced-motion instant). Item 7
+> DECIDED from a 768×1024 screenshot: the desktop shell holds at ≥768 —
+> tight in portrait but functional, and it keeps editing; view-only stays
+> bound to the mobile shell. Nicety filed: auto-collapse the sidebar below
+> ~900px. Only item 6 (real-device smoke) remains, and it needs the human's
+> phone.
 
 The mobile shell shipped v1 (plan `docs/plans/2026-08-08-001`). These were cut
 deliberately and are queued, not forgotten:

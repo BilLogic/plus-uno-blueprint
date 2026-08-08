@@ -285,7 +285,9 @@ function PanelDrawerShell({
                 CELL_DETAIL_PANEL_TOP_CLASS,
                 CELL_DETAIL_PANEL_BOTTOM_CLASS,
                 '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
-                expanded ? 'w-[40rem]' : 'w-[20rem]',
+                expanded
+                  ? 'w-(--width-cell-panel-expanded)'
+                  : 'w-(--width-cell-panel)',
               ),
         )}
         onPointerDown={(event) => event.stopPropagation()}

@@ -367,6 +367,11 @@
   --spacing-content: 21px;
   --spacing-card: var(--card-padding-x);
   --width-listbox: 320px;
+  /* Cell detail panel's two postures (desktop right-pinned card). These
+     widths only feed class names, so CSS is their one home; shell widths
+     the runtime does math on live in lib/layoutTokens.ts instead. */
+  --width-cell-panel: 20rem;
+  --width-cell-panel-expanded: 40rem;
   --breakpoint-xs: 480px;
 
   /* Shadows stay on Tailwind's default scale (Supabase defines no --shadow-*
