@@ -63,6 +63,16 @@ type ArrowSegment = {
   dualMarker?: boolean
 }
 
+/** Identity of a rendered segment list — cheaper than re-rendering to find out. */
+function serializeSegments(segments: readonly ArrowSegment[]): string {
+  return segments
+    .map(
+      (segment) =>
+        `${segment.id}|${segment.d}|${segment.colorKey}|${segment.arrowColor}|${segment.opacity}|${segment.showMarker ?? ''}|${segment.dualMarker ?? ''}`,
+    )
+    .join('~')
+}
+
 function isColoredTrigger(
   trigger: BlueprintCellTrigger,
 ): trigger is ColoredBlueprintTrigger {
@@ -271,11 +281,21 @@ export function BlueprintTriggerArrows({
       })
     }
 
-    setSegments(next)
-    setSize({
-      width: Math.max(content.scrollWidth, content.offsetWidth, 1),
-      height: Math.max(content.scrollHeight, content.offsetHeight, 1),
-    })
+    // Equality-guarded: a ResizeObserver burst during camera-fit relayout
+    // fires many notifications for identical geometry; fresh object
+    // identities on each would re-render (and re-observe) in a loop. Same
+    // hardening as IntegratedTriggerArrows.
+    const nextKey = serializeSegments(next)
+    setSegments((prev) =>
+      serializeSegments(prev) === nextKey ? prev : next,
+    )
+    const width = Math.max(content.scrollWidth, content.offsetWidth, 1)
+    const height = Math.max(content.scrollHeight, content.offsetHeight, 1)
+    setSize((prev) =>
+      prev.width === width && prev.height === height
+        ? prev
+        : { width, height },
+    )
   }, [
     contentRef,
     defaultArrowColor,
@@ -290,26 +310,31 @@ export function BlueprintTriggerArrows({
     if (!content) return
 
     const scrollParent = scrollContainerRef.current ?? content
-    const observer = new ResizeObserver(() => updateArrows())
+
+    // ONE rAF coalescer for every geometry-invalidating signal, the
+    // ResizeObserver included — resize notifications arrive in bursts
+    // during layout, and a synchronous DOM sweep per notification is
+    // exactly the storm the integrated twin already guards against.
+    let raf = 0
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(updateArrows)
+    }
+
+    const observer = new ResizeObserver(scheduleUpdate)
     observer.observe(content)
     if (scrollParent !== content) {
       observer.observe(scrollParent)
     }
 
-    let raf = 0
-    const onScrollOrResize = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(updateArrows)
-    }
-
-    scrollParent.addEventListener('scroll', onScrollOrResize, { passive: true })
-    window.addEventListener('resize', onScrollOrResize)
+    scrollParent.addEventListener('scroll', scheduleUpdate, { passive: true })
+    window.addEventListener('resize', scheduleUpdate)
 
     return () => {
       cancelAnimationFrame(raf)
       observer.disconnect()
-      scrollParent.removeEventListener('scroll', onScrollOrResize)
-      window.removeEventListener('resize', onScrollOrResize)
+      scrollParent.removeEventListener('scroll', scheduleUpdate)
+      window.removeEventListener('resize', scheduleUpdate)
     }
   }, [contentRef, scrollContainerRef, updateArrows])
 

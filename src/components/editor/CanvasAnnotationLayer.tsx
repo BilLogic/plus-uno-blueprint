@@ -1038,7 +1038,7 @@ function ShapeAnnotationNode({
           backgroundColor: annotation.fillColor ?? 'transparent',
           borderRadius: isEllipse ? '50%' : 8,
           boxShadow: hasFill
-            ? '0 1px 2px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(15, 23, 42, 0.06)'
+            ? 'var(--shadow-blueprint-annotation-fill)'
             : undefined,
         }}
         onPointerDown={(e) => {

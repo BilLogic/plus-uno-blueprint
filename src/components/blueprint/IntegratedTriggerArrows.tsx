@@ -69,6 +69,34 @@ type SimpleSegment = {
   dualMarker?: boolean
 }
 
+/**
+ * Frame-shared cell index. Every overlay instance drawing over the same
+ * container (the merged grid mounts 2 per path) reuses one
+ * `querySelectorAll` sweep within a ~frame window; a later frame
+ * re-sweeps, so DOM changes are picked up by the next scheduled update.
+ * Only element IDENTITY is cached — rects are always measured live.
+ */
+const cellSweepCache = new WeakMap<
+  HTMLElement,
+  { at: number; map: Map<string, HTMLElement> }
+>()
+const CELL_SWEEP_TTL_MS = 16
+
+function sharedCellIndex(content: HTMLElement): Map<string, HTMLElement> {
+  const now = performance.now()
+  const cached = cellSweepCache.get(content)
+  if (cached && now - cached.at < CELL_SWEEP_TTL_MS) return cached.map
+  const map = new Map<string, HTMLElement>()
+  for (const el of content.querySelectorAll<HTMLElement>(
+    '[data-blueprint-cell]',
+  )) {
+    const id = el.getAttribute('data-blueprint-cell')
+    if (id !== null && !map.has(id)) map.set(id, el)
+  }
+  cellSweepCache.set(content, { at: now, map })
+  return map
+}
+
 /** Identity of a rendered segment list — cheaper than re-rendering to find out. */
 function serializeSegments(segments: readonly SimpleSegment[]): string {
   return segments
@@ -147,15 +175,11 @@ export function IntegratedTriggerArrows({
 
     const nextSimple = runArrowMeasurementPass(() => {
       const segments: SimpleSegment[] = []
-      // ONE DOM sweep per update: every per-trigger querySelector below used to
-      // rescan the whole band (O(triggers × cells)); the index kills that.
-      const cellElById = new Map<string, HTMLElement>()
-      for (const el of content.querySelectorAll<HTMLElement>(
-        '[data-blueprint-cell]',
-      )) {
-        const id = el.getAttribute('data-blueprint-cell')
-        if (id !== null && !cellElById.has(id)) cellElById.set(id, el)
-      }
+      // ONE DOM sweep per update — and per FRAME per container: the merged
+      // grid mounts a forward+wrap overlay pair per path over one shared
+      // band, so without the frame cache a geometry change cost 2×paths
+      // full-DOM sweeps of the same unchanged tree.
+      const cellElById = sharedCellIndex(content)
       const { resolveTriggers, otherTriggers: railInputTriggers } =
         partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
 

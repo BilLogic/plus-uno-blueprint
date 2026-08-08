@@ -9,19 +9,26 @@ harness one-sourcing + parity + new cases C8/D5/D6, wave-2 IR fields).
 
 Remaining, ranked:
 
-## P2
-1. **Template slice rendering**: the plugin template app has no slice
-   rendering/`?slice=` route, so the slice skill's render-checker Present
-   gate is unreachable on scaffolded workspaces (the SKILL routes around
-   it; a real port would close the loop).
+Third pass (2026-08-08): transcript growth capped
+(TOOL_RESULT_CONTEXT_LIMIT 12k with a re-read marker), attachment
+payloads persisted + rehydrated into the model turn, two-tab clobber
+fixed (per-boot epoch seq base; agent_messages.seq widened to bigint,
+migration applied to hosted). Also closed from todos/019:
+BlueprintTriggerArrows rAF coalescing + equality guards,
+IntegratedTriggerArrows frame-shared cell index (kills the merged
+grid's 2×paths full-DOM sweeps), text-smd token replaces the four
+text-[13px] escapes, annotation fill shadow tokenized with a dark
+variant, vendored-duration exemption + board-ladder primitive
+exception documented in the design foundations.
 
-## P3
-2. Tool-result transcript growth uncapped in `run.messages` for the life
-   of a session (UI rows capped at DETAIL_LIMIT; provider-side copies are
-   not) — a few get_blueprints of a 5-path scenario dominate later rounds.
-3. Attachment payloads (annotation structure) lost on transcript
-   rehydration — the chip label survives, the model-facing payload does
-   not (`persistence.ts` / `hydrateAgentTranscript`).
-4. `persistence.ts` two-tab clobber: seq = local event index with
-   `upsert onConflict(session_id, seq)` — two tabs on one session silently
-   overwrite each other's transcript rows.
+## Remaining (dispositioned)
+1. **Template slice rendering** — belongs to the plugin repo's own
+   migration-v2 uno-parity plan (docs/plans/2026-08-08-001 there): the
+   template src is an older fork, and a faithful port pulls the
+   view-state/tab system + slice stack (~dozens of diverged files). Not
+   a patch; the slice SKILL's schema gate + read-back verification route
+   covers scaffolded workspaces until that migration runs.
+2. **God-component splits** (019: CanvasAnnotationLayer 2157 lines,
+   AgentPanel 19 useState, BlueprintCellDetailPanel 1479) — deliberate
+   hold: large refactors queued behind a green end-to-end testing round,
+   not before it.

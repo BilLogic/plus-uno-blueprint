@@ -86,6 +86,10 @@ export type TranscriptEvent =
       skill?: string
       /** Attachment chip label when the message carried one. */
       attachmentLabel?: string
+      /** The attachment's model-facing payload (annotation structure) —
+       * persisted so a reloaded transcript rebuilds the SAME model turn
+       * the live send used, not just the chip. */
+      attachmentPayload?: string
     }
   | { kind: 'assistant'; text: string }
   | {
@@ -162,6 +166,12 @@ function persistable(event: TranscriptEvent): TranscriptEvent {
   return rest
 }
 
+// Per-boot seq base: two tabs on one session each write their own seq
+// range instead of both counting 0.. and upserting over each other's
+// rows. Chronological ordering holds across tabs to ~ms precision, and
+// hydrated history (small legacy seqs) still sorts first.
+const SEQ_BASE = Date.now() * 1000
+
 function push(sessionId: string, event: TranscriptEvent): void {
   const run = runFor(sessionId)
   run.events.push(event)
@@ -169,7 +179,7 @@ function push(sessionId: string, event: TranscriptEvent): void {
   // The tool row's expandable detail is deliberately NOT persisted: it is a
   // presentation affordance for the live run, and the stored payload shape
   // stays exactly what it has always been.
-  persistEvent(sessionId, run.events.length - 1, persistable(event))
+  persistEvent(sessionId, SEQ_BASE + run.events.length - 1, persistable(event))
   emit()
 }
 
@@ -192,8 +202,14 @@ export async function hydrateAgentTranscript(sessionId: string): Promise<void> {
   if (run.events.length > 0 || run.running) return // a send raced the load
   run.events = events
   run.messages = events.flatMap<AgentMessage>((event) => {
-    if (event.kind === 'user')
-      return [{ role: 'user', parts: [{ type: 'text', text: event.text }] }]
+    if (event.kind === 'user') {
+      // Rebuild the SAME model-facing turn the live send used — an
+      // attachment's structure is conversation context, not chrome.
+      const text = event.attachmentPayload
+        ? `${event.text}\n\n--- attached canvas annotations (drawn by the user, structure not pixels) ---\n${event.attachmentPayload}`
+        : event.text
+      return [{ role: 'user', parts: [{ type: 'text', text }] }]
+    }
     if (event.kind === 'assistant')
       return [{ role: 'assistant', parts: [{ type: 'text', text: event.text }] }]
     return []
@@ -206,6 +222,20 @@ export async function hydrateAgentTranscript(sessionId: string): Promise<void> {
  * payload, not a place to hold a megabyte of tool output in memory.
  */
 const DETAIL_LIMIT = 2000
+
+/**
+ * Cap on tool-result text entering the PROVIDER-side transcript. Results
+ * live in `run.messages` for the session's whole life; a handful of
+ * full-scenario reads would otherwise dominate every later round's input.
+ * Generous enough for any single read to be useful; the marker tells the
+ * model the remedy is a narrower re-read, not despair.
+ */
+const TOOL_RESULT_CONTEXT_LIMIT = 12_000
+
+function contextResult(text: string): string {
+  if (text.length <= TOOL_RESULT_CONTEXT_LIMIT) return text
+  return `${text.slice(0, TOOL_RESULT_CONTEXT_LIMIT)}\n[…truncated at ${TOOL_RESULT_CONTEXT_LIMIT} chars — call the tool again with a narrower target if you need the rest]`
+}
 
 function detailText(value: unknown): string {
   const text =
@@ -275,7 +305,9 @@ export async function sendToAgent(input: {
     kind: 'user',
     text,
     ...(skill ? { skill: skill.id } : {}),
-    ...(attachment ? { attachmentLabel: attachment.label } : {}),
+    ...(attachment
+      ? { attachmentLabel: attachment.label, attachmentPayload: attachment.payload }
+      : {}),
   })
   // First message names the session — a list of "New session" rows says
   // nothing. Explicit renames always win (autoNameSession only replaces
@@ -435,7 +467,7 @@ export async function sendToAgent(input: {
             type: 'tool_result',
             toolCallId: call.id,
             name: call.name,
-            result: output,
+            result: contextResult(output),
           })
           push(sessionId, {
             kind: 'tool',

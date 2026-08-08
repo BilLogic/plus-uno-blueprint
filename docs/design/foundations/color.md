@@ -81,3 +81,14 @@ New color = new semantic role, argued for in the PR: which tier it lives in,
 what it derives from, how it behaves in dark and forced-colors, and what
 `palette.test.ts` says about it. Process and review checklist:
 [engineering/standards.md](../../engineering/standards.md).
+
+## The board ladder's primitive exception
+
+`BLUEPRINT_THEME` and the annotation color families
+(`src/lib/blueprintTheme.ts`, `src/lib/canvasAnnotations.ts`) reference
+primitive color steps (`--color-slate-500`-class tokens) directly from
+TypeScript. This is a reasoned exception to the components-use-semantic
+rule: the board's lane ladder needs an ordered ramp with more steps than
+the semantic layer defines, and inventing semantic names for each rung
+would add vocabulary without adding meaning. The exception is scoped to
+those two modules; everything else derives from semantic tokens.
