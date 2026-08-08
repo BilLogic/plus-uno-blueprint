@@ -16,6 +16,7 @@ import {
   type DeletableKind,
 } from '@/lib/deletionSafety'
 import type { BlueprintData } from '@/types/blueprint'
+import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 import canvasAdapter from '@/lib/agent/skill/references/canvas-adapter.md?raw'
 import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
 import elicitationProtocol from '@/lib/agent/skill/references/elicitation-protocol.md?raw'
@@ -65,13 +66,25 @@ const REFERENCES: Record<string, string> = {
   'slice-templates': sliceTemplates,
 }
 
+// The names live in `referenceNames.ts` (a leaf module, so specs.ts can
+// quote them without this file's ?raw import graph). This record is the
+// documents themselves; the init-time check keeps the two in lockstep.
+{
+  const here = Object.keys(REFERENCES).sort().join(',')
+  const published = [...REFERENCE_NAMES].sort().join(',')
+  if (here !== published)
+    throw new Error(
+      'REFERENCES (read.ts) and REFERENCE_NAMES (referenceNames.ts) drifted — add the reference to both.',
+    )
+}
+
 export function readReference(name: string): string {
   const doc = REFERENCES[name]
   if (doc) return doc
-  return `Unknown reference "${name}". Available: ${Object.keys(REFERENCES).join(', ')}`
+  return `Unknown reference "${name}". Available: ${REFERENCE_NAMES.join(', ')}`
 }
 
-export const REFERENCE_NAMES = Object.keys(REFERENCES)
+export { REFERENCE_NAMES }
 
 export async function listScenarios(client: Client): Promise<string> {
   const { data, error } = await client

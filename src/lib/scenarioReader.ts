@@ -3,6 +3,12 @@ import type {
   BlueprintData,
   BlueprintLayer,
 } from '@/types/blueprint'
+import {
+  BACKSTAGE_ACTIONS_ROLE,
+  BACKSTAGE_TECH_ROLE,
+  SUPPORT_SYSTEMS_ROLE,
+  getLayerRole,
+} from '@/lib/layerRoles'
 import { buildCellLookup, getCellsAt } from '@/lib/normalizeBlueprint'
 
 /**
@@ -39,14 +45,24 @@ export type ScenarioReaderModel = {
   steps: ReaderStep[]
 }
 
-/** Which side of the line of visibility a lane draws on. Unknown or generic
+const BACKSTAGE_ROLES: ReadonlySet<string> = new Set([
+  BACKSTAGE_ACTIONS_ROLE,
+  BACKSTAGE_TECH_ROLE,
+  SUPPORT_SYSTEMS_ROLE,
+])
+
+/** Which side of the line of visibility a lane draws on. Resolved through
+ * the SAME `getLayerRole` fallback the canvas uses, so legacy rows whose
+ * role lives only in their name ("Back Stage Actions", role null) land on
+ * the same side of the line on a phone as on desktop. Unknown or generic
  * lanes read as frontstage — the reader must never hide a lane it cannot
  * classify. */
-export function readerSideForRole(role: string | null | undefined): ReaderSide {
-  if (!role) return 'frontstage'
-  return role.startsWith('backstage') || role.startsWith('support')
-    ? 'backstage'
-    : 'frontstage'
+export function readerSideForLayer(layer: {
+  name: string
+  role?: string | null
+}): ReaderSide {
+  const role = getLayerRole(layer)
+  return role !== null && BACKSTAGE_ROLES.has(role) ? 'backstage' : 'frontstage'
 }
 
 export function buildScenarioReaderModel(
@@ -73,7 +89,7 @@ export function buildScenarioReaderModel(
         const cells = getCellsAt(lookup, layer.id, step.id)
         if (cells.length === 0) continue
         const entry = { layer, cells }
-        if (readerSideForRole(layer.role) === 'backstage') backstage.push(entry)
+        if (readerSideForLayer(layer) === 'backstage') backstage.push(entry)
         else frontstage.push(entry)
       }
 

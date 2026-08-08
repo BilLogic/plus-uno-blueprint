@@ -95,7 +95,15 @@ export function ScenarioTitleBadge({
         showNameInTooltip
         side={side}
       >
-        <span className="min-w-0 truncate leading-none tracking-tight">
+        <span
+          className={cn(
+            'min-w-0 truncate leading-none',
+            // The phase tone is the time-marker register — mono, uppercase,
+            // LETTERSPACED. The span's own tracking would silently beat the
+            // wrapper's `tracking-wider`, shipping the register tight.
+            phaseTone ? 'tracking-wider' : 'tracking-tight',
+          )}
+        >
           {name}
         </span>
       </PathDescriptionTooltip>

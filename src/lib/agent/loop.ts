@@ -9,12 +9,12 @@ import type {
   AgentProviderAdapter,
   AgentToolCallPart,
 } from '@/lib/agent/providers/provider'
+import { dispatchTool } from '@/lib/agent/tools/registry'
 import {
-  dispatchTool,
   MOBILE_READ_TOOL_NAMES,
   TOOL_SPECS,
   WRITE_TOOL_NAMES,
-} from '@/lib/agent/tools/registry'
+} from '@/lib/agent/tools/specs'
 import { isMobileViewport } from '@/hooks/useMobileShell'
 import { collectAgentUiContext } from '@/lib/agent/uiBridge'
 import { agentUiCommandMutates } from '@/lib/agent/uiCommands'
@@ -289,15 +289,19 @@ export async function sendToAgent(input: {
   const WRITE_BATCH_LIMIT = 8
 
   // The mobile shell is view-only for EVERY tier, service accounts included
-  // — the agent there gets the reading roster and nothing else. Sampled per
-  // send: a viewport change mid-conversation applies from the next message.
-  // UX gate only; the server-side RPC tier enforcement is the real wall.
-  const mobileReading = isMobileViewport()
+  // — the agent there gets the reading roster and nothing else. Re-sampled
+  // every round: a run spans many tool rounds, and a tablet rotated across
+  // the breakpoint mid-run must not keep a roster the shell on screen
+  // no longer matches. UX gate only; the server-side RPC tier enforcement
+  // is the real wall.
+  let mobileReading = isMobileViewport()
 
   try {
     for (let round = 0; round < MAX_ROUNDS; round += 1) {
       // Rebuilt every round: the live UI context changes as the agent's own
-      // navigation tools move the canvas mid-conversation.
+      // navigation tools move the canvas mid-conversation — and so can the
+      // shell itself (rotation across the breakpoint).
+      mobileReading = isMobileViewport()
       const liveContext = [contextNote, collectAgentUiContext()]
         .filter(Boolean)
         .join('\n')
@@ -311,11 +315,12 @@ export async function sendToAgent(input: {
             ? '\n\n--- mobile shell ---\nThe user is on the MOBILE app, which is view-only for everyone — your tools are navigation and reading only (no writes, no annotations, no canvas mode switch). The mobile view is a vertical journey reader: scrolling down moves forward through the steps; a Map view shows the 2-D board. When the user wants an edit, explain it is made on desktop — never imply you made it.'
             : ''),
         messages: run.messages,
-        tools: (allowWrites
-          ? TOOL_SPECS
-          : TOOL_SPECS.filter((spec) => !WRITE_TOOL_NAMES.has(spec.name))
-        ).filter(
-          (spec) => !mobileReading || MOBILE_READ_TOOL_NAMES.has(spec.name),
+        // One pass: mobile's whitelist already contains zero write tools
+        // (pinned by mobileRoster.test.ts), so it subsumes the tier filter.
+        tools: TOOL_SPECS.filter((spec) =>
+          mobileReading
+            ? MOBILE_READ_TOOL_NAMES.has(spec.name)
+            : allowWrites || !WRITE_TOOL_NAMES.has(spec.name),
         ),
         apiKey,
         model: modelFor(settings),

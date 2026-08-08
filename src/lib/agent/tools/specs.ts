@@ -1,5 +1,5 @@
 import type { ToolSpec } from '@/lib/agent/providers/provider'
-import { REFERENCE_NAMES } from '@/lib/agent/tools/read'
+import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 
 /**
  * The static allow-list — the agent's entire reach. Each write dispatches

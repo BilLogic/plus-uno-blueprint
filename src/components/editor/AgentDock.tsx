@@ -3,10 +3,11 @@ import { createPortal } from 'react-dom'
 import { ChevronDown, GripHorizontal, X } from 'lucide-react'
 import { AgentPanel } from '@/components/editor/AgentPanel'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { AGENT_FLOAT_MIN } from '@/lib/layoutTokens'
 import {
   DOCK_MAX_RATIO,
   DOCK_MIN_RATIO,
-  FLOAT_MIN,
+  
   dockAgent,
   persistAgentPlacement,
   setAgentDrag,
@@ -216,11 +217,11 @@ export function AgentDock({ visible }: { visible: boolean }) {
             // back on top of a newer one.
             ...placementRef.current.float,
             width: Math.max(
-              FLOAT_MIN.width,
+              AGENT_FLOAT_MIN.width,
               resizeFrom.width + event.clientX - resizeFrom.x,
             ),
             height: Math.max(
-              FLOAT_MIN.height,
+              AGENT_FLOAT_MIN.height,
               resizeFrom.height + event.clientY - resizeFrom.y,
             ),
           },

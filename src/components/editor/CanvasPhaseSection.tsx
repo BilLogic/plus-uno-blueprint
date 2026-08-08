@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from 'react'
 import { PhaseSectionFlowArrow } from '@/components/editor/PhaseSectionFlowArrow'
+import { ordinalLabel } from '@/types/nav'
 import {
   PHASE_SECTION_BOTTOM_INSET,
   PHASE_SECTION_INSET,
@@ -34,7 +35,7 @@ type CanvasPhaseSectionProps = {
   /** 1-based lifecycle position. Phases ARE an ordered sequence in time, so
    * the ordinal is information — it prefixes the badge (`01 · Application`)
    * in the same time-marker register the mobile reader uses. */
-  ordinal?: number
+  ordinal: number
   description?: string | null
   phaseId: string
   children: ReactNode
@@ -202,11 +203,7 @@ export function CanvasPhaseSection({
         }}
       />
       <ScenarioTitleBadge
-        name={
-          ordinal !== undefined
-            ? `${String(ordinal).padStart(2, '0')} · ${title}`
-            : title
-        }
+        name={ordinalLabel(ordinal, title)}
         description={description}
         tone={interactive ? 'phase' : 'default'}
         // The time-marker register: mono, uppercase, letterspaced — the same

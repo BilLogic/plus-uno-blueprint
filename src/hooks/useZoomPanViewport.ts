@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent,
 } from 'react'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
@@ -68,6 +69,10 @@ type UseZoomPanViewportOptions = {
  * blueprint.css under [data-semantic-tier].
  */
 const SEMANTIC_ZOOM_THRESHOLD = 0.35
+
+/** How far a pending touch may wander before it stops being a tap and
+ * becomes a board drag. */
+const TOUCH_PAN_SLOP = 10
 /** Counter-scale that keeps a phase badge at roughly constant screen size
  * (12px type reads ~11px). Capped so a deep zoom-out cannot grow a badge
  * past its artboard. */
@@ -81,14 +86,22 @@ function applyTransformToElement(
 ) {
   el.style.transform = `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`
   const blocks = zoom < SEMANTIC_ZOOM_THRESHOLD
-  if (blocks !== (el.dataset.semanticTier === 'blocks')) {
+  const wasBlocks = el.dataset.semanticTier === 'blocks'
+  if (blocks !== wasBlocks) {
     if (blocks) el.dataset.semanticTier = 'blocks'
     else delete el.dataset.semanticTier
   }
-  el.style.setProperty(
-    '--semantic-label-boost',
-    blocks ? semanticLabelBoost(zoom).toFixed(3) : '1',
-  )
+  // The boost only exists inside the blocks tier — outside it, skip the
+  // style write entirely so a mouse pan stays a single transform write per
+  // frame ("never cost a React render" extends to redundant style churn).
+  if (blocks) {
+    el.style.setProperty(
+      '--semantic-label-boost',
+      semanticLabelBoost(zoom).toFixed(3),
+    )
+  } else if (wasBlocks) {
+    el.style.removeProperty('--semantic-label-boost')
+  }
 }
 
 function measureFitBounds(
@@ -647,12 +660,18 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     null,
   )
   const suppressNextClick = useRef(false)
-  const TOUCH_PAN_SLOP = 10
+  // Mirror of `isPanning` for the 60Hz move path: `beginPan` from inside a
+  // pointermove schedules (not flushes) the state commit, so the moves that
+  // arrive before React lands would read the stale closure and be dropped —
+  // the first frames of a slop-crossed drag stuttering. The ref is the
+  // handler's truth; the state exists only for chrome (cursor).
+  const isPanningRef = useRef(false)
 
   const beginPan = useCallback(
     (clientX: number, clientY: number) => {
       cancelFitAnimation()
       userAdjustedViewRef.current = true
+      isPanningRef.current = true
       setIsPanning(true)
       panStart.current = {
         x: clientX,
@@ -664,24 +683,35 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [cancelFitAnimation],
   )
 
+  const endPan = useCallback(() => {
+    isPanningRef.current = false
+    setIsPanning(false)
+  }, [])
+
   const handlePointerDown = useCallback(
     (e: PointerEvent) => {
       if (e.pointerType === 'touch') {
         // A primary touch means the browser sees NO other active touches —
         // anything still in the map is a ghost (a stream that died without
-        // its up/cancel). Ghosts otherwise pin the gesture in pinch mode
-        // forever, so a fresh primary contact resets the world.
+        // its up/cancel: an unmounted target, an OS takeover). Ghosts
+        // otherwise pin the gesture in pinch mode forever, a stale pending
+        // pan teleports the camera when its pointer id is reused, and a
+        // stranded suppress flag eats the next honest tap — so a fresh
+        // primary contact resets the whole gesture world.
         if (e.isPrimary) {
           touchPoints.current.clear()
           pinchStart.current = null
+          pendingTouchPan.current = null
+          suppressNextClick.current = false
         }
         touchPoints.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-        if (touchPoints.current.size === 2) {
-          // Second finger: whatever was happening becomes a pinch — even if
-          // either finger sits on a cell. Capture both so the stream cannot
-          // be stolen mid-gesture.
+        if (touchPoints.current.size >= 2) {
+          // Another finger: whatever was happening becomes a pinch — even if
+          // a finger sits on a cell, and even mid-pinch (a third contact
+          // rebases the pair rather than falling through to the mouse
+          // path). Capture all so the stream cannot be stolen mid-gesture.
           pendingTouchPan.current = null
-          setIsPanning(false)
+          endPan()
           const [a, b] = [...touchPoints.current.values()]
           pinchStart.current = {
             dist: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)),
@@ -700,9 +730,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           return
         }
       }
+      // Cleared before ANY early return: a suppress flag stranded by a
+      // cancelled gesture (OS edge swipe — no click ever fires to consume
+      // it) must not eat the first honest click of a later, unrelated
+      // interaction, including ones that arrive while panning is disabled.
+      suppressNextClick.current = false
       if (!panEnabled) return
       if (e.button !== 0) return
-      suppressNextClick.current = false
       const target = e.target as HTMLElement
       // The mouse on an interactive child is a tap on it, never a pan. A
       // single FINGER there goes pending instead — pan if it travels past
@@ -726,7 +760,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
       beginPan(e.clientX, e.clientY)
     },
-    [beginPan, cancelFitAnimation, panEnabled, panIgnoreSelector],
+    [beginPan, cancelFitAnimation, endPan, panEnabled, panIgnoreSelector],
   )
 
   const handlePointerMove = useCallback(
@@ -779,7 +813,11 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           return
         }
       }
-      if (!isPanning) return
+      // The ref, not the state: a slop-crossed drag begins inside a
+      // pointermove, and the moves coalesced before React commits the
+      // state would otherwise be dropped — a visible stutter at the exact
+      // moment the drag engages.
+      if (!isPanningRef.current) return
       commitTransform(
         {
           x: panStart.current.panX + (e.clientX - panStart.current.x),
@@ -789,14 +827,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         false,
       )
     },
-    [beginPan, commitTransform, isPanning, syncZoomToReact, zoomAtPoint],
+    [beginPan, commitTransform, syncZoomToReact, zoomAtPoint],
   )
 
   /** Capture-phase click filter: a click synthesized at the end of an
    * engaged touch pan must not reach the cell under the finger. Runs on the
    * container in capture order, so it fires before any cell's own handler. */
   const handleClickCapture = useCallback(
-    (e: { preventDefault: () => void; stopPropagation: () => void }) => {
+    (e: ReactMouseEvent<HTMLElement>) => {
       if (!suppressNextClick.current) return
       suppressNextClick.current = false
       e.preventDefault()
@@ -812,16 +850,32 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         touchPoints.current.delete(e.pointerId)
         if (pendingTouchPan.current?.id === e.pointerId)
           pendingTouchPan.current = null
-        if (touchPoints.current.size < 2) pinchStart.current = null
+        if (touchPoints.current.size < 2) {
+          pinchStart.current = null
+        } else if (pinchStart.current) {
+          // Three fingers down to two: rebase the pinch on the surviving
+          // pair. Leaving the old pair's distance in place would make the
+          // next move compute a ratio against a gesture that no longer
+          // exists — the board lurching by an arbitrary zoom in one frame.
+          const [a, b] = [...touchPoints.current.values()]
+          pinchStart.current = {
+            dist: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)),
+            x: (a.x + b.x) / 2,
+            y: (a.y + b.y) / 2,
+          }
+        }
         if (touchPoints.current.size === 1 && panEnabled) {
           // Pinch released down to one finger: hand the gesture back to a
-          // pan from where that finger is, instead of a dead stop.
+          // pan from where that finger is, instead of a dead stop — and
+          // swallow the click its eventual lift may synthesize, same as a
+          // slop-crossed drag. A pinch is never a tap.
           const [rest] = [...touchPoints.current.values()]
           beginPan(rest.x, rest.y)
+          suppressNextClick.current = true
           continuesAsPan = true
         }
       }
-      if (!continuesAsPan) setIsPanning(false)
+      if (!continuesAsPan) endPan()
       try {
         containerRef.current?.releasePointerCapture(e.pointerId)
       } catch {
@@ -831,11 +885,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       // final camera to React so its copy is not the one from before the drag.
       syncZoomToReact()
     },
-    [beginPan, panEnabled, syncZoomToReact],
+    [beginPan, endPan, panEnabled, syncZoomToReact],
   )
 
   useEffect(() => {
     if (panEnabled) return
+    isPanningRef.current = false
     // eslint-disable-next-line react-hooks/set-state-in-effect -- timing-sensitive pan/zoom state: cancels an in-flight drag the moment panning is disabled
     setIsPanning(false)
   }, [panEnabled])

@@ -19,6 +19,12 @@ export const SIDEBAR_MIN_WIDTH = 240
 export const SIDEBAR_MAX_WIDTH = 640
 
 /** The agent's floating window: birth position/size, and how small the
- * corner drag may make it before the chat inside stops being usable. */
-export const AGENT_FLOAT_DEFAULT = { x: 360, y: 96, width: 380, height: 460 }
-export const AGENT_FLOAT_MIN = { width: 280, height: 240 }
+ * corner drag may make it before the chat inside stops being usable.
+ * `as const` so no consumer can write through the shared objects. */
+export const AGENT_FLOAT_DEFAULT = {
+  x: 360,
+  y: 96,
+  width: 380,
+  height: 460,
+} as const
+export const AGENT_FLOAT_MIN = { width: 280, height: 240 } as const

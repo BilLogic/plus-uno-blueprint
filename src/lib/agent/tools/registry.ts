@@ -60,15 +60,8 @@ import {
 
 type Client = SupabaseClient<Database>
 
-// Tool specs and rosters live in `specs.ts` — pure data with no runtime
-// imports, so tests and the loop's filters can load them without dragging
-// the Supabase client graph into a node environment.
-export {
-  MOBILE_READ_TOOL_NAMES,
-  TOOL_SPECS,
-  WRITE_TOOL_NAMES,
-} from '@/lib/agent/tools/specs'
-
+// Tool specs and rosters live in `specs.ts` (imported directly by their
+// consumers — one canonical path); this module owns only dispatch.
 
 // One lifecycle per deployment today; cached after the first ask.
 let cachedLifecycleId: string | null = null

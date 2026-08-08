@@ -307,6 +307,16 @@ export const FALLBACK_NAV: NavItem[] = [
   },
 ]
 
+/**
+ * The time-marker register's label: `01 · Application`. Phases and steps ARE
+ * ordered sequences, so the zero-padded ordinal is information. One helper,
+ * because five surfaces (phase badges, reader eyebrows, nav sheets) claim to
+ * "name time the same way" — this is what makes that claim structural.
+ */
+export function ordinalLabel(ordinal: number, name: string): string {
+  return `${String(ordinal).padStart(2, '0')} · ${name}`
+}
+
 export function getSlideDisplayLabel(
   slide: NavItem,
   _slides: NavItem[] = FALLBACK_NAV,

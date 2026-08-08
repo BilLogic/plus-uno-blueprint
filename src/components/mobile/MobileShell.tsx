@@ -11,8 +11,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -30,7 +28,7 @@ import {
   registerAgentUiBridge,
   registerAgentUiContext,
 } from '@/lib/agent/uiBridge'
-import { getSlideDisplayLabel } from '@/types/nav'
+import { getSlideDisplayLabel, ordinalLabel } from '@/types/nav'
 import { cn } from '@/lib/utils'
 import type { NavItem } from '@/types/nav'
 
@@ -140,11 +138,13 @@ export function MobileShell() {
   return (
     <CanvasModeProvider>
       <div className="flex h-svh flex-col overflow-hidden bg-background">
-        {/* Compact top bar: nav · title · agent · overflow. */}
-        <header className="flex h-13 shrink-0 items-center gap-1 border-b border-border px-2">
+        {/* Compact top bar: nav · title · agent · overflow. Icon buttons
+            carry a 44px hit area (size-11); the glyphs stay small. */}
+        <header className="flex h-12 shrink-0 items-center gap-0.5 border-b border-border px-1">
           <Button
             variant="ghost"
             size="icon-sm"
+            className="size-11"
             aria-label="Open navigation"
             onClick={() => setNavOpen(true)}
           >
@@ -153,10 +153,12 @@ export function MobileShell() {
           <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
             {title}
           </h1>
+          <ThemeToggle size="icon-sm" />
           {canAgent ? (
             <Button
               variant="ghost"
               size="icon-sm"
+              className="size-11"
               aria-label="Ask the agent"
               onClick={() => setAgentOpen(true)}
             >
@@ -166,17 +168,17 @@ export function MobileShell() {
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon-sm" aria-label="More">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-11"
+                  aria-label="More"
+                >
                   <MoreHorizontal />
                 </Button>
               }
             />
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="flex items-center justify-between gap-4">
-                Theme
-                <ThemeToggle size="icon-sm" />
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <DropdownMenuItem disabled>
                 Editing is available on desktop
               </DropdownMenuItem>
@@ -193,7 +195,7 @@ export function MobileShell() {
           <div
             key={surface + (selectedScenarioId ?? 'none')}
             className={cn(
-              'absolute inset-0 animate-in fade-in duration-200 motion-reduce:animate-none',
+              'absolute inset-0 animate-in fade-in duration-(--motion-fade) motion-reduce:animate-none',
               surface === 'map' ? 'zoom-in-95' : 'slide-in-from-bottom-4',
             )}
           >
@@ -216,11 +218,19 @@ export function MobileShell() {
           </div>
         </main>
 
-        {/* Thumb-reach action bar: the reader ⇄ map fold, and the agent. */}
-        <nav className="flex shrink-0 items-center justify-around border-t border-border bg-background px-4 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+        {/* Thumb-reach action bar: the reader ⇄ map fold, and the agent.
+            Primary navigation earns full-height 44px targets (h-11 beats
+            the sm variant's h-7), and aria-pressed carries the active
+            state to AT and the forced-colors treatment alike. */}
+        <nav
+          aria-label="Primary"
+          className="flex shrink-0 items-center justify-around border-t border-border bg-background px-4 py-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]"
+        >
           <Button
             variant={surface === 'reader' ? 'secondary' : 'ghost'}
             size="sm"
+            className="h-11 flex-1"
+            aria-pressed={surface === 'reader'}
             onClick={() => setSurface('reader')}
           >
             <ScrollText /> Journey
@@ -228,12 +238,19 @@ export function MobileShell() {
           <Button
             variant={surface === 'map' ? 'secondary' : 'ghost'}
             size="sm"
+            className="h-11 flex-1"
+            aria-pressed={surface === 'map'}
             onClick={() => setSurface('map')}
           >
             <MapIcon /> Map
           </Button>
           {canAgent ? (
-            <Button variant="ghost" size="sm" onClick={() => setAgentOpen(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-11 flex-1"
+              onClick={() => setAgentOpen(true)}
+            >
               <Sparkles /> Ask
             </Button>
           ) : null}
@@ -243,7 +260,11 @@ export function MobileShell() {
       {/* Navigation: left sheet, phases → scenarios, same progressive
           disclosure as the desktop sidebar. */}
       <Sheet open={navOpen} onOpenChange={setNavOpen}>
-        <SheetContent side="left" className="w-[18rem] overflow-y-auto p-0">
+        <SheetContent
+          side="left"
+          aria-label="Blueprint contents"
+          className="w-72 overflow-y-auto p-0"
+        >
           <SheetHeader className="border-b border-border px-4 py-3">
             <SheetTitle className="text-sm">Blueprint</SheetTitle>
           </SheetHeader>
@@ -273,27 +294,35 @@ export function MobileShell() {
               <div key={phase.id} className="flex flex-col">
                 <button
                   type="button"
+                  aria-current={
+                    phase.id === selectedPhaseId && !selectedScenarioId
+                      ? 'true'
+                      : undefined
+                  }
                   onClick={() => {
                     selectPhase(phase.id)
                     setSurface('map')
                     setNavOpen(false)
                   }}
                   className={cn(
-                    'flex items-center gap-1 rounded-md px-2 py-1.5 text-left font-mono text-xs uppercase tracking-wider',
+                    'flex min-h-11 items-center gap-1 rounded-md px-2 py-1.5 text-left font-mono text-xs uppercase tracking-wider',
                     phase.id === selectedPhaseId && !selectedScenarioId
                       ? 'bg-accent text-foreground'
                       : 'text-muted-foreground',
                   )}
                 >
-                  {String(phase.index).padStart(2, '0')} · {phase.label}
+                  {ordinalLabel(phase.index, phase.label)}
                 </button>
                 {(scenariosByPhase.get(phase.id) ?? []).map((item) => (
                   <button
                     key={item.id}
                     type="button"
+                    aria-current={
+                      item.id === selectedScenarioId ? 'true' : undefined
+                    }
                     onClick={() => openScenario(item.id)}
                     className={cn(
-                      'flex items-center justify-between rounded-md py-1.5 pr-2 pl-6 text-left text-sm',
+                      'flex min-h-11 items-center justify-between rounded-md py-1.5 pr-2 pl-6 text-left text-sm',
                       item.id === selectedScenarioId
                         ? 'bg-accent font-medium text-foreground'
                         : 'text-foreground/80',
@@ -358,7 +387,7 @@ function MobileJourneyIndex({
   onOpenScenario: (scenarioId: string) => void
 }) {
   return (
-    <div className="h-full overflow-y-auto px-4 pb-24 pt-4">
+    <div className="h-full overflow-y-auto px-4 pb-8 pt-4">
       <p className="pb-4 text-sm text-muted-foreground">
         The service journey, phase by phase. Pick a scenario to read it
         step by step, or open the Map for the whole board.
@@ -367,7 +396,7 @@ function MobileJourneyIndex({
         {phases.map((phase) => (
           <li key={phase.id} className="flex flex-col gap-1.5">
             <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              {String(phase.index).padStart(2, '0')} · {phase.label}
+              {ordinalLabel(phase.index, phase.label)}
             </p>
             {(scenariosByPhase.get(phase.id) ?? []).map((item) => (
               <button

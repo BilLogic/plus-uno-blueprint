@@ -28,14 +28,12 @@ const STORAGE_KEY = 'uno-agent-placement'
 
 export const DOCK_MIN_RATIO = 0.2
 export const DOCK_MAX_RATIO = 0.8
-export const FLOAT_MIN = AGENT_FLOAT_MIN
 
 const DEFAULTS: AgentPlacement = {
   mode: 'docked',
   open: false,
   dockRatio: 0.5,
-  // Copied, not aliased — persistence merges could otherwise write through
-  // to the shared token object.
+  // Spread: the token is readonly; AgentPlacement.float is not.
   float: { ...AGENT_FLOAT_DEFAULT },
 }
 
@@ -67,8 +65,8 @@ function load(): AgentPlacement {
         y: Number.isFinite(float.y)
           ? clamp(float.y, 8, Math.max(8, window.innerHeight - 80))
           : DEFAULTS.float.y,
-        width: Math.max(FLOAT_MIN.width, float.width),
-        height: Math.max(FLOAT_MIN.height, float.height),
+        width: Math.max(AGENT_FLOAT_MIN.width, float.width),
+        height: Math.max(AGENT_FLOAT_MIN.height, float.height),
       },
     }
   } catch {

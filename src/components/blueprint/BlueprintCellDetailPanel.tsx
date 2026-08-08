@@ -261,6 +261,10 @@ function PanelDrawerShell({
   const mobile = useMobileShell()
   return (
     <Drawer
+      // Keyed on posture: a resize across the breakpoint while open would
+      // otherwise reinterpret an in-flight swipe's x-offset against the
+      // other posture's axis. A flip remounts the drawer clean instead.
+      key={mobile ? 'mobile' : 'desktop'}
       open={open}
       onOpenChange={(next) => {
         // Only close *requests* (✕, Escape, swipe) arrive here, and with
@@ -280,7 +284,7 @@ function PanelDrawerShell({
         data-cell-detail-panel=""
         className={cn(
           mobile
-            ? '!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[70svh] w-auto rounded-t-2xl rounded-b-none border-t border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
+            ? '!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[70svh] w-auto border-t border-border/80 bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
             : cn(
                 CELL_DETAIL_PANEL_TOP_CLASS,
                 CELL_DETAIL_PANEL_BOTTOM_CLASS,

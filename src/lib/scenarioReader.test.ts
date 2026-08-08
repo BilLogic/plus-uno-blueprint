@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { BlueprintData } from '@/types/blueprint'
 import {
   buildScenarioReaderModel,
-  readerSideForRole,
+  readerSideForLayer,
 } from '@/lib/scenarioReader'
 
 function fixture(): BlueprintData {
@@ -47,16 +47,29 @@ function fixture(): BlueprintData {
   }
 }
 
-describe('readerSideForRole', () => {
+describe('readerSideForLayer', () => {
+  const side = (role: string | null, name = 'Lane') =>
+    readerSideForLayer({ name, role })
+
   it('splits the lane vocabulary across the line of visibility', () => {
-    expect(readerSideForRole('customer_actions')).toBe('frontstage')
-    expect(readerSideForRole('frontstage_tech')).toBe('frontstage')
-    expect(readerSideForRole('backstage_actions')).toBe('backstage')
-    expect(readerSideForRole('backstage_tech')).toBe('backstage')
-    expect(readerSideForRole('support_systems')).toBe('backstage')
+    expect(side('customer_actions')).toBe('frontstage')
+    expect(side('frontstage_tech')).toBe('frontstage')
+    expect(side('backstage_actions')).toBe('backstage')
+    expect(side('backstage_tech')).toBe('backstage')
+    expect(side('support_systems')).toBe('backstage')
     // A lane the model cannot classify must stay visible, above the line.
-    expect(readerSideForRole(null)).toBe('frontstage')
-    expect(readerSideForRole(undefined)).toBe('frontstage')
+    expect(side(null)).toBe('frontstage')
+    expect(readerSideForLayer({ name: 'Notes' })).toBe('frontstage')
+  })
+
+  it('resolves legacy rows through the same name fallback as the canvas', () => {
+    // Rows predating the layer_role backfill carry their role only in their
+    // name — the reader must land them on the same side desktop does.
+    expect(side(null, 'Back Stage Actions')).toBe('backstage')
+    expect(side(null, 'Back Stage Tech')).toBe('backstage')
+    expect(side(null, 'Computer Systems')).toBe('backstage')
+    expect(side(null, 'Front Stage Actions')).toBe('frontstage')
+    expect(side(null, 'Regular Tutor')).toBe('frontstage')
   })
 })
 

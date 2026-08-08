@@ -11,6 +11,7 @@ import {
 } from '@/lib/scenarioReader'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell, BlueprintLayer } from '@/types/blueprint'
+import { ordinalLabel } from '@/types/nav'
 
 /**
  * The phone's reading of a blueprint: the 2-D board folded into a 1-D
@@ -35,7 +36,7 @@ function StepEyebrow({ index, name }: { index: number; name: string }) {
   return (
     <div className="sticky top-0 z-10 -mx-4 border-b border-border/60 bg-background/95 px-4 py-2 backdrop-blur-sm">
       <p className="font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">
-        {String(index).padStart(2, '0')} · {name}
+        {ordinalLabel(index, name)}
       </p>
     </div>
   )
@@ -44,11 +45,11 @@ function StepEyebrow({ index, name }: { index: number; name: string }) {
 function LaneBand({
   entries,
   onOpenCell,
-  step,
 }: {
   entries: ReaderLaneEntry[]
-  onOpenCell: (cell: OpenCell) => void
-  step: ReaderStep
+  /** The band knows lanes and cells; which STEP it sits in is the caller's
+   * business — the closure carries it. */
+  onOpenCell: (cell: BlueprintCell, layer: BlueprintLayer) => void
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -71,10 +72,11 @@ function LaneBand({
                 type="button"
                 data-blueprint-cell={cell.id}
                 data-blueprint-cell-interactive=""
-                onClick={() => onOpenCell({ cell, layer, step })}
+                onClick={() => onOpenCell(cell, layer)}
                 className={cn(
                   'w-full rounded-lg border border-border bg-card px-3 py-2.5 text-left',
-                  'text-sm text-foreground shadow-xs transition-colors',
+                  'text-sm text-foreground shadow-xs',
+                  'transition-colors duration-(--motion-micro) motion-reduce:transition-none',
                   'active:bg-accent',
                 )}
               >
@@ -122,11 +124,29 @@ function ReaderCellSheet({
     )
   }, [open])
 
+  // The ghost: content rendered during the exit animation. Clearing on
+  // `onClose` alone would blank the sheet the instant it starts leaving —
+  // an empty popover sliding off screen on every close.
+  const [ghost, setGhost] = useState<OpenCell | null>(null)
+  if (open && ghost !== open) setGhost(open)
+  const shown = open ?? ghost
+  // Picture-only cells have empty content — the sheet still needs an
+  // accessible name, and the image IS the content, so it gets a real alt.
+  const pictureOnly = shown !== null && shown.cell.content.trim() === ''
+  const sheetTitle = shown
+    ? pictureOnly
+      ? `${shown.layer.name} visual`
+      : shown.cell.content
+    : ''
+
   return (
     <Drawer
       open={open !== null}
       onOpenChange={(next) => {
         if (!next) onClose()
+      }}
+      onOpenChangeComplete={(next) => {
+        if (!next) setGhost(null)
       }}
       swipeDirection="down"
       // Peek ↔ full: opens at the reading height, drags up for the whole
@@ -135,35 +155,35 @@ function ReaderCellSheet({
       defaultSnapPoint={0.45}
       showSwipeHandle
     >
-      <DrawerContent className="rounded-t-2xl rounded-b-none border-t border-border/80 bg-popover">
-        {open ? (
+      <DrawerContent className="border-t border-border/80 bg-popover">
+        {shown ? (
           <div className="flex min-h-0 flex-col overflow-y-auto px-4 pb-8">
             <DrawerHeader className="px-0 pb-2">
               <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                {String(open.step.index).padStart(2, '0')} · {open.step.name} ·{' '}
-                {open.layer.name}
+                {ordinalLabel(shown.step.index, shown.step.name)} ·{' '}
+                {shown.layer.name}
               </p>
               <DrawerTitle className="text-left text-base">
-                {open.cell.content}
+                {sheetTitle}
               </DrawerTitle>
             </DrawerHeader>
-            {open.cell.description ? (
+            {shown.cell.description ? (
               <p className="text-sm text-muted-foreground">
-                {open.cell.description}
+                {shown.cell.description}
               </p>
             ) : null}
-            {open.cell.picture ? (
+            {shown.cell.picture ? (
               <img
-                src={open.cell.picture}
-                alt=""
+                src={shown.cell.picture}
+                alt={pictureOnly ? sheetTitle : ''}
                 loading="lazy"
                 decoding="async"
                 className="mt-3 w-full rounded-lg border border-border object-contain"
               />
             ) : null}
-            {open.cell.links.length > 0 ? (
+            {shown.cell.links.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {open.cell.links.map((link, index) =>
+                {shown.cell.links.map((link, index) =>
                   link.url ? (
                     <a
                       key={index}
@@ -240,7 +260,7 @@ export function MobileScenarioReader({ scenarioId }: { scenarioId: string }) {
     model.steps.find((step) => step.id === stepId)?.name ?? ''
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain px-4 pb-24">
+    <div className="h-full overflow-y-auto overscroll-contain px-4 pb-8">
       {paths.length > 1 ? (
         <div className="-mx-1 flex gap-1.5 overflow-x-auto py-3">
           {paths.map((path) => {
@@ -249,9 +269,11 @@ export function MobileScenarioReader({ scenarioId }: { scenarioId: string }) {
               <button
                 key={path.id}
                 type="button"
+                aria-pressed={active}
                 onClick={() => setPathId(path.id)}
                 className={cn(
-                  'shrink-0 rounded-full border px-3 py-1 text-xs transition-colors',
+                  'min-h-8 shrink-0 rounded-full border px-3 py-1 text-xs',
+                  'transition-colors duration-(--motion-micro) motion-reduce:transition-none',
                   active
                     ? 'border-foreground/40 bg-foreground text-background'
                     : 'border-border bg-card text-muted-foreground',
@@ -271,8 +293,7 @@ export function MobileScenarioReader({ scenarioId }: { scenarioId: string }) {
             <div className="flex flex-col gap-3 py-3">
               <LaneBand
                 entries={step.frontstage}
-                step={step}
-                onOpenCell={setOpenCell}
+                onOpenCell={(cell, layer) => setOpenCell({ cell, layer, step })}
               />
               {step.frontstage.length > 0 && step.backstage.length > 0 ? (
                 // The line of visibility — the blueprint's most load-bearing
@@ -282,17 +303,27 @@ export function MobileScenarioReader({ scenarioId }: { scenarioId: string }) {
                   role="separator"
                   aria-label="Line of visibility"
                 >
-                  <div className="h-px flex-1 border-t border-dashed border-border" />
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {/* AT reads the separator's label once; the visible text
+                      and rules are presentation. */}
+                  <div
+                    aria-hidden
+                    className="h-px flex-1 border-t border-dashed border-border"
+                  />
+                  <span
+                    aria-hidden
+                    className="text-3xs uppercase tracking-wider text-muted-foreground"
+                  >
                     line of visibility
                   </span>
-                  <div className="h-px flex-1 border-t border-dashed border-border" />
+                  <div
+                    aria-hidden
+                    className="h-px flex-1 border-t border-dashed border-border"
+                  />
                 </div>
               ) : null}
               <LaneBand
                 entries={step.backstage}
-                step={step}
-                onOpenCell={setOpenCell}
+                onOpenCell={(cell, layer) => setOpenCell({ cell, layer, step })}
               />
               {step.triggersTo.length > 0 ? (
                 // The desktop's trigger arrow, rotated with the time axis:
