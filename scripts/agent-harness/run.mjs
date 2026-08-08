@@ -9,13 +9,24 @@
  * - WRITES are dry-run: recorded in the trace, never sent anywhere.
  * - get_ui_state / get_change_history (and D2's get_cell) are per-case
  *   mocks — the CLI has no live shell to observe.
- * - The system prompt is the SAME FILE the app loads: src/lib/agent/role.md
- *   (`?raw` there, readFileSync here) plus the vendored canvas-adapter.
- *   No copy, so no drift.
+ *
+ * One-sourced vs mirrored (be honest about which is which):
+ * - ONE-SOURCED: the tool specs and rosters (TOOL_SPECS, WRITE_TOOL_NAMES,
+ *   MOBILE_READ_TOOL_NAMES) are IMPORTED from src/lib/agent/tools/specs.ts
+ *   — rolldown bundles it at startup, so the harness offers byte-identical
+ *   declarations to the app's. Likewise role.md, canvas-adapter.md and the
+ *   skill files are the SAME FILES the app loads (`?raw` there,
+ *   readFileSync here). No copies, so no drift.
+ * - MIRRORED BY HAND: the system-prompt ASSEMBLY (buildSystem + the tier /
+ *   mobile injections), the Gemini provider glue, the batch limiter and
+ *   the round cap follow src/lib/agent/loop.ts and providers/google.ts by
+ *   copy — edit both sides together. The tool RESULT texts below are
+ *   harness-local mocks of registry.ts behavior, not the real wrappers.
  *
  * Usage:
  *   node scripts/agent-harness/run.mjs             # full suite, Gemini
  *   node scripts/agent-harness/run.mjs --case D4   # one case
+ *   node scripts/agent-harness/run.mjs --list      # print case ids, no key
  *   node scripts/agent-harness/run.mjs --smoke     # no key needed: mock
  *                                                  # provider, machinery only
  *   GEMINI_API_KEY comes from env or gitignored .env.local.
@@ -53,6 +64,10 @@ const opt = (name) => {
 }
 const SMOKE = flag('smoke')
 const ONLY = opt('case')
+if (flag('list')) {
+  for (const caseDef of CASES) console.log(`${caseDef.id}  ${caseDef.title}`)
+  process.exit(0)
+}
 // --repeat N: run each case N times, majority-vote every rubric line.
 // Separates model variance from regressions — a line at 1/3 is flaky or
 // broken, a line at 3/3 is stable; a single run cannot tell you which.
@@ -112,59 +127,45 @@ function buildSystem(skillId, contextNote) {
 
 // ---------------------------------------------------------------------------
 // Tools — real reads, dry-run writes, per-case mocks
+//
+// The spec DECLARATIONS are one-sourced: specs.ts is deliberately kept
+// node-loadable (its only imports are a type and the leaf referenceNames
+// module) except for being TypeScript, so rolldown — already in the tree
+// via rolldown-vite — bundles it to plain ESM at startup and the harness
+// imports the exact objects the app hands its providers. Only the tool
+// IMPLEMENTATIONS below (real reads, dry-run writes, mocks) are
+// harness-local.
 // ---------------------------------------------------------------------------
-const str = (description) => ({ type: 'string', description })
-export const TOOL_SPECS = [
-  { name: 'read_reference', description: 'Read a rulebook reference. Available: canvas-adapter, layer-roles, lane-vocabulary, elicitation-protocol, data-model, audit-playbook, whatif-playbook, check-gap-sweep, check-jargon-lint, check-channel-conflict, check-kpi-alignment, check-perceived-owner, check-value-ledger, check-fee-visibility, slice-playbook, slice-templates.', parameters: { type: 'object', properties: { name: str('Reference name') }, required: ['name'] } },
-  { name: 'list_scenarios', description: 'List every phase and its scenarios, with ids.', parameters: { type: 'object', properties: {} } },
-  { name: 'get_blueprint', description: 'Full grid of one scenario: paths, steps, lanes, cells (ids included). Read before writing into a scenario.', parameters: { type: 'object', properties: { scenario_id: str('Scenario id') }, required: ['scenario_id'] } },
-  { name: 'get_cell', description: 'One cell in full.', parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
-  { name: 'get_compare_diff', description: "Structured comparison of a scenario's paths: canonical columns, numbered divergence zones, differing slots with per-path quotes and cell ids, detail-only group.", parameters: { type: 'object', properties: { scenario_id: str('Scenario id'), path_ids: { type: 'array', description: 'Optional subset (2+) of path ids, in comparison order', items: { type: 'string' } } }, required: ['scenario_id'] } },
-  { name: 'list_slices', description: 'List existing slices.', parameters: { type: 'object', properties: {} } },
-  { name: 'list_owner_tags', description: 'Owner tag vocabulary. ALWAYS read before writing owner fields.', parameters: { type: 'object', properties: {} } },
-  { name: 'get_ui_state', description: 'What the user is looking at RIGHT NOW. When the user asks what they are looking at, relay EVERY line — view level included, not just the selection.', parameters: { type: 'object', properties: {} } },
-  { name: 'get_change_history', description: "This session's edit history (human and agent), newest first. When reporting it, distinguish user edits from agent edits and remind the user rows are revertible from the change sheet.", parameters: { type: 'object', properties: { limit: { type: 'number', description: 'Max entries' } } } },
-  { name: 'open_phase', description: "Navigate the user's canvas to a phase.", parameters: { type: 'object', properties: { phase_id: str('Phase id') }, required: ['phase_id'] } },
-  { name: 'open_scenario', description: "Navigate the user's canvas to a scenario.", parameters: { type: 'object', properties: { scenario_id: str('Scenario id') }, required: ['scenario_id'] } },
-  { name: 'focus_cell', description: 'Scroll the open scenario to a cell — point at evidence.', parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
-  { name: 'add_step', description: 'Add a step (column) to a path. Step names align across paths BY NAME.', parameters: { type: 'object', properties: { path_id: str('Path id'), name: str('Step name'), at_position: { type: 'number', description: '1-based; omit to append' } }, required: ['path_id', 'name'] } },
-  { name: 'add_lane', description: 'Add a lane to EVERY path of a scenario. Read layer-roles and lane-vocabulary first.', parameters: { type: 'object', properties: { scenario_id: str('Scenario id'), name: str('Lane label'), layer_role: str('Semantic role; omit if none fits'), at_row: { type: 'number', description: '1-based; omit to append' } }, required: ['scenario_id', 'name'] } },
-  { name: 'upsert_cell', description: 'Create the cell at (path, lane, step). content REQUIRED and real.', parameters: { type: 'object', properties: { path_id: str('Path id'), layer_id: str('Lane id'), step_id: str('Step id'), content: str('The cell text') }, required: ['path_id', 'layer_id', 'step_id', 'content'] } },
-  { name: 'update_cell_content', description: 'Edit a cell: text, summary, owner, perceived_owner.', parameters: { type: 'object', properties: { cell_id: str('Cell id'), content: str('omit to keep'), summary: str('omit to keep'), owner: str('omit to keep'), perceived_owner: str('omit to keep') }, required: ['cell_id'] } },
-  { name: 'update_cell_spec', description: "Edit a cell's spec: function, form, value_props.", parameters: { type: 'object', properties: { cell_id: str('Cell id'), function: str('omit to keep'), form: str('omit to keep'), value_props: { type: 'array', description: 'full replacement', items: { type: 'object', properties: { for: str('Audience'), value: str('Value') }, required: ['for', 'value'] } } }, required: ['cell_id'] } },
-  { name: 'set_cell_dependency', description: 'Connect two cells on the SAME path. trigger = source sets target in motion (arrow); needs = source depends on target existing (panel-only) — "only makes sense after X" / "depends on X" reads as needs. State which kind you chose and why in your reply.', parameters: { type: 'object', properties: { source_cell_id: str('Source'), target_cell_id: str('Target'), kind: { type: 'string', enum: ['trigger', 'needs'], description: 'Default trigger' }, label: str('omit for none') }, required: ['source_cell_id', 'target_cell_id'] } },
-  { name: 'rename_path', description: 'Rename a path.', parameters: { type: 'object', properties: { path_id: str('Path id'), name: str('New name') }, required: ['path_id', 'name'] } },
-  // Parity additions (mirrors registry.ts) — structural creates, slices, UI control.
-  { name: 'create_phase', description: 'Create a new phase. Propose as text and get a nod first.', parameters: { type: 'object', properties: { name: str('Phase name'), description: str('omit for none') }, required: ['name'] } },
-  { name: 'create_scenario', description: "Create a scenario in a phase with its first path. lane_source_path_id copies an existing path's lane stack (STRONGLY preferred). Nod first.", parameters: { type: 'object', properties: { phase_id: str('Phase id'), name: str('Name'), path_name: str('default "Happy Path"'), step_count: { type: 'number', description: 'default 5' }, lane_source_path_id: str('omit for none') }, required: ['phase_id', 'name'] } },
-  { name: 'create_path', description: 'Add a path variant to a scenario; lane_source_path_id copies sibling lanes.', parameters: { type: 'object', properties: { scenario_id: str('Scenario id'), name: str('Name'), path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'], description: 'default alternative' }, lane_source_path_id: str('omit for none') }, required: ['scenario_id', 'name'] } },
-  { name: 'duplicate_path', description: 'Copy a path (lanes, steps, optionally cells+arrows) as a new variant.', parameters: { type: 'object', properties: { source_path_id: str('Source'), name: str('New name'), path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'], description: 'default alternative' }, copy_cells: { type: 'boolean', description: 'default true' } }, required: ['source_path_id', 'name'] } },
-  { name: 'duplicate_scenario', description: 'Copy a WHOLE blueprint into the same phase — columns, every path, lane, cell and internal arrow. One call, two arguments, but hundreds of row writes; say roughly how big the source is and get a nod first. Fully revertible. The UI names copies "X (copy)".', parameters: { type: 'object', properties: { source_scenario_id: str('Source scenario id'), name: str('Name for the copy; convention is "<source> (copy)"') }, required: ['source_scenario_id', 'name'] } },
-  { name: 'get_deletion_impact', description: 'What deleting something would destroy — cell/arrow counts, slices that lose frames, which of those undo cannot restore, and what survives. A pure read; no delete tool exists for you. Relay the warning and reassurance sentences VERBATIM.', parameters: { type: 'object', properties: { kind: { type: 'string', enum: ['scenario', 'path', 'slice'], description: 'Only these three — lane/step impacts do not match their deletes' }, target_id: str('Id of the scenario, path or slice') }, required: ['kind', 'target_id'] } },
-  { name: 'create_slice', description: 'Create a slice REFERENCING existing cells — never copies. cell_ids in journey order. Propose members by name and get a nod first.', parameters: { type: 'object', properties: { title: str('Title'), description: str('omit for none'), slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'Kind' }, actor: str('omit for none'), cell_ids: { type: 'array', description: 'Existing cell ids in order', items: { type: 'string' } } }, required: ['title', 'slice_type', 'cell_ids'] } },
-  { name: 'update_slice', description: "Edit a slice's fields.", parameters: { type: 'object', properties: { slice_id: str('Slice id'), title: str('omit to keep'), description: str('omit to keep'), actor: str('omit to keep'), slice_type: { type: 'string', enum: ['journey', 'lane', 'step', 'custom'], description: 'omit to keep' } }, required: ['slice_id'] } },
-  { name: 'replace_slice_frames', description: "Replace a slice's frames wholesale — reorder/merge/split screens. Read the slice first; pass the complete new list.", parameters: { type: 'object', properties: { slice_id: str('Slice id'), frames: { type: 'array', description: 'Full replacement in order', items: { type: 'object', properties: { cells: { type: 'array', description: 'Cell ids', items: { type: 'string' } }, caption: str('omit for none'), narrative: str('omit for none') }, required: ['cells'] } } }, required: ['slice_id', 'frames'] } },
-  { name: 'get_slice', description: 'One slice in full: fields + frames. Read before update_slice/replace_slice_frames.', parameters: { type: 'object', properties: { slice_id: str('Slice id') }, required: ['slice_id'] } },
-  { name: 'list_findings', description: 'The findings ledger: audit/whatif findings with status. Read before recording (see what is already open) and when the human asks to triage.', parameters: { type: 'object', properties: { status: { type: 'string', enum: ['open', 'resolved', 'dismissed', 'all'], description: 'Filter; default open' } } } },
-  { name: 'record_finding', description: 'Record one sb:audit / sb:whatif finding as a triageable row. Dedupe is built in: an open finding with the same fingerprint (check_name + cited cells) is updated in place, a dismissed one stays dismissed (the call reports it and writes nothing), a resolved one reopens as a new row. Omit run_id on the first finding of a run and reuse the returned run_id for the rest of that run. Cite cells by id; for a zero-cell finding pass scope instead (e.g. "scenario:Warm-Up").', parameters: { type: 'object', properties: { source: { type: 'string', enum: ['audit', 'whatif'], description: 'Which skill produced it' }, check_name: str('Roster check name, e.g. "gap-sweep"'), severity: { type: 'string', enum: ['info', 'warn', 'critical'], description: 'Per the check doc default unless evidence says otherwise' }, note: str('The finding itself — what is wrong, where, and why it matters. No raw ids in this text.'), cell_ids: { type: 'array', description: 'Cells the finding is about; omit only for zero-cell findings', items: { type: 'string' } }, scope: str('Zero-cell fingerprint scope, required when cell_ids is empty. Include a short reason slug so two zero-cell findings from one check cannot collide, e.g. "scenario:Warm-Up:orphan-step-cooldown"'), run_id: str('The run identity returned by the first record_finding of this run') }, required: ['source', 'check_name', 'severity', 'note'] } },
-  { name: 'set_finding_status', description: 'Triage a finding: resolved (fixed / no longer true) or dismissed (accepted as-is; dismissed findings never reopen), or open to reopen. This is the only edit humans or agents make to an existing finding.', parameters: { type: 'object', properties: { finding_id: str('Finding id from list_findings'), status: { type: 'string', enum: ['open', 'resolved', 'dismissed'], description: 'New status' } }, required: ['finding_id', 'status'] } },
-  { name: 'open_cell_panel', description: "Open the cell detail side panel on the user's screen (scenario must be open).", parameters: { type: 'object', properties: { cell_id: str('Cell id') }, required: ['cell_id'] } },
-  { name: 'set_canvas_mode', description: "Switch the user's canvas between view and design mode.", parameters: { type: 'object', properties: { mode: { type: 'string', enum: ['view', 'design'], description: 'Target' } }, required: ['mode'] } },
-  { name: 'set_sidebar', description: 'Collapse or expand the sidebar.', parameters: { type: 'object', properties: { collapsed: { type: 'boolean', description: 'true = collapse' } }, required: ['collapsed'] } },
-  { name: 'list_ui_commands', description: 'The LIVE list of UI controls you can drive right now (panel tabs, zoom, compare toggle, presentation, undo, …).', parameters: { type: 'object', properties: {} } },
-  { name: 'ui_command', description: 'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only, EXCEPT the ones the list marks "[changes data]": undo_last_change, revert_my_changes (only your own edits — prefer it for "undo what you did") and keep_all_changes (clears the sheet and every revert in it). Reverting the whole session is human-only; revert_all_changes exists to say so.', parameters: { type: 'object', properties: { command: str('Command name'), arg: str('omit unless the command takes one') }, required: ['command'] } },
-  { name: 'annotate_cells', description: 'Draw ephemeral annotation boxes around cells on the open canvas (optional note). Never saved.', parameters: { type: 'object', properties: { cell_ids: { type: 'array', description: 'Cells to box', items: { type: 'string' } }, note: str('omit for none') }, required: ['cell_ids'] } },
-]
+async function loadToolSpecs() {
+  const { rolldown } = await import('rolldown')
+  const bundle = await rolldown({
+    input: resolve(ROOT, 'src/lib/agent/tools/specs.ts'),
+    // Honor tsconfig's `@/*` → `src/*` path alias.
+    resolve: { alias: { '@': resolve(ROOT, 'src') } },
+    logLevel: 'silent',
+  })
+  const { output } = await bundle.generate({ format: 'esm' })
+  await bundle.close()
+  return import(
+    `data:text/javascript;base64,${Buffer.from(output[0].code).toString('base64')}`
+  )
+}
+const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES } =
+  await loadToolSpecs()
 
-const WRITE_TOOLS = new Set([
-  'add_step', 'add_lane', 'upsert_cell', 'update_cell_content',
-  'update_cell_spec', 'set_cell_dependency', 'rename_path',
-  'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
-  'duplicate_scenario',
-  'create_slice', 'update_slice', 'replace_slice_frames',
-  'record_finding', 'set_finding_status',
+// `ui_command` is interface-only EXCEPT the commands the live list marks
+// "[changes data]" — the app asks the registry (agentUiCommandMutates);
+// the harness has no live registry, so the marked names are pinned here.
+const MUTATING_UI_COMMANDS = new Set([
+  'undo_last_change',
+  'revert_my_changes',
+  'keep_all_changes',
 ])
-
+// One predicate for "counts as a write", mirroring the app loop's isWrite:
+// the write roster plus any ui_command whose command mutates data.
+const isWriteCall = (name, args) =>
+  WRITE_TOOL_NAMES.has(name) ||
+  (name === 'ui_command' && MUTATING_UI_COMMANDS.has(String(args?.command ?? '')))
 async function realListScenarios() {
   const data = await rest(
     'phases?select=id,name,order_position,service_scenarios(id,name,order_position)&order=order_position',
@@ -236,17 +237,71 @@ async function realListSlices() {
   return (data ?? []).map((s) => `"${s.title}" (${s.id}) type=${s.slice_type}`).join('\n')
 }
 
+// A frozen desktop base-view snapshot of listAgentUiCommands() output —
+// name — description [changes data], sorted, each line VERBATIM from its
+// registerAgentUiCommand call. Compare-mode commands (jump_divergence,
+// differences_filter, collapse_shared, toggle_pleat) and open_make_slice
+// come and go with their surfaces and are omitted, as the live list would
+// omit them on a base view.
+const UI_COMMANDS_SNAPSHOT = [
+  'activate_base_tab — Bring the base blueprint view forward (deactivate any slice tab).',
+  "cell_panel_close — Close the open cell detail panel.",
+  'cell_panel_expand — Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
+  "cell_panel_tab — Switch the open cell panel's tab. arg: dependencies | evidence | resources",
+  'clear_annotations — Erase every annotation mark from the canvas scratch layer.',
+  'clear_cell_selection — Clear the Design-mode cell selection.',
+  "close_slice_tab — Close a slice's open tab(s). arg: slice id.",
+  'exit_presentation — Leave the running presentation back onto its slice tab.',
+  'go_overview — Back to the zoomed-out overview of all phases (Home).',
+  "keep_all_changes — Accept the session's changes (clears the change sheet). This DISCARDS every captured revert — after it, nothing in the session can be taken back. Refused when the session holds destructive changes; those need the human's own confirm. [changes data]",
+  'open_slice_tab — Open a slice in a tab. arg: slice id (list_slices).',
+  'present_slice — Start presenting a slice full-bleed. arg: slice id.',
+  "revert_all_changes — WITHHELD, and listed here so you can see that it is: reverting the WHOLE session — the human's own edits included — is a human-only control (Revert all, in the Changes sheet). Firing this explains that and does nothing. Use revert_my_changes for your own edits.",
+  "revert_my_changes — Take back the changes YOU made in this agent session, newest first, leaving the human's own edits and other sessions' edits alone. Reports what it took back and names anything it could not, with the reason. Prefer this over firing undo_last_change repeatedly — that walks the whole session including the human's edits, in no guaranteed order, and reports nothing. [changes data]",
+  "select_cells — Gather cells into the Design-mode selection (for Make slice etc.). arg: comma-separated cell ids, or \"all\". Replaces the current selection. Needs design mode.",
+  "set_scenario_view — Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path's version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged.",
+  'toggle_path_filter — Toggle a path variant\'s visibility (the PATHS checkboxes). arg: the path key (type:name, e.g. "happy:Happy Path") or a path name.',
+  "toggle_phase_expanded — Expand/collapse a phase's accordion in the sidebar. arg: phase id.",
+  "undo_last_change — Undo the newest revertible change of this session (same as ⌘Z). One at a time. Note this reverts whatever is newest — INCLUDING the human's own edit if theirs came last; say whose change you are undoing before firing it. [changes data]",
+  'zoom — Zoom the canvas camera. arg: in | out | fit (fit the current focus)',
+].join('\n')
+
 let dryCounter = 0
 const WRITE_BATCH_LIMIT = 8
 async function dispatch(caseDef, name, args, trace, turn = 0) {
   const mock = caseDef.mocks?.[name]
   const record = { name, args, isError: false, turn }
   trace.push(record)
+  // The app loop's gates, in the app's order: mobile roster, session tier,
+  // then batch etiquette. (loop.ts checks each call the same way even
+  // though filtered specs make stray calls unlikely — a hallucinated name
+  // must bounce, not land.)
+  if (caseDef.mobile && !MOBILE_READ_TOOL_NAMES.has(name)) {
+    record.offRoster = true
+    record.isError = true
+    record.result =
+      'The mobile shell is view-only — only the reading and navigation tools exist here. Editing happens on desktop; describe the change instead.'
+    return record.result
+  }
+  if (caseDef.allowWrites === false && isWriteCall(name, args)) {
+    record.refusedWrite = true
+    record.isError = true
+    record.result =
+      'This session is view-only (not a service account) — no write tools exist here. Describe the change for a service account instead.'
+    return record.result
+  }
   // Mirror of the app loop's enforced batch etiquette: writes beyond the
   // per-turn limit bounce with a check-in instruction instead of landing.
-  if (WRITE_TOOLS.has(name) && !mock) {
+  // Like the app, mutating ui_commands count, and only calls that landed
+  // (no error) eat budget — a failed write changed nothing.
+  if (isWriteCall(name, args)) {
     const executed = trace.filter(
-      (t) => t.turn === turn && WRITE_TOOLS.has(t.name) && t.dryRun,
+      (t) =>
+        t !== record &&
+        t.turn === turn &&
+        t.name !== '__text' &&
+        isWriteCall(t.name, t.args) &&
+        !t.isError,
     ).length
     if (executed >= WRITE_BATCH_LIMIT) {
       record.limited = true
@@ -262,7 +317,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       record.result = result
       return result
     }
-    if (WRITE_TOOLS.has(name)) {
+    if (WRITE_TOOL_NAMES.has(name)) {
       dryCounter += 1
       record.dryRun = true
       // The rehearsal note matters: reads are REAL and will not reflect
@@ -313,7 +368,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'open_cell_panel': record.result = 'Opened the cell detail panel.'; return record.result
       case 'set_canvas_mode': record.result = `Canvas mode is now ${args.mode === 'design' ? 'design' : 'view'}.`; return record.result
       case 'set_sidebar': record.result = args.collapsed === true ? 'Sidebar collapsed.' : 'Sidebar expanded.'; return record.result
-      case 'list_ui_commands': record.result = 'cell_panel_tab — Switch the open cell panel\'s tab. arg: dependencies | evidence | resources\ncell_panel_close — Close the open cell detail panel.\nzoom — arg: in | out | fit\ngo_overview — Back to the overview\nset_scenario_view — arg: side-by-side | integrated\ntoggle_path_filter — arg: path key or name\nopen_slice_tab / present_slice / exit_presentation / close_slice_tab — arg: slice id\nclear_annotations — erase marks\nundo_last_change — undo the newest revertible change (may be the human\'s) [changes data]\nrevert_my_changes — take back only your own edits from this session [changes data]\nkeep_all_changes — accept the session and discard every revert [changes data]\nrevert_all_changes — WITHHELD, human-only; firing it explains why'; return record.result
+      case 'list_ui_commands': record.result = UI_COMMANDS_SNAPSHOT; return record.result
       case 'ui_command': record.result = `Done (${args.command}${args.arg ? `: ${args.arg}` : ''}).`; return record.result
       case 'annotate_cells': record.result = `Drew boxes around ${Array.isArray(args.cell_ids) ? args.cell_ids.length : 0} cell(s).`; return record.result
       case 'get_ui_state': record.result = 'No UI state is being reported right now.'; return record.result
@@ -360,18 +415,38 @@ function toGoogleSchema(schema) {
   return schema
 }
 
+// The app loop's round cap (loop.ts MAX_ROUNDS) — keep them equal or the
+// harness grades a budget the app does not have.
+const MAX_ROUNDS = 12
+
 async function runCaseLLM(caseDef) {
   const trace = []
   const replies = [] // final text per user turn
   const contents = []
-  const tools = [{ functionDeclarations: TOOL_SPECS.map((t) => ({ name: t.name, description: t.description, parameters: toGoogleSchema(t.parameters) })) }]
-  const system = buildSystem(caseDef.skill, caseDef.contextNote)
+  // One pass, mirroring loop.ts: mobile's whitelist already contains zero
+  // write tools, so it subsumes the tier filter.
+  const offered = TOOL_SPECS.filter((spec) =>
+    caseDef.mobile
+      ? MOBILE_READ_TOOL_NAMES.has(spec.name)
+      : caseDef.allowWrites !== false || !WRITE_TOOL_NAMES.has(spec.name),
+  )
+  const tools = [{ functionDeclarations: offered.map((t) => ({ name: t.name, description: t.description, parameters: toGoogleSchema(t.parameters) })) }]
+  // The tier / mobile injections are the app's, verbatim (loop.ts). The
+  // mobile paragraph subsumes the tier one, so only one may speak.
+  const system =
+    buildSystem(caseDef.skill, caseDef.contextNote) +
+    (caseDef.allowWrites !== false || caseDef.mobile
+      ? ''
+      : '\n\n--- session tier ---\nThis session is VIEW-ONLY (not a service account): you have no write tools. Navigate, read, annotate, and answer with citations; when the user wants an edit, describe the exact change for a service account to make — never imply you made it.') +
+    (caseDef.mobile
+      ? '\n\n--- mobile shell ---\nThe user is on the MOBILE app, which is view-only for everyone — your tools are navigation and reading only (no writes, no annotations, no canvas mode switch). The mobile view is a vertical journey reader: scrolling down moves forward through the steps; a Map view shows the 2-D board. When the user wants an edit, explain it is made on desktop — never imply you made it.'
+      : '')
 
   for (const [turnIndex, turn] of caseDef.turns.entries()) {
     contents.push({ role: 'user', parts: [{ text: turn }] })
     let turnText = []
     let capped = true
-    for (let round = 0; round < 10; round += 1) {
+    for (let round = 0; round < MAX_ROUNDS; round += 1) {
       const data = await geminiGenerate(MODEL, {
         systemInstruction: { parts: [{ text: system }] },
         contents,

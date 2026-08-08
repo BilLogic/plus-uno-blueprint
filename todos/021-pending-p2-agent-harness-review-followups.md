@@ -8,7 +8,21 @@ tiers, reference availability, slot dialect), read_reference/system-prompt
 duplication, data-model staleness (named path_type, slot dialect, derived
 layer), auditor scope field, adapter-contract asset pointers, skill
 trigger phrases, derived-layer migrations ported to the plugin template,
-dual-home drift converged + synced. Remaining, ranked:
+dual-home drift converged + synced.
+
+FIXED in the second pass (same day): round-limit exhaustion (model told +
+one final no-tools round), Anthropic prompt caching (systemStableLength
+split + tools breakpoint), harness spec fork killed (run.mjs bundles
+specs.ts via rolldown and imports TOOL_SPECS/rosters; toolParity test now
+guards the wiring), stale list_ui_commands mock replaced with a verbatim
+registry snapshot, harness/app parity (round cap 12, batch counter incl.
+mutating ui_commands, gates in app order with app refusal strings), new
+eval cases C8 undo-routing / D5 view-only tier / D6 mobile roster,
+cases.md synced, batch-pause spam + failed-write budget, '' -cannot-clear
+documented, deletion-impact desktop wording, role.md availability claim,
+IR schema + validator wave-2 fields (plugin).
+
+Remaining, ranked:
 
 ## P2
 1. **Round-limit exhaustion UX** (`loop.ts`): on the last round the model is

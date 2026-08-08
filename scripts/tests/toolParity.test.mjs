@@ -4,17 +4,21 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 
 /**
- * The eval harness mirrors the app's tool surface. That mirror is what makes
- * a harness result mean anything — a case that passes against a tool set the
- * app does not have is measuring nothing.
+ * The eval harness must run against the app's tool surface. The spec
+ * DECLARATIONS are now one-sourced — run.mjs bundles specs.ts with rolldown
+ * at startup and imports TOOL_SPECS / WRITE_TOOL_NAMES /
+ * MOBILE_READ_TOOL_NAMES — so the old "did the hand-copied fork drift"
+ * check is replaced by a check that the import wiring still exists and no
+ * fork has crept back in.
  *
- * Three lists have to agree, and the third is the dangerous one: a name
- * missing from `cases.mjs`'s WRITES makes a "no writes happened" trace check
- * PASS, so drift there hides itself instead of failing loudly. Hence a test
- * rather than a comment asking humans to remember.
+ * `cases.mjs` keeps its own WRITES set (it cannot import from run.mjs
+ * without a cycle), and that list is the dangerous one: a name missing
+ * from it makes a "no writes happened" trace check PASS, so drift there
+ * hides itself instead of failing loudly. Hence a test rather than a
+ * comment asking humans to remember.
  *
- * Deliberately text-parsed: `registry.ts` imports supabase-js and Vite `?raw`
- * markdown, so it cannot be loaded from Node without a bundler.
+ * Deliberately text-parsed: `registry.ts` imports supabase-js and Vite
+ * `?raw` markdown, so it cannot be loaded from Node without a bundler.
  */
 // The runner copies test files into a temp dir, so paths resolve from the
 // working directory (npm test runs at the repo root), not from import.meta.
@@ -22,20 +26,6 @@ const REPO_ROOT = process.cwd()
 
 function read(path) {
   return readFileSync(resolve(REPO_ROOT, path), 'utf8')
-}
-
-/** Every `name: '...'` inside the first TOOL_SPECS array literal. */
-function specNames(source) {
-  const start = source.indexOf('TOOL_SPECS')
-  assert.ok(start !== -1, 'TOOL_SPECS not found')
-  const body = source.slice(start)
-  return new Set(
-    [...body.matchAll(/^\s*(?:\{\s*)?name: '([a-z_]+)'/gm)]
-      .map((m) => m[1])
-      // `__text` is the harness's own trace marker for model prose, not a
-      // tool the model can call — it has no app counterpart by design.
-      .filter((name) => !name.startsWith('__')),
-  )
 }
 
 /** The string members of a `new Set([...])` assigned to `name`. */
@@ -46,40 +36,51 @@ function setMembers(source, name) {
   return new Set([...body.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]))
 }
 
-// Specs and rosters moved to specs.ts (pure data); dispatch stays in
+// Specs and rosters live in specs.ts (pure data); dispatch stays in
 // registry.ts. The parity checks read each from where it lives.
 const specs = read('src/lib/agent/tools/specs.ts')
 const registry = read('src/lib/agent/tools/registry.ts')
 const harness = read('scripts/agent-harness/run.mjs')
 const cases = read('scripts/agent-harness/cases.mjs')
 
-test('harness mirrors the app tool surface', () => {
-  const app = specNames(specs)
-  const mirror = specNames(harness)
-  const missing = [...app].filter((name) => !mirror.has(name))
-  const extra = [...mirror].filter((name) => !app.has(name))
-  assert.deepEqual(
-    { missing, extra },
-    { missing: [], extra: [] },
-    'scripts/agent-harness/run.mjs TOOL_SPECS drifted from specs.ts',
+test('harness imports the app tool specs instead of forking them', () => {
+  // The wiring: rolldown bundles specs.ts and the harness destructures the
+  // three exports from the bundle.
+  assert.ok(
+    harness.includes('src/lib/agent/tools/specs.ts'),
+    'run.mjs no longer bundles src/lib/agent/tools/specs.ts',
+  )
+  assert.match(
+    harness,
+    /\{\s*TOOL_SPECS,\s*WRITE_TOOL_NAMES,\s*MOBILE_READ_TOOL_NAMES\s*\}/,
+    'run.mjs no longer imports TOOL_SPECS/WRITE_TOOL_NAMES/MOBILE_READ_TOOL_NAMES from the specs bundle',
+  )
+  // And no fork crept back: a local spec array would re-declare tool
+  // objects (`name: '...'` entries) and a local write set would shadow the
+  // imported roster.
+  assert.ok(
+    !/TOOL_SPECS\s*=\s*\[/.test(harness),
+    'run.mjs declares a local TOOL_SPECS array — the fork is back',
+  )
+  assert.ok(
+    !harness.includes('WRITE_TOOLS = new Set'),
+    'run.mjs declares a local WRITE_TOOLS set — the fork is back',
+  )
+  assert.ok(
+    !/^\s*\{\s*name: '[a-z_]+', description:/m.test(harness),
+    'run.mjs contains inline tool-spec declarations — the fork is back',
   )
 })
 
-test('all three write-tool sets agree', () => {
+test('cases.mjs WRITES agrees with the app write roster', () => {
   const app = setMembers(specs, 'WRITE_TOOL_NAMES')
-  const mirror = setMembers(harness, 'WRITE_TOOLS')
   const rubric = setMembers(cases, 'WRITES')
-  assert.deepEqual(
-    [...mirror].sort(),
-    [...app].sort(),
-    "run.mjs WRITE_TOOLS drifted from specs.ts WRITE_TOOL_NAMES",
-  )
-  // cases.mjs may legitimately track MORE than the write set is not true —
-  // it must match, or "zero writes" checks silently stop covering a tool.
+  // It must MATCH — more or less both break: a missing name makes
+  // "zero writes" checks pass vacuously; an extra one fails them falsely.
   assert.deepEqual(
     [...rubric].sort(),
     [...app].sort(),
-    'cases.mjs WRITES drifted — a missing name makes no-write checks pass vacuously',
+    'cases.mjs WRITES drifted from specs.ts WRITE_TOOL_NAMES',
   )
 })
 
