@@ -337,7 +337,14 @@ export function ResizableComparePanel({
               }
             : undefined
         }
-        onPointerDown={(e) => e.stopPropagation()}
+        // Mouse interactions inside the panel never reach the canvas — but
+        // TOUCH must: the viewport's pan/pinch tracker needs to see every
+        // finger, and its panIgnoreSelector already lists
+        // [data-compare-panel], so a passing touch can only ever become a
+        // slop-gated pending pan or a pinch, never an instant drag.
+        onPointerDown={(e) => {
+          if (e.pointerType !== 'touch') e.stopPropagation()
+        }}
       >
       {chromeBar}
       <div

@@ -57,12 +57,38 @@ type UseZoomPanViewportOptions = {
   suppressResizeRefit?: boolean
 }
 
+/**
+ * Below this zoom the board switches to its SEMANTIC tier: cells stop
+ * pretending their text is readable (it is smudge at these scales) and
+ * render as flat blocks, while phase title badges counter-scale to hold a
+ * constant on-screen size — the overview becomes a table of contents
+ * instead of a shrunken page. Stamped as a data attribute + CSS variable
+ * straight from the transform writer: a pinch is sixty events a second,
+ * and the tier must never cost a React render. Styling lives in
+ * blueprint.css under [data-semantic-tier].
+ */
+const SEMANTIC_ZOOM_THRESHOLD = 0.35
+/** Counter-scale that keeps a phase badge at roughly constant screen size
+ * (12px type reads ~11px). Capped so a deep zoom-out cannot grow a badge
+ * past its artboard. */
+const semanticLabelBoost = (zoom: number) =>
+  Math.min(16, 0.95 / Math.max(zoom, 0.01))
+
 function applyTransformToElement(
   el: HTMLElement,
   pan: { x: number; y: number },
   zoom: number,
 ) {
   el.style.transform = `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`
+  const blocks = zoom < SEMANTIC_ZOOM_THRESHOLD
+  if (blocks !== (el.dataset.semanticTier === 'blocks')) {
+    if (blocks) el.dataset.semanticTier = 'blocks'
+    else delete el.dataset.semanticTier
+  }
+  el.style.setProperty(
+    '--semantic-label-boost',
+    blocks ? semanticLabelBoost(zoom).toFixed(3) : '1',
+  )
 }
 
 function measureFitBounds(
@@ -608,6 +634,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    */
   const touchPoints = useRef(new Map<number, { x: number; y: number }>())
   const pinchStart = useRef<{ dist: number; x: number; y: number } | null>(null)
+  /**
+   * A finger down on a CELL is ambiguous: a tap (open it) or the start of a
+   * board drag — phones expect both from anywhere. Neither is committed at
+   * pointerdown; the finger goes into "pending" and only crossing the slop
+   * distance turns it into a pan (and swallows the trailing click so the
+   * drag does not also open the cell). A finger that lifts inside the slop
+   * was a tap and is left entirely alone. Mouse keeps the strict rule —
+   * cursor affordances make drag-from-background natural there.
+   */
+  const pendingTouchPan = useRef<{ id: number; x: number; y: number } | null>(
+    null,
+  )
+  const suppressNextClick = useRef(false)
+  const TOUCH_PAN_SLOP = 10
 
   const beginPan = useCallback(
     (clientX: number, clientY: number) => {
@@ -627,11 +667,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const handlePointerDown = useCallback(
     (e: PointerEvent) => {
       if (e.pointerType === 'touch') {
+        // A primary touch means the browser sees NO other active touches —
+        // anything still in the map is a ghost (a stream that died without
+        // its up/cancel). Ghosts otherwise pin the gesture in pinch mode
+        // forever, so a fresh primary contact resets the world.
+        if (e.isPrimary) {
+          touchPoints.current.clear()
+          pinchStart.current = null
+        }
         touchPoints.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
         if (touchPoints.current.size === 2) {
           // Second finger: whatever was happening becomes a pinch — even if
           // either finger sits on a cell. Capture both so the stream cannot
           // be stolen mid-gesture.
+          pendingTouchPan.current = null
           setIsPanning(false)
           const [a, b] = [...touchPoints.current.values()]
           pinchStart.current = {
@@ -653,11 +702,21 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
       if (!panEnabled) return
       if (e.button !== 0) return
+      suppressNextClick.current = false
       const target = e.target as HTMLElement
-      // A single finger (or the mouse) on an interactive child is a tap on
-      // it, not a pan — same rule either way. No capture on a plain touch
-      // down, so the tap's click survives untouched.
-      if (panIgnoreSelector && target.closest(panIgnoreSelector)) return
+      // The mouse on an interactive child is a tap on it, never a pan. A
+      // single FINGER there goes pending instead — pan if it travels past
+      // the slop, tap if it lifts inside it.
+      if (panIgnoreSelector && target.closest(panIgnoreSelector)) {
+        if (e.pointerType === 'touch') {
+          pendingTouchPan.current = {
+            id: e.pointerId,
+            x: e.clientX,
+            y: e.clientY,
+          }
+        }
+        return
+      }
 
       try {
         containerRef.current?.setPointerCapture(e.pointerId)
@@ -691,6 +750,34 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           syncZoomToReact()
           return
         }
+        const pending = pendingTouchPan.current
+        if (pending && pending.id === e.pointerId) {
+          if (
+            Math.hypot(e.clientX - pending.x, e.clientY - pending.y) <
+            TOUCH_PAN_SLOP
+          )
+            return
+          // Slop crossed: this was a drag all along. Pan from the DOWN
+          // point (no jump), and swallow the click the browser will still
+          // synthesize at lift — a pan must not also open the cell.
+          pendingTouchPan.current = null
+          suppressNextClick.current = true
+          try {
+            containerRef.current?.setPointerCapture(e.pointerId)
+          } catch {
+            // Capture is an assist, not a precondition.
+          }
+          beginPan(pending.x, pending.y)
+          commitTransform(
+            {
+              x: transformRef.current.pan.x + (e.clientX - pending.x),
+              y: transformRef.current.pan.y + (e.clientY - pending.y),
+            },
+            transformRef.current.zoom,
+            false,
+          )
+          return
+        }
       }
       if (!isPanning) return
       commitTransform(
@@ -702,7 +789,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         false,
       )
     },
-    [commitTransform, isPanning, syncZoomToReact, zoomAtPoint],
+    [beginPan, commitTransform, isPanning, syncZoomToReact, zoomAtPoint],
+  )
+
+  /** Capture-phase click filter: a click synthesized at the end of an
+   * engaged touch pan must not reach the cell under the finger. Runs on the
+   * container in capture order, so it fires before any cell's own handler. */
+  const handleClickCapture = useCallback(
+    (e: { preventDefault: () => void; stopPropagation: () => void }) => {
+      if (!suppressNextClick.current) return
+      suppressNextClick.current = false
+      e.preventDefault()
+      e.stopPropagation()
+    },
+    [],
   )
 
   const handlePointerUp = useCallback(
@@ -710,6 +810,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       let continuesAsPan = false
       if (e.pointerType === 'touch') {
         touchPoints.current.delete(e.pointerId)
+        if (pendingTouchPan.current?.id === e.pointerId)
+          pendingTouchPan.current = null
         if (touchPoints.current.size < 2) pinchStart.current = null
         if (touchPoints.current.size === 1 && panEnabled) {
           // Pinch released down to one finger: hand the gesture back to a
@@ -881,6 +983,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       // Touch streams can be cancelled by the OS (edge gestures, alerts) —
       // without this a cancelled pinch strands ghost pointers in the map.
       onPointerCancel: handlePointerUp,
+      onClickCapture: handleClickCapture,
     },
   }
 }

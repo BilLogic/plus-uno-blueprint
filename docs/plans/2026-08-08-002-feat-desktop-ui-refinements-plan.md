@@ -1,13 +1,13 @@
 ---
 title: Desktop UI refinements — five proposals with before/after drafts
 type: feat
-status: draft
+status: partially-shipped
 date: 2026-08-08
 ---
 
 # Desktop UI Refinements — before vs. after
 
-> Status **draft**: these are proposals for review, not committed scope. The user is not yet convinced — each item below shows the exact before/after so the change can be judged concretely. Nothing here is prerequisite for the mobile plan (2026-08-08-001).
+> Reviewed 2026-08-08: **#1 (semantic zoom) and #4 (phase typographic register) approved and SHIPPED** same day. **#2 (flight breadcrumb) rejected — overkill. #3 (drawer tether) rejected.** #5 remains filed in todos/019. The before/after drafts below are kept for the record.
 
 ## 1. Semantic zoom — the overview becomes a table of contents
 

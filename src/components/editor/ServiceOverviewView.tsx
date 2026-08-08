@@ -138,6 +138,7 @@ function ServicePhaseSection({
   return (
     <CanvasPhaseSection
       title={label}
+      ordinal={phase.index}
       description={description}
       phaseId={phase.id}
       variant="overview"

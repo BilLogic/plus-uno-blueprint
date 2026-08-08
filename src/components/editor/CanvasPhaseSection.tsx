@@ -31,6 +31,10 @@ export {
 
 type CanvasPhaseSectionProps = {
   title: string
+  /** 1-based lifecycle position. Phases ARE an ordered sequence in time, so
+   * the ordinal is information — it prefixes the badge (`01 · Application`)
+   * in the same time-marker register the mobile reader uses. */
+  ordinal?: number
   description?: string | null
   phaseId: string
   children: ReactNode
@@ -99,6 +103,7 @@ function isBlueprintPanelTarget(target: EventTarget | null): boolean {
 /** Figma-style canvas section grouping a lifecycle phase and its scenarios. */
 export function CanvasPhaseSection({
   title,
+  ordinal,
   description,
   phaseId,
   children,
@@ -197,10 +202,17 @@ export function CanvasPhaseSection({
         }}
       />
       <ScenarioTitleBadge
-        name={title}
+        name={
+          ordinal !== undefined
+            ? `${String(ordinal).padStart(2, '0')} · ${title}`
+            : title
+        }
         description={description}
         tone={interactive ? 'phase' : 'default'}
-        className="pointer-events-auto absolute z-10 max-w-[min(100%,28rem)] border-transparent"
+        // The time-marker register: mono, uppercase, letterspaced — the same
+        // idiom the mobile reader's step eyebrows use, so both surfaces name
+        // time the same way. The aria-label above keeps the plain title.
+        className="pointer-events-auto absolute z-10 max-w-[min(100%,28rem)] border-transparent font-mono text-2xs uppercase tracking-wider"
         style={{
           top: -sectionTopInset,
           left: sectionInset,

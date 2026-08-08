@@ -129,8 +129,13 @@ function ReaderCellSheet({
         if (!next) onClose()
       }}
       swipeDirection="down"
+      // Peek ↔ full: opens at the reading height, drags up for the whole
+      // cell, drags down past the peek to close. The handle is the cue.
+      snapPoints={[0.45, 1]}
+      defaultSnapPoint={0.45}
+      showSwipeHandle
     >
-      <DrawerContent className="!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[75svh] rounded-t-2xl rounded-b-none border-t border-border/80 bg-popover">
+      <DrawerContent className="rounded-t-2xl rounded-b-none border-t border-border/80 bg-popover">
         {open ? (
           <div className="flex min-h-0 flex-col overflow-y-auto px-4 pb-8">
             <DrawerHeader className="px-0 pb-2">

@@ -484,4 +484,27 @@
       box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 55%, transparent);
     }
   }
+
+  /*
+   * SEMANTIC ZOOM — the blocks tier. Below the threshold (stamped as
+   * data-semantic-tier by the camera's transform writer, never by React)
+   * cell text is smudge, so cells render as flat blocks and the phase
+   * title badges counter-scale to hold a constant on-screen size: the
+   * overview reads as a table of contents — journey length, density per
+   * phase — instead of a shrunken page. The `scale` property composes
+   * with the badge's inline translate, so no transform fight.
+   */
+  [data-semantic-tier='blocks'] [data-blueprint-cell] > * {
+    visibility: hidden;
+  }
+
+  [data-semantic-tier='blocks'] [data-blueprint-cell] {
+    background-color: var(--border);
+    border-color: transparent;
+  }
+
+  [data-semantic-tier='blocks'] [data-phase-title-badge] {
+    scale: var(--semantic-label-boost, 1);
+    transform-origin: left bottom;
+  }
 }

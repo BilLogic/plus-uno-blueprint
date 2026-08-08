@@ -21,9 +21,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellDeepLink } from '@/hooks/useCellDeepLink'
+import { useSlices } from '@/hooks/useSlices'
 import {
   registerAgentUiBridge,
   registerAgentUiContext,
@@ -59,6 +61,18 @@ export function MobileShell() {
   const [surface, setSurface] = useState<MobileSurface>('reader')
   const [navOpen, setNavOpen] = useState(false)
   const [agentOpen, setAgentOpen] = useState(false)
+  // A slice presents full-bleed over the shell — SlicePresentation is
+  // already linear (frame by frame), which is exactly a phone's shape.
+  const [presentingSliceId, setPresentingSliceId] = useState<string | null>(
+    null,
+  )
+  const slicesQuery = useSlices()
+  const slices =
+    slicesQuery.status === 'ready'
+      ? slicesQuery.data
+      : slicesQuery.status === 'error'
+        ? (slicesQuery.fallback ?? [])
+        : []
 
   const phases = useMemo(
     () => slides.filter((slide) => !slide.parentId),
@@ -228,6 +242,27 @@ export function MobileShell() {
             <SheetTitle className="text-sm">Blueprint</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-4 px-2 py-3">
+            {slices.length > 0 ? (
+              <div className="flex flex-col">
+                <p className="px-2 py-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                  Slices
+                </p>
+                {slices.map((slice) => (
+                  <button
+                    key={slice.id}
+                    type="button"
+                    onClick={() => {
+                      setPresentingSliceId(slice.id)
+                      setNavOpen(false)
+                    }}
+                    className="flex items-center justify-between rounded-md py-1.5 pr-2 pl-6 text-left text-sm text-foreground/80"
+                  >
+                    <span className="min-w-0 truncate">{slice.title}</span>
+                    <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
             {phases.map((phase) => (
               <div key={phase.id} className="flex flex-col">
                 <button
@@ -269,6 +304,18 @@ export function MobileShell() {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Presenting a slice: full-bleed over everything, Return closes.
+          The presentation surface is frame-linear already — phone-shaped. */}
+      {presentingSliceId ? (
+        <div className="fixed inset-0 z-40 bg-background">
+          <SlicePresentation
+            key={presentingSliceId}
+            sliceId={presentingSliceId}
+            onReturn={() => setPresentingSliceId(null)}
+          />
+        </div>
+      ) : null}
 
       {/* The agent, full-height bottom sheet. AgentPanel state lives in the
           module store (panelState), so open/close never drops a session. */}

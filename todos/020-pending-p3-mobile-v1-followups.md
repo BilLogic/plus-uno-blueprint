@@ -1,5 +1,13 @@
 # 020 · P3 · Mobile v1 follow-ups (deliberate scope cuts)
 
+> Update 2026-08-08 (same day, second pass): items 1, 2, 3 SHIPPED — snap
+> points on the reader cell sheet (base-ui `defaultSnapPoint` was the missing
+> piece), drag-threshold pan from cells (plus a ghost-pointer reset on primary
+> touch and a touch pass-through on ResizableComparePanel), and slices
+> presenting full-bleed from the nav sheet. Item 5 half-done: the semantic-zoom
+> block tier shipped on desktop; the fold still cross-fades. Remaining: 4
+> (width tokens), 6 (real-device smoke), 7 (tablet band).
+
 The mobile shell shipped v1 (plan `docs/plans/2026-08-08-001`). These were cut
 deliberately and are queued, not forgotten:
 
