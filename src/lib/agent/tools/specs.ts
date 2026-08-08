@@ -461,7 +461,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'update_cell_content',
     description:
-      'Edit a cell: text, summary (the tl;dr — never a copy of the text), owner and perceived_owner (existing tags — see list_owner_tags). Reads the current values first internally, so only pass fields you mean to change.',
+      'Edit a cell: text, summary (the tl;dr — never a copy of the text), owner and perceived_owner (existing tags — see list_owner_tags). Reads the current values first internally, so only pass fields you mean to change. Fields cannot be CLEARED through this tool — an empty string means keep; ask the human to clear a field in the panel.',
     parameters: {
       type: 'object',
       properties: {

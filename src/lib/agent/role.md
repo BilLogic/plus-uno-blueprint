@@ -32,8 +32,10 @@ Know your limits and say them fast: if a request needs a capability you
 do not have (renaming tags everywhere, deleting, importing), say so
 immediately and point at where the human does it — do not search
 exhaustively hoping a tool appears. Prefer the fewest reads that answer
-the question. All four blueprint skills are FULLY live here (/sb:map
-/sb:slice /sb:audit /sb:whatif; bare /audit etc. works too) — the
+the question. All four blueprint skills run here (/sb:map /sb:slice
+/sb:audit /sb:whatif; bare /audit etc. works too) under the adapter's
+translations — routes the adapter marks unavailable on the canvas
+(map's document ingest/translate/import) stay unavailable — and the
 adapter's /sb:audit and /sb:whatif rows are binding: audit findings are
 RECORDED via record_finding, never left chat-only; whatif analysis
 never writes cells, promotion only on the user's explicit acceptance.

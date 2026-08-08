@@ -1,0 +1,140 @@
+#!/usr/bin/env node
+/**
+ * Generates docs/INDEX.md — the one map both humans and agents read first.
+ *
+ * Doc rows come from each reference doc's frontmatter (`audience`,
+ * `summary`), never hand-typed here: hand-maintained duplication is how
+ * the rev-1 plan drifted its own numbering before a single doc existed.
+ * The task-routing table below IS hand-authored — routing is editorial
+ * judgment — but it lives in exactly one place (this script) and ships
+ * into the generated file.
+ *
+ * Run: node scripts/generate-docs-index.mjs   (also: npm run docs:index)
+ * CI-check: node scripts/generate-docs-index.mjs --check
+ */
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join, relative } from 'node:path'
+
+const ROOT = new URL('..', import.meta.url).pathname
+const DOCS = join(ROOT, 'docs')
+const REFERENCE_DIRS = ['product', 'design', 'engineering', 'decisions']
+
+/** Task-shaped routing — a row per task someone arrives holding, phrased
+ * the way they'd ask it. Update alongside any doc move. */
+const ROUTING = [
+  ['What is this product / can I edit things / how do I get access?', 'product/01-overview.md'],
+  ['Find a scenario, read it on desktop or phone, share it, present to leadership', 'product/02-team-guide.md'],
+  ['What is a lane / line of visibility / slice / finding?', 'product/03-reading-a-blueprint.md'],
+  ['Someone mentioned an audit finding — what is it, can I trust it, how do I challenge it?', 'product/04-the-assistant-and-audits.md'],
+  ['Run a mapping / audit / what-if / slicing session; where is the methodology specified?', 'product/05-service-design-practice.md'],
+  ['Ground product or UX decisions on blueprint evidence', 'product/06-product-design-on-blueprints.md'],
+  ['Why does the app look and feel this way?', 'design/README.md'],
+  ['Match an existing surface’s visual style', 'design/README.md (surface anatomy) → design/components.md'],
+  ['Which color / type / motion / icon / elevation / layout token do I use — and how do I add one?', 'design/foundations/'],
+  ['Chart, band, severity or zoom-tier encodings', 'design/foundations/data-viz.md'],
+  ['Which component or primitive do I reach for; empty/error-state anatomy', 'design/components.md'],
+  ['What does a click / ⌘-click / tap / pinch DO, and why?', 'design/interaction.md'],
+  ['What happens on a phone or tablet (as a spec)?', 'design/responsive.md'],
+  ['Write UI copy, error text, or agent-voice wording', 'design/content-voice.md'],
+  ['Accessibility bar: contrast, forced-colors, reduced motion, touch targets', 'design/accessibility.md'],
+  ['How does the app fit together / where does data flow?', 'engineering/architecture.md'],
+  ['Where does X live; which pattern do I copy?', 'engineering/codebase-guide.md'],
+  ['Add a field to cells end-to-end (schema → RPC → panel UI)', 'engineering/access-and-security.md → engineering/codebase-guide.md → design/components.md'],
+  ['Which user is my session / my agent; what writes are legitimate; how is access enforced?', 'AGENTS.md invariants → engineering/access-and-security.md'],
+  ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'design/interaction.md + engineering/architecture.md'],
+  ['How do the in-app agent and its rosters work?', 'engineering/agent-system.md'],
+  ['Add or change an agent tool; run the eval harness', 'engineering/agent-tools.md'],
+  ['Coding standards, the Supabase benchmark, tooling traps, how to run and write tests', 'engineering/standards.md'],
+  ['Set up local dev', 'README.md'],
+  ['Deploy, rollback, environments, monitoring, troubleshooting', 'engineering/operations.md'],
+  ['Why was X decided?', 'decisions/ (then the linked plan for full context)'],
+  ['Is this plan file still true?', 'its frontmatter `status` + `distilled-into`'],
+]
+
+function frontmatter(text) {
+  const match = /^---\n([\s\S]*?)\n---/.exec(text)
+  if (!match) return {}
+  const out = {}
+  for (const line of match[1].split('\n')) {
+    const idx = line.indexOf(':')
+    if (idx === -1) continue
+    out[line.slice(0, idx).trim()] = line.slice(idx + 1).trim()
+  }
+  return out
+}
+
+function docRows() {
+  const rows = []
+  for (const dir of REFERENCE_DIRS) {
+    const walk = (abs) => {
+      for (const entry of readdirSync(abs, { withFileTypes: true }).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      )) {
+        const full = join(abs, entry.name)
+        if (entry.isDirectory()) walk(full)
+        else if (entry.name.endsWith('.md')) {
+          const fm = frontmatter(readFileSync(full, 'utf8'))
+          rows.push({
+            path: relative(DOCS, full),
+            audience: fm.audience ?? '—',
+            summary: fm.summary ?? '(no summary frontmatter yet)',
+          })
+        }
+      }
+    }
+    try {
+      walk(join(DOCS, dir))
+    } catch {
+      // Folder not populated yet — fine during phased rollout.
+    }
+  }
+  return rows
+}
+
+const rows = docRows()
+const generated = `<!-- GENERATED by scripts/generate-docs-index.mjs — edit frontmatter or the script, never this file. -->
+
+# uno-blueprint documentation map
+
+Three layers, never mixed: **reference** (below — living, always true),
+**history** (\`plans/\`, \`ideation/\` — decision-era snapshots, content
+never edited; check a plan's frontmatter \`status\`/\`distilled-into\`
+before treating it as truth), and the **queue** (\`todos/\`).
+
+## Route by task
+
+| I need to… | Go to |
+|---|---|
+${ROUTING.map(([q, d]) => `| ${q} | ${d} |`).join('\n')}
+
+## Reading paths by role
+
+- **New team member (non-design/dev):** product/01 → 02 → 03, stop there.
+- **New designer:** product/01 → 03 → 06, then design/README → foundations/.
+- **New developer:** README (setup) → engineering/architecture → codebase-guide → access-and-security, with AGENTS.md always in force.
+- **Coding agent:** AGENTS.md (auto-loaded) → this file → the routing rows for your task; any write task reads engineering/access-and-security first.
+
+## Every reference doc
+
+| Doc | Audience | What it answers |
+|---|---|---|
+${rows.map((r) => `| ${r.path} | ${r.audience} | ${r.summary} |`).join('\n')}
+`
+
+const target = join(DOCS, 'INDEX.md')
+if (process.argv.includes('--check')) {
+  let current = ''
+  try {
+    current = readFileSync(target, 'utf8')
+  } catch {
+    /* missing counts as stale */
+  }
+  if (current !== generated) {
+    console.error('docs/INDEX.md is stale — run: node scripts/generate-docs-index.mjs')
+    process.exit(1)
+  }
+  console.log('docs/INDEX.md is current')
+} else {
+  writeFileSync(target, generated)
+  console.log(`wrote docs/INDEX.md (${rows.length} reference docs indexed)`)
+}

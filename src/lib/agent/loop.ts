@@ -295,6 +295,10 @@ export async function sendToAgent(input: {
   // no longer matches. UX gate only; the server-side RPC tier enforcement
   // is the real wall.
   let mobileReading = isMobileViewport()
+  // The stable system prefix (role + adapter + skill — everything before
+  // the live context) is byte-identical across this send's rounds; its
+  // length lets caching providers put a cache breakpoint there.
+  const systemStableLength = buildSystem('', skill).length
 
   try {
     for (let round = 0; round < MAX_ROUNDS; round += 1) {
@@ -317,6 +321,7 @@ export async function sendToAgent(input: {
           (mobileReading
             ? '\n\n--- mobile shell ---\nThe user is on the MOBILE app, which is view-only for everyone — your tools are navigation and reading only (no writes, no annotations, no canvas mode switch). The mobile view is a vertical journey reader: scrolling down moves forward through the steps; a Map view shows the 2-D board. When the user wants an edit, explain it is made on desktop — never imply you made it.'
             : ''),
+        systemStableLength,
         messages: run.messages,
         // One pass: mobile's whitelist already contains zero write tools
         // (pinned by mobileRoster.test.ts), so it subsumes the tier filter.
@@ -346,6 +351,7 @@ export async function sendToAgent(input: {
       if (result.stopReason !== 'tool_use' || calls.length === 0) break
 
       const results: AgentMessage = { role: 'tool', parts: [] }
+      let batchPauseAnnounced = false
       // `ui_command` is normally interface-only, but a command may declare
       // itself a mutation (undo reverts through the delete RPCs). One
       // predicate so the viewer refusal and the batch limiter cannot
@@ -409,15 +415,22 @@ export async function sendToAgent(input: {
             result: `Batch limit: ${WRITE_BATCH_LIMIT} writes already landed this turn. Stop now, summarize what you did, and let the user say "continue" before the next batch.`,
             isError: true,
           })
-          push(sessionId, {
-            kind: 'status',
-            text: `Paused after ${WRITE_BATCH_LIMIT} writes — reply "continue" for the next batch.`,
-          })
+          // One status row per round, however many calls bounced — six
+          // identical "Paused" rows read as a stutter, not a pause.
+          if (!batchPauseAnnounced) {
+            batchPauseAnnounced = true
+            push(sessionId, {
+              kind: 'status',
+              text: `Paused after ${WRITE_BATCH_LIMIT} writes — reply "continue" for the next batch.`,
+            })
+          }
           continue
         }
-        if (isWrite(call)) writesThisSend += 1
         try {
           const output = await dispatchTool(client, sessionId, call.name, call.args)
+          // Counted AFTER success: a write that failed changed nothing and
+          // must not eat batch budget.
+          if (isWrite(call)) writesThisSend += 1
           results.parts.push({
             type: 'tool_result',
             toolCallId: call.id,
@@ -452,11 +465,45 @@ export async function sendToAgent(input: {
         }
       }
       run.messages.push(results)
-      if (round === MAX_ROUNDS - 1)
+      if (round === MAX_ROUNDS - 1) {
+        // Round budget exhausted with tool calls still flowing. The model
+        // does not know its turn was truncated — a silent stop leaves the
+        // user's next "continue" landing on a model that thinks it was
+        // mid-work. Tell it, and give it ONE no-tools round to close out
+        // with an answer built from what it already learned.
+        run.messages.push({
+          role: 'user',
+          parts: [
+            {
+              type: 'text',
+              text: '[system] Tool budget for this turn is exhausted. Do not request more tools — answer the user NOW from what you have learned, and say plainly what remains undone. A fresh user message renews the budget.',
+            },
+          ],
+        })
+        const closing = await adapter.chat({
+          system: buildSystem(
+            [contextNote, collectAgentUiContext()].filter(Boolean).join('\n'),
+            skill,
+          ),
+          systemStableLength,
+          messages: run.messages,
+          tools: [],
+          apiKey,
+          model: modelFor(settings),
+          signal: controller.signal,
+        })
+        if (closing.parts.length > 0) {
+          run.messages.push({ role: 'assistant', parts: closing.parts })
+          for (const part of closing.parts) {
+            if (part.type === 'text' && part.text.trim())
+              push(sessionId, { kind: 'assistant', text: part.text })
+          }
+        }
         push(sessionId, {
           kind: 'status',
           text: 'Stopped after the round limit — send a message to continue.',
         })
+      }
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {

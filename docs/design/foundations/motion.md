@@ -1,0 +1,72 @@
+---
+audience: designers
+summary: The five-token motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.
+sources: src/styles/animations.css, src/lib/motion.ts, scripts/tests/, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+last-reviewed: 2026-08-08
+---
+
+# Motion
+
+## The vocabulary
+
+Everything derives from the sidebar collapse — the one motion that was already
+right — so structural moves, crossfades, and camera eases read as one system
+rather than per-screen inventions. Five tokens, four durations + one easing:
+
+| Token | Used for |
+|---|---|
+| `--motion-micro` | Hover, badges, threshold fades, panel exits |
+| `--motion-fade` (+ `--motion-fade-stagger`) | Opacity crossfades, and the offset between an out/in pair |
+| `--motion-structural` | Width/size changes — sidebar collapse, presentation wipe |
+| `--motion-camera` | Camera flights (rAF, `easeInOutCubic`) |
+| `--ease-structural` | The quintic-out ease for structural moves (a Tailwind `@theme` key, so `ease-structural` is a utility) |
+
+Values live in two homes that must agree: `src/styles/animations.css` (CSS)
+and `src/lib/motion.ts` (JS that has to wait for them, plus
+`prefersReducedMotion()`). Illustratively: micro 150ms, fade 200ms + 75ms
+stagger, structural 320ms, camera 420ms — but the files own the numbers.
+Durations are consumed as `duration-(--motion-structural)` since Tailwind v4
+has no duration namespace.
+
+Asymmetry is part of the vocabulary: **arriving is an event, leaving is not**.
+Enters run on `--motion-fade`; exits on the shorter `--motion-micro` (see the
+cell-panel block in `animations.css` for the worked example, including why the
+exit swaps to `ease-in`).
+
+## The test that pins it
+
+`scripts/tests/motion-tokens` holds the two homes to the same numbers — change
+one without the other and the suite fails. This is what makes the vocabulary a
+*vocabulary*: a new duration or easing is a system change made in both files
+with the test updated, never a literal at a call site. Timing literals in
+components are review-blockers.
+
+## Reduced motion
+
+**Every animation has a reduced path, and an instant swap is an acceptable
+one.** The `prefers-reduced-motion` block in `animations.css` zeroes the
+transitions and strips travel (surfaces appear/disappear; they never move);
+camera flights jump; the mobile fold cross-fades instead of transforming.
+JS reads the preference **live** via `prefersReducedMotion()` — never cached
+at mount — because the OS setting can change mid-session. A new animation
+ships with its reduced path in the same PR or it does not ship.
+
+## When NOT to animate
+
+Motion carries information here; motion that carries none is noise. Pinned
+non-animations (rationale in the 2026-07-30 motion plan):
+
+- **Path toggles never move the camera.** Filtering is not navigation.
+- **Chrome-driven resizes** (tab strip mounting, header reflow) never refit;
+  real window resizes re-center un-eased, debounced.
+- **First fit after any mount jumps** — no swoop-from-nowhere.
+- **No snapping, ever**: no zoom quantization, no magnetic thresholds. Direct
+  manipulation (wheel, drag, pinch) follows the pointer instantly.
+- **Never transition `filter`** — it repaints every affected cell per frame
+  (the slice dim applies its desaturation un-transitioned on frame 1 under an
+  opacity ease; see the comment in `src/styles/blueprint.css`).
+- Exactly **one camera animation per user intent** — a boot, a phase click, a
+  flight; never a restarted or doubled ease.
+
+Loading follows the same restraint: one deferred skeleton per surface,
+all-or-nothing swap — see [components](../components.md#empty-loading-and-error-states).

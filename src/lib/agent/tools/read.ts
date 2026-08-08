@@ -343,7 +343,7 @@ export async function getDeletionImpact(
     lines.push('What survives:', ...summary.reassurances.map((line) => `  ${line}`))
   }
   lines.push(
-    'Relay these sentences as they are. You cannot perform this delete — only the human can, through the confirm dialog, by typing the name.',
+    'Relay these sentences as they are. You cannot perform this delete — only the human can, in the desktop app\'s confirm dialog, by typing the name.',
   )
   return lines.join('\n')
 }

@@ -58,6 +58,15 @@ export type ChatResult = {
 
 export type ChatInput = {
   system: string
+  /**
+   * Where the STABLE prefix of `system` ends (character index). Everything
+   * before it — role, canvas adapter, skill — is byte-identical across a
+   * session's rounds; everything after (live UI context, tier notes)
+   * changes per send. Providers that support prompt caching split here so
+   * the static prefix is paid for once, not up to 12× per send. Optional:
+   * absent means "treat the whole system as volatile".
+   */
+  systemStableLength?: number
   messages: AgentMessage[]
   tools: ToolSpec[]
   apiKey: string

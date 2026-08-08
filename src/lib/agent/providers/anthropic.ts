@@ -67,14 +67,41 @@ export const anthropicAdapter: AgentProviderAdapter = {
       body: JSON.stringify({
         model: input.model,
         max_tokens: 4096,
-        system: input.system,
+        // Prompt caching: the stable system prefix (role + adapter + skill,
+        // ~6-8k tokens) is identical across a session's rounds and would
+        // otherwise be re-paid up to MAX_ROUNDS× per send. Split it into
+        // its own block with a cache breakpoint; the volatile tail (live
+        // UI context) rides uncached behind it.
+        system:
+          input.systemStableLength && input.systemStableLength > 0
+            ? [
+                {
+                  type: 'text',
+                  text: input.system.slice(0, input.systemStableLength),
+                  cache_control: { type: 'ephemeral' },
+                },
+                ...(input.system.length > input.systemStableLength
+                  ? [
+                      {
+                        type: 'text',
+                        text: input.system.slice(input.systemStableLength),
+                      },
+                    ]
+                  : []),
+              ]
+            : input.system,
         messages: toMessages(input.messages),
         ...(input.tools.length > 0
           ? {
-              tools: input.tools.map((tool) => ({
+              // Tools precede system in the cache order — a breakpoint on
+              // the last tool caches the whole tool array too.
+              tools: input.tools.map((tool, index) => ({
                 name: tool.name,
                 description: tool.description,
                 input_schema: tool.parameters,
+                ...(index === input.tools.length - 1
+                  ? { cache_control: { type: 'ephemeral' } }
+                  : {}),
               })),
             }
           : {}),

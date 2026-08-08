@@ -1,8 +1,21 @@
 # PLUS Uno Blueprint
 
-React + Vite app using [shadcn/ui](https://ui.shadcn.com/) and [Supabase](https://supabase.com/).
+A living service-blueprint editor for the PLUS tutoring program: the
+whole service journey — every phase, scenario, and touchpoint, above and
+below the line of visibility — mapped as an explorable canvas, readable
+by anyone, editable by the service team, and worked on by AI agents
+under the same rules as humans.
 
-Blueprint editor for service scenarios: lifecycle → phase → scenario → path grid (layers × steps → cells).
+Built with React + Vite, [shadcn/ui](https://ui.shadcn.com/) (base-ui
+flavor), and [Supabase](https://supabase.com/). Desktop is the full
+editor; phones get a view-only journey reader with a touch map.
+
+**Start here → [`docs/INDEX.md`](docs/INDEX.md)** — the documentation
+map, routed by task. Quick picks:
+
+- *"What is this?"* → [`docs/product/01-overview.md`](docs/product/01-overview.md)
+- *Working on the code* → [`AGENTS.md`](AGENTS.md) + [`docs/engineering/`](docs/engineering/)
+- *Design work* → [`docs/design/README.md`](docs/design/README.md)
 
 ## Setup
 
@@ -27,56 +40,29 @@ VITE_SUPABASE_ANON_KEY=<anon-key-from-cli>
 
 ### Hosted Supabase
 
-Create a project at [supabase.com](https://supabase.com), run migrations (`supabase link` then `supabase db push`), and set `.env` from **Settings → API**.
-
-## Development
-
-```bash
-npm run dev
-```
+Create a project at [supabase.com](https://supabase.com), run migrations
+(`supabase link` then `supabase db push`), and set `.env` from
+**Settings → API**.
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
 | `npm run dev` | Vite dev server |
-| `npm run build` | Production build |
-| `npm run supabase:start` | Start local Supabase |
-| `npm run supabase:stop` | Stop local Supabase |
-| `npm run supabase:reset` | Reset DB and run migrations |
+| `npm test` | vitest (`src/**/*.test.ts` + `scripts/tests/**/*.test.mjs`) |
+| `npm run lint` | eslint — the baseline is zero problems |
+| `npm run build` | Production build (also the real type-check) |
+| `npm run supabase:start` / `:stop` / `:reset` | Local Supabase lifecycle |
+| `npm run supabase:types` / `:types:local` | Regenerate `src/types/database.ts` |
+| `node scripts/generate-docs-index.mjs` | Regenerate `docs/INDEX.md` after doc moves |
 
-## Database
+## Where things are documented
 
-Service Blueprint schema: `service_lifecycles` → `phases` → `service_scenarios` → `paths`, with per-path grids (`layers`, `steps` via `path_steps`, `cells`, `cell_triggers`).
-
-| Resource | Purpose |
-| --- | --- |
-| [supabase/DATABASE.md](./supabase/DATABASE.md) | **Start here** — tables, cells, view modes, queries |
-| [docs/erd.mmd](./docs/erd.mmd) | Mermaid ERD diagram |
-| [docs/scenario-steps-design.md](./docs/scenario-steps-design.md) | Shared steps + `path_steps` ordering |
-| [supabase/schema.reference.sql](./supabase/schema.reference.sql) | Full DDL snapshot |
-| [supabase/migrations/](./supabase/migrations/) | Versioned schema |
-| [supabase/seed.sql](./supabase/seed.sql) | Sample seed data |
-| [src/types/database.ts](./src/types/database.ts) | TypeScript types |
-
-Regenerate types after schema changes: `npm run supabase:types` (hosted) or `npm run supabase:types:local` (Docker).
-
-## UI
-
-Built with **shadcn/ui** (Tailwind v4). Add components:
-
-```bash
-npx shadcn@latest add <component>
-```
-
-Theme tokens live in `src/index.css`.
-
-## Project layout
-
-- `src/components/blueprint/` — blueprint grid, paths, triggers
-- `src/components/editor/` — canvas/slide editor shell
-- `src/components/ui/` — shadcn components
-- `src/hooks/` — Supabase data hooks (`useScenarioBlueprint`, `useLifecyclePhases`)
-- `src/lib/` — queries, normalization, layout helpers
-- `src/data/blueprintFallbacks.ts` — offline demo blueprints
-- `supabase/migrations/` — Postgres schema and RLS policies
+Everything deeper lives under `docs/`, mapped by
+[`docs/INDEX.md`](docs/INDEX.md): the data model and access enforcement
+in `engineering/access-and-security.md`, app architecture in
+`engineering/architecture.md`, the design system in `design/`, product
+and practice guides in `product/`, decision records in `decisions/`.
+`docs/plans/` and `docs/ideation/` are history — snapshots, not current
+truth. Deploys ship from `main` via Netlify; environments and rollback
+in `engineering/operations.md`.
