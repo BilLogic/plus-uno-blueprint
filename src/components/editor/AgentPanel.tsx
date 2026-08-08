@@ -304,7 +304,7 @@ function SessionRow({
         className="size-3 shrink-0 text-sidebar-foreground/50"
         aria-hidden
       />
-      <span className="min-w-0 flex-1 truncate text-smd text-sidebar-foreground/85 group-hover/session:text-sidebar-accent-foreground">
+      <span className="min-w-0 flex-1 truncate text-[13px] text-sidebar-foreground/85 group-hover/session:text-sidebar-accent-foreground">
         {session.title}
       </span>
       {changeCount > 0 ? (
