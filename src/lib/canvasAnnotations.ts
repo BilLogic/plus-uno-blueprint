@@ -120,6 +120,14 @@ export const ANNOTATION_STROKE_SWATCHES = [
   ...swatches(1100),
 ] as const
 
+/**
+ * The agent's ink. Its boxes should read as "the agent drew this" — a
+ * deliberate, attention-red that no human swatch offers — but it must still
+ * be a token, so dark mode follows and `annotationSwatchName` returns "Red"
+ * to a screen reader instead of "Custom".
+ */
+export const ANNOTATION_AGENT_INK = 'var(--color-red-900)'
+
 /** Pen ink — step 900, the vivid step. */
 export const ANNOTATION_PEN_SWATCHES = [
   ANNOTATION_INK,

@@ -12,6 +12,7 @@ import {
   ANNOTATION_DEFAULT_PEN_STROKE,
   ANNOTATION_DEFAULT_STROKE,
   ANNOTATION_INK,
+  ANNOTATION_AGENT_INK,
 } from '@/lib/canvasAnnotations'
 import { CanvasAnnotationContext } from '@/contexts/canvasAnnotationContext'
 import { registerAgentAnnotator } from '@/lib/agent/uiBridge'
@@ -96,7 +97,7 @@ export function CanvasAnnotationProvider({
               width: rect.width / scale + 8,
               height: rect.height / scale + 8,
               strokeWidth: ANNOTATION_DEFAULT_STROKE,
-              color: '#dc2626',
+              color: ANNOTATION_AGENT_INK,
               fillColor: null,
               text: '',
             },
@@ -117,7 +118,7 @@ export function CanvasAnnotationProvider({
               y: at.y - ANNOTATION_DEFAULT_FONT_SIZE - 10,
               text: note,
               fontSize: ANNOTATION_DEFAULT_FONT_SIZE,
-              color: '#dc2626',
+              color: ANNOTATION_AGENT_INK,
             },
           ])
         }

@@ -91,7 +91,7 @@
      is still near-opaque, so the pair still reads as one event. */
   [data-blueprint-cell-anchor] {
     transition-property: box-shadow, transform, opacity, background-color;
-    transition-duration: 180ms;
+    transition-duration: var(--motion-micro);
   }
 
   /* Slice focus — member rings persist whether or not the dim is up. Ring
@@ -134,7 +134,7 @@
      crossing it now costs one 150 ms opacity animation, not a relayout. */
   [data-slice-sequence-badge],
   [data-slice-pick-badge] {
-    transition: opacity 150ms ease-out;
+    transition: opacity var(--motion-micro) ease-out;
   }
 
   [data-canvas-zoom-far] [data-slice-sequence-badge] {
