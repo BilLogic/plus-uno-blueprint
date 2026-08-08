@@ -65,7 +65,7 @@ export const WRITE_TOOL_NAMES = new Set([
 export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'read_reference',
-    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.join(', ')}. Read canvas-adapter before your first write of a session; layer-roles and lane-vocabulary before any lane/role work; elicitation-protocol before co-creating a scenario from notes.`,
+    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.join(', ')}. canvas-adapter is already embedded in full in your system prompt — never fetch it. Read layer-roles and lane-vocabulary before any lane/role work; elicitation-protocol before co-creating a scenario from notes.`,
     parameters: {
       type: 'object',
       properties: { name: str('Reference name, e.g. "layer-roles"') },
@@ -446,7 +446,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'upsert_cell',
     description:
-      'Create the cell at (path, lane, step). content is REQUIRED and must be real journey text — an empty or placeholder cell is invisible in the grid.',
+      'Create the cell at (path, lane, step). Creation ONLY — the call refuses if a cell already exists there (edit with update_cell_content instead). content is REQUIRED and must be real journey text — an empty or placeholder cell is invisible in the grid.',
     parameters: {
       type: 'object',
       properties: {

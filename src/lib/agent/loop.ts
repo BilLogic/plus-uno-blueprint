@@ -63,7 +63,7 @@ export function buildSystem(
 ): string {
   return [
     ROLE,
-    '\n\n--- canvas-adapter reference (read_reference has more) ---\n',
+    '\n\n--- canvas-adapter reference (FULL text — read_reference serves the other, deeper references) ---\n',
     canvasAdapterDoc,
     skill?.content
       ? `\n\n--- active skill: ${skill.label} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${skill.content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`
@@ -308,7 +308,10 @@ export async function sendToAgent(input: {
       const result = await adapter.chat({
         system:
           buildSystem(liveContext, skill) +
-          (allowWrites
+          // The mobile paragraph subsumes the tier one — and they disagree
+          // about annotations (viewer tier has annotate_cells; the mobile
+          // roster does not), so only one may speak per send.
+          (allowWrites || mobileReading
             ? ''
             : '\n\n--- session tier ---\nThis session is VIEW-ONLY (not a service account): you have no write tools. Navigate, read, annotate, and answer with citations; when the user wants an edit, describe the exact change for a service account to make — never imply you made it.') +
           (mobileReading
@@ -327,6 +330,10 @@ export async function sendToAgent(input: {
         signal: controller.signal,
       })
 
+      // An all-filtered response (e.g. Gemini thought-only parts) must not
+      // become an empty assistant turn — replaying one 400s on every
+      // provider. Nothing usable came back; end the turn instead.
+      if (result.parts.length === 0) break
       run.messages.push({ role: 'assistant', parts: result.parts })
       for (const part of result.parts) {
         if (part.type === 'text' && part.text.trim())
@@ -348,7 +355,30 @@ export async function sendToAgent(input: {
         (call.name === 'ui_command' &&
           agentUiCommandMutates(String(call.args.command ?? '')))
       for (const call of calls) {
-        if (controller.signal.aborted) throw new DOMException('stopped', 'AbortError')
+        if (controller.signal.aborted) {
+          // Stopping mid-batch must not strand the assistant's tool_use
+          // parts without results: every provider rejects the NEXT send of
+          // a transcript containing an unanswered tool call, which would
+          // poison the session permanently. Answer everything not yet
+          // dispatched with a stopped marker, commit the results turn,
+          // THEN bail.
+          for (const pending of calls) {
+            const answered = results.parts.some(
+              (part) =>
+                part.type === 'tool_result' && part.toolCallId === pending.id,
+            )
+            if (answered) continue
+            results.parts.push({
+              type: 'tool_result',
+              toolCallId: pending.id,
+              name: pending.name,
+              result: 'Stopped by the user before this call ran.',
+              isError: true,
+            })
+          }
+          run.messages.push(results)
+          throw new DOMException('stopped', 'AbortError')
+        }
         if (mobileReading && !MOBILE_READ_TOOL_NAMES.has(call.name)) {
           results.parts.push({
             type: 'tool_result',

@@ -264,10 +264,29 @@ export async function dispatchTool(
         return 'Added lane to every path of the scenario. Re-read the blueprint for the new lane ids.'
       }
       case 'upsert_cell': {
+        const layerId = need(args, 'layer_id')
+        const stepId = need(args, 'step_id')
+        // Occupancy guard: the RPC upserts, so a second call on the same
+        // slot would silently OVERWRITE the cell — and the recorded revert
+        // for a "create" is a delete, so a human undoing the agent's edit
+        // would destroy a pre-existing cell. Creation tool means creation
+        // only; edits go through update_cell_content.
+        const { data: occupied, error: occupiedError } = await client
+          .from('cells')
+          .select('id')
+          .eq('layer_id', layerId)
+          .eq('step_id', stepId)
+          .or('slot_position.is.null,slot_position.eq.0')
+          .limit(1)
+        if (occupiedError) throw new Error(occupiedError.message)
+        if (occupied && occupied.length > 0)
+          throw new Error(
+            `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell_content to edit the existing cell.`,
+          )
         const id = await upsertCell(client, {
           pathId: need(args, 'path_id'),
-          layerId: need(args, 'layer_id'),
-          stepId: need(args, 'step_id'),
+          layerId,
+          stepId,
           content: need(args, 'content'),
         })
         return `Created cell (${id}).`

@@ -1,175 +1,200 @@
 ---
 title: Documentation revamp — information architecture for humans and agents
 type: docs
-status: draft-for-review
+status: draft-for-review (rev 2 — three persona reviews incorporated)
 date: 2026-08-08
 ---
 
-# Documentation Revamp — Information Architecture
+# Documentation Revamp — Information Architecture (rev 2)
 
-> **For review before execution.** This plans the structure and what goes where; no docs are written yet. The explicit goal is context engineering: a future human or agent picking up this project should be able to load the right context in minutes, by audience, without spelunking through 20 chronological plan files.
+> **For review before execution.** Rev 2 incorporates three persona wayfinding reviews (designer / developer+agent / non-technical team member) run against rev 1. Their consensus: skeleton right, routing table is the real product, rev 1 was doc-shaped where it must be task-shaped. Changes from rev 1 are marked ◆.
 
-## Diagnosis — what exists today
+## Diagnosis — unchanged from rev 1
 
-| Artifact | State |
-|---|---|
-| `README.md` (82 lines) | Setup only. No product story, no map into anything else. |
-| `AGENTS.md` (54 lines) | Coding conventions. No pointers to deeper context. |
-| `docs/plans/` (20 files) | The real knowledge base — but chronological, decision-era snapshots, partially stale, unnavigable by topic. |
-| `docs/ideation/`, `docs/agent/ui-inventory.md`, `erd.mmd`, `seed-verification.sql`, one-off design docs | Scattered loose files at mixed altitudes. |
-| `todos/` (20 files) | Work queue; fine as-is. |
-| `src/lib/agent/skill/references/` | The *in-app agent's* rulebook (layer-roles, canvas-adapter…). Load-bearing runtime docs — must stay where code imports them. |
-| My assistant memory files | Cross-session context that only I can read — exactly the knowledge this revamp should make public. |
+`README` = setup only; `AGENTS.md` = conventions without pointers; the durable knowledge is trapped in 20 chronological plan files, loose docs at mixed altitudes, and the assistant's private memory. No living reference layer exists.
 
-**The gap:** there is no *living reference* layer at all. Everything durable is trapped in either historical plans or private memory.
+## Principles
 
-## Principles (the part to agree on before structure)
+1. **Three layers, never mixed:** *Reference* (living, updated in the PR that changes the fact) / *History* (plans, ideation — content-immutable) / *Queue* (todos). ◆ Amendment: history allows exactly one class of edit — **frontmatter only**: `status: superseded|distilled` + `distilled-into: docs/...`. Without it, grep-driven readers (agents especially) keep loading stale plans as truth.
+2. **Code owns facts; docs own intent.** No value duplication that can rot.
+3. **Dual consumption.** Humans browse, agents load. Frontmatter contract on every reference doc: `audience`, `summary`, `sources`, `last-reviewed`. ◆ `INDEX.md` is **generated from frontmatter by a script** — rev 1 already drifted its own numbering internally; hand-maintained duplication is how maps rot.
+4. **Task-shaped routing.** ◆ The routing table is a **phase-1 deliverable with a row per task, not per doc** — all three reviewers' failures traced to missing task rows, not wrong folders.
+5. **Single owner per fact.** ◆ Every topic named in two docs gets one owner and one link (rev 1 violated this for drawer postures, breakpoints, env handling, the write path).
 
-1. **Three layers, never mixed:** *Reference* (living, always-true, updated in the PR that changes the fact) / *History* (plans, ideation — append-only, never edited, snapshots of decisions) / *Queue* (todos). A reference doc may cite history; history is never "fixed up."
-2. **Code is the source of truth for facts; docs are the source of truth for intent.** The design-system doc does not restate token values (theme.css owns those) — it explains the tiers, the naming contract, and where each kind of value lives. Anything a doc duplicates from code will rot; anything code can't express (why, when, for whom) is the docs' job.
-3. **Dual consumption: humans browse, agents load.** Every reference doc carries frontmatter (`audience`, `summary`, `sources`) and a strict length budget; `docs/INDEX.md` is the one map both read first; `AGENTS.md` becomes the agent boot sequence pointing into it.
-4. **Audience-first top level.** product / design / engineering / decisions — matching your four groups, because "who is asking" is the first routing question.
-
-## Proposed structure
+## Proposed structure (rev 2)
 
 ```
-README.md                 ← front door: what this is, 5-min quickstart, map into docs/
-AGENTS.md                 ← agent boot file: conventions, tooling traps, "read INDEX.md,
-                            then the docs tagged for your task" — the context-engineering entry
+README.md                 Front door: what this is, 5-min quickstart, map into docs/.
+AGENTS.md                 Agent boot file — see boot protocol below. ◆ Keeps the
+                          non-negotiable write invariants VERBATIM inline (never the
+                          service key; writes through wrapper functions; deletes are
+                          human-only) — a narrowly-prompted subagent that skips boot
+                          reading must still be unable to miss them.
 docs/
-  INDEX.md                ← THE map. One line per doc: path · audience · what it answers.
-  product/                                                [USER audiences]
-    01-product-overview.md        What uno-blueprint is; the three personas (visitor /
-                                  signed-in viewer / service account); mobile = view-only
-    02-reading-a-blueprint.md     Service-blueprint literacy: lifecycle→phase→scenario→path,
-                                  lanes & the line of visibility, steps, cells, triggers vs
-                                  needs, slices, findings. THE shared vocabulary doc.
-    03-service-design-practice.md How to run SB work here: mapping (sb:map), auditing
-                                  (sb:audit), what-if (sb:whatif), slicing (sb:slice),
-                                  compare workflow, findings triage. For practitioners.
-    04-product-design-on-blueprints.md  Grounding product/UI/UX work on the blueprints:
-                                  slices → specs, citing cells as evidence, touchpoint
-                                  reasoning, presenting to stakeholders.
-    05-team-guide.md              Non-designers: find a scenario, read the journey (desktop
-                                  + phone reader), ask the agent, share deep links. Shortest
-                                  doc; assumes zero design background.
-    06-surface-tours.md           Guided tour per surface: board/overview, scenario detail,
-                                  compare cockpit, slices & presentation, mobile shell, the
-                                  agent. Screenshots. (Replaces "watch someone use it.")
-  design/                                                 [DESIGN audience]
-    01-design-language.md         The point of view: restraint stance, type roles, the
-                                  time-marker register (mono/uppercase/ordinal), color
-                                  philosophy, where boldness is spent (per-surface signatures).
-    02-design-system.md           Token architecture (tiers 1–4 + where each lives), motion
-                                  vocabulary + the test that pins it, radius/spacing/width
-                                  tokens, component recipes (Sheet/Drawer postures, badges,
-                                  segmented controls). Points at css files, never restates values.
-    03-interaction-grammar.md     The click grammar (⌘-click opens, pick vs read), canvas
-                                  modes (view/design), panel-as-selection ownership, camera
-                                  behavior, touch contract (tap/slop/pan/pinch/ghost rules).
-    04-responsive-behavior.md     The breakpoint contract (<768 = mobile shell, view-only for
-                                  every tier; ≥768 desktop incl. tablets), reader⇄map fold,
-                                  semantic zoom tiers, what is deliberately NOT responsive.
-    05-content-voice.md           UI copy rules (active voice, sentence case, one job per
-                                  element, error/empty-state stance), the agent's voice
-                                  (honest verification, "the panel is NOT open"), naming
-                                  conventions (Merged/Stacked, Journey/Map...).
-    06-accessibility.md           The bar and how it's held: forced-colors restatements,
-                                  reduced motion, focus-visible catch-all, aria state on
-                                  toggles, 44px touch targets, screen-reader naming rules.
-  engineering/                                            [DEV audience]
-    01-architecture.md            App shape: provider stack, module stores
-                                  (useSyncExternalStore pattern & why), canvas stack
-                                  (viewport→transform→artboards→cells), data flow
-                                  (useSupabaseQuery cache + invalidation contract), ERD
-                                  (embeds docs/reference/erd.mmd).
-    02-frontend-guide.md          Where things live and the patterns to copy: component
-                                  library usage (shadcn + base-ui, which primitive for what),
-                                  drawer/sheet postures, one-surface-two-postures precedent,
-                                  render-time state reset idiom, ledger/authoring invariants.
-    03-backend-supabase.md        Schema tour, the security model (RLS restrictive + RPC tier
-                                  enforcement + is_service_account, WHY UI gating is not the
-                                  wall), migrations workflow, seed/verification, environments
-                                  (local/hosted project ids), auth & service accounts.
-    04-agent-system.md            The in-app agent: loop rounds & batch etiquette, tool
-                                  registry/specs split (and the node-loadability boundary),
-                                  rosters (tier + mobile), ui bridge/commands/context
-                                  contributors, skills & references, the eval harness +
-                                  parity tests.
-    05-standards.md               Coding standards & dos/don'ts: the Supabase benchmark and
-                                  what it means concretely, token discipline rules, comment
-                                  philosophy (constraints not narration), testing philosophy
-                                  (what earns a test), TOOLING TRAPS (bare tsc no-op, zsh
-                                  globs, base-ui defaultSnapPoint...), review workflow.
-    06-operations.md              Deploy (Netlify from main), envs & keys handling (what
-                                  never gets committed), Supabase dashboards, monitoring
-                                  (ErrorBoundary channel), access/invite flow, rollback.
-  decisions/                                              [ALL — the "why" log]
-    README.md + ADR-NNN-*.md      One page each, immutable: view-only mobile for all tiers;
-                                  panel-as-selection single owner; canvas agent = full parity;
-                                  writes via guarded RPCs only; deletes are human-only;
-                                  compare v3 model; semantic zoom; sidebar float-pill...
-                                  Each links the plan(s) it distills.
-  reference/                                              [machine-adjacent artifacts]
-    erd.mmd, seed-verification.sql, authored-fields.json, ui-inventory.md (moved from
-    docs/agent/), warm-up-happy-path-ids.md
-  plans/        (UNCHANGED — pipeline writes here; history layer)
-  ideation/     (UNCHANGED — history layer)
-  brainstorms/  (if/when created by ce:brainstorm)
-  solutions/    (if/when created by ce:compound)
+  INDEX.md                Generated map: one line per doc + the task-routing table.
+                          ◆ Header carries a plans/-staleness warning ("history, not
+                          truth — check distilled-into").
+  product/                                     [ordered for the least-technical reader ◆]
+    01-overview.md              What this is, for whom, in plain words. Defines
+                                "service blueprint" and "surface" in its first
+                                paragraph ◆. The user-type table in PLAIN language:
+                                who can look, who can edit, how you get invited —
+                                zero enforcement vocabulary ◆ (the enforcement view
+                                moved to engineering/access-and-security).
+    02-team-guide.md            ◆ PROMOTED to position 2. Zero-background: find a
+                                scenario, read the journey (desktop + phone), what
+                                you can/can't do on a phone (owns the lay answer ◆),
+                                ask the assistant, share deep links, and a named
+                                "Presenting and sharing" section (slices,
+                                presentation mode, what exports cleanly) ◆.
+    03-reading-a-blueprint.md   The vocabulary doc: phases, lanes, line of
+                                visibility, steps, cells, triggers vs needs,
+                                slices, findings.
+    04-the-assistant-and-audits.md  ◆ NEW (both non-dev dead-ends): what the in-app
+                                agent and the audit skills produce, under whose
+                                permissions they act, how results are verified
+                                (fingerprint dedupe, eval harness — in plain words),
+                                how to challenge/dismiss a finding, why to trust a
+                                citation. Lay companion to engineering/agent-system.
+    05-service-design-practice.md  Running SB work: mapping, audits, what-if,
+                                slicing, compare, findings triage. PLUS practice
+                                provenance ◆: the textbook-grounded practices are
+                                encoded in the skill references (in-app:
+                                src/lib/agent/skill/references/; plugin repo:
+                                references/) — this doc maps practice → where
+                                specified → which skill applies it.
+    06-product-design-on-blueprints.md  For designers grounding product work:
+                                slices → specs, citing cells as evidence,
+                                touchpoint reasoning. (Stakeholder-presentation
+                                content lives in 02, linked ◆.)
+  design/                                      [DESIGN audience]
+    README.md                   The point of view (restraint, where boldness is
+                                spent, Supabase benchmark) + how the folder is
+                                organized + ◆ three sections rev 1 lacked:
+                                "Surface anatomy" (what each surface looks like,
+                                with links per surface — the designer's №1 task),
+                                "Deviating" (can I break a rule, who decides),
+                                and "Design tooling" (the source of truth is code;
+                                no Figma library — stated explicitly, not implied).
+    foundations/
+      color.md                  Palette philosophy, semantic tiers, dark mode,
+                                forced-colors stance. ◆ Ends with "adding a token"
+                                process linking engineering/standards.
+      typography.md             Type roles & scale; the time-marker register — ◆
+                                naming the UI elements it governs (phase badges,
+                                reader eyebrows), not only the register jargon.
+      motion.md                 Motion vocabulary, the pinning test, reduced motion.
+      iconography.md            Icon set, sizing, glyph-vs-hit-area rule.
+      elevation.md              ◆ Split out of layout (shadows/z — conventional
+                                foundation; nobody searches "layout" for shadows).
+      data-viz.md               ◆ NEW: encodings for compare bands/ledger/strips,
+                                severity colors, semantic-zoom tiers.
+      layout.md                 Spacing, radius, width tokens (layoutTokens.ts ↔
+                                theme.css split). ◆ Breakpoints move OUT (responsive
+                                owns them; layout links).
+    components.md               Which primitive for what; ◆ single owner of
+                                drawer/sheet postures (engineering side links here);
+                                ◆ empty/error-state visual recipes (copy stance
+                                stays in content-voice, cross-linked).
+    interaction.md              Click grammar, canvas modes, panel-as-selection,
+                                camera, the touch contract.
+    responsive.md               ◆ Owns the breakpoint contract. Mobile shell
+                                view-only, reader⇄map, semantic zoom, non-goals.
+    content-voice.md            Copy rules, agent voice, naming conventions.
+    accessibility.md            Forced-colors, reduced motion, focus, aria state,
+                                touch targets, SR naming.
+  engineering/                                 [DEV audience — subject-named]
+    architecture.md             Provider stack, module stores, canvas stack
+                                (◆ + performance constraints/budgets — the 325MB
+                                decode lesson lives here), data flow, ERD. ◆ Canvas
+                                section links design/interaction for INTENDED
+                                gesture behavior.
+    codebase-guide.md           ◆ (renamed from "patterns" — too vague) Where
+                                things live and what to copy: component
+                                conventions, module-store idiom, render-time
+                                reset, error boundaries. Links, not owns, postures.
+    access-and-security.md      ◆ (renamed from data-and-security; absorbs the
+                                enforcement half of rev 1's product/02) OPENS with
+                                the user-type × enforcement matrix (UI gate vs RPC
+                                tier vs RLS vs roster) — "which user am I?" links
+                                product/01 for the lay table. Then: schema tour,
+                                RLS + RPC tier + is_service_account, migrations
+                                workflow, environments (single owner ◆), auth &
+                                service accounts. ◆ Names ONE owner for the write
+                                path: the "authoring writes" section (WriteFn
+                                union, zero-row-is-failure, invalidateStructure,
+                                identity-keyed inverses) lives HERE;
+                                codebase-guide links it.
+    agent-system.md             ◆ Pre-split in two (rev 1's single doc covered 7
+                                subsystems — would blow the length budget):
+      agent-system.md             Loop, rounds/batches, rosters & tiers, ui bridge,
+                                  skills & the dual-home sync contract.
+      agent-tools.md              The tool surface: specs/dispatch split,
+                                  node-loadability boundary, adding a tool, the
+                                  eval harness + parity tests.
+    standards.md                Supabase benchmark concretely, token discipline,
+                                comment philosophy, ◆ testing how-to (run/write,
+                                incl. scripts/tests/*.mjs) alongside testing
+                                philosophy, TOOLING TRAPS, review workflow.
+    operations.md               Deploy, envs & keys (linked from
+                                access-and-security, owned here ◆... no — owned in
+                                access-and-security per single-owner; operations
+                                covers deploy/rollback/monitoring/invite mechanics
+                                and ◆ a troubleshooting section (Docker/supabase
+                                start failures).
+  decisions/                    ~10 ADRs, one page each; ◆ each is the
+                                `distilled-into` target of the plan(s) it distills.
+  reference/                    erd.mmd, seed-verification.sql, authored-fields.json,
+                                ui-inventory.md, warm-up-happy-path-ids.md.
+  plans/ · ideation/            History layer, unchanged paths.
 ```
 
-`todos/` stays at repo root (pipeline convention). `src/lib/agent/skill/references/` stays with the code that imports it; `engineering/04` explains its role and links it.
+◆ **Dropped: standalone surface-tours doc.** Two of three reviewers flagged screenshot maintenance as silent-failure risk; tours fold into 02-team-guide (user-facing walkthroughs) and design/README's surface-anatomy section (designer-facing), each owning only what its audience needs.
 
-## What goes where — the routing table
+◆ **Numbering: product/ only** (real reading order). design/ and engineering/ use bare slugs — rev 1 couldn't keep its own numbers straight across two sections, and INDEX generation makes ordering metadata anyway.
 
-| Question | Doc |
+◆ **Orphan dispositions** (every existing file gets one): `supabase/DATABASE.md` → superseded by access-and-security (deleted after distillation, pointer left one release); `docs/generalization-audit.md`, `docs/scenario-steps-design.md` → history (move to ideation/ with frontmatter status); `src/lib/agent/skill/references/*` + `src/lib/agent/role.md` → stay with code (runtime-loaded), documented in agent-system; `docs/agent/ui-inventory.md` → reference/.
+
+## Routing table — now task-shaped ◆ (excerpt; full table is a phase-1 deliverable)
+
+| Task | Route (in order) |
 |---|---|
-| "What is this product / who is it for?" | product/01 |
-| "What's a lane / line of visibility / slice?" | product/02 (everyone's prerequisite) |
-| "How do I run an audit / make a slice?" | product/03 |
-| "How do I use blueprints for product decisions?" | product/04 |
-| "I'm an engineer/PM — where's the context for scenario X?" | product/05 → 06 |
-| "Why does it look/feel like this?" | design/01 |
-| "What token/component do I use?" | design/02 (+ code) |
-| "What does click/tap X do, and why?" | design/03 |
-| "What happens on a phone/tablet?" | design/04 |
-| "How do I write UI copy here?" | design/05 |
-| "How does data flow / where do I add a feature?" | engineering/01–02 |
-| "How is write access actually enforced?" | engineering/03 |
-| "How do agent tools work / how do I add one?" | engineering/04 |
-| "What are the standards / traps / benchmark?" | engineering/05 + AGENTS.md |
-| "Why was X decided?" | decisions/ (then the linked plan for full context) |
+| "What is this / can I edit / how do I get access?" | product/01 |
+| "Find scenario X / read it / phone / present to leadership" | product/02 |
+| "Someone mentioned an audit finding — what is it, is it trustworthy?" | product/04 ◆ |
+| "Add a field to cells end-to-end" | access-and-security (schema+RPC) → codebase-guide (wrapper+ledger) → design/components (panel UI) ◆ |
+| "Which credentials does my agent session use; what's forbidden?" | AGENTS.md invariants → access-and-security ◆ |
+| "Canvas gesture misbehaving — intended vs implemented" | design/interaction + engineering/architecture ◆ |
+| "Match an existing surface's visual style" | design/README (surface anatomy) → components + foundations ◆ |
+| "Empty-state: visuals / words" | design/components / design/content-voice ◆ |
+| "Set up local dev" / "deploy, rollback, envs" | README / operations ◆ |
+| "Add an agent tool / trust the eval numbers" | engineering/agent-tools ◆ |
+| "Is this plan file still true?" | its frontmatter `status` + `distilled-into` ◆ |
 
-## Context engineering — the agent path
+## Context engineering — boot protocol (hardened ◆)
 
-`AGENTS.md` gains a **boot protocol** section:
-1. Read `docs/INDEX.md` (the map, ~60 lines).
-2. Load by task type: UI work → design/02+03 + engineering/02; data/auth → engineering/03; agent tools → engineering/04; product questions → product/01–02. INDEX.md carries these task→doc mappings.
-3. Standing rules (tooling traps, commit conventions, protected paths) stay in AGENTS.md itself — the only file guaranteed auto-loaded.
+1. AGENTS.md auto-carries: the verbatim write invariants, tooling traps, protected paths, "code is newer than docs", and ◆ the ambiguity default ("unsure → engineering/architecture first").
+2. Read `docs/INDEX.md`; route by task rows.
+3. Any write task: read engineering/access-and-security's opening matrix first.
+4. Per-role reading paths for HUMANS too ◆ ("New designer? product/01→03→06, design/README, foundations" — rev 1 gave agents a boot path and humans nothing).
 
-Frontmatter contract on every reference doc: `audience`, `summary` (one line, shown in INDEX), `sources` (the plans/code it distills — so an agent can go deeper), `last-reviewed`. A doc whose code-sources changed in a PR is expected to change in that PR — enforced socially via the review checklist in engineering/05.
-
-## Sources — no doc starts blank
-
-Every doc distills material that already exists: the 20 plans, 2 ideation docs, the loose design docs, AGENTS.md, README, my assistant memory (access model, infra ids, invariants — this revamp makes that knowledge public and survivable), and the code itself. The plan-to-doc mapping is per-doc in the tree above; nothing requires new research.
-
-## Execution phasing (after your review)
+## Execution phasing (unchanged shape; routing table promoted into phase 1)
 
 | Phase | Deliverable | Size |
 |---|---|---|
-| 1 | Skeleton dirs + `INDEX.md` + move loose files → `reference/` + rewrite `README.md` + `AGENTS.md` boot protocol | S |
-| 2 | `engineering/` 01–06 (highest agent value; most is distillation) | L |
-| 3 | `design/` 01–06 | M |
-| 4 | `product/` 01–06 (06 needs screenshots) | M–L |
-| 5 | `decisions/` backfill (~10 ADRs from plans) | M |
+| 1 | Skeleton + INDEX generator + full task-routing table + orphan dispositions + README/AGENTS.md rewrite | M ◆ |
+| 2 | engineering/ (6 docs) | L |
+| 3 | design/ (README + 7 foundations/ + 5) | M–L |
+| 4 | product/ (6 docs) | M |
+| 5 | decisions/ backfill + history frontmatter stamping ◆ | M |
 
-Each phase is a reviewable PR. Phases 2–4 parallelize across subagents (one doc each, INDEX as contract).
+Phase gate ◆: phase 2 does not start until the routing table is complete — all three reviewers converged on it being the actual product.
 
-## Open questions for your review
+## Resolved review questions
 
-1. **Audience-first (proposed) vs topic-first** top level? Audience-first optimizes routing; topic-first optimizes cross-linking. I recommend audience-first with the routing table gluing.
-2. **ADR layer** — worth the backfill, or do plan files + INDEX suffice as the "why" record?
-3. **product/06 surface tours with screenshots** — maintenance-heavy; keep, or fold thin tours into product/03–05?
-4. **Numbered filenames** (stable reading order, as proposed) vs bare slugs?
-5. Anything to add for the **Ecoeled dogfood / publishable sb: plugin** — document here, or keep that in the plugin repo when it splits out?
+- **Audience-first vs topic-first**: audience-first stands, but honesty note: it survives only because the routing table glues cross-audience tasks — hence the phase gate.
+- **ADRs**: yes, scoped to the ~10 named, doubling as `distilled-into` targets.
+- **Surface tours**: folded (see above).
+- **Numbering**: product/ only.
+- **product/02 dual-audience protocol doc (rev 1)**: split ◆ — plain table in product/01, enforcement matrix opens engineering/access-and-security. A doc an instructor reads to learn "can I fix a typo" and a doc a dev-agent must read before writes have opposite failure modes; fusing failed both.
+- Ecoeled/plugin docs: stay in the plugin repo; agent-system documents the sync contract.
