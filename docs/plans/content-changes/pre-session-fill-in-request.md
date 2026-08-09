@@ -1,0 +1,46 @@
+# Fill-in Request — Content Revision Plan
+Date: 2026-08-08 · Blueprint: PLUS Application › Pre-session › Fill-in Request · Path: Happy Path (`a0000000-0000-4000-8000-000000000807`)
+Status of scenario today: 4 steps / 20 cells. The whole flow is STALE: it documents Shift Swap Google Form → supervisor reviews spreadsheet → Slack/email outreach → supervisor manually adds tutor. Verified reality (06 #1/#3/#4, 08 #4, 09 #6): the Fill-In tab is in-app (card 2192, live 2026-02-04); sessions with capacity within 72 hours are auto-listed; tutors self-select — no supervisor broker in the happy path. Production confirms real usage: fill-ins are ~10–12% of monthly sign-ups (Jan 264 / Feb 589 / Mar 673 / Apr 378, `is_fill_in` flag). The supervisor "recruit fill-ins" flow still exists but as backstage escalation, not the mainline.
+
+## 1. Revise existing cells
+
+| Cell (lane › step) | cell_id | Property | Current | Proposed | Evidence |
+|---|---|---|---|---|---|
+| Front Stage Tech › Initial request | `a0000000-0000-4000-8000-000000150106` | content | "Shift Swap Google Form" | "PLUS App — fill-in list (automatic)" | 06 #2/#3 OUTDATED (in-app call-off dev commits Nov 2025, prod-live 2026-01-11 per 09 #2); FILL_IN_THRESHOLD_HOURS=72 (TutorSessionServiceImpl.java:71) |
+| Front Stage Tech › Initial request | `a0000000-0000-4000-8000-000000150106` | description | Google Form blurb | "Sessions that still have tutor capacity within the next 72 hours appear automatically in every tutor's Fill-In tab — no form or supervisor request is needed. A session usually gets here because a tutor called off (300–640 call-offs/month in spring 2026); fill-ins cover roughly 10–12% of monthly sign-ups." | 08 #4 ("auto-add" = appears in Fill-In tab; tutors self-select); call-off bypass :1092-1099; 09 #2/#6 prod volumes |
+| Front Stage Tech › Initial request | `a0000000-0000-4000-8000-000000150106` | links | Google Form entry | `[{"type":"url","label":"Figma — 2.2 Fill in from the pop-up","url":"https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11227-161744"},{"type":"url","label":"Figma — 2.3 Fill in from the table","url":"https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=11227-161745"}]` | Figma Pre-Session §2.2/§2.3 |
+| Regular Tutor › Send request | `a0000000-0000-4000-8000-000000150203` | content | "Tutor receives request." | "Browses the Fill-In tab for sessions needing coverage." | 08 #1 tab set; 08 #4 self-select |
+| Regular Tutor › Send request | `a0000000-0000-4000-8000-000000150203` | description | (empty) | "The Fill-In tab lists sessions in the next 72 hours with open capacity. Tutors already committed to an overlapping session, or who called off the same session, don't see it offered back to them." | TutorSessionServiceImpl.java:1092-1099 (active call-off bypass); tooltip tutor_schedule_fill_ins.js:46 |
+| Front Stage Tech › Send request | `a0000000-0000-4000-8000-000000150206` | content | "Slack" | "PLUS App — Fill-In tab" (keep Slack as secondary entry, see §2) | 06 #1; Slack remains for urgent supervisor pushes |
+| Regular Tutor › Tutor response | `a0000000-0000-4000-8000-000000150303` | content | "Tutor confirms or denies fill in request." | "Signs up for the fill-in slot in the app." | 08 #4 (self-select; no confirm/deny handshake) |
+| Front Stage Tech › Tutor response | `a0000000-0000-4000-8000-000000150306` | content/links | "Slack" + Slack/Email links | "PLUS App" with the §2.2/§2.3 Figma links above; drop Slack/Email as the response channel | same |
+| Front Stage Actions › Send request | `a0000000-0000-4000-8000-000000150204` | content | "Tutor supervisor team requests fill in and fellow tutor sends message in #shift-swap Slack channel." | "For hard-to-fill or urgent gaps, supervisors additionally push a coverage request to Slack; the mainline path needs no outreach." | 06 #2 (emergency <12h via Slack); Figma Supervisor Pre-Session "recruit fill-ins" (206-149220) |
+| Front Stage Actions › Tutor response | `a0000000-0000-4000-8000-000000150304` | content | "Tutor supervisor team is notified on if tutor can fill in." | "The roster updates immediately when a tutor takes a fill-in slot; supervisors see it in Admin › Sessions." | 08 §Job2b |
+| Regular Tutor › Finalize assignment | `a0000000-0000-4000-8000-000000150403` | content | "Tutor accesses session if able to fill in." | "Sees the session in My Sessions and joins it like any other session." | tab set; Join Session 15-min gate (08 §Job2b) |
+| Back Stage Tech › Initial request | `a0000000-0000-4000-8000-000000150108` | content | "Google Spreadsheet" | "72-hour auto-add job" | FILL_IN_THRESHOLD_HOURS = 72L (TutorSessionServiceImpl.java:71); batch query :1126 |
+| Back Stage Tech › Initial request | `a0000000-0000-4000-8000-000000150108` | description | spreadsheet blurb | "The app continuously surfaces sessions with remaining capacity in the next 72 hours into the Fill-In tab (threshold raised from 12h to 72h in Nov 2025). Tutors with an active call-off on a session are excluded from seeing it." | 06 #4 CURRENT; Slack DM Boyuan↔Ishan 2025-11-03 (12h→72h) |
+| Back Stage Actions › Initial request | `a0000000-0000-4000-8000-000000150107` | content | "Tutor supervisor team receives call off request and reviews tutor availabilities." | "No supervisor action needed to open a fill-in — call-off approval (or immediate <12h execution) automatically frees the slot into the fill-in pool." | CallOffRequestServiceImpl executeCallOff :654; 08 #2d |
+| Back Stage Actions › Finalize assignment | `a0000000-0000-4000-8000-000000150407` | content | "Tutor supervisor team adds tutor to session if tutor confirms request." | "Supervisors only intervene for unfilled sessions close to start — recruiting fill-ins directly or adjusting the roster in Admin › Sessions." | Figma 206-149220 (recruit fill-ins); Slack #8 (Harry Gilliland 2025-10-27 no-show coverage) |
+| Support Actions › Initial request | `a0000000-0000-4000-8000-000000150109` | description | "Dev Team stores tutor schedules in a Google Spreadsheet…" | "The Dev Team maintains the fill-in surfacing logic and tabs; thresholds and exclusions are code-level rules." | 07 #4 |
+
+## 2. New cells
+
+| Lane › Step | Property | Proposed value | Evidence |
+|---|---|---|---|
+| Back Stage Tech › Send request | content | "Slack bridge (urgent coverage)" · description: "For manual-review call-offs and urgent gaps, the app notifies a Slack channel via the CALL_OFF_SLACK_EMAIL email-to-Slack bridge, so supervisors can chase coverage without polling the admin UI." | EmailHelper.java:42 (08 #2d) |
+| Back Stage Actions › Tutor response | content | "Approved call-off reassigns that tutor's students; a lead-capable regular tutor is promoted to LEAD if the lead called off." | reassignStudentsFromAbsentTutor :683; lead promotion :679-681 |
+| Support Actions › Finalize assignment (existing cell `…150409` keep) | links | Add `[{"type":"url","label":"Figma — Supervisor Pre-Session","url":"https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=206-149220"}]` | supervisor recruit-fill-ins flows |
+
+## 3. Structural changes (new steps / triggers / paths)
+
+1. **Re-title steps to match the shipped flow**: "Initial request" → "Session enters fill-in pool"; "Send request" → "Tutor browses Fill-In tab"; "Tutor response" → "Tutor takes the slot"; "Finalize assignment" → "Roster updated, tutor joins". No column count change.
+2. **Triggers in**: from Call-off Request ("call-off executed → slot freed"). A second trigger from Standard Scheduling ("reconfirm Unavailable → slot freed") only once the reconfirmation flow deploys — it is dev-only today (09 #5).
+3. **Unhappy path candidate**: "Nobody fills in" — supervisor Slack push → still unfilled → session runs short / lead covers. Evidence: Slack #8 (View All Sessions toggle; lead tutors asked to fill in but lack the toggle — tooling gap). Recommended as this scenario's first alternate path.
+4. Note: the "In-session Fill-In Request" PRD (Notion 2c5b7cca-4982-8030-ab2b-e37c6db27eec — Request Fill-In button, urgency window, editable Slack message) is design-stage and belongs to the In-session phase; do not author it here as current.
+
+## 4. Divergences & open questions (things Bill must decide)
+
+- **Who is the "Regular Tutor" lane actor?** Today it's the *covering* tutor; the tutor who needs coverage lives in Call-off Request. Keep that split, but say it in the path description so the two scenarios read as one story.
+- **Slack #shift-swap's residual role**: tutors historically posted for peer coverage themselves. Under the in-app flow this is no longer required — confirm whether tutor-initiated Slack posts should still appear anywhere (currently kept only as supervisor escalation).
+- **Lead-tutor View All Sessions gap** (Slack #8): known tooling gap where leads asked to cover can't see other sessions. Worth a cell only if still true — verify against current tab code (All Sessions is conditional in tutor_schedule.js:50-56, which may have fixed this).
+- **Compensation for fill-ins** is an open question in the PRDs — out of scope for cells, but flag in path note.

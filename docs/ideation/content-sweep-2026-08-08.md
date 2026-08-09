@@ -1,62 +1,56 @@
-# Blueprint Content Changes — 2026-08-08
+# Blueprint Content Sweep — Index (2026-08-08)
 
-Planned edits to blueprint content (Supabase), from a five-source sweep verified against code (web-app `dev`, 2026-08-07) and newest Slack. Everything below is already triangulated — each row states the change and where the fact comes from.
+Five-source sweep (Supabase audit × Notion × Slack × Figma × CMU-PLUS/web-app code × Metabase production data), triangulated. Source authority: **code (dev) = shipped truth · Metabase = deployed/production truth · Notion may run ahead · Figma lags the app in places**. Key global caveat: **dev-shipped ≠ prod-deployed** (e.g. reconfirmation Card 2452 is on dev only — prod schema has no reconfirm column).
 
-**Authoring rule:** several existing blueprint cells describe retired ops (Acuity, Google Forms, spreadsheets). When in doubt, trust dev-branch code and 2026 Slack over old Notion pages.
+## Per-scenario revision plans → [docs/plans/content-changes/](../plans/content-changes/)
 
----
+Each doc: exact cell placement (lane › step, cell_id) · per-property proposals (content / description / links / picture) with ready-to-paste text · structural changes · decision items for Bill.
 
-## 1. Fix outdated cells (highest priority — currently wrong)
-
-| Cell (scenario › step) | Says now | Change to | Source |
-|---|---|---|---|
-| Session Sign Up › Sign up | "Dev Team stores scheduling info in a Google Spreadsheet" | Tutors sign up in-app: Sign-up tab (recurring) + Fill-in tab (one-time). Live since Feb 2026. | Slack 2026-05-18; code card2192 |
-| Session Sign Up › Review scheduling | "Supervisor reviews Google Spreadsheet from Dev Team" | Supervisor manages recurring sign-ups in the app's admin views. | Figma Supervisor Pre-Session `206:149220` |
-| Call-off Request › Early call-off | "Supervisor reviews Google Form request" | In-app call-off (Session Functionality V2, Nov 2025): one-time/fill-in call-offs >12h out auto-approve; recurring call-offs need supervisor review; <12h emergencies go through Slack. | Code Nov 2025–Jun 2026; Slack 2026-02-17 |
-| Call-off Request › Internal decision | "…determines excused or unexcused" (keep, add detail) | Add: reason taxonomy (Illness, Family Emergency, Job Conflict, Transportation, Academic Commitment, Signed Up By Mistake, Other); PENDING→APPROVED/REJECTED with notes; withdrawal eligibility by hours-before-session; approval auto-reassigns the tutor's students. | `CallOffRequestServiceImpl`; Card 2349 |
-| Any cell mentioning Acuity | — | Remove/replace: Acuity retired; all scheduling in-app. | Slack 2026-05-18; code (dead, zero callers) |
-
-## 2. Enrich supervisor lanes (add descriptions + links to existing cells)
-
-| Cell | Add | Source |
-|---|---|---|
-| Standard Scheduling › Review schedules | Reconfirmation loop: tutors reconfirm availability (PENDING/AVAILABLE/UNAVAILABLE); shipped 2026-08-06. | Card2452 (Session Functionality v3) |
-| Fill-in Request › Initial request | Unfilled sessions auto-add to fill-in list **72h** before start; an active call-off bypasses the threshold. | `TutorSessionServiceImpl:71`; Slack 2026-02-04 |
-| Fill-in Request › Finalize assignment | Link the in-session Fill-In PRD (Request Fill-In modal → Slack message → live slot tracking). | Notion `2c5b7cca…` |
-| Before Students Join › (new cell) | Auto-assignment algorithm: non-lead before lead, fill to baseLoad, then load → continuity → proficiency; supervisor gets email digest for out-of-DB students. | Code `chooseRecipientForStudent` (Notion card 1629 diverges — use code) |
-| Interview & Offer › all 4 backstage cells | 6-stage pipeline: application → interview invite → soft offer → acceptance form → **CPO clearance** (gates all app access) → onboarding. Offer paperwork via Workday. Link group-interview design doc. | Slack 2026-04-01; Notion hiring docs |
-| Discovery › 3 backstage cells | Required info session acts as first interview; Intercom for candidate comms. | Notion "Hiring process revisions"; canvas F07K8G0U96Y |
-| Reporting an Issue › Resolve concern | Reflection "areas" chips (live) feed supervisor triage; school incidents escalate by email under draft School-PLUS Policy Agreement; ticketing tool decision pending. | Code `reflection.js:438`; Notion `388b7cca…`; Slack 2026-06-18 |
-| Reporting Hours › Approve hours | Context: attendance data incomplete (complete in only 38% of sessions); call-off absences recorded in `tutor_absence`. | Slack 2026-03-09 |
-| Onboarding scenarios › backstage cells | Supervisor monitors Training Progress in admin tool; clearance gates access. | Notion Tutor Admin Iteration; Figma `3408:120455` |
-
-## 3. Add missing supervisor cells (lanes currently empty)
-
-| Where | Add | Source |
-|---|---|---|
-| Student Just Joined › Back Stage Actions (0 cells) | Late joiners can land in wrong breakout rooms; any co-host can move students → attendance drift; app auto-places via `placeSingleStudent`. | Slack #plus-dev; code |
-| Warm-Up › Back Stage Actions (0 cells) | Supervisor maintains assignment data; lead tutor assigns + DMs regular tutors via Slack/Zoom at start. | Slack 2025-07-24; Notion Module 11 |
-| Wrap-Up › Support Actions (lane missing) | Add the lane (only path without it) or note why absent. | DB audit |
-| Post-session scenarios › (new cells) | Weekly class report: reflections + goal-reward eligibility → per-class Mailchimp email to teachers. TutorAiInsight coaching generated from reflections. | Notion card 2106; code |
-
-## 4. Mechanical fixes
-
-- Wire or delete Help Request orphan step `…000986`
-- Add triggers to Goal Setting "Update Goals" (66 cells, 0 triggers)
-- Finish or archive "New In-Cycle Check-In" (13/72 cells, 0 triggers)
-- Fill 149 empty cell labels (18.6%)
-
-## 5. Do NOT author (unshipped or unknown)
-
-| Topic | Status |
+| Phase | Docs |
 |---|---|
-| Reflection redesign (AI follow-ups, escalation chips) | Design iteration only, unshipped (Jul 2026) — current form has ratings + area chips + recording upload |
-| Soft-conflict overlap rule | Proposal only; threshold moving 20→10 min (Aug 2026) |
-| Attendance/call-off policy, semester schedule creation, student-side journey, post-session triage runbook, payroll link, ticketing | No source documents these — mark as open questions, don't invent |
+| Application | [discovery](../plans/content-changes/application-discovery.md) · [interview-and-offer](../plans/content-changes/application-interview-and-offer.md) |
+| Onboarding | [tech-setup](../plans/content-changes/onboarding-tech-setup.md) · [onboarding-modules](../plans/content-changes/onboarding-onboarding-modules.md) · [lesson-modules](../plans/content-changes/onboarding-lesson-modules.md) · [session-sign-up](../plans/content-changes/onboarding-session-sign-up.md) |
+| Pre-session | [standard-scheduling](../plans/content-changes/pre-session-standard-scheduling.md) · [fill-in-request](../plans/content-changes/pre-session-fill-in-request.md) · [call-off-request](../plans/content-changes/pre-session-call-off-request.md) |
+| In-session | [before-students-join](../plans/content-changes/in-session-before-students-join.md) · [student-just-joined](../plans/content-changes/in-session-student-just-joined.md) · [warm-up](../plans/content-changes/in-session-warm-up.md) · [goal-setting](../plans/content-changes/in-session-goal-setting.md) · [help-request](../plans/content-changes/in-session-help-request.md) · [wrap-up](../plans/content-changes/in-session-wrap-up.md) |
+| Post-session | [reporting-an-issue](../plans/content-changes/post-session-reporting-an-issue.md) · [reporting-hours](../plans/content-changes/post-session-reporting-hours.md) |
 
-## 6. Optional later: new unhappy paths (your call)
+## Figma sync plans → [docs/plans/figma-sync/](../plans/figma-sync/)
 
-Best-evidenced candidates: no/few students join (Notion article is step-by-step) · session cancelled/reverted · call-off rejected · teacher-side failures (may need a Teacher lane).
+One per Figma page, live-verified structure + out-of-sync tables + action items: [01 Pre-Session](../plans/figma-sync/01-toolkit-pre-session.md) · [02 In-Session](../plans/figma-sync/02-toolkit-in-session.md) · [03 Post-Session](../plans/figma-sync/03-toolkit-post-session.md) · [04 Admin pages](../plans/figma-sync/04-admin-pages.md) · [05 Training](../plans/figma-sync/05-training-onboarding-lessons.md) · [06 Profile+Home](../plans/figma-sync/06-profile-home.md) · [07 Universal/Login/MISC](../plans/figma-sync/07-universal-login-misc.md) · [08 New coverage](../plans/figma-sync/08-new-coverage.md) (proposes 5 new pages; Student Portal first — the missing student actor)
+
+## Decisions (Bill, 2026-08-08)
+
+1. **Future-state convention: dedicated "Future" path** per affected scenario (reconfirmation rollout, session creation, reflection redesign, soft-conflict rule) — current path stays as-is, future path diverges where roadmap changes behavior.
+2. **Call-off Request: split into 2 paths** — "Standard call-off (12h+)" + "Late call-off (<12h)" exception (matches Figma §5.1/§5.2).
+3. **Goal Setting "New In-Cycle Check-In": fold into Check Goals**, delete skeleton path.
+4. **Goal-setting condition**: stored in another in-app table, exact location unknown — fine to leave; don't cite `test_condition`.
+5. **No Intercom anywhere** — fully out of date; purged from all plans.
+6. **Live form URLs confirmed**: tutor sign-up = Become-a-Tutor Google Form; school/misc contact = Get-PLUS-Tutoring Google Form (both wired into Discovery doc, verified against live tutors.plus nav).
+7. **Before Students Join: app assignment system = primary flow**; manual spreadsheet/Slack-DM choreography captured in descriptions as current practice.
+8. **Goal-setting RCT condition: description-only** — grid labels neutral, study mechanics in detail panel.
+9. **Reconfirm decline ≠ call-off (by design)** — reconfirm fires only on supervisor-initiated session changes; Future-path material once deployed.
+10. **Clearance: procedure reconstructed** (sweep/10) — acceptance form → supervisor adds to CPO roster → CPO↔tutor directly (Act 153 trio, ~2wks) → CPO weekly email → Friday-8pm ETL writes `advisor.clearance_status` → app access. **Recommended placement: own clearance stage appended to Interview & Offer with wait-state into Tech Setup** (CPO as external actor) — pending Bill confirm.
+11. **Figma sync: text/spec corrections EXECUTED 2026-08-08** — 16 amber "[sync 2026-08-08]" annotations across 11 pages (log: figma-sync/00-execution-log.md); frame/visual restructuring stays with design team.
+12. **Notion call-off page updated** — superseded-banner with verified current process + production stats prepended (history + comments preserved).
+
+## Top divergences for Bill to reconcile
+
+1. **<12h call-off ≠ pending state** — tutor removed from roster immediately; review only decides excused/unexcused.
+2. **Reconfirmation (resolved)** — fires only on supervisor-initiated session changes; declining ≠ call-off by design (Bill confirmed 2026-08-08). Dev-only today → Future path material, no policy issue.
+3. **No session creation in app** — sessions arrive via DB import; Figma "create session" is fiction; semester-schedule creation undocumented anywhere.
+4. **Call-off reality** — prod-live 2026-01-11, 300–640/month, 64% auto-approved; the "~20/month" Notion figure = old manual era.
+5. **Notion matching PRD ≠ shipped algorithm** — author from code.
+6. **test_condition ≠ goal-setting experiment** — goal-setting condition storage location unknown (open question).
+7. **Notion ahead of code** — reflection redesign (AI follow-ups), soft-conflict rule (threshold now 10 min), match-history accordion: unshipped, don't author as current.
+8. **Messaging near-unused** (643 rows lifetime) — deprioritize "Between-Session Communication" scenario.
+
+## Missing scenarios/paths (app ships, blueprint lacks)
+
+Supervisor Program Administration (Tutors/Sessions/Students/Groups admin) · Tutor Profile & Identity Maintenance · Student Kickoff Interview · Session Prep / Resource Selection · Post-Session Growth Loop (AI Coach + Accredible badges) · student portal journey (no student actor lane anywhere) · unhappy paths (zero exist; strongest candidates: no/few students, late call-off branch, cancellation/revert, nobody-fills-in).
+
+## Production volumes worth citing (Metabase, spring 2026)
+
+Sessions ~540–790/mo, 22–41% cancelled monthly · call-offs 300–640/mo (21% <12h; illness avg 30h notice) · fill-ins ≈10–12% of sign-ups · attendance: 83.4% of students recorded, only 31.8% of sessions fully covered · reflections 1,500–2,000/mo, ~80% empty notes · AI Coach 882 insights/148 tutors (8-week pilot) · badges 208 lifetime.
 
 ---
-*Raw sweep + verification reports: session scratchpad `sweep/01–07`. Side find for web-app repo: stale "from Acuity" tooltip at `tutor_coach_charts.js:95`.*
+*Raw evidence: session scratchpad `sweep/01–09` (08 = code validation file:line; 09 = Metabase). Side find for web-app: stale "from Acuity" tooltip `tutor_coach_charts.js:95`.*
