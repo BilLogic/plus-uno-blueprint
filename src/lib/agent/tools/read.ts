@@ -20,6 +20,7 @@ import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 import canvasAdapter from '@/lib/agent/skill/references/canvas-adapter.md?raw'
 import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
 import elicitationProtocol from '@/lib/agent/skill/references/elicitation-protocol.md?raw'
+import cocreatePlaybook from '@/lib/agent/skill/references/cocreate-playbook.md?raw'
 import laneVocabulary from '@/lib/agent/skill/references/lane-vocabulary.md?raw'
 import layerRoles from '@/lib/agent/skill/references/layer-roles.md?raw'
 import auditPlaybook from '@/lib/agent/skill/references/audit-playbook.md?raw'
@@ -52,6 +53,7 @@ const REFERENCES: Record<string, string> = {
   'layer-roles': layerRoles,
   'lane-vocabulary': laneVocabulary,
   'elicitation-protocol': elicitationProtocol,
+  'cocreate-playbook': cocreatePlaybook,
   'data-model': dataModel,
   'audit-playbook': auditPlaybook,
   'whatif-playbook': whatifPlaybook,

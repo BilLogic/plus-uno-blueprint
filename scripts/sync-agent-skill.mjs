@@ -24,6 +24,7 @@ const FILES = [
   'references/layer-roles.md',
   'references/lane-vocabulary.md',
   'skills/map/references/elicitation-protocol.md',
+  'skills/map/references/cocreate-playbook.md',
   'references/data-model.md',
   'references/audit-playbook.md',
   'skills/whatif/references/whatif-playbook.md',

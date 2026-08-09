@@ -13,6 +13,7 @@ export const REFERENCE_NAMES: readonly string[] = [
   'layer-roles',
   'lane-vocabulary',
   'elicitation-protocol',
+  'cocreate-playbook',
   'data-model',
   'audit-playbook',
   'whatif-playbook',

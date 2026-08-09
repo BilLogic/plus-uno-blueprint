@@ -65,7 +65,7 @@ export const WRITE_TOOL_NAMES = new Set([
 export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'read_reference',
-    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.join(', ')}. canvas-adapter is already embedded in full in your system prompt — never fetch it. Read layer-roles and lane-vocabulary before any lane/role work; elicitation-protocol before co-creating a scenario from notes.`,
+    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read layer-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
     parameters: {
       type: 'object',
       properties: { name: str('Reference name, e.g. "layer-roles"') },
@@ -80,7 +80,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_blueprint',
     description:
-      'Full grid of one scenario: every path with its steps, lanes, and cells (ids included). Read before writing into a scenario.',
+      'Full grid of one scenario: every path with its steps, lanes, and cells (ids included). Read before writing into a scenario. ("Blueprint" unqualified means the whole workspace; this tool returns one scenario\'s grid.)',
     parameters: {
       type: 'object',
       properties: { scenario_id: str('Scenario id from list_scenarios') },
@@ -191,7 +191,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'ui_command',
     description:
-      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only, EXCEPT the ones the list marks "[changes data]" — those count against your write batch. Today: undo_last_change (reverts whatever is newest, INCLUDING the human\'s own edit if theirs came last — say whose change you are undoing before firing it), revert_my_changes (only your own edits from this session; prefer it whenever the user says "undo what you did"), and keep_all_changes (clears the change sheet and with it every revert in the session — nothing can be taken back afterwards). Reverting the whole session is human-only; revert_all_changes exists to say so.',
+      'Fire a UI control by name (from list_ui_commands), with an optional arg. Interface only, EXCEPT the ones the list marks "[changes data]" — those count against your write batch. Notable [changes data] commands: undo_last_change (reverts whatever is newest, INCLUDING the human\'s own edit if theirs came last — say whose change you are undoing before firing it), revert_my_changes (only your own edits from this session; prefer it whenever the user says "undo what you did"), and keep_all_changes (clears the change sheet and with it every revert in the session — nothing can be taken back afterwards). Reverting the whole session is human-only; revert_all_changes exists to say so.',
     parameters: {
       type: 'object',
       properties: {
@@ -283,7 +283,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_path',
     description:
-      'Add a path (variant) to a scenario — alternative/unhappy/exception. lane_source_path_id copies the sibling\'s lane stack (preferred).',
+      'Add a path to a scenario — alternative/unhappy/exception. lane_source_path_id copies the sibling\'s lane stack (preferred).',
     parameters: {
       type: 'object',
       properties: {
@@ -317,7 +317,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'duplicate_scenario',
     description:
-      'Copy a WHOLE blueprint into the same phase — its columns, every path, every lane, every cell, and every arrow with both ends inside it. One call, two arguments, but it writes far more rows than that suggests: duplicating a 5-path blueprint is hundreds of inserts. Say roughly how big the source is and get a nod first. Fully revertible (its inverse deletes the copy). The UI names copies "X (copy)" — use the same form unless the human asks for a different name, so the sidebar reads consistently however the copy was made. Copied cells get no cell_key, so they cannot be bound into a slice until one is authored.',
+      'Copy a WHOLE scenario into the same phase — its columns, every path, every lane, every cell, and every arrow with both ends inside it. One call, two arguments, but it writes far more rows than that suggests: duplicating a 5-path scenario is hundreds of inserts. Say roughly how big the source is and get a nod first. Fully revertible (its inverse deletes the copy). The UI names copies "X (copy)" — use the same form unless the human asks for a different name, so the sidebar reads consistently however the copy was made. Copied cells get no cell_key, so they cannot be bound into a slice until one is authored.',
     parameters: {
       type: 'object',
       properties: {
@@ -337,8 +337,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         kind: {
           type: 'string',
           enum: ['scenario', 'path', 'slice'],
-          description:
-            'What is being deleted. Only these three: lane and step deletes exist in the database but their impact counts do not match what they remove, so they are not offered here or in the UI.',
+          description: 'What is being deleted. Only these three kinds are supported.',
         },
         target_id: str('Id of the scenario, path, or slice'),
       },
@@ -387,7 +386,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'replace_slice_frames',
     description:
-      "Replace a slice's frames wholesale — THE tool for reordering, resequencing, merging cells into one screen, or splitting them apart. Read the slice first; pass the complete new frame list (each frame: cells in order + optional caption/narrative). When a reorder instruction is positionally ambiguous (e.g. \"move the last one up, then merge 2 and 3\" — original numbering or after the move?), confirm which you mean before writing.",
+      "Replace a slice's frames wholesale — THE tool for reordering, resequencing, merging cells into one screen, or splitting them apart. Read the slice first; pass the complete new frame list (each frame: cells in order + optional caption/narrative). When a reorder instruction is positionally ambiguous (e.g. \"move the last one up, then merge 2 and 3\" — original numbering or after the move?), confirm which you mean before writing. Re-read the slice afterwards to confirm the frame count matches what you intended.",
     parameters: {
       type: 'object',
       properties: {
@@ -451,9 +450,9 @@ export const TOOL_SPECS: ToolSpec[] = [
       type: 'object',
       properties: {
         path_id: str('Path id'),
-        layer_id: str('Lane id (from get_blueprint)'),
+        layer_id: str('Lane id from get_blueprint (parameter named layer_id for historical reasons)'),
         step_id: str('Step id (from get_blueprint)'),
-        content: str('The cell text — a journey moment, not a system capability'),
+        content: str('The cell text — a journey moment, not a system capability. Good: "Tutor greets the student and confirms today\'s goal". Bad: "Session management module".'),
       },
       required: ['path_id', 'layer_id', 'step_id', 'content'],
     },

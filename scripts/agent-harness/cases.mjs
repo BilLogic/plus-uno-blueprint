@@ -78,7 +78,7 @@ const NOTES = `Notes from my session observation:
 export const CASES = [
   // --- A. skill routing & fidelity ------------------------------------
   {
-    id: 'A1', title: 'map-skill-followed', skill: 'blueprint',
+    id: 'A1', title: 'map-skill-followed', skill: 'map',
     turns: [
       `${NOTES}\n\nGet this onto the canvas — flesh out the "Student Just Joined" scenario's happy path with it.`,
       'yes, go ahead.',
