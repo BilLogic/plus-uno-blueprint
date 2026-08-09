@@ -1,4 +1,4 @@
-import blueprintSkill from '@/lib/agent/skill/skills/blueprint.md?raw'
+import mapSkill from '@/lib/agent/skill/skills/map.md?raw'
 import sliceSkill from '@/lib/agent/skill/skills/slice.md?raw'
 import auditSkill from '@/lib/agent/skill/skills/audit.md?raw'
 import whatifSkill from '@/lib/agent/skill/skills/whatif.md?raw'
@@ -30,7 +30,7 @@ export const AGENT_SKILL_COMMANDS: AgentSkillCommand[] = [
     aliases: ['map'],
     label: '/sb:map',
     description: 'Create or evolve a blueprint from notes and conversation',
-    content: blueprintSkill,
+    content: mapSkill,
   },
   {
     id: 'sb:slice',

@@ -12,33 +12,36 @@ import { copyFileSync, existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const PLUGIN = resolve(process.env.PLUGIN_REPO ?? '../agentic-service-blueprinting')
-const PLUGIN_REFS = resolve(PLUGIN, 'references')
 const VENDORED = resolve('src/lib/agent/skill/references')
 const VENDORED_SKILLS = resolve('src/lib/agent/skill/skills')
 
+// Plugin-relative source path per vendored reference. The plugin keeps its
+// shared core at references/ and each skill's own materials under
+// skills/<name>/references/; the app's vendored dir stays flat because
+// read_reference serves files by bare name.
 const FILES = [
-  'canvas-adapter.md',
-  'layer-roles.md',
-  'lane-vocabulary.md',
-  'elicitation-protocol.md',
-  'data-model.md',
-  'audit-playbook.md',
-  'whatif-playbook.md',
-  'check-gap-sweep.md',
-  'check-jargon-lint.md',
-  'check-channel-conflict.md',
-  'check-kpi-alignment.md',
-  'check-perceived-owner.md',
-  'check-value-ledger.md',
-  'check-fee-visibility.md',
-  'slice-playbook.md',
-  'slice-templates.md',
+  'references/canvas-adapter.md',
+  'references/layer-roles.md',
+  'references/lane-vocabulary.md',
+  'skills/map/references/elicitation-protocol.md',
+  'references/data-model.md',
+  'references/audit-playbook.md',
+  'skills/whatif/references/whatif-playbook.md',
+  'skills/audit/references/check-gap-sweep.md',
+  'skills/audit/references/check-jargon-lint.md',
+  'skills/audit/references/check-channel-conflict.md',
+  'skills/audit/references/check-kpi-alignment.md',
+  'skills/audit/references/check-perceived-owner.md',
+  'skills/audit/references/check-value-ledger.md',
+  'skills/audit/references/check-fee-visibility.md',
+  'skills/slice/references/slice-playbook.md',
+  'skills/slice/references/slice-templates.md',
 ]
 
 // The four-skill architecture: these SKILL.md files are the same ones IDE
 // humans get from the plugin; the app vendors them for the /slash triggers.
 const SKILLS = [
-  ['map/SKILL.md', 'blueprint.md'],
+  ['map/SKILL.md', 'map.md'],
   ['slice/SKILL.md', 'slice.md'],
   ['audit/SKILL.md', 'audit.md'],
   ['whatif/SKILL.md', 'whatif.md'],
@@ -46,14 +49,18 @@ const SKILLS = [
 
 const check = process.argv.includes('--check')
 
-if (!existsSync(PLUGIN_REFS)) {
-  console.error(`plugin references not found at ${PLUGIN_REFS} (set PLUGIN_REPO)`)
+if (!existsSync(resolve(PLUGIN, 'references'))) {
+  console.error(`plugin references not found at ${resolve(PLUGIN, 'references')} (set PLUGIN_REPO)`)
   process.exit(check ? 0 : 1) // absent plugin checkout must not fail CI
 }
 
 let drift = 0
 const pairs = [
-  ...FILES.map((file) => [resolve(PLUGIN_REFS, file), resolve(VENDORED, file), file]),
+  ...FILES.map((file) => [
+    resolve(PLUGIN, file),
+    resolve(VENDORED, file.split('/').pop()),
+    file,
+  ]),
   ...SKILLS.map(([from, to]) => [
     resolve(PLUGIN, 'skills', from),
     resolve(VENDORED_SKILLS, to),
