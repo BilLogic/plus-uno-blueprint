@@ -1,0 +1,34 @@
+# The cross-repo forcing function: uno-bot (the "le goat" Slack bot) reads
+# this app's database, and schema changes here have twice broken its reads
+# SILENTLY (renamed slices column, re-shaped findings column — each returned
+# empty for weeks). The bot exposes a public, boolean-only probe that runs
+# its exact selects; this workflow turns any breakage into a red build here,
+# where the breaking change ships.
+#
+# No secrets: /health/blueprint is unauthenticated by design — it returns
+# only per-probe booleans (table names are public-read anyway), never data.
+name: bot-contract-probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "src/lib/blueprintContract.ts"
+  schedule:
+    # Daily, after the bot's nightly embed backfill (07:00 UTC).
+    - cron: "30 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe uno-bot blueprint reads
+        run: |
+          body=$(curl -sS --max-time 30 https://uno-bot.bryanhuang628.workers.dev/health/blueprint)
+          echo "$body"
+          echo "$body" | grep -q '"ok":true' || {
+            echo "::error::uno-bot reports a broken blueprint read — a schema change here likely broke the bot. Probe output above; bot repo: PLUS-UNO/plus-vibe-coding-starting-kit/agents/uno-bot."
+            exit 1
+          }

@@ -13,6 +13,12 @@
  * is dropped when both appear rather than opening a panel behind a tab.
  */
 
+import { BLUEPRINT_CONTRACT } from '@/lib/blueprintContract'
+
+// Param names come from the cross-repo contract (uno-bot builds links with
+// the same constants, vendored from blueprintContract.ts).
+const PARAMS = BLUEPRINT_CONTRACT.urlParams
+
 export type UrlViewState =
   | { kind: 'blueprint'; cellId?: string }
   | { kind: 'slice'; sliceId: string }
@@ -29,16 +35,16 @@ function parseFrameParam(raw: string | null): number {
 /** Parse a location search string; null when no view params are present. */
 export function parseUrlViewState(search: string): UrlViewState | null {
   const params = new URLSearchParams(search)
-  const sliceId = params.get('slice')
+  const sliceId = params.get(PARAMS.slice)
 
   if (sliceId) {
-    if (params.get('mode') === 'present') {
-      return { kind: 'present', sliceId, frame: parseFrameParam(params.get('frame')) }
+    if (params.get(PARAMS.mode) === 'present') {
+      return { kind: 'present', sliceId, frame: parseFrameParam(params.get(PARAMS.frame)) }
     }
     return { kind: 'slice', sliceId }
   }
 
-  const cellId = params.get('cell')
+  const cellId = params.get(PARAMS.cell)
   if (cellId) return { kind: 'blueprint', cellId }
 
   return null
@@ -50,15 +56,15 @@ export function serializeUrlViewState(state: UrlViewState): string {
 
   switch (state.kind) {
     case 'blueprint':
-      if (state.cellId) params.set('cell', state.cellId)
+      if (state.cellId) params.set(PARAMS.cell, state.cellId)
       break
     case 'slice':
-      params.set('slice', state.sliceId)
+      params.set(PARAMS.slice, state.sliceId)
       break
     case 'present':
-      params.set('slice', state.sliceId)
-      params.set('mode', 'present')
-      params.set('frame', String(Math.max(0, Math.trunc(state.frame))))
+      params.set(PARAMS.slice, state.sliceId)
+      params.set(PARAMS.mode, 'present')
+      params.set(PARAMS.frame, String(Math.max(0, Math.trunc(state.frame))))
       break
   }
 
