@@ -11,8 +11,17 @@
 alter view public.evidence_counts set (security_invoker = true);
 
 -- 2. search_blueprint was the one function without a pinned search_path.
-alter function public.search_blueprint(q text)
-  set search_path = public, pg_catalog, pg_temp;
+--    Guarded: on a fresh replay the function is created later, by
+--    20260809000100_search_blueprint_versioned.sql (with the pinned
+--    search_path already folded into its definition), so at this point in
+--    the timeline it may not exist yet.
+do $$
+begin
+  if to_regprocedure('public.search_blueprint(text)') is not null then
+    alter function public.search_blueprint(q text)
+      set search_path = public, pg_catalog, pg_temp;
+  end if;
+end $$;
 
 -- 3. flag_founding_service_accounts is an operator routine; it has no
 --    business on the public REST surface. The grant that exposed it was

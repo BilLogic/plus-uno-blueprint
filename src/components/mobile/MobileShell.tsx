@@ -22,6 +22,7 @@ import {
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { useViewState } from '@/contexts/viewStateStore'
 import { useCellDeepLink } from '@/hooks/useCellDeepLink'
 import { useSlices } from '@/hooks/useSlices'
 import {
@@ -71,6 +72,32 @@ export function MobileShell() {
       : slicesQuery.status === 'error'
         ? (slicesQuery.fallback ?? [])
         : []
+
+  // ?slice= deep links (uno-bot shares them into Slack, which mostly opens
+  // on phones). Desktop resolves these in TabStrip; this shell never mounts
+  // it, so resolve here: present the slice if it exists (derived below),
+  // otherwise the pending state just clears and the reader shows.
+  const { pendingUrlState, resolvePending } = useViewState()
+  const [bootSliceId] = useState(() =>
+    pendingUrlState !== null && pendingUrlState.kind !== 'blueprint'
+      ? pendingUrlState.sliceId
+      : null,
+  )
+  const [bootSliceDismissed, setBootSliceDismissed] = useState(false)
+  useEffect(() => {
+    if (pendingUrlState === null) return
+    if (slicesQuery.status === 'loading') return
+    resolvePending(slices.map((slice) => slice.id))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `slices` is derived from slicesQuery each render; keying on the query status avoids re-running on referentially fresh arrays
+  }, [pendingUrlState, resolvePending, slicesQuery.status])
+  const bootPresentingId =
+    !bootSliceDismissed &&
+    presentingSliceId === null &&
+    bootSliceId !== null &&
+    slices.some((slice) => slice.id === bootSliceId)
+      ? bootSliceId
+      : null
+  const activeSliceId = presentingSliceId ?? bootPresentingId
 
   const phases = useMemo(
     () => slides.filter((slide) => !slide.parentId),
@@ -342,12 +369,15 @@ export function MobileShell() {
 
       {/* Presenting a slice: full-bleed over everything, Return closes.
           The presentation surface is frame-linear already — phone-shaped. */}
-      {presentingSliceId ? (
+      {activeSliceId ? (
         <div className="fixed inset-0 z-40 bg-background">
           <SlicePresentation
-            key={presentingSliceId}
-            sliceId={presentingSliceId}
-            onReturn={() => setPresentingSliceId(null)}
+            key={activeSliceId}
+            sliceId={activeSliceId}
+            onReturn={() => {
+              setPresentingSliceId(null)
+              setBootSliceDismissed(true)
+            }}
           />
         </div>
       ) : null}
