@@ -4,10 +4,7 @@ import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandle
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { CompareLaneRowShell } from '@/components/blueprint/CompareLaneRowShell'
 import { CompareCellBlock } from '@/components/blueprint/CompareCellBlock'
-import {
-  ComparePleatCell,
-  CompareDiffColumnTint,
-} from '@/components/blueprint/CompareTrackDecorations'
+import { ComparePleatCell } from '@/components/blueprint/CompareTrackDecorations'
 import {
   BlueprintDividerRow,
   BlueprintLabelRow,
@@ -184,11 +181,10 @@ export function BlueprintPathBand({
       />
       {arrangement.kind === 'row' ? (
         <>
-          {/* Divergent columns tint the full band height — the v3 diff
-              signal is column-level; cells themselves never carry paint.
-              `relative` so the tint paints above the absolutely-positioned
-              section frame while staying under the z-[1] cells. Pleat
-              tracks render the pleat cell at the same x in EVERY band. */}
+          {/* No divergent-column tints (streamlined 2026-08-17): the Diff
+              ledger finds differences, the canvas stays quiet. Pleat
+              tracks still render the pleat cell at the same x in EVERY
+              band. */}
           {arrangement.tracks.map((track, trackIndex) =>
             track.kind === 'pleat' ? (
               <ComparePleatCell
@@ -196,11 +192,6 @@ export function BlueprintPathBand({
                 track={track}
                 gridColumn={trackIndex + 2}
                 onExpand={arrangement.onExpandPleat}
-              />
-            ) : track.divergent ? (
-              <CompareDiffColumnTint
-                key={`tint-${track.key}`}
-                gridColumn={trackIndex + 2}
               />
             ) : null,
           )}

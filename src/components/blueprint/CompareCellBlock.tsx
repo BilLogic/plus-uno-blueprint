@@ -56,6 +56,7 @@ export function CompareCellBlock({
   visualPictures,
   slotCells,
   pathRails,
+  pathWash = true,
 }: {
   cellId?: string
   stepIndex: number
@@ -70,6 +71,12 @@ export function CompareCellBlock({
   slotCells?: BlueprintCell[]
   /** Member paths of a divergent sub-cell — one wash stripe + label each. */
   pathRails?: readonly CompareCellPathRail[]
+  /**
+   * Fully-shared cells show every path's LABEL but skip the wash — the
+   * wash means "this face belongs to a strict subset of the paths", and
+   * tinting cells that belong to everyone would repaint most of the board.
+   */
+  pathWash?: boolean
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -94,9 +101,10 @@ export function CompareCellBlock({
   )
   // Visual faces are photographs — a colour wash over them reads as a bad
   // scan, so there the labels alone carry the affiliation.
-  const washStyle = isVisual
-    ? undefined
-    : getPathWashStyle(pathRails?.map((rail) => rail.color))
+  const washStyle =
+    isVisual || !pathWash
+      ? undefined
+      : getPathWashStyle(pathRails?.map((rail) => rail.color))
 
   const innerContent =
     variant === 'visual' ? (

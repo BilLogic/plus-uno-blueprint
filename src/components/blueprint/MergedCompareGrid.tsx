@@ -259,16 +259,24 @@ export function MergedCompareGrid({
   */
   const arrowDataByPath = useMemo(() => {
     const remap = buildMergedArrowRemap(assemblyByKey.values())
+    // After the remap, two paths' triggers can land on the SAME drawn
+    // (source, target) pair — subset-shared endpoints alias onto one cell.
+    // Draw that edge once: N identical strokes stack into one visually
+    // "doubled" arrowhead and say nothing extra.
+    const drawnEdges = new Set<string>()
     return blueprints.map((blueprint, index) => {
       const data = getComparePathArrowData(
         blueprint,
         foldedStepIdsByPath?.get(blueprint.path.id),
       )
-      return {
-        path: blueprint.path,
-        ...data,
-        triggers: remapMergedPathTriggers(data.triggers, remap, index === 0),
-      }
+      const remapped = remapMergedPathTriggers(data.triggers, remap, index === 0)
+      const triggers = remapped.filter((trigger) => {
+        const key = `${trigger.source_cell_id} ${trigger.target_cell_id}`
+        if (drawnEdges.has(key)) return false
+        drawnEdges.add(key)
+        return true
+      })
+      return { path: blueprint.path, ...data, triggers }
     })
   }, [assemblyByKey, blueprints, foldedStepIdsByPath])
 
@@ -288,7 +296,6 @@ export function MergedCompareGrid({
         <CompareStepHeaderRow
           tracks={tracks}
           showPinGlyph={activeFold.folded}
-          diffTint={false}
         />
         <div
           ref={bandRef}
@@ -569,18 +576,18 @@ function MergedLaneRow({
             : assembly.kind === 'shared'
               ? [assembly.representative]
               : assembly.subCells
-        // A fully-shared cell belongs to every path, so it wears no wash or
-        // labels. Divergent sub-cells — including subset-shared groups — do,
-        // one label (and wash stripe) per member path.
-        const withRail = assembly?.kind === 'split'
+        // Every drawn cell names its member paths — a fully-shared cell
+        // carries ALL the labels (the clear "shared by both" statement),
+        // while only strict-subset cells additionally wear the wash.
+        const withWash = assembly?.kind === 'split'
         const railsFor = (
           subCell: MergedSubCell,
-        ): CompareCellPathRail[] | undefined =>
-          withRail
-            ? subCell.pathIds
-                .map((pathId) => runtimeByPathId.get(pathId)?.rail)
-                .filter((rail): rail is CompareCellPathRail => rail !== undefined)
-            : undefined
+        ): CompareCellPathRail[] | undefined => {
+          const rails = subCell.pathIds
+            .map((pathId) => runtimeByPathId.get(pathId)?.rail)
+            .filter((rail): rail is CompareCellPathRail => rail !== undefined)
+          return rails.length > 0 ? rails : undefined
+        }
 
         return (
           <Fragment key={track.key}>
@@ -602,6 +609,7 @@ function MergedLaneRow({
                 compact={compact}
                 flushBottom={flushBottom}
                 pathRails={railsFor(subCells[0])}
+                pathWash={withWash}
                 scenarioName={scenarioName}
                 phaseName={phaseName}
               />
@@ -619,6 +627,7 @@ function MergedLaneRow({
                     compact={compact}
                     flushBottom={flushBottom}
                     pathRails={railsFor(subCell)}
+                    pathWash={withWash}
                     scenarioName={scenarioName}
                     phaseName={phaseName}
                   />
@@ -644,6 +653,7 @@ function MergedSubCellBlock({
   compact,
   flushBottom,
   pathRails,
+  pathWash = true,
   scenarioName,
   phaseName,
 }: {
@@ -656,8 +666,9 @@ function MergedSubCellBlock({
   variant: BlueprintCellVariant
   compact?: boolean
   flushBottom?: boolean
-  /** One entry per member path of this sub-cell (wash stripe + label). */
+  /** One entry per member path of this sub-cell (label; wash if pathWash). */
   pathRails?: readonly CompareCellPathRail[]
+  pathWash?: boolean
   scenarioName?: string
   phaseName?: string
 }) {
@@ -702,6 +713,7 @@ function MergedSubCellBlock({
       visualPictures={visualPictures}
       slotCells={variant === 'pills' ? cells : undefined}
       pathRails={pathRails}
+      pathWash={pathWash}
       selectionContext={
         scenarioName && cellId
           ? {

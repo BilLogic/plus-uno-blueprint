@@ -4,7 +4,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
 import type { CompareGridTrack } from '@/lib/compareGridTracks'
 import { cn } from '@/lib/utils'
 
@@ -19,18 +18,10 @@ import { cn } from '@/lib/utils'
 export function CompareStepHeaderRow({
   tracks,
   showPinGlyph,
-  diffTint = true,
 }: {
   tracks: readonly CompareGridTrack[]
   /** The `🔗 pinned` explainer only means anything while the fold is on. */
   showPinGlyph: boolean
-  /**
-   * Stacked marks divergent columns with a header tint. Merged turns it
-   * off: there divergence is already said twice (sub-cell stacking, path
-   * wash), and with most columns divergent the tinted header read as a
-   * wall of noise paint.
-   */
-  diffTint?: boolean
 }) {
   return (
     <>
@@ -42,11 +33,10 @@ export function CompareStepHeaderRow({
             // row (single-path stacked, merged), the frame's opaque fill is
             // an absolutely-positioned later sibling — without a stacking
             // order the labels paint UNDER it and the header "vanishes".
+            // No divergent-column header tint (streamlined 2026-08-17):
+            // the Diff ledger finds differences, the header stays quiet.
             className="relative z-[1] flex min-w-0 items-end justify-center gap-1 overflow-hidden rounded-md px-2 pb-1.5"
             style={{ gridColumn: trackIndex + 2, gridRow: 1 }}
-            {...(diffTint && track.divergent
-              ? { 'data-blueprint-compare-diffcolumn': 'header' }
-              : {})}
           >
             <span
               className="truncate text-xs font-medium text-muted-foreground"
@@ -76,31 +66,11 @@ export function CompareStepHeaderRow({
   )
 }
 
-/**
- * The v3 diff signal on the canvas: a light tint over the full height of a
- * divergent column. Column-level by design — cells themselves never carry
- * paint. `relative` so the tint paints above the absolutely-positioned
- * section frame while staying under the z-[1] cells.
+/*
+ * The divergent-column tint (v3's canvas diff signal) was retired
+ * 2026-08-17: with the Diff ledger, the path wash, and merged's sub-cell
+ * stacking, the column paint read as noise in both arrangements.
  */
-export function CompareDiffColumnTint({
-  gridColumn,
-}: {
-  gridColumn: number
-}) {
-  return (
-    <div
-      aria-hidden
-      data-blueprint-compare-diffcolumn=""
-      className="pointer-events-none relative rounded-md"
-      style={{
-        gridColumn,
-        gridRow: '1 / -1',
-        marginLeft: -STEP_COLUMN_GAP / 2,
-        marginRight: -STEP_COLUMN_GAP / 2,
-      }}
-    />
-  )
-}
 
 /**
  * One collapsed pleat, full band height — flat `--muted` with a single 1px

@@ -1699,12 +1699,6 @@ export function AgentSettingsRailButton() {
                 Save
               </Button>
             </div>
-
-            <p className="text-3xs leading-snug text-muted-foreground">
-              Stored in this browser only, never the repo or a server — and
-              readable by anyone with devtools on this machine. Use a personal
-              key.
-            </p>
               </>
             ) : null}
           </div>

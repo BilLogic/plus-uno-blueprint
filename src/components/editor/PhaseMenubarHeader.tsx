@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import { Columns2, Diff, FoldHorizontal, GitCompareArrows } from 'lucide-react'
+import { Columns2, Diff, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
@@ -19,13 +18,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
-import { countFoldableCompareColumns } from '@/lib/compareFold'
 import { countCompareDifferences } from '@/lib/compareLedger'
-import {
-  setCompareFolded,
-  useCompareReviewState,
-} from '@/lib/compareReviewStore'
-import { computePinnedColumns } from '@/lib/compareSlots'
+import { useCompareReviewState } from '@/lib/compareReviewStore'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
@@ -104,67 +98,6 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
 }
 
 /**
- * The `[⇤ Fold]` toggle (Phase 4a) — opt-in compression of shared step
- * runs into pleats, in whichever compare mode is showing (the fold state
- * is mode-agnostic by design). Disabled at zero differences (S7 — nothing
- * to pull adjacent) and when the pin rule leaves no foldable shared
- * column. Turning fold off clears the per-pleat expansions.
- */
-function CompareFoldToggle({ slide }: { slide: NavItem }) {
-  const { registration, fold } = useCompareReviewState()
-  const active =
-    registration && registration.slideId === slide.id ? registration : null
-  const foldableCount = useMemo(
-    () =>
-      active
-        ? countFoldableCompareColumns(
-            active.model,
-            computePinnedColumns(active.model, active.blueprints),
-          )
-        : 0,
-    [active],
-  )
-  if (!active) return null
-  const differenceCount = countCompareDifferences(active.model)
-  const disabled = differenceCount === 0 || foldableCount === 0
-  const foldLabel = `Fold ${foldableCount} shared step${foldableCount === 1 ? '' : 's'}`
-  const toggle = (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      disabled={disabled}
-      aria-pressed={fold.folded}
-      aria-label={fold.folded ? 'Unfold shared steps' : foldLabel}
-      // Pressed styling is the ghost variant's own `aria-pressed:` rule —
-      // the brand-tint selected fill. Hand-writing `bg-muted` here was the
-      // bug: it is ghost's hover fill, so pressed and hovered looked alike.
-      className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
-      onClick={() => setCompareFolded(!fold.folded)}
-    >
-      <FoldHorizontal className="size-3.5" aria-hidden />
-      <span className="max-xl:hidden">Fold</span>
-    </Button>
-  )
-  return (
-    <Tooltip>
-      <TooltipTrigger render={<span className="inline-flex" />}>
-        {toggle}
-      </TooltipTrigger>
-      <TooltipContent>
-        {disabled
-          ? differenceCount === 0
-            ? 'Paths are identical — nothing to fold around'
-            : 'Every shared step feeds a divergent one — nothing folds'
-          : fold.folded
-            ? 'Unfold shared steps'
-            : foldLabel}
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-/**
  * The `[Diff N]` button — the menubar entry to the difference ledger, beside
  * the compare toggles. A real toggle: pressed while the panel is open ON the
  * Differences surface, and clicking it then CLOSES the panel (the panel's own
@@ -235,8 +168,7 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
 }
 
 /**
- * The compare controls as ONE right-aligned cluster (Stacked/Merged, Fold,
- * Diff) — the navbar composes it beside the path selector so every view
+ * The compare controls as ONE right-aligned cluster (Stacked/Merged, Diff) — the navbar composes it beside the path selector so every view
  * control shares one edge and one gap rhythm, instead of toggles floating
  * mid-bar next to the title.
  */
@@ -255,7 +187,6 @@ export function CompareControlsCluster({
       onClick={(event) => event.stopPropagation()}
     >
       <CompareViewToggle slide={slide} />
-      <CompareFoldToggle slide={slide} />
       <CompareDifferencesChip slide={slide} />
     </div>
   )
