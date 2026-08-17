@@ -168,8 +168,20 @@ vitest tests elsewhere). Pin what the redesign keeps true: nav routing, the
   `EditorRail`'s `SidebarSurface` set — with the light/dark control at the foot
   of the rail.
 - Delete the ⋯ overflow menu.
-- Top-right holds **Fit to screen**, rendered only on the map, fixing the
-  unreachable-reset defect.
+- Top-right holds the **path selector** (decided 2026-08-16): mobile reads one
+  path at a time, and the control that picks it belongs in the top bar rather
+  than as a chip row inside the reader's scroll. The reader already maintains
+  per-path state (`MobileScenarioReader.tsx:227` `pathId`) — this lifts the
+  existing selection into the shell chrome, it does not invent a new mode.
+  - Compact control: current path name as a tappable pill; tap opens a small
+    menu of the scenario's paths (they are few — happy/unhappy/exception).
+  - **Default rule:** the last path the user viewed for that scenario
+    (persisted per scenario in `localStorage`), falling back to the happy
+    path on first visit.
+  - The Map surface honours the same selection where it applies; the
+    selector hides on surfaces with no path dimension.
+- The map's **Fit to screen** control shares the right slot, rendered only on
+  the map, fixing the unreachable-reset defect.
 - Navigation no longer forces a surface as a side effect; the surface follows
   from *what kind of thing* was tapped.
 - Route nav through the shared helpers (`getMainSlides` / `getSubslides`) and
