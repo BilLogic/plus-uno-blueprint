@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { Check, Play } from 'lucide-react'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
+import { CanvasLoadProgress } from '@/components/editor/CanvasLoadProgress'
 import {
   PendingCanvasLoadingSkeleton,
   SliceTabLoadingSkeleton,
@@ -144,7 +145,21 @@ function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
       <DeferredSkeleton
         loading
         holdKey={skeletonHoldKey}
-        skeleton={<SliceTabLoadingSkeleton />}
+        skeleton={
+          <div className="relative h-full">
+            <SliceTabLoadingSkeleton />
+            {/* Plan 2026-08-17-001 U3: the slice waterfall's stages, over
+                the same skeleton session the whole chain shares. */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <CanvasLoadProgress
+                stages={[
+                  { label: 'Loading slice…', done: false },
+                  { label: 'Loading blueprints…', done: false },
+                ]}
+              />
+            </div>
+          </div>
+        }
         className="h-full min-h-0"
       >
         {null}
@@ -212,7 +227,19 @@ function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
           <DeferredSkeleton
             loading
             holdKey={skeletonHoldKey}
-            skeleton={<PendingCanvasLoadingSkeleton />}
+            skeleton={
+              <>
+                <PendingCanvasLoadingSkeleton />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <CanvasLoadProgress
+                    stages={[
+                      { label: 'Loading slice…', done: true },
+                      { label: 'Loading blueprints…', done: false },
+                    ]}
+                  />
+                </div>
+              </>
+            }
           >
             {null}
           </DeferredSkeleton>

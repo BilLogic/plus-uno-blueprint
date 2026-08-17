@@ -105,6 +105,8 @@ function SliceGroups({
               <li key={slice.id}>
                 <NavRow
                   rowId={slice.id}
+                  className="min-h-11"
+
                   label={slice.title}
                   icon={<Diamond className="inline size-3" />}
                   onSelect={() => onSelectSlice(slice.id)}
@@ -182,7 +184,8 @@ export function MobileNavSheet({
             </button>
           ))}
           <div className="flex-1" aria-hidden />
-          <ThemeToggle size="icon-sm" />
+          {/* size-11 = the 44px touch floor (plan Phase 5). */}
+          <ThemeToggle size="icon-sm" className="size-11" />
         </nav>
 
         <div className="flex min-w-0 flex-1 flex-col">
@@ -210,6 +213,8 @@ export function MobileNavSheet({
                     <div key={phase.id}>
                       <NavRow
                         rowId={phase.id}
+                        className="min-h-11"
+
                         label={phaseLabel}
                         toggleLabel={phaseLabel}
                         open={hasChildren ? isOpen : undefined}
@@ -236,6 +241,8 @@ export function MobileNavSheet({
                             <li key={item.id}>
                               <NavRow
                                 rowId={item.id}
+                                className="min-h-11"
+
                                 label={getSlideDisplayLabel(item, slides)}
                                 onSelect={() => onSelectScenario(item.id)}
                                 selected={item.id === selectedScenarioId}

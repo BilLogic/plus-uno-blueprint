@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Menu } from 'lucide-react'
+import { Info, Menu, X } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { MobileTopBar } from '@/components/mobile/MobileTopBar'
 import {
   MobileNavSheet,
@@ -17,10 +18,9 @@ import { SliceView } from '@/components/editor/SliceView'
 import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useViewState } from '@/contexts/viewStateStore'
+import { tabKey, useViewState } from '@/contexts/viewStateStore'
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { useCellDeepLink } from '@/hooks/useCellDeepLink'
-import { useMobileSliceDeepLink } from '@/hooks/useMobileSliceDeepLink'
 import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { useSlices } from '@/hooks/useSlices'
 import {
@@ -66,7 +66,22 @@ export function MobileShell() {
     setPhaseExpanded,
   } = useEditor()
   const { canAgent } = useSupabase()
-  const { pendingUrlState } = useViewState()
+  // The SAME tab store the desktop shell uses (todo 025 solution B): slice
+  // and presentation surfaces are tabs here too, so both shells agree about
+  // what is showing, `?slice=` resolution lives in the shared reducer, a
+  // network flap cannot unmount a presentation mid-read (the tab is state,
+  // not a derived query value), and a dead link surfaces the same
+  // missing-slice notice desktop shows.
+  const {
+    pendingUrlState,
+    resolvePending,
+    activeTab,
+    openTab,
+    closeTab,
+    activateTab,
+    missingSliceId,
+    dismissMissingSlice,
+  } = useViewState()
   useCellDeepLink()
 
   // First load with nothing selected: the drawer IS the index, so it opens.
@@ -80,11 +95,6 @@ export function MobileShell() {
   )
   const [navSurface, setNavSurface] = useState<MobileNavSurface>('blueprints')
   const [agentOpen, setAgentOpen] = useState(false)
-  // A slice opened from the drawer: the same scoped-canvas slice view the
-  // desktop opens in a tab (member cells outlined, others dimmed, Present in
-  // the header band). Full-bleed presentation is one tap further, not the
-  // only door (decided 2026-08-17).
-  const [viewingSliceId, setViewingSliceId] = useState<string | null>(null)
 
   const slicesQuery = useSlices()
   const slices =
@@ -93,12 +103,16 @@ export function MobileShell() {
       : slicesQuery.status === 'error'
         ? (slicesQuery.fallback ?? [])
         : []
-  // A slice presents full-bleed over the shell — SlicePresentation is
-  // already linear (frame by frame), which is exactly a phone's shape.
-  const { activeSliceId, presentSlice, dismissSlice } = useMobileSliceDeepLink(
-    slices,
-    slicesQuery.status === 'loading',
-  )
+
+  // Resolve the boot deep link once the slice list has loaded — the same
+  // handshake TabStrip performs on desktop; the reducer opens the tab (or
+  // records missingSliceId) exactly once.
+  useEffect(() => {
+    if (pendingUrlState === null) return
+    if (slicesQuery.status === 'loading') return
+    resolvePending(slices.map((slice) => slice.id))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `slices` is derived from the query each render; keying on the status avoids re-running on referentially fresh arrays
+  }, [pendingUrlState, resolvePending, slicesQuery.status])
 
   const phases = useMemo(() => getMainSlides(slides), [slides])
   const scenariosByPhase = useMemo(
@@ -111,6 +125,11 @@ export function MobileShell() {
 
   const scenario = slides.find((slide) => slide.id === selectedScenarioId)
   const phase = slides.find((slide) => slide.id === selectedPhaseId)
+  // Slice surfaces come from the shared tab store: a `slice` tab is the
+  // scoped canvas view, a `present` tab is the full-bleed presentation.
+  const viewingSliceId = activeTab?.kind === 'slice' ? activeTab.sliceId : null
+  const presentingSliceId =
+    activeTab?.kind === 'present' ? activeTab.sliceId : null
   const viewingSlice = viewingSliceId
     ? slices.find((slice) => slice.id === viewingSliceId)
     : undefined
@@ -174,16 +193,27 @@ export function MobileShell() {
     writeLastViewedPath(selectedScenarioId, pathId)
   }
 
+  // Agent-driven navigation closes the sheet first and leaves any slice tab
+  // for the base canvas — a jump should be VISIBLE, not land behind an
+  // opaque surface (plan 2026-08-16-002 Phase 4).
   useEffect(
     () =>
       registerAgentUiBridge(
         makeMobileAgentBridge({
-          selectPhase,
-          selectScenario,
+          selectPhase: (phaseId) => {
+            setAgentOpen(false)
+            activateTab(null)
+            selectPhase(phaseId)
+          },
+          selectScenario: (scenarioId) => {
+            setAgentOpen(false)
+            activateTab(null)
+            selectScenario(scenarioId)
+          },
           openAgent: () => setAgentOpen(true),
         }),
       ),
-    [selectPhase, selectScenario],
+    [selectPhase, selectScenario, activateTab],
   )
 
   // What the shell knows about the phone's screen, for get_ui_state.
@@ -213,11 +243,13 @@ export function MobileShell() {
   // destinations — only scenarios (and slices) navigate.
   const openScenario = (scenarioId: string) => {
     selectScenario(scenarioId)
-    setViewingSliceId(null)
+    // Back to the base canvas; the tab stays open in the store (desktop
+    // keeps closed-over tabs too) but stops covering the view.
+    activateTab(null)
     setNavOpen(false)
   }
   const openSlice = (sliceId: string) => {
-    setViewingSliceId(sliceId)
+    openTab({ kind: 'slice', sliceId })
     setNavOpen(false)
   }
 
@@ -241,6 +273,30 @@ export function MobileShell() {
           }
         />
 
+        {/* A dead ?slice= link: same notice desktop shows, instead of the
+            link silently doing nothing (todo 025 acceptance). */}
+        {missingSliceId !== null ? (
+          <div className="shrink-0 border-b border-border bg-sidebar px-2 py-1.5">
+            <Alert variant="info" className="items-center">
+              <Info className="size-3.5" aria-hidden />
+              <AlertDescription className="text-xs">
+                That link points to a slice that no longer exists — it may
+                have been deleted.
+              </AlertDescription>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                className="absolute top-1.5 right-1.5"
+                aria-label="Dismiss"
+                onClick={dismissMissingSlice}
+              >
+                <X className="size-3" />
+              </Button>
+            </Alert>
+          </div>
+        ) : null}
+
         {/* The error boundary sits HERE, inside the chrome, so a throw in
             the canvas leaves the menu and the agent reachable; its resetKey
             means navigating somewhere else clears it. The canvas subtree is
@@ -249,7 +305,10 @@ export function MobileShell() {
         <main className="relative min-h-0 flex-1">
           <EditorErrorBoundary
             resetKey={
-              viewingSliceId ?? selectedScenarioId ?? selectedPhaseId ?? 'none'
+              (activeTab ? tabKey(activeTab) : null) ??
+              selectedScenarioId ??
+              selectedPhaseId ??
+              'none'
             }
           >
             {viewingSliceId ? (
@@ -257,7 +316,9 @@ export function MobileShell() {
                 <SliceView
                   key={viewingSliceId}
                   sliceId={viewingSliceId}
-                  onPresent={presentSlice}
+                  onPresent={(sliceId) =>
+                    openTab({ kind: 'present', sliceId })
+                  }
                 />
               </div>
             ) : hasSelection ? (
@@ -304,14 +365,16 @@ export function MobileShell() {
         onSelectScenario={openScenario}
       />
 
-      {/* Presenting a slice: full-bleed over everything, Return closes.
-          The presentation surface is frame-linear already — phone-shaped. */}
-      {activeSliceId ? (
+      {/* Presenting a slice: full-bleed over everything; Return closes the
+          present tab, and the store activates the slice tab beneath it (or
+          the base view for a boot ?slice=&mode=present link). The tab is
+          STATE — a network flap cannot unmount this mid-read (todo 025). */}
+      {presentingSliceId ? (
         <div className="fixed inset-0 z-40 bg-background">
           <SlicePresentation
-            key={activeSliceId}
-            sliceId={activeSliceId}
-            onReturn={dismissSlice}
+            key={presentingSliceId}
+            sliceId={presentingSliceId}
+            onReturn={() => closeTab(`present:${presentingSliceId}`)}
           />
         </div>
       ) : null}

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
 import { makeMobileAgentBridge } from '@/components/mobile/mobileAgentBridge'
-import { resolveBootSlice } from '@/hooks/useMobileSliceDeepLink'
 
 // Pins the agent bridge's handlers: the phone shows ONE surface (the shared
 // canvas, decided 2026-08-17), so phase and scenario opens are plain
@@ -49,41 +48,5 @@ describe('makeMobileAgentBridge', () => {
     expect(typeof result).toBe('string')
     expect(result).toMatch(/no sidebar/)
     expect(h.selectPhase).not.toHaveBeenCalled()
-  })
-})
-
-// Pins the ?slice= boot decision (todo 025 documents the known
-// derived-from-query defect; Phase 4 replaces the mechanism, and these
-// cases state what must stay true across that replacement).
-describe('resolveBootSlice', () => {
-  const base = {
-    bootSliceId: 'abc',
-    bootSliceDismissed: false,
-    presentingSliceId: null,
-    sliceIds: ['abc', 'def'],
-  }
-
-  it('presents the boot slice when it exists and nothing else presents', () => {
-    expect(resolveBootSlice(base)).toBe('abc')
-  })
-
-  it('never presents after dismissal', () => {
-    expect(resolveBootSlice({ ...base, bootSliceDismissed: true })).toBeNull()
-  })
-
-  it('defers to an explicit user presentation', () => {
-    expect(resolveBootSlice({ ...base, presentingSliceId: 'def' })).toBeNull()
-  })
-
-  it('a dead link presents nothing (falls back to the reader)', () => {
-    expect(resolveBootSlice({ ...base, sliceIds: ['def'] })).toBeNull()
-  })
-
-  it('no boot link, no presentation', () => {
-    expect(resolveBootSlice({ ...base, bootSliceId: null })).toBeNull()
-  })
-
-  it('presents nothing while the slice list is still empty', () => {
-    expect(resolveBootSlice({ ...base, sliceIds: [] })).toBeNull()
   })
 })
