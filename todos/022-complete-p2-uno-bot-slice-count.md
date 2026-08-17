@@ -1,5 +1,7 @@
 # 022 · P2 · uno-bot reports page size as slice total
 
+STATUS: COMPLETE 2026-08-17 — fix shipped in plus-uno (PRs #118/#120, commit 258cfd02: fetchRows carries Prefer: count=exact totals; tool result answers counts from the table). Live-verified against deployed r66: bot answered 10, DB has 10.
+
 Found by live smoke test 2026-08-08 (DM D0APTB20SK0, devoli workspace):
 asked "how many slices does the blueprint have" — bot answered **5**; the
 database has **14**. Its newest-slice answer (title, date, deep link) and
