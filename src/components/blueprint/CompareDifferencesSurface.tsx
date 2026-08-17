@@ -547,7 +547,7 @@ export function CompareDifferencesSurface({
         >
           {stepGroups.map((group) => (
             <AccordionItem key={group.columnKey} value={`step-${group.columnKey}`}>
-              <AccordionTrigger className="gap-1.5 py-2 hover:no-underline">
+              <AccordionTrigger className="w-full min-w-0 gap-1.5 py-2 hover:no-underline">
                 {groupHeader(
                   group.headerLabel,
                   filteredStepSlots(group).length,
@@ -567,7 +567,7 @@ export function CompareDifferencesSurface({
           ))}
           {detailOnlySlots.length > 0 ? (
             <AccordionItem value="detail">
-              <AccordionTrigger className="gap-1.5 py-2 hover:no-underline">
+              <AccordionTrigger className="w-full min-w-0 gap-1.5 py-2 hover:no-underline">
                 {groupHeader(
                   'Detail-only differences',
                   filteredDetailSlots.length,

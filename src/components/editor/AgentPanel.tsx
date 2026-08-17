@@ -108,6 +108,7 @@ function AgentMarkdown(props: { text: string; className?: string }) {
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { NavSection } from '@/components/editor/SidebarNav'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Collapsible,
   CollapsibleContent,
@@ -162,6 +163,7 @@ import {
   hydrateAgentSessions,
   renameAgentSession,
   useAgentSessions,
+  useAgentSessionsHydrating,
   type AgentSession,
 } from '@/lib/agent/sessions'
 import {
@@ -343,6 +345,7 @@ function AgentSessionsView({
   onOpen: (id: string) => void
   onCreate: () => void
 }) {
+  const hydrating = useAgentSessionsHydrating()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [todayOpen, setTodayOpen] = useState(true)
@@ -439,10 +442,21 @@ function AgentSessionsView({
 
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
         {sessions.length === 0 ? (
-          <p className="px-1.5 pt-2 text-xs text-muted-foreground">
-            No sessions yet. A session is one conversation plus the changes
-            it made.
-          </p>
+          hydrating ? (
+            // Loading and empty are different states (same rule as the
+            // sidebar lists): skeleton rows while the DB merge is on the
+            // wire, the teaching copy only once the list is truly bare.
+            <div className="flex flex-col gap-2 px-1.5 pt-2" aria-hidden>
+              <Skeleton className="h-3.5 w-40" />
+              <Skeleton className="h-3.5 w-28" />
+              <Skeleton className="h-3.5 w-36" />
+            </div>
+          ) : (
+            <p className="px-1.5 pt-2 text-xs text-muted-foreground">
+              No sessions yet. A session is one conversation plus the changes
+              it made.
+            </p>
+          )
         ) : searching ? (
           // A filter answers "where is it", so groups get out of the way.
           <div className="flex flex-col gap-0.5">

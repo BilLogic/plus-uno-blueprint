@@ -58,6 +58,29 @@ export function useAgentSessions(): AgentSession[] {
   )
 }
 
+// Hydration-in-flight flag, so the sessions list can show skeleton rows
+// (the same loading/empty distinction the sidebar's lists make) instead of
+// flashing "no sessions" while the DB merge is still on the wire.
+let hydrating = false
+const hydrationListeners = new Set<() => void>()
+
+function setHydrating(next: boolean) {
+  if (hydrating === next) return
+  hydrating = next
+  hydrationListeners.forEach((listener) => listener())
+}
+
+export function useAgentSessionsHydrating(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      hydrationListeners.add(listener)
+      return () => hydrationListeners.delete(listener)
+    },
+    () => hydrating,
+    () => false,
+  )
+}
+
 export function createAgentSession(title = 'New session'): AgentSession {
   const now = new Date().toISOString()
   const session: AgentSession = {
@@ -78,17 +101,22 @@ export function createAgentSession(title = 'New session'): AgentSession {
  * Called once persistence attaches; a no-op when the DB is unreachable.
  */
 export async function hydrateAgentSessions(): Promise<void> {
-  const persisted = await loadPersistedSessions()
-  if (!persisted) return
-  const byId = new Map(persisted.map((session) => [session.id, session]))
-  const localOnly = snapshot.filter((session) => !byId.has(session.id))
-  // Local-only sessions predate persistence — push them up so the merge
-  // converges instead of forking per browser.
-  localOnly.forEach(persistSession)
-  const merged = [...persisted, ...localOnly].sort((a, b) =>
-    b.createdAt.localeCompare(a.createdAt),
-  )
-  write(merged)
+  setHydrating(true)
+  try {
+    const persisted = await loadPersistedSessions()
+    if (!persisted) return
+    const byId = new Map(persisted.map((session) => [session.id, session]))
+    const localOnly = snapshot.filter((session) => !byId.has(session.id))
+    // Local-only sessions predate persistence — push them up so the merge
+    // converges instead of forking per browser.
+    localOnly.forEach(persistSession)
+    const merged = [...persisted, ...localOnly].sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    )
+    write(merged)
+  } finally {
+    setHydrating(false)
+  }
 }
 
 /**
