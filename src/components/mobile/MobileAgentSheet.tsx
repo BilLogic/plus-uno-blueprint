@@ -38,7 +38,11 @@ export function MobileAgentSheet({
         <SheetHeader className="border-b border-border px-4 py-3">
           <SheetTitle className="text-sm">Agent</SheetTitle>
         </SheetHeader>
-        <div className="min-h-0 flex-1">
+        {/* Must be a flex COLUMN, not a block: AgentPanel's own root is
+            `min-h-0 flex-1 flex-col`, which only stretches inside a flex
+            parent — in a block div the panel takes natural height and the
+            composer floats mid-sheet instead of anchoring at the bottom. */}
+        <div className="flex min-h-0 flex-1 flex-col">
           <AgentPanel />
         </div>
       </SheetContent>

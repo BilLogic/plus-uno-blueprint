@@ -60,6 +60,25 @@ There is no server-side monitoring, alerting, or error-reporting service
 If a real error pipeline is added later, the boundary's `componentDidCatch`
 is the single seam to hook.
 
+## Local dev servers and auth redirects
+
+The recommended local dev ports — the ones agent-assisted sessions should
+reach for — are:
+
+- **`5199`** — the canonical agent/preview port (`.claude/launch.json`
+  starts `npm run dev` here; browser-driven verification targets it).
+- **`5173`** — Vite's default when running `npm run dev` by hand.
+
+Both origins are registered in the hosted project's auth **Redirect URLs**
+(Supabase dashboard → Authentication → URL Configuration), alongside the
+**Site URL** `https://uno-blueprint.netlify.app`. That allowlist is what
+makes emailed auth links work: magic-link and recovery emails redirect to
+the requesting origin only if it is on the list, otherwise Supabase
+silently falls back to the Site URL. If a mailed link lands somewhere
+unexpected, check this configuration first. Use another port and mailed
+links will not come back to it — either add the origin there or stick to
+the two above.
+
 ## Inviting people
 
 Supabase dashboard → **Authentication → Users → Invite user** (email).
