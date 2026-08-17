@@ -1330,6 +1330,38 @@ export function AgentSettingsRailButton() {
       })
   }
 
+  // Magic link: sign in without a password at all. The right fit for this
+  // app's hand-created admin accounts — there is no sign-up flow and no
+  // set-password screen, so a mailed link that lands already authenticated
+  // beats a recovery flow with nowhere to type a new password.
+  // `shouldCreateUser: false` keeps it from quietly minting accounts.
+  // Requires the project's Site URL / redirect allowlist to include this
+  // origin — a link mailed to the default localhost Site URL goes nowhere.
+  const [linkSent, setLinkSent] = useState(false)
+  const sendMagicLink = () => {
+    if (!client || authBusy) return
+    const email = emailDraft.trim()
+    if (!email) return
+    setAuthBusy(true)
+    setAuthError(null)
+    void client.auth
+      .signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: window.location.origin,
+        },
+      })
+      .then(({ error }) => {
+        setAuthBusy(false)
+        if (error) {
+          setAuthError(error.message)
+          return
+        }
+        setLinkSent(true)
+      })
+  }
+
   const signOut = () => {
     if (!client || authBusy) return
     setAuthBusy(true)
@@ -1448,9 +1480,22 @@ export function AgentSettingsRailButton() {
                     Sign in
                   </Button>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 justify-start px-1 text-xs text-muted-foreground"
+                  disabled={authBusy || emailDraft.trim() === ''}
+                  onClick={sendMagicLink}
+                >
+                  Email me a sign-in link instead
+                </Button>
                 {authError ? (
                   <p className="text-3xs leading-snug text-destructive">
                     {authError}
+                  </p>
+                ) : linkSent ? (
+                  <p className="text-3xs leading-snug text-muted-foreground">
+                    Link sent — check that inbox, then open it on this device.
                   </p>
                 ) : (
                   <p className="text-3xs leading-snug text-muted-foreground">
