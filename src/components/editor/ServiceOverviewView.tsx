@@ -546,7 +546,14 @@ export function ServiceOverviewView({
                 250 ms hold, leaves in the same commit the content fades
                 in, and fast loads see neither. */}
             {!noPathsSelected ? (
-              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+              // role=status lives HERE now: the shaped skeleton went
+              // visibility-hidden (the bar is the one visible signal), and
+              // visibility removes it from the accessibility tree with it.
+              <div
+                role={overviewReady ? undefined : 'status'}
+                aria-label={overviewReady ? undefined : 'Loading canvas'}
+                className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
+              >
                 <DeferredSkeleton
                   loading={!overviewReady}
                   holdKey={canvasHoldKey}

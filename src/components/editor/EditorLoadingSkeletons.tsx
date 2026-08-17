@@ -79,6 +79,11 @@ const UNKNOWN_SHAPE: OverviewSkeletonPhase[] = [
  *
  * Deliberately not progressive: this is one flat placeholder that swaps to
  * the real canvas in a single commit, never a frame that fills in.
+ *
+ * INVISIBLE since the determinate progress bar landed (decided 2026-08-17):
+ * the bar is the only visible loading signal — a ghost grid under it read
+ * as clutter. The skeleton still mounts because its dimensions are what
+ * the camera pre-fits against; only its ink is gone.
  */
 export function ServiceOverviewCanvasSkeleton({
   phases,
@@ -96,7 +101,7 @@ export function ServiceOverviewCanvasSkeleton({
       role="status"
       aria-busy="true"
       aria-label="Loading canvas"
-      className="relative inline-flex w-max flex-col items-start"
+      className="invisible relative inline-flex w-max flex-col items-start"
       style={{
         paddingTop: OVERVIEW_CANVAS_PADDING_Y,
         paddingBottom: OVERVIEW_CANVAS_PADDING_Y,

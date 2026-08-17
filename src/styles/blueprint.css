@@ -523,6 +523,11 @@
   [data-semantic-tier='blocks'] [data-phase-title-badge] {
     scale: var(--semantic-label-boost, 1);
     transform-origin: left bottom;
+    /* The badge component's own transition-all animated this scale at the
+       tier boundary — a visible "growing label" effect nobody asked for
+       (removed 2026-08-17). Counter-scaling is instant framing math, not
+       an animation. */
+    transition: none;
   }
 
   /* Forced-colors flattens the --border fill to Canvas — the whole board
