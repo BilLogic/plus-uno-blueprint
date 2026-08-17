@@ -20,6 +20,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
+import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
@@ -218,31 +219,47 @@ export function MobileShell() {
             (diving INTO the board — and it lands on the semantic-zoom block
             tier, which IS the miniature), the reader rises from below (the
             journey unrolling). Reduced motion swaps instantly. */}
+        {/* The surface fold. The key is `surface` ALONE: selecting a scenario
+            is a camera move inside the canvas, not a screen change, so it must
+            not remount the board — the same rule DesktopEditorShell states for
+            its own canvas. Keying on the scenario as well used to tear down and
+            rebuild the whole subtree on every navigation, which is what jammed
+            the main thread and left surfaces half-drawn on top of each other.
+
+            The error boundary sits HERE, inside the chrome, so a throw in one
+            view leaves the menu and the agent reachable; its resetKey means
+            navigating somewhere else clears it. */}
         <main className="relative min-h-0 flex-1">
-          <div
-            key={surface + (selectedScenarioId ?? 'none')}
-            className={cn(
-              'absolute inset-0 animate-in fade-in duration-(--motion-fade) motion-reduce:animate-none',
-              surface === 'map' ? 'zoom-in-95' : 'slide-in-from-bottom-4',
-            )}
+          <EditorErrorBoundary
+            resetKey={`${surface}:${selectedScenarioId ?? selectedPhaseId ?? 'none'}`}
           >
-            {surface === 'map' ? (
-              <VisualWalkthroughShell>
-                <div className="absolute inset-0 flex min-h-0 flex-col" data-editor-view>
-                  <ServiceOverviewView />
-                </div>
-              </VisualWalkthroughShell>
-            ) : selectedScenarioId ? (
-              <MobileScenarioReader scenarioId={selectedScenarioId} />
-            ) : (
-              <MobileJourneyIndex
-                phases={phases}
-                scenariosByPhase={scenariosByPhase}
-                slides={slides}
-                onOpenScenario={openScenario}
-              />
-            )}
-          </div>
+            <div
+              key={surface}
+              className={cn(
+                'absolute inset-0 animate-in fade-in duration-(--motion-fade) motion-reduce:animate-none',
+                surface === 'map' ? 'zoom-in-95' : 'slide-in-from-bottom-4',
+              )}
+            >
+              {surface === 'map' ? (
+                <VisualWalkthroughShell>
+                  <div className="absolute inset-0 flex min-h-0 flex-col" data-editor-view>
+                    {/* Scoped to the selected phase: a phone renders one
+                        stretch of the service, never the whole board. */}
+                    <ServiceOverviewView soloPhaseId={selectedPhaseId ?? undefined} />
+                  </div>
+                </VisualWalkthroughShell>
+              ) : selectedScenarioId ? (
+                <MobileScenarioReader scenarioId={selectedScenarioId} />
+              ) : (
+                <MobileJourneyIndex
+                  phases={phases}
+                  scenariosByPhase={scenariosByPhase}
+                  slides={slides}
+                  onOpenScenario={openScenario}
+                />
+              )}
+            </div>
+          </EditorErrorBoundary>
         </main>
 
         {/* Thumb-reach action bar: the reader ⇄ map fold, and the agent.

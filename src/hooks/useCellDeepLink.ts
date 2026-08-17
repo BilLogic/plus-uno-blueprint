@@ -25,11 +25,18 @@ import { findFallbackScenarioForCells } from '@/lib/sliceCells'
 /** The cell can mount several frames after the scenario does (canvas fit,
  *  deferred skeletons). Poll rather than guess a delay, and give up loudly. */
 const OPEN_POLL_MS = 150
-const OPEN_TIMEOUT_MS = 10_000
+/**
+ * How long the link may keep hunting for its cell once the scenario is up.
+ * Deliberately short: this window ends with a panel opening under the user's
+ * thumb, so a link that has not resolved in a few seconds has lost its claim
+ * on their attention. Ten seconds was long enough to feel like the app acting
+ * on its own, seconds after the user had moved on.
+ */
+const OPEN_TIMEOUT_MS = 3_000
 
 export function useCellDeepLink(): void {
   const { pendingUrlState } = useViewState()
-  const { seedBaseSelection } = useEditor()
+  const { seedBaseSelection, selectedScenarioId } = useEditor()
 
   // Captured at mount, not watched: `resolvePending` clears pendingUrlState as
   // soon as the slice list loads, which is typically before the cell query
@@ -75,11 +82,19 @@ export function useCellDeepLink(): void {
   }, [scenarioId, seedBaseSelection])
 
   // Once the scenario is on screen, wait for the cell to mount and open it.
+  //
+  // The latch is set on SUCCESS, not on attempt. A refetch failure (a phone
+  // returning from the background triggers these constantly) nulls scenarioId,
+  // which cancels the poll; latching up front meant the retry saw the link as
+  // already spent and silently did nothing.
   const openedRef = useRef<string | null>(null)
   useEffect(() => {
     if (cellId === null || scenarioId === null) return
     if (openedRef.current === cellId) return
-    openedRef.current = cellId
+    // The link is only entitled to move the screen while the user is still
+    // standing where it put them — the same rule seedBaseSelection follows.
+    // The moment they navigate somewhere of their own choosing, it is spent.
+    if (selectedScenarioId !== null && selectedScenarioId !== scenarioId) return
 
     let cancelled = false
     const deadline = Date.now() + OPEN_TIMEOUT_MS
@@ -91,10 +106,12 @@ export function useCellDeepLink(): void {
         `[data-blueprint-cell="${CSS.escape(cellId)}"][data-blueprint-cell-interactive]`,
       )
       if (mounted) {
+        openedRef.current = cellId
         void agentOpenCellPanel(cellId)
         return
       }
       if (Date.now() > deadline) {
+        openedRef.current = cellId
         console.warn(
           `[deep link] cell ${cellId} never mounted on the canvas — the panel was not opened`,
         )
@@ -108,5 +125,5 @@ export function useCellDeepLink(): void {
       cancelled = true
       if (timer) window.clearTimeout(timer)
     }
-  }, [cellId, scenarioId])
+  }, [cellId, scenarioId, selectedScenarioId])
 }

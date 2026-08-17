@@ -181,6 +181,13 @@ type ServiceOverviewViewProps = {
    */
   soloScenarioId?: string
   /**
+   * Narrows the board to one phase's scenarios. `soloScenarioId` narrows all
+   * the way to a single scenario; this is the step above it, and it is what
+   * the mobile Map uses — a phone asks "show me this stretch of the service",
+   * never "render all 800 cells".
+   */
+  soloPhaseId?: string
+  /**
    * Embedding tabs (slice focus) replace the built-in docked navbar header
    * with their own band. Rendered inside the canvas zoom chrome provider.
    */
@@ -197,6 +204,7 @@ type ServiceOverviewViewProps = {
 export function ServiceOverviewView({
   skeletonHoldKey,
   soloScenarioId,
+  soloPhaseId,
   renderHeader,
   floatingChrome,
 }: ServiceOverviewViewProps = {}) {
@@ -217,24 +225,28 @@ export function ServiceOverviewView({
     consumeCanvasFitAnimationSkip,
   } = useEditor()
   const allPhases = useMemo(() => getMainSlides(slides), [slides])
-  const soloPhase = useMemo(
-    () =>
-      soloScenarioId
-        ? (allPhases.find((phase) =>
-            getSubslides(phase.id, slides).some(
-              (scenario) => scenario.id === soloScenarioId,
-            ),
-          ) ?? null)
-        : null,
-    [allPhases, slides, soloScenarioId],
-  )
+  const soloPhase = useMemo(() => {
+    if (soloScenarioId)
+      return (
+        allPhases.find((phase) =>
+          getSubslides(phase.id, slides).some(
+            (scenario) => scenario.id === soloScenarioId,
+          ),
+        ) ?? null
+      )
+    if (soloPhaseId)
+      return allPhases.find((phase) => phase.id === soloPhaseId) ?? null
+    return null
+  }, [allPhases, slides, soloScenarioId, soloPhaseId])
   const phases = useMemo(
     () => (soloPhase ? [soloPhase] : allPhases),
     [allPhases, soloPhase],
   )
   const scenarioIds = soloScenarioId
     ? [soloScenarioId]
-    : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
+    : soloPhase
+      ? getSubslides(soloPhase.id, slides).map((scenario) => scenario.id)
+      : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
   const isDetail = view === 'detail'
   const focusedScenarioId =
     isDetail && isSubslide(activeSlide) ? activeSlide.id : null
