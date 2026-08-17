@@ -13,6 +13,7 @@ import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { Button } from '@/components/ui/button'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
+import { SliceView } from '@/components/editor/SliceView'
 import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -79,6 +80,11 @@ export function MobileShell() {
   )
   const [navSurface, setNavSurface] = useState<MobileNavSurface>('blueprints')
   const [agentOpen, setAgentOpen] = useState(false)
+  // A slice opened from the drawer: the same scoped-canvas slice view the
+  // desktop opens in a tab (member cells outlined, others dimmed, Present in
+  // the header band). Full-bleed presentation is one tap further, not the
+  // only door (decided 2026-08-17).
+  const [viewingSliceId, setViewingSliceId] = useState<string | null>(null)
 
   const slicesQuery = useSlices()
   const slices =
@@ -105,11 +111,16 @@ export function MobileShell() {
 
   const scenario = slides.find((slide) => slide.id === selectedScenarioId)
   const phase = slides.find((slide) => slide.id === selectedPhaseId)
-  const title = scenario
-    ? getSlideDisplayLabel(scenario, slides)
-    : phase
-      ? getSlideDisplayLabel(phase, slides)
-      : 'Service blueprint'
+  const viewingSlice = viewingSliceId
+    ? slices.find((slice) => slice.id === viewingSliceId)
+    : undefined
+  const title = viewingSlice
+    ? viewingSlice.title
+    : scenario
+      ? getSlideDisplayLabel(scenario, slides)
+      : phase
+        ? getSlideDisplayLabel(phase, slides)
+        : 'Service blueprint'
 
   // ONE path at a time (decided 2026-08-16, single-select confirmed
   // 2026-08-17): the pill drives the same PathSelection context the desktop
@@ -202,10 +213,11 @@ export function MobileShell() {
   // destinations — only scenarios (and slices) navigate.
   const openScenario = (scenarioId: string) => {
     selectScenario(scenarioId)
+    setViewingSliceId(null)
     setNavOpen(false)
   }
   const openSlice = (sliceId: string) => {
-    presentSlice(sliceId)
+    setViewingSliceId(sliceId)
     setNavOpen(false)
   }
 
@@ -219,7 +231,7 @@ export function MobileShell() {
           navOpen={navOpen}
           onToggleNav={() => setNavOpen((open) => !open)}
           rightSlot={
-            selectedScenarioId && paths.length > 0 ? (
+            !viewingSliceId && selectedScenarioId && paths.length > 0 ? (
               <MobilePathSelector
                 paths={paths}
                 activePathId={activePathId}
@@ -236,9 +248,19 @@ export function MobileShell() {
             remount — the remount is what used to jam the main thread. */}
         <main className="relative min-h-0 flex-1">
           <EditorErrorBoundary
-            resetKey={selectedScenarioId ?? selectedPhaseId ?? 'none'}
+            resetKey={
+              viewingSliceId ?? selectedScenarioId ?? selectedPhaseId ?? 'none'
+            }
           >
-            {hasSelection ? (
+            {viewingSliceId ? (
+              <div className="absolute inset-0 flex min-h-0 flex-col">
+                <SliceView
+                  key={viewingSliceId}
+                  sliceId={viewingSliceId}
+                  onPresent={presentSlice}
+                />
+              </div>
+            ) : hasSelection ? (
               <VisualWalkthroughShell>
                 <div
                   className="absolute inset-0 flex min-h-0 flex-col"

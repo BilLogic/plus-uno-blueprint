@@ -37,6 +37,11 @@ const FOCUS_CLICK_IGNORE =
 
 type SliceViewProps = {
   sliceId: string
+  /**
+   * Where "Present" goes. Desktop's default opens a presentation tab; the
+   * mobile shell has no tab strip, so it presents full-bleed instead.
+   */
+  onPresent?: (sliceId: string) => void
 }
 
 /**
@@ -46,19 +51,19 @@ type SliceViewProps = {
  * attribute + CSS, member cells carry outlines and sequence badges
  * (BlueprintCellButton reads SliceMembershipContext).
  */
-export function SliceView({ sliceId }: SliceViewProps) {
+export function SliceView({ sliceId, onPresent }: SliceViewProps) {
   // The provider sits above the surface, not inside the viewport, because the
   // slice tab itself has to know the mode: in Design mode the tab *is* the
   // editor, so the frame strip and the picker mount here rather than behind a
   // separate Edit button.
   return (
     <CanvasModeProvider>
-      <SliceSurface sliceId={sliceId} />
+      <SliceSurface sliceId={sliceId} onPresent={onPresent} />
     </CanvasModeProvider>
   )
 }
 
-function SliceSurface({ sliceId }: SliceViewProps) {
+function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
   const { openTab } = useViewState()
   const {
     result,
@@ -183,7 +188,10 @@ function SliceSurface({ sliceId }: SliceViewProps) {
           : {
               label: 'Present',
               icon: Play,
-              onClick: () => openTab({ kind: 'present', sliceId }),
+              onClick: () =>
+                onPresent
+                  ? onPresent(sliceId)
+                  : openTab({ kind: 'present', sliceId }),
             }
       }
     />

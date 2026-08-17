@@ -28,10 +28,12 @@ export function MobileAgentSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        // max-h carries the size: the sheet variant's own data-[side=bottom]
-        // h-auto survives tailwind-merge (different variant prefix), so a
-        // bare h-[60svh] can lose to it once content wants more height.
-        className="flex h-[60svh] max-h-[60svh] flex-col gap-0 rounded-t-2xl p-0"
+        // min-h + max-h pin the size in BOTH directions: the sheet variant's
+        // own data-[side=bottom] h-auto survives tailwind-merge (different
+        // variant prefix), so a bare h-[60svh] loses to it — content-hungry
+        // panels grew past it, and a fresh empty chat SHRANK below it. The
+        // sheet is a fixed room the conversation lives in, not a balloon.
+        className="flex min-h-[60svh] max-h-[60svh] flex-col gap-0 rounded-t-2xl p-0"
       >
         <SheetHeader className="border-b border-border px-4 py-3">
           <SheetTitle className="text-sm">Agent</SheetTitle>
