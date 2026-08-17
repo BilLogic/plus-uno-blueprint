@@ -547,9 +547,11 @@ export function ScenarioBlueprintPanel({
     return (
       <ResizableComparePanel
         {...comparePanelProps}
-        // Strip in both compare modes (stacked + merged), navigation only.
+        // Strip in STACKED only: merged already reads as one combined
+        // board (labels + wash carry divergence), and the zone strip on
+        // top of it was chrome without a job.
         chromeBar={
-          compareModel ? (
+          compareModel && displayViewType !== 'merged' ? (
             <CompareDivergenceStrip
               model={compareModel}
               blueprints={visibleBlueprints}
@@ -557,7 +559,11 @@ export function ScenarioBlueprintPanel({
             />
           ) : undefined
         }
-        chromeBarHeight={COMPARE_STRIP_HEIGHT}
+        chromeBarHeight={
+          compareModel && displayViewType !== 'merged'
+            ? COMPARE_STRIP_HEIGHT
+            : 0
+        }
         fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
       >
         {mergedModel !== null ? (
