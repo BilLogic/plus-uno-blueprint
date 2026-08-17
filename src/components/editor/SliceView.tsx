@@ -15,6 +15,7 @@ import {
 } from '@/components/editor/EditorLoadingSkeletons'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
+import { useMobileShell } from '@/hooks/useMobileShell'
 import { SliceEditSession } from '@/components/editor/SliceEditSession'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
@@ -66,6 +67,7 @@ export function SliceView({ sliceId, onPresent }: SliceViewProps) {
 
 function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
   const { openTab } = useViewState()
+  const mobileShell = useMobileShell()
   const {
     result,
     detail,
@@ -267,10 +269,14 @@ function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
               skeletonHoldKey={skeletonHoldKey}
               soloScenarioId={scenarioId}
               renderHeader={() => header}
+              // Reset View is mobile-only (no wheel, easy to lose the
+              // canvas); desktop slice tabs carry no float at all.
               floatingChrome={
-                <div className="rounded-full border border-border bg-card px-1 shadow-sm">
-                  <NavbarZoomIndicator />
-                </div>
+                mobileShell ? (
+                  <div className="rounded-full border border-border bg-card px-1 shadow-sm">
+                    <NavbarZoomIndicator />
+                  </div>
+                ) : undefined
               }
             />
           </div>

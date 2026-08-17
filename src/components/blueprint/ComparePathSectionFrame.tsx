@@ -95,15 +95,16 @@ export function ComparePathSectionFrame({
       {extraTopInset > 0 ? (
         // The wrapped step-header row gets a light band — the horizontal
         // counterpart of the lane-label rail, one tint lighter so the two
-        // axes read as related but distinct.
+        // axes read as related but distinct. Offset 3px inside the frame
+        // edges so it never paints over the frame's border.
         <div
           aria-hidden
-          className="pointer-events-none absolute rounded-t-[10px]"
+          className="pointer-events-none absolute rounded-t-[9px]"
           style={{
-            top: inset.top,
-            left: inset.left,
-            right: inset.right,
-            height: COMPARE_STEP_HEADER_HEIGHT,
+            top: inset.top + 3,
+            left: inset.left + 3,
+            right: inset.right + 3,
+            height: COMPARE_STEP_HEADER_HEIGHT - 3,
             backgroundColor: `color-mix(in oklab, ${blueprintPanelLabelRailColor()} 45%, transparent)`,
           }}
         />

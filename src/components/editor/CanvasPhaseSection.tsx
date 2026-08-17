@@ -145,6 +145,9 @@ export function CanvasPhaseSection({
   }
 
   const interactive = Boolean(onNavigate)
+  // `navigable` also gates the data-canvas-phase-interactive pan-ignore
+  // marker below: in focus mode the click affordance is gone, and a drag
+  // inside the board must PAN, not die on that attribute.
   const navigable = interactive && !focusActive
 
   const handleSectionClick = (event: MouseEvent<HTMLElement>) => {
@@ -168,7 +171,7 @@ export function CanvasPhaseSection({
       data-canvas-focus-dimmed={dimmed ? '' : undefined}
       {...(focusActive ? { 'data-canvas-focus-active': '' } : {})}
       data-phase-section-inset={sectionInset}
-      {...(interactive ? { 'data-canvas-phase-interactive': '' } : {})}
+      {...(navigable ? { 'data-canvas-phase-interactive': '' } : {})}
       {...(isFlowArrowAnchor ? { 'data-flow-arrow-anchor': '' } : {})}
       {...(isLoopArrowFrom ? { 'data-phase-loop-from': '' } : {})}
       {...(isLoopArrowTo ? { 'data-phase-loop-to': '' } : {})}

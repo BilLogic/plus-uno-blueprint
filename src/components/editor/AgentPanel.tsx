@@ -303,10 +303,8 @@ function SessionRow({
         'hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
       )}
     >
-      <Sparkles
-        className="size-3 shrink-0 text-sidebar-foreground/50"
-        aria-hidden
-      />
+      {/* No per-row glyph: a column of identical ✦ marks says nothing the
+          SESSIONS header hasn't already said. */}
       <span className="min-w-0 flex-1 truncate text-[13px] text-sidebar-foreground/85 group-hover/session:text-sidebar-accent-foreground">
         {session.title}
       </span>
@@ -444,22 +442,21 @@ function AgentSessionsView({
       ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-        {sessions.length === 0 ? (
-          hydrating ? (
-            // Loading and empty are different states (same rule as the
-            // sidebar lists): skeleton rows while the DB merge is on the
-            // wire, the teaching copy only once the list is truly bare.
-            <div className="flex flex-col gap-2 px-1.5 pt-2" aria-hidden>
-              <Skeleton className="h-3.5 w-40" />
-              <Skeleton className="h-3.5 w-28" />
-              <Skeleton className="h-3.5 w-36" />
-            </div>
-          ) : (
-            <p className="px-1.5 pt-2 text-xs text-muted-foreground">
-              No sessions yet. A session is one conversation plus the changes
-              it made.
-            </p>
-          )
+        {hydrating ? (
+          // The DB merge is the list's source of truth, so until the first
+          // merge lands the WHOLE list is a loading state — the localStorage
+          // cache underneath may be missing sessions from other browsers.
+          <div className="flex flex-col gap-3 px-1.5 pt-2" aria-hidden>
+            <Skeleton className="h-3.5 w-40" />
+            <Skeleton className="h-3.5 w-28" />
+            <Skeleton className="h-3.5 w-36" />
+            <Skeleton className="h-3.5 w-32" />
+          </div>
+        ) : sessions.length === 0 ? (
+          <p className="px-1.5 pt-2 text-xs text-muted-foreground">
+            No sessions yet. A session is one conversation plus the changes
+            it made.
+          </p>
         ) : searching ? (
           // A filter answers "where is it", so groups get out of the way.
           <div className="flex flex-col gap-0.5">
@@ -523,45 +520,6 @@ function useAgentChangeCount(sessionId: string): number {
  * and status lines are Markers — the chat vocabulary shadcn ships, not a
  * hand-rolled lookalike.
  */
-/**
- * Working prose from mid-run turns collapses to one muted line once the
- * conversation has moved past it — the reasoning stays reachable without
- * the transcript reading like a log dump. The latest answer never
- * collapses, and short narration lines are left alone.
- */
-function CollapsedAssistantRow({ text }: { text: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger
-        render={
-          <button
-            type="button"
-            className="group/collapsed flex w-full min-w-0 items-center gap-1 rounded-sm py-0.5 text-left text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ChevronRight
-              className={cn(
-                'size-3 shrink-0 transition-transform',
-                open && 'rotate-90',
-              )}
-              aria-hidden
-            />
-            <span className={cn('min-w-0 flex-1 italic', !open && 'truncate')}>
-              {open ? 'Working notes' : text.replace(/\s+/g, ' ').trim()}
-            </span>
-          </button>
-        }
-      />
-      <CollapsibleContent>
-        <div className="pl-4">
-          <AgentMarkdown text={text} className="text-foreground/80" />
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
-  )
-}
-
-const COLLAPSE_THRESHOLD = 200
 
 type ToolEvent = Extract<TranscriptEvent, { kind: 'tool' }>
 
@@ -582,8 +540,8 @@ function ToolDetail({ label, body }: { label: string; body: string }) {
 /**
  * A tool call. Collapsed it is the same quiet one-liner it always was; open
  * it shows the arguments the agent sent and what came back — the same
- * disclosure vocabulary as CollapsedAssistantRow, so a reviewer only has to
- * learn one gesture. Rows rehydrated from a previous browser session carry
+ * disclosure vocabulary as the folded steps block, so a reviewer only has
+ * to learn one gesture. Rows rehydrated from a previous browser session carry
  * no payload and stay flat.
  */
 function ToolRow({ event }: { event: ToolEvent }) {
@@ -652,19 +610,9 @@ function ToolRow({ event }: { event: ToolEvent }) {
 
 function TranscriptRow({
   event,
-  intermediate = false,
 }: {
   event: TranscriptEvent
-  /** An assistant turn the conversation already moved past. */
-  intermediate?: boolean
 }) {
-  if (
-    event.kind === 'assistant' &&
-    intermediate &&
-    event.text.length > COLLAPSE_THRESHOLD
-  ) {
-    return <CollapsedAssistantRow text={event.text} />
-  }
   switch (event.kind) {
     case 'user':
       return (
@@ -846,12 +794,6 @@ function AgentChatView({
   // The slash menu is a portalled popover; this is what it anchors to (and
   // what --anchor-width measures).
   const composerRowRef = useRef<HTMLDivElement>(null)
-  // Only the latest answer renders full-width; earlier assistant turns are
-  // working notes and collapse (see CollapsedAssistantRow).
-  const lastAssistantIndex = events.reduce(
-    (last, entry, index) => (entry.kind === 'assistant' ? index : last),
-    -1,
-  )
 
   // Reopening a session after a reload restores its transcript from
   // agent_messages (no-op for never-persisted sessions).
@@ -1076,13 +1018,9 @@ function AgentChatView({
                           event.kind === 'user' && index > 0 && 'mt-3',
                         )}
                       >
-                        <TranscriptRow
-                          event={event}
-                          intermediate={
-                            event.kind === 'assistant' &&
-                            index !== lastAssistantIndex
-                          }
-                        />
+                        {/* Chat replies never fold — only completed
+                            tool/status step runs do (TranscriptStepsBlock). */}
+                        <TranscriptRow event={event} />
                       </MessageScrollerItem>
                     )
                   })

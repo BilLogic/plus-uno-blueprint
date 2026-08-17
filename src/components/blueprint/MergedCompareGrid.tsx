@@ -321,7 +321,8 @@ export function MergedCompareGrid({
           <BlueprintStickyLabelBackdrop
             rowCount={rows.length}
             bleedTop={COMPARE_STACKED_HEADER_GAP}
-            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET}
+            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET - 3}
+            bleedLeft={COMPARE_PATH_SECTION_INSET - 3}
           />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||
@@ -455,15 +456,19 @@ function MergedSectionFrame({
         }}
       />
       {/* Header band — same treatment as the single-path frame: the
-          lane-rail's horizontal counterpart, one tint lighter. */}
+          lane-rail's horizontal counterpart, one tint lighter, held 3px
+          inside the frame edges so the border stays untouched. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute rounded-t-[10px]"
+        className="pointer-events-none absolute rounded-t-[9px]"
         style={{
-          top: -COMPARE_PATH_SECTION_TOP_INSET - COMPARE_HEADER_WRAP_EXTRA_INSET,
-          left: -COMPARE_PATH_SECTION_INSET,
-          right: -COMPARE_PATH_SECTION_INSET,
-          height: COMPARE_STEP_HEADER_HEIGHT,
+          top:
+            -COMPARE_PATH_SECTION_TOP_INSET -
+            COMPARE_HEADER_WRAP_EXTRA_INSET +
+            3,
+          left: -COMPARE_PATH_SECTION_INSET + 3,
+          right: -COMPARE_PATH_SECTION_INSET + 3,
+          height: COMPARE_STEP_HEADER_HEIGHT - 3,
           backgroundColor: `color-mix(in oklab, ${blueprintPanelLabelRailColor()} 45%, transparent)`,
         }}
       />

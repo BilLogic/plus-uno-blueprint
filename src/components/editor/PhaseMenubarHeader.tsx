@@ -228,6 +228,33 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
   )
 }
 
+/**
+ * The compare controls as ONE right-aligned cluster (Stacked/Merged, Fold,
+ * Diff) — the navbar composes it beside the path selector so every view
+ * control shares one edge and one gap rhythm, instead of toggles floating
+ * mid-bar next to the title.
+ */
+export function CompareControlsCluster({
+  slide,
+  selectedPathIds,
+}: {
+  slide: NavItem
+  selectedPathIds: string[]
+}) {
+  if (!isSubslide(slide) || selectedPathIds.length < 2) return null
+  return (
+    <div
+      className="flex shrink-0 items-center gap-1.5"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <CompareViewToggle slide={slide} />
+      <CompareFoldToggle slide={slide} />
+      <CompareDifferencesChip slide={slide} />
+    </div>
+  )
+}
+
 /** Phase or scenario title bar using the shadcn Menubar component. */
 export function PhaseMenubarHeader({
   slide,
@@ -240,7 +267,6 @@ export function PhaseMenubarHeader({
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
   const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
-  const showCompareToggle = isScenario && selectedPathIds.length >= 2
 
   return (
     <Menubar
@@ -258,15 +284,9 @@ export function PhaseMenubarHeader({
           className="shrink-0"
         />
       </div>
-      {/* Beside the title, not flex-end: the bar's right edge belongs to the
-          absolutely-positioned zoom / Reset View chrome. */}
-      {showCompareToggle ? (
-        <div className="ml-3 flex shrink-0 items-center gap-1.5">
-          <CompareViewToggle slide={slide} />
-          <CompareFoldToggle slide={slide} />
-          <CompareDifferencesChip slide={slide} />
-        </div>
-      ) : null}
+      {/* Compare controls moved to the navbar's right cluster
+          (CompareControlsCluster) — the title keeps the left edge to
+          itself. */}
     </Menubar>
   )
 }

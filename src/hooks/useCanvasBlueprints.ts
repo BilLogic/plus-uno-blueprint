@@ -156,7 +156,7 @@ function deriveFromRows(
  * per-chunk ticks are REAL network completions (the reason the fetch is
  * chunked at all), large enough that a full board is a handful of requests.
  */
-const SCENARIOS_PER_CHUNK = 8
+const SCENARIOS_PER_CHUNK = 4
 
 function chunkIds(ids: string[]): string[][] {
   const chunks: string[][] = []

@@ -34,6 +34,7 @@ import {
 import type { CompareGridTrack } from '@/lib/compareGridTracks'
 import {
   COMPARE_PATH_SECTION_BOTTOM_INSET,
+  COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
   COMPARE_PLEAT_TRACK_WIDTH,
   COMPARE_STACKED_HEADER_GAP,
@@ -214,9 +215,12 @@ export function BlueprintPathBand({
             bleedTop={
               frameExtraTopInset
                 ? COMPARE_STACKED_HEADER_GAP
-                : COMPARE_PATH_SECTION_TOP_INSET
+                : COMPARE_PATH_SECTION_TOP_INSET - 3
             }
-            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET}
+            // Inset minus the frame's border (≤3px): the rail meets the
+            // border's inner edge, never paints over it.
+            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET - 3}
+            bleedLeft={COMPARE_PATH_SECTION_INSET - 3}
           />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||
