@@ -108,11 +108,17 @@ phone.
   separate in-content index — the drawer *is* the index, so
   `MobileJourneyIndex` retires.
 
-### 2. Journey ⇄ Map becomes a view toggle
+### 2. Journey ⇄ Map is decided by navigation, not a toggle
 
-A two-segment control in the top bar's right slot, not a tab bar. It is a
-mode switch on one scenario, so it reads as `role="radiogroup"` (or a pressed
-pair), never as navigation.
+> **Superseded 2026-08-16 (v3).** This section originally proposed a
+> two-segment toggle in the top bar. Review killed it: the menu already
+> expresses the same intent — tapping a *phase* asks for the map, tapping a
+> *scenario* asks for the reader — so a second control asked a question the
+> user had just answered. The surface now follows from what kind of thing was
+> tapped, and the freed slot holds **Fit to screen** on the map. Implementation
+> in [plan 002](2026-08-16-002-feat-mobile-shell-implementation-plan.md).
+
+The rule below still holds; only the control is gone.
 
 - Selecting a scenario anywhere no longer forces a view. The user's last
   chosen view **persists across navigation** — this is the fix for the

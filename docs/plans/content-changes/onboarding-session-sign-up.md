@@ -37,4 +37,4 @@ Status of scenario today: smallest scenario — 2 steps / 9 cells, 33% empty lab
 
 - **Spreadsheet history**: whether any manual-ops spreadsheet ever existed outside the app is unverifiable (07 #6). The plan removes it outright rather than marking "legacy" — confirm.
 - **Who creates the slots**: no session/shift creation UI exists; sessions arrive via DB import (08 §Job1-8). That backstage truth is documented in the Standard Scheduling plan — decide which scenario owns "semester schedule creation" (currently documented nowhere; eval flag B3-SCHED-01).
-- **Soft-conflict cell**: it's a design proposal, not shipped — include as PROPOSED or omit until triaged.
+- **Soft-conflict cell — DECIDED (Bill, 2026-08-08): include as a Future-path cell** (10-min gate design: warn/acknowledge under 10 min, supervisor-named gate at 10+).

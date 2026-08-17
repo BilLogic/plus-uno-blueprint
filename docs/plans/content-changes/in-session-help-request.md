@@ -32,4 +32,4 @@ Status of scenario today: 33 cells over 8 steps (one step orphaned, never render
 ## 4. Divergences & open questions (Bill decides)
 - Is tutors@tutor.plus still the escalation endpoint of record? It's baked into a step name today; the pending ticketing decision (Slack 2026-06-18) will obsolete it. Suggest keeping the address in cell content, not step names, so the swap is one edit.
 - Escalation-through-reflection ("lead tutor absent/late" chips, card 2067) is design-stage per report 06 #5 — deliberately NOT authored here as a current channel.
-- The routing-table material could justify an "Escalation" alternate path rather than fattening the happy path — happy = content help resolved in-room; alternate = routed out. Your call on whether this scenario stays single-path.
+- **DECIDED (Bill, 2026-08-08): add "Escalation" alternate path** — happy = content help resolved in-room; alternate = routed out (school Slack / support / urgent). Move tutors@tutor.plus out of the step name into cell content.

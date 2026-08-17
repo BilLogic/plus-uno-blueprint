@@ -28,7 +28,7 @@ No picture proposals — there is no PLUS-owned surface here, and screenshotting
 - Keep the 8-lane Post-session layout as is; this scenario legitimately has nothing for Support Actions (no dev/design surface).
 
 ## 4. Divergences & open questions (Bill decides)
-- What actually happens when hours are missed or rejected? Zero sources across Slack/Notion/code. Needs one answer from ops before a sad path can be authored.
+- **Missed/rejected hours — ANSWERED (Bill, 2026-08-08): both mechanisms** — supervisor follows up manually (Slack/email) AND the tutor can self-correct in Workday the next pay cycle. A sad path can now be authored: missed deadline → supervisor chase → late entry or next-cycle self-fix.
 - Scope label: should the scenario be titled/annotated "CMU tutors" explicitly? Non-CMU campus payroll variants are an acknowledged Notion gap and the current cells silently assume CMU/Workday.
 - The attendance-completeness problem (83.4% of students recorded, 31.8% of sessions fully covered — Metabase report 09 #4) means PLUS-side data couldn't currently support payroll verification even if a bridge were wanted. Worth stating in the Back Stage Tech boundary cell, or too editorial for the blueprint?
 - tutor_absence records stopped after Apr 2025 and the call-off system now carries absence data (Metabase report 09 #2/#3) — if a comp tie-in is ever built, the call-off table is the source, not tutor_absence. Note kept here so the boundary cell ages well.

@@ -35,6 +35,6 @@ Front Stage Tech cells (`…110106`, `…110206`, `…110306`, `…110406`, `…
 
 ## 4. Divergences & open questions (things Bill must decide)
 
-- **Module count drift**: Notion hub says 11 modules; Slack references M10 as Lead Tutor responsibilities while the Notion page for lead responsibilities is titled Module 11; PR #1151 added two more. Pin the canonical count/order from the Notion hub before writing it into cell prose (the draft above says "11 modules" — adjust if the hub says otherwise today).
+- **Module count — RESOLVED (hub re-read 2026-08-08): 11 modules canonical** (M1 Welcome → M11 Tutoring Session Responsibilities: Lead Tutors; M10 = Handling Difficult Situations). Slack's "M10 = Lead Tutor" reflects the old numbering — a Florida-specific M10 now sits in the hub's Archive. Cite the hub (26fb7cca-4982-8000-952f-d7b346d1b09c) as source of truth.
 - **Quiz results plumbing**: quizzes are Google Forms — how results reach the supervisor Training Progress view (manual vs. import) is undocumented. The `…110503` draft stays vague deliberately; document the pipeline if Bill knows it.
 - **Reflection loop location**: reflection happens in-app (confirmed) but reflection *questions* are maintained in Notion (`…110608`) — confirm this is still the flow after PR #1151's new modules.

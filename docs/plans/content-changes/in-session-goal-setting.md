@@ -43,8 +43,8 @@ System-lane enrichment — add once to Happy Path and once to each of Set Goals 
 3. **Path descriptions:** all six other paths have description+note; whatever survives of New In-Cycle Check-In must too.
 
 ## 4. Divergences & open questions (Bill decides)
-- Keep 7 paths? Happy Path largely duplicates Set/Check at lower resolution; consider demoting it to an overview path whose description points at the named paths, rather than maintaining 46 more cells.
-- Edge Case duplication strategy: Set/Update Edge Case paths are ~95% copies of their parents. Adding the new Back Stage Tech cells to all of them quadruples maintenance; my proposal adds them to the parents only.
+- **DECIDED (Bill, 2026-08-08): demote Happy Path to a thin overview** whose description points at the named paths; stop maintaining its 46 duplicate cells.
+- **DECIDED (Bill, 2026-08-08): new Back Stage Tech cells go on parent paths only** (Set/Update/Check), not the Edge Case copies.
 - Do you want the goal RCT condition surfaced at all in a partner-visible blueprint? It's accurate but exposes study mechanics; could live in description (detail panel) only, never in grid labels — which is how I've written it.
 - New In-Cycle Check-In — **DECIDED (Bill, 2026-08-08): fold into Check Goals** (move the two novel Front Stage Tech ideas as description/link material), then delete the skeleton path.
 - **Condition-storage location is an open question:** Metabase confirmed test_condition holds assessment-item conditions (MCQ / open-response / AI variants, student-scoped via student_test_map, 105 students) — NOT the goal-setting experiment (report 09 #9). Do not cite test_condition on any goal-setting cell. Bill (2026-08-08): condition lives in another in-app table, exact location unknown — acceptable to leave unresolved; word descriptions as "assigned by the research team's ETL into the app's database" without naming a table.

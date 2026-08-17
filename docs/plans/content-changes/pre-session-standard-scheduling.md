@@ -38,5 +38,5 @@ Status of scenario today: 2 steps / 9 cells, 44% descriptions but the content is
 
 - **Semester schedule creation is undocumented anywhere** (eval flag B3-SCHED-01): who builds the import file, from what partner-calendar inputs, on what cadence. The Back Stage Tech cell above says "DB import" — the honest current truth — but the upstream process needs an owner and a doc before the blueprint can say more.
 - **Reconfirm-Unavailable = silent absence**: dropping off a roster via reconfirmation bypasses the call-off record entirely (TutorSessionServiceImpl.java:236). Decide whether this belongs here, in Call-off Request as a divergence note, or as its own unhappy path. It is currently an uncovered edge in both scenarios.
-- **Step count**: this plan grows the scenario from 2 to 3 steps; if Bill prefers keeping 2, fold reconfirmation into "Views schedule" as description + links only.
+- **Step count — DECIDED (Bill, 2026-08-08): grow to 3 steps**; reconfirmation gets its own column (Future-path content until prod deploy).
 - **Revert**: `revertSessionsWithScope` exists on dev, but production shows no revert traces and no `session_change_event` table (09 #7). Keep revert in supervisor-action prose as "supported by shipping code" rather than an observed operational behavior.

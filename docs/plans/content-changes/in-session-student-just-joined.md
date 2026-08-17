@@ -29,6 +29,6 @@ Status of scenario today: the thinnest In-session scenario — 13 cells over 3 s
 - With only 3 steps this scenario could also absorb a "Student joins under wrong name / un-rostered" column (lead renames + adds to attendance list, currently only represented inside Warm-Up's lead lane).
 
 ## 4. Divergences & open questions (Bill decides)
-- Should "No or Few Students Join" be a second path here or its own scenario? It maps 1:1 onto a Help Center article and the eval DB treats no-shows as a distinct case.
+- **DECIDED (Bill, 2026-08-08): "No or Few Students Join" becomes a second path in this scenario** (built from the Help Center article's step-by-step flow).
 - The teacher lane says "Ask students to share screen and log into math software" but the tutor lane has no counterpart cell until my proposed addition — confirm the intended actor split (teacher prompts in-room, tutor verifies in-breakout).
 - Attendance drift from co-host moves is stated in two scenarios now (here and Before Students Join); fine to repeat, but decide which one carries the canonical description.
