@@ -1,8 +1,11 @@
 import type { CompareModel } from '@/lib/compareSlots'
 
 /**
- * Fold (Compare v3, Phase 4a) — pure derivations behind the `[⇤ Fold]`
- * menubar toggle and the pleats that compress shared step columns.
+ * Fold (Compare v3, Phase 4a) — pure derivations behind the pleats that
+ * compress shared step columns. The `[⇤ Fold]` toggle and the agent's
+ * collapse_shared/toggle_pleat commands were retired 2026-08-17; nothing
+ * sets the fold state anymore, so this machinery is dormant pending a
+ * deletion pass (todo).
  *
  * Fold state is per-scenario and session-only; it lives in
  * `compareReviewStore` and is deliberately MODE-AGNOSTIC: the same

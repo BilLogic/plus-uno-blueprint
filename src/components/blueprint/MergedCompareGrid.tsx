@@ -63,10 +63,7 @@ import {
   getMergedCompareRowTrackCss,
   resolveBlueprintLayer,
 } from '@/lib/sideBySideCompareLayout'
-import {
-  getPathColor,
-  getPathDashArray,
-} from '@/lib/pathColorTheme'
+import { getPathColor } from '@/lib/pathColorTheme'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type {
@@ -170,8 +167,6 @@ export function MergedCompareGrid({
             ),
             rail: {
               color: getPathColor(path),
-              // Colour and dash always travel as a pair (SC 1.4.1).
-              dashed: getPathDashArray(path) !== undefined,
               label: shortLabels.get(path.id) ?? path.name.slice(0, 2),
               pathName: path.name,
             },

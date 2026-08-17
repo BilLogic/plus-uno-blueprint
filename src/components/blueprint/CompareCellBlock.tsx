@@ -35,8 +35,6 @@ import type { BlueprintCell } from '@/types/blueprint'
  */
 export type CompareCellPathRail = {
   color: string
-  /** Paired with the colour through `getPathDashArray`, never independent. */
-  dashed: boolean
   /** Short label ("HP") — see `buildComparePathShortLabels`. */
   label: string
   /** Full path name, for the label's tooltip/title. */

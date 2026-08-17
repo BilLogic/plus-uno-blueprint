@@ -209,7 +209,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
           })(),
         )
         if (outcome === 'timeout') throw new Error('The request timed out')
-        return outcome as CanvasRawPath[]
+        return outcome
       },
     })),
   })
@@ -221,9 +221,13 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
   const allSettled = noDb || loadedChunks === results.length
   const loading = orderedScenarioIds.length > 0 && !allSettled
 
+  // dataUpdatedAt, not a y/e/n status string: after a mutation calls
+  // invalidateQueries('canvas-blueprints') the refetched chunks come back
+  // with data still DEFINED, so a status-only key never changed and the
+  // canvas kept rendering pre-edit rows until a reload.
   const rowsKey = results
-    .map((result) => (result.data ? 'y' : result.error ? 'e' : 'n'))
-    .join('')
+    .map((result) => (result.error ? 'e' : String(result.dataUpdatedAt ?? 0)))
+    .join(',')
   const derived = useMemo<CanvasBlueprintMaps>(() => {
     if (orderedScenarioIds.length === 0) return EMPTY_MAPS
     if (noDb || !allSettled) {
@@ -252,7 +256,11 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     loading,
     error,
     usingFallback: derived.usingFallback,
-    /** Real network progress: settled chunks over total chunks. */
-    progress: { loaded: loadedChunks, total: results.length },
+    /** Real network progress: settled chunks over total chunks. A no-DB
+     *  session has nothing on the wire — it reports complete, so the bar
+     *  never parks below full while nothing is loading. */
+    progress: noDb
+      ? { loaded: results.length, total: results.length }
+      : { loaded: loadedChunks, total: results.length },
   }
 }

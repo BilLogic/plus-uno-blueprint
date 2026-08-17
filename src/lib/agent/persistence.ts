@@ -17,9 +17,21 @@ type Client = SupabaseClient<Database>
  */
 
 let attached: Client | null = null
+const attachListeners = new Set<() => void>()
 
 export function attachAgentPersistence(client: Client | null) {
+  const cameOnline = attached === null && client !== null
   attached = client
+  // Child effects run before the parent effect that attaches, so hydrators
+  // that fired too early wait on this signal instead of a client they will
+  // never see change.
+  if (cameOnline) attachListeners.forEach((listener) => listener())
+}
+
+/** Fires whenever persistence goes from detached to attached. */
+export function onAgentPersistenceAttached(listener: () => void): () => void {
+  attachListeners.add(listener)
+  return () => attachListeners.delete(listener)
 }
 
 export function persistSession(session: AgentSession): void {
@@ -78,6 +90,12 @@ export function persistEvent(
       { onConflict: 'session_id,seq' },
     )
     .then(() => undefined)
+}
+
+/** Whether a client is attached — hydrators check this BEFORE burning
+ *  their once-per-page-load attempt on a load that cannot succeed. */
+export function isAgentPersistenceAttached(): boolean {
+  return attached !== null
 }
 
 export async function loadPersistedEvents(

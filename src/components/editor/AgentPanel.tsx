@@ -798,10 +798,13 @@ function AgentChatView({
   const composerRowRef = useRef<HTMLDivElement>(null)
 
   // Reopening a session after a reload restores its transcript from
-  // agent_messages (no-op for never-persisted sessions).
+  // agent_messages (no-op for never-persisted sessions). `client` is a
+  // dep on purpose: this child effect fires before the parent attaches
+  // persistence, the hydrate self-guards on attachment, and the retry
+  // happens HERE when the client lands.
   useEffect(() => {
     void hydrateAgentTranscript(session.id)
-  }, [session.id])
+  }, [session.id, client])
 
   // React-side context. What the user is *looking at* (view, selection,
   // open panel, Design picks) comes from the UI-context bridge, collected

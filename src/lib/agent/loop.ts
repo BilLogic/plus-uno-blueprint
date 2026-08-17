@@ -29,7 +29,9 @@ import {
 } from '@/lib/agent/settings'
 import { autoNameSession } from '@/lib/agent/sessions'
 import {
+  isAgentPersistenceAttached,
   loadPersistedEvents,
+  onAgentPersistenceAttached,
   persistEvent,
 } from '@/lib/agent/persistence'
 
@@ -185,6 +187,15 @@ function push(sessionId: string, event: TranscriptEvent): void {
 
 const hydrated = new Set<string>()
 
+/** Sessions whose hydrate fired before persistence attached — replayed on
+ *  the attach signal. */
+const pendingHydrates = new Set<string>()
+onAgentPersistenceAttached(() => {
+  const parked = [...pendingHydrates]
+  pendingHydrates.clear()
+  parked.forEach((sessionId) => void hydrateAgentTranscript(sessionId))
+})
+
 // Transcript-hydration-in-flight, per session, so the chat view can show
 // skeleton bubbles instead of the "Ready" empty state while a persisted
 // conversation is still on the wire.
@@ -219,6 +230,14 @@ export function useAgentTranscriptHydrating(sessionId: string): boolean {
  */
 export async function hydrateAgentTranscript(sessionId: string): Promise<void> {
   if (hydrated.has(sessionId)) return
+  // Child effects run before parent effects: on a reload with a chat open,
+  // this fires before AgentPanel has attached persistence. Do NOT burn the
+  // one hydrate attempt — park the session id and retry on the attach
+  // signal; the pending flag keeps reading "loading" in the meantime.
+  if (!isAgentPersistenceAttached()) {
+    pendingHydrates.add(sessionId)
+    return
+  }
   hydrated.add(sessionId)
   // The pending flag above watches `hydrated` too — flush the change even
   // on the early exits, or the skeleton outlives the load.

@@ -284,11 +284,17 @@ export function ServiceOverviewView({
   // Content holds until the bar has visibly REACHED 100%: readiness flips
   // the bar to full, and the reveal follows a beat later — loading ends at
   // a full bar, never mid-bar.
-  const [overviewSettled, setOverviewSettled] = useState(false)
+  // Lazy init + the sawLoading ref: a WARM mount (everything cached,
+  // ready on first render) settles instantly — the 450 ms full-bar dwell
+  // only applies when this mount actually showed a loading pass, else
+  // every tab-switch back would flash a skeleton that used to be instant.
+  const [overviewSettled, setOverviewSettled] = useState(() => overviewReady)
+  const sawLoadingRef = useRef(!overviewReady)
   useEffect(() => {
+    if (!overviewReady) sawLoadingRef.current = true
     const timer = window.setTimeout(
       () => setOverviewSettled(overviewReady),
-      overviewReady ? 450 : 0,
+      overviewReady && sawLoadingRef.current ? 450 : 0,
     )
     return () => window.clearTimeout(timer)
   }, [overviewReady])
