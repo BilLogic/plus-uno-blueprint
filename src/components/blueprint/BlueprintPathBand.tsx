@@ -89,6 +89,8 @@ type BlueprintPathBandProps = {
   phaseName?: string
   showPathTypeBadge?: boolean
   fillSwimlaneHeight?: boolean
+  /** Extend the section frame upward to wrap the step-header row (px). */
+  frameExtraTopInset?: number
 }
 
 /**
@@ -103,6 +105,7 @@ export function BlueprintPathBand({
   rows,
   arrangement,
   compact,
+  frameExtraTopInset,
   scrollContainerRef,
   scenarioName,
   phaseName,
@@ -173,6 +176,7 @@ export function BlueprintPathBand({
         blueprint={blueprint}
         compact={compact}
         showPathTypeBadge={showPathTypeBadge}
+        extraTopInset={frameExtraTopInset}
       />
       {arrangement.kind === 'row' ? (
         <>

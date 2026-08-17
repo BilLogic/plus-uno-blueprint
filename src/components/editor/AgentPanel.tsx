@@ -135,6 +135,7 @@ import {
   sendToAgent,
   stopAgent,
   useAgentRun,
+  useAgentTranscriptHydrating,
   type TranscriptEvent,
 } from '@/lib/agent/loop'
 import {
@@ -835,6 +836,7 @@ function AgentChatView({
     })
   const attachment = usePendingAgentAttachment()
   const { events, running } = useAgentRun(session.id)
+  const transcriptHydrating = useAgentTranscriptHydrating(session.id)
   const changeCount = useAgentChangeCount(session.id)
   const [renaming, setRenaming] = useState(false)
   // The slash menu is a portalled popover; this is what it anchors to (and
@@ -1000,7 +1002,16 @@ function AgentChatView({
           <MessageScrollerViewport className="p-3">
             <MessageScrollerContent className="gap-3">
               {events.length === 0 ? (
-                keyed ? (
+                transcriptHydrating ? (
+                  // A persisted conversation is still on the wire —
+                  // skeleton bubbles, not the "Ready" copy, which read as
+                  // the agent having no loading state at all.
+                  <div className="flex flex-col gap-3" aria-hidden>
+                    <Skeleton className="ml-auto h-8 w-3/5 rounded-2xl" />
+                    <Skeleton className="h-8 w-4/5 rounded-2xl" />
+                    <Skeleton className="h-8 w-2/5 rounded-2xl" />
+                  </div>
+                ) : keyed ? (
                   <p className="text-sm text-muted-foreground">
                     Ready ({modelFor(settings)}). Writes land live on the
                     canvas as{' '}

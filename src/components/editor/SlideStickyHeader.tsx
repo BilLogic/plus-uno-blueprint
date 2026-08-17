@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
-import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
+import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
 import { PhaseMenubarHeader } from '@/components/editor/PhaseMenubarHeader'
 import {
   BLUEPRINT_MENUBAR_FLAT_CLASS,
@@ -133,8 +133,11 @@ export function SlideStickyHeader({
         selectedPathIds={contentProps.selectedPathIds}
         className={cn('min-w-0 flex-1', BLUEPRINT_MENUBAR_FLAT_CLASS)}
       />
+      {/* Right slot = the path selector (plan 2026-08-17-002 U2). Reset
+          View moved to the canvas's bottom-right float, matching the slice
+          views — the top-right belongs to "which paths am I reading". */}
       <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
-        <NavbarZoomIndicator />
+        <PathSelectorMenu options={contentProps.paths} />
       </div>
     </div>
   )

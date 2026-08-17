@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { SlideNavLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { useEditor } from '@/contexts/EditorContext'
-import { PathsSidebarSection } from '@/components/editor/PathsSidebarSection'
 import { NavRowAction, NavSection } from '@/components/editor/SidebarNav'
 import { CreatePhaseDialog } from '@/components/editor/CreatePhaseDialog'
 import { CreateBlueprintDialog } from '@/components/editor/CreateBlueprintDialog'
@@ -130,14 +129,9 @@ export function SlideModeSidebarNav({
             )}
           </NavSection>
 
-          {/*
-            Paths filter one scenario's blueprint, so the section belongs to
-            the Blueprints mode and to nothing else: a slice is a fixed set of
-            cells, and offering a path filter beside it only invited the
-            question of what it would filter. The rule replaces nav plan D4's
-            "outside the mode tabs" placement.
-          */}
-          <PathsSidebarSection />
+          {/* The PATHS section moved to the canvas top bar as the compact
+              multi-select (PathSelectorMenu, plan 2026-08-17-002 U2) — one
+              owner for "which paths am I reading". */}
 
           <CreatePhaseDialog
             lifecycleId={lifecycleId}

@@ -49,7 +49,9 @@ per meaning, affiliation by fill not by ornament.
    above/outside the green border (`COMPARE_STEP_HEADER_HEIGHT` row sits
    before the band in the grid; the frame is drawn around the band only).
    Target: frame top edge wraps the header row; badge overlaps the frame
-   edge as now.
+   edge as now. **The header row gets NO container of its own** (decided
+   2026-08-17): it is bare labels inside the frame — no border, no
+   background, no box.
 2. **No fixed vertical remainder.** Panel height = sum of its children +
    paddings, nothing else. Any hardcoded height that can exceed content
    (the source of the empty band under the last lane) becomes `minHeight`
@@ -122,10 +124,12 @@ focused scenario                     unfocused sibling
 ```
 
 - **Multi-select stays** (desktop compares; mobile stays single-select).
-  Control: compact popover listing the scenario's paths with the same
-  checkmark rows `PathsSidebarSection` renders now — the state and
-  `PathSelectionContext` wiring do not change, only where the control
-  mounts.
+  **Compact trigger** (decided 2026-08-17): never the full path names —
+  overlapping path-color dots plus a count (`●● 2 paths ▾`); one selected
+  path may show its short name. The popover lists the scenario's paths
+  with the same checkmark rows `PathsSidebarSection` renders now — the
+  state and `PathSelectionContext` wiring do not change, only where the
+  control mounts.
 - Sidebar PATHS section retires once the top-bar control lands (one
   owner per fact).
 - **Files:** `SlideStickyHeader.tsx` (right slot), new

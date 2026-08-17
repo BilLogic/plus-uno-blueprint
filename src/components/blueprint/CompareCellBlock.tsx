@@ -179,18 +179,26 @@ export function CompareCellBlock({
     <div className={shellClassName} style={shellStyle}>
       {pathRail ? (
         <>
+          {/* Affiliation by TINT, not by rail (plan 2026-08-17-002 U3):
+              the colored side-lines read as noise; a low-alpha wash of the
+              path color over the cell says "this one belongs to that path"
+              without adding a stroke. The short label stays — it is the
+              non-color identification the dashed/solid pairing used to
+              carry (SC 1.4.1). */}
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-y-1 left-0.5"
+            className="pointer-events-none absolute z-[2] rounded-2xl"
             style={{
-              borderLeftWidth: 3,
-              borderLeftStyle: pathRail.dashed ? 'dashed' : 'solid',
-              borderLeftColor: pathRail.color,
+              left: compact ? 12 : 14,
+              right: compact ? 12 : 14,
+              top: compact ? 12 : 16,
+              bottom: flushBottom ? 0 : compact ? 12 : 16,
+              backgroundColor: `color-mix(in oklab, ${pathRail.color} 14%, transparent)`,
             }}
           />
           <span
             title={pathRail.pathName}
-            className="pointer-events-none absolute left-2.5 top-0 font-mono text-3xs font-semibold tabular-nums"
+            className="pointer-events-none absolute left-2.5 top-0 z-[3] font-mono text-3xs font-semibold tabular-nums"
             style={{ color: pathRail.color }}
           >
             {pathRail.label}

@@ -425,8 +425,11 @@ export function ServiceOverviewView({
                 {floatingChrome}
               </div>
             ) : null}
-            {!focusedHeader && !renderHeader ? (
-              <div className="pointer-events-none absolute right-4 top-3 z-30 flex items-center">
+            {/* Reset View floats bottom-right (plan 2026-08-17-002 U2) —
+                the navbar's top-right slot now belongs to the path
+                selector, and this matches where the slice views keep it. */}
+            {!renderHeader ? (
+              <div className="pointer-events-none absolute bottom-4 right-4 z-30 flex items-center [&>*]:pointer-events-auto">
                 <NavbarZoomIndicator />
               </div>
             ) : null}

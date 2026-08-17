@@ -18,6 +18,13 @@ export const SERVICE_PATH_SECTION_INSET = 8
 type ComparePathSectionFrameProps = {
   blueprint: BlueprintData
   compact?: boolean
+  /**
+   * Extends the frame upward (px) so it also wraps the step-header row —
+   * step names are facts about the path's columns and belong INSIDE the
+   * path frame (plan 2026-08-17-002 U1). The header row itself stays bare
+   * labels: no container of its own.
+   */
+  extraTopInset?: number
   /** When false, only the colored path outline is rendered (service blueprint). */
   showTitle?: boolean
   /**
@@ -36,6 +43,7 @@ export function ComparePathSectionFrame({
   showTitle = true,
   showPathTypeBadge = false,
   variant = 'compare',
+  extraTopInset = 0,
 }: ComparePathSectionFrameProps) {
   const { path } = blueprint
   const pathBorder = getPathTypeSectionBorderStyle(path.path_type, path)
@@ -46,7 +54,7 @@ export function ComparePathSectionFrame({
   const inset =
     variant === 'compare'
       ? {
-          top: -COMPARE_PATH_SECTION_TOP_INSET,
+          top: -COMPARE_PATH_SECTION_TOP_INSET - extraTopInset,
           left: -COMPARE_PATH_SECTION_INSET,
           right: -COMPARE_PATH_SECTION_INSET,
           bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
@@ -59,7 +67,9 @@ export function ComparePathSectionFrame({
         }
 
   const titleTop =
-    variant === 'compare' ? -COMPARE_PATH_SECTION_TOP_INSET : -SERVICE_PATH_SECTION_INSET
+    variant === 'compare'
+      ? -COMPARE_PATH_SECTION_TOP_INSET - extraTopInset
+      : -SERVICE_PATH_SECTION_INSET
   const titleLeft =
     variant === 'compare'
       ? COMPARE_PATH_SECTION_INSET + 2
