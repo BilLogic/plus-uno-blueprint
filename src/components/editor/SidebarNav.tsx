@@ -193,6 +193,10 @@ export function NavRow({
       data-nav-row={rowId}
       className={cn(
         'group/nav-row relative flex w-full min-w-0 items-center gap-1 rounded-md pl-1 pr-1 transition-colors',
+        // ONE focus ring for the whole row (keyboard focus on the label or
+        // the chevron both light it) — a ring on just the inner button read
+        // as highlighting the wrong box.
+        'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-sidebar-ring',
         selected
           ? 'bg-sidebar-selected text-sidebar-selected-foreground before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-selected-rail'
           : 'hover:bg-sidebar-accent',
@@ -210,7 +214,7 @@ export function NavRow({
           className={cn(
             CHEVRON_SLOT_CLASS,
             CHEVRON_REVEAL_CLASS,
-            'hover:bg-sidebar-accent focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+            'hover:bg-sidebar-accent focus-visible:opacity-100 focus-visible:outline-none',
           )}
         >
           <NavChevron open={open} />
@@ -225,7 +229,7 @@ export function NavRow({
         onKeyDown={handleKeyDown}
         aria-current={selected ? 'true' : undefined}
         className={cn(
-          'min-w-0 flex-1 truncate rounded-md py-1.5 pr-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+          'min-w-0 flex-1 truncate rounded-md py-1.5 pr-2 text-left transition-colors focus-visible:outline-none',
           size === 'md' ? 'text-[13px]' : 'text-xs',
           selected
             ? 'font-medium text-sidebar-selected-foreground'

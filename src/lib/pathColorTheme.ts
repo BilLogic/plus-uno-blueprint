@@ -276,9 +276,10 @@ export function pathColorKeyToMarkerSuffix(colorKey: string): string {
  * Wash alpha. Deliberately faint: the cell's LANE color is the primary
  * identity and must stay legible under the wash — the path tint is a
  * secondary annotation (the label carries the exact affiliation). 24% read
- * as repainting the cell; 10% reads as a cast over it.
+ * as repainting the cell; 10% was invisible; 16% is the cast that still
+ * reads at canvas zoom.
  */
-const PATH_WASH_PERCENT = 10
+const PATH_WASH_PERCENT = 16
 
 /**
  * The merged view's path-affiliation wash, as a `background-image` so it

@@ -299,7 +299,9 @@ function SessionRow({
       type="button"
       onClick={onOpen}
       className={cn(
-        'group/session flex w-full min-w-0 items-center gap-1.5 rounded-md py-1.5 pl-1.5 pr-2 text-left transition-colors',
+        // pl-6 = the NavSection title's own text indent (pl-1 + size-4
+        // chevron slot + gap-1), so rows left-align with TODAY / EARLIER.
+        'group/session flex w-full min-w-0 items-center gap-1.5 rounded-md py-1.5 pl-6 pr-2 text-left transition-colors',
         'hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
       )}
     >
@@ -446,7 +448,7 @@ function AgentSessionsView({
           // The DB merge is the list's source of truth, so until the first
           // merge lands the WHOLE list is a loading state — the localStorage
           // cache underneath may be missing sessions from other browsers.
-          <div className="flex flex-col gap-3 px-1.5 pt-2" aria-hidden>
+          <div className="flex flex-col gap-3 pl-6 pr-2 pt-2" aria-hidden>
             <Skeleton className="h-3.5 w-40" />
             <Skeleton className="h-3.5 w-28" />
             <Skeleton className="h-3.5 w-36" />

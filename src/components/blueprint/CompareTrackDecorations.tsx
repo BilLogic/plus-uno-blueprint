@@ -19,10 +19,18 @@ import { cn } from '@/lib/utils'
 export function CompareStepHeaderRow({
   tracks,
   showPinGlyph,
+  diffTint = true,
 }: {
   tracks: readonly CompareGridTrack[]
   /** The `🔗 pinned` explainer only means anything while the fold is on. */
   showPinGlyph: boolean
+  /**
+   * Stacked marks divergent columns with a header tint. Merged turns it
+   * off: there divergence is already said twice (sub-cell stacking, path
+   * wash), and with most columns divergent the tinted header read as a
+   * wall of noise paint.
+   */
+  diffTint?: boolean
 }) {
   return (
     <>
@@ -36,7 +44,7 @@ export function CompareStepHeaderRow({
             // order the labels paint UNDER it and the header "vanishes".
             className="relative z-[1] flex min-w-0 items-end justify-center gap-1 overflow-hidden rounded-md px-2 pb-1.5"
             style={{ gridColumn: trackIndex + 2, gridRow: 1 }}
-            {...(track.divergent
+            {...(diffTint && track.divergent
               ? { 'data-blueprint-compare-diffcolumn': 'header' }
               : {})}
           >

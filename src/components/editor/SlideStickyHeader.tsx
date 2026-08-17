@@ -123,7 +123,7 @@ export function SlideStickyHeader({
     <div
       data-editor-navbar
       className={cn(
-        'relative flex items-center',
+        'relative flex items-center gap-3',
         BLUEPRINT_NAVBAR_BAR_CLASS,
         className,
       )}
@@ -136,10 +136,10 @@ export function SlideStickyHeader({
         selectedPathIds={contentProps.selectedPathIds}
         className={cn('min-w-0 flex-1', BLUEPRINT_MENUBAR_FLAT_CLASS)}
       />
-      {/* Right cluster: EVERY view control — compare toggles, then the
-          path selector — on one edge with one gap rhythm (the balance
-          treatment the mobile bar already has). */}
-      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center gap-2 [&>*]:pointer-events-auto">
+      {/* Right cluster in FLOW, not absolute: the title's truncation now
+          respects the controls' real width instead of running under them.
+          One edge, one gap rhythm for every view control. */}
+      <div className="flex shrink-0 items-center gap-2">
         <CompareControlsCluster
           slide={contentProps.slide}
           selectedPathIds={contentProps.selectedPathIds}

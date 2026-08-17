@@ -99,7 +99,9 @@ export function getComparePathArrowData(
 
 export const COMPARE_CARD_GAP = 20
 export const COMPARE_CARD_PADDING_X = 12
-export const COMPARE_LABEL_WIDTH = 192
+// 208: room for two-word lane names ("Front Stage Actions") and the
+// canonical "LINE OF …" divider labels without clipping at the rail edge.
+export const COMPARE_LABEL_WIDTH = 208
 export const COMPARE_PANEL_PADDING = 24
 /** Extra inset on the right edge of the compare blueprint grid. */
 export const COMPARE_PANEL_PADDING_RIGHT = 40

@@ -88,9 +88,15 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
       onValueChange={(value) => setScenarioDisplayViewType(slide.id, value)}
     >
       {segments.map(({ value, label, icon: Icon }) => (
-        <SegmentedControlItem key={value} value={value} className="px-2">
+        <SegmentedControlItem
+          key={value}
+          value={value}
+          className="px-2"
+          aria-label={label}
+        >
           <Icon className="size-3.5" aria-hidden />
-          {label}
+          {/* Narrow shells go icon-only; the aria-label keeps the name. */}
+          <span className="max-xl:hidden">{label}</span>
         </SegmentedControlItem>
       ))}
     </SegmentedControl>
@@ -137,7 +143,7 @@ function CompareFoldToggle({ slide }: { slide: NavItem }) {
       onClick={() => setCompareFolded(!fold.folded)}
     >
       <FoldHorizontal className="size-3.5" aria-hidden />
-      Fold
+      <span className="max-xl:hidden">Fold</span>
     </Button>
   )
   return (
@@ -196,7 +202,7 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
       onClick={() => (open ? cellDetail.closePanel() : cellDetail.openDifferences())}
     >
       <Diff className="size-3.5" aria-hidden />
-      Diff
+      <span className="max-xl:hidden">Diff</span>
       <span
         aria-hidden
         className={cn(

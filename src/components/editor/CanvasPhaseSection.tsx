@@ -212,7 +212,9 @@ export function CanvasPhaseSection({
         // The time-marker register: mono, uppercase, letterspaced — the same
         // idiom the mobile reader's step eyebrows use, so both surfaces name
         // time the same way. The aria-label above keeps the plain title.
-        className="pointer-events-auto absolute z-10 max-w-[min(100%,28rem)] border-transparent font-mono text-2xs uppercase tracking-wider"
+        // z-30: zoomed far out the badge counter-scales larger than its
+        // inset and must not sink under a neighboring phase's panels.
+        className="pointer-events-auto absolute z-30 max-w-[min(100%,28rem)] border-transparent font-mono text-2xs uppercase tracking-wider"
         style={{
           top: -sectionTopInset,
           left: sectionInset,

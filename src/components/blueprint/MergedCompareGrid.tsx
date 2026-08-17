@@ -12,7 +12,6 @@ import {
 import { CompareLaneRowShell } from '@/components/blueprint/CompareLaneRowShell'
 import {
   ComparePleatCell,
-  CompareDiffColumnTint,
   CompareStepHeaderRow,
 } from '@/components/blueprint/CompareTrackDecorations'
 import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
@@ -286,7 +285,11 @@ export function MergedCompareGrid({
           columnGap: STEP_COLUMN_GAP,
         }}
       >
-        <CompareStepHeaderRow tracks={tracks} showPinGlyph={activeFold.folded} />
+        <CompareStepHeaderRow
+          tracks={tracks}
+          showPinGlyph={activeFold.folded}
+          diffTint={false}
+        />
         <div
           ref={bandRef}
           className="relative z-0 grid overflow-visible"
@@ -302,6 +305,9 @@ export function MergedCompareGrid({
           }}
         >
           <MergedSectionFrame blueprints={blueprints} compact={compact} />
+          {/* No divergent-column tints here — merged says divergence with
+              sub-cell stacking + the path wash; column paint on top of
+              that was pure noise. Pleats still render. */}
           {tracks.map((track, trackIndex) =>
             track.kind === 'pleat' ? (
               <ComparePleatCell
@@ -309,11 +315,6 @@ export function MergedCompareGrid({
                 track={track}
                 gridColumn={trackIndex + 2}
                 onExpand={expandComparePleat}
-              />
-            ) : track.divergent ? (
-              <CompareDiffColumnTint
-                key={`tint-${track.key}`}
-                gridColumn={trackIndex + 2}
               />
             ) : null,
           )}
