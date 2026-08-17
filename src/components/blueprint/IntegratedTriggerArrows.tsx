@@ -472,7 +472,11 @@ export function IntegratedTriggerArrows({
     <svg
       className={cn(
         'pointer-events-none absolute overflow-visible',
-        layer === 'forward' ? 'z-[2]' : 'z-[30]',
+        // z-0, UNDER the z-[1] cells: a run that crosses a cell tucks
+        // behind it instead of striking through its face — lines are
+        // always behind the blocks. The wrap layer stays above: it rides
+        // the empty corridors outside the rows by construction.
+        layer === 'forward' ? 'z-0' : 'z-[30]',
       )}
       style={svgStyle}
       overflow="visible"

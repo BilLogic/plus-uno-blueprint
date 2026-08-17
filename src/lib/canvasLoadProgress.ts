@@ -14,6 +14,18 @@ export function loadProgressPercent(stages: CanvasLoadStage[]): number {
   return Math.max(FLOOR_PERCENT, Math.round((done / stages.length) * 100))
 }
 
+/**
+ * Percent from REAL completed work units (network requests settled over
+ * requests issued), floored the same way. Callers with per-request counts
+ * pass these instead of stage booleans, so the bar's movement is actual
+ * fetch completion — never a timer.
+ */
+export function loadProgressUnitPercent(loaded: number, total: number): number {
+  if (total <= 0) return FLOOR_PERCENT
+  const clamped = Math.min(Math.max(loaded, 0), total)
+  return Math.max(FLOOR_PERCENT, Math.round((clamped / total) * 100))
+}
+
 /** The earliest not-done stage names the work; all done → last label. */
 export function loadProgressLabel(stages: CanvasLoadStage[]): string {
   return (

@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import { Columns2, Diff, FoldHorizontal, GitCompareArrows } from 'lucide-react'
+import { Columns2, Diff, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
@@ -19,13 +18,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
-import { countFoldableCompareColumns } from '@/lib/compareFold'
 import { countCompareDifferences } from '@/lib/compareLedger'
-import {
-  setCompareFolded,
-  useCompareReviewState,
-} from '@/lib/compareReviewStore'
-import { computePinnedColumns } from '@/lib/compareSlots'
+import { useCompareReviewState } from '@/lib/compareReviewStore'
 import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
@@ -88,73 +82,18 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
       onValueChange={(value) => setScenarioDisplayViewType(slide.id, value)}
     >
       {segments.map(({ value, label, icon: Icon }) => (
-        <SegmentedControlItem key={value} value={value} className="px-2">
+        <SegmentedControlItem
+          key={value}
+          value={value}
+          className="px-2"
+          aria-label={label}
+        >
           <Icon className="size-3.5" aria-hidden />
-          {label}
+          {/* Narrow shells go icon-only; the aria-label keeps the name. */}
+          <span className="max-xl:hidden">{label}</span>
         </SegmentedControlItem>
       ))}
     </SegmentedControl>
-  )
-}
-
-/**
- * The `[⇤ Fold]` toggle (Phase 4a) — opt-in compression of shared step
- * runs into pleats, in whichever compare mode is showing (the fold state
- * is mode-agnostic by design). Disabled at zero differences (S7 — nothing
- * to pull adjacent) and when the pin rule leaves no foldable shared
- * column. Turning fold off clears the per-pleat expansions.
- */
-function CompareFoldToggle({ slide }: { slide: NavItem }) {
-  const { registration, fold } = useCompareReviewState()
-  const active =
-    registration && registration.slideId === slide.id ? registration : null
-  const foldableCount = useMemo(
-    () =>
-      active
-        ? countFoldableCompareColumns(
-            active.model,
-            computePinnedColumns(active.model, active.blueprints),
-          )
-        : 0,
-    [active],
-  )
-  if (!active) return null
-  const differenceCount = countCompareDifferences(active.model)
-  const disabled = differenceCount === 0 || foldableCount === 0
-  const foldLabel = `Fold ${foldableCount} shared step${foldableCount === 1 ? '' : 's'}`
-  const toggle = (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      disabled={disabled}
-      aria-pressed={fold.folded}
-      aria-label={fold.folded ? 'Unfold shared steps' : foldLabel}
-      // Pressed styling is the ghost variant's own `aria-pressed:` rule —
-      // the brand-tint selected fill. Hand-writing `bg-muted` here was the
-      // bug: it is ghost's hover fill, so pressed and hovered looked alike.
-      className="h-6 gap-1 px-2 text-2xs text-muted-foreground hover:text-foreground"
-      onClick={() => setCompareFolded(!fold.folded)}
-    >
-      <FoldHorizontal className="size-3.5" aria-hidden />
-      Fold
-    </Button>
-  )
-  return (
-    <Tooltip>
-      <TooltipTrigger render={<span className="inline-flex" />}>
-        {toggle}
-      </TooltipTrigger>
-      <TooltipContent>
-        {disabled
-          ? differenceCount === 0
-            ? 'Paths are identical — nothing to fold around'
-            : 'Every shared step feeds a divergent one — nothing folds'
-          : fold.folded
-            ? 'Unfold shared steps'
-            : foldLabel}
-      </TooltipContent>
-    </Tooltip>
   )
 }
 
@@ -196,7 +135,7 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
       onClick={() => (open ? cellDetail.closePanel() : cellDetail.openDifferences())}
     >
       <Diff className="size-3.5" aria-hidden />
-      Diff
+      <span className="max-xl:hidden">Diff</span>
       <span
         aria-hidden
         className={cn(
@@ -228,6 +167,31 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
   )
 }
 
+/**
+ * The compare controls as ONE right-aligned cluster (Stacked/Merged, Diff) — the navbar composes it beside the path selector so every view
+ * control shares one edge and one gap rhythm, instead of toggles floating
+ * mid-bar next to the title.
+ */
+export function CompareControlsCluster({
+  slide,
+  selectedPathIds,
+}: {
+  slide: NavItem
+  selectedPathIds: string[]
+}) {
+  if (!isSubslide(slide) || selectedPathIds.length < 2) return null
+  return (
+    <div
+      className="flex shrink-0 items-center gap-1.5"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <CompareViewToggle slide={slide} />
+      <CompareDifferencesChip slide={slide} />
+    </div>
+  )
+}
+
 /** Phase or scenario title bar using the shadcn Menubar component. */
 export function PhaseMenubarHeader({
   slide,
@@ -240,7 +204,6 @@ export function PhaseMenubarHeader({
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
   const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
-  const showCompareToggle = isScenario && selectedPathIds.length >= 2
 
   return (
     <Menubar
@@ -258,15 +221,9 @@ export function PhaseMenubarHeader({
           className="shrink-0"
         />
       </div>
-      {/* Beside the title, not flex-end: the bar's right edge belongs to the
-          absolutely-positioned zoom / Reset View chrome. */}
-      {showCompareToggle ? (
-        <div className="ml-3 flex shrink-0 items-center gap-1.5">
-          <CompareViewToggle slide={slide} />
-          <CompareFoldToggle slide={slide} />
-          <CompareDifferencesChip slide={slide} />
-        </div>
-      ) : null}
+      {/* Compare controls moved to the navbar's right cluster
+          (CompareControlsCluster) — the title keeps the left edge to
+          itself. */}
     </Menubar>
   )
 }

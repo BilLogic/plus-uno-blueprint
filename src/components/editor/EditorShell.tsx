@@ -432,10 +432,12 @@ function DesktopEditorShell() {
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-row">
       <EditorRail
         surface={surface}
+        agentActive={agentPlacement.open}
+        showAgent={canAgent}
         onSelectSurface={(next) => {
-          // The rail is pure surface navigation now (the ✦ toggle moved
-          // to the ⚙ popover); 'agent' can still arrive from older
-          // callers and keeps its toggle meaning.
+          // ✦ toggles the chat's presence; the other two still pick the
+          // panel underneath it, so "chat while looking at the nav" is
+          // the default posture rather than a swap away from it.
           if (next === 'agent') toggleAgentOpen()
           else setSurface(next)
           if (sidebarCollapsed) {
@@ -483,7 +485,10 @@ function DesktopEditorShell() {
     // one and shadows it, which is what keeps the two surfaces independent.
     <CanvasModeProvider>
       <div
-        className="relative flex h-svh flex-col overflow-hidden bg-background"
+        // h-full rides the html/body/#root 100% chain — unlike svh units it
+        // tracks the real laid-out viewport in embedded panes that resolve
+        // viewport units against a stale size after a resize.
+        className="relative flex h-full flex-col overflow-hidden bg-background"
         data-editor-shell
       >
         {/* Full-width top nav: workspace identity, Home, open tabs. */}

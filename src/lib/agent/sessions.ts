@@ -58,10 +58,15 @@ export function useAgentSessions(): AgentSession[] {
   )
 }
 
-// Hydration-in-flight flag, so the sessions list can show skeleton rows
-// (the same loading/empty distinction the sidebar's lists make) instead of
-// flashing "no sessions" while the DB merge is still on the wire.
+// Hydration state, so the sessions list can show skeleton rows (the same
+// loading/empty distinction the sidebar's lists make) instead of flashing
+// "no sessions". Two facts, because the gap they cover differs:
+// `hydrating` is the DB merge on the wire; `hydratedOnce` covers the
+// window BEFORE the merge even starts (auth/client still resolving), which
+// is where the "still no skeleton" report came from — the panel mounted,
+// hydrate had not been called yet, and the flag read false.
 let hydrating = false
+let hydratedOnce = false
 const hydrationListeners = new Set<() => void>()
 
 function setHydrating(next: boolean) {
@@ -70,13 +75,18 @@ function setHydrating(next: boolean) {
   hydrationListeners.forEach((listener) => listener())
 }
 
+/**
+ * True until the first DB merge has COMPLETED — callers gate it on their
+ * own "persistence is possible" fact (canAgent), else a signed-out panel
+ * would show skeletons forever.
+ */
 export function useAgentSessionsHydrating(): boolean {
   return useSyncExternalStore(
     (listener) => {
       hydrationListeners.add(listener)
       return () => hydrationListeners.delete(listener)
     },
-    () => hydrating,
+    () => hydrating || !hydratedOnce,
     () => false,
   )
 }
@@ -115,6 +125,7 @@ export async function hydrateAgentSessions(): Promise<void> {
     )
     write(merged)
   } finally {
+    hydratedOnce = true
     setHydrating(false)
   }
 }

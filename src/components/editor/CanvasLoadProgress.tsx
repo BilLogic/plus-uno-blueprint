@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react'
 import { Diamond } from 'lucide-react'
 import {
   loadProgressLabel,
   loadProgressPercent,
+  loadProgressUnitPercent,
   type CanvasLoadStage,
 } from '@/lib/canvasLoadProgress'
 import { cn } from '@/lib/utils'
@@ -21,12 +23,54 @@ import { cn } from '@/lib/utils'
  */
 export function CanvasLoadProgress({
   stages,
+  units,
   className,
 }: {
   stages: CanvasLoadStage[]
+  /**
+   * Real work-unit counts (settled requests / issued requests). When given,
+   * the bar's width comes from these instead of the coarse stage fraction —
+   * stages still name the work via the label.
+   */
+  units?: { loaded: number; total: number }
   className?: string
 }) {
-  const percent = loadProgressPercent(stages)
+  const percent = units
+    ? loadProgressUnitPercent(units.loaded, units.total)
+    : loadProgressPercent(stages)
+  const complete = percent >= 100
+
+  /*
+    Displayed width: anchored to the REAL percent (every settled request
+    advances the anchor), with a slow creep between anchors so the bar is
+    visibly alive while a request is on the wire — capped well short of the
+    next anchor, so it can never claim work that has not finished. On
+    completion it snaps to 100 (the caller holds the overlay long enough
+    for that to be seen before content appears).
+  */
+  const percentRef = useRef(percent)
+  useEffect(() => {
+    percentRef.current = percent
+  }, [percent])
+  const [creep, setCreep] = useState(0)
+  useEffect(() => {
+    if (complete) return
+    const timer = window.setInterval(() => {
+      setCreep((current) => {
+        const cap = Math.min(percentRef.current + 12, 94)
+        const base = Math.max(current, percentRef.current)
+        return base < cap ? base + 1 : current
+      })
+    }, 180)
+    return () => window.clearInterval(timer)
+  }, [complete])
+  // Anchors always win over the creep, completion snaps to full, and the
+  // creep's CONTRIBUTION is re-clamped to the current cap at render time —
+  // if the real target regresses (the scenario set grew mid-load), a stale
+  // high creep cannot overstate progress (todo 031).
+  const display = complete
+    ? 100
+    : Math.min(Math.max(percent, creep), Math.min(percent + 12, 94))
   return (
     <div
       aria-hidden
@@ -41,7 +85,7 @@ export function CanvasLoadProgress({
       <div className="h-0.5 w-40 overflow-hidden rounded-full bg-border">
         <div
           className="h-full rounded-full bg-primary transition-[width] duration-400 ease-out motion-reduce:transition-none"
-          style={{ width: `${percent}%` }}
+          style={{ width: `${display}%` }}
         />
       </div>
       <p className="text-xs text-muted-foreground">

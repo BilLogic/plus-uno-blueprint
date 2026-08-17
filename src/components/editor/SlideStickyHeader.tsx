@@ -2,7 +2,10 @@ import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
 import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
-import { PhaseMenubarHeader } from '@/components/editor/PhaseMenubarHeader'
+import {
+  CompareControlsCluster,
+  PhaseMenubarHeader,
+} from '@/components/editor/PhaseMenubarHeader'
 import {
   BLUEPRINT_MENUBAR_FLAT_CLASS,
   BLUEPRINT_NAVBAR_BAR_CLASS,
@@ -120,7 +123,7 @@ export function SlideStickyHeader({
     <div
       data-editor-navbar
       className={cn(
-        'relative flex items-center',
+        'relative flex items-center gap-3',
         BLUEPRINT_NAVBAR_BAR_CLASS,
         className,
       )}
@@ -133,10 +136,14 @@ export function SlideStickyHeader({
         selectedPathIds={contentProps.selectedPathIds}
         className={cn('min-w-0 flex-1', BLUEPRINT_MENUBAR_FLAT_CLASS)}
       />
-      {/* Right slot = the path selector (plan 2026-08-17-002 U2). Reset
-          View moved to the canvas's bottom-right float, matching the slice
-          views — the top-right belongs to "which paths am I reading". */}
-      <div className="pointer-events-none absolute inset-y-0 right-4 z-20 flex items-center">
+      {/* Right cluster in FLOW, not absolute: the title's truncation now
+          respects the controls' real width instead of running under them.
+          One edge, one gap rhythm for every view control. */}
+      <div className="flex shrink-0 items-center gap-2">
+        <CompareControlsCluster
+          slide={contentProps.slide}
+          selectedPathIds={contentProps.selectedPathIds}
+        />
         <PathSelectorMenu options={contentProps.paths} />
       </div>
     </div>

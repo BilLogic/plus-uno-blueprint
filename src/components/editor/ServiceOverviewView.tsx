@@ -56,7 +56,11 @@ import {
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathListItem } from '@/lib/pathSelection'
 const OVERVIEW_PAN_IGNORE =
-  "button, a, input, textarea, select, label, [role='button'], [data-slide-sticky-header], [data-compare-panel], [data-zoom-indicator], [data-annotation-toolbar], [data-canvas-annotation-layer], [data-phase-scenario-overview], [data-phase-scenario-panel], [data-canvas-phase-interactive], [data-phase-menubar-header], [data-canvas-phase-section], [data-path-description-trigger], [data-cell-detail-panel], [data-blueprint-cell-interactive], [data-slot='menubar'], [data-slot='menubar-trigger'], [data-canvas-nav]"
+  // Interactive CHROME only — container-wide entries (compare panel, phase
+  // section/overview wrappers) used to be here too, which made every drag
+  // that started inside a path board a dead drag: empty board space must
+  // pan like the rest of the canvas.
+  "button, a, input, textarea, select, label, [role='button'], [data-slide-sticky-header], [data-zoom-indicator], [data-annotation-toolbar], [data-canvas-annotation-layer], [data-canvas-phase-interactive], [data-phase-menubar-header], [data-path-description-trigger], [data-cell-detail-panel], [data-blueprint-cell-interactive], [data-slot='menubar'], [data-slot='menubar-trigger'], [data-canvas-nav]"
 
 function CanvasFocusEscapeHandler() {
   const { view, goHome } = useEditor()
@@ -264,6 +268,7 @@ export function ServiceOverviewView({
     pathsByScenario,
     blueprintsByPathId,
     loading: blueprintsLoading,
+    progress: blueprintsProgress,
     filterPaths: overviewPaths,
     filterSelectedPathIds: overviewSelectedPathIds,
     viewType: overviewViewType,
@@ -276,6 +281,23 @@ export function ServiceOverviewView({
   })
 
   const overviewReady = !slidesLoading && !blueprintsLoading
+  // Content holds until the bar has visibly REACHED 100%: readiness flips
+  // the bar to full, and the reveal follows a beat later — loading ends at
+  // a full bar, never mid-bar.
+  // Lazy init + the sawLoading ref: a WARM mount (everything cached,
+  // ready on first render) settles instantly — the 450 ms full-bar dwell
+  // only applies when this mount actually showed a loading pass, else
+  // every tab-switch back would flash a skeleton that used to be instant.
+  const [overviewSettled, setOverviewSettled] = useState(() => overviewReady)
+  const sawLoadingRef = useRef(!overviewReady)
+  useEffect(() => {
+    if (!overviewReady) sawLoadingRef.current = true
+    const timer = window.setTimeout(
+      () => setOverviewSettled(overviewReady),
+      overviewReady && sawLoadingRef.current ? 450 : 0,
+    )
+    return () => window.clearTimeout(timer)
+  }, [overviewReady])
   // One session for the canvas skeleton AND the progress overlay: they are
   // separate DeferredSkeleton instances (canvas space vs screen space), and
   // only a shared key makes them appear and leave as one surface.
@@ -425,11 +447,11 @@ export function ServiceOverviewView({
                 {floatingChrome}
               </div>
             ) : null}
-            {/* Reset View floats bottom-right (plan 2026-08-17-002 U2) —
-                the navbar's top-right slot now belongs to the path
-                selector, and this matches where the slice views keep it. */}
-            {!renderHeader ? (
-              <div className="pointer-events-none absolute bottom-4 right-4 z-30 flex items-center [&>*]:pointer-events-auto">
+            {/* Reset View is a MOBILE affordance (no scroll wheel, easy to
+                lose the canvas): bottom-centered under the thumb. Desktop
+                has no Reset View at all — double-click/Home reframe. */}
+            {mobileShell && !renderHeader ? (
+              <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center [&>*]:pointer-events-auto">
                 <NavbarZoomIndicator />
               </div>
             ) : null}
@@ -458,7 +480,7 @@ export function ServiceOverviewView({
                 focusCellsKey={focusedScenarioId ?? soloScenarioId ?? undefined}
               >
                 <DeferredSkeleton
-                  loading={!overviewReady}
+                  loading={!overviewSettled}
                   holdKey={canvasHoldKey}
                   skeleton={
                     <ServiceOverviewCanvasSkeleton
@@ -553,12 +575,12 @@ export function ServiceOverviewView({
               // visibility-hidden (the bar is the one visible signal), and
               // visibility removes it from the accessibility tree with it.
               <div
-                role={overviewReady ? undefined : 'status'}
-                aria-label={overviewReady ? undefined : 'Loading canvas'}
+                role={overviewSettled ? undefined : 'status'}
+                aria-label={overviewSettled ? undefined : 'Loading canvas'}
                 className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
               >
                 <DeferredSkeleton
-                  loading={!overviewReady}
+                  loading={!overviewSettled}
                   holdKey={canvasHoldKey}
                   skeleton={
                     <CanvasLoadProgress
@@ -569,6 +591,13 @@ export function ServiceOverviewView({
                           done: !blueprintsLoading,
                         },
                       ]}
+                      // Real ticks: the structure query + each settled
+                      // blueprint chunk is one unit — no synthetic fill.
+                      units={{
+                        loaded:
+                          (slidesLoading ? 0 : 1) + blueprintsProgress.loaded,
+                        total: 1 + blueprintsProgress.total,
+                      }}
                     />
                   }
                 >

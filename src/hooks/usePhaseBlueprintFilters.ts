@@ -24,6 +24,8 @@ export type PhaseBlueprintFilters = {
   pathsByScenario: Map<string, PathListItem[]>
   blueprintsByPathId: Map<string, BlueprintData>
   loading: boolean
+  /** Real fetch progress: settled request chunks over total. */
+  progress: { loaded: number; total: number }
   filterPaths: PathOption[]
   filterSelectedPathIds: string[]
   viewType: SlideViewType
@@ -48,6 +50,7 @@ export function usePhaseBlueprintFilters({
     pathsByScenario,
     blueprintsByPathId,
     loading,
+    progress,
   } = useCanvasBlueprints(activeScenarioIds)
 
   // `activeScenarioIds` is the scope: the store may prune any of these that
@@ -127,6 +130,7 @@ export function usePhaseBlueprintFilters({
     pathsByScenario,
     blueprintsByPathId,
     loading,
+    progress,
     filterPaths,
     filterSelectedPathIds,
     viewType,

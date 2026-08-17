@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/tooltip'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
+import { invalidateCanvasBlueprintsForPath } from '@/hooks/useCanvasBlueprints'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellContent } from '@/hooks/useCellContent'
 import { useCellSpec } from '@/hooks/useCellSpec'
@@ -326,7 +327,8 @@ function CellPanelEditorForm({
       }
 
       invalidateQueries('lifecycle-phases')
-      invalidateQueries('canvas-blueprints')
+      // Content edit: only the edited path's scenario is stale (todo 029).
+      invalidateCanvasBlueprintsForPath(draft!.pathId)
       invalidateQueries(`cell-content:${targetId}`)
       invalidateQueries(`cell-spec:${targetId}`)
       invalidateQueries('owner-tags')

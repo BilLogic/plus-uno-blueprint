@@ -80,8 +80,13 @@ const TOUCH_PAN_SLOP = 10
 /** Counter-scale that keeps a phase badge at roughly constant screen size
  * (12px type reads ~11px). Capped so a deep zoom-out cannot grow a badge
  * past its artboard. */
+// Cap 10, not 16: the badge grows upward from the frame's top edge, and
+// with OVERVIEW_PHASE_ROW_GAP's headroom a 10× badge (~220 content px)
+// stays inside its own row's gap — 16× reached into the previous phase's
+// panels, which broke the badge's group affiliation exactly when zoomed
+// out far enough to need it.
 const semanticLabelBoost = (zoom: number) =>
-  Math.min(16, 0.95 / Math.max(zoom, 0.01))
+  Math.min(10, 0.95 / Math.max(zoom, 0.01))
 
 function applyTransformToElement(
   el: HTMLElement,

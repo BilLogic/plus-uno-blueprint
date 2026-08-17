@@ -12,6 +12,7 @@ type TechPillFaceProps = {
   item: string
   compact?: boolean
   className?: string
+  style?: CSSProperties
   opacity?: number
   asSpan?: boolean
 }
@@ -24,6 +25,7 @@ export function TechPillFace({
   item,
   compact = false,
   className,
+  style: styleProp,
   opacity,
   asSpan = false,
 }: TechPillFaceProps) {
@@ -32,6 +34,7 @@ export function TechPillFace({
   if (asSpan) {
     const style = {
       ...(opacity != null && opacity < 1 ? { opacity } : undefined),
+      ...styleProp,
     } as CSSProperties
 
     return (
@@ -58,6 +61,7 @@ export function TechPillFace({
       compact={compact}
       opacity={opacity}
       className={cn('min-w-0 shrink-0 break-words', className)}
+      style={styleProp}
     >
       {item}
     </BlueprintCellButton>

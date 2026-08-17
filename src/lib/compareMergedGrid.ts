@@ -18,14 +18,28 @@ import type { IntegratedBlueprintTrigger } from '@/types/integratedBlueprint'
  * composite id.
  */
 
-/** One path's contribution to a merged slot. */
-export type MergedSubCell = {
+/** One member path's own backing cells for a merged sub-cell. */
+export type MergedSubCellMember = {
   readonly pathId: string
   /** That path's step id backing this canonical column. */
   readonly stepId: string
   /** Real cell ids — never merged, never synthesized (bar the visual-lane
    *  `visual-<stepId>` anchor the stacked grid already uses). */
   readonly cellIds: readonly string[]
+}
+
+/**
+ * One DRAWN cell of a merged slot. Paths whose cell content is identical
+ * share one drawn cell — a slot never stacks two copies of the same words
+ * (todo: the "two HP cells" report) — so a sub-cell carries every member
+ * path it stands for. The first member's cells are the ones drawn; the
+ * rest are `hidden`, and the arrow remap aliases their ids onto the drawn
+ * ones exactly like a fully-shared slot does.
+ */
+export type MergedSubCell = MergedSubCellMember & {
+  /** Every member path, in selection order. First = the drawn one. */
+  readonly pathIds: readonly string[]
+  readonly hidden: readonly MergedSubCellMember[]
 }
 
 /**
@@ -44,8 +58,8 @@ export type MergedSlotAssembly =
   | { readonly kind: 'empty' }
   | {
       readonly kind: 'shared'
+      /** One group holding every path; its `hidden` carries the others. */
       readonly representative: MergedSubCell
-      readonly hidden: readonly MergedSubCell[]
     }
   | { readonly kind: 'split'; readonly subCells: readonly MergedSubCell[] }
 
@@ -55,7 +69,7 @@ export type MergedSlotAssembly =
  * callers pass the content-only signature: a detail-only difference (V7,
  * description/links only) must not fork the canvas, it lives in the ledger.
  */
-export type MergedSlotCandidate = MergedSubCell & {
+export type MergedSlotCandidate = MergedSubCellMember & {
   readonly signature: string
 }
 
@@ -77,26 +91,40 @@ export function assembleMergedSlot(
 
   if (present.length === 0) return { kind: 'empty' }
 
-  const allPresent = present.length === pathIds.length
-  const agree = present.every(
-    (candidate) => candidate.signature === present[0].signature,
-  )
-  if (allPresent && agree) {
-    const [representative, ...hidden] = present
-    return {
-      kind: 'shared',
-      representative: toSubCell(representative),
-      hidden: hidden.map(toSubCell),
+  // Equal-signature candidates collapse into ONE drawn cell whatever the
+  // slot's kind — two paths that say the same words never stack two copies.
+  const groups: MergedSlotCandidate[][] = []
+  const bySignature = new Map<string, MergedSlotCandidate[]>()
+  for (const candidate of present) {
+    const group = bySignature.get(candidate.signature)
+    if (group) {
+      group.push(candidate)
+    } else {
+      const fresh = [candidate]
+      bySignature.set(candidate.signature, fresh)
+      groups.push(fresh)
     }
   }
-  return { kind: 'split', subCells: present.map(toSubCell) }
+
+  const allPresent = present.length === pathIds.length
+  if (allPresent && groups.length === 1) {
+    return { kind: 'shared', representative: toSubCell(groups[0]) }
+  }
+  return { kind: 'split', subCells: groups.map(toSubCell) }
 }
 
-function toSubCell(candidate: MergedSlotCandidate): MergedSubCell {
+function toSubCell(group: readonly MergedSlotCandidate[]): MergedSubCell {
+  const [drawn, ...rest] = group
   return {
-    pathId: candidate.pathId,
-    stepId: candidate.stepId,
-    cellIds: candidate.cellIds,
+    pathId: drawn.pathId,
+    stepId: drawn.stepId,
+    cellIds: drawn.cellIds,
+    pathIds: group.map((candidate) => candidate.pathId),
+    hidden: rest.map((candidate) => ({
+      pathId: candidate.pathId,
+      stepId: candidate.stepId,
+      cellIds: candidate.cellIds,
+    })),
   }
 }
 
@@ -135,7 +163,7 @@ export function buildComparePathShortLabels(
  * A shared slot draws ONE cell, so the other paths' cell ids have no DOM
  * anchor: their arrows would silently vanish at the overlay's
  * `querySelector`. Both fixes happen here, at the data level (the same
- * discipline as the folded-arrow drop):
+ * discipline as every other data-level arrow rule):
  *
  * - `aliasByCellId` rewrites a hidden path's cell id to the id that is
  *   drawn, so the arrow anchors on the shared cell.
@@ -154,17 +182,27 @@ export function buildMergedArrowRemap(
 ): MergedArrowRemap {
   const aliasByCellId = new Map<string, string>()
   const sharedCellIds = new Set<string>()
-  for (const assembly of assemblies) {
-    if (assembly.kind !== 'shared') continue
-    const drawn = assembly.representative.cellIds
-    for (const cellId of drawn) sharedCellIds.add(cellId)
-    for (const hidden of assembly.hidden) {
+  const aliasGroup = (group: MergedSubCell, markShared: boolean) => {
+    const drawn = group.cellIds
+    if (markShared) for (const cellId of drawn) sharedCellIds.add(cellId)
+    for (const hidden of group.hidden) {
       hidden.cellIds.forEach((cellId, index) => {
         // Index-wise where the multiset lines up (equal signature ⇒ equal
         // count), else onto the drawn slot's first cell.
         aliasByCellId.set(cellId, drawn[index] ?? drawn[0])
-        sharedCellIds.add(cellId)
+        if (markShared) sharedCellIds.add(cellId)
       })
+    }
+  }
+  for (const assembly of assemblies) {
+    if (assembly.kind === 'shared') {
+      aliasGroup(assembly.representative, true)
+    } else if (assembly.kind === 'split') {
+      // Subset-shared groups alias too (their hidden cells have no DOM
+      // anchor), but only FULLY-shared cells join `sharedCellIds` — the
+      // "draw a wholly-shared arrow once" rule is about arrows every path
+      // owns, and a subset's arrow still belongs to each member.
+      for (const group of assembly.subCells) aliasGroup(group, false)
     }
   }
   return { aliasByCellId, sharedCellIds }

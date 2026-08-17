@@ -29,7 +29,10 @@ describe('assembleMergedSlot', () => {
     expect(assembly.kind).toBe('shared')
     if (assembly.kind !== 'shared') return
     expect(assembly.representative.pathId).toBe('a')
-    expect(assembly.hidden.map((entry) => entry.pathId)).toEqual(['b'])
+    expect(assembly.representative.pathIds).toEqual(['a', 'b'])
+    expect(assembly.representative.hidden.map((entry) => entry.pathId)).toEqual([
+      'b',
+    ])
   })
 
   it('stacks every present path when they disagree', () => {
@@ -50,14 +53,23 @@ describe('assembleMergedSlot', () => {
     expect(assembly.subCells[0].pathId).toBe('b')
   })
 
-  it('never merges when a path is absent, even with equal signatures', () => {
+  it('keeps a subset agreement divergent but draws it as ONE labelled cell', () => {
     // Presence is half the fork condition: two of three paths agreeing is
-    // still a divergence, and drawing one bare cell would hide the gap.
+    // still a divergence (the slot stays split, so it wears labels). But the
+    // agreeing subset never stacks two copies of the same words — one drawn
+    // cell carries both member paths.
     const assembly = assembleMergedSlot(
       ['a', 'b', 'c'],
       [candidate('a', 'same'), candidate('b', 'same')],
     )
     expect(assembly.kind).toBe('split')
+    if (assembly.kind !== 'split') return
+    expect(assembly.subCells).toHaveLength(1)
+    expect(assembly.subCells[0].pathIds).toEqual(['a', 'b'])
+    expect(assembly.subCells[0].pathId).toBe('a')
+    expect(assembly.subCells[0].hidden.map((entry) => entry.pathId)).toEqual([
+      'b',
+    ])
   })
 
   it('is empty when no path has anything', () => {
@@ -112,14 +124,19 @@ describe('buildMergedArrowRemap', () => {
   const assemblies: MergedSlotAssembly[] = [
     {
       kind: 'shared',
-      representative: { pathId: 'a', stepId: 's1', cellIds: ['a1'] },
-      hidden: [{ pathId: 'b', stepId: 's1b', cellIds: ['b1'] }],
+      representative: {
+        pathId: 'a',
+        stepId: 's1',
+        cellIds: ['a1'],
+        pathIds: ['a', 'b'],
+        hidden: [{ pathId: 'b', stepId: 's1b', cellIds: ['b1'] }],
+      },
     },
     {
       kind: 'split',
       subCells: [
-        { pathId: 'a', stepId: 's2', cellIds: ['a2'] },
-        { pathId: 'b', stepId: 's2b', cellIds: ['b2'] },
+        { pathId: 'a', stepId: 's2', cellIds: ['a2'], pathIds: ['a'], hidden: [] },
+        { pathId: 'b', stepId: 's2b', cellIds: ['b2'], pathIds: ['b'], hidden: [] },
       ],
     },
   ]
@@ -152,13 +169,23 @@ describe('buildMergedArrowRemap', () => {
     const remap = buildMergedArrowRemap([
       {
         kind: 'shared',
-        representative: { pathId: 'a', stepId: 's1', cellIds: ['a1'] },
-        hidden: [{ pathId: 'b', stepId: 's1b', cellIds: ['b1'] }],
+        representative: {
+          pathId: 'a',
+          stepId: 's1',
+          cellIds: ['a1'],
+          pathIds: ['a', 'b'],
+          hidden: [{ pathId: 'b', stepId: 's1b', cellIds: ['b1'] }],
+        },
       },
       {
         kind: 'shared',
-        representative: { pathId: 'a', stepId: 's2', cellIds: ['a2'] },
-        hidden: [{ pathId: 'b', stepId: 's2b', cellIds: ['b2'] }],
+        representative: {
+          pathId: 'a',
+          stepId: 's2',
+          cellIds: ['a2'],
+          pathIds: ['a', 'b'],
+          hidden: [{ pathId: 'b', stepId: 's2b', cellIds: ['b2'] }],
+        },
       },
     ])
     const trigger = (pathId: string, source: string, target: string) => ({
@@ -175,6 +202,28 @@ describe('buildMergedArrowRemap', () => {
     expect(
       remapMergedPathTriggers([trigger('b', 'b1', 'b2')], remap, false),
     ).toHaveLength(0)
+  })
+
+  it('aliases a subset-shared hidden cell without marking it wholly shared', () => {
+    const remap = buildMergedArrowRemap([
+      {
+        kind: 'split',
+        subCells: [
+          {
+            pathId: 'a',
+            stepId: 's3',
+            cellIds: ['a3'],
+            pathIds: ['a', 'b'],
+            hidden: [{ pathId: 'b', stepId: 's3b', cellIds: ['b3'] }],
+          },
+        ],
+      },
+    ])
+    expect(remap.aliasByCellId.get('b3')).toBe('a3')
+    // Subset agreement is still a divergence: its arrows belong to each
+    // member, so the once-only rule must not swallow them.
+    expect(remap.sharedCellIds.has('a3')).toBe(false)
+    expect(remap.sharedCellIds.has('b3')).toBe(false)
   })
 
   it('leaves untouched triggers referentially identical', () => {

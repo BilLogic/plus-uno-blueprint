@@ -46,20 +46,11 @@ export type ComparePathArrowData = {
   steps: IntegratedBlueprintStep[]
 }
 
-/**
- * One path's arrow inputs. `foldedStepIds` (from the compare model + fold
- * state, never the DOM) drops any trigger with an endpoint inside a
- * collapsed pleat HERE, at the data level — a declared drop, so the overlay
- * never silently misses a DOM anchor the fold removed.
- */
+/** One path's arrow inputs (fold's trigger-drop retired 2026-08-17). */
 export function getComparePathArrowData(
   blueprint: BlueprintData,
-  foldedStepIds?: ReadonlySet<string>,
 ): ComparePathArrowData {
   const { path, cells, triggers, steps } = blueprint
-  const keepTrigger = (stepId: string | undefined) =>
-    stepId === undefined || !foldedStepIds?.has(stepId)
-  const stepIdByCellId = new Map(cells.map((cell) => [cell.id, cell.step_id]))
 
   return {
     steps: steps.map((step) => ({
@@ -78,15 +69,7 @@ export function getComparePathArrowData(
       links: cell.links,
       opacity: 1,
     })),
-    triggers: triggers
-      .filter(
-        (trigger) =>
-          foldedStepIds === undefined ||
-          foldedStepIds.size === 0 ||
-          (keepTrigger(stepIdByCellId.get(trigger.source_cell_id)) &&
-            keepTrigger(stepIdByCellId.get(trigger.target_cell_id))),
-      )
-      .map((trigger) => ({
+    triggers: triggers.map((trigger) => ({
         id: trigger.id,
         source_cell_id: trigger.source_cell_id,
         target_cell_id: trigger.target_cell_id,
@@ -99,7 +82,9 @@ export function getComparePathArrowData(
 
 export const COMPARE_CARD_GAP = 20
 export const COMPARE_CARD_PADDING_X = 12
-export const COMPARE_LABEL_WIDTH = 192
+// 208: room for two-word lane names ("Front Stage Actions") and the
+// canonical "LINE OF …" divider labels without clipping at the rail edge.
+export const COMPARE_LABEL_WIDTH = 208
 export const COMPARE_PANEL_PADDING = 24
 /** Extra inset on the right edge of the compare blueprint grid. */
 export const COMPARE_PANEL_PADDING_RIGHT = 40
@@ -649,11 +634,22 @@ export function getComparePanelHeight(
 /** Vertical gap between stacked path bands — room for both bands' section
  *  frame insets (20 + 20) plus the lower band's title badge overhang. */
 export const COMPARE_STACKED_BAND_GAP = 64
-/** Fixed track width of one folded pleat (Phase 4a) — a whole run of shared
- *  columns compresses to this. */
-export const COMPARE_PLEAT_TRACK_WIDTH = 28
 /** Gap between the step-header row and the first band's rows. */
 export const COMPARE_STACKED_HEADER_GAP = 36
+
+/**
+ * Extra top inset that stretches a path frame from its normal top edge all
+ * the way up PAST the step-header row to the grid's first row line — the
+ * header row is inside the frame with no container of its own (plan
+ * 2026-08-17-002 U1). Derivation: the band box starts
+ * `COMPARE_STACKED_HEADER_GAP` below the header row's bottom, the frame
+ * already reaches `COMPARE_PATH_SECTION_TOP_INSET` above the band box, and
+ * the header row itself is `COMPARE_STEP_HEADER_HEIGHT` tall.
+ */
+export const COMPARE_HEADER_WRAP_EXTRA_INSET =
+  COMPARE_STACKED_HEADER_GAP +
+  COMPARE_STEP_HEADER_HEIGHT -
+  COMPARE_PATH_SECTION_TOP_INSET
 
 /** One band's box height: its lane-row tracks plus the row gaps between them
  *  (section-frame insets live in the band gaps, not the band box). */

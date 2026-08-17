@@ -155,9 +155,10 @@ export function layerPrecedesBlueprintDivider(
   )
 }
 
-export const INTERACTION_LINE_LABEL = 'INTERACTION LINE'
-export const VISIBILITY_LINE_LABEL = 'VISIBILITY LINE'
-export const INTERNAL_INTERACTION_LINE_LABEL = 'INTERNAL INTERACTION LINE'
+// Service-blueprint canon: the dividers are the "line of …" boundaries.
+export const INTERACTION_LINE_LABEL = 'LINE OF INTERACTION'
+export const VISIBILITY_LINE_LABEL = 'LINE OF VISIBILITY'
+export const INTERNAL_INTERACTION_LINE_LABEL = 'LINE OF INTERNAL INTERACTION'
 
 export const BLUEPRINT_DIVIDER_ROW_HEIGHT = 28
 /** Right inset so interaction / visibility lines stop before the board edge. */

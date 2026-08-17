@@ -73,13 +73,17 @@ export function SliceHeaderBand({
     >
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
+          {/* No ◇ glyph: the header already says what this is; a decorative
+              icon just indents the title away from its own caption. */}
           <h2 className="min-w-0 truncate text-sm font-semibold">
-            <span aria-hidden>◇ </span>
             {detail.slice.title}
           </h2>
-          {/* A raw `slice_type` enum, not a written label — mono so it reads as
-              the stored value it is. */}
-          <Badge variant="secondary" className="shrink-0 font-mono">
+          {/* A raw `slice_type` enum, not a written label — mono so it reads
+              as the stored value it is, on a real filled chip. */}
+          <Badge
+            variant="secondary"
+            className="shrink-0 border-border/60 bg-foreground/5 font-mono text-muted-foreground"
+          >
             {detail.slice.slice_type}
           </Badge>
         </div>

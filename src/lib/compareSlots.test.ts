@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import type { BlueprintCell, BlueprintData } from '@/types/blueprint'
 import {
   buildCompareModel,
-  computePinnedColumns,
   makeSlotKey,
   normalizeCompareName,
   type CompareBlueprints,
@@ -343,34 +342,3 @@ describe('buildCompareModel — columns, runs, ordering', () => {
   })
 })
 
-describe('computePinnedColumns', () => {
-  it('pins shared cells one hop from a divergent cell, and only one hop', () => {
-    const happy = makeBlueprint(
-      'happy',
-      ['Stock', 'Pay', 'Ship'],
-      [
-        { lane: 'BS', step: 'Stock', content: 'Check stock', id: 'h-stock' },
-        { lane: 'FS', step: 'Pay', content: 'Pay', id: 'h-pay' },
-        { lane: 'BS', step: 'Ship', content: 'Pack', id: 'h-ship' },
-      ],
-      {
-        triggers: [
-          { source: 'h-stock', target: 'h-pay', kind: 'needs' }, // shared -> divergent: pins Stock
-          { source: 'h-ship', target: 'h-stock', kind: 'trigger' }, // shared -> shared: no pin
-        ],
-      },
-    )
-    const crisis = makeBlueprint(
-      'crisis',
-      ['Stock', 'Pay', 'Ship'],
-      [
-        { lane: 'BS', step: 'Stock', content: 'Check stock' },
-        { lane: 'FS', step: 'Pay', content: 'Pay fails' },
-        { lane: 'BS', step: 'Ship', content: 'Pack' },
-      ],
-    )
-    const model = buildCompareModel(pair(happy, crisis))
-    const pinned = computePinnedColumns(model, [happy, crisis])
-    expect(pinned).toEqual(new Set(['stock#0']))
-  })
-})

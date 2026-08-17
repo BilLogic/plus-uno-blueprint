@@ -10,11 +10,7 @@ import {
   type CompareCellPathRail,
 } from '@/components/blueprint/CompareCellBlock'
 import { CompareLaneRowShell } from '@/components/blueprint/CompareLaneRowShell'
-import {
-  ComparePleatCell,
-  CompareDiffColumnTint,
-  CompareStepHeaderRow,
-} from '@/components/blueprint/CompareTrackDecorations'
+import { CompareStepHeaderRow } from '@/components/blueprint/CompareTrackDecorations'
 import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { useCompareGridAxis } from '@/hooks/useCompareGridAxis'
@@ -29,6 +25,7 @@ import {
   type BlueprintCellVariant,
 } from '@/lib/blueprintLayout'
 import {
+  blueprintPanelLabelRailColor,
   blueprintPanelSectionFillColor,
   getBlueprintLayerStyle,
   getBlueprintLayerZone,
@@ -44,17 +41,16 @@ import {
   type MergedSlotCandidate,
   type MergedSubCell,
 } from '@/lib/compareMergedGrid'
-import { expandComparePleat } from '@/lib/compareReviewStore'
 import {
   makeSlotKey,
   normalizeCompareName,
   type CompareModel,
 } from '@/lib/compareSlots'
 import {
+  COMPARE_HEADER_WRAP_EXTRA_INSET,
   COMPARE_PATH_SECTION_BOTTOM_INSET,
   COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
-  COMPARE_PLEAT_TRACK_WIDTH,
   COMPARE_STACKED_HEADER_GAP,
   COMPARE_STEP_HEADER_HEIGHT,
   getComparePathArrowData,
@@ -62,10 +58,7 @@ import {
   getMergedCompareRowTrackCss,
   resolveBlueprintLayer,
 } from '@/lib/sideBySideCompareLayout'
-import {
-  getPathColor,
-  getPathDashArray,
-} from '@/lib/pathColorTheme'
+import { getPathColor } from '@/lib/pathColorTheme'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type {
@@ -100,9 +93,7 @@ type MergedPathRuntime = {
 /**
  * The MERGED canvas: the compared paths combined into ONE blueprint — one
  * lane set (labels rendered once), one canonical step axis (the same tracks
- * the stacked bands use, so fold, pleats, the pin rule and the
- * divergent-column tint carry over unchanged), and per SLOT (lane ×
- * canonical column):
+ * the stacked bands use), and per SLOT (lane × canonical column):
  *
  * - the paths agree ⇒ ONE cell, drawn exactly like a normal blueprint cell,
  *   with no path rail: it belongs to every path
@@ -131,15 +122,8 @@ export function MergedCompareGrid({
   const bandRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
   const resolvedScrollRef = scrollContainerRef ?? fallbackScrollRef
-  const {
-    layers,
-    rows,
-    toggleLayer,
-    activeFold,
-    tracks,
-    foldedStepIdsByPath,
-    gridTemplateColumns,
-  } = useCompareGridAxis(model, blueprints, compact)
+  const { layers, rows, toggleLayer, tracks, gridTemplateColumns } =
+    useCompareGridAxis(model, blueprints, compact)
 
   const rowTrackCss = useMemo(
     () => rows.map((row) => getMergedCompareRowTrackCss(row)).join(' '),
@@ -169,8 +153,6 @@ export function MergedCompareGrid({
             ),
             rail: {
               color: getPathColor(path),
-              // Colour and dash always travel as a pair (SC 1.4.1).
-              dashed: getPathDashArray(path) !== undefined,
               label: shortLabels.get(path.id) ?? path.name.slice(0, 2),
               pathName: path.name,
             },
@@ -254,22 +236,38 @@ export function MergedCompareGrid({
     its own overlay pair over that container (the segments already carry the
     path's colour + dash). A shared slot draws one cell, so a hidden path's
     endpoints are remapped onto the drawn cell and a wholly-shared arrow is
-    drawn once — both at the data level, like the folded-arrow drop.
+    drawn once — both at the data level.
   */
   const arrowDataByPath = useMemo(() => {
     const remap = buildMergedArrowRemap(assemblyByKey.values())
+    // After the remap, two paths' triggers can land on the SAME drawn
+    // (source, target) pair — subset-shared endpoints alias onto one cell.
+    // Draw that edge once: N identical strokes stack into one visually
+    // "doubled" arrowhead and say nothing extra.
+    const drawnEdges = new Set<string>()
     return blueprints.map((blueprint, index) => {
-      const data = getComparePathArrowData(
-        blueprint,
-        foldedStepIdsByPath?.get(blueprint.path.id),
-      )
-      return {
-        path: blueprint.path,
-        ...data,
-        triggers: remapMergedPathTriggers(data.triggers, remap, index === 0),
-      }
+      const data = getComparePathArrowData(blueprint)
+      // Kind + label ride the dedupe key (todo 031): only triggers that
+      // draw the SAME edge with the same meaning collapse — two distinct
+      // semantics between one remapped pair both survive. They live on
+      // the RAW blueprint triggers, so look them up by id.
+      const rawById = new Map(blueprint.triggers.map((raw) => [raw.id, raw]))
+      const remapped = remapMergedPathTriggers(data.triggers, remap, index === 0)
+      const triggers = remapped.filter((trigger) => {
+        const raw = rawById.get(trigger.id)
+        const key = [
+          trigger.source_cell_id,
+          trigger.target_cell_id,
+          raw?.kind ?? 'trigger',
+          raw?.label ?? '',
+        ].join(' | ')
+        if (drawnEdges.has(key)) return false
+        drawnEdges.add(key)
+        return true
+      })
+      return { path: blueprint.path, ...data, triggers }
     })
-  }, [assemblyByKey, blueprints, foldedStepIdsByPath])
+  }, [assemblyByKey, blueprints])
 
   return (
     <div
@@ -284,7 +282,7 @@ export function MergedCompareGrid({
           columnGap: STEP_COLUMN_GAP,
         }}
       >
-        <CompareStepHeaderRow tracks={tracks} showPinGlyph={activeFold.folded} />
+        <CompareStepHeaderRow tracks={tracks} />
         <div
           ref={bandRef}
           className="relative z-0 grid overflow-visible"
@@ -300,23 +298,15 @@ export function MergedCompareGrid({
           }}
         >
           <MergedSectionFrame blueprints={blueprints} compact={compact} />
-          {tracks.map((track, trackIndex) =>
-            track.kind === 'pleat' ? (
-              <ComparePleatCell
-                key={`pleat-${track.key}`}
-                track={track}
-                gridColumn={trackIndex + 2}
-                onExpand={expandComparePleat}
-              />
-            ) : track.divergent ? (
-              <CompareDiffColumnTint
-                key={`tint-${track.key}`}
-                gridColumn={trackIndex + 2}
-              />
-            ) : null,
+          {tracks.map(() => null
           )}
           {/* One lane rail for the whole comparison — the point of merging. */}
-          <BlueprintStickyLabelBackdrop rowCount={rows.length} />
+          <BlueprintStickyLabelBackdrop
+            rowCount={rows.length}
+            bleedTop={COMPARE_STACKED_HEADER_GAP}
+            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET - 3}
+            bleedLeft={COMPARE_PATH_SECTION_INSET - 3}
+          />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||
             row.kind === 'visibility' ||
@@ -434,21 +424,41 @@ function MergedSectionFrame({
   )
   return (
     <>
+      {/* The merged board is ONE frame, so — like a single-path board —
+          the step-header row lives inside it: no container of its own
+          (plan 2026-08-17-002 U1). */}
       <div
         aria-hidden
         className="pointer-events-none absolute rounded-xl border-2 border-border"
         style={{
-          top: -COMPARE_PATH_SECTION_TOP_INSET,
+          top: -COMPARE_PATH_SECTION_TOP_INSET - COMPARE_HEADER_WRAP_EXTRA_INSET,
           left: -COMPARE_PATH_SECTION_INSET,
           right: -COMPARE_PATH_SECTION_INSET,
           bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
           backgroundColor: blueprintPanelSectionFillColor(),
         }}
       />
+      {/* Header band — same treatment as the single-path frame: the
+          lane-rail's horizontal counterpart, one tint lighter, held 3px
+          inside the frame edges so the border stays untouched. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute rounded-t-[9px]"
+        style={{
+          top:
+            -COMPARE_PATH_SECTION_TOP_INSET -
+            COMPARE_HEADER_WRAP_EXTRA_INSET +
+            3,
+          left: -COMPARE_PATH_SECTION_INSET + 3,
+          right: -COMPARE_PATH_SECTION_INSET + 3,
+          height: COMPARE_STEP_HEADER_HEIGHT - 3,
+          backgroundColor: `color-mix(in oklab, ${blueprintPanelLabelRailColor()} 45%, transparent)`,
+        }}
+      />
       <div
         className="pointer-events-auto absolute z-50 flex max-w-[calc(100%-12px)] items-center gap-1.5"
         style={{
-          top: -COMPARE_PATH_SECTION_TOP_INSET,
+          top: -COMPARE_PATH_SECTION_TOP_INSET - COMPARE_HEADER_WRAP_EXTRA_INSET,
           left: COMPARE_PATH_SECTION_INSET + 2,
           transform: 'translateY(-50%)',
         }}
@@ -515,25 +525,6 @@ function MergedLaneRow({
           />
         )
 
-        if (track.kind === 'pleat') {
-          // The pleat itself is one full-height cell drawn by the band; the
-          // lane row only holds its track width.
-          return (
-            <Fragment key={`pleat-${track.key}`}>
-              <div
-                aria-hidden
-                data-compare-pleat-spacer=""
-                className="shrink-0"
-                style={{
-                  width: COMPARE_PLEAT_TRACK_WIDTH,
-                  minWidth: COMPARE_PLEAT_TRACK_WIDTH,
-                }}
-              />
-              {gapSpacer}
-            </Fragment>
-          )
-        }
-
         const assembly = assemblyByKey.get(mergedSlotKey(layer.id, track.key))
         const subCells: readonly MergedSubCell[] =
           assembly === undefined || assembly.kind === 'empty'
@@ -541,9 +532,18 @@ function MergedLaneRow({
             : assembly.kind === 'shared'
               ? [assembly.representative]
               : assembly.subCells
-        // A shared cell belongs to every path, so it wears no rail. Divergent
-        // and single-path sub-cells do.
-        const withRail = assembly?.kind === 'split'
+        // Every drawn cell names its member paths — a fully-shared cell
+        // carries ALL the labels (the clear "shared by both" statement),
+        // while only strict-subset cells additionally wear the wash.
+        const withWash = assembly?.kind === 'split'
+        const railsFor = (
+          subCell: MergedSubCell,
+        ): CompareCellPathRail[] | undefined => {
+          const rails = subCell.pathIds
+            .map((pathId) => runtimeByPathId.get(pathId)?.rail)
+            .filter((rail): rail is CompareCellPathRail => rail !== undefined)
+          return rails.length > 0 ? rails : undefined
+        }
 
         return (
           <Fragment key={track.key}>
@@ -564,7 +564,8 @@ function MergedLaneRow({
                 variant={variant}
                 compact={compact}
                 flushBottom={flushBottom}
-                withRail={withRail}
+                pathRails={railsFor(subCells[0])}
+                pathWash={withWash}
                 scenarioName={scenarioName}
                 phaseName={phaseName}
               />
@@ -581,7 +582,8 @@ function MergedLaneRow({
                     variant={variant}
                     compact={compact}
                     flushBottom={flushBottom}
-                    withRail={withRail}
+                    pathRails={railsFor(subCell)}
+                    pathWash={withWash}
                     scenarioName={scenarioName}
                     phaseName={phaseName}
                   />
@@ -606,7 +608,8 @@ function MergedSubCellBlock({
   variant,
   compact,
   flushBottom,
-  withRail,
+  pathRails,
+  pathWash = true,
   scenarioName,
   phaseName,
 }: {
@@ -619,7 +622,9 @@ function MergedSubCellBlock({
   variant: BlueprintCellVariant
   compact?: boolean
   flushBottom?: boolean
-  withRail: boolean
+  /** One entry per member path of this sub-cell (label; wash if pathWash). */
+  pathRails?: readonly CompareCellPathRail[]
+  pathWash?: boolean
   scenarioName?: string
   phaseName?: string
 }) {
@@ -663,7 +668,8 @@ function MergedSubCellBlock({
       flushBottom={flushBottom}
       visualPictures={visualPictures}
       slotCells={variant === 'pills' ? cells : undefined}
-      pathRail={withRail ? runtime.rail : undefined}
+      pathRails={pathRails}
+      pathWash={pathWash}
       selectionContext={
         scenarioName && cellId
           ? {

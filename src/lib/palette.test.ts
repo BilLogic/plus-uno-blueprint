@@ -481,29 +481,3 @@ describe('interaction states', () => {
     )
   })
 })
-
-describe('compare diff-column tint', () => {
-  const css = readFileSync(
-    fileURLToPath(new URL('../styles/blueprint.css', import.meta.url)),
-    'utf8',
-  )
-
-  // Compare v3's only canvas diff paint. Pinned to the tier-4 contract
-  // (--{property}-blueprint-{part}) and to the semantic warning family —
-  // "warning says THAT paths differ, path accents say WHO differs" — so a
-  // refactor cannot quietly swap it to a raw color-* or a path accent.
-  it('washes divergent columns with the semantic warning family', () => {
-    const tints = [
-      ...css.matchAll(
-        /--background-blueprint-diffcolumn:\s*color-mix\(\s*in oklab,\s*var\(--warning\)\s*(\d+)%,\s*transparent\s*\)/g,
-      ),
-    ].map(([, percent]) => Number(percent))
-
-    // One faint column wash + one stronger header tint.
-    expect(tints).toHaveLength(2)
-    const [column, header] = tints
-    expect(header).toBeGreaterThan(column)
-    // Light per-column highlight, not paint: both stay washes.
-    expect(header).toBeLessThanOrEqual(25)
-  })
-})

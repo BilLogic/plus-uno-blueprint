@@ -4,6 +4,7 @@ import {
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import { getTouchpointTone } from '@/lib/techPillColors'
+import type { CSSProperties } from 'react'
 
 type BlueprintTechPillProps = {
   item: string
@@ -11,6 +12,7 @@ type BlueprintTechPillProps = {
   stepIndex: number
   compact?: boolean
   opacity?: number
+  style?: CSSProperties
   /** Pills share their cell id — only the first pill carries the badge. */
   sliceSequenceBadge?: boolean
 }
@@ -25,6 +27,7 @@ export function BlueprintTechPill({
   stepIndex,
   compact = false,
   opacity,
+  style,
   sliceSequenceBadge = false,
 }: BlueprintTechPillProps) {
   return (
@@ -37,6 +40,7 @@ export function BlueprintTechPill({
       variant="pill"
       compact={compact}
       opacity={opacity}
+      style={style}
       sliceSequenceBadge={sliceSequenceBadge}
       className="min-w-0 shrink-0 break-words"
       data-blueprint-tech-pill={item}
