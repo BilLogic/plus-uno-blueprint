@@ -6,6 +6,7 @@ import {
   mergePathsWithFallback,
 } from '@/data/blueprintFallbacks'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { queryClient } from '@/lib/queryClient'
 import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
 import type { RawPath } from '@/lib/normalizeBlueprint'
@@ -151,29 +152,48 @@ function deriveFromRows(
   }
 }
 
-/**
- * How many scenarios ride one request. Small enough that the progress bar's
- * per-chunk ticks are REAL network completions (the reason the fetch is
- * chunked at all), large enough that a full board is a handful of requests.
- */
-const SCENARIOS_PER_CHUNK = 4
+const SCENARIO_KEY_PREFIX = 'canvas-blueprints:scenario:'
 
-function chunkIds(ids: string[]): string[][] {
-  const chunks: string[][] = []
-  for (let at = 0; at < ids.length; at += SCENARIOS_PER_CHUNK) {
-    chunks.push(ids.slice(at, at + SCENARIOS_PER_CHUNK))
-  }
-  return chunks
+/**
+ * Invalidate exactly the scenarios a write touched — one refetch, not a
+ * board-wide storm (todo 029). Membership changes (create/delete/duplicate
+ * scenario) still go through `invalidateStructure()`'s bare
+ * 'canvas-blueprints' prefix, which these keys also match.
+ */
+export function invalidateCanvasBlueprintsForScenario(
+  scenarioId: string,
+): void {
+  void queryClient.invalidateQueries({
+    predicate: (query) =>
+      String(query.queryKey[0] ?? '') === `${SCENARIO_KEY_PREFIX}${scenarioId}`,
+  })
 }
 
 /**
- * Blueprints for a set of scenarios, fetched in chunked `paths` queries so
- * loading progress is measurable: each chunk completing is one real tick of
- * `progress` (no synthetic percentages). Chunks are cached individually
- * under the `canvas-blueprints:` prefix (the same one mutations invalidate),
- * so every mount of the same scenario set — overview canvas, slice tabs, tab
- * switches — reuses the fetches. Errors, timeouts, and no-DB sessions fall
- * back to the static local blueprints.
+ * Path-scoped variant for callers that only know the path (the cell panel
+ * editor): match the one scenario query whose cached rows contain the
+ * path. A query with no cached data yet is counted as matching — stale to
+ * be safe.
+ */
+export function invalidateCanvasBlueprintsForPath(pathId: string): void {
+  void queryClient.invalidateQueries({
+    predicate: (query) => {
+      const key = String(query.queryKey[0] ?? '')
+      if (!key.startsWith(SCENARIO_KEY_PREFIX)) return false
+      const rows = query.state.data as CanvasRawPath[] | undefined
+      return rows === undefined || rows.some((row) => row.id === pathId)
+    },
+  })
+}
+
+/**
+ * Blueprints for a set of scenarios, fetched ONE QUERY PER SCENARIO so
+ * loading progress is measurable (each settle is one real tick), cache
+ * keys are stable under membership changes (adding a scenario adds one
+ * key; the rest stay warm — todo 029), and a lost request degrades only
+ * its own scenario to the static fallback instead of the whole board
+ * (todo 030). Keys live under the `canvas-blueprints:` prefix the
+ * mutation contract invalidates.
  */
 export function useCanvasBlueprints(scenarioIds: string[]) {
   const idsKey = scenarioIds.slice().sort().join(',')
@@ -188,14 +208,10 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
 
   const { client, configured } = useSupabase()
   const noDb = !configured || !client
-  const chunks = useMemo(
-    () => chunkIds(orderedScenarioIds),
-    [orderedScenarioIds],
-  )
 
   const results = useQueries({
-    queries: chunks.map((chunk) => ({
-      queryKey: [`canvas-blueprints:chunk:${chunk.join(',')}`],
+    queries: orderedScenarioIds.map((scenarioId) => ({
+      queryKey: [`${SCENARIO_KEY_PREFIX}${scenarioId}`],
       enabled: !noDb,
       queryFn: async (): Promise<CanvasRawPath[]> => {
         const outcome = await raceSupabaseQuery(
@@ -203,7 +219,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
             const { data, error } = await client!
               .from('paths')
               .select(PATH_BLUEPRINT_SELECT)
-              .in('service_scenario_id', chunk)
+              .eq('service_scenario_id', scenarioId)
             if (error) throw new Error(error.message)
             return (data ?? []) as CanvasRawPath[]
           })(),
@@ -214,11 +230,11 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     })),
   })
 
-  const loadedChunks = results.filter(
+  const loadedCount = results.filter(
     (result) => result.data !== undefined || result.error !== null,
   ).length
   const anyError = results.some((result) => result.error !== null)
-  const allSettled = noDb || loadedChunks === results.length
+  const allSettled = noDb || loadedCount === results.length
   const loading = orderedScenarioIds.length > 0 && !allSettled
 
   // dataUpdatedAt, not a y/e/n status string: after a mutation calls
@@ -235,12 +251,15 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
       // all → the static local fallbacks, same as before the split.
       return noDb ? staticFallbacks : EMPTY_MAPS
     }
-    if (anyError) return staticFallbacks
+    // Per-scenario degradation (todo 030): a failed scenario contributes no
+    // rows, and deriveFromRows already falls back to the bundled fixture
+    // for a scenario with nothing — the other scenarios keep their fetched
+    // data instead of the whole board swapping to statics.
     const rows = results.flatMap((result) => result.data ?? [])
     return deriveFromRows(rows, orderedScenarioIds, staticFallbacks)
     // rowsKey stands in for the results array's per-render identity churn.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orderedScenarioIds, noDb, allSettled, anyError, rowsKey, staticFallbacks])
+  }, [orderedScenarioIds, noDb, allSettled, rowsKey, staticFallbacks])
 
   const firstError = results.find((result) => result.error)?.error
   const error = anyError
@@ -255,12 +274,12 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     blueprintsByPathId: derived.blueprintsByPathId,
     loading,
     error,
-    usingFallback: derived.usingFallback,
+    usingFallback: derived.usingFallback || anyError,
     /** Real network progress: settled chunks over total chunks. A no-DB
      *  session has nothing on the wire — it reports complete, so the bar
      *  never parks below full while nothing is loading. */
     progress: noDb
       ? { loaded: results.length, total: results.length }
-      : { loaded: loadedChunks, total: results.length },
+      : { loaded: loadedCount, total: results.length },
   }
 }

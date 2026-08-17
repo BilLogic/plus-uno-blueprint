@@ -251,15 +251,6 @@ export function ScenarioBlueprintPanel({
         filterBits.length > 0
           ? `Ledger filter: ${filterBits.join('; ')}.`
           : 'Ledger filter: none.',
-        state.fold.folded
-          ? `Shared steps FOLDED${
-              state.fold.expandedPleats.size > 0
-                ? `, ${state.fold.expandedPleats.size} pleat${
-                    state.fold.expandedPleats.size === 1 ? '' : 's'
-                  } expanded`
-                : ''
-            }.`
-          : 'Shared steps unfolded.',
       ].join(' ')
     })
     const unregisterJump = registerAgentUiCommand({

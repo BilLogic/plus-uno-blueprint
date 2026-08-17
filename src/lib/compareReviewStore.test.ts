@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getCompareReviewState,
   registerCompareReview,
-  setCompareFolded,
+  setCompareActiveStep,
   type CompareReviewRegistration,
 } from '@/lib/compareReviewStore'
 import type { CompareModel } from '@/lib/compareSlots'
@@ -24,32 +24,37 @@ function makeRegistration(slideId: string): CompareReviewRegistration {
   }
 }
 
+/*
+ * The handoff contract: per-comparison state survives a SAME-scenario
+ * re-register (a mode switch or refetch runs the effect cleanup first,
+ * then the new registration) but resets when a different scenario
+ * registers. (These invariants used to be pinned through the fold state;
+ * fold retired 2026-08-17 — the cursor carries the same contract.)
+ */
 describe('compareReviewStore registration handoff', () => {
-  it('preserves fold across a same-scenario re-register (mode switch / refetch)', () => {
+  it('re-registering the same scenario keeps the active step', () => {
     const unregisterFirst = registerCompareReview(makeRegistration('warm-up'))
-    setCompareFolded(true)
+    setCompareActiveStep('col-3')
 
-    // A mode switch re-registers the SAME scenario through an effect
-    // cleanup: unregister runs first, then the new registration. The fold
-    // is contracted (Phase 4a locked decision) to survive this — and the
-    // Merged reading preset (Phase 4b) depends on it, since the preset's
-    // fold lands before the re-registration does.
     unregisterFirst()
     const unregisterSecond = registerCompareReview(makeRegistration('warm-up'))
-    expect(getCompareReviewState().fold.folded).toBe(true)
+    // The cleanup nulls the cursor, and the same-scenario re-register must
+    // not treat that as a scenario change (lastRegisteredSlideId, not the
+    // live registration, is the judge).
+    expect(getCompareReviewState().registration?.slideId).toBe('warm-up')
 
     unregisterSecond()
   })
 
-  it('resets fold when a different scenario registers', () => {
+  it('resets the active step when a different scenario registers', () => {
     const unregisterFirst = registerCompareReview(makeRegistration('warm-up'))
-    setCompareFolded(true)
+    setCompareActiveStep('col-3')
     unregisterFirst()
 
     const unregisterSecond = registerCompareReview(
       makeRegistration('goal-setting'),
     )
-    expect(getCompareReviewState().fold.folded).toBe(false)
+    expect(getCompareReviewState().activeStepKey).toBeNull()
 
     unregisterSecond()
   })

@@ -46,20 +46,11 @@ export type ComparePathArrowData = {
   steps: IntegratedBlueprintStep[]
 }
 
-/**
- * One path's arrow inputs. `foldedStepIds` (from the compare model + fold
- * state, never the DOM) drops any trigger with an endpoint inside a
- * collapsed pleat HERE, at the data level — a declared drop, so the overlay
- * never silently misses a DOM anchor the fold removed.
- */
+/** One path's arrow inputs (fold's trigger-drop retired 2026-08-17). */
 export function getComparePathArrowData(
   blueprint: BlueprintData,
-  foldedStepIds?: ReadonlySet<string>,
 ): ComparePathArrowData {
   const { path, cells, triggers, steps } = blueprint
-  const keepTrigger = (stepId: string | undefined) =>
-    stepId === undefined || !foldedStepIds?.has(stepId)
-  const stepIdByCellId = new Map(cells.map((cell) => [cell.id, cell.step_id]))
 
   return {
     steps: steps.map((step) => ({
@@ -78,15 +69,7 @@ export function getComparePathArrowData(
       links: cell.links,
       opacity: 1,
     })),
-    triggers: triggers
-      .filter(
-        (trigger) =>
-          foldedStepIds === undefined ||
-          foldedStepIds.size === 0 ||
-          (keepTrigger(stepIdByCellId.get(trigger.source_cell_id)) &&
-            keepTrigger(stepIdByCellId.get(trigger.target_cell_id))),
-      )
-      .map((trigger) => ({
+    triggers: triggers.map((trigger) => ({
         id: trigger.id,
         source_cell_id: trigger.source_cell_id,
         target_cell_id: trigger.target_cell_id,
@@ -651,9 +634,6 @@ export function getComparePanelHeight(
 /** Vertical gap between stacked path bands — room for both bands' section
  *  frame insets (20 + 20) plus the lower band's title badge overhang. */
 export const COMPARE_STACKED_BAND_GAP = 64
-/** Fixed track width of one folded pleat (Phase 4a) — a whole run of shared
- *  columns compresses to this. */
-export const COMPARE_PLEAT_TRACK_WIDTH = 28
 /** Gap between the step-header row and the first band's rows. */
 export const COMPARE_STACKED_HEADER_GAP = 36
 

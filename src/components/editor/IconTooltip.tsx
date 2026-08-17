@@ -26,8 +26,8 @@ import { cn } from '@/lib/utils'
  *    stays on the button.
  * 2. **Say what it does, not what it is.** "Start a new session", not
  *    "Plus". The existing copy sets the register: "New scenario in
- *    Post-session", "Fold 4 shared steps", "kept expanded — feeds a divergent
- *    step".
+ *    Post-session" or a control's accessible name — action phrases,
+ *    never a restated label.
  *
  * No `TooltipProvider` is needed — one is mounted app-wide in `App.tsx` at a
  * 200 ms delay. Wrap in a local provider only to change that delay, the way

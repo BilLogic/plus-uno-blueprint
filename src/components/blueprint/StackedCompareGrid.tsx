@@ -3,7 +3,6 @@ import { BlueprintPathBand } from '@/components/blueprint/BlueprintPathBand'
 import { CompareStepHeaderRow } from '@/components/blueprint/CompareTrackDecorations'
 import { useCompareGridAxis } from '@/hooks/useCompareGridAxis'
 import { STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
-import { expandComparePleat } from '@/lib/compareReviewStore'
 import {
   COMPARE_HEADER_WRAP_EXTRA_INSET,
   COMPARE_STACKED_BAND_GAP,
@@ -42,11 +41,6 @@ type StackedCompareGridProps = {
  * 'shared') carry a light tint — the v3 diff signal is column-level, never
  * per-cell paint.
  *
- * Fold (Phase 4a): when the shared fold state is on, each run of shared
- * columns — minus pinned columns and individually re-expanded pleats —
- * collapses to one fixed pleat track. The PARENT's `gridTemplateColumns`
- * changes (instantly, never animated) and the bands re-derive via subgrid.
- *
  * No `position: sticky` in here: the grid lives inside the zoom-transformed
  * canvas, where sticky both misbehaves and has nothing to stick to.
  */
@@ -60,15 +54,8 @@ export function StackedCompareGrid({
   phaseName,
   sectionTitleLabel,
 }: StackedCompareGridProps) {
-  const {
-    layers,
-    rows,
-    toggleLayer,
-    activeFold,
-    tracks,
-    foldedStepIdsByPath,
-    gridTemplateColumns,
-  } = useCompareGridAxis(model, blueprints, compact)
+  const { layers, rows, toggleLayer, tracks, gridTemplateColumns } =
+    useCompareGridAxis(model, blueprints, compact)
 
   const rowTrackCss = useMemo(
     () => rows.map((row) => getCompareRowTrackCss(row)).join(' '),
@@ -98,10 +85,7 @@ export function StackedCompareGrid({
           columnGap: STEP_COLUMN_GAP,
         }}
       >
-        <CompareStepHeaderRow
-          tracks={tracks}
-          showPinGlyph={activeFold.folded}
-        />
+        <CompareStepHeaderRow tracks={tracks} />
         {blueprints.map((blueprint, bandIndex) => (
           <Fragment key={blueprint.path.id}>
             <BlueprintPathBand
@@ -127,9 +111,6 @@ export function StackedCompareGrid({
                     ? COMPARE_STACKED_HEADER_GAP
                     : COMPARE_STACKED_BAND_GAP,
                 onToggleLayer: toggleLayer,
-                onExpandPleat: expandComparePleat,
-                foldedStepIds:
-                  foldedStepIdsByPath?.get(blueprint.path.id) ?? undefined,
               }}
               compact={compact}
               scrollContainerRef={scrollContainerRef}

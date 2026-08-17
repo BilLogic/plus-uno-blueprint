@@ -296,8 +296,7 @@ export function CompareDifferencesSurface({
 
   const flyTo = (cellIds: string[]) => {
     if (cellIds.length === 0) return
-    // The shared compare gesture: auto-expands a pleat first when the
-    // target is folded, so step-fly and row-fly work while folded.
+    // The shared compare gesture (one owner for step activation + camera).
     void focusCompareCells(cellIds, registration.slideId)
   }
 

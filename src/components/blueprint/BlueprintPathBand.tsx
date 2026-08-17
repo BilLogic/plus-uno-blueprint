@@ -4,7 +4,6 @@ import { BlueprintLaneHandles } from '@/components/blueprint/BlueprintLaneHandle
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { CompareLaneRowShell } from '@/components/blueprint/CompareLaneRowShell'
 import { CompareCellBlock } from '@/components/blueprint/CompareCellBlock'
-import { ComparePleatCell } from '@/components/blueprint/CompareTrackDecorations'
 import {
   BlueprintDividerRow,
   BlueprintLabelRow,
@@ -33,7 +32,6 @@ import {
   COMPARE_PATH_SECTION_BOTTOM_INSET,
   COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
-  COMPARE_PLEAT_TRACK_WIDTH,
   COMPARE_STACKED_HEADER_GAP,
   type BlueprintLabelRowSpec,
   getComparePathArrowData,
@@ -68,15 +66,6 @@ export type PathBandArrangement =
       rowTrackCss: string
       marginTop?: number
       onToggleLayer?: (layerId: string) => void
-      /** Pleat click — expands that pleat in the shared fold state. */
-      onExpandPleat?: (pleatKey: string) => void
-      /**
-       * THIS path's step ids hidden inside collapsed pleats — derived from
-       * the compare model + fold state upstream (never the DOM). Arrows
-       * with an endpoint on one of these steps are dropped at the data
-       * level before the overlay ever sees them.
-       */
-      foldedStepIds?: ReadonlySet<string>
     }
 
 type BlueprintPathBandProps = {
@@ -116,11 +105,9 @@ export function BlueprintPathBand({
   const bandRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
   const resolvedScrollRef = scrollContainerRef ?? fallbackScrollRef
-  const foldedStepIds =
-    arrangement.kind === 'row' ? arrangement.foldedStepIds : undefined
   const arrowData = useMemo(
-    () => getComparePathArrowData(blueprint, foldedStepIds),
-    [blueprint, foldedStepIds],
+    () => getComparePathArrowData(blueprint),
+    [blueprint],
   )
   // A fresh array literal here re-runs the overlay's whole observer setup on
   // every render, and `observe()` fires immediately — which renders again.
@@ -181,20 +168,6 @@ export function BlueprintPathBand({
       />
       {arrangement.kind === 'row' ? (
         <>
-          {/* No divergent-column tints (streamlined 2026-08-17): the Diff
-              ledger finds differences, the canvas stays quiet. Pleat
-              tracks still render the pleat cell at the same x in EVERY
-              band. */}
-          {arrangement.tracks.map((track, trackIndex) =>
-            track.kind === 'pleat' ? (
-              <ComparePleatCell
-                key={`pleat-${track.key}`}
-                track={track}
-                gridColumn={trackIndex + 2}
-                onExpand={arrangement.onExpandPleat}
-              />
-            ) : null,
-          )}
           {/* The label rail re-emits per band: every band names its own
               lanes, in DOM order matching the path order. */}
           {/* Bleed the rail to the frame's own edges: up through the gap
@@ -507,26 +480,6 @@ function CompareLayerRow({
                   : {})}
               />
             ) : null
-
-          if (track.kind === 'pleat') {
-            // The pleat itself is one full-band-height cell rendered by the
-            // band (see BlueprintPathBand); lane rows just keep its track's
-            // width so the flex row stays on the parent grid's tracks.
-            return (
-              <Fragment key={`pleat-${track.key}`}>
-                <div
-                  aria-hidden
-                  data-compare-pleat-spacer=""
-                  className="shrink-0"
-                  style={{
-                    width: COMPARE_PLEAT_TRACK_WIDTH,
-                    minWidth: COMPARE_PLEAT_TRACK_WIDTH,
-                  }}
-                />
-                {gapSpacer()}
-              </Fragment>
-            )
-          }
 
           const stepId = track.stepIdByPath[pathId]
           const step = stepId !== undefined ? stepById.get(stepId) : undefined

@@ -163,7 +163,7 @@ export function buildComparePathShortLabels(
  * A shared slot draws ONE cell, so the other paths' cell ids have no DOM
  * anchor: their arrows would silently vanish at the overlay's
  * `querySelector`. Both fixes happen here, at the data level (the same
- * discipline as the folded-arrow drop):
+ * discipline as every other data-level arrow rule):
  *
  * - `aliasByCellId` rewrites a hidden path's cell id to the id that is
  *   drawn, so the arrow anchors on the shared cell.

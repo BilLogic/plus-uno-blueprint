@@ -64,8 +64,13 @@ export function CanvasLoadProgress({
     }, 180)
     return () => window.clearInterval(timer)
   }, [complete])
-  // Anchors always win over the creep, and completion snaps to full.
-  const display = complete ? 100 : Math.max(percent, creep)
+  // Anchors always win over the creep, completion snaps to full, and the
+  // creep's CONTRIBUTION is re-clamped to the current cap at render time —
+  // if the real target regresses (the scenario set grew mid-load), a stale
+  // high creep cannot overstate progress (todo 031).
+  const display = complete
+    ? 100
+    : Math.min(Math.max(percent, creep), Math.min(percent + 12, 94))
   return (
     <div
       aria-hidden

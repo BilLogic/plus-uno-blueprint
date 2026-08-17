@@ -1,9 +1,5 @@
 import { useSyncExternalStore } from 'react'
 import type { BlueprintData } from '@/types/blueprint'
-import {
-  EMPTY_COMPARE_FOLD_STATE,
-  type CompareFoldState,
-} from '@/lib/compareFold'
 import type { CompareModel, CompareStatus } from '@/lib/compareSlots'
 
 /**
@@ -52,11 +48,6 @@ export type CompareReviewState = {
   filters: CompareDifferencesFilters
   /** Mirrored by the panel while the Differences surface is showing. */
   ledgerOpen: boolean
-  /**
-   * Fold (Phase 4a): per-scenario, session-only, MODE-AGNOSTIC — one
-   * fold fact shared across Stacked/Merged switches (locked decision).
-   */
-  fold: CompareFoldState
 }
 
 const EMPTY_FILTERS: CompareDifferencesFilters = {
@@ -70,7 +61,6 @@ let state: CompareReviewState = {
   activeStepKey: null,
   filters: EMPTY_FILTERS,
   ledgerOpen: false,
-  fold: EMPTY_COMPARE_FOLD_STATE,
 }
 
 const listeners = new Set<() => void>()
@@ -99,7 +89,7 @@ export function useCompareReviewState(): CompareReviewState {
  * switch (or blueprint refetch) re-registers the SAME scenario through an
  * effect cleanup that has already nulled the live registration, and
  * judging against the null would wrongly treat every re-register as a new
- * scenario — wiping the fold that is contracted to survive mode switches.
+ * scenario — wiping per-comparison state that survives mode switches.
  */
 let lastRegisteredSlideId: string | null = null
 
@@ -118,16 +108,10 @@ export function registerCompareReview(
     registration,
     activeStepKey: scenarioChanged ? null : state.activeStepKey,
     filters: scenarioChanged ? EMPTY_FILTERS : state.filters,
-    // Fold survives mode switches (same slideId re-registers) but resets
-    // with the scenario — it is per-comparison state, not a preference.
-    fold: scenarioChanged ? EMPTY_COMPARE_FOLD_STATE : state.fold,
   }
   emit()
   return () => {
     if (state.registration !== registration) return
-    // Fold deliberately survives here: this cleanup also runs mid-flight
-    // during a same-scenario re-register (mode switch, refetch), and the
-    // register above owns the reset decision via `scenarioChanged`.
     state = {
       ...state,
       registration: null,
@@ -157,35 +141,5 @@ export function clearCompareFilters() {
 export function setCompareLedgerOpen(open: boolean) {
   if (state.ledgerOpen === open) return
   state = { ...state, ledgerOpen: open }
-  emit()
-}
-
-/** Unfolding clears the per-pleat expansions — they only mean anything folded. */
-export function setCompareFolded(folded: boolean) {
-  if (state.fold.folded === folded) return
-  state = {
-    ...state,
-    fold: folded
-      ? { folded: true, expandedPleats: state.fold.expandedPleats }
-      : EMPTY_COMPARE_FOLD_STATE,
-  }
-  emit()
-}
-
-/** Pleat click / focus auto-expand: open one pleat, keep the rest folded. */
-export function expandComparePleat(pleatKey: string) {
-  if (!state.fold.folded || state.fold.expandedPleats.has(pleatKey)) return
-  const expandedPleats = new Set(state.fold.expandedPleats)
-  expandedPleats.add(pleatKey)
-  state = { ...state, fold: { folded: true, expandedPleats } }
-  emit()
-}
-
-/** Agent `toggle_pleat`: re-collapse an expanded pleat or expand a folded one. */
-export function toggleComparePleat(pleatKey: string) {
-  if (!state.fold.folded) return
-  const expandedPleats = new Set(state.fold.expandedPleats)
-  if (!expandedPleats.delete(pleatKey)) expandedPleats.add(pleatKey)
-  state = { ...state, fold: { folded: true, expandedPleats } }
   emit()
 }
