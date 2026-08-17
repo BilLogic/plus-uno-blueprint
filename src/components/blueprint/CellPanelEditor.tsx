@@ -328,7 +328,13 @@ function CellPanelEditorForm({
 
       invalidateQueries('lifecycle-phases')
       // Content edit: only the edited path's scenario is stale (todo 029).
-      invalidateCanvasBlueprintsForPath(draft!.pathId)
+      // Existing-cell edits mount with draft undefined and don't know their
+      // path, so they fall back to invalidating every scenario's blueprint.
+      if (draft) {
+        invalidateCanvasBlueprintsForPath(draft.pathId)
+      } else {
+        invalidateQueries('canvas-blueprints')
+      }
       invalidateQueries(`cell-content:${targetId}`)
       invalidateQueries(`cell-spec:${targetId}`)
       invalidateQueries('owner-tags')
