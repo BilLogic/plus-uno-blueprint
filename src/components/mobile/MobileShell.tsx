@@ -292,6 +292,7 @@ export function MobileShell() {
         surface={navSurface}
         onSurfaceChange={setNavSurface}
         slices={slices}
+        slicesLoading={slicesQuery.status === 'loading'}
         phases={phases}
         scenariosByPhase={scenariosByPhase}
         slides={slides}

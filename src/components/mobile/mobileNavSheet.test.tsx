@@ -54,6 +54,7 @@ function renderSheet(over: Partial<Parameters<typeof MobileNavSheet>[0]> = {}) {
       surface="blueprints"
       onSurfaceChange={onSurfaceChange}
       slices={slices}
+      slicesLoading={false}
       phases={phases}
       scenariosByPhase={scenariosByPhase}
       slides={slides}
@@ -150,5 +151,21 @@ describe('MobileNavSheet accordion and rail', () => {
   it('the blueprints surface does not render slice rows', () => {
     renderSheet({ surface: 'blueprints' })
     expect(screen.queryByText('Regular Tutor lane: warm-up')).toBeNull()
+  })
+
+  it('slices surface groups rows under the slice_type section', () => {
+    renderSheet({ surface: 'slices' })
+    expect(screen.getByText('lane')).toBeDefined()
+    expect(screen.getByText('Regular Tutor lane: warm-up')).toBeDefined()
+  })
+
+  it('a loading slice list shows skeleton rows, not the empty message', () => {
+    renderSheet({ surface: 'slices', slices: [], slicesLoading: true })
+    expect(screen.queryByText('No saved slices yet.')).toBeNull()
+  })
+
+  it('a truly empty slice list shows the empty message', () => {
+    renderSheet({ surface: 'slices', slices: [], slicesLoading: false })
+    expect(screen.getByText('No saved slices yet.')).toBeDefined()
   })
 })

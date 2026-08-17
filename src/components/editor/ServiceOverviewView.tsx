@@ -15,6 +15,7 @@ import {
   PHASE_OVERVIEW_LOOP_CHANNEL_OFFSET,
 } from '@/components/editor/PhaseOverviewPhaseLoopArrow'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
+import { CanvasLoadProgress } from '@/components/editor/CanvasLoadProgress'
 import { ServiceOverviewCanvasSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
@@ -272,6 +273,10 @@ export function ServiceOverviewView({
   })
 
   const overviewReady = !slidesLoading && !blueprintsLoading
+  // One session for the canvas skeleton AND the progress overlay: they are
+  // separate DeferredSkeleton instances (canvas space vs screen space), and
+  // only a shared key makes them appear and leave as one surface.
+  const canvasHoldKey = skeletonHoldKey ?? 'service-overview-canvas'
   const fitSelector = getCanvasFocusSelector(view, activeSlide)
   const maxFitZoom = getCanvasFocusMaxZoom(view)
   const fitInsets = getCanvasFocusFitInsets(view)
@@ -440,7 +445,7 @@ export function ServiceOverviewView({
               >
                 <DeferredSkeleton
                   loading={!overviewReady}
-                  holdKey={skeletonHoldKey}
+                  holdKey={canvasHoldKey}
                   skeleton={
                     <ServiceOverviewCanvasSkeleton
                       phases={skeletonPhases}
@@ -523,6 +528,33 @@ export function ServiceOverviewView({
                 </DeferredSkeleton>
               </ZoomPanViewport>
             )}
+            {/* Determinate load progress, in SCREEN space — the shaped
+                skeleton lives inside the viewport and scales with the
+                camera, but a progress bar must not. Same holdKey, so it
+                joins the skeleton's session: appears together after the
+                250 ms hold, leaves in the same commit the content fades
+                in, and fast loads see neither. */}
+            {!noPathsSelected ? (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                <DeferredSkeleton
+                  loading={!overviewReady}
+                  holdKey={canvasHoldKey}
+                  skeleton={
+                    <CanvasLoadProgress
+                      stages={[
+                        { label: 'Loading structure…', done: !slidesLoading },
+                        {
+                          label: 'Loading blueprints…',
+                          done: !blueprintsLoading,
+                        },
+                      ]}
+                    />
+                  }
+                >
+                  {null}
+                </DeferredSkeleton>
+              </div>
+            ) : null}
             {cellDetailEnabled ? <BlueprintCellDetailPanel /> : null}
           </div>
         </div>

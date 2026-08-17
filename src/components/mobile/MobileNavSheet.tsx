@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { NavChildren, NavRow, NavSection } from '@/components/editor/SidebarNav'
+import { SliceListLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { getSlideDisplayLabel } from '@/types/nav'
 import { cn } from '@/lib/utils'
@@ -55,9 +56,11 @@ function sliceTypeGroup(
 /** The drawer's Slices surface: type groups (open by default), NavRow rows. */
 function SliceGroups({
   slices,
+  loading,
   onSelectSlice,
 }: {
   slices: Slice[]
+  loading: boolean
   onSelectSlice: (sliceId: string) => void
 }) {
   const [collapsedGroups, setCollapsedGroups] = useState<ReadonlySet<string>>(
@@ -71,6 +74,9 @@ function SliceGroups({
   })).filter((group) => group.slices.length > 0)
 
   if (groups.length === 0) {
+    // Loading and empty are different states: skeleton rows while the list
+    // is in flight, the empty message only once it has truly come back bare.
+    if (loading) return <SliceListLoadingSkeleton />
     return (
       <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">
         No saved slices yet.
@@ -119,6 +125,7 @@ export function MobileNavSheet({
   surface,
   onSurfaceChange,
   slices,
+  slicesLoading,
   phases,
   scenariosByPhase,
   slides,
@@ -134,6 +141,7 @@ export function MobileNavSheet({
   surface: MobileNavSurface
   onSurfaceChange: (surface: MobileNavSurface) => void
   slices: Slice[]
+  slicesLoading: boolean
   phases: NavItem[]
   scenariosByPhase: Map<string, NavItem[]>
   slides: NavItem[]
@@ -186,7 +194,11 @@ export function MobileNavSheet({
 
           <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
             {surface === 'slices' ? (
-              <SliceGroups slices={slices} onSelectSlice={onSelectSlice} />
+              <SliceGroups
+                slices={slices}
+                loading={slicesLoading}
+                onSelectSlice={onSelectSlice}
+              />
             ) : (
               <div className="flex flex-col gap-0.5">
                 {phases.map((phase) => {

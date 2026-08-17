@@ -287,6 +287,18 @@ export function SlicePresentationLoadingSkeleton() {
   )
 }
 
+/** Slices list placeholder (drawer/sidebar) — mirrors PathsLoadingRows. */
+export function SliceListLoadingSkeleton() {
+  return (
+    <div className="flex flex-col gap-0.5 px-2" aria-hidden>
+      <Skeleton className="my-1 h-3.5 w-16" />
+      <Skeleton className="my-1 ml-4 h-3.5 w-40" />
+      <Skeleton className="my-1 ml-4 h-3.5 w-28" />
+      <Skeleton className="my-1 ml-4 h-3.5 w-36" />
+    </div>
+  )
+}
+
 /** Sidebar phase/scenario list placeholder. */
 export function SlideNavLoadingSkeleton({
   rows = 6,
