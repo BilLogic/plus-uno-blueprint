@@ -1,35 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronRight, Map as MapIcon, Menu, MoreHorizontal, ScrollText, Sparkles } from 'lucide-react'
+import { ChevronRight, Map as MapIcon, ScrollText, Sparkles } from 'lucide-react'
 import { MobileScenarioReader } from '@/components/mobile/MobileScenarioReader'
-import { AgentPanel } from '@/components/editor/AgentPanel'
+import { MobileTopBar } from '@/components/mobile/MobileTopBar'
+import { MobileNavSheet } from '@/components/mobile/MobileNavSheet'
+import { MobileAgentSheet } from '@/components/mobile/MobileAgentSheet'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
-import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
 import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useViewState } from '@/contexts/viewStateStore'
 import { useCellDeepLink } from '@/hooks/useCellDeepLink'
+import { useMobileSliceDeepLink } from '@/hooks/useMobileSliceDeepLink'
 import { useSlices } from '@/hooks/useSlices'
 import {
   registerAgentUiBridge,
   registerAgentUiContext,
 } from '@/lib/agent/uiBridge'
+import { makeMobileAgentBridge, type MobileSurface } from '@/components/mobile/mobileAgentBridge'
 import { getSlideDisplayLabel, ordinalLabel } from '@/types/nav'
 import { cn } from '@/lib/utils'
 import type { NavItem } from '@/types/nav'
@@ -42,9 +32,13 @@ import type { NavItem } from '@/types/nav'
  * pinch/pan. Navigation lives in a left sheet, the agent in a full-height
  * bottom sheet, and nothing here can write: no design mode, no editors,
  * and the agent's tool roster is filtered to reading (see loop.ts).
+ *
+ * Phase-2 shape (plan 2026-08-16-002): the shell is composition — top bar,
+ * surfaces, tab bar, and three extracted children. Surface policy (what a
+ * tap means for the visible view) lives HERE, in the handlers, so the
+ * Phase-3 model changes one place.
  */
 
-type MobileSurface = 'reader' | 'map'
 
 export function MobileShell() {
   const {
@@ -61,11 +55,7 @@ export function MobileShell() {
   const [surface, setSurface] = useState<MobileSurface>('reader')
   const [navOpen, setNavOpen] = useState(false)
   const [agentOpen, setAgentOpen] = useState(false)
-  // A slice presents full-bleed over the shell — SlicePresentation is
-  // already linear (frame by frame), which is exactly a phone's shape.
-  const [presentingSliceId, setPresentingSliceId] = useState<string | null>(
-    null,
-  )
+
   const slicesQuery = useSlices()
   const slices =
     slicesQuery.status === 'ready'
@@ -73,32 +63,12 @@ export function MobileShell() {
       : slicesQuery.status === 'error'
         ? (slicesQuery.fallback ?? [])
         : []
-
-  // ?slice= deep links (uno-bot shares them into Slack, which mostly opens
-  // on phones). Desktop resolves these in TabStrip; this shell never mounts
-  // it, so resolve here: present the slice if it exists (derived below),
-  // otherwise the pending state just clears and the reader shows.
-  const { pendingUrlState, resolvePending } = useViewState()
-  const [bootSliceId] = useState(() =>
-    pendingUrlState !== null && pendingUrlState.kind !== 'blueprint'
-      ? pendingUrlState.sliceId
-      : null,
+  // A slice presents full-bleed over the shell — SlicePresentation is
+  // already linear (frame by frame), which is exactly a phone's shape.
+  const { activeSliceId, presentSlice, dismissSlice } = useMobileSliceDeepLink(
+    slices,
+    slicesQuery.status === 'loading',
   )
-  const [bootSliceDismissed, setBootSliceDismissed] = useState(false)
-  useEffect(() => {
-    if (pendingUrlState === null) return
-    if (slicesQuery.status === 'loading') return
-    resolvePending(slices.map((slice) => slice.id))
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `slices` is derived from slicesQuery each render; keying on the query status avoids re-running on referentially fresh arrays
-  }, [pendingUrlState, resolvePending, slicesQuery.status])
-  const bootPresentingId =
-    !bootSliceDismissed &&
-    presentingSliceId === null &&
-    bootSliceId !== null &&
-    slices.some((slice) => slice.id === bootSliceId)
-      ? bootSliceId
-      : null
-  const activeSliceId = presentingSliceId ?? bootPresentingId
 
   const phases = useMemo(
     () => slides.filter((slide) => !slide.parentId),
@@ -120,23 +90,16 @@ export function MobileShell() {
     ? getSlideDisplayLabel(scenario, slides)
     : 'Service blueprint'
 
-  // The agent's navigation hands on mobile: scenario opens land in the
-  // reader (the phone's reading surface), and the ✦ sheet is the agent
-  // surface. The sidebar tool has no sidebar to drive here.
   useEffect(
     () =>
-      registerAgentUiBridge({
-        selectPhase: (phaseId) => {
-          selectPhase(phaseId)
-          setSurface('map')
-        },
-        selectScenario: (scenarioId) => {
-          selectScenario(scenarioId)
-          setSurface('reader')
-        },
-        openAgentSurface: () => setAgentOpen(true),
-        setSidebarCollapsed: () => {},
-      }),
+      registerAgentUiBridge(
+        makeMobileAgentBridge({
+          selectPhase,
+          selectScenario,
+          setSurface,
+          openAgent: () => setAgentOpen(true),
+        }),
+      ),
     [selectPhase, selectScenario],
   )
 
@@ -157,68 +120,32 @@ export function MobileShell() {
     [],
   )
 
+  // Surface policy: what a tap in the nav sheet means for the visible view.
   const openScenario = (scenarioId: string) => {
     selectScenario(scenarioId)
     setSurface('reader')
+    setNavOpen(false)
+  }
+  const openPhase = (phaseId: string) => {
+    selectPhase(phaseId)
+    setSurface('map')
+    setNavOpen(false)
+  }
+  const openSlice = (sliceId: string) => {
+    presentSlice(sliceId)
     setNavOpen(false)
   }
 
   return (
     <CanvasModeProvider>
       <div className="flex h-svh flex-col overflow-hidden bg-background">
-        {/* Compact top bar: nav · title · agent · overflow. Icon buttons
-            carry a 44px hit area (size-11); the glyphs stay small. */}
-        <header className="flex h-12 shrink-0 items-center gap-0.5 border-b border-border px-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="size-11"
-            aria-label="Open navigation"
-            onClick={() => setNavOpen(true)}
-          >
-            <Menu />
-          </Button>
-          <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-            {title}
-          </h1>
-          <ThemeToggle size="icon-sm" />
-          {canAgent ? (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="size-11"
-              aria-label="Ask the agent"
-              onClick={() => setAgentOpen(true)}
-            >
-              <Sparkles />
-            </Button>
-          ) : null}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="size-11"
-                  aria-label="More"
-                >
-                  <MoreHorizontal />
-                </Button>
-              }
-            />
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled>
-                Editing is available on desktop
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </header>
+        <MobileTopBar
+          title={title}
+          canAgent={canAgent}
+          onOpenNav={() => setNavOpen(true)}
+          onOpenAgent={() => setAgentOpen(true)}
+        />
 
-        {/* The two readings of the board, keyed so switching remounts. The
-            fold is directional: the Map arrives by growing from a miniature
-            (diving INTO the board — and it lands on the semantic-zoom block
-            tier, which IS the miniature), the reader rises from below (the
-            journey unrolling). Reduced motion swaps instantly. */}
         {/* The surface fold. The key is `surface` ALONE: selecting a scenario
             is a camera move inside the canvas, not a screen change, so it must
             not remount the board — the same rule DesktopEditorShell states for
@@ -301,88 +228,19 @@ export function MobileShell() {
         </nav>
       </div>
 
-      {/* Navigation: left sheet, phases → scenarios, same progressive
-          disclosure as the desktop sidebar. */}
-      <Sheet open={navOpen} onOpenChange={setNavOpen}>
-        <SheetContent
-          side="left"
-          aria-label="Blueprint contents"
-          className="w-72 overflow-y-auto p-0"
-        >
-          <SheetHeader className="border-b border-border px-4 py-3">
-            <SheetTitle className="text-sm">Blueprint</SheetTitle>
-          </SheetHeader>
-          <div className="flex flex-col gap-4 px-2 py-3">
-            {slices.length > 0 ? (
-              <div className="flex flex-col">
-                <p className="px-2 py-1.5 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                  Slices
-                </p>
-                {slices.map((slice) => (
-                  <button
-                    key={slice.id}
-                    type="button"
-                    onClick={() => {
-                      setPresentingSliceId(slice.id)
-                      setNavOpen(false)
-                    }}
-                    className="flex items-center justify-between rounded-md py-1.5 pr-2 pl-6 text-left text-sm text-foreground/80"
-                  >
-                    <span className="min-w-0 truncate">{slice.title}</span>
-                    <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            {phases.map((phase) => (
-              <div key={phase.id} className="flex flex-col">
-                <button
-                  type="button"
-                  aria-current={
-                    phase.id === selectedPhaseId && !selectedScenarioId
-                      ? 'true'
-                      : undefined
-                  }
-                  onClick={() => {
-                    selectPhase(phase.id)
-                    setSurface('map')
-                    setNavOpen(false)
-                  }}
-                  className={cn(
-                    'flex min-h-11 items-center gap-1 rounded-md px-2 py-1.5 text-left font-mono text-xs uppercase tracking-wider',
-                    phase.id === selectedPhaseId && !selectedScenarioId
-                      ? 'bg-accent text-foreground'
-                      : 'text-muted-foreground',
-                  )}
-                >
-                  {ordinalLabel(phase.index, phase.label)}
-                </button>
-                {(scenariosByPhase.get(phase.id) ?? []).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-current={
-                      item.id === selectedScenarioId ? 'true' : undefined
-                    }
-                    onClick={() => openScenario(item.id)}
-                    className={cn(
-                      'flex min-h-11 items-center justify-between rounded-md py-1.5 pr-2 pl-6 text-left text-sm',
-                      item.id === selectedScenarioId
-                        ? 'bg-accent font-medium text-foreground'
-                        : 'text-foreground/80',
-                    )}
-                  >
-                    <span className="min-w-0 truncate">
-                      {getSlideDisplayLabel(item, slides)}
-                    </span>
-                    <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-                  </button>
-                ))}
-              </div>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
+      <MobileNavSheet
+        open={navOpen}
+        onOpenChange={setNavOpen}
+        slices={slices}
+        phases={phases}
+        scenariosByPhase={scenariosByPhase}
+        slides={slides}
+        selectedPhaseId={selectedPhaseId}
+        selectedScenarioId={selectedScenarioId}
+        onSelectSlice={openSlice}
+        onSelectPhase={openPhase}
+        onSelectScenario={openScenario}
+      />
 
       {/* Presenting a slice: full-bleed over everything, Return closes.
           The presentation surface is frame-linear already — phone-shaped. */}
@@ -391,30 +249,13 @@ export function MobileShell() {
           <SlicePresentation
             key={activeSliceId}
             sliceId={activeSliceId}
-            onReturn={() => {
-              setPresentingSliceId(null)
-              setBootSliceDismissed(true)
-            }}
+            onReturn={dismissSlice}
           />
         </div>
       ) : null}
 
-      {/* The agent, full-height bottom sheet. AgentPanel state lives in the
-          module store (panelState), so open/close never drops a session. */}
       {canAgent ? (
-        <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
-          <SheetContent
-            side="bottom"
-            className="flex h-[92svh] flex-col gap-0 rounded-t-2xl p-0"
-          >
-            <SheetHeader className="border-b border-border px-4 py-3">
-              <SheetTitle className="text-sm">Agent</SheetTitle>
-            </SheetHeader>
-            <div className="min-h-0 flex-1">
-              <AgentPanel />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <MobileAgentSheet open={agentOpen} onOpenChange={setAgentOpen} />
       ) : null}
     </CanvasModeProvider>
   )

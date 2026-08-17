@@ -13,10 +13,14 @@ export default defineConfig({
     },
   },
   test: {
-    // Pure-function tests only for now (colour math, layout helpers, the
-    // script-level suites migrated off node:test). Add `environment: 'jsdom'`
-    // alongside a DOM testing library when component tests arrive.
+    // Node by default (colour math, layout helpers, script-level suites);
+    // component tests opt into jsdom per-file with a
+    // `// @vitest-environment jsdom` docblock.
     environment: 'node',
-    include: ['src/**/*.test.ts', 'scripts/tests/**/*.test.mjs'],
+    include: [
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+      'scripts/tests/**/*.test.mjs',
+    ],
   },
 })
