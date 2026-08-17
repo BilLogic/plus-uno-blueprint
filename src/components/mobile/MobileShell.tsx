@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Maximize, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { MobileTopBar } from '@/components/mobile/MobileTopBar'
 import {
   MobileNavSheet,
   type MobileNavSurface,
 } from '@/components/mobile/MobileNavSheet'
 import { MobileAgentSheet } from '@/components/mobile/MobileAgentSheet'
-import { MobileAgentFab } from '@/components/mobile/MobileAgentFab'
+import { MobileAgentBar } from '@/components/mobile/MobileAgentBar'
 import { MobilePathSelector } from '@/components/mobile/MobilePathSelector'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
@@ -26,7 +26,6 @@ import {
   registerAgentUiBridge,
   registerAgentUiContext,
 } from '@/lib/agent/uiBridge'
-import { runAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   readLastViewedPath,
   resolveDefaultPathId,
@@ -199,14 +198,10 @@ export function MobileShell() {
   )
 
   // Navigation is a camera move on the one canvas; the drawer closes so the
-  // move is visible.
+  // move is visible. Phases are accordion headers in the drawer, not
+  // destinations — only scenarios (and slices) navigate.
   const openScenario = (scenarioId: string) => {
     selectScenario(scenarioId)
-    setNavOpen(false)
-  }
-  const openPhase = (phaseId: string) => {
-    selectPhase(phaseId)
-    setPhaseExpanded(phaseId, true)
     setNavOpen(false)
   }
   const openSlice = (sliceId: string) => {
@@ -224,28 +219,12 @@ export function MobileShell() {
           navOpen={navOpen}
           onToggleNav={() => setNavOpen((open) => !open)}
           rightSlot={
-            hasSelection ? (
-              <>
-                {selectedScenarioId && paths.length > 0 ? (
-                  <MobilePathSelector
-                    paths={paths}
-                    activePathId={activePathId}
-                    onSelect={choosePath}
-                  />
-                ) : null}
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="size-11"
-                  aria-label="Fit to screen"
-                  // The same camera the agent drives — the canvas viewport
-                  // registers `zoom` while mounted, so this is one fit
-                  // path, not a parallel implementation.
-                  onClick={() => void runAgentUiCommand('zoom', 'fit')}
-                >
-                  <Maximize />
-                </Button>
-              </>
+            selectedScenarioId && paths.length > 0 ? (
+              <MobilePathSelector
+                paths={paths}
+                activePathId={activePathId}
+                onSelect={choosePath}
+              />
             ) : null
           }
         />
@@ -266,9 +245,13 @@ export function MobileShell() {
                   data-editor-view
                 >
                   {/* Scoped to the selected phase: a phone renders one
-                      stretch of the service, never the whole board. */}
+                      stretch of the service, never the whole board. The
+                      sticky phase header is suppressed — the shell's own
+                      top bar already names the selection, and two bars
+                      saying the same thing read as clutter. */}
                   <ServiceOverviewView
                     soloPhaseId={selectedPhaseId ?? undefined}
+                    renderHeader={() => null}
                   />
                 </div>
               </VisualWalkthroughShell>
@@ -277,9 +260,12 @@ export function MobileShell() {
             )}
           </EditorErrorBoundary>
         </main>
-      </div>
 
-      <MobileAgentFab canAgent={canAgent} onOpen={() => setAgentOpen(true)} />
+        <MobileAgentBar
+          canAgent={canAgent}
+          onOpen={() => setAgentOpen(true)}
+        />
+      </div>
 
       <MobileNavSheet
         open={navOpen}
@@ -295,7 +281,6 @@ export function MobileShell() {
         selectedPhaseId={selectedPhaseId}
         selectedScenarioId={selectedScenarioId}
         onSelectSlice={openSlice}
-        onSelectPhase={openPhase}
         onSelectScenario={openScenario}
       />
 

@@ -17,8 +17,10 @@ import type { Slice } from '@/types/database'
  * the same IA as the desktop sidebar — and the same COMPONENTS. Rows are
  * `NavRow`/`NavChildren` from SidebarNav, so the phone inherits the desktop
  * disclosure vocabulary wholesale: chevron in a fixed left slot (always
- * visible on coarse pointers), label click expands AND navigates, chevron
- * click expands without navigating, children indent by one chevron slot.
+ * visible on coarse pointers), children indent by one chevron slot. One
+ * divergence from desktop, decided 2026-08-17: a phase row is purely an
+ * accordion header — label and chevron both just toggle — because on a
+ * phone "tap phase" navigating somewhere read as a misfire.
  *
  * The rail carries the surface radio — Blueprints ◫ / Slices ◇,
  * `EditorRail`'s vocabulary — with the light/dark control at its foot.
@@ -52,7 +54,6 @@ export function MobileNavSheet({
   selectedPhaseId,
   selectedScenarioId,
   onSelectSlice,
-  onSelectPhase,
   onSelectScenario,
 }: {
   open: boolean
@@ -68,7 +69,6 @@ export function MobileNavSheet({
   selectedPhaseId: string | null
   selectedScenarioId: string | null
   onSelectSlice: (sliceId: string) => void
-  onSelectPhase: (phaseId: string) => void
   onSelectScenario: (scenarioId: string) => void
 }) {
   return (
@@ -151,13 +151,13 @@ export function MobileNavSheet({
                             ? () => onPhaseExpandedChange(phase.id, !isOpen)
                             : undefined
                         }
-                        // One touch space, desktop semantics: the label
-                        // expands AND navigates, so the common case is one
-                        // tap. The chevron alone collapses without moving
-                        // the camera.
+                        // One touch space, one meaning (decided 2026-08-17):
+                        // a phase row is an accordion header, nothing more —
+                        // tapping it toggles its scenarios and never moves
+                        // the camera. Scenarios are the only navigators here.
                         onSelect={() => {
-                          if (hasChildren) onPhaseExpandedChange(phase.id, true)
-                          onSelectPhase(phase.id)
+                          if (hasChildren)
+                            onPhaseExpandedChange(phase.id, !isOpen)
                         }}
                         selected={
                           phase.id === selectedPhaseId && !selectedScenarioId

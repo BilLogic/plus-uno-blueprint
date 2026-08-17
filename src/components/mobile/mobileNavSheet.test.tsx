@@ -38,7 +38,6 @@ const allExpanded = new Set(['ph-1', 'ph-2'])
 
 function renderSheet(over: Partial<Parameters<typeof MobileNavSheet>[0]> = {}) {
   const onSelectSlice = vi.fn()
-  const onSelectPhase = vi.fn()
   const onSelectScenario = vi.fn()
   const onSurfaceChange = vi.fn()
   const onPhaseExpandedChange = vi.fn()
@@ -57,14 +56,12 @@ function renderSheet(over: Partial<Parameters<typeof MobileNavSheet>[0]> = {}) {
       selectedPhaseId={null}
       selectedScenarioId={null}
       onSelectSlice={onSelectSlice}
-      onSelectPhase={onSelectPhase}
       onSelectScenario={onSelectScenario}
       {...over}
     />,
   )
   return {
     onSelectSlice,
-    onSelectPhase,
     onSelectScenario,
     onSurfaceChange,
     onPhaseExpandedChange,
@@ -78,24 +75,27 @@ describe('MobileNavSheet routing', () => {
     const h = renderSheet({ surface: 'slices' })
     screen.getByText('Regular Tutor lane: warm-up').click()
     expect(h.onSelectSlice).toHaveBeenCalledWith('sl-1')
-    expect(h.onSelectPhase).not.toHaveBeenCalled()
     expect(h.onSelectScenario).not.toHaveBeenCalled()
   })
 
-  it('a phase label is one touch space: it expands AND reports the phase', () => {
+  it('a phase label is an accordion header: it toggles and never navigates', () => {
     const h = renderSheet({ expandedPhaseIds: new Set<string>() })
     screen.getByText(/Application/).click()
-    expect(h.onSelectPhase).toHaveBeenCalledWith('ph-1')
     expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-1', true)
     expect(h.onSelectScenario).not.toHaveBeenCalled()
     expect(h.onSelectSlice).not.toHaveBeenCalled()
+  })
+
+  it('tapping an expanded phase label collapses it', () => {
+    const h = renderSheet({ expandedPhaseIds: new Set(['ph-1']) })
+    screen.getByText(/Application/).click()
+    expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-1', false)
   })
 
   it('a scenario row reports the scenario and only the scenario', () => {
     const h = renderSheet()
     screen.getByText('Discovery').click()
     expect(h.onSelectScenario).toHaveBeenCalledWith('sc-1')
-    expect(h.onSelectPhase).not.toHaveBeenCalled()
     expect(h.onSelectSlice).not.toHaveBeenCalled()
   })
 
@@ -125,7 +125,7 @@ describe('MobileNavSheet accordion and rail', () => {
     expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-2', true)
     screen.getByLabelText('Collapse Application').click()
     expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-1', false)
-    expect(h.onSelectPhase).not.toHaveBeenCalled()
+    expect(h.onSelectScenario).not.toHaveBeenCalled()
   })
 
   it('the rail is a radio: tapping Slices reports the surface change', () => {
