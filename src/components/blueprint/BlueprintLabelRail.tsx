@@ -34,9 +34,18 @@ export type { BlueprintLabelRowSpec }
 export function BlueprintStickyLabelBackdrop({
   rowCount,
   rowStart = 1,
+  bleedTop = 0,
+  bleedBottom = 0,
 }: {
   rowCount: number
   rowStart?: number
+  /**
+   * Extend the rail past the row tracks (px) so it meets the section
+   * frame's edges instead of stopping short and leaving white L-gaps
+   * inside the frame — the band's rows do not include the frame insets.
+   */
+  bleedTop?: number
+  bleedBottom?: number
 }) {
   return (
     <div
@@ -47,6 +56,8 @@ export function BlueprintStickyLabelBackdrop({
         gridRow: `${rowStart} / ${rowCount + rowStart}`,
         width: COMPARE_LABEL_WIDTH,
         alignSelf: 'stretch',
+        marginTop: bleedTop > 0 ? -bleedTop : undefined,
+        marginBottom: bleedBottom > 0 ? -bleedBottom : undefined,
         backgroundColor: blueprintPanelLabelRailColor(),
       }}
     />

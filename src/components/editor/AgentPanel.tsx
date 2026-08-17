@@ -63,7 +63,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
-import { toggleAgentOpen, useAgentPlacement } from '@/lib/agent/placement'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import {
   Marker,
@@ -1466,7 +1465,6 @@ function DeleteSessionDialog({
 export function AgentSettingsRailButton() {
   const settings = useAgentSettings()
   const { client, session, canAgent } = useSupabase()
-  const agentOpen = useAgentPlacement().open
   const [keyDraft, setKeyDraft] = useState('')
   const [emailDraft, setEmailDraft] = useState('')
   const [passwordDraft, setPasswordDraft] = useState('')
@@ -1591,20 +1589,8 @@ export function AgentSettingsRailButton() {
         </Tooltip>
         <PopoverContent side="right" align="end" className="w-72 p-3">
           <div className="flex flex-col gap-2.5">
-            {/* The chat's show/hide lives here now that the rail's ✦ toggle
-                is gone (2026-08-17) — the gear is the reopen path once the
-                panel's own ✕ has hidden it. */}
-            {canAgent ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 justify-start text-xs"
-                onClick={() => toggleAgentOpen()}
-              >
-                <Sparkles className="size-3.5" aria-hidden />
-                {agentOpen ? 'Hide the agent chat' : 'Show the agent chat'}
-              </Button>
-            ) : null}
+            {/* Show/hide the chat is the rail's ✦ toggle — settings hold
+                settings, not surface toggles. */}
             <p className="text-xs font-medium text-foreground">Admin</p>
             {session ? (
               <div className="flex items-center gap-2">

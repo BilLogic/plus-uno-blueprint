@@ -1,10 +1,12 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import {
   getBlueprintFallback,
   getFallbackPathsForScenario,
   mergePathsWithFallback,
 } from '@/data/blueprintFallbacks'
-import { useSupabaseQuery } from '@/hooks/useSupabaseQuery'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
 import type { RawPath } from '@/lib/normalizeBlueprint'
 import type { PathListItem } from '@/lib/pathSelection'
@@ -150,11 +152,28 @@ function deriveFromRows(
 }
 
 /**
- * Blueprints for a set of scenarios, one `paths` query for the whole set.
- * Backed by the shared `useSupabaseQuery` cache keyed on the sorted id set,
- * so every mount of the same scenario set (overview canvas, slice tabs, tab
- * switches back and forth) reuses one fetch. Errors, timeouts, and no-DB
- * sessions fall back to the static local blueprints.
+ * How many scenarios ride one request. Small enough that the progress bar's
+ * per-chunk ticks are REAL network completions (the reason the fetch is
+ * chunked at all), large enough that a full board is a handful of requests.
+ */
+const SCENARIOS_PER_CHUNK = 8
+
+function chunkIds(ids: string[]): string[][] {
+  const chunks: string[][] = []
+  for (let at = 0; at < ids.length; at += SCENARIOS_PER_CHUNK) {
+    chunks.push(ids.slice(at, at + SCENARIOS_PER_CHUNK))
+  }
+  return chunks
+}
+
+/**
+ * Blueprints for a set of scenarios, fetched in chunked `paths` queries so
+ * loading progress is measurable: each chunk completing is one real tick of
+ * `progress` (no synthetic percentages). Chunks are cached individually
+ * under the `canvas-blueprints:` prefix (the same one mutations invalidate),
+ * so every mount of the same scenario set — overview canvas, slice tabs, tab
+ * switches — reuses the fetches. Errors, timeouts, and no-DB sessions fall
+ * back to the static local blueprints.
  */
 export function useCanvasBlueprints(scenarioIds: string[]) {
   const idsKey = scenarioIds.slice().sort().join(',')
@@ -167,38 +186,64 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     [orderedScenarioIds],
   )
 
-  const fallback = useCallback(() => null, [])
-  const result = useSupabaseQuery<CanvasRawPath[]>(
-    orderedScenarioIds.length === 0 ? null : `canvas-blueprints:${idsKey}`,
-    async (client) => {
-      const { data, error } = await client
-        .from('paths')
-        .select(PATH_BLUEPRINT_SELECT)
-        .in('service_scenario_id', orderedScenarioIds)
-      if (error) throw new Error(error.message)
-      return (data ?? []) as CanvasRawPath[]
-    },
-    fallback,
+  const { client, configured } = useSupabase()
+  const noDb = !configured || !client
+  const chunks = useMemo(
+    () => chunkIds(orderedScenarioIds),
+    [orderedScenarioIds],
   )
 
+  const results = useQueries({
+    queries: chunks.map((chunk) => ({
+      queryKey: [`canvas-blueprints:chunk:${chunk.join(',')}`],
+      enabled: !noDb,
+      queryFn: async (): Promise<CanvasRawPath[]> => {
+        const outcome = await raceSupabaseQuery(
+          (async () => {
+            const { data, error } = await client!
+              .from('paths')
+              .select(PATH_BLUEPRINT_SELECT)
+              .in('service_scenario_id', chunk)
+            if (error) throw new Error(error.message)
+            return (data ?? []) as CanvasRawPath[]
+          })(),
+        )
+        if (outcome === 'timeout') throw new Error('The request timed out')
+        return outcome as CanvasRawPath[]
+      },
+    })),
+  })
+
+  const loadedChunks = results.filter(
+    (result) => result.data !== undefined || result.error !== null,
+  ).length
+  const anyError = results.some((result) => result.error !== null)
+  const allSettled = noDb || loadedChunks === results.length
+  const loading = orderedScenarioIds.length > 0 && !allSettled
+
+  const rowsKey = results
+    .map((result) => (result.data ? 'y' : result.error ? 'e' : 'n'))
+    .join('')
   const derived = useMemo<CanvasBlueprintMaps>(() => {
     if (orderedScenarioIds.length === 0) return EMPTY_MAPS
-    switch (result.status) {
-      case 'loading':
-        return EMPTY_MAPS
-      case 'error':
-        // DB error, timeout, or no-DB session — static local fallbacks.
-        return staticFallbacks
-      case 'ready':
-        return result.source === 'database'
-          ? deriveFromRows(result.data, orderedScenarioIds, staticFallbacks)
-          : staticFallbacks
+    if (noDb || !allSettled) {
+      // Still on the wire → empty (the skeleton owns the canvas); no DB at
+      // all → the static local fallbacks, same as before the split.
+      return noDb ? staticFallbacks : EMPTY_MAPS
     }
-  }, [orderedScenarioIds, result, staticFallbacks])
+    if (anyError) return staticFallbacks
+    const rows = results.flatMap((result) => result.data ?? [])
+    return deriveFromRows(rows, orderedScenarioIds, staticFallbacks)
+    // rowsKey stands in for the results array's per-render identity churn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderedScenarioIds, noDb, allSettled, anyError, rowsKey, staticFallbacks])
 
-  const loading =
-    orderedScenarioIds.length > 0 && result.status === 'loading'
-  const error = result.status === 'error' ? result.message : null
+  const firstError = results.find((result) => result.error)?.error
+  const error = anyError
+    ? firstError instanceof Error
+      ? firstError.message
+      : String(firstError)
+    : null
 
   return {
     blueprintsByScenario: derived.blueprintsByScenario,
@@ -207,5 +252,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
     loading,
     error,
     usingFallback: derived.usingFallback,
+    /** Real network progress: settled chunks over total chunks. */
+    progress: { loaded: loadedChunks, total: results.length },
   }
 }

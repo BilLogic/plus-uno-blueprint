@@ -264,6 +264,7 @@ export function ServiceOverviewView({
     pathsByScenario,
     blueprintsByPathId,
     loading: blueprintsLoading,
+    progress: blueprintsProgress,
     filterPaths: overviewPaths,
     filterSelectedPathIds: overviewSelectedPathIds,
     viewType: overviewViewType,
@@ -569,6 +570,13 @@ export function ServiceOverviewView({
                           done: !blueprintsLoading,
                         },
                       ]}
+                      // Real ticks: the structure query + each settled
+                      // blueprint chunk is one unit — no synthetic fill.
+                      units={{
+                        loaded:
+                          (slidesLoading ? 0 : 1) + blueprintsProgress.loaded,
+                        total: 1 + blueprintsProgress.total,
+                      }}
                     />
                   }
                 >

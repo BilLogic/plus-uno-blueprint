@@ -4,11 +4,15 @@ import {
   getPathTypeSectionBorderStyle,
   shouldShowPathTypeBadge,
 } from '@/lib/pathTypeTheme'
-import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
+import {
+  blueprintPanelLabelRailColor,
+  blueprintPanelSectionFillColor,
+} from '@/lib/blueprintTheme'
 import {
   COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
   COMPARE_PATH_SECTION_BOTTOM_INSET,
+  COMPARE_STEP_HEADER_HEIGHT,
 } from '@/lib/sideBySideCompareLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -88,6 +92,22 @@ export function ComparePathSectionFrame({
           backgroundColor: sectionFill,
         }}
       />
+      {extraTopInset > 0 ? (
+        // The wrapped step-header row gets a light band — the horizontal
+        // counterpart of the lane-label rail, one tint lighter so the two
+        // axes read as related but distinct.
+        <div
+          aria-hidden
+          className="pointer-events-none absolute rounded-t-[10px]"
+          style={{
+            top: inset.top,
+            left: inset.left,
+            right: inset.right,
+            height: COMPARE_STEP_HEADER_HEIGHT,
+            backgroundColor: `color-mix(in oklab, ${blueprintPanelLabelRailColor()} 45%, transparent)`,
+          }}
+        />
+      ) : null}
       {showTitle ? (
         useTypeBadge ? (
           <PathTypeBadge

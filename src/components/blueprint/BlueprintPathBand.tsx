@@ -33,7 +33,10 @@ import {
 } from '@/lib/blueprintTheme'
 import type { CompareGridTrack } from '@/lib/compareGridTracks'
 import {
+  COMPARE_PATH_SECTION_BOTTOM_INSET,
+  COMPARE_PATH_SECTION_TOP_INSET,
   COMPARE_PLEAT_TRACK_WIDTH,
+  COMPARE_STACKED_HEADER_GAP,
   type BlueprintLabelRowSpec,
   getComparePathArrowData,
   resolveBlueprintLayer,
@@ -202,7 +205,19 @@ export function BlueprintPathBand({
           )}
           {/* The label rail re-emits per band: every band names its own
               lanes, in DOM order matching the path order. */}
-          <BlueprintStickyLabelBackdrop rowCount={rows.length} />
+          {/* Bleed the rail to the frame's own edges: up through the gap
+              under the header (wrapped frames) or the plain top inset, and
+              down through the bottom inset — no white L-gaps inside the
+              frame. */}
+          <BlueprintStickyLabelBackdrop
+            rowCount={rows.length}
+            bleedTop={
+              frameExtraTopInset
+                ? COMPARE_STACKED_HEADER_GAP
+                : COMPARE_PATH_SECTION_TOP_INSET
+            }
+            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET}
+          />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||
             row.kind === 'visibility' ||

@@ -29,6 +29,7 @@ import {
   type BlueprintCellVariant,
 } from '@/lib/blueprintLayout'
 import {
+  blueprintPanelLabelRailColor,
   blueprintPanelSectionFillColor,
   getBlueprintLayerStyle,
   getBlueprintLayerZone,
@@ -317,7 +318,11 @@ export function MergedCompareGrid({
             ) : null,
           )}
           {/* One lane rail for the whole comparison — the point of merging. */}
-          <BlueprintStickyLabelBackdrop rowCount={rows.length} />
+          <BlueprintStickyLabelBackdrop
+            rowCount={rows.length}
+            bleedTop={COMPARE_STACKED_HEADER_GAP}
+            bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET}
+          />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||
             row.kind === 'visibility' ||
@@ -447,6 +452,19 @@ function MergedSectionFrame({
           right: -COMPARE_PATH_SECTION_INSET,
           bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
           backgroundColor: blueprintPanelSectionFillColor(),
+        }}
+      />
+      {/* Header band — same treatment as the single-path frame: the
+          lane-rail's horizontal counterpart, one tint lighter. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute rounded-t-[10px]"
+        style={{
+          top: -COMPARE_PATH_SECTION_TOP_INSET - COMPARE_HEADER_WRAP_EXTRA_INSET,
+          left: -COMPARE_PATH_SECTION_INSET,
+          right: -COMPARE_PATH_SECTION_INSET,
+          height: COMPARE_STEP_HEADER_HEIGHT,
+          backgroundColor: `color-mix(in oklab, ${blueprintPanelLabelRailColor()} 45%, transparent)`,
         }}
       />
       <div

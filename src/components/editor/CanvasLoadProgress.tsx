@@ -2,6 +2,7 @@ import { Diamond } from 'lucide-react'
 import {
   loadProgressLabel,
   loadProgressPercent,
+  loadProgressUnitPercent,
   type CanvasLoadStage,
 } from '@/lib/canvasLoadProgress'
 import { cn } from '@/lib/utils'
@@ -21,12 +22,21 @@ import { cn } from '@/lib/utils'
  */
 export function CanvasLoadProgress({
   stages,
+  units,
   className,
 }: {
   stages: CanvasLoadStage[]
+  /**
+   * Real work-unit counts (settled requests / issued requests). When given,
+   * the bar's width comes from these instead of the coarse stage fraction —
+   * stages still name the work via the label.
+   */
+  units?: { loaded: number; total: number }
   className?: string
 }) {
-  const percent = loadProgressPercent(stages)
+  const percent = units
+    ? loadProgressUnitPercent(units.loaded, units.total)
+    : loadProgressPercent(stages)
   return (
     <div
       aria-hidden

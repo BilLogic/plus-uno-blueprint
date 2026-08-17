@@ -19,13 +19,16 @@ export function EditorZoomIndicator({
       data-zoom-indicator=""
       className={cn('pointer-events-none flex items-center', className)}
     >
+      {/* Floats over the canvas, so it wears the same elevated card the
+          bottom-center annotation toolbar does — a bare ghost button reads
+          as stray text against the board. */}
       <Button
         type="button"
-        variant="ghost"
+        variant="outline"
         size="sm"
         aria-label="Reset view"
         onClick={onResetView}
-        className="pointer-events-auto h-5 shrink-0 gap-1 px-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+        className="pointer-events-auto h-8 shrink-0 gap-1.5 rounded-lg border-border/80 bg-card px-3 text-xs font-medium text-muted-foreground shadow-md hover:text-foreground hover:shadow-lg"
       >
         <RotateCcw className="size-3" aria-hidden />
         Reset View

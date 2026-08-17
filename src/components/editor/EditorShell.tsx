@@ -432,10 +432,12 @@ function DesktopEditorShell() {
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-row">
       <EditorRail
         surface={surface}
+        agentActive={agentPlacement.open}
+        showAgent={canAgent}
         onSelectSurface={(next) => {
-          // The rail is pure surface navigation now (the ✦ toggle moved
-          // to the ⚙ popover); 'agent' can still arrive from older
-          // callers and keeps its toggle meaning.
+          // ✦ toggles the chat's presence; the other two still pick the
+          // panel underneath it, so "chat while looking at the nav" is
+          // the default posture rather than a swap away from it.
           if (next === 'agent') toggleAgentOpen()
           else setSurface(next)
           if (sidebarCollapsed) {
