@@ -497,10 +497,15 @@ const PILL_ITEM_HEIGHT_COMPACT = 34
 const PILL_STACK_GAP = 10
 const PILL_CELL_PADDING = BLUEPRINT_CELL_GUTTER * 2
 
-/** Compare / service grid cell inner width (column minus horizontal shell padding). */
+/** Compare / service grid cell inner width — the box TEXT actually wraps
+ * in: column minus the shell's padding AND the cell button's own chrome
+ * (its `px-4` + borders). Counting only the shell (todo 026) overstated
+ * the text box by ~34px, so the line-count estimate undershot and tall
+ * cells overflowed their fixed row tracks. */
 export function getBlueprintCellInnerWidth(compact = false): number {
   const shellPadX = compact ? 24 : 28
-  return STEP_COLUMN_WIDTH - shellPadX
+  const buttonChromeX = compact ? 26 : 34
+  return STEP_COLUMN_WIDTH - shellPadX - buttonChromeX
 }
 
 /** East-Asian full-width codepoints render ~2× the width of a Latin glyph.
@@ -533,15 +538,46 @@ function lineDisplayWidth(line: string): number {
   return width
 }
 
+/** Greedy word-wrap simulation: words move to the next line whole, so a
+ * paragraph costs 15-20% more lines than `chars ÷ chars-per-line` claims —
+ * the naive division was one of the three undershoots that let tall cells
+ * cross their lane band (todo 026). Words longer than a line fill whole
+ * lines, matching the browser's overflow-wrap behaviour. */
+function countWrappedLines(line: string, charsPerLine: number): number {
+  const words = line.split(/\s+/).filter(Boolean)
+  if (words.length === 0) return 1
+  let lines = 1
+  let used = 0
+  for (const word of words) {
+    let width = lineDisplayWidth(word)
+    const separator = used > 0 ? 1 : 0
+    if (used + separator + width <= charsPerLine) {
+      used += separator + width
+      continue
+    }
+    lines += 1
+    while (width > charsPerLine) {
+      width -= charsPerLine
+      lines += 1
+    }
+    used = width
+  }
+  return lines
+}
+
 /** Line count including soft-wrap at the blueprint column width. */
 export function getEffectiveLineCount(content: string, compact = false): number {
   const innerWidth = getBlueprintCellInnerWidth(compact)
-  const charWidth = compact ? 6.5 : 7
+  // 8px average glyph (space included) for text-sm — deliberately a shade
+  // conservative: the estimate is a FLOOR under overflow-visible rows, and
+  // an undershoot bleeds into the lane below while an overshoot just airs
+  // the row out (todo 026, measured against the real 257-char worst case).
+  const charWidth = compact ? 6.5 : 8
   const charsPerLine = Math.max(6, Math.floor(innerWidth / charWidth))
 
   return content.split('\n').reduce((total, line) => {
     if (line.length === 0) return total + 1
-    return total + Math.ceil(lineDisplayWidth(line) / charsPerLine)
+    return total + countWrappedLines(line, charsPerLine)
   }, 0)
 }
 
@@ -549,7 +585,10 @@ function getTextBlockMinHeight(lineCount: number, compact = false): number {
   const base = compact ? BLUEPRINT_ROW_MIN_HEIGHT : BLUEPRINT_ROW_MIN_HEIGHT - 16
   if (lineCount <= 1) return base
 
-  const lineHeight = compact ? 14 : 20
+  // Non-compact cells render text-sm at leading-relaxed: 14px × 1.625 =
+  // 22.75px per line, not the 20px this assumed (todo 026 — the second
+  // half of the undershoot that let tall cells cross their lane band).
+  const lineHeight = compact ? 14 : 22.75
   const innerPadding = compact ? 20 : 24
   const wrappedHeight =
     BLUEPRINT_CELL_GUTTER * 2 + innerPadding + lineCount * lineHeight

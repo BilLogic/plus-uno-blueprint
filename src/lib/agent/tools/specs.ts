@@ -452,7 +452,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         path_id: str('Path id'),
         layer_id: str('Lane id from get_blueprint (parameter named layer_id for historical reasons)'),
         step_id: str('Step id (from get_blueprint)'),
-        content: str('The cell text — a journey moment, not a system capability. Good: "Tutor greets the student and confirms today\'s goal". Bad: "Session management module".'),
+        content: str('The cell text — a journey moment, not a system capability, max 120 characters (the canvas reads at a glance; put detail in the summary). Good: "Tutor greets the student and confirms today\'s goal". Bad: "Session management module".'),
       },
       required: ['path_id', 'layer_id', 'step_id', 'content'],
     },
@@ -465,7 +465,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       type: 'object',
       properties: {
         cell_id: str('Cell id'),
-        content: str('New cell text; omit to keep'),
+        content: str('New cell text, max 120 characters (detail belongs in summary); omit to keep'),
         summary: str('New summary; omit to keep'),
         owner: str('Owner tag; omit to keep'),
         perceived_owner: str('Perceived-owner tag; omit to keep'),

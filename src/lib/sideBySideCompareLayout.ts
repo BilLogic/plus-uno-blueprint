@@ -536,8 +536,16 @@ export function getSharedLayerRowHeight(
   return getCompareCellShellMinHeight(contentHeight + shellPad, compact)
 }
 
+/**
+ * Lane rows must be able to GROW (todo 026): the row shells are
+ * `overflow-visible`, so an underestimated cell painted OVER the next lane
+ * instead of clipping — the merged arrangement had the `minmax` fix
+ * (`getMergedCompareRowTrackCss` below) while Stacked, the default view,
+ * kept a bare fixed track. `minmax(Npx, auto)` keeps the estimated floor;
+ * rows only diverge from it when content genuinely swells past it.
+ */
 export function getCompareRowTrackCss(row: CompareRowHeightSpec): string {
-  return `${getCompareRowTrackHeight(row)}px`
+  return `minmax(${getCompareRowTrackHeight(row)}px, auto)`
 }
 
 export function getCompareCardWidth(

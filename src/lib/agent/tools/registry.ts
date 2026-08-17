@@ -35,6 +35,7 @@ import {
   type CellContentUpdate,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
+import { checkCellContentLength } from '@/lib/cellContentLimits'
 import { findingFingerprint } from '@/lib/findingFingerprint'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import {
@@ -283,16 +284,24 @@ export async function dispatchTool(
           throw new Error(
             `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell_content to edit the existing cell.`,
           )
+        const newContent = need(args, 'content')
+        const lengthProblem = checkCellContentLength(newContent)
+        if (lengthProblem) throw new Error(lengthProblem)
         const id = await upsertCell(client, {
           pathId: need(args, 'path_id'),
           layerId,
           stepId,
-          content: need(args, 'content'),
+          content: newContent,
         })
         return `Created cell (${id}).`
       }
       case 'update_cell_content': {
         const cellId = need(args, 'cell_id')
+        const nextContent = s(args, 'content')
+        if (nextContent !== undefined) {
+          const lengthProblem = checkCellContentLength(nextContent)
+          if (lengthProblem) throw new Error(lengthProblem)
+        }
         const { data, error } = await client
           .from('cells')
           .select('content, description, owner, perceived_owner')
