@@ -281,6 +281,11 @@ export function CanvasAnnotationToolbar() {
   const drawActive = tool === 'pen' || tool === 'eraser'
   const showSubpanel = drawActive && !designing && openFamily === null
 
+  // No annotation tools on the phone at all (decided 2026-08-17): the mobile
+  // shell is a view-only reading surface, and a floating tool palette was a
+  // second bottom bar competing with the agent bar for the thumb zone.
+  if (mobileShell) return null
+
   return (
     <div className="pointer-events-none absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 flex-col items-center gap-2">
       {showSubpanel ? <DrawSubpanel /> : null}

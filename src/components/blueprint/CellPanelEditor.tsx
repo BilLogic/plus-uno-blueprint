@@ -16,6 +16,7 @@ import { useCellSpec } from '@/hooks/useCellSpec'
 import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { upsertCell } from '@/lib/authoringRpc'
+import { CELL_CONTENT_MAX } from '@/lib/cellContentLimits'
 import { updateCellContent } from '@/lib/cellContentMutations'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { parseValueProps, type ValueProp } from '@/lib/valueProps'
@@ -357,6 +358,11 @@ function CellPanelEditorForm({
         <Input
           value={form.text}
           autoFocus={cellId === null}
+          // The cell-content budget (todo 026): a cell is read at a glance,
+          // and the lane grid's row rhythm assumes ~5-6 wrapped lines.
+          // Detail belongs in Summary. Same cap the agent write path
+          // enforces (cellContentLimits.ts).
+          maxLength={CELL_CONTENT_MAX}
           onChange={(event) => set('text', event.target.value)}
         />
       </Field>

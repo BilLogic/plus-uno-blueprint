@@ -62,3 +62,114 @@ the same everywhere:
 - Time markers render as the register (`01 · Arrival`) but are *spoken and
   written* as plain names — accessible labels and running copy say "the
   Arrival phase" (see [accessibility](accessibility.md)).
+
+## Blueprint cell content: the grid and the citation
+
+Cells have two audiences and one text. A person scans `content` in a grid
+square; the Slack bot and the canvas agent quote that same string back as
+evidence, and the semantic index embeds it. Those look like competing demands —
+terse for the grid, self-contained for the citation — but they are not, once you
+see what the citation actually is.
+
+**The citation unit is breadcrumb + cell, never the cell alone.** Every surface
+that quotes a cell prints `Scenario · Path · Step · Layer` alongside it, and the
+embedding chunk leads with the same line. The subject, the moment, and the actor
+are already supplied. So `content` does not need to restate them — it needs to
+be a **grammatically complete predicate** of that breadcrumb.
+
+That single reframe resolves the tension. `Leave breakout room.` fails not
+because it is short, but because it is the wrong part of speech for a string
+that will be read after a lane name. Fix the grammar and terseness costs
+nothing.
+
+### The test
+
+Read the cell as: **«Lane» at «Step»: ___**. If that is a true, complete
+sentence, the cell is right.
+
+### The three fields
+
+| Field | Holds | Test |
+| --- | --- | --- |
+| `content` | The one thing that happens here. Grid text; the quoted string. | Passes the sentence test above. |
+| `description` | What the grid cannot hold: mechanism, thresholds, exceptions, numbers, evidence for shipped-status claims. | Says something `content` does not — never a restatement of it. |
+| `function` / `form` / `value_props` / `owner` / `perceived_owner` | Analytic spec, filled deliberately for cells under review. | An auditor would query it. |
+
+### Grammar, by lane type
+
+**Act lanes** (Regular Tutor, Lead Tutor, Supervisor, Teacher, Front/Back Stage
+Actions) — third-person singular present, **verb first**. The lane supplies the
+subject; never restate it.
+
+> ✅ `Leaves the student's breakout room.`
+> ❌ `Leave breakout room.` (imperative — a blueprint documents, it does not instruct)
+> ❌ `Tutor leaves the breakout room.` (restates the lane in the grid's narrowest dimension)
+> ❌ `The tutor can leave…` (modal — describe what happens, not what is permitted)
+
+Sentence case, one sentence, terminal period, present tense. Name the object
+rather than a pronoun: `Marks the student present.`, not `Mark them as present.`
+— "them" resolves only from the step column, which a citation may not carry.
+
+**Pill lanes** (Front Stage Tech, Back Stage Tech, Support Actions) — a
+canonical proper noun. No verb, no period, one system or team per line.
+
+> `Zoom/Pencil` · `PLUS App` · `Dev Team`
+
+Because content is a bare noun here, `description` is **not optional garnish —
+it is the only thing that makes the cell citable**, and it must say what this
+system does *at this step*, distinct from the neighbouring step. A pill with
+boilerplate pasted down the row is one cell repeated, not several cells.
+
+**Visual lane** — `content` stays empty; `picture` carries the cell.
+
+**System rules are not actor moments.** A policy like "12+ hours out,
+call-offs are auto-approved" belongs to the system that enforces it or to the
+description of the act it governs — not as content in an actor's lane.
+
+### Unshipped behavior must say so in `content`
+
+If a cell describes behavior that is not in production, the grid has to carry
+that, because the grid is what people read and bots quote.
+
+> `content`: `Planned — reconfirms availability when a session is edited or reverted.`
+> `description`: `PLANNED (not shipped as of Aug 2026): <mechanism>. Evidence: <source>.`
+
+Prefix is `Planned — ` (em dash, no parentheses, no date). Retire the variants
+`(Shipping — not yet in production.)`, inline `(planned)`, and bare `TBD`.
+Uncertainty about *design* goes in the description; uncertainty about
+*existence* goes in the prefix. Ten characters is the difference between a grid
+that documents the service and one that misreports it.
+
+### Length
+
+| | Target | Cap |
+| --- | --- | --- |
+| Act-lane `content` | ≤ 80 chars, one sentence | 120 |
+| Pill-lane `content` | ≤ 24 chars per pill | 40 |
+| `description` | 120–400 chars | 600 |
+
+Over the cap, the lead clause stays and the rest moves to `description`. The
+cap is a rendering constraint as much as an editorial one: a fixed lane row
+cannot grow, so long content escapes its band and paints over the row below.
+
+### Identifiers
+
+Never in `content`; freely in `description`. `ReconfirmState`, `TutorSession`,
+`/PLUS/TutorReview`, `home.js:802` are load-bearing evidence and belong where
+the engineer who needs them will look. Content names the capability;
+description names the class.
+
+### Naming
+
+`PLUS App` (capital A) everywhere, in every field. Vendors keep their own
+casing. Roles are named as groups, never individuals. One canonical spelling
+per actor group — `Researchers set…` and `Researcher sets…` are one claim
+split into two, which costs the index a duplicate vector and the reader a
+second entity.
+
+### Three failure modes to check
+
+1. **Pronoun with no antecedent in the cell** → name the object.
+2. **Bare noun where a predicate belongs** (pill lanes excepted) → add the verb.
+3. **The same string in two cells** → at least one is wrong. Differentiate it,
+   or leave the cell empty. Empty cells are normal; filler is not.

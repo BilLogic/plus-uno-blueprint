@@ -30,9 +30,12 @@ import { cn } from '@/lib/utils'
 const CHEVRON_SLOT_CLASS =
   'flex size-4 shrink-0 items-center justify-center rounded-sm'
 
-/** Hidden at rest, revealed by hovering or focusing anywhere in the row. */
+/** Hidden at rest, revealed by hover or focus anywhere in the row. Coarse
+ * pointers have no hover, so there it is always shown — same rule
+ * NavRowAction already states: an affordance that only exists under a
+ * mouse is not an affordance for everyone. */
 const CHEVRON_REVEAL_CLASS =
-  'opacity-0 transition-opacity duration-(--motion-micro) group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100 motion-reduce:transition-none'
+  'opacity-0 transition-opacity duration-(--motion-micro) group-hover/nav-row:opacity-100 group-focus-within/nav-row:opacity-100 motion-reduce:transition-none [@media(pointer:coarse)]:opacity-100'
 
 /** Child rows indent by exactly one chevron slot. */
 export const NAV_CHILD_INDENT_CLASS = 'pl-4'

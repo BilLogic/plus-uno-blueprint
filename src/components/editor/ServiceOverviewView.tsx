@@ -15,6 +15,7 @@ import {
   PHASE_OVERVIEW_LOOP_CHANNEL_OFFSET,
 } from '@/components/editor/PhaseOverviewPhaseLoopArrow'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
+import { CanvasLoadProgress } from '@/components/editor/CanvasLoadProgress'
 import { ServiceOverviewCanvasSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
@@ -27,6 +28,8 @@ import {
 import { CanvasZoomChromeProvider } from '@/contexts/CanvasZoomChromeContext'
 import { useEditor } from '@/contexts/EditorContext'
 import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
+import { useMobileShell } from '@/hooks/useMobileShell'
+import { cn } from '@/lib/utils'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
 import {
   getCanvasFocusFitInsets,
@@ -181,6 +184,13 @@ type ServiceOverviewViewProps = {
    */
   soloScenarioId?: string
   /**
+   * Narrows the board to one phase's scenarios. `soloScenarioId` narrows all
+   * the way to a single scenario; this is the step above it, and it is what
+   * the mobile Map uses — a phone asks "show me this stretch of the service",
+   * never "render all 800 cells".
+   */
+  soloPhaseId?: string
+  /**
    * Embedding tabs (slice focus) replace the built-in docked navbar header
    * with their own band. Rendered inside the canvas zoom chrome provider.
    */
@@ -197,11 +207,13 @@ type ServiceOverviewViewProps = {
 export function ServiceOverviewView({
   skeletonHoldKey,
   soloScenarioId,
+  soloPhaseId,
   renderHeader,
   floatingChrome,
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
+  const mobileShell = useMobileShell()
   const {
     slides,
     slidesLoading,
@@ -217,24 +229,28 @@ export function ServiceOverviewView({
     consumeCanvasFitAnimationSkip,
   } = useEditor()
   const allPhases = useMemo(() => getMainSlides(slides), [slides])
-  const soloPhase = useMemo(
-    () =>
-      soloScenarioId
-        ? (allPhases.find((phase) =>
-            getSubslides(phase.id, slides).some(
-              (scenario) => scenario.id === soloScenarioId,
-            ),
-          ) ?? null)
-        : null,
-    [allPhases, slides, soloScenarioId],
-  )
+  const soloPhase = useMemo(() => {
+    if (soloScenarioId)
+      return (
+        allPhases.find((phase) =>
+          getSubslides(phase.id, slides).some(
+            (scenario) => scenario.id === soloScenarioId,
+          ),
+        ) ?? null
+      )
+    if (soloPhaseId)
+      return allPhases.find((phase) => phase.id === soloPhaseId) ?? null
+    return null
+  }, [allPhases, slides, soloScenarioId, soloPhaseId])
   const phases = useMemo(
     () => (soloPhase ? [soloPhase] : allPhases),
     [allPhases, soloPhase],
   )
   const scenarioIds = soloScenarioId
     ? [soloScenarioId]
-    : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
+    : soloPhase
+      ? getSubslides(soloPhase.id, slides).map((scenario) => scenario.id)
+      : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
   const isDetail = view === 'detail'
   const focusedScenarioId =
     isDetail && isSubslide(activeSlide) ? activeSlide.id : null
@@ -260,6 +276,10 @@ export function ServiceOverviewView({
   })
 
   const overviewReady = !slidesLoading && !blueprintsLoading
+  // One session for the canvas skeleton AND the progress overlay: they are
+  // separate DeferredSkeleton instances (canvas space vs screen space), and
+  // only a shared key makes them appear and leave as one surface.
+  const canvasHoldKey = skeletonHoldKey ?? 'service-overview-canvas'
   const fitSelector = getCanvasFocusSelector(view, activeSlide)
   const maxFitZoom = getCanvasFocusMaxZoom(view)
   const fitInsets = getCanvasFocusFitInsets(view)
@@ -393,7 +413,15 @@ export function ServiceOverviewView({
             data-slide-canvas
           >
             {floatingChrome ? (
-              <div className="pointer-events-none absolute right-4 bottom-4 z-30 [&>*]:pointer-events-auto">
+              <div
+                className={cn(
+                  'pointer-events-none absolute bottom-4 z-30 [&>*]:pointer-events-auto',
+                  // Bottom-centered on the phone (thumb reach, and the
+                  // corner is where the agent FAB lives); bottom-right on
+                  // desktop, beside the cursor's natural resting corner.
+                  mobileShell ? 'left-1/2 -translate-x-1/2' : 'right-4',
+                )}
+              >
                 {floatingChrome}
               </div>
             ) : null}
@@ -428,7 +456,7 @@ export function ServiceOverviewView({
               >
                 <DeferredSkeleton
                   loading={!overviewReady}
-                  holdKey={skeletonHoldKey}
+                  holdKey={canvasHoldKey}
                   skeleton={
                     <ServiceOverviewCanvasSkeleton
                       phases={skeletonPhases}
@@ -511,6 +539,33 @@ export function ServiceOverviewView({
                 </DeferredSkeleton>
               </ZoomPanViewport>
             )}
+            {/* Determinate load progress, in SCREEN space — the shaped
+                skeleton lives inside the viewport and scales with the
+                camera, but a progress bar must not. Same holdKey, so it
+                joins the skeleton's session: appears together after the
+                250 ms hold, leaves in the same commit the content fades
+                in, and fast loads see neither. */}
+            {!noPathsSelected ? (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                <DeferredSkeleton
+                  loading={!overviewReady}
+                  holdKey={canvasHoldKey}
+                  skeleton={
+                    <CanvasLoadProgress
+                      stages={[
+                        { label: 'Loading structure…', done: !slidesLoading },
+                        {
+                          label: 'Loading blueprints…',
+                          done: !blueprintsLoading,
+                        },
+                      ]}
+                    />
+                  }
+                >
+                  {null}
+                </DeferredSkeleton>
+              </div>
+            ) : null}
             {cellDetailEnabled ? <BlueprintCellDetailPanel /> : null}
           </div>
         </div>

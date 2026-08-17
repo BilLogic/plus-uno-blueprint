@@ -14,7 +14,12 @@ export type AgentUiBridge = {
   selectScenario: (scenarioId: string) => void
   /** Open the ✦ sidebar surface (used by "Send to the agent" hand-offs). */
   openAgentSurface: () => void
-  setSidebarCollapsed: (collapsed: boolean) => void
+  /**
+   * Collapse/expand the sidebar. A shell with no sidebar to drive returns
+   * its own honest message instead of letting the default "Sidebar
+   * collapsed." claim success for a no-op (todo 027).
+   */
+  setSidebarCollapsed: (collapsed: boolean) => void | string
 }
 
 let bridge: AgentUiBridge | null = null
@@ -53,7 +58,8 @@ export function agentFocusCell(cellId: string): string {
 
 export function agentSetSidebar(collapsed: boolean): string {
   if (!bridge) return 'UI control is not available right now.'
-  bridge.setSidebarCollapsed(collapsed)
+  const override = bridge.setSidebarCollapsed(collapsed)
+  if (typeof override === 'string') return override
   return collapsed ? 'Sidebar collapsed.' : 'Sidebar expanded.'
 }
 
