@@ -68,7 +68,11 @@ type UseZoomPanViewportOptions = {
  * and the tier must never cost a React render. Styling lives in
  * blueprint.css under [data-semantic-tier].
  */
-const SEMANTIC_ZOOM_THRESHOLD = 0.35
+// 0.25, down from 0.35 (2026-08-17): the blocks tier was kicking in while
+// cell text was still legible enough to skim, which read as content being
+// withheld — users saw "skeletons" on a loaded board. Below 0.25 the text
+// really is smudge.
+const SEMANTIC_ZOOM_THRESHOLD = 0.25
 
 /** How far a pending touch may wander before it stops being a tap and
  * becomes a board drag. */

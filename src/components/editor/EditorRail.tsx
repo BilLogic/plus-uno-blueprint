@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Diamond, LayoutGrid, Sparkles } from 'lucide-react'
+import { Diamond, LayoutGrid } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
@@ -80,21 +80,11 @@ function RailButton({
 export function EditorRail({
   surface,
   onSelectSurface,
-  showAgent,
-  agentActive,
   topSlot,
   bottomSlot,
 }: {
   surface: SidebarSurface
   onSelectSurface: (surface: SidebarSurface) => void
-  /** Deployed read-only builds hide the agent surface entirely. */
-  showAgent: boolean
-  /**
-   * ✦ is a TOGGLE, not a surface swap — the chat docks under whichever
-   * panel is open (or floats), so Blueprints/Slices keeps its own
-   * highlight while the agent is showing.
-   */
-  agentActive?: boolean
   topSlot?: ReactNode
   bottomSlot?: ReactNode
 }) {
@@ -125,18 +115,9 @@ export function EditorRail({
           </RailButton>
         ))}
         <div className="flex-1" aria-hidden />
-        {showAgent ? (
-          <>
-            <RailButton
-              label={agentActive ? 'Hide the agent' : 'Show the agent'}
-              toggled={agentActive === true}
-              onClick={() => onSelectSurface('agent')}
-            >
-              <Sparkles className="size-4" aria-hidden />
-            </RailButton>
-            <div className="my-0.5 h-px w-6 shrink-0 bg-border/60" aria-hidden />
-          </>
-        ) : null}
+        {/* The ✦ agent toggle used to live here; removed 2026-08-17 — the
+            chat's own chrome (and the ⚙ popover's show/hide row) carry its
+            presence, and the rail stays pure surface navigation. */}
         {bottomSlot}
       </nav>
     </TooltipProvider>
