@@ -134,6 +134,10 @@ export function ServiceOverviewCanvasSkeleton({
               transform: 'translateY(-50%)',
             }}
           />
+          {/* Plain frames only — since the determinate progress bar landed
+              (plan 2026-08-17-001) the skeleton's job is geometry for the
+              camera pre-fit, not imitating chrome; the fake title chips
+              read as extra noise under the bar. */}
           <div className="inline-flex items-stretch" aria-hidden>
             {Array.from(
               { length: Math.max(1, phase.scenarioCount) },
@@ -145,7 +149,7 @@ export function ServiceOverviewCanvasSkeleton({
                   <BlueprintPanelLoadingSkeleton
                     width={SKELETON_PANEL_WIDTH}
                     height={COMPARE_MIN_PANEL_HEIGHT}
-                    showTitle
+                    showTitle={false}
                   />
                 </Fragment>
               ),

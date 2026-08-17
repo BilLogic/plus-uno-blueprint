@@ -63,6 +63,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import { toggleAgentOpen, useAgentPlacement } from '@/lib/agent/placement'
 import { Bubble, BubbleContent } from '@/components/ui/bubble'
 import {
   Marker,
@@ -698,6 +699,97 @@ function TranscriptRow({
   }
 }
 
+/**
+ * Transcript grouping (2026-08-17): a finished run's tool/status rows fold
+ * into one "N steps" accordion — a long build otherwise leaves a wall of
+ * upsert_cell rows between the question and the answer. Rules: only runs of
+ * ≥3 consecutive step rows fold; the LIVE tail never folds (streaming stays
+ * visible); a run containing an error starts open — collapsing a failure
+ * would hide the thing that most needs reading.
+ */
+type TranscriptBlock =
+  | { kind: 'event'; index: number }
+  | { kind: 'steps'; start: number; end: number; hasError: boolean }
+
+const MIN_FOLDED_STEPS = 3
+
+function blockTranscript(events: TranscriptEvent[]): TranscriptBlock[] {
+  const blocks: TranscriptBlock[] = []
+  let runStart = -1
+  let runHasError = false
+  const flush = (end: number) => {
+    if (runStart === -1) return
+    if (end - runStart >= MIN_FOLDED_STEPS) {
+      blocks.push({
+        kind: 'steps',
+        start: runStart,
+        end: end - 1,
+        hasError: runHasError,
+      })
+    } else {
+      for (let i = runStart; i < end; i += 1)
+        blocks.push({ kind: 'event', index: i })
+    }
+    runStart = -1
+    runHasError = false
+  }
+  events.forEach((event, index) => {
+    const isStep = event.kind === 'tool' || event.kind === 'status'
+    if (isStep) {
+      if (runStart === -1) runStart = index
+      if (
+        (event.kind === 'tool' && event.isError) ||
+        (event.kind === 'status' && /error/i.test(event.text))
+      )
+        runHasError = true
+      return
+    }
+    flush(index)
+    blocks.push({ kind: 'event', index })
+  })
+  flush(events.length)
+  return blocks
+}
+
+function TranscriptStepsBlock({
+  events,
+  start,
+  end,
+  hasError,
+}: {
+  events: TranscriptEvent[]
+  start: number
+  end: number
+  hasError: boolean
+}) {
+  // Errors start open — the fold must never hide a failure.
+  const [open, setOpen] = useState(hasError)
+  const count = end - start + 1
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger className="group/steps flex w-full items-center gap-1.5 rounded-md py-0.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <ChevronRight
+          aria-hidden
+          className={cn(
+            'size-3.5 transition-transform duration-(--motion-fade) motion-reduce:transition-none',
+            open && 'rotate-90',
+          )}
+        />
+        <span>
+          {count} steps{hasError ? ' — one failed' : ''}
+        </span>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="flex flex-col gap-3 pt-3 pl-1">
+          {events.slice(start, end + 1).map((event, offset) => (
+            <TranscriptRow key={start + offset} event={event} />
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
+
 function AgentChatView({
   session,
   onBack,
@@ -916,22 +1008,56 @@ function AgentChatView({
                 )
               ) : (
                 // Index keys are safe here: the transcript is append-only.
-                events.map((event, index) => (
-                  <MessageScrollerItem
-                    key={index}
-                    // While a run streams, the working row below is the
-                    // anchor — otherwise the last event is.
-                    scrollAnchor={!running && index === events.length - 1}
-                    className={cn(event.kind === 'user' && index > 0 && 'mt-3')}
-                  >
-                    <TranscriptRow
-                      event={event}
-                      intermediate={
-                        event.kind === 'assistant' && index !== lastAssistantIndex
-                      }
-                    />
-                  </MessageScrollerItem>
-                ))
+                // Finished step runs fold into an accordion; the live tail
+                // (last block while running) always renders expanded so
+                // streaming stays visible.
+                blockTranscript(events).map((block, blockIndex, blocks) => {
+                  const isLastBlock = blockIndex === blocks.length - 1
+                  if (block.kind === 'steps' && !(running && isLastBlock)) {
+                    return (
+                      <MessageScrollerItem
+                        key={`steps-${block.start}`}
+                        scrollAnchor={!running && isLastBlock}
+                      >
+                        <TranscriptStepsBlock
+                          events={events}
+                          start={block.start}
+                          end={block.end}
+                          hasError={block.hasError}
+                        />
+                      </MessageScrollerItem>
+                    )
+                  }
+                  const indices =
+                    block.kind === 'steps'
+                      ? Array.from(
+                          { length: block.end - block.start + 1 },
+                          (_, i) => block.start + i,
+                        )
+                      : [block.index]
+                  return indices.map((index) => {
+                    const event = events[index]
+                    return (
+                      <MessageScrollerItem
+                        key={index}
+                        // While a run streams, the working row below is the
+                        // anchor — otherwise the last event is.
+                        scrollAnchor={!running && index === events.length - 1}
+                        className={cn(
+                          event.kind === 'user' && index > 0 && 'mt-3',
+                        )}
+                      >
+                        <TranscriptRow
+                          event={event}
+                          intermediate={
+                            event.kind === 'assistant' &&
+                            index !== lastAssistantIndex
+                          }
+                        />
+                      </MessageScrollerItem>
+                    )
+                  })
+                })
               )}
               {/* A transcript row, not a loose glyph: it keeps the list's
                   rhythm, and it announces itself instead of spinning in
@@ -1234,15 +1360,20 @@ function RenameSessionDialog({
         <DialogHeader>
           <DialogTitle className="text-sm">Rename session</DialogTitle>
         </DialogHeader>
-        <Input
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') submit()
-          }}
-          aria-label="Session title"
-          autoFocus
-        />
+        {/* Body content carries its own gutter — DialogContent is
+            deliberately unpadded so p-0 surfaces (command palette,
+            walkthrough) don't fight it. */}
+        <div className="px-6 py-4">
+          <Input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') submit()
+            }}
+            aria-label="Session title"
+            autoFocus
+          />
+        </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Cancel
@@ -1271,7 +1402,7 @@ function DeleteSessionDialog({
             Delete “{session?.title}”?
           </DialogTitle>
         </DialogHeader>
-        <p className="text-xs text-muted-foreground">
+        <p className="px-6 py-4 text-xs text-muted-foreground">
           Changes it already made to the blueprint stay — revert those from
           Changes.
         </p>
@@ -1305,6 +1436,7 @@ function DeleteSessionDialog({
 export function AgentSettingsRailButton() {
   const settings = useAgentSettings()
   const { client, session, canAgent } = useSupabase()
+  const agentOpen = useAgentPlacement().open
   const [keyDraft, setKeyDraft] = useState('')
   const [emailDraft, setEmailDraft] = useState('')
   const [passwordDraft, setPasswordDraft] = useState('')
@@ -1429,6 +1561,20 @@ export function AgentSettingsRailButton() {
         </Tooltip>
         <PopoverContent side="right" align="end" className="w-72 p-3">
           <div className="flex flex-col gap-2.5">
+            {/* The chat's show/hide lives here now that the rail's ✦ toggle
+                is gone (2026-08-17) — the gear is the reopen path once the
+                panel's own ✕ has hidden it. */}
+            {canAgent ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 justify-start text-xs"
+                onClick={() => toggleAgentOpen()}
+              >
+                <Sparkles className="size-3.5" aria-hidden />
+                {agentOpen ? 'Hide the agent chat' : 'Show the agent chat'}
+              </Button>
+            ) : null}
             <p className="text-xs font-medium text-foreground">Admin</p>
             {session ? (
               <div className="flex items-center gap-2">
