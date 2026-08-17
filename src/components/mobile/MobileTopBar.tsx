@@ -1,32 +1,34 @@
-import { Menu, MoreHorizontal, Sparkles } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/editor/ThemeToggle'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 /**
- * The phone's top chrome: nav · title · theme · agent · overflow.
+ * The phone's top chrome (plan 2026-08-16-002 Phase 3): menu · title ·
+ * contextual right slot. The agent is NOT here — it enters through the
+ * floating action button (MobileAgentFab), so the bar stays navigation-only.
  *
- * Extracted from MobileShell as a Phase-2 seam (plan 2026-08-16-002): the
- * redesign replaces this bar's contents, and a component swap beats surgery
- * on the middle of the shell. Behaviour here is IDENTICAL to the inline
- * original — icon buttons carry a 44px hit area (size-11), the glyphs stay
- * small.
+ * The menu button is stateful — ☰ while the drawer is closed, ✕ while it is
+ * open — and tapping it toggles, so the same control opens and closes the
+ * drawer; `aria-expanded` and the label follow. The swap animates with a
+ * small rotation, stilled under `prefers-reduced-motion`.
+ *
+ * `rightSlot` is contextual chrome the shell owns: the path selector on the
+ * reader, Fit on the map, nothing when neither applies. The ⋯ overflow and
+ * the theme toggle are gone — the overflow held only a disabled caption,
+ * and light/dark now lives at the foot of the drawer's rail, where the
+ * desktop keeps its utilities.
  */
 export function MobileTopBar({
   title,
-  canAgent,
-  onOpenNav,
-  onOpenAgent,
+  navOpen,
+  onToggleNav,
+  rightSlot,
 }: {
   title: string
-  canAgent: boolean
-  onOpenNav: () => void
-  onOpenAgent: () => void
+  navOpen: boolean
+  onToggleNav: () => void
+  rightSlot?: ReactNode
 }) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-0.5 border-b border-border px-1">
@@ -34,45 +36,24 @@ export function MobileTopBar({
         variant="ghost"
         size="icon-sm"
         className="size-11"
-        aria-label="Open navigation"
-        onClick={onOpenNav}
+        aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={navOpen}
+        onClick={onToggleNav}
       >
-        <Menu />
+        <span
+          aria-hidden
+          className={cn(
+            'flex items-center justify-center transition-transform duration-(--motion-micro) motion-reduce:transition-none',
+            navOpen && 'rotate-90',
+          )}
+        >
+          {navOpen ? <X /> : <Menu />}
+        </span>
       </Button>
       <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
         {title}
       </h1>
-      <ThemeToggle size="icon-sm" />
-      {canAgent ? (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="size-11"
-          aria-label="Ask the agent"
-          onClick={onOpenAgent}
-        >
-          <Sparkles />
-        </Button>
-      ) : null}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="size-11"
-              aria-label="More"
-            >
-              <MoreHorizontal />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem disabled>
-            Editing is available on desktop
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {rightSlot}
     </header>
   )
 }

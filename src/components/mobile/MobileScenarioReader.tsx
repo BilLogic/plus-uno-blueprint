@@ -215,21 +215,19 @@ function ReaderCellSheet({
   )
 }
 
-export function MobileScenarioReader({ scenarioId }: { scenarioId: string }) {
-  const { blueprintsByScenario, pathsByScenario, blueprintsByPathId, loading } =
+export function MobileScenarioReader({
+  scenarioId,
+  pathId,
+}: {
+  scenarioId: string
+  /** Which path to read; `null` means the preferred (happy) path. The
+   * selection lives in the shell's top bar (plan 2026-08-16-002 Phase 3) —
+   * the reader is controlled, it no longer owns a chip row. */
+  pathId: string | null
+}) {
+  const { blueprintsByScenario, blueprintsByPathId, loading } =
     useCanvasBlueprints(useMemo(() => [scenarioId], [scenarioId]))
-  const paths = pathsByScenario.get(scenarioId) ?? []
   const preferred = blueprintsByScenario.get(scenarioId) ?? null
-
-  // Path choice is reader-local and resets with the scenario. `null` means
-  // "the preferred path" (the same one the desktop canvas leads with).
-  // Render-time reset, not an effect — same idiom as the shell's tab latch.
-  const [pathId, setPathId] = useState<string | null>(null)
-  const [pathScenarioId, setPathScenarioId] = useState(scenarioId)
-  if (pathScenarioId !== scenarioId) {
-    setPathScenarioId(scenarioId)
-    setPathId(null)
-  }
   const blueprint =
     (pathId ? blueprintsByPathId.get(pathId) : null) ?? preferred
 
@@ -260,32 +258,8 @@ export function MobileScenarioReader({ scenarioId }: { scenarioId: string }) {
     model.steps.find((step) => step.id === stepId)?.name ?? ''
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain px-4 pb-8">
-      {paths.length > 1 ? (
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto py-3">
-          {paths.map((path) => {
-            const active = path.id === (pathId ?? model.pathId)
-            return (
-              <button
-                key={path.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setPathId(path.id)}
-                className={cn(
-                  'min-h-8 shrink-0 rounded-full border px-3 py-1 text-xs',
-                  'transition-colors duration-(--motion-micro) motion-reduce:transition-none',
-                  active
-                    ? 'border-foreground/40 bg-foreground text-background'
-                    : 'border-border bg-card text-muted-foreground',
-                )}
-              >
-                {path.name}
-              </button>
-            )
-          })}
-        </div>
-      ) : null}
-
+    // pb-24 clears the agent FAB, which floats over this scroll's tail.
+    <div className="h-full overflow-y-auto overscroll-contain px-4 pb-24 pt-3">
       <ol className="flex flex-col">
         {model.steps.map((step) => (
           <li key={step.id} className="flex flex-col">

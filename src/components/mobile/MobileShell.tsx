@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronRight, Map as MapIcon, ScrollText, Sparkles } from 'lucide-react'
+import { Maximize, Menu } from 'lucide-react'
 import { MobileScenarioReader } from '@/components/mobile/MobileScenarioReader'
 import { MobileTopBar } from '@/components/mobile/MobileTopBar'
-import { MobileNavSheet } from '@/components/mobile/MobileNavSheet'
+import {
+  MobileNavSheet,
+  type MobileNavSurface,
+} from '@/components/mobile/MobileNavSheet'
 import { MobileAgentSheet } from '@/components/mobile/MobileAgentSheet'
+import { MobileAgentFab } from '@/components/mobile/MobileAgentFab'
+import { MobilePathSelector } from '@/components/mobile/MobilePathSelector'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
@@ -12,6 +17,8 @@ import { SlicePresentation } from '@/components/editor/SlicePresentation'
 import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { useEditor } from '@/contexts/EditorContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { useViewState } from '@/contexts/viewStateStore'
+import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { useCellDeepLink } from '@/hooks/useCellDeepLink'
 import { useMobileSliceDeepLink } from '@/hooks/useMobileSliceDeepLink'
 import { useSlices } from '@/hooks/useSlices'
@@ -19,26 +26,31 @@ import {
   registerAgentUiBridge,
   registerAgentUiContext,
 } from '@/lib/agent/uiBridge'
+import { runAgentUiCommand } from '@/lib/agent/uiCommands'
+import {
+  readLastViewedPath,
+  resolveDefaultPathId,
+  writeLastViewedPath,
+} from '@/lib/mobilePathMemory'
 import { makeMobileAgentBridge, type MobileSurface } from '@/components/mobile/mobileAgentBridge'
-import { getSlideDisplayLabel, ordinalLabel } from '@/types/nav'
+import { getMainSlides, getSlideDisplayLabel, getSubslides } from '@/types/nav'
 import { cn } from '@/lib/utils'
 import type { NavItem } from '@/types/nav'
 
 /**
  * The phone's shell — the view-only visitor experience, for every tier.
  *
- * Two ways to read the same board: the READER (default) folds the 2-D grid
- * into a vertical journey, and the MAP is the real canvas with touch
- * pinch/pan. Navigation lives in a left sheet, the agent in a full-height
- * bottom sheet, and nothing here can write: no design mode, no editors,
- * and the agent's tool roster is filtered to reading (see loop.ts).
+ * Two ways to read the same board: the READER folds one scenario into a
+ * vertical journey, and the MAP is the real canvas scoped to one phase.
+ * There is no surface toggle (plan 2026-08-16-002 Phase 3): navigation
+ * implies the surface — tapping a scenario opens the reader, tapping a
+ * phase opens the map — and the drawer is the index, opening on first load
+ * when nothing is selected yet. Nothing here can write: no design mode, no
+ * editors, and the agent's tool roster is filtered to reading (loop.ts).
  *
- * Phase-2 shape (plan 2026-08-16-002): the shell is composition — top bar,
- * surfaces, tab bar, and three extracted children. Surface policy (what a
- * tap means for the visible view) lives HERE, in the handlers, so the
- * Phase-3 model changes one place.
+ * Surface policy (what a tap means for the visible view) stays HERE, in
+ * the handlers, so the model lives in one place.
  */
-
 
 export function MobileShell() {
   const {
@@ -48,12 +60,24 @@ export function MobileShell() {
     selectScenario,
     selectedPhaseId,
     selectedScenarioId,
+    expandedPhaseIds,
+    setPhaseExpanded,
   } = useEditor()
   const { canAgent } = useSupabase()
+  const { pendingUrlState } = useViewState()
   useCellDeepLink()
 
   const [surface, setSurface] = useState<MobileSurface>('reader')
-  const [navOpen, setNavOpen] = useState(false)
+  // First load with nothing selected: the drawer IS the index, so it opens.
+  // Captured at mount — a deep link (cell or slice) is a destination of its
+  // own, so it keeps the drawer closed rather than racing it.
+  const [navOpen, setNavOpen] = useState(
+    () =>
+      selectedScenarioId === null &&
+      selectedPhaseId === null &&
+      pendingUrlState === null,
+  )
+  const [navSurface, setNavSurface] = useState<MobileNavSurface>('blueprints')
   const [agentOpen, setAgentOpen] = useState(false)
 
   const slicesQuery = useSlices()
@@ -70,25 +94,58 @@ export function MobileShell() {
     slicesQuery.status === 'loading',
   )
 
-  const phases = useMemo(
-    () => slides.filter((slide) => !slide.parentId),
-    [slides],
+  const phases = useMemo(() => getMainSlides(slides), [slides])
+  const scenariosByPhase = useMemo(
+    () =>
+      new Map<string, NavItem[]>(
+        phases.map((phase) => [phase.id, getSubslides(phase.id, slides)]),
+      ),
+    [phases, slides],
   )
-  const scenariosByPhase = useMemo(() => {
-    const map = new Map<string, NavItem[]>()
-    for (const slide of slides) {
-      if (!slide.parentId) continue
-      const list = map.get(slide.parentId)
-      if (list) list.push(slide)
-      else map.set(slide.parentId, [slide])
-    }
-    return map
-  }, [slides])
 
   const scenario = slides.find((slide) => slide.id === selectedScenarioId)
+  const phase = slides.find((slide) => slide.id === selectedPhaseId)
   const title = scenario
     ? getSlideDisplayLabel(scenario, slides)
-    : 'Service blueprint'
+    : surface === 'map' && phase
+      ? phase.label
+      : 'Service blueprint'
+
+  // ONE path at a time (decided 2026-08-16): the selection lives in the top
+  // bar, defaulting to the last path viewed for this scenario (persisted),
+  // else the happy path. Same query key as the reader's fetch — the shared
+  // cache means this costs no extra request. Render-time latch, not an
+  // effect, same idiom the reader used before the lift.
+  const { pathsByScenario } = useCanvasBlueprints(
+    useMemo(
+      () => (selectedScenarioId ? [selectedScenarioId] : []),
+      [selectedScenarioId],
+    ),
+  )
+  const paths = selectedScenarioId
+    ? (pathsByScenario.get(selectedScenarioId) ?? [])
+    : []
+  const [pathChoice, setPathChoice] = useState<{
+    scenarioId: string
+    pathId: string | null
+  } | null>(null)
+  if (selectedScenarioId && pathChoice?.scenarioId !== selectedScenarioId) {
+    setPathChoice({
+      scenarioId: selectedScenarioId,
+      pathId: readLastViewedPath(selectedScenarioId),
+    })
+  }
+  // Validated against the loaded list every render: a stored id whose path
+  // was deleted falls back to the happy path instead of a dead selection.
+  const activePathId =
+    paths.length > 0
+      ? resolveDefaultPathId(pathChoice?.pathId ?? null, paths)
+      : null
+  const choosePath = (pathId: string) => {
+    if (!selectedScenarioId) return
+    setPathChoice({ scenarioId: selectedScenarioId, pathId })
+    writeLastViewedPath(selectedScenarioId, pathId)
+  }
 
   useEffect(
     () =>
@@ -109,8 +166,13 @@ export function MobileShell() {
     scenario
       ? `Selected scenario: "${getSlideDisplayLabel(scenario, slides)}" (${scenario.id})`
       : `Selected scenario: none${view === 'home' ? ' (overview)' : ''}`,
+    paths.length > 1 && activePathId
+      ? `Reading path: ${paths.find((path) => path.id === activePathId)?.name ?? activePathId}`
+      : null,
     `Agent sheet: ${agentOpen ? 'open' : 'closed'}`,
-  ].join('\n')
+  ]
+    .filter(Boolean)
+    .join('\n')
   const shellContextRef = useRef(shellContext)
   useEffect(() => {
     shellContextRef.current = shellContext
@@ -120,7 +182,8 @@ export function MobileShell() {
     [],
   )
 
-  // Surface policy: what a tap in the nav sheet means for the visible view.
+  // Surface policy: navigation implies the surface. A scenario is a thing
+  // you read; a phase is a stretch of the board you look at.
   const openScenario = (scenarioId: string) => {
     selectScenario(scenarioId)
     setSurface('reader')
@@ -128,6 +191,7 @@ export function MobileShell() {
   }
   const openPhase = (phaseId: string) => {
     selectPhase(phaseId)
+    setPhaseExpanded(phaseId, true)
     setSurface('map')
     setNavOpen(false)
   }
@@ -136,14 +200,37 @@ export function MobileShell() {
     setNavOpen(false)
   }
 
+  const hasSelection = selectedScenarioId !== null || selectedPhaseId !== null
+
   return (
     <CanvasModeProvider>
       <div className="flex h-svh flex-col overflow-hidden bg-background">
         <MobileTopBar
           title={title}
-          canAgent={canAgent}
-          onOpenNav={() => setNavOpen(true)}
-          onOpenAgent={() => setAgentOpen(true)}
+          navOpen={navOpen}
+          onToggleNav={() => setNavOpen((open) => !open)}
+          rightSlot={
+            surface === 'map' && hasSelection ? (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="size-11"
+                aria-label="Fit to screen"
+                // The same camera the agent drives — the map's viewport
+                // registers `zoom` while mounted, so this is one fit path,
+                // not a parallel implementation.
+                onClick={() => void runAgentUiCommand('zoom', 'fit')}
+              >
+                <Maximize />
+              </Button>
+            ) : surface === 'reader' && selectedScenarioId && paths.length > 1 ? (
+              <MobilePathSelector
+                paths={paths}
+                activePathId={activePathId}
+                onSelect={choosePath}
+              />
+            ) : null
+          }
         />
 
         {/* The surface fold. The key is `surface` ALONE: selecting a scenario
@@ -167,7 +254,7 @@ export function MobileShell() {
                 surface === 'map' ? 'zoom-in-95' : 'slide-in-from-bottom-4',
               )}
             >
-              {surface === 'map' ? (
+              {surface === 'map' && hasSelection ? (
                 <VisualWalkthroughShell>
                   <div className="absolute inset-0 flex min-h-0 flex-col" data-editor-view>
                     {/* Scoped to the selected phase: a phone renders one
@@ -176,65 +263,31 @@ export function MobileShell() {
                   </div>
                 </VisualWalkthroughShell>
               ) : selectedScenarioId ? (
-                <MobileScenarioReader scenarioId={selectedScenarioId} />
-              ) : (
-                <MobileJourneyIndex
-                  phases={phases}
-                  scenariosByPhase={scenariosByPhase}
-                  slides={slides}
-                  onOpenScenario={openScenario}
+                <MobileScenarioReader
+                  scenarioId={selectedScenarioId}
+                  pathId={activePathId}
                 />
+              ) : (
+                <MobileEmptyState onOpenNav={() => setNavOpen(true)} />
               )}
             </div>
           </EditorErrorBoundary>
         </main>
-
-        {/* Thumb-reach action bar: the reader ⇄ map fold, and the agent.
-            Primary navigation earns full-height 44px targets (h-11 beats
-            the sm variant's h-7), and aria-pressed carries the active
-            state to AT and the forced-colors treatment alike. */}
-        <nav
-          aria-label="Primary"
-          className="flex shrink-0 items-center justify-around border-t border-border bg-background px-4 py-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]"
-        >
-          <Button
-            variant={surface === 'reader' ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-11 flex-1"
-            aria-pressed={surface === 'reader'}
-            onClick={() => setSurface('reader')}
-          >
-            <ScrollText /> Journey
-          </Button>
-          <Button
-            variant={surface === 'map' ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-11 flex-1"
-            aria-pressed={surface === 'map'}
-            onClick={() => setSurface('map')}
-          >
-            <MapIcon /> Map
-          </Button>
-          {canAgent ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-11 flex-1"
-              onClick={() => setAgentOpen(true)}
-            >
-              <Sparkles /> Ask
-            </Button>
-          ) : null}
-        </nav>
       </div>
+
+      <MobileAgentFab canAgent={canAgent} onOpen={() => setAgentOpen(true)} />
 
       <MobileNavSheet
         open={navOpen}
         onOpenChange={setNavOpen}
+        surface={navSurface}
+        onSurfaceChange={setNavSurface}
         slices={slices}
         phases={phases}
         scenariosByPhase={scenariosByPhase}
         slides={slides}
+        expandedPhaseIds={expandedPhaseIds}
+        onPhaseExpandedChange={setPhaseExpanded}
         selectedPhaseId={selectedPhaseId}
         selectedScenarioId={selectedScenarioId}
         onSelectSlice={openSlice}
@@ -261,54 +314,17 @@ export function MobileShell() {
   )
 }
 
-/** No scenario picked yet: the journey's table of contents — every phase
- * with its scenarios, in lifecycle order. The phone's home screen. */
-function MobileJourneyIndex({
-  phases,
-  scenariosByPhase,
-  slides,
-  onOpenScenario,
-}: {
-  phases: NavItem[]
-  scenariosByPhase: Map<string, NavItem[]>
-  slides: NavItem[]
-  onOpenScenario: (scenarioId: string) => void
-}) {
+/** The drawer closed on an empty shell — the one state with nothing to
+ * show. Point back at the menu rather than guessing a destination. */
+function MobileEmptyState({ onOpenNav }: { onOpenNav: () => void }) {
   return (
-    <div className="h-full overflow-y-auto px-4 pb-8 pt-4">
-      <p className="pb-4 text-sm text-muted-foreground">
-        The service journey, phase by phase. Pick a scenario to read it
-        step by step, or open the Map for the whole board.
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-8">
+      <p className="text-center text-sm text-muted-foreground">
+        Pick a scenario to read it step by step, or a phase to see its map.
       </p>
-      <ol className="flex flex-col gap-5">
-        {phases.map((phase) => (
-          <li key={phase.id} className="flex flex-col gap-1.5">
-            <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-              {ordinalLabel(phase.index, phase.label)}
-            </p>
-            {(scenariosByPhase.get(phase.id) ?? []).map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onOpenScenario(item.id)}
-                className="flex w-full items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5 text-left text-sm text-foreground shadow-xs active:bg-accent"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate">
-                    {getSlideDisplayLabel(item, slides)}
-                  </span>
-                  {item.description ? (
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                      {item.description}
-                    </span>
-                  ) : null}
-                </span>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </button>
-            ))}
-          </li>
-        ))}
-      </ol>
+      <Button variant="outline" size="sm" onClick={onOpenNav}>
+        <Menu /> Open the menu
+      </Button>
     </div>
   )
 }

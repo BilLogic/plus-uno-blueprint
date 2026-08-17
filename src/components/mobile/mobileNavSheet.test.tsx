@@ -5,10 +5,12 @@ import { MobileNavSheet } from '@/components/mobile/MobileNavSheet'
 import type { NavItem } from '@/types/nav'
 import type { Slice } from '@/types/database'
 
-// Render tests for the nav sheet (plan 2026-08-16-002 Phase 2): the sheet
-// only reports what was tapped — slice, phase, or scenario — and the pinned
-// contract is that each row calls exactly its own callback. The shell owns
-// what a tap means for the visible surface.
+// Render tests for the Phase-3 drawer (plan 2026-08-16-002): rail + panel.
+// The pinned contract from Phase 2 survives — the sheet only reports what
+// was tapped (slice, phase, scenario, surface, expansion); the shell owns
+// what a tap means for the visible surface. New in Phase 3: the accordion
+// renders scenarios only for expanded phases, driven by EditorContext's
+// expandedPhaseIds rather than always-expanded.
 
 const nav = (over: Partial<NavItem> & { id: string; label: string }): NavItem =>
   ({
@@ -32,19 +34,26 @@ const scenariosByPhase = new Map<string, NavItem[]>([
   ['ph-2', [scenarios[1]]],
 ])
 const slices = [{ id: 'sl-1', title: 'Regular Tutor lane: warm-up' } as Slice]
+const allExpanded = new Set(['ph-1', 'ph-2'])
 
 function renderSheet(over: Partial<Parameters<typeof MobileNavSheet>[0]> = {}) {
   const onSelectSlice = vi.fn()
   const onSelectPhase = vi.fn()
   const onSelectScenario = vi.fn()
+  const onSurfaceChange = vi.fn()
+  const onPhaseExpandedChange = vi.fn()
   render(
     <MobileNavSheet
       open
       onOpenChange={() => {}}
+      surface="blueprints"
+      onSurfaceChange={onSurfaceChange}
       slices={slices}
       phases={phases}
       scenariosByPhase={scenariosByPhase}
       slides={slides}
+      expandedPhaseIds={allExpanded}
+      onPhaseExpandedChange={onPhaseExpandedChange}
       selectedPhaseId={null}
       selectedScenarioId={null}
       onSelectSlice={onSelectSlice}
@@ -53,14 +62,20 @@ function renderSheet(over: Partial<Parameters<typeof MobileNavSheet>[0]> = {}) {
       {...over}
     />,
   )
-  return { onSelectSlice, onSelectPhase, onSelectScenario }
+  return {
+    onSelectSlice,
+    onSelectPhase,
+    onSelectScenario,
+    onSurfaceChange,
+    onPhaseExpandedChange,
+  }
 }
 
 afterEach(cleanup)
 
 describe('MobileNavSheet routing', () => {
-  it('a slice row reports the slice and only the slice', () => {
-    const h = renderSheet()
+  it('a slice row (Slices surface) reports the slice and only the slice', () => {
+    const h = renderSheet({ surface: 'slices' })
     screen.getByText('Regular Tutor lane: warm-up').click()
     expect(h.onSelectSlice).toHaveBeenCalledWith('sl-1')
     expect(h.onSelectPhase).not.toHaveBeenCalled()
@@ -93,5 +108,40 @@ describe('MobileNavSheet routing', () => {
     renderSheet({ selectedPhaseId: 'ph-1', selectedScenarioId: 'sc-1' })
     const phaseRow = screen.getByText(/Application/).closest('button')
     expect(phaseRow?.getAttribute('aria-current')).toBeNull()
+  })
+})
+
+describe('MobileNavSheet accordion and rail', () => {
+  it('collapsed phases hide their scenarios', () => {
+    renderSheet({ expandedPhaseIds: new Set(['ph-1']) })
+    expect(screen.getByText('Discovery')).toBeDefined()
+    expect(screen.queryByText('Tech Setup')).toBeNull()
+  })
+
+  it('the caret reports an expansion change and nothing else', () => {
+    const h = renderSheet({ expandedPhaseIds: new Set(['ph-1']) })
+    screen.getByLabelText('Expand Onboarding').click()
+    expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-2', true)
+    screen.getByLabelText('Collapse Application').click()
+    expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-1', false)
+    expect(h.onSelectPhase).not.toHaveBeenCalled()
+  })
+
+  it('the rail is a radio: tapping Slices reports the surface change', () => {
+    const h = renderSheet()
+    const slicesButton = screen.getByRole('button', { name: 'Slices' })
+    expect(slicesButton.getAttribute('aria-pressed')).toBe('false')
+    slicesButton.click()
+    expect(h.onSurfaceChange).toHaveBeenCalledWith('slices')
+    expect(
+      screen
+        .getByRole('button', { name: 'Blueprints' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+  })
+
+  it('the blueprints surface does not render slice rows', () => {
+    renderSheet({ surface: 'blueprints' })
+    expect(screen.queryByText('Regular Tutor lane: warm-up')).toBeNull()
   })
 })
