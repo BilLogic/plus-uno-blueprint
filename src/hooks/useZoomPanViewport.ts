@@ -479,8 +479,28 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     if (!content) return
 
     let debounceTimer = 0
+    // Portrait/landscape detection for the rotation rule below.
+    let lastAspectLandscape: boolean | null = null
 
     const onResize = () => {
+      // A rotation is not a window drag (todo 027 §4): flipping the aspect
+      // ratio invalidates whatever framing the user had built, and on a
+      // phone there is no Reset control to recover with — so an
+      // orientation flip refits even when the user has adjusted the view.
+      const box = container?.getBoundingClientRect()
+      if (box && box.width > 0 && box.height > 0) {
+        const landscape = box.width > box.height
+        const flipped =
+          lastAspectLandscape !== null && landscape !== lastAspectLandscape
+        lastAspectLandscape = landscape
+        if (flipped) {
+          userAdjustedViewRef.current = false
+          window.clearTimeout(debounceTimer)
+          fitToView({ animate: false })
+          return
+        }
+      }
+
       if (userAdjustedViewRef.current) return
 
       // A fit that is still owed takes priority over every policy below: the
@@ -521,6 +541,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       observer.disconnect()
     }
   }, [
+    fitToView,
     recenterToView,
     resetKey,
     refitOnResize,

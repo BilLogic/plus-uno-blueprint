@@ -315,5 +315,14 @@ export function scrollBlueprintCellIntoView(cellId: string): void {
   const element = document.querySelector<HTMLElement>(
     `[data-blueprint-cell="${CSS.escape(cellId)}"]`,
   )
-  element?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+  if (!element) return
+  // Inside the zoom/pan camera, "scroll" is a lie (todo 027 §5): the
+  // viewport is overflow-hidden and moves by transform, but a programmatic
+  // scrollIntoView still sets scrollTop on the hidden-overflow box — which
+  // every camera calculation assumes is zero, so the board afterwards zooms
+  // toward a point offset from the fingers. Cells on a canvas are brought
+  // into view by the camera (the focus-cells pipeline); this helper only
+  // scrolls surfaces that genuinely scroll.
+  if (element.closest('[data-zoom-pan-viewport]')) return
+  element.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
 }
