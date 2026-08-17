@@ -29,9 +29,24 @@ One per Figma page, live-verified structure + out-of-sync tables + action items:
 7. **Before Students Join: app assignment system = primary flow**; manual spreadsheet/Slack-DM choreography captured in descriptions as current practice.
 8. **Goal-setting RCT condition: description-only** — grid labels neutral, study mechanics in detail panel.
 9. **Reconfirm decline ≠ call-off (by design)** — reconfirm fires only on supervisor-initiated session changes; Future-path material once deployed.
-10. **Clearance: procedure reconstructed** (sweep/10) — acceptance form → supervisor adds to CPO roster → CPO↔tutor directly (Act 153 trio, ~2wks) → CPO weekly email → Friday-8pm ETL writes `advisor.clearance_status` → app access. **Recommended placement: own clearance stage appended to Interview & Offer with wait-state into Tech Setup** (CPO as external actor) — pending Bill confirm.
+10. **Clearance: procedure reconstructed** (sweep/10) — acceptance form → supervisor adds to CPO roster → CPO↔tutor directly (Act 153 trio, ~2wks) → CPO weekly email → Friday-8pm ETL writes `advisor.clearance_status` → app access.
 11. **Figma sync: text/spec corrections EXECUTED 2026-08-08** — 16 amber "[sync 2026-08-08]" annotations across 11 pages (log: figma-sync/00-execution-log.md); frame/visual restructuring stays with design team.
 12. **Notion call-off page updated** — superseded-banner with verified current process + production stats prepended (history + comments preserved).
+13. **Clearance placement ADOPTED**: own step/sub-sequence appended to Interview & Offer, wait-state trigger into Tech Setup; CPO = external actor.
+14. **Goal Setting**: demote Happy Path to thin overview; add new system cells to parent paths only (not Edge Case copies).
+15. **Help Request**: add Escalation alternate path; move tutors@tutor.plus from step name into cell content.
+16. **"No or Few Students Join" = second path under Student Just Joined.**
+17. **Standard Scheduling grows 2→3 steps** (reconfirmation column; Future-path until prod deploy). **Soft-conflict rule = Future-path cell** in Session Sign Up (10-min gate design).
+18. **Onboarding modules: 11 canonical** per Notion hub (M10 Handling Difficult Situations, M11 Lead Tutors; archived Florida-specific M10 explains Slack numbering drift).
+19. **Missed/rejected hours**: supervisor follows up manually AND tutor self-fixes in Workday next cycle — sad path can be authored from both.
+
+## APPLIED 2026-08-08 — revisions written to DB
+
+All 17 scenarios applied (3 writer passes; per-scenario transactions; logs: content-changes/APPLIED-2026-08-08-*.md). Global before→after: cells 802→867 · paths 24→26 (+Late call-off exception, +Help Request Escalation, +No/Few Students Join, −New In-Cycle Check-In) · triggers 448→503 (incl. Update Goals 0→39) · descriptions 162→327 (20%→38%) · links 244→272 · new steps: info session, accepts-offer/clearance, complete-profile, reconfirm availability · Wrap-Up Support Actions lane added · orphan step deleted. Integrity verified: 0 orphan steps / bad refs / dangling triggers. Backup: backup_20260808_* tables.
+
+**Wave 2 APPLIED (same day):** all remaining items except illustrations. Final state: **6 phases · 23 scenarios · 38 paths · 954 cells · 470 triggers · 45% descriptions · 314 linked cells · 0 integrity issues**. Added: new phase Program Administration + 6 new scenarios (Supervisor Admin, Tutor Profile & Maintenance, Student Kickoff Interview [In-session, rationale logged], Session Prep & Resources, Post-Session Growth Loop, Student Session Experience — first Student actor lanes); 5 "Future (roadmap)" paths (39 PLANNED-prefixed cells); Reporting Hours "Missed hours" unhappy path; Warm-Up boilerplate purged (16 cells); late column removed from original call-off path. **Empty-labels finding: all 147 remaining empty cells are Visual-lane — the illustration strip, Bill's work; zero non-Visual cells lack labels.** Figma: 5 new scaffold pages (Student Portal 11275:4, Resources 11275:5, Messaging 11275:6, AI Coach 11275:7, Admin/Program 11275:8), missing-case sections (revert flow, calendar view, recording states, badge claim), IA page 1:182 now the file's table of contents. Logs: APPLIED-2026-08-08-{cleanups,future-paths,new-scenarios-A,new-scenarios-B}.md + figma-sync/00-execution-log.md.
+
+Remaining for Bill: Visual-lane illustrations (147 cells) + picture properties · designer work on the TO-SPEC placeholder frames · Roadmap/PRD slots in Figma context blocks.
 
 ## Top divergences for Bill to reconcile
 
