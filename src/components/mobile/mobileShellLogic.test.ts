@@ -43,9 +43,11 @@ describe('makeMobileAgentBridge', () => {
     expect(h.selectScenario).not.toHaveBeenCalled()
   })
 
-  it('setSidebarCollapsed exists and is a no-op (known dishonesty, todo 027)', () => {
+  it('setSidebarCollapsed reports honestly that no sidebar exists (todo 027)', () => {
     const h = harness()
-    expect(() => h.bridge.setSidebarCollapsed(true)).not.toThrow()
+    const result = h.bridge.setSidebarCollapsed(true)
+    expect(typeof result).toBe('string')
+    expect(result).toMatch(/no sidebar/)
     expect(h.selectPhase).not.toHaveBeenCalled()
   })
 })

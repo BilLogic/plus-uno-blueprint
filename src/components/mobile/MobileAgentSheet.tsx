@@ -1,10 +1,13 @@
+import { X } from 'lucide-react'
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
 import { AgentPanel } from '@/components/editor/AgentPanel'
+import { Button } from '@/components/ui/button'
 
 /**
  * The agent, as a BOTTOM sheet — a little over half the screen, so the
@@ -12,10 +15,11 @@ import { AgentPanel } from '@/components/editor/AgentPanel'
  * AgentPanel state lives in the module store (panelState), so open/close
  * never drops a session.
  *
- * Extracted from MobileShell as a Phase-2 seam (plan 2026-08-16-002); the
- * Phase-4 redesign replaces this sheet with the FAB + workspace, and wants
- * a component swap. The shell mounts this only when the session can run the
- * agent, so the sheet itself assumes nothing about tiers.
+ * The header is custom rather than the sheet's default chrome so its
+ * gutters MATCH the panel's own (the SESSIONS row sits on an 8 px inset):
+ * title left-aligned with the section labels, close button's right edge on
+ * the same line as the panel's + / filter controls. Without this the sheet
+ * title floated on a 16 px gutter one step off everything under it.
  */
 export function MobileAgentSheet({
   open,
@@ -28,6 +32,7 @@ export function MobileAgentSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
+        showCloseButton={false}
         // min-h + max-h pin the size in BOTH directions: the sheet variant's
         // own data-[side=bottom] h-auto survives tailwind-merge (different
         // variant prefix), so a bare h-[60svh] loses to it — content-hungry
@@ -35,8 +40,20 @@ export function MobileAgentSheet({
         // sheet is a fixed room the conversation lives in, not a balloon.
         className="flex min-h-[60svh] max-h-[60svh] flex-col gap-0 rounded-t-2xl p-0"
       >
-        <SheetHeader className="border-b border-border px-4 py-3">
+        <SheetHeader className="flex-row items-center justify-between border-b border-border py-1 pl-2 pr-0.5">
           <SheetTitle className="text-sm">Agent</SheetTitle>
+          <SheetClose
+            render={
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="size-9"
+                aria-label="Close"
+              >
+                <X />
+              </Button>
+            }
+          />
         </SheetHeader>
         {/* Must be a flex COLUMN, not a block: AgentPanel's own root is
             `min-h-0 flex-1 flex-col`, which only stretches inside a flex

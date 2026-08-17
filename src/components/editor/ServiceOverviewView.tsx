@@ -28,6 +28,8 @@ import {
 import { CanvasZoomChromeProvider } from '@/contexts/CanvasZoomChromeContext'
 import { useEditor } from '@/contexts/EditorContext'
 import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
+import { useMobileShell } from '@/hooks/useMobileShell'
+import { cn } from '@/lib/utils'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
 import {
   getCanvasFocusFitInsets,
@@ -211,6 +213,7 @@ export function ServiceOverviewView({
 }: ServiceOverviewViewProps = {}) {
   const overviewRef = useRef<HTMLDivElement>(null)
   const [overviewEl, setOverviewEl] = useState<HTMLDivElement | null>(null)
+  const mobileShell = useMobileShell()
   const {
     slides,
     slidesLoading,
@@ -410,7 +413,15 @@ export function ServiceOverviewView({
             data-slide-canvas
           >
             {floatingChrome ? (
-              <div className="pointer-events-none absolute right-4 bottom-4 z-30 [&>*]:pointer-events-auto">
+              <div
+                className={cn(
+                  'pointer-events-none absolute bottom-4 z-30 [&>*]:pointer-events-auto',
+                  // Bottom-centered on the phone (thumb reach, and the
+                  // corner is where the agent FAB lives); bottom-right on
+                  // desktop, beside the cursor's natural resting corner.
+                  mobileShell ? 'left-1/2 -translate-x-1/2' : 'right-4',
+                )}
+              >
                 {floatingChrome}
               </div>
             ) : null}

@@ -5,9 +5,10 @@ import type { AgentUiBridge } from '@/lib/agent/uiBridge'
  * handlers can be pinned by a node unit test without dragging the shell's
  * `?raw` import graph in. The phone shows the same canvas as desktop, so
  * phase and scenario opens are plain selections — the camera move is the
- * surface change. The ✦ sheet is the agent surface. The sidebar tool has no
- * sidebar to drive here — the stub is a known dishonesty (`agentSetSidebar`
- * still claims success; see todo 027) scheduled for the Phase-4 rework.
+ * surface change. The ✦ sheet is the agent surface. The sidebar tool has
+ * no sidebar to drive here and SAYS SO — the returned message overrides
+ * `agentSetSidebar`'s default success claim (closes todo 027's
+ * dishonest-stub item).
  */
 export function makeMobileAgentBridge({
   selectPhase,
@@ -22,6 +23,7 @@ export function makeMobileAgentBridge({
     selectPhase,
     selectScenario,
     openAgentSurface: openAgent,
-    setSidebarCollapsed: () => {},
+    setSidebarCollapsed: () =>
+      'The mobile shell has no sidebar — navigation lives in the menu drawer, which the reader opens themselves.',
   }
 }
