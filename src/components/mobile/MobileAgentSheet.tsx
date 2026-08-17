@@ -7,8 +7,10 @@ import {
 import { AgentPanel } from '@/components/editor/AgentPanel'
 
 /**
- * The agent, full-height bottom sheet. AgentPanel state lives in the module
- * store (panelState), so open/close never drops a session.
+ * The agent, as a BOTTOM sheet — a little over half the screen, so the
+ * canvas stays visible behind it (92svh read as a full-screen takeover).
+ * AgentPanel state lives in the module store (panelState), so open/close
+ * never drops a session.
  *
  * Extracted from MobileShell as a Phase-2 seam (plan 2026-08-16-002); the
  * Phase-4 redesign replaces this sheet with the FAB + workspace, and wants
@@ -26,7 +28,10 @@ export function MobileAgentSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="flex h-[92svh] flex-col gap-0 rounded-t-2xl p-0"
+        // max-h carries the size: the sheet variant's own data-[side=bottom]
+        // h-auto survives tailwind-merge (different variant prefix), so a
+        // bare h-[60svh] can lose to it once content wants more height.
+        className="flex h-[60svh] max-h-[60svh] flex-col gap-0 rounded-t-2xl p-0"
       >
         <SheetHeader className="border-b border-border px-4 py-3">
           <SheetTitle className="text-sm">Agent</SheetTitle>

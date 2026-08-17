@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Maximize, Menu } from 'lucide-react'
-import { MobileScenarioReader } from '@/components/mobile/MobileScenarioReader'
 import { MobileTopBar } from '@/components/mobile/MobileTopBar'
 import {
   MobileNavSheet,
@@ -21,6 +20,7 @@ import { useViewState } from '@/contexts/viewStateStore'
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { useCellDeepLink } from '@/hooks/useCellDeepLink'
 import { useMobileSliceDeepLink } from '@/hooks/useMobileSliceDeepLink'
+import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { useSlices } from '@/hooks/useSlices'
 import {
   registerAgentUiBridge,
@@ -32,24 +32,26 @@ import {
   resolveDefaultPathId,
   writeLastViewedPath,
 } from '@/lib/mobilePathMemory'
-import { makeMobileAgentBridge, type MobileSurface } from '@/components/mobile/mobileAgentBridge'
+import { makeMobileAgentBridge } from '@/components/mobile/mobileAgentBridge'
 import { getMainSlides, getSlideDisplayLabel, getSubslides } from '@/types/nav'
-import { cn } from '@/lib/utils'
 import type { NavItem } from '@/types/nav'
 
 /**
  * The phone's shell — the view-only visitor experience, for every tier.
  *
- * Two ways to read the same board: the READER folds one scenario into a
- * vertical journey, and the MAP is the real canvas scoped to one phase.
- * There is no surface toggle (plan 2026-08-16-002 Phase 3): navigation
- * implies the surface — tapping a scenario opens the reader, tapping a
- * phase opens the map — and the drawer is the index, opening on first load
- * when nothing is selected yet. Nothing here can write: no design mode, no
- * editors, and the agent's tool roster is filtered to reading (loop.ts).
+ * ONE surface: the same canvas the desktop shows, scoped to the selected
+ * phase so a phone renders one stretch of the service rather than the whole
+ * board (the whole board is what used to jam the main thread). There is no
+ * mobile-specific reading view (removed 2026-08-17 by request): navigation
+ * is a camera move on the shared canvas — tapping a phase frames it,
+ * tapping a scenario focuses it. The drawer is the index and opens on
+ * first load when nothing is selected. Nothing here can write: no design
+ * mode, no editors, and the agent's tool roster is filtered to reading
+ * (loop.ts).
  *
- * Surface policy (what a tap means for the visible view) stays HERE, in
- * the handlers, so the model lives in one place.
+ * Paths are SINGLE-select on the phone: the top-bar pill picks exactly one,
+ * through the same PathSelection context the desktop's PATHS checkboxes
+ * drive, defaulting to the last-viewed path per scenario.
  */
 
 export function MobileShell() {
@@ -67,7 +69,6 @@ export function MobileShell() {
   const { pendingUrlState } = useViewState()
   useCellDeepLink()
 
-  const [surface, setSurface] = useState<MobileSurface>('reader')
   // First load with nothing selected: the drawer IS the index, so it opens.
   // Captured at mount — a deep link (cell or slice) is a destination of its
   // own, so it keeps the drawer closed rather than racing it.
@@ -107,43 +108,59 @@ export function MobileShell() {
   const phase = slides.find((slide) => slide.id === selectedPhaseId)
   const title = scenario
     ? getSlideDisplayLabel(scenario, slides)
-    : surface === 'map' && phase
-      ? phase.label
+    : phase
+      ? getSlideDisplayLabel(phase, slides)
       : 'Service blueprint'
 
-  // ONE path at a time (decided 2026-08-16): the selection lives in the top
-  // bar, defaulting to the last path viewed for this scenario (persisted),
-  // else the happy path. Same query key as the reader's fetch — the shared
-  // cache means this costs no extra request. Render-time latch, not an
-  // effect, same idiom the reader used before the lift.
+  // ONE path at a time (decided 2026-08-16, single-select confirmed
+  // 2026-08-17): the pill drives the same PathSelection context the desktop
+  // PATHS checkboxes use — the canvas needs no mobile-specific plumbing —
+  // but always replaces the whole selection with one path. Defaults to the
+  // last-viewed path per scenario (localStorage), else the happy path.
   const { pathsByScenario } = useCanvasBlueprints(
     useMemo(
       () => (selectedScenarioId ? [selectedScenarioId] : []),
       [selectedScenarioId],
     ),
   )
-  const paths = selectedScenarioId
-    ? (pathsByScenario.get(selectedScenarioId) ?? [])
-    : []
-  const [pathChoice, setPathChoice] = useState<{
-    scenarioId: string
-    pathId: string | null
-  } | null>(null)
-  if (selectedScenarioId && pathChoice?.scenarioId !== selectedScenarioId) {
-    setPathChoice({
-      scenarioId: selectedScenarioId,
-      pathId: readLastViewedPath(selectedScenarioId),
-    })
-  }
-  // Validated against the loaded list every render: a stored id whose path
-  // was deleted falls back to the happy path instead of a dead selection.
-  const activePathId =
-    paths.length > 0
-      ? resolveDefaultPathId(pathChoice?.pathId ?? null, paths)
-      : null
+  const { catalog, getSelectedPathIds, setSelectedPathIds } =
+    usePathSelectionContext()
+  // Prefer the context catalog (what the canvas has synced — the list
+  // setSelectedPathIds resolves ids against); the direct query fills the
+  // first frames before that sync lands.
+  const paths = useMemo(() => {
+    if (!selectedScenarioId) return []
+    const synced = catalog[selectedScenarioId]
+    if (synced && synced.length > 0) return synced
+    return pathsByScenario.get(selectedScenarioId) ?? []
+  }, [selectedScenarioId, catalog, pathsByScenario])
+
+  // Apply the default once per scenario visit — but only after the canvas
+  // has synced this scenario into the context catalog: setSelectedPathIds
+  // resolves ids against the catalog, so applying earlier maps to an empty
+  // key set and blanks the canvas ("No paths selected"). Also what
+  // collapses a desktop multi-select down to one on this shell.
+  const appliedForRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!selectedScenarioId) return
+    const catalogPaths = catalog[selectedScenarioId] ?? []
+    if (catalogPaths.length === 0) return
+    if (appliedForRef.current === selectedScenarioId) return
+    appliedForRef.current = selectedScenarioId
+    const resolved = resolveDefaultPathId(
+      readLastViewedPath(selectedScenarioId),
+      catalogPaths,
+    )
+    if (resolved) setSelectedPathIds(selectedScenarioId, [resolved])
+  }, [selectedScenarioId, catalog, setSelectedPathIds])
+
+  const activePathId = selectedScenarioId
+    ? (getSelectedPathIds(selectedScenarioId)[0] ??
+      resolveDefaultPathId(readLastViewedPath(selectedScenarioId), paths))
+    : null
   const choosePath = (pathId: string) => {
     if (!selectedScenarioId) return
-    setPathChoice({ scenarioId: selectedScenarioId, pathId })
+    setSelectedPathIds(selectedScenarioId, [pathId])
     writeLastViewedPath(selectedScenarioId, pathId)
   }
 
@@ -153,7 +170,6 @@ export function MobileShell() {
         makeMobileAgentBridge({
           selectPhase,
           selectScenario,
-          setSurface,
           openAgent: () => setAgentOpen(true),
         }),
       ),
@@ -162,11 +178,11 @@ export function MobileShell() {
 
   // What the shell knows about the phone's screen, for get_ui_state.
   const shellContext = [
-    `Mobile shell (view-only): ${surface === 'reader' ? 'journey reader' : 'map (2-D canvas)'}`,
+    'Mobile shell (view-only): the shared canvas, scoped to the selected phase',
     scenario
       ? `Selected scenario: "${getSlideDisplayLabel(scenario, slides)}" (${scenario.id})`
       : `Selected scenario: none${view === 'home' ? ' (overview)' : ''}`,
-    paths.length > 1 && activePathId
+    paths.length > 0 && activePathId
       ? `Reading path: ${paths.find((path) => path.id === activePathId)?.name ?? activePathId}`
       : null,
     `Agent sheet: ${agentOpen ? 'open' : 'closed'}`,
@@ -182,17 +198,15 @@ export function MobileShell() {
     [],
   )
 
-  // Surface policy: navigation implies the surface. A scenario is a thing
-  // you read; a phase is a stretch of the board you look at.
+  // Navigation is a camera move on the one canvas; the drawer closes so the
+  // move is visible.
   const openScenario = (scenarioId: string) => {
     selectScenario(scenarioId)
-    setSurface('reader')
     setNavOpen(false)
   }
   const openPhase = (phaseId: string) => {
     selectPhase(phaseId)
     setPhaseExpanded(phaseId, true)
-    setSurface('map')
     setNavOpen(false)
   }
   const openSlice = (sliceId: string) => {
@@ -210,67 +224,57 @@ export function MobileShell() {
           navOpen={navOpen}
           onToggleNav={() => setNavOpen((open) => !open)}
           rightSlot={
-            surface === 'map' && hasSelection ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="size-11"
-                aria-label="Fit to screen"
-                // The same camera the agent drives — the map's viewport
-                // registers `zoom` while mounted, so this is one fit path,
-                // not a parallel implementation.
-                onClick={() => void runAgentUiCommand('zoom', 'fit')}
-              >
-                <Maximize />
-              </Button>
-            ) : surface === 'reader' && selectedScenarioId && paths.length > 1 ? (
-              <MobilePathSelector
-                paths={paths}
-                activePathId={activePathId}
-                onSelect={choosePath}
-              />
+            hasSelection ? (
+              <>
+                {selectedScenarioId && paths.length > 0 ? (
+                  <MobilePathSelector
+                    paths={paths}
+                    activePathId={activePathId}
+                    onSelect={choosePath}
+                  />
+                ) : null}
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-11"
+                  aria-label="Fit to screen"
+                  // The same camera the agent drives — the canvas viewport
+                  // registers `zoom` while mounted, so this is one fit
+                  // path, not a parallel implementation.
+                  onClick={() => void runAgentUiCommand('zoom', 'fit')}
+                >
+                  <Maximize />
+                </Button>
+              </>
             ) : null
           }
         />
 
-        {/* The surface fold. The key is `surface` ALONE: selecting a scenario
-            is a camera move inside the canvas, not a screen change, so it must
-            not remount the board — the same rule DesktopEditorShell states for
-            its own canvas. Keying on the scenario as well used to tear down and
-            rebuild the whole subtree on every navigation, which is what jammed
-            the main thread and left surfaces half-drawn on top of each other.
-
-            The error boundary sits HERE, inside the chrome, so a throw in one
-            view leaves the menu and the agent reachable; its resetKey means
-            navigating somewhere else clears it. */}
+        {/* The error boundary sits HERE, inside the chrome, so a throw in
+            the canvas leaves the menu and the agent reachable; its resetKey
+            means navigating somewhere else clears it. The canvas subtree is
+            never keyed on the selection: selecting is a camera move, not a
+            remount — the remount is what used to jam the main thread. */}
         <main className="relative min-h-0 flex-1">
           <EditorErrorBoundary
-            resetKey={`${surface}:${selectedScenarioId ?? selectedPhaseId ?? 'none'}`}
+            resetKey={selectedScenarioId ?? selectedPhaseId ?? 'none'}
           >
-            <div
-              key={surface}
-              className={cn(
-                'absolute inset-0 animate-in fade-in duration-(--motion-fade) motion-reduce:animate-none',
-                surface === 'map' ? 'zoom-in-95' : 'slide-in-from-bottom-4',
-              )}
-            >
-              {surface === 'map' && hasSelection ? (
-                <VisualWalkthroughShell>
-                  <div className="absolute inset-0 flex min-h-0 flex-col" data-editor-view>
-                    {/* Scoped to the selected phase: a phone renders one
-                        stretch of the service, never the whole board. */}
-                    <ServiceOverviewView soloPhaseId={selectedPhaseId ?? undefined} />
-                  </div>
-                </VisualWalkthroughShell>
-              ) : selectedScenarioId ? (
-                <MobileScenarioReader
-                  scenarioId={selectedScenarioId}
-                  pathId={activePathId}
-                />
-              ) : (
-                <MobileEmptyState onOpenNav={() => setNavOpen(true)} />
-              )}
-            </div>
+            {hasSelection ? (
+              <VisualWalkthroughShell>
+                <div
+                  className="absolute inset-0 flex min-h-0 flex-col"
+                  data-editor-view
+                >
+                  {/* Scoped to the selected phase: a phone renders one
+                      stretch of the service, never the whole board. */}
+                  <ServiceOverviewView
+                    soloPhaseId={selectedPhaseId ?? undefined}
+                  />
+                </div>
+              </VisualWalkthroughShell>
+            ) : (
+              <MobileEmptyState onOpenNav={() => setNavOpen(true)} />
+            )}
           </EditorErrorBoundary>
         </main>
       </div>
@@ -320,7 +324,8 @@ function MobileEmptyState({ onOpenNav }: { onOpenNav: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-8">
       <p className="text-center text-sm text-muted-foreground">
-        Pick a scenario to read it step by step, or a phase to see its map.
+        Pick a phase to frame its stretch of the service, or a scenario to
+        zoom in on it.
       </p>
       <Button variant="outline" size="sm" onClick={onOpenNav}>
         <Menu /> Open the menu

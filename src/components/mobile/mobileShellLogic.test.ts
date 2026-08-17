@@ -2,45 +2,43 @@ import { describe, expect, it, vi } from 'vitest'
 import { makeMobileAgentBridge } from '@/components/mobile/mobileAgentBridge'
 import { resolveBootSlice } from '@/hooks/useMobileSliceDeepLink'
 
-// Pins the agent bridge's four handlers (plan 2026-08-16-002 Phase 2): the
-// composition — which navigation lands on which surface — is exactly the
-// behaviour the Phase-3 redesign must consciously change, not drift.
+// Pins the agent bridge's handlers: the phone shows ONE surface (the shared
+// canvas, decided 2026-08-17), so phase and scenario opens are plain
+// selections — the camera move IS the surface change. No setSurface hand
+// exists anymore; this test pins that simplification.
 describe('makeMobileAgentBridge', () => {
   function harness() {
     const selectPhase = vi.fn()
     const selectScenario = vi.fn()
-    const setSurface = vi.fn()
     const openAgent = vi.fn()
     const bridge = makeMobileAgentBridge({
       selectPhase,
       selectScenario,
-      setSurface,
       openAgent,
     })
-    return { bridge, selectPhase, selectScenario, setSurface, openAgent }
+    return { bridge, selectPhase, selectScenario, openAgent }
   }
 
-  it('phase opens land on the map', () => {
+  it('phase opens select the phase and nothing else', () => {
     const h = harness()
     h.bridge.selectPhase('phase-1')
     expect(h.selectPhase).toHaveBeenCalledWith('phase-1')
-    expect(h.setSurface).toHaveBeenCalledWith('map')
     expect(h.selectScenario).not.toHaveBeenCalled()
+    expect(h.openAgent).not.toHaveBeenCalled()
   })
 
-  it('scenario opens land in the reader', () => {
+  it('scenario opens select the scenario and nothing else', () => {
     const h = harness()
     h.bridge.selectScenario('scen-1')
     expect(h.selectScenario).toHaveBeenCalledWith('scen-1')
-    expect(h.setSurface).toHaveBeenCalledWith('reader')
     expect(h.selectPhase).not.toHaveBeenCalled()
+    expect(h.openAgent).not.toHaveBeenCalled()
   })
 
   it('openAgentSurface opens the agent and touches nothing else', () => {
     const h = harness()
     h.bridge.openAgentSurface()
     expect(h.openAgent).toHaveBeenCalledTimes(1)
-    expect(h.setSurface).not.toHaveBeenCalled()
     expect(h.selectPhase).not.toHaveBeenCalled()
     expect(h.selectScenario).not.toHaveBeenCalled()
   })
@@ -48,7 +46,7 @@ describe('makeMobileAgentBridge', () => {
   it('setSidebarCollapsed exists and is a no-op (known dishonesty, todo 027)', () => {
     const h = harness()
     expect(() => h.bridge.setSidebarCollapsed(true)).not.toThrow()
-    expect(h.setSurface).not.toHaveBeenCalled()
+    expect(h.selectPhase).not.toHaveBeenCalled()
   })
 })
 

@@ -82,10 +82,11 @@ describe('MobileNavSheet routing', () => {
     expect(h.onSelectScenario).not.toHaveBeenCalled()
   })
 
-  it('a phase row reports the phase and only the phase', () => {
-    const h = renderSheet()
+  it('a phase label is one touch space: it expands AND reports the phase', () => {
+    const h = renderSheet({ expandedPhaseIds: new Set<string>() })
     screen.getByText(/Application/).click()
     expect(h.onSelectPhase).toHaveBeenCalledWith('ph-1')
+    expect(h.onPhaseExpandedChange).toHaveBeenCalledWith('ph-1', true)
     expect(h.onSelectScenario).not.toHaveBeenCalled()
     expect(h.onSelectSlice).not.toHaveBeenCalled()
   })
