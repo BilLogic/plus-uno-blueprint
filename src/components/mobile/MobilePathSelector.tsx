@@ -28,6 +28,22 @@ export function MobilePathSelector({
   const active = paths.find((path) => path.id === activePathId) ?? paths[0]
   if (!active) return null
 
+  // One path: still SAY which path this is, but as a read-only chip — a
+  // menu with a single choice is a control that answers nothing.
+  if (paths.length === 1) {
+    return (
+      <span
+        aria-label={`Path: ${active.name}`}
+        className={cn(
+          'flex h-8 max-w-40 items-center rounded-full border border-border/60 bg-transparent',
+          'px-2.5 text-xs text-muted-foreground',
+        )}
+      >
+        <span className="min-w-0 truncate">{active.name}</span>
+      </span>
+    )
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

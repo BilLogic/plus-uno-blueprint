@@ -33,7 +33,13 @@ const scenariosByPhase = new Map<string, NavItem[]>([
   ['ph-1', [scenarios[0]]],
   ['ph-2', [scenarios[1]]],
 ])
-const slices = [{ id: 'sl-1', title: 'Regular Tutor lane: warm-up' } as Slice]
+const slices = [
+  {
+    id: 'sl-1',
+    title: 'Regular Tutor lane: warm-up',
+    slice_type: 'lane',
+  } as Slice,
+]
 const allExpanded = new Set(['ph-1', 'ph-2'])
 
 function renderSheet(over: Partial<Parameters<typeof MobileNavSheet>[0]> = {}) {

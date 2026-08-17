@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Diamond, LayoutGrid } from 'lucide-react'
 import {
   Sheet,
@@ -5,7 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { NavChildren, NavRow } from '@/components/editor/SidebarNav'
+import { NavChildren, NavRow, NavSection } from '@/components/editor/SidebarNav'
 import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { getSlideDisplayLabel } from '@/types/nav'
 import { cn } from '@/lib/utils'
@@ -39,6 +40,78 @@ const RAIL_SURFACES: Array<{
   { id: 'blueprints', label: 'Blueprints', icon: LayoutGrid },
   { id: 'slices', label: 'Slices', icon: Diamond },
 ]
+
+/** Same group taxonomy and order as the desktop slices sidebar
+ * (SlicesSidebarSection) — unknown types fall into CUSTOM. */
+const SLICE_TYPE_GROUPS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
+
+function sliceTypeGroup(
+  sliceType: string,
+): (typeof SLICE_TYPE_GROUPS)[number] {
+  const type = sliceType.toLowerCase()
+  return SLICE_TYPE_GROUPS.find((group) => group === type) ?? 'custom'
+}
+
+/** The drawer's Slices surface: type groups (open by default), NavRow rows. */
+function SliceGroups({
+  slices,
+  onSelectSlice,
+}: {
+  slices: Slice[]
+  onSelectSlice: (sliceId: string) => void
+}) {
+  const [collapsedGroups, setCollapsedGroups] = useState<ReadonlySet<string>>(
+    new Set(),
+  )
+  const groups = SLICE_TYPE_GROUPS.map((type) => ({
+    type,
+    slices: slices.filter(
+      (slice) => sliceTypeGroup(slice.slice_type) === type,
+    ),
+  })).filter((group) => group.slices.length > 0)
+
+  if (groups.length === 0) {
+    return (
+      <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">
+        No saved slices yet.
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col">
+      {groups.map((group) => (
+        <NavSection
+          key={group.type}
+          title={group.type}
+          open={!collapsedGroups.has(group.type)}
+          onOpenChange={(open) =>
+            setCollapsedGroups((collapsed) => {
+              const next = new Set(collapsed)
+              if (open) next.delete(group.type)
+              else next.add(group.type)
+              return next
+            })
+          }
+        >
+          <ul className="flex flex-col gap-0.5">
+            {group.slices.map((slice) => (
+              <li key={slice.id}>
+                <NavRow
+                  rowId={slice.id}
+                  label={slice.title}
+                  icon={<Diamond className="inline size-3" />}
+                  onSelect={() => onSelectSlice(slice.id)}
+                  size="sm"
+                />
+              </li>
+            ))}
+          </ul>
+        </NavSection>
+      ))}
+    </div>
+  )
+}
 
 export function MobileNavSheet({
   open,
@@ -113,25 +186,7 @@ export function MobileNavSheet({
 
           <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
             {surface === 'slices' ? (
-              slices.length > 0 ? (
-                <ul className="flex flex-col gap-0.5">
-                  {slices.map((slice) => (
-                    <li key={slice.id}>
-                      <NavRow
-                        rowId={slice.id}
-                        label={slice.title}
-                        icon={<Diamond className="inline size-3" />}
-                        onSelect={() => onSelectSlice(slice.id)}
-                        size="sm"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="px-2 py-1.5 text-xs text-sidebar-foreground/50">
-                  No saved slices yet.
-                </p>
-              )
+              <SliceGroups slices={slices} onSelectSlice={onSelectSlice} />
             ) : (
               <div className="flex flex-col gap-0.5">
                 {phases.map((phase) => {

@@ -6,7 +6,7 @@ import {
   type MobileNavSurface,
 } from '@/components/mobile/MobileNavSheet'
 import { MobileAgentSheet } from '@/components/mobile/MobileAgentSheet'
-import { MobileAgentBar } from '@/components/mobile/MobileAgentBar'
+import { MobileAgentFab } from '@/components/mobile/MobileAgentFab'
 import { MobilePathSelector } from '@/components/mobile/MobilePathSelector'
 import { CanvasModeProvider } from '@/components/editor/CanvasModeProvider'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
@@ -282,12 +282,9 @@ export function MobileShell() {
             )}
           </EditorErrorBoundary>
         </main>
-
-        <MobileAgentBar
-          canAgent={canAgent}
-          onOpen={() => setAgentOpen(true)}
-        />
       </div>
+
+      <MobileAgentFab canAgent={canAgent} onOpen={() => setAgentOpen(true)} />
 
       <MobileNavSheet
         open={navOpen}
