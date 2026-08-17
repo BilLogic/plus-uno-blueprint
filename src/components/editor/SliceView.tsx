@@ -146,7 +146,7 @@ function SliceSurface({ sliceId, onPresent }: SliceViewProps) {
         loading
         holdKey={skeletonHoldKey}
         skeleton={
-          <div className="relative h-full">
+          <div className="relative h-full" role="status" aria-label="Loading slice">
             <SliceTabLoadingSkeleton />
             {/* Plan 2026-08-17-001 U3: the slice waterfall's stages, over
                 the same skeleton session the whole chain shares. */}

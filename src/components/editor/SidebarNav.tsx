@@ -202,6 +202,7 @@ export function NavRow({
       {expandable ? (
         <button
           type="button"
+          onPointerDown={(event) => event.preventDefault()}
           onClick={onToggle}
           aria-expanded={open}
           aria-controls={panelId}
@@ -219,6 +220,7 @@ export function NavRow({
       )}
       <button
         type="button"
+        onPointerDown={(event) => event.preventDefault()}
         onClick={onSelect}
         onKeyDown={handleKeyDown}
         aria-current={selected ? 'true' : undefined}
@@ -271,6 +273,7 @@ export function NavSection({
     <Collapsible open={open} onOpenChange={onOpenChange}>
       <div className="group/nav-row flex items-center gap-1 pr-1">
         <CollapsibleTrigger
+          onPointerDown={(event) => event.preventDefault()}
           aria-controls={panelId}
           className={cn(
             'flex min-w-0 flex-1 items-center gap-1 rounded-md pl-1 text-left transition-colors',

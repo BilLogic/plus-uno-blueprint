@@ -107,6 +107,15 @@ export function StackedCompareGrid({
               blueprint={blueprint}
               layers={layers}
               rows={rows}
+              // Single-path boards: the step-header row is a fact about
+              // THIS path's columns, so the frame wraps it (plan
+              // 2026-08-17-002 U1). Multi-path keeps the shared canonical
+              // header outside every frame — it belongs to all of them.
+              frameExtraTopInset={
+                blueprints.length === 1 && bandIndex === 0
+                  ? COMPARE_STEP_HEADER_HEIGHT
+                  : undefined
+              }
               arrangement={{
                 kind: 'row',
                 gridRow: bandIndex + 2,

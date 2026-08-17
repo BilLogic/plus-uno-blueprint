@@ -1,13 +1,9 @@
-import { Fragment } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import {
   OVERVIEW_CANVAS_PADDING_X,
   OVERVIEW_CANVAS_PADDING_Y,
   OVERVIEW_PHASE_ROW_GAP,
-  OVERVIEW_PHASE_SECTION_BOTTOM_INSET,
-  OVERVIEW_PHASE_SECTION_INSET,
-  OVERVIEW_PHASE_SECTION_TOP_INSET,
   OVERVIEW_SCENARIO_GAP,
 } from '@/lib/overviewLayout'
 import { COMPARE_MIN_PANEL_HEIGHT } from '@/lib/sideBySideCompareLayout'
@@ -96,11 +92,14 @@ export function ServiceOverviewCanvasSkeleton({
   const rows = phases.length > 0 ? phases : UNKNOWN_SHAPE
 
   return (
+    // Nothing here paints — every visual element is deleted (decided
+    // 2026-08-17: the progress bar is the ONLY visible loading signal).
+    // What remains is pure geometry: one spacer per phase row at the loaded
+    // board's dimensions, so the camera pre-fit still frames the right
+    // rectangle and the content swap lands at the final transform.
     <div
       data-canvas-fit
-      role="status"
-      aria-busy="true"
-      aria-label="Loading canvas"
+      aria-hidden
       className="invisible relative inline-flex w-max flex-col items-start"
       style={{
         paddingTop: OVERVIEW_CANVAS_PADDING_Y,
@@ -112,57 +111,16 @@ export function ServiceOverviewCanvasSkeleton({
       {rows.map((phase, phaseIndex) => (
         <div
           key={phase.id}
-          className="relative inline-flex w-max flex-col items-start"
           style={{
+            width:
+              Math.max(1, phase.scenarioCount) * SKELETON_PANEL_WIDTH +
+              (Math.max(1, phase.scenarioCount) - 1) * OVERVIEW_SCENARIO_GAP,
+            height: COMPARE_MIN_PANEL_HEIGHT,
             marginBottom:
               phaseIndex < rows.length - 1 ? OVERVIEW_PHASE_ROW_GAP : undefined,
           }}
-        >
-          {/* Phase frame, at the same insets the loaded section uses. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute rounded-2xl border border-solid border-border/60"
-            style={{
-              top: -OVERVIEW_PHASE_SECTION_TOP_INSET,
-              left: -OVERVIEW_PHASE_SECTION_INSET,
-              right: -OVERVIEW_PHASE_SECTION_INSET,
-              bottom: -OVERVIEW_PHASE_SECTION_BOTTOM_INSET,
-            }}
-          />
-          {/* Phase title badge — absolute, straddling the frame edge. */}
-          <Skeleton
-            aria-hidden
-            className="absolute z-10 h-6 w-44 rounded-full"
-            style={{
-              top: -OVERVIEW_PHASE_SECTION_TOP_INSET,
-              left: OVERVIEW_PHASE_SECTION_INSET,
-              transform: 'translateY(-50%)',
-            }}
-          />
-          {/* Plain frames only — since the determinate progress bar landed
-              (plan 2026-08-17-001) the skeleton's job is geometry for the
-              camera pre-fit, not imitating chrome; the fake title chips
-              read as extra noise under the bar. */}
-          <div className="inline-flex items-stretch" aria-hidden>
-            {Array.from(
-              { length: Math.max(1, phase.scenarioCount) },
-              (_, scenarioIndex) => (
-                <Fragment key={scenarioIndex}>
-                  {scenarioIndex > 0 ? (
-                    <div style={{ width: OVERVIEW_SCENARIO_GAP }} />
-                  ) : null}
-                  <BlueprintPanelLoadingSkeleton
-                    width={SKELETON_PANEL_WIDTH}
-                    height={COMPARE_MIN_PANEL_HEIGHT}
-                    showTitle={false}
-                  />
-                </Fragment>
-              ),
-            )}
-          </div>
-        </div>
+        />
       ))}
-      <span className="sr-only">Loading…</span>
     </div>
   )
 }
@@ -179,15 +137,15 @@ export function PendingCanvasLoadingSkeleton({
   className?: string
 }) {
   return (
+    // Geometry only, no ink — same rule as the overview skeleton: the
+    // progress bar is the one visible loading signal.
     <div
-      className={cn('absolute inset-x-12 bottom-12 top-[104px]', className)}
-      role="status"
-      aria-busy="true"
-      aria-label="Loading canvas"
-    >
-      <Skeleton className="size-full rounded-2xl" />
-      <span className="sr-only">Loading…</span>
-    </div>
+      className={cn(
+        'invisible absolute inset-x-12 bottom-12 top-[104px]',
+        className,
+      )}
+      aria-hidden
+    />
   )
 }
 

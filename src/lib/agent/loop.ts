@@ -185,6 +185,27 @@ function push(sessionId: string, event: TranscriptEvent): void {
 
 const hydrated = new Set<string>()
 
+// Transcript-hydration-in-flight, per session, so the chat view can show
+// skeleton bubbles instead of the "Ready" empty state while a persisted
+// conversation is still on the wire.
+const hydratingTranscripts = new Set<string>()
+const transcriptHydrationListeners = new Set<() => void>()
+
+function notifyTranscriptHydration() {
+  transcriptHydrationListeners.forEach((listener) => listener())
+}
+
+export function useAgentTranscriptHydrating(sessionId: string): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      transcriptHydrationListeners.add(listener)
+      return () => transcriptHydrationListeners.delete(listener)
+    },
+    () => hydratingTranscripts.has(sessionId),
+    () => false,
+  )
+}
+
 /**
  * Restore a session's transcript from agent_messages, once per session per
  * page load. The provider-side conversation is rebuilt from the user and
@@ -197,7 +218,15 @@ export async function hydrateAgentTranscript(sessionId: string): Promise<void> {
   hydrated.add(sessionId)
   const run = runFor(sessionId)
   if (run.events.length > 0 || run.running) return
-  const events = await loadPersistedEvents(sessionId)
+  hydratingTranscripts.add(sessionId)
+  notifyTranscriptHydration()
+  let events: TranscriptEvent[] | null
+  try {
+    events = await loadPersistedEvents(sessionId)
+  } finally {
+    hydratingTranscripts.delete(sessionId)
+    notifyTranscriptHydration()
+  }
   if (!events || events.length === 0) return
   if (run.events.length > 0 || run.running) return // a send raced the load
   run.events = events
