@@ -30,7 +30,11 @@ export function CompareStepHeaderRow({
         track.kind === 'pleat' ? null : (
           <div
             key={track.key}
-            className="flex min-w-0 items-end justify-center gap-1 overflow-hidden rounded-md px-2 pb-1.5"
+            // `relative z-[1]`: when a path frame extends up to wrap this
+            // row (single-path stacked, merged), the frame's opaque fill is
+            // an absolutely-positioned later sibling — without a stacking
+            // order the labels paint UNDER it and the header "vanishes".
+            className="relative z-[1] flex min-w-0 items-end justify-center gap-1 overflow-hidden rounded-md px-2 pb-1.5"
             style={{ gridColumn: trackIndex + 2, gridRow: 1 }}
             {...(track.divergent
               ? { 'data-blueprint-compare-diffcolumn': 'header' }

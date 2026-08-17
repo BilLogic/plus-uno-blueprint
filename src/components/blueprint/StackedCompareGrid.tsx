@@ -5,6 +5,7 @@ import { useCompareGridAxis } from '@/hooks/useCompareGridAxis'
 import { STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
 import { expandComparePleat } from '@/lib/compareReviewStore'
 import {
+  COMPARE_HEADER_WRAP_EXTRA_INSET,
   COMPARE_STACKED_BAND_GAP,
   COMPARE_STACKED_HEADER_GAP,
   COMPARE_STEP_HEADER_HEIGHT,
@@ -113,7 +114,7 @@ export function StackedCompareGrid({
               // header outside every frame — it belongs to all of them.
               frameExtraTopInset={
                 blueprints.length === 1 && bandIndex === 0
-                  ? COMPARE_STEP_HEADER_HEIGHT
+                  ? COMPARE_HEADER_WRAP_EXTRA_INSET
                   : undefined
               }
               arrangement={{

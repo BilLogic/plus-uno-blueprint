@@ -13,6 +13,7 @@ import {
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
+import { getPathWashStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell } from '@/types/blueprint'
 
@@ -24,10 +25,13 @@ import type { BlueprintCell } from '@/types/blueprint'
  */
 
 /**
- * The merged view's path rail: a 3px left edge in the path's colour AND its
- * dash pattern (colour alone would fail SC 1.4.1), plus the path's short
- * label. Only sub-cells of a DIVERGENT slot carry one — a shared cell
- * belongs to every path and is drawn bare.
+ * The merged view's path affiliation mark: a low-alpha WASH of the path
+ * colour painted on the cell face itself (never a separate box — the wash
+ * inherits the face's exact bounds and radius), plus the path's short
+ * label. Only sub-cells of a DIVERGENT slot carry them — a fully-shared
+ * cell belongs to every path and is drawn bare. A sub-cell shared by a
+ * SUBSET of paths carries one mark per member: the wash splits into
+ * vertical stripes and the labels line up left-to-right.
  */
 export type CompareCellPathRail = {
   color: string
@@ -35,9 +39,10 @@ export type CompareCellPathRail = {
   dashed: boolean
   /** Short label ("HP") — see `buildComparePathShortLabels`. */
   label: string
-  /** Full path name, for the rail's tooltip/title. */
+  /** Full path name, for the label's tooltip/title. */
   pathName: string
 }
+
 
 export function CompareCellBlock({
   cellId,
@@ -50,7 +55,7 @@ export function CompareCellBlock({
   selectionContext,
   visualPictures,
   slotCells,
-  pathRail,
+  pathRails,
 }: {
   cellId?: string
   stepIndex: number
@@ -63,7 +68,8 @@ export function CompareCellBlock({
   visualPictures?: Array<{ picture: string; label: string }>
   /** Every cell in a tech slot — one per touchpoint since the split. */
   slotCells?: BlueprintCell[]
-  pathRail?: CompareCellPathRail
+  /** Member paths of a divergent sub-cell — one wash stripe + label each. */
+  pathRails?: readonly CompareCellPathRail[]
 }) {
   const shellPadding = cn(
     compact ? 'px-3' : 'px-3.5',
@@ -86,6 +92,11 @@ export function CompareCellBlock({
     shellPadding,
     isVisual && 'min-h-0 overflow-hidden',
   )
+  // Visual faces are photographs — a colour wash over them reads as a bad
+  // scan, so there the labels alone carry the affiliation.
+  const washStyle = isVisual
+    ? undefined
+    : getPathWashStyle(pathRails?.map((rail) => rail.color))
 
   const innerContent =
     variant === 'visual' ? (
@@ -129,6 +140,7 @@ export function CompareCellBlock({
             <BlueprintTechPill
               key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
+              style={washStyle}
               // Identity is the split's point: each pill carries its own
               // cell in the selection it hands to the panel and the picker.
               selectionContext={
@@ -155,6 +167,7 @@ export function CompareCellBlock({
               item={item}
               compact={compact}
               className="shrink-0"
+              style={washStyle}
             />
           ),
         )}
@@ -170,6 +183,7 @@ export function CompareCellBlock({
         }
         cellId={cellId}
         stepIndex={stepIndex}
+        style={washStyle}
       >
         <p className="w-full whitespace-pre-wrap">{content}</p>
       </BlueprintCellButton>
@@ -177,34 +191,25 @@ export function CompareCellBlock({
 
   return (
     <div className={shellClassName} style={shellStyle}>
-      {pathRail ? (
-        <>
-          {/* Affiliation by TINT, not by rail (plan 2026-08-17-002 U3):
-              the colored side-lines read as noise; a low-alpha wash of the
-              path color over the cell says "this one belongs to that path"
-              without adding a stroke. The short label stays — it is the
-              non-color identification the dashed/solid pairing used to
-              carry (SC 1.4.1). */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute z-[2] rounded-2xl"
-            style={{
-              left: compact ? 12 : 14,
-              right: compact ? 12 : 14,
-              top: compact ? 12 : 16,
-              bottom: flushBottom ? 0 : compact ? 12 : 16,
-              backgroundColor: `color-mix(in oklab, ${pathRail.color} 14%, transparent)`,
-            }}
-          />
-          <span
-            title={pathRail.pathName}
-            className="pointer-events-none absolute left-2.5 top-0 z-[3] font-mono text-3xs font-semibold tabular-nums"
-            style={{ color: pathRail.color }}
-          >
-            {pathRail.label}
-            <span className="sr-only">{` (${pathRail.pathName})`}</span>
-          </span>
-        </>
+      {pathRails && pathRails.length > 0 ? (
+        // Affiliation by WASH (plan 2026-08-17-002 U3, revised): the wash
+        // rides the cell face's own background (see `getPathWashStyle`), so
+        // there is no separate tint box to misalign. The short labels stay —
+        // they are the non-color identification the dashed/solid pairing
+        // used to carry (SC 1.4.1) — one per member path.
+        <span className="pointer-events-none absolute left-2.5 top-0 z-[3] flex gap-1.5">
+          {pathRails.map((rail) => (
+            <span
+              key={rail.label}
+              title={rail.pathName}
+              className="font-mono text-3xs font-semibold tabular-nums"
+              style={{ color: rail.color }}
+            >
+              {rail.label}
+              <span className="sr-only">{` (${rail.pathName})`}</span>
+            </span>
+          ))}
+        </span>
       ) : null}
       {innerContent}
     </div>

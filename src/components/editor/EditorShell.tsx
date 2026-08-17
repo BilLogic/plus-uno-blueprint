@@ -483,7 +483,10 @@ function DesktopEditorShell() {
     // one and shadows it, which is what keeps the two surfaces independent.
     <CanvasModeProvider>
       <div
-        className="relative flex h-svh flex-col overflow-hidden bg-background"
+        // h-full rides the html/body/#root 100% chain — unlike svh units it
+        // tracks the real laid-out viewport in embedded panes that resolve
+        // viewport units against a stale size after a resize.
+        className="relative flex h-full flex-col overflow-hidden bg-background"
         data-editor-shell
       >
         {/* Full-width top nav: workspace identity, Home, open tabs. */}

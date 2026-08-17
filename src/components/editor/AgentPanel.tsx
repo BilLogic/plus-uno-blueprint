@@ -346,7 +346,10 @@ function AgentSessionsView({
   onOpen: (id: string) => void
   onCreate: () => void
 }) {
-  const hydrating = useAgentSessionsHydrating()
+  // canAgent gates the pending flag: without persistence there is nothing
+  // on the wire, so "not yet hydrated" must not read as loading forever.
+  const { canAgent } = useSupabase()
+  const hydrating = useAgentSessionsHydrating() && canAgent
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [todayOpen, setTodayOpen] = useState(true)
@@ -813,7 +816,7 @@ function AgentChatView({
   onBack: () => void
 }) {
   const settings = useAgentSettings()
-  const { client, canWrite } = useSupabase()
+  const { client, canWrite, canAgent } = useSupabase()
   const mode = useCanvasModeValue()
   const { activePathKeys } = usePathSelectionContext()
   const changes = useSyncExternalStore(subscribeToSession, sessionSnapshot)
@@ -836,7 +839,9 @@ function AgentChatView({
     })
   const attachment = usePendingAgentAttachment()
   const { events, running } = useAgentRun(session.id)
-  const transcriptHydrating = useAgentTranscriptHydrating(session.id)
+  // Same canAgent gate as the sessions list: without persistence the
+  // "not yet hydrated" half of the flag would be a forever-skeleton.
+  const transcriptHydrating = useAgentTranscriptHydrating(session.id) && canAgent
   const changeCount = useAgentChangeCount(session.id)
   const [renaming, setRenaming] = useState(false)
   // The slash menu is a portalled popover; this is what it anchors to (and

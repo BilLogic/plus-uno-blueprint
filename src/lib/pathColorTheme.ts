@@ -271,3 +271,34 @@ export function getPathBadgeStyle(path: PathColorInput): {
 export function pathColorKeyToMarkerSuffix(colorKey: string): string {
   return colorKey.replace(/[^a-zA-Z0-9]+/g, '-')
 }
+
+/** Wash alpha — strong enough to read as affiliation at canvas zoom. */
+const PATH_WASH_PERCENT = 24
+
+/**
+ * The merged view's path-affiliation wash, as a `background-image` so it
+ * layers OVER the cell face's own `background-color` and is clipped by its
+ * border radius — the reason the earlier absolutely-positioned tint box
+ * read as a second, misaligned card. One colour paints flat; N colours
+ * (a subset-shared cell) paint N equal vertical stripes.
+ */
+export function getPathWashStyle(
+  colors: readonly string[] | undefined,
+): { backgroundImage: string } | undefined {
+  if (!colors || colors.length === 0) return undefined
+  const mix = (color: string) =>
+    `color-mix(in oklab, ${color} ${PATH_WASH_PERCENT}%, transparent)`
+  if (colors.length === 1) {
+    return {
+      backgroundImage: `linear-gradient(0deg, ${mix(colors[0])}, ${mix(colors[0])})`,
+    }
+  }
+  const stops = colors
+    .map((color, index) => {
+      const from = ((index / colors.length) * 100).toFixed(2)
+      const to = (((index + 1) / colors.length) * 100).toFixed(2)
+      return `${mix(color)} ${from}% ${to}%`
+    })
+    .join(', ')
+  return { backgroundImage: `linear-gradient(90deg, ${stops})` }
+}

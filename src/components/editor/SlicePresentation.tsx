@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react'
+import { CanvasLoadProgress } from '@/components/editor/CanvasLoadProgress'
 import { SlicePresentationLoadingSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { SliceHeaderBand } from '@/components/editor/SliceHeaderBand'
@@ -167,7 +168,22 @@ export function SlicePresentation({
       <DeferredSkeleton
         loading
         holdKey={`present-tab:${sliceId}`}
-        skeleton={<SlicePresentationLoadingSkeleton />}
+        skeleton={
+          <div className="relative h-full min-h-0">
+            <SlicePresentationLoadingSkeleton />
+            {/* Same stage bar the slice tab shows (plan 2026-08-17-001):
+                every canvas-loading surface carries the one progress
+                vocabulary, presentation included. */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <CanvasLoadProgress
+                stages={[
+                  { label: 'Loading slice…', done: result.status !== 'loading' },
+                  { label: 'Loading blueprints…', done: false },
+                ]}
+              />
+            </div>
+          </div>
+        }
         className="h-full min-h-0"
       >
         {null}

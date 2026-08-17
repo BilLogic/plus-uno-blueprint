@@ -201,7 +201,11 @@ export function useAgentTranscriptHydrating(sessionId: string): boolean {
       transcriptHydrationListeners.add(listener)
       return () => transcriptHydrationListeners.delete(listener)
     },
-    () => hydratingTranscripts.has(sessionId),
+    // Pending until the session's ONE hydrate attempt has at least begun
+    // its early-exit checks: an opened session whose hydrate has not run
+    // yet (client still resolving) must read as loading, not "Ready".
+    // Callers gate on canAgent, same as the sessions-list flag.
+    () => hydratingTranscripts.has(sessionId) || !hydrated.has(sessionId),
     () => false,
   )
 }
@@ -216,6 +220,9 @@ export function useAgentTranscriptHydrating(sessionId: string): boolean {
 export async function hydrateAgentTranscript(sessionId: string): Promise<void> {
   if (hydrated.has(sessionId)) return
   hydrated.add(sessionId)
+  // The pending flag above watches `hydrated` too — flush the change even
+  // on the early exits, or the skeleton outlives the load.
+  notifyTranscriptHydration()
   const run = runFor(sessionId)
   if (run.events.length > 0 || run.running) return
   hydratingTranscripts.add(sessionId)

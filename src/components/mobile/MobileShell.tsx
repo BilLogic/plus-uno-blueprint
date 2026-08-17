@@ -257,7 +257,9 @@ export function MobileShell() {
 
   return (
     <CanvasModeProvider>
-      <div className="flex h-svh flex-col overflow-hidden bg-background">
+      {/* min() of the two: h-full tracks embedded panes' real viewport,
+          svh caps below mobile browser chrome. */}
+      <div className="flex h-full max-h-svh flex-col overflow-hidden bg-background">
         <MobileTopBar
           title={title}
           navOpen={navOpen}

@@ -51,6 +51,7 @@ import {
   type CompareModel,
 } from '@/lib/compareSlots'
 import {
+  COMPARE_HEADER_WRAP_EXTRA_INSET,
   COMPARE_PATH_SECTION_BOTTOM_INSET,
   COMPARE_PATH_SECTION_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
@@ -434,11 +435,14 @@ function MergedSectionFrame({
   )
   return (
     <>
+      {/* The merged board is ONE frame, so — like a single-path board —
+          the step-header row lives inside it: no container of its own
+          (plan 2026-08-17-002 U1). */}
       <div
         aria-hidden
         className="pointer-events-none absolute rounded-xl border-2 border-border"
         style={{
-          top: -COMPARE_PATH_SECTION_TOP_INSET,
+          top: -COMPARE_PATH_SECTION_TOP_INSET - COMPARE_HEADER_WRAP_EXTRA_INSET,
           left: -COMPARE_PATH_SECTION_INSET,
           right: -COMPARE_PATH_SECTION_INSET,
           bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
@@ -448,7 +452,7 @@ function MergedSectionFrame({
       <div
         className="pointer-events-auto absolute z-50 flex max-w-[calc(100%-12px)] items-center gap-1.5"
         style={{
-          top: -COMPARE_PATH_SECTION_TOP_INSET,
+          top: -COMPARE_PATH_SECTION_TOP_INSET - COMPARE_HEADER_WRAP_EXTRA_INSET,
           left: COMPARE_PATH_SECTION_INSET + 2,
           transform: 'translateY(-50%)',
         }}
@@ -541,9 +545,18 @@ function MergedLaneRow({
             : assembly.kind === 'shared'
               ? [assembly.representative]
               : assembly.subCells
-        // A shared cell belongs to every path, so it wears no rail. Divergent
-        // and single-path sub-cells do.
+        // A fully-shared cell belongs to every path, so it wears no wash or
+        // labels. Divergent sub-cells — including subset-shared groups — do,
+        // one label (and wash stripe) per member path.
         const withRail = assembly?.kind === 'split'
+        const railsFor = (
+          subCell: MergedSubCell,
+        ): CompareCellPathRail[] | undefined =>
+          withRail
+            ? subCell.pathIds
+                .map((pathId) => runtimeByPathId.get(pathId)?.rail)
+                .filter((rail): rail is CompareCellPathRail => rail !== undefined)
+            : undefined
 
         return (
           <Fragment key={track.key}>
@@ -564,7 +577,7 @@ function MergedLaneRow({
                 variant={variant}
                 compact={compact}
                 flushBottom={flushBottom}
-                withRail={withRail}
+                pathRails={railsFor(subCells[0])}
                 scenarioName={scenarioName}
                 phaseName={phaseName}
               />
@@ -581,7 +594,7 @@ function MergedLaneRow({
                     variant={variant}
                     compact={compact}
                     flushBottom={flushBottom}
-                    withRail={withRail}
+                    pathRails={railsFor(subCell)}
                     scenarioName={scenarioName}
                     phaseName={phaseName}
                   />
@@ -606,7 +619,7 @@ function MergedSubCellBlock({
   variant,
   compact,
   flushBottom,
-  withRail,
+  pathRails,
   scenarioName,
   phaseName,
 }: {
@@ -619,7 +632,8 @@ function MergedSubCellBlock({
   variant: BlueprintCellVariant
   compact?: boolean
   flushBottom?: boolean
-  withRail: boolean
+  /** One entry per member path of this sub-cell (wash stripe + label). */
+  pathRails?: readonly CompareCellPathRail[]
   scenarioName?: string
   phaseName?: string
 }) {
@@ -663,7 +677,7 @@ function MergedSubCellBlock({
       flushBottom={flushBottom}
       visualPictures={visualPictures}
       slotCells={variant === 'pills' ? cells : undefined}
-      pathRail={withRail ? runtime.rail : undefined}
+      pathRails={pathRails}
       selectionContext={
         scenarioName && cellId
           ? {
