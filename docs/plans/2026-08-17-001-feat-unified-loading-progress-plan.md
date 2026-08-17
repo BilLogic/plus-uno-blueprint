@@ -112,14 +112,37 @@ t=0                 250ms                                   ready
 ### Progress semantics — honest ticks only
 
 - The canvas load has **two real stages**: structure (`slidesLoading`) and
-  blueprints (`blueprintsLoading`). Fraction = completed/total, eased by a
-  CSS width transition (~400 ms) so ticks read as motion, not jumps.
+  blueprints (`blueprintsLoading`) — **the same two stages on desktop and
+  mobile** (confirmed 2026-08-17): both shells render `ServiceOverviewView`,
+  so the bar reads identically on both. Fraction = completed/total, eased
+  by a CSS width transition (~400 ms) so ticks read as motion, not jumps.
 - A small head-start floor (8%) so the bar never looks parked at zero.
 - **Never** time-based fill, never 100% before `overviewReady` — the bar
   hits full only in the same commit that swaps content in, and the swap
   fade carries it out.
 - Label names the earliest incomplete stage: "Loading structure…" →
   "Loading blueprints…".
+
+## Benchmark — how Supabase Studio does loading (surveyed 2026-08-17)
+
+Read from `supabase/supabase` `apps/studio` source (components/ui +
+interfaces/layouts):
+
+| Their pattern | What it is | Our equivalent / takeaway |
+|---|---|---|
+| Per-surface skeletons (~15 dedicated `*Skeleton`/`*Loading` components: `EditorMenuListSkeleton`, `RoleRowSkeleton`, `ShimmeringCard`, …) | Placeholders shaped like the real layout, one per surface | Same architecture as `EditorLoadingSkeletons` — **validated**; ours adds camera pre-fit, which they don't need |
+| `Shimmers.tsx` / `shimmering-loader` CSS | Shimmer sweep on skeleton blocks | We pulse; shimmer is a token-level style choice, not structural — optional polish |
+| `ShimmerLine.tsx` — 2 px full-width **indeterminate** line at panel top | Their "loading bar" for streaming/log panels | Alternative composition if the centered Figma-style bar feels heavy; a 2 px line under the top bar carries the same signal at lower volume |
+| `LoadingOpacity.tsx` — stale content dims to 30 % while refetching | Stale-while-revalidate presentation over react-query cache: **refetch never unmounts to skeleton** | Matches our single-commit doctrine; our `useSupabaseQuery` cache + no-remount rule already behaves this way on path/scenario switches |
+| `SonnerProgress` toast (row export) | Their **only determinate** progress — used exactly where real units exist (rows exported / total) | Confirms the honest-units rule: they never put a percentage on a data *fetch*, because fetches have no honest units. Our stage-count (2 real query stages) is the honest unit we do have — coarser than rows, but real |
+
+**Conclusion:** our plan is structurally aligned with Studio's system
+(shaped skeletons + never-regress-to-skeleton + determinate only with real
+units). The one place we go beyond them — a determinate stage bar on first
+canvas load — stays honest because each tick is a completed query, and
+Figma (the user's reference) does the same with download phases. If the
+centered composition proves heavy in review, `ShimmerLine`'s 2 px top-edge
+variant is the fallback with the same wiring.
 
 ## Technical implementation — step by step
 
