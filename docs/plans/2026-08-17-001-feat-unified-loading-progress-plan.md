@@ -1,7 +1,7 @@
 ---
 title: 'feat: Unified loading — determinate progress over the shared skeleton system'
 type: feat
-status: active
+status: completed
 date: 2026-08-17
 ---
 

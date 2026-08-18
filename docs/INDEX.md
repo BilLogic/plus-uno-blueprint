@@ -36,7 +36,6 @@ before treating it as truth), and the **queue** (`todos/`).
 | Coding standards, the Supabase benchmark, tooling traps, how to run and write tests | engineering/standards.md |
 | Set up local dev | README.md |
 | Deploy, rollback, environments, monitoring, troubleshooting | engineering/operations.md |
-| Why was X decided? | decisions/ (then the linked plan for full context) |
 | Is this plan file still true? | its frontmatter `status` + `distilled-into` |
 
 ## Reading paths by role
@@ -68,7 +67,7 @@ before treating it as truth), and the **queue** (`todos/`).
 | design/foundations/typography.md | designers | Type roles and scale (including the sub-xs steps), and the time-marker register that names phases and steps the same way on every surface. |
 | design/interaction.md | designers, developers | The click grammar, canvas modes, panel-as-selection, camera behavior, and the touch contract — what every input gesture means and why. |
 | design/README.md | designers | The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations. |
-| design/responsive.md | designers, developers | The breakpoint contract (this doc is its single owner) — the 768px gate, the view-only mobile shell with reader and Map, tablet stance, semantic zoom, and the deliberate non-goals. |
+| design/responsive.md | designers, developers | The breakpoint contract (this doc is its single owner) — the 768px gate, the view-only desktop-parity mobile shell, tablet stance, semantic zoom, and the deliberate non-goals. |
 | engineering/access-and-security.md | developers | Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments. |
 | engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill sync contract. |
 | engineering/agent-tools.md | developers | The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest. |

@@ -28,7 +28,7 @@ the code is newer; say so and follow the code.
   `.env.local`); **never the service-role key**.
 - Every DB write goes through the wrappers (`authoringRpc.ts`,
   `cellContentMutations.ts`, `cellSpecMutations.ts`,
-  `sliceMutations.ts`) so it lands in the session ledger with a captured
+  `sliceMutations.ts`, `evidenceMutations.ts`) so it lands in the session ledger with a captured
   revert. No raw table writes from components. Deletes are human-only.
 - Watch for literal NUL bytes in generated source (breaks git diffing);
   write the six-character backslash-u0000 escape, never the raw byte.

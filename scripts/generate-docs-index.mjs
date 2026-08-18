@@ -17,7 +17,7 @@ import { join, relative } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const DOCS = join(ROOT, 'docs')
-const REFERENCE_DIRS = ['product', 'design', 'engineering', 'decisions']
+const REFERENCE_DIRS = ['product', 'design', 'engineering']
 
 /** Task-shaped routing — a row per task someone arrives holding, phrased
  * the way they'd ask it. Update alongside any doc move. */
@@ -47,7 +47,6 @@ const ROUTING = [
   ['Coding standards, the Supabase benchmark, tooling traps, how to run and write tests', 'engineering/standards.md'],
   ['Set up local dev', 'README.md'],
   ['Deploy, rollback, environments, monitoring, troubleshooting', 'engineering/operations.md'],
-  ['Why was X decided?', 'decisions/ (then the linked plan for full context)'],
   ['Is this plan file still true?', 'its frontmatter `status` + `distilled-into`'],
 ]
 

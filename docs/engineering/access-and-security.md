@@ -2,7 +2,7 @@
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
 sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # Access and security
@@ -99,6 +99,9 @@ write from a component:
 - `src/lib/cellContentMutations.ts` / `cellSpecMutations.ts` — cell text
   and spec columns via column-level grants; optimistic, the exception.
 - `src/lib/sliceMutations.ts` — slices and frames.
+- `src/lib/evidenceMutations.ts` — evidence rows; same shape as
+  `cellContentMutations` (direct table write under row grants, recorded in
+  the session ledger with a captured inverse).
 
 What the wrappers buy, and why bypassing them is never acceptable:
 

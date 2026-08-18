@@ -1,8 +1,8 @@
 ---
 audience: designers, developers
 summary: Which primitive for what, the drawer/sheet posture contract (this doc is its single owner), badges and segmented controls, and the empty/loading/error visual recipes.
-sources: src/components/ui/, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/mobile/MobileScenarioReader.tsx, src/components/EditorErrorBoundary.tsx
-last-reviewed: 2026-08-08
+sources: src/components/ui/, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobileAgentSheet.tsx, src/components/EditorErrorBoundary.tsx
+last-reviewed: 2026-08-18
 ---
 
 # Components
@@ -20,7 +20,7 @@ of primitives → a new primitive argued in the PR. Highlights:
 | Choice among few | `toggle-group` (segmented), `tabs` |
 | Overlay, blocking | `dialog` |
 | Overlay, anchored | `popover`, `dropdown-menu`, `context-menu`, `tooltip` |
-| Edge panel | `sheet` (mobile nav, mobile agent), `drawer` (cell detail, reader cell sheet) |
+| Edge panel | `sheet` (mobile nav, mobile agent), `drawer` (cell detail) |
 | Loading | `deferred-skeleton`, `skeleton`, `spinner` (`DelayedSpinner`) |
 | Structure | `sidebar`, `separator`, `card`, `badge` |
 
@@ -47,8 +47,10 @@ owner of the contract (engineering docs link here):
 - Surface switches inside an open drawer are content swaps at the same tree
   position — never close-reopen.
 - **Snap points require a `defaultSnapPoint`.** A drawer given `snapPoints`
-  without a default opens at an arbitrary state; the reader's cell sheet
-  (`MobileScenarioReader.tsx`) is the pattern — peek by default, drag to full.
+  without a default opens at an arbitrary state — pass both or neither
+  through the `drawer` primitive (`src/components/ui/drawer.tsx`). No current
+  surface uses snap points; the mobile reader that did was deleted
+  2026-08-17.
 
 Agent dock docked/floating is the same one-component-two-postures precedent.
 

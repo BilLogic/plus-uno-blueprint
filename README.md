@@ -8,7 +8,8 @@ under the same rules as humans.
 
 Built with React + Vite, [shadcn/ui](https://ui.shadcn.com/) (base-ui
 flavor), and [Supabase](https://supabase.com/). Desktop is the full
-editor; phones get a view-only journey reader with a touch map.
+editor; phones get the same canvas, view-only and scoped to one phase
+at a time.
 
 **Start here → [`docs/INDEX.md`](docs/INDEX.md)** — the documentation
 map, routed by task. Quick picks:

@@ -1,7 +1,7 @@
 ---
 title: 'feat: Canvas container anatomy — one spec for frames, headers, focus, and zoom'
 type: feat
-status: active
+status: completed
 date: 2026-08-17
 ---
 

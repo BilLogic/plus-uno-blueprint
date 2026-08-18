@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations.
-sources: docs/plans/2026-08-04-001-refactor-supabase-design-system-alignment-plan.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, docs/plans/2026-08-08-002-feat-desktop-ui-refinements-plan.md, src/styles/
-last-reviewed: 2026-08-08
+sources: docs/plans/2026-08-04-001-refactor-supabase-design-system-alignment-plan.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, docs/plans/2026-08-08-002-feat-desktop-ui-refinements-plan.md, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md, src/styles/
+last-reviewed: 2026-08-18
 ---
 
 # Design — the point of view
@@ -62,13 +62,14 @@ mode wraps the same view in a dark stage (`.dark` on a subtree, which is why
 the semantic layer re-derives per scope). Signature: *the slice dim*. See
 [color](foundations/color.md) and [motion](foundations/motion.md).
 
-**Mobile shell.** Below the breakpoint the 2-D board folds into a 1-D vertical
-journey — the reader is the default, the touch canvas ("Map") is opt-in, and
-everything is view-only for every tier. Signature: *the fold*. See
+**Mobile shell.** Below the breakpoint the phone shows the same canvas as
+desktop, scoped to one phase at a time — navigation is a camera move, a
+single-select path pill replaces the PATHS checkboxes, and everything is
+view-only for every tier. Signature: *the phase-scoped camera*. See
 [responsive](responsive.md), which owns the whole contract.
 
-**The agent panel.** Docked to the sidebar or floating; full-screen sheet on
-mobile. Its canvas annotations draw in a named, tokenized red ink no human
+**The agent panel.** Docked to the sidebar or floating; a bottom sheet on
+mobile, entered through a floating action button. Its canvas annotations draw in a named, tokenized red ink no human
 swatch offers, so "the agent drew this" is legible at a glance. Signature:
 *the agent's ink*. See [color](foundations/color.md) and
 [content-voice](content-voice.md) for its voice.

@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: Type roles and scale (including the sub-xs steps), and the time-marker register that names phases and steps the same way on every surface.
-sources: src/styles/theme.css, src/styles/base.css, src/types/nav.ts, src/components/editor/CanvasPhaseSection.tsx, src/components/mobile/MobileScenarioReader.tsx, src/components/mobile/MobileShell.tsx
-last-reviewed: 2026-08-08
+sources: src/styles/theme.css, src/styles/base.css, src/types/nav.ts, src/components/editor/CanvasPhaseSection.tsx
+last-reviewed: 2026-08-18
 ---
 
 # Typography
@@ -38,14 +38,13 @@ The one deliberate typographic voice in the app: **mono + uppercase +
 built by one helper, `ordinalLabel` in `src/types/nav.ts`, which is what makes
 "these surfaces name time the same way" structural rather than aspirational.
 
-It governs exactly these elements:
+It governs exactly one element today:
 
 - **Canvas phase badges** — the `ScenarioTitleBadge` on each phase frame
   (`CanvasPhaseSection.tsx`), which also counter-scales to stay legible at the
-  semantic-zoom blocks tier.
-- **Mobile reader step eyebrows** — the sticky `StepEyebrow` in
-  `MobileScenarioReader.tsx`.
-- **Nav-sheet phase rows** — the journey index in `MobileShell.tsx`.
+  semantic-zoom blocks tier. (The mobile reader's step eyebrows carried the
+  register too until the reader was deleted 2026-08-17; the shared canvas
+  now serves phones, so the badges are the register's one home.)
 
 Why it exists: phases and steps ARE ordered sequences in time, so **the
 ordinal is information, not decoration**. That is also the register's limit —
