@@ -1,7 +1,7 @@
 ---
 title: "feat: Compare v3 — Stacked & Merged views (branch canvas, difference ledger, divergence strip)"
 type: feat
-status: active
+status: completed
 date: 2026-08-06
 origin: docs/ideation/2026-08-04-compare-view-v3-ideation.md
 ---

@@ -1,8 +1,9 @@
 ---
 title: "feat: mobile shell implementation — menu-driven surfaces, agent workspace, crash fixes"
 type: feat
-status: active
+status: completed
 date: 2026-08-16
+distilled-into: docs/design/responsive.md
 origin: docs/plans/2026-08-16-001-feat-mobile-navigation-model-plan.md
 ---
 
