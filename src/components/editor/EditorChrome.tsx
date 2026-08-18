@@ -1,5 +1,6 @@
 import { Home, PanelLeft, Play } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
@@ -55,7 +56,7 @@ type HomeNavButtonProps = {
   size?: 'icon-sm' | 'icon-xs'
 }
 
-/** Route back to the overview canvas from the tab strip. */
+/** Route back to the cover page from the tab strip. */
 export function HomeNavButton({
   isActive = false,
   onClick,
@@ -63,7 +64,7 @@ export function HomeNavButton({
   size = 'icon-xs',
 }: HomeNavButtonProps) {
   return (
-    <IconTooltip label="Back to the overview canvas" side="bottom">
+    <IconTooltip label="Back to the cover page" side="bottom">
       <Button
         type="button"
         variant="ghost"
@@ -90,24 +91,26 @@ export function WorkspaceBadges() {
       {/* Writing with the local authoring key is a privileged state that
           looks exactly like the read-only app otherwise. Say so. */}
       {isDevAuthoring ? (
-        <span
-          className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-3xs font-medium text-amber-700 dark:text-amber-400"
+        <Badge
+          variant="warning"
+          className="h-auto px-1.5 py-0.5 text-3xs"
           title="Local authoring key in use — writes go to the live database"
         >
           authoring
-        </span>
+        </Badge>
       ) : null}
       {/* The opposite state, and it must not look like the one above: the Edit
           surfaces are visible so they can be worked on, and every write will
           be refused. Amber says "careful, this is live"; slate says "nothing
           you do here lands". */}
       {isEditPreview ? (
-        <span
-          className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-3xs font-medium text-muted-foreground"
+        <Badge
+          variant="secondary"
+          className="h-auto bg-muted px-1.5 py-0.5 text-3xs text-muted-foreground"
           title="Edit UI preview — no authoring key, so writes will be refused"
         >
           edit preview
-        </span>
+        </Badge>
       ) : null}
     </>
   )
@@ -149,7 +152,7 @@ export function FloatingSidebarPill({ onExpand }: { onExpand: () => void }) {
             <Button
               type="button"
               size="sm"
-              className="ml-0.5 h-6 shrink-0 px-2 text-[0.7rem]"
+              className="ml-0.5 h-6 shrink-0 px-2 text-2xs"
               onClick={summary.action.onClick}
             >
               <Play className="size-3" aria-hidden />
