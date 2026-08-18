@@ -2,7 +2,7 @@
 audience: everyone
 summary: The zero-background guide — find a scenario, read a journey, use a phone, ask the assistant, share links, and present to stakeholders.
 sources: docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, src/components/editor/SidebarNav.tsx, src/components/editor/SlicePresentation.tsx, src/lib/urlViewState.ts
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # Team guide
@@ -21,7 +21,7 @@ mapped inside it.
   scenario to open its board. Once a scenario is open, its journey variants
   (paths) appear in the sidebar too.
 - **On a phone**, tap the menu button (top left) to get the same list, then
-  tap a scenario to open its journey.
+  tap a scenario to open its board.
 
 ## Read a journey top to bottom
 
@@ -41,13 +41,13 @@ moment, who does it, what it depends on, and the research behind it.
 
 ## On a phone
 
-The phone doesn't shrink the desktop board — it refolds it. Scrolling down
-**is** moving forward through the journey: each step appears as a card, with
-the customer-visible part on top, the line of visibility drawn across it,
-and the behind-the-scenes part below. Tap a cell for its details; tap
-**Map** to see the full 2-D board, where you can pinch to zoom and drag to
-pan. Everything on a phone is **view-only** for everyone — editing is a
-desktop activity.
+The phone shows the same board as desktop, one stage at a time — picking a
+scenario from the menu frames its stretch of the map. Pinch to zoom and
+drag to pan; tap a cell and its details slide up from the bottom. The pill
+in the top bar switches which path you're reading (one at a time on a
+phone), and **Reset View** at the bottom reframes the board if you lose it.
+Everything on a phone is **view-only** for everyone — editing is a desktop
+activity.
 
 ## Ask the assistant
 

@@ -2,7 +2,7 @@
 audience: designers
 summary: Flat by default — elevation is a lightness ladder, shadows are rare and tokenized, and the z-index bands are a short fixed map.
 sources: src/styles/semantic.css, src/styles/theme.css, src/components/editor/EditorShell.tsx, src/components/mobile/MobileShell.tsx
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # Elevation
@@ -40,10 +40,10 @@ Small fixed bands, not an arms race. The shell's map:
 
 | Band | Belongs to |
 |---|---|
-| `z-10` | In-surface pins: phase badges on the canvas, sticky reader eyebrows |
+| `z-10` | In-surface pins: phase badges on the canvas |
 | `z-20` | Shell columns — the sidebar over the canvas edge |
-| `z-30` | Shell furniture over content: the sidebar resize handle, corner overlays |
-| `z-40` | Full-screen takeovers: the mobile Map overlay |
+| `z-30` | Shell furniture over content: the sidebar resize handle, corner overlays, the mobile agent FAB and Reset View |
+| `z-40` | Full-screen takeovers: the mobile slice-presentation overlay, the agent's floating window |
 | `z-50` | Topmost transients: menus, popovers, tooltips (the primitives' default), canvas flow arrows |
 
 Rules: pick the band by *role*, never bump a value to win a local fight — a

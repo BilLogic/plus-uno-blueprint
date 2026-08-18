@@ -80,8 +80,8 @@ real type-check.
   six-character backslash-u0000 escape (`\` `u` `0` `0` `0` `0`), never the raw byte.
 - base-ui triggers take a `render={...}` prop, **not** `asChild`.
 - base-ui `Drawer` snap points: `snapPoints` alone does nothing you can
-  feel — `defaultSnapPoint` is the missing piece (see
-  `MobileScenarioReader.tsx`'s cell sheet for the working pair).
+  feel — `defaultSnapPoint` is the missing piece; pass both or neither
+  (`src/components/ui/drawer.tsx` forwards them).
 - After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.
 - The whole-board canvas has a decoded-image memory budget — read
   [architecture](architecture.md#performance-constraints) before adding

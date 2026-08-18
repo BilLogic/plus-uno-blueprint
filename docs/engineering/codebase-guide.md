@@ -19,7 +19,7 @@ enough that "nearest feature" is always findable.
 | `src/components/ui/` | The design system — shadcn, base-ui flavor. Compose these; never hand-roll a primitive that exists. Missing one? Add via the shadcn CLI. |
 | `src/components/blueprint/` | The board itself: cells, arrows, the cell detail panel, compare surfaces, walkthroughs. |
 | `src/components/editor/` | The shell around the board: sidebar, tabs, canvas chrome, dialogs, the agent dock, slice editing. |
-| `src/components/mobile/` | The phone shell: `MobileShell` + `MobileScenarioReader`. View-only by design. |
+| `src/components/mobile/` | The phone shell: `MobileShell` + its chrome (top bar, nav sheet, agent sheet, path pill). View-only by design; the canvas itself is shared with desktop. |
 | `src/lib/` | Plain logic, no React: layout math, mutations, the authoring session ledger, `agent/` (the in-app agent). |
 | `src/hooks/` | Data hooks (thin wrappers over `useSupabaseQuery`) and viewport/interaction hooks. |
 | `src/contexts/` | Providers and module stores. Files ending in lowercase (`canvasModeContext.ts`) are stores non-React code can read; `*Provider.tsx` files are React-only. |

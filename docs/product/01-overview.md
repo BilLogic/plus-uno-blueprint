@@ -2,7 +2,7 @@
 audience: everyone
 summary: What uno-blueprint is in plain words, who it is for, the surfaces at a glance, and who can look vs. edit.
 sources: docs/plans/2026-08-06-001-plan-access-model-three-personas.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, src/components/editor/EditorShell.tsx
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # What uno-blueprint is
@@ -38,7 +38,7 @@ readable by an AI assistant that can answer questions about it.
 | **Compare** | Two or more versions of a journey side by side, to see where they differ. |
 | **Slices** | Short, focused cuts of the map made for one audience — e.g. just the student's journey. |
 | **Presentation** | A full-screen, frame-by-frame way to walk an audience through a slice. |
-| **Phone view** | The same map, refolded into a top-to-bottom journey you scroll through. |
+| **Phone view** | The same map, one stage at a time — pick a scenario from the menu, pan and pinch, view-only. |
 | **The assistant** | An AI panel that reads the same map and can navigate, point, and explain ([doc 04](04-the-assistant-and-audits.md)). |
 
 ## Who can do what

@@ -2,7 +2,7 @@
 audience: developers
 summary: How the app fits together — provider stack, module stores, the canvas stack, data flow, the mobile fork, and the performance constraints that shape all of it.
 sources: src/App.tsx, src/components/editor/EditorShell.tsx, src/hooks/useZoomPanViewport.ts, src/hooks/useSupabaseQuery.ts, src/lib/queryClient.ts, src/lib/agent/placement.ts, commit 5911a95
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # Architecture
@@ -31,9 +31,10 @@ EditorErrorBoundary → EditorShell
 ## The shell fork
 
 `EditorShell` (`src/components/editor/EditorShell.tsx`) is one breakpoint
-deciding which app this is: below `md` the view-only `MobileShell`
-(journey reader + touch map), at or above it the desktop editor —
-byte-for-byte the pre-mobile tree. The check is **synchronous**
+deciding which app this is: below `md` the view-only `MobileShell` — the
+same desktop-parity canvas, scoped to the selected phase, behind mobile
+chrome (top bar, nav drawer, agent sheet) — at or above it the desktop
+editor, byte-for-byte the pre-mobile tree. The check is **synchronous**
 (`matchMedia` through `useSyncExternalStore`, `src/hooks/useMobileShell.ts`)
 so a phone never mounts the desktop canvas for even one frame. The
 breakpoint contract itself is owned by `design/responsive.md`.

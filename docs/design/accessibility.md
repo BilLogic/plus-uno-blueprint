@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: The accessibility bar — forced-colors restatements, reduced motion everywhere, the global focus catch-all, aria state on toggles, 44px targets, and plain screen-reader names.
-sources: src/styles/base.css, src/styles/blueprint.css, src/styles/animations.css, src/components/editor/CanvasPhaseSection.tsx, src/components/mobile/MobileScenarioReader.tsx, src/lib/canvasAnnotations.ts
-last-reviewed: 2026-08-08
+sources: src/styles/base.css, src/styles/blueprint.css, src/styles/animations.css, src/components/editor/CanvasPhaseSection.tsx, src/components/blueprint/BlueprintLabelRail.tsx, src/lib/canvasAnnotations.ts
+last-reviewed: 2026-08-18
 ---
 
 # Accessibility
@@ -71,9 +71,10 @@ Visual registers are visual; accessible names stay plain:
   the content.
 - Annotation swatches announce human color names ("Red") via
   `annotationSwatchName`, never their token strings.
-- The reader's line-of-visibility divider is a single `role="separator"` with
-  `aria-label="Line of visibility"`; its rules and repeated visible text are
-  `aria-hidden` — AT hears the separator **once**.
+- The canvas divider rows (line of visibility and the interaction lines,
+  `BlueprintLabelRail.tsx`) are each a single `role="separator"` carrying the
+  divider's name; their rules and sticky visible labels are `aria-hidden` —
+  AT hears each separator **once**.
 
 The general rule: decorative repetition and typographic dressing are
 `aria-hidden`; every meaningful element has exactly one plain name.

@@ -46,7 +46,7 @@ components are review-blockers.
 **Every animation has a reduced path, and an instant swap is an acceptable
 one.** The `prefers-reduced-motion` block in `animations.css` zeroes the
 transitions and strips travel (surfaces appear/disappear; they never move);
-camera flights jump; the mobile fold cross-fades instead of transforming.
+camera flights jump.
 JS reads the preference **live** via `prefersReducedMotion()` — never cached
 at mount — because the OS setting can change mid-session. A new animation
 ships with its reduced path in the same PR or it does not ship.

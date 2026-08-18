@@ -1,7 +1,7 @@
 ---
 audience: designers
 summary: Lucide only, small glyphs on generous hit areas, and the rule that an icon carrying meaning always has a text name.
-sources: src/components/ui/, src/components/mobile/MobileShell.tsx, src/lib/canvasAnnotations.ts
+sources: src/components/ui/, src/components/mobile/MobileTopBar.tsx, src/lib/canvasAnnotations.ts
 last-reviewed: 2026-08-08
 ---
 
@@ -29,7 +29,7 @@ its touchable area are two different things:
 - On desktop, the `Button` icon variants supply comfortable padding around a
   `size-4` glyph.
 - On touch surfaces, targets must be at least 44px square. The pattern is the
-  mobile top bar (`MobileShell.tsx`): `size-11` buttons (44px) carrying
+  mobile top bar (`MobileTopBar.tsx`): `size-11` buttons (44px) carrying
   `size-4`–`size-5` glyphs. Never grow the glyph to grow the target.
 
 The 44px floor is part of the accessibility bar — see

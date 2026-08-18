@@ -2,7 +2,7 @@
 audience: designers
 summary: UI copy rules, error and empty-state wording, the agent's honest voice, and the naming conventions the interface must keep straight.
 sources: src/lib/agent/uiBridge.ts, src/lib/viewTypeVocabulary.ts, src/components/mobile/MobileShell.tsx, src/types/nav.ts
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # Content and voice
@@ -48,9 +48,12 @@ users' vocabulary, active voice, no internals.
 The words the interface must keep straight — one name per concept, spelled
 the same everywhere:
 
-- **Journey / Map** — the mobile reader's two views. "Journey" is the
-  vertical reader; "Map" is the touch canvas. Never "canvas", "board view",
-  or "reader mode" in mobile UI copy.
+- **The phone has no view names.** The mobile shell shows the same canvas as
+  desktop, so mobile copy names the same things desktop does — "phase",
+  "scenario", "path", "slice" — plus "the menu" for the drawer
+  (`MobileNavSheet`'s surfaces are titled "Blueprints" and "Slices", matching
+  the desktop rail). Never revive the retired "Journey"/"Map"/"reader"
+  vocabulary — those views no longer exist.
 - **Stacked / Merged** — the compare view names shown in UI. The database
   keeps the historical tokens `side-by-side` / `integrated`; the two
   vocabularies meet only at the read seam (`src/lib/viewTypeVocabulary.ts`),

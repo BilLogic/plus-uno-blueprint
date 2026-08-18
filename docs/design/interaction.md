@@ -69,8 +69,8 @@ contract in short:
 
 ## The touch contract
 
-Owned by `useZoomPanViewport.ts`; the reader's scroll surface is ordinary
-page scroll, this contract governs the Map/canvas:
+Owned by `useZoomPanViewport.ts`; this contract governs the canvas on any
+touch screen — on a phone the canvas is the whole surface:
 
 - **Tap opens.** A finger that lifts inside the slop is a tap and behaves as
   a (bare) click.

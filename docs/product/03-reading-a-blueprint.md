@@ -2,7 +2,7 @@
 audience: everyone
 summary: The vocabulary — phases, scenarios, paths, lanes, the line of visibility, steps, cells, triggers vs needs, slices, and findings.
 sources: src/lib/agent/skill/references/layer-roles.md, src/lib/agent/skill/references/lane-vocabulary.md, src/components/blueprint/ServiceBlueprintGrid.tsx
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-18
 ---
 
 # Reading a blueprint
@@ -42,13 +42,12 @@ visibility** — a horizontal rule across the whole board. Above it: what the
 customer experiences. Below it: the machinery — everything that has to
 happen for the moment above to feel effortless. Most service problems live
 in the mismatch across this line, which is why the app never lets you lose
-sight of it — even the phone view redraws it inside every step.
+sight of it — it runs across the board on every screen, phones included.
 
 ## Steps
 
 **Steps** are the board's columns: time, left to right. Step 1 happens
-before step 2. On a phone the time axis rotates — steps run top to bottom,
-and scrolling down is moving forward through the journey.
+before step 2 — on every screen, phones included.
 
 ## Cells
 
