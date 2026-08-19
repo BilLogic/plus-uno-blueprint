@@ -334,7 +334,11 @@ export function ResizableComparePanel({
         ref={scrollContainerRef}
         className={cn(
           'min-h-0 flex-1 overflow-hidden',
-          contentFitsWithPadding && !lockHeight && 'flex flex-col justify-center',
+          // Short content centers in a height-locked panel (a shared phase
+          // row) instead of top-aligning over a block of gray. The old
+          // condition also required `!lockHeight`, which the flag's own
+          // definition contradicts — so the centering never applied anywhere.
+          contentFitsWithPadding && 'flex flex-col justify-center',
         )}
         style={{
           paddingTop: ARROW_VIEWPORT_PAD + scrollInsetY,

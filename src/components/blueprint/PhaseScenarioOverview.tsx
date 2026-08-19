@@ -347,6 +347,18 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
       {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
         const scenarioViewType = resolveViewType(scenario)
+        /*
+          The focused scenario opts out of the shared-row height contract in
+          BOTH directions. The measurement hook already keeps it from driving
+          its dimmed siblings' locked height — but the locked height was
+          still being passed back INTO it, so a focused Merged view (about
+          one band tall) sat inside a panel pinned to its tallest sibling,
+          with the difference rendered as dead gray below the grid. The
+          camera frames this panel edge-to-edge, which put that gray in the
+          middle of the screen. Focused, the panel hugs its own content;
+          the row contract resumes when focus leaves.
+        */
+        const scenarioFocused = focusedScenarioId === scenario.id
 
         return (
           <Fragment key={scenario.id}>
@@ -357,13 +369,13 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={rowPanelHeight}
+              lockedPanelHeight={scenarioFocused ? undefined : rowPanelHeight}
               fixedSwimlaneBodyHeight={
-                scenarioViewType === 'single'
+                scenarioViewType === 'single' && !scenarioFocused
                   ? sharedSwimlaneBodyHeight
                   : undefined
               }
-              lockPanelHeight={alignPanelHeights}
+              lockPanelHeight={scenarioFocused ? false : alignPanelHeights}
               displayViewType={scenarioViewType}
               onNavigate={() => openDetail(scenario.id)}
               dimmed={
@@ -371,7 +383,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
                 (focusedScenarioId !== null &&
                   focusedScenarioId !== scenario.id)
               }
-              focusActive={focusedScenarioId === scenario.id}
+              focusActive={scenarioFocused}
               getScenarioDisplayViewType={getScenarioDisplayViewType}
             />
 

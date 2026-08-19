@@ -317,6 +317,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    */
   const hasFittedRef = useRef(false)
   /**
+   * True while the resetKey effect's settle loop is waiting for the fit
+   * target's layout to go quiet. The resize observer's owed-fit branch
+   * defers to it — see the loop for why.
+   */
+  const fitSettlingRef = useRef(false)
+  /**
    * Latest semantic threshold, so the post-fit badge re-stamp can read it
    * without making `fitToView` depend on (and re-create itself for) a prop
    * that changes nothing about how a fit is computed.
@@ -715,20 +721,62 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     // cleared between scheduling this fit and the frame it runs on.
     const animate = animateFitRef.current
     pendingFitAnimateRef.current = animate
-    let frame1 = 0
-    let frame2 = 0
-    const runFit = () => runPendingFit(animate)
 
-    frame1 = requestAnimationFrame(() => {
-      frame2 = requestAnimationFrame(runFit)
-    })
+    /*
+      Fit when the TARGET has stopped changing size, not on a fixed clock.
 
-    // Backstop for content that hasn't laid out within two frames.
-    const timeout = window.setTimeout(runFit, 150)
+      The old schedule (two frames, 150 ms backstop) fit against whatever
+      had laid out by then — and a comparison panel is mid-measurement
+      right then: its content mounts in one commit, a ResizeObserver
+      measures it, and the panel takes its real size a commit later. A
+      path toggled onto a focused scenario therefore eased toward a
+      half-grown panel, and the growth correction afterwards landed as a
+      visible snap on top of the ease — the "zoom messes up the page".
+      Waiting for two consecutive frames to measure the same target size
+      costs one frame on already-stable boards and buys a single clean
+      ease against final geometry everywhere else.
+
+      `fitSettlingRef` tells the resize observer's owed-fit branch to stay
+      out while this loop is watching — that branch re-fires the pending
+      fit on any content resize, which is precisely the mid-layout moment
+      this loop exists to wait out.
+    */
+    fitSettlingRef.current = true
+    let frame = 0
+    let lastSize: { width: number; height: number } | null = null
+    const runFit = () => {
+      fitSettlingRef.current = false
+      runPendingFit(animate)
+    }
+    const step = () => {
+      const content = contentRef.current
+      const target =
+        content?.querySelector<HTMLElement>(fitSelector) ?? content
+      const size = target
+        ? { width: target.offsetWidth, height: target.offsetHeight }
+        : null
+      if (
+        size &&
+        lastSize &&
+        Math.abs(size.width - lastSize.width) <= 1 &&
+        Math.abs(size.height - lastSize.height) <= 1
+      ) {
+        runFit()
+        return
+      }
+      lastSize = size
+      frame = requestAnimationFrame(step)
+    }
+    frame = requestAnimationFrame(step)
+
+    // Backstop for content that will not go quiet in time — the ease is
+    // 420 ms, and a fit that starts later than this reads as a hang. Late
+    // growth after it is the resize observer's correction to make.
+    const timeout = window.setTimeout(runFit, 250)
 
     return () => {
-      cancelAnimationFrame(frame1)
-      cancelAnimationFrame(frame2)
+      fitSettlingRef.current = false
+      cancelAnimationFrame(frame)
       window.clearTimeout(timeout)
     }
   }, [resetKey, fitSelector, runPendingFit])
@@ -768,15 +816,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (userAdjustedViewRef.current) return
 
       // A fit that is still owed takes priority over every policy below: the
-      // resetKey fit retries twice by frame and once at 150ms, and on a heavy
-      // mount all three fire before the grid has laid out — after which this
-      // observer used to be the only agent left, and the refit branch never
-      // ran it. A viewport that has never framed anything has nothing to
-      // preserve; re-centering a camera that does not exist yet is not a
-      // policy question. This is how Edit mode ended up permanently at
-      // identity zoom over an empty corner.
+      // resetKey fit's settle loop and backstop can all pass before a heavy
+      // mount's grid has laid out — after which this observer is the only
+      // agent left, and the refit branch never ran it. A viewport that has
+      // never framed anything has nothing to preserve; re-centering a camera
+      // that does not exist yet is not a policy question. This is how Edit
+      // mode ended up permanently at identity zoom over an empty corner.
+      //
+      // NOT while the settle loop is still watching: these observations are
+      // the very mid-layout growth it is waiting out, and fitting from here
+      // is exactly the premature fit the loop exists to prevent.
       if (pendingFitRef.current) {
-        runPendingFit(pendingFitAnimateRef.current)
+        if (!fitSettlingRef.current) {
+          runPendingFit(pendingFitAnimateRef.current)
+        }
         return
       }
 
