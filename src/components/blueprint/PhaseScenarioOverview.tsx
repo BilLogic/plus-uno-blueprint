@@ -13,6 +13,7 @@ import type { PathListItem } from '@/lib/pathSelection'
 import { COMPARE_MIN_PANEL_HEIGHT } from '@/lib/sideBySideCompareLayout'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { OVERVIEW_SCENARIO_GAP } from '@/lib/overviewLayout'
+import { resolveScenarioPanelHeight } from '@/lib/phaseRowPanelHeight'
 import { SUBSLIDE_GAP } from '@/lib/slideLayout'
 import {
   getSlideDisplayLabel,
@@ -211,9 +212,43 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     The row still aligns whenever nothing is focused, which is the state the
     contract exists for — a row of peers read side by side at overview zoom.
   */
+  const selectedPathIdsFor = useCallback(
+    (scenario: { id: string }) => {
+      const paths = pathsByScenario.get(scenario.id) ?? []
+      return getSelectedPathIdsProp
+        ? getSelectedPathIdsProp(scenario.id, paths)
+        : defaultSelectedPathIds(paths)
+    },
+    [pathsByScenario, getSelectedPathIdsProp],
+  )
+
+  /*
+    Is the focused scenario showing MORE than its default path selection?
+
+    That, not focus itself, is what the exclusion is for. Focus alone must
+    change no geometry — and excluding a panel changes the row height, which
+    is a geometry change. Gating on the expansion gives both invariants at
+    once: a plain focus leaves every number in the row exactly where it was,
+    and a comparison opened inside the focused panel still cannot reach its
+    dimmed neighbours.
+  */
+  const focusedScenarioExpanded = useMemo(() => {
+    if (focusedScenarioId === null) return false
+    const scenario = scenarios.find((item) => item.id === focusedScenarioId)
+    if (!scenario) return false
+    const paths = pathsByScenario.get(scenario.id) ?? []
+    const selected = [...selectedPathIdsFor(scenario)].sort().join(',')
+    const fallback = [...defaultSelectedPathIds(paths)].sort().join(',')
+    return selected !== fallback
+  }, [focusedScenarioId, scenarios, pathsByScenario, selectedPathIdsFor])
+
+  /** Whose height feeds the row's shared number. */
   const rowHeightScenarios = useMemo(
-    () => scenarios.filter((scenario) => scenario.id !== focusedScenarioId),
-    [scenarios, focusedScenarioId],
+    () =>
+      focusedScenarioExpanded
+        ? scenarios.filter((scenario) => scenario.id !== focusedScenarioId)
+        : scenarios,
+    [scenarios, focusedScenarioId, focusedScenarioExpanded],
   )
 
   const sharedSwimlaneBodyHeight = useMemo(() => {
@@ -263,6 +298,9 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
         paths,
         selectedPathIds,
         blueprintsByPathId,
+        // Aligned row panels are height-locked: no resize handle, so no
+        // handle chrome in the placeholder either.
+        scrollChrome: { lockHeight: alignPanelHeights },
       })
     })
     const height = Math.max(0, ...heights)
@@ -270,6 +308,83 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   }, [
     alignPanelHeights,
     rowHeightScenarios,
+    pathsByScenario,
+    blueprintsByPathId,
+    getSelectedPathIdsProp,
+    resolveViewType,
+  ])
+
+  /*
+    The focused panel's OWN floor, so that excluding it above cannot shrink
+    it.
+
+    The exclusion answers "whose height may drive the SIBLINGS". It was
+    silently answering a second question too — "how tall is the focused
+    panel" — and getting it wrong whenever the focused scenario was the
+    tallest in its row. Measured on the Application row: overview locked
+    every panel to 1766px (Discovery's own estimate, the row maximum);
+    focusing Discovery dropped the shared height to 1730px (the sibling's
+    estimate) and Discovery shrank 36px, because its own rendered content
+    measures under the estimate and so never grew the panel back. That 36px
+    is the padding jump between a phase view and the scenario view.
+
+    Handing the focused panel `max(rowHeight, itsOwnEstimate)` restores the
+    exact number it had at overview — the row maximum is by definition the
+    larger of "the siblings' maximum" and "its own estimate" — while the
+    siblings keep the height computed WITHOUT it. Both invariants hold at
+    once: focus changes no geometry, and a comparison opened inside a
+    focused scenario still cannot inflate its dimmed neighbours.
+  */
+  const focusedPanelHeightFloor = useMemo(() => {
+    if (!alignPanelHeights || focusedScenarioId === null) return undefined
+    if (!focusedScenarioExpanded) return undefined
+    const scenario = scenarios.find((item) => item.id === focusedScenarioId)
+    if (!scenario) return undefined
+    const paths = pathsByScenario.get(scenario.id) ?? []
+    const selectedPathIds = getSelectedPathIdsProp
+      ? getSelectedPathIdsProp(scenario.id, paths)
+      : defaultSelectedPathIds(paths)
+    const height = getScenarioBlueprintPanelHeight({
+      displayViewType: resolveViewType(scenario),
+      paths,
+      selectedPathIds,
+      blueprintsByPathId,
+      scrollChrome: { lockHeight: alignPanelHeights },
+    })
+    return height > 0 ? height : undefined
+  }, [
+    alignPanelHeights,
+    focusedScenarioId,
+    focusedScenarioExpanded,
+    scenarios,
+    pathsByScenario,
+    blueprintsByPathId,
+    getSelectedPathIdsProp,
+    resolveViewType,
+  ])
+
+  /** The same restoration for the single-view lane body. */
+  const focusedSwimlaneBodyFloor = useMemo(() => {
+    if (!alignPanelHeights || focusedScenarioId === null) return undefined
+    if (!focusedScenarioExpanded) return undefined
+    const scenario = scenarios.find((item) => item.id === focusedScenarioId)
+    if (!scenario) return undefined
+    const paths = pathsByScenario.get(scenario.id) ?? []
+    const selectedPathIds = getSelectedPathIdsProp
+      ? getSelectedPathIdsProp(scenario.id, paths)
+      : defaultSelectedPathIds(paths)
+    const height = getScenarioSwimlaneBodyHeight({
+      displayViewType: resolveViewType(scenario),
+      paths,
+      selectedPathIds,
+      blueprintsByPathId,
+    })
+    return height > 0 ? height : undefined
+  }, [
+    alignPanelHeights,
+    focusedScenarioId,
+    focusedScenarioExpanded,
+    scenarios,
     pathsByScenario,
     blueprintsByPathId,
     getSelectedPathIdsProp,
@@ -310,13 +425,19 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   // `focusedScenarioId` is part of the key because it changes WHICH panels
   // the row measures over — the measurement skips the focused one, so focus
   // moving is a re-measure even when every estimate above is unchanged.
-  const rowMeasureKey = `${phase.id}:${sharedPanelHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? 'none'}`
-  const rowPanelHeight = useAlignedPhaseRowPanelHeight(
+  const rowMeasureKey = `${phase.id}:${sharedPanelHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? 'none'}:${focusedScenarioExpanded}`
+  const { rowPanelHeight, focusedPanelHeight } = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
+    focusedPanelHeightFloor,
     alignPanelHeights,
     rowMeasureKey,
   )
+  /** The height a given scenario's panel takes. */
+  const panelHeightFor = (scenarioId: string) =>
+    focusedScenarioExpanded && focusedScenarioId === scenarioId
+      ? focusedPanelHeight
+      : rowPanelHeight
 
   if (scenarios.length === 0) {
     // Scenario creation lives on the phase row's `+` in the sidebar (the row
@@ -341,7 +462,15 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   }
 
   if (loading) {
-    const skeletonHeight = sharedPanelHeight ?? COMPARE_MIN_PANEL_HEIGHT
+    /*
+      The skeleton has to stand exactly where the panel will, and that is
+      per-scenario now: `sharedPanelHeight` leaves the focused scenario out,
+      so a skeleton sized from it alone would be short by the same margin
+      the panel used to be, and the board would step once when the content
+      arrived. Same resolver as the real panel, same number.
+    */
+    const skeletonHeightFor = (scenarioId: string) =>
+      panelHeightFor(scenarioId) ?? COMPARE_MIN_PANEL_HEIGHT
 
     return (
       <div
@@ -354,7 +483,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
         {scenarios.map((scenario, index) => (
           <Fragment key={scenario.id}>
             <BlueprintPanelLoadingSkeleton
-              height={skeletonHeight}
+              height={skeletonHeightFor(scenario.id)}
               width={640}
             />
             {renderScenarioSeparator(index, scenarios.length)}
@@ -406,6 +535,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
       {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
         const scenarioViewType = resolveViewType(scenario)
+        const isFocusedScenario = focusedScenarioId === scenario.id
 
         return (
           <Fragment key={scenario.id}>
@@ -432,7 +562,15 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               that excluded the floor is the siblings' height, the lock stays
               a floor rather than a ceiling (see `targetHeight` in
               ResizableComparePanel), and a taller board simply grows past
-              it — no gray, and no geometry change on focus.
+              it — no gray.
+
+              "A taller board simply grows past it" is true only of the
+              MEASURED board, and an estimate can sit above what the board
+              measures. When it did, the focused panel did not grow back and
+              shrank by the difference the moment it was focused — see
+              `focusedPanelHeightFloor` above, which hands it its own
+              estimate as a floor so the number it had at overview survives
+              the focus.
             */}
             <ScenarioBlueprintPanelBody
               slide={scenario}
@@ -441,21 +579,22 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={rowPanelHeight}
+              lockedPanelHeight={panelHeightFor(scenario.id)}
               fixedSwimlaneBodyHeight={
                 scenarioViewType === 'single'
-                  ? sharedSwimlaneBodyHeight
+                  ? resolveScenarioPanelHeight({
+                      rowPanelHeight: sharedSwimlaneBodyHeight,
+                      ownHeightFloor: focusedSwimlaneBodyFloor,
+                      isFocused: isFocusedScenario,
+                    })
                   : undefined
               }
               lockPanelHeight={alignPanelHeights}
               displayViewType={scenarioViewType}
               onNavigate={navigateByScenario.get(scenario.id)}
-              dimmed={
-                dimAllScenarios ||
-                (focusedScenarioId !== null &&
-                  focusedScenarioId !== scenario.id)
-              }
-              focusActive={focusedScenarioId === scenario.id}
+              dimmed={dimAllScenarios || (focusedScenarioId !== null && !isFocusedScenario)}
+              focusActive={isFocusedScenario}
+              excludeFromRowHeight={isFocusedScenario && focusedScenarioExpanded}
               getScenarioDisplayViewType={getScenarioDisplayViewType}
             />
 

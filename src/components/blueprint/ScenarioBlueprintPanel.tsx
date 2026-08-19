@@ -73,6 +73,8 @@ export type ScenarioBlueprintPanelProps = {
   dimmed?: boolean
   /** When true, this panel is the camera focus target — no hover chrome. */
   focusActive?: boolean
+  /** See `ResizableComparePanel`. */
+  excludeFromRowHeight?: boolean
 }
 
 type ScenarioBlueprintPanelBodyProps = ScenarioBlueprintPanelProps & {
@@ -109,6 +111,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   displayViewType: displayViewTypeProp,
   dimmed = false,
   focusActive = false,
+  excludeFromRowHeight = false,
   getScenarioDisplayViewType,
 }: ScenarioBlueprintPanelBodyProps) {
   const internalScrollRef = useRef<HTMLDivElement>(null)
@@ -378,19 +381,20 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     : null
   const showPathTypeBadge = Boolean(sectionTitleLabel)
 
+  // The chrome this panel will actually have — a locked panel has no resize
+  // handle, and an estimate that budgets one is dead gray space.
+  const scrollChrome = { lockHeight: lockPanelHeight }
   const panelHeight =
     lockedPanelHeight ??
     (fixedSwimlaneBodyHeight !== undefined
-      ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight, {
-          lockHeight: lockPanelHeight,
-        })
+      ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight, scrollChrome)
       : mergedModel !== null
         ? // Merged is about one band tall; the swell over divergent slots
           // comes from the panel's measurement, not from this floor.
-          getMergedComparePanelHeight(visibleBlueprints)
+          getMergedComparePanelHeight(visibleBlueprints, false, scrollChrome)
         : useSideBySideLayout
-          ? getStackedComparePanelHeight(visibleBlueprints)
-          : getComparePanelHeight(visibleBlueprints))
+          ? getStackedComparePanelHeight(visibleBlueprints, false, scrollChrome)
+          : getComparePanelHeight(visibleBlueprints, false, scrollChrome))
 
   const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
 
@@ -407,6 +411,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
       : getComparePanelWidth(visibleBlueprints),
     defaultHeight: panelHeight,
     lockHeight: lockPanelHeight,
+    excludeFromRowHeight,
     onNavigate,
     navigateLabel: onNavigate ? `Open ${scenarioName} scenario` : undefined,
     panelTitleLabel: sectionTitleLabel,

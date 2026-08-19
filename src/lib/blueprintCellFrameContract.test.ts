@@ -51,7 +51,11 @@ describe('stable blueprint cell frame contract', () => {
     expect(scenarioPanel).not.toContain('isOverviewConstrained')
     expect(scenarioPanel).not.toContain('focusActive ?')
     expect(phaseOverview).toContain('displayViewType={scenarioViewType}')
-    expect(phaseOverview).not.toContain('focusedScenarioId,')
+    // Focus may not branch the panel's geometry props — it goes through
+    // `resolveScenarioPanelHeight`, whose whole contract is that the number
+    // it returns for a focused panel equals the one it had at overview.
+    // (The arithmetic itself is pinned in phaseRowPanelHeight.test.ts.)
+    expect(phaseOverview).toContain('resolveScenarioPanelHeight({')
     expect(pathFrame).not.toContain('extraTopInset')
   })
 

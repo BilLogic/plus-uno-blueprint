@@ -35,11 +35,20 @@ reading view. An earlier vertical "reader" existed and was deleted in the
   writes; the agent is present (for tiers that have it) but limited to the
   reading toolset. This is a UX gate — the server's RPC tiers remain the real
   wall.
-- **One surface: the shared canvas, scoped to the selected phase.** The phone
-  renders one stretch of the service rather than the whole board (rendering
-  the whole board is what used to jam the main thread). Navigation is a
-  camera move on that canvas — picking a scenario in the drawer frames it;
-  there is no view toggle and no fold animation.
+- **One surface: the shared canvas, scoped to ONE SCENARIO.** The phone
+  renders a single board rather than the whole service (rendering the whole
+  board is what used to jam the main thread). Navigation is a camera move on
+  that canvas — picking a scenario in the drawer frames it; there is no view
+  toggle and no fold animation.
+
+  The scope is a scenario, not a phase, and the difference is load-bearing.
+  A phase row is up to seven full boards; drawing the set on a phone took
+  the renderer down. It also put sibling scenarios on the canvas as apparent
+  destinations, which the phone has no way to reach — there is no phase
+  lane, no canvas navigation, and the drawer is the only route between
+  scenarios. So the shell must not disclose siblings at all. A phase-only
+  selection (the agent bridge and boot links can still produce one) resolves
+  to that phase's first scenario rather than falling back to the row.
 - **Chrome:** `MobileTopBar` (menu · title · contextual right slot) up top;
   `MobileNavSheet` — a left sheet holding a rail + panel, the same IA and
   `NavRow` components as the desktop sidebar, with Blueprints/Slices surfaces

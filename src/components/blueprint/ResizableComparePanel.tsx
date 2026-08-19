@@ -49,6 +49,24 @@ type ResizableComparePanelProps = {
   dimmed?: boolean
   /** When true, this panel is the camera focus target — no hover chrome. */
   focusActive?: boolean
+  /**
+   * Keeps this panel's measurement OUT of its phase row's shared height.
+   *
+   * Set only for a focused scenario whose path selection is expanded past
+   * its default — the one case the exclusion exists for, where a comparison
+   * opened inside a focused panel would otherwise reach every dimmed
+   * neighbour through the row's `Math.max` (six untouched panels once grew
+   * from 2218px to 4250px each). Focus ALONE must not set it: excluding a
+   * panel changes the row height, and a row height that moves on focus is a
+   * geometry change the camera pays for.
+   *
+   * This is a distinct attribute rather than a reading of
+   * `data-canvas-focus-active` because that attribute is also set on the
+   * phase SECTION. A `closest()` for it matched every panel in a focused
+   * row, not the focused one — which silently disabled the row measurement
+   * entirely and dropped the row to its estimate.
+   */
+  excludeFromRowHeight?: boolean
   className?: string
   scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
@@ -74,6 +92,7 @@ export function ResizableComparePanel({
   focusSlideId,
   dimmed = false,
   focusActive = false,
+  excludeFromRowHeight = false,
   className,
   scrollContainerRef,
 }: ResizableComparePanelProps) {
@@ -177,12 +196,19 @@ export function ResizableComparePanel({
     resolvedMinWidth,
     measuredPanelWidth ?? defaultWidth ?? resolvedMinWidth,
   )
-  const targetHeight =
-    Math.max(
-      resolvedMinHeight,
-      lockHeight ? (defaultHeight ?? resolvedMinHeight) : 0,
-      measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
-    )
+  /*
+    The estimate floors a LOCKED panel and only a locked panel. Locked means
+    this panel belongs to an aligned phase row, where the height it is handed
+    is the row's shared contract — measured, and a real floor. Unlocked, that
+    same argument is nothing but the pre-measure estimate, and keeping it as
+    a floor is exactly the mistake the width axis above already documents:
+    the compare-grid height estimate runs hot, so the floor showed up as dead
+    gray under the board rather than as a panel that hugs its content.
+  */
+  const targetHeight = Math.max(
+    lockHeight ? resolvedMinHeight : COMPARE_MIN_PANEL_HEIGHT,
+    measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
+  )
   const size = {
     width: Math.max(targetWidth, userSize.width),
     height: lockHeight ? targetHeight : Math.max(targetHeight, userSize.height),
@@ -368,6 +394,7 @@ export function ResizableComparePanel({
         data-blueprint-artboard
         {...(interactive ? { 'data-phase-scenario-panel': '' } : {})}
         {...(focusActive ? { 'data-canvas-focus-active': '' } : {})}
+        {...(excludeFromRowHeight ? { 'data-row-height-excluded': '' } : {})}
         role={navigable ? 'button' : undefined}
         tabIndex={navigable ? 0 : undefined}
         aria-label={navigable ? navigateLabel : undefined}
