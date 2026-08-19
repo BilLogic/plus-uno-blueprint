@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import { BlueprintCellDetailPanel } from '@/components/blueprint/BlueprintCellDetailPanel'
-import { PhaseScenarioOverview } from '@/components/blueprint/PhaseScenarioOverview'
+import { PhaseScenarioOverviewBody } from '@/components/blueprint/PhaseScenarioOverview'
 import { CanvasPhaseSection } from '@/components/editor/CanvasPhaseSection'
 import { OverviewPhaseRowDivider } from '@/components/editor/OverviewPhaseRowDivider'
 import {
@@ -173,6 +173,8 @@ type ServicePhaseSectionProps = {
   /** Slice-tab scope: mount only this scenario's artboard within the phase. */
   onlyScenarioId?: string | null
   onOpenPhase: (phaseId: string) => void
+  openScenario: (scenarioId: string) => void
+  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
 }
 
 function ServicePhaseSection({
@@ -183,6 +185,8 @@ function ServicePhaseSection({
   getSelectedPathIds,
   displayViewType,
   onOpenPhase,
+  openScenario,
+  getScenarioDisplayViewType,
   showFlowArrow = false,
   isFlowArrowAnchor = false,
   isLoopArrowFrom = false,
@@ -211,7 +215,7 @@ function ServicePhaseSection({
       focusActive={focusActive}
       onNavigate={() => onOpenPhase(phase.id)}
     >
-      <PhaseScenarioOverview
+      <PhaseScenarioOverviewBody
         phase={phase}
         slides={slides}
         variant="overview"
@@ -223,6 +227,8 @@ function ServicePhaseSection({
         focusedScenarioId={focusedScenarioId}
         onlyScenarioId={onlyScenarioId}
         loading={false}
+        openDetail={openScenario}
+        getScenarioDisplayViewType={getScenarioDisplayViewType}
       />
     </CanvasPhaseSection>
   )
@@ -1005,6 +1011,10 @@ function ServiceOverviewViewImpl({
                             getSelectedPathIds={resolveSelectedPathIds}
                             displayViewType={overviewViewType}
                             onOpenPhase={openDetail}
+                            openScenario={openDetail}
+                            getScenarioDisplayViewType={
+                              getScenarioDisplayViewType
+                            }
                             dimmed={dimPhase}
                             focusActive={phaseIsFocused}
                             focusedScenarioId={

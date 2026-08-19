@@ -54,29 +54,29 @@ The source comments and earlier plans say Space-drag remains available in Design
 - Adding mobile authoring; the mobile shell remains view-only.
 - Moving every application shortcut into one global keyboard manager. Only key state that modifies canvas gestures belongs in the input router.
 
-## Existing behavior that is a compatibility contract
+## Target interaction contract
 
-| Input | Context | Required result |
-| --- | --- | --- |
-| Primary drag | View, non-interactive canvas content | Pan |
-| Primary drag | Design + Select, empty canvas | Marquee selection |
-| Primary drag | Design + Hand | Pan |
-| Space + primary drag | Any desktop canvas tool/mode | Temporary pan; restore the prior tool on release |
-| Middle-button drag | Desktop canvas | Pan without changing tools |
-| Shift + cell click | Design | Range selection from the anchor |
-| Cmd/Ctrl + cell click | Canvas | Open detail without changing the gathered selection (`src/lib/cellPickGrammar.ts:73-78`) |
-| Plain cell click | Design | Toggle membership, not replace |
-| Plain empty click | Design | Do not clear a long-lived gathered selection |
-| Shift + marquee | Design | Add hits to selection |
-| Cmd/Ctrl-A | Design, outside editable controls | Select all cells in reading order |
-| Escape | Canvas | Close the highest-priority overlay first; clear canvas selection only if no overlay handled it |
-| Wheel/trackpad scroll | Canvas | Pan unless a nested scrollable can consume the delta |
-| Ctrl-wheel / trackpad pinch; Cmd-wheel | Canvas | Zoom around the pointer without browser page zoom |
-| Cmd/Ctrl `+`, `-`, `0` | Outside editable controls | Zoom in, zoom out, fit |
-| Right-click | Cell/control | Preserve current context-menu behavior; never begin a pan |
-| One-finger drag | Mobile Map | Pan after touch slop, including when starting on a cell/container |
-| One-finger tap | Mobile Map | Activate the tapped item if movement stays below slop |
-| Two-finger gesture | Any mobile canvas tool | Pan/pinch the camera; navigation takes precedence over drawing |
+| Input | Context | Required result | Status entering this plan |
+| --- | --- | --- | --- |
+| Primary drag | View, non-interactive canvas content | Pan | Preserve |
+| Primary drag | Design + Select, empty canvas | Marquee selection | Preserve |
+| Primary drag | Design + Hand | Pan | Preserve |
+| Space + primary drag | Any desktop canvas tool/mode | Temporary pan; restore the prior tool on release | Implement; previously documented but absent |
+| Middle-button drag | Desktop canvas | Pan without changing tools | Add standard desktop affordance |
+| Shift + cell click | Design | Range selection from the anchor | Preserve |
+| Cmd/Ctrl + cell click | Canvas | Open detail without changing the gathered selection (`src/lib/cellPickGrammar.ts:73-78`) | Preserve |
+| Plain cell click | Design | Toggle membership, not replace | Preserve |
+| Plain empty click | Design | Do not clear a long-lived gathered selection | Preserve |
+| Shift + marquee | Design | Add hits to selection | Preserve |
+| Cmd/Ctrl-A | Design, outside editable controls | Select all cells in reading order | Preserve |
+| Escape | Canvas | Close the highest-priority overlay first; clear canvas selection only if no overlay handled it | Preserve |
+| Wheel/trackpad scroll | Canvas | Pan unless a nested scrollable can consume the delta | Preserve |
+| Ctrl-wheel / trackpad pinch; Cmd-wheel | Canvas | Zoom around the pointer without browser page zoom | Preserve |
+| Cmd/Ctrl `+`, `-`, `0` | Outside editable controls | Zoom in, zoom out, fit | Preserve |
+| Right-click | Cell/control | Preserve current context-menu behavior; never begin a pan | Preserve |
+| One-finger drag | Mobile Map | Pan after touch slop, including when starting on a cell/container | Fix and preserve intended behavior |
+| One-finger tap | Mobile Map | Activate the tapped item if movement stays below slop | Preserve |
+| Two-finger gesture | Any mobile canvas tool | Pan/pinch the camera; navigation takes precedence over drawing | Preserve and centralize |
 
 ## Proposed architecture
 
@@ -224,6 +224,49 @@ Space behavior:
    - remove pointer `stopPropagation()` calls only when their sole purpose was to block canvas pan;
    - retain click propagation guards that prevent nested activations until separately audited.
 
+### 6. Preserve the agent control boundary
+
+The in-app agent primarily controls the canvas through semantic commands, not simulated pointer streams. The input router must remain a human-input adapter and must not become a prerequisite for agent actions.
+
+Preserve these paths explicitly:
+
+- `open_phase` / `open_scenario` continue to call the shell's navigation callbacks through `AgentUiBridge`.
+- `set_canvas_mode` continues to write the shared canvas-mode store directly; the new policy reads that same store so human and agent mode changes cannot disagree.
+- `select_cells` / `clear_cell_selection` continue to call `CanvasSelectionProvider`'s selection API directly and do not synthesize marquee gestures.
+- `annotate_cells` continues to write annotation data through `CanvasAnnotationProvider`; it does not synthesize pen pointer events.
+- the live `zoom` UI command remains registered by the mounted viewport and invokes the same camera primitives as keyboard/buttons.
+- `open_cell_panel` currently dispatches a synthetic Cmd-click on the real cell. Because the router owns pointer streams, not semantic `click`, this path must remain valid and idempotent (`isTrusted === false` must never turn an open command into a close command).
+- `get_ui_state` contributors and `list_ui_commands` registrations must survive component extraction and must unregister only when their owning surface truly unmounts.
+
+Add a live `set_canvas_tool` UI command from `CanvasAnnotationProvider` with a validated arg matching tools available in the current mode. This closes the existing Hand-tool blind spot: `open_cell_panel` can currently fail while Hand is active, yet the agent has no command to return to Select. The command changes only interface state, not blueprint data, and therefore stays inside `ui_command` rather than becoming a new top-level model tool.
+
+Agent actions must not be routed through `resolveCanvasIntent()`: they already express intent. They call the same semantic selection, annotation, navigation, and camera operations the human path eventually dispatches.
+
+Add one small semantic camera UI command, `canvas_camera`, rather than teaching the agent desktop hotkeys or touch gestures. It accepts validated primitives: `pan` with screen-pixel `dx`/`dy`, `zoom_in`, `zoom_out`, `fit`, and `cancel`. Keep the existing `zoom` command as a compatibility alias that delegates to the same controller. This gives the agent the same meaningful outcomes as Space-drag, middle-drag, wheel/trackpad, pinch, and zoom buttons without manufacturing raw input events.
+
+### Agent-native input/tool capability map
+
+| User-visible outcome | Human route after this plan | Agent route | Refactor impact | Required proof |
+| --- | --- | --- | --- | --- |
+| Enter View or Design mode | Mode toggle / shortcut | top-level `set_canvas_mode` | Shared store remains the source of truth read by the policy snapshot | Mode changes in DOM and `get_ui_state`; next real gesture follows the new grammar |
+| Choose Select, Hand, draw, text, or eraser | Toolbar | dynamic `set_canvas_tool` | New semantic command; no pointer synthesis | Tool UI and context agree; Hand → Select restores cell opening |
+| Pan | Touch drag, Space-drag, middle-drag, Hand drag, wheel/trackpad | `canvas_camera pan dx=… dy=…` | Both routes call the same imperative camera primitive | A fixed scene point moves by the requested screen delta; nested scroll rules affect only human wheel input |
+| Zoom or fit | Pinch, wheel modifier, keyboard, buttons | existing `zoom` alias and `canvas_camera` | Registration must belong to the explicitly active viewport | Pointer-centered human zoom and agent zoom both change the same live transform; exactly one active command is listed |
+| Select cells | Tap/click grammar or marquee | `select_cells` / `clear_cell_selection` | Agent bypasses arbitration and calls the selection owner | Visible selection and `design-picks` context match |
+| Add annotations | Pen/shape/text/sticky tools | `annotate_cells`; `clear_annotations` UI command | Direct data path must remain independent of gesture sessions | Annotation lands on the requested cell before and after a camera move |
+| Open cell detail | Cmd/Ctrl-click | `open_cell_panel` | Retain verified semantic click temporarily; do not send pointerdown/move | Panel context contains the requested cell; Hand cannot strand the agent |
+
+This is outcome parity, not event parity. Keyboard modifiers and target arbitration are human adapters; the semantic operations below them are the shared primitives. Avoid adding agent-only camera math or a second transform store.
+
+### Registration and context contract
+
+- Register `set_canvas_tool`, `canvas_camera`, and the `zoom` alias from a thin controller whose `active` prop is explicit. Do not let the last mounted viewport win because `registerAgentUiCommand()` is keyed only by command name.
+- At any time, `list_ui_commands` exposes one active camera owner, the commands for the visible shell, and no commands retained by an inactive tab/viewport.
+- On surface switch, remount, or unmount, the previous registration is removed and calls resolve the new owner at invocation time; callbacks must not close over an obsolete transform or tool.
+- Add a lightweight canvas contributor to `get_ui_state` with mode, tool, active surface, rounded zoom, and `idle`/`moving`. Read live refs on request; do not subscribe React or the heavy board on every frame.
+- In development/tests, fail or warn on duplicate active registration of a singleton canvas command. This is a narrow ownership assertion, not a new application-wide event bus.
+- Preserve every currently registered non-camera surface command and contributor: shell navigation/tabs/presentation, selection, path filters, compare controls, cell-panel controls, changes/revert controls, and Make Slice.
+
 ## Implementation phases
 
 ### Phase 1 — Pin the current grammar
@@ -258,6 +301,9 @@ Deliverable: the reported bug is fixed without changing selection semantics.
 - Integrate annotation draw/place/manipulate callbacks.
 - Add target capability attributes to ambiguous controls.
 - Remove obsolete propagation-based arbitration and duplicate pointer maps.
+- Register `set_canvas_tool` and `canvas_camera` from the explicitly active controller; keep `zoom` as a delegating compatibility alias. Verify that `set_canvas_mode` changes the policy snapshot used by the next human gesture.
+- Preserve the viewport's `zoom` command, selection commands, annotation command, UI-context contributors, and synthetic cell-open path across component extraction.
+- Add active-owner cleanup and duplicate-registration assertions so tab/viewport mount order cannot choose the agent's camera.
 - Keep a temporary assertion/log in development if more than one owner attempts to claim a gesture.
 
 Deliverable: handler order no longer decides global gesture meaning.
@@ -265,6 +311,8 @@ Deliverable: handler order no longer decides global gesture meaning.
 ### Phase 5 — Browser validation and cleanup
 
 - Add a focused Playwright browser suite if no existing real-browser harness is available. Keep it limited to canvas input so the dependency has a clear purpose.
+- Add an agent-control contract scenario that calls the real tool registry/UI bridge—not a parallel test-only API—and checks mode, every tool family, relative pan, zoom/fit/cancel, selection, annotation, cell panel, context, command discovery, and stale-registration cleanup after a tab/viewport switch.
+- Add a mobile-shell contract check: read/navigation/focus/panel/camera capabilities remain available, while desktop authoring commands that the mobile product intentionally excludes are not accidentally advertised.
 - Run mouse, trackpad, keyboard, touch-emulation, and real-device smoke tests.
 - Remove stale comments claiming behaviors that are no longer implemented by the named component.
 - Document the policy table next to the pure resolver, not in multiple components.
@@ -327,6 +375,11 @@ The following cross-layer scenarios must be handled explicitly:
 7. **Pointer cancellation occurs after slop.** The owner cleans transient UI, camera state is synchronized once, and no click fires.
 8. **Two canvas viewports are mounted in different tab surfaces.** Exactly one claims a wheel/pointer stream.
 9. **Cmd/Ctrl-click synthesized by the agent UI bridge.** It keeps the current idempotent detail-open semantics and does not enter the camera router as a drag.
+10. **The agent switches Design + Hand → Select, opens a cell, selects cells, and annotates cells.** Every command uses the semantic owner directly; no command depends on manufacturing trusted pointer events.
+11. **A viewport remounts during navigation or tab switching.** The old live UI commands unregister and the new viewport registers exactly one `zoom` command without a stale closure.
+12. **Two viewport bodies remain mounted for render preservation.** Only the explicitly active controller publishes `canvas_camera`, `zoom`, tool state, and canvas context; mount order cannot redirect the agent to the hidden viewport.
+13. **The agent pans while a human camera animation is active.** `canvas_camera` cancels the transaction first, applies the delta to the live transform, and reports the real outcome.
+14. **The agent annotates immediately after pan/zoom.** The annotation owner uses the live landed transform and places the mark over the requested cell, not stale React camera state.
 
 ## Acceptance criteria
 
@@ -341,6 +394,9 @@ The following cross-layer scenarios must be handled explicitly:
 - [ ] Nested scrollable content consumes wheel input until it reaches the relevant edge.
 - [ ] Right-click/context-menu and resize-handle drags do not pan.
 - [ ] Drawing and manipulation tools receive exactly one stream and cannot simultaneously pan/select.
+- [ ] Agent `set_canvas_mode`, `set_canvas_tool`, `select_cells`, `clear_cell_selection`, `annotate_cells`, `open_cell_panel`, `zoom`, and `canvas_camera` continue to control their visible surfaces without synthesizing raw pointerdown/move gesture streams; `open_cell_panel` may retain its verified semantic Cmd-click.
+- [ ] `open_cell_panel` remains idempotent for a synthetic Cmd-click and the agent can recover from Hand by invoking the discoverable `set_canvas_tool select` UI command.
+- [ ] `get_ui_state` and `list_ui_commands` reflect the active canvas/mode/tool/camera after the router refactor, with exactly one active camera owner and no stale hidden-surface commands.
 
 ### Non-functional
 
@@ -356,6 +412,11 @@ The following cross-layer scenarios must be handled explicitly:
 - [ ] Browser test reproducing a descendant-stopped pointer event passes in Chromium and WebKit.
 - [ ] Real-device Safari smoke confirms pan/pinch inside a populated board.
 - [ ] Mouse + keyboard smoke covers View, Design Select, Hand, annotation Select, and drawing tools.
+- [ ] Browser-level agent-control smoke drives the real UI bridge/command registry and verifies visible mode, tool, selection, annotation, panel, and zoom outcomes.
+- [ ] The same smoke covers relative pan, fit, cancel/interruption, active viewport switching, annotation alignment, and command/context cleanup; it invokes production registry/bridge entry points.
+- [ ] A focused command-registration test proves singleton ownership, cleanup on remount, invocation-time resolution, and no stale closures.
+- [ ] `node scripts/agent-harness/run.mjs --smoke` and `scripts/tests/toolParity.test.mjs` pass; the harness keeps importing the app's one-sourced tool specs.
+- [ ] If command names/arguments or agent guidance change, update `src/lib/agent/skill/references/canvas-adapter.md`, `scripts/agent-harness/cases.md`, `scripts/agent-harness/cases.mjs`, and parity expectations in the same change; verify repository search finds no obsolete command examples.
 - [ ] `npm run typecheck`, `npm test`, `npm run lint`, and `npm run build` pass.
 
 ## Success metrics
@@ -364,6 +425,7 @@ The following cross-layer scenarios must be handled explicitly:
 - One semantic owner per gesture in development instrumentation.
 - No React commits during continuous pan/pinch frames; one trailing camera sync after idle/end.
 - No regression in the existing cell-selection grammar tests.
+- Zero canvas controls lost from `list_ui_commands` after viewport/tool component remounts; one registration per command name.
 
 ## Dependencies and sequencing
 
@@ -415,6 +477,10 @@ Rejected. Their boundaries validate the design, but UNO's semantic blueprint lay
 - Selection commands: `src/components/editor/CanvasSelectionProvider.tsx:229-265`
 - Cell modifier grammar: `src/lib/cellPickGrammar.ts:8-151`
 - Hand tool: `src/components/editor/CanvasAnnotationToolbar.tsx:307-323`
+- Agent UI bridge and synthetic cell open: `src/lib/agent/uiBridge.ts:1-104`
+- Live agent command registry: `src/lib/agent/uiCommands.ts:1-68`
+- Agent canvas annotation owner: `src/contexts/CanvasAnnotationProvider.tsx:68-140`
+- Harness one-source/parity guard: `scripts/agent-harness/run.mjs:13-24`, `scripts/tests/toolParity.test.mjs`
 - Safari subtree fix: commit `aac9cde`
 - Marquee introduction and Hand follow-up: commits `003ee9c`, `cd56965`
 
@@ -426,4 +492,3 @@ Rejected. Their boundaries validate the design, but UNO's semantic blueprint lay
 - [Excalidraw central pointer handling](https://github.com/excalidraw/excalidraw/blob/master/packages/excalidraw/components/App.tsx)
 - [BlockSuite pan and keyboard-combination tests](https://github.com/toeverything/blocksuite/blob/master/tests/edgeless/pan.spec.ts)
 - [MapLibre handler manager](https://github.com/maplibre/maplibre-gl-js/blob/main/src/ui/handler_manager.ts)
-
