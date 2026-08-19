@@ -65,8 +65,30 @@ export function createCameraTransitionClock(durationMs: number) {
 }
 
 /**
- * Interpolate the visible world rectangle, then derive its transform. This
- * keeps pan and zoom coupled: a destination never moves away before arriving.
+ * Interpolate the visible world CENTRE linearly and the scale GEOMETRICALLY,
+ * then derive the transform. Pan and zoom stay coupled — a destination never
+ * moves away before arriving — and the perceived rate of zoom is constant.
+ *
+ * The geometric half is the part that matters, and it is not a refinement.
+ * This used to interpolate the visible rectangle's WIDTH linearly and derive
+ * `zoom = viewportWidth / width`. Zoom is the RECIPROCAL of width, so a
+ * straight line in width is a hyperbola in zoom, and the visible rate of
+ * change is wildly uneven at both ends of it. Measured on a real zoom-out
+ * (0.157 → 0.051 over 455 ms): 78% of the perceived travel was over by the
+ * halfway frame and 98% by 74% of the duration, leaving the last quarter of
+ * the animation to deliver 2% of the visible change. What that looks like is
+ * the camera flying past the destination and then hanging — the "overshoot
+ * and settle back" it was reported as. Zooming IN is the same defect
+ * mirrored: almost nothing happens, then it rushes at the end.
+ *
+ * Scale is perceived as a ratio, so equal time must buy an equal RATIO of
+ * change: `z(t) = z0 · (z1/z0)^t`. That makes the ease curve mean what it
+ * says — the eased progress IS the perceived progress — and it makes the
+ * two directions symmetric, which linear width can never be.
+ *
+ * The centre (not the top-left corner) is the anchor: with the scale moving
+ * geometrically, interpolating an edge would let the frame drift sideways
+ * on its way, because the distance from edge to centre is itself scaling.
  */
 export function interpolateCameraTransform(
   from: CameraTransform,
@@ -78,23 +100,31 @@ export function interpolateCameraTransform(
   if (progress === 0) return from
   if (progress === 1) return to
   const width = Math.max(1, viewport.width)
+  const height = Math.max(1, viewport.height)
   const fromZoom = Math.max(0.0001, from.zoom)
   const toZoom = Math.max(0.0001, to.zoom)
-  const fromRect = {
-    x: -from.pan.x / fromZoom,
-    y: -from.pan.y / fromZoom,
-    width: width / fromZoom,
+
+  const zoom = fromZoom * Math.pow(toZoom / fromZoom, progress)
+
+  // The world point currently under the middle of the viewport, at each end.
+  const fromCenter = {
+    x: (width / 2 - from.pan.x) / fromZoom,
+    y: (height / 2 - from.pan.y) / fromZoom,
   }
-  const toRect = {
-    x: -to.pan.x / toZoom,
-    y: -to.pan.y / toZoom,
-    width: width / toZoom,
+  const toCenter = {
+    x: (width / 2 - to.pan.x) / toZoom,
+    y: (height / 2 - to.pan.y) / toZoom,
   }
-  const rect = {
-    x: fromRect.x + (toRect.x - fromRect.x) * progress,
-    y: fromRect.y + (toRect.y - fromRect.y) * progress,
-    width: fromRect.width + (toRect.width - fromRect.width) * progress,
+  const center = {
+    x: fromCenter.x + (toCenter.x - fromCenter.x) * progress,
+    y: fromCenter.y + (toCenter.y - fromCenter.y) * progress,
   }
-  const zoom = width / Math.max(0.0001, rect.width)
-  return { pan: { x: -rect.x * zoom, y: -rect.y * zoom }, zoom }
+
+  return {
+    pan: {
+      x: width / 2 - center.x * zoom,
+      y: height / 2 - center.y * zoom,
+    },
+    zoom,
+  }
 }
