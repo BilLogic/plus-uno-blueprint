@@ -31,6 +31,11 @@ const VIEWPORT_TSX = readFileSync(
   'utf8',
 )
 
+const CAMERA_HOOK = readFileSync(
+  fileURLToPath(new URL('../hooks/useZoomPanViewport.ts', import.meta.url)),
+  'utf8',
+)
+
 describe('canvas touch contract', () => {
   it('kills native touch handling on the whole board subtree, not just the viewport', () => {
     const rule = CSS.replace(/\s+/g, ' ')
@@ -54,5 +59,13 @@ describe('canvas touch contract', () => {
     // steal from the one above; both have to stay dead.
     expect(CSS).toContain('-webkit-touch-callout: none')
     expect(CSS).toContain('-webkit-user-select: none')
+  })
+
+  it('observes pointer streams in native capture before descendants can stop them', () => {
+    expect(CAMERA_HOOK).toContain(
+      "el.addEventListener('pointerdown', handlePointerDown, options)",
+    )
+    expect(CAMERA_HOOK).toContain('const options = { capture: true } as const')
+    expect(CAMERA_HOOK).not.toContain('onPointerDown: handlePointerDown')
   })
 })

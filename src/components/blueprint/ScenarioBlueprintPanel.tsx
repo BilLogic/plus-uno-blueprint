@@ -201,7 +201,10 @@ export function ScenarioBlueprintPanel({
     line register alongside.
   */
   useEffect(() => {
-    if (!compareModel) return
+    // Multiple compare-capable panels remain mounted in overview/phase views.
+    // Only the explicitly focused scenario may own singleton agent commands
+    // and the portalled review store; mount order is not active ownership.
+    if (!compareModel || !focusActive) return
     const unregisterStore = registerCompareReview({
       slideId: slide.id,
       scenarioName,
@@ -291,9 +294,9 @@ export function ScenarioBlueprintPanel({
         return `${group.headerLabel} — divergent step ${targetIndex + 1} of ${stepGroups.length}, ${group.slots.length} difference${
           group.slots.length === 1 ? '' : 's'
         }${
-          outcome?.kind === 'flown'
+          outcome?.kind === 'flown' && outcome.completion === 'completed'
             ? ' — camera flown to it.'
-            : ' — marked active, but its cells are not on the current canvas.'
+            : ` — marked active, but the camera ${outcome?.kind === 'flown' ? outcome.completion : 'could not resolve its cells'}.`
         }`
       },
     })
@@ -347,6 +350,7 @@ export function ScenarioBlueprintPanel({
   }, [
     compareModel,
     displayViewType,
+    focusActive,
     phaseName,
     scenarioName,
     slide.id,

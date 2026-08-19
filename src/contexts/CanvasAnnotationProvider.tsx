@@ -15,8 +15,12 @@ import {
   ANNOTATION_AGENT_INK,
 } from '@/lib/canvasAnnotations'
 import { CanvasAnnotationContext } from '@/contexts/canvasAnnotationContext'
-import { registerAgentAnnotator } from '@/lib/agent/uiBridge'
+import {
+  registerAgentAnnotator,
+  registerAgentUiContext,
+} from '@/lib/agent/uiBridge'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 
 type CanvasAnnotationProviderProps = {
   children: ReactNode
@@ -25,6 +29,7 @@ type CanvasAnnotationProviderProps = {
 export function CanvasAnnotationProvider({
   children,
 }: CanvasAnnotationProviderProps) {
+  const mode = useCanvasModeValue()
   const [tool, setTool] = useState<CanvasAnnotationTool>('select')
   const [penColor, setPenColor] = useState(ANNOTATION_INK)
   const [penStrokeWidth, setPenStrokeWidth] = useState(
@@ -127,8 +132,18 @@ export function CanvasAnnotationProvider({
     [],
   )
 
-  useEffect(
-    () =>
+  useEffect(() => {
+    const tools: CanvasAnnotationTool[] = [
+      'select',
+      'hand',
+      'pen',
+      'rect',
+      'ellipse',
+      'text',
+      'sticky',
+      'eraser',
+    ]
+    const unregister = [
       registerAgentUiCommand({
         name: 'clear_annotations',
         description: 'Erase every annotation mark from the canvas scratch layer.',
@@ -137,7 +152,29 @@ export function CanvasAnnotationProvider({
           return 'Annotations cleared.'
         },
       }),
-    [clearAnnotations],
+      registerAgentUiCommand({
+        name: 'set_canvas_tool',
+        description:
+          'Choose the active canvas tool. arg: select | hand | pen | rect | ellipse | text | sticky | eraser',
+        run: (arg) => {
+          if (!tools.includes(arg as CanvasAnnotationTool))
+            return `Canvas tool unchanged. Choose one of: ${tools.join(', ')}.`
+          setTool(arg as CanvasAnnotationTool)
+          return `Canvas tool is now ${arg}.`
+        },
+      }),
+    ]
+    return () => unregister.forEach((remove) => remove())
+  }, [clearAnnotations])
+
+  useEffect(
+    () =>
+      registerAgentUiContext(
+        'canvas-tool',
+        () =>
+          `Canvas interaction: ${mode} mode, ${tool} tool, ${annotations.length} annotation(s).`,
+      ),
+    [annotations.length, mode, tool],
   )
 
   const value = useMemo(

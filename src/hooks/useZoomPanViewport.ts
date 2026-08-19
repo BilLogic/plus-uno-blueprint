@@ -5,8 +5,17 @@ import {
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
-  type PointerEvent,
 } from 'react'
+import {
+  getCanvasSpaceHeld,
+  setCanvasSpaceHeld,
+} from '@/lib/canvasKeyboardState'
+import { isEditableKeyboardTarget } from '@/lib/keyboardTarget'
+import {
+  cameraTransitionDuration,
+  interpolateCameraTransform,
+  type CameraTransitionResult,
+} from '@/lib/cameraTransition'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
 import {
   pulseBlueprintCells,
@@ -279,6 +288,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
+  const [isSpaceHeld, setIsSpaceHeld] = useState(false)
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
   const transformRef = useRef({ pan: { x: 0, y: 0 }, zoom: 1 })
   const pendingFitRef = useRef(false)
@@ -295,6 +305,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const pendingFitAnimateRef = useRef(false)
   const userAdjustedViewRef = useRef(false)
   const fitAnimationRef = useRef<number | null>(null)
+  const fitAnimationResolveRef = useRef<
+    ((result: CameraTransitionResult) => void) | null
+  >(null)
   /**
    * False until this viewport instance has framed content once. The first
    * fit jumps: animating it would swoop in from the unfitted origin
@@ -340,10 +353,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     animateFitRef.current = animateFit
   }, [animateFit])
 
-  const cancelFitAnimation = useCallback(() => {
+  const cancelFitAnimation = useCallback((kind: 'cancelled' | 'superseded' = 'cancelled') => {
     if (fitAnimationRef.current !== null) {
       cancelAnimationFrame(fitAnimationRef.current)
       fitAnimationRef.current = null
+      fitAnimationResolveRef.current?.({ kind, transform: transformRef.current })
+      fitAnimationResolveRef.current = null
     }
   }, [])
 
@@ -375,32 +390,34 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   )
 
   const animateTransform = useCallback(
-    (nextPan: { x: number; y: number }, nextZoom: number) => {
-      cancelFitAnimation()
+    (nextPan: { x: number; y: number }, nextZoom: number): Promise<CameraTransitionResult> => {
+      cancelFitAnimation('superseded')
       const from = transformRef.current
       const start = performance.now()
-
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / fitDurationMs)
-        const e = easeInOutCubic(t)
-        commitTransform(
-          {
-            x: from.pan.x + (nextPan.x - from.pan.x) * e,
-            y: from.pan.y + (nextPan.y - from.pan.y) * e,
-          },
-          from.zoom + (nextZoom - from.zoom) * e,
-          t === 1,
-          // The tier commits to the destination from frame one.
-          nextZoom,
-        )
-        if (t < 1) {
-          fitAnimationRef.current = requestAnimationFrame(step)
-          return
-        }
-        fitAnimationRef.current = null
+      const container = containerRef.current
+      const viewport = {
+        width: container?.clientWidth ?? 1,
+        height: container?.clientHeight ?? 1,
       }
+      const target = { pan: nextPan, zoom: nextZoom }
+      const duration = fitDurationMs ?? cameraTransitionDuration(from, target, viewport)
 
-      fitAnimationRef.current = requestAnimationFrame(step)
+      return new Promise((resolve) => {
+        fitAnimationResolveRef.current = resolve
+        const step = (now: number) => {
+          const t = Math.min(1, (now - start) / duration)
+          const next = interpolateCameraTransform(from, target, viewport, easeInOutCubic(t))
+          commitTransform(next.pan, next.zoom, t === 1, nextZoom)
+          if (t < 1) {
+            fitAnimationRef.current = requestAnimationFrame(step)
+            return
+          }
+          fitAnimationRef.current = null
+          fitAnimationResolveRef.current = null
+          resolve({ kind: 'completed', transform: target })
+        }
+        fitAnimationRef.current = requestAnimationFrame(step)
+      })
     },
     [cancelFitAnimation, commitTransform, fitDurationMs],
   )
@@ -1032,13 +1049,16 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       // it) must not eat the first honest click of a later, unrelated
       // interaction, including ones that arrive while panning is disabled.
       suppressNextClick.current = false
-      if (!panEnabled) return
-      if (e.button !== 0) return
+      const temporaryPan =
+        e.button === 1 ||
+        (e.button === 0 && e.pointerType !== 'touch' && getCanvasSpaceHeld())
+      if (!panEnabled && !temporaryPan) return
+      if (e.button !== 0 && e.button !== 1) return
       const target = e.target as HTMLElement
       // The mouse on an interactive child is a tap on it, never a pan. A
       // single FINGER there goes pending instead — pan if it travels past
       // the slop, tap if it lifts inside it.
-      if (panIgnoreSelector && target.closest(panIgnoreSelector)) {
+      if (!temporaryPan && panIgnoreSelector && target.closest(panIgnoreSelector)) {
         if (e.pointerType === 'touch') {
           pendingTouchPan.current = {
             id: e.pointerId,
@@ -1049,6 +1069,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         return
       }
 
+      if (temporaryPan) e.preventDefault()
       try {
         containerRef.current?.setPointerCapture(e.pointerId)
       } catch {
@@ -1059,6 +1080,37 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     },
     [beginPan, cancelFitAnimation, endPan, panEnabled, panIgnoreSelector],
   )
+
+  useEffect(() => {
+    const clear = () => {
+      setCanvasSpaceHeld(false)
+      setIsSpaceHeld(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Space' || event.repeat) return
+      if (isEditableKeyboardTarget(event.target)) return
+      const el = containerRef.current
+      const active = document.activeElement
+      if (!el || (active instanceof Node && active !== document.body && !el.contains(active))) return
+      setCanvasSpaceHeld(true)
+      setIsSpaceHeld(true)
+      event.preventDefault()
+    }
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code === 'Space') clear()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', clear)
+    document.addEventListener('visibilitychange', clear)
+    return () => {
+      clear()
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', clear)
+      document.removeEventListener('visibilitychange', clear)
+    }
+  }, [])
 
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
@@ -1185,6 +1237,26 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [beginPan, endPan, panEnabled, syncZoomToReact],
   )
 
+  // Native capture is the bug fix: React bubble pointerdown never runs when
+  // a populated lane/container child stops propagation. Observing the stream
+  // at the viewport boundary first preserves the pending-touch decision and
+  // pointer capture regardless of descendant handlers.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const options = { capture: true } as const
+    el.addEventListener('pointerdown', handlePointerDown, options)
+    el.addEventListener('pointermove', handlePointerMove, options)
+    el.addEventListener('pointerup', handlePointerUp, options)
+    el.addEventListener('pointercancel', handlePointerUp, options)
+    return () => {
+      el.removeEventListener('pointerdown', handlePointerDown, options)
+      el.removeEventListener('pointermove', handlePointerMove, options)
+      el.removeEventListener('pointerup', handlePointerUp, options)
+      el.removeEventListener('pointercancel', handlePointerUp, options)
+    }
+  }, [handlePointerDown, handlePointerMove, handlePointerUp])
+
   useEffect(() => {
     if (panEnabled) return
     isPanningRef.current = false
@@ -1209,9 +1281,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * Reads the camera from `transformRef.current`, never the React copies —
    * those trail the live transform by up to ~80ms (see syncZoomToReact) and
    * a fly computed from them lands beside the target, not on it.
-   */
+  */
   const focusCells = useCallback(
-    (cellIds: string[], opts?: { animate?: boolean }): FocusCellsResult => {
+    async (
+      cellIds: string[],
+      opts?: { animate?: boolean },
+    ): Promise<FocusCellsResult> => {
       const container = containerRef.current
       const content = contentRef.current
       if (!container || !content) {
@@ -1254,11 +1329,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
 
       const animate = (opts?.animate ?? true) && !prefersReducedMotion()
-      if (animate) animateTransform(nextPan, nextZoom)
+      let completion: 'completed' | 'cancelled' | 'superseded' = 'completed'
+      if (animate) completion = (await animateTransform(nextPan, nextZoom)).kind
       else commitTransform(nextPan, nextZoom, true)
 
       pulseBlueprintCells(found)
-      return { kind: 'flown' }
+      return { kind: 'flown', completion }
     },
     [animateTransform, cancelFitAnimation, commitTransform],
   )
@@ -1277,6 +1353,25 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     zoomAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2, 1 / 1.2)
   }, [zoomAtPoint])
 
+  const panBy = useCallback(
+    (dx: number, dy: number) => {
+      cancelFitAnimation()
+      userAdjustedViewRef.current = true
+      const current = transformRef.current
+      commitTransform(
+        { x: current.pan.x + dx, y: current.pan.y + dy },
+        current.zoom,
+        true,
+      )
+    },
+    [cancelFitAnimation, commitTransform],
+  )
+
+  const getCameraState = useCallback(() => ({
+    ...transformRef.current,
+    moving: fitAnimationRef.current !== null,
+  }), [])
+
   /**
    * Keyboard zoom, because on some setups there is otherwise none.
    *
@@ -1292,14 +1387,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey)) return
-      const target = event.target
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        (target instanceof HTMLElement && target.isContentEditable)
-      ) {
-        return
-      }
+      if (isEditableKeyboardTarget(event.target)) return
       // `=` is the unshifted key most people press for "+".
       if (event.key === '+' || event.key === '=') {
         event.preventDefault()
@@ -1322,19 +1410,16 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     pan,
     zoom,
     isPanning,
+    isSpaceHeld,
     fitToView,
     focusCells,
     resetView,
     zoomIn,
     zoomOut,
+    panBy,
+    cancelCamera: cancelFitAnimation,
+    getCameraState,
     pointerHandlers: {
-      onPointerDown: handlePointerDown,
-      onPointerMove: handlePointerMove,
-      onPointerUp: handlePointerUp,
-      onPointerLeave: handlePointerUp,
-      // Touch streams can be cancelled by the OS (edge gestures, alerts) —
-      // without this a cancelled pinch strands ghost pointers in the map.
-      onPointerCancel: handlePointerUp,
       onClickCapture: handleClickCapture,
     },
   }

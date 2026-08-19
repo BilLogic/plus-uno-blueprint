@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useId, useMemo, useRef } from 'react'
+import { Fragment, memo, useCallback, useId, useMemo, useRef } from 'react'
 import {
   getScenarioSwimlaneBodyHeight,
   ScenarioBlueprintPanel,
@@ -25,7 +25,7 @@ import { BlueprintPanelLoadingSkeleton } from '@/components/editor/EditorLoading
 
 const DEFAULT_SCENARIO_GAP = SUBSLIDE_GAP
 
-type PhaseScenarioOverviewProps = {
+export type PhaseScenarioOverviewProps = {
   phase: NavItem
   slides: NavItem[]
   className?: string
@@ -50,6 +50,11 @@ type PhaseScenarioOverviewProps = {
   dimAllScenarios?: boolean
   /** Slice-tab scope: mount only this scenario's artboard. */
   onlyScenarioId?: string | null
+}
+
+type PhaseScenarioOverviewBodyProps = PhaseScenarioOverviewProps & {
+  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
+  openDetail: (scenarioId: string) => void
 }
 
 function PhaseScenarioConnector({ width }: { width: number }) {
@@ -104,6 +109,20 @@ function PhaseScenarioConnector({ width }: { width: number }) {
 
 /** A phase frame on the overview canvas: its scenario panels plus the flow arrows between them. */
 export function PhaseScenarioOverview({
+  ...props
+}: PhaseScenarioOverviewProps) {
+  const { getScenarioDisplayViewType, openDetail } = useEditor()
+  return (
+    <PhaseScenarioOverviewBody
+      {...props}
+      getScenarioDisplayViewType={getScenarioDisplayViewType}
+      openDetail={openDetail}
+    />
+  )
+}
+
+/** Heavy board body with navigation dependencies passed as stable props. */
+export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody({
   phase,
   slides,
   className,
@@ -117,8 +136,9 @@ export function PhaseScenarioOverview({
   focusedScenarioId = null,
   dimAllScenarios = false,
   onlyScenarioId = null,
-}: PhaseScenarioOverviewProps) {
-  const { getScenarioDisplayViewType, openDetail } = useEditor()
+  getScenarioDisplayViewType,
+  openDetail,
+}: PhaseScenarioOverviewBodyProps) {
   const isOverview = variant === 'overview'
 
   /*
@@ -356,4 +376,4 @@ export function PhaseScenarioOverview({
       })}
     </div>
   )
-}
+})
