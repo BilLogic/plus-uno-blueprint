@@ -140,6 +140,7 @@ export type Database = {
           path_id: string
           perceived_owner: string | null
           picture: string | null
+          search_tsv: unknown
           slot_position: number
           step_id: string
           updated_at: string
@@ -158,6 +159,7 @@ export type Database = {
           path_id: string
           perceived_owner?: string | null
           picture?: string | null
+          search_tsv?: unknown
           slot_position?: number
           step_id: string
           updated_at?: string
@@ -176,6 +178,7 @@ export type Database = {
           path_id?: string
           perceived_owner?: string | null
           picture?: string | null
+          search_tsv?: unknown
           slot_position?: number
           step_id?: string
           updated_at?: string
@@ -786,6 +789,32 @@ export type Database = {
       }
     }
     Functions: {
+      blueprint_hybrid_search: {
+        Args: {
+          embed_model?: string
+          match_count?: number
+          q: string
+          query_embedding?: string
+          rrf_k?: number
+        }
+        Returns: {
+          description: string
+          id: string
+          kind: string
+          layer: string
+          links: Json
+          matched_by: string
+          path: string
+          phase: string
+          rrf_score: number
+          scenario: string
+          similarity: number
+          snippet: string
+          step: string
+          title: string
+          updated_at: string
+        }[]
+      }
       search_blueprint: {
         Args: { q: string }
         Returns: {
