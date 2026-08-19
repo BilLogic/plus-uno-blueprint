@@ -1,0 +1,22 @@
+-- semantic_search.corpus_chunks: let the backfill delete orphaned chunks.
+--
+-- 20260809000000 granted service_role select/insert/update on the index, but
+-- never delete. The uno-bot backfill's orphan pass
+-- (agents/uno-bot/scripts/backfill-semantic-search.mjs deleteOrphans) diffs the
+-- index against semantic_search.blueprint_chunks_src and removes what the view
+-- no longer contains — and has therefore 403'd on every nightly run since
+-- 2026-08-18:
+--
+--   permission denied for table corpus_chunks (42501)
+--   hint: GRANT DELETE ON semantic_search.corpus_chunks TO service_role;
+--
+-- The prune runs AFTER the upsert, so the failure is invisible in the data:
+-- embeddings stay current while chunks for deleted cells accumulate. Measured
+-- 2026-08-19: 43 orphans, all for cells hard-deleted from public.cells, and
+-- 10% of sampled searches surfaced one in their top-15 — the bot can quote a
+-- cell that no longer exists and link a ?cell= URL that resolves to nothing.
+--
+-- Scope: service_role only, on the index's own table. anon/authenticated are
+-- unchanged and still reach the corpus solely through the security-definer
+-- match_corpus_chunks. The blueprint's own tables are untouched.
+grant delete on semantic_search.corpus_chunks to service_role;
