@@ -82,11 +82,16 @@ wraps annotation + selection providers) → the transform layer
 - **Camera**: fit-to-view measures `fitSelector` bounds; `focusCells`
   registers per-viewport in a module registry (`src/lib/canvasFocusCells.ts`)
   so portalled surfaces (ledger drawer, agent commands) can fly the camera
-  without a React path to it. Programmatic motion interpolates the visible
-  world rectangle (coupled pan + zoom), has one cancellable owner, and starts
-  navigation flights against the already-mounted target before the concurrent
-  focus-state render. A matching post-navigation fit joins that flight instead
-  of restarting it.
+  without a React path to it. Programmatic motion keeps pan and zoom coupled —
+  the viewport centre interpolates linearly, the scale as a ratio — has one
+  cancellable owner, and starts navigation flights against the already-mounted
+  target before the concurrent focus-state render. A matching post-navigation
+  fit joins that flight instead of restarting it; **"matching" is doing real
+  work there**, and the layout invariants that keep it matching are in
+  `design/interaction.md` under "What 'exactly one camera animation per
+  intent' rests on". A fit also waits for its target to measure the same size
+  on two consecutive frames before it flies, so it never aims at half-grown
+  geometry.
 - **Input ownership**: pointer streams enter through native capture so a lane
   or cell cannot hide pointerdown with `stopPropagation`. The pure
   `canvasInputPolicy.ts` table documents precedence; continuous transforms stay

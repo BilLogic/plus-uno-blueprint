@@ -29,6 +29,15 @@ stagger, structural 320ms, camera 420ms — but the files own the numbers.
 Durations are consumed as `duration-(--motion-structural)` since Tailwind v4
 has no duration namespace.
 
+An easing token only describes what a reader sees if the property it drives is
+perceived linearly in the value being interpolated. Scale is not: it is
+perceived as a **ratio**, so camera zoom interpolates geometrically
+(`z0·(z1/z0)^t`) and the ease is applied to that. Interpolating the visible
+width linearly instead — zoom being width's reciprocal — makes the curve
+hyperbolic and the token decorative, front-loading one direction and
+back-loading the other. See "What 'exactly one camera animation per intent'
+rests on" in `docs/design/interaction.md` for the measurement that caught it.
+
 Asymmetry is part of the vocabulary: **arriving is an event, leaving is not**.
 Enters run on `--motion-fade`; exits on the shorter `--motion-micro` (see the
 cell-panel block in `animations.css` for the worked example, including why the
