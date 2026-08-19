@@ -187,10 +187,32 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     blueprintsByPathIdProp ?? fetched.blueprintsByPathId
   const loading = loadingProp ?? fetched.loading
 
+  /*
+    The scenarios the shared row height is computed FROM — everything except
+    the focused one.
+
+    The focused scenario is exempt from the row contract: it renders at its
+    own content height (see `scenarioFocused` below), and
+    `useAlignedPhaseRowPanelHeight` already refuses to let it drive its
+    siblings' measured height. The ESTIMATES below did not know that, so a
+    comparison opened inside a focused scenario still reached its dimmed
+    neighbours through `Math.max`: selecting a second path in one scenario
+    grew six untouched siblings from 2218px to 4250px each, every one of
+    them rendering two thousand pixels of empty gray. The estimate now
+    agrees with the measurement about whose height counts.
+
+    The row still aligns whenever nothing is focused, which is the state the
+    contract exists for — a row of peers read side by side at overview zoom.
+  */
+  const rowHeightScenarios = useMemo(
+    () => scenarios.filter((scenario) => scenario.id !== focusedScenarioId),
+    [scenarios, focusedScenarioId],
+  )
+
   const sharedSwimlaneBodyHeight = useMemo(() => {
     if (!alignPanelHeights) return undefined
 
-    const heights = scenarios.map((scenario) => {
+    const heights = rowHeightScenarios.map((scenario) => {
       const paths = pathsByScenario.get(scenario.id) ?? []
       const selectedPathIds = getSelectedPathIdsProp
         ? getSelectedPathIdsProp(scenario.id, paths)
@@ -203,10 +225,13 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
       })
     })
 
-    return Math.max(0, ...heights)
+    // Undefined, not 0: the only way to have no heights is a row whose sole
+    // scenario is the focused one, and a shared body height of zero would
+    // pin a panel flat rather than say "there is nothing to align to".
+    return heights.length > 0 ? Math.max(...heights) : undefined
   }, [
     alignPanelHeights,
-    scenarios,
+    rowHeightScenarios,
     pathsByScenario,
     blueprintsByPathId,
     getSelectedPathIdsProp,
@@ -215,7 +240,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
 
   const sharedPanelHeight = useMemo(() => {
     if (!alignPanelHeights) return undefined
-    const heights = scenarios.map((scenario) => {
+    const heights = rowHeightScenarios.map((scenario) => {
       const paths = pathsByScenario.get(scenario.id) ?? []
       const selectedPathIds = getSelectedPathIdsProp
         ? getSelectedPathIdsProp(scenario.id, paths)
@@ -231,7 +256,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     return height > 0 ? height : undefined
   }, [
     alignPanelHeights,
-    scenarios,
+    rowHeightScenarios,
     pathsByScenario,
     blueprintsByPathId,
     getSelectedPathIdsProp,
@@ -251,7 +276,10 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   const viewTypesMeasureKey = scenarios
     .map((scenario) => resolveViewType(scenario))
     .join(',')
-  const rowMeasureKey = `${phase.id}:${sharedPanelHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}`
+  // `focusedScenarioId` is part of the key because it changes WHICH panels
+  // the row measures over — the measurement skips the focused one, so focus
+  // moving is a re-measure even when every estimate above is unchanged.
+  const rowMeasureKey = `${phase.id}:${sharedPanelHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? 'none'}`
   const rowPanelHeight = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
