@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -92,16 +93,39 @@ export function ResizableComparePanel({
     setUserSize({ width: 0, height: 0 })
   }, [fitContentKey, defaultWidth, defaultHeight, lockHeight])
 
-  useEffect(() => {
+  /*
+    The first measurement after a content change runs BEFORE paint.
+
+    `targetHeight` below is a `Math.max` of the estimate and the last
+    measurement, so the panel answers growth in the commit that causes it
+    (the estimate rises immediately) but could only answer SHRINKAGE once a
+    new measurement arrived — until then the stale, larger measurement kept
+    winning the max. As a passive effect that measurement landed a paint
+    late, which is why the two directions did not behave alike: adding a
+    path resized the panel at once, removing one left it at the old size for
+    a frame and then snapped. The camera fit, which waits for this size to
+    settle, inherited the asymmetry exactly.
+
+    A layout effect measures and re-renders inside the same frame as the
+    commit, so both directions are one visual step. The ResizeObserver stays
+    asynchronous — it is for growth that happens later (images, fonts), not
+    for the change we already know about.
+  */
+  useLayoutEffect(() => {
     const element = contentMeasureRef.current
     if (!element) return
 
     const measure = () => {
       // Layout size only. `scrollHeight` also counts arrow overlays and path
       // frames that bleed past the board, which would pad the panel with gray.
-      setMeasuredContent({
-        width: element.offsetWidth,
-        height: element.offsetHeight,
+      setMeasuredContent((current) => {
+        const width = element.offsetWidth
+        const height = element.offsetHeight
+        // Bail on an unchanged measurement: this runs on every content key
+        // change and a needless state write would re-render the whole board.
+        return current.width === width && current.height === height
+          ? current
+          : { width, height }
       })
     }
 
@@ -151,10 +175,6 @@ export function ResizableComparePanel({
     width: Math.max(targetWidth, userSize.width),
     height: lockHeight ? targetHeight : Math.max(targetHeight, userSize.height),
   }
-  const contentFitsWithPadding =
-    lockHeight &&
-    measuredContentHeight > 0 &&
-    measuredContentHeight + scrollPaddingY <= size.height
   const resizeStart = useRef({
     x: 0,
     y: 0,
@@ -332,14 +352,28 @@ export function ResizableComparePanel({
       >
       <div
         ref={scrollContainerRef}
-        className={cn(
-          'min-h-0 flex-1 overflow-hidden',
-          // Short content centers in a height-locked panel (a shared phase
-          // row) instead of top-aligning over a block of gray. The old
-          // condition also required `!lockHeight`, which the flag's own
-          // definition contradicts — so the centering never applied anywhere.
-          contentFitsWithPadding && 'flex flex-col justify-center',
-        )}
+        /*
+          The board is ALWAYS top-aligned in its panel. Never centred.
+
+          A height-locked panel belongs to a phase row, and the whole point
+          of that row is that its boards are read across: the step header
+          row and the lane rail have to sit at the same height in every
+          panel or the row stops being one readable object. Centring each
+          board inside its own container independently is precisely what
+          breaks that — the shorter boards drift down and their headers no
+          longer line up with their neighbours'.
+
+          There was a `justify-center` here guarded on
+          `contentFitsWithPadding && !lockHeight`, and since that flag is
+          itself defined as `lockHeight && …`, the condition was never true.
+          I removed the contradiction and let the centring apply, which is
+          how the headers came adrift and how the padding above each board
+          started changing as the measurement settled (the flag flips while
+          it does). The condition was dead in the direction that was right;
+          there is no case where centring is correct, so it is gone rather
+          than re-guarded.
+        */
+        className={cn('min-h-0 flex-1 overflow-hidden')}
         style={{
           paddingTop: ARROW_VIEWPORT_PAD + scrollInsetY,
           paddingLeft: ARROW_VIEWPORT_PAD,

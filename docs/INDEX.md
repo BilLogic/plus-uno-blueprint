@@ -9,34 +9,34 @@ before treating it as truth), and the **queue** (`todos/`).
 
 ## Route by task
 
-| I need to…                                                                                     | Go to                                                                                     |
-| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| What is this product / can I edit things / how do I get access?                                | product/01-overview.md                                                                    |
-| Find a scenario, read it on desktop or phone, share it, present to leadership                  | product/02-team-guide.md                                                                  |
-| What is a lane / line of visibility / slice / finding?                                         | product/03-reading-a-blueprint.md                                                         |
-| Someone mentioned an audit finding — what is it, can I trust it, how do I challenge it?        | product/04-the-assistant-and-audits.md                                                    |
-| Run a mapping / audit / what-if / slicing session; where is the methodology specified?         | product/05-service-design-practice.md                                                     |
-| Ground product or UX decisions on blueprint evidence                                           | product/06-product-design-on-blueprints.md                                                |
-| Why does the app look and feel this way?                                                       | design/README.md                                                                          |
-| Match an existing surface’s visual style                                                       | design/README.md (surface anatomy) → design/components.md                                 |
-| Which color / type / motion / icon / elevation / layout token do I use — and how do I add one? | design/foundations/                                                                       |
-| Chart, band, severity or zoom-tier encodings                                                   | design/foundations/data-viz.md                                                            |
-| Which component or primitive do I reach for; empty/error-state anatomy                         | design/components.md                                                                      |
-| What does a click / ⌘-click / tap / pinch DO, and why?                                         | design/interaction.md                                                                     |
-| What happens on a phone or tablet (as a spec)?                                                 | design/responsive.md                                                                      |
-| Write UI copy, error text, or agent-voice wording                                              | design/content-voice.md                                                                   |
-| Accessibility bar: contrast, forced-colors, reduced motion, touch targets                      | design/accessibility.md                                                                   |
-| How does the app fit together / where does data flow?                                          | engineering/architecture.md                                                               |
-| Where does X live; which pattern do I copy?                                                    | engineering/codebase-guide.md                                                             |
-| Add a field to cells end-to-end (schema → RPC → panel UI)                                      | engineering/access-and-security.md → engineering/codebase-guide.md → design/components.md |
-| Which user is my session / my agent; what writes are legitimate; how is access enforced?       | AGENTS.md invariants → engineering/access-and-security.md                                 |
-| Canvas gesture or camera misbehaving — intended vs implemented behavior                        | design/interaction.md + engineering/architecture.md                                       |
-| How do the in-app agent and its rosters work?                                                  | engineering/agent-system.md                                                               |
-| Add or change an agent tool; run the eval harness                                              | engineering/agent-tools.md                                                                |
-| Coding standards, the Supabase benchmark, tooling traps, how to run and write tests            | engineering/standards.md                                                                  |
-| Set up local dev                                                                               | README.md                                                                                 |
-| Deploy, rollback, environments, monitoring, troubleshooting                                    | engineering/operations.md                                                                 |
-| Is this plan file still true?                                                                  | its frontmatter `status` + `distilled-into`                                               |
+| I need to… | Go to |
+|---|---|
+| What is this product / can I edit things / how do I get access? | product/01-overview.md |
+| Find a scenario, read it on desktop or phone, share it, present to leadership | product/02-team-guide.md |
+| What is a lane / line of visibility / slice / finding? | product/03-reading-a-blueprint.md |
+| Someone mentioned an audit finding — what is it, can I trust it, how do I challenge it? | product/04-the-assistant-and-audits.md |
+| Run a mapping / audit / what-if / slicing session; where is the methodology specified? | product/05-service-design-practice.md |
+| Ground product or UX decisions on blueprint evidence | product/06-product-design-on-blueprints.md |
+| Why does the app look and feel this way? | design/README.md |
+| Match an existing surface’s visual style | design/README.md (surface anatomy) → design/components.md |
+| Which color / type / motion / icon / elevation / layout token do I use — and how do I add one? | design/foundations/ |
+| Chart, band, severity or zoom-tier encodings | design/foundations/data-viz.md |
+| Which component or primitive do I reach for; empty/error-state anatomy | design/components.md |
+| What does a click / ⌘-click / tap / pinch DO, and why? | design/interaction.md |
+| What happens on a phone or tablet (as a spec)? | design/responsive.md |
+| Write UI copy, error text, or agent-voice wording | design/content-voice.md |
+| Accessibility bar: contrast, forced-colors, reduced motion, touch targets | design/accessibility.md |
+| How does the app fit together / where does data flow? | engineering/architecture.md |
+| Where does X live; which pattern do I copy? | engineering/codebase-guide.md |
+| Add a field to cells end-to-end (schema → RPC → panel UI) | engineering/access-and-security.md → engineering/codebase-guide.md → design/components.md |
+| Which user is my session / my agent; what writes are legitimate; how is access enforced? | AGENTS.md invariants → engineering/access-and-security.md |
+| Canvas gesture or camera misbehaving — intended vs implemented behavior | design/interaction.md + engineering/architecture.md |
+| How do the in-app agent and its rosters work? | engineering/agent-system.md |
+| Add or change an agent tool; run the eval harness | engineering/agent-tools.md |
+| Coding standards, the Supabase benchmark, tooling traps, how to run and write tests | engineering/standards.md |
+| Set up local dev | README.md |
+| Deploy, rollback, environments, monitoring, troubleshooting | engineering/operations.md |
+| Is this plan file still true? | its frontmatter `status` + `distilled-into` |
 
 ## Reading paths by role
 
@@ -47,31 +47,31 @@ before treating it as truth), and the **queue** (`todos/`).
 
 ## Every reference doc
 
-| Doc                                        | Audience                         | What it answers                                                                                                                                                                                                 |
-| ------------------------------------------ | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| product/01-overview.md                     | everyone                         | What uno-blueprint is in plain words, who it is for, the surfaces at a glance, and who can look vs. edit.                                                                                                       |
-| product/02-team-guide.md                   | everyone                         | The zero-background guide — find a scenario, read a journey, use a phone, ask the assistant, share links, and present to stakeholders.                                                                          |
-| product/03-reading-a-blueprint.md          | everyone                         | The vocabulary — phases, scenarios, paths, lanes, the line of visibility, steps, cells, triggers vs needs, slices, and findings.                                                                                |
-| product/04-the-assistant-and-audits.md     | everyone                         | What the in-app AI assistant is, what audits and findings are, why results can be trusted, and how to challenge them.                                                                                           |
-| product/05-service-design-practice.md      | service designers, practitioners | The four blueprint practices (map, audit, what-if, slice), the compare workflow, findings triage, and where each practice is specified.                                                                         |
-| product/06-product-design-on-blueprints.md | designers, product               | Grounding product and design decisions on the blueprint — cells as evidence, slices to specs, touchpoint reasoning, audits as design-debt radar.                                                                |
-| design/accessibility.md                    | designers                        | The accessibility bar — forced-colors restatements, reduced motion everywhere, the global focus catch-all, aria state on toggles, 44px targets, and plain screen-reader names.                                  |
-| design/components.md                       | designers, developers            | Which primitive for what, the drawer/sheet posture contract (this doc is its single owner), badges and segmented controls, and the empty/loading/error visual recipes.                                          |
-| design/content-voice.md                    | designers                        | UI copy rules, error and empty-state wording, the agent's honest voice, and the naming conventions the interface must keep straight.                                                                            |
-| design/foundations/color.md                | designers                        | The four color-token tiers, semantic-only consumption, dark mode as a class, the forced-colors stance, lane tints, and the agent-ink precedent.                                                                 |
-| design/foundations/data-viz.md             | designers                        | The encodings — compare bands, ledger, merged membership outlines, severity, the semantic-zoom blocks tier, path-type colors — and the rule that every encoding is tokenized and survives dark + forced-colors. |
-| design/foundations/elevation.md            | designers                        | Flat by default — elevation is a lightness ladder, shadows are rare and tokenized, and the z-index bands are a short fixed map.                                                                                 |
-| design/foundations/iconography.md          | designers                        | Lucide only, small glyphs on generous hit areas, and the rule that an icon carrying meaning always has a text name.                                                                                             |
-| design/foundations/layout.md               | designers                        | Spacing, radius and width tokens, and the one-home split between theme.css (class-only widths) and layoutTokens.ts (widths the runtime does math on).                                                           |
-| design/foundations/motion.md               | designers                        | The five-token motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.                                                             |
-| design/foundations/typography.md           | designers                        | Type roles and scale (including the sub-xs steps), and the time-marker register that names phases and steps the same way on every surface.                                                                      |
-| design/interaction.md                      | designers, developers            | The click grammar, canvas modes, panel-as-selection, camera behavior, and the touch contract — what every input gesture means and why.                                                                          |
-| design/README.md                           | designers                        | The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations.                                                            |
-| design/responsive.md                       | designers, developers            | The breakpoint contract (this doc is its single owner) — the 768px gate, the view-only desktop-parity mobile shell, tablet stance, semantic zoom, and the deliberate non-goals.                                 |
-| engineering/access-and-security.md         | developers                       | Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.                                                           |
-| engineering/agent-system.md                | developers                       | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill sync contract.                                        |
-| engineering/agent-tools.md                 | developers                       | The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest.                                                                          |
-| engineering/architecture.md                | developers                       | How the app fits together — provider stack, module stores, the canvas stack, data flow, the mobile fork, and the performance constraints that shape all of it.                                                  |
-| engineering/codebase-guide.md              | developers                       | Where things live in src/ and which existing pattern to copy before inventing one.                                                                                                                              |
-| engineering/operations.md                  | developers                       | Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist.                                                                                                       |
-| engineering/standards.md                   | developers                       | The quality bar — token discipline against the Supabase benchmark, comment philosophy, what earns a test and how to run them, tooling traps, review workflow.                                                   |
+| Doc | Audience | What it answers |
+|---|---|---|
+| product/01-overview.md | everyone | What uno-blueprint is in plain words, who it is for, the surfaces at a glance, and who can look vs. edit. |
+| product/02-team-guide.md | everyone | The zero-background guide — find a scenario, read a journey, use a phone, ask the assistant, share links, and present to stakeholders. |
+| product/03-reading-a-blueprint.md | everyone | The vocabulary — phases, scenarios, paths, lanes, the line of visibility, steps, cells, triggers vs needs, slices, and findings. |
+| product/04-the-assistant-and-audits.md | everyone | What the in-app AI assistant is, what audits and findings are, why results can be trusted, and how to challenge them. |
+| product/05-service-design-practice.md | service designers, practitioners | The four blueprint practices (map, audit, what-if, slice), the compare workflow, findings triage, and where each practice is specified. |
+| product/06-product-design-on-blueprints.md | designers, product | Grounding product and design decisions on the blueprint — cells as evidence, slices to specs, touchpoint reasoning, audits as design-debt radar. |
+| design/accessibility.md | designers | The accessibility bar — forced-colors restatements, reduced motion everywhere, the global focus catch-all, aria state on toggles, 44px targets, and plain screen-reader names. |
+| design/components.md | designers, developers | Which primitive for what, the drawer/sheet posture contract (this doc is its single owner), badges and segmented controls, and the empty/loading/error visual recipes. |
+| design/content-voice.md | designers | UI copy rules, error and empty-state wording, the agent's honest voice, and the naming conventions the interface must keep straight. |
+| design/foundations/color.md | designers | The four color-token tiers, semantic-only consumption, dark mode as a class, the forced-colors stance, lane tints, and the agent-ink precedent. |
+| design/foundations/data-viz.md | designers | The encodings — compare bands, ledger, merged membership outlines, severity, the semantic-zoom blocks tier, path-type colors — and the rule that every encoding is tokenized and survives dark + forced-colors. |
+| design/foundations/elevation.md | designers | Flat by default — elevation is a lightness ladder, shadows are rare and tokenized, and the z-index bands are a short fixed map. |
+| design/foundations/iconography.md | designers | Lucide only, small glyphs on generous hit areas, and the rule that an icon carrying meaning always has a text name. |
+| design/foundations/layout.md | designers | Spacing, radius and width tokens, and the one-home split between theme.css (class-only widths) and layoutTokens.ts (widths the runtime does math on). |
+| design/foundations/motion.md | designers | The motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate. |
+| design/foundations/typography.md | designers | Type roles and scale (including the sub-xs steps), and the time-marker register that names phases and steps the same way on every surface. |
+| design/interaction.md | designers, developers | The click grammar, canvas modes, panel-as-selection, camera behavior, and the touch contract — what every input gesture means and why. |
+| design/README.md | designers | The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations. |
+| design/responsive.md | designers, developers | The breakpoint contract (this doc is its single owner) — the 768px gate, the view-only desktop-parity mobile shell, tablet stance, semantic zoom, and the deliberate non-goals. |
+| engineering/access-and-security.md | developers | Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments. |
+| engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill sync contract. |
+| engineering/agent-tools.md | developers | The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest. |
+| engineering/architecture.md | developers | How the app fits together — provider stack, module stores, the canvas stack, data flow, the mobile fork, and the performance constraints that shape all of it. |
+| engineering/codebase-guide.md | developers | Where things live in src/ and which existing pattern to copy before inventing one. |
+| engineering/operations.md | developers | Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist. |
+| engineering/standards.md | developers | The quality bar — token discipline against the Supabase benchmark, comment philosophy, what earns a test and how to run them, tooling traps, review workflow. |

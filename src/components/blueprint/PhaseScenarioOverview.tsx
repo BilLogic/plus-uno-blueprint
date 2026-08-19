@@ -191,15 +191,22 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     The scenarios the shared row height is computed FROM — everything except
     the focused one.
 
-    The focused scenario is exempt from the row contract: it renders at its
-    own content height (see `scenarioFocused` below), and
-    `useAlignedPhaseRowPanelHeight` already refuses to let it drive its
-    siblings' measured height. The ESTIMATES below did not know that, so a
-    comparison opened inside a focused scenario still reached its dimmed
-    neighbours through `Math.max`: selecting a second path in one scenario
-    grew six untouched siblings from 2218px to 4250px each, every one of
-    them rendering two thousand pixels of empty gray. The estimate now
-    agrees with the measurement about whose height counts.
+    `useAlignedPhaseRowPanelHeight` already refuses to let the focused
+    scenario drive its siblings' MEASURED height. The two ESTIMATES below
+    did not know that, so a comparison opened inside a focused scenario
+    still reached its dimmed neighbours through `Math.max`: selecting a
+    second path in one scenario grew six untouched siblings from 2218px to
+    4250px each, every one of them rendering two thousand pixels of empty
+    gray. The same inflation came back at the focused panel — its own floor
+    was raised by its own content — which is where the gray under a focused
+    Merged view came from. One exclusion fixes both. The estimate now agrees
+    with the measurement about whose height counts.
+
+    Note what this deliberately does NOT do: the focused panel still RECEIVES
+    the row height, like every other panel. Excluding it from the input is a
+    change to a number; excluding it from the contract would be a change to
+    its geometry, and the camera depends on focus changing no geometry at
+    all (see the note beside the panel props below).
 
     The row still aligns whenever nothing is focused, which is the state the
     contract exists for — a row of peers read side by side at overview zoom.
@@ -375,21 +382,34 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
       {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
         const scenarioViewType = resolveViewType(scenario)
-        /*
-          The focused scenario opts out of the shared-row height contract in
-          BOTH directions. The measurement hook already keeps it from driving
-          its dimmed siblings' locked height — but the locked height was
-          still being passed back INTO it, so a focused Merged view (about
-          one band tall) sat inside a panel pinned to its tallest sibling,
-          with the difference rendered as dead gray below the grid. The
-          camera frames this panel edge-to-edge, which put that gray in the
-          middle of the screen. Focused, the panel hugs its own content;
-          the row contract resumes when focus leaves.
-        */
-        const scenarioFocused = focusedScenarioId === scenario.id
 
         return (
           <Fragment key={scenario.id}>
+            {/*
+              FOCUS CHANGES NO GEOMETRY. Every scenario takes the same row
+              props whether or not it is the focused one.
+
+              This is load-bearing for the camera. A canvas click starts the
+              ease immediately from the geometry on screen
+              (`focusActiveCanvasSlide`), and React's navigation then bumps
+              the fit key, which computes the fit again; `fitToView` skips
+              that second animation only when the two targets agree. So
+              anything that resizes the focused panel *because* it became
+              focused guarantees a second ease that supersedes the first
+              partway through — an ease-in-out restarting from a moving
+              camera drops to zero velocity, which is the lurch.
+
+              I briefly had the focused panel drop the row lock and hug its
+              content, to kill the dead gray under a focused Merged view.
+              It killed the gray and broke this invariant. The gray had a
+              different cause and is fixed at its source: the row-height
+              ESTIMATE above used to include the focused scenario, so a
+              two-path comparison inflated its own floor to 4250px. With
+              that excluded the floor is the siblings' height, the lock stays
+              a floor rather than a ceiling (see `targetHeight` in
+              ResizableComparePanel), and a taller board simply grows past
+              it — no gray, and no geometry change on focus.
+            */}
             <ScenarioBlueprintPanelBody
               slide={scenario}
               slides={slides}
@@ -397,13 +417,13 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={scenarioFocused ? undefined : rowPanelHeight}
+              lockedPanelHeight={rowPanelHeight}
               fixedSwimlaneBodyHeight={
-                scenarioViewType === 'single' && !scenarioFocused
+                scenarioViewType === 'single'
                   ? sharedSwimlaneBodyHeight
                   : undefined
               }
-              lockPanelHeight={scenarioFocused ? false : alignPanelHeights}
+              lockPanelHeight={alignPanelHeights}
               displayViewType={scenarioViewType}
               onNavigate={() => openDetail(scenario.id)}
               dimmed={
@@ -411,7 +431,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
                 (focusedScenarioId !== null &&
                   focusedScenarioId !== scenario.id)
               }
-              focusActive={scenarioFocused}
+              focusActive={focusedScenarioId === scenario.id}
               getScenarioDisplayViewType={getScenarioDisplayViewType}
             />
 

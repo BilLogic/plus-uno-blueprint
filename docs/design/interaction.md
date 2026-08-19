@@ -84,6 +84,74 @@ contract in short:
   70% on hover or keyboard focus. They remain navigation targets so a reader
   can switch focus directly; cell-level actions inside them remain inactive.
 
+### What "exactly one camera animation per intent" rests on
+
+The rule above is not self-enforcing. Three invariants hold it up, and each
+has been broken at least once — always with the same symptom, a navigation
+that lurches or appears to overshoot. Check them before touching canvas
+layout, not just canvas camera code.
+
+**1. Focus changes no geometry.** A canvas click starts the ease immediately
+from the geometry on screen (`focusActiveCanvasSlide`, before React's
+navigation reconciles), and the navigation then bumps the fit key, which
+computes the fit a second time. `fitToView` skips that second animation only
+when the two targets agree. So anything that resizes the focused panel
+*because* it became focused guarantees a second ease that supersedes the
+first partway through — and an ease-in-out restarting from a moving camera
+drops to zero velocity, which is the lurch. Every scenario in a phase row
+therefore takes identical layout props whether or not it is the focused one.
+The focused scenario is excluded from the row-height **input** (see below);
+it is never excluded from the row-height **contract**.
+
+**2. Scale interpolates geometrically, not linearly.** Zoom is the reciprocal
+of the visible rect's width, so interpolating width linearly makes the
+perceived rate hyperbolic and the ease curve decorative. Measured on a real
+zoom-out before this was fixed: 78% of the perceived travel was done by the
+halfway frame, 98% by 74% of the duration — the camera flew out and then
+hung, which reads exactly as overshoot. `interpolateCameraTransform`
+interpolates the viewport **centre** linearly and the **scale** as a ratio
+(`z0·(z1/z0)^t`), which is what makes the ease symmetric between zooming in
+and zooming out. `cameraTransition.test.ts` pins equal ratios per quarter.
+
+**3. A fit waits for its target's layout to settle.** Compare panels reach
+their real size across more than one commit, so the fit scheduled by a fit-key
+change holds until the target measures the same size on two consecutive frames
+(250 ms backstop). Without it the ease aims at half-grown geometry and the
+resize observer's correction lands as a snap on top of the finished ease. The
+resize observer's own owed-fit branch stands down while that loop is watching,
+since the resizes it sees are the ones being waited out.
+
+## The phase-row height contract
+
+Scenario panels in one phase row share a height so the row reads as one
+object: the step header row and the lane rail sit at the same height in every
+panel. Two rules keep that true.
+
+**Boards top-align inside their panel, always.** Never centred. Centring each
+board independently inside its own container is precisely what breaks the
+row — shorter boards drift down and their headers no longer line up with
+their neighbours'. It also makes the padding above a board appear to change
+as the measurement settles.
+
+**The focused scenario is excluded from the height input, not from the
+contract.** It still receives the row height like every other panel
+(invariant 1 above). It is left out of the `Math.max` that computes that
+height, because otherwise a comparison opened inside a focused scenario
+inflates its dimmed neighbours: a second path once grew six untouched
+siblings from 2218px to 4250px each. The same inflation raised the focused
+panel's own floor, which is where the dead gray under a focused Merged view
+came from — one exclusion fixes both, because the row height is a floor and
+not a ceiling (`targetHeight` in `ResizableComparePanel`), so a taller board
+simply grows past it.
+
+Panel content is measured in a **layout** effect, not a passive one. The
+panel answers growth in the commit that causes it (the estimate rises
+immediately) but can only answer shrinkage once a new measurement arrives —
+measure a paint late and the two directions stop behaving alike: adding a
+path resizes at once, removing one holds the old size for a frame and then
+snaps. The camera fit, which waits on this size, inherits that asymmetry
+exactly.
+
 ## The touch contract
 
 Owned by the native-capture boundary in `useZoomPanViewport.ts`, with the
