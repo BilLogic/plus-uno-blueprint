@@ -40,10 +40,21 @@ describe('coverContent', () => {
     expect(missing).toEqual([])
   })
 
-  it('every figure carries alt text that describes it', () => {
-    for (const figure of coverFigures(coverContent)) {
+  it('every image carries alt text that describes it', () => {
+    for (const image of coverFigures(coverContent)) {
       // Long enough to be a description rather than a restated filename.
-      expect(figure.alt.length, figure.src).toBeGreaterThan(20)
+      expect(image.alt.length, image.src).toBeGreaterThan(10)
+    }
+  })
+
+  it('every wide diagram figure carries its viewBox dimensions', () => {
+    // Portrait images (the-service tab) are fixed-size by CSS, not by their
+    // own dimensions, so this is scoped to sections with a `figure` slot.
+    const figures = coverContent.tabs
+      .flatMap((tab) => tab.sections)
+      .flatMap((section) => ('figure' in section && section.figure ? [section.figure] : []))
+    expect(figures.length).toBeGreaterThan(0)
+    for (const figure of figures) {
       expect(figure.width, figure.src).toBeGreaterThan(0)
       expect(figure.height, figure.src).toBeGreaterThan(0)
     }

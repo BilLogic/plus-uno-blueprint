@@ -31,21 +31,31 @@ export const coverContent: CoverContent = {
         'What PLUS is, and who the blueprints in here are about.',
       sections: [
         {
-          kind: 'prose',
+          kind: 'portrait',
           id: 'service-plus',
           heading: 'PLUS Personalized Learning',
           paragraphs: [
             'PLUS Personalized Learning is a hybrid human-AI tutoring platform with 500+ tutors, used across 13+ schools, supporting 5,000+ middle school students through real-time, in-class math tutoring sessions.',
           ],
+          image: {
+            src: '/homepage/plus-icon.png',
+            alt: 'The PLUS logomark, a plus sign in a gradient tile',
+            size: 'badge',
+          },
         },
         {
-          kind: 'prose',
+          kind: 'portrait',
           id: 'service-tutors',
           heading: 'Tutors',
           paragraphs: [
             'Tutors at PLUS are university students working part time. Before they run sessions, they complete onboarding and lesson modules. In each tutoring session they typically support about 5–6 students, guided by the PLUS app built by the PLUS team.',
             'The blueprints in here follow that arc — Discovery through Post-Session — so a tutor journey and the staff work behind it are read from one map.',
           ],
+          image: {
+            src: '/homepage/tutor-illustration.png',
+            alt: 'Illustration of a PLUS tutor',
+            size: 'framed',
+          },
         },
       ],
     },
@@ -252,11 +262,8 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-map',
           command: '/sb:map',
-          purpose:
-            "Build a blueprint from what you already have — documents, a working session, or someone else's diagram.",
-          producesLabel: 'Produces',
-          produces:
-            'A validated blueprint file, signed off scenario by scenario, imported into the workspace.',
+          description:
+            "Builds a blueprint from what you already have — documents, a working session, or someone else's diagram — and produces a validated blueprint file, signed off scenario by scenario and imported into the workspace.",
           figure: {
             src: '/cover/sb-map.svg',
             alt: 'How sb:map turns documents, sessions, or a foreign diagram into a validated blueprint',
@@ -268,10 +275,8 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-audit',
           command: '/sb:audit',
-          purpose:
-            'Run the check roster and find what is missing, conflicting, or unowned.',
-          producesLabel: 'Produces',
-          produces: 'Findings for triage — the audit writes no changes of its own.',
+          description:
+            'Runs the check roster to find what is missing, conflicting, or unowned, and produces findings for triage — the audit writes no changes of its own.',
           figure: {
             src: '/cover/sb-audit.svg',
             alt: 'How sb:audit runs its check roster and records findings for triage',
@@ -283,11 +288,8 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-whatif',
           command: '/sb:whatif',
-          purpose:
-            'Trace a proposed change through the dependency graph before anyone commits.',
-          producesLabel: 'Produces',
-          produces:
-            'The cells it would reach and the assumptions it would break, worked on a copy.',
+          description:
+            'Traces a proposed change through the dependency graph before anyone commits, producing the cells it would reach and the assumptions it would break — worked on a copy, never the live blueprint.',
           figure: {
             src: '/cover/sb-whatif.svg',
             alt: 'How sb:whatif traces a proposed change downstream on a copy',
@@ -299,9 +301,8 @@ export const coverContent: CoverContent = {
           kind: 'skill',
           id: 'skills-slice',
           command: '/sb:slice',
-          purpose: 'Cut the view one stakeholder needs out of the whole.',
-          producesLabel: 'Produces',
-          produces: 'One slice per view, still citing the cells it quotes.',
+          description:
+            'Cuts the view one stakeholder needs out of the whole, producing one slice per view that still cites the cells it quotes.',
           figure: {
             src: '/cover/sb-slice.svg',
             alt: 'How sb:slice selects and orders cells into a stakeholder view',
