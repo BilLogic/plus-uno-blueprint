@@ -19,7 +19,6 @@ import { usePublishCanvasZoomChrome } from '@/contexts/CanvasZoomChromeContext'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
-import { registerActiveCanvasCamera } from '@/lib/activeCanvasCamera'
 
 type ZoomPanViewportProps = {
   children: ReactNode
@@ -88,7 +87,6 @@ function ZoomPanViewportInner({
     panBy,
     cancelCamera,
     getCameraState,
-    focusSlide,
   } = useZoomPanViewport({
     resetKey,
     panIgnoreSelector,
@@ -116,10 +114,6 @@ function ZoomPanViewportInner({
   }, [focusCells, focusCellsKey])
 
   useEffect(() => registerActiveFocusCells(focusCells), [focusCells])
-  useEffect(
-    () => registerActiveCanvasCamera({ focusSlide }),
-    [focusSlide],
-  )
 
   // Agent parity: camera controls (otherwise keyboard-only ⌘+/⌘−/⌘0).
   useEffect(() => {

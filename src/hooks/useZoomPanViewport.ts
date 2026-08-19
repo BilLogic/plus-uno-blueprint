@@ -112,6 +112,14 @@ export const SEMANTIC_ZOOM_THRESHOLD = 0.25
 /** How far a pending touch may wander before it stops being a tap and
  * becomes a board drag. */
 const TOUCH_PAN_SLOP = 10
+
+/**
+ * Frame cap on the pre-fit settle loop. Comfortably longer than the two
+ * frames a stable board needs and than the commits a navigation takes, and
+ * short enough that a target which never goes quiet degrades to "fit against
+ * whatever we have" rather than polling forever.
+ */
+const MAX_SETTLE_POLLS = 20
 /** Counter-scale that keeps a phase badge at roughly constant screen size
  * (12px type reads ~11px). Capped so a deep zoom-out cannot grow a badge
  * past its artboard. */
@@ -323,12 +331,40 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    */
   const fitSettlingRef = useRef(false)
   /**
-   * Latest semantic threshold, so the post-fit badge re-stamp can read it
-   * without making `fitToView` depend on (and re-create itself for) a prop
-   * that changes nothing about how a fit is computed.
+   * Portrait/landscape, for the rotation rule in the resize observer.
+   *
+   * A ref, not a closure local of that effect: the effect lists `resetKey`
+   * in its deps, so every navigation re-created it and reset the detector to
+   * `null` — and a flip needs a previous value to compare against. A freshly
+   * constructed ResizeObserver also delivers once for each observed element,
+   * which consumed the re-seed. The upshot was that the branch existing
+   * because "on a phone there is no Reset control to recover with" could not
+   * fire on the first delivery after any navigation. Orientation is device
+   * state; it does not belong to an effect generation.
+   */
+  const lastAspectLandscapeRef = useRef<boolean | null>(null)
+  /**
+   * Latest semantic threshold, read by every transform write so that NOTHING
+   * on the camera path depends on the prop.
+   *
+   * This ref existed for the post-fit badge re-stamp and said, correctly,
+   * that `fitToView` must not "depend on (and re-create itself for) a prop
+   * that changes nothing about how a fit is computed" — but `commitTransform`
+   * still closed over the prop, so the whole chain
+   * (`commitTransform → animateTransform → fitToView → runPendingFit →` the
+   * resetKey layout effect) was rebuilt whenever the threshold moved. That
+   * effect is NOT idempotent: it raises `pendingFitRef` and clears
+   * `userAdjustedViewRef`. The threshold is dynamic now, so a reader focused
+   * on a phase who toggled a path — a case `fitKey` deliberately ignores —
+   * had their pan and zoom thrown away by a fit nobody asked for. Reading it
+   * through the ref finishes the job the comment described.
+   *
+   * Synced in a LAYOUT effect: the fit effect below is one too, and a passive
+   * sync would leave the first fit after a threshold change reading a stale
+   * value.
    */
   const semanticThresholdRef = useRef(semanticZoomThreshold)
-  useEffect(() => {
+  useLayoutEffect(() => {
     semanticThresholdRef.current = semanticZoomThreshold
   }, [semanticZoomThreshold])
   /**
@@ -392,7 +428,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           el,
           nextPan,
           nextZoom,
-          semanticZoomThreshold,
+          semanticThresholdRef.current,
           tierZoom,
         )
       }
@@ -401,7 +437,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         setZoom(nextZoom)
       }
     },
-    [semanticZoomThreshold],
+    // Identity-stable on purpose — see `semanticThresholdRef`. Everything
+    // downstream of this callback schedules fits, and a rebuild there is a
+    // camera move.
+    [],
   )
 
   const animateTransform = useCallback(
@@ -411,12 +450,42 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     ): Promise<CameraTransitionResult> => {
       cancelFitAnimation('superseded')
       const from = transformRef.current
-      const container = containerRef.current
-      const viewport = {
-        width: container?.clientWidth ?? 1,
-        height: container?.clientHeight ?? 1,
-      }
       const target = { pan: nextPan, zoom: nextZoom }
+
+      /*
+        The viewport is read PER FRAME, not snapshotted.
+
+        Interpolating about the viewport centre made `height` load-bearing —
+        the old rectangle-width maths used `width` alone. A snapshot taken
+        while the container is still zero-height (a fit scheduled from a
+        layout effect, a collapsed panel, a `display` change in the same
+        commit) fell back to 1, so every intermediate frame was computed
+        about y≈0 instead of the real centre: the camera swung hundreds of
+        pixels out and snapped home on the last frame, because the endpoints
+        short-circuit and stay exact. Reading live also means a container
+        that resizes mid-ease (chrome opening) is followed rather than
+        ignored.
+      */
+      const readViewport = () => {
+        const container = containerRef.current
+        return {
+          width: container?.clientWidth ?? 0,
+          height: container?.clientHeight ?? 0,
+        }
+      }
+
+      // Nothing to interpolate against, and no frame would be honest about
+      // it — land on the target rather than animate through a fictional
+      // centre.
+      const initialViewport = readViewport()
+      if (initialViewport.width <= 0 || initialViewport.height <= 0) {
+        commitTransform(nextPan, nextZoom, true, nextZoom)
+        return Promise.resolve<CameraTransitionResult>({
+          kind: 'completed',
+          transform: target,
+        })
+      }
+
       fitAnimationTargetRef.current = target
       const progressAt = createCameraTransitionClock(fitDurationMs)
 
@@ -424,10 +493,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         fitAnimationResolveRef.current = resolve
         const step = (now: number) => {
           const t = progressAt(now)
+          const viewport = readViewport()
           const next = interpolateCameraTransform(
             from,
             target,
-            viewport,
+            viewport.width > 0 && viewport.height > 0
+              ? viewport
+              : initialViewport,
             easeCameraTransition(t),
           )
           commitTransform(next.pan, next.zoom, t === 1, nextZoom)
@@ -636,6 +708,23 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           void animateTransform(next.pan, next.zoom)
         }
       } else {
+        /*
+          Cancel first. Every other camera entry point in this file does
+          (`zoomAtPoint`, `zoomBetweenPoints`, `beginPan`, `panBy`, the wheel
+          pan) — this branch did not, and `commitTransform` only writes the
+          ref and the element: a queued `step` still holds its own captured
+          `from`/`target` and repaints straight over the correction on the
+          next frame.
+
+          It made two escape hatches inert. `refitWhenIdle` gives up waiting
+          past its deadline precisely BECAUSE an ease is still running, then
+          "corrected" into that ease and lost. And a backgrounded tab stops
+          `requestAnimationFrame` mid-flight, so the queued frame is still
+          pending when the reader returns — the deadline correction lands
+          during the freeze, then the resumed frame slams the camera back to
+          the pre-layout framing the instant the tab is looked at.
+        */
+        cancelFitAnimation()
         commitTransform(next.pan, next.zoom, true)
       }
       const content = contentRef.current
@@ -669,7 +758,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
       return true
     },
-    [animateTransform, commitTransform, computeFitTransform],
+    [animateTransform, cancelFitAnimation, commitTransform, computeFitTransform],
   )
 
   /**
@@ -743,41 +832,89 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     */
     fitSettlingRef.current = true
     let frame = 0
+    let polls = 0
     let lastSize: { width: number; height: number } | null = null
-    const runFit = () => {
-      fitSettlingRef.current = false
-      runPendingFit(animate)
+    let lastTarget: HTMLElement | null = null
+
+    const stop = () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timeout)
     }
+
+    /*
+      Stand down only once the fit has actually been CONSUMED.
+
+      `runPendingFit` can decline: `computeFitTransform` bails when the
+      target measures 0×0, leaving `pendingFitRef` raised. Lowering the guard
+      regardless handed the next fit to the ResizeObserver's owed-fit branch
+      — which fires on the panel's mid-layout growth, i.e. exactly the
+      premature fit this loop exists to prevent, ~200 ms before the backstop
+      could have helped.
+    */
+    const runFit = () => {
+      runPendingFit(animate)
+      if (pendingFitRef.current) return false
+      fitSettlingRef.current = false
+      stop()
+      return true
+    }
+
     const step = () => {
       const content = contentRef.current
-      const target =
-        content?.querySelector<HTMLElement>(fitSelector) ?? content
+      const target = content?.querySelector<HTMLElement>(fitSelector) ?? content
       const size = target
         ? { width: target.offsetWidth, height: target.offsetHeight }
         : null
-      if (
-        size &&
-        lastSize &&
+      /*
+        Three things have to be true to call this settled, and only the last
+        one used to be checked.
+
+        A REAL size — `0×0` twice running is a board that has not begun
+        laying out, not a board that has finished. That is the heavy mount
+        this loop was written for, and it was the one case it mis-read.
+
+        The SAME element both times — `fitSelector` changes on the same
+        navigation that mounts the new node, so frame one legitimately
+        measures the content fallback and frame two measures the real target.
+        Two different elements agreeing within a pixel is a coincidence, not
+        a settled layout.
+
+        And the same size, within a pixel of integer `offsetWidth` rounding.
+      */
+      const measurable = size !== null && size.width > 0 && size.height > 0
+      const settled =
+        measurable &&
+        lastSize !== null &&
+        target === lastTarget &&
         Math.abs(size.width - lastSize.width) <= 1 &&
         Math.abs(size.height - lastSize.height) <= 1
-      ) {
+
+      if (settled && runFit()) return
+
+      lastSize = measurable ? size : null
+      lastTarget = target
+      // Bounded, like `refitWhenIdle` below. A target that never goes quiet
+      // — an oscillating measurement, a selector that keeps missing — would
+      // otherwise poll forever, and each poll is a `querySelector` plus two
+      // forced layout reads scheduled right after our own transform writes.
+      if (++polls > MAX_SETTLE_POLLS) {
         runFit()
         return
       }
-      lastSize = size
       frame = requestAnimationFrame(step)
     }
     frame = requestAnimationFrame(step)
 
     // Backstop for content that will not go quiet in time — the ease is
     // 420 ms, and a fit that starts later than this reads as a hang. Late
-    // growth after it is the resize observer's correction to make.
+    // growth after it is the resize observer's correction to make. It also
+    // ENDS the loop: leaving the rAF running past the backstop was a
+    // permanent per-frame forced layout for the life of the view.
     const timeout = window.setTimeout(runFit, 250)
 
     return () => {
       fitSettlingRef.current = false
-      cancelAnimationFrame(frame)
-      window.clearTimeout(timeout)
+      stop()
     }
   }, [resetKey, fitSelector, runPendingFit])
 
@@ -791,8 +928,6 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     if (!content) return
 
     let debounceTimer = 0
-    // Portrait/landscape detection for the rotation rule below.
-    let lastAspectLandscape: boolean | null = null
 
     const onResize = () => {
       // A rotation is not a window drag (todo 027 §4): flipping the aspect
@@ -803,8 +938,9 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (box && box.width > 0 && box.height > 0) {
         const landscape = box.width > box.height
         const flipped =
-          lastAspectLandscape !== null && landscape !== lastAspectLandscape
-        lastAspectLandscape = landscape
+          lastAspectLandscapeRef.current !== null &&
+          landscape !== lastAspectLandscapeRef.current
+        lastAspectLandscapeRef.current = landscape
         if (flipped) {
           userAdjustedViewRef.current = false
           window.clearTimeout(debounceTimer)
@@ -901,9 +1037,6 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         )
         return
       }
-      // Not a refit: the fit scheduled by the last resetKey is still
-      // waiting on content that has only now laid out.
-      runPendingFit(pendingFitAnimateRef.current)
     }
 
     const observer = new ResizeObserver(onResize)
@@ -1490,17 +1623,6 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [cancelFitAnimation, commitTransform],
   )
 
-  const focusSlide = useCallback(
-    (slideId: string) => {
-      const selector = `[data-focus-slide-id="${CSS.escape(slideId)}"], [data-phase-id="${CSS.escape(slideId)}"]`
-      const next = computeFitTransform(undefined, selector)
-      if (!next) return
-      userAdjustedViewRef.current = false
-      void animateTransform(next.pan, next.zoom)
-    },
-    [animateTransform, computeFitTransform],
-  )
-
   const getCameraState = useCallback(
     () => ({
       ...transformRef.current,
@@ -1556,7 +1678,6 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     panBy,
     cancelCamera: cancelFitAnimation,
     getCameraState,
-    focusSlide,
     pointerHandlers: {
       onClickCapture: handleClickCapture,
     },

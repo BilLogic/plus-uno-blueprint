@@ -55,7 +55,13 @@ export function easeCameraTransition(value: number): number {
  * that blocked time makes the first visible frame jump toward the target.
  */
 export function createCameraTransitionClock(durationMs: number) {
-  const duration = Math.max(1, durationMs)
+  // `Math.max(1, NaN)` is NaN, so the clamp alone is not a clamp. A NaN
+  // duration makes every progress NaN, and `t < 1` is false for NaN — so the
+  // loop writes NaN into the transform, reports `completed`, and every later
+  // pan, zoom and fit reads that NaN. The canvas vanishes and cannot recover
+  // without a remount. Unreachable today; silent and unrecoverable if it ever
+  // is.
+  const duration = Number.isFinite(durationMs) ? Math.max(1, durationMs) : 420
   let firstFrameAt: number | null = null
 
   return (frameAt: number): number => {

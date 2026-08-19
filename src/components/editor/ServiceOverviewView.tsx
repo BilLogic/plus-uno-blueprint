@@ -42,12 +42,16 @@ import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import { cn } from '@/lib/utils'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
-import { focusActiveCanvasSlide } from '@/lib/activeCanvasCamera'
 import {
   getCanvasFocusFitInsets,
   getCanvasFocusMaxZoom,
   getCanvasFocusSelector,
 } from '@/lib/canvasFocus'
+import {
+  getFocusedComparisonCameraKey,
+  getMinFitZoom,
+  getSemanticZoomThreshold,
+} from '@/lib/canvasCameraPolicy'
 import {
   OVERVIEW_CANVAS_PADDING_X,
   OVERVIEW_CANVAS_PADDING_Y,
@@ -77,34 +81,6 @@ import {
   prefersReducedMotion,
 } from '@/lib/motion'
 import type { PathListItem } from '@/lib/pathSelection'
-/**
- * Floor for the phone's fit-to-view zoom — 3x the phone's own semantic
- * threshold below, so the frame the reader lands on always has cell text in
- * it with room to pinch out before the text goes. Roughly half a phase board
- * across on a 390px screen.
- */
-const MOBILE_MIN_FIT_ZOOM = 0.45
-
-/**
- * Where the phone's cells give up their text. Lower than the desktop 0.25
- * because a phone has ~3 device pixels per CSS pixel: at 0.15 the blurbs
- * are small but still ink on the screen, and a reader who pinches out to
- * see where they are keeps something to read. At 0.25 the whole board went
- * blank the moment they zoomed out at all, which reads as "this blueprint
- * has no content" rather than "you are too far out".
- */
-const MOBILE_SEMANTIC_ZOOM_THRESHOLD = 0.15
-
-/**
- * A focused comparison is intentionally wider/taller than one blueprint.
- * Its fitted destination commonly lands below the overview's 0.25 density
- * cutoff even though the comparison is the thing the reader explicitly
- * opened. Keep its cell content present until 0.12; manual zoom-out can still
- * cross into the density-map tier, while the programmatic comparison landing
- * no longer looks like an empty board.
- */
-const COMPARE_SEMANTIC_ZOOM_THRESHOLD = 0.12
-
 /**
  * Which element's `transitionend` is allowed to close each reveal stage.
  *
@@ -375,9 +351,29 @@ function ServiceOverviewViewImpl({
       : activeSlide.id
     : null
 
+  /*
+    ONE camera writer per navigation.
+
+    This used to start an ease imperatively here, before React reconciled,
+    so the camera moved while the transition rendered. The problem was never
+    the timing — it was that the pre-flight and the fit that follows it
+    compute DIFFERENT destinations, so the `isSameTransform` skip in
+    `fitToView` (which exists to make the second one a no-op) could never
+    fire. The pre-flight closes over the overview's fit parameters
+    (`maxFitZoom: 1`, margin 48, no insets) while the settled fit uses the
+    focused view's (`MAX_ZOOM`, margin 20, 56px insets), and navigating also
+    mounts the sticky header, which changes the container's height. No amount
+    of care about panel geometry could make those two agree. Every click
+    therefore ran a 420 ms glide superseded partway by a second 420 ms glide,
+    and a sine ease restarted from a moving camera departs at zero velocity:
+    glide, brake, glide.
+
+    `createCameraTransitionClock` already solves the latency this was for —
+    it starts the ease's clock on the first frame the browser can draw, so
+    reconciliation cannot eat the animation. One writer, one ease.
+  */
   const openCanvasDetail = useCallback(
     (slideId: string) => {
-      focusActiveCanvasSlide(slideId)
       startTransition(() => openDetail(slideId))
     },
     [openDetail],
@@ -430,12 +426,13 @@ function ServiceOverviewViewImpl({
   // read. Floored, the camera frames the board's top-left at a legible
   // scale and the reader pans from there. Desktop keeps the true fit: a
   // laptop can hold a whole phase at a readable size.
-  const minFitZoom = mobileShell ? MOBILE_MIN_FIT_ZOOM : undefined
-  const semanticZoomThreshold = mobileShell
-    ? MOBILE_SEMANTIC_ZOOM_THRESHOLD
-    : isDetail && overviewSelectedPathIds.length > 1
-      ? COMPARE_SEMANTIC_ZOOM_THRESHOLD
-      : undefined
+  const cameraSurface = {
+    mobileShell,
+    isDetail,
+    selectedPathCount: overviewSelectedPathIds.length,
+  }
+  const minFitZoom = getMinFitZoom(cameraSurface)
+  const semanticZoomThreshold = getSemanticZoomThreshold(cameraSurface)
 
   /*
     Skeleton geometry — real phase count and real scenarios per phase from
@@ -488,9 +485,11 @@ function ServiceOverviewViewImpl({
   // new fitted frame instead of letting ResizeObserver snap there afterward.
   // `focusNonce` bumps on each nav click so re-selecting the current row also
   // recenters after panning away.
-  const focusedComparisonCameraKey = isSubslide(activeSlide)
-    ? `${overviewSelectedPathIds.join(',')}:${getScenarioDisplayViewType(activeSlide)}`
-    : 'stable'
+  const focusedComparisonCameraKey = getFocusedComparisonCameraKey({
+    isFocusedScenario: isSubslide(activeSlide),
+    selectedPathIds: overviewSelectedPathIds,
+    displayViewType: getScenarioDisplayViewType(activeSlide),
+  })
   const fitKey = overviewReady
     ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}:${focusedComparisonCameraKey}`
     : `service-canvas:loading:${skeletonPhases.map((phase) => phase.scenarioCount).join('-') || 'unknown'}`

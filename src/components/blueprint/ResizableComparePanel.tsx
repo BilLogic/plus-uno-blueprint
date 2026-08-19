@@ -87,10 +87,22 @@ export function ResizableComparePanel({
   const measuredContentHeight = measuredContent.height
   const [userSize, setUserSize] = useState({ width: 0, height: 0 })
 
+  /** Teardown for an in-flight corner drag, so unmount can end it. */
+  const releaseDragRef = useRef<(() => void) | null>(null)
+  useEffect(() => () => releaseDragRef.current?.(), [])
+
   useEffect(() => {
     if (lockHeight) return
+    // A fresh object never bails React's `Object.is` check, so this used to
+    // re-render every unlocked panel on the board on every content-key
+    // change — one paint after the layout effect below had already measured,
+    // landing inside the camera's settle window N times over.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- deliberate reset of the user's drag-resize when the fit key or defaults change; part of the panel's measurement flow
-    setUserSize({ width: 0, height: 0 })
+    setUserSize((current) =>
+      current.width === 0 && current.height === 0
+        ? current
+        : { width: 0, height: 0 },
+    )
   }, [fitContentKey, defaultWidth, defaultHeight, lockHeight])
 
   /*
@@ -194,7 +206,27 @@ export function ResizableComparePanel({
         height: size.height,
       }
 
+      /*
+        The drag is bound to ONE pointer id, and its teardown is idempotent
+        and reachable from three directions.
+
+        Every listener here used to be unfiltered, so any pointerup from any
+        pointer ran the teardown — and `releasePointerCapture` THROWS
+        `NotFoundError` for an id this button never captured, which skipped
+        both `removeEventListener` calls that followed it. Put a second
+        finger on the board mid-drag (the viewport turns it into a pinch and
+        captures it), lift that finger first, and `onMove` stays on `window`
+        for the rest of the session holding a stale `resizeStart`: the panel
+        then resizes itself on any later mouse move, with no button held.
+        `pointercancel` (an OS edge swipe, the notification shade) and an
+        unmount mid-drag stranded it the same way, by never firing a
+        pointerup at all.
+      */
+      const pointerId = e.pointerId
+      const target = e.currentTarget
+
       const onMove = (moveEvent: PointerEvent) => {
+        if (moveEvent.pointerId !== pointerId) return
         setUserSize({
           width: Math.max(
             resolvedMinWidth,
@@ -209,16 +241,32 @@ export function ResizableComparePanel({
         })
       }
 
-      const target = e.currentTarget
-
-      const onUp = (upEvent: PointerEvent) => {
-        target.releasePointerCapture(upEvent.pointerId)
+      const endDrag = () => {
+        try {
+          target.releasePointerCapture(pointerId)
+        } catch {
+          // Already released, or never captured — the teardown below is the
+          // part that matters and must not be skipped for it.
+        }
         window.removeEventListener('pointermove', onMove)
-        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointerup', onPointerEnd)
+        window.removeEventListener('pointercancel', onPointerEnd)
+        releaseDragRef.current = null
       }
 
+      const onPointerEnd = (endEvent: PointerEvent) => {
+        if (endEvent.pointerId !== pointerId) return
+        endDrag()
+      }
+
+      // Unmount mid-drag never fires a pointer event; the effect below calls
+      // this instead.
+      releaseDragRef.current?.()
+      releaseDragRef.current = endDrag
+
       window.addEventListener('pointermove', onMove)
-      window.addEventListener('pointerup', onUp)
+      window.addEventListener('pointerup', onPointerEnd)
+      window.addEventListener('pointercancel', onPointerEnd)
     },
     [resolvedMinHeight, resolvedMinWidth, size.height, size.width],
   )

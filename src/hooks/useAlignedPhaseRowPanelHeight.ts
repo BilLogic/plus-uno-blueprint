@@ -35,9 +35,20 @@ export function useAlignedPhaseRowPanelHeight(
       )
       let maxPanelHeight = sharedPanelHeight
       contentNodes.forEach((node) => {
-        // The focused scenario opts out of the shared-row contract (it
-        // renders the stacked arrangement at content height) — it must not
-        // drive its dimmed siblings' locked height.
+        /*
+          The focused scenario is excluded from the INPUT to the row height,
+          not from the contract — it still receives the row height like every
+          other panel, because focus must change as little geometry as
+          possible (see "One writer per navigation" in
+          design/interaction.md). What it must not do is drive its own floor:
+          a comparison opened inside it would otherwise inflate its dimmed
+          siblings, which is how six untouched panels once grew from 2218px
+          to 4250px each.
+
+          `PhaseScenarioOverview` applies the same exclusion to the two
+          height ESTIMATES; the two must agree about whose height counts or
+          the estimate and the measurement fight.
+        */
         if (node.closest('[data-canvas-focus-active]')) return
         // Layout height only — `scrollHeight` also counts arrow overlays and
         // path frames bleeding past the board, which shows up as gray surplus.
