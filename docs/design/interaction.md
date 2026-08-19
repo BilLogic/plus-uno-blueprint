@@ -154,16 +154,41 @@ row — shorter boards drift down and their headers no longer line up with
 their neighbours'. It also makes the padding above a board appear to change
 as the measurement settles.
 
-**The focused scenario is excluded from the height input, not from the
-contract.** It still receives the row height like every other panel
-(invariant 1 above). It is left out of the `Math.max` that computes that
-height, because otherwise a comparison opened inside a focused scenario
-inflates its dimmed neighbours: a second path once grew six untouched
-siblings from 2218px to 4250px each. The same inflation raised the focused
-panel's own floor, which is where the dead gray under a focused Merged view
-came from — one exclusion fixes both, because the row height is a floor and
-not a ceiling (`targetHeight` in `ResizableComparePanel`), so a taller board
-simply grows past it.
+**The row height is MEASURED, and the estimate is only a placeholder.** The
+estimate exists to size panels in the commit before anything has been
+measured; the moment a measurement lands it replaces the estimate outright,
+in both directions. Treating it as a floor put **84px of dead gray under
+every board on the canvas** — the same 84px on all six phase rows, which is
+the signature of an arithmetic error, not a measurement one. A `Math.max`
+against a prediction that is always high can never correct itself. Two
+independent terms produced it: 64px because the panel-height estimates
+called `getComparePanelScrollPaddingY()` with no options and so budgeted for
+the *unlocked* scroll chrome — resize-handle inset plus artboard buffer — on
+panels that are height-locked and have no handle, while the measuring pass
+and `ResizableComparePanel` both correctly passed `{ lockHeight: true }`;
+and 20px for a path-section bottom inset the stacked board does not render.
+The estimates take the chrome as an argument now, so the placeholder is
+close — but nothing depends on it being right any more, which is the point.
+A future drift shows up as one wrong pre-paint frame instead of permanent
+gray.
+
+**A panel leaves the row's height input only when it is EXPANDED, never
+merely because it is focused.** The exclusion exists for one case: a
+comparison opened inside a focused scenario reaching its dimmed neighbours.
+Gating it on focus instead made invariant 1 unsatisfiable — excluding a
+panel changes the row height, and the focused panel went down with it (the
+Application row read 1766px at overview and 1730px once Discovery was
+focused; that 36px was the container padding appearing to jump between the
+phase view and the scenario view). Gated on the expansion, a plain focus
+leaves every number in the row exactly where it was, and an expanded panel
+is still bucketed rather than dropped — `resolveScenarioPanelHeight` hands
+it `max(rowHeight, itsOwn)` so excluding it can never shrink it.
+
+The marker is an explicit `data-row-height-excluded` attribute, not a
+reading of `data-canvas-focus-active`. That attribute is set on the phase
+SECTION as well as the panel, so a `closest()` for it matched *every* panel
+in a focused row rather than the focused one — which silently disabled the
+row measurement altogether and dropped the row to its estimate.
 
 Panel content is measured in a **layout** effect, not a passive one. The
 panel answers growth in the commit that causes it (the estimate rises
@@ -191,6 +216,25 @@ touch screen — on a phone the canvas is the whole surface:
   gesture state.
 - **A drag's trailing click is swallowed** — the synthetic click browsers
   fire after a pan must not also open a cell.
+
+**The gesture is claimed twice over: declared in CSS, then taken in JS.**
+`touch-action: none` is set on the viewport, on the transformed content
+wrapper, and on every descendant of it (`blueprint.css`) — but that property
+is a *declaration* the compositor consults before deciding whether a touch
+belongs to the page, and `[data-zoom-pan-content]` is a composited layer that
+WebKit does not dependably resolve it across. When it resolves to `auto` the
+browser takes the touch and answers with `pointercancel`: a finger on empty
+canvas pans, the identical finger on a cell does nothing, and two fingers
+zoom the page instead of the board. So the viewport also holds non-passive
+`touchmove` and `touchstart` listeners that call `preventDefault` — no layer
+boundary sits between an event already delivered and its default action.
+`touchstart` is claimed only from the second finger: preventing the first
+would suppress the click a tap depends on, while multi-touch synthesizes no
+click and is where WebKit's page pinch-zoom starts, which `touch-action`
+cannot reach at all. Chromium resolves the declaration correctly and never
+showed any of this, which is why `canvasTouchContract.test.ts` pins both
+halves — no amount of checking in a Chromium pane can catch a regression
+here.
 
 The viewport observes pointer streams in native capture, before populated
 lanes, cells, or controls can stop bubbling. Desktop adds two temporary pan
