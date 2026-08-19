@@ -60,12 +60,34 @@ function pathIdsKey(paths: PathListItem[]): string {
   return paths.map((path) => path.id).join('|')
 }
 
-function defaultPathKeysFromCatalog(catalog: PathCatalog): string[] {
+/**
+ * Every scenario's own default path identity, deduped, in catalog order.
+ *
+ * This used to return the FIRST scenario's preferred key and stop, which
+ * made one scenario's path name the global default. Path identity is
+ * `path_type:name`, and nothing makes two scenarios name their happy paths
+ * the same — so every scenario that named its own differently matched
+ * nothing and rendered "No selected paths in this phase" on the overview,
+ * with no error anywhere. Uno's content happens to reuse one name across
+ * scenarios, so the key matched everywhere by luck and hid it; the first
+ * scenario added with its own vocabulary would have surfaced it.
+ *
+ * The union is safe for the compare cluster's single-selection gate: a key
+ * belonging to another scenario's paths cannot match this one's, so no
+ * scenario ever draws more than one of them.
+ */
+export function defaultPathKeysFromCatalog(catalog: PathCatalog): string[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
   for (const paths of Object.values(catalog)) {
     const preferred = pickPreferredPath(paths)
-    if (preferred) return [getOverviewPathKey(preferred)]
+    if (!preferred) continue
+    const key = getOverviewPathKey(preferred)
+    if (seen.has(key)) continue
+    seen.add(key)
+    keys.push(key)
   }
-  return []
+  return keys
 }
 
 function selectedIdsForPaths(
@@ -79,7 +101,7 @@ function selectedIdsForPaths(
     .map((path) => path.id)
 }
 
-function deriveSelections(
+export function deriveSelections(
   catalog: PathCatalog,
   activePathKeys: readonly string[],
 ): Record<string, string[]> {
