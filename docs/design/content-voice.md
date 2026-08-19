@@ -145,15 +145,17 @@ that documents the service and one that misreports it.
 
 ### Length
 
-| | Target | Cap |
+| | Target | Review threshold |
 | --- | --- | --- |
-| Act-lane `content` | ≤ 80 chars, one sentence | 120 |
-| Pill-lane `content` | ≤ 24 chars per pill | 40 |
+| Act-lane `content` | ≤ 80 chars, one sentence | 100 |
+| Pill-lane label | ≤ 32 chars per pill | 48 |
 | `description` | 120–400 chars | 600 |
 
-Over the cap, the lead clause stays and the rest moves to `description`. The
-cap is a rendering constraint as much as an editorial one: a fixed lane row
-cannot grow, so long content escapes its band and paints over the row below.
+Thresholds are editorial warnings, not storage caps. Over the threshold, keep
+the lead clause in `content` and move supporting detail to `description` when
+that improves the writing. The canvas preserves stable geometry by clamping
+the preview (four lines for narrative cells, two for pills); the detail panel,
+accessibility tree, database, and agent tools retain the complete content.
 
 ### Identifiers
 

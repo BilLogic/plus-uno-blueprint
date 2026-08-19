@@ -1,8 +1,8 @@
 ---
 audience: designers
-summary: The encodings — compare bands, ledger, divergence strip and zones, severity, the semantic-zoom blocks tier, path-type colors — and the rule that every encoding is tokenized and survives dark + forced-colors.
-sources: src/components/blueprint/CompareDivergenceStrip.tsx, src/components/blueprint/StackedCompareGrid.tsx, src/components/blueprint/CompareDifferencesSurface.tsx, src/lib/pathColorTheme.ts, src/styles/blueprint.css, src/lib/palette.test.ts
-last-reviewed: 2026-08-08
+summary: The encodings — compare bands, ledger, merged membership outlines, severity, the semantic-zoom blocks tier, path-type colors — and the rule that every encoding is tokenized and survives dark + forced-colors.
+sources: src/components/blueprint/StackedCompareGrid.tsx, src/components/blueprint/MergedCompareGrid.tsx, src/components/blueprint/CompareDifferencesSurface.tsx, src/lib/pathColorTheme.ts, src/styles/blueprint.css, src/lib/palette.test.ts
+last-reviewed: 2026-08-19
 ---
 
 # Data visualization
@@ -19,13 +19,16 @@ The compare cockpit (Compare v3) reads two scenario runs against each other:
   the other on the same time axis.
 - **The ledger** (`CompareDifferencesSurface`) — the itemized differences
   surface below the fold; each entry cites the cells it derives from.
-- **The divergence strip** (`CompareDivergenceStrip`) — the signature. One
-  shared neutral 2px track where the runs agree; where they split, per-path
-  **colored + dashed** tracks; **zone chips** (①②③…, `CompareZoneChip` /
-  `deriveCompareZones`) numbering each divergent zone so the strip, the
-  bands, and the ledger can all point at "zone ②" and mean the same thing.
-- **Merged** is a per-slot combined grid — a view mode, not a new encoding
-  (see [content-voice](../content-voice.md) for the Stacked/Merged naming).
+- **Divergent column tint** — a quiet background cue in Stacked; the
+  Differences surface provides the precise step-by-step reading and
+  navigation. There is no second navigation strip above the canvas.
+- **Merged** is a per-slot combined grid. Shared slots draw once. Different
+  versions stack vertically, while a thin rounded membership outline identifies
+  the paths represented by every rendered cell without repainting its
+  lane-colored face. A solid outline means one path; equal perimeter segments
+  mean multiple paths. Hover or keyboard focus discloses the full path names.
+  A shared cell therefore shows every selected path rather than encoding
+  “shared” as an unexplained absence.
 
 ## Severity
 
@@ -46,6 +49,9 @@ length, cells per phase, above/below the line of visibility — with the phase
 labels as the only legible text. The CSS in `src/styles/blueprint.css`
 (SEMANTIC ZOOM block) owns the fill choices; its forced-colors restatement
 redraws the blocks in `CanvasText` so the density map survives High Contrast.
+Focused multi-path comparisons use a lower cutoff because their fitted frame is
+larger than one blueprint; opening a comparison must not immediately replace
+the content the reader asked for with the density encoding.
 
 ## Path-type colors
 
@@ -58,6 +64,8 @@ colors from a registry. Everything about it is deliberate and tested:
   badge without matching it.
 - Color is never the only channel: the **happy path is solid, every other
   type is dashed** — line style carries the distinction too.
+- Merged membership outlines pair color with perimeter position and full-name tooltip text;
+  stacked geometry—not color—remains the primary difference signal.
 - The named-path families are **disjoint from the lane families**, so a 2px
   path line can never render in the hue of the lane it crosses.
 

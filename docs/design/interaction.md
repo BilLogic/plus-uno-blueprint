@@ -19,7 +19,7 @@ One grammar for cells, everywhere (the authoritative comment lives in
   selection). No picker armed → a bare click opens the panel — or closes it,
   when the panel already shows that exact cell (click-in, click-out).
 - **Double-click deliberately does nothing.** In a toggle grammar, click-in
-  click-out *is* a fast double-click — indistinguishable by construction —
+  click-out _is_ a fast double-click — indistinguishable by construction —
   and every attempt to give the pair its own meaning turned reading a cell
   into flipping its membership. A held modifier cannot be produced by
   clicking fast; that is why "open" is the modifier.
@@ -32,7 +32,7 @@ clicks, the Differences surface, an open draft) is decided in one place,
 
 `CanvasMode` is `'view' | 'design'` (`src/contexts/canvasModeContext.ts`).
 View is reading, navigating, annotating; design turns the same canvas into an
-authoring surface — cells become selectable, and the toolbar *swaps* its
+authoring surface — cells become selectable, and the toolbar _swaps_ its
 annotation tools for creation ones rather than growing a second row. Scope is
 **per surface**, not global: the base canvas and each slice tab hold their own
 mode.
@@ -61,15 +61,33 @@ contract in short:
 - **Escape / Home / breadcrumb all animate to the overview identically** —
   same destination, same feel, no jump-cut variant.
 - First fit after any mount **jumps**; deep-link restores jump.
-- Path toggles, sidebar collapse, and chrome-driven resizes **never move the
-  camera**. Wheel/trackpad input follows instantly — no smoothing, no
-  momentum, and no snapping of any kind.
+- Path toggles in overview, sidebar collapse, and chrome-driven resizes **never
+  move the camera**. A path toggle inside a focused comparison changes the
+  target's geometry, so it gets one normal camera ease to the new fit.
+  Wheel/trackpad input follows instantly — no smoothing, no momentum, and no
+  snapping of any kind.
 - Exactly one camera animation per intent; reduced motion makes every fit a
-  jump.
+  jump. Automatic travel uses one 420 ms duration and a symmetric sine
+  ease-in-out across every route, keeping camera movement synchronized with
+  its focus fades. Manual wheel, pinch, drag, and keyboard input remains
+  immediate and never runs through this animation clock.
+- Wheel and trackpad zoom preserve the world point beneath the cursor. A
+  two-finger pinch maps its previous midpoint directly to its current midpoint,
+  combining scale and finger drift in one transform instead of applying drift
+  twice.
+- Focused phase and scenario boards are centered in the canvas. Floating
+  sequence controls use equal top and bottom clearance so avoiding the controls
+  never shifts the selected board off the visual center.
+- Camera time begins on the first drawable animation frame. React/layout work
+  may delay the start, but it cannot consume the ease before the browser paints.
+- Focus mode dims non-selected phase/scenario cards to 30%, then lifts them to
+  70% on hover or keyboard focus. They remain navigation targets so a reader
+  can switch focus directly; cell-level actions inside them remain inactive.
 
 ## The touch contract
 
-Owned by `useZoomPanViewport.ts`; this contract governs the canvas on any
+Owned by the native-capture boundary in `useZoomPanViewport.ts`, with the
+pure ownership table in `canvasInputPolicy.ts`; this contract governs the canvas on any
 touch screen — on a phone the canvas is the whole surface:
 
 - **Tap opens.** A finger that lifts inside the slop is a tap and behaves as
@@ -84,6 +102,11 @@ touch screen — on a phone the canvas is the whole surface:
   gesture state.
 - **A drag's trailing click is swallowed** — the synthetic click browsers
   fire after a pan must not also open a cell.
+
+The viewport observes pointer streams in native capture, before populated
+lanes, cells, or controls can stop bubbling. Desktop adds two temporary pan
+overrides without changing the selected tool: hold Space and primary-drag, or
+drag with the middle mouse button. Editable fields retain Space and shortcuts.
 
 Desktop wheel/keyboard paths are untouched by all of this, and an
 interaction test pins the pinch path. Breakpoint questions (what exists on a

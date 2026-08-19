@@ -230,7 +230,7 @@ export async function getCompareDiff(
   ]
   // Grouped by STEP — the ledger's grain and jump_divergence's argument;
   // each group names the divergence zone (run) it sits in, which is the
-  // grain the strip draws.
+  // grain used to group related divergent steps.
   for (const group of stepGroups) {
     lines.push(
       `${group.headerLabel} (zone ${group.zoneIndex}, ${group.slots.length} difference${

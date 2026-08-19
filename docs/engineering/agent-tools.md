@@ -23,6 +23,10 @@ refusal, not an attempt. **Deliberately absent: every delete.**
   maps a name onto the same wrapper the UI calls (`authoringRpc.ts`,
   `cellContentMutations.ts`, `cellSpecMutations.ts`, `sliceMutations.ts`),
   so RLS, validation, ledger logging, and revert capture come free.
+- UI navigation dispatch may be asynchronous: `open_phase`, `open_scenario`,
+  and `focus_cell` wait for verified selection/camera outcomes. The CLI harness
+  mocks those visual effects, so production camera movement is validated in a
+  real browser in addition to tool-parity and model-sequencing tests.
 - **`src/lib/agent/tools/read.ts`** — the read tools and the vendored
   reference documents; asserts at module init that its keys match
   `REFERENCE_NAMES` exactly.

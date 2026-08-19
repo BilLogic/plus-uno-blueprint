@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   defaultPathKeysFromCatalog,
   deriveSelections,
+  isScenarioSwitch,
 } from '@/contexts/PathSelectionContext'
 import type { PathListItem } from '@/lib/pathSelection'
 
@@ -62,5 +63,24 @@ describe('overview default path selection', () => {
     const selections = deriveSelections(withEmpty, defaultPathKeysFromCatalog(withEmpty))
     expect(selections.s4).toEqual([])
     expect(selections.s2).toEqual(['p3'])
+  })
+})
+
+/*
+ * The scenario-switch collapse (ScenarioPathSelectionReset). The decision
+ * predicate is pure and pinned here; the collapse itself is exercised
+ * through the provider in a browser, where it is a visible behavior
+ * (a Merged comparison does not follow the reader to the next scenario).
+ */
+describe('scenario-switch collapse decision', () => {
+  it('collapses only on a scenario-to-scenario move', () => {
+    // First entry — overview or deep link. The overview filter survives.
+    expect(isScenarioSwitch(null, 's1')).toBe(false)
+    // Leaving to the overview is not a switch either.
+    expect(isScenarioSwitch('s1', null)).toBe(false)
+    // Re-selecting the same scenario recenters the camera, nothing more.
+    expect(isScenarioSwitch('s1', 's1')).toBe(false)
+    // The one move that resets.
+    expect(isScenarioSwitch('s1', 's2')).toBe(true)
   })
 })

@@ -54,3 +54,22 @@ Implement option 2 in the order documented by the two active 2026-08-19 plans: i
 **Learnings:**
 - The implementation must distinguish semantic outcome parity from raw human-event parity.
 - Camera command ownership and completion semantics are prerequisites for trustworthy agent results.
+
+### 2026-08-19 - Core implementation and browser validation
+
+**By:** Codex
+
+**Actions:**
+- Added native-capture pointer routing, Space/middle temporary pan, a pure input policy, and shared editable-target guard.
+- Added coupled visible-rectangle camera interpolation, adaptive timing, pre-navigation camera start, cancellation/completion results, and active focus/camera registries.
+- Repaired `focus_cell`, deterministic panel sequencing, agent camera/tool commands, and live camera/tool context.
+- Isolated phase/scenario heavy bodies from combined navigation context and prevented read-mode lane overlays from subscribing hundreds of times.
+- Replaced full-subtree saturation with opacity-only focus dimming; inactive
+  phase/scenario cards stay navigable and visibly lift on hover/focus, while
+  their cell-level controls keep using the scoped dimmed-state guards.
+- Verified stopped-propagation touch pan on desktop and emulated iPhone, semantic agent pan/tool/focus, and warmed production navigation (~15 ms to first transform; zero observed LoAFs).
+- Ran the full Vitest suite, typecheck, lint, build, tool parity, and harness smoke during implementation.
+
+**Learnings:**
+- Starting the camera before the concurrent navigation render removes the visible response gap; recognizing the same target prevents a second flight.
+- The LLM harness proves tool choice, while only the mounted production registry can prove the transformed canvas actually moved.

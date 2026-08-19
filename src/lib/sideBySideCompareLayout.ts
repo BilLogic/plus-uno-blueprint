@@ -353,6 +353,21 @@ export function getScenarioSwimlaneBodyHeight(
 export function getScenarioBlueprintPanelHeight(
   options: ScenarioSwimlaneLayoutInput,
 ): number {
+  const visibleBlueprints = itemsInSelectionOrder(
+    options.selectedPathIds,
+    (id) => options.blueprintsByPathId.get(id),
+  ).filter((blueprint): blueprint is BlueprintData => blueprint !== undefined)
+
+  if (visibleBlueprints.length > 0 && options.displayViewType === 'stacked') {
+    return getStackedComparePanelHeight(visibleBlueprints, options.compact)
+  }
+  if (visibleBlueprints.length > 1 && options.displayViewType === 'merged') {
+    return getMergedComparePanelHeight(visibleBlueprints, options.compact)
+  }
+  if (visibleBlueprints.length > 0 && options.displayViewType === 'merged') {
+    return getStackedComparePanelHeight(visibleBlueprints, options.compact)
+  }
+
   const swimlaneBodyHeight = getScenarioSwimlaneBodyHeight(options)
   if (swimlaneBodyHeight > 0) {
     return getPanelHeightFromSwimlaneBody(swimlaneBodyHeight)
@@ -636,20 +651,6 @@ export function getComparePanelHeight(
 export const COMPARE_STACKED_BAND_GAP = 64
 /** Gap between the step-header row and the first band's rows. */
 export const COMPARE_STACKED_HEADER_GAP = 36
-
-/**
- * Extra top inset that stretches a path frame from its normal top edge all
- * the way up PAST the step-header row to the grid's first row line — the
- * header row is inside the frame with no container of its own (plan
- * 2026-08-17-002 U1). Derivation: the band box starts
- * `COMPARE_STACKED_HEADER_GAP` below the header row's bottom, the frame
- * already reaches `COMPARE_PATH_SECTION_TOP_INSET` above the band box, and
- * the header row itself is `COMPARE_STEP_HEADER_HEIGHT` tall.
- */
-export const COMPARE_HEADER_WRAP_EXTRA_INSET =
-  COMPARE_STACKED_HEADER_GAP +
-  COMPARE_STEP_HEADER_HEIGHT -
-  COMPARE_PATH_SECTION_TOP_INSET
 
 /** One band's box height: its lane-row tracks plus the row gaps between them
  *  (section-frame insets live in the band gaps, not the band box). */

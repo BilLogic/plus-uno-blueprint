@@ -71,17 +71,23 @@ Built fresh every round by `buildSystem` (`loop.ts`):
 
 Two module-level seams, both deliberately non-React:
 
-- **`uiBridge.ts`** — navigation only: the shell registers
-  `selectPhase`/`selectScenario`/sidebar callbacks; camera moves are free,
-  data is not. `open_cell_panel` drives the *same ⌘-click handler the
-  human uses* and verifies the panel actually mounted — no parallel code
-  path to drift.
+- **`uiBridge.ts`** — navigation and semantic camera focus: the shell registers
+  `selectPhase`/`selectScenario`/sidebar callbacks; the active viewport
+  registers its focus operation. `focus_cell` awaits a real
+  completed/missed/cancelled outcome instead of claiming a transformed-canvas
+  scroll. `open_cell_panel` waits for that focus, drives the *same ⌘-click
+  handler the human uses*, and verifies the panel actually mounted — no
+  parallel data path to drift.
 - **`uiCommands.ts`** — the no-blind-spots registry: every UI control the
   agent should reach registers one named command from the component that
   owns its state. Commands appear and disappear with their surfaces, so
   `list_ui_commands` is live truth and a missing registration is a visible
   gap, not a silent one. Registration is ~3 lines; do it when you ship a
   control.
+- **Canvas commands** — the active viewport exposes `canvas_camera` (relative
+  pan, zoom, fit, cancel) and the annotation owner exposes `set_canvas_tool`.
+  Agents call semantic primitives rather than synthesizing touch/mouse streams;
+  `get_ui_state` reports live camera, mode, and tool state.
 - **Context contributors** — surfaces register `registerAgentUiContext`
   snippets so the prompt's "current context" reflects what is on screen.
 

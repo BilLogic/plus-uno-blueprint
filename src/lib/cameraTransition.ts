@@ -9,6 +9,62 @@ export type CameraTransitionResult =
   | { kind: 'superseded'; transform: CameraTransform }
 
 /**
+ * Changes camera scale while mapping one viewport point to another.
+ *
+ * A wheel zoom passes the same point twice, keeping the world beneath the
+ * cursor stationary. A pinch passes the previous and current midpoint, so
+ * midpoint drift and scale are solved in one transform instead of applying
+ * the finger movement twice.
+ */
+export function transformCameraAroundPoint(
+  from: CameraTransform,
+  fromPoint: { x: number; y: number },
+  toPoint: { x: number; y: number },
+  nextZoom: number,
+): CameraTransform {
+  const fromZoom = Math.max(0.0001, from.zoom)
+  const safeNextZoom = Math.max(0.0001, nextZoom)
+  const world = {
+    x: (fromPoint.x - from.pan.x) / fromZoom,
+    y: (fromPoint.y - from.pan.y) / fromZoom,
+  }
+
+  return {
+    pan: {
+      x: toPoint.x - world.x * safeNextZoom,
+      y: toPoint.y - world.y * safeNextZoom,
+    },
+    zoom: safeNextZoom,
+  }
+}
+
+/**
+ * Sine ease-in-out: a calm departure and landing without smootherstep's
+ * long near-still endpoints and steep middle acceleration.
+ */
+export function easeCameraTransition(value: number): number {
+  const t = Math.min(1, Math.max(0, value))
+  if (t === 0 || t === 1) return t
+  return -(Math.cos(Math.PI * t) - 1) / 2
+}
+
+/**
+ * Returns transition progress measured from the first frame the browser can
+ * actually draw. Work scheduled before requestAnimationFrame (notably React
+ * reconciliation for a large canvas) may block the main thread; counting
+ * that blocked time makes the first visible frame jump toward the target.
+ */
+export function createCameraTransitionClock(durationMs: number) {
+  const duration = Math.max(1, durationMs)
+  let firstFrameAt: number | null = null
+
+  return (frameAt: number): number => {
+    firstFrameAt ??= frameAt
+    return Math.min(1, Math.max(0, (frameAt - firstFrameAt) / duration))
+  }
+}
+
+/**
  * Interpolate the visible world rectangle, then derive its transform. This
  * keeps pan and zoom coupled: a destination never moves away before arriving.
  */
@@ -41,16 +97,4 @@ export function interpolateCameraTransform(
   }
   const zoom = width / Math.max(0.0001, rect.width)
   return { pan: { x: -rect.x * zoom, y: -rect.y * zoom }, zoom }
-}
-
-export function cameraTransitionDuration(
-  from: CameraTransform,
-  to: CameraTransform,
-  viewport: { width: number; height: number },
-): number {
-  const diagonal = Math.max(1, Math.hypot(viewport.width, viewport.height))
-  const screenTravel = Math.hypot(to.pan.x - from.pan.x, to.pan.y - from.pan.y)
-  const zoomTravel = Math.abs(Math.log(Math.max(0.0001, to.zoom / from.zoom)))
-  const weight = Math.min(1, screenTravel / diagonal / 1.5 + zoomTravel / 3)
-  return Math.round(240 + (420 - 240) * weight)
 }

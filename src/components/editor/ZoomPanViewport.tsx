@@ -19,6 +19,7 @@ import { usePublishCanvasZoomChrome } from '@/contexts/CanvasZoomChromeContext'
 import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
+import { registerActiveCanvasCamera } from '@/lib/activeCanvasCamera'
 
 type ZoomPanViewportProps = {
   children: ReactNode
@@ -40,7 +41,7 @@ type ZoomPanViewportProps = {
   /**
    * Registers this viewport's `focusCells` in the module registry under
    * this key (the focused scenario's slide id) — the fly-to-cell pipeline
-   * for the difference ledger, the divergence strip and agent commands.
+   * for the difference ledger and agent commands.
    */
   focusCellsKey?: string
 }
@@ -87,6 +88,7 @@ function ZoomPanViewportInner({
     panBy,
     cancelCamera,
     getCameraState,
+    focusSlide,
   } = useZoomPanViewport({
     resetKey,
     panIgnoreSelector,
@@ -114,6 +116,10 @@ function ZoomPanViewportInner({
   }, [focusCells, focusCellsKey])
 
   useEffect(() => registerActiveFocusCells(focusCells), [focusCells])
+  useEffect(
+    () => registerActiveCanvasCamera({ focusSlide }),
+    [focusSlide],
+  )
 
   // Agent parity: camera controls (otherwise keyboard-only ⌘+/⌘−/⌘0).
   useEffect(() => {
@@ -168,7 +174,7 @@ function ZoomPanViewportInner({
       }),
     ]
     return () => unregister.forEach((remove) => remove())
-  }, [cancelCamera, fitToView, panBy, zoomIn, zoomOut])
+  }, [cancelCamera, fitToView, getCameraState, panBy, zoomIn, zoomOut])
 
   useEffect(
     () =>
@@ -185,7 +191,10 @@ function ZoomPanViewportInner({
     // know the mode above its viewport to swap in the editor.
     <CanvasSelectionProvider>
     <div
-      className={cn('relative min-h-0 flex-1', className)}
+      // Bound every canvas-local z-index to this surface. The transformed
+      // world, screen-space chrome, and annotation tools keep their internal
+      // order without competing with the editor shell or portalled dialogs.
+      className={cn('relative isolate min-h-0 flex-1', className)}
       data-zoom-pan-root
       // Cell-corner overlays (slice sequence badges) scale with the canvas;
       // below this zoom they are illegible specks, so CSS hides them. Same

@@ -82,7 +82,15 @@ wraps annotation + selection providers) → the transform layer
 - **Camera**: fit-to-view measures `fitSelector` bounds; `focusCells`
   registers per-viewport in a module registry (`src/lib/canvasFocusCells.ts`)
   so portalled surfaces (ledger drawer, agent commands) can fly the camera
-  without a React path to it.
+  without a React path to it. Programmatic motion interpolates the visible
+  world rectangle (coupled pan + zoom), has one cancellable owner, and starts
+  navigation flights against the already-mounted target before the concurrent
+  focus-state render. A matching post-navigation fit joins that flight instead
+  of restarting it.
+- **Input ownership**: pointer streams enter through native capture so a lane
+  or cell cannot hide pointerdown with `stopPropagation`. The pure
+  `canvasInputPolicy.ts` table documents precedence; continuous transforms stay
+  imperative and publish one trailing React snapshot.
 
 What each gesture is *supposed* to do — the click grammar, the touch
 contract — is owned by `design/interaction.md`; this doc owns how it is
@@ -122,8 +130,10 @@ decode to `width × height × 4 bytes` of bitmap **regardless of file
 size**. ~450×700px sources across 141 mounted images meant 325 MB of
 decoded RGBA — fine on desktop, an OOM tab-kill on mobile Chrome. Hence:
 
-- **300px longest-edge cap** on step-visual assets. They display at
-  ≤113×80; 300px is already 2.6× headroom. Downscale before committing.
+- **300px longest-edge cap** on step-visual assets. They display inside a
+  stable 4:3, `object-contain` frame; 300px retains ample high-density
+  headroom without paying to decode source-sized art. Downscale before
+  committing.
 - `loading="lazy"` + `decoding="async"` on every canvas `<img>`
   (`src/components/blueprint/BlueprintStepVisual.tsx`).
 - `EditorErrorBoundary` catches recoverable throws with a designed reload

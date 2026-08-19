@@ -1,6 +1,7 @@
 import {
   Fragment,
   memo,
+  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -41,6 +42,7 @@ import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import { cn } from '@/lib/utils'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
+import { focusActiveCanvasSlide } from '@/lib/activeCanvasCamera'
 import {
   getCanvasFocusFitInsets,
   getCanvasFocusMaxZoom,
@@ -92,6 +94,16 @@ const MOBILE_MIN_FIT_ZOOM = 0.45
  * has no content" rather than "you are too far out".
  */
 const MOBILE_SEMANTIC_ZOOM_THRESHOLD = 0.15
+
+/**
+ * A focused comparison is intentionally wider/taller than one blueprint.
+ * Its fitted destination commonly lands below the overview's 0.25 density
+ * cutoff even though the comparison is the thing the reader explicitly
+ * opened. Keep its cell content present until 0.12; manual zoom-out can still
+ * cross into the density-map tier, while the programmatic comparison landing
+ * no longer looks like an empty board.
+ */
+const COMPARE_SEMANTIC_ZOOM_THRESHOLD = 0.12
 
 /**
  * Which element's `transitionend` is allowed to close each reveal stage.
@@ -339,11 +351,21 @@ function ServiceOverviewViewImpl({
     () => (soloPhase ? [soloPhase] : allPhases),
     [allPhases, soloPhase],
   )
-  const scenarioIds = soloScenarioId
-    ? [soloScenarioId]
-    : soloPhase
-      ? getSubslides(soloPhase.id, slides).map((scenario) => scenario.id)
-      : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
+  // Stable scope identity is load-bearing for render isolation: rebuilding
+  // this array on every navigation recreates path-selection callbacks, which
+  // defeats memoization and reconciles every heavy phase body before the
+  // camera can draw its first frame.
+  const scenarioIds = useMemo(
+    () =>
+      soloScenarioId
+        ? [soloScenarioId]
+        : soloPhase
+          ? getSubslides(soloPhase.id, slides).map((scenario) => scenario.id)
+          : slides
+              .filter((slide) => isSubslide(slide))
+              .map((slide) => slide.id),
+    [slides, soloPhase, soloScenarioId],
+  )
   const isDetail = view === 'detail'
   const focusedScenarioId =
     isDetail && isSubslide(activeSlide) ? activeSlide.id : null
@@ -352,6 +374,14 @@ function ServiceOverviewViewImpl({
       ? getParentSlide(activeSlide, slides)?.id
       : activeSlide.id
     : null
+
+  const openCanvasDetail = useCallback(
+    (slideId: string) => {
+      focusActiveCanvasSlide(slideId)
+      startTransition(() => openDetail(slideId))
+    },
+    [openDetail],
+  )
 
   const {
     pathsByScenario,
@@ -403,7 +433,9 @@ function ServiceOverviewViewImpl({
   const minFitZoom = mobileShell ? MOBILE_MIN_FIT_ZOOM : undefined
   const semanticZoomThreshold = mobileShell
     ? MOBILE_SEMANTIC_ZOOM_THRESHOLD
-    : undefined
+    : isDetail && overviewSelectedPathIds.length > 1
+      ? COMPARE_SEMANTIC_ZOOM_THRESHOLD
+      : undefined
 
   /*
     Skeleton geometry — real phase count and real scenarios per phase from
@@ -450,12 +482,17 @@ function ServiceOverviewViewImpl({
     [blueprintsByPathId, pathsByScenario, phases, slides, soloScenarioId],
   )
 
-  // Camera key. Deliberately excludes the selected path ids: toggling a path
-  // is a filter, not a navigation, and having it here threw away the user's
-  // pan/zoom on every checkbox. `focusNonce` bumps on each nav click so
-  // re-selecting the row you are already on recenters after panning away.
+  // Camera key. Path selection is stable in overview, where it behaves like a
+  // filter. Inside a focused scenario it changes the comparison's geometry,
+  // so it becomes an explicit camera-layout event: the viewport eases to the
+  // new fitted frame instead of letting ResizeObserver snap there afterward.
+  // `focusNonce` bumps on each nav click so re-selecting the current row also
+  // recenters after panning away.
+  const focusedComparisonCameraKey = isSubslide(activeSlide)
+    ? `${overviewSelectedPathIds.join(',')}:${getScenarioDisplayViewType(activeSlide)}`
+    : 'stable'
   const fitKey = overviewReady
-    ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}`
+    ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}:${focusedComparisonCameraKey}`
     : `service-canvas:loading:${skeletonPhases.map((phase) => phase.scenarioCount).join('-') || 'unknown'}`
 
   // The cell-detail panel clears its selection when this changes, so it must
@@ -758,13 +795,7 @@ function ServiceOverviewViewImpl({
       paths: scopedPaths,
       selectedPathIds: scopedSelectedPathIds,
     }
-  }, [
-    activeSlide,
-    isDetail,
-    overviewSelectedPathIds,
-    pathsByScenario,
-    slides,
-  ])
+  }, [activeSlide, isDetail, overviewSelectedPathIds, pathsByScenario, slides])
 
   // The viewport below has already scheduled this fit with animation
   // suppressed (child effects run before parent effects), so release the
@@ -1010,8 +1041,8 @@ function ServiceOverviewViewImpl({
                             blueprintsByPathId={blueprintsByPathId}
                             getSelectedPathIds={resolveSelectedPathIds}
                             displayViewType={overviewViewType}
-                            onOpenPhase={openDetail}
-                            openScenario={openDetail}
+                            onOpenPhase={openCanvasDetail}
+                            openScenario={openCanvasDetail}
                             getScenarioDisplayViewType={
                               getScenarioDisplayViewType
                             }
@@ -1031,7 +1062,9 @@ function ServiceOverviewViewImpl({
                             isLoopArrowFrom={
                               phase.id === postToPreLoop?.fromPhaseId
                             }
-                            isLoopArrowTo={phase.id === postToPreLoop?.toPhaseId}
+                            isLoopArrowTo={
+                              phase.id === postToPreLoop?.toPhaseId
+                            }
                           />
                         </Fragment>
                       )
@@ -1068,7 +1101,9 @@ function ServiceOverviewViewImpl({
               <div
                 role={revealStage < CANVAS_REVEAL_LANES ? 'status' : undefined}
                 aria-label={
-                  revealStage < CANVAS_REVEAL_LANES ? 'Loading canvas' : undefined
+                  revealStage < CANVAS_REVEAL_LANES
+                    ? 'Loading canvas'
+                    : undefined
                 }
                 className={cn(
                   'pointer-events-none absolute inset-0 z-20 flex items-center justify-center',
