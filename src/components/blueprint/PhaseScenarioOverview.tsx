@@ -1,5 +1,6 @@
 import { Fragment, memo, useCallback, useId, useMemo, useRef } from 'react'
 import {
+  getScenarioBlueprintPanelHeight,
   getScenarioSwimlaneBodyHeight,
   ScenarioBlueprintPanelBody,
 } from '@/components/blueprint/ScenarioBlueprintPanel'
@@ -9,7 +10,7 @@ import { useAlignedPhaseRowPanelHeight } from '@/hooks/useAlignedPhaseRowPanelHe
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { defaultSelectedPathIds } from '@/lib/pathSelection'
 import type { PathListItem } from '@/lib/pathSelection'
-import { COMPARE_MIN_PANEL_HEIGHT, getPanelHeightFromSwimlaneBody } from '@/lib/sideBySideCompareLayout'
+import { COMPARE_MIN_PANEL_HEIGHT } from '@/lib/sideBySideCompareLayout'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { OVERVIEW_SCENARIO_GAP } from '@/lib/overviewLayout'
 import { SUBSLIDE_GAP } from '@/lib/slideLayout'
@@ -147,8 +148,8 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     for *one* scenario, and a phase-level 'stacked' silently clobbering
     it is exactly how a toggle looks broken while its state is correct.
 
-    'merged' coerces to 'stacked' here: it is a focused-scenario mode, and
-    overview rows render only the horizontal arrangement.
+    The resolved mode is passed through at every camera level. Overview and
+    focus must render the same grid; navigation changes framing, not topology.
   */
   const resolveViewType = useCallback(
     (scenario: NavItem): SlideViewType => {
@@ -157,7 +158,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
         perScenario !== 'stacked'
           ? perScenario
           : (displayViewTypeProp ?? perScenario)
-      return resolved === 'merged' ? 'stacked' : resolved
+      return resolved
     },
     [displayViewTypeProp, getScenarioDisplayViewType],
   )
@@ -213,20 +214,29 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   ])
 
   const sharedPanelHeight = useMemo(() => {
-    if (!alignPanelHeights || sharedSwimlaneBodyHeight === undefined) {
-      return undefined
-    }
-
-    // No selected paths (or no content) — keep the row empty, don't force a
-    // minimum gray panel height.
-    if (sharedSwimlaneBodyHeight === 0) {
-      return undefined
-    }
-
-    return getPanelHeightFromSwimlaneBody(sharedSwimlaneBodyHeight, {
-      lockHeight: true,
+    if (!alignPanelHeights) return undefined
+    const heights = scenarios.map((scenario) => {
+      const paths = pathsByScenario.get(scenario.id) ?? []
+      const selectedPathIds = getSelectedPathIdsProp
+        ? getSelectedPathIdsProp(scenario.id, paths)
+        : defaultSelectedPathIds(paths)
+      return getScenarioBlueprintPanelHeight({
+        displayViewType: resolveViewType(scenario),
+        paths,
+        selectedPathIds,
+        blueprintsByPathId,
+      })
     })
-  }, [alignPanelHeights, sharedSwimlaneBodyHeight])
+    const height = Math.max(0, ...heights)
+    return height > 0 ? height : undefined
+  }, [
+    alignPanelHeights,
+    scenarios,
+    pathsByScenario,
+    blueprintsByPathId,
+    getSelectedPathIdsProp,
+    resolveViewType,
+  ])
 
   const rowRef = useRef<HTMLDivElement>(null)
   const selectedPathsMeasureKey = scenarios
@@ -241,7 +251,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   const viewTypesMeasureKey = scenarios
     .map((scenario) => resolveViewType(scenario))
     .join(',')
-  const rowMeasureKey = `${phase.id}:${sharedSwimlaneBodyHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? ''}`
+  const rowMeasureKey = `${phase.id}:${sharedPanelHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}`
   const rowPanelHeight = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
@@ -336,13 +346,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     >
       {visibleScenarioSelections.map(({ scenario, paths, selectedPathIds }, index) => {
         const label = getSlideDisplayLabel(scenario, slides)
-        /*
-          The focused scenario leaves the overview's shared-row contract:
-          without the locked height / phase-uniform view type it becomes the
-          FOCUSED SCENARIO VIEW, where compared paths stack as vertical
-          bands. Its dimmed siblings keep the horizontal row layout.
-        */
-        const isFocusedScenario = focusedScenarioId === scenario.id
+        const scenarioViewType = resolveViewType(scenario)
 
         return (
           <Fragment key={scenario.id}>
@@ -353,14 +357,14 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               selectedPathIds={selectedPathIds}
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
-              lockedPanelHeight={isFocusedScenario ? undefined : rowPanelHeight}
+              lockedPanelHeight={rowPanelHeight}
               fixedSwimlaneBodyHeight={
-                isFocusedScenario ? undefined : sharedSwimlaneBodyHeight
+                scenarioViewType === 'single'
+                  ? sharedSwimlaneBodyHeight
+                  : undefined
               }
-              lockPanelHeight={isFocusedScenario ? false : alignPanelHeights}
-              displayViewType={
-                isFocusedScenario ? undefined : resolveViewType(scenario)
-              }
+              lockPanelHeight={alignPanelHeights}
+              displayViewType={scenarioViewType}
               onNavigate={() => openDetail(scenario.id)}
               dimmed={
                 dimAllScenarios ||

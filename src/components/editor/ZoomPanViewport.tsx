@@ -41,7 +41,7 @@ type ZoomPanViewportProps = {
   /**
    * Registers this viewport's `focusCells` in the module registry under
    * this key (the focused scenario's slide id) — the fly-to-cell pipeline
-   * for the difference ledger, the divergence strip and agent commands.
+   * for the difference ledger and agent commands.
    */
   focusCellsKey?: string
 }
@@ -191,7 +191,10 @@ function ZoomPanViewportInner({
     // know the mode above its viewport to swap in the editor.
     <CanvasSelectionProvider>
     <div
-      className={cn('relative min-h-0 flex-1', className)}
+      // Bound every canvas-local z-index to this surface. The transformed
+      // world, screen-space chrome, and annotation tools keep their internal
+      // order without competing with the editor shell or portalled dialogs.
+      className={cn('relative isolate min-h-0 flex-1', className)}
       data-zoom-pan-root
       // Cell-corner overlays (slice sequence badges) scale with the canvas;
       // below this zoom they are illegible specks, so CSS hides them. Same

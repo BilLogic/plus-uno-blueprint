@@ -11,7 +11,7 @@ This app is a reading instrument for service blueprints. Its design identity is
 **restraint**: quiet neutral surfaces, one brand accent, semantic tokens
 everywhere, and boldness spent deliberately — **one signature element per
 surface**, with everything around it disciplined. The house benchmark is
-Supabase: not their look, their *code quality* — the token architecture, file
+Supabase: not their look, their _code quality_ — the token architecture, file
 discipline, and accessibility rigor of their design system, adopted wholesale in
 the 2026-08-04 alignment (see that plan for the full rationale). When a choice
 is unclear, "what would survive a Supabase design-system review?" is the tiebreak.
@@ -42,42 +42,43 @@ docs point at token files and components, they do not restate numbers.
 (`ZoomPanViewport`). Below the semantic-zoom threshold cells drop to the
 **blocks tier** — flat blocks, counter-scaled phase labels — so the overview
 reads as a table of contents (journey length, density per phase) instead of a
-shrunken page. Signature: *the board that becomes a map at distance*. See
+shrunken page. Signature: _the board that becomes a map at distance_. See
 [data-viz](foundations/data-viz.md) and [interaction](interaction.md).
 
 **Scenario detail.** The camera flies into one phase or scenario; phase badges
 carry the time-marker register (`01 · ARRIVAL`), cells open the detail panel on
-⌘-click. Signature: *the time-marker register* — the typographic voice of the
+⌘-click. Signature: _the time-marker register_ — the typographic voice of the
 time skeleton. See [typography](foundations/typography.md) and
 [motion](foundations/motion.md).
 
 **Compare cockpit.** Stacked per-path bands over a shared grid, the differences
-ledger below the fold, and the divergence strip tracking where runs agree
-(one neutral track) and split (per-path colored dashed tracks, zone chips).
-Signature: *the divergence strip*. See [data-viz](foundations/data-viz.md).
+ledger below the fold. Stacked uses quiet divergent-column tint; Merged uses
+vertical version stacking plus rounded membership outlines. Exact navigation
+lives in the Differences surface rather than a second strip above the canvas.
+See [data-viz](foundations/data-viz.md).
 
 **Slices and presentation.** A slice focuses its member cells — members keep
 their role-accent rings while non-members dim and desaturate — and presentation
 mode wraps the same view in a dark stage (`.dark` on a subtree, which is why
-the semantic layer re-derives per scope). Signature: *the slice dim*. See
+the semantic layer re-derives per scope). Signature: _the slice dim_. See
 [color](foundations/color.md) and [motion](foundations/motion.md).
 
 **Mobile shell.** Below the breakpoint the phone shows the same canvas as
 desktop, scoped to one phase at a time — navigation is a camera move, a
 single-select path pill replaces the PATHS checkboxes, and everything is
-view-only for every tier. Signature: *the phase-scoped camera*. See
+view-only for every tier. Signature: _the phase-scoped camera_. See
 [responsive](responsive.md), which owns the whole contract.
 
 **The agent panel.** Docked to the sidebar or floating; a bottom sheet on
 mobile, entered through a floating action button. Its canvas annotations draw in a named, tokenized red ink no human
 swatch offers, so "the agent drew this" is legible at a glance. Signature:
-*the agent's ink*. See [color](foundations/color.md) and
+_the agent's ink_. See [color](foundations/color.md) and
 [content-voice](content-voice.md) for its voice.
 
 ## Deviating
 
 Every rule in this folder is a **default with a reason attached** — none is
-policy for its own sake. To deviate, the *reason* has to fail, not the rule:
+policy for its own sake. To deviate, the _reason_ has to fail, not the rule:
 find the owner doc, check why the rule exists, and if your case genuinely
 breaks the premise, propose the deviation in the PR that needs it, stating the
 why. A deviation without a stated reason gets reverted on review.
@@ -85,7 +86,7 @@ why. A deviation without a stated reason gets reverted on review.
 One vocabulary is pinned harder than the rest: motion. The drift test
 (`scripts/tests/motion-tokens`) holds `src/styles/animations.css` and
 `src/lib/motion.ts` to the same five numbers — a new duration or easing is a
-*change to the vocabulary*, made in both homes with the test updated, never a
+_change to the vocabulary_, made in both homes with the test updated, never a
 one-off literal at a call site.
 
 ## Design tooling

@@ -26,14 +26,6 @@ import { cn } from '@/lib/utils'
 
 type ResizableComparePanelProps = {
   children: ReactNode
-  /**
-   * Panel-chrome bar (the divergence strip) docked above the content.
-   * Rendered OUTSIDE `contentMeasureRef` on purpose: measuring it would
-   * feed its own height back into the panel size — a measure loop.
-   */
-  chromeBar?: ReactNode
-  /** The chrome bar's fixed height, added to the panel's target height. */
-  chromeBarHeight?: number
   minWidth?: number
   minHeight?: number
   defaultWidth?: number
@@ -67,8 +59,6 @@ type ResizableComparePanelProps = {
  */
 export function ResizableComparePanel({
   children,
-  chromeBar,
-  chromeBarHeight = 0,
   minWidth,
   minHeight,
   defaultWidth,
@@ -151,15 +141,12 @@ export function ResizableComparePanel({
     resolvedMinWidth,
     measuredPanelWidth ?? defaultWidth ?? resolvedMinWidth,
   )
-  // The chrome bar (divergence strip) sits outside the measured content, so
-  // its fixed height is added here rather than observed — no measure loop.
-  const chromeHeight = chromeBar ? chromeBarHeight : 0
   const targetHeight =
     Math.max(
       resolvedMinHeight,
       lockHeight ? (defaultHeight ?? resolvedMinHeight) : 0,
       measuredPanelHeight ?? defaultHeight ?? resolvedMinHeight,
-    ) + chromeHeight
+    )
   const size = {
     width: Math.max(targetWidth, userSize.width),
     height: lockHeight ? targetHeight : Math.max(targetHeight, userSize.height),
@@ -272,7 +259,7 @@ export function ResizableComparePanel({
   return (
     <div
       className={cn(
-        'relative shrink-0 transition-opacity duration-(--motion-camera) ease-structural',
+        'relative shrink-0 transition-opacity duration-(--motion-camera) ease-camera',
         dimmed && 'opacity-30',
         dimmed && navigable && 'hover:opacity-70 focus-within:opacity-70',
         className,
@@ -343,7 +330,6 @@ export function ResizableComparePanel({
         // here — which made every drag inside a path board a dead drag.
         // Interactive chrome opts out via the viewport's panIgnoreSelector.
       >
-      {chromeBar}
       <div
         ref={scrollContainerRef}
         className={cn(

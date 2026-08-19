@@ -12,9 +12,10 @@ import {
 } from '@/lib/canvasKeyboardState'
 import { isEditableKeyboardTarget } from '@/lib/keyboardTarget'
 import {
-  cameraTransitionDuration,
   createCameraTransitionClock,
+  easeCameraTransition,
   interpolateCameraTransform,
+  transformCameraAroundPoint,
   type CameraTransitionResult,
 } from '@/lib/cameraTransition'
 import { isCanvasResizeRefitSuppressed } from '@/lib/canvasChromeResize'
@@ -208,10 +209,6 @@ function measureFitBounds(
   }
 }
 
-function easeInOutCubic(t: number) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-}
-
 /**
  * True when something between `target` and `container` can still scroll in
  * the direction of this wheel delta — in which case the wheel belongs to it,
@@ -358,15 +355,21 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     animateFitRef.current = animateFit
   }, [animateFit])
 
-  const cancelFitAnimation = useCallback((kind: 'cancelled' | 'superseded' = 'cancelled') => {
-    if (fitAnimationRef.current !== null) {
-      cancelAnimationFrame(fitAnimationRef.current)
-      fitAnimationRef.current = null
-      fitAnimationTargetRef.current = null
-      fitAnimationResolveRef.current?.({ kind, transform: transformRef.current })
-      fitAnimationResolveRef.current = null
-    }
-  }, [])
+  const cancelFitAnimation = useCallback(
+    (kind: 'cancelled' | 'superseded' = 'cancelled') => {
+      if (fitAnimationRef.current !== null) {
+        cancelAnimationFrame(fitAnimationRef.current)
+        fitAnimationRef.current = null
+        fitAnimationTargetRef.current = null
+        fitAnimationResolveRef.current?.({
+          kind,
+          transform: transformRef.current,
+        })
+        fitAnimationResolveRef.current = null
+      }
+    },
+    [],
+  )
 
   const commitTransform = useCallback(
     (
@@ -396,7 +399,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   )
 
   const animateTransform = useCallback(
-    (nextPan: { x: number; y: number }, nextZoom: number): Promise<CameraTransitionResult> => {
+    (
+      nextPan: { x: number; y: number },
+      nextZoom: number,
+    ): Promise<CameraTransitionResult> => {
       cancelFitAnimation('superseded')
       const from = transformRef.current
       const container = containerRef.current
@@ -406,14 +412,18 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       }
       const target = { pan: nextPan, zoom: nextZoom }
       fitAnimationTargetRef.current = target
-      const duration = fitDurationMs ?? cameraTransitionDuration(from, target, viewport)
-      const progressAt = createCameraTransitionClock(duration)
+      const progressAt = createCameraTransitionClock(fitDurationMs)
 
       return new Promise((resolve) => {
         fitAnimationResolveRef.current = resolve
         const step = (now: number) => {
           const t = progressAt(now)
-          const next = interpolateCameraTransform(from, target, viewport, easeInOutCubic(t))
+          const next = interpolateCameraTransform(
+            from,
+            target,
+            viewport,
+            easeCameraTransition(t),
+          )
           commitTransform(next.pan, next.zoom, t === 1, nextZoom)
           if (t < 1) {
             fitAnimationRef.current = requestAnimationFrame(step)
@@ -455,7 +465,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   )
 
   const zoomAtPoint = useCallback(
-    (clientX: number, clientY: number, scaleFactor: number, syncReact = true) => {
+    (
+      clientX: number,
+      clientY: number,
+      scaleFactor: number,
+      syncReact = true,
+    ) => {
       const el = containerRef.current
       if (!el) return
 
@@ -465,16 +480,44 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const rect = el.getBoundingClientRect()
       const mx = clientX - rect.left
       const my = clientY - rect.top
-      const { pan: p, zoom: z } = transformRef.current
-      const newZoom = clampZoom(z * scaleFactor)
-      const worldX = (mx - p.x) / z
-      const worldY = (my - p.y) / z
-      const nextPan = {
-        x: mx - worldX * newZoom,
-        y: my - worldY * newZoom,
-      }
+      const current = transformRef.current
+      const newZoom = clampZoom(current.zoom * scaleFactor)
+      const next = transformCameraAroundPoint(
+        current,
+        { x: mx, y: my },
+        { x: mx, y: my },
+        newZoom,
+      )
 
-      commitTransform(nextPan, newZoom, syncReact)
+      commitTransform(next.pan, next.zoom, syncReact)
+    },
+    [cancelFitAnimation, commitTransform],
+  )
+
+  const zoomBetweenPoints = useCallback(
+    (
+      fromClientX: number,
+      fromClientY: number,
+      toClientX: number,
+      toClientY: number,
+      scaleFactor: number,
+      syncReact = true,
+    ) => {
+      const el = containerRef.current
+      if (!el) return
+
+      cancelFitAnimation()
+      userAdjustedViewRef.current = true
+
+      const rect = el.getBoundingClientRect()
+      const current = transformRef.current
+      const next = transformCameraAroundPoint(
+        current,
+        { x: fromClientX - rect.left, y: fromClientY - rect.top },
+        { x: toClientX - rect.left, y: toClientY - rect.top },
+        clampZoom(current.zoom * scaleFactor),
+      )
+      commitTransform(next.pan, next.zoom, syncReact)
     },
     [cancelFitAnimation, commitTransform],
   )
@@ -492,7 +535,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
 
       const margin = fitMargin
       const matchedTarget = content.querySelector<HTMLElement>(selector)
-      const fitTarget = matchedTarget ?? (selector === fitSelector ? content : null)
+      const fitTarget =
+        matchedTarget ?? (selector === fitSelector ? content : null)
       if (!fitTarget) return null
       const { zoom: currentZoom } = transformRef.current
       const bounds = measureFitBounds(content, fitTarget, currentZoom)
@@ -504,7 +548,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         left: margin,
       }
       const fitWidth = Math.max(el.clientWidth - insets.left - insets.right, 1)
-      const fitHeight = Math.max(el.clientHeight - insets.top - insets.bottom, 1)
+      const fitHeight = Math.max(
+        el.clientHeight - insets.top - insets.bottom,
+        1,
+      )
       if (bounds.width <= 0 || bounds.height <= 0) return null
 
       const trueFit = Math.min(
@@ -659,7 +706,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     commitTransform(p, z, false)
   }, [commitTransform])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (resetKey === undefined) return
     pendingFitRef.current = true
     userAdjustedViewRef.current = false
@@ -763,7 +810,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           easeInOut restart begins at zero velocity, so the visible result is
           the zoom braking hard partway through and setting off again. That
           is the "abrupt" phase→scenario transition. Waiting for the ease to
-          land turns the pair into two clean glides in sequence.
+          land preserves one clean glide, followed only by the instant layout
+          correction documented below.
         */
         /*
           Bounded. The poll waits out a fit ease, and a backgrounded tab
@@ -924,8 +972,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       passive: false,
       capture: true,
     })
-    return () =>
-      window.removeEventListener('wheel', onWheel, { capture: true })
+    return () => window.removeEventListener('wheel', onWheel, { capture: true })
   }, [cancelFitAnimation, commitTransform, syncZoomToReact, zoomAtPoint])
 
   /**
@@ -1073,7 +1120,11 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       // The mouse on an interactive child is a tap on it, never a pan. A
       // single FINGER there goes pending instead — pan if it travels past
       // the slop, tap if it lifts inside it.
-      if (!temporaryPan && panIgnoreSelector && target.closest(panIgnoreSelector)) {
+      if (
+        !temporaryPan &&
+        panIgnoreSelector &&
+        target.closest(panIgnoreSelector)
+      ) {
         if (e.pointerType === 'touch') {
           pendingTouchPan.current = {
             id: e.pointerId,
@@ -1106,7 +1157,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (isEditableKeyboardTarget(event.target)) return
       const el = containerRef.current
       const active = document.activeElement
-      if (!el || (active instanceof Node && active !== document.body && !el.contains(active))) return
+      if (
+        !el ||
+        (active instanceof Node &&
+          active !== document.body &&
+          !el.contains(active))
+      )
+        return
       setCanvasSpaceHeld(true)
       setIsSpaceHeld(true)
       event.preventDefault()
@@ -1137,11 +1194,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           const dist = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y))
           const midX = (a.x + b.x) / 2
           const midY = (a.y + b.y) / 2
-          zoomAtPoint(midX, midY, dist / pinch.dist, false)
-          const { pan: p, zoom: z } = transformRef.current
-          commitTransform(
-            { x: p.x + (midX - pinch.x), y: p.y + (midY - pinch.y) },
-            z,
+          zoomBetweenPoints(
+            pinch.x,
+            pinch.y,
+            midX,
+            midY,
+            dist / pinch.dist,
             false,
           )
           pinchStart.current = { dist, x: midX, y: midY }
@@ -1191,21 +1249,18 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         false,
       )
     },
-    [beginPan, commitTransform, syncZoomToReact, zoomAtPoint],
+    [beginPan, commitTransform, syncZoomToReact, zoomBetweenPoints],
   )
 
   /** Capture-phase click filter: a click synthesized at the end of an
    * engaged touch pan must not reach the cell under the finger. Runs on the
    * container in capture order, so it fires before any cell's own handler. */
-  const handleClickCapture = useCallback(
-    (e: ReactMouseEvent<HTMLElement>) => {
-      if (!suppressNextClick.current) return
-      suppressNextClick.current = false
-      e.preventDefault()
-      e.stopPropagation()
-    },
-    [],
-  )
+  const handleClickCapture = useCallback((e: ReactMouseEvent<HTMLElement>) => {
+    if (!suppressNextClick.current) return
+    suppressNextClick.current = false
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
 
   const handlePointerUp = useCallback(
     (e: PointerEvent) => {
@@ -1296,7 +1351,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * Reads the camera from `transformRef.current`, never the React copies —
    * those trail the live transform by up to ~80ms (see syncZoomToReact) and
    * a fly computed from them lands beside the target, not on it.
-  */
+   */
   const focusCells = useCallback(
     async (
       cellIds: string[],
@@ -1393,10 +1448,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [animateTransform, computeFitTransform],
   )
 
-  const getCameraState = useCallback(() => ({
-    ...transformRef.current,
-    moving: fitAnimationRef.current !== null,
-  }), [])
+  const getCameraState = useCallback(
+    () => ({
+      ...transformRef.current,
+      moving: fitAnimationRef.current !== null,
+    }),
+    [],
+  )
 
   /**
    * Keyboard zoom, because on some setups there is otherwise none.

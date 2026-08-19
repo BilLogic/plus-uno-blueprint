@@ -60,9 +60,11 @@ surface reads them together:
 
 - **Side-by-side** — each path as its own full grid.
 - **Stacked** — paths as horizontal bands under a shared time axis, with a
-  divergence strip flagging where they split.
+  quiet column tint flagging where they differ.
 - **Merged** — one combined grid, each slot showing every path's take on
-  that moment.
+  that moment. Shared cells draw once; different versions stack, and a thin
+  rounded outline identifies the member paths of every cell without recoloring
+  the service-lane fill.
 
 Typical loop: map the variant as a path → compare against the happy path →
 audit the divergences → slice the result for whoever must decide.
@@ -87,12 +89,12 @@ specification — don't improvise around it. That's also how the practice
 grows: a new audit check is a new `check-*.md` written from the playbook's
 template, run alone once, then added to the roster.
 
-| Practice | Specification files (references/) | Applied by |
-| --- | --- | --- |
-| Mapping | `elicitation-protocol.md` (question script), `lane-vocabulary.md` (drafting convergence), `layer-roles.md` (lane semantics ↔ rendering), `data-model.md` | `/sb:map` |
-| Auditing | `audit-playbook.md` (run semantics, fingerprints, triage, check template), `check-gap-sweep.md`, `check-jargon-lint.md`, `check-channel-conflict.md`, `check-kpi-alignment.md`, `check-perceived-owner.md`, `check-value-ledger.md`, `check-fee-visibility.md` | `/sb:audit` |
-| What-if | `whatif-playbook.md` (variant discipline, replay/restage/prioritize, promote handoff) | `/sb:whatif` |
-| Slicing | `slice-playbook.md` (selection + regeneration rules), `slice-templates.md` | `/sb:slice` |
+| Practice | Specification files (references/)                                                                                                                                                                                                                              | Applied by   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| Mapping  | `elicitation-protocol.md` (question script), `lane-vocabulary.md` (drafting convergence), `layer-roles.md` (lane semantics ↔ rendering), `data-model.md`                                                                                                       | `/sb:map`    |
+| Auditing | `audit-playbook.md` (run semantics, fingerprints, triage, check template), `check-gap-sweep.md`, `check-jargon-lint.md`, `check-channel-conflict.md`, `check-kpi-alignment.md`, `check-perceived-owner.md`, `check-value-ledger.md`, `check-fee-visibility.md` | `/sb:audit`  |
+| What-if  | `whatif-playbook.md` (variant discipline, replay/restage/prioritize, promote handoff)                                                                                                                                                                          | `/sb:whatif` |
+| Slicing  | `slice-playbook.md` (selection + regeneration rules), `slice-templates.md`                                                                                                                                                                                     | `/sb:slice`  |
 
 Lay explanation of audits and findings for non-practitioners:
 [doc 04](04-the-assistant-and-audits.md). Using slices to drive product

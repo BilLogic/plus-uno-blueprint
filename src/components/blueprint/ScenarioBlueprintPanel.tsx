@@ -2,12 +2,7 @@ import { memo, useEffect, useMemo, useRef, type RefObject } from 'react'
 import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePanel'
 import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { MergedCompareGrid } from '@/components/blueprint/MergedCompareGrid'
-import { SideBySideCompareGrid } from '@/components/blueprint/SideBySideCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
-import {
-  CompareDivergenceStrip,
-  COMPARE_STRIP_HEIGHT,
-} from '@/components/blueprint/CompareDivergenceStrip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEditor } from '@/contexts/EditorContext'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
@@ -138,18 +133,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     selectedPathIds.length > 0
   const useSinglePathLayout =
     displayViewType === 'single' && selectedPathIds.length > 0
-  /*
-    Two arrangements of the same path bands. Overview rows render under a
-    shared-row-height contract (locked heights, phase-uniform view type) and
-    keep the horizontal layout; the focused scenario view — no overview
-    constraints — stacks the bands vertically on one canonical step axis.
-  */
-  const isOverviewConstrained =
-    lockedPanelHeight !== undefined ||
-    fixedSwimlaneBodyHeight !== undefined ||
-    displayViewTypeProp !== undefined
-  const useStackedArrangement = useSideBySideLayout && !isOverviewConstrained
-
   const visibleBlueprints = useMemo(
     () =>
       useSideBySideLayout || useSinglePathLayout
@@ -172,11 +155,11 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     flash divergences.
   */
   const compareModel = useMemo(() => {
-    if (!useStackedArrangement) return null
+    if (!useSideBySideLayout) return null
     if (visibleBlueprints.length < 2) return null
     if (visibleBlueprints.length !== selectedPathIds.length) return null
     return buildCompareModel(visibleBlueprints as CompareBlueprints)
-  }, [selectedPathIds.length, useStackedArrangement, visibleBlueprints])
+  }, [selectedPathIds.length, useSideBySideLayout, visibleBlueprints])
 
   /*
     Merged = ONE COMBINED BLUEPRINT (Phase 4b). `MergedCompareGrid` renders
@@ -276,7 +259,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     const unregisterJump = registerAgentUiCommand({
       name: 'jump_divergence',
       description:
-        "Fly the camera to a divergent STEP of the compared paths and mark it active (the ledger opens that step's group; in Stacked the strip highlights it too). arg: next | prev | <step number> — the canonical step number the ledger shows as \"Step N\".",
+        "Fly the camera to a divergent STEP of the compared paths and mark it active (the ledger opens that step's group). arg: next | prev | <step number> — the canonical step number the ledger shows as \"Step N\".",
       run: async (arg) => {
         const state = getCompareReviewState()
         const registration = state.registration
@@ -379,12 +362,11 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     single path or a half-loaded pair has nothing to merge and falls back to
     the stacked bands (which read fine with one band).
   */
-  const mergedModel =
-    useStackedArrangement && displayViewType === 'merged' ? compareModel : null
+  const mergedModel = displayViewType === 'merged' ? compareModel : null
 
-  // Arrangement is part of the key: switching stacked bands ⇄ overview row
-  // re-measures instead of keeping the other arrangement's size.
-  const compareFitContentKey = `${slide.id}:${selectedPathIds.join(',')}:${displayViewType}:${useStackedArrangement ? 'bands' : 'row'}:${paths.length}`
+  // View mode owns arrangement; camera focus only changes the viewport
+  // transform. This key therefore stays stable across overview ⇄ focus.
+  const compareFitContentKey = `${slide.id}:${selectedPathIds.join(',')}:${displayViewType}:${paths.length}`
   const stackedColumnCount =
     compareModel?.columns.length ??
     visibleBlueprints.reduce((sum, blueprint) => sum + blueprint.steps.length, 0)
@@ -406,7 +388,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
         ? // Merged is about one band tall; the swell over divergent slots
           // comes from the panel's measurement, not from this floor.
           getMergedComparePanelHeight(visibleBlueprints)
-        : useStackedArrangement
+        : useSideBySideLayout
           ? getStackedComparePanelHeight(visibleBlueprints)
           : getComparePanelHeight(visibleBlueprints))
 
@@ -416,11 +398,11 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     // Compare-grid estimates run hot (the height one predates
     // classification collapsing stacked slots). A floor set from a hot
     // estimate is dead gray space — the measured content rules instead.
-    minWidth: useStackedArrangement
+    minWidth: useSideBySideLayout
       ? getStackedComparePanelWidth(stackedColumnCount)
       : getComparePanelWidth(visibleBlueprints),
     minHeight: panelHeight,
-    defaultWidth: useStackedArrangement
+    defaultWidth: useSideBySideLayout
       ? getStackedComparePanelWidth(stackedColumnCount)
       : getComparePanelWidth(visibleBlueprints),
     defaultHeight: panelHeight,
@@ -440,7 +422,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   // — a band-by-band trickle would reshuffle canonical columns per arrival.
   const stackedStillLoading =
     loading &&
-    useStackedArrangement &&
+    useSideBySideLayout &&
     selectedPathIds.length >= 2 &&
     visibleBlueprints.length < selectedPathIds.length
 
@@ -485,23 +467,9 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   }
 
   if (useSideBySideLayout) {
-    // Strip in STACKED only: merged already reads as one combined board
-    // (labels + wash carry divergence); the zone strip on top of it was
-    // chrome without a job.
-    const stripVisible = compareModel !== null && displayViewType !== 'merged'
     return (
       <ResizableComparePanel
         {...comparePanelProps}
-        chromeBar={
-          stripVisible ? (
-            <CompareDivergenceStrip
-              model={compareModel}
-              blueprints={visibleBlueprints}
-              slideId={slide.id}
-            />
-          ) : undefined
-        }
-        chromeBarHeight={stripVisible ? COMPARE_STRIP_HEIGHT : 0}
         fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
       >
         {mergedModel !== null ? (
@@ -512,7 +480,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             scenarioName={scenarioName}
             phaseName={phaseName}
           />
-        ) : useStackedArrangement ? (
+        ) : (
           <StackedCompareGrid
             blueprints={visibleBlueprints}
             model={compareModel}
@@ -520,16 +488,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             scenarioName={scenarioName}
             phaseName={phaseName}
             sectionTitleLabel={sectionTitleLabel}
-          />
-        ) : (
-          <SideBySideCompareGrid
-            blueprints={visibleBlueprints}
-            scrollContainerRef={scrollContainerRef}
-            scenarioName={scenarioName}
-            phaseName={phaseName}
-            sectionTitleLabel={sectionTitleLabel}
-            fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
-            fillSwimlaneHeight={fillSwimlaneHeight}
           />
         )}
       </ResizableComparePanel>
@@ -548,7 +506,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             data={data}
             className="shrink-0"
             scenarioName={scenarioName}
-          phaseName={phaseName}
+            phaseName={phaseName}
             headerTitleLabel={sectionTitleLabel}
             headerTitleDescription={sectionTitleDescription}
             showPathTypeBadge={showPathTypeBadge}

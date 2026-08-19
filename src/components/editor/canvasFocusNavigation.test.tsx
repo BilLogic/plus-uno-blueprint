@@ -40,7 +40,7 @@ describe('dimmed canvas navigation', () => {
     expect(onNavigate).toHaveBeenCalledTimes(1)
   })
 
-  it('keeps a different phase clickable and gives hover/focus a visible lift', () => {
+  it('keeps a different phase clickable and exposes its nested dim state', () => {
     const onNavigate = vi.fn()
     render(
       <CanvasPhaseSection
@@ -58,7 +58,8 @@ describe('dimmed canvas navigation', () => {
       name: 'Open Onboarding phase',
     })
     expect(phase.hasAttribute('inert')).toBe(false)
-    expect(phase.className).toContain('hover:opacity-70')
+    expect(phase.hasAttribute('data-canvas-focus-dimmed')).toBe(true)
+    expect(phase.className).not.toContain('opacity-30')
 
     phase.click()
     expect(onNavigate).toHaveBeenCalledTimes(1)

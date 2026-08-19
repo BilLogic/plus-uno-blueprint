@@ -1,6 +1,6 @@
 ---
 audience: designers
-summary: The five-token motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.
+summary: The motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.
 sources: src/styles/animations.css, src/lib/motion.ts, scripts/tests/, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
 last-reviewed: 2026-08-08
 ---
@@ -11,15 +11,16 @@ last-reviewed: 2026-08-08
 
 Everything derives from the sidebar collapse — the one motion that was already
 right — so structural moves, crossfades, and camera eases read as one system
-rather than per-screen inventions. Five tokens, four durations + one easing:
+rather than per-screen inventions. Five duration tokens and two easing profiles:
 
-| Token | Used for |
-|---|---|
-| `--motion-micro` | Hover, badges, threshold fades, panel exits |
-| `--motion-fade` (+ `--motion-fade-stagger`) | Opacity crossfades, and the offset between an out/in pair |
-| `--motion-structural` | Width/size changes — sidebar collapse, presentation wipe |
-| `--motion-camera` | Camera flights (rAF, `easeInOutCubic`) |
-| `--ease-structural` | The quintic-out ease for structural moves (a Tailwind `@theme` key, so `ease-structural` is a utility) |
+| Token                                       | Used for                                                                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `--motion-micro`                            | Hover, badges, threshold fades, panel exits                                                            |
+| `--motion-fade` (+ `--motion-fade-stagger`) | Opacity crossfades, and the offset between an out/in pair                                              |
+| `--motion-structural`                       | Width/size changes — sidebar collapse, presentation wipe                                               |
+| `--motion-camera`                           | Programmatic camera flights and their synchronized focus fades (420 ms)                                |
+| `--ease-structural`                         | The quintic-out ease for structural moves (a Tailwind `@theme` key, so `ease-structural` is a utility) |
+| `--ease-camera`                             | The symmetric sine-like ease for automatic camera travel and its focus fades                           |
 
 Values live in two homes that must agree: `src/styles/animations.css` (CSS)
 and `src/lib/motion.ts` (JS that has to wait for them, plus
@@ -37,7 +38,7 @@ exit swaps to `ease-in`).
 
 `scripts/tests/motion-tokens` holds the two homes to the same numbers — change
 one without the other and the suite fails. This is what makes the vocabulary a
-*vocabulary*: a new duration or easing is a system change made in both files
+_vocabulary_: a new duration or easing is a system change made in both files
 with the test updated, never a literal at a call site. Timing literals in
 components are review-blockers.
 
@@ -56,7 +57,9 @@ ships with its reduced path in the same PR or it does not ship.
 Motion carries information here; motion that carries none is noise. Pinned
 non-animations (rationale in the 2026-07-30 motion plan):
 
-- **Path toggles never move the camera.** Filtering is not navigation.
+- **Path toggles in overview never move the camera.** In a focused scenario,
+  adding or removing a compared path changes the framed layout and therefore
+  gets one normal camera ease to the new fit.
 - **Chrome-driven resizes** (tab strip mounting, header reflow) never refit;
   real window resizes re-center un-eased, debounced.
 - **First fit after any mount jumps** — no swoop-from-nowhere.
@@ -66,7 +69,8 @@ non-animations (rationale in the 2026-07-30 motion plan):
   (the slice dim applies its desaturation un-transitioned on frame 1 under an
   opacity ease; see the comment in `src/styles/blueprint.css`).
 - Exactly **one camera animation per user intent** — a boot, a phase click, a
-  flight; never a restarted or doubled ease.
+  flight; never a restarted or doubled ease. All automatic fits use the same
+  420 ms clock and sine ease so the camera and focus fades settle together.
 
 Loading follows the same restraint: one deferred skeleton per surface,
 all-or-nothing swap — see [components](../components.md#empty-loading-and-error-states).

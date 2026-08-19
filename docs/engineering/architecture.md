@@ -130,8 +130,10 @@ decode to `width × height × 4 bytes` of bitmap **regardless of file
 size**. ~450×700px sources across 141 mounted images meant 325 MB of
 decoded RGBA — fine on desktop, an OOM tab-kill on mobile Chrome. Hence:
 
-- **300px longest-edge cap** on step-visual assets. They display at
-  ≤113×80; 300px is already 2.6× headroom. Downscale before committing.
+- **300px longest-edge cap** on step-visual assets. They display inside a
+  stable 4:3, `object-contain` frame; 300px retains ample high-density
+  headroom without paying to decode source-sized art. Downscale before
+  committing.
 - `loading="lazy"` + `decoding="async"` on every canvas `<img>`
   (`src/components/blueprint/BlueprintStepVisual.tsx`).
 - `EditorErrorBoundary` catches recoverable throws with a designed reload
