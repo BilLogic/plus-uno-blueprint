@@ -27,15 +27,13 @@ export const coverContent: CoverContent = {
     {
       value: 'the-service',
       label: 'The service',
-      intro:
-        'What PLUS is, and who the blueprints in here are about.',
       sections: [
         {
           kind: 'portrait',
           id: 'service-plus',
-          heading: 'PLUS Personalized Learning',
+          heading: 'PLUS Tutoring',
           paragraphs: [
-            'PLUS Personalized Learning is a hybrid human-AI tutoring platform with 500+ tutors, used across 13+ schools, supporting 5,000+ middle school students through real-time, in-class math tutoring sessions.',
+            'PLUS Tutoring is a hybrid human-AI tutoring platform with 500+ tutors, used across 13+ schools, supporting 5,000+ middle school students through real-time, in-class math tutoring sessions.',
           ],
           image: {
             src: '/homepage/plus-icon.png',
