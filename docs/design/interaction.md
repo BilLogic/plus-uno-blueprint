@@ -91,17 +91,38 @@ has been broken at least once — always with the same symptom, a navigation
 that lurches or appears to overshoot. Check them before touching canvas
 layout, not just canvas camera code.
 
-**1. Focus changes no geometry.** A canvas click starts the ease immediately
-from the geometry on screen (`focusActiveCanvasSlide`, before React's
-navigation reconciles), and the navigation then bumps the fit key, which
-computes the fit a second time. `fitToView` skips that second animation only
-when the two targets agree. So anything that resizes the focused panel
-*because* it became focused guarantees a second ease that supersedes the
-first partway through — and an ease-in-out restarting from a moving camera
-drops to zero velocity, which is the lurch. Every scenario in a phase row
-therefore takes identical layout props whether or not it is the focused one.
-The focused scenario is excluded from the row-height **input** (see below);
-it is never excluded from the row-height **contract**.
+**1. One writer per navigation.** There is exactly one camera writer for a
+navigation: the fit scheduled when the fit key changes. There used to be a
+second — an ease started imperatively at click time, before React
+reconciled — and the two could never agree on a destination, because the
+pre-flight closed over the *overview's* fit parameters (`maxFitZoom: 1`,
+margin 48, no insets) while the settled fit uses the *focused* view's
+(`MAX_ZOOM`, margin 20, 56px insets), and navigating also mounts the sticky
+header, which changes the container's height. `fitToView` skips a second
+animation only when the targets match, so that skip could never fire: every
+click ran a 420 ms glide superseded partway by another, and a sine ease
+restarted from a moving camera departs at zero velocity — glide, brake,
+glide. `createCameraTransitionClock` already covers the latency the
+pre-flight was for, by starting the ease's clock on the first frame the
+browser can draw.
+
+Keep this property when adding camera entry points: an imperative flight and
+a fit-key flight for the same intent will fight unless they compute the same
+destination from the same parameters.
+
+**1a. Focus should change as little geometry as possible.** Every scenario in
+a phase row takes identical layout props whether or not it is the focused
+one, and no focus styling touches a box-affecting property (the dim rules set
+`opacity`, `background-color`, `border-color`, `box-shadow` only).
+
+This is a discipline, not a guarantee, and the honest statement of the
+remaining hole is: the focused scenario is excluded from the row-height
+**input**, and that height reaches every panel — including the focused one —
+as a `Math.max` floor. So the focused panel's box is unchanged *provided its
+own measured content exceeds the row floor*, which is the ordinary case and
+is exactly the case the exclusion was introduced for. Where a hot estimate
+for the focused scenario is strictly the row maximum, focusing it does shrink
+the row. Fixing that properly means fixing the estimator, not the exclusion.
 
 **2. Scale interpolates geometrically, not linearly.** Zoom is the reciprocal
 of the visible rect's width, so interpolating width linearly makes the

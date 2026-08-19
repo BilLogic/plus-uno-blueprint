@@ -232,10 +232,16 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
       })
     })
 
-    // Undefined, not 0: the only way to have no heights is a row whose sole
-    // scenario is the focused one, and a shared body height of zero would
-    // pin a panel flat rather than say "there is nothing to align to".
-    return heights.length > 0 ? Math.max(...heights) : undefined
+    // Undefined, not 0 — and zero is reachable two ways, not one. The row
+    // can be empty (its only scenario is the focused one), and it can be
+    // non-empty but measure zero throughout, which happens when none of this
+    // phase's path keys match the global selection (see the cross-scenario
+    // naming note in PathSelectionContext). Either way a shared body height
+    // of zero would pin a panel flat rather than say "there is nothing to
+    // align to" — and `sharedPanelHeight` below has always guarded `> 0`, so
+    // anything less here makes the two memos disagree about what zero means.
+    const tallest = Math.max(0, ...heights)
+    return tallest > 0 ? tallest : undefined
   }, [
     alignPanelHeights,
     rowHeightScenarios,
@@ -269,6 +275,24 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     getSelectedPathIdsProp,
     resolveViewType,
   ])
+
+  /*
+    One stable navigate handler per scenario.
+
+    `ScenarioBlueprintPanelBody` is memoised, and an inline
+    `() => openDetail(scenario.id)` is a new identity on every render — so
+    every panel and all of its cells re-rendered whenever anything above
+    them changed, including the row-height measurement settling. That lands
+    in the same commit as the camera ease, which is the worst possible
+    moment for it.
+  */
+  const navigateByScenario = useMemo(() => {
+    const handlers = new Map<string, () => void>()
+    for (const scenario of scenarios) {
+      handlers.set(scenario.id, () => openDetail(scenario.id))
+    }
+    return handlers
+  }, [scenarios, openDetail])
 
   const rowRef = useRef<HTMLDivElement>(null)
   const selectedPathsMeasureKey = scenarios
@@ -425,7 +449,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               }
               lockPanelHeight={alignPanelHeights}
               displayViewType={scenarioViewType}
-              onNavigate={() => openDetail(scenario.id)}
+              onNavigate={navigateByScenario.get(scenario.id)}
               dimmed={
                 dimAllScenarios ||
                 (focusedScenarioId !== null &&
