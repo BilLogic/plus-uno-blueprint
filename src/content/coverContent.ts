@@ -59,7 +59,7 @@ export const coverContent: CoverContent = {
           heading: 'Why a blueprint that stays true',
           paragraphs: [
             'Service blueprints have always been worth having and have always gone stale. They were strategic artifacts — commissioned, workshopped, opened a few times a year — because reading one took facilitation and context you had to rebuild every time. The map decayed quietly, and nothing in the week depended on it enough to force a correction.',
-            'This project makes one bet: put the blueprint in a structure an agent can query, and that arithmetic changes. Interpretation stops being the expensive part, so the map gets consulted in ordinary work rather than at offsites — and because something now depends on it daily, keeping it accurate has a practical reason rather than a virtuous one.',
+            'This project makes one bet: put the blueprint in a structure an agent can query, and the cost of reading it collapses. Interpretation stops being the expensive part, so the map gets consulted in ordinary work rather than at offsites — and because something now depends on it daily, keeping it accurate has a practical reason rather than a virtuous one.',
           ],
           figure: {
             src: '/cover/why-now.svg',
@@ -94,7 +94,7 @@ export const coverContent: CoverContent = {
             {
               term: 'Context Management',
               definition:
-                'The audit roster names what has stopped holding since the service last moved, so the map is corrected rather than quietly abandoned.',
+                'The audit roster names what has stopped holding since the service last moved, so the map is corrected rather than abandoned by degrees.',
             },
           ],
           figure: {
@@ -128,8 +128,6 @@ export const coverContent: CoverContent = {
     {
       value: 'blueprints',
       label: 'Blueprints',
-      intro:
-        'Three zoom levels: what holds the blueprint, what a single path is made of, and what one cell records.',
       sections: [
         {
           kind: 'prose',
@@ -137,7 +135,7 @@ export const coverContent: CoverContent = {
           heading: 'How a blueprint is organized',
           paragraphs: [
             'A **lifecycle** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
-            'Every path is a grid, and that is the next zoom level.',
+            'Every path is a grid. That is the next level down.',
           ],
           figure: {
             src: '/cover/data-model-hierarchy.svg',
@@ -166,7 +164,8 @@ export const coverContent: CoverContent = {
           id: 'blueprints-cell',
           heading: 'Inside a single cell',
           paragraphs: [
-            "A cell is one actor's action at one step, plus the record around it: where it sits in the hierarchy; who **owns** it and who the customer *thinks* owns it, kept as two fields because the interesting case is when they differ; what it does, what form it takes, and what it is worth; the **evidence** it rests on; the resources it points at; its **dependencies** — what sets it off, what it sets off, what it needs to exist; and the slices that quote it.",
+            "A cell is one actor's action at one step, plus the record around it. It carries where it sits in the hierarchy, what it does, what form it takes, and what it is worth. It carries who **owns** it and who the customer *thinks* owns it — two fields, because the interesting case is when they differ.",
+            'It also carries the **evidence** it rests on, the resources it points at, its **dependencies** — what sets it off, what it sets off, what it needs to exist — and the slices that quote it.',
             'That last one runs both ways: open a cell and you can see which views would change if you edited it.',
           ],
           figure: {
@@ -188,12 +187,19 @@ export const coverContent: CoverContent = {
       sections: [
         {
           kind: 'prose',
-          id: 'slices-view',
+          id: 'slices-intro',
           heading: 'A view taken out of the blueprint',
           paragraphs: [
             'A blueprint is complete by design, which makes it the wrong thing to put in front of any one person. A **slice** is a standing view cut from it: an ordered set of cells with a caption and a narrative, built for one audience and one question.',
-            'A slice quotes cells rather than copying them — it keeps naming its sources. That is the difference between a view and a snapshot: when the cells move, the slice does not quietly go on claiming the old thing.',
+            'A slice quotes cells rather than copying them — it keeps naming its sources. That is the difference between a view and a snapshot: when the cells move, the slice does not go on asserting the old thing.',
+            'It opens as its own tab beside the blueprint, so a reader can move between the view and the board it came from, and it runs frame by frame in presentation mode when the audience is a room rather than a person. Both states are addressable — a slice link carries its id, a presented one carries the frame — so you can send someone exactly what you are looking at.',
           ],
+          figure: {
+            src: '/cover/slice-concept.svg',
+            alt: 'One path becoming a presentation — the cells a slice quotes, ordered into frames',
+            width: 880,
+            height: 364,
+          },
         },
         {
           kind: 'defs',
@@ -215,21 +221,6 @@ export const coverContent: CoverContent = {
             alt: 'The five slice types and what each one selects out of a path',
             width: 880,
             height: 214,
-          },
-        },
-        {
-          kind: 'prose',
-          id: 'slices-reading',
-          heading: 'Reading and presenting',
-          paragraphs: [
-            'A slice opens as its own tab beside the blueprint, so a reader can move between the view and the board it came from. The same slice runs frame by frame in presentation mode when the audience is a room rather than a person.',
-            'Both states are addressable: a slice link carries its id, and a presented one carries the frame. Send someone the frame you are looking at.',
-          ],
-          figure: {
-            src: '/cover/slice-concept.svg',
-            alt: 'One path becoming a presentation — the cells a slice quotes, ordered into frames',
-            width: 880,
-            height: 364,
           },
         },
       ],
@@ -280,7 +271,7 @@ export const coverContent: CoverContent = {
           purpose:
             'Run the check roster and find what is missing, conflicting, or unowned.',
           producesLabel: 'Produces',
-          produces: 'Findings you triage — the audit changes nothing for you.',
+          produces: 'Findings for triage — the audit writes no changes of its own.',
           figure: {
             src: '/cover/sb-audit.svg',
             alt: 'How sb:audit runs its check roster and records findings for triage',
