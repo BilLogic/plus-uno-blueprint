@@ -1,6 +1,7 @@
 import {
   Fragment,
   memo,
+  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -41,6 +42,7 @@ import { usePhaseBlueprintFilters } from '@/hooks/usePhaseBlueprintFilters'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import { cn } from '@/lib/utils'
 import { isBlueprintCellDetailEnabled } from '@/lib/blueprintDisplayFlags'
+import { focusActiveCanvasSlide } from '@/lib/activeCanvasCamera'
 import {
   getCanvasFocusFitInsets,
   getCanvasFocusMaxZoom,
@@ -339,11 +341,19 @@ function ServiceOverviewViewImpl({
     () => (soloPhase ? [soloPhase] : allPhases),
     [allPhases, soloPhase],
   )
-  const scenarioIds = soloScenarioId
-    ? [soloScenarioId]
-    : soloPhase
-      ? getSubslides(soloPhase.id, slides).map((scenario) => scenario.id)
-      : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id)
+  // Stable scope identity is load-bearing for render isolation: rebuilding
+  // this array on every navigation recreates path-selection callbacks, which
+  // defeats memoization and reconciles every heavy phase body before the
+  // camera can draw its first frame.
+  const scenarioIds = useMemo(
+    () =>
+      soloScenarioId
+        ? [soloScenarioId]
+        : soloPhase
+          ? getSubslides(soloPhase.id, slides).map((scenario) => scenario.id)
+          : slides.filter((slide) => isSubslide(slide)).map((slide) => slide.id),
+    [slides, soloPhase, soloScenarioId],
+  )
   const isDetail = view === 'detail'
   const focusedScenarioId =
     isDetail && isSubslide(activeSlide) ? activeSlide.id : null
@@ -352,6 +362,14 @@ function ServiceOverviewViewImpl({
       ? getParentSlide(activeSlide, slides)?.id
       : activeSlide.id
     : null
+
+  const openCanvasDetail = useCallback(
+    (slideId: string) => {
+      focusActiveCanvasSlide(slideId)
+      startTransition(() => openDetail(slideId))
+    },
+    [openDetail],
+  )
 
   const {
     pathsByScenario,
@@ -1010,8 +1028,8 @@ function ServiceOverviewViewImpl({
                             blueprintsByPathId={blueprintsByPathId}
                             getSelectedPathIds={resolveSelectedPathIds}
                             displayViewType={overviewViewType}
-                            onOpenPhase={openDetail}
-                            openScenario={openDetail}
+                            onOpenPhase={openCanvasDetail}
+                            openScenario={openCanvasDetail}
                             getScenarioDisplayViewType={
                               getScenarioDisplayViewType
                             }

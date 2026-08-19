@@ -178,8 +178,8 @@ export function CanvasPhaseSection({
         */
         'relative inline-flex w-max flex-col items-start',
         'transition-opacity duration-(--motion-camera) ease-structural',
-        dimmed &&
-          'opacity-30 saturate-50 [&_[data-blueprint-cell-interactive]]:pointer-events-none',
+        dimmed && 'opacity-30',
+        dimmed && navigable && 'hover:opacity-70 focus-within:opacity-70',
         navigable &&
           'cursor-pointer rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-0',
         className,

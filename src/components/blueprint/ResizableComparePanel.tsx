@@ -272,9 +272,9 @@ export function ResizableComparePanel({
   return (
     <div
       className={cn(
-        'relative shrink-0 transition-[opacity,filter] duration-(--motion-fade) ease-out',
-        dimmed &&
-          'opacity-30 saturate-50 [&_[data-blueprint-cell-interactive]]:pointer-events-none',
+        'relative shrink-0 transition-opacity duration-(--motion-camera) ease-structural',
+        dimmed && 'opacity-30',
+        dimmed && navigable && 'hover:opacity-70 focus-within:opacity-70',
         className,
       )}
       data-focus-slide-id={focusSlideId}

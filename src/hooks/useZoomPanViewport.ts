@@ -13,6 +13,7 @@ import {
 import { isEditableKeyboardTarget } from '@/lib/keyboardTarget'
 import {
   cameraTransitionDuration,
+  createCameraTransitionClock,
   interpolateCameraTransform,
   type CameraTransitionResult,
 } from '@/lib/cameraTransition'
@@ -305,6 +306,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   const pendingFitAnimateRef = useRef(false)
   const userAdjustedViewRef = useRef(false)
   const fitAnimationRef = useRef<number | null>(null)
+  const fitAnimationTargetRef = useRef<{
+    pan: { x: number; y: number }
+    zoom: number
+  } | null>(null)
   const fitAnimationResolveRef = useRef<
     ((result: CameraTransitionResult) => void) | null
   >(null)
@@ -357,6 +362,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     if (fitAnimationRef.current !== null) {
       cancelAnimationFrame(fitAnimationRef.current)
       fitAnimationRef.current = null
+      fitAnimationTargetRef.current = null
       fitAnimationResolveRef.current?.({ kind, transform: transformRef.current })
       fitAnimationResolveRef.current = null
     }
@@ -393,19 +399,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     (nextPan: { x: number; y: number }, nextZoom: number): Promise<CameraTransitionResult> => {
       cancelFitAnimation('superseded')
       const from = transformRef.current
-      const start = performance.now()
       const container = containerRef.current
       const viewport = {
         width: container?.clientWidth ?? 1,
         height: container?.clientHeight ?? 1,
       }
       const target = { pan: nextPan, zoom: nextZoom }
+      fitAnimationTargetRef.current = target
       const duration = fitDurationMs ?? cameraTransitionDuration(from, target, viewport)
+      const progressAt = createCameraTransitionClock(duration)
 
       return new Promise((resolve) => {
         fitAnimationResolveRef.current = resolve
         const step = (now: number) => {
-          const t = Math.min(1, (now - start) / duration)
+          const t = progressAt(now)
           const next = interpolateCameraTransform(from, target, viewport, easeInOutCubic(t))
           commitTransform(next.pan, next.zoom, t === 1, nextZoom)
           if (t < 1) {
@@ -413,6 +420,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
             return
           }
           fitAnimationRef.current = null
+          fitAnimationTargetRef.current = null
           fitAnimationResolveRef.current = null
           resolve({ kind: 'completed', transform: target })
         }
@@ -477,14 +485,15 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * `forcedZoom` keeps an existing zoom and solves for pan only.
    */
   const computeFitTransform = useCallback(
-    (forcedZoom?: number) => {
+    (forcedZoom?: number, selector = fitSelector) => {
       const el = containerRef.current
       const content = contentRef.current
       if (!el || !content) return null
 
       const margin = fitMargin
-      const fitTarget =
-        content.querySelector<HTMLElement>(fitSelector) ?? content
+      const matchedTarget = content.querySelector<HTMLElement>(selector)
+      const fitTarget = matchedTarget ?? (selector === fitSelector ? content : null)
+      if (!fitTarget) return null
       const { zoom: currentZoom } = transformRef.current
       const bounds = measureFitBounds(content, fitTarget, currentZoom)
 
@@ -566,7 +575,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       const shouldAnimate =
         (options?.animate ?? animateFitRef.current) && !prefersReducedMotion()
       if (shouldAnimate) {
-        animateTransform(next.pan, next.zoom)
+        const activeTarget = fitAnimationTargetRef.current
+        if (
+          !activeTarget ||
+          !isSameTransform(activeTarget, { pan: next.pan, zoom: next.zoom })
+        ) {
+          void animateTransform(next.pan, next.zoom)
+        }
       } else {
         commitTransform(next.pan, next.zoom, true)
       }
@@ -1367,6 +1382,17 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     [cancelFitAnimation, commitTransform],
   )
 
+  const focusSlide = useCallback(
+    (slideId: string) => {
+      const selector = `[data-focus-slide-id="${CSS.escape(slideId)}"], [data-phase-id="${CSS.escape(slideId)}"]`
+      const next = computeFitTransform(undefined, selector)
+      if (!next) return
+      userAdjustedViewRef.current = false
+      void animateTransform(next.pan, next.zoom)
+    },
+    [animateTransform, computeFitTransform],
+  )
+
   const getCameraState = useCallback(() => ({
     ...transformRef.current,
     moving: fitAnimationRef.current !== null,
@@ -1419,6 +1445,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     panBy,
     cancelCamera: cancelFitAnimation,
     getCameraState,
+    focusSlide,
     pointerHandlers: {
       onClickCapture: handleClickCapture,
     },

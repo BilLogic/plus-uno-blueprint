@@ -82,7 +82,15 @@ wraps annotation + selection providers) → the transform layer
 - **Camera**: fit-to-view measures `fitSelector` bounds; `focusCells`
   registers per-viewport in a module registry (`src/lib/canvasFocusCells.ts`)
   so portalled surfaces (ledger drawer, agent commands) can fly the camera
-  without a React path to it.
+  without a React path to it. Programmatic motion interpolates the visible
+  world rectangle (coupled pan + zoom), has one cancellable owner, and starts
+  navigation flights against the already-mounted target before the concurrent
+  focus-state render. A matching post-navigation fit joins that flight instead
+  of restarting it.
+- **Input ownership**: pointer streams enter through native capture so a lane
+  or cell cannot hide pointerdown with `stopPropagation`. The pure
+  `canvasInputPolicy.ts` table documents precedence; continuous transforms stay
+  imperative and publish one trailing React snapshot.
 
 What each gesture is *supposed* to do — the click grammar, the touch
 contract — is owned by `design/interaction.md`; this doc owns how it is

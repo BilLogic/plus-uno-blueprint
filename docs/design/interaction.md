@@ -66,10 +66,16 @@ contract in short:
   momentum, and no snapping of any kind.
 - Exactly one camera animation per intent; reduced motion makes every fit a
   jump.
+- Camera time begins on the first drawable animation frame. React/layout work
+  may delay the start, but it cannot consume the ease before the browser paints.
+- Focus mode dims non-selected phase/scenario cards to 30%, then lifts them to
+  70% on hover or keyboard focus. They remain navigation targets so a reader
+  can switch focus directly; cell-level actions inside them remain inactive.
 
 ## The touch contract
 
-Owned by `useZoomPanViewport.ts`; this contract governs the canvas on any
+Owned by the native-capture boundary in `useZoomPanViewport.ts`, with the
+pure ownership table in `canvasInputPolicy.ts`; this contract governs the canvas on any
 touch screen — on a phone the canvas is the whole surface:
 
 - **Tap opens.** A finger that lifts inside the slop is a tap and behaves as
@@ -84,6 +90,11 @@ touch screen — on a phone the canvas is the whole surface:
   gesture state.
 - **A drag's trailing click is swallowed** — the synthetic click browsers
   fire after a pan must not also open a cell.
+
+The viewport observes pointer streams in native capture, before populated
+lanes, cells, or controls can stop bubbling. Desktop adds two temporary pan
+overrides without changing the selected tool: hold Space and primary-drag, or
+drag with the middle mouse button. Editable fields retain Space and shortcuts.
 
 Desktop wheel/keyboard paths are untouched by all of this, and an
 interaction test pins the pinch path. Breakpoint questions (what exists on a

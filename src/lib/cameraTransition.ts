@@ -9,6 +9,22 @@ export type CameraTransitionResult =
   | { kind: 'superseded'; transform: CameraTransform }
 
 /**
+ * Returns transition progress measured from the first frame the browser can
+ * actually draw. Work scheduled before requestAnimationFrame (notably React
+ * reconciliation for a large canvas) may block the main thread; counting
+ * that blocked time makes the first visible frame jump toward the target.
+ */
+export function createCameraTransitionClock(durationMs: number) {
+  const duration = Math.max(1, durationMs)
+  let firstFrameAt: number | null = null
+
+  return (frameAt: number): number => {
+    firstFrameAt ??= frameAt
+    return Math.min(1, Math.max(0, (frameAt - firstFrameAt) / duration))
+  }
+}
+
+/**
  * Interpolate the visible world rectangle, then derive its transform. This
  * keeps pan and zoom coupled: a destination never moves away before arriving.
  */

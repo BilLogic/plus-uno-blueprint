@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   cameraTransitionDuration,
+  createCameraTransitionClock,
   interpolateCameraTransform,
 } from '@/lib/cameraTransition'
 
@@ -32,5 +33,16 @@ describe('camera transition', () => {
     expect(near).toBe(240)
     expect(far).toBeGreaterThan(near)
     expect(far).toBeLessThanOrEqual(420)
+  })
+
+  it('starts elapsed time on the first drawable frame', () => {
+    const progressAt = createCameraTransitionClock(420)
+
+    // React may occupy the main thread for most of the nominal duration
+    // before requestAnimationFrame can draw. That delay must not consume the
+    // animation: the first frame is still the exact starting transform.
+    expect(progressAt(338)).toBe(0)
+    expect(progressAt(548)).toBeCloseTo(0.5)
+    expect(progressAt(758)).toBe(1)
   })
 })

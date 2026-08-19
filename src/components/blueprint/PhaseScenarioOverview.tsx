@@ -1,7 +1,7 @@
 import { Fragment, memo, useCallback, useId, useMemo, useRef } from 'react'
 import {
   getScenarioSwimlaneBodyHeight,
-  ScenarioBlueprintPanel,
+  ScenarioBlueprintPanelBody,
 } from '@/components/blueprint/ScenarioBlueprintPanel'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import { useEditor } from '@/contexts/EditorContext'
@@ -346,7 +346,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
 
         return (
           <Fragment key={scenario.id}>
-            <ScenarioBlueprintPanel
+            <ScenarioBlueprintPanelBody
               slide={scenario}
               slides={slides}
               paths={paths}
@@ -368,6 +368,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
                   focusedScenarioId !== scenario.id)
               }
               focusActive={focusedScenarioId === scenario.id}
+              getScenarioDisplayViewType={getScenarioDisplayViewType}
             />
 
             {renderScenarioSeparator(index, visibleScenarioSelections.length)}
