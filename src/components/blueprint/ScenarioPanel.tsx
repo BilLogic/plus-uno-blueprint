@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Info } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -13,7 +11,10 @@ import {
   SCENARIO_PANEL_FOOTER_ID,
   PanelFooterHost,
   PanelHeader,
+  PanelIdentity,
+  PanelLoading,
 } from '@/components/blueprint/panelShell'
+import { PanelHint } from '@/components/blueprint/PanelHint'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { useScenarioSpec, type ScenarioSpec } from '@/hooks/useScenarioSpec'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -60,17 +61,22 @@ export function ScenarioPanel({
             scenario={scenario}
             onDone={onClose}
           />
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {result.status === 'error'
-              ? 'That scenario could not be loaded.'
-              : 'Loading…'}
+        ) : result.status === 'error' ? (
+          <p className="text-sm text-muted-foreground">
+            That scenario could not be loaded.
           </p>
+        ) : (
+          <PanelLoading />
         )}
       </div>
       <PanelFooterHost id={SCENARIO_PANEL_FOOTER_ID} />
     </>
   )
+}
+
+/** "1 path" / "2 paths" — the panels' one counting voice. */
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
 }
 
 type PathForm = { summary: string; note: string }
@@ -173,20 +179,13 @@ function ScenarioPanelBody({
       data-panel-editor=""
       data-busy={busy || undefined}
     >
-      <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium tracking-tight text-foreground">
-          {scenario.name}
-        </h2>
-        <p className="text-2xs leading-tight text-muted-foreground">
-          {scenario.paths.length === 1
-            ? '1 path'
-            : `${scenario.paths.length} paths`}{' '}
-          ·{' '}
-          {scenario.stepCount === 1 ? '1 step' : `${scenario.stepCount} steps`}{' '}
-          ·{' '}
-          {scenario.cellCount === 1 ? '1 cell' : `${scenario.cellCount} cells`}
-        </p>
-      </div>
+      <PanelIdentity
+        title={scenario.name}
+        meta={`${plural(scenario.paths.length, 'path')} · ${plural(
+          scenario.stepCount,
+          'step',
+        )} · ${plural(scenario.cellCount, 'cell')}`}
+      />
 
       <PanelTextareaField
         label="Summary"
@@ -200,8 +199,16 @@ function ScenarioPanelBody({
       />
 
       <div className="flex flex-col gap-1">
-        <span className="text-2xs font-medium text-muted-foreground">
+        <span className="flex items-center gap-1 text-2xs font-medium text-muted-foreground">
           Paths
+          {/* Why the layout control is absent, said once, on request —
+              rather than a tinted banner explaining it on every open. */}
+          <PanelHint label="Where the layout is set">
+            How the paths are laid out — one at a time, side by side, merged —
+            is a view preference, set by the compare control on the canvas. A
+            properties panel is the wrong place to change what you are
+            currently looking at.
+          </PanelHint>
         </span>
         <Accordion value={openPath} onValueChange={setOpenPath}>
           {scenario.paths.map((path) => (
@@ -247,13 +254,6 @@ function ScenarioPanelBody({
           ))}
         </Accordion>
       </div>
-
-      <Alert variant="info" className="items-center">
-        <Info />
-        <AlertDescription className="text-xs">
-          How the paths are laid out is set by the compare control, not here.
-        </AlertDescription>
-      </Alert>
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 

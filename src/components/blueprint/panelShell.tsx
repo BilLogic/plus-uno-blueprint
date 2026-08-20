@@ -25,6 +25,8 @@ import {
   CELL_DETAIL_PANEL_BOTTOM_CLASS,
   CELL_DETAIL_PANEL_TOP_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import { panelEditorBusy } from '@/lib/panelEditorBusy'
 import { cn } from '@/lib/utils'
@@ -308,5 +310,63 @@ export function PanelHeader({
         </Button>
       </IconTooltip>
     </DrawerHeader>
+  )
+}
+
+/**
+ * The identity block every entity panel opens with: what this is, then where
+ * it sits and how big it is.
+ *
+ * Typography is the cell panel's, exactly — `text-sm font-bold leading-snug
+ * tracking-tight` for the name and the 11px `text-2xs` step for the meta line.
+ * Three panels each inventing their own heading is how a shell stops reading
+ * as one surface.
+ */
+export function PanelIdentity({
+  title,
+  meta,
+  children,
+}: {
+  title: string
+  /** Counts and relationships — never a restatement of the title. */
+  meta: ReactNode
+  children?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
+        {title}
+      </p>
+      <p className="text-2xs leading-tight text-muted-foreground">{meta}</p>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * What a panel shows while its query is in flight.
+ *
+ * `deferred-skeleton.tsx` and not the word "Loading…": the inventory names it
+ * for empty and loading states, and a panel that opens on a spelt-out
+ * placeholder reads slower than one that opens on the shape of its content.
+ * The hold means a fast query never paints a skeleton at all.
+ */
+export function PanelLoading() {
+  return (
+    <DeferredSkeleton
+      loading
+      skeleton={
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+        </div>
+      }
+    >
+      {null}
+    </DeferredSkeleton>
   )
 }

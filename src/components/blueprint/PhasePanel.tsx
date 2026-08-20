@@ -5,6 +5,8 @@ import {
   PHASE_PANEL_FOOTER_ID,
   PanelFooterHost,
   PanelHeader,
+  PanelIdentity,
+  PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { usePhaseSpec, type PhaseSpec } from '@/hooks/usePhaseSpec'
@@ -47,12 +49,12 @@ export function PhasePanel({
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
         {phase ? (
           <PhasePanelBody key={phase.id} phase={phase} onDone={onClose} />
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {result.status === 'error'
-              ? 'That phase could not be loaded.'
-              : 'Loading…'}
+        ) : result.status === 'error' ? (
+          <p className="text-sm text-muted-foreground">
+            That phase could not be loaded.
           </p>
+        ) : (
+          <PanelLoading />
         )}
       </div>
       <PanelFooterHost id={PHASE_PANEL_FOOTER_ID} />
@@ -121,18 +123,14 @@ function PhasePanelBody({
       data-panel-editor=""
       data-busy={busy || undefined}
     >
-      <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium tracking-tight text-foreground">
-          {phase.name}
-        </h2>
-        <p className="text-2xs leading-tight text-muted-foreground">
-          {phase.scenarioCount === 1
-            ? '1 scenario'
-            : `${phase.scenarioCount} scenarios`}{' '}
-          · {phase.cellCount === 1 ? '1 cell' : `${phase.cellCount} cells`}
-          {phase.loopsToName ? ` · loops to ${phase.loopsToName}` : ''}
-        </p>
-      </div>
+      <PanelIdentity
+        title={phase.name}
+        meta={`${phase.scenarioCount} scenario${
+          phase.scenarioCount === 1 ? '' : 's'
+        } · ${phase.cellCount} cell${phase.cellCount === 1 ? '' : 's'}${
+          phase.loopsToName ? ` · loops to ${phase.loopsToName}` : ''
+        }`}
+      />
 
       <PanelTextareaField
         label="Summary"

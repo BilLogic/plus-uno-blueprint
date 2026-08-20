@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Info, Plus, X } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { IconTooltip } from '@/components/editor/IconTooltip'
@@ -10,7 +9,10 @@ import {
   LANE_PANEL_FOOTER_ID,
   PanelFooterHost,
   PanelHeader,
+  PanelIdentity,
+  PanelLoading,
 } from '@/components/blueprint/panelShell'
+import { PanelHint } from '@/components/blueprint/PanelHint'
 import { useLaneSpec, type LaneSpec } from '@/hooks/useLaneSpec'
 import { useOwnerTags } from '@/hooks/useOwnerTags'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -52,12 +54,12 @@ export function LanePanel({
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
         {lane ? (
           <LanePanelBody key={lane.id} lane={lane} onDone={onClose} />
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {result.status === 'error'
-              ? 'That lane could not be loaded.'
-              : 'Loading…'}
+        ) : result.status === 'error' ? (
+          <p className="text-sm text-muted-foreground">
+            That lane could not be loaded.
           </p>
+        ) : (
+          <PanelLoading />
         )}
       </div>
       <PanelFooterHost id={LANE_PANEL_FOOTER_ID} />
@@ -131,25 +133,40 @@ function LanePanelBody({
       // while the write lands anyway.
       data-busy={busy || undefined}
     >
-      <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-medium tracking-tight text-foreground">
-          {lane.name}
-        </h2>
+      <PanelIdentity
+        title={lane.name}
+        meta={
+          <>
+            {fanOut === 1 ? '1 path' : `${fanOut} paths`} ·{' '}
+            {lane.cellCount === 1 ? '1 cell' : `${lane.cellCount} cells`}
+            {/* The grain, on request rather than as a permanent banner: a
+                lane row belongs to ONE path, so the label you are editing is
+                several rows and every one of them moves. */}
+            {canEdit && fanOut > 1 ? (
+              <>
+                {' · '}
+                <span className="whitespace-nowrap">edits apply to all {fanOut}</span>{' '}
+                <PanelHint label="What a save touches">
+                  A lane row belongs to one path, so “{lane.name}” is {fanOut}{' '}
+                  rows in {lane.scenarioName}. Saving writes all of them —
+                  otherwise the same lane would claim a different owner
+                  depending on which path you were looking at.
+                </PanelHint>
+              </>
+            ) : null}
+          </>
+        }
+      >
         {/* The role in words, not the enum key: `frontstage_actions` is a
             rendering contract, and a reader of this panel is being asked
-            whether the KPI below matches what the lane DOES. */}
+            whether the KPI below matches what the lane DOES. Resolved through
+            the legacy name map first — most rows predate `lane_role` and
+            carry null, and saying "no blueprint role" about a lane the canvas
+            draws the interaction line under would be a lie. */}
         <p className="text-2xs leading-tight text-muted-foreground">
-          {/* Resolved, not raw: most rows predate `lane_role` and carry
-              null, and the legacy name map is what the CANVAS renders them
-              by. Showing "no blueprint role" for a lane the canvas is
-              drawing an interaction line under would be a lie. */}
           {describeLaneRole(getLayerRole({ name: lane.name, role: lane.role }))}
         </p>
-        <p className="text-2xs leading-tight text-muted-foreground">
-          {fanOut === 1 ? '1 path' : `${fanOut} paths`} ·{' '}
-          {lane.cellCount === 1 ? '1 cell' : `${lane.cellCount} cells`}
-        </p>
-      </div>
+      </PanelIdentity>
 
       <Field
         label="Owner team"
@@ -192,19 +209,6 @@ function LanePanelBody({
         disabled={!canEdit}
         onChange={(next) => set('tools', next)}
       />
-
-      {/* The grain, stated before saving rather than discovered after. A lane
-          row belongs to ONE path, so the label you are editing is several
-          rows and every one of them moves. */}
-      {canEdit && fanOut > 1 ? (
-        <Alert variant="info" className="items-center">
-          <Info />
-          <AlertDescription className="text-xs">
-            Edits apply to all {fanOut} “{lane.name}” lanes in{' '}
-            {lane.scenarioName}.
-          </AlertDescription>
-        </Alert>
-      ) : null}
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
@@ -301,7 +305,7 @@ function StringListField({
           </div>
         ))}
         {values.length === 0 && disabled ? (
-          <p className="text-xs text-muted-foreground">None recorded.</p>
+          <p className="text-sm text-muted-foreground">None recorded.</p>
         ) : null}
         {disabled ? null : (
           <Button
