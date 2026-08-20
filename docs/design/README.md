@@ -64,9 +64,10 @@ the semantic layer re-derives per scope). Signature: _the slice dim_. See
 [color](foundations/color.md) and [motion](foundations/motion.md).
 
 **Mobile shell.** Below the breakpoint the phone shows the same canvas as
-desktop, scoped to one phase at a time — navigation is a camera move, a
-single-select path pill replaces the PATHS checkboxes, and everything is
-view-only for every tier. Signature: _the phase-scoped camera_. See
+desktop, scoped to one scenario at a time — the drawer is the only way to
+move between them, a single-select path pill replaces the PATHS
+checkboxes, and everything is view-only for every tier. Signature: _the
+scenario-scoped canvas_. See
 [responsive](responsive.md), which owns the whole contract.
 
 **The agent panel.** Docked to the sidebar or floating; a bottom sheet on
