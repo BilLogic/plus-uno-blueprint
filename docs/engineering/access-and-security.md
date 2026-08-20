@@ -96,10 +96,10 @@ unchanged.
 | `corpus_chunks` | One row per embedded cell: breadcrumb `title`, the enriched `chunk` text, a 768-dim `embedding` (Vertex `text-embedding-005`), HNSW index. **RLS-sealed — nothing reads it directly.** |
 | `blueprint_chunks_src` | Read-only view joining each non-empty cell up its hierarchy into the chunk + title. `service_role` only. |
 | `index_meta` | Which model built the index. The hybrid RPC rejects a caller declaring a different one. |
-| `match_corpus_chunks()` | Vector-only lookup. Legacy; the hybrid RPC superseded it for the bot. |
+| `match_corpus_chunks()` | Vector-only lookup. Legacy; the portal superseded it for the bot. |
 | `prune_orphans()` | Deletes exactly the chunks whose cell no longer qualifies. Returns the count. |
 | `index_health()` | Counts only — total, eligible, orphaned, stale, last embed. |
-| `public.blueprint_hybrid_search()` | **The retrieval entry point.** Vector + prose + structural-name, fused by reciprocal rank. |
+| `public.search_blueprint()` | **The portal — every consumer's one search entry point.** Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_type` / `filter_layer_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
 
 **The pattern to keep: narrow doors, not wide grants.** The table is sealed and
 every capability is a `security definer` function that permits exactly one
