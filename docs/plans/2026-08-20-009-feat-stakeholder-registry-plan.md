@@ -1,7 +1,7 @@
 ---
 title: "The stakeholder registry — one cast list instead of four"
 type: feat
-status: active
+status: completed
 date: 2026-08-20
 repos: uno-blueprint, plus-uno
 brief: docs/plans/2026-08-20-001-spec-layer-brief.md
@@ -9,6 +9,11 @@ related: docs/plans/2026-08-20-006-design-data-model.md
 ---
 
 # Stakeholder registry
+
+> **Shipped 2026-08-20** — migration `20260820170000_stakeholders.sql`.
+> Six stakeholders seeded, 75 actor lanes linked, 224 structural rows left
+> null, 7 of 10 slices matched. Phases 1–4 done; Phase 5 done except the
+> pinned service-panel surface.
 
 > ## 📌 One phase of this is pinned — 2026-08-20
 >

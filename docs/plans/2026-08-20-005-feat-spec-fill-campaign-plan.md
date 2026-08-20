@@ -1,17 +1,27 @@
 ---
 title: "Fill the spec layer — scoped, cited, reviewed"
 type: feat
-status: blocked
+status: active
 date: 2026-08-20
 repos: uno-blueprint
 brief: docs/plans/2026-08-20-001-spec-layer-brief.md
-blocked-by: docs/plans/2026-08-20-003-feat-entity-detail-panels-plan.md
 ---
 
 # Spec fill campaign
 
-> **Blocked on plan 003.** Filling fields a human cannot then see or correct
-> is how the last round of this content ended up invisible. Panels first.
+> **Unblocked 2026-08-20.** Plan 003's panels ship: a step's summary is
+> editable in the step panel and visible as the storyboard caption, and the
+> lane panel edits `owner_team`, `kpis` and `tools`. Filling fields a human
+> can now see and correct is the whole precondition.
+
+> ## Run log
+>
+> | Run | Target | Scope | Result |
+> |---|---|---|---|
+> | 0 | `steps.summary` | Warm-Up, 9 steps | **all 9 written**, each grounded clause by clause in that column's cells. No gaps: every column had at least one non-empty cell. Storyboard cells' own `content` untouched |
+>
+> **Stopped after run 0 by decision** — the calibration run is the review
+> gate's whole point. Nothing else in the campaign has run.
 
 ---
 
