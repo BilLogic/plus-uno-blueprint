@@ -3,12 +3,11 @@ import { createPortal } from 'react-dom'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import {
+  CELL_PANEL_FOOTER_ID,
+  Field,
+} from '@/components/blueprint/panelShell'
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
 import { invalidateCanvasBlueprintsForPath } from '@/hooks/useCanvasBlueprints'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -29,14 +28,6 @@ import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { parseValueProps, type ValueProp } from '@/lib/valueProps'
 import { cn } from '@/lib/utils'
 
-/**
- * The one place the panel's Save and Cancel live: a host element pinned to
- * the drawer's bottom edge, below the scroll region and the tabs. The form
- * portals its buttons here so they read as controls for the whole panel —
- * one Save for everything on it — instead of a row buried mid-scroll.
- */
-export const CELL_PANEL_FOOTER_ID = 'cell-panel-editor-footer'
-
 /** Where a not-yet-created cell would go — the draft the editor writes on Save. */
 export type DraftCellTarget = {
   pathId: string
@@ -47,40 +38,6 @@ export type DraftCellTarget = {
   stepIndex: number
   scenarioName?: string
   phaseName?: string
-}
-
-/** Label with its explanation folded into a hover tooltip, not inline text. */
-function Field({
-  label,
-  hint,
-  required = false,
-  children,
-}: {
-  label: string
-  hint?: string
-  /** Draws the asterisk — the only signal a field cannot be left empty. */
-  required?: boolean
-  children: React.ReactNode
-}) {
-  const labelText = (
-    <span className="w-fit text-2xs font-medium text-muted-foreground">
-      {label}
-      {required ? <span className="ml-0.5 text-destructive">*</span> : null}
-    </span>
-  )
-  return (
-    <div className="flex flex-col gap-1">
-      {hint ? (
-        <Tooltip>
-          <TooltipTrigger render={labelText} />
-          <TooltipContent side="left">{hint}</TooltipContent>
-        </Tooltip>
-      ) : (
-        labelText
-      )}
-      {children}
-    </div>
-  )
 }
 
 type FormState = {
@@ -385,7 +342,7 @@ function CellPanelEditorForm({
   return (
     <div
       className="flex flex-col gap-3"
-      data-cell-panel-editor=""
+      data-panel-editor=""
       // Read by the panel's dismiss paths: Escape while a save is in flight
       // must not close the drawer — "cancelled" a beat after clicking Create
       // would otherwise materialize the cell into a panel-less silence.
