@@ -513,7 +513,7 @@ export async function dispatchTool(
         const id = await createPhase(client, {
           lifecycleId: await lifecycleId(client),
           name: need(args, 'name'),
-          description: s(args, 'description') ?? null,
+          summary: s(args, 'summary') ?? null,
         })
         return `Created phase (${id}).`
       }

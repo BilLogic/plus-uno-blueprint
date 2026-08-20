@@ -457,37 +457,37 @@ export type Database = {
         Row: {
           business_impact: string | null
           created_at: string
-          description: string | null
           id: string
           loops_to_phase_id: string | null
           name: string
           operational_requirements: string | null
           position: number
           service_lifecycle_id: string
+          summary: string | null
           updated_at: string
         }
         Insert: {
           business_impact?: string | null
           created_at?: string
-          description?: string | null
           id?: string
           loops_to_phase_id?: string | null
           name: string
           operational_requirements?: string | null
           position?: number
           service_lifecycle_id: string
+          summary?: string | null
           updated_at?: string
         }
         Update: {
           business_impact?: string | null
           created_at?: string
-          description?: string | null
           id?: string
           loops_to_phase_id?: string | null
           name?: string
           operational_requirements?: string | null
           position?: number
           service_lifecycle_id?: string
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -578,31 +578,31 @@ export type Database = {
       scenarios: {
         Row: {
           created_at: string
-          description: string | null
           id: string
           name: string
           position: number
           phase_id: string
+          summary: string | null
           updated_at: string
           view_type: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
           id?: string
           name: string
           position?: number
           phase_id: string
+          summary?: string | null
           updated_at?: string
           view_type?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
           id?: string
           name?: string
           position?: number
           phase_id?: string
+          summary?: string | null
           updated_at?: string
           view_type?: string
         }

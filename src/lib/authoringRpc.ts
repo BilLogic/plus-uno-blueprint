@@ -242,12 +242,14 @@ function deriveRevert(
  */
 export function createPhase(
   client: Client,
-  input: { lifecycleId: string; name: string; description?: string | null },
+  input: { lifecycleId: string; name: string; summary?: string | null },
 ): Promise<string> {
   return call<string>(client, 'create_phase', {
     lifecycle_id: input.lifecycleId,
     name: input.name,
-    description: input.description ?? null,
+    // PostgREST binds RPC arguments BY NAME, so this key is the function's
+    // parameter name, not a column name that happens to match.
+    summary: input.summary ?? null,
   })
 }
 

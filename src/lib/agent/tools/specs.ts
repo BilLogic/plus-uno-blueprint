@@ -429,7 +429,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       type: 'object',
       properties: {
         name: str('Phase name'),
-        description: str('One-line description; omit for none'),
+        summary: str('One line on what this stage is; omit for none'),
       },
       required: ['name'],
     },

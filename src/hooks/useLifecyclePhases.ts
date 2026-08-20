@@ -8,13 +8,13 @@ import type { NavItem } from '@/types/nav'
 const LIFECYCLE_PHASES_SELECT = `
   id,
   name,
-  description,
+  summary,
   position,
   loops_to_phase_id,
   scenarios (
     id,
     name,
-    description,
+    summary,
     position,
     phase_id,
     view_type

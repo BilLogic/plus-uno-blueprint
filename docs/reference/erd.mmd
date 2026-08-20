@@ -70,7 +70,7 @@ erDiagram
     uuid service_lifecycle_id FK
     uuid loops_to_phase_id FK "optional self-reference"
     text name
-    text description
+    text summary "the stage in one line"
     int position
     text business_impact "what this phase is worth, and what it costs"
     text operational_requirements "what must be true for it to run at all"
@@ -80,7 +80,7 @@ erDiagram
     uuid id PK
     uuid phase_id FK
     text name
-    text description
+    text summary "the situation this blueprint covers"
     int position
     text view_type "single | stacked"
     text origin
@@ -98,6 +98,7 @@ erDiagram
     uuid id PK
     uuid scenario_id FK
     text name
+    text summary "what this moment is, across every lane — the storyboard caption"
     text origin
   }
   path_steps {

@@ -34,7 +34,7 @@ create table public.phases (
   id uuid primary key default gen_random_uuid(),
   service_lifecycle_id uuid not null references public.service_lifecycles (id) on delete cascade,
   name text not null,
-  description text,
+  summary text,   -- the stage in one line
   position integer not null default 0,
   loops_to_phase_id uuid references public.phases (id) on delete set null,
   business_impact text,
@@ -44,11 +44,11 @@ create table public.phases (
   updated_at timestamptz not null default now()
 );
 
-create table public.service_scenarios (
+create table public.scenarios (
   id uuid primary key default gen_random_uuid(),
   phase_id uuid not null references public.phases (id) on delete cascade,
   name text not null,
-  description text,
+  summary text,   -- the situation this blueprint covers
   position integer not null default 0,
   -- `merged` is a per-session display chosen in the compare control, never
   -- stored. create_scenario refuses it by name.
@@ -60,7 +60,7 @@ create table public.service_scenarios (
 
 create table public.paths (
   id uuid primary key default gen_random_uuid(),
-  service_scenario_id uuid not null references public.service_scenarios (id) on delete cascade,
+  scenario_id uuid not null references public.scenarios (id) on delete cascade,
   name text not null,
   path_type text not null,
   summary text,   -- when this route applies
@@ -89,8 +89,9 @@ create table public.lanes (
 
 create table public.steps (
   id uuid primary key default gen_random_uuid(),
-  service_scenario_id uuid not null references public.service_scenarios (id) on delete cascade,
+  scenario_id uuid not null references public.scenarios (id) on delete cascade,
   name text not null,
+  summary text,   -- what this moment is, across every lane (storyboard caption)
   origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

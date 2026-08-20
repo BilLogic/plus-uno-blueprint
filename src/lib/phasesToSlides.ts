@@ -3,17 +3,24 @@ import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
   Scenario,
-  'id' | 'name' | 'description' | 'position' | 'phase_id' | 'view_type'
+  'id' | 'name' | 'summary' | 'position' | 'phase_id' | 'view_type'
 >
 
 export type PhaseRow = Pick<
   Phase,
-  'id' | 'name' | 'description' | 'position' | 'loops_to_phase_id'
+  'id' | 'name' | 'summary' | 'position' | 'loops_to_phase_id'
 > & {
   scenarios?: ScenarioRow[]
 }
 
-/** Map phases and nested scenarios to editor slides (scenarios = subsides under their phase). */
+/**
+ * Map phases and nested scenarios to editor slides (scenarios = subsides under
+ * their phase).
+ *
+ * This is the seam where the COLUMN `summary` becomes the slide's
+ * `description` prop. The prop is a display API shared by every slide kind and
+ * keeps its name; only the field read off the row was renamed.
+ */
 export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
   const slides: NavItem[] = []
   const sortedPhases = [...phases].sort(
@@ -25,7 +32,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
       id: phase.id,
       index: phaseIndex + 1,
       label: phase.name,
-      description: phase.description,
+      description: phase.summary,
       loopToId: phase.loops_to_phase_id ?? undefined,
     })
 
@@ -38,7 +45,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         id: scenario.id,
         index: scenarioIndex + 1,
         label: scenario.name,
-        description: scenario.description,
+        description: scenario.summary,
         parentId: phase.id,
         // One vocabulary. The column now holds client tokens
         // (`single | stacked`), so there is no seam to cross — but a row
