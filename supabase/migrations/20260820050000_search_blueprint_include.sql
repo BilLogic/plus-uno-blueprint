@@ -5,7 +5,16 @@
 -- then findings, then slices, then the index — against a Cloudflare Workers
 -- cap of 50 subrequests per invocation, where three searches in a turn
 -- already cost 36. granularity retired the index call; `include` retires the
--- other three.
+-- edges and findings calls.
+--
+-- It does NOT retire uno-bot's slices call, and that is worth stating because
+-- the two answer different questions. `include => slices` returns slices whose
+-- frames REFERENCE the returned cells. uno-bot's fetchSlices(env, query) runs
+-- a title/actor ILIKE search on the QUERY TEXT, and spends a second subrequest
+-- on a rows-free head-count so that "how many slices are there" is not
+-- answered with a filtered count. Swapping one for the other would be a
+-- behaviour change wearing an optimisation's clothes. Net for uno-bot:
+-- 5 calls to 3, not 5 to 1.
 --
 -- Include rows describe the rows ALREADY RETURNED, so they are computed
 -- after the cap and do NOT count against match_count: ask for 15 cells with
