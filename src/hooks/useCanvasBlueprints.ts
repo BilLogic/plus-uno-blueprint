@@ -105,7 +105,7 @@ function deriveFromRows(
           scenarioPaths.map((path) => ({
             id: path.id,
             name: path.name,
-            description: path.description ?? null,
+            summary: path.summary ?? null,
             note: path.note ?? null,
             path_type: path.path_type,
           })),

@@ -101,7 +101,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     layerId === L.regular
@@ -198,7 +198,7 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     'Tutor supervisor team assigns lessons.',
   ),
   cell(lmCell('01', '09'), L.support, STEPS[0].id, STEP_1_SUPPORT, {
-    description: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
+    summary: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
   }),
 
   // Step 2 — work through questions
@@ -235,7 +235,7 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(lmCell('02', '09'), L.support, STEPS[1].id, STEP_1_SUPPORT, {
-    description: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
+    summary: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
   }),
 
   // Step 3 — finish lesson
@@ -272,7 +272,7 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(lmCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign Team', {
-    description: LESSON_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
+    summary: LESSON_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
   }),
 ]
 

@@ -109,7 +109,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   return {

@@ -116,7 +116,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  extras: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  extras: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     layerId === L.regular
@@ -275,7 +275,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     },
   ),
   cell(callOffCell('05', '09'), L.support, STEPS[4].id, 'Dev Team', {
-    description: CALL_OFF_REQUEST_SUPPORT_STEP_05_DESCRIPTION,
+    summary: CALL_OFF_REQUEST_SUPPORT_STEP_05_DESCRIPTION,
   }),
 
   cell(callOffCell('06', '10'), L.visual, STEPS[5].id, ''),

@@ -139,7 +139,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   return {
     id,
@@ -250,7 +250,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(tsCell('01', '09'), L.support, STEPS[0].id, 'Child protection laws', {
-    description: TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION,
+    summary: TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION,
   }),
 
   // Step 2 — obtain clearances
@@ -278,7 +278,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     },
   ),
   cell(tsCell('02', '09'), L.support, STEPS[1].id, 'Child protection laws', {
-    description: TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION,
+    summary: TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION,
   }),
 
   // Step 3 — send clearances
@@ -305,7 +305,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(tsCell('03', '09'), L.support, STEPS[2].id, 'Child protection laws', {
-    description: TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION,
+    summary: TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION,
   }),
 
   // Step 4 — schedule I-9 meeting
@@ -326,7 +326,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(tsCell('04', '09'), L.support, STEPS[3].id, 'Employment laws', {
-    description: TECH_SETUP_EMPLOYMENT_LAWS_DESCRIPTION,
+    summary: TECH_SETUP_EMPLOYMENT_LAWS_DESCRIPTION,
   }),
 
   // Step 5 — attend I-9 meeting
@@ -344,7 +344,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     'CMU HR department reviews employment forms at an I-9 meeting.',
   ),
   cell(tsCell('05', '09'), L.support, STEPS[4].id, 'Employment laws', {
-    description: TECH_SETUP_EMPLOYMENT_LAWS_DESCRIPTION,
+    summary: TECH_SETUP_EMPLOYMENT_LAWS_DESCRIPTION,
   }),
 
   // Step 6 — payroll setup

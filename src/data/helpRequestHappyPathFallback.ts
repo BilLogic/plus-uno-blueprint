@@ -143,7 +143,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     layerId === L.regular
@@ -282,19 +282,19 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ),
 
   cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
   }),
   cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
   }),
   cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
   }),
   cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
   }),
   cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
   }),
   cell(hrCell('06', '06'), L.frontStageTech, STEPS[5].id, 'PLUS App', {
     links: [
@@ -315,7 +315,7 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ),
 
   cell(hrCell('06', '09'), L.support, STEPS[5].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 

@@ -107,7 +107,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     layerId === L.regular
@@ -229,15 +229,15 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
 
   cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
   }),
   cell(sjjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
   }),
   cell(sjjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
   }),
 ]
 

@@ -171,7 +171,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
@@ -327,24 +327,24 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
   ),
 
   cell(gsCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[0],
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[0],
   }),
   cell(gsCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil, PLUS App', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[1],
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[1],
     links: [happyPathPlusAppLink(
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[0],
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_02_PICTURE,
     )],
   }),
   cell(gsCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil, PLUS App', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[2],
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[2],
     links: [happyPathPlusAppLink(
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[1],
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_03_PICTURE,
     )],
   }),
   cell(gsCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil, PLUS App', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[3],
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[3],
     links: [happyPathPlusAppLink(
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[2],
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_04_PICTURE,
@@ -356,7 +356,7 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     STEPS[4].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[4],
+      summary: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[4],
       links: [happyPathPlusAppLink(
         GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[3],
         GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_05_PICTURE,
@@ -364,7 +364,7 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     },
   ),
   cell(gsCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[5],
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[5],
   }),
   cell(gsCell('07', '06'), L.frontStageTech, STEPS[6].id, 'PLUS App', {
     links: [happyPathPlusAppLink(
@@ -399,19 +399,19 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
   ),
 
   cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('05', '09'), L.support, STEPS[4].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 

@@ -107,7 +107,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'description' | 'links' | 'picture'>>,
+  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'picture'>>,
 ): BlueprintCell {
   return {
     id,
@@ -170,7 +170,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     STEPS[0].id,
     'Google Spreadsheet',
     {
-      description: FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+      summary: FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
       links: [
         techDescriptionLink(
           'Google Spreadsheet',
@@ -190,7 +190,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(fillCell('01', '09'), L.support, STEPS[0].id, 'Dev Team', {
-    description: FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION,
+    summary: FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION,
   }),
 
   cell(fillCell('02', '10'), L.visual, STEPS[1].id, ''),
@@ -272,7 +272,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     'Tutor supervisor team adds tutor to session if tutor confirms request.',
   ),
   cell(fillCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
-    description: FILL_IN_REQUEST_SUPPORT_STEP_04_DESCRIPTION,
+    summary: FILL_IN_REQUEST_SUPPORT_STEP_04_DESCRIPTION,
   }),
 ]
 

@@ -84,7 +84,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'description' | 'links' | 'picture'>>,
+  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'picture'>>,
 ): BlueprintCell {
   return {
     id,
@@ -139,7 +139,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     'Tutor supervisor team receives and reviews tutor schedules from the Dev Team.',
   ),
   cell(schedCell('01', '08'), L.backStageTech, STEPS[0].id, 'Google Spreadsheet', {
-    description: STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
     links: [
       techDescriptionLink(
         'Google Spreadsheet',
@@ -149,7 +149,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(schedCell('01', '09'), L.support, STEPS[0].id, 'Dev Team', {
-    description: STANDARD_SCHEDULING_SUPPORT_STEP_01_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_SUPPORT_STEP_01_DESCRIPTION,
   }),
 
   cell(schedCell('02', '10'), L.visual, STEPS[1].id, ''),
@@ -167,7 +167,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     'Tutor supervisor team sends schedule.',
   ),
   cell(schedCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
-    description: STANDARD_SCHEDULING_PLUS_APP_STEP_02_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_PLUS_APP_STEP_02_DESCRIPTION,
     links: [
       techDescriptionLink(
         'PLUS App',
@@ -176,7 +176,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(schedCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign Team', {
-    description: STANDARD_SCHEDULING_SUPPORT_STEP_02_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_SUPPORT_STEP_02_DESCRIPTION,
   }),
 ]
 

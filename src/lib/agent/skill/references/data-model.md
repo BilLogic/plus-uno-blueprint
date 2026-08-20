@@ -53,7 +53,7 @@ erDiagram
   steps { uuid id PK  uuid service_scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
   path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int column_position "unique per (path_id, column_position)" }
   layers { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text layer_role "semantic role key; null = generic swimlane"  int row_position }
-  cells { uuid id PK  uuid path_id FK  uuid layer_id FK "unique (layer_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text description "optional detail-panel text"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
+  cells { uuid id PK  uuid path_id FK  uuid layer_id FK "unique (layer_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
   cell_triggers { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK }
 ```
 

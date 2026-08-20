@@ -20,7 +20,7 @@ type CellSpec = {
   lane: string
   step: string
   content: string
-  description?: string
+  summary?: string
   id?: string
 }
 
@@ -51,7 +51,7 @@ function makeBlueprint(
     step_id: stepIdByName.get(cell.step) ?? '',
     content: cell.content,
     picture: null,
-    description: cell.description ?? null,
+    summary: cell.summary ?? null,
     links: [],
   }))
   return {
@@ -89,7 +89,7 @@ function fixture() {
         lane: 'Front Stage',
         step: 'Ship',
         content: 'Ship order',
-        description: 'Courier A',
+        summary: 'Courier A',
       },
       { lane: 'Front Stage', step: 'Rate', content: 'Rate purchase' },
     ],
@@ -106,7 +106,7 @@ function fixture() {
         lane: 'Front Stage',
         step: 'Ship',
         content: 'Ship order',
-        description: 'Courier B',
+        summary: 'Courier B',
       },
       { lane: 'Front Stage', step: 'Rate', content: 'Rate the call' },
     ],

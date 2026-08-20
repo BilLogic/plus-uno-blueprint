@@ -28,7 +28,7 @@ export type RawCell = {
   step_id: string
   content: string
   picture?: string | null
-  description?: string | null
+  summary?: string | null
   links?: Json | null
   outgoing?: RawOutgoingTrigger[] | null
 }
@@ -51,7 +51,7 @@ export type RawLayer = {
 export type RawPath = {
   id: string
   name: string
-  description?: string | null
+  summary?: string | null
   note?: string | null
   path_type: PathType
   layers?: RawLayer[] | null
@@ -214,7 +214,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     step_id: cell.step_id,
     content: cell.content,
     picture: cell.picture ?? null,
-    description: cell.description ?? null,
+    summary: cell.summary ?? null,
     links: normalizeCellLinks(cell.links),
   }))
   const triggers =
@@ -231,7 +231,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     path: {
       id: raw.id,
       name: raw.name,
-      summary: raw.description ?? null,
+      summary: raw.summary ?? null,
       note: raw.note ?? null,
       path_type: raw.path_type,
     },

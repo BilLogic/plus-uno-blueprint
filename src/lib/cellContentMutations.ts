@@ -12,7 +12,7 @@ type Client = SupabaseClient<Database>
 export type CellContentUpdate = {
   /** The text in the cell on the grid. */
   content: string
-  description: string
+  summary: string
   owner: string
   perceivedOwner: string
 }
@@ -55,7 +55,7 @@ export async function updateCellContent(
       content,
       // Empty means "not specified", stored as null so the read path has one
       // kind of empty to check rather than two.
-      description: update.description.trim() || null,
+      summary: update.summary.trim() || null,
       owner: update.owner.trim() || null,
       perceived_owner: update.perceivedOwner.trim() || null,
     })

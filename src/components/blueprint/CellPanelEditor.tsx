@@ -153,7 +153,7 @@ export function CellPanelEditor({
       // fallback below, but diffs and reverts compare against this — an
       // owner-only edit must not smuggle the fallback prose into the
       // description column, and undo must restore what the DB actually held.
-      description: content.description ?? '',
+      description: content.summary ?? '',
       owner: content.owner ?? '',
       perceivedOwner: content.perceived_owner ?? '',
       functionText: spec?.function ?? '',
@@ -168,7 +168,7 @@ export function CellPanelEditor({
         draft={undefined}
         layerName={layerName}
         baseline={baseline}
-        seededDescription={content.description ?? fallbackDescription}
+        seededDescription={content.summary ?? fallbackDescription}
         onDone={onDone}
       />
     )
@@ -318,14 +318,14 @@ function CellPanelEditorForm({
           targetId,
           {
             content: form.text,
-            description: cellId ? effectiveDescription : form.description,
+            summary: cellId ? effectiveDescription : form.description,
             owner: form.owner,
             perceivedOwner: form.perceivedOwner,
           },
           cellId
             ? {
                 content: baseline.text,
-                description: baseline.description,
+                summary: baseline.description,
                 owner: baseline.owner,
                 perceivedOwner: baseline.perceivedOwner,
               }
@@ -410,9 +410,9 @@ function CellPanelEditorForm({
         </p>
       </Field>
 
-      {/* "Summary", not "Description": it is the tl;dr that consolidates
-          what the detailed fields (function, form, value) spell out. The
-          column stays `description` — a label rename is not a migration. */}
+      {/* The tl;dr that consolidates what the detailed fields (function,
+          form, value) spell out. The column is `summary` too now — this used
+          to carry a note explaining why the label and the column disagreed. */}
       <Field label="Summary" hint="The tl;dr — what the detailed fields below add up to.">
         <textarea
           value={form.description}

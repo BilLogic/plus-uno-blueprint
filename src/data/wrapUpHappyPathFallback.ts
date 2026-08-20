@@ -121,7 +121,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     layerId === L.regular
@@ -280,15 +280,15 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
 
   cell(wuCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: WRAP_UP_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: WRAP_UP_ZOOM_PENCIL_STEP_01_DESCRIPTION,
   }),
   cell(wuCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: WRAP_UP_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: WRAP_UP_ZOOM_PENCIL_STEP_02_DESCRIPTION,
   }),
   cell(wuCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: WRAP_UP_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: WRAP_UP_ZOOM_PENCIL_STEP_03_DESCRIPTION,
   }),
   cell(wuCell('04', '06'), L.frontStageTech, STEPS[3].id, 'PLUS App', {
     links: [
@@ -302,7 +302,7 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
   }),
 
   cell(wuCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 

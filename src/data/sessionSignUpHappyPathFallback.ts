@@ -84,7 +84,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>>,
+  extras?: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>>,
 ): BlueprintCell {
   return {
     id,
@@ -143,7 +143,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     { picture: SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_PICTURE },
   ),
   cell(ssCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS app', {
-    description: SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
+    summary: SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
     links: [
       techDescriptionLink(
         'PLUS app',
@@ -165,7 +165,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     STEPS[0].id,
     'Google Spreadsheet',
     {
-      description: SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+      summary: SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
       links: [
         techDescriptionLink(
           'Google Spreadsheet',
@@ -176,7 +176,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     },
   ),
   cell(ssCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign Team', {
-    description: SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
+    summary: SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
   }),
 
   // Step 2 — Review scheduling

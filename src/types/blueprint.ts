@@ -46,7 +46,10 @@ export type BlueprintCell = {
   /** Cell Label — primary text shown in the blueprint grid. */
   content: string
   picture: string | null
-  description: string | null
+  /** The tl;dr the detail fields add up to. Renamed from `description` with the
+   *  column — CellPanelEditor already labelled it "Summary" and getCell already
+   *  relabelled it on the way out, so this closes a documented workaround. */
+  summary: string | null
   links: CellLink[]
   /**
    * Order within a slot (one lane, one step). Tech lanes hold one cell per

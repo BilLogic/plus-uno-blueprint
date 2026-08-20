@@ -622,7 +622,7 @@ function BlueprintSwimLane({
                             : `empty-${layerId}-${step.id}`),
                         cellContent: cell?.content ?? '',
                         cellPicture: cell?.picture ?? null,
-                        cellDescription: cell?.description ?? null,
+                        cellDescription: cell?.summary ?? null,
                         cellLinks: cell?.links,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
@@ -727,7 +727,7 @@ function BlueprintCellBlock({
       ? (slotCells && slotCells.length > 0
           ? slotCells
           : content !== undefined
-            ? [{ id: cellId, content, picture: null, description: null, links: [] }]
+            ? [{ id: cellId, content, picture: null, summary: null, links: [] }]
             : []
         ).flatMap((slotCell) =>
           getTechPillItems(slotCell.content ?? '').map((item) => ({
@@ -797,7 +797,7 @@ function BlueprintCellBlock({
                 cellId: slotCell.id ?? selectionContext.cellId,
                 cellContent: slotCell.content ?? '',
                 cellPicture: slotCell.picture ?? null,
-                cellDescription: slotCell.description ?? null,
+                cellDescription: slotCell.summary ?? null,
                 cellLinks: slotCell.links,
               }}
               stepIndex={stepIndex}

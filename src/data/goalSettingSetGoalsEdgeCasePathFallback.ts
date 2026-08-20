@@ -242,7 +242,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
@@ -429,7 +429,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
   ),
 
   cell(geCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION,
   }),
   cell(geCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
     links: [
@@ -455,7 +455,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     STEPS[3].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_04_DESCRIPTION,
@@ -466,7 +466,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     },
   ),
   cell(geCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+    summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION,
   }),
   cell(
     geCell('06', '06'),
@@ -474,7 +474,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     STEPS[5].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_06_DESCRIPTION,
@@ -490,7 +490,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     STEPS[6].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_07_DESCRIPTION,
@@ -506,7 +506,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     STEPS[7].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_08_DESCRIPTION,
@@ -522,7 +522,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     STEPS[8].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_09_DESCRIPTION,
@@ -538,7 +538,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     STEPS[9].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_10_DESCRIPTION,
@@ -549,7 +549,7 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     },
   ),
   cell(geCell('11', '06'), L.frontStageTech, STEPS[10].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION,
+    summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION,
   }),
   cell(geCell('12', '06'), L.frontStageTech, STEPS[11].id, 'PLUS App', {
     links: [
@@ -575,31 +575,31 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
   ),
 
   cell(geCell('02', '09'), L.support, STEPS[1].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('03', '09'), L.support, STEPS[2].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('04', '09'), L.support, STEPS[3].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('06', '09'), L.support, STEPS[5].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('07', '09'), L.support, STEPS[6].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('08', '09'), L.support, STEPS[7].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('09', '09'), L.support, STEPS[8].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('10', '09'), L.support, STEPS[9].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('12', '09'), L.support, STEPS[11].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 

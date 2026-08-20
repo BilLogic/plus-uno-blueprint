@@ -175,7 +175,7 @@ export function CompareCellBlock({
                       cellId: slotCell.id,
                       cellContent: slotCell.content ?? '',
                       cellPicture: slotCell.picture ?? null,
-                      cellDescription: slotCell.description ?? null,
+                      cellDescription: slotCell.summary ?? null,
                       cellLinks: slotCell.links,
                     }
                   : selectionContext

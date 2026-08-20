@@ -13,7 +13,7 @@ export type PathOption = {
    */
   id: string
   name: string
-  description: string | null
+  summary: string | null
   path_type: PathType
   /**
    * The real path uuids folded into this option, in the order they were
@@ -99,7 +99,7 @@ function PathNotionPill({
     >
       <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
-        description={path.description}
+        description={path.summary}
         pathName={path.name}
         side="top"
       >
@@ -131,7 +131,7 @@ export function PathToolbarButton({
     >
       <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
-        description={path.description}
+        description={path.summary}
         pathName={path.name}
         side="top"
       >
@@ -189,7 +189,7 @@ function PathCheckbox({
       />
       <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
-        description={path.description}
+        description={path.summary}
         pathName={path.name}
         side="top"
       >

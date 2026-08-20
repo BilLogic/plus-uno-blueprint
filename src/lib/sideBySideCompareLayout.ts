@@ -65,7 +65,7 @@ export function getComparePathArrowData(
       path_type: path.path_type,
       content: cell.content,
       picture: cell.picture,
-      description: cell.description,
+      description: cell.summary,
       links: cell.links,
       opacity: 1,
     })),

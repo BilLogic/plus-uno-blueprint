@@ -193,7 +193,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
@@ -360,7 +360,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
   ),
 
   cell(gcCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION,
   }),
   cell(gcCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
     links: [
@@ -377,7 +377,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     STEPS[2].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+      summary: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_03_DESCRIPTION,
       links: [
         checkGoalsPlusAppLink(
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_03_DESCRIPTION,
@@ -388,7 +388,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     },
   ),
   cell(gcCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+    summary: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_04_DESCRIPTION,
   }),
   cell(
     gcCell('05', '06'),
@@ -396,7 +396,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     STEPS[4].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+      summary: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_05_DESCRIPTION,
       links: [
         checkGoalsPlusAppLink(
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_05_DESCRIPTION,
@@ -412,7 +412,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     STEPS[5].id,
     'Zoom/Pencil, PLUS App',
     {
-      description: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+      summary: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_06_DESCRIPTION,
       links: [
         checkGoalsPlusAppLink(
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_DESCRIPTION,
@@ -423,7 +423,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     },
   ),
   cell(gcCell('07', '06'), L.frontStageTech, STEPS[6].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_07_DESCRIPTION,
+    summary: GOAL_SETTING_CHECK_GOALS_ZOOM_PENCIL_STEP_07_DESCRIPTION,
   }),
   cell(gcCell('08', '06'), L.frontStageTech, STEPS[7].id, 'PLUS App', {
     links: [
@@ -461,23 +461,23 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
   ),
 
   cell(gcCell('02', '09'), L.support, STEPS[1].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gcCell('03', '09'), L.support, STEPS[2].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gcCell('05', '09'), L.support, STEPS[4].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gcCell('06', '09'), L.support, STEPS[5].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(
     gcCell('08', '09'),
     L.support,
     STEPS[7].id,
     SUPPORT_STEP_8,
-    { description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION },
+    { summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION },
   ),
 ]
 

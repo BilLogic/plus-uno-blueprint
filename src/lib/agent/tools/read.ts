@@ -610,7 +610,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
   const { data, error } = await client
     .from('cells')
     .select(
-      'id, content, description, owner, perceived_owner, function, form, value_props, links, layer_id, step_id, slot_position',
+      'id, content, summary, owner, perceived_owner, function, form, value_props, links, layer_id, step_id, slot_position',
     )
     .eq('id', cellId)
     .maybeSingle()
@@ -618,7 +618,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
   if (!data) return `No cell with id ${cellId}.`
   const fields: Array<[string, unknown]> = [
     ['content', data.content],
-    ['summary', data.description],
+    ['summary', data.summary],
     ['owner', data.owner],
     ['perceived_owner', data.perceived_owner],
     ['function', data.function],

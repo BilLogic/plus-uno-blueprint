@@ -4,13 +4,13 @@ import type { CellLink } from '@/types/blueprint'
 
 export type CellContent = {
   content: string
-  description: string | null
+  summary: string | null
   owner: string | null
   perceived_owner: string | null
   links: CellLink[]
 }
 
-const CELL_CONTENT_SELECT = 'content, description, owner, perceived_owner, links'
+const CELL_CONTENT_SELECT = 'content, summary, owner, perceived_owner, links'
 
 /**
  * The cell's own editable text, read on demand.
@@ -41,7 +41,7 @@ export function useCellContent(
       if (!data) return null
       return {
         content: data.content ?? '',
-        description: data.description ?? null,
+        summary: data.summary ?? null,
         owner: data.owner ?? null,
         perceived_owner: data.perceived_owner ?? null,
         links: (data.links ?? []) as unknown as CellLink[],

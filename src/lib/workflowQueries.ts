@@ -31,7 +31,7 @@ export const PATH_BLUEPRINT_SELECT = `
     slot_position,
     content,
     picture,
-    description,
+    summary,
     links,
     outgoing:cell_triggers!cell_triggers_source_cell_id_fkey (
       id,

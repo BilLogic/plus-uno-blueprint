@@ -411,7 +411,7 @@ export async function dispatchTool(
         const { data, error } = await client
           .from('cells')
           .select(
-            'content, description, owner, perceived_owner, function, form, value_props',
+            'content, summary, owner, perceived_owner, function, form, value_props',
           )
           .eq('id', cellId)
           .maybeSingle()
@@ -443,7 +443,7 @@ export async function dispatchTool(
               : getCellContentLengthGuidance(nextContent)
           const previous: CellContentUpdate = {
             content: data.content ?? '',
-            description: data.description ?? '',
+            summary: data.summary ?? '',
             owner: data.owner ?? '',
             perceivedOwner: data.perceived_owner ?? '',
           }
@@ -452,7 +452,7 @@ export async function dispatchTool(
             cellId,
             {
               content: nextContent ?? previous.content,
-              description: s(args, 'summary') ?? previous.description,
+              summary: s(args, 'summary') ?? previous.summary,
               owner: s(args, 'owner') ?? previous.owner,
               perceivedOwner:
                 s(args, 'perceived_owner') ?? previous.perceivedOwner,

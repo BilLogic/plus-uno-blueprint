@@ -146,7 +146,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     layerId === L.regular
@@ -355,7 +355,7 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
   }),
   cell(bsjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App, Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION,
@@ -366,15 +366,15 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
   }),
   cell(bsjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION,
   }),
   cell(bsjCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION,
   }),
   cell(bsjCell('05', '06'), L.frontStageTech, STEPS[4].id, 'PLUS App, Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
@@ -385,7 +385,7 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
   }),
   cell(bsjCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom/Pencil', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION,
   }),
 
   cell(
@@ -402,13 +402,13 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
   ),
 
   cell(bsjCell('01', '09'), L.support, STEPS[0].id, 'Dev team\nDesign team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(bsjCell('02', '09'), L.support, STEPS[1].id, 'Dev team\nDesign team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(bsjCell('05', '09'), L.support, STEPS[4].id, 'Dev team\nDesign team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 

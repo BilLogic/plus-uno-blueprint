@@ -307,7 +307,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
       const fieldSignatures: Record<CompareField, string> = {
         content: multisetSignature(cells.map((cell) => cell.content.trim())),
         description: multisetSignature(
-          cells.map((cell) => (cell.description ?? '').trim()),
+          cells.map((cell) => (cell.summary ?? '').trim()),
         ),
         links: multisetSignature(cells.map(linkSignature)),
       }

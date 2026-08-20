@@ -84,7 +84,7 @@ export function pickWalkthroughBlueprint(
 type VisualPictureBlueprint = Pick<BlueprintData, 'layers' | 'cells'>
 
 function resolveCellDescription(cell: BlueprintData['cells'][number] | undefined): string {
-  return cell?.description?.trim() || cell?.content.trim() || ''
+  return cell?.summary?.trim() || cell?.content.trim() || ''
 }
 
 export function resolveVisualStepPictureEntries(

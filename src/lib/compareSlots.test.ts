@@ -11,7 +11,7 @@ type CellSpec = {
   lane: string
   step: string
   content: string
-  description?: string
+  summary?: string
   id?: string
 }
 
@@ -46,7 +46,7 @@ function makeBlueprint(
     step_id: stepIdByName.get(cell.step) ?? '',
     content: cell.content,
     picture: null,
-    description: cell.description ?? null,
+    summary: cell.summary ?? null,
     links: [],
   }))
   return {
@@ -204,12 +204,12 @@ describe('buildCompareModel — fields and multisets', () => {
     const a = makeBlueprint(
       'a',
       ['Pay'],
-      [{ lane: 'FS', step: 'Pay', content: 'Pay', description: 'via card' }],
+      [{ lane: 'FS', step: 'Pay', content: 'Pay', summary: 'via card' }],
     )
     const b = makeBlueprint(
       'b',
       ['Pay'],
-      [{ lane: 'FS', step: 'Pay', content: 'Pay', description: 'via invoice' }],
+      [{ lane: 'FS', step: 'Pay', content: 'Pay', summary: 'via invoice' }],
     )
     const model = buildCompareModel(pair(a, b))
     const slot = model.slots[0]
@@ -221,12 +221,12 @@ describe('buildCompareModel — fields and multisets', () => {
     const a = makeBlueprint(
       'a',
       ['Pay'],
-      [{ lane: 'FS', step: 'Pay', content: 'Pay', description: 'via card' }],
+      [{ lane: 'FS', step: 'Pay', content: 'Pay', summary: 'via card' }],
     )
     const b = makeBlueprint(
       'b',
       ['Pay'],
-      [{ lane: 'FS', step: 'Pay', content: 'Pay', description: 'via invoice' }],
+      [{ lane: 'FS', step: 'Pay', content: 'Pay', summary: 'via invoice' }],
     )
     const model = buildCompareModel(pair(a, b))
     // Fork condition is content-or-presence: a description-only difference

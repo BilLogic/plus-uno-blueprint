@@ -136,7 +136,7 @@ function cell(
   layerId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   return {
     id,
@@ -243,7 +243,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(omCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign Team', {
-    description: ONBOARDING_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
+    summary: ONBOARDING_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
   }),
 
   // Step 2 — accessing content
@@ -273,7 +273,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(omCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign Team', {
-    description: ONBOARDING_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
+    summary: ONBOARDING_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
   }),
 
   // Step 3 — reading lesson
@@ -304,7 +304,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     L.support,
     STEPS[2].id,
     'Researchers help guide instructional implementation.',
-    { description: ONBOARDING_MODULES_RESEARCHERS_SUPPORT_DESCRIPTION },
+    { summary: ONBOARDING_MODULES_RESEARCHERS_SUPPORT_DESCRIPTION },
   ),
 
   // Step 4 — supplementary materials
@@ -346,7 +346,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     L.support,
     STEPS[3].id,
     'Researchers help guide instructional implementation.',
-    { description: ONBOARDING_MODULES_RESEARCHERS_SUPPORT_DESCRIPTION },
+    { summary: ONBOARDING_MODULES_RESEARCHERS_SUPPORT_DESCRIPTION },
   ),
 
   // Step 5 — quiz completion
@@ -379,7 +379,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     L.support,
     STEPS[4].id,
     'Researchers help guide instructional implementation.',
-    { description: ONBOARDING_MODULES_RESEARCHERS_SUPPORT_DESCRIPTION },
+    { summary: ONBOARDING_MODULES_RESEARCHERS_SUPPORT_DESCRIPTION },
   ),
 
   // Step 6 — reflection
@@ -420,7 +420,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     L.support,
     STEPS[5].id,
     'Researchers help guide instructional implementation.\nDev Team\nDesign Team',
-    { description: ONBOARDING_MODULES_STEP_06_SUPPORT_DESCRIPTION },
+    { summary: ONBOARDING_MODULES_STEP_06_SUPPORT_DESCRIPTION },
   ),
 
   // Step 7 — module completion
@@ -442,7 +442,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(omCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign Team', {
-    description: ONBOARDING_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
+    summary: ONBOARDING_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
   }),
 ]
 

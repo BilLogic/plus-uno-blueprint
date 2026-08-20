@@ -39,7 +39,7 @@ function resolveScenarioDescription(
   if (slide.description?.trim()) return slide.description
 
   const selectedPath = paths.find((path) => selectedPathIds.includes(path.id))
-  return selectedPath?.description ?? paths[0]?.description ?? null
+  return selectedPath?.summary ?? paths[0]?.summary ?? null
 }
 
 function SlideHeaderContent({
@@ -66,7 +66,7 @@ function SlideHeaderContent({
   const description = isScenario
     ? resolveScenarioDescription(slide, paths, selectedPathIds)
     : slide.description ??
-      paths[0]?.description ??
+      paths[0]?.summary ??
       'Scenarios in this phase and how they connect.'
 
   return (

@@ -588,14 +588,14 @@ function BlueprintCellDetailPanelBody() {
 
   const selectedCell = useMemo((): Pick<
     BlueprintCell,
-    'content' | 'description' | 'links' | 'picture'
+    'content' | 'summary' | 'links' | 'picture'
   > | null => {
     const pathId = pathEntry?.pathId
     if (!resolvedCellId || !pathId) {
       if (!pathEntry) return null
       return {
         content: pathEntry.content,
-        description: pathEntry.description ?? null,
+        summary: pathEntry.description ?? null,
         picture: pathEntry.picture ?? null,
         links: pathEntry.links ?? [],
       }
@@ -608,7 +608,7 @@ function BlueprintCellDetailPanelBody() {
 
     return {
       content: pathEntry?.content ?? '',
-      description: pathEntry?.description ?? null,
+      summary: pathEntry?.description ?? null,
       picture: pathEntry?.picture ?? null,
       links: pathEntry?.links ?? [],
     }

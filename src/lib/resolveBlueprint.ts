@@ -170,8 +170,8 @@ function mergeMissingBlueprintContent(
       }
     }
 
-    if (fallbackCell.description?.trim() && !cell.description?.trim()) {
-      next = { ...next, description: fallbackCell.description }
+    if (fallbackCell.summary?.trim() && !cell.summary?.trim()) {
+      next = { ...next, summary: fallbackCell.summary }
       changed = true
     }
 
@@ -307,7 +307,7 @@ export function resolveBlueprintForScenario(
             id: rawPath.id,
             name: fallback.path.name,
             summary:
-              fallback.path.summary ?? rawPath.description ?? null,
+              fallback.path.summary ?? rawPath.summary ?? null,
             note: fallback.path.note ?? rawPath.note ?? null,
             path_type: rawPath.path_type,
           }

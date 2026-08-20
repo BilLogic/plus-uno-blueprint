@@ -47,7 +47,7 @@ function resolveHeaderDescription(
     if (slide.description?.trim()) return slide.description
 
     const selectedPath = paths.find((path) => selectedPathIds.includes(path.id))
-    return selectedPath?.description ?? paths[0]?.description ?? null
+    return selectedPath?.summary ?? paths[0]?.summary ?? null
   }
 
   return (
