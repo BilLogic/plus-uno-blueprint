@@ -45,46 +45,46 @@ export const GOAL_SETTING_CHECK_GOALS_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-0000000008b0'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008b1',
     name: 'Partner Action: Teacher',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b2',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b3',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b4',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b5',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b7',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b6',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008b8',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -92,42 +92,42 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000009b01',
     name: 'Join breakout session',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b02',
     name: "Click on 'Check Goals' CTA in the Action column",
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b03',
     name: 'Share screen',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b04',
     name: 'Review goals that were set with student',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b05',
     name: "Once goal review is done, clicks on 'Check Goals' button",
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b06',
     name: 'Finalize checking goal with the student.',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b07',
     name: 'Leave breakout room',
-    column_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009b08',
     name: 'Move on to the next student in sorted order set by researchers.',
-    column_position: 8,
+    position: 8,
   },
 ] as const
 

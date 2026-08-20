@@ -264,7 +264,7 @@ export async function listLayers(client: Client): Promise<string> {
   const { data, error } = await client
     .from('lanes')
     .select('name, lane_role')
-    .order('row_position')
+    .order('position')
   if (error) throw new Error(error.message)
   const counts = new Map<string, number>()
   for (const row of data ?? []) {
@@ -471,7 +471,7 @@ export async function getBlueprint(
     const lines: string[] = [
       `Path "${path.name}" (${path.id}, type ${path.path_type})`,
       `Steps: ${steps
-        .map((step) => `${step.column_position}. "${step.name}" (${step.id})`)
+        .map((step) => `${step.position}. "${step.name}" (${step.id})`)
         .join(' | ')}`,
     ]
     for (const lane of lanes) {
@@ -488,7 +488,7 @@ export async function getBlueprint(
       for (const step of steps) {
         for (const cell of byStep.get(step.id) ?? []) {
           lines.push(
-            `  [step ${step.column_position}] "${cell.content}" (${cell.id})`,
+            `  [step ${step.position}] "${cell.content}" (${cell.id})`,
           )
         }
       }
@@ -610,7 +610,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
   const { data, error } = await client
     .from('cells')
     .select(
-      'id, content, summary, owner, perceived_owner, function, form, value_props, links, lane_id, step_id, slot_position',
+      'id, content, summary, owner, perceived_owner, function, form, value_props, links, lane_id, step_id, position',
     )
     .eq('id', cellId)
     .maybeSingle()
@@ -629,7 +629,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
     ['links', data.links ? JSON.stringify(data.links) : null],
     ['lane_id', data.lane_id],
     ['step_id', data.step_id],
-    ['slot_position', data.slot_position],
+    ['position', data.position],
   ]
   return fields
     .filter(([, value]) => value !== null && value !== undefined && value !== '')

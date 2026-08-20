@@ -40,19 +40,19 @@ export function repairWarmUpPathLayerPositions(
   referenceLayers: readonly BlueprintLane[],
 ): BlueprintData {
   const rowByName = new Map(
-    referenceLayers.map((lane) => [lane.name, lane.row_position]),
+    referenceLayers.map((lane) => [lane.name, lane.position]),
   )
   const lanes = data.lanes.map((lane) => {
-    const rowPosition = rowByName.get(lane.name)
-    if (rowPosition === undefined || lane.row_position === rowPosition) {
+    const position = rowByName.get(lane.name)
+    if (position === undefined || lane.position === position) {
       return lane
     }
-    return { ...lane, row_position: rowPosition }
+    return { ...lane, position: position }
   })
-  lanes.sort((a, b) => a.row_position - b.row_position)
+  lanes.sort((a, b) => a.position - b.position)
 
   const changed = lanes.some(
-    (lane, index) => lane.row_position !== data.lanes[index]?.row_position,
+    (lane, index) => lane.position !== data.lanes[index]?.position,
   )
 
   return changed ? { ...data, lanes } : data

@@ -48,36 +48,36 @@ export const TECH_SETUP_HAPPY_PATH_ID = 'a0000000-0000-4000-8000-000000000800'
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000818'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000831',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000833',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000832',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000835',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000834',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000836',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -85,42 +85,42 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000821',
     name: 'Clearance email',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000822',
     name: 'Obtain clearances',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000823',
     name: 'Send clearances',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000826',
     name: 'I-9 meeting',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000827',
     name: 'Attend I-9 meeting',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000824',
     name: 'Payroll setup',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000825',
     name: 'Join Slack',
-    column_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000829',
     name: 'PLUS app login',
-    column_position: 8,
+    position: 8,
   },
 ] as const
 

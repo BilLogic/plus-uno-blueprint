@@ -161,27 +161,27 @@ const ALTERNATE_STEP_VISUAL_LAYER_ID =
   'a0000000-0000-4000-8000-000000000410'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
-  { id: 'a0000000-0000-4000-8000-000000000301', name: 'Partner Action: Teacher', row_position: 1 },
-  { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', row_position: 2 },
-  { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', row_position: 3 },
-  { id: 'a0000000-0000-4000-8000-000000000306', name: 'Front Stage Tech', row_position: 4 },
-  { id: 'a0000000-0000-4000-8000-000000000304', name: 'Front Stage Actions', row_position: 5 },
-  { id: 'a0000000-0000-4000-8000-000000000308', name: 'Back Stage Tech', row_position: 6 },
-  { id: 'a0000000-0000-4000-8000-000000000307', name: 'Back Stage Actions', row_position: 7 },
-  { id: 'a0000000-0000-4000-8000-000000000309', name: 'Support Actions', row_position: 8 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
+  { id: 'a0000000-0000-4000-8000-000000000301', name: 'Partner Action: Teacher', position: 1 },
+  { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', position: 2 },
+  { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', position: 3 },
+  { id: 'a0000000-0000-4000-8000-000000000306', name: 'Front Stage Tech', position: 4 },
+  { id: 'a0000000-0000-4000-8000-000000000304', name: 'Front Stage Actions', position: 5 },
+  { id: 'a0000000-0000-4000-8000-000000000308', name: 'Back Stage Tech', position: 6 },
+  { id: 'a0000000-0000-4000-8000-000000000307', name: 'Back Stage Actions', position: 7 },
+  { id: 'a0000000-0000-4000-8000-000000000309', name: 'Support Actions', position: 8 },
 ] as const
 
 const STEPS = [
-  { id: 'a0000000-0000-4000-8000-000000000311', name: 'Enter Breakout Room', column_position: 1 },
-  { id: 'a0000000-0000-4000-8000-000000000312', name: 'Greet Student', column_position: 2 },
-  { id: 'a0000000-0000-4000-8000-000000000313', name: 'Ask Student to Share Screen', column_position: 3 },
-  { id: 'a0000000-0000-4000-8000-000000000314', name: 'Remind Student They Can Ask for Help', column_position: 4 },
-  { id: 'a0000000-0000-4000-8000-000000000315', name: 'Mark Student Present', column_position: 5 },
-  { id: 'a0000000-0000-4000-8000-000000000316', name: 'Select Engagement level', column_position: 6 },
-  { id: 'a0000000-0000-4000-8000-000000000317', name: 'Mark Student Helped', column_position: 7 },
-  { id: 'a0000000-0000-4000-8000-000000000319', name: 'Leave Breakout Room', column_position: 8 },
-  { id: 'a0000000-0000-4000-8000-000000000318', name: 'Move to Next Student', column_position: 9 },
+  { id: 'a0000000-0000-4000-8000-000000000311', name: 'Enter Breakout Room', position: 1 },
+  { id: 'a0000000-0000-4000-8000-000000000312', name: 'Greet Student', position: 2 },
+  { id: 'a0000000-0000-4000-8000-000000000313', name: 'Ask Student to Share Screen', position: 3 },
+  { id: 'a0000000-0000-4000-8000-000000000314', name: 'Remind Student They Can Ask for Help', position: 4 },
+  { id: 'a0000000-0000-4000-8000-000000000315', name: 'Mark Student Present', position: 5 },
+  { id: 'a0000000-0000-4000-8000-000000000316', name: 'Select Engagement level', position: 6 },
+  { id: 'a0000000-0000-4000-8000-000000000317', name: 'Mark Student Helped', position: 7 },
+  { id: 'a0000000-0000-4000-8000-000000000319', name: 'Leave Breakout Room', position: 8 },
+  { id: 'a0000000-0000-4000-8000-000000000318', name: 'Move to Next Student', position: 9 },
 ] as const
 
 const L = {
@@ -573,7 +573,7 @@ const WARM_UP_ALTERNATE_STEPS = STEPS.filter(
   (step) => step.id !== WARM_UP_STEP_3_ID,
 ).map((step, index) => ({
   ...step,
-  column_position: index + 1,
+  position: index + 1,
 }))
 
 const warmUpAlternatePartnerLeadOptions = {

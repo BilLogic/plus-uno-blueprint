@@ -3,12 +3,12 @@ import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
   ServiceScenario,
-  'id' | 'name' | 'description' | 'order_position' | 'phase_id' | 'view_type'
+  'id' | 'name' | 'description' | 'position' | 'phase_id' | 'view_type'
 >
 
 export type PhaseRow = Pick<
   Phase,
-  'id' | 'name' | 'description' | 'order_position' | 'loops_to_phase_id'
+  'id' | 'name' | 'description' | 'position' | 'loops_to_phase_id'
 > & {
   service_scenarios?: ScenarioRow[]
 }
@@ -17,7 +17,7 @@ export type PhaseRow = Pick<
 export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
   const slides: NavItem[] = []
   const sortedPhases = [...phases].sort(
-    (a, b) => a.order_position - b.order_position,
+    (a, b) => a.position - b.position,
   )
 
   sortedPhases.forEach((phase, phaseIndex) => {
@@ -30,7 +30,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
     })
 
     const scenarios = [...(phase.service_scenarios ?? [])].sort(
-      (a, b) => a.order_position - b.order_position,
+      (a, b) => a.position - b.position,
     )
 
     scenarios.forEach((scenario, scenarioIndex) => {

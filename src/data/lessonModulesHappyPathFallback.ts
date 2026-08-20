@@ -32,36 +32,36 @@ export const LESSON_MODULES_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000001240'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000001241',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001243',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001242',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001245',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001244',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001246',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -69,17 +69,17 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000861',
     name: 'Open lesson',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000862',
     name: 'Work through questions',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000863',
     name: 'Finish lesson',
-    column_position: 3,
+    position: 3,
   },
 ] as const
 

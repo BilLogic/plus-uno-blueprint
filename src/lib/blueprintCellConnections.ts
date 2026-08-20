@@ -68,7 +68,7 @@ function toConnection(
 
   const lane = resolveLayer(blueprint, cell.lane_id)
   const laneName = lane?.name ?? 'Unknown lane'
-  const layerRowPosition = lane?.row_position ?? -1
+  const layerRowPosition = lane?.position ?? -1
   const isTech = lane ? shouldUsePillCellContent(lane) : false
   const techItems = isTech ? getTechPillItems(cell.content) : []
 
@@ -235,7 +235,7 @@ export function getSelectedCellLayerRowPosition(
 ): number {
   const cell = findCell(blueprint, cellId)
   if (!cell) return -1
-  return resolveLayer(blueprint, cell.lane_id)?.row_position ?? -1
+  return resolveLayer(blueprint, cell.lane_id)?.position ?? -1
 }
 
 function interactionDirectionFromRows(

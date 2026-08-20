@@ -23,36 +23,36 @@ export const STANDARD_SCHEDULING_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000885'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000886',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000888',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000887',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000890',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000889',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000895',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -60,12 +60,12 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000894',
     name: 'Review schedules',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000896',
     name: 'Receive schedule',
-    column_position: 2,
+    position: 2,
   },
 ] as const
 

@@ -15,7 +15,7 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   (
     'a0000000-0000-4000-8000-000000000791',
@@ -61,9 +61,9 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  row_position = excluded.row_position;
+  position = excluded.position;
 
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000701', 'a0000000-0000-4000-8000-000000000711', 1),
   ('a0000000-0000-4000-8000-000000000701', 'a0000000-0000-4000-8000-000000000712', 2),
@@ -72,7 +72,7 @@ values
   ('a0000000-0000-4000-8000-000000000701', 'a0000000-0000-4000-8000-000000000715', 5),
   ('a0000000-0000-4000-8000-000000000701', 'a0000000-0000-4000-8000-000000000717', 6)
 on conflict (path_id, step_id) do update set
-  column_position = excluded.column_position;
+  position = excluded.position;
 
 insert into public.cells (id, path_id, lane_id, step_id, content)
 values

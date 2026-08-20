@@ -154,7 +154,7 @@ where c.lane_id = l.id
   and ps.path_id = p.id
   and ps.step_id = c.step_id
   and l.name = 'Regular Tutor'
-  and ps.column_position = 1
+  and ps.position = 1
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 2 illustration (all paths)
@@ -167,7 +167,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
-  and s.column_position = 2
+  and s.position = 2
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 3 illustration (all paths)
@@ -180,7 +180,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
-  and s.column_position = 3
+  and s.position = 3
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 4 illustration (all paths)
@@ -193,7 +193,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
-  and s.column_position = 4
+  and s.position = 4
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 5 illustration (all paths)
@@ -206,7 +206,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
-  and s.column_position = 5
+  and s.position = 5
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 6 illustration (all paths)
@@ -219,7 +219,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
-  and s.column_position = 6
+  and s.position = 6
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 7 illustration (all paths)
@@ -232,5 +232,5 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
-  and s.column_position = 7
+  and s.position = 7
   and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';

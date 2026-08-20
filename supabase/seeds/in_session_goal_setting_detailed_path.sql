@@ -20,7 +20,7 @@ delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000811';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000811';
 
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   ('a0000000-0000-4000-8000-0000000008a0', 'a0000000-0000-4000-8000-000000000811', 'Visual', 0),
   ('a0000000-0000-4000-8000-0000000008a1', 'a0000000-0000-4000-8000-000000000811', 'Partner Action: Teacher', 1),
@@ -31,7 +31,7 @@ values
   ('a0000000-0000-4000-8000-0000000008a7', 'a0000000-0000-4000-8000-000000000811', 'Back Stage Tech', 6),
   ('a0000000-0000-4000-8000-0000000008a6', 'a0000000-0000-4000-8000-000000000811', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008a8', 'a0000000-0000-4000-8000-000000000811', 'Support Actions', 8)
-on conflict (id) do update set name = excluded.name, row_position = excluded.row_position, path_id = excluded.path_id;
+on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
 
 insert into public.steps (id, service_scenario_id, name)
 values
@@ -47,7 +47,7 @@ values
   ('a0000000-0000-4000-8000-000000009a0a', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room')
 on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
 
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000009a01', 1),
   ('a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000009a02', 2),
@@ -60,7 +60,7 @@ values
   ('a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000009a09', 9),
   ('a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000009a0a', 10),
   ('a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000000974', 11)
-on conflict (path_id, step_id) do update set column_position = excluded.column_position;
+on conflict (path_id, step_id) do update set position = excluded.position;
 
 insert into public.cells (id, path_id, lane_id, step_id, content)
 values

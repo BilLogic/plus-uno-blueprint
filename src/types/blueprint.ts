@@ -17,13 +17,13 @@ export type BlueprintLane = {
   name: string
   /** Semantic role key (`lanes.lane_role`); null/absent = generic swimlane. */
   role?: string | null
-  row_position: number
+  position: number
 }
 
 export type BlueprintStep = {
   id: string
   name: string
-  column_position: number
+  position: number
 }
 
 /** Structured link on a cell (stored as JSONB; type is usually "url"). */
@@ -56,7 +56,7 @@ export type BlueprintCell = {
    * touchpoint; everything else holds a single cell at 0. Optional because
    * rows predating the split never carry it — absent reads as 0.
    */
-  slot_position?: number
+  position?: number
 }
 
 export type BlueprintCellDependency = {

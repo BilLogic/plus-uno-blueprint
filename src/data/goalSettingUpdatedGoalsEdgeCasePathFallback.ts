@@ -55,46 +55,46 @@ export const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-0000000008f0'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008f1',
     name: 'Partner Action: Teacher',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f2',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f3',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f4',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f5',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f7',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f6',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008f8',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -102,62 +102,62 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000009e01',
     name: 'Join breakout session',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e02',
     name: "Sees action color in dashboard is warning and CTA copy is 'Update Goals' within a mid-cycle goal check-in session.",
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e03',
     name: "Click on 'Update Goals' CTA in the action column",
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e04',
     name: 'Share screen',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e05',
     name: 'Review last goal cycle overview and system suggestion',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e06',
     name: 'Once student understands, starts updating goal for the next goal cycle while sharing screen',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e07',
     name: 'Fills out goal settings and quantity with the student',
-    column_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e08',
     name: 'If prompted, fill out goal achievement strategy with the student',
-    column_position: 8,
+    position: 8,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e09',
     name: 'Save goal',
-    column_position: 9,
+    position: 9,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e0a',
     name: 'Finalize updating goal with student',
-    column_position: 10,
+    position: 10,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e0b',
     name: 'Leave breakout room',
-    column_position: 11,
+    position: 11,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009e0c',
     name: 'Move on to the next student in sorted order set by researchers',
-    column_position: 12,
+    position: 12,
   },
 ] as const
 

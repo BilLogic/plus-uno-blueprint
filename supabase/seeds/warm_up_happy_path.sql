@@ -15,8 +15,8 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
--- Layers (lane_id → row_position)
-insert into public.lanes (id, path_id, name, row_position)
+-- Layers (lane_id → position)
+insert into public.lanes (id, path_id, name, position)
 values
   (
     'a0000000-0000-4000-8000-000000000310',
@@ -74,7 +74,7 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  row_position = excluded.row_position;
+  position = excluded.position;
 
 -- Steps (scenario-scoped; column order via path_steps)
 insert into public.steps (id, service_scenario_id, name)
@@ -128,7 +128,7 @@ on conflict (id) do update set
   name = excluded.name,
   service_scenario_id = excluded.service_scenario_id;
 
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000300', 'a0000000-0000-4000-8000-000000000311', 1),
   ('a0000000-0000-4000-8000-000000000300', 'a0000000-0000-4000-8000-000000000312', 2),
@@ -140,7 +140,7 @@ values
   ('a0000000-0000-4000-8000-000000000300', 'a0000000-0000-4000-8000-000000000319', 8),
   ('a0000000-0000-4000-8000-000000000300', 'a0000000-0000-4000-8000-000000000318', 9)
 on conflict (path_id, step_id) do update set
-  column_position = excluded.column_position;
+  position = excluded.position;
 
 -- Cells (step × layer); cell id suffix 04{step}{layer}
 insert into public.cells (id, path_id, lane_id, step_id, content)

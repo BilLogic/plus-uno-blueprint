@@ -36,36 +36,36 @@ export const FILL_IN_REQUEST_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000903'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000904',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000906',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000905',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000908',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000907',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000909',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -73,22 +73,22 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000897',
     name: 'Initial request',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000898',
     name: 'Send request',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000899',
     name: 'Tutor response',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000900',
     name: 'Finalize assignment',
-    column_position: 4,
+    position: 4,
   },
 ] as const
 

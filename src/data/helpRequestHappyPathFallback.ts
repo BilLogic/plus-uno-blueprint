@@ -45,46 +45,46 @@ export const HELP_REQUEST_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000860'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000867',
     name: 'Partner Action: Teacher',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000868',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000861',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000863',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000862',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000865',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000864',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000866',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -92,37 +92,37 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000975',
     name: 'Receive help request',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000976',
     name: 'Finish conversation',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000977',
     name: 'Visit student',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000978',
     name: 'Resolve issue',
-    column_position: 4,
+    position: 4,
   },
   {
     id: HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID,
     name: 'Leave breakout room',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000979',
     name: 'Next student',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000987',
     name: PARALLEL_SESSION_PARTNER_CONTENT[6]!,
-    column_position: 7,
+    position: 7,
   },
 ] as const
 

@@ -143,7 +143,7 @@ function mergeMissingBlueprintContent(
     layerIds.add(lane.id)
     layerIdByName.set(lane.name, lane.id)
   }
-  lanes.sort((a, b) => a.row_position - b.row_position)
+  lanes.sort((a, b) => a.position - b.position)
 
   const fallbackCellById = new Map(
     fallback.cells.map((cell) => [cell.id, cell]),
@@ -205,7 +205,7 @@ function mergeMissingBlueprintContent(
       steps.push(step)
     }
   }
-  steps.sort((a, b) => a.column_position - b.column_position)
+  steps.sort((a, b) => a.position - b.position)
 
   const triggerKeys = new Set(
     data.triggers.map(
@@ -281,7 +281,7 @@ function sortBlueprintSteps(data: BlueprintData): BlueprintData {
   return {
     ...data,
     steps: [...data.steps].sort(
-      (a, b) => a.column_position - b.column_position,
+      (a, b) => a.position - b.position,
     ),
   }
 }

@@ -50,36 +50,36 @@ export const ONBOARDING_MODULES_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000828'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000841',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000843',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000842',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000845',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000844',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000846',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -87,37 +87,37 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000851',
     name: 'Module opening',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000852',
     name: 'Accessing content',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000853',
     name: 'Reading lesson',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000854',
     name: 'Supplementary materials',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000855',
     name: 'Quiz completion',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000856',
     name: 'Reflection',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000857',
     name: 'Module completion',
-    column_position: 7,
+    position: 7,
   },
 ] as const
 

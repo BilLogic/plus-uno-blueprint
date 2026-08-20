@@ -495,7 +495,7 @@ function PresentationMiniMap({
   frameCellIds: ReadonlySet<string>
 }) {
   const lanes = useMemo(
-    () => [...blueprint.lanes].sort((a, b) => a.row_position - b.row_position),
+    () => [...blueprint.lanes].sort((a, b) => a.position - b.position),
     [blueprint.lanes],
   )
   const cellLookup = useMemo(

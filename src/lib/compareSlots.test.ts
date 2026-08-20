@@ -32,12 +32,12 @@ function makeBlueprint(
   const lanes = laneNames.map((name, index) => ({
     id: `${pathId}-lane-${name}`,
     name,
-    row_position: index,
+    position: index,
   }))
   const stepRows = steps.map((name, index) => ({
     id: `${pathId}-step-${index}`,
     name,
-    column_position: index,
+    position: index,
   }))
   const stepIdByName = new Map(stepRows.map((step) => [step.name, step.id]))
   const blueprintCells: BlueprintCell[] = cells.map((cell) => ({
@@ -153,7 +153,7 @@ describe('buildCompareModel — alignment and verdicts', () => {
       { ...a.cells[0], id: 'b-check-1', lane_id: 'b-lane-FS', step_id: b.steps[0].id, content: 'First check' },
       { ...a.cells[0], id: 'b-check-2', lane_id: 'b-lane-FS', step_id: b.steps[1].id, content: 'Different second' },
     ]
-    b.lanes = [{ id: 'b-lane-FS', name: 'FS', row_position: 0 }]
+    b.lanes = [{ id: 'b-lane-FS', name: 'FS', position: 0 }]
 
     const model = buildCompareModel(pair(a, b))
     const verdicts = new Map(
@@ -309,7 +309,7 @@ describe('buildCompareModel — columns, runs, ordering', () => {
       const delta = order.indexOf(colX) - order.indexOf(colY)
       return delta !== 0 ? delta : 0
     }))
-    // FS row (row_position 0) precedes BS within the divergent column.
+    // FS row (position 0) precedes BS within the divergent column.
     const three = model.slots.filter((slot) => slot.columnKey === 'three#0')
     expect(three.map((slot) => slot.laneKey)).toEqual(['fs', 'bs'])
   })

@@ -9,13 +9,13 @@ const LIFECYCLE_PHASES_SELECT = `
   id,
   name,
   description,
-  order_position,
+  position,
   loops_to_phase_id,
   service_scenarios (
     id,
     name,
     description,
-    order_position,
+    position,
     phase_id,
     view_type
   )
@@ -65,7 +65,7 @@ export function useLifecyclePhases(lifecycleId?: string) {
               .select(LIFECYCLE_PHASES_SELECT)
               .eq('service_lifecycle_id', lifecycleId)
           : client.from('phases').select(LIFECYCLE_PHASES_SELECT_WITH_OWNER)
-      ).order('order_position', { ascending: true })
+      ).order('position', { ascending: true })
 
       const [resolvedLifecycleId, { data, error }] = await Promise.all([
         lifecycleIdPromise,

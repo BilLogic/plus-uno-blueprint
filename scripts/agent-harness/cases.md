@@ -10,7 +10,7 @@ the practice it broke, not a vibe. Source keys:
   steps, Q6 empty cells are normal, Q7 paths, Q8 arrows only where they
   inform)
 - **CA-inv** — `references/canvas-adapter.md` ⚠ app-only invariants
-  (never empty content, trigger vs needs, slot_position, tags before
+  (never empty content, trigger vs needs, position, tags before
   invention, name-aligned steps, no deletes)
 - **CA-etq** — adapter etiquette (narrate then act, batches ≤ ~8 then
   check in, no per-cell permission asks, errors verbatim + stop + never

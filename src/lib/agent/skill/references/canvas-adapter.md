@@ -69,8 +69,8 @@ Per-tool write rules (content required, trigger-vs-needs semantics,
 step-name alignment, tag vocabularies, create-vs-edit split) live in the
 tool descriptions — trust them at call time. Adapter-only additions:
 
-- **`slot_position`** (canvas dialect: tech lanes hold several cells per
-  (lane, step), ordered by `slot_position`; other deployments may not
+- **`position`** (canvas dialect: tech lanes hold several cells per
+  (lane, step), ordered by `position`; other deployments may not
   have the column — see data-model.md). The tools manage slots for you;
   read the cell list before inserting so you edit rather than duplicate.
 - **No deletes.** No delete tool exists. If asked to remove something,

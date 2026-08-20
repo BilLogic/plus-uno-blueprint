@@ -32,66 +32,66 @@ export const REPORTING_AN_ISSUE_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000910'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000917',
     name: 'Lead Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000911',
     name: 'Regular Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000913',
     name: 'Front Stage Tech',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000912',
     name: 'Front Stage Actions',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000915',
     name: 'Back Stage Tech',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000914',
     name: 'Back Stage Actions',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000916',
     name: 'Support Actions',
-    row_position: 7,
+    position: 7,
   },
 ] as const
 
 const STEP_REACH_OUT = {
   id: 'a0000000-0000-4000-8000-000000000988',
   name: 'Reach out',
-  column_position: 1,
+  position: 1,
 } as const
 
 const STEP_REQUEST_ASSISTANCE = {
   id: 'a0000000-0000-4000-8000-000000000991',
   name: 'Request assistance',
-  column_position: 2,
+  position: 2,
 } as const
 
 const STEP_FOLLOW_UP = {
   id: 'a0000000-0000-4000-8000-000000000993',
   name: 'Follow up',
-  column_position: 3,
+  position: 3,
 } as const
 
 const STEP_RESOLVE_CONCERN = {
   id: 'a0000000-0000-4000-8000-000000000990',
   name: 'Resolve concern',
-  column_position: 4,
+  position: 4,
 } as const
 
 /** Visual column order: Reach out → Request assistance → Follow up → Resolve concern. */

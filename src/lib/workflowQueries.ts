@@ -15,10 +15,10 @@ export const PATH_BLUEPRINT_SELECT = `
     id,
     name,
     lane_role,
-    row_position
+    position
   ),
   path_steps (
-    column_position,
+    position,
     steps (
       id,
       name
@@ -28,7 +28,7 @@ export const PATH_BLUEPRINT_SELECT = `
     id,
     lane_id,
     step_id,
-    slot_position,
+    position,
     content,
     picture,
     summary,

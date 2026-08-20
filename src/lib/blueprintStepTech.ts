@@ -30,7 +30,7 @@ export function getBlueprintStepTechItems(
 
   const pillLayers = blueprint.lanes
     .filter((lane) => shouldUsePillCellContent(lane))
-    .sort((a, b) => a.row_position - b.row_position)
+    .sort((a, b) => a.position - b.position)
 
   const entries: BlueprintStepTechEntry[] = []
 

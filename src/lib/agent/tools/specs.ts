@@ -610,7 +610,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         lane_role: str(
           'Semantic role (e.g. frontstage_actions, backstage_tech); omit if none fits',
         ),
-        at_row: { type: 'number', description: 'Insert row (1-based); omit to append' },
+        at_position: { type: 'number', description: 'Insert row (1-based); omit to append' },
       },
       required: ['scenario_id', 'name'],
     },

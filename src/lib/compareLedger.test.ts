@@ -37,12 +37,12 @@ function makeBlueprint(
   const lanes = names.map((name, index) => ({
     id: `${pathId}-lane-${name}`,
     name,
-    row_position: index,
+    position: index,
   }))
   const stepRows = steps.map((name, index) => ({
     id: `${pathId}-step-${index}`,
     name,
-    column_position: index,
+    position: index,
   }))
   const stepIdByName = new Map(stepRows.map((step) => [step.name, step.id]))
   const blueprintCells: BlueprintCell[] = cells.map((cell) => ({

@@ -141,7 +141,7 @@ export type Database = {
           perceived_owner: string | null
           picture: string | null
           search_tsv: unknown
-          slot_position: number
+          position: number
           step_id: string
           updated_at: string
           value_props: Json
@@ -160,7 +160,7 @@ export type Database = {
           perceived_owner?: string | null
           picture?: string | null
           search_tsv?: unknown
-          slot_position?: number
+          position?: number
           step_id: string
           updated_at?: string
           value_props?: Json
@@ -179,7 +179,7 @@ export type Database = {
           perceived_owner?: string | null
           picture?: string | null
           search_tsv?: unknown
-          slot_position?: number
+          position?: number
           step_id?: string
           updated_at?: string
           value_props?: Json
@@ -335,7 +335,7 @@ export type Database = {
           name: string
           owner_team: string | null
           path_id: string
-          row_position: number
+          position: number
           tools: Json
           updated_at: string
         }
@@ -347,7 +347,7 @@ export type Database = {
           name: string
           owner_team?: string | null
           path_id: string
-          row_position?: number
+          position?: number
           tools?: Json
           updated_at?: string
         }
@@ -359,7 +359,7 @@ export type Database = {
           name?: string
           owner_team?: string | null
           path_id?: string
-          row_position?: number
+          position?: number
           tools?: Json
           updated_at?: string
         }
@@ -375,21 +375,21 @@ export type Database = {
       }
       path_steps: {
         Row: {
-          column_position: number
+          position: number
           created_at: string
           path_id: string
           step_id: string
           updated_at: string
         }
         Insert: {
-          column_position?: number
+          position?: number
           created_at?: string
           path_id: string
           step_id: string
           updated_at?: string
         }
         Update: {
-          column_position?: number
+          position?: number
           created_at?: string
           path_id?: string
           step_id?: string
@@ -462,7 +462,7 @@ export type Database = {
           loops_to_phase_id: string | null
           name: string
           operational_requirements: string | null
-          order_position: number
+          position: number
           service_lifecycle_id: string
           updated_at: string
         }
@@ -474,7 +474,7 @@ export type Database = {
           loops_to_phase_id?: string | null
           name: string
           operational_requirements?: string | null
-          order_position?: number
+          position?: number
           service_lifecycle_id: string
           updated_at?: string
         }
@@ -486,7 +486,7 @@ export type Database = {
           loops_to_phase_id?: string | null
           name?: string
           operational_requirements?: string | null
-          order_position?: number
+          position?: number
           service_lifecycle_id?: string
           updated_at?: string
         }
@@ -581,7 +581,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
-          order_position: number
+          position: number
           phase_id: string
           updated_at: string
           view_type: string
@@ -591,7 +591,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          order_position?: number
+          position?: number
           phase_id: string
           updated_at?: string
           view_type?: string
@@ -601,7 +601,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          order_position?: number
+          position?: number
           phase_id?: string
           updated_at?: string
           view_type?: string

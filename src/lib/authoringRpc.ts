@@ -66,7 +66,7 @@ export type DeletionImpact = {
 export type LaneSetEntry = {
   name: string
   lane_role: string | null
-  row_position: number
+  position: number
 }
 
 export type DependencyKind = 'sets_off' | 'enables'
@@ -362,7 +362,7 @@ export function addStep(
 }
 
 /**
- * Add a lane to **every version** of a blueprint. `atRow` inserts; omitted
+ * Add a lane to **every version** of a blueprint. `atPosition` inserts; omitted
  * appends.
  *
  * Scenario-scoped, not version-scoped: the call creates one `lanes` row per
@@ -380,14 +380,14 @@ export async function addLane(
     scenarioId: string
     name: string
     laneRole?: string | null
-    atRow?: number
+    atPosition?: number
   },
 ): Promise<string[]> {
   const created = await call<string[] | null>(client, 'add_lane', {
     scenario_id: input.scenarioId,
     name: input.name,
     lane_role: input.laneRole ?? null,
-    at_row: input.atRow ?? null,
+    at_position: input.atPosition ?? null,
   })
   return created ?? []
 }

@@ -142,7 +142,7 @@ export function buildVisualWalkthroughSession(
   meta?: VisualWalkthroughContextMeta,
 ): VisualWalkthroughSession {
   const steps = [...blueprint.steps]
-    .sort((a, b) => a.column_position - b.column_position)
+    .sort((a, b) => a.position - b.position)
     .map((step, stepIndex) => {
       const pictureEntries = resolveVisualStepPictureEntries(blueprint, step.id)
       return {

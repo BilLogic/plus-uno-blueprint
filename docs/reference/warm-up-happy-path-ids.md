@@ -9,7 +9,7 @@ Hierarchy: **Pre-Session** (`…000103`) → **Warm-Up** (`…000203`) → **War
 | UUID | `a0000000-0000-4000-8000-000000000300` |
 | path_type | `happy` |
 
-## Layers (`lane_id` → UUID, `row_position`)
+## Layers (`lane_id` → UUID, `position`)
 
 | lane_id | UUID | name |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ Hierarchy: **Pre-Session** (`…000103`) → **Warm-Up** (`…000203`) → **War
 | back_stage_tech | `…000308` | Back Stage Tech |
 | support_actions | `…000309` | Support Actions |
 
-## Steps (`id` → UUID, `column_position`)
+## Steps (`id` → UUID, `position`)
 
 | id | UUID | title |
 | --- | --- | --- |

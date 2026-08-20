@@ -24,7 +24,7 @@ where path_id = 'a0000000-0000-4000-8000-000000000350'
   and step_id = 'a0000000-0000-4000-8000-000000000313';
 
 -- Seven steps; step …0314+ shift left one column
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   (
     'a0000000-0000-4000-8000-000000000350',
@@ -67,22 +67,22 @@ values
     8
   )
 on conflict (path_id, step_id) do update set
-  column_position = excluded.column_position;
+  position = excluded.position;
 
 -- Alternate path cells and triggers
 
 -- Clone lanes (…301–309 → …401–409)
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 select
   replace(l.id::text, '00000003', '00000004')::uuid,
   'a0000000-0000-4000-8000-000000000350',
   l.name,
-  l.row_position
+  l.position
 from public.lanes l
 where l.path_id = 'a0000000-0000-4000-8000-000000000300'
 on conflict (id) do update set
   name = excluded.name,
-  row_position = excluded.row_position;
+  position = excluded.position;
 
 delete from public.cell_dependencies
 where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000350')

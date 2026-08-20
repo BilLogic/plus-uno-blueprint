@@ -160,7 +160,7 @@ function buildColumnSeeds(blueprints: readonly BlueprintData[]): ColumnSeed[] {
     const seen = new Map<string, number>()
     let lastMatchedIndex = -1
     const orderedSteps = [...blueprint.steps].sort(
-      (a, b) => a.column_position - b.column_position,
+      (a, b) => a.position - b.position,
     )
     for (const step of orderedSteps) {
       const name = normalizeCompareName(step.name)
@@ -236,14 +236,14 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
   const columnIndexByKey = new Map(columnSeeds.map((seed, index) => [seed.key, index]))
 
   // Lane axis: union of lanes across paths by normalized name, ordered by
-  // first appearance (row_position within each path).
+  // first appearance (position within each path).
   type LaneSeed = { key: string; label: string }
   const laneSeeds: LaneSeed[] = []
   const laneIndexByKey = new Map<string, number>()
   const laneKeyByPathLayer = new Map<string, string>()
   for (const blueprint of blueprints) {
     const orderedLayers = [...blueprint.lanes].sort(
-      (a, b) => a.row_position - b.row_position,
+      (a, b) => a.position - b.position,
     )
     for (const lane of orderedLayers) {
       const key = normalizeCompareName(lane.name)

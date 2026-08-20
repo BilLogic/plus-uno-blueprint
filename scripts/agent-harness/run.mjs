@@ -235,12 +235,12 @@ async function realSearchBlueprint(args) {
 
 async function realListScenarios() {
   const data = await rest(
-    'phases?select=id,name,order_position,service_scenarios(id,name,order_position)&order=order_position',
+    'phases?select=id,name,position,service_scenarios(id,name,position)&order=position',
   )
   return data
     .map((phase) => {
       const scenarios = (phase.service_scenarios ?? [])
-        .sort((a, b) => a.order_position - b.order_position)
+        .sort((a, b) => a.position - b.position)
         .map((s) => `  - scenario "${s.name}" (${s.id})`)
         .join('\n')
       return `phase "${phase.name}" (${phase.id})\n${scenarios}`
@@ -250,13 +250,13 @@ async function realListScenarios() {
 
 async function realGetBlueprint(scenarioId) {
   const paths = await rest(
-    `paths?select=id,name,path_type,lanes(id,name,lane_role,row_position),path_steps(column_position,steps(id,name))&service_scenario_id=eq.${encodeURIComponent(scenarioId)}`,
+    `paths?select=id,name,path_type,lanes(id,name,lane_role,position),path_steps(position,steps(id,name))&service_scenario_id=eq.${encodeURIComponent(scenarioId)}`,
   )
   if (!paths?.length) return 'No paths for that scenario id.'
   const out = []
   for (const path of paths) {
     const steps = (path.path_steps ?? [])
-      .sort((a, b) => a.column_position - b.column_position)
+      .sort((a, b) => a.position - b.position)
       .map((ps) => ps.steps)
       .filter(Boolean)
     const cells = await rest(
@@ -266,7 +266,7 @@ async function realGetBlueprint(scenarioId) {
       `path "${path.name}" (${path.id}) type=${path.path_type}`,
       `  steps: ${steps.map((s) => `"${s.name}" (${s.id})`).join(', ')}`,
       ...(path.lanes ?? [])
-        .sort((a, b) => a.row_position - b.row_position)
+        .sort((a, b) => a.position - b.position)
         .map((lane) => {
           const laneCells = (cells ?? [])
             .filter((cell) => cell.lane_id === lane.id)
@@ -404,7 +404,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'list_layers': {
-        const rows = await rest('lanes?select=name,lane_role&order=row_position')
+        const rows = await rest('lanes?select=name,lane_role&order=position')
         const counts = new Map()
         for (const row of rows ?? []) {
           const key = JSON.stringify([row.name, row.lane_role ?? null])

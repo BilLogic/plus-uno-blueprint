@@ -53,27 +53,27 @@ const DISCOVERY_SHARED_STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000711',
     name: 'Discovers PLUS',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000712',
     name: 'Discovers PLUS',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000713',
     name: 'Discovers PLUS',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000714',
     name: 'Discovers PLUS',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000715',
     name: 'Discovers PLUS',
-    column_position: 5,
+    position: 5,
   },
 ] as const
 
@@ -85,13 +85,13 @@ export const DISCOVERY_SAD_FINAL_STEP_ID =
 const DISCOVERY_HAPPY_FINAL_STEP = {
   id: DISCOVERY_HAPPY_FINAL_STEP_ID,
   name: 'Interested in joining PLUS',
-  column_position: 6,
+  position: 6,
 } as const
 
 const DISCOVERY_SAD_FINAL_STEP = {
   id: DISCOVERY_SAD_FINAL_STEP_ID,
   name: 'Not interested in joining PLUS',
-  column_position: 6,
+  position: 6,
 } as const
 
 function getDiscoveryPathSteps(config: ApplicationDiscoveryPathConfig) {
@@ -204,13 +204,13 @@ function buildApplicationDiscoveryFallback(
   const finalStep = steps[steps.length - 1]!
 
   const lanes = [
-    { id: L.visual, name: 'Visual', row_position: 0 },
-    { id: L.regular, name: 'Regular Tutor', row_position: 1 },
-    { id: L.frontStageTech, name: 'Front Stage Tech', row_position: 2 },
-    { id: L.frontStage, name: 'Front Stage Actions', row_position: 3 },
-    { id: L.backStageTech, name: 'Back Stage Tech', row_position: 4 },
-    { id: L.backStage, name: 'Back Stage Actions', row_position: 5 },
-    { id: L.support, name: 'Support Actions', row_position: 6 },
+    { id: L.visual, name: 'Visual', position: 0 },
+    { id: L.regular, name: 'Regular Tutor', position: 1 },
+    { id: L.frontStageTech, name: 'Front Stage Tech', position: 2 },
+    { id: L.frontStage, name: 'Front Stage Actions', position: 3 },
+    { id: L.backStageTech, name: 'Back Stage Tech', position: 4 },
+    { id: L.backStage, name: 'Back Stage Actions', position: 5 },
+    { id: L.support, name: 'Support Actions', position: 6 },
   ] as const
 
   const triggers: BlueprintCellDependency[] = [

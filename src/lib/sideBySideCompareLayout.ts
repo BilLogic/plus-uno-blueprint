@@ -394,7 +394,7 @@ export function getScenarioBlueprintPanelHeight(
 export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLane[] {
   const source = blueprints[0]
   if (!source) return []
-  return [...source.lanes].sort((a, b) => a.row_position - b.row_position)
+  return [...source.lanes].sort((a, b) => a.position - b.position)
 }
 
 /** Map a canonical swimlane row onto a path's lane ids (paths use different lane uuids). */
@@ -407,11 +407,11 @@ export function resolveBlueprintLayer(
     blueprint.lanes.find((lane) => lane.name === canonicalLayer.name) ??
     blueprint.lanes.find(
       (lane) =>
-        lane.row_position === canonicalLayer.row_position &&
+        lane.position === canonicalLayer.position &&
         lane.name === canonicalLayer.name,
     ) ??
     blueprint.lanes.find(
-      (lane) => lane.row_position === canonicalLayer.row_position,
+      (lane) => lane.position === canonicalLayer.position,
     ) ??
     canonicalLayer
   )
@@ -423,7 +423,7 @@ export function resolveBlueprintLayer(
  */
 type InLaneLoopLayoutSource = {
   lanes: BlueprintLane[]
-  steps: ReadonlyArray<{ id: string; column_position: number }>
+  steps: ReadonlyArray<{ id: string; position: number }>
   cells: ReadonlyArray<{ id: string; lane_id: string; step_id: string }>
   triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
 }
@@ -451,7 +451,7 @@ export function blueprintLayerHasBackwardInLaneLoop(
   const lane = resolveBlueprintLayer(canonicalLayer, source)
   const cellById = new Map(source.cells.map((cell) => [cell.id, cell]))
   const columnByStepId = new Map(
-    source.steps.map((step) => [step.id, step.column_position]),
+    source.steps.map((step) => [step.id, step.position]),
   )
 
   return source.triggers.some((trigger) => {

@@ -118,7 +118,7 @@ export function ServiceBlueprintGrid({
   const { path, steps, triggers } = data
   const lanes = useMemo(
     () =>
-      [...data.lanes].sort((a, b) => a.row_position - b.row_position),
+      [...data.lanes].sort((a, b) => a.position - b.position),
     [data.lanes],
   )
   const gridBodyRef = useRef<HTMLDivElement>(null)

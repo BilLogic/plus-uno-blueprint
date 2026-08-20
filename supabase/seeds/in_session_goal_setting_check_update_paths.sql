@@ -9,7 +9,7 @@ delete from public.cell_dependencies where source_cell_id in (select id from pub
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000814';
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   ('a0000000-0000-4000-8000-0000000008b0', 'a0000000-0000-4000-8000-000000000814', 'Visual', 0),
   ('a0000000-0000-4000-8000-0000000008b1', 'a0000000-0000-4000-8000-000000000814', 'Partner Action: Teacher', 1),
@@ -20,7 +20,7 @@ values
   ('a0000000-0000-4000-8000-0000000008b7', 'a0000000-0000-4000-8000-000000000814', 'Back Stage Tech', 6),
   ('a0000000-0000-4000-8000-0000000008b6', 'a0000000-0000-4000-8000-000000000814', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000000814', 'Support Actions', 8)
-on conflict (id) do update set name = excluded.name, row_position = excluded.row_position, path_id = excluded.path_id;
+on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
 insert into public.steps (id, service_scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009b01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
@@ -32,7 +32,7 @@ values
   ('a0000000-0000-4000-8000-000000009b07', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room'),
   ('a0000000-0000-4000-8000-000000009b08', 'a0000000-0000-4000-8000-000000000204', 'Move on to the next student in sorted order set by researchers.')
 on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b01', 1),
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b02', 2),
@@ -42,7 +42,7 @@ values
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b06', 6),
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b07', 7),
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b08', 8)
-on conflict (path_id, step_id) do update set column_position = excluded.column_position;
+on conflict (path_id, step_id) do update set position = excluded.position;
 insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000a00110', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b0', 'a0000000-0000-4000-8000-000000009b01', ''),
@@ -136,7 +136,7 @@ delete from public.cell_dependencies where source_cell_id in (select id from pub
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000815';
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   ('a0000000-0000-4000-8000-0000000008d0', 'a0000000-0000-4000-8000-000000000815', 'Visual', 0),
   ('a0000000-0000-4000-8000-0000000008d1', 'a0000000-0000-4000-8000-000000000815', 'Partner Action: Teacher', 1),
@@ -147,7 +147,7 @@ values
   ('a0000000-0000-4000-8000-0000000008d7', 'a0000000-0000-4000-8000-000000000815', 'Back Stage Tech', 6),
   ('a0000000-0000-4000-8000-0000000008d6', 'a0000000-0000-4000-8000-000000000815', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000000815', 'Support Actions', 8)
-on conflict (id) do update set name = excluded.name, row_position = excluded.row_position, path_id = excluded.path_id;
+on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
 insert into public.steps (id, service_scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009d01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
@@ -162,7 +162,7 @@ values
   ('a0000000-0000-4000-8000-000000009d0a', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room'),
   ('a0000000-0000-4000-8000-000000009d0b', 'a0000000-0000-4000-8000-000000000204', 'Move on to the next student in sorted order set by researchers.')
 on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d01', 1),
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d02', 2),
@@ -175,7 +175,7 @@ values
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d09', 9),
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d0a', 10),
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d0b', 11)
-on conflict (path_id, step_id) do update set column_position = excluded.column_position;
+on conflict (path_id, step_id) do update set position = excluded.position;
 insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000b00110', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d0', 'a0000000-0000-4000-8000-000000009d01', ''),

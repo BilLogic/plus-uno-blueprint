@@ -53,46 +53,46 @@ export const GOAL_SETTING_DETAILED_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-0000000008a0'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008a1',
     name: 'Partner Action: Teacher',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a2',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a3',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a4',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a5',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a7',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a6',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008a8',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -100,57 +100,57 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000009a01',
     name: 'Join breakout session',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a02',
     name: 'Click on Set Goals CTA in the Action column',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a03',
     name: 'Share screen',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a04',
     name: 'Explain to student what goal setting is',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a05',
     name: 'Once student understands, starts setting first goal while sharing screen',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a06',
     name: 'Fill out goal settings and quantity with the student',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a07',
     name: 'If prompted, fill out goal achievement strategy with the student',
-    column_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a08',
     name: 'Save goal',
-    column_position: 8,
+    position: 8,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a09',
     name: 'Finalize goal setting with student',
-    column_position: 9,
+    position: 9,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009a0a',
     name: 'Leave breakout room',
-    column_position: 10,
+    position: 10,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000974',
     name: 'Next student',
-    column_position: 11,
+    position: 11,
   },
 ] as const
 

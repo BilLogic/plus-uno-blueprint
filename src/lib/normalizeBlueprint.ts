@@ -34,14 +34,14 @@ export type RawCell = {
 }
 
 type RawPathStep = {
-  column_position: number
+  position: number
   steps: { id: string; name: string } | null
 }
 
 export type RawLane = {
   id: string
   name: string
-  row_position: number
+  position: number
   /** Semantic role column as selected from the DB. */
   lane_role?: string | null
   /** Normalized shape (fallback data passes BlueprintLane directly). */
@@ -65,14 +65,14 @@ export type RawPath = {
 /** Flatten path_steps junction rows into blueprint steps sorted by column. */
 export function flattenPathSteps(raw: RawPathStep[]): BlueprintStep[] {
   return [...raw]
-    .sort((a, b) => a.column_position - b.column_position)
+    .sort((a, b) => a.position - b.position)
     .flatMap((row) => {
       if (!row.steps) return []
       return [
         {
           id: row.steps.id,
           name: row.steps.name,
-          column_position: row.column_position,
+          position: row.position,
         },
       ]
     })
@@ -83,7 +83,7 @@ function resolveSteps(raw: RawPath): BlueprintStep[] {
     return flattenPathSteps(raw.path_steps)
   }
   return [...(raw.steps ?? [])].sort(
-    (a, b) => a.column_position - b.column_position,
+    (a, b) => a.position - b.position,
   )
 }
 
@@ -142,12 +142,12 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
         (cellCountByLayerId.get(b.id) ?? 0) -
         (cellCountByLayerId.get(a.id) ?? 0)
       if (cellDiff !== 0) return cellDiff
-      return a.row_position - b.row_position
+      return a.position - b.position
     })[0]
 
     keptLayers.push({
       ...canonical,
-      row_position: Math.min(...group.map((lane) => lane.row_position)),
+      position: Math.min(...group.map((lane) => lane.position)),
     })
 
     for (const lane of group) {
@@ -182,14 +182,14 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
       cellIds.has(trigger.target_cell_id),
   )
 
-  keptLayers.sort((a, b) => a.row_position - b.row_position)
+  keptLayers.sort((a, b) => a.position - b.position)
 
   return { ...data, lanes: keptLayers, cells, triggers }
 }
 
 export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
   const lanes = [...data.lanes].sort(
-    (a, b) => a.row_position - b.row_position,
+    (a, b) => a.position - b.position,
   )
   const unchanged = lanes.every(
     (lane, index) => lane.id === data.lanes[index]?.id,
@@ -199,12 +199,12 @@ export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
 
 export function normalizeBlueprint(raw: RawPath): BlueprintData {
   const lanes: BlueprintLane[] = [...(raw.lanes ?? [])]
-    .sort((a, b) => a.row_position - b.row_position)
+    .sort((a, b) => a.position - b.position)
     .map((lane) => ({
       id: lane.id,
       name: lane.name,
       role: lane.lane_role ?? lane.role ?? null,
-      row_position: lane.row_position,
+      position: lane.position,
     }))
   const steps = resolveSteps(raw)
   const rawCells = raw.cells ?? []
@@ -244,7 +244,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
 
 /**
  * Cells by slot. A slot — one lane, one step — holds a *list*: tech lanes
- * carry one cell per touchpoint (`slot_position` orders them), and the old
+ * carry one cell per touchpoint (`position` orders them), and the old
  * single-cell map silently dropped every sibling but the last, which is the
  * kind of data loss that never throws. Non-tech lanes still hold one.
  */
@@ -260,13 +260,13 @@ export function buildCellLookup(
   }
   for (const slot of map.values()) {
     slot.sort(
-      (left, right) => (left.slot_position ?? 0) - (right.slot_position ?? 0),
+      (left, right) => (left.position ?? 0) - (right.position ?? 0),
     )
   }
   return map
 }
 
-/** Every cell in the slot, in `slot_position` order. */
+/** Every cell in the slot, in `position` order. */
 export function getCellsAt(
   lookup: Map<string, BlueprintCell[]>,
   laneId: string,

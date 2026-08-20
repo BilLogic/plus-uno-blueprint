@@ -27,7 +27,7 @@ where path_id = 'a0000000-0000-4000-8000-000000000805';
 delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-000000000805';
 
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   (
     'a0000000-0000-4000-8000-000000000878',
@@ -73,7 +73,7 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  row_position = excluded.row_position,
+  position = excluded.position,
   path_id = excluded.path_id;
 
 insert into public.steps (id, service_scenario_id, name)
@@ -92,12 +92,12 @@ on conflict (id) do update set
   name = excluded.name,
   service_scenario_id = excluded.service_scenario_id;
 
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000805', 'a0000000-0000-4000-8000-000000000891', 1),
   ('a0000000-0000-4000-8000-000000000805', 'a0000000-0000-4000-8000-000000000892', 2)
 on conflict (path_id, step_id) do update set
-  column_position = excluded.column_position;
+  position = excluded.position;
 
 insert into public.cells (id, path_id, lane_id, step_id, content)
 values

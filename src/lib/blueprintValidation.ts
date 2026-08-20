@@ -56,13 +56,13 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  *   line up against any existing one in the side-by-side view.
  */
 export const DEFAULT_LANE_SET: LaneSetEntry[] = [
-  { name: 'Visual', lane_role: 'visual', row_position: 0 },
-  { name: 'Regular Tutor', lane_role: null, row_position: 1 },
-  { name: 'Front Stage Tech', lane_role: 'frontstage_tech', row_position: 2 },
-  { name: 'Front Stage Actions', lane_role: 'frontstage_actions', row_position: 3 },
-  { name: 'Back Stage Tech', lane_role: 'backstage_tech', row_position: 4 },
-  { name: 'Back Stage Actions', lane_role: 'backstage_actions', row_position: 5 },
-  { name: 'Support Actions', lane_role: null, row_position: 6 },
+  { name: 'Visual', lane_role: 'visual', position: 0 },
+  { name: 'Regular Tutor', lane_role: null, position: 1 },
+  { name: 'Front Stage Tech', lane_role: 'frontstage_tech', position: 2 },
+  { name: 'Front Stage Actions', lane_role: 'frontstage_actions', position: 3 },
+  { name: 'Back Stage Tech', lane_role: 'backstage_tech', position: 4 },
+  { name: 'Back Stage Actions', lane_role: 'backstage_actions', position: 5 },
+  { name: 'Support Actions', lane_role: null, position: 6 },
 ]
 
 /** Columns beyond this read as a process map, not a blueprint. */

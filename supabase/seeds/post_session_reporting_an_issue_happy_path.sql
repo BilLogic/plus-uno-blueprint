@@ -27,7 +27,7 @@ where path_id = 'a0000000-0000-4000-8000-00000000080f';
 delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-00000000080f';
 
-insert into public.lanes (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   ('a0000000-0000-4000-8000-000000000910', 'a0000000-0000-4000-8000-00000000080f', 'Visual', 0),
   ('a0000000-0000-4000-8000-000000000917', 'a0000000-0000-4000-8000-00000000080f', 'Lead Tutor', 1),
@@ -39,7 +39,7 @@ values
   ('a0000000-0000-4000-8000-000000000916', 'a0000000-0000-4000-8000-00000000080f', 'Support Actions', 7)
 on conflict (id) do update set
   name = excluded.name,
-  row_position = excluded.row_position,
+  position = excluded.position,
   path_id = excluded.path_id;
 
 insert into public.steps (id, service_scenario_id, name)
@@ -55,14 +55,14 @@ on conflict (id) do update set
 delete from public.path_steps
 where path_id = 'a0000000-0000-4000-8000-00000000080f';
 
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000988', 1),
   ('a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000991', 2),
   ('a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000993', 3),
   ('a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000990', 4)
 on conflict (path_id, step_id) do update set
-  column_position = excluded.column_position;
+  position = excluded.position;
 
 insert into public.cells (id, path_id, lane_id, step_id, content)
 values

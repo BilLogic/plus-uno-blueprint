@@ -47,12 +47,12 @@ erDiagram
   cells ||--o{ cell_dependencies : "target"
 
   service_lifecycles { uuid id PK  text name  text description }
-  phases { uuid id PK  uuid service_lifecycle_id FK  text name  text description  int order_position  uuid loops_to_phase_id FK "optional self-reference" }
-  service_scenarios { uuid id PK  uuid phase_id FK  text name  text description  int order_position  text view_type "single | stacked — merged is session-only, never stored" }
+  phases { uuid id PK  uuid service_lifecycle_id FK  text name  text description  int position  uuid loops_to_phase_id FK "optional self-reference" }
+  service_scenarios { uuid id PK  uuid phase_id FK  text name  text description  int position  text view_type "single | stacked — merged is session-only, never stored" }
   paths { uuid id PK  uuid service_scenario_id FK  text name  text summary "when this route applies — the condition that puts someone on it"  text note "the author's aside: open questions, provenance, working state"  text path_type "happy | unhappy | exception | alternative | named" }
   steps { uuid id PK  uuid service_scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
-  path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int column_position "unique per (path_id, column_position)" }
-  lanes { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text lane_role "semantic role key; null = generic swimlane"  int row_position }
+  path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int position "unique per (path_id, position)" }
+  lanes { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text lane_role "semantic role key; null = generic swimlane"  int position }
   cells { uuid id PK  uuid path_id FK  uuid lane_id FK "unique (lane_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
   cell_dependencies { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK  text kind "sets_off = makes the other happen, drawn | enables = must already be true, never drawn"  text label  text note }
 ```
@@ -62,11 +62,11 @@ erDiagram
 | Table | Purpose | Notes |
 | --- | --- | --- |
 | `service_lifecycles` | Top container (one per blueprint deployment, usually) | |
-| `phases` | Lifecycle stages, ordered by `order_position` | `loops_to_phase_id` self-reference renders the lifecycle loop |
+| `phases` | Lifecycle stages, ordered by `position` | `loops_to_phase_id` self-reference renders the lifecycle loop |
 | `service_scenarios` | The unit users navigate; owns steps and paths | `view_type` enum below |
 | `paths` | A journey variant within a scenario | `path_type` enum below; optional `note` |
 | `steps` | Scenario-scoped step columns, SHARED across paths | A step exists once per scenario; paths select/ordr via `path_steps` |
-| `path_steps` | Which steps a path uses and in what column order | `column_position` unique per path |
+| `path_steps` | Which steps a path uses and in what column order | `position` unique per path |
 | `lanes` | Swimlanes, per PATH (each path carries its own layer rows) | `name` free-form any language; `lane_role` semantic key (see `references/lane-roles.md`) |
 | `cells` | Grid content at (layer × step) on a path | `unique (lane_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
 | `cell_dependencies` | Directed arrows cell → cell. `kind` is `sets_off` (this cell makes the other happen — drawn) or `enables` (the other must already be true — recorded, never drawn). Not inverses: "set off by" is `sets_off` read from the other end, and a precondition causes nothing | Unique pair, `source != target`, both cells must be on the same path |
@@ -117,9 +117,9 @@ IR re-imports produce identical rows. See `references/adapter-contract.md`.
 
 ## Ordering fields
 
-All sibling order is explicit integers: `phases.order_position`,
-`service_scenarios.order_position`, `path_steps.column_position` (per path),
-`lanes.row_position` (per path). The frontend sorts by these — gaps are
+All sibling order is explicit integers: `phases.position`,
+`service_scenarios.position`, `path_steps.position` (per path),
+`lanes.position` (per path). The frontend sorts by these — gaps are
 harmless, duplicates are not (validator checks).
 
 ## Working precedent
@@ -132,8 +132,8 @@ generators follow.
 ## Canvas dialect: cell slots
 
 The canvas deployment splits tech-lane touchpoints into multiple cells
-per (lane, step), ordered by `slot_position` (unique on
-`(lane_id, step_id, slot_position)`; rows predating the split carry no
+per (lane, step), ordered by `position` (unique on
+`(lane_id, step_id, position)`; rows predating the split carry no
 value and read as slot 0). Deployments scaffolded from the plain
 template keep one cell per (lane, step). Tools and the IR never expose
 slot management directly — treat "the" cell of a slot as slot 0.

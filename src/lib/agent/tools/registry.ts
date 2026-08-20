@@ -359,7 +359,7 @@ export async function dispatchTool(
           scenarioId: need(args, 'scenario_id'),
           name: need(args, 'name'),
           laneRole: s(args, 'lane_role') ?? null,
-          atRow: typeof args.at_row === 'number' ? args.at_row : undefined,
+          atPosition: typeof args.at_position === 'number' ? args.at_position : undefined,
         })
         return 'Added lane to every path of the scenario. Re-read the blueprint for the new lane ids.'
       }
@@ -376,7 +376,7 @@ export async function dispatchTool(
           .select('id')
           .eq('lane_id', laneId)
           .eq('step_id', stepId)
-          .or('slot_position.is.null,slot_position.eq.0')
+          .or('position.is.null,position.eq.0')
           .limit(1)
         if (occupiedError) throw new Error(occupiedError.message)
         if (occupied && occupied.length > 0)

@@ -41,7 +41,7 @@ export function repairDiscoverySadPathBlueprint(
     ...(hasSadFinalStep
       ? data.steps.filter((step) => step.id === DISCOVERY_SAD_FINAL_STEP_ID)
       : [sadFinalStep]),
-  ].sort((a, b) => a.column_position - b.column_position)
+  ].sort((a, b) => a.position - b.position)
 
   const cells = data.cells.map((cell) =>
     cell.step_id === DISCOVERY_HAPPY_FINAL_STEP_ID
