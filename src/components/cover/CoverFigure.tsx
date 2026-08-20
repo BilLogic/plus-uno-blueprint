@@ -32,15 +32,18 @@ import { cn } from '@/lib/utils'
  * expands", and having both say it a second way read as two competing
  * signals for one action rather than reinforcement.
  *
- * The opened figure has a second zoom step of its own: click it once more
- * to view at its authored pixel size (the popup scrolls if that exceeds the
- * viewport), click again to return to fit. Zoom-in/zoom-out cursors live on
- * the IMAGE for that reason — they describe what clicking the image does.
- * Everywhere else in the popup (the empty margin, the backdrop) closes the
- * whole thing on click, with a plain cursor: closing is a different action
- * from the image's own zoom step and was not read well by reusing the same
- * cursor for both. There is no separate close button — every square inch
- * that is not the diagram already closes it.
+ * The opened figure has ONE state: fit to the viewport. It used to carry a
+ * second zoom step — click the opened image again for its authored pixel
+ * size, click once more to return — and that step is gone. Two zoom levels
+ * behind two identical-looking clicks made the popup a small mode of its
+ * own, and the figures are authored to be readable at fit.
+ *
+ * So every click inside the popup now does the same thing: close. The image
+ * is `pointer-events-none` and the full-bleed close catcher underneath
+ * takes the click wherever it lands, diagram included — which is also what
+ * puts one plain pointer cursor over the whole surface instead of a zoom
+ * cursor on the diagram and a pointer beside it. There is no separate close
+ * button; there is nothing left to hit that is not "close".
  */
 export function CoverFigure({
   figure,
@@ -53,17 +56,11 @@ export function CoverFigure({
   className?: string
 }) {
   const [open, setOpen] = useState(false)
-  const [expanded, setExpanded] = useState(false)
 
   return (
     <DialogPrimitive.Root
       open={open}
-      onOpenChange={(next) => {
-        setOpen(next)
-        // Every reopen starts fit-to-viewport; the zoomed-in step is a
-        // per-visit choice, not a remembered preference.
-        if (!next) setExpanded(false)
-      }}
+      onOpenChange={setOpen}
     >
       <DialogPrimitive.Trigger
         type="button"
@@ -99,18 +96,11 @@ export function CoverFigure({
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 cursor-pointer bg-black/70 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <DialogPrimitive.Popup
           aria-label={figure.alt}
-          className={cn(
-            'fixed inset-4 z-50 flex outline-none transition duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 sm:inset-10',
-            // Fit state centers; the expanded step can exceed the box, so it
-            // scrolls instead of clipping or forcing the image back down.
-            expanded
-              ? 'items-start justify-center overflow-auto'
-              : 'items-center justify-center',
-          )}
+          className="fixed inset-4 z-50 flex items-center justify-center outline-none transition duration-200 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 sm:inset-10"
         >
-          {/* Fills the popup BEHIND the image. The image sits on top and
-              handles its own click (zoom step); every click that lands
-              outside the image's own bounds reaches this and closes. */}
+          {/* Fills the popup behind the image and takes every click in it.
+              The image above is `pointer-events-none`, so a click on the
+              diagram lands here too — one surface, one action. */}
           <DialogPrimitive.Close
             aria-label="Close"
             className="absolute inset-0 cursor-pointer"
@@ -121,32 +111,12 @@ export function CoverFigure({
             alt={figure.alt}
             width={figure.width}
             height={figure.height}
-            onClick={(event) => {
-              // Stop here, or the click falls through to the close button
-              // beneath it and the zoom step also closes the popup.
-              event.stopPropagation()
-              setExpanded((value) => !value)
-            }}
-            aria-label={expanded ? 'Shrink to fit' : 'View at full size'}
-            /*
-              Expanded size is an inline style, not a utility class, and
-              that is load-bearing. `width:auto` should fall back to the
-              `width`/`height` HTML attributes (880×N) once `max-width:100%`
-              is cleared — but these figures are SVGs authored with a
-              `viewBox` and no `width`/`height` on the root `<svg>`, so the
-              browser's own intrinsic-size detection reports the UA default
-              (300×150) inside this flex popup, and CSS `auto` sizing
-              follows THAT, not our attribute. An explicit pixel width here
-              is the one way to get the authored size deterministically
-              rather than arguing with SVG intrinsic-size edge cases.
-            */
-            style={expanded ? { width: figure.width, maxWidth: 'none' } : undefined}
-            className={cn(
-              'relative shrink-0 rounded-xl object-contain shadow-2xl',
-              expanded
-                ? 'cursor-zoom-out'
-                : 'max-h-full max-w-full cursor-zoom-in',
-            )}
+            // Decoration on top of the close catcher, deliberately inert:
+            // the popup has one action and the diagram must not intercept
+            // it. Keep this in step with the catcher — an image that takes
+            // pointer events again puts a dead zone over the middle of the
+            // popup, which reads as a stuck dialog.
+            className="pointer-events-none relative max-h-full max-w-full shrink-0 rounded-xl object-contain shadow-2xl"
           />
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
