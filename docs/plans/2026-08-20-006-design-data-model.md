@@ -29,15 +29,22 @@ section is the reasoning behind one row of this table.
 |---|---|---|---|---|
 | **Service** | 1 | `name`, `summary`, + business model: `pricing`, `revenue_model`, `funding`, `delivery_cost`, `partners` | sidebar row, top | **Service panel** |
 | **Phase** | 6 | `name`, `summary`, `business_impact`, `operational_requirements`, `loops_to_phase_id` | phase section on the canvas | **Phase panel** (ⓘ in the menubar header) |
-| **Scenario** | 22 | `name`, `summary`, `view_type` | sidebar row + breadcrumb | `summary` → hover card. `view_type` → the compare control, not a panel |
-| **Path** | 38 | `name`, `path_type`, `summary`, `note` | path label on the canvas | ⚠️ nothing yet — `summary` vs `note` is undefined, decide before building |
-| **Step** | 185 | `name` | column header | nothing to edit |
+| **Scenario** | 22 | `name`, `summary`, `view_type` | sidebar row + breadcrumb | **Scenario panel** (ⓘ on the breadcrumb) — *and it hosts the paths* |
+| **Path** | 38 | `name`, `path_type`, `summary`, `note` | path label on the canvas | **inside the scenario panel**, one row per path — a path has no canvas shape of its own to hang an affordance on |
+| **Step** | 185 | `name` + **`summary` (new)** | column header | hover card on the header, editable inline |
 | **Lane** | 299 rows / **166 logical** | `name`, `lane_role`, `owner_team`, `kpis`, `tools` | lane label on the rail | **Lane panel** (ⓘ on the label) |
 | **Cell** | 955 | `content`, `summary`, `function`, `form`, `value_props`, `owner`, `perceived_owner`, `links`, `picture` | the grid | **Cell panel** (plain click) |
 
-Three panels are new — service, phase, lane. The cell panel exists. Scenario,
-path and step get **no panel**, because between them they own four editable
-fields and two of those are undefined.
+Four panels are new — service, phase, lane, **scenario**. The cell panel
+exists. Step gets a hover card, not a panel.
+
+**The scenario panel is a reversal, and the reason is paths.** The earlier
+verdict — "a drawer holding one summary field is worse than editing the name
+inline" — measured the scenario alone. It owns one editable field. But **38
+paths own three each and have no surface anywhere**, and a path is a child of a
+scenario. Folding them in turns a one-field drawer into the only place path
+`name`, `path_type`, `summary` and `note` can ever be written. That is worth a
+panel.
 
 **Two fields are computed, never stored empty-and-shown-empty:**
 
@@ -110,22 +117,91 @@ A named stage of the journey. **Both fields were vague; here is the split.**
 Both hints in the panel are lifted verbatim from the column comments in
 `f65efcf` — the only documentation these fields have ever had.
 
-### 🧭 SCENARIO / PATH / STEP — no panel
+### 🧭 SCENARIO — 22 rows, and the home of paths
 
-Audited each, since all three were asked about:
-
-| Level | Rows | Fields it owns | Verdict |
+| Field | Definition | Why it exists | Not this |
 |---|---|---|---|
-| scenario | 22 | `name`, `summary`, `view_type` | **no panel** — a drawer holding one summary field is worse than editing the name inline |
-| path | 38 | `name`, `path_type`, `summary`, `note` | **no panel** — and `summary` vs `note` have no documented difference. Decide what each means *before* either gets a UI |
-| step | 185 | `name` only | **no panel** — there is nothing to edit |
+| `name`, `summary` | the situation this blueprint covers | orientation | — |
+| `view_type` | which compare layout it opens in | a **view preference**, set by using the compare control — never a panel field | a spec field |
 
-**But step is the open question**, and it is worth stating plainly: the
-suspicion that `value_props` belongs to the **step** rather than the cell is
-the one thing that would give steps a panel. A step is a *moment*; a lane's
-action inside it *contributes* to the value that moment delivers. If the fill
-campaign finds the same value text repeated across a step's cells, that is the
-answer — and step gets fields, and then a panel. Not decided on 11 rows.
+### 🧭 PATH — 38 rows, edited inside the scenario panel
+
+A path is a route through a scenario — happy, exception, variant. It has a
+label on the canvas but no shape of its own, which is why it gets no affordance
+and lives in its parent's panel instead.
+
+| Field | Definition | Why it exists | Not this |
+|---|---|---|---|
+| `name` | the route — "Happy Path", "No-show" | the label | — |
+| `path_type` | the kind of route | drives ordering and comparison | a description |
+| `summary` | 🔴 **what this route is** — the condition that puts someone on it | "the student joins on time" vs "the student never joins" is the whole reason two paths exist, and today it is nowhere | commentary |
+| `note` | 🔴 **an author's aside** — open questions, provenance, "confirm with ops" | working state that should not read as fact | the definition of the route |
+
+> **The split, decided.** `summary` answers *when does this path apply*;
+> `note` is the author talking to the next author. If a sentence would embarrass
+> you in front of a stakeholder, it is a `note`. The panel labels them **Route**
+> and **Author note**, and the note gets muted styling so the difference is
+> visible without reading the hint.
+
+### 🧭 STEP — 185 rows, and it should get a `summary`
+
+A step is a moment in the journey: the column every lane's cell sits under.
+Asked whether the step could borrow the storyboard cell's text instead of
+owning a field. **Checked, and it cannot** — for two measured reasons.
+
+**The storyboard row is completely empty.** The `visual` lane exists in 38
+paths and is rendered on every canvas:
+
+```
+147  visual cells
+  0  with content
+  0  with description
+  0  with a picture
+```
+
+A whole reserved row, blank across the entire blueprint. So there is no
+existing text to reuse — only an empty slot that would have to be filled.
+
+**And the grain is wrong.** A visual cell is per **path**; a step is per
+**scenario**:
+
+| | |
+|---|---|
+| steps | **185** |
+| steps with a visual cell at all | 138 — **47 steps have no slot to write into** |
+| steps whose visual cell exists in more than one path | 9 — the same summary typed twice, free to diverge |
+
+**Recommendation: `steps.summary`, a new column.** One row per step, so no
+fan-out, no drift, and it covers all 185 rather than 138.
+
+| Field | Definition | Why it exists | Not this |
+|---|---|---|---|
+| `name` | the moment — "Confirm the booking" | the column header | — |
+| `summary` **(new)** | **what this moment is, across every lane** — the one sentence that makes the column legible without reading five cells | a step is the only level a reader scans horizontally and has nothing to read. It is also the honest home for `value_props` if that question resolves step-ward | any single lane's action — that is a cell |
+
+**The storyboard cell keeps its own job.** `content` on a visual cell is a
+*frame caption* and `picture` is the frame — that is the storyboard, not the
+step's summary. Both surface in the same hover card, and neither pretends to be
+the other:
+
+```
+┌─ step header hover ──────────────────┐
+│  Confirm the booking                 │  name
+│  The student picks a slot and the    │  steps.summary
+│  system holds it for 10 minutes.     │
+│  ┌──────────┐                        │
+│  │ [frame]  │  storyboard, if the    │  visual cell picture + content,
+│  └──────────┘  visual cell has one   │  shown only when present
+└──────────────────────────────────────┘
+```
+
+**Correction to an earlier claim in this document:** it said a step "is already
+a `(scenario, name)` concept represented by many `path_steps` rows" and
+therefore shares the lane's grain problem. **Wrong.** `steps` has
+`service_scenario_id` and one row per step; `path_steps` only carries
+`column_position`. Step identity is the row id. There is no fan-out write and
+no grain problem — which is exactly why `steps.summary` is cheap and
+`lanes.owner_team` is not.
 
 ### 🧭 LANE — 299 rows, 166 logical, 12 names
 
@@ -135,7 +211,31 @@ answer — and step gets fields, and then a panel. Not decided on 11 rows.
 | `lane_role` | the semantic key that drives rendering | **never inferred from the name** — that broke every non-English blueprint (`layer-roles.md`) | a display label |
 | `owner_team` | **the team that staffs this lane** | the org unit accountable for everything in the row. Answers "who do I talk to about this" once, instead of per cell | the actor's job title — that is `name` |
 | `kpis` | **what that team is measured on** | `check-kpi-alignment` compares them against what the lane's cells actually do: measured-but-never-enacted, and enacted-but-never-measured | outcomes nobody is accountable for |
-| `tools` | **systems the lane's actors use** | tells the KPI check whether a measured thing is even instrumented | tools mentioned in a cell but not used by this lane |
+| `tools` | **systems the lane's actors use** | 🟡 **one reader, and only as a secondary signal** — see below | tools mentioned in a cell but not used by this lane |
+
+> **What `tools` is actually for — asked directly, so here is the whole answer.**
+> Grepped every check and every renderer. `tools` has **exactly one consumer**,
+> and it is a supporting clause inside another check:
+>
+> ```
+> check-kpi-alignment.md:10-12
+>   "Per lane with non-empty `kpis`: the KPI list vs that lane's cells across
+>    all steps and paths. `tools` for whether the measured thing is even
+>    instrumented."
+> ```
+>
+> That is it. Nothing renders it, no other check reads it, and
+> `check-channel-conflict`'s use of the word "tools" is prose, not the column.
+>
+> **So the field answers one question: "you say you measure this — is there a
+> system that could even record it?"** A lane measured on session completion
+> with no tool that records attendance has a KPI nobody can report. That is a
+> real finding, and it is the only one `tools` produces.
+>
+> **Consequence for the fill campaign:** `tools` is worth filling *only where
+> `kpis` is filled*, and after it. A lane with tools and no KPIs feeds nothing.
+> Plan 005 orders them together; it should order them `owner_team` → `kpis` →
+> `tools`, and stop if `kpis` comes back empty.
 
 ### 🧭 CELL — 955 rows
 
@@ -197,6 +297,14 @@ erDiagram
     phases {
         text business_impact          "what it is worth, what it costs"
         text operational_requirements "what must be true to run"
+    }
+    paths {
+        text path_type "the kind of route"
+        text summary   "WHEN this route applies"
+        text note      "author aside — not fact"
+    }
+    steps {
+        text summary "what this moment is, across every lane — NEW"
     }
     lanes {
         text lane_role  "semantic key, never inferred from name"
@@ -292,7 +400,7 @@ erDiagram
     services ||--o{ stakeholders : "the cast"
     stakeholders {
         text name  "Regular Tutor · Student · Zoom · Payroll vendor"
-        text kind  "recipient | internal | partner"
+        text kind  "recipient | staff | partner | provider"
         text note  "who they are, in one line"
     }
     lanes           }o--o| stakeholders : "lanes.stakeholder_id"
@@ -340,7 +448,20 @@ The **names** stay concrete and human — the lane is literally called
 | `recipient` | who the service is for | the `Student` lane |
 | `staff` | who delivers it | `Tutor`, `Regular Tutor`, `Lead Tutor`, `Supervisor` |
 | `partner` | external orgs it depends on | the `Partner Action: Teacher` lane — the model already prefixes it |
-| `organisation` | the provider itself, which receives value but acts nowhere | `business`, 10 mentions, no lane |
+| `provider` | **the organisation running the service** — it receives value but takes no action on the canvas | `business`, 10 mentions, no lane |
+
+> **`provider`, not `organisation` — asked what that kind even was.**
+> It is **the org running the service** — PLUS itself. It earned a kind because
+> it is the most-cited audience in the data and the only one with no lane:
+> `value_props` names `business` 10 times ("attendance data stays clean
+> downstream"), and no actor on any canvas is the business. It receives value
+> and acts nowhere, so a lane can never represent it.
+>
+> `organisation` was the wrong word because **partners are organisations too** —
+> Zoom is an organisation, the university is an organisation. The kind has to
+> say *which* org, and `provider` does: the one delivering the service. The four
+> kinds then read as one sentence — a **provider** delivers to a **recipient**,
+> staffed by **staff**, depending on **partners**.
 
 **On personas:** a persona is a *characterisation* of a stakeholder, not a
 stakeholder — "a first-time tutor, anxious about tech" describes the `Tutor`
@@ -392,42 +513,43 @@ for, and why they are not proposed now:
 | Duration | real, but a phase's duration is a property of a *journey through* it, not of the phase — and nothing measures it today |
 | Phase owner | a phase spans lanes, each with its own `owner_team`. A phase-level owner would either duplicate them or contradict them |
 
-## Path, step and scenario without a panel — where the information shows
+## Where each level's information shows — resolved
 
-The question is right: cutting the panel does not mean the information has
-nowhere to live.
+| Level | What it holds | Where it shows | Where it is edited |
+|---|---|---|---|
+| Scenario | `name`, `summary` | sidebar row; `summary` in a hover card there | **scenario panel** |
+| Path | `name`, `path_type`, `summary`, `note` | the path label carries name and type | **scenario panel**, one row per path |
+| Step | `name`, `summary` *(new)* | column header; `summary` in a hover card on it | inline in the hover card |
+| Lane | name, role, owner, KPIs, tools | the lane label | **lane panel** |
+| Cell | the spec block | the grid | **cell panel** |
 
-| Level | What it holds | Where it shows |
-|---|---|---|
-| Scenario | `name`, `summary` | the **sidebar row** already lists it; `summary` belongs in a hover card there, not on the canvas |
-| Path | `name`, `path_type`, `summary`, `note` | the path label already carries name and type. `summary`/`note` — **decide what each means first**; today they are two undocumented free-text fields |
-| Step | `name` only | the column header. Nothing else to show |
-| Lane | name, role, owner, KPIs, tools | the panel |
+**On tooltips vs hover cards, unchanged and still the rule.**
+`ui-inventory.md` is firm that `IconTooltip` copy *"says what it DOES"* —
+tooltips name a control, they do not hold prose.
 
-**On tooltips specifically:** the instinct is right for one-line facts and
-wrong for content. `ui-inventory.md` is firm that `IconTooltip` copy *"says
-what it DOES"* — tooltips are for naming a control, not for holding prose. So:
+- **Tooltip** — a truncated lane label on a narrow rail. One line, no
+  interaction.
+- **Hover card** (`popover.tsx` on hover-intent) — a step's `summary` and its
+  storyboard frame; a scenario's `summary` in the sidebar. Multi-line,
+  selectable, can hold a control.
+- **Panel** — anything with more than one editable field.
 
-- **Tooltip** — the lane label truncated on a narrow rail, the step header's
-  full name. One line, no interaction.
-- **Hover card** (`popover.tsx` on hover-intent) — a scenario's `summary`
-  from the sidebar. Multi-line, selectable text.
-- **Neither** — anything a user would want to *edit*. That is a panel, and if
-  the level has nothing worth editing it does not get one.
+## Should step get a panel like lane? — no, a hover card
 
-## Should step get a panel like lane?
+**Resolved, and the reason changed.** The earlier answer was "no, because a
+step has the same grain problem lanes do." **That was wrong** — `steps` has one
+row per step keyed on `service_scenario_id`; `path_steps` only positions it.
+Step identity is clean.
 
-**Not today, and the reason is worth writing down: a step has the same grain
-problem lanes do, and no fields to make it worth solving.**
+The real answer is **volume**: a step owns two fields. A drawer for two fields
+is the same mistake the scenario panel only avoids by adopting 38 paths, and a
+step has no orphan children to adopt. So:
 
-A step belongs to a scenario but is *positioned per path* through
-`path_steps`. So "the step" is already a `(scenario, name)` concept
-represented by many `path_steps` rows — the same shape as a lane's
-`(scenario, name)` across 299 rows.
-
-If `value_props` moves from cell to step, then step gains real fields, and
-the panel and the fan-out write pattern both arrive together. Until then a
-step panel would edit a name.
+| | |
+|---|---|
+| Reading a step | hover the column header — name, summary, storyboard frame |
+| Editing `summary` | inline in that hover card, the one control it holds |
+| A panel | **only if `value_props` moves to the step.** Then it has real fields, and it inherits the lane's `ⓘ` pattern |
 
 ## `content` stays `content` — decided
 

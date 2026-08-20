@@ -67,8 +67,8 @@ report on.
 |---|---|---|---|
 | [002](2026-08-20-002-refactor-database-vocabulary-plan.md) | **Database vocabulary** — `layers`→`lanes`, `cell_triggers`→`cell_links`, `propositions`→`business_model`, `cells.description`→`summary` | active | The code already apologises for two of these in comments. Must land **after** `refactor/agent-tool-surface` merges |
 | [006](2026-08-20-006-design-data-model.md) | **The data model** — every level, every field, a definition and a reason for each. The ERD, the two grain corrections, and four open questions | active | Decides what is worth storing, before anything is built to edit it |
-| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, on one lifted shell | active | The front door. Everything else waits on it |
-| [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, a service switcher, `filter_service` | not scheduled | One service today. Written down so the list isn't rediscovered |
+| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, **scenario** (which hosts paths), plus a step hover card, on one lifted shell | active | The front door. Everything else waits on it |
+| [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, `filter_service`, then a switcher | **active** | Decided: one app, many services. RLS first; the switcher must not ship before the RPC filter |
 | [005](2026-08-20-005-feat-spec-fill-campaign-plan.md) | **Fill campaign** — scoped, cited, human-gated | blocked on 003 | Filling fields nobody can then see is how this content got lost the first time |
 
 ---
@@ -154,6 +154,17 @@ and the fix in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md).
   nothing in the app reads. `service_lifecycles` is the real root, and its own
   comment says `'End-to-end service journey'`. It **is** the service. Plan 002
   drops the dead table and renames the real one.
+- **The storyboard row is empty everywhere.** The `visual` lane has 147 cells
+  across 38 paths: **0 with content, 0 with a description, 0 with a picture.**
+  A reserved row rendered on every canvas holding nothing. It is why the step's
+  summary gets its own column instead of borrowing the storyboard cell's.
+- **`lanes.tools` has exactly one reader.** `check-kpi-alignment.md:10-12` uses
+  it for *"whether the measured thing is even instrumented"* — nothing renders
+  it and no other check reads it. Fill it only after `kpis`, and only where
+  `kpis` is non-empty.
+- **A step has no grain problem.** `steps` holds one row per step keyed on
+  `service_scenario_id`; `path_steps` only carries `column_position`. An
+  earlier read called this a lane-shaped fan-out. It is not.
 - **Row and column are rendering words.** `row_position` and `column_position`
   name how a lane and a step happen to be drawn today; the compare view already
   draws the same lanes in a different geometry. Plan 002 moves them to

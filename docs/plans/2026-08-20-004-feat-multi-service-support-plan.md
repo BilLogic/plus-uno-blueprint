@@ -1,7 +1,7 @@
 ---
 title: "More than one service — what it would actually take"
 type: feat
-status: not-scheduled
+status: active
 date: 2026-08-20
 repos: uno-blueprint, plus-uno
 brief: docs/plans/2026-08-20-001-spec-layer-brief.md
@@ -9,10 +9,12 @@ brief: docs/plans/2026-08-20-001-spec-layer-brief.md
 
 # Multi-service
 
-> **Status: not scheduled, deliberately.** There is one service today. This
-> plan exists so that the day a second one is real, nobody rediscovers the
-> list — and so the piece most likely to be missed is written down while it is
-> fresh.
+> **Decided: one app, many services.** The earlier draft recommended one
+> deployment per service. That is overruled — the schema already carries the
+> service FK on every root table, so paying a whole deployment to avoid a
+> dropdown is the wrong trade. The front-end work is scoped below and is
+> genuinely small; **RLS is the part that is real work**, and it is what gates
+> shipping to a second team, not the UI.
 
 ---
 
@@ -75,64 +77,91 @@ other consideration on this list. It is written first here for that reason.
       new parameter — but each needs a test proving it
 - [ ] Replace `resolveFirstLifecycleId` with a real current-service resolver
 
-### Front end — I conflated two questions; separating them
+### Front end — the actual tweaks
 
-The earlier draft said "two services are two workspaces, not two columns" and
-read as a recommendation against multi-service. It was not. It answered a
-narrower question — *should two services render side by side on one canvas?* —
-and the answer to that is still **no**: a blueprint is one continuous journey,
-and two would fight over the same camera, lane rail and compare model.
+Read every call site. **The hooks already take the parameter.** `useSlices` and
+`useLifecyclePhases` both accept an optional `lifecycleId` and fall back to
+"the first one" only when called with no argument — and **every call site calls
+them with no argument.** So the work is supplying a value that already has a
+socket, not threading a new one through.
 
-**The separate question — how hard is multi-service — has a different answer,
-and you are right that the front end is the easy part.**
+**Ten places, three kinds.**
 
-| Layer | Work |
-|---|---|
-| Schema | **none.** Every root table already carries the service FK |
-| Front end | **small.** A switcher, and scoping reads to the active service. The scoping code partly exists (`useLifecyclePhases`, `useSlices`) — it just resolves to "the first one" |
-| RLS | **the actual work.** Nine tables at `using (true)` |
-| `search_blueprint` | one `filter_service` parameter, three call sites inside the function |
+```
+① the resolver              src/lib/lifecycle.ts:12-37
+   findFirstLifecycleId caches ONE id module-level. Becomes
+   findServiceIds() + an active-service resolver. The module-level
+   cache must key by id or it will serve service A's id to service B
+   after a switch — that cache is the single likeliest bug here.
 
-I overweighted the front end. Corrected.
+② hooks called argless      6 sites, each gains one argument
+   EditorContext.tsx:328            useLifecyclePhases()
+   CreateBlueprintDialog.tsx:114    useLifecyclePhases()
+   MobileShell.tsx:99               useSlices()
+   TabStrip.tsx:188                 useSlices()
+   SlicesSidebarSection.tsx:125     useSlices()
+   CellInSlicesFooter.tsx:40        useSlices()
 
-### Two shapes, and one of them costs nothing today
+③ direct resolver calls     4 sites, each reads the active service instead
+   SlideModeView.tsx:54-60          useEffect → setLifecycleId
+   StructureRowMenu.tsx:315-322     useEffect → setLifecycleId
+   CreateSliceSheet.tsx:126         findFirstLifecycleId at submit
+   CellEvidenceTab.tsx:131          resolveFirstLifecycleId at insert
+```
 
-| | One app per service | One app, many services |
+Two of those (`SlideModeView`, `StructureRowMenu`) hold a local `useState` +
+`useEffect` purely to resolve the first id. **Both delete** — the context
+supplies it synchronously.
+
+#### The pieces to build
+
+- [ ] **`ServiceContext`** — `{ activeServiceId, services[], setActiveService }`.
+      Mounted above `EditorContext`, because `EditorContext:328` is a consumer.
+- [ ] **Persist the choice** in the URL, not in local storage. A blueprint link
+      pasted into Slack has to open the same service for the person who
+      receives it. Local storage would open *their* last service and silently
+      show the wrong blueprint under the right cell id.
+- [ ] **The switcher** — `dropdown-menu.tsx` on the sidebar's service row.
+      That row is already specified in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md)
+      as the trigger for the **service panel**, so the row now does two things
+      and the split must be explicit: the **row** opens the panel, a **chevron**
+      opens the switcher. Same pattern as the lane label and its `ⓘ`.
+- [ ] **Hide it at one service.** A switcher offering one option is noise. The
+      chevron appears only when `services.length > 1`.
+- [ ] **Switching is a navigation, not a filter.** Clear the camera, the open
+      panel, the compare selection, and the slice picker. A stale cell panel
+      from Service A floating over Service B is the confusion to avoid — and
+      the panel state is now five panels deep after plan 003, so this needs one
+      reset function, not five call sites.
+- [ ] **Empty state** for a user whose membership list is empty — today no
+      view has one at any level.
+
+#### What is deliberately *not* front-end work
+
+`search_blueprint`, `deletion_impact` and the authoring RPCs are all
+server-side. Adding a switcher without `filter_service` on `search_blueprint`
+(⚠️ section 3 above) produces the worst outcome available: a UI that claims to
+be showing Service A while the agent answers from Service B. **The switcher
+must not ship before the RPC filter.**
+
+### Why not one deployment per service
+
+Recorded because it was the earlier recommendation and was overruled:
+
+| | One app per service | **One app, many services** |
 |---|---|---|
-| Isolation | **total** — separate deployment, separate database | RLS, correctly, on nine tables |
-| Work to support | **none. It already works** | membership table, policy rewrite, switcher, `filter_service` |
-| Switching services | a different URL | in-app |
+| Isolation | total — separate database | RLS on nine tables |
+| Front-end work | none | **10 call sites + a context + a switcher** |
+| Backend work | none | membership table, policy rewrite, `filter_service` |
+| Switching services | a different URL, a different login | in-app |
 | Cross-service anything | impossible | possible later |
-| Who it suits | a second team with their own service and no overlap | one org running several services |
+| Cost per new team | a Supabase project and a deploy | a row |
 
-**Recommendation for v1: one app per service.** It is not a compromise — it
-is the strongest isolation available, it needs no code, and it is what the
-current architecture already does. A second team gets their own deployment and
-their own Supabase project, and nothing in this plan is needed.
-
-Build the in-app version when a single org runs **two services and wants one
-place to see both** — that is the requirement RLS is worth paying for. Until
-then the deployment boundary is doing the job a membership table would do,
-with less to get wrong.
-
-**If it is built**, the shape:
-
-```
-┌─ sidebar ─────────────┐
-│  ⌄ PLUS Tutoring      │  ← switcher, dropdown-menu.tsx
-│  ─────────────────    │
-│  Service              │  ← the service panel (plan 003)
-│  Phases               │
-│    Application        │
-│    …                  │
-│  Slices               │
-└───────────────────────┘
-```
-
-- [ ] Switching a service is a **navigation**, not a filter: clear the camera,
-      the panel and the compare selection. A stale cell panel from Service A
-      over Service B is the confusion to avoid
-- [ ] Empty state for a user with no membership
+The deciding argument is the last row. Per-deployment isolation is real, but it
+prices every new service at an operator task, and a product that cannot onboard
+a team without an operator is not a product. RLS is a known, bounded piece of
+work — nine tables, enumerable from `pg_policy` — and it buys the thing
+deployments cannot: **one org seeing two of its own services in one place.**
 
 ### Creating the second service — the step nobody has planned
 
@@ -197,11 +226,22 @@ product cannot onboard anyone without an operator.
 | Stale panel across a switch | Medium | Switching is navigation; clear all selection state |
 | uno-bot guesses a service | High | Refuse-not-guess, the same posture as its absence handling |
 
-## The honest recommendation
+## Order of work — and the one rule
 
-Do not build any of this speculatively — including the `filter_service`
-parameter on its own. An unused filter is another thing that has to stay true
-through every future change, and this session has already found two filters
-that silently were not (`deletion_impact`'s lane branch, the harness's
-`list_blueprint` case). Build the whole thing, once, when a second service is
-real.
+RLS before UI. Always.
+
+| # | Step | Why this order |
+|---|---|---|
+| 1 | `service_members` + rewrite every SELECT policy | one missed table is the whole leak; do it while there is still only one service and nothing can be exposed |
+| 2 | `filter_service` on `search_blueprint` — `scoped`, `structural` **and** the total count | a filter reaching two of three under-reports silently |
+| 3 | `ServiceContext` + the 10 call sites | mechanical once 1 and 2 exist |
+| 4 | The switcher, hidden at one service | the visible half, and the smallest |
+| 5 | Creating a service (below) | the first screen a second team ever sees |
+
+**The rule: the switcher does not ship before step 2.** A UI that says
+Service A while the agent answers from Service B is worse than no switcher —
+it is a wrong answer wearing a correct label.
+
+Steps 1 and 2 can land now against the single service and change nothing
+observable. That is the argument for doing them first rather than waiting for a
+second service to exist: they are verifiable while the blast radius is zero.

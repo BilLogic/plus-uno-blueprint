@@ -1,5 +1,5 @@
 ---
-title: "Detail panels for lane, phase and service"
+title: "Detail panels for lane, phase, service and scenario"
 type: feat
 status: active
 date: 2026-08-20
@@ -10,9 +10,15 @@ depends-on: docs/plans/2026-08-20-002-refactor-database-vocabulary-plan.md
 
 # Entity detail panels
 
-The cell panel is the only way to write a spec field. Three more levels own
-spec fields and have no surface at all. This builds them **as one
-parameterised panel**, not four copies.
+The cell panel is the only way to write a spec field. Four more levels own
+fields and have no surface at all. This builds them **as one parameterised
+panel**, not five copies.
+
+**Scenario is in scope, and it carries paths.** Plan 006 reversed the earlier
+"no panel" verdict: the scenario owns one editable field, but its **38 paths
+own three each and have no surface anywhere on the canvas** — a path is a label,
+not a shape, so there is nothing to hang an affordance on. The scenario panel is
+where a path is edited.
 
 *(Vocabulary: this plan says **lane**. The table is still `layers` until
 plan 002 lands; every file path below uses today's names.)*
@@ -51,6 +57,8 @@ precedent, per its own rule of thumb:
 | Empty / loading | `deferred-skeleton.tsx` | |
 | "No evidence — this is an assumption" | `alert.tsx` variant `info` | tinted surface + filled icon chip, copy stays `--foreground` |
 | Grouped lists (validation questions) | `accordion.tsx`, controlled | the ledger step-groups precedent: one open at a time |
+| **Paths inside the scenario panel** | `accordion.tsx`, controlled — one path open at a time | same precedent. A scenario averages 1.7 paths, so all of them fit; the accordion keeps `note` from competing with `summary` for attention |
+| **Step hover card** | `popover.tsx` on hover-intent | **not** `IconTooltip` — the inventory reserves tooltips for naming a control, and this holds prose plus one input |
 
 **Nothing new is added to `src/components/ui/`.** Every need above already has
 a primitive or a precedent — which is the point of matching.
@@ -110,6 +118,34 @@ Save/Cancel portalled to a footer host.
 │                            [ Cancel ]  [ Save ]   │
 └───────────────────────────────────────────────────┘
 ```
+
+```
+┌─ SCENARIO ───────────────────────────────────────┐
+│ ⤢   In-session › Warm-Up                     ✕  │
+│                                                   │
+│  Warm-Up                                          │
+│  2 paths · 9 steps · 88 cells                     │
+│                                                   │
+│  Summary        [ ____________________________ ] │
+│                                                   │
+│  PATHS                                            │
+│  ▼ Happy Path                        happy_path  │  accordion, controlled
+│      Route     [ the student joins on time   ]   │  paths.summary
+│      Author    [ confirm the 10-min hold with]   │  paths.note — muted,
+│      note      [ ops                          ]   │  visibly an aside
+│                                                   │
+│  ▶ No-show                            exception  │
+│                                                   │
+│  ⓘ View type is set by the compare control,      │  alert variant=info
+│    not here.                                      │
+├───────────────────────────────────────────────────┤
+│                            [ Cancel ]  [ Save ]   │
+└───────────────────────────────────────────────────┘
+```
+
+`view_type` is deliberately absent: it is a **view preference**, set by using
+the compare control, and a properties panel is the wrong place to change what
+you are currently looking at.
 
 ```
 ┌─ SERVICE ────────────────────────────────────────┐
@@ -175,8 +211,10 @@ picker owns the bare click.
 |---|---|---|
 | Service | a **Service** row at the top of the left sidebar | click |
 | Phase | info button in `PhaseMenubarHeader` | click |
+| Scenario | `ⓘ` in `ScenarioMenubarBreadcrumb` | click |
 | Lane | `(i)` beside the lane label, **both** render paths | click |
 | Cell | the cell | plain click *(unchanged)* |
+| Step | column header | **hover** — a card, not a panel |
 
 **Phase gets a button, not a modifier-click.** `CanvasPhaseSection.tsx:180`
 already makes the whole section `role="button"` meaning *navigate into this
@@ -200,6 +238,12 @@ global DOM id the Save/Cancel row portals into.
 ## Files
 
 ```
+NEW  supabase/migrations/*_step_summary.sql           add steps.summary +
+                                                      grant update (summary)
+                                                      on steps to authenticated
+                                                      — the ONLY new column in
+                                                      this plan; everything
+                                                      else is already granted
 NEW  src/components/blueprint/panelShell.tsx          lifted: PanelDrawerShell,
                                                       error boundary, Field,
                                                       footer-host id as a prop
@@ -217,6 +261,11 @@ EDIT src/lib/authoringSession.ts                      3 ledger kinds + labels
 EDIT scripts/tests/authoringSession.test.ts           exhaustiveness map
 EDIT src/components/blueprint/BlueprintCellDetailPanel.tsx   consume the shell
 EDIT src/components/editor/PhaseMenubarHeader.tsx     info button
+NEW  src/components/blueprint/ScenarioPanel.tsx       + its paths accordion
+NEW  src/components/blueprint/StepHoverCard.tsx       name, summary, frame
+NEW  src/lib/pathMutations.ts  stepMutations.ts       each + a revert case
+EDIT src/components/editor/ScenarioMenubarBreadcrumb.tsx   info button
+EDIT src/components/blueprint/ServiceBlueprintGrid.tsx     step header hover
 EDIT src/components/blueprint/BlueprintLabelRail.tsx  (i)
 EDIT src/components/blueprint/ServiceBlueprintGrid.tsx (i)
 EDIT src/components/editor/ServiceOverviewView.tsx    mount, NOT gated on
@@ -241,7 +290,12 @@ EDIT scripts/agent-harness/run.mjs                    a case per new read tool
 
 ## Acceptance criteria
 
-- [ ] The lifted shell serves four panels; the cell panel is unchanged
+- [ ] The lifted shell serves five panels; the cell panel is unchanged
+- [ ] The scenario panel writes `paths.summary` and `paths.note`, and the two
+      are visibly different in weight — a note never reads as fact
+- [ ] `view_type` appears in no panel
+- [ ] The step hover card opens on focus as well as hover, and commits
+      `steps.summary` on blur with a ledger entry
 - [ ] Lane edits fan out to every same-named lane in the scenario, and the
       panel says so before saving
 - [ ] `cells.owner` shows the inherited lane team and only writes on override
@@ -264,6 +318,7 @@ without saying what they were for. Justified or cut:
 |---|---|---|---|
 | **Contents** — "61 cells" / "4 scenarios" | lane, phase | the children, in journey order, each a link that navigates and closes the panel | ✅ **keep.** It answers "what am I actually editing the spec *for*", and it is the only way to check that a KPI matches what the lane does — which is exactly what `check-kpi-alignment` asks a human to judge |
 | **Flagged** | lane, phase | open findings whose `cell_ids` fall inside this lane / phase | ✅ **keep.** Findings have **no UI anywhere** — 5 real rows a human cannot read. Scoping them to the thing you are looking at is the smallest honest way to surface them, and it costs one `list_findings(cell_id)` call per child |
+| **Paths** | scenario | its paths, as a controlled accordion — this is the panel's reason to exist | ✅ **keep.** Not a tab; an inline section, because it is the primary content rather than a secondary view |
 | ~~Evidence~~ | lane, phase | — | ❌ **cut.** `evidence.cell_id` is the only entity link. No lane or phase link exists without a schema change |
 | ~~Resources~~ | lane, phase | — | ❌ **cut.** Reads `cells.links`; no other level has one |
 | ~~Dependencies~~ | lane, phase | — | ❌ **cut.** Walks `cell_links` → `cells.id` |
@@ -271,6 +326,9 @@ without saying what they were for. Justified or cut:
 Tab labels carry their count (`61 cells`, not `Cells`) because the count is
 the useful part and the panel has room for it — the same reason the difference
 ledger puts its count at the end of the group header rather than on the tab.
+
+The **scenario** panel gets no Contents tab either: its paths are already the
+body, and its steps are the columns you are looking at while the panel is open.
 
 The **service** panel gets no Contents tab: its children are six phases already
 listed in the sidebar, and duplicating navigation inside a properties panel is
@@ -329,9 +387,13 @@ The phase section is already one big navigate button
 the canvas shape:
 
 - **Phase:** an `ⓘ` button in `PhaseMenubarHeader`, right of the title.
-- **Scenario:** no panel *(nothing to edit — see the proposal above)*. If the
-  step question resolves in favour of scenario-level fields, it inherits this
-  same pattern on `ScenarioMenubarBreadcrumb`.
+- **Scenario:** the same `ⓘ`, on `ScenarioMenubarBreadcrumb`. Same glyph, same
+  sizing, same tooltip pattern — "Scenario properties" — so the two chrome
+  affordances read as one family and neither needs to be learned twice.
+
+**Paths get no affordance of their own.** A path label is not a shape and has
+no hover target that is not already the canvas; the path rows live in the
+scenario panel, which is the only surface a path can reach.
 
 ### Service
 
@@ -352,12 +414,35 @@ an affordance:
 Sits above Phases, styled as a `NavSection` header row rather than a nav item,
 because it is the container of everything below it — not a sibling of Phases.
 
-### Steps
+### Steps — a hover card, not a panel
 
-**No affordance, because there is nothing to open** — a step owns only its
-name. Recorded here so the absence is a decision: if `value_props` moves to the
-step, a step header gains the same `ⓘ` treatment as a lane label, and this
-section is where that lands.
+A step owns `name` and (after plan 006) `summary`. Two fields do not justify a
+drawer, and the storyboard cell that might have carried the text is **empty in
+all 147 of its rows** — measured, in plan 006.
+
+```
+   column header at rest        hover-intent
+   ┌──────────────────┐         ┌────────────────────────────────┐
+   │ Confirm booking  │         │ Confirm the booking            │
+   └──────────────────┘         │ The student picks a slot and   │
+                                │ the system holds it 10 minutes.│
+                                │ ┌────────┐                     │
+                                │ │[frame] │  storyboard, only   │
+                                │ └────────┘  when the visual    │
+                                │             cell has a picture │
+                                └────────────────────────────────┘
+```
+
+- `popover.tsx` on hover-intent, **not** `IconTooltip` — it holds prose and one
+  control, and the inventory reserves tooltips for naming a control.
+- `summary` is edited **inline in the card**, not in a separate mode: one field
+  needs no Save/Cancel row, so it commits on blur and lands in the ledger like
+  any other write.
+- Keyboard: the header is focusable and the card opens on focus, same as the
+  lane `ⓘ`. A hover-only affordance is not an affordance.
+- **Escalation path, recorded:** if `value_props` moves from cell to step, the
+  step gains real fields and inherits the lane's `ⓘ` + panel treatment. The
+  hover card then shows the summary and the `ⓘ` opens the panel.
 
 ### The interaction table
 
@@ -365,9 +450,11 @@ section is where that lands.
 |---|---|---|---|
 | Service | sidebar row, above Phases | click | it is a visible row |
 | Phase | `ⓘ` in `PhaseMenubarHeader` | click | visible in chrome |
+| Scenario | `ⓘ` in `ScenarioMenubarBreadcrumb` | click | visible in chrome |
 | Lane | `ⓘ` on the label, hover/focus-revealed, always tabbable | click | right-click → "Lane properties" |
 | Cell | the cell itself | **plain click** | right-click → "View cell detail" |
-| Scenario · Path · Step | — | — | nothing to edit |
+| Step | the column header | **hover or focus** → card | the card is the surface |
+| Path | — | — | **inside the scenario panel** — a label is not a shape |
 
 **Close is the shell's job and identical for all of them:** `✕`, `Escape`, or
 swipe, each routed through `onCloseRequest` and guarded by `panelEditorBusy()`
