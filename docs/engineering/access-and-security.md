@@ -53,7 +53,7 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `src/types/database.ts`.
 
 **Core hierarchy** — `service_lifecycles` → `phases` (ordered, optional
-`loops_to_phase_id`) → `service_scenarios` (`view_type`: single /
+`loops_to_phase_id`) → `scenarios` (`view_type`: single /
 side-by-side / integrated — integrated is merged at runtime, each path
 stored separately) → `paths` (`path_type`: happy / unhappy / exception /
 alternative / named). Steps are scenario-scoped (`steps`), joined to paths

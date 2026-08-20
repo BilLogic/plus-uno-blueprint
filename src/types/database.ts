@@ -420,7 +420,7 @@ export type Database = {
           name: string
           note: string | null
           path_type: PathType
-          service_scenario_id: string
+          scenario_id: string
           updated_at: string
         }
         Insert: {
@@ -430,7 +430,7 @@ export type Database = {
           name: string
           note?: string | null
           path_type: PathType
-          service_scenario_id: string
+          scenario_id: string
           updated_at?: string
         }
         Update: {
@@ -440,15 +440,15 @@ export type Database = {
           name?: string
           note?: string | null
           path_type?: PathType
-          service_scenario_id?: string
+          scenario_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: 'paths_service_scenario_id_fkey'
-            columns: ['service_scenario_id']
+            columns: ['scenario_id']
             isOneToOne: false
-            referencedRelation: 'service_scenarios'
+            referencedRelation: 'scenarios'
             referencedColumns: ['id']
           },
         ]
@@ -575,7 +575,7 @@ export type Database = {
         }
         Relationships: []
       }
-      service_scenarios: {
+      scenarios: {
         Row: {
           created_at: string
           description: string | null
@@ -751,29 +751,29 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          service_scenario_id: string
+          scenario_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          service_scenario_id: string
+          scenario_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          service_scenario_id?: string
+          scenario_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: 'steps_service_scenario_id_fkey'
-            columns: ['service_scenario_id']
+            columns: ['scenario_id']
             isOneToOne: false
-            referencedRelation: 'service_scenarios'
+            referencedRelation: 'scenarios'
             referencedColumns: ['id']
           },
         ]
@@ -838,7 +838,7 @@ export type PathStep = Database['public']['Tables']['path_steps']['Row']
 export type Phase = Database['public']['Tables']['phases']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
 export type ServiceLifecycle = Database['public']['Tables']['service_lifecycles']['Row']
-export type ServiceScenario = Database['public']['Tables']['service_scenarios']['Row']
+export type Scenario = Database['public']['Tables']['scenarios']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']
 
 export type Slice = Database['public']['Tables']['slices']['Row']

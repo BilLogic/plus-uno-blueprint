@@ -1,7 +1,7 @@
 -- Application → Discovery scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/applicationHappyPathFallback.ts
 
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000700',
   'a0000000-0000-4000-8000-000000000121',
@@ -10,7 +10,7 @@ values (
   'happy'
 )
 on conflict (id) do update set
-  service_scenario_id = excluded.service_scenario_id,
+  scenario_id = excluded.scenario_id,
   name = excluded.name,
   description = excluded.description,
   path_type = excluded.path_type;
@@ -63,7 +63,7 @@ on conflict (id) do update set
   name = excluded.name,
   position = excluded.position;
 
-insert into public.steps (id, service_scenario_id, name)
+insert into public.steps (id, scenario_id, name)
 values
   (
     'a0000000-0000-4000-8000-000000000711',
@@ -102,7 +102,7 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  service_scenario_id = excluded.service_scenario_id;
+  scenario_id = excluded.scenario_id;
 
 insert into public.path_steps (path_id, step_id, position)
 values

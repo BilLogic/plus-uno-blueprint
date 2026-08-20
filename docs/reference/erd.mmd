@@ -14,8 +14,8 @@
 %% next to the output.
 %%
 %% Enums (CHECK constraints, live):
-%%   service_scenarios.view_type ∈ (single | stacked)      merged is session-only,
-%%                                                          never stored
+%%   scenarios.view_type         ∈ (single | stacked)   merged is session-only,
+%%                                                      never stored
 %%   paths.path_type             ∈ (happy | unhappy | exception | alternative | named)
 %%   cell_dependencies.kind      ∈ (sets_off | enables)
 %%   origin (cells/lanes/paths/phases/scenarios/steps/slices) ∈ (import | app)
@@ -36,10 +36,10 @@
 %%        is PINNED with the rest of the service tier, so both still appear here.
 erDiagram
   service_lifecycles ||--o{ phases : "has many"
-  phases             ||--o{ service_scenarios : "has many"
+  phases             ||--o{ scenarios : "has many"
   phases             |o--o| phases : "loops_to_phase_id"
-  service_scenarios  ||--o{ paths : "has many"
-  service_scenarios  ||--o{ steps : "has many"
+  scenarios          ||--o{ paths : "has many"
+  scenarios          ||--o{ steps : "has many"
   paths              ||--o{ path_steps : "has many"
   steps              ||--o{ path_steps : "has many"
   paths              ||--o{ lanes : "has many"
@@ -76,7 +76,7 @@ erDiagram
     text operational_requirements "what must be true for it to run at all"
     text origin
   }
-  service_scenarios {
+  scenarios {
     uuid id PK
     uuid phase_id FK
     text name
@@ -87,7 +87,7 @@ erDiagram
   }
   paths {
     uuid id PK
-    uuid service_scenario_id FK
+    uuid scenario_id FK
     text name
     text path_type
     text summary "when this route applies"
@@ -96,7 +96,7 @@ erDiagram
   }
   steps {
     uuid id PK
-    uuid service_scenario_id FK
+    uuid scenario_id FK
     text name
     text origin
   }

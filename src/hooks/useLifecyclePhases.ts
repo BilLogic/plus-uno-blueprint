@@ -11,7 +11,7 @@ const LIFECYCLE_PHASES_SELECT = `
   description,
   position,
   loops_to_phase_id,
-  service_scenarios (
+  scenarios (
     id,
     name,
     description,

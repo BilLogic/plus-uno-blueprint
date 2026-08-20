@@ -36,7 +36,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = v.layer_name
   and c.content = v.content
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Partner Action: Teacher
 update public.cells c
@@ -85,7 +85,7 @@ where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = v.layer_name
   and c.content = v.content
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Front Stage Tech — Zoom/Pencil logos (all paths, all steps)
 update public.cells c
@@ -101,7 +101,7 @@ where c.lane_id = l.id
     or c.content like '%, Zoom/Pencil'
     or c.content like '%, Zoom/Pencil,%'
   )
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Front Stage Tech — Zoom/Pencil shared description (all paths, all steps)
 update public.cells c
@@ -117,7 +117,7 @@ where c.lane_id = l.id
     or c.content like '%, Zoom/Pencil'
     or c.content like '%, Zoom/Pencil,%'
   )
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Front Stage Tech — Zoom/Pencil Share Screen step description (all paths)
 update public.cells
@@ -155,7 +155,7 @@ where c.lane_id = l.id
   and ps.step_id = c.step_id
   and l.name = 'Regular Tutor'
   and ps.position = 1
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 2 illustration (all paths)
 update public.cells c
@@ -168,7 +168,7 @@ where c.lane_id = l.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
   and s.position = 2
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 3 illustration (all paths)
 update public.cells c
@@ -181,7 +181,7 @@ where c.lane_id = l.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
   and s.position = 3
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 4 illustration (all paths)
 update public.cells c
@@ -194,7 +194,7 @@ where c.lane_id = l.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
   and s.position = 4
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 5 illustration (all paths)
 update public.cells c
@@ -207,7 +207,7 @@ where c.lane_id = l.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
   and s.position = 5
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 6 illustration (all paths)
 update public.cells c
@@ -220,7 +220,7 @@ where c.lane_id = l.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
   and s.position = 6
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 
 -- Regular Tutor — step 7 illustration (all paths)
 update public.cells c
@@ -233,4 +233,4 @@ where c.lane_id = l.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
   and s.position = 7
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000204';

@@ -1,7 +1,7 @@
 -- Application → Discovery scenario — Sad Path (mirrors Happy Path for now)
 -- Reuses scenario steps from application_discovery_happy_path.sql via path_steps.
 
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000701',
   'a0000000-0000-4000-8000-000000000121',
@@ -10,7 +10,7 @@ values (
   'unhappy'
 )
 on conflict (id) do update set
-  service_scenario_id = excluded.service_scenario_id,
+  scenario_id = excluded.scenario_id,
   name = excluded.name,
   description = excluded.description,
   path_type = excluded.path_type;

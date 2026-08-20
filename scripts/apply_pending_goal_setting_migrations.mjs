@@ -76,7 +76,7 @@ from public.cells c
 join public.lanes l on l.id = c.lane_id
 join public.paths p on p.id = l.path_id
 cross join lateral jsonb_array_elements(c.links) as elem
-where p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';
+where p.scenario_id = 'a0000000-0000-4000-8000-000000000204';
 `)
 
 console.log('Verification:', verify)

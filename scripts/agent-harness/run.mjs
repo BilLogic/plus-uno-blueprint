@@ -235,11 +235,11 @@ async function realSearchBlueprint(args) {
 
 async function realListScenarios() {
   const data = await rest(
-    'phases?select=id,name,position,service_scenarios(id,name,position)&order=position',
+    'phases?select=id,name,position,scenarios(id,name,position)&order=position',
   )
   return data
     .map((phase) => {
-      const scenarios = (phase.service_scenarios ?? [])
+      const scenarios = (phase.scenarios ?? [])
         .sort((a, b) => a.position - b.position)
         .map((s) => `  - scenario "${s.name}" (${s.id})`)
         .join('\n')
@@ -250,7 +250,7 @@ async function realListScenarios() {
 
 async function realGetBlueprint(scenarioId) {
   const paths = await rest(
-    `paths?select=id,name,path_type,lanes(id,name,lane_role,position),path_steps(position,steps(id,name))&service_scenario_id=eq.${encodeURIComponent(scenarioId)}`,
+    `paths?select=id,name,path_type,lanes(id,name,lane_role,position),path_steps(position,steps(id,name))&scenario_id=eq.${encodeURIComponent(scenarioId)}`,
   )
   if (!paths?.length) return 'No paths for that scenario id.'
   const out = []

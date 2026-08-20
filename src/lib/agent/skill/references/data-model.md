@@ -23,7 +23,7 @@ and stable keys in place of UUIDs.
 ## Hierarchy
 
 ```
-service_lifecycles → phases → service_scenarios → paths → {lanes, cells, cell_dependencies}
+service_lifecycles → phases → scenarios → paths → {lanes, cells, cell_dependencies}
                                                 → steps (scenario-scoped)
                                         paths ⇄ steps via path_steps (column order)
 ```
@@ -33,10 +33,10 @@ service_lifecycles → phases → service_scenarios → paths → {lanes, cells,
 ```mermaid
 erDiagram
   service_lifecycles ||--o{ phases : "has many"
-  phases ||--o{ service_scenarios : "has many"
+  phases ||--o{ scenarios : "has many"
   phases |o--o| phases : "loops_to_phase_id"
-  service_scenarios ||--o{ paths : "has many"
-  service_scenarios ||--o{ steps : "has many"
+  scenarios ||--o{ paths : "has many"
+  scenarios ||--o{ steps : "has many"
   paths ||--o{ path_steps : "has many"
   steps ||--o{ path_steps : "has many"
   paths ||--o{ lanes : "has many"
@@ -48,9 +48,9 @@ erDiagram
 
   service_lifecycles { uuid id PK  text name  text description }
   phases { uuid id PK  uuid service_lifecycle_id FK  text name  text description  int position  uuid loops_to_phase_id FK "optional self-reference" }
-  service_scenarios { uuid id PK  uuid phase_id FK  text name  text description  int position  text view_type "single | stacked — merged is session-only, never stored" }
-  paths { uuid id PK  uuid service_scenario_id FK  text name  text summary "when this route applies — the condition that puts someone on it"  text note "the author's aside: open questions, provenance, working state"  text path_type "happy | unhappy | exception | alternative | named" }
-  steps { uuid id PK  uuid service_scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
+  scenarios { uuid id PK  uuid phase_id FK  text name  text description  int position  text view_type "single | stacked — merged is session-only, never stored" }
+  paths { uuid id PK  uuid scenario_id FK  text name  text summary "when this route applies — the condition that puts someone on it"  text note "the author's aside: open questions, provenance, working state"  text path_type "happy | unhappy | exception | alternative | named" }
+  steps { uuid id PK  uuid scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
   path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int position "unique per (path_id, position)" }
   lanes { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text lane_role "semantic role key; null = generic swimlane"  int position }
   cells { uuid id PK  uuid path_id FK  uuid lane_id FK "unique (lane_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
@@ -63,7 +63,7 @@ erDiagram
 | --- | --- | --- |
 | `service_lifecycles` | Top container (one per blueprint deployment, usually) | |
 | `phases` | Lifecycle stages, ordered by `position` | `loops_to_phase_id` self-reference renders the lifecycle loop |
-| `service_scenarios` | The unit users navigate; owns steps and paths | `view_type` enum below |
+| `scenarios` | The unit users navigate; owns steps and paths | `view_type` enum below |
 | `paths` | A journey variant within a scenario | `path_type` enum below; optional `note` |
 | `steps` | Scenario-scoped step columns, SHARED across paths | A step exists once per scenario; paths select/ordr via `path_steps` |
 | `path_steps` | Which steps a path uses and in what column order | `position` unique per path |
@@ -73,7 +73,7 @@ erDiagram
 
 ## Enums
 
-- `service_scenarios.view_type`: `single` \| `stacked` — ONE vocabulary. The
+- `scenarios.view_type`: `single` \| `stacked` — ONE vocabulary. The
   stored token is the token the UI names. (It used to store
   `single | side-by-side | integrated` with a translation module; all rows held
   `side-by-side` and the other two were unused, so the translation was deleted.)
@@ -103,7 +103,7 @@ before any adapter runs.
 paths → steps → path_steps → lanes → cells → cell_dependencies
 ```
 
-(with `service_lifecycles → phases → service_scenarios` before all of the
+(with `service_lifecycles → phases → scenarios` before all of the
 above). Any other order violates FKs or the integrity trigger.
 
 ## Re-import semantics
@@ -118,7 +118,7 @@ IR re-imports produce identical rows. See `references/adapter-contract.md`.
 ## Ordering fields
 
 All sibling order is explicit integers: `phases.position`,
-`service_scenarios.position`, `path_steps.position` (per path),
+`scenarios.position`, `path_steps.position` (per path),
 `lanes.position` (per path). The frontend sorts by these — gaps are
 harmless, duplicates are not (validator checks).
 

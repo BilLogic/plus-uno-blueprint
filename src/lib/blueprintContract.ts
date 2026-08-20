@@ -61,7 +61,7 @@ export const BLUEPRINT_CONTRACT = {
    */
   publicReadTables: [
     'phases',
-    'service_scenarios',
+    'scenarios',
     'steps',
     'paths',
     'lanes',

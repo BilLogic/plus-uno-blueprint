@@ -1,13 +1,13 @@
 -- In-session → Help Request scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/helpRequestHappyPathFallback.ts
 
-update public.service_scenarios
+update public.scenarios
 set
   description = 'Tutors receive and resolve student help requests during the session.',
   view_type = 'side-by-side'
 where id = 'a0000000-0000-4000-8000-000000000205';
 
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-00000000080d',
   'a0000000-0000-4000-8000-000000000205',
@@ -16,7 +16,7 @@ values (
   'happy'
 )
 on conflict (id) do update set
-  service_scenario_id = excluded.service_scenario_id,
+  scenario_id = excluded.scenario_id,
   name = excluded.name,
   description = excluded.description,
   path_type = excluded.path_type;
@@ -49,7 +49,7 @@ on conflict (id) do update set
   position = excluded.position,
   path_id = excluded.path_id;
 
-insert into public.steps (id, service_scenario_id, name)
+insert into public.steps (id, scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000000975', 'a0000000-0000-4000-8000-000000000205', 'Receive help request'),
   ('a0000000-0000-4000-8000-000000000976', 'a0000000-0000-4000-8000-000000000205', 'Finish conversation'),
@@ -60,7 +60,7 @@ values
   ('a0000000-0000-4000-8000-000000000987', 'a0000000-0000-4000-8000-000000000205', 'Escalates unresolved issues to tutors@tutor.plus promptly.')
 on conflict (id) do update set
   name = excluded.name,
-  service_scenario_id = excluded.service_scenario_id;
+  scenario_id = excluded.scenario_id;
 
 delete from public.path_steps
 where path_id = 'a0000000-0000-4000-8000-00000000080d';

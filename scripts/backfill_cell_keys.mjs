@@ -90,7 +90,7 @@ function canonicalKey(row) {
 async function loadCells() {
   const rows = await rest(
     'cells?select=id,lane:lanes(name),step:steps(name),' +
-      'path:paths(name,path_type,scenario:service_scenarios(name,' +
+      'path:paths(name,path_type,scenario:scenarios(name,' +
       'phase:phases(lifecycle:service_lifecycles(name))))',
   )
   return rows.map((row) => {

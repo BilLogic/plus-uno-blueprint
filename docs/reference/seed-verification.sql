@@ -18,7 +18,7 @@ select
   ss.position,
   ss.name as scenario
 from public.phases p
-join public.service_scenarios ss on ss.phase_id = p.id
+join public.scenarios ss on ss.phase_id = p.id
 where p.id = 'a0000000-0000-4000-8000-000000000104'
 order by ss.position;
 
@@ -35,7 +35,7 @@ select
    join public.cells c on c.id = ct.source_cell_id
    where c.path_id = pa.id) as triggers
 from public.paths pa
-join public.service_scenarios ss on ss.id = pa.service_scenario_id
+join public.scenarios ss on ss.id = pa.scenario_id
 where pa.id = 'a0000000-0000-4000-8000-000000000300';
 
 select l.position, l.name as lane

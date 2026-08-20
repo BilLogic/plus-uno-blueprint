@@ -2,9 +2,9 @@
 -- Stable keys map to src/data/goalSettingCheckGoalsPathFallback.ts and goalSettingUpdateGoalsPathFallback.ts
 
 -- Check Goals
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000000204', 'Check Goals', 'Goals already set, but deadline not reached.', 'named')
-on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000814';
@@ -21,7 +21,7 @@ values
   ('a0000000-0000-4000-8000-0000000008b6', 'a0000000-0000-4000-8000-000000000814', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000000814', 'Support Actions', 8)
 on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
-insert into public.steps (id, service_scenario_id, name)
+insert into public.steps (id, scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009b01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
   ('a0000000-0000-4000-8000-000000009b02', 'a0000000-0000-4000-8000-000000000204', 'Click on ''Check Goals'' CTA in the Action column'),
@@ -31,7 +31,7 @@ values
   ('a0000000-0000-4000-8000-000000009b06', 'a0000000-0000-4000-8000-000000000204', 'Finalize checking goal with the student.'),
   ('a0000000-0000-4000-8000-000000009b07', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room'),
   ('a0000000-0000-4000-8000-000000009b08', 'a0000000-0000-4000-8000-000000000204', 'Move on to the next student in sorted order set by researchers.')
-on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
+on conflict (id) do update set name = excluded.name, scenario_id = excluded.scenario_id;
 insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b01', 1),
@@ -129,9 +129,9 @@ values
 on conflict (id) do update set source_cell_id = excluded.source_cell_id, target_cell_id = excluded.target_cell_id;
 
 -- Update Goals
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000000204', 'Update Goals', 'First tutoring day of a new goal cycle after personalized goals have been set.', 'named')
-on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000815';
@@ -148,7 +148,7 @@ values
   ('a0000000-0000-4000-8000-0000000008d6', 'a0000000-0000-4000-8000-000000000815', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000000815', 'Support Actions', 8)
 on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
-insert into public.steps (id, service_scenario_id, name)
+insert into public.steps (id, scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009d01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
   ('a0000000-0000-4000-8000-000000009d02', 'a0000000-0000-4000-8000-000000000204', 'Click on ''Update Goals'' CTA in the Action column'),
@@ -161,7 +161,7 @@ values
   ('a0000000-0000-4000-8000-000000009d09', 'a0000000-0000-4000-8000-000000000204', 'Finalize updating goal with the student'),
   ('a0000000-0000-4000-8000-000000009d0a', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room'),
   ('a0000000-0000-4000-8000-000000009d0b', 'a0000000-0000-4000-8000-000000000204', 'Move on to the next student in sorted order set by researchers.')
-on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
+on conflict (id) do update set name = excluded.name, scenario_id = excluded.scenario_id;
 insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d01', 1),

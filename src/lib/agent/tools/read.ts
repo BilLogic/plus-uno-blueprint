@@ -459,7 +459,7 @@ export async function getBlueprint(
   const { data, error } = await client
     .from('paths')
     .select(PATH_BLUEPRINT_SELECT)
-    .eq('service_scenario_id', scenarioId)
+    .eq('scenario_id', scenarioId)
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as unknown as RawPath[]
   if (rows.length === 0) return 'No paths in this scenario.'
@@ -546,7 +546,7 @@ export async function getCompareDiff(
   const { data, error } = await client
     .from('paths')
     .select(PATH_BLUEPRINT_SELECT)
-    .eq('service_scenario_id', scenarioId)
+    .eq('scenario_id', scenarioId)
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as unknown as RawPath[]
   if (rows.length === 0) return 'No paths in this scenario.'

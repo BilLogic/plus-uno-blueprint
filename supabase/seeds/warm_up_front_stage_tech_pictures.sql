@@ -15,4 +15,4 @@ where c.lane_id = l.id
     or c.content like '%, Zoom/Pencil,%'
     or c.content like 'Zoom/Pencil' || E'\n%'
   )
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000203';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000203';

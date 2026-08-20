@@ -346,7 +346,7 @@ export function getBlueprintScenarioId(slide: NavItem): string | undefined {
 }
 
 /**
- * A raw `service_scenarios.view_type` as a SlideViewType.
+ * A raw `scenarios.view_type` as a SlideViewType.
  *
  * Not a translation — the stored tokens ARE these tokens. It is a guard: a row
  * outside the CHECK constraint falls back to the plain single view rather than

@@ -1,7 +1,7 @@
 -- In-session → Goal Setting scenario — Detailed Path
 -- Stable keys map to fixed UUIDs in src/data/goalSettingDetailedPathFallback.ts
 
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000811',
   'a0000000-0000-4000-8000-000000000204',
@@ -10,7 +10,7 @@ values (
   'named'
 )
 on conflict (id) do update set
-  service_scenario_id = excluded.service_scenario_id,
+  scenario_id = excluded.scenario_id,
   name = excluded.name,
   description = excluded.description,
   path_type = excluded.path_type;
@@ -33,7 +33,7 @@ values
   ('a0000000-0000-4000-8000-0000000008a8', 'a0000000-0000-4000-8000-000000000811', 'Support Actions', 8)
 on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
 
-insert into public.steps (id, service_scenario_id, name)
+insert into public.steps (id, scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009a01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
   ('a0000000-0000-4000-8000-000000009a02', 'a0000000-0000-4000-8000-000000000204', 'Click on Set Goals CTA in the Action column'),
@@ -45,7 +45,7 @@ values
   ('a0000000-0000-4000-8000-000000009a08', 'a0000000-0000-4000-8000-000000000204', 'Save goal'),
   ('a0000000-0000-4000-8000-000000009a09', 'a0000000-0000-4000-8000-000000000204', 'Finalize goal setting with student'),
   ('a0000000-0000-4000-8000-000000009a0a', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room')
-on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
+on conflict (id) do update set name = excluded.name, scenario_id = excluded.scenario_id;
 
 insert into public.path_steps (path_id, step_id, position)
 values

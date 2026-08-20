@@ -1,8 +1,8 @@
-import type { Phase, ServiceScenario } from '@/types/database'
+import type { Phase, Scenario } from '@/types/database'
 import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
-  ServiceScenario,
+  Scenario,
   'id' | 'name' | 'description' | 'position' | 'phase_id' | 'view_type'
 >
 
@@ -10,7 +10,7 @@ export type PhaseRow = Pick<
   Phase,
   'id' | 'name' | 'description' | 'position' | 'loops_to_phase_id'
 > & {
-  service_scenarios?: ScenarioRow[]
+  scenarios?: ScenarioRow[]
 }
 
 /** Map phases and nested scenarios to editor slides (scenarios = subsides under their phase). */
@@ -29,7 +29,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
       loopToId: phase.loops_to_phase_id ?? undefined,
     })
 
-    const scenarios = [...(phase.service_scenarios ?? [])].sort(
+    const scenarios = [...(phase.scenarios ?? [])].sort(
       (a, b) => a.position - b.position,
     )
 

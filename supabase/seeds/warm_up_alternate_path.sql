@@ -1,7 +1,7 @@
 -- Warm-Up Alternate Path: omits step 3 (Ask Student to Share Screen); eight steps.
 -- Reuses scenario steps from warm_up_happy_path.sql via path_steps.
 
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000350',
   'a0000000-0000-4000-8000-000000000203',

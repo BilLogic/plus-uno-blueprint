@@ -123,7 +123,7 @@ function indexBy(rows, keyFn) {
 }
 
 /** Nested selects that carry a row up to its phase. */
-const PATH_CONTEXT = 'path:paths(name,scenario:service_scenarios(name,phase:phases(name)))'
+const PATH_CONTEXT = 'path:paths(name,scenario:scenarios(name,phase:phases(name)))'
 
 function contextOf(row) {
   const scenario = row.path?.scenario
