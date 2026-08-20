@@ -110,6 +110,38 @@ So:
       floating over Service B is exactly the confusion this must avoid
 - [ ] Empty state for a user with no membership
 
+### Creating the second service — the step nobody has planned
+
+Reading two services is the part that gets designed. **Making one is the part
+that is missing entirely**, and it is where a team actually starts.
+
+There is no "new service" path anywhere: no UI, no agent tool, no script. The
+one service in the database arrived through the importer. So a second team's
+first experience is a blank product with no way to begin.
+
+- [ ] Decide what creating a service *means*. Three options, and they are not
+      equivalent:
+      **(a) empty** — a service with no phases, and a first-run flow that walks
+      someone into `create_phase`;
+      **(b) from a template** — copy a reference blueprint's structure with no
+      content, which is what `services`' orphan `"Example API"` row looks like
+      a half-built attempt at;
+      **(c) import-only** — creating a service stays an operator task through
+      the existing pipeline, and the product never offers it.
+- [ ] Whichever it is, the **empty state is the product's first screen** for a
+      new team. Today there is no empty state at any level — every view assumes
+      content exists.
+- [ ] `create_service` as an agent tool, or deliberately not. The canvas agent
+      can already create phases, scenarios and paths; refusing it the root while
+      granting it everything below is an odd line unless it is drawn on purpose.
+- [ ] Membership: whoever creates a service is presumably its first member.
+      That is the moment the membership table gets its first row, so the two
+      cannot be designed apart.
+
+**Recommendation: (a) empty, with a first-run flow.** A template hides the
+model from the person who most needs to learn it, and import-only means the
+product cannot onboard anyone without an operator.
+
 ### Agent
 
 - [ ] The canvas agent inherits the active service from the app — it should

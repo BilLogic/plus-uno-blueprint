@@ -8,7 +8,7 @@ repos: uno-blueprint
 
 # The spec layer
 
-**One finding, four plans.** This document is the evidence; the plans are the
+**One finding, five documents.** This document is the evidence; the plans are the
 work. Everything below was read from the live database or from a file that was
 actually opened — no inference.
 
@@ -66,7 +66,8 @@ report on.
 | # | Plan | Status | Why now |
 |---|---|---|---|
 | [002](2026-08-20-002-refactor-database-vocabulary-plan.md) | **Database vocabulary** — `layers`→`lanes`, `cell_triggers`→`cell_links`, `propositions`→`business_model`, `cells.description`→`summary` | active | The code already apologises for two of these in comments. Must land **after** `refactor/agent-tool-surface` merges |
-| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, on one lifted shell. Includes the ERD and the field-grain verdict | active | The front door. Everything else waits on it |
+| [006](2026-08-20-006-design-data-model.md) | **The data model** — every level, every field, a definition and a reason for each. The ERD, the two grain corrections, and four open questions | active | Decides what is worth storing, before anything is built to edit it |
+| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, on one lifted shell | active | The front door. Everything else waits on it |
 | [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, a service switcher, `filter_service` | not scheduled | One service today. Written down so the list isn't rediscovered |
 | [005](2026-08-20-005-feat-spec-fill-campaign-plan.md) | **Fill campaign** — scoped, cited, human-gated | blocked on 003 | Filling fields nobody can then see is how this content got lost the first time |
 

@@ -215,3 +215,33 @@ Then: `resolveFirstLifecycleId` → `resolveFirstServiceId`, `src/lib/lifecycle.
 **Sequencing note for [plan 004](2026-08-20-004-feat-multi-service-support-plan.md):**
 this rename makes multi-service *easier*, not harder — `service_id` is exactly
 the predicate every RLS policy will need, and it will already be named right.
+
+---
+
+## Phase 7 — the schema assets, which are already stale
+
+The rename is not the only reason to touch these. **Both machine-readable
+schema assets predate the derived layer by a month** — neither
+`evidence`, `findings`, `slices` nor `propositions` appears in either,
+though they shipped on 2026-07-29 in `f65efcf`:
+
+| Asset | Lines | Has derived layer? | Needs |
+|---|---|---|---|
+| `docs/reference/erd.mmd` | 97 | ❌ **no** | regenerate — its own header says *"verified through 20260716120000_layer_role.sql"*, five weeks and eleven migrations ago |
+| `supabase/schema.reference.sql` | 104 | ❌ **no** | regenerate |
+| `supabase/DATABASE.md` | 5 | — | a pointer file; check it points somewhere true |
+| `docs/reference/authored-fields.json` | — | ? | names columns; verify against the rename |
+| `docs/reference/seed-verification.sql` | — | ? | names tables; verify |
+| `docs/engineering/access-and-security.md` | — | — | describes grants and policies by table name |
+
+A July plan already flagged both as stale
+(`2026-07-16-001-…-plan.md:183`) and asked for them to be **generated from
+the migrations so they cannot drift again**. They drifted again. That is the
+argument for generating rather than hand-editing them in this pass.
+
+- [ ] Regenerate `erd.mmd` from the live schema, including the derived layer
+- [ ] Regenerate `schema.reference.sql`
+- [ ] Sweep the three reference files for renamed identifiers
+- [ ] Update `access-and-security.md`'s object table
+- [ ] Prefer a generator; if that is out of scope, say so in the file header
+      with the date it was last verified, so the next reader knows
