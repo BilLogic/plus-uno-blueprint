@@ -21,7 +21,7 @@ import {
 } from '@/lib/sideBySideCompareLayout'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
-import { LanePropertiesButton } from '@/components/blueprint/LanePropertiesButton'
+import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
@@ -524,7 +524,12 @@ function BlueprintSwimLane({
             {laneName}
           </span>
         )}
-        <LanePropertiesButton laneId={laneId} laneName={laneName} />
+        <EntityPropertiesButton
+          kind="lane"
+          id={laneId}
+          name={laneName}
+          revealOnHover
+        />
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED && onToggleCollapse && (
           <LaneCollapseToggle
             laneName={laneName}

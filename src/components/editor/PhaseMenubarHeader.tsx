@@ -1,5 +1,6 @@
 import { Columns2, Diff, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
+import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
 import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
 import {
   BLUEPRINT_MENUBAR_HEADER_CLASS,
@@ -219,6 +220,18 @@ export function PhaseMenubarHeader({
           description={description}
           infoTooltip={infoTooltip}
           className="shrink-0"
+        />
+        {/*
+          The properties affordance for a phase and a scenario both live here,
+          because this header is the title bar for both. Not a modifier-click
+          on the canvas shape: the phase section is already one big button
+          meaning "navigate into this phase", and a hidden gesture layered on
+          top of that would not be found.
+        */}
+        <EntityPropertiesButton
+          kind={isScenario ? 'scenario' : 'phase'}
+          id={slide.id}
+          name={label}
         />
       </div>
       {/* Compare controls moved to the navbar's right cluster

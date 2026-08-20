@@ -57,6 +57,9 @@ export type WriteFn =
   | 'update_cell_resources'
   | 'update_cell_spec'
   | 'update_lane_spec'
+  | 'update_phase_spec'
+  | 'update_scenario_spec'
+  | 'update_path_spec'
   | 'add_evidence'
   | 'update_evidence'
   | 'delete_evidence'
@@ -259,6 +262,9 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   update_cell_resources: () => 'Edited a cell’s resources',
   update_cell_spec: () => 'Specified function & form',
   update_lane_spec: () => 'Edited a lane’s owner, KPIs & tools',
+  update_phase_spec: () => 'Edited a phase’s summary, impact & requirements',
+  update_scenario_spec: () => 'Edited a scenario’s summary',
+  update_path_spec: () => 'Edited a path’s summary & note',
   add_evidence: (entry) =>
     titled(entry) ? `Added evidence “${titled(entry)}”` : 'Added an evidence source',
   update_evidence: (entry) =>

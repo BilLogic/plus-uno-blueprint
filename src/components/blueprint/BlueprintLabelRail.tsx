@@ -162,7 +162,7 @@ export function BlueprintDividerRow({
   )
 }
 
-import { LanePropertiesButton } from '@/components/blueprint/LanePropertiesButton'
+import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cellsInLane } from '@/lib/canvasCellQuery'
@@ -287,7 +287,12 @@ export function BlueprintLabelRow({
             label itself selects the lane's cells, and the two readings have to
             stay visibly separate. */}
         {row.kind === 'lane' && row.lane ? (
-          <LanePropertiesButton laneId={row.lane.id} laneName={row.label} />
+          <EntityPropertiesButton
+            kind="lane"
+            id={row.lane.id}
+            name={row.label}
+            revealOnHover
+          />
         ) : null}
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
           row.kind === 'lane' &&

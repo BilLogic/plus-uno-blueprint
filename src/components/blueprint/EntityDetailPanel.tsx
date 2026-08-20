@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LanePanel } from '@/components/blueprint/LanePanel'
+import { PhasePanel } from '@/components/blueprint/PhasePanel'
+import { ScenarioPanel } from '@/components/blueprint/ScenarioPanel'
 import {
   DetailPanelErrorBoundary,
   PANEL_EXIT_MS,
@@ -77,6 +79,12 @@ function EntityDetailPanelBody() {
     >
       {shown?.kind === 'lane' ? (
         <LanePanel laneId={shown.id} onClose={closeEntity} />
+      ) : null}
+      {shown?.kind === 'phase' ? (
+        <PhasePanel phaseId={shown.id} onClose={closeEntity} />
+      ) : null}
+      {shown?.kind === 'scenario' ? (
+        <ScenarioPanel scenarioId={shown.id} onClose={closeEntity} />
       ) : null}
     </PanelDrawerShell>
   )

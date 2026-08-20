@@ -8,6 +8,15 @@ import {
 import { updateCellSpec, type CellSpecUpdate } from '@/lib/cellSpecMutations'
 import { updateLaneSpec, type LaneSpecUpdate } from '@/lib/laneSpecMutations'
 import {
+  updatePhaseSpec,
+  type PhaseSpecUpdate,
+} from '@/lib/phaseSpecMutations'
+import {
+  updatePathSpec,
+  updateScenarioSummary,
+  type PathSpecUpdate,
+} from '@/lib/scenarioSpecMutations'
+import {
   deleteEvidence,
   restoreEvidenceRow,
   updateEvidence,
@@ -83,6 +92,38 @@ export async function executeRevert(
       }
       const update = revert.args.update as LaneSpecUpdate
       await updateLaneSpec(client, laneIds as string[], update, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'update_phase_spec': {
+      // Self-inverse, like update_cell_spec.
+      const phaseId = stringArg(revert.args, 'phase_id')
+      const update = revert.args.update as PhaseSpecUpdate
+      await updatePhaseSpec(client, phaseId, update, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'update_scenario_spec': {
+      const scenarioId = stringArg(revert.args, 'scenario_id')
+      // One column, and the captured value may legitimately be an empty
+      // string — "it had no summary before" is a state worth restoring, so
+      // this reads the arg directly rather than through `stringArg`, which
+      // refuses empties.
+      const summary = revert.args.summary
+      if (typeof summary !== 'string') {
+        throw new Error("This change's revert is missing its summary.")
+      }
+      await updateScenarioSummary(client, scenarioId, summary, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'update_path_spec': {
+      const pathId = stringArg(revert.args, 'path_id')
+      const update = revert.args.update as PathSpecUpdate
+      await updatePathSpec(client, pathId, update, undefined, {
         record: false,
       })
       return
