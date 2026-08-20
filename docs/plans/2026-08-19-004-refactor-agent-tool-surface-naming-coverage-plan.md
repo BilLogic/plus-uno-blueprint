@@ -1,7 +1,7 @@
 ---
 title: "Agent tool surface — one naming rule, one ladder, full entity coverage"
 type: refactor
-status: active
+status: completed
 date: 2026-08-19
 repos: uno-blueprint (canvas agent harness), plus-uno (uno-bot parity)
 supersedes-in-part: docs/plans/2026-08-19-003-feat-canvas-agent-search-tool-plan.md
@@ -632,3 +632,80 @@ three of the author's own earlier claims were retracted on evidence during that
 process (the 41k-token context estimate, the "agent cannot find anything"
 framing, and the `get_cells`-in-the-ladder grouping). The P4 finding contradicts
 a prior plan — **re-verify it before acting on it.**
+
+---
+
+## Outcome — built 2026-08-20, branch `refactor/agent-tool-surface`
+
+Four commits. All 448 tests, typecheck and lint green at each one.
+
+| Commit | Phase |
+|---|---|
+| `7530402` | 1 — naming rule, 9 renames, 2 parity tests |
+| `d5dcbe0` | 2 — the discarded join, 8 new reads, 1 new write |
+| `6d63a9d` | 3 — `granularity` migration, `list_blueprint` |
+| `c83ad43` | 4 — `search_blueprint` tool |
+
+### Verified
+
+- **v2 callers unaffected.** Baseline taken *before* the migration and
+  re-run after: `q => 'host key'` returns the same single row and the same
+  `total_matched` (1); `filter_scenario => 'Warm-Up'` returns the same 5
+  rows and the same total (76).
+- **Granularity is exact.** `['phase','scenario','path']` returns **66 =
+  6 + 22 + 38** — precisely the counts plan 003 recorded and precisely what
+  uno-bot's index returns.
+- **Eval fixtures hold** at the keyword level, checked against the RPC
+  directly (BR7 Handshake 1/3, BR8 host key 1/1, BR9 I-9 8/8 in Tech Setup,
+  BR12 7/7 on path, BR19 8/8 on path). The paraphrase cases exercise the
+  vector arm, which this change does not touch.
+
+### Corrections to this plan, found while building
+
+1. **`get_cell` does NOT retire into the portal.** The plan said
+   `get_blueprint(granularity:'cell', ids)` would replace it. The portal
+   returns a `snippet`; `get_cell` returns the full record —
+   `function`, `form`, `value_props`, owners. Retiring it would have been a
+   capability loss. It stays.
+2. **`get_blueprint` does NOT retire either.** It renders a *grid* — lanes
+   × steps, plus the arrows — which the portal's flat rows cannot express.
+   Rendering, not retrieval. Only `list_scenarios` retired.
+3. **uno-bot does not shed ~210 lines.** `blueprint-index.ts` is a
+   *renderer* (`renderBlueprintIndex`, `INDEX_LEGEND`, `futureLabel`) plus
+   unrelated cap helpers, and `fetchBlueprintIndex`'s bulk is a 10-minute
+   TTL cache and a subrequest-budget guard for the Worker's 50-call cap —
+   Worker concerns, not duplicated retrieval. The genuine duplication is a
+   single PostgREST embed. Swapping it for an RPC would add flat→nested
+   reshaping to save one select, so **it was not done.** The shared
+   contract that mattered — one fusion implementation — already exists.
+4. **`add_step` / `add_lane` are also Postgres RPC names**
+   (`authoringRpc.ts:355`) and authoring-ledger entry kinds. The tool
+   rename is correct and the RPC call sites are untouched; a repo-wide sed
+   would have broken the app. A tool name is not an RPC name — now stated
+   in the `specs.ts` header.
+
+### Not built, and why
+
+- **`update_evidence` / `update_proposition`.** Both need a new revert
+  function registered in `revertChange.ts` to keep the ledger's undo pair
+  intact. `create_evidence` shipped because `addEvidence` and its
+  `delete_evidence` inverse already exist. Inventing revert semantics blind
+  is exactly what the `specs.ts` write contract forbids.
+- **`update_cell_content` + `update_cell_spec` merge.** Still unchecked
+  whether the split carries a validation reason.
+- **`measure_deletion_impact` widening** to `step` / `layer`, which stays
+  blocked by the `registry.ts` correctness note.
+
+### Deliberate override
+
+`search_blueprint` was gated in plan 003 on a build trigger that has **not**
+fired — zero search-shaped requests across 46 observed user turns. It was
+built here as an explicit scope decision. The gate was overridden, not met.
+
+### Operational note
+
+The migration ran against production via `apply_migration`, which was
+confirmed transactional first (a deliberately failing `drop`+`create`
+rolled the drop back). `search_blueprint` is `security definer` with a
+pinned `search_path`; grants are unchanged — `anon`, `authenticated`,
+`service_role`.
