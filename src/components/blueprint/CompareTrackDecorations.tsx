@@ -34,7 +34,9 @@ export function CompareStepHeaderRow({
           // row (single-path stacked, merged), the frame's opaque fill is
           // an absolutely-positioned later sibling — without a stacking
           // order the labels paint UNDER it and the header "vanishes".
-          className="z-[1]"
+          // `self-end` keeps the label sitting just above the grid it names,
+          // the same place the single-path axis puts it.
+          className="z-[1] self-end"
           style={{ gridColumn: trackIndex + 2, gridRow: 1 }}
         />
       ))}

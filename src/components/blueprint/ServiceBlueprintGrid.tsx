@@ -511,7 +511,6 @@ function BlueprintSwimLane({
           laneId={laneId}
           laneName={laneName}
           color={laneStyle.label}
-          compact={compact}
         />
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED && onToggleCollapse && (
           <LaneCollapseToggle

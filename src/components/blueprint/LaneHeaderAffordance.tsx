@@ -1,5 +1,11 @@
 import { Info } from 'lucide-react'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
+import {
+  CANVAS_HEADER_BOX,
+  CANVAS_HEADER_HINT,
+  CANVAS_HEADER_STATE,
+  CANVAS_HEADER_TEXT,
+} from '@/lib/canvasHeaderStyle'
 import { cn } from '@/lib/utils'
 
 /**
@@ -11,6 +17,11 @@ import { cn } from '@/lib/utils'
  * the click makes the affordance findable at the size it actually is, and the
  * ⓘ stops being the target and becomes the hint that there is one.
  *
+ * Top-left aligned, because a lane label reads down a tall row — the only
+ * thing it does differently from the column header it shares a treatment
+ * with. The negative margin lets the ink block breathe into the rail's own
+ * padding without moving the text a pixel.
+ *
  * NOT used where the label already means something else. In the compare
  * rail's Design mode the label is a *selection* handle — clicking takes every
  * cell in the lane — and a second meaning on the same word would make both
@@ -20,14 +31,12 @@ export function LaneHeaderAffordance({
   laneId,
   laneName,
   color,
-  compact = false,
   className,
 }: {
   laneId: string
   laneName: string
   /** The lane's own label ink — role-derived, passed by the caller. */
   color?: string
-  compact?: boolean
   className?: string
 }) {
   const { openEntity, selection } = useEntityDetail()
@@ -47,33 +56,29 @@ export function LaneHeaderAffordance({
         openEntity({ kind: 'lane', id: laneId })
       }}
       className={cn(
-        'group/lane-header -mx-1 flex min-w-0 flex-1 items-start gap-1.5 self-stretch',
-        'rounded-md px-1 py-0.5 text-left',
-        'transition-colors duration-(--motion-micro)',
-        'hover:bg-foreground/5 aria-pressed:bg-foreground/5',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'group/lane-header -mx-2 -my-1 flex min-w-0 flex-1 items-start self-stretch text-left',
+        CANVAS_HEADER_BOX,
+        CANVAS_HEADER_STATE,
         className,
       )}
     >
       <span
         className={cn(
-          'min-w-0 flex-1 font-bold leading-snug tracking-tight whitespace-normal break-words',
-          compact ? 'text-xs' : 'text-sm',
+          'min-w-0 flex-1 whitespace-normal break-words',
+          CANVAS_HEADER_TEXT,
         )}
         style={color ? { color } : undefined}
       >
         {laneName}
       </span>
-      {/* The hint, not the target: transparent at rest, and it never takes
-          the click on its own — the whole block already has it. */}
+      {/* Optically on the label's first line: the glyph's own box is taller
+          than the cap height it has to sit beside. */}
       <Info
-        className={cn(
-          'mt-0.5 size-3.5 shrink-0 text-muted-foreground/50 opacity-0',
-          'transition-opacity duration-(--motion-micro)',
-          'group-hover/lane-header:opacity-100',
-          'group-focus-visible/lane-header:opacity-100',
-          'group-aria-pressed/lane-header:opacity-100',
-        )}
+        className={cn(CANVAS_HEADER_HINT, 'mt-px', {
+          'group-hover/lane-header:opacity-100': true,
+          'group-focus-visible/lane-header:opacity-100': true,
+          'group-aria-pressed/lane-header:opacity-100': true,
+        })}
         aria-hidden
       />
     </button>

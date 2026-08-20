@@ -5,19 +5,23 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
+import {
+  CANVAS_HEADER_BOX,
+  CANVAS_HEADER_HINT,
+  CANVAS_HEADER_STATE,
+  CANVAS_HEADER_TEXT,
+} from '@/lib/canvasHeaderStyle'
 import { cn } from '@/lib/utils'
 
 /**
- * The step column header, as the way into the step.
+ * The step column header, as the way into the step. Same treatment as the
+ * lane's row header — same size, weight, radius, padding and states — and
+ * centred rather than top-left, because that is what a column label is.
  *
- * Same shape as the lane's: the whole header block takes the hover, the focus
- * ring and the click, and the ⓘ appears as the hint rather than being the
- * target. A step is the only level a reader scans horizontally, and until now
- * its name was the one thing on the canvas that said nothing when you reached
- * for it.
- *
- * `name` is truncated by the caller's width; the tooltip carries it in full
- * alongside what the control does.
+ * The ⓘ is positioned rather than laid out: an icon in the flex row shifts
+ * the label off the column's centre by half its width, whether it is visible
+ * or not. Out of flow, the label stays centred over the cells it names and
+ * the hint appears at the box's right edge.
  */
 export function StepHeaderAffordance({
   stepId,
@@ -49,23 +53,26 @@ export function StepHeaderAffordance({
               openEntity({ kind: 'step', id: stepId })
             }}
             className={cn(
-              'group/step-header relative flex min-w-0 items-end justify-center gap-1',
-              'overflow-hidden rounded-md px-2 pb-1.5',
-              'transition-colors duration-(--motion-micro)',
-              'hover:bg-foreground/5 aria-pressed:bg-foreground/5',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+              'group/step-header relative flex min-w-0 items-center justify-center',
+              CANVAS_HEADER_BOX,
+              CANVAS_HEADER_STATE,
               className,
             )}
           />
         }
       >
-        <span className="relative truncate text-xs font-medium text-muted-foreground">
+        <span
+          className={cn(
+            'min-w-0 truncate text-center text-muted-foreground',
+            CANVAS_HEADER_TEXT,
+          )}
+        >
           {name}
         </span>
         <Info
           className={cn(
-            'size-3 shrink-0 text-muted-foreground/50 opacity-0',
-            'transition-opacity duration-(--motion-micro)',
+            CANVAS_HEADER_HINT,
+            'absolute right-1.5 top-1/2 -translate-y-1/2',
             'group-hover/step-header:opacity-100',
             'group-focus-visible/step-header:opacity-100',
             'group-aria-pressed/step-header:opacity-100',

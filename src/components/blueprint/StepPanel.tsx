@@ -101,20 +101,23 @@ function StepPanelBody({
     }
   }
 
-  // A step sits at a position PER PATH, and eleven of them sit at different
-  // ones on different paths — so the meta line reports what is true rather
-  // than picking one path's number and calling it the step's.
+  /*
+    The meta line says only what a reader could not already see.
+    "column 1 of 1 path" is both of those things — the column is on screen and
+    the path is in the breadcrumb — so a step that sits where you would expect
+    reports its cell count and nothing else. A step that sits at DIFFERENT
+    columns on different paths is the one case worth a sentence, and it gets
+    the list below as well.
+  */
   const distinct = new Set(step.positions.map((entry) => entry.position))
   const positionLabel =
     step.positions.length === 0
       ? 'in no path yet'
-      : distinct.size === 1
-        ? `column ${(step.positions[0]?.position ?? 0) + 1} of ${
-            step.positions.length === 1
-              ? '1 path'
-              : `${step.positions.length} paths`
-          }`
-        : `${step.positions.length} paths, at different columns`
+      : distinct.size > 1
+        ? `different columns on ${step.positions.length} paths`
+        : step.positions.length > 1
+          ? `${step.positions.length} paths`
+          : null
 
   return (
     <div
@@ -125,9 +128,12 @@ function StepPanelBody({
       <PanelIdentity
         badge={<PanelKindBadge label="Step" />}
         title={step.name}
-        meta={`${positionLabel} · ${step.cellCount} cell${
-          step.cellCount === 1 ? '' : 's'
-        }`}
+        meta={[
+          `${step.cellCount} cell${step.cellCount === 1 ? '' : 's'}`,
+          positionLabel,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
       />
 
       <PanelTextareaField

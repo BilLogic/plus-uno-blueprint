@@ -151,7 +151,6 @@ function LanePanelBody({
         title={lane.name}
         meta={
           <>
-            {fanOut === 1 ? '1 path' : `${fanOut} paths`} ·{' '}
             {lane.cellCount === 1 ? '1 cell' : `${lane.cellCount} cells`}
             {/* The grain, on request rather than as a permanent banner: a
                 lane row belongs to ONE path, so the label you are editing is

@@ -4,7 +4,6 @@ import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAfforda
 import {
   BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
   BLUEPRINT_MENUBAR_HEADER_CLASS,
-  BLUEPRINT_MENUBAR_SEPARATOR_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import {
@@ -227,16 +226,14 @@ export function PhaseMenubarHeader({
           label={label}
         />
         {description ? (
-          <>
-            <span className={BLUEPRINT_MENUBAR_SEPARATOR_CLASS} aria-hidden>
-              ·
-            </span>
-            {/* `title` and not a tooltip: this is truncated prose, and the
-                full text is one click away in the panel the title opens. */}
-            <p className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS} title={description}>
-              {description}
-            </p>
-          </>
+          // Its own row, aligned under the title — the slice header band's
+          // shape. Inline after a separator, the summary competed with the
+          // name for the same line and truncated first on a narrow canvas.
+          // `title` and not a tooltip: this is truncated prose, and the full
+          // text is one click away in the panel the title opens.
+          <p className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS} title={description}>
+            {description}
+          </p>
         ) : null}
       </div>
       {/* Compare controls moved to the navbar's right cluster

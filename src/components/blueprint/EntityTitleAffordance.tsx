@@ -1,5 +1,4 @@
 import { Info } from 'lucide-react'
-import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
 import {
   Tooltip,
   TooltipContent,
@@ -19,23 +18,20 @@ import { cn } from '@/lib/utils'
  * group takes the hover, the focus ring and the click. A separate icon button
  * makes the title look inert and hides the affordance in 24 pixels.
  *
- * The badge inside is rendered without its own info tooltip on purpose — a
- * second ⓘ inside the first would be two affordances in one control, and
- * nesting its trigger button inside this one is invalid markup besides. What
- * that tooltip carried (the parallel-scenario note) is authored on the path
- * and reads in the panel this control opens.
+ * A TITLE, not a badge. The filled pill made the name of the thing you are
+ * looking at read as a tag on something else, and the slice header band —
+ * which is the same job on the same chrome lane — sets its title as plain
+ * semibold text with the summary beneath it. One shape for one job.
  */
 export function EntityTitleAffordance({
   kind,
   id,
   label,
-  tone,
   className,
 }: {
   kind: EntityDetailKind
   id: string
   label: string
-  tone?: 'default' | 'panel' | 'phase'
   className?: string
 }) {
   const { openEntity, selection } = useEntityDetail()
@@ -52,7 +48,7 @@ export function EntityTitleAffordance({
             aria-pressed={open}
             data-entity-title-affordance=""
             className={cn(
-              'group/entity-title flex min-w-0 shrink-0 items-center gap-1 rounded-md px-1 py-0.5',
+              'group/entity-title flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-0.5',
               'transition-colors duration-(--motion-micro)',
               'hover:bg-sidebar-accent aria-pressed:bg-sidebar-accent',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
@@ -65,11 +61,9 @@ export function EntityTitleAffordance({
           />
         }
       >
-        <ScenarioTitleBadge
-          name={label}
-          tone={tone}
-          className="pointer-events-none"
-        />
+        <h2 className="min-w-0 truncate text-sm font-semibold tracking-tight text-foreground">
+          {label}
+        </h2>
         <Info
           className={cn(
             'size-3.5 shrink-0 text-muted-foreground/50',

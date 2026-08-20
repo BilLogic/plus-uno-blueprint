@@ -1,6 +1,13 @@
-/** Shared layout classes for blueprint canvas menubar headers. */
+/**
+ * Shared layout classes for blueprint canvas menubar headers.
+ *
+ * `min-h-9` rather than `h-9`: the bar carries two rows now — the title, then
+ * the summary under it, the slice header band's shape — and a fixed height
+ * cropped the second one. Nothing measures this constant; the detail panel
+ * measures the canvas region itself and only falls back to the old number.
+ */
 export const BLUEPRINT_MENUBAR_HEADER_CLASS =
-  'relative h-9 w-full max-w-full shrink-0 items-center gap-3 rounded-none border-0 bg-transparent px-3 py-0 shadow-none'
+  'relative min-h-9 w-full max-w-full shrink-0 items-center gap-3 rounded-none border-0 bg-transparent px-3 py-1 shadow-none'
 
 /** Docked navbar bar — same surface/elevation as the side nav. */
 export const BLUEPRINT_NAVBAR_BAR_CLASS =
@@ -33,17 +40,17 @@ export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
 
 /** Flattens the menubar when it sits inside the docked navbar bar. */
 export const BLUEPRINT_MENUBAR_FLAT_CLASS =
-  'relative h-9 rounded-none border-0 bg-transparent px-0 py-0 shadow-none'
+  'relative min-h-9 rounded-none border-0 bg-transparent px-0 py-1 shadow-none'
 
 /**
  * Left-aligned title + paths control row. Right padding keeps the row clear
  * of the absolutely-positioned zoom indicator / Reset View cluster.
  */
 export const BLUEPRINT_MENUBAR_TITLE_CLASS =
-  'relative z-10 flex h-full min-w-0 max-w-[calc(100%-9rem)] items-center gap-2.5 px-1'
+  'relative z-10 flex min-w-0 max-w-[calc(100%-9rem)] flex-col items-start gap-0.5 px-1'
 
 export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
-  'min-w-0 truncate text-xs text-muted-foreground'
+  'min-w-0 max-w-full truncate px-1.5 text-xs text-muted-foreground'
 
 export const BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS =
   'shrink-0 text-sm font-semibold tracking-tight text-foreground'
