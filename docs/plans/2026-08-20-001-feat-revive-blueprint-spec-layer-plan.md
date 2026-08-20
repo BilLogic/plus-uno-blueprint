@@ -513,3 +513,255 @@ production database, not inferred. UI architecture was mapped by two Sonnet 5
 subagents working on disjoint file sets. `docs/solutions/` does not exist in
 this repo. Every file:line above came from a file that was actually opened —
 but re-verify before editing, since this branch is moving.
+
+---
+
+# UI design — one panel, five entities
+
+> Added 2026-08-20 after review. Vocabulary fixed throughout: the table is
+> `layers`, **the user-facing word is lane**. `layer-roles.md` splits a lane's
+> `display_name` (free-form, any language) from its `role` (stable semantic
+> key). This section says lane.
+>
+> Also confirmed: `propositions.service_lifecycle_id` means the business model
+> sits at the **service** level — one row for the whole service, far above a
+> phase. This database has exactly one service and one lifecycle.
+
+## What each level actually holds
+
+Checked column by column, because it decides which levels deserve a panel:
+
+| Level | Rows | Spec fields it owns |
+|---|---|---|
+| **Service** | 1 | `business_model`: pricing, revenue_model, funding, partners, delivery_cost — **plus** the understand / value / usability validation questions, answered by evidence |
+| **Phase** | 6 | `business_impact`, `operational_requirements` (+ `description`) |
+| **Scenario** | 22 | `description` only — **no spec fields** |
+| **Path** | 38 | `description`, `note` — **no spec fields** |
+| **Lane** | 299 | `kpis`, `owner_team`, `tools` |
+| **Cell** | 955 | `function`, `form`, `value_props`, `owner`, `perceived_owner` |
+
+**Consequence: scenario and path do not get their own panel in this plan.**
+A drawer holding one description field is a worse experience than editing the
+name inline, and neither level gates an audit check. Revisit if spec fields
+are ever added there.
+
+## The shape to reuse
+
+The cell panel already is the pattern. Anatomy as built:
+
+```
+┌─ CELL PANEL (today) ─────────────────────────────┐
+│ ⤢   Warm-Up › Happy Path › Step 3            ✕  │  drawer header
+│  ┌──────────┬─────────────┐                      │
+│  │ Details  │ Differences │                      │  SegmentedControl
+│  └──────────┴─────────────┘                      │   = surfaces
+│                                                   │
+│  "Enters the student's breakout room."           │  identity block
+│  Lane: Regular Tutor                              │  (always visible)
+│                                                   │
+│  Function   Open the tutoring moment: join the   │  spec block
+│             assigned room within the first minute │  (always visible)
+│  Form       Prompt and unhurried; camera on…     │
+│  Value      tutor → …        student → …          │
+│                                                   │
+│  ┌─────────────┬──────────┬───────────┐          │
+│  │ Dependencies│ Evidence │ Resources │          │  Tabs
+│  └─────────────┴──────────┴───────────┘          │
+│  … tab body, scrolls …                            │
+├───────────────────────────────────────────────────┤
+│                            [ Cancel ]  [ Save ]   │  portal footer host
+└───────────────────────────────────────────────────┘
+```
+
+Four parts are entity-agnostic and get **lifted, not copied**: the drawer
+shell, the identity block, the always-visible spec block, and the portalled
+footer. Only the tab row and the spec fields differ per entity.
+
+## Lane panel
+
+```
+┌─ LANE ───────────────────────────────────────────┐
+│ ⤢   Goal Setting › Regular Tutor             ✕  │
+│                                                   │
+│  Regular Tutor                                    │  identity
+│  Role: frontstage_actions · 6 lanes · 61 cells   │  (role, not inferred
+│                                                   │   from the name)
+│  Owner team    ▢ ______________________          │  spec
+│  KPIs          [ session completion ×]           │
+│                [ + add ]                          │
+│  Tools         [ Zoom ×] [ PLUS App ×] [ + ]     │
+│                                                   │
+│  ┌──────────┬──────────┐                         │
+│  │  Cells   │ Findings │                          │  Tabs
+│  └──────────┴──────────┘                         │
+│  61 cells across 6 paths …                        │
+├───────────────────────────────────────────────────┤
+│                            [ Cancel ]  [ Save ]   │
+└───────────────────────────────────────────────────┘
+```
+
+`kpis` and `tools` are jsonb string arrays — reuse the `OwnerTagSelect`
+multi-value idiom AGENTS.md:38-42 points at, not a hand-rolled chip input.
+
+**Where:** the lane label, in both render paths. **A lane label is one word
+that already means two things** — inert in `ServiceBlueprintGrid.tsx:497-525`,
+and a Design-mode *select-every-cell-in-this-lane* button in
+`BlueprintLabelRail.tsx:186-201`. The properties affordance must be a separate,
+visible target:
+
+```
+   ┌ lane rail ─────────────┐
+   │ Regular Tutor      (i) │ ← new: opens the lane panel, always visible
+   │ ↑                      │
+   │ existing click =       │
+   │ select cells (Design)  │
+   └────────────────────────┘
+```
+
+## Phase panel
+
+```
+┌─ PHASE ──────────────────────────────────────────┐
+│ ⤢   In-session                               ✕  │
+│                                                   │
+│  In-session                                       │  identity
+│  4 scenarios · 312 cells · loops to Pre-session   │
+│                                                   │
+│  Description   ▢ ____________________________    │  spec
+│  Business      ▢ ____________________________    │
+│  impact        ▢ opex, NPS, brand, retention…    │
+│  Operational   ▢ ____________________________    │
+│  requirements  ▢ process / system / people /     │
+│                ▢ legal                            │
+│                                                   │
+│  ┌───────────┬──────────┐                        │
+│  │ Scenarios │ Findings │                         │  Tabs
+│  └───────────┴──────────┘                        │
+│  Warm-Up · Goal Setting · Wrap-Up · …            │
+├───────────────────────────────────────────────────┤
+│                            [ Cancel ]  [ Save ]   │
+└───────────────────────────────────────────────────┘
+```
+
+The two placeholder hints are lifted verbatim from the column comments in
+`f65efcf` — they are the only documentation these fields have ever had.
+
+**Where:** an info button in `PhaseMenubarHeader.tsx`. **Not** a modifier-click
+on the phase section: `CanvasPhaseSection.tsx:180` already makes the whole
+section `role="button"` meaning *navigate into this phase*, and a hidden
+gesture layered on a surface whose obvious gesture is navigation will not be
+found.
+
+## Service panel — the business model
+
+```
+┌─ SERVICE ────────────────────────────────────────┐
+│ ⤢   PLUS Tutoring                            ✕  │
+│  ┌────────────────┬───────────────┐              │
+│  │ Business model │  Validation   │              │  SegmentedControl
+│  └────────────────┴───────────────┘              │   (two surfaces)
+│                                                   │
+│  Pricing        ▢ ________________________       │
+│  Revenue model  ▢ ________________________       │
+│  Funding        ▢ ________________________       │
+│  Partners       ▢ ________________________       │
+│  Delivery cost  ▢ ________________________       │
+│                                                   │
+│  6 phases · 22 scenarios · 955 cells             │
+├───────────────────────────────────────────────────┤
+│                            [ Cancel ]  [ Save ]   │
+└───────────────────────────────────────────────────┘
+
+── Validation surface ─────────────────────────────
+│  Do people UNDERSTAND the service?               │
+│    ● 2 sources        [ + add evidence ]         │
+│      · Session observation, P3    (observation)  │
+│      · Tutor sync decision            (meeting)  │
+│                                                   │
+│  Do people VALUE it?                              │
+│    ○ no evidence — this is an assumption          │  ← the doctrine,
+│                       [ + add evidence ]          │     stated in the UI
+│                                                   │
+│  Can people USE it?                               │
+│    ○ no evidence — this is an assumption          │
+│                       [ + add evidence ]          │
+└───────────────────────────────────────────────────┘
+```
+
+The validation surface is the half of the design nothing has ever exercised.
+`evidence` already enforces `check (num_nonnulls(cell_id,
+proposition_question_key) = 1)` — a row attaches to a cell **or** to one of
+`understand | value | usability`, never both. Zero rows use the question key
+today.
+
+The empty state is the point. *"A cell with zero evidence rows is an
+ASSUMPTION"* is the blueprint's own doctrine (`f65efcf`); this surface says it
+out loud at the service level.
+
+**Where:** the service is the one level with no obvious anchor on the canvas.
+Proposal — a **Service** row at the top of the left sidebar, above Phases,
+opening the same drawer. It is the only level a user cannot click *into*, so
+it needs a named entry rather than an affordance on a shape.
+
+## Trigger and close, in one table
+
+| Entity | Opens from | Gesture |
+|---|---|---|
+| Service | left sidebar, above Phases | click |
+| Phase | info button, `PhaseMenubarHeader` | click |
+| Lane | `(i)` beside the lane label, **both** render paths | click |
+| Cell | the cell itself | ⌘/ctrl-click *(unchanged)* |
+
+**Close is identical for all four, because it is the shell's job, not the
+entity's:** the `✕`, `Escape`, or a swipe on mobile — every one of them routed
+through `onCloseRequest` and **guarded by `panelEditorBusy()`**, so a panel
+never closes mid-save. That guard already exists
+(`BlueprintCellDetailPanel.tsx:274,527`); the lifted shell inherits it.
+
+**One panel open at a time.** Opening a lane panel closes a cell panel. This
+is not just simpler — `CELL_PANEL_FOOTER_ID` is a single global DOM id that
+the Save/Cancel row portals into, so two simultaneous panels would collide on
+it. Each panel still gets its own footer-host id so the collision cannot come
+back through the side door.
+
+## Revised file plan
+
+The five entities share one component, parameterised — **not** five copies:
+
+```
+src/components/blueprint/panelShell.tsx        NEW  lifted from the cell panel:
+                                                    PanelDrawerShell, error
+                                                    boundary, footer host id
+                                                    as a prop, Field
+src/contexts/EntityDetailContext.tsx           NEW  selection: {kind, id},
+                                                    replaces the cell-only
+                                                    BlueprintCellDetailContext
+                                                    shape
+src/components/blueprint/LanePanel.tsx         NEW
+src/components/blueprint/PhasePanel.tsx        NEW
+src/components/blueprint/ServicePanel.tsx      NEW  two surfaces
+src/components/blueprint/ValidationSurface.tsx NEW  the three questions
+src/hooks/useLaneSpec.ts                       NEW
+src/hooks/usePhaseSpec.ts                      NEW
+src/hooks/useBusinessModel.ts                  NEW
+src/lib/laneSpecMutations.ts                   NEW  + revert case
+src/lib/phaseSpecMutations.ts                  NEW  + revert case
+src/lib/businessModelMutations.ts              NEW  + revert case
+```
+
+`BlueprintCellDetailPanel.tsx` keeps its cell-specific body (tech pills,
+pictures, dependency candidates — none of which has a phase or lane analog)
+and simply consumes the lifted shell.
+
+## What this does NOT reuse, and why
+
+- **Evidence tab** — `evidence.cell_id` is the only entity link column on that
+  table. No `phase_id`, no `layer_id`. The *service* panel can use evidence
+  because `proposition_question_key` already exists as the second link. Phase
+  and lane panels cannot, without a schema change that is out of scope.
+- **Resources tab** — reads `cells.links`. No other level has a `links` column.
+- **Dependencies tab** — walks `cell_triggers`, which references `cells.id`.
+  Phases have `loops_to_phase_id`, already drawn as loop arrows, not a
+  dependency editor.
+- **Draft mode** — `CellPanelEditor`'s not-yet-created-row branch. Phases,
+  lanes and the service already exist; only cells are created from a panel.
