@@ -12,6 +12,7 @@ import {
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
+  PanelKindBadge,
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelHint } from '@/components/blueprint/PanelHint'
@@ -180,6 +181,7 @@ function ScenarioPanelBody({
       data-busy={busy || undefined}
     >
       <PanelIdentity
+        badge={<PanelKindBadge label="Scenario" />}
         title={scenario.name}
         meta={`${plural(scenario.paths.length, 'path')} · ${plural(
           scenario.stepCount,

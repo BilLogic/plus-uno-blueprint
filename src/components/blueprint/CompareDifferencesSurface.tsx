@@ -36,6 +36,7 @@ import {
   getBlueprintLayerZone,
 } from '@/lib/blueprintTheme'
 import { getPathBadgeStyle, getPathColor } from '@/lib/pathColorTheme'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
@@ -443,9 +444,9 @@ export function CompareDifferencesSurface({
               ) : null}
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 gap-2 p-3">
-              <p className="text-3xs font-medium uppercase tracking-wide text-muted-foreground">
-                Lanes
-              </p>
+              {/* The panel's one section-label role — these three group the
+                  filter chips exactly as a field label groups a field. */}
+              <p className={PANEL_TEXT.sectionLabel}>Lanes</p>
               <div className="flex flex-wrap gap-1">
                 {laneFacets.map((facet) => (
                   <FilterChip
@@ -456,9 +457,7 @@ export function CompareDifferencesSurface({
                   />
                 ))}
               </div>
-              <p className="pt-1 text-3xs font-medium uppercase tracking-wide text-muted-foreground">
-                Verdict
-              </p>
+              <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Verdict</p>
               <div className="flex flex-wrap gap-1">
                 <FilterChip
                   label="≠ divergent"
@@ -475,9 +474,7 @@ export function CompareDifferencesSurface({
                   filter for a step with no differences filters to nothing. */}
               {stepGroups.length > 0 ? (
                 <>
-                  <p className="pt-1 text-3xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Steps
-                  </p>
+                  <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Steps</p>
                   <div className="flex flex-wrap gap-1">
                     {stepGroups.map((group) => (
                       <FilterChip

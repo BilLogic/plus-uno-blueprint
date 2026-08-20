@@ -24,6 +24,8 @@ import {
   DetailPanelErrorBoundary,
   PanelDrawerShell,
   PanelFooterHost,
+  PanelIdentity,
+  PanelKindBadge,
 } from '@/components/blueprint/panelShell'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { IconTooltip } from '@/components/editor/IconTooltip'
@@ -76,7 +78,6 @@ import {
   scrollBlueprintTechPillIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
-import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
 import {
   getBlueprintLayerStyle,
@@ -1030,26 +1031,25 @@ function BlueprintCellDetailPanelBody() {
   // one role-colored chip (colored by lane_role, never by name).
   const cellTitleText =
     cellContent.split('\n')[0]?.trim() || selection.laneName
-  const laneChip = laneChipStyle ? (
-    <span
-      className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
-      style={{
-        backgroundColor: laneChipStyle.lane,
-        color: BLUEPRINT_THEME.cellText,
-      }}
+  /* The lane chip, tinted with that lane's own cell colour. Rendered on its
+     own in the two cases where the title would repeat what is already on
+     screen (the editor's TEXT field, a tech pill's own label). */
+  const laneChip = (
+    <PanelKindBadge
+      label={selection.laneName}
+      laneRole={laneChipStyle?.lane ?? null}
       title={selection.laneName}
-    >
-      {selection.laneName}
-    </span>
-  ) : null
+    />
+  )
 
   const titleRow = (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <p className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
-        {cellTitleText}
-      </p>
-      {laneChip}
-    </div>
+    <PanelIdentity
+      badge={laneChip}
+      title={cellTitleText}
+      // The breadcrumb already says which path; a count only earns its line
+      // when the same cell is read across several of them.
+      meta={selection.paths.length > 1 ? `${selection.paths.length} paths` : ''}
+    />
   )
 
   const selectedTechPill = showTechPill ? (

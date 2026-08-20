@@ -1,3 +1,4 @@
+import { PANEL_TEXT } from '@/lib/panelText'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellContent } from '@/hooks/useCellContent'
 
@@ -37,10 +38,10 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
 function OwnerCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-2xs font-medium text-muted-foreground">
+      <span className={PANEL_TEXT.sectionLabel}>
         {label}
       </span>
-      <span className="text-sm text-foreground/80">{value}</span>
+      <span className={PANEL_TEXT.value}>{value}</span>
     </div>
   )
 }

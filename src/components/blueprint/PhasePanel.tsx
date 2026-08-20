@@ -6,6 +6,7 @@ import {
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
+  PanelKindBadge,
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
@@ -37,10 +38,9 @@ export function PhasePanel({
   return (
     <>
       <PanelHeader
-        // A phase has no ancestor to name while the service tier is pinned,
-        // so the crumb is the kind — and never the name, which is the heading
-        // immediately below it.
-        crumbs={['Phase']}
+        // The ancestor, not the kind: "Phase" is the badge's job now, and a
+        // crumb that repeated the heading below it said nothing.
+        crumbs={[phase?.serviceName ?? '']}
         title="Phase properties"
         description="Summary, business impact and operational requirements"
         closeLabel="Close phase properties"
@@ -124,6 +124,7 @@ function PhasePanelBody({
       data-busy={busy || undefined}
     >
       <PanelIdentity
+        badge={<PanelKindBadge label="Phase" />}
         title={phase.name}
         meta={`${phase.scenarioCount} scenario${
           phase.scenarioCount === 1 ? '' : 's'

@@ -1,3 +1,5 @@
+import { PANEL_TEXT } from '@/lib/panelText'
+import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellSpec } from '@/hooks/useCellSpec'
 import { parseValueProps } from '@/lib/valueProps'
@@ -5,10 +7,10 @@ import { parseValueProps } from '@/lib/valueProps'
 function SpecSection({ title, text }: { title: string; text: string }) {
   return (
     <section className="flex flex-col gap-1">
-      <h3 className="text-2xs font-medium text-muted-foreground">
+      <h3 className={PANEL_TEXT.sectionLabel}>
         {title}
       </h3>
-      <p className="text-sm whitespace-pre-wrap text-foreground/80">{text}</p>
+      <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>{text}</p>
     </section>
   )
 }
@@ -50,7 +52,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
       {formText ? <SpecSection title="Form" text={formText} /> : null}
       {valueProps.length > 0 ? (
         <section className="flex flex-col gap-1">
-          <h3 className="text-2xs font-medium text-muted-foreground">
+          <h3 className={PANEL_TEXT.sectionLabel}>
             Value
           </h3>
           <ul className="flex flex-col gap-1">

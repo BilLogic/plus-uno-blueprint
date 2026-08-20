@@ -9,6 +9,7 @@ export type PhaseSpec = {
   operationalRequirements: string
   /** The phase this one loops back to, by name — null when it runs once. */
   loopsToName: string | null
+  serviceName: string
   scenarioCount: number
   cellCount: number
 }
@@ -34,7 +35,7 @@ export function usePhaseSpec(
       const { data: phase, error } = await client
         .from('phases')
         .select(
-          'id, name, summary, business_impact, operational_requirements, loops_to_phase_id',
+          'id, name, summary, business_impact, operational_requirements, loops_to_phase_id, service_lifecycles!inner(name)',
         )
         .eq('id', phaseId)
         .maybeSingle()
@@ -71,8 +72,11 @@ export function usePhaseSpec(
         loopsToName = target?.name ?? null
       }
 
+      const service = phase.service_lifecycles as unknown as { name: string }
+
       return {
         id: phase.id,
+        serviceName: service.name,
         name: phase.name,
         summary: phase.summary ?? '',
         businessImpact: phase.business_impact ?? '',

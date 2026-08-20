@@ -6,6 +6,7 @@ import {
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
+  PanelKindBadge,
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
@@ -122,6 +123,7 @@ function StepPanelBody({
       data-busy={busy || undefined}
     >
       <PanelIdentity
+        badge={<PanelKindBadge label="Step" />}
         title={step.name}
         meta={`${positionLabel} · ${step.cellCount} cell${
           step.cellCount === 1 ? '' : 's'

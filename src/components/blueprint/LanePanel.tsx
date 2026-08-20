@@ -10,6 +10,7 @@ import {
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
+  PanelKindBadge,
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelHint } from '@/components/blueprint/PanelHint'
@@ -20,6 +21,7 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { updateLaneSpec } from '@/lib/laneSpecMutations'
 import { describeLaneRole, getLayerRole } from '@/lib/laneRoles'
+import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
 
 /**
  * The lane's properties: who owns it, what it is measured by, what it runs on.
@@ -124,6 +126,17 @@ function LanePanelBody({
   }
 
   const fanOut = lane.siblingLaneIds.length
+  const resolvedRole = getLayerRole({ name: lane.name, role: lane.role })
+  /*
+    The badge takes its colour the same way a CELL does — through
+    `getBlueprintLayerStyle`, whose `.lane` is the key blueprint.css paints
+    from. The zone argument only decides the fallback for a lane with neither
+    a role nor a known name, and the panel has no lane stack to read a zone
+    from, so it asks for the frontstage fallback: a grey-ish chip on an
+    unclassified lane, rather than a wrong-family colour.
+  */
+  const laneRole = getBlueprintLayerStyle(lane.name, 'frontstage', lane.role)
+    .lane
 
   return (
     <div
@@ -134,6 +147,7 @@ function LanePanelBody({
       data-busy={busy || undefined}
     >
       <PanelIdentity
+        badge={<PanelKindBadge label="Lane" laneRole={laneRole} />}
         title={lane.name}
         meta={
           <>
@@ -164,7 +178,7 @@ function LanePanelBody({
             carry null, and saying "no blueprint role" about a lane the canvas
             draws the interaction line under would be a lie. */}
         <p className="text-2xs leading-tight text-muted-foreground">
-          {describeLaneRole(getLayerRole({ name: lane.name, role: lane.role }))}
+          {describeLaneRole(resolvedRole)}
         </p>
       </PanelIdentity>
 

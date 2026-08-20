@@ -25,9 +25,15 @@ import {
   CELL_DETAIL_PANEL_BOTTOM_CLASS,
   CELL_DETAIL_PANEL_TOP_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
+import { Badge } from '@/components/ui/badge'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMobileShell } from '@/hooks/useMobileShell'
+import { PANEL_TEXT } from '@/lib/panelText'
+import {
+  blueprintLaneAttrs,
+  type BlueprintLaneRole,
+} from '@/lib/blueprintCellStyle'
 import { panelEditorBusy } from '@/lib/panelEditorBusy'
 import { cn } from '@/lib/utils'
 
@@ -217,7 +223,7 @@ export function Field({
   children: ReactNode
 }) {
   const labelText = (
-    <span className="w-fit text-2xs font-medium text-muted-foreground">
+    <span className={cn('w-fit', PANEL_TEXT.sectionLabel)}>
       {label}
       {required ? <span className="ml-0.5 text-destructive">*</span> : null}
     </span>
@@ -324,23 +330,88 @@ export function PanelHeader({
  * as one surface.
  */
 export function PanelIdentity({
+  badge,
   title,
   meta,
   children,
 }: {
+  /**
+   * What kind of thing this is — ABOVE the title, because it is the context
+   * the title is read in, and a reader who just clicked a green cell needs
+   * the green chip to confirm they opened what they aimed at. Below the
+   * title it read as an afterthought and indented away from its own heading.
+   */
+  badge?: ReactNode
   title: string
   /** Counts and relationships — never a restatement of the title. */
   meta: ReactNode
   children?: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <p className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
-        {title}
-      </p>
-      <p className="text-2xs leading-tight text-muted-foreground">{meta}</p>
+    <div className="flex min-w-0 flex-col items-start gap-1.5">
+      {badge}
+      <p className={PANEL_TEXT.title}>{title}</p>
+      {meta ? <p className={PANEL_TEXT.meta}>{meta}</p> : null}
       {children}
     </div>
+  )
+}
+
+/**
+ * The kind chip. Tinted with the LANE's own cell colour when there is one, so
+ * the panel and the cell you clicked are visibly the same object; neutral
+ * `secondary` for the levels that have no colour on the canvas.
+ *
+ * The tint comes from `data-blueprint-lane` — the attribute blueprint.css
+ * turns into a lane's surface and ink steps — not from an inline colour. The
+ * chip this replaced tried `backgroundColor: style.lane`, and `style.lane` is
+ * a ROLE KEY ("actor"), not a colour: the declaration was invalid, the browser
+ * dropped it, and the badge had rendered as plain text since the day it
+ * shipped.
+ */
+export function PanelKindBadge({
+  label,
+  laneRole,
+  title,
+}: {
+  label: string
+  laneRole?: BlueprintLaneRole | null
+  title?: string
+}) {
+  if (!laneRole) {
+    // `secondary` alone is white-on-white here — the slice header band hit the
+    // same thing and answered it the same way: a faint foreground wash and a
+    // named edge rung, so the chip reads as a chip on the popover surface.
+    return (
+      <Badge
+        variant="secondary"
+        className="max-w-full truncate border-muted bg-foreground/5 text-muted-foreground"
+        title={title}
+      >
+        {label}
+      </Badge>
+    )
+  }
+  return (
+    <Badge
+      {...blueprintLaneAttrs(laneRole)}
+      title={title}
+      className="max-w-full truncate border-transparent"
+      /*
+        Inline, not a utility: the badge's own `variant` paints
+        `bg-primary`, and a same-specificity arbitrary-property class lost to
+        it — measured, the chip came out brand teal on every lane. The values
+        are the tokens `[data-blueprint-lane]` publishes, so nothing here is a
+        colour; this is the same idiom BlueprintStepVisual uses for the
+        presentation frame.
+      */
+      style={{
+        backgroundColor: 'var(--background-blueprint-cell)',
+        color: 'var(--foreground-blueprint-cell)',
+      }}
+    >
+      {label}
+    </Badge>
   )
 }
 

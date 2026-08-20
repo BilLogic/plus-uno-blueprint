@@ -242,6 +242,14 @@ export function BlueprintCellButton({
       detail!.closePanel()
       return
     }
+    // Both open paths route through `onOpen` when there is one — the modifier
+    // above and the bare click here. Hooking only the modifier is how the
+    // storyboard kept opening a cell panel on an ordinary click while the
+    // ⌘-click opened its step: one gesture, two answers.
+    if (onOpen) {
+      onOpen()
+      return
+    }
     detail!.selectCell(selection!)
   }
 

@@ -13,6 +13,7 @@ import type {
   BlueprintCellConnection,
   BlueprintCellConnections,
 } from '@/lib/blueprintCellConnections'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
 export type CellDependencyTechEntry = {
@@ -170,7 +171,10 @@ function DependencyGroup({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-3xs font-semibold tracking-wide text-muted-foreground uppercase">
+      {/* The same section-label role the spec sections use. Two treatments
+          for one job — 11px medium sentence case here, 10px semibold
+          uppercase there — read as two unrelated panels. */}
+      <p className={PANEL_TEXT.sectionLabel}>
         {title}
       </p>
       <ul className="flex flex-col">{children}</ul>
