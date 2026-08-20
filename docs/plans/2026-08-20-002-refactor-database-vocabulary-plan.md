@@ -27,7 +27,7 @@ The test applied: **would a user recognise this word?** Not "is it defensible"
 | `layers` | **lane** | `layer-roles.md` has to teach the split; `BlueprintLabelRail.tsx:75` says "swim-lane grid row"; `remove_lane` is already named lane |
 | `layers.layer_role` | lane role | same |
 | `cells.layer_id` | lane | `upsert_cell`'s own spec says *"lane id from get_blueprint (parameter named layer_id **for historical reasons**)"* — the code apologises for it |
-| `cell_triggers` | dependency / link | stores `kind in ('trigger','needs')`, so the name covers **half its contents**. The panel tab says "Dependencies"; the agent tools already say `create_cell_link` / `list_cell_links` |
+| `cell_triggers` | **dependency** | stores `kind in ('trigger','needs')`, so the name covers **half its contents**. Target is `cell_dependencies` — see the correction below; an earlier draft said `cell_links`, which collides |
 | `propositions` | business model | one word from `cells.value_props`, means the opposite scope |
 | `cells.description` | **summary** | `CellPanelEditor.tsx:413` carries the comment `{/* "Summary", not "Description": it is the tl;dr … */}` and renders `<Field label="Summary">`. `getCell` relabels it on the way out: `['summary', data.description]` |
 | `paths.description` | **summary** | same word, same reason, same level of the tree as `cells.description`. [Plan 006](2026-08-20-006-design-data-model.md) defines it as *when this route applies*, with `note` as the author's aside |
@@ -213,7 +213,49 @@ in a prose comment (`agents/uno-bot/src/integrations/blueprint.ts:493`).
 rename costs one comment edit in the bot. Full evidence in
 [plan 007](2026-08-20-007-feat-cross-repo-blueprint-contract-plan.md).
 
-### Phase 2 — `cell_triggers` → `cell_links`
+### 🔴 Correction — the target is `cell_dependencies`, not `cell_links`
+
+An earlier draft proposed `cell_triggers` → `cell_links` and cited the agent
+tools (`create_cell_link` / `list_cell_links`) as evidence. **That was
+backwards: those tools are the drift, not the standard**, and the rename would
+have collided head-on with something that already exists.
+
+| | `cells.links` | `cell_triggers` |
+|---|---|---|
+| Shape | a jsonb array **on one cell** | a table of **cell → cell** rows |
+| Holds | `{type:'url', label:'Figma — Attendance / Dropdown', url:'…'}` | `kind in ('trigger','needs')` |
+| TS type | `CellLink` | — |
+| Panel tab | **Resources** (`Link2` icon) | **Dependencies** (`Workflow` icon) |
+
+`cell_links` as a table name would have made three different things share one
+word: the table (edges), `cells.links` (URLs) and `CellLink` (a URL).
+
+**Everything except the agent tools already says "dependency":**
+
+```
+public.set_cell_dependency · public.clear_cell_dependency      RPCs
+'set_cell_dependency' | 'clear_cell_dependency'                ledger kinds
+"Connected two cells" · "Removed a connection"                 ledger labels
+{ value: 'dependencies', label: 'Dependencies' }               panel tab
+```
+
+So the rename is **`cell_triggers` → `cell_dependencies`**, and the two agent
+tools move with it: `create_cell_link` → `create_cell_dependency`,
+`list_cell_links` → `list_cell_dependencies`. Afterwards `links` means URLs,
+exclusively, at every level. It still fixes the real half of the original
+complaint — `cell_triggers` names one of the two kinds it stores.
+
+**Measured surface:** 15 database objects carry the old name (6 constraints,
+4 indexes, 4 policies, 1 trigger) plus 8 function bodies. Only the two FK
+constraint names are load-bearing beyond cosmetics — they are the embed hints.
+Unlike `description`, `cell_triggers` is an unambiguous identifier, so a
+word-boundary sweep over the function bodies is safe here.
+
+⚠️ **Deploy coupling:** uno-bot reads `/rest/v1/cell_triggers` directly, so the
+rename and the bot's deploy must ship in ONE window. Until the bot deploys its
+edge read 404s and degrades to "no dependencies" — silently.
+
+### Phase 2 — `cell_triggers` → `cell_dependencies`
 
 > 🔴 **This is the real cross-repo break, not `filter_layer_role`.** uno-bot
 > reads the table by URL (`/rest/v1/cell_triggers`), by **FK constraint name**
@@ -380,6 +422,8 @@ above.
 
 - [ ] No table or column name is contradicted by a UI label or a code comment
 - [ ] `grep -rn "layer" src/` returns only genuine z-index/CSS uses
+- [ ] `links` means URLs and nothing else: no table, type or tool named
+      `*_link*` refers to a cell-to-cell edge
 - [ ] The two apology comments are deleted, because they are no longer true:
       `upsert_cell`'s *"for historical reasons"* and `CellPanelEditor.tsx:413`'s
       *"Summary, not Description"*
