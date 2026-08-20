@@ -2,7 +2,7 @@ import { buildBlueprintCellSelection, getTechPillItems } from '@/lib/blueprintCe
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { shouldUsePillCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
-import type { BlueprintCell, BlueprintCellTrigger, BlueprintData } from '@/types/blueprint'
+import type { BlueprintCell, BlueprintCellDependency, BlueprintData } from '@/types/blueprint'
 
 export type BlueprintCellConnectionKind = 'interaction' | 'connection'
 
@@ -55,7 +55,7 @@ function resolveStepIndex(blueprint: BlueprintData, stepId: string): number {
 
 function toConnection(
   blueprint: BlueprintData,
-  trigger: BlueprintCellTrigger,
+  trigger: BlueprintCellDependency,
   cellId: string,
   selectedStepIndex: number,
 ): BlueprintCellConnection | null {

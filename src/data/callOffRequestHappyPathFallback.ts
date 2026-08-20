@@ -22,7 +22,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -148,7 +148,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: callOffTrigger(slot),
     source_cell_id: callOffCell(fromStep, fromLayer),
@@ -156,7 +156,7 @@ function trigger(
   }
 }
 
-const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellTrigger[] = [
+const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
   trigger('001', '01', '03', '02', '03'),
   trigger('003', '01', '03', '03', '03'),
   trigger('002', '02', '03', '02', '06'),

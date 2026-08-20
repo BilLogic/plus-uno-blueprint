@@ -1,6 +1,6 @@
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
   BlueprintLayer,
   BlueprintStep,
@@ -59,7 +59,7 @@ export type RawPath = {
   steps?: BlueprintStep[] | null
   path_steps?: RawPathStep[] | null
   cells?: RawCell[] | null
-  cell_triggers?: BlueprintCellTrigger[] | null
+  cell_dependencies?: BlueprintCellDependency[] | null
 }
 
 /** Flatten path_steps junction rows into blueprint steps sorted by column. */
@@ -87,8 +87,8 @@ function resolveSteps(raw: RawPath): BlueprintStep[] {
   )
 }
 
-function flattenTriggersFromCells(cells: RawCell[]): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+function flattenTriggersFromCells(cells: RawCell[]): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (const cell of cells) {
     for (const outgoing of cell.outgoing ?? []) {
       triggers.push({
@@ -218,8 +218,8 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     links: normalizeCellLinks(cell.links),
   }))
   const triggers =
-    raw.cell_triggers && raw.cell_triggers.length > 0
-      ? raw.cell_triggers.map((trigger) => ({
+    raw.cell_dependencies && raw.cell_dependencies.length > 0
+      ? raw.cell_dependencies.map((trigger) => ({
           ...trigger,
           kind: normalizeTriggerKind(trigger.kind),
           label: trigger.label ?? null,

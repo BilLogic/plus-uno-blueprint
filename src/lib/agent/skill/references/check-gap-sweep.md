@@ -8,7 +8,7 @@ where does the blueprint go silent while the service keeps happening?
 
 ## Read
 Per path, in step order: the step list vs each lane's cells. Then the
-trigger graph.
+dependency graph.
 
 ## Finding shape
 Emit one finding per contiguous silent stretch, not per empty cell:

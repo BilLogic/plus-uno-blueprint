@@ -20,7 +20,7 @@ import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescripti
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -133,7 +133,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: lmTrigger(slot),
     source_cell_id: lmCell(fromStep, fromLayer),
@@ -141,7 +141,7 @@ function trigger(
   }
 }
 
-const LESSON_MODULES_TRIGGERS: BlueprintCellTrigger[] = [
+const LESSON_MODULES_TRIGGERS: BlueprintCellDependency[] = [
   // Regular Tutor → Front Stage Tech
   trigger('001', '01', '03', '01', '06'),
   trigger('002', '02', '03', '02', '06'),

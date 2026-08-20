@@ -68,7 +68,7 @@ lifecycle phases — phases live in `phases`.
 migration: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
 
-**Edges** — `cell_triggers`, `kind` = `trigger` (temporal) or `needs`
+**Edges** — `cell_dependencies`, `kind` = `trigger` (temporal) or `needs`
 (functional, panel-only), unique per (source, target, kind).
 
 **Derived layer** (`20260729120000_derived_layer.sql`) — `slices` +

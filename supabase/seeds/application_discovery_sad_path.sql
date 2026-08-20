@@ -231,7 +231,7 @@ set links = jsonb_build_array(
 )
 where id = 'a0000000-0000-4000-8000-000000720508';
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000728001', 'a0000000-0000-4000-8000-000000720104', 'a0000000-0000-4000-8000-000000720103'),
   ('a0000000-0000-4000-8000-000000728002', 'a0000000-0000-4000-8000-000000720207', 'a0000000-0000-4000-8000-000000720208'),

@@ -21,7 +21,7 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where source_cell_id in (
   select id from public.cells
   where path_id = 'a0000000-0000-4000-8000-00000000080d'
@@ -77,7 +77,7 @@ values
 on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where source_cell_id in (
   select id from public.cells where path_id = 'a0000000-0000-4000-8000-00000000080d'
 )
@@ -217,7 +217,7 @@ set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-06-n
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0603';
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000099001', 'a0000000-0000-4000-8000-0000001b0101', 'a0000000-0000-4000-8000-0000001b0201'),
   ('a0000000-0000-4000-8000-000000099002', 'a0000000-0000-4000-8000-0000001b0201', 'a0000000-0000-4000-8000-0000001b0301'),

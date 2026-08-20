@@ -11,7 +11,7 @@ import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -110,7 +110,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: ssTrigger(slot),
     source_cell_id: ssCell(fromStep, fromLayer),
@@ -118,7 +118,7 @@ function trigger(
   }
 }
 
-const SESSION_SIGN_UP_TRIGGERS: BlueprintCellTrigger[] = [
+const SESSION_SIGN_UP_TRIGGERS: BlueprintCellDependency[] = [
   // Regular Tutor → PLUS app
   trigger('003', '01', '03', '01', '06'),
   // PLUS app → Dev team stores scheduling info

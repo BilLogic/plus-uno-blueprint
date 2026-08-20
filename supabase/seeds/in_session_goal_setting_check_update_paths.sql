@@ -5,7 +5,7 @@
 insert into public.paths (id, service_scenario_id, name, description, path_type)
 values ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000000204', 'Check Goals', 'Goals already set, but deadline not reached.', 'named')
 on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
-delete from public.cell_triggers where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814');
+delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.layers where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000814';
@@ -92,7 +92,7 @@ values
   ('a0000000-0000-4000-8000-000000a00609', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000009b06', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-000000a00809', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000009b08', 'Researchers set student order, Dev Team, Design Team.')
 on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-00000009c001', 'a0000000-0000-4000-8000-000000a00101', 'a0000000-0000-4000-8000-000000a00201'),
   ('a0000000-0000-4000-8000-00000009c002', 'a0000000-0000-4000-8000-000000a00201', 'a0000000-0000-4000-8000-000000a00301'),
@@ -132,7 +132,7 @@ on conflict (id) do update set source_cell_id = excluded.source_cell_id, target_
 insert into public.paths (id, service_scenario_id, name, description, path_type)
 values ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000000204', 'Update Goals', 'First tutoring day of a new goal cycle after personalized goals have been set.', 'named')
 on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
-delete from public.cell_triggers where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815');
+delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.layers where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000815';
@@ -239,7 +239,7 @@ values
   ('a0000000-0000-4000-8000-000000b00809', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000009d08', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-000000b01109', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000009d0b', 'Dev Team, Design Team')
 on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-00000009e001', 'a0000000-0000-4000-8000-000000b00101', 'a0000000-0000-4000-8000-000000b00201'),
   ('a0000000-0000-4000-8000-00000009e002', 'a0000000-0000-4000-8000-000000b00201', 'a0000000-0000-4000-8000-000000b00301'),

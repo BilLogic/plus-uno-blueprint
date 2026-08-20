@@ -25,7 +25,7 @@ import {
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -153,7 +153,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: wuTrigger(slot),
     source_cell_id: wuCell(fromStep, fromLayer),
@@ -165,8 +165,8 @@ function rowTriggers(
   layer: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
@@ -188,8 +188,8 @@ function columnLaneTriggers(
   toLayer: string,
   idStart: number,
   stepCount: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
     triggers.push(
@@ -205,7 +205,7 @@ function columnLaneTriggers(
   return triggers
 }
 
-const WRAP_UP_TRIGGERS: BlueprintCellTrigger[] = [
+const WRAP_UP_TRIGGERS: BlueprintCellDependency[] = [
   ...rowTriggers('01', 1, 3),
   ...rowTriggers('02', 10, 3),
   ...rowTriggers('03', 20, 3),

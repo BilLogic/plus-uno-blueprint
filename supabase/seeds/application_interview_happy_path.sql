@@ -141,7 +141,7 @@ on conflict (id) do update set
   layer_id = excluded.layer_id,
   step_id = excluded.step_id;
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where id in (
   'a0000000-0000-4000-8000-000000098021',
   'a0000000-0000-4000-8000-000000098022'
@@ -150,7 +150,7 @@ where id in (
 delete from public.cells
 where id = 'a0000000-0000-4000-8000-000000090104';
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000098001', 'a0000000-0000-4000-8000-000000090107', 'a0000000-0000-4000-8000-000000090106'),
   ('a0000000-0000-4000-8000-000000098002', 'a0000000-0000-4000-8000-000000090107', 'a0000000-0000-4000-8000-000000090207'),

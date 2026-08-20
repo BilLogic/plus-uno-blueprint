@@ -486,7 +486,7 @@ values
 on conflict (id) do update set content = excluded.content;
 
 -- Cell triggers
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000050001', 'a0000000-0000-4000-8000-000000040101', 'a0000000-0000-4000-8000-000000040201'),
   ('a0000000-0000-4000-8000-000000050002', 'a0000000-0000-4000-8000-000000040201', 'a0000000-0000-4000-8000-000000040301'),

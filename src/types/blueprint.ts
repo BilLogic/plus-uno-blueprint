@@ -59,7 +59,7 @@ export type BlueprintCell = {
   slot_position?: number
 }
 
-export type BlueprintCellTrigger = {
+export type BlueprintCellDependency = {
   id: string
   source_cell_id: string
   target_cell_id: string
@@ -76,5 +76,5 @@ export type BlueprintData = {
   layers: BlueprintLayer[]
   steps: BlueprintStep[]
   cells: BlueprintCell[]
-  triggers: BlueprintCellTrigger[]
+  triggers: BlueprintCellDependency[]
 }

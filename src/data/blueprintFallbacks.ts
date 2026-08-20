@@ -139,7 +139,7 @@ import {
 } from '@/data/goalSettingParallelSessionPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -316,7 +316,7 @@ function buildRegularTutorToFrontStageTechTriggers(
   triggerPrefix: '05' | '07',
   idStart: number,
   stepSlots: readonly string[],
-): BlueprintCellTrigger[] {
+): BlueprintCellDependency[] {
   return stepSlots.map((step, index) => {
     const triggerSlot = String(idStart + index).padStart(4, '0')
     return {
@@ -491,7 +491,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
   }),
 ]
 
-const WARM_UP_TRIGGERS: BlueprintCellTrigger[] = [
+const WARM_UP_TRIGGERS: BlueprintCellDependency[] = [
   ...buildParallelSessionPartnerLeadTriggers(warmUpPartnerLeadOptions),
   {
     id: 'a0000000-0000-4000-8000-000000050101',
@@ -618,7 +618,7 @@ const WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS = new Set([
   'a0000000-0000-4000-8000-000000050112',
 ])
 
-function buildWarmUpAlternatePathTriggers(): BlueprintCellTrigger[] {
+function buildWarmUpAlternatePathTriggers(): BlueprintCellDependency[] {
   const regularTutorTriggers = WARM_UP_TRIGGERS.filter(
     (trigger) =>
       WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS.has(trigger.id) &&
@@ -642,7 +642,7 @@ function buildWarmUpAlternatePathTriggers(): BlueprintCellTrigger[] {
   ]
 }
 
-const WARM_UP_ALTERNATE_TRIGGERS: BlueprintCellTrigger[] =
+const WARM_UP_ALTERNATE_TRIGGERS: BlueprintCellDependency[] =
   buildWarmUpAlternatePathTriggers()
 
 export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {

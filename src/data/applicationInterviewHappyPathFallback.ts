@@ -23,7 +23,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 export const APPLICATION_INTERVIEW_HAPPY_PATH_ID =
@@ -136,7 +136,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: iTrigger(slot),
     source_cell_id: iCell(fromStep, fromLayer),
@@ -144,7 +144,7 @@ function trigger(
   }
 }
 
-const INTERVIEW_TRIGGERS: BlueprintCellTrigger[] = [
+const INTERVIEW_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — application form setup
   trigger('001', '01', '07', '01', '06'),
   trigger('002', '01', '07', '02', '07'),

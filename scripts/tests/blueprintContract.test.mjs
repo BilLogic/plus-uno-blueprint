@@ -8,7 +8,7 @@ import assert from 'node:assert/strict'
  * nothing type-checks that promise on either side.
  *
  * PostgREST binds RPC arguments BY NAME and takes embed hints as STRINGS
- * (`source:cells!cell_triggers_source_cell_id_fkey(content)`). So a migration
+ * (`source:cells!cell_dependencies_source_cell_id_fkey(content)`). So a migration
  * can rename a parameter or a constraint, both repos still compile, and the
  * only symptom is a 400 the bot swallows into an empty array — which reads in
  * Slack as "this cell has no dependencies" rather than as an error. The bot's
@@ -93,30 +93,28 @@ test('every declared include value is accepted by the function', () => {
 })
 
 /**
- * The embed-hint constraints are Postgres DEFAULT names — `<table>_<column>_fkey`,
- * generated implicitly by `references public.cells(id)`. No migration has ever
- * written them down, which is precisely why they are easy to break: rename the
- * table and Postgres renames the constraints with it, silently, and the
- * hard-coded hint string in uno-bot stops matching.
+ * The embed-hint constraints started life as Postgres DEFAULT names —
+ * `<table>_<column>_fkey`, generated implicitly by `references
+ * public.cells(id)` and written down in no migration at all. That is precisely
+ * why they were easy to break: nothing named them, so nothing noticed them.
  *
- * Verified against production on 2026-08-20 (`pg_constraint` on
- * `public.cell_triggers`): both names present, both `on delete cascade`.
- *
- * So the rule this test enforces is not "the name appears somewhere" — it is
- * "no migration renames the table without renaming the constraints too."
+ * The `cell_dependencies` → `cell_dependencies` rename made them explicit. The rule
+ * enforced here is not "the name appears somewhere" — it is "a migration that
+ * renames this table also renames both constraints, and the contract agrees
+ * with whatever that migration produced."
  */
-test('a migration that renames cell_triggers also renames both FK constraints', () => {
+test('a migration that renames cell_dependencies also renames both FK constraints', () => {
   const dir = 'supabase/migrations'
   const files = readdirSync(resolve(REPO_ROOT, dir)).filter((f) => f.endsWith('.sql'))
 
   for (const file of files) {
     const sql = read(`${dir}/${file}`)
-    if (!/alter\s+table\s+(public\.)?cell_triggers\s+rename\s+to/i.test(sql)) continue
+    if (!/alter\s+table\s+(public\.)?cell_dependencies\s+rename\s+to/i.test(sql)) continue
 
     for (const name of contractValues('fkConstraints')) {
       assert.ok(
         new RegExp(`rename\\s+constraint\\s+${name}`, 'i').test(sql),
-        `${file} renames cell_triggers but does not rename "${name}". ` +
+        `${file} renames cell_dependencies but does not rename "${name}". ` +
           `PostgREST embed hints are strings, so uno-bot's fetchEdges would 400 and ` +
           `return [] — Slack then reports "no dependencies" for cells that have them. ` +
           `Rename the constraint in the same migration, and update blueprintContract.ts.`,
@@ -125,11 +123,26 @@ test('a migration that renames cell_triggers also renames both FK constraints', 
   }
 })
 
-test('the contract names both cell_triggers embed-hint constraints', () => {
-  const names = contractValues('fkConstraints')
+test('the contract agrees with the newest rename migration, not with itself', () => {
+  // The first version of this test compared the contract to a hard-coded list,
+  // which is the contract compared to a copy of itself: it passed while the
+  // database had already moved on. The migrations are the only outside witness
+  // available offline, so the expectation is derived from them.
+  const dir = 'supabase/migrations'
+  const renames = readdirSync(resolve(REPO_ROOT, dir))
+    .filter((f) => f.endsWith('.sql'))
+    .map((f) => read(`${dir}/${f}`))
+    .filter((sql) => /rename\s+constraint\s+\S*cell\S*_fkey/i.test(sql))
+
+  assert.ok(renames.length > 0, 'no migration renames a cell-edge FK constraint')
+  const newest = renames[renames.length - 1]
+  const produced = [...newest.matchAll(/rename\s+constraint\s+\S+\s+to\s+(\S+_fkey)/gi)]
+    .map((m) => m[1])
+    .sort()
+
   assert.deepEqual(
-    [...names].sort(),
-    ['cell_triggers_source_cell_id_fkey', 'cell_triggers_target_cell_id_fkey'],
-    'uno-bot hard-codes exactly these two hints in fetchEdges; the contract must mirror them',
+    [...contractValues('fkConstraints')].sort(),
+    produced,
+    'uno-bot hard-codes these two hints in fetchEdges; the contract must name what the migration actually produced',
   )
 })

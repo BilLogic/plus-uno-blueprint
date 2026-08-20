@@ -31,7 +31,7 @@ select
   (select count(*) from public.layers l where l.path_id = pa.id) as layers,
   (select count(*) from public.path_steps ps where ps.path_id = pa.id) as steps,
   (select count(*) from public.cells c where c.path_id = pa.id) as cells,
-  (select count(*) from public.cell_triggers ct
+  (select count(*) from public.cell_dependencies ct
    join public.cells c on c.id = ct.source_cell_id
    where c.path_id = pa.id) as triggers
 from public.paths pa

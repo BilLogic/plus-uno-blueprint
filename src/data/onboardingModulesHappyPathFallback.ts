@@ -38,7 +38,7 @@ import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -162,7 +162,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: omTrigger(slot),
     source_cell_id: omCell(fromStep, fromLayer),
@@ -170,7 +170,7 @@ function trigger(
   }
 }
 
-const ONBOARDING_MODULES_TRIGGERS: BlueprintCellTrigger[] = [
+const ONBOARDING_MODULES_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — tutor opens module → PLUS App
   trigger('001', '01', '03', '01', '06'),
 

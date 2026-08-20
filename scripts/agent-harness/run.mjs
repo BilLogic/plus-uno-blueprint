@@ -427,11 +427,11 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
           .sort()
           .join('\n')
         return record.result
-      case 'list_cell_links': {
+      case 'list_cell_dependencies': {
         const scope = args.cell_id
           ? `&or=(source_cell_id.eq.${encodeURIComponent(String(args.cell_id))},target_cell_id.eq.${encodeURIComponent(String(args.cell_id))})`
           : ''
-        const rows = await rest(`cell_triggers?select=id,source_cell_id,target_cell_id,kind,label,note&limit=200${scope}`)
+        const rows = await rest(`cell_dependencies?select=id,source_cell_id,target_cell_id,kind,label,note&limit=200${scope}`)
         record.result = rows?.length
           ? [`${rows.length} link(s):`, ...rows.map((e) => `${e.source_cell_id} --${e.kind ?? 'trigger'}--> ${e.target_cell_id}${e.label ? ` "${e.label}"` : ''} (${e.id})`)].join('\n')
           : args.cell_id ? `No links on cell ${args.cell_id}.` : 'No links recorded yet.'

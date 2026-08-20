@@ -23,7 +23,7 @@ and stable keys in place of UUIDs.
 ## Hierarchy
 
 ```
-service_lifecycles → phases → service_scenarios → paths → {layers, cells, cell_triggers}
+service_lifecycles → phases → service_scenarios → paths → {layers, cells, cell_dependencies}
                                                 → steps (scenario-scoped)
                                         paths ⇄ steps via path_steps (column order)
 ```
@@ -43,8 +43,8 @@ erDiagram
   paths ||--o{ cells : "has many"
   layers ||--o{ cells : "has many"
   steps ||--o{ cells : "has many"
-  cells ||--o{ cell_triggers : "source"
-  cells ||--o{ cell_triggers : "target"
+  cells ||--o{ cell_dependencies : "source"
+  cells ||--o{ cell_dependencies : "target"
 
   service_lifecycles { uuid id PK  text name  text description }
   phases { uuid id PK  uuid service_lifecycle_id FK  text name  text description  int order_position  uuid loops_to_phase_id FK "optional self-reference" }
@@ -54,7 +54,7 @@ erDiagram
   path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int column_position "unique per (path_id, column_position)" }
   layers { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text layer_role "semantic role key; null = generic swimlane"  int row_position }
   cells { uuid id PK  uuid path_id FK  uuid layer_id FK "unique (layer_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
-  cell_triggers { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK }
+  cell_dependencies { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK  text kind "trigger = temporal, sets off | needs = functional, must exist first"  text label  text note }
 ```
 
 ## Tables in brief
@@ -69,7 +69,7 @@ erDiagram
 | `path_steps` | Which steps a path uses and in what column order | `column_position` unique per path |
 | `layers` | Swimlanes, per PATH (each path carries its own layer rows) | `name` free-form any language; `layer_role` semantic key (see `references/layer-roles.md`) |
 | `cells` | Grid content at (layer × step) on a path | `unique (layer_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
-| `cell_triggers` | Directed arrows cell → cell | Unique pair, `source != target`, both cells must be on the same path |
+| `cell_dependencies` | Directed arrows cell → cell. `kind` is `trigger` (temporal — sets off) or `needs` (functional — must exist first); the table is the genus, `trigger` is one species | Unique pair, `source != target`, both cells must be on the same path |
 
 ## Enums
 
@@ -100,7 +100,7 @@ before any adapter runs.
 ## ⚠ REQUIRED: import order
 
 ```
-paths → steps → path_steps → layers → cells → cell_triggers
+paths → steps → path_steps → layers → cells → cell_dependencies
 ```
 
 (with `service_lifecycles → phases → service_scenarios` before all of the
@@ -110,7 +110,7 @@ above). Any other order violates FKs or the integrity trigger.
 
 Scenario-scoped **delete-and-reinsert in one transaction**: delete the
 scenario's paths/steps (FK cascades remove path_steps, layers, cells,
-triggers), then insert fresh rows in the order above. Never
+dependencies), then insert fresh rows in the order above. Never
 `on conflict do update` — rows removed from the IR must not survive as
 orphans. IDs are UUIDv5 from IR keys + locale (NFC-normalized), so identical
 IR re-imports produce identical rows. See `references/adapter-contract.md`.

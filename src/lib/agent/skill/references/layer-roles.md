@@ -67,7 +67,7 @@ template versions attach rendering to it. Prefer a named custom role over
 `null` whenever the lane means something.
 
 All layout logic is role-agnostic where it can be: e.g. backward in-lane
-loop corridors are computed from trigger geometry for ANY lane, custom
+loop corridors are computed from dependency geometry for ANY lane, custom
 roles included (`blueprintLayerHasBackwardInLaneLoop`).
 
 ## Legacy name shim

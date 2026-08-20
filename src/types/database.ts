@@ -78,7 +78,7 @@ export type Database = {
         }
         Relationships: []
       }
-      cell_triggers: {
+      cell_dependencies: {
         Row: {
           created_at: string
           id: string
@@ -111,14 +111,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cell_triggers_source_cell_id_fkey'
+            foreignKeyName: 'cell_dependencies_source_cell_id_fkey'
             columns: ['source_cell_id']
             isOneToOne: false
             referencedRelation: 'cells'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'cell_triggers_target_cell_id_fkey'
+            foreignKeyName: 'cell_dependencies_target_cell_id_fkey'
             columns: ['target_cell_id']
             isOneToOne: false
             referencedRelation: 'cells'
@@ -831,7 +831,7 @@ export type Database = {
 export type AgentSessionRow = Database['public']['Tables']['agent_sessions']['Row']
 export type AgentMessageRow = Database['public']['Tables']['agent_messages']['Row']
 export type Cell = Database['public']['Tables']['cells']['Row']
-export type CellTrigger = Database['public']['Tables']['cell_triggers']['Row']
+export type CellDependency = Database['public']['Tables']['cell_dependencies']['Row']
 export type Layer = Database['public']['Tables']['layers']['Row']
 export type Path = Database['public']['Tables']['paths']['Row']
 export type PathStep = Database['public']['Tables']['path_steps']['Row']

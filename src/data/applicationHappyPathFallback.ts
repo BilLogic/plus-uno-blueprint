@@ -37,7 +37,7 @@ import { techDescriptionLink, URL_LINK_TYPE } from '@/lib/blueprintTechDescripti
 import { FIGMA_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
@@ -213,7 +213,7 @@ function buildApplicationDiscoveryFallback(
     { id: L.support, name: 'Support Actions', row_position: 6 },
   ] as const
 
-  const triggers: BlueprintCellTrigger[] = [
+  const triggers: BlueprintCellDependency[] = [
     {
       id: appTrigger(config, '001'),
       source_cell_id: appCell(config, '01', '04'),

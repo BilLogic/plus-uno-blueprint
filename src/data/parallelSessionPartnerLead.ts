@@ -1,5 +1,5 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
-import type { BlueprintCell, BlueprintCellTrigger } from '@/types/blueprint'
+import type { BlueprintCell, BlueprintCellDependency } from '@/types/blueprint'
 
 /** Shared Partner Action: Teacher steps for parallel in-session scenarios. */
 export const PARALLEL_SESSION_PARTNER_CONTENT = [
@@ -151,7 +151,7 @@ function trigger(
   fromLayer: PartnerLeadLayerSuffix,
   toStep: string,
   toLayer: PartnerLeadLayerSuffix,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: options.triggerId(slot),
     source_cell_id: options.cellId(fromStep, fromLayer),
@@ -164,8 +164,8 @@ function rowTriggers(
   layer: PartnerLeadLayerSuffix,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
@@ -185,7 +185,7 @@ function rowTriggers(
 
 export function buildParallelSessionPartnerLeadTriggers(
   options: BuildPartnerLeadOptions,
-): BlueprintCellTrigger[] {
+): BlueprintCellDependency[] {
   return [
     ...rowTriggers(options, '01', 1, PARALLEL_SESSION_PARTNER_COLUMN_COUNT - 1),
     ...rowTriggers(options, '02', 20, PARALLEL_SESSION_LEAD_COLUMN_COUNT - 1),

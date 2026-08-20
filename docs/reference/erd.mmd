@@ -4,7 +4,7 @@
 %%        paths.path_type ∈ (happy | unhappy | exception | alternative)
 %% Integrity: cells.path_id must match layers.path_id AND (path_id, step_id) must exist in
 %%            path_steps (DB trigger cells_validate_path_match). Import order:
-%%            paths → steps → path_steps → layers → cells → cell_triggers.
+%%            paths → steps → path_steps → layers → cells → cell_dependencies.
 %% Roles: layers.layer_role — semantic role key separate from the display name. Canonical:
 %%            customer_actions, frontstage_actions, backstage_actions, frontstage_tech,
 %%            backstage_tech, support_systems, visual, step_visual; extensible (org-defined
@@ -21,8 +21,8 @@ erDiagram
   paths ||--o{ cells : "has many"
   layers ||--o{ cells : "has many"
   steps ||--o{ cells : "has many"
-  cells ||--o{ cell_triggers : "source"
-  cells ||--o{ cell_triggers : "target"
+  cells ||--o{ cell_dependencies : "source"
+  cells ||--o{ cell_dependencies : "target"
 
   service_lifecycles {
     uuid id PK
@@ -90,7 +90,7 @@ erDiagram
     jsonb links "array of {type, label, url?}"
   }
 
-  cell_triggers {
+  cell_dependencies {
     uuid id PK
     uuid source_cell_id FK "unique pair; source != target"
     uuid target_cell_id FK

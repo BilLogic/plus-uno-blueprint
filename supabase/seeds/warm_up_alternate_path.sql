@@ -84,7 +84,7 @@ on conflict (id) do update set
   name = excluded.name,
   row_position = excluded.row_position;
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000350')
    or target_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000350');
 
@@ -147,7 +147,7 @@ Design Team'),
   ('a0000000-0000-4000-8000-000000060502', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000402', 'a0000000-0000-4000-8000-000000000316', E'Respond to classroom teachers "ask for help" request.')
 on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000070001', 'a0000000-0000-4000-8000-000000060101', 'a0000000-0000-4000-8000-000000060201'),
   ('a0000000-0000-4000-8000-000000070002', 'a0000000-0000-4000-8000-000000060201', 'a0000000-0000-4000-8000-000000060301'),

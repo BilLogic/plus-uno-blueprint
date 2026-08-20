@@ -93,7 +93,7 @@ create table public.cells (
   check (jsonb_typeof(links) = 'array')
 );
 
-create table public.cell_triggers (
+create table public.cell_dependencies (
   id uuid primary key default gen_random_uuid(),
   source_cell_id uuid not null references public.cells (id) on delete cascade,
   target_cell_id uuid not null references public.cells (id) on delete cascade,

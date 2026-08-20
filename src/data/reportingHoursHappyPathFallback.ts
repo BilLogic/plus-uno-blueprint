@@ -13,7 +13,7 @@ import {
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -130,7 +130,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: hoursTrigger(slot),
     source_cell_id: hoursCell(fromStep, fromLayer),
@@ -143,7 +143,7 @@ const APPROVE_HOURS_STEP_ID = STEPS[1].id
 const RECEIVE_PAYCHECK_STEP_ID = STEPS[2].id
 
 /** Report hours → approve hours → receive paycheck. */
-const REPORTING_HOURS_TRIGGERS: BlueprintCellTrigger[] = [
+const REPORTING_HOURS_TRIGGERS: BlueprintCellDependency[] = [
   trigger('090', '01', '03', '01', '06'),
   trigger('091', '01', '02', '01', '06'),
   trigger('094', '01', '06', '03', '07'),

@@ -282,7 +282,7 @@ export async function listLayers(client: Client): Promise<string> {
 }
 
 /**
- * The arrows, readable on their own. `create_cell_link` could write an edge
+ * The arrows, readable on their own. `create_cell_dependency` could write an edge
  * the agent had no way to read back; this is the missing half of that pair.
  * Scope to one cell when you have one — the whole graph is large.
  */
@@ -291,7 +291,7 @@ export async function listCellLinks(
   cellId?: string,
 ): Promise<string> {
   let query = client
-    .from('cell_triggers')
+    .from('cell_dependencies')
     .select('id, source_cell_id, target_cell_id, kind, label, note')
     .limit(200)
   if (cellId) {
@@ -493,9 +493,9 @@ export async function getBlueprint(
         }
       }
     }
-    // The arrows. `PATH_BLUEPRINT_SELECT` has always joined `cell_triggers`
+    // The arrows. `PATH_BLUEPRINT_SELECT` has always joined `cell_dependencies`
     // and this renderer used to drop them on the floor — the agent could
-    // WRITE an edge (create_cell_link) and never read one back, and the
+    // WRITE an edge (create_cell_dependency) and never read one back, and the
     // relationships the user sees on the canvas were invisible to it. The
     // join was already paid for; only the rendering was missing.
     if (triggers.length > 0) {

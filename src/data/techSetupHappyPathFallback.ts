@@ -30,7 +30,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -166,7 +166,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: tsTrigger(slot),
     source_cell_id: tsCell(fromStep, fromLayer),
@@ -174,7 +174,7 @@ function trigger(
   }
 }
 
-const TECH_SETUP_TRIGGERS: BlueprintCellTrigger[] = [
+const TECH_SETUP_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — supervisor email → Email → tutor receives
   trigger('001', '01', '04', '01', '06'),
   trigger('002', '01', '06', '01', '03'),

@@ -10,7 +10,7 @@ import {
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -110,7 +110,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: schedTrigger(slot),
     source_cell_id: schedCell(fromStep, fromLayer),
@@ -118,7 +118,7 @@ function trigger(
   }
 }
 
-const STANDARD_SCHEDULING_TRIGGERS: BlueprintCellTrigger[] = [
+const STANDARD_SCHEDULING_TRIGGERS: BlueprintCellDependency[] = [
   // Google Spreadsheet → Tutor supervisor review
   trigger('003', '01', '08', '01', '07'),
   // Supervisor review → send schedule to tutors

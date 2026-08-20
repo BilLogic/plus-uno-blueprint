@@ -62,7 +62,7 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
   'get_reference',
   'list_references',
   'list_layers',
-  'list_cell_links',
+  'list_cell_dependencies',
   'list_evidence',
   'get_evidence',
   'get_proposition',
@@ -91,7 +91,7 @@ export const WRITE_TOOL_NAMES = new Set([
   'create_layer',
   'upsert_cell',
   'update_cell',
-  'create_cell_link',
+  'create_cell_dependency',
   'update_path',
   'create_phase',
   'create_scenario',
@@ -246,9 +246,9 @@ export const TOOL_SPECS: ToolSpec[] = [
     parameters: { type: 'object', properties: {} },
   },
   {
-    name: 'list_cell_links',
+    name: 'list_cell_dependencies',
     description:
-      'The dependency arrows: which cell sets off or needs which other cell. `trigger` is temporal ("sets off"), `needs` is functional. Pass cell_id to get just the edges touching one cell — the whole graph is large. These are the same arrows the user sees on the canvas, and the read half of create_cell_link.',
+      'The dependency arrows: which cell sets off or needs which other cell. `trigger` is temporal ("sets off"), `needs` is functional. Pass cell_id to get just the edges touching one cell — the whole graph is large. These are the same arrows the user sees on the canvas, and the read half of create_cell_dependency.',
     parameters: {
       type: 'object',
       properties: {
@@ -658,7 +658,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'create_cell_link',
+    name: 'create_cell_dependency',
     description:
       'Connect two cells on the SAME path. kind "trigger" = source sets target in motion (drawn as an arrow); "needs" = source depends on target existing (panel-only) — "only makes sense after X" / "depends on X" reads as needs. State which kind you chose and why in your reply. Arrows only where they add information.',
     parameters: {

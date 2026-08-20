@@ -40,7 +40,7 @@ import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescripti
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -178,7 +178,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: bsjTrigger(slot),
     source_cell_id: bsjCell(fromStep, fromLayer),
@@ -191,8 +191,8 @@ function rowTriggers(
   layer: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
@@ -209,7 +209,7 @@ function rowTriggers(
   return triggers
 }
 
-const BEFORE_STUDENTS_JOIN_TRIGGERS: BlueprintCellTrigger[] = [
+const BEFORE_STUDENTS_JOIN_TRIGGERS: BlueprintCellDependency[] = [
   ...rowTriggers('01', '01', 1, 5),
   ...rowTriggers('01', '02', 10, 5),
   trigger('020', '01', '03', '02', '03'),

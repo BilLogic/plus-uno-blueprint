@@ -209,7 +209,7 @@ export async function dispatchTool(
       return listLayers(client)
     case 'list_references':
       return listReferences()
-    case 'list_cell_links':
+    case 'list_cell_dependencies':
       return listCellLinks(client, s(args, 'cell_id'))
     case 'list_evidence':
       return listEvidence(client, s(args, 'cell_id'))
@@ -492,7 +492,7 @@ export async function dispatchTool(
 
         return `Cell updated.${notes.length ? ` ${notes.join(' ')}` : ''}`
       }
-      case 'create_cell_link': {
+      case 'create_cell_dependency': {
         const kind = args.kind === 'needs' ? 'needs' : 'trigger'
         const id = await setCellDependency(client, {
           sourceCellId: need(args, 'source_cell_id'),

@@ -369,7 +369,7 @@ def build_path_sql(path: dict) -> list[str]:
         f"name = excluded.name, description = excluded.description, path_type = excluded.path_type;"
     )
     lines.append(
-        f"delete from public.cell_triggers where source_cell_id in "
+        f"delete from public.cell_dependencies where source_cell_id in "
         f"(select id from public.cells where path_id = {sql_str(pid)});"
     )
     lines.append(f"delete from public.cells where path_id = {sql_str(pid)};")
@@ -565,7 +565,7 @@ def build_path_sql(path: dict) -> list[str]:
     for tid, src, tgt in triggers:
         trig_rows.append(f"  ({sql_str(tid)}, {sql_str(src)}, {sql_str(tgt)})")
     lines.append(
-        "insert into public.cell_triggers (id, source_cell_id, target_cell_id)\nvalues\n"
+        "insert into public.cell_dependencies (id, source_cell_id, target_cell_id)\nvalues\n"
         + ",\n".join(trig_rows)
         + "\non conflict (id) do update set source_cell_id = excluded.source_cell_id, target_cell_id = excluded.target_cell_id;"
     )

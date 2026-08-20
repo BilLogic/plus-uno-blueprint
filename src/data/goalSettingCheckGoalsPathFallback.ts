@@ -33,7 +33,7 @@ import {
 } from '@/data/goalSettingHappyPathFallback'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -229,7 +229,7 @@ function trigger(
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
     id: gcTrigger(slot),
     source_cell_id: gcCell(fromStep, fromLayer),
@@ -241,8 +241,8 @@ function rowTriggers(
   layer: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
@@ -264,8 +264,8 @@ function columnLaneTriggers(
   toLayer: string,
   idStart: number,
   stepCount: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const triggers: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
     triggers.push(
@@ -292,7 +292,7 @@ const partnerLeadOptions = {
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
 }
 
-const GOAL_SETTING_CHECK_GOALS_TRIGGERS: BlueprintCellTrigger[] = [
+const GOAL_SETTING_CHECK_GOALS_TRIGGERS: BlueprintCellDependency[] = [
   ...buildParallelSessionPartnerLeadTriggers(partnerLeadOptions),
   ...rowTriggers('03', 50, 7),
   ...columnLaneTriggers('03', '06', 70, 8),

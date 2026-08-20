@@ -56,7 +56,7 @@ export const BLUEPRINT_CONTRACT = {
     'paths',
     'layers',
     'cells',
-    'cell_triggers',
+    'cell_dependencies',
     'findings',
     'slices',
     'slice_items',
@@ -64,20 +64,20 @@ export const BLUEPRINT_CONTRACT = {
   ],
 
   /** Tables the bot actively reads (probe list for /health/blueprint). */
-  botReadTables: ['cells', 'cell_triggers', 'findings', 'slices'],
+  botReadTables: ['cells', 'cell_dependencies', 'findings', 'slices'],
 
   /**
    * PostgREST embed-hint constraint names. These are the sharpest edge in the
    * whole contract: an embed hint is a STRING inside a `select=`, so nothing
-   * type-checks it on either side. Rename `cell_triggers` without renaming its
+   * type-checks it on either side. Rename `cell_dependencies` without renaming its
    * constraints and the request 400s, the bot's fetchEdges logs a warning and
    * returns [], and Slack reports "no dependencies" for cells that have them —
    * the same silent-empty failure the bot already documents from the
    * `cell_id=in.(…)` era.
    */
   fkConstraints: {
-    cellTriggerSource: 'cell_triggers_source_cell_id_fkey',
-    cellTriggerTarget: 'cell_triggers_target_cell_id_fkey',
+    cellDependencySource: 'cell_dependencies_source_cell_id_fkey',
+    cellDependencyTarget: 'cell_dependencies_target_cell_id_fkey',
   },
 
   /** RPCs the bot calls. DDL is versioned in this repo's supabase/migrations. */

@@ -15,7 +15,7 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
-delete from public.cell_triggers where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811');
+delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811';
 delete from public.layers where path_id = 'a0000000-0000-4000-8000-000000000811';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000811';
@@ -127,7 +127,7 @@ values
   ('a0000000-0000-4000-8000-0000001f1109', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-0000000008a8', 'a0000000-0000-4000-8000-000000000974', E'Dev Team\nDesign Team')
 on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-00000009b001', 'a0000000-0000-4000-8000-0000001f0101', 'a0000000-0000-4000-8000-0000001f0201'),
   ('a0000000-0000-4000-8000-00000009b002', 'a0000000-0000-4000-8000-0000001f0201', 'a0000000-0000-4000-8000-0000001f0301'),

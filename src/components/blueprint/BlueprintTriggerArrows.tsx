@@ -27,7 +27,7 @@ import {
 } from '@/lib/pathColorTheme'
 import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
 import { cn } from '@/lib/utils'
-import type { BlueprintCellTrigger } from '@/types/blueprint'
+import type { BlueprintCellDependency } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 import {
   BlueprintArrowMarkerDefs,
@@ -36,13 +36,13 @@ import {
 
 type ArrowLayer = 'forward' | 'wrap'
 
-export type ColoredBlueprintTrigger = BlueprintCellTrigger & {
+export type ColoredBlueprintTrigger = BlueprintCellDependency & {
   path_type: PathType
   opacity?: number
 }
 
 type BlueprintTriggerArrowsProps = {
-  triggers: BlueprintCellTrigger[] | ColoredBlueprintTrigger[]
+  triggers: BlueprintCellDependency[] | ColoredBlueprintTrigger[]
   contentRef: RefObject<HTMLElement | null>
   scrollContainerRef: RefObject<HTMLElement | null>
   /** forward = in column gaps behind cells; wrap = loop overlay on top */
@@ -74,7 +74,7 @@ function serializeSegments(segments: readonly ArrowSegment[]): string {
 }
 
 function isColoredTrigger(
-  trigger: BlueprintCellTrigger,
+  trigger: BlueprintCellDependency,
 ): trigger is ColoredBlueprintTrigger {
   return 'path_type' in trigger
 }

@@ -9,7 +9,7 @@
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const WRITES = new Set([
   'create_step', 'create_layer', 'upsert_cell', 'update_cell',
-  'create_cell_link', 'update_path',
+  'create_cell_dependency', 'update_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
   'create_slice', 'update_slice', 'replace_slice_frames',
@@ -400,7 +400,7 @@ Canvas mode: view`,
     traceChecks: [
       {
         id: 'one-dependency',
-        fn: (trace) => calls(trace, 'create_cell_link').length <= 1 || 'multiple dependency writes',
+        fn: (trace) => calls(trace, 'create_cell_dependency').length <= 1 || 'multiple dependency writes',
       },
     ],
     judgeLines: [

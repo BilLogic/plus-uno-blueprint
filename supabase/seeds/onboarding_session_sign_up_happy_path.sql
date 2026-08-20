@@ -15,7 +15,7 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where source_cell_id in (
   select id from public.cells
   where path_id = 'a0000000-0000-4000-8000-000000000805'
@@ -150,16 +150,16 @@ set
   )
 where id = 'a0000000-0000-4000-8000-000000130108';
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where id in (
-  select id from public.cell_triggers
+  select id from public.cell_dependencies
   where source_cell_id in (
     select id from public.cells
     where path_id = 'a0000000-0000-4000-8000-000000000805'
   )
 );
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000092003', 'a0000000-0000-4000-8000-000000130103', 'a0000000-0000-4000-8000-000000130106'),
   ('a0000000-0000-4000-8000-000000092001', 'a0000000-0000-4000-8000-000000130106', 'a0000000-0000-4000-8000-000000130107'),
