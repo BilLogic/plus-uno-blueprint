@@ -132,6 +132,50 @@ and the whole point of this plan is that the database says the domain word.
 
 ---
 
+## 🔴 The trap that governs every rename here
+
+**`alter table ... rename column` does not touch plpgsql function bodies.**
+Views and constraints track their dependencies by OID and follow a rename
+automatically. A plpgsql body is stored as **text** and resolved at *execution*
+time — so a renamed column leaves every function that names it syntactically
+intact, deployable, and broken on the next call.
+
+Measured on production, 2026-08-20, across the 36 functions in `public` +
+`semantic_search`:
+
+| Identifier | Functions naming it |
+|---|---|
+| `layers` | **14** |
+| `layer_id` | **9** |
+| `cell_triggers` | **8** |
+| `layer_role` | **6** |
+| `paths.description` | 4 |
+
+**So each phase below is "rename the column, then rewrite N function bodies",
+not "rename the column."** The rewrite is the work; the `alter table` is the
+easy line. Nothing in CI catches a missed one — the function still compiles,
+and the failure surfaces as a runtime error the first time that path runs,
+which for the rarer RPCs could be weeks.
+
+**Technique that worked** (used for `search_blueprint` v5 and the `view_type`
+collapse): fetch `pg_get_functiondef`, `replace()` the exact fragment, assert
+the length changed, then `execute`. It preserves the rest of the body verbatim
+and aborts loudly if the anchor moved. Hand-retyping a body is how
+`create_scenario` nearly shipped with the wrong return type — Postgres caught
+that one only because the signature changed too. A body change would not have
+been caught.
+
+**Acceptance for every rename phase:** after the migration, assert that **zero**
+functions still name the old identifier:
+
+```sql
+select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname in ('public','semantic_search') and p.prokind = 'f'
+  and pg_get_functiondef(p.oid) ~* '\mlayer_id\M';   -- must return 0 rows
+```
+
+---
+
 ## Order of work
 
 **This must land after `refactor/agent-tool-surface` merges.** That branch
@@ -208,10 +252,23 @@ Do this one **only with Phase 1**, not alone. It touches `getCell`,
 the compare model. Worth it because the workaround comment is in the code
 today, but not worth its own migration window.
 
-`paths.description` rides along: it has **no UI reader at all today**, so its
-rename is a pure schema + type-regeneration change. Doing it now means
-[plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md)'s scenario panel is
-written against the final name and never has to be edited twice.
+⚠️ **Correction — `paths.description` is read in at least six places.** An
+earlier draft of this plan claimed it "has no UI reader at all today," which is
+wrong. Grepped: `SlideStickyHeader.tsx:42,69`, `MergedCompareGrid.tsx:450,669`,
+`WalkthroughPathSelect.tsx:39,89`, `PathMultiSelect.tsx:102,134,192`,
+`ServiceBlueprintGrid.tsx:183,194`, `BlueprintPathBand.tsx:404` — plus
+`PATH_LIST_SELECT` and `PATH_BLUEPRINT_SELECT`, the `BlueprintPath` type, and
+**four database functions** (`duplicate_path`, `duplicate_scenario`,
+`search_blueprint`).
+
+What remains true is that there is no **editing** surface — which is what
+[plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md)'s scenario panel
+adds. The rename is still worth doing before that panel is written, so it is
+written against the final name; it is just not free.
+
+Component **props** named `description` stay as they are: those are display
+APIs, not column names. Only field access (`path.description` → `path.summary`)
+moves.
 
 ### Phase 5 — positions (optional)
 
