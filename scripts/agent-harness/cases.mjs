@@ -8,12 +8,12 @@
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const WRITES = new Set([
-  'add_step', 'add_lane', 'upsert_cell', 'update_cell_content',
-  'update_cell_spec', 'set_cell_dependency', 'rename_path',
+  'create_step', 'create_layer', 'upsert_cell', 'update_cell_content',
+  'update_cell_spec', 'create_cell_link', 'update_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
   'create_slice', 'update_slice', 'replace_slice_frames',
-  'record_finding', 'set_finding_status',
+  'create_finding', 'update_finding',
 ])
 
 const writesIn = (trace, turn) =>
@@ -125,7 +125,7 @@ export const CASES = [
       {
         id: 'reads-check-docs',
         fn: (trace) =>
-          calls(trace, 'read_reference').some((t) =>
+          calls(trace, 'get_reference').some((t) =>
             String(t.args.name ?? '').startsWith('check-') ||
             t.args.name === 'audit-playbook',
           ) || 'never read the audit playbook or any check doc',
@@ -137,7 +137,7 @@ export const CASES = [
       {
         id: 'records-findings',
         fn: (trace) =>
-          calls(trace, 'record_finding').length > 0 ||
+          calls(trace, 'create_finding').length > 0 ||
           'ran an audit but never recorded a finding row',
       },
       {
@@ -146,8 +146,8 @@ export const CASES = [
           const offenders = toolCalls(trace).filter(
             (t) =>
               WRITES.has(t.name) &&
-              t.name !== 'record_finding' &&
-              t.name !== 'set_finding_status',
+              t.name !== 'create_finding' &&
+              t.name !== 'update_finding',
           )
           return (
             offenders.length === 0 ||
@@ -158,12 +158,12 @@ export const CASES = [
       {
         id: 'one-run-id',
         fn: (trace) => {
-          const recs = calls(trace, 'record_finding')
+          const recs = calls(trace, 'create_finding')
           const omitted = recs.filter((t) => !t.args.run_id).length
           return (
             recs.length <= 1 ||
             omitted <= 1 ||
-            `${omitted} record_finding calls minted their own run_id — one run, one run_id`
+            `${omitted} create_finding calls minted their own run_id — one run, one run_id`
           )
         },
       },
@@ -299,9 +299,9 @@ Canvas mode: view`,
     turns: ['Add a QA lane to the Warm-Up happy path.', 'yes, add it.'],
     // --smoke: exercises real Supabase reads + dry-run write plumbing.
     smokeCalls: [
-      ['read_reference', { name: 'layer-roles' }],
+      ['get_reference', { name: 'layer-roles' }],
       ['list_scenarios', {}],
-      ['add_lane', { scenario_id: 'smoke', name: 'QA' }],
+      ['create_layer', { scenario_id: 'smoke', name: 'QA' }],
     ],
     smokeReply: 'Adding the QA lane now (one line of narration first).',
     traceChecks: [
@@ -311,16 +311,16 @@ Canvas mode: view`,
         fn: (trace) => {
           const firstWrite = firstIndex(trace, (t) => WRITES.has(t.name))
           if (firstWrite === -1) return 'never wrote the lane'
-          const refBefore = trace.slice(0, firstWrite).some((t) => t.name === 'read_reference')
+          const refBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_reference')
           const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'list_scenarios')
-          if (!refBefore) return 'no read_reference before the write (layer-roles / lane-vocabulary)'
+          if (!refBefore) return 'no get_reference before the write (layer-roles / lane-vocabulary)'
           if (!readBefore) return 'no blueprint read before the write'
           return true
         },
       },
       {
         id: 'exactly-one-add-lane',
-        fn: (trace) => calls(trace, 'add_lane').length === 1 || `${calls(trace, 'add_lane').length} add_lane calls`,
+        fn: (trace) => calls(trace, 'create_layer').length === 1 || `${calls(trace, 'create_layer').length} create_layer calls`,
       },
       narratesBeforeWrites(1),
     ],
@@ -398,7 +398,7 @@ Canvas mode: view`,
     traceChecks: [
       {
         id: 'one-dependency',
-        fn: (trace) => calls(trace, 'set_cell_dependency').length <= 1 || 'multiple dependency writes',
+        fn: (trace) => calls(trace, 'create_cell_link').length <= 1 || 'multiple dependency writes',
       },
     ],
     judgeLines: [

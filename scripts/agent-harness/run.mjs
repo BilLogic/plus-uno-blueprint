@@ -112,7 +112,7 @@ const adapterDoc = readFileSync(resolve(REFERENCES_DIR, 'canvas-adapter.md'), 'u
 function buildSystem(skillId, contextNote) {
   const parts = [
     ROLE,
-    '\n\n--- canvas-adapter reference (read_reference has more) ---\n',
+    '\n\n--- canvas-adapter reference (get_reference has more) ---\n',
     adapterDoc,
   ]
   if (skillId) {
@@ -322,24 +322,24 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       record.dryRun = true
       // The rehearsal note matters: reads are REAL and will not reflect
       // this write — without it the model re-reads, concludes the write
-      // failed, and retries (observed: doubled add_lane).
+      // failed, and retries (observed: doubled create_layer).
       record.result =
-        name === 'record_finding'
+        name === 'create_finding'
           ? `Recorded ${args.severity ?? 'warn'} finding for ${args.check_name ?? '?'}. run_id ${args.run_id ?? `00000000-0000-4000-8000-00000000d${dryCounter}`}; reuse it for the rest of this run. NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
           : `Done (${name} accepted, ref dry-${dryCounter}). NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
       return record.result
     }
     switch (name) {
-      case 'read_reference':
+      case 'get_reference':
         record.result = readFileSync(resolve(REFERENCES_DIR, `${String(args.name).replace(/[^a-z-]/g, '')}.md`), 'utf8')
         return record.result
       case 'list_scenarios': record.result = await realListScenarios(); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'get_cell': record.result = await realGetCell(args.cell_id); return record.result
-      case 'get_compare_diff':
+      case 'compare_blueprint':
         // The compare model is a client-bundle computation (compareSlots.ts);
         // the harness has no bundler, so rehearsal falls back to the raw grids.
-        record.result = 'get_compare_diff is unavailable in this rehearsal environment — read get_blueprint and compare the paths by hand (steps align across paths by name).'
+        record.result = 'compare_blueprint is unavailable in this rehearsal environment — read get_blueprint and compare the paths by hand (steps align across paths by name).'
         return record.result
       case 'list_owner_tags': record.result = await realListOwnerTags(); return record.result
       case 'list_slices': record.result = await realListSlices(); return record.result
@@ -373,7 +373,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'annotate_cells': record.result = `Drew boxes around ${Array.isArray(args.cell_ids) ? args.cell_ids.length : 0} cell(s).`; return record.result
       case 'get_ui_state': record.result = 'No UI state is being reported right now.'; return record.result
       case 'get_change_history': record.result = 'No changes recorded in this browser session yet.'; return record.result
-      case 'get_deletion_impact':
+      case 'measure_deletion_impact':
         record.result = `Deleting this ${args.kind} would destroy:\n  4 cells\n  2 arrows\nWarnings:\n  1 slice will lose frames: \u201cTutor journey\u201d.\nWhat survives:\n  Archived to the recovery table first \u2014 nothing is destroyed without a copy behind it.\nRelay these sentences as they are. You cannot perform this delete \u2014 only the human can, through the confirm dialog, by typing the name.`
         return record.result
       case 'open_phase': record.result = 'Opened the phase on the canvas.'; return record.result

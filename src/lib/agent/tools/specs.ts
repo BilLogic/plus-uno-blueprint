@@ -9,6 +9,42 @@ import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
  * refusal, not an attempt. Deliberately absent: every delete.
  */
 
+/**
+ * NAMING — the rule every tool here follows.
+ *
+ * A tool name is `<verb>_<noun>`. The verb states the CONTRACT (what the
+ * caller may assume about the result); the noun states the entity family,
+ * or the corpus when the rows can come from several rungs of one walk.
+ *
+ *   search_  ranked matches for a query — truncated at k, snippets only
+ *   list_    the COMPLETE set at a level — no query, always projected
+ *   get_     named ids — full bodies, bounded BY the ids being required
+ *   compare_ / measure_   derived, not stored
+ *   create_ / update_ / upsert_ / duplicate_   data writes (CRUD)
+ *   set_     UI STATE ONLY — never a data write
+ *   open_ / focus_   move the user's canvas
+ *
+ * `list_` and `search_` stay apart because their success criteria are
+ * opposite: enumeration must be COMPLETE, ranking must be RELEVANT. A
+ * model that reaches for the ranked door on an enumeration question gets
+ * a silent top-k truncation and reports a partial set as the whole one.
+ *
+ * `list_` and `get_` stay apart because `get_` REQUIRES ids, and that
+ * requirement is the payload guardrail — it makes "every cell at full
+ * body" impossible by construction rather than by a conditional check.
+ *
+ * NAME vs PARAMETER. Scope rides in a parameter when it is a zoom level on
+ * one parent-child walk (`phase > scenario > path > step/layer > cell` —
+ * that is `granularity`), and in the NAME when it is a different record
+ * type. Test: can you reach it by walking parent to child through the
+ * grid? Evidence hangs off a cell but is not a coarser cell, so it earns a
+ * name. Attachments on rows you already asked for ride in `include`.
+ *
+ * A tool name is NOT a table name and NOT an RPC name. The agent tool
+ * `create_step` dispatches to the Postgres RPC `add_step`; renaming one
+ * must never rename the other.
+ */
+
 const str = (description: string) => ({ type: 'string', description })
 
 /**
@@ -23,10 +59,10 @@ const str = (description: string) => ({ type: 'string', description })
  * enforcement stays the real wall.
  */
 export const MOBILE_READ_TOOL_NAMES = new Set([
-  'read_reference',
+  'get_reference',
   'list_scenarios',
   'get_blueprint',
-  'get_compare_diff',
+  'compare_blueprint',
   'get_cell',
   'list_slices',
   'get_slice',
@@ -37,19 +73,19 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
   'open_scenario',
   'focus_cell',
   'open_cell_panel',
-  'get_deletion_impact',
+  'measure_deletion_impact',
   'list_findings',
 ])
 
 /** The tools that mutate data — the loop enforces batch etiquette on these. */
 export const WRITE_TOOL_NAMES = new Set([
-  'add_step',
-  'add_lane',
+  'create_step',
+  'create_layer',
   'upsert_cell',
   'update_cell_content',
   'update_cell_spec',
-  'set_cell_dependency',
-  'rename_path',
+  'create_cell_link',
+  'update_path',
   'create_phase',
   'create_scenario',
   'create_path',
@@ -58,13 +94,13 @@ export const WRITE_TOOL_NAMES = new Set([
   'create_slice',
   'update_slice',
   'replace_slice_frames',
-  'record_finding',
-  'set_finding_status',
+  'create_finding',
+  'update_finding',
 ])
 
 export const TOOL_SPECS: ToolSpec[] = [
   {
-    name: 'read_reference',
+    name: 'get_reference',
     description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read layer-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
     parameters: {
       type: 'object',
@@ -88,7 +124,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'get_compare_diff',
+    name: 'compare_blueprint',
     description:
       "Structured comparison of a scenario's paths: canonical columns with verdicts, one group per divergent STEP (the same \"Step N\" the ledger groups by and jump_divergence takes) tagged with its logical divergence zone, every differing slot with per-path quotes and cell ids, and the detail-only (description/links) group. Read before driving the compare UI or answering \"what differs\". Triggers/needs edges are not compared.",
     parameters: {
@@ -328,7 +364,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'get_deletion_impact',
+    name: 'measure_deletion_impact',
     description:
       'What deleting something would destroy — cell and arrow counts, which slices lose frames, which of those undo cannot put back, and what survives. A pure read: it deletes nothing, and no delete tool exists for you. Use it to answer "what happens if I remove this?" BEFORE the human opens the confirm dialog. Relay the warning and reassurance sentences VERBATIM; they are worded to not overstate what comes back.',
     parameters: {
@@ -409,7 +445,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'add_step',
+    name: 'create_step',
     description:
       'Add a step (column) to a path. Read sibling paths first — step names align across paths BY NAME, so reuse the exact name when the step exists elsewhere.',
     parameters: {
@@ -426,7 +462,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'add_lane',
+    name: 'create_layer',
     description:
       'Add a lane to EVERY path of a scenario. Read layer-roles and lane-vocabulary first; lane labels are byte-identical for the same actor group across scenarios.',
     parameters: {
@@ -497,7 +533,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'set_cell_dependency',
+    name: 'create_cell_link',
     description:
       'Connect two cells on the SAME path. kind "trigger" = source sets target in motion (drawn as an arrow); "needs" = source depends on target existing (panel-only) — "only makes sense after X" / "depends on X" reads as needs. State which kind you chose and why in your reply. Arrows only where they add information.',
     parameters: {
@@ -512,7 +548,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'rename_path',
+    name: 'update_path',
     description: 'Rename a path.',
     parameters: {
       type: 'object',
@@ -536,7 +572,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'record_finding',
+    name: 'create_finding',
     description:
       'Record one sb:audit / sb:whatif finding as a triageable row. Dedupe is built in: an open finding with the same fingerprint (check_name + cited cells) is updated in place, a dismissed one stays dismissed (the call reports it and writes nothing), a resolved one reopens as a new row. Omit run_id on the first finding of a run and reuse the returned run_id for the rest of that run. Cite cells by id; for a zero-cell finding pass scope instead (e.g. "scenario:Warm-Up").',
     parameters: {
@@ -552,13 +588,13 @@ export const TOOL_SPECS: ToolSpec[] = [
           items: { type: 'string' },
         },
         scope: str('Zero-cell fingerprint scope, required when cell_ids is empty. Include a short reason slug so two zero-cell findings from one check cannot collide, e.g. "scenario:Warm-Up:orphan-step-cooldown"'),
-        run_id: str('The run identity returned by the first record_finding of this run'),
+        run_id: str('The run identity returned by the first create_finding of this run'),
       },
       required: ['source', 'check_name', 'severity', 'note'],
     },
   },
   {
-    name: 'set_finding_status',
+    name: 'update_finding',
     description:
       'Triage a finding: resolved (fixed / no longer true) or dismissed (accepted as-is; dismissed findings never reopen), or open to reopen. This is the only edit humans or agents make to an existing finding.',
     parameters: {

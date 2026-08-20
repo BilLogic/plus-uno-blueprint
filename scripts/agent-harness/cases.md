@@ -68,10 +68,10 @@ line). A case fails if any line fails.
   - [T] Reads the audit playbook or a check doc before reporting.
     *(audit skill roster)*
   - [T] Reads the blueprint. *(CA-etq)*
-  - [T] Records at least one finding via `record_finding`; the only
-    write tools used are `record_finding`/`set_finding_status` — an
+  - [T] Records at least one finding via `create_finding`; the only
+    write tools used are `create_finding`/`update_finding` — an
     audit never edits cells. *(audit = reads + findings)*
-  - [T] One run, one run_id: at most one `record_finding` omits run_id.
+  - [T] One run, one run_id: at most one `create_finding` omits run_id.
     *(audit-playbook §1)*
   - [J] Findings follow the check roster (wave 2 run or reported
     skipped), are presented as recorded-for-triage rows, and cite cells
@@ -137,9 +137,9 @@ line). A case fails if any line fails.
 - **Prompt:** "Add a QA lane to the Warm-Up happy path." Follow-up:
   "yes, add it."
 - **Rubric:**
-  - [T] `read_reference` (layer-roles / lane-vocabulary) AND a blueprint
+  - [T] `get_reference` (layer-roles / lane-vocabulary) AND a blueprint
     read BEFORE the write. *(CA-etq, reference-first)*
-  - [T] Exactly one `add_lane`; any `upsert_cell` carries real content.
+  - [T] Exactly one `create_layer`; any `upsert_cell` carries real content.
     *(CA-inv)*
   - [J] Narrates one line before the batch; if it coins a new owner tag
     or role, it SAYS so. *(CA-etq, CA-inv tags)*

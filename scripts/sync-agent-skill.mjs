@@ -6,7 +6,7 @@
  *
  * The plugin repo is the canonical home (humans manage the same files as
  * IDE skills); the app bundles the vendored copy via ?raw imports and
- * serves it through the read_reference tool.
+ * serves it through the get_reference tool.
  */
 import { copyFileSync, existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -18,7 +18,7 @@ const VENDORED_SKILLS = resolve('src/lib/agent/skill/skills')
 // Plugin-relative source path per vendored reference. The plugin keeps its
 // shared core at references/ and each skill's own materials under
 // skills/<name>/references/; the app's vendored dir stays flat because
-// read_reference serves files by bare name.
+// get_reference serves files by bare name.
 const FILES = [
   'references/canvas-adapter.md',
   'references/layer-roles.md',

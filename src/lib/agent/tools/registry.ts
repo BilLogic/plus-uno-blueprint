@@ -102,13 +102,13 @@ export async function dispatchTool(
   args: Record<string, unknown>,
 ): Promise<string> {
   switch (name) {
-    case 'read_reference':
+    case 'get_reference':
       return readReference(need(args, 'name'))
     case 'list_scenarios':
       return listScenarios(client)
     case 'get_blueprint':
       return getBlueprint(client, need(args, 'scenario_id'))
-    case 'get_compare_diff': {
+    case 'compare_blueprint': {
       const pathIds = Array.isArray(args.path_ids)
         ? args.path_ids.filter(
             (value): value is string => typeof value === 'string',
@@ -118,7 +118,7 @@ export async function dispatchTool(
     }
     case 'get_cell':
       return getCell(client, need(args, 'cell_id'))
-    case 'get_deletion_impact': {
+    case 'measure_deletion_impact': {
       const kind = s(args, 'kind')
       // Validated against the UI's vocabulary, not the RPC's: `lane` and
       // `step` are answerable server-side but their counts do not match what
@@ -246,7 +246,7 @@ export async function dispatchTool(
   setAgentAttribution(agentSessionId)
   try {
     switch (name) {
-      case 'add_step': {
+      case 'create_step': {
         const at = typeof args.at_position === 'number' ? args.at_position : undefined
         const id = await addStep(client, {
           pathId: need(args, 'path_id'),
@@ -255,7 +255,7 @@ export async function dispatchTool(
         })
         return `Added step (${id}).`
       }
-      case 'add_lane': {
+      case 'create_layer': {
         await addLane(client, {
           scenarioId: need(args, 'scenario_id'),
           name: need(args, 'name'),
@@ -363,7 +363,7 @@ export async function dispatchTool(
         )
         return 'Cell spec updated.'
       }
-      case 'set_cell_dependency': {
+      case 'create_cell_link': {
         const kind = args.kind === 'needs' ? 'needs' : 'trigger'
         const id = await setCellDependency(client, {
           sourceCellId: need(args, 'source_cell_id'),
@@ -373,7 +373,7 @@ export async function dispatchTool(
         })
         return `Dependency set (${id}).`
       }
-      case 'rename_path': {
+      case 'update_path': {
         await renamePath(client, {
           pathId: need(args, 'path_id'),
           name: need(args, 'name'),
@@ -482,7 +482,7 @@ export async function dispatchTool(
         await replaceSliceFrames(client, sliceId, frames)
         return `Replaced the slice's frames (${frames.length}).`
       }
-      case 'record_finding': {
+      case 'create_finding': {
         const source = args.source === 'whatif' ? 'whatif' : 'audit'
         const checkName = need(args, 'check_name')
         const severityArg = s(args, 'severity')
@@ -534,7 +534,7 @@ export async function dispatchTool(
         const reopened = existing && existing.length > 0
         return `Recorded ${severityArg} finding for ${checkName}${reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. run_id ${runId}; reuse it for the rest of this run.`
       }
-      case 'set_finding_status': {
+      case 'update_finding': {
         const status = s(args, 'status')
         if (status !== 'open' && status !== 'resolved' && status !== 'dismissed')
           throw new Error('status must be open, resolved, or dismissed.')

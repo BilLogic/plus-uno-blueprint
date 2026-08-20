@@ -10,7 +10,7 @@ nothing here relaxes one.
 
 | Skill-world operation | Here |
 |---|---|
-| Edit IR JSON | call write tools: `create_phase`, `create_scenario`, `create_path`, `duplicate_path`, `duplicate_scenario`, `add_step`, `add_lane`, `upsert_cell`, `update_cell_content`, `update_cell_spec`, `set_cell_dependency`, `rename_path`, `create_slice`, `update_slice`, `replace_slice_frames`, `record_finding`, `set_finding_status` — plus `ui_command`'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. Each tool's own description carries its binding rules — trust it over memory. |
+| Edit IR JSON | call write tools: `create_phase`, `create_scenario`, `create_path`, `duplicate_path`, `duplicate_scenario`, `create_step`, `create_layer`, `upsert_cell`, `update_cell_content`, `update_cell_spec`, `create_cell_link`, `update_path`, `create_slice`, `update_slice`, `replace_slice_frames`, `create_finding`, `update_finding` — plus `ui_command`'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. Each tool's own description carries its binding rules — trust it over memory. |
 | Save / rework a slice | `create_slice`, `update_slice`, `replace_slice_frames` |
 | Drive the interface | `open_phase`, `open_scenario`, `focus_cell`, `open_cell_panel`, `set_canvas_mode` (view/design), `set_sidebar`, `annotate_cells` (ephemeral marker boxes + note) — the same gestures the human has; none of these touch data |
 | Rename an owner tag everywhere | no tool — point the human at the owner-tag dropdown's rename (it renames everywhere at once) |
@@ -20,24 +20,24 @@ nothing here relaxes one.
 | Sign-off hash gate | the human's Save gate — every write you make lands immediately but revertibly in the change sheet; the human keeps or reverts each row |
 | Scenario import / re-import | not available here — say so and point at the IDE flow |
 | Read source documents | not available — the human pastes relevant text into chat |
-| Reference docs (cited in playbooks as `references/…` or `skills/<skill>/references/…` paths) | `read_reference` serves the canvas set by BARE NAME — the filename without directory or `.md` (e.g. `skills/audit/references/check-gap-sweep.md` → `check-gap-sweep`). The set: playbooks for cocreate/audit/whatif/slice, check docs, lane-vocabulary, layer-roles, data-model, elicitation-protocol, slice-templates. The IDE-only references (ingest/translate/review-import playbooks, adapter-contract, change-request-schema) do NOT exist on the canvas — their binding rules are already translated by THIS file; never attempt to read them, and never improvise their content |
+| Reference docs (cited in playbooks as `references/…` or `skills/<skill>/references/…` paths) | `get_reference` serves the canvas set by BARE NAME — the filename without directory or `.md` (e.g. `skills/audit/references/check-gap-sweep.md` → `check-gap-sweep`). The set: playbooks for cocreate/audit/whatif/slice, check docs, lane-vocabulary, layer-roles, data-model, elicitation-protocol, slice-templates. The IDE-only references (ingest/translate/review-import playbooks, adapter-contract, change-request-schema) do NOT exist on the canvas — their binding rules are already translated by THIS file; never attempt to read them, and never improvise their content |
 
 ## Canvas audit run (`/sb:audit`)
 
 1. **Roster**: enumerate the check docs; every check is executed or
    reported skipped-with-reason.
-2. **Read the docs in ONE round**: parallel `read_reference` calls for
+2. **Read the docs in ONE round**: parallel `get_reference` calls for
    every check you will execute. A check run without its doc is improv,
    not the audit. Each doc's Non-findings section is binding — a finding
    it excludes is invalid (an empty lane alone is not a gap unless you
    cite the contradicting content).
-3. **Record as you go**: findings land via `record_finding` the moment a
+3. **Record as you go**: findings land via `create_finding` the moment a
    check completes — deferring all recording to the end risks running
    out of tool rounds and delivering chat-only opinion, which is a
    failed audit. Reuse the run_id the first call returns for the whole
    run.
 4. **Report**: per-check counts, skipped checks with reasons.
-5. **Triage** = `set_finding_status`; the ledger = `list_findings`.
+5. **Triage** = `update_finding`; the ledger = `list_findings`.
 
 Canvas findings cite cells by id (written as the cell_keys), so canvas
 and IDE fingerprints are separate dedupe spaces.
@@ -46,11 +46,11 @@ and IDE fingerprints are separate dedupe spaces.
 
 1. **The hypothetical variant is conversational**: analysis never writes
    cells — reason over reads, record consequence findings via
-   `record_finding` source `whatif`.
+   `create_finding` source `whatif`.
 2. **Promotion is direct**: only on the human's explicit acceptance,
    apply the diff through the ordinary write tools (nod gate, small
    batches, ledger), then resolve superseded whatif findings via
-   `set_finding_status`.
+   `update_finding`.
 3. No change-request file here; optimistic-concurrency tokens replace
    the sign-off-hash staleness guard.
 
