@@ -85,6 +85,50 @@ findings forever).
 **Agent tables** — `agent_sessions` / `agent_messages`, open to all
 `authenticated` (chatting is what viewers are for), no anon policies.
 
+**`semantic_search` schema** — the retrieval index over the blueprint, and
+this repo's to own: the DDL used to be vendored in the uno-bot repo, which
+deleted it when the app took ownership. Additive and read-only with respect
+to `public.*` — dropping the whole schema leaves the blueprint byte-for-byte
+unchanged.
+
+| Object | What it is |
+| --- | --- |
+| `corpus_chunks` | One row per embedded cell: breadcrumb `title`, the enriched `chunk` text, a 768-dim `embedding` (Vertex `text-embedding-005`), HNSW index. **RLS-sealed — nothing reads it directly.** |
+| `blueprint_chunks_src` | Read-only view joining each non-empty cell up its hierarchy into the chunk + title. `service_role` only. |
+| `index_meta` | Which model built the index. The hybrid RPC rejects a caller declaring a different one. |
+| `match_corpus_chunks()` | Vector-only lookup. Legacy; the hybrid RPC superseded it for the bot. |
+| `prune_orphans()` | Deletes exactly the chunks whose cell no longer qualifies. Returns the count. |
+| `index_health()` | Counts only — total, eligible, orphaned, stale, last embed. |
+| `public.blueprint_hybrid_search()` | **The retrieval entry point.** Vector + prose + structural-name, fused by reciprocal rank. |
+
+**The pattern to keep: narrow doors, not wide grants.** The table is sealed and
+every capability is a `security definer` function that permits exactly one
+operation. Reads go through `match_corpus_chunks` / `blueprint_hybrid_search`;
+the one write that is not an upsert goes through `prune_orphans()`, whose
+`WHERE` lives inside the definer so the caller chooses no rows. `service_role`
+holds `INSERT, SELECT, UPDATE` on the table and **not** `DELETE` — it briefly
+did (2026-08-19) and that was taken back once the caller moved to the function.
+Mutating functions are granted to `service_role` alone; `anon` reaches only the
+counting and reading ones.
+
+Two failure modes this schema has actually produced, both worth remembering
+because neither looked like a failure:
+
+- **A missing grant that only broke the last step.** The nightly backfill's
+  orphan prune 403'd for two nights while embeddings stayed current, so the
+  data looked healthy and 43 chunks for hard-deleted cells kept answering
+  searches. Anything derived needs a health check that is *read* somewhere —
+  hence `index_health()` and the bot's `/debug/blueprint`.
+- **Similarity is not a confidence score.** Measured across a 26-case set,
+  questions with no answer in the blueprint scored 0.607–0.654 while genuine
+  hits reached down to 0.565. No threshold separates them. Consumers judge by
+  which retrievers corroborated (`matched_by`), never by score.
+
+A change to `blueprint_chunks_src` alters chunk *text* without touching
+`cells.updated_at`, so it requires a **full** re-embed — the nightly pass is
+incremental and would skip every row. Run the uno-bot repo's *embed blueprint*
+workflow with `full: true`.
+
 ## Authoring writes
 
 Single owner of the write path — other docs link here.
