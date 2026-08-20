@@ -29,10 +29,26 @@ use.
 
 ## Problem statement
 
-**P1 — The canvas agent cannot find a cell by what it says.** 37 tools, all
-structural: `list_scenarios` → `get_blueprint(scenarioId)` → `get_cell(id)`.
-Nothing matches content. `focus_cell`, `open_cell_panel` and `annotate_cells`
-all take cell IDs the agent has no way to *discover* by description.
+**P1 — Navigation already works for the top two levels; the bottom three are
+the gap.** An earlier draft claimed the agent "cannot find anything." Wrong, and
+worth stating precisely, because it changes what this tool is for.
+
+`list_scenarios` returns **all 6 phases and 22 scenarios with ids and
+descriptions for ~1,100 tokens** — a complete structural index. So "take me to
+the Warm-Up scenario" resolves cleanly: list → match the name → `open_scenario(id)`.
+That is why all 46 observed user turns succeeded.
+
+What it does NOT cover:
+
+| Level | Findable by name today? |
+|---|---|
+| Phase (6), Scenario (22) | ✅ `list_scenarios`, ~1.1k tokens |
+| **Path (38)** | ⚠️ only inside `get_blueprint`, which needs the scenario you are trying to find |
+| **Step, Lane** | ⚠️ same |
+| **Cell, by content** | ❌ nothing |
+
+`focus_cell`, `open_cell_panel` and `annotate_cells` all take cell IDs the agent
+can only obtain by loading a whole scenario it must already have identified.
 
 **P2 — "Does this exist?" is unanswerable, and the product doc makes it
 load-bearing.** `docs/product/06-product-design-on-blueprints.md`: *"If the cell
@@ -203,6 +219,42 @@ CONTENT SCAN, not a column test."*
 embedding endpoint and a second home for a Vertex credential, against
 `AGENTS.md`'s keys-in-one-place rule. Out of scope; the keyword+structural half
 covers the "find by words" job that P1/P2 describe.
+
+### Granularity — and why a MIX is the right default
+
+The portal returns only `kind='cell'`. The function it replaced returned mixed
+kinds (`cell|step|path|scenario|phase`). **That is a regression this work
+introduced and none of the 26 eval cases caught**, because every case asserts on
+cells (or on the `path` field *of* cell rows).
+
+Restoring it as an explicit `granularity` parameter beats the old implicit mix,
+because the same match set answers different questions depending on how the
+asker meant it. Measured, one query, three projections:
+
+| `granularity` | Rows for "Zoom" | What it tells you |
+|---|---|---|
+| `cell` (today) | 15 of 116 | fifteen breadcrumbs to read |
+| `scenario` | 11 | Goal Setting **48**, Before Students Join 19, Warm-Up 18 — where Zoom lives |
+| `lane` | 8 | **Front Stage Tech 88 of 116** — Zoom is a front-stage touchpoint, in one line |
+
+The `lane` rollup answers a service-design question that fifteen cells would not.
+
+**Accept an ARRAY, not a single value** — `granularity: ['scenario','cell']`.
+A search question rarely has one right granularity: "where do we handle
+call-offs" wants the scenario *and* the cells that justify it. The old
+function's mixed return was correct in instinct and wrong only in being
+unchooseable. The caller knows how they meant the question; the function should
+not guess.
+
+Shape: `kind` becomes each row's granularity. Non-cell rows carry an identity, a
+breadcrumb and `match_count`. `total_matched` stays the **cell** count so it is
+comparable across granularities. Cost is one `GROUP BY` over an already-computed
+match set — no new matching logic.
+
+**Ship `granularity` in the portal, not in this tool.** Every consumer wants it
+(uno-bot's "which scenario covers X" answers improve identically), and adding it
+to one consumer would re-fragment what was just unified. This plan then consumes
+it.
 
 ### Naming: one capability, one name
 
