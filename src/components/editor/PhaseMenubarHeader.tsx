@@ -1,9 +1,10 @@
 import { Columns2, Diff, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
-import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
-import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
+import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
 import {
+  BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
   BLUEPRINT_MENUBAR_HEADER_CLASS,
+  BLUEPRINT_MENUBAR_SEPARATOR_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import {
@@ -21,7 +22,6 @@ import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailCo
 import { useEditor } from '@/contexts/EditorContext'
 import { countCompareDifferences } from '@/lib/compareLedger'
 import { useCompareReviewState } from '@/lib/compareReviewStore'
-import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
   isSubslide,
@@ -204,7 +204,6 @@ export function PhaseMenubarHeader({
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
-  const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
 
   return (
     <Menubar
@@ -215,24 +214,30 @@ export function PhaseMenubarHeader({
       onClick={(event) => event.stopPropagation()}
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
-        <NavbarSlideTitleNav
-          label={label}
-          description={description}
-          infoTooltip={infoTooltip}
-          className="shrink-0"
-        />
         {/*
-          The properties affordance for a phase and a scenario both live here,
-          because this header is the title bar for both. Not a modifier-click
-          on the canvas shape: the phase section is already one big button
-          meaning "navigate into this phase", and a hidden gesture layered on
-          top of that would not be found.
+          Title and summary on one row, the slice header band's shape adapted
+          to a 36px bar: identity first, then what this thing is, truncated.
+          The summary used to live only inside the title's hover tooltip,
+          which is a strange place for the one sentence that says what you are
+          looking at.
         */}
-        <EntityPropertiesButton
+        <EntityTitleAffordance
           kind={isScenario ? 'scenario' : 'phase'}
           id={slide.id}
-          name={label}
+          label={label}
         />
+        {description ? (
+          <>
+            <span className={BLUEPRINT_MENUBAR_SEPARATOR_CLASS} aria-hidden>
+              ·
+            </span>
+            {/* `title` and not a tooltip: this is truncated prose, and the
+                full text is one click away in the panel the title opens. */}
+            <p className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS} title={description}>
+              {description}
+            </p>
+          </>
+        ) : null}
       </div>
       {/* Compare controls moved to the navbar's right cluster
           (CompareControlsCluster) — the title keeps the left edge to
