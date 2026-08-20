@@ -31,7 +31,7 @@
  *                                                  # provider, machinery only
  *   GEMINI_API_KEY comes from env or gitignored .env.local.
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CASES } from './cases.mjs'
@@ -166,6 +166,73 @@ const MUTATING_UI_COMMANDS = new Set([
 const isWriteCall = (name, args) =>
   WRITE_TOOL_NAMES.has(name) ||
   (name === 'ui_command' && MUTATING_UI_COMMANDS.has(String(args?.command ?? '')))
+/** POST to a Postgres function, for the tools that go through the portal. */
+async function rpc(fn, body) {
+  const response = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      apikey: env.VITE_SUPABASE_ANON_KEY,
+      authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) throw new Error(`rpc ${fn} ${response.status}: ${(await response.text()).slice(0, 200)}`)
+  return response.json()
+}
+
+/**
+ * Mirrors `renderPortalRows` in src/lib/agent/tools/read.ts. Both portal
+ * doors render the same way in the app, so they must here too — a harness
+ * that formats results differently rehearses a different agent.
+ */
+function renderPortalRows(rows, emptyMessage, ranked) {
+  if (!rows?.length) return emptyMessage
+  const total = Number(rows[0].total_matched ?? rows.length)
+  const header = ranked
+    ? `${rows.length} shown of ${total} matching:`
+    : rows.length < total
+      ? `${rows.length} of ${total} (clipped — raise limit or narrow the filters):`
+      : `${total} of ${total}:`
+  const lines = rows.map((row) => {
+    const where = [row.phase, row.scenario, row.path, row.step, row.layer].filter(Boolean).join(' › ')
+    const body = row.kind === 'cell' ? `"${String(row.snippet ?? '').split('\n')[0]}"` : `"${row.snippet}"`
+    const detail = row.description ? ` — ${row.description}` : ''
+    const how = ranked && row.matched_by ? `  [${row.matched_by}]` : ''
+    return `[${row.kind}] ${body} · ${where}${detail} (${row.id})${how}`
+  })
+  return [header, ...lines].join('\n')
+}
+
+async function realListBlueprint(args) {
+  const rows = await rpc('search_blueprint', {
+    granularity: Array.isArray(args.granularity) ? args.granularity : ['cell'],
+    match_count: Math.min(Number(args.limit) || 200, 500),
+    filter_phase: args.phase ?? null,
+    filter_scenario: args.scenario ?? null,
+    filter_path_type: args.path_type ?? null,
+    filter_layer_role: args.layer_role ?? null,
+  })
+  return renderPortalRows(rows, 'Nothing at that granularity within those filters.', false)
+}
+
+async function realSearchBlueprint(args) {
+  const rows = await rpc('search_blueprint', {
+    q: String(args.query ?? ''),
+    granularity: Array.isArray(args.granularity) && args.granularity.length ? args.granularity : ['cell'],
+    match_count: Math.min(Number(args.limit) || 15, 100),
+    filter_phase: args.phase ?? null,
+    filter_scenario: args.scenario ?? null,
+    filter_path_type: args.path_type ?? null,
+    filter_layer_role: args.layer_role ?? null,
+  })
+  return renderPortalRows(
+    rows,
+    `Nothing matches the words "${args.query}". That means no row USES those words — it does not mean the blueprint has no such moment. Try the board's own vocabulary, or list_blueprint to see what exists.`,
+    true,
+  )
+}
+
 async function realListScenarios() {
   const data = await rest(
     'phases?select=id,name,order_position,service_scenarios(id,name,order_position)&order=order_position',
@@ -333,8 +400,80 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'get_reference':
         record.result = readFileSync(resolve(REFERENCES_DIR, `${String(args.name).replace(/[^a-z-]/g, '')}.md`), 'utf8')
         return record.result
-      case 'list_blueprint': record.result = await realListScenarios(); return record.result
+      case 'list_blueprint': record.result = await realListBlueprint(args); return record.result
+      case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
+      case 'list_layers': {
+        const rows = await rest('layers?select=name,layer_role&order=row_position')
+        const counts = new Map()
+        for (const row of rows ?? []) {
+          const key = JSON.stringify([row.name, row.layer_role ?? null])
+          counts.set(key, (counts.get(key) ?? 0) + 1)
+        }
+        record.result = counts.size
+          ? [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([key, count]) => {
+              const [name, role] = JSON.parse(key)
+              return `${name}${role ? ` (role ${role})` : ''} — ${count} lane${count === 1 ? '' : 's'}`
+            }).join('\n')
+          : 'No lanes defined yet.'
+        return record.result
+      }
+      case 'list_references':
+        // Same source the app's REFERENCE_NAMES lists, read off disk —
+        // the harness has no access to that module's export.
+        record.result = readdirSync(REFERENCES_DIR)
+          .filter((f) => f.endsWith('.md'))
+          .map((f) => `- ${f.slice(0, -3)}`)
+          .sort()
+          .join('\n')
+        return record.result
+      case 'list_cell_links': {
+        const scope = args.cell_id
+          ? `&or=(source_cell_id.eq.${encodeURIComponent(String(args.cell_id))},target_cell_id.eq.${encodeURIComponent(String(args.cell_id))})`
+          : ''
+        const rows = await rest(`cell_triggers?select=id,source_cell_id,target_cell_id,kind,label,note&limit=200${scope}`)
+        record.result = rows?.length
+          ? [`${rows.length} link(s):`, ...rows.map((e) => `${e.source_cell_id} --${e.kind ?? 'trigger'}--> ${e.target_cell_id}${e.label ? ` "${e.label}"` : ''} (${e.id})`)].join('\n')
+          : args.cell_id ? `No links on cell ${args.cell_id}.` : 'No links recorded yet.'
+        return record.result
+      }
+      case 'list_evidence': {
+        const scope = args.cell_id ? `&cell_id=eq.${encodeURIComponent(String(args.cell_id))}` : ''
+        const rows = await rest(`evidence?select=id,cell_id,kind,title,ref,excerpt,note,observed_at&order=created_at.desc&limit=100${scope}`)
+        record.result = rows?.length
+          ? [`${rows.length} evidence row(s):`, ...rows.map((r) => `[${r.kind}] "${r.title}"${r.ref ? ` ref=${r.ref}` : ''}${r.cell_id ? ` cell=${r.cell_id}` : ''} (${r.id})`)].join('\n')
+          : args.cell_id ? `No evidence attached to cell ${args.cell_id}.` : 'No evidence recorded yet.'
+        return record.result
+      }
+      case 'get_evidence': {
+        const ids = Array.isArray(args.evidence_ids) ? args.evidence_ids : []
+        if (!ids.length) { record.result = 'Pass at least one evidence id.'; return record.result }
+        const rows = await rest(`evidence?select=id,cell_id,kind,title,ref,excerpt,note,observed_at&id=in.(${ids.map(encodeURIComponent).join(',')})`)
+        record.result = rows?.length
+          ? rows.map((r) => [`[${r.kind}] "${r.title}" (${r.id})`, r.excerpt ? `  excerpt: ${r.excerpt}` : '', r.note ? `  note: ${r.note}` : ''].filter(Boolean).join('\n')).join('\n')
+          : 'No evidence with those ids.'
+        return record.result
+      }
+      case 'get_proposition': {
+        const rows = await rest('propositions?select=pricing,funding,partners,revenue_model,delivery_cost&limit=1')
+        const row = rows?.[0]
+        if (!row) { record.result = 'No proposition recorded for this service yet.'; return record.result }
+        const filled = Object.entries(row).filter(([, v]) => v !== null && v !== '')
+        record.result = filled.length
+          ? filled.map(([k, v]) => `${k}: ${v}`).join('\n')
+          : 'The proposition row exists but is empty.'
+        return record.result
+      }
+      // The session store is browser state (localStorage plus a merged DB
+      // list), and the harness has no browser. Saying so is the honest
+      // rehearsal: the agent learns the tool exists and that this
+      // environment cannot answer it, rather than seeing a crash.
+      case 'list_sessions':
+        record.result = 'Past sessions are not available in this rehearsal environment (no browser session store).'
+        return record.result
+      case 'get_session':
+        record.result = 'Session transcripts are not available in this rehearsal environment (no browser session store).'
+        return record.result
       case 'get_cell': record.result = await realGetCell(args.cell_id); return record.result
       case 'compare_blueprint':
         // The compare model is a client-bundle computation (compareSlots.ts);

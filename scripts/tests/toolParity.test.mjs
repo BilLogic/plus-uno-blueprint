@@ -121,6 +121,26 @@ test('every tool spec is dispatchable', () => {
 })
 
 /**
+ * The harness runs its OWN tool implementations (registry.ts cannot load
+ * from Node), and nothing checked that it covers the roster it imports. It
+ * bit: renaming list_scenarios to list_blueprint rewrote the harness's case
+ * LABEL and left it calling the old phases query, so the harness answered
+ * list_blueprint with the pre-granularity shape and silently rehearsed a
+ * different agent than the app runs. Writes are exempt — they short-circuit
+ * to a generic dry-run response before this switch.
+ */
+test('every read tool has a harness implementation', () => {
+  const writes = setMembers(specs, 'WRITE_TOOL_NAMES')
+  for (const name of specNames(specs)) {
+    if (writes.has(name)) continue
+    assert.ok(
+      harness.includes(`case '${name}':`),
+      `${name} is a read tool with no case in scripts/agent-harness/run.mjs — the harness would throw on it`,
+    )
+  }
+})
+
+/**
  * The other direction: a dispatch case with no spec is dead code the model
  * can never reach — the residue a rename leaves when specs.ts moves on and
  * registry.ts keeps the old arm.
