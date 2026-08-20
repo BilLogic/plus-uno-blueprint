@@ -16,7 +16,8 @@ one decides *how it is edited*.
 
 *(Names below are the proposed ones from [plan 002](2026-08-20-002-refactor-database-vocabulary-plan.md):
 `services` replaces `service_lifecycles`, `lanes` replaces `layers`,
-`summary` replaces `cells.description`, `moment` replaces `cells.content`.)*
+`summary` replaces `cells.description`. **`cells.content` keeps its name** —
+see "content stays content" below.)*
 
 ---
 
@@ -31,12 +32,12 @@ section is the reasoning behind one row of this table.
 | **Phase** | 6 | `name`, `summary`, `business_impact`, `operational_requirements`, `loops_to_phase_id` | phase section on the canvas | **Phase panel** (ⓘ in the menubar header) |
 | **Scenario** | 22 | `name`, `summary`, `view_type` | sidebar row + breadcrumb | **Scenario panel** (ⓘ on the breadcrumb) — *and it hosts the paths* |
 | **Path** | 38 | `name`, `path_type`, `summary`, `note` | path label on the canvas | **inside the scenario panel**, one row per path — a path has no canvas shape of its own to hang an affordance on |
-| **Step** | 185 | `name` + **`summary` (new)** | column header | hover card on the header, editable inline |
+| **Step** | 185 | `name` only | column header | rename inline. Its *description* lives in the **storyboard cell** below the header — the cell panel, plain click |
 | **Lane** | 299 rows / **166 logical** | `name`, `lane_role`, `owner_team`, `kpis`, `tools` | lane label on the rail | **Lane panel** (ⓘ on the label) |
 | **Cell** | 955 | `content`, `summary`, `function`, `form`, `value_props`, `owner`, `perceived_owner`, `links`, `picture` | the grid | **Cell panel** (plain click) |
 
 Four panels are new — service, phase, lane, **scenario**. The cell panel
-exists. Step gets a hover card, not a panel.
+exists. **Step gets no new surface at all** — it already has a row in the grid.
 
 **The scenario panel is a reversal, and the reason is paths.** The earlier
 verdict — "a drawer holding one summary field is worse than editing the name
@@ -485,10 +486,24 @@ work. Recording it here because the panels are where the pressure showed up:
 a lane panel with a free-text `owner_team` beside a value editor with a
 free-text `for` is two places to type the same wrong thing.
 
-**Recommendation: defer, but do not fill `owner_team` as free text at scale
-until this is decided** — 166 lanes of hand-typed team names is exactly the
-vocabulary drift the registry would prevent, and the fill campaign
-(plan 005) is what would create it.
+**Recommendation: defer the registry — and fill `owner_team` from a closed
+list, not free text.**
+
+An earlier draft said "do not fill `owner_team` at scale until this is
+decided," which contradicts [plan 005](2026-08-20-005-feat-spec-fill-campaign-plan.md)
+ordering it first. **Resolved, and the resolution is smaller than either
+position.** There are **12 distinct lane names**, so there are at most a
+dozen owning teams — the drift risk is not 166 hand-typed strings, it is
+whether the twelfth one is spelled like the first.
+
+So: agree the team list **once, before the campaign runs**, write it into
+`docs/reference/lane-vocabulary.md` (which plan 005's agent brief already
+reads), and have the panel offer it as a `datalist` — *"a datalist suggests,
+never blocks"*, the same rule `value_props` already follows.
+
+That is a stakeholder registry's discipline without its schema. If the registry
+is built later, a closed 12-item list is exactly what back-fills cleanly; 166
+free-text strings are not.
 
 ## Is phase sufficient?
 
@@ -516,7 +531,7 @@ for, and why they are not proposed now:
 |---|---|---|---|
 | Scenario | `name`, `summary` | sidebar row; `summary` in a hover card there | **scenario panel** |
 | Path | `name`, `path_type`, `summary`, `note` | the path label carries name and type | **scenario panel**, one row per path |
-| Step | `name`, `summary` *(new)* | column header; `summary` in a hover card on it | inline in the hover card |
+| Step | `name` | column header | rename inline; its description is the **storyboard cell**, opened with a plain click like any cell |
 | Lane | name, role, owner, KPIs, tools | the lane label | **lane panel** |
 | Cell | the spec block | the grid | **cell panel** |
 
@@ -526,9 +541,8 @@ tooltips name a control, they do not hold prose.
 
 - **Tooltip** — a truncated lane label on a narrow rail. One line, no
   interaction.
-- **Hover card** (`popover.tsx` on hover-intent) — a step's `summary` and its
-  storyboard frame; a scenario's `summary` in the sidebar. Multi-line,
-  selectable, can hold a control.
+- **Hover card** (`popover.tsx` on hover-intent) — a scenario's `summary` in
+  the sidebar. Multi-line, selectable, can hold a control.
 - **Panel** — anything with more than one editable field.
 
 ## Should step get a panel like lane? — no, and now it needs no hover card either

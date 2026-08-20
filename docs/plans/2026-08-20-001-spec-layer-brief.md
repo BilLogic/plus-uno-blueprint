@@ -1,5 +1,5 @@
 ---
-title: "The spec layer — what we found, and the four plans that came out of it"
+title: "The spec layer — the finding, and the five plans that came out of it"
 type: brief
 status: active
 date: 2026-08-20
@@ -8,7 +8,7 @@ repos: uno-blueprint
 
 # The spec layer
 
-**One finding, five documents.** This document is the evidence; the plans are the
+**One finding, five plans.** This document is the evidence; the plans are the
 work. Everything below was read from the live database or from a file that was
 actually opened — no inference.
 
@@ -57,11 +57,13 @@ everywhere. Against the numbers above:
 about it — *"every skip is reported with its reason"* — it just has little to
 report on.
 
-**The metric for all four plans: audit checks live, 3/7 → 7/7.**
+**The metric this whole effort is judged on: audit checks that can run in
+any scenario, 3/7 → 7/7.** Plans 002–004 build the road; [plan 005](2026-08-20-005-feat-spec-fill-campaign-plan.md)
+is the one that moves the number.
 
 ---
 
-## The four plans
+## The five plans, and the order to build them
 
 | # | Plan | Status | Why now |
 |---|---|---|---|
@@ -70,6 +72,27 @@ report on.
 | [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, **scenario** (which hosts paths), on one lifted shell — **no new columns** | active | The front door. Everything else waits on it |
 | [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, `filter_service`, then a switcher | **active** | Decided: one app, many services. RLS first; the switcher must not ship before the RPC filter |
 | [005](2026-08-20-005-feat-spec-fill-campaign-plan.md) | **Fill campaign** — scoped, cited, human-gated | blocked on 003 | Filling fields nobody can then see is how this content got lost the first time |
+
+### Build order
+
+```
+002  vocabulary          ← after refactor/agent-tool-surface merges
+      │                    renames paths.description → summary, which 003 writes against
+      ▼
+003  panels              ← the front door. No new columns, no migration.
+      │
+      ├──▶ 005  fill campaign   ← needs somewhere for the content to be seen
+      │
+006  data model          ← reference, not work. Read alongside 002 and 003.
+
+004  multi-service       ← independent. Its steps 1–2 (RLS, filter_service)
+                           can land any time and change nothing observable.
+                           Its switcher must NOT ship before step 2.
+```
+
+**Nothing here needs a migration except 002's renames and 004's membership
+table.** Every field the panels write already carries a column grant — that is
+the whole finding.
 
 ---
 
@@ -121,7 +144,7 @@ proposition card did not.
 | **business model** | ❌ none | 1 read | 0 |
 
 `/audit`'s entire output is findings, and no human can read one in the app.
-Not in the four plans; worth its own.
+Not in the five plans; worth its own.
 
 ### Two fields are at the wrong grain
 
@@ -142,7 +165,7 @@ and the fix in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md).
 - **Cells open on a plain click**, not ⌘-click. `BlueprintCellButton.tsx:180`:
   *"a bare click on a canvas with no picker opens the panel."* ⌘-click is the
   escape hatch for when a slice picker owns the bare click.
-- **`layers` is the table; lane is the word.** All four plans say lane.
+- **`layers` is the table; lane is the word.** All five plans say lane.
 - **The business model is at the service level**, not the phase level —
   `propositions.service_lifecycle_id`, one row per lifecycle.
 - **`propositions` is not vestigial.** An earlier read of this called it a

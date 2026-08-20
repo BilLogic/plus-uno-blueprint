@@ -30,6 +30,13 @@ The test applied: **would a user recognise this word?** Not "is it defensible"
 | `cell_triggers` | dependency / link | stores `kind in ('trigger','needs')`, so the name covers **half its contents**. The panel tab says "Dependencies"; the agent tools already say `create_cell_link` / `list_cell_links` |
 | `propositions` | business model | one word from `cells.value_props`, means the opposite scope |
 | `cells.description` | **summary** | `CellPanelEditor.tsx:413` carries the comment `{/* "Summary", not "Description": it is the tl;dr … */}` and renders `<Field label="Summary">`. `getCell` relabels it on the way out: `['summary', data.description]` |
+| `paths.description` | **summary** | same word, same reason, same level of the tree as `cells.description`. [Plan 006](2026-08-20-006-design-data-model.md) defines it as *when this route applies*, with `note` as the author's aside |
+| the `Visual` lane label | **Storyboard** | a **label**, not a column. "Visual" names a medium; the row holds the step's storyboard frame and its one-line description. `layer_role` stays `visual` — it is the semantic key and every importer writes it |
+
+**`cells.content` is deliberately absent from this table.** `moment` and
+`preview` were both considered and rejected — see
+[plan 006](2026-08-20-006-design-data-model.md). It has the widest blast radius
+of any rename here and the smallest gain.
 
 `cells.layer_id` and `cells.description` are the two where the codebase has
 **already written down that the name is wrong** and worked around it. Those are
@@ -105,9 +112,12 @@ and the whole point of this plan is that the database says the domain word.
 
 ### ⚠️ Not a rename, but flagged
 
-- `paths.description` **and** `paths.note` — two free-text fields with no
-  documented difference. Before either gets a UI, decide what each is for or
-  merge them.
+- ~~`paths.description` **and** `paths.note` — no documented difference.~~
+  **Resolved** in [plan 006](2026-08-20-006-design-data-model.md): `description`
+  → `summary`, meaning *the condition that puts someone on this route*; `note`
+  stays, meaning *the author's aside* — open questions, provenance, working
+  state. The scenario panel labels them **Route** and **Author note**, and
+  renders the note muted so the difference is visible without reading a hint.
 - `evidence.added_by` **and** `created_by` — two attribution columns. `added_by`
   is documented (*"Agent name or participant-coded author. Never the
   interviewee."*); `created_by` is not.
@@ -160,39 +170,27 @@ Smallest: 0 rows, 1 reader (`get_proposition`, added on this branch), 2 skill
 docs. `evidence.proposition_question_key` keeps its name — renaming it would
 have to move the CHECK constraint for nothing.
 
-### Phase 4 — `cells.description` → `cells.summary`
+### Phase 4 — `description` → `summary` on cells **and** paths
+
+```sql
+alter table public.cells rename column description to summary;
+alter table public.paths rename column description to summary;
+```
 
 Do this one **only with Phase 1**, not alone. It touches `getCell`,
 `CellPanelEditor`, `search_blueprint`'s projection, `PATH_BLUEPRINT_SELECT` and
 the compare model. Worth it because the workaround comment is in the code
 today, but not worth its own migration window.
 
+`paths.description` rides along: it has **no UI reader at all today**, so its
+rename is a pure schema + type-regeneration change. Doing it now means
+[plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md)'s scenario panel is
+written against the final name and never has to be edited twice.
+
 ### Phase 5 — positions (optional)
 
 `order_position` / `slot_position` / `position` → `position`. Skip unless
 Phases 1–4 are already touching the same files.
-
----
-
-## Acceptance criteria
-
-- [ ] No table or column name is contradicted by a UI label or a code comment
-- [ ] `grep -rn "layer" src/` returns only genuine z-index/CSS uses
-- [ ] The two apology comments are deleted, because they are no longer true:
-      `upsert_cell`'s *"for historical reasons"* and `CellPanelEditor.tsx:413`'s
-      *"Summary, not Description"*
-- [ ] uno-bot still answers — it calls `search_blueprint` **by parameter name**
-- [ ] `npm run build`, `npm run lint`, full test suite green
-- [ ] Retrieval evals stay 26/26
-
-## Risks
-
-| Risk | Severity | Mitigation |
-|---|---|---|
-| `filter_layer_role` rename breaks uno-bot | **High** — cross-repo | Keep the old parameter name, or ship both repos in one window |
-| PostgREST embed hints break silently | High | They fail loudly at request time, not build time — cover with a smoke query per embed |
-| Rename lands mid-branch and conflicts | Medium | Sequenced after `refactor/agent-tool-surface` merges |
-| Sweep misses a string in a skill doc | Low | Word-boundary sweep, same method as `7530402` |
 
 ### Phase 6 — retire "lifecycle"
 
@@ -218,7 +216,7 @@ the predicate every RLS policy will need, and it will already be named right.
 
 ---
 
-## Phase 7 — the schema assets, which are already stale
+### Phase 7 — the schema assets, which are already stale
 
 The rename is not the only reason to touch these. **Both machine-readable
 schema assets predate the derived layer by a month** — neither
@@ -248,7 +246,7 @@ argument for generating rather than hand-editing them in this pass.
 
 ---
 
-## Phase 8 — collapse the `view_type` vocabulary
+### Phase 8 — collapse the `view_type` vocabulary
 
 Two vocabularies exist for one concept, with `viewTypeVocabulary.ts` as the
 translation seam:
@@ -276,3 +274,31 @@ Then delete `src/lib/viewTypeVocabulary.ts`, `toClientViewType`,
 
 **Verify the constraint name first** (`\d service_scenarios`); it is guessed
 above.
+
+---
+
+## Acceptance criteria
+
+- [ ] No table or column name is contradicted by a UI label or a code comment
+- [ ] `grep -rn "layer" src/` returns only genuine z-index/CSS uses
+- [ ] The two apology comments are deleted, because they are no longer true:
+      `upsert_cell`'s *"for historical reasons"* and `CellPanelEditor.tsx:413`'s
+      *"Summary, not Description"*
+- [ ] uno-bot still answers — it calls `search_blueprint` **by parameter name**
+- [ ] `npm run build`, `npm run lint`, full test suite green
+- [ ] Retrieval evals stay 26/26
+- [ ] `viewTypeVocabulary.ts` is deleted, and no file translates between two
+      view-type vocabularies
+- [ ] The lane label reads **Storyboard** in both render paths; `layer_role`
+      is untouched and every import still writes `visual`
+- [ ] `cells.content` is unchanged — this plan renames no cell body field
+      other than `description`
+
+## Risks
+
+| Risk | Severity | Mitigation |
+|---|---|---|
+| `filter_layer_role` rename breaks uno-bot | **High** — cross-repo | Keep the old parameter name, or ship both repos in one window |
+| PostgREST embed hints break silently | High | They fail loudly at request time, not build time — cover with a smoke query per embed |
+| Rename lands mid-branch and conflicts | Medium | Sequenced after `refactor/agent-tool-surface` merges |
+| Sweep misses a string in a skill doc | Low | Word-boundary sweep, same method as `7530402` |

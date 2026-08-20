@@ -1,5 +1,5 @@
 ---
-title: "More than one service — what it would actually take"
+title: "One app, many services — the front end and what gates it"
 type: feat
 status: active
 date: 2026-08-20
