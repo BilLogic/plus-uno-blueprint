@@ -109,7 +109,7 @@ export const CASES = [
         id: 'reads-before-proposing',
         fn: (trace) =>
           calls(trace, 'get_blueprint').length > 0 ||
-          calls(trace, 'list_scenarios').length > 0 ||
+          calls(trace, 'list_blueprint').length > 0 ||
           'proposed without reading anything',
       },
     ],
@@ -301,7 +301,7 @@ Canvas mode: view`,
     // --smoke: exercises real Supabase reads + dry-run write plumbing.
     smokeCalls: [
       ['get_reference', { name: 'layer-roles' }],
-      ['list_scenarios', {}],
+      ['list_blueprint', {}],
       ['create_layer', { scenario_id: 'smoke', name: 'QA' }],
     ],
     smokeReply: 'Adding the QA lane now (one line of narration first).',
@@ -313,7 +313,7 @@ Canvas mode: view`,
           const firstWrite = firstIndex(trace, (t) => WRITES.has(t.name))
           if (firstWrite === -1) return 'never wrote the lane'
           const refBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_reference')
-          const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'list_scenarios')
+          const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'list_blueprint')
           if (!refBefore) return 'no get_reference before the write (layer-roles / lane-vocabulary)'
           if (!readBefore) return 'no blueprint read before the write'
           return true

@@ -796,6 +796,7 @@ export type Database = {
           filter_path_type?: string
           filter_phase?: string
           filter_scenario?: string
+          granularity?: string[]
           match_count?: number
           q?: string
           query_embedding?: string

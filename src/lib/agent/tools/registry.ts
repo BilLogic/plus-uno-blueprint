@@ -75,8 +75,8 @@ import {
   listLayers,
   listReferences,
   listSessions,
+  listBlueprint,
   listOwnerTags,
-  listScenarios,
   listSlices,
   readReference,
 } from '@/lib/agent/tools/read'
@@ -126,8 +126,26 @@ export async function dispatchTool(
   switch (name) {
     case 'get_reference':
       return readReference(need(args, 'name'))
-    case 'list_scenarios':
-      return listScenarios(client)
+    case 'list_blueprint': {
+      const granularity = Array.isArray(args.granularity)
+        ? args.granularity.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : []
+      if (granularity.length === 0) {
+        throw new Error(
+          'granularity is required — one or more of phase, scenario, path, step, layer, cell.',
+        )
+      }
+      return listBlueprint(client, {
+        granularity,
+        phase: s(args, 'phase'),
+        scenario: s(args, 'scenario'),
+        pathType: s(args, 'path_type'),
+        layerRole: s(args, 'layer_role'),
+        limit: typeof args.limit === 'number' ? args.limit : undefined,
+      })
+    }
     case 'get_blueprint':
       return getBlueprint(client, need(args, 'scenario_id'))
     case 'compare_blueprint': {

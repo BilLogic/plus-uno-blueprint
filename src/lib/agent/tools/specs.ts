@@ -68,7 +68,7 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
   'get_proposition',
   'list_sessions',
   'get_session',
-  'list_scenarios',
+  'list_blueprint',
   'get_blueprint',
   'compare_blueprint',
   'get_cell',
@@ -118,17 +118,39 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'list_scenarios',
-    description: 'List every phase and its scenarios, with ids.',
-    parameters: { type: 'object', properties: {} },
+    name: 'list_blueprint',
+    description:
+      'The COMPLETE set of things at one or more levels of the journey, with ids. granularity picks the level: phase, scenario, path, step, layer, cell. Optional filters narrow the scope. This is your table of contents and your "what exists" answer — every row is returned (up to limit) with the true total, so it is the only honest way to say "all N scenarios" or "every unhappy path". Start here: granularity ["phase","scenario"] is the orientation read. Use get_blueprint instead when you already know the scenario and want its grid laid out.',
+    parameters: {
+      type: 'object',
+      properties: {
+        granularity: {
+          type: 'array',
+          description:
+            'One or more of: phase, scenario, path, step, layer, cell. Ask for the level you actually need — "cell" across the whole blueprint is 955 rows.',
+          items: { type: 'string' },
+        },
+        phase: str('Restrict to a phase by name, e.g. "In-session"'),
+        scenario: str('Restrict to a scenario by name, e.g. "Warm-Up"'),
+        path_type: str('happy | alternative | unhappy | exception | named'),
+        layer_role: str(
+          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
+        ),
+        limit: {
+          type: 'number',
+          description: 'Max rows (default 200, max 500). The true total is reported either way.',
+        },
+      },
+      required: ['granularity'],
+    },
   },
   {
     name: 'get_blueprint',
     description:
-      'Full grid of one scenario: every path with its steps, lanes, and cells (ids included). Read before writing into a scenario. ("Blueprint" unqualified means the whole workspace; this tool returns one scenario\'s grid.)',
+      'One scenario laid out as a GRID: every path with its steps, lanes, cells (ids included) and the dependency arrows between them. This is the reading view — use it before writing into a scenario. For "what exists at level X", use list_blueprint instead.',
     parameters: {
       type: 'object',
-      properties: { scenario_id: str('Scenario id from list_scenarios') },
+      properties: { scenario_id: str('Scenario id from list_blueprint') },
       required: ['scenario_id'],
     },
   },
@@ -139,7 +161,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     parameters: {
       type: 'object',
       properties: {
-        scenario_id: str('Scenario id from list_scenarios'),
+        scenario_id: str('Scenario id from list_blueprint'),
         path_ids: {
           type: 'array',
           description:
@@ -275,7 +297,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       'Navigate the user\'s canvas to a phase. Use when asked to go to / show / open something, or to show your work after writing into it.',
     parameters: {
       type: 'object',
-      properties: { phase_id: str('Phase id from list_scenarios') },
+      properties: { phase_id: str('Phase id from list_blueprint') },
       required: ['phase_id'],
     },
   },
@@ -285,7 +307,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       'Navigate the user\'s canvas to a scenario. Open the scenario before focus_cell.',
     parameters: {
       type: 'object',
-      properties: { scenario_id: str('Scenario id from list_scenarios') },
+      properties: { scenario_id: str('Scenario id from list_blueprint') },
       required: ['scenario_id'],
     },
   },
@@ -388,7 +410,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     parameters: {
       type: 'object',
       properties: {
-        phase_id: str('Phase id from list_scenarios'),
+        phase_id: str('Phase id from list_blueprint'),
         name: str('Scenario name'),
         path_name: str('First path name; defaults to "Happy Path"'),
         step_count: { type: 'number', description: 'Initial step columns (default 5)' },
@@ -438,7 +460,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     parameters: {
       type: 'object',
       properties: {
-        source_scenario_id: str('Scenario id from list_scenarios'),
+        source_scenario_id: str('Scenario id from list_blueprint'),
         name: str('Name for the copy; the UI convention is "<source name> (copy)"'),
       },
       required: ['source_scenario_id', 'name'],

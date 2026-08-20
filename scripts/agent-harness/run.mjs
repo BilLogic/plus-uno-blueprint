@@ -333,7 +333,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'get_reference':
         record.result = readFileSync(resolve(REFERENCES_DIR, `${String(args.name).replace(/[^a-z-]/g, '')}.md`), 'utf8')
         return record.result
-      case 'list_scenarios': record.result = await realListScenarios(); return record.result
+      case 'list_blueprint': record.result = await realListScenarios(); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'get_cell': record.result = await realGetCell(args.cell_id); return record.result
       case 'compare_blueprint':
