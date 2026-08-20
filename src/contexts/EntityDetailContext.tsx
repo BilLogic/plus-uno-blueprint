@@ -19,10 +19,10 @@ import {
  * The levels of the tree that own spec fields and are not a cell.
  *
  * The service is absent on purpose: the service tier is pinned, and adding a
- * fourth member here before its panel exists would put a kind in the union
- * that nothing can open.
+ * member here before its panel exists would put a kind in the union that
+ * nothing can open.
  */
-export type EntityDetailKind = 'lane' | 'phase' | 'scenario'
+export type EntityDetailKind = 'lane' | 'phase' | 'scenario' | 'step'
 
 export type EntityDetailSelection = {
   kind: EntityDetailKind

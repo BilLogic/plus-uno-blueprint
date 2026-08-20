@@ -47,6 +47,15 @@ type BlueprintCellButtonProps = {
    * first pill only; plain cell faces leave the default (true).
    */
   sliceSequenceBadge?: boolean
+  /**
+   * What a plain click OPENS, when the answer is not "this cell's panel".
+   *
+   * The storyboard cell is the one case: its face is the step's frames and
+   * its caption is `steps.summary`, so the thing behind it is the STEP. Every
+   * other gesture — picking, the emphasis ring, the close-on-second-click
+   * grammar — is unchanged; only the open verb is swapped.
+   */
+  onOpen?: () => void
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
@@ -72,6 +81,7 @@ export function BlueprintCellButton({
   variant = 'cell',
   opacity,
   sliceSequenceBadge = true,
+  onOpen,
   children,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
@@ -193,6 +203,10 @@ export function BlueprintCellButton({
       the discoverable route to the same place.
     */
     if (clickOpensDetail(event)) {
+      if (onOpen) {
+        onOpen()
+        return
+      }
       detail!.selectCell(selection!)
       return
     }

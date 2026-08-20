@@ -60,6 +60,7 @@ export type WriteFn =
   | 'update_phase_spec'
   | 'update_scenario_spec'
   | 'update_path_spec'
+  | 'update_step_spec'
   | 'add_evidence'
   | 'update_evidence'
   | 'delete_evidence'
@@ -265,6 +266,7 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   update_phase_spec: () => 'Edited a phase’s summary, impact & requirements',
   update_scenario_spec: () => 'Edited a scenario’s summary',
   update_path_spec: () => 'Edited a path’s summary & note',
+  update_step_spec: () => 'Edited a step’s summary',
   add_evidence: (entry) =>
     titled(entry) ? `Added evidence “${titled(entry)}”` : 'Added an evidence source',
   update_evidence: (entry) =>

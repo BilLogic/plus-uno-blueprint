@@ -75,6 +75,7 @@ export const PANEL_EXIT_MS = 200
 export const LANE_PANEL_FOOTER_ID = 'lane-panel-editor-footer'
 export const PHASE_PANEL_FOOTER_ID = 'phase-panel-editor-footer'
 export const SCENARIO_PANEL_FOOTER_ID = 'scenario-panel-editor-footer'
+export const STEP_PANEL_FOOTER_ID = 'step-panel-editor-footer'
 
 /**
  * A render error in the drawer must cost the drawer, not the app.

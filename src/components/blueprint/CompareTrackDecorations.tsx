@@ -1,3 +1,4 @@
+import { StepHeaderAffordance } from '@/components/blueprint/StepHeaderAffordance'
 import {
   LAYER_COLUMN_WIDTH,
   STEP_COLUMN_GAP,
@@ -22,23 +23,20 @@ export function CompareStepHeaderRow({
   return (
     <>
       {tracks.map((track, trackIndex) => (
-        <div
+        <StepHeaderAffordance
           key={track.key}
-          data-blueprint-column-header=""
+          // A canonical column can carry a different step id per path; they
+          // are the same MOMENT, and the summary is stored once per step, so
+          // the first is the one to open.
+          stepId={Object.values(track.stepIdByPath)[0] ?? ''}
+          name={track.label}
           // `relative z-[1]`: when a path frame extends up to wrap this
           // row (single-path stacked, merged), the frame's opaque fill is
           // an absolutely-positioned later sibling — without a stacking
           // order the labels paint UNDER it and the header "vanishes".
-          className="relative z-[1] flex min-w-0 items-end justify-center gap-1 overflow-hidden rounded-md px-2 pb-1.5"
+          className="z-[1]"
           style={{ gridColumn: trackIndex + 2, gridRow: 1 }}
-        >
-          <span
-            className="relative truncate text-xs font-medium text-muted-foreground"
-            title={track.label}
-          >
-            {track.label}
-          </span>
-        </div>
+        />
       ))}
     </>
   )
@@ -65,18 +63,11 @@ export function ServiceStepHeaderRow({
       />
       {steps.map((step, index) => (
         <div key={step.id} className="flex shrink-0 items-end justify-center">
-          <div
-            data-blueprint-column-header=""
-            className="relative flex min-w-0 items-end justify-center overflow-hidden rounded-md px-2 pb-1.5"
+          <StepHeaderAffordance
+            stepId={step.id}
+            name={step.name}
             style={{ width: STEP_COLUMN_WIDTH }}
-          >
-            <span
-              className="relative truncate text-xs font-medium text-muted-foreground"
-              title={step.name}
-            >
-              {step.name}
-            </span>
-          </div>
+          />
           {index < steps.length - 1 ? (
             <div
               aria-hidden

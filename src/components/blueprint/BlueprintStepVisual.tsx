@@ -4,6 +4,7 @@ import type { BlueprintLaneRole } from '@/lib/blueprintCellStyle'
 import { hasEmbeddedVisualFrame } from '@/lib/visualWalkthrough'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
+import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import type { CSSProperties } from 'react'
 
 export type BlueprintStepVisualPicture = {
@@ -25,6 +26,13 @@ type BlueprintStepVisualProps = {
    *  treatment. Absent on a step nobody has described yet, which is most of
    *  them. */
   caption?: string | null
+  /**
+   * The step this frame belongs to. With it, the cell opens the STEP panel
+   * rather than a cell panel: the storyboard row's content IS the step —
+   * its frames and its summary — and the cell panel could only describe it
+   * through whichever other lane happened to supply the picture.
+   */
+  stepId?: string | null
   /** Larger walkthrough/presentation layout — images scale to fit without clipping. */
   presentation?: boolean
   'aria-describedby'?: string
@@ -94,9 +102,12 @@ export function BlueprintStepVisual({
   opacity,
   pictures,
   caption,
+  stepId,
   presentation = false,
   'aria-describedby': ariaDescribedBy,
 }: BlueprintStepVisualProps) {
+  const { openEntity, closeEntity, selection: entitySelection } =
+    useEntityDetail()
   const displayPictures = normalizePictures(pictures ?? [])
   const hasRealPictures = displayPictures.length > 0
   // Counts what is actually here — images for one step, not people. The old
@@ -172,6 +183,23 @@ export function BlueprintStepVisual({
       } as CSSProperties}
       selection={selection}
       cellId={cellId}
+      onOpen={
+        stepId
+          ? () => {
+              // Second click on the open step closes it — the same toggle a
+              // cell panel gives, so the storyboard cell does not become the
+              // one shape you cannot click twice.
+              if (
+                entitySelection?.kind === 'step' &&
+                entitySelection.id === stepId
+              ) {
+                closeEntity()
+                return
+              }
+              openEntity({ kind: 'step', id: stepId })
+            }
+          : undefined
+      }
       stepIndex={stepIndex}
       opacity={opacity}
       aria-label={ariaLabel}

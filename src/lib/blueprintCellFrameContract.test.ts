@@ -34,6 +34,9 @@ const techPill = source('../components/blueprint/BlueprintTechPill.tsx')
 const laneHeader = source(
   '../components/blueprint/LaneHeaderAffordance.tsx',
 )
+const stepHeader = source(
+  '../components/blueprint/StepHeaderAffordance.tsx',
+)
 const css = source('../styles/blueprint.css')
 const agentRegistry = source('./agent/tools/registry.ts')
 const agentSpecs = source('./agent/tools/specs.ts')
@@ -63,7 +66,10 @@ describe('stable blueprint cell frame contract', () => {
   })
 
   it('retains both header axes and skeletonizes their paint at blocks tier', () => {
-    expect(compareDecorations).toContain('data-blueprint-column-header=""')
+    // Both axes are affordances now, and each carries its own attribute —
+    // the one blueprint.css skeletonizes at the blocks tier.
+    expect(compareDecorations).toContain('<StepHeaderAffordance')
+    expect(stepHeader).toContain('data-blueprint-column-header=""')
     expect(serviceGrid).toContain('<ServiceStepHeaderRow')
     // The row-header axis moved into the lane affordance when the label
     // block became the control; the attribute is what blueprint.css

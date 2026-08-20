@@ -11,6 +11,7 @@ const KIND_LABELS: Record<EntityDetailKind, string> = {
   lane: 'Lane properties',
   phase: 'Phase properties',
   scenario: 'Scenario properties',
+  step: 'Step properties',
 }
 
 /**

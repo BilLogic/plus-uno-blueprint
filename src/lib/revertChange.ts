@@ -16,6 +16,7 @@ import {
   updateScenarioSummary,
   type PathSpecUpdate,
 } from '@/lib/scenarioSpecMutations'
+import { updateStepSummary } from '@/lib/stepSpecMutations'
 import {
   deleteEvidence,
   restoreEvidenceRow,
@@ -116,6 +117,20 @@ export async function executeRevert(
         throw new Error("This change's revert is missing its summary.")
       }
       await updateScenarioSummary(client, scenarioId, summary, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'update_step_spec': {
+      const stepId = stringArg(revert.args, 'step_id')
+      // Empty is a real prior value — a step that had no summary is a state
+      // worth restoring — so this reads the arg directly rather than through
+      // `stringArg`, which refuses empties.
+      const summary = revert.args.summary
+      if (typeof summary !== 'string') {
+        throw new Error("This change's revert is missing its summary.")
+      }
+      await updateStepSummary(client, stepId, summary, undefined, {
         record: false,
       })
       return

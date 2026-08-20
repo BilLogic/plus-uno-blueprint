@@ -385,6 +385,7 @@ function CompareLayerRow({
         flushBottom={flushBottom}
         visualPictures={visualPictures}
         stepSummary={step.summary}
+        stepId={step.id}
         slotCells={slotCells}
         selectionContext={
           scenarioName && (cell?.id || isVisualLane)

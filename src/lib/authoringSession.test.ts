@@ -56,6 +56,7 @@ const EVERY_WRITE = Object.keys({
   update_phase_spec: true,
   update_scenario_spec: true,
   update_path_spec: true,
+  update_step_spec: true,
   add_evidence: true,
   update_evidence: true,
   delete_evidence: true,

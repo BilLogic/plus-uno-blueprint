@@ -596,6 +596,7 @@ function BlueprintSwimLane({
                 flushBottom={flushBottom}
                 visualPictures={visualPictures}
                 stepSummary={step.summary}
+                stepId={step.id}
                 slotCells={slotCells}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLane || showEmptyCells)
@@ -686,6 +687,7 @@ function BlueprintCellBlock({
   selectionContext,
   visualPictures,
   stepSummary,
+  stepId: visualStepId,
   slotCells,
 }: {
   stepIndex: number
@@ -702,6 +704,8 @@ function BlueprintCellBlock({
   visualPictures?: Array<{ picture: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
   stepSummary?: string | null
+  /** The step behind a storyboard frame — see BlueprintStepVisual. */
+  stepId?: string
   /** Every cell in a tech slot — one per touchpoint since the split. */
   slotCells?: BlueprintCell[]
 }) {
@@ -760,6 +764,7 @@ function BlueprintCellBlock({
           fill={laneStyle.lane}
           pictures={visualPictures}
           caption={stepSummary}
+          stepId={visualStepId}
           selection={
             selectionContext
               ? buildBlueprintCellSelection(selectionContext)
