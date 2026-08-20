@@ -58,12 +58,12 @@ side-by-side / integrated — integrated is merged at runtime, each path
 stored separately) → `paths` (`path_type`: happy / unhappy / exception /
 alternative / named). Steps are scenario-scoped (`steps`), joined to paths
 with per-path column order via `path_steps`. `lanes` are a path's rows;
-`cells` sit at layer × step per path, with a trigger
+`cells` sit at lane × step per path, with a trigger
 (`cells_validate_path_match`) enforcing path integrity.
 **Naming trap:** DB `steps` are blueprint *columns* (journey moments), not
 lifecycle phases — phases live in `phases`.
 
-**Cells** carry the grid label (`content` — never empty), `description`,
+**Cells** carry the grid label (`content` — never empty), `summary`,
 `picture`, `links` (JSONB), and the spec columns from the derived-layer
 migration: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.

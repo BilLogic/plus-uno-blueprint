@@ -26,7 +26,7 @@ order by ss.position;
 select
   ss.name as scenario,
   pa.name as path,
-  pa.description,
+  pa.summary,
   pa.path_type,
   (select count(*) from public.lanes l where l.path_id = pa.id) as lanes,
   (select count(*) from public.path_steps ps where ps.path_id = pa.id) as steps,
@@ -38,7 +38,7 @@ from public.paths pa
 join public.service_scenarios ss on ss.id = pa.service_scenario_id
 where pa.id = 'a0000000-0000-4000-8000-000000000300';
 
-select l.position, l.name as layer
+select l.position, l.name as lane
 from public.lanes l
 where l.path_id = 'a0000000-0000-4000-8000-000000000300'
 order by l.position;
