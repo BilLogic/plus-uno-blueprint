@@ -48,7 +48,11 @@ import {
   collectAgentUiContext,
 } from '@/lib/agent/uiBridge'
 import type { DeletableKind } from '@/lib/deletionSafety'
-import { addEvidence, type EvidenceKind } from '@/lib/evidenceMutations'
+import {
+  addEvidence,
+  updateEvidence,
+  type EvidenceKind,
+} from '@/lib/evidenceMutations'
 import { resolveFirstLifecycleId } from '@/lib/lifecycle'
 
 /** Mirrors the DB CHECK constraint so a bad kind fails before the insert. */
@@ -584,6 +588,22 @@ export async function dispatchTool(
           note: s(args, 'note') ?? null,
         })
         return `Evidence added (${id}).`
+      }
+      case 'update_evidence': {
+        const kind = s(args, 'kind')
+        if (kind && !EVIDENCE_KINDS.has(kind)) {
+          throw new Error(
+            `kind must be one of ${[...EVIDENCE_KINDS].join(', ')} — the DB CHECK constraint rejects anything else.`,
+          )
+        }
+        await updateEvidence(client, need(args, 'evidence_id'), {
+          kind: kind as EvidenceKind | undefined,
+          title: s(args, 'title'),
+          ref: s(args, 'ref'),
+          excerpt: s(args, 'excerpt'),
+          note: s(args, 'note'),
+        })
+        return 'Evidence updated.'
       }
       case 'create_finding': {
         const source = args.source === 'whatif' ? 'whatif' : 'audit'

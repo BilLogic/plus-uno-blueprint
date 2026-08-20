@@ -53,6 +53,7 @@ const EVERY_WRITE = Object.keys({
   update_cell_resources: true,
   update_cell_spec: true,
   add_evidence: true,
+  update_evidence: true,
   delete_evidence: true,
   set_cell_dependency: true,
   clear_cell_dependency: true,

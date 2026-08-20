@@ -103,6 +103,7 @@ export const WRITE_TOOL_NAMES = new Set([
   'update_slice',
   'replace_slice_frames',
   'create_evidence',
+  'update_evidence',
   'create_finding',
   'update_finding',
 ])
@@ -719,6 +720,23 @@ export const TOOL_SPECS: ToolSpec[] = [
         note: str('Why this source supports the cell; omit if none'),
       },
       required: ['cell_id', 'kind', 'title'],
+    },
+  },
+  {
+    name: 'update_evidence',
+    description:
+      'Edit an evidence row: kind, title, ref, excerpt, note. Pass only the fields you mean to change — the rest are kept. To move a source to a DIFFERENT cell, add it there and remove it here; this tool does not re-point it.',
+    parameters: {
+      type: 'object',
+      properties: {
+        evidence_id: str('Evidence id from list_evidence'),
+        kind: str('interview | survey | analytics | doc | meeting | decision | observation | other; omit to keep'),
+        title: str('New title; omit to keep'),
+        ref: str('New link or locator; omit to keep'),
+        excerpt: str('New quoted passage; omit to keep'),
+        note: str('New why-line; omit to keep'),
+      },
+      required: ['evidence_id'],
     },
   },
   {

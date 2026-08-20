@@ -6,7 +6,12 @@ import {
   type CellContentUpdate,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec, type CellSpecUpdate } from '@/lib/cellSpecMutations'
-import { deleteEvidence, restoreEvidenceRow } from '@/lib/evidenceMutations'
+import {
+  deleteEvidence,
+  restoreEvidenceRow,
+  updateEvidence,
+  type EvidenceUpdate,
+} from '@/lib/evidenceMutations'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
@@ -88,6 +93,15 @@ export async function executeRevert(
       // Undo of "added a source": remove the row it created.
       const evidenceId = stringArg(revert.args, 'evidence_id')
       await deleteEvidence(client, evidenceId, undefined, { record: false })
+      return
+    }
+    case 'update_evidence': {
+      // Undo of "edited a source": write the captured prior values back.
+      // Self-inverse, like update_cell_spec — the captured payload IS an
+      // update, so the same function serves both directions.
+      const evidenceId = stringArg(revert.args, 'evidence_id')
+      const update = revert.args.update as EvidenceUpdate
+      await updateEvidence(client, evidenceId, update, { record: false })
       return
     }
     case 'restore_evidence_row': {
