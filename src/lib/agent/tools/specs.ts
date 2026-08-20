@@ -145,6 +145,36 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
+    name: 'search_blueprint',
+    description:
+      'Find things by WHAT THEY SAY, when you do not already know which scenario holds them — "where do we handle a late call-off", "which cells mention Workday". Results are RANKED and cut off at limit; the header reports how many matched in total, so say that number when you show a subset. Every row reports matched_by. ' +
+      'IMPORTANT: this matches WORDS, not meaning. A question phrased differently from the blueprint\'s own wording can return nothing even though the moment IS mapped — zero rows means "no row uses these words", NEVER "the blueprint does not cover this". Re-search with the board\'s vocabulary, or use list_blueprint to see what exists, before reporting an absence. ' +
+      'Use list_blueprint when you want the COMPLETE set at a level, and get_blueprint when you already know the scenario.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('The words to match, in the blueprint\'s own vocabulary where you know it'),
+        granularity: {
+          type: 'array',
+          description:
+            'Levels to search: phase, scenario, path, step, layer, cell. Defaults to ["cell"]. Add "path" or "scenario" when hunting for a named branch.',
+          items: { type: 'string' },
+        },
+        phase: str('Restrict to a phase by name'),
+        scenario: str('Restrict to a scenario by name'),
+        path_type: str('happy | alternative | unhappy | exception | named'),
+        layer_role: str(
+          'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
+        ),
+        limit: {
+          type: 'number',
+          description: 'Max rows (default 15, max 100). The true total is reported either way.',
+        },
+      },
+      required: ['query'],
+    },
+  },
+  {
     name: 'get_blueprint',
     description:
       'One scenario laid out as a GRID: every path with its steps, lanes, cells (ids included) and the dependency arrows between them. This is the reading view — use it before writing into a scenario. For "what exists at level X", use list_blueprint instead.',

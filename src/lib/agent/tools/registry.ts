@@ -76,6 +76,7 @@ import {
   listReferences,
   listSessions,
   listBlueprint,
+  searchBlueprint,
   listOwnerTags,
   listSlices,
   readReference,
@@ -139,6 +140,22 @@ export async function dispatchTool(
       }
       return listBlueprint(client, {
         granularity,
+        phase: s(args, 'phase'),
+        scenario: s(args, 'scenario'),
+        pathType: s(args, 'path_type'),
+        layerRole: s(args, 'layer_role'),
+        limit: typeof args.limit === 'number' ? args.limit : undefined,
+      })
+    }
+    case 'search_blueprint': {
+      const granularity = Array.isArray(args.granularity)
+        ? args.granularity.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : undefined
+      return searchBlueprint(client, {
+        query: need(args, 'query'),
+        granularity: granularity?.length ? granularity : undefined,
         phase: s(args, 'phase'),
         scenario: s(args, 'scenario'),
         pathType: s(args, 'path_type'),

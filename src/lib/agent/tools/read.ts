@@ -142,12 +142,47 @@ export async function listBlueprint(
     filter_layer_role: options.layerRole,
   })
   if (error) throw new Error(error.message)
-  const rows = data ?? []
-  if (rows.length === 0) return 'Nothing at that granularity within those filters.'
+  return renderPortalRows(
+    data ?? [],
+    'Nothing at that granularity within those filters.',
+    false,
+  )
+}
 
+/** A row as `public.search_blueprint` returns it. */
+type PortalRow = {
+  kind: string
+  id: string
+  snippet: string | null
+  description: string | null
+  layer: string | null
+  step: string | null
+  scenario: string | null
+  phase: string | null
+  path: string | null
+  matched_by: string | null
+  total_matched: number | null
+}
+
+/**
+ * One rendering for both portal doors, so a phase row reads the same
+ * whether it arrived by enumeration or by ranking, and ids always ride
+ * along for the write that follows.
+ *
+ * The header carries the honesty number either way: `list_` says when it
+ * clipped, `search_` says how many matched corpus-wide so a top-k answer
+ * cannot be mistaken for the whole set.
+ */
+function renderPortalRows(
+  rows: PortalRow[],
+  emptyMessage: string,
+  ranked: boolean,
+): string {
+  if (rows.length === 0) return emptyMessage
   const total = Number(rows[0].total_matched ?? rows.length)
-  const header =
-    rows.length < total
+  const header = ranked
+    ? `${rows.length} shown of ${total} matching:`
+    : rows.length < total
       ? `${rows.length} of ${total} (clipped — raise limit or narrow the filters):`
       : `${total} of ${total}:`
 
@@ -155,16 +190,58 @@ export async function listBlueprint(
     const where = [row.phase, row.scenario, row.path, row.step, row.layer]
       .filter(Boolean)
       .join(' › ')
-    // The breadcrumb IS the identity for a structural row, so it is not
-    // repeated after the name; a cell's content is what identifies it.
+    // A structural row IS its breadcrumb, so the name is not repeated; a
+    // cell is identified by its content, first line only.
     const body =
       row.kind === 'cell'
         ? `"${(row.snippet ?? '').split('\n')[0]}"`
         : `"${row.snippet}"`
     const detail = row.description ? ` — ${row.description}` : ''
-    return `[${row.kind}] ${body} · ${where}${detail} (${row.id})`
+    const how = ranked && row.matched_by ? `  [${row.matched_by}]` : ''
+    return `[${row.kind}] ${body} · ${where}${detail} (${row.id})${how}`
   })
   return [header, ...lines].join('\n')
+}
+
+/**
+ * RANKED retrieval over the same portal — for when you have WORDS but not
+ * a name or an id.
+ *
+ * The canvas agent runs in the browser on the user's chat key and cannot
+ * embed a query (`providers/models.ts` filters embedding models out), so
+ * this reaches the portal's keyword and structural arms only, never the
+ * vector one. That is a real capability difference from uno-bot and it is
+ * why the tool description says, in as many words, that zero rows means
+ * "no row uses these words" and NEVER "the blueprint does not cover this".
+ * `matched_by` is surfaced per row so the model can see which arm fired.
+ */
+export async function searchBlueprint(
+  client: Client,
+  options: {
+    query: string
+    granularity?: string[]
+    phase?: string
+    scenario?: string
+    pathType?: string
+    layerRole?: string
+    limit?: number
+  },
+): Promise<string> {
+  const { data, error } = await client.rpc('search_blueprint', {
+    q: options.query,
+    granularity: options.granularity ?? ['cell'],
+    match_count: Math.min(options.limit ?? 15, 100),
+    filter_phase: options.phase,
+    filter_scenario: options.scenario,
+    filter_path_type: options.pathType,
+    filter_layer_role: options.layerRole,
+  })
+  if (error) throw new Error(error.message)
+  return renderPortalRows(
+    data ?? [],
+    `Nothing matches the words "${options.query}". That means no row USES those words — it does not mean the blueprint has no such moment. Try the board's own vocabulary, or list_blueprint to see what exists.`,
+    true,
+  )
 }
 
 /**
