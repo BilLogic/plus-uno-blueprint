@@ -204,7 +204,7 @@ function buildApplicationDiscoveryFallback(
   const finalStep = steps[steps.length - 1]!
 
   const lanes = [
-    { id: L.visual, name: 'Visual', position: 0 },
+    { id: L.visual, name: 'Storyboard', position: 0 },
     { id: L.regular, name: 'Regular Tutor', position: 1 },
     { id: L.frontStageTech, name: 'Front Stage Tech', position: 2 },
     { id: L.frontStage, name: 'Front Stage Actions', position: 3 },
