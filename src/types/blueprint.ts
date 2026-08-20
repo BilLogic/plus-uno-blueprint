@@ -63,8 +63,10 @@ export type BlueprintCellDependency = {
   id: string
   source_cell_id: string
   target_cell_id: string
-  /** trigger = temporal "sets off" (default); needs = functional dependency. */
-  kind?: 'trigger' | 'needs'
+  /** `sets_off` (default) — this cell makes the other one happen; drawn as an
+   *  arrow. `enables` — the other cell must already be true; recorded, never
+   *  drawn. Not inverses: a loaded roster does not set off a greeting. */
+  kind?: 'sets_off' | 'enables'
   /** Short edge label, e.g. a channel tag like "Email". */
   label?: string | null
   /** Why-line shown in the cell panel dependencies tab. */

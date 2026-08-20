@@ -23,7 +23,7 @@ const otherVersion = { cellId: 'c', pathId: 'p2', label: 'Escalate' }
 const draft = (patch) => ({
   sourceCellId: 'a',
   targetCellId: 'b',
-  kind: 'trigger',
+  kind: 'sets_off',
   label: '',
   note: '',
   ...patch,
@@ -68,17 +68,17 @@ test('no target is reported before anything else', () => {
 
 test('the same connection is not added twice', () => {
   const problems = validateDraftDependency(draft(), source, sameVersion, [
-    { targetCellId: 'b', kind: 'trigger' },
+    { targetCellId: 'b', kind: 'sets_off' },
   ])
   assert.ok(problems.some((p) => /already exists/.test(p)))
 })
 
 test('the same pair may hold both a trigger and a needs', () => {
   const problems = validateDraftDependency(
-    draft({ kind: 'needs' }),
+    draft({ kind: 'enables' }),
     source,
     sameVersion,
-    [{ targetCellId: 'b', kind: 'trigger' }],
+    [{ targetCellId: 'b', kind: 'sets_off' }],
   )
   assert.deepEqual(problems, [])
 })

@@ -54,7 +54,7 @@ erDiagram
   path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int column_position "unique per (path_id, column_position)" }
   layers { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text layer_role "semantic role key; null = generic swimlane"  int row_position }
   cells { uuid id PK  uuid path_id FK  uuid layer_id FK "unique (layer_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
-  cell_dependencies { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK  text kind "trigger = temporal, sets off | needs = functional, must exist first"  text label  text note }
+  cell_dependencies { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK  text kind "sets_off = makes the other happen, drawn | enables = must already be true, never drawn"  text label  text note }
 ```
 
 ## Tables in brief
@@ -69,7 +69,7 @@ erDiagram
 | `path_steps` | Which steps a path uses and in what column order | `column_position` unique per path |
 | `layers` | Swimlanes, per PATH (each path carries its own layer rows) | `name` free-form any language; `layer_role` semantic key (see `references/layer-roles.md`) |
 | `cells` | Grid content at (layer × step) on a path | `unique (layer_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
-| `cell_dependencies` | Directed arrows cell → cell. `kind` is `trigger` (temporal — sets off) or `needs` (functional — must exist first); the table is the genus, `trigger` is one species | Unique pair, `source != target`, both cells must be on the same path |
+| `cell_dependencies` | Directed arrows cell → cell. `kind` is `sets_off` (this cell makes the other happen — drawn) or `enables` (the other must already be true — recorded, never drawn). Not inverses: "set off by" is `sets_off` read from the other end, and a precondition causes nothing | Unique pair, `source != target`, both cells must be on the same path |
 
 ## Enums
 

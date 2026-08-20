@@ -105,16 +105,17 @@ export function BlueprintTriggerArrows({
 
   const updateArrows = useCallback(() => {
     const content = contentRef.current
-    // `needs` links are panel-only by design — arrows draw temporal triggers only.
-    const arrowTriggers = triggers.filter((t) => (t.kind ?? 'trigger') === 'trigger')
-    if (!content || arrowTriggers.length === 0) {
+    // `enables` is panel-only by design: a precondition causes nothing, so
+    // drawing it as an arrow would claim a handoff that never happens.
+    const arrowDependencies = triggers.filter((t) => (t.kind ?? 'sets_off') === 'sets_off')
+    if (!content || arrowDependencies.length === 0) {
       setSegments([])
       return
     }
 
     const next: ArrowSegment[] = []
     const { resolveTriggers, otherTriggers: railInputTriggers } =
-      partitionReportingAnIssueFsaStep1ToResolveTriggers(arrowTriggers)
+      partitionReportingAnIssueFsaStep1ToResolveTriggers(arrowDependencies)
 
     for (const trigger of resolveTriggers) {
       const sourceEl = content.querySelector<HTMLElement>(

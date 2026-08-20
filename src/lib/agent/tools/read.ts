@@ -305,7 +305,7 @@ export async function listCellLinks(
   const lines = data.map((edge) => {
     const label = edge.label ? ` "${edge.label}"` : ''
     const note = edge.note ? ` — ${edge.note}` : ''
-    return `${edge.source_cell_id} --${edge.kind ?? 'trigger'}--> ${edge.target_cell_id}${label}${note} (${edge.id})`
+    return `${edge.source_cell_id} --${edge.kind ?? 'sets_off'}--> ${edge.target_cell_id}${label}${note} (${edge.id})`
   })
   const header = cellId
     ? `${data.length} link(s) touching ${cellId}:`
@@ -503,7 +503,7 @@ export async function getBlueprint(
       for (const edge of triggers) {
         const label = edge.label ? ` "${edge.label}"` : ''
         lines.push(
-          `  ${edge.source_cell_id} --${edge.kind ?? 'trigger'}--> ${edge.target_cell_id}${label}`,
+          `  ${edge.source_cell_id} --${edge.kind ?? 'sets_off'}--> ${edge.target_cell_id}${label}`,
         )
       }
     }

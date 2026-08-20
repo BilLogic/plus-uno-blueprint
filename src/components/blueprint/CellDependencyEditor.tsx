@@ -55,7 +55,7 @@ export function CellDependencyEditor({
   const [draft, setDraft] = useState<DraftDependency>({
     sourceCellId: source.cellId,
     targetCellId: null,
-    kind: 'trigger',
+    kind: 'sets_off',
     label: '',
     note: '',
   })

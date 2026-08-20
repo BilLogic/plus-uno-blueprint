@@ -24,7 +24,7 @@ function makeBlueprint(
   cells: CellSpec[],
   options: {
     lanes?: string[]
-    triggers?: Array<{ source: string; target: string; kind?: 'trigger' | 'needs' }>
+    triggers?: Array<{ source: string; target: string; kind?: 'sets_off' | 'enables' }>
   } = {},
 ): BlueprintData {
   const laneNames =

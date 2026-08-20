@@ -69,7 +69,7 @@ export type LaneSetEntry = {
   row_position: number
 }
 
-export type DependencyKind = 'trigger' | 'needs'
+export type DependencyKind = 'sets_off' | 'enables'
 
 /** What `service_scenarios.view_type` may hold. `merged` is a display state and
  *  the CHECK constraint rejects it — see StoredSlideViewType in types/nav.ts. */
@@ -487,7 +487,7 @@ export function setCellDependency(
   return call<string>(client, 'set_cell_dependency', {
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
-    kind: input.kind ?? 'trigger',
+    kind: input.kind ?? 'sets_off',
     label: input.label ?? null,
     note: input.note ?? null,
   })

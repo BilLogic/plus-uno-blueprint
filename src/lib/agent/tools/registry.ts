@@ -493,7 +493,7 @@ export async function dispatchTool(
         return `Cell updated.${notes.length ? ` ${notes.join(' ')}` : ''}`
       }
       case 'create_cell_dependency': {
-        const kind = args.kind === 'needs' ? 'needs' : 'trigger'
+        const kind = args.kind === 'enables' ? 'enables' : 'sets_off'
         const id = await setCellDependency(client, {
           sourceCellId: need(args, 'source_cell_id'),
           targetCellId: need(args, 'target_cell_id'),

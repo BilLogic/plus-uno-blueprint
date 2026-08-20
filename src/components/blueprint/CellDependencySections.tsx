@@ -188,8 +188,10 @@ type CellDependencySectionsProps = {
 } & SelectHandlers
 
 /**
- * Dependencies tab: grouped SET OFF BY (incoming triggers) / SETS OFF
- * (outgoing triggers) / NEEDS (functional links, both directions). Rows keep
+ * Dependencies tab: grouped SET OFF BY (incoming `sets_off`) / SETS OFF
+ * (outgoing `sets_off`) / DEPENDS ON (`enables`, both directions). The
+ * group headings are the stored kind values, minus the underscore — that is
+ * the point of the rename: the product word and the column agree. Rows keep
  * the hover-preview and click-to-navigate behavior, with the direction
  * glyphs and indented detail lines from the previous dependency table.
  * Read-only — link editing is an agent path.
@@ -203,32 +205,32 @@ export function CellDependencySections({
   className,
 }: CellDependencySectionsProps) {
   const setOffBy = connections.incoming.filter(
-    (connection) => connection.linkKind === 'trigger',
+    (connection) => connection.linkKind === 'sets_off',
   )
   const setsOff = connections.outgoing.filter(
-    (connection) => connection.linkKind === 'trigger',
+    (connection) => connection.linkKind === 'sets_off',
   )
 
-  const needsById = new Map<
+  const enablesById = new Map<
     string,
     { connection: BlueprintCellConnection; flow: RowFlow }
   >()
   for (const connection of connections.incoming) {
-    if (connection.linkKind !== 'needs') continue
-    if (!needsById.has(connection.triggerId)) {
-      needsById.set(connection.triggerId, { connection, flow: 'in' })
+    if (connection.linkKind !== 'enables') continue
+    if (!enablesById.has(connection.triggerId)) {
+      enablesById.set(connection.triggerId, { connection, flow: 'in' })
     }
   }
   for (const connection of connections.outgoing) {
-    if (connection.linkKind !== 'needs') continue
-    const existing = needsById.get(connection.triggerId)
+    if (connection.linkKind !== 'enables') continue
+    const existing = enablesById.get(connection.triggerId)
     if (existing) {
       existing.flow = 'both'
     } else {
-      needsById.set(connection.triggerId, { connection, flow: 'out' })
+      enablesById.set(connection.triggerId, { connection, flow: 'out' })
     }
   }
-  const needs = [...needsById.values()]
+  const enables = [...enablesById.values()]
 
   const linkedTechIds = new Set(
     [...connections.incoming, ...connections.outgoing].flatMap((connection) =>
@@ -242,7 +244,7 @@ export function CellDependencySections({
   if (
     setOffBy.length === 0 &&
     setsOff.length === 0 &&
-    needs.length === 0 &&
+    enables.length === 0 &&
     remainingTech.length === 0
   ) {
     return (
@@ -282,9 +284,9 @@ export function CellDependencySections({
           ))}
         </DependencyGroup>
       ) : null}
-      {needs.length > 0 ? (
-        <DependencyGroup title="Needs">
-          {needs.map(({ connection, flow }) => (
+      {enables.length > 0 ? (
+        <DependencyGroup title="Enables">
+          {enables.map(({ connection, flow }) => (
             <DependencyRow
               key={`needs:${connection.triggerId}`}
               connection={connection}

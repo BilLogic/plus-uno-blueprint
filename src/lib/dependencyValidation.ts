@@ -8,23 +8,36 @@ import type { DependencyKind } from '@/lib/authoringRpc'
  * being rejected is a rule you have to guess at first.
  */
 
-export const DEPENDENCY_KINDS: DependencyKind[] = ['trigger', 'needs']
+export const DEPENDENCY_KINDS: DependencyKind[] = ['sets_off', 'enables']
 
 /**
  * What each kind means, and — the part that matters — whether it draws.
  *
  * Every relationship being an arrow is what makes a blueprint unreadable.
  * Most "this depends on that" facts are not handoffs: they are constraints
- * worth recording and not worth drawing. `needs` is where those go.
+ * worth recording and not worth drawing. `enables` is where those go.
+ *
+ * Both kinds read SOURCE-FIRST and upstream-first, which is the whole reason
+ * this pair replaced `sets_off` / `depends_on`: those two put the source cell
+ * at opposite ends, so an edge's direction could not be read without first
+ * checking its kind.
+ *
+ *   "Creates breakout rooms"  sets off  "Reminds tutors to go through rooms"
+ *   "Roster has loaded"       enables   "Greets the student"
+ *
+ * Makes it HAPPEN versus makes it POSSIBLE. A loaded roster does not set off a
+ * greeting — the student arriving does — but nothing works without it.
  */
 export const DEPENDENCY_KIND_HINTS: Record<DependencyKind, string> = {
-  trigger: 'One step hands off to the next. Draws an arrow.',
-  needs: 'A dependency that is not a handoff. Recorded, never drawn.',
+  sets_off: 'One step hands off to the next. Draws an arrow.',
+  enables: 'Makes the next step possible, without causing it.',
 }
 
+/** The stored value IS the label, minus the underscore — that is the point of
+ *  the rename. These match the Dependencies tab's group headings. */
 export const DEPENDENCY_KIND_LABELS: Record<DependencyKind, string> = {
-  trigger: 'Triggers',
-  needs: 'Needs',
+  sets_off: 'Sets off',
+  enables: 'Enables',
 }
 
 export type DraftDependency = {
