@@ -24,6 +24,11 @@ export type BlueprintStep = {
   id: string
   name: string
   position: number
+  /** What this moment is, across every lane — the one sentence that makes the
+   *  column legible without reading five cells. Shown as the caption under the
+   *  storyboard frame, and in the step header's hover card when there is no
+   *  frame to caption. Optional because fallback data predates the column. */
+  summary?: string | null
 }
 
 /** Structured link on a cell (stored as JSONB; type is usually "url"). */

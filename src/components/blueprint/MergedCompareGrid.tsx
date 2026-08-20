@@ -645,6 +645,7 @@ function MergedSubCellBlock({
       compact={compact}
       flushBottom={flushBottom}
       visualPictures={visualPictures}
+      stepSummary={step.summary}
       slotCells={variant === 'pills' ? cells : undefined}
       pathMembership={pathMembership}
       selectionContext={

@@ -21,7 +21,8 @@ export const PATH_BLUEPRINT_SELECT = `
     position,
     steps (
       id,
-      name
+      name,
+      summary
     )
   ),
   cells (

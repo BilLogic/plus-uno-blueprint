@@ -20,6 +20,11 @@ type BlueprintStepVisualProps = {
   stepIndex?: number
   opacity?: number
   pictures?: readonly string[] | readonly BlueprintStepVisualPicture[]
+  /** `steps.summary` — what this moment is, across every lane. Rendered under
+   *  the frame, as a sibling of the per-picture labels rather than a new
+   *  treatment. Absent on a step nobody has described yet, which is most of
+   *  them. */
+  caption?: string | null
   /** Larger walkthrough/presentation layout — images scale to fit without clipping. */
   presentation?: boolean
   'aria-describedby'?: string
@@ -88,6 +93,7 @@ export function BlueprintStepVisual({
   stepIndex,
   opacity,
   pictures,
+  caption,
   presentation = false,
   'aria-describedby': ariaDescribedBy,
 }: BlueprintStepVisualProps) {
@@ -103,9 +109,34 @@ export function BlueprintStepVisual({
     : 'Empty step visual'
   const inlineMaxHeight = getVisualCellButtonMaxHeight(compact)
 
+  const captionText = caption?.trim()
+  // A caption without a frame renders NOTHING here, deliberately. The visual
+  // row's face is its pictures; giving it a text mode would make `showCell`
+  // learn a second reason to draw and would put prose in a picture row. A step
+  // with a summary and no frame is read in the column header's hover card.
   if (!hasRealPictures) {
     return null
   }
+
+  // A hairline separates the step's caption from the PER-PICTURE labels the
+  // strip already renders: without it the two run together and the caption
+  // reads as a fourth, overflowing label. Clamped to two lines because the
+  // cell is a fixed 4/3 box — an unclamped summary takes height straight out
+  // of the frame it is supposed to be describing.
+  const captionEl = captionText ? (
+    <p
+      data-blueprint-step-caption=""
+      title={captionText}
+      className={cn(
+        'mt-0.5 w-full shrink-0 border-t border-muted px-1 pt-0.5',
+        'line-clamp-2 text-center text-[8px] font-normal leading-tight tracking-tight',
+        'text-foreground/65',
+      )}
+      style={{ textWrap: 'balance' } as CSSProperties}
+    >
+      {captionText}
+    </p>
+  ) : null
 
   if (presentation) {
     return (
@@ -120,6 +151,7 @@ export function BlueprintStepVisual({
         aria-label={ariaLabel}
       >
         <VisualPictureStrip pictures={displayPictures} />
+        {captionEl}
       </div>
     )
   }
@@ -145,7 +177,10 @@ export function BlueprintStepVisual({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
     >
-      <VisualPictureStrip pictures={displayPictures} />
+      <div className="flex h-full min-h-0 w-full flex-col items-stretch overflow-hidden">
+        <VisualPictureStrip pictures={displayPictures} className="min-h-0 flex-1" />
+        {captionEl}
+      </div>
     </BlueprintCellButton>
   )
 }

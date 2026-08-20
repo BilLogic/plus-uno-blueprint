@@ -35,7 +35,7 @@ export type RawCell = {
 
 type RawPathStep = {
   position: number
-  steps: { id: string; name: string } | null
+  steps: { id: string; name: string; summary?: string | null } | null
 }
 
 export type RawLane = {
@@ -73,6 +73,7 @@ export function flattenPathSteps(raw: RawPathStep[]): BlueprintStep[] {
           id: row.steps.id,
           name: row.steps.name,
           position: row.position,
+          summary: row.steps.summary ?? null,
         },
       ]
     })

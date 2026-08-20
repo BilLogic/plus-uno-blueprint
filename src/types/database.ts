@@ -752,6 +752,7 @@ export type Database = {
           id: string
           name: string
           scenario_id: string
+          summary: string | null
           updated_at: string
         }
         Insert: {
@@ -759,6 +760,7 @@ export type Database = {
           id?: string
           name: string
           scenario_id: string
+          summary?: string | null
           updated_at?: string
         }
         Update: {
@@ -766,6 +768,7 @@ export type Database = {
           id?: string
           name?: string
           scenario_id?: string
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [
