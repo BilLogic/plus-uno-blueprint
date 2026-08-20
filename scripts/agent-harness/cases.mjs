@@ -8,8 +8,8 @@
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const WRITES = new Set([
-  'create_step', 'create_layer', 'upsert_cell', 'update_cell_content',
-  'update_cell_spec', 'create_cell_link', 'update_path',
+  'create_step', 'create_layer', 'upsert_cell', 'update_cell',
+  'create_cell_link', 'update_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
   'create_slice', 'update_slice', 'replace_slice_frames',
@@ -358,7 +358,7 @@ Canvas mode: view`,
       {
         id: 'reads-before-updates',
         fn: (trace) => {
-          const firstWrite = firstIndex(trace, (t) => t.name === 'update_cell_content')
+          const firstWrite = firstIndex(trace, (t) => t.name === 'update_cell')
           if (firstWrite === -1) return true // proposing first is also fine
           const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'get_cell')
           return readBefore || 'updated specs without reading the cells first'
@@ -367,7 +367,7 @@ Canvas mode: view`,
       {
         id: 'owners-from-vocabulary',
         fn: (trace) => {
-          const ownerWrites = calls(trace, 'update_cell_content').filter((t) => t.args.owner)
+          const ownerWrites = calls(trace, 'update_cell').filter((t) => t.args.owner)
           if (ownerWrites.length === 0) return true
           const tagsCall = calls(trace, 'list_owner_tags')[0]
           if (!tagsCall) return 'wrote owners without list_owner_tags'
@@ -387,7 +387,7 @@ Canvas mode: view`,
     traceChecks: [
       {
         id: 'no-per-cell-fanout',
-        fn: (trace) => calls(trace, 'update_cell_content').length <= 2 || `${calls(trace, 'update_cell_content').length}-cell rewrite fan-out`,
+        fn: (trace) => calls(trace, 'update_cell').length <= 2 || `${calls(trace, 'update_cell').length}-cell rewrite fan-out`,
       },
     ],
     judgeLines: [
@@ -599,7 +599,7 @@ Canvas mode: view`,
     // targets — the mock, not the model, caused that. A revision conflict
     // has one correct response: report it, re-read, retry the SAME cell.
     mocks: {
-      update_cell_content: (() => {
+      update_cell: (() => {
         let first = true
         return () => {
           if (first) {

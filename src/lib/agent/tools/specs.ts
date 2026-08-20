@@ -90,8 +90,7 @@ export const WRITE_TOOL_NAMES = new Set([
   'create_step',
   'create_layer',
   'upsert_cell',
-  'update_cell_content',
-  'update_cell_spec',
+  'update_cell',
   'create_cell_link',
   'update_path',
   'create_phase',
@@ -150,7 +149,8 @@ export const TOOL_SPECS: ToolSpec[] = [
     description:
       'Find things by WHAT THEY SAY, when you do not already know which scenario holds them — "where do we handle a late call-off", "which cells mention Workday". Results are RANKED and cut off at limit; the header reports how many matched in total, so say that number when you show a subset. Every row reports matched_by. ' +
       'IMPORTANT: this matches WORDS, not meaning. A question phrased differently from the blueprint\'s own wording can return nothing even though the moment IS mapped — zero rows means "no row uses these words", NEVER "the blueprint does not cover this". Re-search with the board\'s vocabulary, or use list_blueprint to see what exists, before reporting an absence. ' +
-      'Use list_blueprint when you want the COMPLETE set at a level, and get_blueprint when you already know the scenario.',
+      'Use list_blueprint when you want the COMPLETE set at a level, and get_blueprint when you already know the scenario. ' +
+      'AFTER you find cells, POINT AT THEM: open_scenario, then focus_cell on the one you are talking about. Finding a cell is not the same as showing it — the user is looking at a canvas, and an answer they cannot see on screen is half an answer.',
     parameters: {
       type: 'object',
       properties: {
@@ -615,7 +615,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'upsert_cell',
     description:
-      'Create the cell at (path, lane, step). Creation ONLY — the call refuses if a cell already exists there (edit with update_cell_content instead). content is REQUIRED and must be real journey text — an empty or placeholder cell is invisible in the grid.',
+      'Create the cell at (path, lane, step). Creation ONLY — the call refuses if a cell already exists there (edit with update_cell instead). content is REQUIRED and must be real journey text — an empty or placeholder cell is invisible in the grid.',
     parameters: {
       type: 'object',
       properties: {
@@ -628,9 +628,9 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'update_cell_content',
+    name: 'update_cell',
     description:
-      'Edit a cell: text, summary (the tl;dr — never a copy of the text), owner and perceived_owner (existing tags — see list_owner_tags). Reads the current values first internally, so only pass fields you mean to change. Fields cannot be CLEARED through this tool — an empty string means keep; ask the human to clear a field in the panel.',
+      'Edit a cell. Text side: content, summary (the tl;dr — never a copy of the text), owner and perceived_owner (existing tags — see list_owner_tags). Spec side: function (what it does), form (how it appears), value_props (audience/value pairs). Reads the current values first, so pass only the fields you mean to change. Fields cannot be CLEARED here — an empty string means keep; ask the human to clear one in the panel.',
     parameters: {
       type: 'object',
       properties: {
@@ -639,20 +639,8 @@ export const TOOL_SPECS: ToolSpec[] = [
         summary: str('New summary; omit to keep'),
         owner: str('Owner tag; omit to keep'),
         perceived_owner: str('Perceived-owner tag; omit to keep'),
-      },
-      required: ['cell_id'],
-    },
-  },
-  {
-    name: 'update_cell_spec',
-    description:
-      'Edit a cell’s spec: function (what it does), form (how it appears), value_props (audience/value pairs).',
-    parameters: {
-      type: 'object',
-      properties: {
-        cell_id: str('Cell id'),
-        function: str('Function text; omit to keep'),
-        form: str('Form text; omit to keep'),
+        function: str('Function text — what the cell does; omit to keep'),
+        form: str('Form text — how it appears; omit to keep'),
         value_props: {
           type: 'array',
           description: 'Full replacement list of {for, value}; omit to keep',

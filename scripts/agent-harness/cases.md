@@ -177,7 +177,7 @@ line). A case fails if any line fails.
 - **Rubric:**
   - [J] Points at the rename-everywhere mechanism (the app's owner-tag
     dropdown rename); [T] no per-cell rewrite loop (no
-    update_cell_content fan-out).
+    update_cell fan-out).
 
 ### C5 · dependency-semantics
 - **Prompt:** "In 'Before Students Join', the 'Share Zoom link' moment
@@ -282,7 +282,7 @@ line). A case fails if any line fails.
   no leaked tool syntax/JSON in prose.
 
 ### E2 · error-etiquette
-- **Setup:** harness forces the first `update_cell_content` to fail with
+- **Setup:** harness forces the first `update_cell` to fail with
   "write rejected: revision conflict — the cell changed since you read
   it; re-read before retrying" (an unambiguous transient failure — the
   earlier "row not found" mock tricked the model into believing it had

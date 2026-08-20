@@ -354,7 +354,7 @@ export async function dispatchTool(
         // slot would silently OVERWRITE the cell — and the recorded revert
         // for a "create" is a delete, so a human undoing the agent's edit
         // would destroy a pre-existing cell. Creation tool means creation
-        // only; edits go through update_cell_content.
+        // only; edits go through update_cell.
         const { data: occupied, error: occupiedError } = await client
           .from('cells')
           .select('id')
@@ -365,7 +365,7 @@ export async function dispatchTool(
         if (occupiedError) throw new Error(occupiedError.message)
         if (occupied && occupied.length > 0)
           throw new Error(
-            `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell_content to edit the existing cell.`,
+            `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell to edit the existing cell.`,
           )
         const newContent = need(args, 'content')
         const lengthGuidance = getCellContentLengthGuidance(newContent)
@@ -377,74 +377,104 @@ export async function dispatchTool(
         })
         return `Created cell (${id}).${lengthGuidance.message ? ` ${lengthGuidance.message}` : ''}`
       }
-      case 'update_cell_content': {
+      /**
+       * One tool over BOTH cell-write wrappers.
+       *
+       * They stay two functions underneath because they carry two separate
+       * column-level grants and two ledger entries — the revert sheet still
+       * distinguishes "Edited a cell's text" from "Specified function &
+       * form", so a user can take back one without the other. What the
+       * merge removes is the model having to know which half a field
+       * lives in, which is an implementation detail it kept guessing at.
+       *
+       * Each wrapper is called ONLY if this call names a field it owns, so
+       * editing just `function` still produces exactly one ledger row.
+       */
+      case 'update_cell': {
         const cellId = need(args, 'cell_id')
-        const nextContent = s(args, 'content')
-        const lengthGuidance =
-          nextContent === undefined
-            ? null
-            : getCellContentLengthGuidance(nextContent)
         const { data, error } = await client
           .from('cells')
-          .select('content, description, owner, perceived_owner')
+          .select(
+            'content, description, owner, perceived_owner, function, form, value_props',
+          )
           .eq('id', cellId)
           .maybeSingle()
         if (error) throw new Error(error.message)
         if (!data) throw new Error(`No cell with id ${cellId}.`)
-        const previous: CellContentUpdate = {
-          content: data.content ?? '',
-          description: data.description ?? '',
-          owner: data.owner ?? '',
-          perceivedOwner: data.perceived_owner ?? '',
+
+        const touchesText =
+          s(args, 'content') !== undefined ||
+          s(args, 'summary') !== undefined ||
+          s(args, 'owner') !== undefined ||
+          s(args, 'perceived_owner') !== undefined
+        const touchesSpec =
+          s(args, 'function') !== undefined ||
+          s(args, 'form') !== undefined ||
+          Array.isArray(args.value_props)
+        if (!touchesText && !touchesSpec) {
+          throw new Error(
+            'Name at least one field to change: content, summary, owner, perceived_owner, function, form or value_props.',
+          )
         }
-        await updateCellContent(
-          client,
-          cellId,
-          {
-            content: s(args, 'content') ?? previous.content,
-            description: s(args, 'summary') ?? previous.description,
-            owner: s(args, 'owner') ?? previous.owner,
-            perceivedOwner: s(args, 'perceived_owner') ?? previous.perceivedOwner,
-          },
-          previous,
-        )
-        return `Cell updated.${lengthGuidance?.message ? ` ${lengthGuidance.message}` : ''}`
-      }
-      case 'update_cell_spec': {
-        const cellId = need(args, 'cell_id')
-        const { data, error } = await client
-          .from('cells')
-          .select('function, form, value_props')
-          .eq('id', cellId)
-          .maybeSingle()
-        if (error) throw new Error(error.message)
-        if (!data) throw new Error(`No cell with id ${cellId}.`)
-        const prevProps = Array.isArray(data.value_props)
-          ? (data.value_props as Array<{ for?: string; value?: string }>).map(
-              (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
-            )
-          : []
-        const previous = {
-          function: data.function ?? '',
-          form: data.form ?? '',
-          valueProps: prevProps,
+
+        const notes: string[] = []
+
+        if (touchesText) {
+          const nextContent = s(args, 'content')
+          const lengthGuidance =
+            nextContent === undefined
+              ? null
+              : getCellContentLengthGuidance(nextContent)
+          const previous: CellContentUpdate = {
+            content: data.content ?? '',
+            description: data.description ?? '',
+            owner: data.owner ?? '',
+            perceivedOwner: data.perceived_owner ?? '',
+          }
+          await updateCellContent(
+            client,
+            cellId,
+            {
+              content: nextContent ?? previous.content,
+              description: s(args, 'summary') ?? previous.description,
+              owner: s(args, 'owner') ?? previous.owner,
+              perceivedOwner:
+                s(args, 'perceived_owner') ?? previous.perceivedOwner,
+            },
+            previous,
+          )
+          if (lengthGuidance?.message) notes.push(lengthGuidance.message)
         }
-        const nextProps = Array.isArray(args.value_props)
-          ? (args.value_props as Array<{ for?: string; value?: string }>).map(
-              (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
-            )
-          : previous.valueProps
-        await updateCellSpec(
-          client,
-          cellId,
-          {
-            function: s(args, 'function') ?? previous.function,
-            form: s(args, 'form') ?? previous.form,
-            valueProps: nextProps,
-          },
-          previous,
-        )
-        return 'Cell spec updated.'
+
+        if (touchesSpec) {
+          const prevProps = Array.isArray(data.value_props)
+            ? (data.value_props as Array<{ for?: string; value?: string }>).map(
+                (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
+              )
+            : []
+          const previous = {
+            function: data.function ?? '',
+            form: data.form ?? '',
+            valueProps: prevProps,
+          }
+          const nextProps = Array.isArray(args.value_props)
+            ? (args.value_props as Array<{ for?: string; value?: string }>).map(
+                (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
+              )
+            : previous.valueProps
+          await updateCellSpec(
+            client,
+            cellId,
+            {
+              function: s(args, 'function') ?? previous.function,
+              form: s(args, 'form') ?? previous.form,
+              valueProps: nextProps,
+            },
+            previous,
+          )
+        }
+
+        return `Cell updated.${notes.length ? ` ${notes.join(' ')}` : ''}`
       }
       case 'create_cell_link': {
         const kind = args.kind === 'needs' ? 'needs' : 'trigger'
