@@ -32,12 +32,12 @@ section is the reasoning behind one row of this table.
 | **Phase** | 6 | `name`, `summary`, `business_impact`, `operational_requirements`, `loops_to_phase_id` | phase section on the canvas | **Phase panel** (ⓘ in the menubar header) |
 | **Scenario** | 22 | `name`, `summary`, `view_type` | sidebar row + breadcrumb | **Scenario panel** (ⓘ on the breadcrumb) — *and it hosts the paths* |
 | **Path** | 38 | `name`, `path_type`, `summary`, `note` | path label on the canvas | **inside the scenario panel**, one row per path — a path has no canvas shape of its own to hang an affordance on |
-| **Step** | 185 | `name` only | column header | rename inline. Its *description* lives in the **storyboard cell** below the header — the cell panel, plain click |
+| **Step** | 185 | `name`, **`summary` (new)** | column header; `summary` is the **caption on the storyboard frame** | hover card on the header |
 | **Lane** | 299 rows / **166 logical** | `name`, `lane_role`, `owner_team`, `kpis`, `tools` | lane label on the rail | **Lane panel** (ⓘ on the label) |
 | **Cell** | 955 | `content`, `summary`, `function`, `form`, `value_props`, `owner`, `perceived_owner`, `links`, `picture` | the grid | **Cell panel** (plain click) |
 
 Four panels are new — service, phase, lane, **scenario**. The cell panel
-exists. **Step gets no new surface at all** — it already has a row in the grid.
+exists. Step gets **one column and one caption slot** — no panel.
 
 **The scenario panel is a reversal, and the reason is paths.** The earlier
 verdict — "a drawer holding one summary field is worse than editing the name
@@ -164,93 +164,96 @@ have never been written, which is true of any empty cell and is what
 `upsert_cell` is for. My earlier "47 steps have no slot" was counting
 materialised rows, not positions. **The slot is there for every step.**
 
-> ## 🔴 Correction — the storyboard row does not render text
->
-> **Found while planning 007–009, and it undercuts the consolidation above.**
-> The reasoning below was measured against the *data*. The *renderer* says
-> something different.
->
-> ```tsx
-> // src/components/blueprint/BlueprintStepVisual.tsx:105-107
-> if (!hasRealPictures) {
->   return null
-> }
-> ```
->
-> ```tsx
-> // src/components/blueprint/MergedCompareGrid.tsx:184-185
-> // A visual lane's face comes from the walkthrough layers' pictures,
-> // NOT from its own cell text, so it merges on the picture set.
-> ```
->
-> A visual cell's `content` is read by **no renderer**. With no pictures the
-> cell renders nothing at all — so it is not clickable either, and the cell
-> panel cannot be reached to edit it. The row's face is assembled by
-> `resolveVisualStepPictureEntries(blueprint, step.id)` from *other* lanes'
-> pictures.
->
-> **So "reuse the surface that already exists" was wrong: for text, there is no
-> surface.** Writing a step description into a storyboard cell would put it in
-> exactly the position this whole brief exists to fix — a filled column with no
-> front door.
->
-> ### Two honest options
->
-> | | **A · `steps.summary` + header hover** | B · caption the storyboard row |
-> |---|---|---|
-> | Storage | one new column, one row per step | existing `cells.content`, per path |
-> | Render paths to change | **1** — the step header | **5** — `ServiceBlueprintGrid`, `BlueprintPathBand`, `CompareCellBlock`, `MergedCompareGrid`, `BlueprintStepVisual` |
-> | Grain | clean: `steps` is keyed per scenario | per path; in side-by-side compare, "which cell does the header edit" has no answer |
-> | Storyboard keeps its job | yes — pictures | it gains a second job |
->
-> **Recommendation: A.** One useful fact points the same way — pictures are
-> *already* resolved by `step.id`, not by path. The row is conceptually
-> step-grained already, so a step-grained column is the shape the renderer is
-> reaching for.
->
-> ⚠️ **This reverses a decision that was endorsed. Not applied to plans 003 or
-> 005 pending a call** — the sections below still describe the storyboard
-> consolidation.
+### 🧭 STEP — 185 rows · `steps.summary`, shown as the storyboard caption
 
-**So step needs no column.** It already has a row of its own, rendered on every
-canvas, aligned under the step header, with a full editor behind it:
+**Resolved.** Storage is step-grained; display is in the storyboard row. Each
+half goes where it belongs, and neither pretends to be the other.
 
-| A new `steps.summary` would need | The storyboard row already has |
+#### Why not the storyboard cell's own `content` — the renderer settles it
+
+The first consolidation attempt was measured against the *data* (215 grid
+positions, every one blank). The *renderer* says something different:
+
+```tsx
+// src/components/blueprint/BlueprintStepVisual.tsx:105-107
+if (!hasRealPictures) {
+  return null
+}
+```
+
+```tsx
+// src/components/blueprint/MergedCompareGrid.tsx:184-185
+// A visual lane's face comes from the walkthrough layers' pictures,
+// NOT from its own cell text, so it merges on the picture set.
+```
+
+A visual cell's `content` is read by **no renderer**, and with no pictures the
+cell renders nothing — so it is not clickable and the cell panel cannot reach
+it. Writing a step description there would put it in exactly the position this
+brief exists to fix: a filled column with no front door.
+
+#### The design
+
+```
+        ┌───────────────────────┐
+Step    │  Confirm the booking  │  ← steps.name. Hover opens the card.
+        └───────────────────────┘
+        ┌───────────────────────┐
+Story-  │      [ frame ]        │  ← pictures, resolved BY step.id
+board   │ ───────────────────── │
+        │ The student picks a   │  ← steps.summary, as the caption
+        │ slot; the system      │
+        │ holds it 10 minutes.  │
+        └───────────────────────┘
+Student │ Picks a slot          │
+Fr.Tech │ Holds the slot 10 min │
+```
+
+| | Where |
 |---|---|
-| a migration + column grant | `content`, `description`, `picture`, `links` — granted |
-| a mutation wrapper + revert case + ledger kind | `upsert_cell`, its revert, its ledger label |
-| a new hover-card component with an inline editor | the **cell panel**, plain click |
-| a hover card to *read* it — hidden by default | **visible in the grid**, always |
+| **Stored** | `steps.summary` — one row per step, keyed on `service_scenario_id` |
+| **Shown, when the step has a storyboard** | as the **caption under the frame**, in the storyboard row |
+| **Shown, always** | the step header's hover card — the only surface when there is no picture |
+| **Edited** | inline in that hover card. One field, so it commits on blur |
 
-The last row is the real argument. A hover card hides step-level information
-behind a gesture; the storyboard row shows it in place, in journey order, next
-to the cells it summarises. That is strictly better, and it costs nothing.
+#### Three facts make this cheap
 
-**What the field means, stated so the row stops being blank:**
+**1. The row is already step-grained.** `resolveVisualStepPictureEntries(blueprint, step.id)`
+resolves by step id, not by path — so a step-keyed caption is the shape the
+renderer is already reaching for. No per-path ambiguity, and nothing to decide
+about which path's caption wins in side-by-side compare.
 
-| Field on a storyboard cell | Means |
-|---|---|
-| `content` | **what this moment is**, across every lane — the one line that makes the column legible without reading five cells |
-| `picture` | the storyboard frame, when there is one |
-| `description` | 🟡 leave empty here. On a storyboard cell there is nothing for a tl;dr to summarise |
+**2. There are two render call sites, not five.** `BlueprintStepVisual` is
+rendered from `ServiceBlueprintGrid.tsx:764` and `CompareCellBlock.tsx:127`
+only; merged compare routes through the latter. **One `caption` prop threaded
+through two call sites reaches every geometry.**
 
-**Per-path, and that is correct.** 215 positions for 185 steps means ~30 are a
-step appearing in more than one path. A storyboard is a per-path artefact by
-nature — the same step in the happy path and the no-show path can legitimately
-show a different frame and a different line. **No fan-out**, unlike lanes:
-lanes fan out because `remove_lane` already keys on `(scenario, name)` and the
-database treats them as one thing. Nothing treats two paths' storyboard cells
-as one thing, so nothing should.
+**3. The caption slot already exists one level down.** `VisualPictureStrip`
+renders a per-picture `label` at 8px beneath each image
+(`BlueprintStepVisual.tsx:70-74`). The step caption is its sibling — under the
+strip rather than under each frame — so it inherits an established treatment
+instead of inventing one.
 
-**One product change to make the row mean this:** the lane is named `Visual`,
-which describes a medium, not a job. Rename the label to **Storyboard** —
-`layer_role` stays `visual` (it is the semantic key and renaming it would break
-every import). Plan 002 carries the label change.
+#### What each field means
 
 | Field | Definition | Why it exists | Not this |
 |---|---|---|---|
-| `steps.name` | the moment — "Confirm the booking" | the column header | — |
-| *(no other column)* | the step's description lives in its storyboard cell | reuse over a new column | a `steps.summary` — considered and rejected above |
+| `name` | the moment — "Confirm the booking" | the column header | — |
+| `summary` **(new)** | **what this moment is, across every lane** — the one sentence that makes the column legible without reading five cells, and the caption the storyboard frame has never had | a step is the only level a reader scans horizontally and has nothing to read | any single lane's action — that is a cell |
+
+**A storyboard cell's own `content` stays unused**, and that is now a
+deliberate null rather than an oversight: the picture is the content.
+
+#### Still true, and unchanged by this
+
+The step has **no grain problem**. `steps` holds one row per step keyed on
+`service_scenario_id`; `path_steps` only carries `column_position`. An earlier
+read called this a lane-shaped fan-out. It is not — which is exactly why
+`steps.summary` is cheap and `lanes.owner_team` is not.
+
+One label change belongs to [plan 002](2026-08-20-002-refactor-database-vocabulary-plan.md):
+the lane reads `Visual`, which names a medium. It should read **Storyboard**.
+`layer_role` stays `visual`.
 
 ### 🧭 LANE — 299 rows, 166 logical, 12 names
 
@@ -346,6 +349,9 @@ erDiagram
     phases {
         text business_impact          "what it is worth, what it costs"
         text operational_requirements "what must be true to run"
+    }
+    steps {
+        text summary "what this moment is — the storyboard caption"
     }
     paths {
         text path_type "the kind of route"
@@ -579,7 +585,7 @@ for, and why they are not proposed now:
 |---|---|---|---|
 | Scenario | `name`, `summary` | sidebar row; `summary` in a hover card there | **scenario panel** |
 | Path | `name`, `path_type`, `summary`, `note` | the path label carries name and type | **scenario panel**, one row per path |
-| Step | `name` | column header | rename inline; its description is the **storyboard cell**, opened with a plain click like any cell |
+| Step | `name`, `summary` | column header; the summary captions the storyboard frame when one exists | hover card on the header, inline |
 | Lane | name, role, owner, KPIs, tools | the lane label | **lane panel** |
 | Cell | the spec block | the grid | **cell panel** |
 
@@ -589,19 +595,22 @@ tooltips name a control, they do not hold prose.
 
 - **Tooltip** — a truncated lane label on a narrow rail. One line, no
   interaction.
-- **Hover card** (`popover.tsx` on hover-intent) — a scenario's `summary` in
-  the sidebar. Multi-line, selectable, can hold a control.
+- **Hover card** (`popover.tsx` on hover-intent) — a step's `summary` on its
+  column header, and a scenario's `summary` in the sidebar. Multi-line,
+  selectable, can hold a control.
 - **Panel** — anything with more than one editable field.
 
-## Should step get a panel like lane? — no, and now it needs no hover card either
+## Should step get a panel like lane? — no. A caption and a hover card
 
-`steps` owns exactly one column: `name`. Everything a reader wants about a step
-is in its **storyboard cell**, which already has the cell panel.
+`steps` owns two columns. A drawer for two fields is the mistake the scenario
+panel only avoids by adopting 38 orphan paths, and a step has no orphan
+children to adopt.
 
 | Want | Surface |
 |---|---|
-| Read what a step is | the storyboard row, visible in the grid |
-| Edit it | plain click on that cell — the cell panel |
+| Read what a step is | the **storyboard caption**, visible in the grid |
+| Read it where there is no storyboard | the header hover card |
+| Edit it | inline in that card — one field, commits on blur |
 | Rename the step | inline on the column header, as today |
 
 **Escalation path, recorded:** if `value_props` moves from cell to step, `steps`

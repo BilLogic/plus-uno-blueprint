@@ -58,7 +58,8 @@ precedent, per its own rule of thumb:
 | "No evidence — this is an assumption" | `alert.tsx` variant `info` | tinted surface + filled icon chip, copy stays `--foreground` |
 | Grouped lists (validation questions) | `accordion.tsx`, controlled | the ledger step-groups precedent: one open at a time |
 | **Paths inside the scenario panel** | `accordion.tsx`, controlled — one path open at a time | same precedent. A scenario averages 1.7 paths, so all of them fit; the accordion keeps `note` from competing with `summary` for attention |
-| Step description | **nothing new** — it is a storyboard cell, edited in the cell panel | see plan 006: `steps` owns only `name`; the `visual` lane's cell is the step's row and already has a full editor |
+| Step caption | a `caption` prop on `BlueprintStepVisual`, rendered under the picture strip | the per-picture `label` at `BlueprintStepVisual.tsx:70-74` is the treatment to echo — same placement logic, one level up |
+| Step hover card | `popover.tsx` on hover-intent | **not** `IconTooltip` — the inventory reserves tooltips for naming a control, and this holds prose plus one input |
 
 **Nothing new is added to `src/components/ui/`.** Every need above already has
 a primitive or a precedent — which is the point of matching.
@@ -214,7 +215,7 @@ picker owns the bare click.
 | Scenario | `ⓘ` in `ScenarioMenubarBreadcrumb` | click |
 | Lane | `(i)` beside the lane label, **both** render paths | click |
 | Cell | the cell | plain click *(unchanged)* |
-| Step | its **storyboard cell** in the grid | plain click — the cell panel |
+| Step | column header | **hover or focus** — a card, not a panel |
 
 **Phase gets a button, not a modifier-click.** `CanvasPhaseSection.tsx:180`
 already makes the whole section `role="button"` meaning *navigate into this
@@ -238,12 +239,12 @@ global DOM id the Save/Cancel row portals into.
 ## Files
 
 ```
-                                                      NO new columns and no
-                                                      new migration in this
-                                                      plan — every field these
-                                                      panels write is already
-                                                      granted (brief §"already
-                                                      finished")
+NEW  supabase/migrations/*_step_summary.sql           add steps.summary +
+                                                      grant update (summary)
+                                                      on steps to authenticated
+                                                      — the ONLY new column in
+                                                      this plan; every other
+                                                      field is already granted
 NEW  src/components/blueprint/panelShell.tsx          lifted: PanelDrawerShell,
                                                       error boundary, Field,
                                                       footer-host id as a prop
@@ -262,7 +263,13 @@ EDIT scripts/tests/authoringSession.test.ts           exhaustiveness map
 EDIT src/components/blueprint/BlueprintCellDetailPanel.tsx   consume the shell
 EDIT src/components/editor/PhaseMenubarHeader.tsx     info button
 NEW  src/components/blueprint/ScenarioPanel.tsx       + its paths accordion
-NEW  src/lib/pathMutations.ts                         + a revert case
+NEW  src/lib/pathMutations.ts  stepMutations.ts       each + a revert case
+NEW  src/components/blueprint/StepHeaderCard.tsx      name, summary, frame
+EDIT src/components/blueprint/BlueprintStepVisual.tsx caption slot under the
+                                                      picture strip
+EDIT src/components/blueprint/ServiceBlueprintGrid.tsx :764 pass caption;
+                                                      step header hover
+EDIT src/components/blueprint/CompareCellBlock.tsx    :127 pass caption
 EDIT src/components/editor/ScenarioMenubarBreadcrumb.tsx   info button
 EDIT src/components/blueprint/BlueprintLabelRail.tsx  (i)
 EDIT src/components/blueprint/ServiceBlueprintGrid.tsx (i)
@@ -292,7 +299,10 @@ EDIT scripts/agent-harness/run.mjs                    a case per new read tool
 - [ ] The scenario panel writes `paths.summary` and `paths.note`, and the two
       are visibly different in weight — a note never reads as fact
 - [ ] `view_type` appears in no panel
-- [ ] No new column and no migration ships with this plan
+- [ ] `steps.summary` captions the storyboard frame in the main grid, in
+      side-by-side compare and in merged compare — from one `caption` prop
+- [ ] A step with no pictures renders no visual cell, exactly as today
+- [ ] The header card opens on focus as well as hover and commits on blur
 - [ ] Lane edits fan out to every same-named lane in the scenario, and the
       panel says so before saving
 - [ ] `cells.owner` shows the inherited lane team and only writes on override
@@ -411,31 +421,44 @@ an affordance:
 Sits above Phases, styled as a `NavSection` header row rather than a nav item,
 because it is the container of everything below it — not a sibling of Phases.
 
-### Steps — no new surface at all
+### Steps — a caption in the grid, a card on the header
 
-**Cut from this plan.** The earlier draft specified a hover card with an inline
-editor for a new `steps.summary` column. Plan 006 reversed that: `steps` owns
-only `name`, and the step's description belongs in its **storyboard cell** —
-the `visual` lane's row, which exists in all 38 paths, occupies a real grid
-position under every step header, and already opens the cell panel on a plain
-click.
+`steps.summary` is stored once per step and shown twice. Full reasoning in
+[plan 006](2026-08-20-006-design-data-model.md); the surfaces are here.
 
 ```
-     step header        Confirm the booking          ← rename inline, as today
-     ─────────────────────────────────────────
-  →  Storyboard         The student picks a slot     ← cells.content
-                        and the system holds it       plain click = cell panel
-                        10 minutes.
-     Student            Picks a slot
-     Front Stage Tech   Holds the slot 10 min
+        ┌───────────────────────┐
+Step    │  Confirm the booking  │  hover / focus → the card
+        └───────────────────────┘
+        ┌───────────────────────┐
+Story-  │      [ frame ]        │  pictures, resolved BY step.id
+board   │ ───────────────────── │
+        │ The student picks a   │  ← steps.summary, the caption
+        │ slot; the system      │
+        │ holds it 10 minutes.  │
+        └───────────────────────┘
 ```
 
-Visible in the grid rather than hidden behind hover, editable through a panel
-that already exists, with a ledger entry and a revert case that already exist.
-**Zero new components.**
+**Two call sites, not five.** `BlueprintStepVisual` is rendered from
+`ServiceBlueprintGrid.tsx:764` and `CompareCellBlock.tsx:127` only — merged
+compare routes through the latter. One `caption` prop threaded through both
+reaches every geometry.
 
-One label change belongs to plan 002, not here: the lane reads `Visual`, which
-names a medium. It should read **Storyboard**. `layer_role` stays `visual`.
+- The caption sits **under the picture strip**, echoing the per-picture `label`
+  treatment at `BlueprintStepVisual.tsx:70-74` — same idea one level up. It
+  renders only when the step has pictures.
+- **`BlueprintStepVisual` still returns `null` with no pictures** and that
+  stays true. A summary with no storyboard is read in the header card, not in
+  an empty visual cell — otherwise the visual row grows a text mode and the
+  `showCell` gating at `ServiceBlueprintGrid.tsx:578` has to learn a second
+  reason to render.
+- The header card holds name, summary and the frame, and is where `summary` is
+  **edited**: one field, so it commits on blur with a ledger entry — no
+  Save/Cancel row and no footer host.
+- Opens on **focus as well as hover**. A hover-only control keyboard users
+  cannot reach is not an affordance.
+- **A storyboard cell's own `content` stays unused** — deliberately. The
+  picture is the content; the caption belongs to the step.
 
 ### The interaction table
 
@@ -446,7 +469,7 @@ names a medium. It should read **Storyboard**. `layer_role` stays `visual`.
 | Scenario | `ⓘ` in `ScenarioMenubarBreadcrumb` | click | visible in chrome |
 | Lane | `ⓘ` on the label, hover/focus-revealed, always tabbable | click | right-click → "Lane properties" |
 | Cell | the cell itself | **plain click** | right-click → "View cell detail" |
-| Step | its storyboard cell | **plain click** | it is a cell like any other |
+| Step | the column header | **hover or focus** → card | its summary also captions the storyboard frame |
 | Path | — | — | **inside the scenario panel** — a label is not a shape |
 
 **Close is the shell's job and identical for all of them:** `✕`, `Escape`, or

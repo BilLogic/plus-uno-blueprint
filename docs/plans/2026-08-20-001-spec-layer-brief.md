@@ -189,14 +189,18 @@ and the fix in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md).
   nothing in the app reads. `service_lifecycles` is the real root, and its own
   comment says `'End-to-end service journey'`. It **is** the service. Plan 002
   drops the dead table and renames the real one.
-- **The storyboard row is empty everywhere, and it is the step's surface.**
-  The `visual` lane exists in all 38 paths and its cells occupy **215
-  `(path, step)` grid positions** — 147 written, all blank; 68 not yet created,
-  which is true of any unwritten cell. A reserved row rendered on every canvas
-  holding nothing. **No `steps.summary` column is needed**: the step's
-  description goes in its storyboard cell, which already has the cell panel, a
-  ledger entry and a revert case. Rename the lane label `Visual` → `Storyboard`;
-  `layer_role` stays `visual`.
+- **The storyboard row is empty everywhere, and no renderer reads its text.**
+  The `visual` lane exists in all 38 paths and occupies **215 `(path, step)`
+  grid positions** — 147 cells written, every one blank. But
+  `BlueprintStepVisual.tsx:105` returns `null` without pictures, and
+  `MergedCompareGrid.tsx:184` states it outright: *"A visual lane's face comes
+  from the walkthrough layers' pictures, NOT from its own cell text."* So the
+  cell's `content` has no front door. **`steps.summary` is the column** — one
+  row per step, shown as the **caption on the storyboard frame** (and in a
+  header hover card when there is no frame). Cheap because pictures are already
+  resolved by `step.id`, and because `BlueprintStepVisual` has only two render
+  call sites. Rename the lane label `Visual` → `Storyboard`; `layer_role` stays
+  `visual`.
 - **`lanes.tools` has exactly one reader.** `check-kpi-alignment.md:10-12` uses
   it for *"whether the measured thing is even instrumented"* — nothing renders
   it and no other check reads it. Fill it only after `kpis`, and only where
