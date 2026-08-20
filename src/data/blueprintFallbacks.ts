@@ -131,7 +131,7 @@ import {
 } from '@/lib/repairWarmUpAlternatePathBlueprint'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
   GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
@@ -231,7 +231,7 @@ const WARM_UP_ZOOM_PENCIL_LEAVE_BREAKOUT_DESCRIPTION =
 const warmUpPartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     `a0000000-0000-4000-8000-00000004${stepSlot}${layerSuffix}`,
-  triggerId: (slot: string) =>
+  dependencyId: (slot: string) =>
     `a0000000-0000-4000-8000-00000005${slot}`,
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
@@ -311,16 +311,16 @@ const WARM_UP_ALTERNATE_RT_TO_FRONT_TECH_STEP_SLOTS = [
   '09',
 ] as const
 
-function buildRegularTutorToFrontStageTechTriggers(
+function buildRegularTutorToFrontStageTechDependencies(
   cellPrefix: '04' | '06',
-  triggerPrefix: '05' | '07',
+  dependencyPrefix: '05' | '07',
   idStart: number,
   stepSlots: readonly string[],
 ): BlueprintCellDependency[] {
   return stepSlots.map((step, index) => {
-    const triggerSlot = String(idStart + index).padStart(4, '0')
+    const dependencySlot = String(idStart + index).padStart(4, '0')
     return {
-      id: `a0000000-0000-4000-8000-000000${triggerPrefix}${triggerSlot}`,
+      id: `a0000000-0000-4000-8000-000000${dependencyPrefix}${dependencySlot}`,
       source_cell_id: `a0000000-0000-4000-8000-000000${cellPrefix}${step}03`,
       target_cell_id: `a0000000-0000-4000-8000-000000${cellPrefix}${step}06`,
     }
@@ -328,7 +328,7 @@ function buildRegularTutorToFrontStageTechTriggers(
 }
 
 const WARM_UP_RT_TO_FRONT_TECH_TRIGGERS =
-  buildRegularTutorToFrontStageTechTriggers(
+  buildRegularTutorToFrontStageTechDependencies(
     '04',
     '05',
     113,
@@ -336,7 +336,7 @@ const WARM_UP_RT_TO_FRONT_TECH_TRIGGERS =
   )
 
 const WARM_UP_ALTERNATE_RT_TO_FRONT_TECH_TRIGGERS =
-  buildRegularTutorToFrontStageTechTriggers(
+  buildRegularTutorToFrontStageTechDependencies(
     '06',
     '07',
     113,
@@ -492,7 +492,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
 ]
 
 const WARM_UP_TRIGGERS: BlueprintCellDependency[] = [
-  ...buildParallelSessionPartnerLeadTriggers(warmUpPartnerLeadOptions),
+  ...buildParallelSessionPartnerLeadDependencies(warmUpPartnerLeadOptions),
   {
     id: 'a0000000-0000-4000-8000-000000050101',
     source_cell_id: 'a0000000-0000-4000-8000-000000040103',
@@ -553,14 +553,14 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: WARM_UP_CELLS,
-  triggers: WARM_UP_TRIGGERS,
+  dependencies: WARM_UP_TRIGGERS,
 }
 
 function mapHappyCellId(id: string): string {
   return id.replace('00000004', '00000006')
 }
 
-function mapHappyTriggerId(id: string): string {
+function mapHappyDependencyId(id: string): string {
   return id.replace('00000005', '00000007')
 }
 
@@ -579,7 +579,7 @@ const WARM_UP_ALTERNATE_STEPS = STEPS.filter(
 const warmUpAlternatePartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     `a0000000-0000-4000-8000-00000006${stepSlot}${layerSuffix}`,
-  triggerId: (slot: string) => `a0000000-0000-4000-8000-00000007${slot}`,
+  dependencyId: (slot: string) => `a0000000-0000-4000-8000-00000007${slot}`,
   partnerLayerId: mapAlternatePathLayerId(L.partner),
   leadLayerId: mapAlternatePathLayerId(L.lead),
   stepIdForColumn: (column: number) => WARM_UP_ALTERNATE_STEPS[column - 1]!.id,
@@ -618,21 +618,21 @@ const WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS = new Set([
   'a0000000-0000-4000-8000-000000050112',
 ])
 
-function buildWarmUpAlternatePathTriggers(): BlueprintCellDependency[] {
-  const regularTutorTriggers = WARM_UP_TRIGGERS.filter(
-    (trigger) =>
-      WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS.has(trigger.id) &&
-      trigger.id !== 'a0000000-0000-4000-8000-000000050102' &&
-      trigger.id !== 'a0000000-0000-4000-8000-000000050103',
-  ).map((trigger) => ({
-    id: mapHappyTriggerId(trigger.id),
-    source_cell_id: mapHappyCellId(trigger.source_cell_id),
-    target_cell_id: mapHappyCellId(trigger.target_cell_id),
+function buildWarmUpAlternatePathDependencies(): BlueprintCellDependency[] {
+  const regularTutorDependencies = WARM_UP_TRIGGERS.filter(
+    (dependency) =>
+      WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS.has(dependency.id) &&
+      dependency.id !== 'a0000000-0000-4000-8000-000000050102' &&
+      dependency.id !== 'a0000000-0000-4000-8000-000000050103',
+  ).map((dependency) => ({
+    id: mapHappyDependencyId(dependency.id),
+    source_cell_id: mapHappyCellId(dependency.source_cell_id),
+    target_cell_id: mapHappyCellId(dependency.target_cell_id),
   }))
 
   return [
-    ...buildParallelSessionPartnerLeadTriggers(warmUpAlternatePartnerLeadOptions),
-    ...regularTutorTriggers,
+    ...buildParallelSessionPartnerLeadDependencies(warmUpAlternatePartnerLeadOptions),
+    ...regularTutorDependencies,
     {
       id: 'a0000000-0000-4000-8000-000000070102',
       source_cell_id: 'a0000000-0000-4000-8000-000000060203',
@@ -643,7 +643,7 @@ function buildWarmUpAlternatePathTriggers(): BlueprintCellDependency[] {
 }
 
 const WARM_UP_ALTERNATE_TRIGGERS: BlueprintCellDependency[] =
-  buildWarmUpAlternatePathTriggers()
+  buildWarmUpAlternatePathDependencies()
 
 export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
   path: {
@@ -659,7 +659,7 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
   })),
   steps: WARM_UP_ALTERNATE_STEPS,
   cells: buildWarmUpAlternatePathCells(),
-  triggers: WARM_UP_ALTERNATE_TRIGGERS,
+  dependencies: WARM_UP_ALTERNATE_TRIGGERS,
 }
 
 const FALLBACK_BY_PATH: Record<string, BlueprintData> = {

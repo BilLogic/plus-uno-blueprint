@@ -467,7 +467,7 @@ export async function getBlueprint(
   const sections: string[] = []
   for (const raw of rows) {
     const blueprint = normalizeBlueprint(raw)
-    const { path, steps, lanes, cells, triggers } = blueprint
+    const { path, steps, lanes, cells, dependencies } = blueprint
     const lines: string[] = [
       `Path "${path.name}" (${path.id}, type ${path.path_type})`,
       `Steps: ${steps
@@ -498,9 +498,9 @@ export async function getBlueprint(
     // WRITE an edge (create_cell_dependency) and never read one back, and the
     // relationships the user sees on the canvas were invisible to it. The
     // join was already paid for; only the rendering was missing.
-    if (triggers.length > 0) {
-      lines.push(`Edges (${triggers.length}):`)
-      for (const edge of triggers) {
+    if (dependencies.length > 0) {
+      lines.push(`Edges (${dependencies.length}):`)
+      for (const edge of dependencies) {
         const label = edge.label ? ` "${edge.label}"` : ''
         lines.push(
           `  ${edge.source_cell_id} --${edge.kind ?? 'sets_off'}--> ${edge.target_cell_id}${label}`,
@@ -601,7 +601,7 @@ export async function getCompareDiff(
     (slot) => slot.verdict === 'shared' && !isDetailOnlyCompareSlot(slot),
   ).length
   lines.push(
-    `${shared} shared slots. Note: triggers/needs edges are not compared.`,
+    `${shared} shared slots. Note: dependencies/needs edges are not compared.`,
   )
   return lines.join('\n')
 }

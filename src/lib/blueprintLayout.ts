@@ -11,8 +11,8 @@ import {
   VISUAL_ROLE,
 } from '@/lib/laneRoles'
 import {
-  isParallelSessionLeadBottomWrapTrigger,
-  isParallelSessionPartnerWrapTrigger,
+  isParallelSessionLeadBottomWrapDependency,
+  isParallelSessionPartnerWrapDependency,
 } from '@/data/parallelSessionPartnerLead'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
@@ -175,12 +175,12 @@ export const BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN = 32
 export const OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN =
   /000000(?:07|72|17)(\d{2})03$/
 
-/** Application discovery triggers that span forward across Regular Tutor columns. */
-export function triggersIncludeDiscoveryRail(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+/** Application discovery dependencies that span forward across Regular Tutor columns. */
+export function dependenciesIncludeDiscoveryRail(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) => {
-    const { source_cell_id: src, target_cell_id: tgt } = trigger
+  return dependencies.some((dependency) => {
+    const { source_cell_id: src, target_cell_id: tgt } = dependency
     return (
       OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(src) &&
       OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(tgt) &&
@@ -189,16 +189,16 @@ export function triggersIncludeDiscoveryRail(
   })
 }
 
-export function blueprintHasDiscoveryRailTriggers(
+export function blueprintHasDiscoveryRailDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeDiscoveryRail(data.triggers)
+  return dependenciesIncludeDiscoveryRail(data.dependencies)
 }
 
 export function layerHasDiscoveryRailCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
@@ -206,9 +206,9 @@ export function layerHasDiscoveryRailCorridor(
   if (lane.name !== 'Regular Tutor') return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasDiscoveryRailTriggers)) return true
+    if (blueprints.some(blueprintHasDiscoveryRailDependencies)) return true
   }
-  if (extraTriggers && triggersIncludeDiscoveryRail(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludeDiscoveryRail(extraDependencies)) {
     return true
   }
   return false
@@ -221,27 +221,27 @@ export function abbreviateConnectionLayerName(laneName: string): string {
   return laneName
 }
 
-export function triggersIncludePartnerActionOverheadWrap(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludePartnerActionOverheadWrap(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) =>
-    isParallelSessionPartnerWrapTrigger(
-      trigger.source_cell_id,
-      trigger.target_cell_id,
+  return dependencies.some((dependency) =>
+    isParallelSessionPartnerWrapDependency(
+      dependency.source_cell_id,
+      dependency.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasPartnerActionOverheadWrapTriggers(
+export function blueprintHasPartnerActionOverheadWrapDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludePartnerActionOverheadWrap(data.triggers)
+  return dependenciesIncludePartnerActionOverheadWrap(data.dependencies)
 }
 
 export function layerHasPartnerActionOverheadWrapCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
@@ -249,11 +249,11 @@ export function layerHasPartnerActionOverheadWrapCorridor(
   if (lane.name !== PARTNER_ACTION_LAYER_NAME) return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasPartnerActionOverheadWrapTriggers)) {
+    if (blueprints.some(blueprintHasPartnerActionOverheadWrapDependencies)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludePartnerActionOverheadWrap(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludePartnerActionOverheadWrap(extraDependencies)) {
     return true
   }
   return false
@@ -261,27 +261,27 @@ export function layerHasPartnerActionOverheadWrapCorridor(
 
 export const LEAD_TUTOR_LAYER_NAME = 'Lead Tutor'
 
-export function triggersIncludeLeadTutorBottomWrap(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludeLeadTutorBottomWrap(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) =>
-    isParallelSessionLeadBottomWrapTrigger(
-      trigger.source_cell_id,
-      trigger.target_cell_id,
+  return dependencies.some((dependency) =>
+    isParallelSessionLeadBottomWrapDependency(
+      dependency.source_cell_id,
+      dependency.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasLeadTutorBottomWrapTriggers(
+export function blueprintHasLeadTutorBottomWrapDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeLeadTutorBottomWrap(data.triggers)
+  return dependenciesIncludeLeadTutorBottomWrap(data.dependencies)
 }
 
 export function layerHasLeadTutorBottomWrapCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
@@ -289,59 +289,59 @@ export function layerHasLeadTutorBottomWrapCorridor(
   if (lane.name !== LEAD_TUTOR_LAYER_NAME) return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasLeadTutorBottomWrapTriggers)) {
+    if (blueprints.some(blueprintHasLeadTutorBottomWrapDependencies)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludeLeadTutorBottomWrap(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludeLeadTutorBottomWrap(extraDependencies)) {
     return true
   }
   return false
 }
 
 /** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function triggersIncludeLeadTutorOverheadWrap(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludeLeadTutorOverheadWrap(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggersIncludeLeadTutorBottomWrap(triggers)
+  return dependenciesIncludeLeadTutorBottomWrap(dependencies)
 }
 
 /** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function blueprintHasLeadTutorOverheadWrapTriggers(
+export function blueprintHasLeadTutorOverheadWrapDependencies(
   data: BlueprintData,
 ): boolean {
-  return blueprintHasLeadTutorBottomWrapTriggers(data)
+  return blueprintHasLeadTutorBottomWrapDependencies(data)
 }
 
 /** @deprecated Lead Tutor loops route below the row, not overhead. */
 export function layerHasLeadTutorOverheadWrapCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
-  return layerHasLeadTutorBottomWrapCorridor(lane, data, extraTriggers)
+  return layerHasLeadTutorBottomWrapCorridor(lane, data, extraDependencies)
 }
 
 export function layerHasWrapCorridorBelow(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
   return (
     shouldShowInteractionLineAfter(lane) ||
-    layerHasLeadTutorBottomWrapCorridor(lane, data, extraTriggers)
+    layerHasLeadTutorBottomWrapCorridor(lane, data, extraDependencies)
   )
 }
 
 const REGULAR_TUTOR_LAYER_CELL_ID_PATTERN = /(\d{2})03$/
 
-export function isRegularTutorInLaneLoopTrigger(
+export function isRegularTutorInLaneLoopDependency(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
@@ -354,27 +354,27 @@ export function isRegularTutorInLaneLoopTrigger(
   return targetStep < sourceStep
 }
 
-export function triggersIncludeRegularTutorInLaneLoop(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludeRegularTutorInLaneLoop(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) =>
-    isRegularTutorInLaneLoopTrigger(
-      trigger.source_cell_id,
-      trigger.target_cell_id,
+  return dependencies.some((dependency) =>
+    isRegularTutorInLaneLoopDependency(
+      dependency.source_cell_id,
+      dependency.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasRegularTutorInLaneLoopTriggers(
+export function blueprintHasRegularTutorInLaneLoopDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeRegularTutorInLaneLoop(data.triggers)
+  return dependenciesIncludeRegularTutorInLaneLoop(data.dependencies)
 }
 
 export function layerHasRegularTutorInLaneLoopCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
@@ -382,11 +382,11 @@ export function layerHasRegularTutorInLaneLoopCorridor(
   if (lane.name !== 'Regular Tutor') return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasRegularTutorInLaneLoopTriggers)) {
+    if (blueprints.some(blueprintHasRegularTutorInLaneLoopDependencies)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludeRegularTutorInLaneLoop(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludeRegularTutorInLaneLoop(extraDependencies)) {
     return true
   }
   return false
@@ -405,14 +405,14 @@ export function countRegularTutorInLaneLoopCorridorMargins(
 export function layerHasOverheadArrowCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
   return (
-    layerHasDiscoveryRailCorridor(lane, data, extraTriggers) ||
-    layerHasPartnerActionOverheadWrapCorridor(lane, data, extraTriggers)
+    layerHasDiscoveryRailCorridor(lane, data, extraDependencies) ||
+    layerHasPartnerActionOverheadWrapCorridor(lane, data, extraDependencies)
   )
 }
 
@@ -448,7 +448,7 @@ export function countBlueprintWrapCorridorMargins(
 
 export const LAYER_COLUMN_WIDTH = 220
 export const STEP_COLUMN_WIDTH = 220
-/** Visible space between step columns where trigger arrows are drawn. */
+/** Visible space between step columns where dependency arrows are drawn. */
 export const STEP_COLUMN_GAP = 24
 /** Left gutter on the white board so the play control clears Visual cells. */
 export const VISUAL_PLAY_GUTTER = 28

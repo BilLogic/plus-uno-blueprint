@@ -73,7 +73,7 @@ the user volunteers in `description`, not by bloating labels.
 For designed-vs-reality comparisons: make it two labeled variants
 (`variant_label`, view_type `stacked`) and ask for the two labels.
 
-## Q8 — Triggers
+## Q8 — Dependencies
 
 > "Are there hand-offs worth drawing an arrow for — where one cell kicks off
 > another?" Only where arrows add information; same path only.

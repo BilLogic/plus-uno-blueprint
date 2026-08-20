@@ -35,7 +35,7 @@ Hierarchy: **Pre-Session** (`…000103`) → **Warm-Up** (`…000203`) → **War
 | mark_student_helped | `…000317` | Mark Student Helped |
 | move_to_next_student | `…000318` | Move to Next Student |
 
-## Step 1 → step 2 triggers
+## Step 1 → step 2 dependencies
 
 | Layer | Source cell | Target cell |
 | --- | --- | --- |
@@ -43,14 +43,14 @@ Hierarchy: **Pre-Session** (`…000103`) → **Warm-Up** (`…000203`) → **War
 | Lead Tutor | `…040102` | `…040202` |
 | Regular Tutor | `…040103` | `…040203` |
 
-## Step 2 → step 3 triggers
+## Step 2 → step 3 dependencies
 
 | Layer | Source cell | Target cell |
 | --- | --- | --- |
 | Partner Action: Teacher | `…040201` | `…040301` |
 | Lead Tutor | `…040202` | `…040302` |
 
-## Regular Tutor cells (trigger chain, steps 2–8)
+## Regular Tutor cells (dependency chain, steps 2–8)
 
 | Step | Cell UUID |
 | --- | --- |

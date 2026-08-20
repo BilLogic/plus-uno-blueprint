@@ -120,11 +120,11 @@ function hoursCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001e${stepSlot}${layerSuffix}`
 }
 
-function hoursTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function hoursDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -132,7 +132,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: hoursTrigger(slot),
+    id: hoursDependency(slot),
     source_cell_id: hoursCell(fromStep, fromLayer),
     target_cell_id: hoursCell(toStep, toLayer),
   }
@@ -144,13 +144,13 @@ const RECEIVE_PAYCHECK_STEP_ID = STEPS[2].id
 
 /** Report hours → approve hours → receive paycheck. */
 const REPORTING_HOURS_TRIGGERS: BlueprintCellDependency[] = [
-  trigger('090', '01', '03', '01', '06'),
-  trigger('091', '01', '02', '01', '06'),
-  trigger('094', '01', '06', '03', '07'),
-  trigger('085', '03', '07', '03', '08'),
-  trigger('086', '03', '08', '02', '06'),
-  trigger('092', '02', '06', '02', '02'),
-  trigger('093', '02', '06', '02', '03'),
+  dependency('090', '01', '03', '01', '06'),
+  dependency('091', '01', '02', '01', '06'),
+  dependency('094', '01', '06', '03', '07'),
+  dependency('085', '03', '07', '03', '08'),
+  dependency('086', '03', '08', '02', '06'),
+  dependency('092', '02', '06', '02', '02'),
+  dependency('093', '02', '06', '02', '03'),
 ]
 
 const REPORTING_HOURS_CELLS: BlueprintCell[] = [
@@ -247,5 +247,5 @@ export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: REPORTING_HOURS_CELLS,
-  triggers: REPORTING_HOURS_TRIGGERS,
+  dependencies: REPORTING_HOURS_TRIGGERS,
 }

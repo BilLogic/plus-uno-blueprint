@@ -123,11 +123,11 @@ function lmCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000012${stepSlot}${layerSuffix}`
 }
 
-function lmTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000090${triggerSlot}`
+function lmDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000090${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -135,7 +135,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: lmTrigger(slot),
+    id: lmDependency(slot),
     source_cell_id: lmCell(fromStep, fromLayer),
     target_cell_id: lmCell(toStep, toLayer),
   }
@@ -143,24 +143,24 @@ function trigger(
 
 const LESSON_MODULES_TRIGGERS: BlueprintCellDependency[] = [
   // Regular Tutor → Front Stage Tech
-  trigger('001', '01', '03', '01', '06'),
-  trigger('002', '02', '03', '02', '06'),
-  trigger('003', '03', '03', '03', '06'),
+  dependency('001', '01', '03', '01', '06'),
+  dependency('002', '02', '03', '02', '06'),
+  dependency('003', '03', '03', '03', '06'),
 
   // Regular Tutor forward chain
-  trigger('011', '01', '03', '02', '03'),
-  trigger('012', '02', '03', '03', '03'),
+  dependency('011', '01', '03', '02', '03'),
+  dependency('012', '02', '03', '03', '03'),
   // Loop to next lesson
-  trigger('013', '03', '03', '01', '03'),
+  dependency('013', '03', '03', '01', '03'),
 
   // Step 1 — assignment → PLUS app
-  trigger('031', '01', '07', '01', '06'),
+  dependency('031', '01', '07', '01', '06'),
 
   // Steps 2–3 — instructional design → Notion → PLUS app
-  trigger('032', '02', '07', '02', '08'),
-  trigger('033', '03', '07', '03', '08'),
-  trigger('034', '02', '08', '02', '06'),
-  trigger('035', '03', '08', '03', '06'),
+  dependency('032', '02', '07', '02', '08'),
+  dependency('033', '03', '07', '03', '08'),
+  dependency('034', '02', '08', '02', '06'),
+  dependency('035', '03', '08', '03', '06'),
 ]
 
 const LESSON_MODULES_CELLS: BlueprintCell[] = [
@@ -288,5 +288,5 @@ export const LESSON_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: LESSON_MODULES_CELLS,
-  triggers: LESSON_MODULES_TRIGGERS,
+  dependencies: LESSON_MODULES_TRIGGERS,
 }

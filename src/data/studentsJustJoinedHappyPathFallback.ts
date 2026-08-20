@@ -129,11 +129,11 @@ function sjjCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000019${stepSlot}${layerSuffix}`
 }
 
-function sjjTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000097${triggerSlot}`
+function sjjDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000097${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -141,23 +141,23 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: sjjTrigger(slot),
+    id: sjjDependency(slot),
     source_cell_id: sjjCell(fromStep, fromLayer),
     target_cell_id: sjjCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
         lane,
@@ -166,16 +166,16 @@ function rowTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const STUDENTS_JUST_JOINED_TRIGGERS: BlueprintCellDependency[] = [
-  ...rowTriggers('01', 1, 2),
-  ...rowTriggers('02', 10, 2),
-  trigger('020', '03', '02', '03', '03'),
-  trigger('031', '01', '02', '01', '06'),
-  trigger('032', '02', '02', '02', '06'),
-  trigger('030', '03', '03', '03', '06'),
+  ...rowDependencies('01', 1, 2),
+  ...rowDependencies('02', 10, 2),
+  dependency('020', '03', '02', '03', '03'),
+  dependency('031', '01', '02', '01', '06'),
+  dependency('032', '02', '02', '02', '06'),
+  dependency('030', '03', '03', '03', '06'),
 ]
 
 const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
@@ -253,5 +253,5 @@ export const STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: STUDENTS_JUST_JOINED_CELLS,
-  triggers: STUDENTS_JUST_JOINED_TRIGGERS,
+  dependencies: STUDENTS_JUST_JOINED_TRIGGERS,
 }

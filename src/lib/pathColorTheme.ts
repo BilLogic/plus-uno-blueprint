@@ -37,7 +37,7 @@ export const PATH_TYPE_COLORS: Record<PathType, string> = {
 }
 
 /**
- * Stroke color for blueprint trigger arrows — step 1000, one notch lighter than
+ * Stroke color for blueprint dependency arrows — step 1000, one notch lighter than
  * the badge, so a stroke reads as related to the label it belongs to without
  * being the same value. Same family per path type as `PATH_TYPE_COLORS`.
  */

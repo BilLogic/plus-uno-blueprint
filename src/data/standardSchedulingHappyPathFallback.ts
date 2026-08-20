@@ -100,11 +100,11 @@ function schedCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000014${stepSlot}${layerSuffix}`
 }
 
-function schedTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000093${triggerSlot}`
+function schedDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000093${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -112,7 +112,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: schedTrigger(slot),
+    id: schedDependency(slot),
     source_cell_id: schedCell(fromStep, fromLayer),
     target_cell_id: schedCell(toStep, toLayer),
   }
@@ -120,13 +120,13 @@ function trigger(
 
 const STANDARD_SCHEDULING_TRIGGERS: BlueprintCellDependency[] = [
   // Google Spreadsheet → Tutor supervisor review
-  trigger('003', '01', '08', '01', '07'),
+  dependency('003', '01', '08', '01', '07'),
   // Supervisor review → send schedule to tutors
-  trigger('001', '01', '07', '02', '04'),
+  dependency('001', '01', '07', '02', '04'),
   // Supervisor sends schedule → PLUS App
-  trigger('002', '02', '04', '02', '06'),
+  dependency('002', '02', '04', '02', '06'),
   // PLUS App → tutor receives schedule
-  trigger('004', '02', '06', '02', '03'),
+  dependency('004', '02', '06', '02', '03'),
 ]
 
 const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
@@ -191,5 +191,5 @@ export const STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: STANDARD_SCHEDULING_CELLS,
-  triggers: STANDARD_SCHEDULING_TRIGGERS,
+  dependencies: STANDARD_SCHEDULING_TRIGGERS,
 }

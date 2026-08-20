@@ -138,11 +138,11 @@ function callOffCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000017${stepSlot}${layerSuffix}`
 }
 
-function callOffTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000095${triggerSlot}`
+function callOffDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000095${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -150,28 +150,28 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: callOffTrigger(slot),
+    id: callOffDependency(slot),
     source_cell_id: callOffCell(fromStep, fromLayer),
     target_cell_id: callOffCell(toStep, toLayer),
   }
 }
 
 const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
-  trigger('001', '01', '03', '02', '03'),
-  trigger('003', '01', '03', '03', '03'),
-  trigger('002', '02', '03', '02', '06'),
-  trigger('004', '02', '06', '02', '07'),
-  trigger('011', '02', '07', '05', '07'),
-  trigger('005', '03', '03', '03', '06'),
-  trigger('010', '03', '06', '03', '04'),
-  trigger('012', '03', '04', '05', '07'),
-  trigger('006', '03', '03', '04', '03'),
-  trigger('007', '04', '03', '04', '06'),
-  trigger('013', '04', '04', '04', '06'),
-  trigger('014', '05', '07', '05', '08'),
-  trigger('008', '05', '07', '06', '04'),
-  trigger('015', '06', '04', '06', '06'),
-  trigger('016', '06', '03', '06', '06'),
+  dependency('001', '01', '03', '02', '03'),
+  dependency('003', '01', '03', '03', '03'),
+  dependency('002', '02', '03', '02', '06'),
+  dependency('004', '02', '06', '02', '07'),
+  dependency('011', '02', '07', '05', '07'),
+  dependency('005', '03', '03', '03', '06'),
+  dependency('010', '03', '06', '03', '04'),
+  dependency('012', '03', '04', '05', '07'),
+  dependency('006', '03', '03', '04', '03'),
+  dependency('007', '04', '03', '04', '06'),
+  dependency('013', '04', '04', '04', '06'),
+  dependency('014', '05', '07', '05', '08'),
+  dependency('008', '05', '07', '06', '04'),
+  dependency('015', '06', '04', '06', '06'),
+  dependency('016', '06', '03', '06', '06'),
 ]
 
 const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
@@ -314,5 +314,5 @@ export const CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: CALL_OFF_REQUEST_CELLS,
-  triggers: CALL_OFF_REQUEST_TRIGGERS,
+  dependencies: CALL_OFF_REQUEST_TRIGGERS,
 }

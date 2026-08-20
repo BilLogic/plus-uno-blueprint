@@ -14,10 +14,10 @@ import {
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
-  findBidirectionalTriggerPairs,
-  groupDiscoveryRailTriggers,
-  isWrapTrigger,
-  partitionReportingAnIssueFsaStep1ToResolveTriggers,
+  findBidirectionalDependencyPairs,
+  groupDiscoveryRailDependencies,
+  isWrapDependency,
+  partitionReportingAnIssueFsaStep1ToResolveDependencies,
   runArrowMeasurementPass,
 } from '@/lib/blueprintArrowGeometry'
 import {
@@ -36,7 +36,7 @@ import {
 import type {
   IntegratedBlueprintCell,
   IntegratedBlueprintStep,
-  IntegratedBlueprintTrigger,
+  IntegratedBlueprintDependency,
 } from '@/types/integratedBlueprint'
 import type { PathType } from '@/types/database'
 
@@ -48,8 +48,8 @@ type IntegratedPathRef = {
   path_type: PathType
 }
 
-type IntegratedTriggerArrowsProps = {
-  triggers: IntegratedBlueprintTrigger[]
+type IntegratedDependencyArrowsProps = {
+  dependencies: IntegratedBlueprintDependency[]
   /** Accepted for parity with the band's arrow data; geometry reads the DOM. */
   cells?: IntegratedBlueprintCell[]
   steps?: IntegratedBlueprintStep[]
@@ -132,13 +132,13 @@ function resolveSegmentStyle(
  * rail routes for the scenarios whose geometry the generic router cannot
  * express. (The integrated grid's fork trunks retired with that grid.)
  */
-export function IntegratedTriggerArrows({
-  triggers,
+export function IntegratedDependencyArrows({
+  dependencies,
   paths = [],
   contentRef,
   scrollContainerRef,
   lane,
-}: IntegratedTriggerArrowsProps) {
+}: IntegratedDependencyArrowsProps) {
   const [simpleSegments, setSimpleSegments] = useState<SimpleSegment[]>([])
   const [size, setSize] = useState({ width: 0, height: 0 })
   const markerId = useId().replace(/:/g, '')
@@ -168,7 +168,7 @@ export function IntegratedTriggerArrows({
 
   const updateArrows = useCallback(() => {
     const content = contentRef.current
-    if (!content || triggers.length === 0) {
+    if (!content || dependencies.length === 0) {
       setSimpleSegments((prev) => (prev.length === 0 ? prev : []))
       return
     }
@@ -180,19 +180,19 @@ export function IntegratedTriggerArrows({
       // band, so without the frame cache a geometry change cost 2×paths
       // full-DOM sweeps of the same unchanged tree.
       const cellElById = sharedCellIndex(content)
-      const { resolveTriggers, otherTriggers: railInputTriggers } =
-        partitionReportingAnIssueFsaStep1ToResolveTriggers(triggers)
+      const { resolveDependencies, otherDependencies: railInputDependencies } =
+        partitionReportingAnIssueFsaStep1ToResolveDependencies(dependencies)
 
-      for (const trigger of resolveTriggers) {
-        const sourceEl = cellElById.get(trigger.source_cell_id)
-        const targetEl = cellElById.get(trigger.target_cell_id)
+      for (const dependency of resolveDependencies) {
+        const sourceEl = cellElById.get(dependency.source_cell_id)
+        const targetEl = cellElById.get(dependency.target_cell_id)
         if (!sourceEl || !targetEl) continue
 
-        const wrap = isWrapTrigger(
+        const wrap = isWrapDependency(
           sourceEl,
           targetEl,
-          trigger.source_cell_id,
-          trigger.target_cell_id,
+          dependency.source_cell_id,
+          dependency.target_cell_id,
         )
         if (lane === 'forward' && wrap) continue
         if (lane === 'wrap' && !wrap) continue
@@ -204,27 +204,27 @@ export function IntegratedTriggerArrows({
         )
         if (!d) continue
 
-        const style = resolveSegmentStyle(trigger.path_id, pathById)
+        const style = resolveSegmentStyle(dependency.path_id, pathById)
         segments.push({
-          id: trigger.id,
+          id: dependency.id,
           d,
           colorKey: style.colorKey,
           arrowColor: style.arrowColor,
-          opacity: trigger.opacity,
+          opacity: dependency.opacity,
         })
       }
 
-      const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
-        railInputTriggers,
+      const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailDependencies(
+        railInputDependencies,
         content,
       )
 
       for (const group of fanOutGroups) {
-        const sampleTrigger = triggers.find((entry) =>
-          group.branches.some((branch) => branch.triggerId === entry.id),
+        const sampleDependency = dependencies.find((entry) =>
+          group.branches.some((branch) => branch.dependencyId === entry.id),
         )
         const trunkStyle = resolveSegmentStyle(
-          sampleTrigger?.path_id ?? '',
+          sampleDependency?.path_id ?? '',
           pathById,
         )
         const targetEls = group.branches.map((branch) => branch.targetEl)
@@ -245,10 +245,10 @@ export function IntegratedTriggerArrows({
         }
 
         for (const branch of group.branches) {
-          const trigger = triggers.find(
-            (entry) => entry.id === branch.triggerId,
+          const dependency = dependencies.find(
+            (entry) => entry.id === branch.dependencyId,
           )
-          const branchStyle = resolveSegmentStyle(trigger?.path_id ?? '', pathById)
+          const branchStyle = resolveSegmentStyle(dependency?.path_id ?? '', pathById)
           const d = buildOverheadRailFanOutDropPath(
             group.sourceEl,
             branch.targetEl,
@@ -257,38 +257,38 @@ export function IntegratedTriggerArrows({
           if (!d) continue
 
           segments.push({
-            id: branch.triggerId,
+            id: branch.dependencyId,
             d,
             colorKey: branchStyle.colorKey,
             arrowColor: branchStyle.arrowColor,
-            opacity: trigger?.opacity ?? 1,
+            opacity: dependency?.opacity ?? 1,
           })
         }
       }
 
       for (const group of busGroups) {
-        const triggersInGroup = triggers.filter((trigger) =>
-          group.triggerIds.includes(trigger.id),
+        const dependenciesInGroup = dependencies.filter((dependency) =>
+          group.dependencyIds.includes(dependency.id),
         )
         const byPathId = new Map<
           string,
-          { sourceEls: HTMLElement[]; opacity: number; triggerIds: string[] }
+          { sourceEls: HTMLElement[]; opacity: number; dependencyIds: string[] }
         >()
 
-        for (const trigger of triggersInGroup) {
-          const sourceEl = cellElById.get(trigger.source_cell_id)
+        for (const dependency of dependenciesInGroup) {
+          const sourceEl = cellElById.get(dependency.source_cell_id)
           if (!sourceEl) continue
 
-          const existing = byPathId.get(trigger.path_id)
+          const existing = byPathId.get(dependency.path_id)
           if (existing) {
             existing.sourceEls.push(sourceEl)
-            existing.triggerIds.push(trigger.id)
-            existing.opacity = Math.max(existing.opacity, trigger.opacity)
+            existing.dependencyIds.push(dependency.id)
+            existing.opacity = Math.max(existing.opacity, dependency.opacity)
           } else {
-            byPathId.set(trigger.path_id, {
+            byPathId.set(dependency.path_id, {
               sourceEls: [sourceEl],
-              opacity: trigger.opacity,
-              triggerIds: [trigger.id],
+              opacity: dependency.opacity,
+              dependencyIds: [dependency.id],
             })
           }
         }
@@ -296,9 +296,9 @@ export function IntegratedTriggerArrows({
         for (const [pathId, pathGroup] of byPathId) {
           const style = resolveSegmentStyle(pathId, pathById)
           const targetEl =
-            triggersInGroup
-              .filter((trigger) => trigger.path_id === pathId)
-              .map((trigger) => cellElById.get(trigger.target_cell_id))
+            dependenciesInGroup
+              .filter((dependency) => dependency.path_id === pathId)
+              .map((dependency) => cellElById.get(dependency.target_cell_id))
               .find((el): el is HTMLElement => el !== undefined) ?? group.targetEl
 
           const d = buildApplicationRegularTutorRailBusPath(
@@ -319,14 +319,14 @@ export function IntegratedTriggerArrows({
       }
 
       const { pairs, remaining: unpaired } =
-        findBidirectionalTriggerPairs(remaining)
+        findBidirectionalDependencyPairs(remaining)
 
       for (const pair of pairs) {
         const cellAEl = cellElById.get(pair.cellAId)
         const cellBEl = cellElById.get(pair.cellBId)
         if (!cellAEl || !cellBEl) continue
 
-        const wrap = isWrapTrigger(
+        const wrap = isWrapDependency(
           cellAEl,
           cellBEl,
           pair.cellAId,
@@ -349,16 +349,16 @@ export function IntegratedTriggerArrows({
         })
       }
 
-      for (const trigger of unpaired) {
-        const sourceEl = cellElById.get(trigger.source_cell_id)
-        const targetEl = cellElById.get(trigger.target_cell_id)
+      for (const dependency of unpaired) {
+        const sourceEl = cellElById.get(dependency.source_cell_id)
+        const targetEl = cellElById.get(dependency.target_cell_id)
         if (!sourceEl || !targetEl) continue
 
-        const wrap = isWrapTrigger(
+        const wrap = isWrapDependency(
           sourceEl,
           targetEl,
-          trigger.source_cell_id,
-          trigger.target_cell_id,
+          dependency.source_cell_id,
+          dependency.target_cell_id,
         )
         if (lane === 'forward' && wrap) continue
         if (lane === 'wrap' && !wrap) continue
@@ -367,19 +367,19 @@ export function IntegratedTriggerArrows({
           sourceEl,
           targetEl,
           content,
-          trigger.source_cell_id,
-          trigger.target_cell_id,
-          trigger.id,
+          dependency.source_cell_id,
+          dependency.target_cell_id,
+          dependency.id,
         )
         if (!d) continue
 
-        const style = resolveSegmentStyle(trigger.path_id, pathById)
+        const style = resolveSegmentStyle(dependency.path_id, pathById)
         segments.push({
-          id: trigger.id,
+          id: dependency.id,
           d,
           colorKey: style.colorKey,
           arrowColor: style.arrowColor,
-          opacity: trigger.opacity,
+          opacity: dependency.opacity,
         })
       }
 
@@ -391,7 +391,7 @@ export function IntegratedTriggerArrows({
       serializeSegments(prev) === nextKey ? prev : nextSimple,
     )
     measureSize()
-  }, [contentRef, lane, measureSize, pathById, triggers])
+  }, [contentRef, lane, measureSize, pathById, dependencies])
 
   useEffect(() => {
     updateArrows()

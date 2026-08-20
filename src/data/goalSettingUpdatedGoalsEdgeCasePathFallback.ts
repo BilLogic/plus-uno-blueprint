@@ -4,7 +4,7 @@ import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescripti
 import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
   GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
@@ -271,11 +271,11 @@ function ugCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-000000d0${stepSlot}${layerSuffix}`
 }
 
-function ugTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-00000009e${triggerSlot}`
+function ugDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-00000009e${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -283,23 +283,23 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: ugTrigger(slot),
+    id: ugDependency(slot),
     source_cell_id: ugCell(fromStep, fromLayer),
     target_cell_id: ugCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
         lane,
@@ -308,20 +308,20 @@ function rowTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -330,13 +330,13 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     ugCell(stepSlot, layerSuffix),
-  triggerId: (slot: string) => ugTrigger(slot),
+  dependencyId: (slot: string) => ugDependency(slot),
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
@@ -345,10 +345,10 @@ const partnerLeadOptions = {
 }
 
 const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_TRIGGERS: BlueprintCellDependency[] = [
-  ...buildParallelSessionPartnerLeadTriggers(partnerLeadOptions),
-  ...rowTriggers('03', 50, 11),
-  ...columnLaneTriggers('03', '06', 70, 12),
-  trigger('062', '12', '03', '01', '03'),
+  ...buildParallelSessionPartnerLeadDependencies(partnerLeadOptions),
+  ...rowDependencies('03', 50, 11),
+  ...columnLaneDependencies('03', '06', 70, 12),
+  dependency('062', '12', '03', '01', '03'),
 ]
 
 const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
@@ -630,5 +630,5 @@ export const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK: BlueprintData =
     lanes: [...LAYERS],
     steps: [...STEPS],
     cells: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS,
-    triggers: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_TRIGGERS,
+    dependencies: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_TRIGGERS,
   }

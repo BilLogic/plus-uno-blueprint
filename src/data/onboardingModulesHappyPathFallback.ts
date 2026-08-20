@@ -152,11 +152,11 @@ function omCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000011${stepSlot}${layerSuffix}`
 }
 
-function omTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000089${triggerSlot}`
+function omDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000089${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -164,7 +164,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: omTrigger(slot),
+    id: omDependency(slot),
     source_cell_id: omCell(fromStep, fromLayer),
     target_cell_id: omCell(toStep, toLayer),
   }
@@ -172,46 +172,46 @@ function trigger(
 
 const ONBOARDING_MODULES_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — tutor opens module → PLUS App
-  trigger('001', '01', '03', '01', '06'),
+  dependency('001', '01', '03', '01', '06'),
 
   // Step 2 — tutor follows Notion link → PLUS App / Notion
-  trigger('002', '02', '03', '02', '06'),
+  dependency('002', '02', '03', '02', '06'),
 
   // Step 3 — tutor reads lesson → Notion
-  trigger('003', '03', '03', '03', '06'),
+  dependency('003', '03', '03', '03', '06'),
 
   // Step 4 — tutor reads supplementary materials → Notion / Google Docs
-  trigger('004', '04', '03', '04', '06'),
+  dependency('004', '04', '03', '04', '06'),
 
   // Step 5 — tutor completes quiz → Google Quiz
-  trigger('005', '05', '03', '05', '06'),
+  dependency('005', '05', '03', '05', '06'),
 
   // Step 6 — tutor fills reflection → PLUS App
-  trigger('006', '06', '03', '06', '06'),
+  dependency('006', '06', '03', '06', '06'),
 
   // Step 7 — tutor submits reflection / completes module → PLUS App
-  trigger('007', '07', '03', '07', '06'),
+  dependency('007', '07', '03', '07', '06'),
 
   // Regular Tutor forward chain
-  trigger('011', '01', '03', '02', '03'),
-  trigger('012', '02', '03', '03', '03'),
-  trigger('013', '03', '03', '04', '03'),
-  trigger('014', '04', '03', '05', '03'),
-  trigger('015', '05', '03', '06', '03'),
-  trigger('017', '06', '03', '07', '03'),
+  dependency('011', '01', '03', '02', '03'),
+  dependency('012', '02', '03', '03', '03'),
+  dependency('013', '03', '03', '04', '03'),
+  dependency('014', '04', '03', '05', '03'),
+  dependency('015', '05', '03', '06', '03'),
+  dependency('017', '06', '03', '07', '03'),
   // Loop to next module
-  trigger('016', '07', '03', '01', '03'),
+  dependency('016', '07', '03', '01', '03'),
 
   // Step 3 — instructional design → Notion
-  trigger('031', '03', '07', '03', '06'),
+  dependency('031', '03', '07', '03', '06'),
 
   // Step 4 — instructional design → Google Docs/ Slides (nearest pill)
-  trigger('041', '04', '07', '04', '06'),
-  trigger('051', '05', '06', '05', '07'),
-  trigger('052', '05', '07', '05', '06'),
+  dependency('041', '04', '07', '04', '06'),
+  dependency('051', '05', '06', '05', '07'),
+  dependency('052', '05', '07', '05', '06'),
   // Step 6 — instructional design → Notion → PLUS App
-  trigger('063', '06', '07', '06', '08'),
-  trigger('064', '06', '08', '06', '06'),
+  dependency('063', '06', '07', '06', '08'),
+  dependency('064', '06', '08', '06', '06'),
 ]
 
 const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
@@ -458,5 +458,5 @@ export const ONBOARDING_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: ONBOARDING_MODULES_CELLS,
-  triggers: ONBOARDING_MODULES_TRIGGERS,
+  dependencies: ONBOARDING_MODULES_TRIGGERS,
 }

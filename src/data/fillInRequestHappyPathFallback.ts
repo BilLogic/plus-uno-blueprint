@@ -123,11 +123,11 @@ function fillCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000015${stepSlot}${layerSuffix}`
 }
 
-function fillTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000094${triggerSlot}`
+function fillDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000094${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -135,25 +135,25 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: fillTrigger(slot),
+    id: fillDependency(slot),
     source_cell_id: fillCell(fromStep, fromLayer),
     target_cell_id: fillCell(toStep, toLayer),
   }
 }
 
 const FILL_IN_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
-  trigger('001', '01', '07', '01', '08'),
-  trigger('009', '01', '06', '01', '07'),
-  trigger('002', '01', '07', '02', '04'),
-  trigger('003', '02', '04', '02', '06'),
-  trigger('010', '02', '06', '02', '03'),
-  trigger('004', '02', '03', '03', '03'),
-  trigger('005', '03', '03', '03', '06'),
-  trigger('011', '03', '06', '03', '04'),
-  trigger('012', '03', '03', '04', '03'),
-  trigger('006', '03', '04', '04', '07'),
-  trigger('013', '04', '07', '04', '06'),
-  trigger('014', '04', '06', '04', '03'),
+  dependency('001', '01', '07', '01', '08'),
+  dependency('009', '01', '06', '01', '07'),
+  dependency('002', '01', '07', '02', '04'),
+  dependency('003', '02', '04', '02', '06'),
+  dependency('010', '02', '06', '02', '03'),
+  dependency('004', '02', '03', '03', '03'),
+  dependency('005', '03', '03', '03', '06'),
+  dependency('011', '03', '06', '03', '04'),
+  dependency('012', '03', '03', '04', '03'),
+  dependency('006', '03', '04', '04', '07'),
+  dependency('013', '04', '07', '04', '06'),
+  dependency('014', '04', '06', '04', '03'),
 ]
 
 const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
@@ -287,5 +287,5 @@ export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: FILL_IN_REQUEST_CELLS,
-  triggers: FILL_IN_REQUEST_TRIGGERS,
+  dependencies: FILL_IN_REQUEST_TRIGGERS,
 }

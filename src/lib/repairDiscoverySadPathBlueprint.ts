@@ -60,21 +60,21 @@ export function repairDiscoverySadPathBlueprint(
     }
   }
 
-  const triggerKeys = new Set(
-    data.triggers.map(
-      (trigger) => `${trigger.source_cell_id}:${trigger.target_cell_id}`,
+  const dependencyKeys = new Set(
+    data.dependencies.map(
+      (dependency) => `${dependency.source_cell_id}:${dependency.target_cell_id}`,
     ),
   )
-  const triggers = [...data.triggers]
-  for (const fallbackTrigger of fallback.triggers) {
-    const key = `${fallbackTrigger.source_cell_id}:${fallbackTrigger.target_cell_id}`
-    if (!triggerKeys.has(key)) {
-      triggers.push(fallbackTrigger)
-      triggerKeys.add(key)
+  const dependencies = [...data.dependencies]
+  for (const fallbackDependency of fallback.dependencies) {
+    const key = `${fallbackDependency.source_cell_id}:${fallbackDependency.target_cell_id}`
+    if (!dependencyKeys.has(key)) {
+      dependencies.push(fallbackDependency)
+      dependencyKeys.add(key)
     }
   }
 
-  return { ...data, steps, cells, triggers }
+  return { ...data, steps, cells, dependencies }
 }
 
 export function remapDiscoverySadFinalStepId(stepId: string, pathId: string): string {

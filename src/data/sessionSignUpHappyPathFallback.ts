@@ -100,11 +100,11 @@ function ssCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000013${stepSlot}${layerSuffix}`
 }
 
-function ssTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000092${triggerSlot}`
+function ssDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000092${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -112,7 +112,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: ssTrigger(slot),
+    id: ssDependency(slot),
     source_cell_id: ssCell(fromStep, fromLayer),
     target_cell_id: ssCell(toStep, toLayer),
   }
@@ -120,13 +120,13 @@ function trigger(
 
 const SESSION_SIGN_UP_TRIGGERS: BlueprintCellDependency[] = [
   // Regular Tutor → PLUS app
-  trigger('003', '01', '03', '01', '06'),
+  dependency('003', '01', '03', '01', '06'),
   // PLUS app → Dev team stores scheduling info
-  trigger('001', '01', '06', '01', '07'),
+  dependency('001', '01', '06', '01', '07'),
   // Dev team → Google Spreadsheet
-  trigger('004', '01', '07', '01', '08'),
+  dependency('004', '01', '07', '01', '08'),
   // Google Spreadsheet → Tutor supervisor review
-  trigger('005', '01', '08', '02', '07'),
+  dependency('005', '01', '08', '02', '07'),
 ]
 
 const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
@@ -201,5 +201,5 @@ export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: SESSION_SIGN_UP_CELLS,
-  triggers: SESSION_SIGN_UP_TRIGGERS,
+  dependencies: SESSION_SIGN_UP_TRIGGERS,
 }

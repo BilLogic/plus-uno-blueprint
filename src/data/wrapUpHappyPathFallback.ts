@@ -143,11 +143,11 @@ function wuCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001c${stepSlot}${layerSuffix}`
 }
 
-function wuTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-00000009a${triggerSlot}`
+function wuDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-00000009a${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -155,23 +155,23 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: wuTrigger(slot),
+    id: wuDependency(slot),
     source_cell_id: wuCell(fromStep, fromLayer),
     target_cell_id: wuCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
         lane,
@@ -180,20 +180,20 @@ function rowTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -202,16 +202,16 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const WRAP_UP_TRIGGERS: BlueprintCellDependency[] = [
-  ...rowTriggers('01', 1, 3),
-  ...rowTriggers('02', 10, 3),
-  ...rowTriggers('03', 20, 3),
-  ...columnLaneTriggers('03', '06', 113, 4),
-  trigger('033', '03', '02', '03', '03'),
-  trigger('034', '03', '03', '03', '02'),
+  ...rowDependencies('01', 1, 3),
+  ...rowDependencies('02', 10, 3),
+  ...rowDependencies('03', 20, 3),
+  ...columnLaneDependencies('03', '06', 113, 4),
+  dependency('033', '03', '02', '03', '03'),
+  dependency('034', '03', '03', '03', '02'),
 ]
 
 const WRAP_UP_CELLS: BlueprintCell[] = [
@@ -318,5 +318,5 @@ export const WRAP_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: WRAP_UP_CELLS,
-  triggers: WRAP_UP_TRIGGERS,
+  dependencies: WRAP_UP_TRIGGERS,
 }

@@ -7,7 +7,7 @@ import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import {
   BlueprintDividerRow,
 } from '@/components/blueprint/BlueprintLabelRail'
-import { BlueprintTriggerArrows } from '@/components/blueprint/BlueprintTriggerArrows'
+import { BlueprintDependencyArrows } from '@/components/blueprint/BlueprintDependencyArrows'
 import { ServiceStepHeaderRow } from '@/components/blueprint/CompareTrackDecorations'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import {
@@ -116,7 +116,7 @@ export function ServiceBlueprintGrid({
   fillSwimlaneHeight = false,
   showEmptyCells = false,
 }: ServiceBlueprintGridProps) {
-  const { path, steps, triggers } = data
+  const { path, steps, dependencies } = data
   const lanes = useMemo(
     () =>
       [...data.lanes].sort((a, b) => a.position - b.position),
@@ -247,9 +247,9 @@ export function ServiceBlueprintGrid({
               }}
               aria-hidden
             />
-            <BlueprintTriggerArrows
+            <BlueprintDependencyArrows
               lane="forward"
-              triggers={triggers}
+              dependencies={dependencies}
               contentRef={gridBodyRef}
               scrollContainerRef={scrollContainerRef}
               pathType={path.path_type}
@@ -382,9 +382,9 @@ export function ServiceBlueprintGrid({
                 </Fragment>
               )
             })}
-            <BlueprintTriggerArrows
+            <BlueprintDependencyArrows
               lane="wrap"
-              triggers={triggers}
+              dependencies={dependencies}
               contentRef={gridBodyRef}
               scrollContainerRef={scrollContainerRef}
               pathType={path.path_type}

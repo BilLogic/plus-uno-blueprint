@@ -6,9 +6,9 @@ function source(relativePath: string): string {
   return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf8')
 }
 
-const legacyArrows = source('../components/blueprint/BlueprintTriggerArrows.tsx')
+const legacyArrows = source('../components/blueprint/BlueprintDependencyArrows.tsx')
 const integratedArrows = source(
-  '../components/blueprint/IntegratedTriggerArrows.tsx',
+  '../components/blueprint/IntegratedDependencyArrows.tsx',
 )
 const phaseSection = source('../components/editor/CanvasPhaseSection.tsx')
 const phaseLoop = source('../components/editor/PhaseOverviewPhaseLoopArrow.tsx')

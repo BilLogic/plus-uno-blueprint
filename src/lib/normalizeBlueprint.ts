@@ -8,7 +8,7 @@ import type {
 import type { PathType, Json } from '@/types/database'
 import { normalizeCellLinks } from '@/lib/cellMetadata'
 
-type RawOutgoingTrigger = {
+type RawOutgoingDependency = {
   id: string
   target_cell_id: string
   /** Fallback data omits these — default kind 'sets_off', label/note null. */
@@ -17,7 +17,7 @@ type RawOutgoingTrigger = {
   note?: string | null
 }
 
-/** Normalize a raw kind column value; anything unknown is a plain trigger. */
+/** Normalize a raw kind column value; anything unknown is a plain dependency. */
 function normalizeDependencyKind(kind: string | null | undefined): 'sets_off' | 'enables' {
   return kind === 'enables' ? 'enables' : 'sets_off'
 }
@@ -30,7 +30,7 @@ export type RawCell = {
   picture?: string | null
   summary?: string | null
   links?: Json | null
-  outgoing?: RawOutgoingTrigger[] | null
+  outgoing?: RawOutgoingDependency[] | null
 }
 
 type RawPathStep = {
@@ -88,11 +88,11 @@ function resolveSteps(raw: RawPath): BlueprintStep[] {
   )
 }
 
-function flattenTriggersFromCells(cells: RawCell[]): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+function flattenDependenciesFromCells(cells: RawCell[]): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (const cell of cells) {
     for (const outgoing of cell.outgoing ?? []) {
-      triggers.push({
+      dependencies.push({
         id: outgoing.id,
         source_cell_id: cell.id,
         target_cell_id: outgoing.target_cell_id,
@@ -102,7 +102,7 @@ function flattenTriggersFromCells(cells: RawCell[]): BlueprintCellDependency[] {
       })
     }
   }
-  return triggers
+  return dependencies
 }
 
 /** Collapse duplicate swim lanes that share a name (e.g. legacy + fallback lane IDs). */
@@ -177,15 +177,15 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
 
   const cells = [...cellByLayerStep.values()]
   const cellIds = new Set(cells.map((cell) => cell.id))
-  const triggers = data.triggers.filter(
-    (trigger) =>
-      cellIds.has(trigger.source_cell_id) &&
-      cellIds.has(trigger.target_cell_id),
+  const dependencies = data.dependencies.filter(
+    (dependency) =>
+      cellIds.has(dependency.source_cell_id) &&
+      cellIds.has(dependency.target_cell_id),
   )
 
   keptLayers.sort((a, b) => a.position - b.position)
 
-  return { ...data, lanes: keptLayers, cells, triggers }
+  return { ...data, lanes: keptLayers, cells, dependencies }
 }
 
 export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
@@ -218,15 +218,15 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     summary: cell.summary ?? null,
     links: normalizeCellLinks(cell.links),
   }))
-  const triggers =
+  const dependencies =
     raw.cell_dependencies && raw.cell_dependencies.length > 0
-      ? raw.cell_dependencies.map((trigger) => ({
-          ...trigger,
-          kind: normalizeDependencyKind(trigger.kind),
-          label: trigger.label ?? null,
-          note: trigger.note ?? null,
+      ? raw.cell_dependencies.map((dependency) => ({
+          ...dependency,
+          kind: normalizeDependencyKind(dependency.kind),
+          label: dependency.label ?? null,
+          note: dependency.note ?? null,
         }))
-      : flattenTriggersFromCells(rawCells)
+      : flattenDependenciesFromCells(rawCells)
 
   return sortBlueprintLayers({
     path: {
@@ -239,7 +239,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     lanes,
     steps,
     cells,
-    triggers,
+    dependencies,
   })
 }
 

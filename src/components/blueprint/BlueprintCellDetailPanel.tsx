@@ -629,7 +629,7 @@ function BlueprintCellDetailPanelBody() {
   const existingDependencies = useMemo<ExistingDependency[]>(
     () =>
       connections.outgoing.map((connection) => ({
-        id: connection.triggerId,
+        id: connection.dependencyId,
         targetCellId: connection.cellId,
         targetLabel: cellPositionLabel(
           connection.stepIndex,

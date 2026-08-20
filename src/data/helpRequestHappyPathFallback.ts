@@ -26,7 +26,7 @@ import {
 import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
   PARALLEL_SESSION_PARTNER_CONTENT,
 } from '@/data/parallelSessionPartnerLead'
 import type {
@@ -165,11 +165,11 @@ function hrCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001b${stepSlot}${layerSuffix}`
 }
 
-function hrTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000099${triggerSlot}`
+function hrDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000099${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -177,23 +177,23 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: hrTrigger(slot),
+    id: hrDependency(slot),
     source_cell_id: hrCell(fromStep, fromLayer),
     target_cell_id: hrCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
         lane,
@@ -202,20 +202,20 @@ function rowTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -224,13 +224,13 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     hrCell(stepSlot, layerSuffix),
-  triggerId: (slot: string) => hrTrigger(slot),
+  dependencyId: (slot: string) => hrDependency(slot),
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
@@ -239,13 +239,13 @@ const partnerLeadOptions = {
 }
 
 const HELP_REQUEST_PARTNER_LEAD_TRIGGERS =
-  buildParallelSessionPartnerLeadTriggers(partnerLeadOptions)
+  buildParallelSessionPartnerLeadDependencies(partnerLeadOptions)
 
 const HELP_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
   ...HELP_REQUEST_PARTNER_LEAD_TRIGGERS,
-  ...rowTriggers('03', 50, 5),
-  ...columnLaneTriggers('03', '06', 113, 6),
-  trigger('060', '06', '03', '01', '03'),
+  ...rowDependencies('03', 50, 5),
+  ...columnLaneDependencies('03', '06', 113, 6),
+  dependency('060', '06', '03', '01', '03'),
 ]
 
 const HELP_REQUEST_CELLS: BlueprintCell[] = [
@@ -331,5 +331,5 @@ export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: HELP_REQUEST_CELLS,
-  triggers: HELP_REQUEST_TRIGGERS,
+  dependencies: HELP_REQUEST_TRIGGERS,
 }

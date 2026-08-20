@@ -27,8 +27,8 @@ import {
   isBlueprintLayerCollapsed,
 } from '@/lib/blueprintLayerCollapse'
 import {
-  isParallelSessionLeadBottomWrapTrigger,
-  isParallelSessionPartnerWrapTrigger,
+  isParallelSessionLeadBottomWrapDependency,
+  isParallelSessionPartnerWrapDependency,
 } from '@/data/parallelSessionPartnerLead'
 import type { PathListItem } from '@/lib/pathSelection'
 import { itemsInSelectionOrder } from '@/lib/pathSelection'
@@ -36,21 +36,21 @@ import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 import type {
   IntegratedBlueprintCell,
   IntegratedBlueprintStep,
-  IntegratedBlueprintTrigger,
+  IntegratedBlueprintDependency,
 } from '@/types/integratedBlueprint'
 import type { SlideViewType } from '@/types/nav'
 
 export type ComparePathArrowData = {
-  triggers: IntegratedBlueprintTrigger[]
+  dependencies: IntegratedBlueprintDependency[]
   cells: IntegratedBlueprintCell[]
   steps: IntegratedBlueprintStep[]
 }
 
-/** One path's arrow inputs (fold's trigger-drop retired 2026-08-17). */
+/** One path's arrow inputs (fold's dependency-drop retired 2026-08-17). */
 export function getComparePathArrowData(
   blueprint: BlueprintData,
 ): ComparePathArrowData {
-  const { path, cells, triggers, steps } = blueprint
+  const { path, cells, dependencies, steps } = blueprint
 
   return {
     steps: steps.map((step) => ({
@@ -69,10 +69,10 @@ export function getComparePathArrowData(
       links: cell.links,
       opacity: 1,
     })),
-    triggers: triggers.map((trigger) => ({
-        id: trigger.id,
-        source_cell_id: trigger.source_cell_id,
-        target_cell_id: trigger.target_cell_id,
+    dependencies: dependencies.map((dependency) => ({
+        id: dependency.id,
+        source_cell_id: dependency.source_cell_id,
+        target_cell_id: dependency.target_cell_id,
         path_id: path.id,
         path_type: path.path_type,
         opacity: 1,
@@ -425,12 +425,12 @@ type InLaneLoopLayoutSource = {
   lanes: BlueprintLane[]
   steps: ReadonlyArray<{ id: string; position: number }>
   cells: ReadonlyArray<{ id: string; lane_id: string; step_id: string }>
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
 }
 
 /**
  * Generic in-lane loop-corridor rule: a lane needs loop headroom at the top
- * of its lane when it contains a trigger whose source and target cells are
+ * of its lane when it contains a dependency whose source and target cells are
  * BOTH in that lane with the source at a later column than the target — a
  * backward in-lane loop. Derived purely from blueprint data (cell lane
  * membership + step column positions), with no scenario or lane identity;
@@ -454,22 +454,22 @@ export function blueprintLayerHasBackwardInLaneLoop(
     source.steps.map((step) => [step.id, step.position]),
   )
 
-  return source.triggers.some((trigger) => {
+  return source.dependencies.some((dependency) => {
     if (
-      isParallelSessionPartnerWrapTrigger(
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+      isParallelSessionPartnerWrapDependency(
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       ) ||
-      isParallelSessionLeadBottomWrapTrigger(
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+      isParallelSessionLeadBottomWrapDependency(
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
     ) {
       return false
     }
 
-    const sourceCell = cellById.get(trigger.source_cell_id)
-    const targetCell = cellById.get(trigger.target_cell_id)
+    const sourceCell = cellById.get(dependency.source_cell_id)
+    const targetCell = cellById.get(dependency.target_cell_id)
     if (!sourceCell || !targetCell) return false
     if (
       sourceCell.lane_id !== lane.id ||

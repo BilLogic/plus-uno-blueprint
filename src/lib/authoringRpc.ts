@@ -399,7 +399,7 @@ export async function addLane(
  *
  * The link between column and version is ensured inside the function, so a
  * caller may drop a cell into a column the version does not carry yet and get
- * the column linked rather than a trigger exception.
+ * the column linked rather than a database trigger exception.
  */
 export function upsertCell(
   client: Client,
@@ -472,7 +472,7 @@ export function reorderLanes(
 /**
  * Add or update one dependency between two cells in the same version.
  *
- * `trigger` draws an arrow; `needs` records a dependency that deliberately
+ * `sets_off` draws an arrow; `enables` records a dependency that deliberately
  * does not — a blueprint where every relationship is an arrow is unreadable,
  * and most "this depends on that" facts are not handoffs.
  */

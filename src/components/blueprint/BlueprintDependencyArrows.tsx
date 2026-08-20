@@ -14,10 +14,10 @@ import {
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
-  findBidirectionalTriggerPairs,
-  groupDiscoveryRailTriggers,
-  isWrapTrigger,
-  partitionReportingAnIssueFsaStep1ToResolveTriggers,
+  findBidirectionalDependencyPairs,
+  groupDiscoveryRailDependencies,
+  isWrapDependency,
+  partitionReportingAnIssueFsaStep1ToResolveDependencies,
 } from '@/lib/blueprintArrowGeometry'
 import {
   getPathArrowColor,
@@ -36,18 +36,18 @@ import {
 
 type ArrowLayer = 'forward' | 'wrap'
 
-export type ColoredBlueprintTrigger = BlueprintCellDependency & {
+export type ColoredBlueprintDependency = BlueprintCellDependency & {
   path_type: PathType
   opacity?: number
 }
 
-type BlueprintTriggerArrowsProps = {
-  triggers: BlueprintCellDependency[] | ColoredBlueprintTrigger[]
+type BlueprintDependencyArrowsProps = {
+  dependencies: BlueprintCellDependency[] | ColoredBlueprintDependency[]
   contentRef: RefObject<HTMLElement | null>
   scrollContainerRef: RefObject<HTMLElement | null>
   /** forward = in column gaps behind cells; wrap = loop overlay on top */
   lane: ArrowLayer
-  /** Used when triggers do not include path_type (single-path grids). */
+  /** Used when dependencies do not include path_type (single-path grids). */
   pathType?: PathType
   /** When set with pathType, arrows use the stable path identity color. */
   pathName?: string
@@ -73,10 +73,10 @@ function serializeSegments(segments: readonly ArrowSegment[]): string {
     .join('~')
 }
 
-function isColoredTrigger(
-  trigger: BlueprintCellDependency,
-): trigger is ColoredBlueprintTrigger {
-  return 'path_type' in trigger
+function isColoredDependency(
+  dependency: BlueprintCellDependency,
+): dependency is ColoredBlueprintDependency {
+  return 'path_type' in dependency
 }
 
 /**
@@ -84,14 +84,14 @@ function isColoredTrigger(
  * path's colour and dash pattern, so arrows stay distinguishable where they
  * cross and in a monochrome print.
  */
-export function BlueprintTriggerArrows({
-  triggers,
+export function BlueprintDependencyArrows({
+  dependencies,
   contentRef,
   scrollContainerRef,
   lane,
   pathType = 'happy',
   pathName,
-}: BlueprintTriggerArrowsProps) {
+}: BlueprintDependencyArrowsProps) {
   const [segments, setSegments] = useState<ArrowSegment[]>([])
   const [size, setSize] = useState({ width: 0, height: 0 })
   const markerId = useId().replace(/:/g, '')
@@ -107,30 +107,30 @@ export function BlueprintTriggerArrows({
     const content = contentRef.current
     // `enables` is panel-only by design: a precondition causes nothing, so
     // drawing it as an arrow would claim a handoff that never happens.
-    const arrowDependencies = triggers.filter((t) => (t.kind ?? 'sets_off') === 'sets_off')
+    const arrowDependencies = dependencies.filter((t) => (t.kind ?? 'sets_off') === 'sets_off')
     if (!content || arrowDependencies.length === 0) {
       setSegments([])
       return
     }
 
     const next: ArrowSegment[] = []
-    const { resolveTriggers, otherTriggers: railInputTriggers } =
-      partitionReportingAnIssueFsaStep1ToResolveTriggers(arrowDependencies)
+    const { resolveDependencies, otherDependencies: railInputDependencies } =
+      partitionReportingAnIssueFsaStep1ToResolveDependencies(arrowDependencies)
 
-    for (const trigger of resolveTriggers) {
+    for (const dependency of resolveDependencies) {
       const sourceEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.source_cell_id}"]`,
+        `[data-blueprint-cell="${dependency.source_cell_id}"]`,
       )
       const targetEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.target_cell_id}"]`,
+        `[data-blueprint-cell="${dependency.target_cell_id}"]`,
       )
       if (!sourceEl || !targetEl) continue
 
-      const wrap = isWrapTrigger(
+      const wrap = isWrapDependency(
         sourceEl,
         targetEl,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
       if (lane === 'forward' && wrap) continue
       if (lane === 'wrap' && !wrap) continue
@@ -143,16 +143,16 @@ export function BlueprintTriggerArrows({
       if (!d) continue
 
       next.push({
-        id: trigger.id,
+        id: dependency.id,
         d,
         colorKey: defaultColorKey,
         arrowColor: defaultArrowColor,
-        opacity: isColoredTrigger(trigger) ? (trigger.opacity ?? 1) : 1,
+        opacity: isColoredDependency(dependency) ? (dependency.opacity ?? 1) : 1,
       })
     }
 
-    const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailTriggers(
-      railInputTriggers,
+    const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailDependencies(
+      railInputDependencies,
       content,
     )
 
@@ -183,7 +183,7 @@ export function BlueprintTriggerArrows({
         if (!d) continue
 
         next.push({
-          id: branch.triggerId,
+          id: branch.dependencyId,
           d,
           colorKey: defaultColorKey,
           arrowColor: defaultArrowColor,
@@ -201,7 +201,7 @@ export function BlueprintTriggerArrows({
       if (!d) continue
 
       next.push({
-        id: group.triggerIds.join('-'),
+        id: group.dependencyIds.join('-'),
         d,
         colorKey: defaultColorKey,
         arrowColor: defaultArrowColor,
@@ -210,7 +210,7 @@ export function BlueprintTriggerArrows({
     }
 
     const { pairs, remaining: unpaired } =
-      findBidirectionalTriggerPairs(remaining)
+      findBidirectionalDependencyPairs(remaining)
 
     for (const pair of pairs) {
       const cellAEl = content.querySelector<HTMLElement>(
@@ -221,7 +221,7 @@ export function BlueprintTriggerArrows({
       )
       if (!cellAEl || !cellBEl) continue
 
-      const wrap = isWrapTrigger(
+      const wrap = isWrapDependency(
         cellAEl,
         cellBEl,
         pair.cellAId,
@@ -238,27 +238,27 @@ export function BlueprintTriggerArrows({
         d,
         colorKey: defaultColorKey,
         arrowColor: defaultArrowColor,
-        opacity: isColoredTrigger(pair.first)
+        opacity: isColoredDependency(pair.first)
           ? (pair.first.opacity ?? 1)
           : 1,
         dualMarker: true,
       })
     }
 
-    for (const trigger of unpaired) {
+    for (const dependency of unpaired) {
       const sourceEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.source_cell_id}"]`,
+        `[data-blueprint-cell="${dependency.source_cell_id}"]`,
       )
       const targetEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${trigger.target_cell_id}"]`,
+        `[data-blueprint-cell="${dependency.target_cell_id}"]`,
       )
       if (!sourceEl || !targetEl) continue
 
-      const wrap = isWrapTrigger(
+      const wrap = isWrapDependency(
         sourceEl,
         targetEl,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
       if (lane === 'forward' && wrap) continue
       if (lane === 'wrap' && !wrap) continue
@@ -267,25 +267,25 @@ export function BlueprintTriggerArrows({
         sourceEl,
         targetEl,
         content,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
-        trigger.id,
+        dependency.source_cell_id,
+        dependency.target_cell_id,
+        dependency.id,
       )
       if (!d) continue
 
       next.push({
-        id: trigger.id,
+        id: dependency.id,
         d,
         colorKey: defaultColorKey,
         arrowColor: defaultArrowColor,
-        opacity: isColoredTrigger(trigger) ? (trigger.opacity ?? 1) : 1,
+        opacity: isColoredDependency(dependency) ? (dependency.opacity ?? 1) : 1,
       })
     }
 
     // Equality-guarded: a ResizeObserver burst during camera-fit relayout
     // fires many notifications for identical geometry; fresh object
     // identities on each would re-render (and re-observe) in a loop. Same
-    // hardening as IntegratedTriggerArrows.
+    // hardening as IntegratedDependencyArrows.
     const nextKey = serializeSegments(next)
     setSegments((prev) =>
       serializeSegments(prev) === nextKey ? prev : next,
@@ -302,7 +302,7 @@ export function BlueprintTriggerArrows({
     defaultArrowColor,
     defaultColorKey,
     lane,
-    triggers,
+    dependencies,
   ])
 
   useEffect(() => {
@@ -379,7 +379,7 @@ export function BlueprintTriggerArrows({
       data-blueprint-arrows=""
       className={cn(
         'pointer-events-none absolute overflow-visible',
-        // Keep the connector hierarchy identical to IntegratedTriggerArrows:
+        // Keep the connector hierarchy identical to IntegratedDependencyArrows:
         // ordinary runs tuck below the z-[1] cells, while wrap runs stay
         // elevated because they travel through the empty outer corridors.
         lane === 'forward' ? 'z-0' : 'z-[30]',

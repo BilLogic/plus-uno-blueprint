@@ -83,5 +83,5 @@ export type BlueprintData = {
   lanes: BlueprintLane[]
   steps: BlueprintStep[]
   cells: BlueprintCell[]
-  triggers: BlueprintCellDependency[]
+  dependencies: BlueprintCellDependency[]
 }

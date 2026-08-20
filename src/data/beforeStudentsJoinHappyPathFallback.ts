@@ -168,11 +168,11 @@ function bsjCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000018${stepSlot}${layerSuffix}`
 }
 
-function bsjTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000096${triggerSlot}`
+function bsjDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000096${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -180,24 +180,24 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: bsjTrigger(slot),
+    id: bsjDependency(slot),
     source_cell_id: bsjCell(fromStep, fromLayer),
     target_cell_id: bsjCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   _startSlot: string,
   lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
-  const triggers: BlueprintCellDependency[] = []
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
         lane,
@@ -206,26 +206,26 @@ function rowTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const BEFORE_STUDENTS_JOIN_TRIGGERS: BlueprintCellDependency[] = [
-  ...rowTriggers('01', '01', 1, 5),
-  ...rowTriggers('01', '02', 10, 5),
-  trigger('020', '01', '03', '02', '03'),
-  trigger('021', '02', '03', '03', '03'),
-  trigger('022', '03', '03', '05', '03'),
-  trigger('023', '05', '03', '06', '03'),
-  trigger('031', '05', '02', '05', '03'),
-  trigger('032', '06', '02', '06', '03'),
-  trigger('041', '01', '03', '01', '06'),
-  trigger('042', '02', '03', '02', '06'),
-  trigger('043', '03', '03', '03', '06'),
-  trigger('044', '05', '03', '05', '06'),
-  trigger('045', '06', '03', '06', '06'),
+  ...rowDependencies('01', '01', 1, 5),
+  ...rowDependencies('01', '02', 10, 5),
+  dependency('020', '01', '03', '02', '03'),
+  dependency('021', '02', '03', '03', '03'),
+  dependency('022', '03', '03', '05', '03'),
+  dependency('023', '05', '03', '06', '03'),
+  dependency('031', '05', '02', '05', '03'),
+  dependency('032', '06', '02', '06', '03'),
+  dependency('041', '01', '03', '01', '06'),
+  dependency('042', '02', '03', '02', '06'),
+  dependency('043', '03', '03', '03', '06'),
+  dependency('044', '05', '03', '05', '06'),
+  dependency('045', '06', '03', '06', '06'),
   // Back Stage Actions → Front Stage Tech
-  trigger('061', '01', '07', '01', '06'),
-  trigger('062', '02', '07', '02', '06'),
+  dependency('061', '01', '07', '01', '06'),
+  dependency('062', '02', '07', '02', '06'),
 ]
 
 function beforeStudentsJoinPlusAppLink(
@@ -423,5 +423,5 @@ export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: BEFORE_STUDENTS_JOIN_CELLS,
-  triggers: BEFORE_STUDENTS_JOIN_TRIGGERS,
+  dependencies: BEFORE_STUDENTS_JOIN_TRIGGERS,
 }

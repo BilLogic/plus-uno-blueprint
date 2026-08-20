@@ -156,11 +156,11 @@ function tsCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000010${stepSlot}${layerSuffix}`
 }
 
-function tsTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000088${triggerSlot}`
+function tsDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000088${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -168,7 +168,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: tsTrigger(slot),
+    id: tsDependency(slot),
     source_cell_id: tsCell(fromStep, fromLayer),
     target_cell_id: tsCell(toStep, toLayer),
   }
@@ -176,44 +176,44 @@ function trigger(
 
 const TECH_SETUP_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — supervisor email → Email → tutor receives
-  trigger('001', '01', '04', '01', '06'),
-  trigger('002', '01', '06', '01', '03'),
+  dependency('001', '01', '04', '01', '06'),
+  dependency('002', '01', '06', '01', '03'),
 
   // Regular Tutor forward chain
-  trigger('011', '01', '03', '02', '03'),
-  trigger('012', '02', '03', '03', '03'),
-  trigger('013', '03', '03', '04', '03'),
-  trigger('014', '04', '03', '05', '03'),
-  trigger('015', '05', '03', '06', '03'),
-  trigger('016', '06', '03', '07', '03'),
-  trigger('017', '07', '03', '08', '03'),
+  dependency('011', '01', '03', '02', '03'),
+  dependency('012', '02', '03', '03', '03'),
+  dependency('013', '03', '03', '04', '03'),
+  dependency('014', '04', '03', '05', '03'),
+  dependency('015', '05', '03', '06', '03'),
+  dependency('016', '06', '03', '07', '03'),
+  dependency('017', '07', '03', '08', '03'),
 
   // Step 2 — CMU HR → Clearance Obtainment guide → tutor
-  trigger('022', '02', '04', '02', '06'),
-  trigger('023', '02', '06', '02', '03'),
+  dependency('022', '02', '04', '02', '06'),
+  dependency('023', '02', '06', '02', '03'),
 
   // Step 3 — tutor sends clearances via Email → supervisor receives
-  trigger('031', '03', '03', '03', '06'),
-  trigger('032', '03', '06', '03', '04'),
+  dependency('031', '03', '03', '03', '06'),
+  dependency('032', '03', '06', '03', '04'),
 
   // Step 4 — tutor schedules I-9 meeting via Workday
-  trigger('033', '04', '03', '04', '06'),
+  dependency('033', '04', '03', '04', '06'),
 
   // Step 5 — tutor attends I-9 meeting → CMU HR reviews forms
-  trigger('041', '05', '03', '05', '04'),
+  dependency('041', '05', '03', '05', '04'),
 
   // Step 6 — tutor sets up payroll → Workday; supervisor paperwork chain
-  trigger('042', '06', '03', '06', '06'),
-  trigger('043', '06', '07', '06', '08'),
-  trigger('044', '06', '08', '06', '06'),
+  dependency('042', '06', '03', '06', '06'),
+  dependency('043', '06', '07', '06', '08'),
+  dependency('044', '06', '08', '06', '06'),
 
   // Step 7 — supervisor invite via Email/Slack → tutor joins
-  trigger('051', '07', '04', '07', '06'),
-  trigger('052', '07', '06', '07', '03'),
+  dependency('051', '07', '04', '07', '06'),
+  dependency('052', '07', '06', '07', '03'),
 
   // Step 8 — supervisor provides credentials via Email/PLUS App → tutor obtains login
-  trigger('061', '08', '04', '08', '06'),
-  trigger('062', '08', '06', '08', '03'),
+  dependency('061', '08', '04', '08', '06'),
+  dependency('062', '08', '06', '08', '03'),
 ]
 
 const TECH_SETUP_CELLS: BlueprintCell[] = [
@@ -460,5 +460,5 @@ export const TECH_SETUP_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: TECH_SETUP_CELLS,
-  triggers: TECH_SETUP_TRIGGERS,
+  dependencies: TECH_SETUP_TRIGGERS,
 }

@@ -24,7 +24,7 @@ function makeBlueprint(
   cells: CellSpec[],
   options: {
     lanes?: string[]
-    triggers?: Array<{ source: string; target: string; kind?: 'sets_off' | 'enables' }>
+    dependencies?: Array<{ source: string; target: string; kind?: 'sets_off' | 'enables' }>
   } = {},
 ): BlueprintData {
   const laneNames =
@@ -60,11 +60,11 @@ function makeBlueprint(
     lanes,
     steps: stepRows,
     cells: blueprintCells,
-    triggers: (options.triggers ?? []).map((trigger, index) => ({
+    dependencies: (options.dependencies ?? []).map((dependency, index) => ({
       id: `${pathId}-trigger-${index}`,
-      source_cell_id: trigger.source,
-      target_cell_id: trigger.target,
-      kind: trigger.kind,
+      source_cell_id: dependency.source,
+      target_cell_id: dependency.target,
+      kind: dependency.kind,
     })),
   }
 }

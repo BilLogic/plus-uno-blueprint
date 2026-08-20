@@ -65,7 +65,7 @@ function makeBlueprint(
     lanes,
     steps: stepRows,
     cells: blueprintCells,
-    triggers: [],
+    dependencies: [],
   }
 }
 

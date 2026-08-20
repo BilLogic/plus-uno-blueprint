@@ -126,11 +126,11 @@ function iCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000009${stepSlot}${layerSuffix}`
 }
 
-function iTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function iDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -138,7 +138,7 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: iTrigger(slot),
+    id: iDependency(slot),
     source_cell_id: iCell(fromStep, fromLayer),
     target_cell_id: iCell(toStep, toLayer),
   }
@@ -146,33 +146,33 @@ function trigger(
 
 const INTERVIEW_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — application form setup
-  trigger('001', '01', '07', '01', '06'),
-  trigger('002', '01', '07', '02', '07'),
-  trigger('005', '01', '03', '01', '06'),
+  dependency('001', '01', '07', '01', '06'),
+  dependency('002', '01', '07', '02', '07'),
+  dependency('005', '01', '03', '01', '06'),
 
   // Applies → review & invitation
-  trigger('003', '02', '07', '02', '04'),
-  trigger('004', '02', '04', '02', '06'),
-  trigger('006', '02', '06', '02', '03'),
+  dependency('003', '02', '07', '02', '04'),
+  dependency('004', '02', '04', '02', '06'),
+  dependency('006', '02', '06', '02', '03'),
 
   // Regular Tutor forward chain
-  trigger('011', '01', '03', '02', '03'),
-  trigger('012', '02', '03', '03', '03'),
-  trigger('013', '03', '03', '04', '03'),
-  trigger('014', '04', '03', '05', '03'),
+  dependency('011', '01', '03', '02', '03'),
+  dependency('012', '02', '03', '03', '03'),
+  dependency('013', '03', '03', '04', '03'),
+  dependency('014', '04', '03', '05', '03'),
 
   // Group interview
-  trigger('023', '03', '04', '03', '06'),
-  trigger('024', '03', '03', '03', '06'),
-  trigger('025', '03', '07', '03', '08'),
+  dependency('023', '03', '04', '03', '06'),
+  dependency('024', '03', '03', '03', '06'),
+  dependency('025', '03', '07', '03', '08'),
 
   // Decision processing → offer
-  trigger('031', '03', '07', '04', '07'),
-  trigger('032', '04', '07', '04', '08'),
+  dependency('031', '03', '07', '04', '07'),
+  dependency('032', '04', '07', '04', '08'),
   // Step 4 back stage → step 5 front stage
-  trigger('041', '04', '07', '05', '04'),
-  trigger('042', '05', '04', '05', '06'),
-  trigger('043', '05', '06', '05', '03'),
+  dependency('041', '04', '07', '05', '04'),
+  dependency('042', '05', '04', '05', '06'),
+  dependency('043', '05', '06', '05', '03'),
 ]
 
 const INTERVIEW_CELLS: BlueprintCell[] = [
@@ -367,5 +367,5 @@ export const APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: INTERVIEW_CELLS,
-  triggers: INTERVIEW_TRIGGERS,
+  dependencies: INTERVIEW_TRIGGERS,
 }

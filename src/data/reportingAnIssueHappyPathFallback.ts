@@ -140,11 +140,11 @@ function issueCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001d${stepSlot}${layerSuffix}`
 }
 
-function issueTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function issueDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
@@ -152,23 +152,23 @@ function trigger(
   toLayer: string,
 ): BlueprintCellDependency {
   return {
-    id: issueTrigger(slot),
+    id: issueDependency(slot),
     source_cell_id: issueCell(fromStep, fromLayer),
     target_cell_id: issueCell(toStep, toLayer),
   }
 }
 
 const REPORTING_AN_ISSUE_TRIGGERS: BlueprintCellDependency[] = [
-  trigger('070', '01', '03', '01', '06'),
-  trigger('074', '01', '02', '01', '06'),
-  trigger('076', '01', '06', '01', '04'),
-  trigger('078', '01', '04', '03', '04'),
-  trigger('081', '01', '04', '02', '07'),
-  trigger('077', '03', '04', '04', '06'),
-  trigger('073', '04', '06', '04', '03'),
-  trigger('075', '04', '06', '04', '02'),
-  trigger('079', '04', '02', '02', '07'),
-  trigger('080', '04', '03', '02', '07'),
+  dependency('070', '01', '03', '01', '06'),
+  dependency('074', '01', '02', '01', '06'),
+  dependency('076', '01', '06', '01', '04'),
+  dependency('078', '01', '04', '03', '04'),
+  dependency('081', '01', '04', '02', '07'),
+  dependency('077', '03', '04', '04', '06'),
+  dependency('073', '04', '06', '04', '03'),
+  dependency('075', '04', '06', '04', '02'),
+  dependency('079', '04', '02', '02', '07'),
+  dependency('080', '04', '03', '02', '07'),
 ]
 
 const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
@@ -284,5 +284,5 @@ export const REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK: BlueprintData = {
   lanes: [...LAYERS],
   steps: [...STEPS],
   cells: REPORTING_AN_ISSUE_CELLS,
-  triggers: REPORTING_AN_ISSUE_TRIGGERS,
+  dependencies: REPORTING_AN_ISSUE_TRIGGERS,
 }

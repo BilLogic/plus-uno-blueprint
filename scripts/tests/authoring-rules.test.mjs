@@ -73,7 +73,7 @@ test('the same connection is not added twice', () => {
   assert.ok(problems.some((p) => /already exists/.test(p)))
 })
 
-test('the same pair may hold both a trigger and a needs', () => {
+test('the same pair may hold both a sets_off and an enables', () => {
   const problems = validateDraftDependency(
     draft({ kind: 'enables' }),
     source,

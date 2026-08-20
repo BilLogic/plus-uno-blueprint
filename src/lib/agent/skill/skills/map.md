@@ -72,7 +72,7 @@ these, which are where the system actually breaks**:
 
 - ⚠ **REQUIRED — validate before import.** Run `scripts/validate_ir.py` and
   require exit 0 before any adapter runs. It catches what the DB trigger
-  would abort mid-import (cells without path_steps, cross-path triggers,
+  would abort mid-import (cells without path_steps, cross-path dependencies,
   duplicate columns, unknown roles).
 - ⚠ **REQUIRED — never import unsigned IR.** The sign-off content hash in
   `blueprint-workspace.json` must match the current IR file; on mismatch,

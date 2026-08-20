@@ -51,7 +51,7 @@ Per scenario, in this order (mirrors the elicitation protocol):
 4. Paths — after the happy path exists, ask what goes wrong / what's the
    workaround; alternative/exception paths reuse scenario steps via
    `path_steps` and may add their own.
-5. Triggers — "what kicks off what?" — only where arrows genuinely add
+5. Dependencies — "what kicks off what?" — only where arrows genuinely add
    information (same-path only).
 6. Locales — if bilingual, capture both languages as you go (locale maps),
    don't bolt translation on later; flag domain terms for review.

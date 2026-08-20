@@ -11,7 +11,7 @@ import {
   BlueprintSwimLaneDivider,
 } from '@/components/blueprint/BlueprintLabelRail'
 import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSectionFrame'
-import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
+import { IntegratedDependencyArrows } from '@/components/blueprint/IntegratedDependencyArrows'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import {
   BLUEPRINT_LAYER_ROW_GAP,
@@ -78,7 +78,7 @@ type BlueprintPathBandProps = {
 }
 
 /**
- * One path's full lane-row band — section frame, trigger arrows, design-mode
+ * One path's full lane-row band — section frame, dependency arrows, design-mode
  * handles and the cells themselves. Both compare arrangements compose this
  * component; only the placement (`arrangement`) differs. The rendering of a
  * cell is identical in both, down to its `data-blueprint-cell` anchors.
@@ -202,9 +202,9 @@ export function BlueprintPathBand({
           )}
         </>
       ) : null}
-      <IntegratedTriggerArrows
+      <IntegratedDependencyArrows
         lane="forward"
-        triggers={arrowData.triggers}
+        dependencies={arrowData.dependencies}
         cells={arrowData.cells}
         steps={arrowData.steps}
         paths={arrowPaths}
@@ -229,9 +229,9 @@ export function BlueprintPathBand({
           }
         />
       ))}
-      <IntegratedTriggerArrows
+      <IntegratedDependencyArrows
         lane="wrap"
-        triggers={arrowData.triggers}
+        dependencies={arrowData.dependencies}
         cells={arrowData.cells}
         steps={arrowData.steps}
         paths={arrowPaths}
