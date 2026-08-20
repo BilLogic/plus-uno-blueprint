@@ -1,5 +1,5 @@
 ---
-title: "search_cells: give the canvas agent the search portal — on a trigger, not on a hunch"
+title: "Give the canvas agent the search portal — one name, on a trigger"
 type: feat
 status: ready-not-authorized
 date: 2026-08-19
@@ -7,7 +7,7 @@ repos: uno-blueprint (agent harness), plus-uno (uno-bot parity)
 depends-on: public.search_blueprint portal (shipped 2026-08-19, PR #53)
 ---
 
-# `search_cells` — the canvas agent's door to the portal
+# The canvas agent's door to `search_blueprint`
 
 > **STATUS: READY, DELIBERATELY NOT AUTHORIZED.** The design below is complete
 > and the backend already exists. It should **not** be built until the trigger
@@ -72,7 +72,7 @@ The structural navigation has served 100% of real traffic.
 
 ## Proposed solution
 
-One read tool, `search_cells`, wrapping the portal. Two modes in one call,
+One read tool, `search_blueprint`, wrapping the portal. Two modes in one call,
 mirroring the portal itself.
 
 ### Capability boundary — the constraint that shapes the spec
@@ -99,7 +99,7 @@ nothing about this" when the truth is "your phrasing shares no words with it."
 
 ```ts
 {
-  name: 'search_cells',
+  name: 'search_blueprint',
   description:
     'Find cells by what they SAY or where they SIT, when you do not already ' +
     'know which scenario holds them. Two modes. (1) Give `query` to search ' +
@@ -139,7 +139,7 @@ from `MOBILE_READ_TOOL_NAMES`** — mobile is a view-only reading surface
 ### Dispatch — `src/lib/agent/tools/registry.ts`
 
 ```ts
-case 'search_cells':
+case 'search_blueprint':
   return searchCells(client, {
     query:      s(args, 'query'),
     phase:      s(args, 'phase'),
@@ -152,7 +152,7 @@ case 'search_cells':
 
 ### Reader — `src/lib/agent/tools/read.ts`
 
-Calls `client.rpc('search_blueprint', {...})` and renders the same
+Calls `client.rpc('search_blueprint', {...})` — the tool and the RPC share a name **on purpose**: one capability, one word, whatever surface you are on and renders the same
 `[step N] "content" (uuid)` line shape `getBlueprint` already uses, so the model
 sees one consistent cell vocabulary. Header carries the honesty numbers:
 
@@ -204,6 +204,25 @@ embedding endpoint and a second home for a Vertex credential, against
 `AGENTS.md`'s keys-in-one-place rule. Out of scope; the keyword+structural half
 covers the "find by words" job that P1/P2 describe.
 
+### Naming: one capability, one name
+
+An earlier draft called this tool `search_cells`, which would have made **three
+names for one thing**: the RPC `search_blueprint`, uno-bot's tool
+`blueprint_search`, and a new `search_cells`. That is exactly the fragmentation
+the portal was built to end.
+
+The canvas tool is therefore named **`search_blueprint`**, matching the RPC it
+calls. A reader who sees the tool name, the RPC name, the migration name and
+the docs sees one word.
+
+**Optional follow-up, not required by this plan:** uno-bot's tool is
+`blueprint_search` (`agents/uno-bot/tool-definitions.json`). Renaming it to
+`search_blueprint` would complete the convergence. It touches `AGENT.md`,
+`docs/conventions/blueprint-navigation.md` and eval scenario text, and tool
+names are internal (AGENT.md forbids speaking them aloud to users), so the risk
+is churn rather than breakage. Worth doing when that file is next open; not
+worth a dedicated change.
+
 ## Harness changes
 
 ### The documented four-step process is stale — fix it
@@ -254,7 +273,7 @@ contract), so these exercise the live portal:
 | `search-finds-by-term` | "Workday" returns Tech Setup cells; `total_matched` present |
 | `search-filter-only-complete` | filters, no query → `total_matched` equals row count |
 | `search-zero-rows-is-not-absence` | a paraphrase returns 0 rows and the agent does **not** claim the blueprint lacks it |
-| `search-not-used-for-slices` | "make me a journey slice of X" routes to the slice flow, not `search_cells` |
+| `search-not-used-for-slices` | "make me a journey slice of X" routes to the slice flow, not `search_blueprint` |
 | `search-honours-total` | showing 15 of 116, the reply cites 116 |
 
 The third is the one that matters: it pins the failure mode the capability
@@ -284,7 +303,7 @@ portal makes the documented trap structurally impossible.
 
 ## System-wide impact
 
-**Interaction graph.** `search_cells` → `registry.ts` dispatch → `searchCells`
+**Interaction graph.** `search_blueprint` → `registry.ts` dispatch → `searchCells`
 → `client.rpc('search_blueprint')` → the portal's three CTEs → `cells` +
 `corpus_chunks`. Results reach the model as text; the model then typically calls
 `focus_cell` / `open_cell_panel` (UI bridge, camera move) or `annotate_cells`
@@ -310,7 +329,7 @@ consumers, same query, same relevance.
 
 ## Acceptance criteria
 
-- [ ] `search_cells` in `specs.ts`; not in `WRITE_TOOL_NAMES`; not in `MOBILE_READ_TOOL_NAMES`
+- [ ] `search_blueprint` in `specs.ts`; not in `WRITE_TOOL_NAMES`; not in `MOBILE_READ_TOOL_NAMES`
 - [ ] Dispatch case in `registry.ts`; `searchCells` in `read.ts` calling `search_blueprint`
 - [ ] Filter-only mode returns the complete set and says so
 - [ ] `total_matched` and `matched_by` surfaced in the rendered output
@@ -325,7 +344,7 @@ consumers, same query, same relevance.
 
 | Metric | Target |
 |---|---|
-| Sessions where `search_cells` is called | >0 within 2 weeks, else the trigger was misread |
+| Sessions where `search_blueprint` is called | >0 within 2 weeks, else the trigger was misread |
 | Zero-row results followed by a false absence claim | **0** — the failure mode this design exists to prevent |
 | Search used for journey-slice selection | **0** — playbook violation |
 | Portal latency, canvas modes | <100ms (measured today: 22ms filter, 55ms keyword) |
@@ -340,6 +359,90 @@ consumers, same query, same relevance.
 | A 38th tool dilutes tool choice | Medium | `role.md` already says *"Prefer the fewest reads that answer the question"*; description says when NOT to call |
 | Built with no demand | Medium | The build trigger exists for this |
 | Filter-only returns 955 rows | Low | `limit` caps rows; `total_matched` still tells the truth |
+
+## Review findings folded in
+
+Four independent reviews (context-engineering, measurement audit, service-design,
+YAGNI) ran against an earlier draft. What survived, including where they
+corrected me and where one was wrong.
+
+### Corrected figures
+
+| Claim in earlier drafts | Correct |
+|---|---|
+| Whole blueprint ~90k tokens | **~101k** under the same (already-wrong) estimator |
+| 481 cells in duplicate-body groups | **499** (61.8% of the 808 content-bearing) |
+| Zoom baseline "29 of 95" | **29 of 113** — the 95 counted one field, the 29 counted six. The real gap was worse than stated |
+| Goal Setting ~41k tokens to read | **~10,098** — `getBlueprint` returns content+id only |
+
+### Three of seven audit checks can never fire on this data
+
+Measured across all 955 cells: `owner` **0**, `perceived_owner` **0**,
+lanes with `kpis` **0**, `value_props` **11**.
+
+So `perceived-owner`, `kpi-alignment` and `value-ledger` are permanently
+wave-2 skips. The audit suite has only ever exercised **4 of 7 checks**. That
+is correct behaviour per `audit-playbook.md` §1.5 — but it means "the audit
+passed" currently carries less coverage than it sounds like, and any claim
+about audit quality should say 4/7. Unrelated to search; worth knowing.
+
+### The canvas audit does NOT use a frozen export — and that is deliberate
+
+The service-design review suspected canvas audits bypass `audit-playbook` §1's
+scoped blind dispatch. Verified: they do, and it is **documented, intentional
+translation**, not drift. `canvas-adapter.md` § "Canvas audit run" specifies a
+live in-conversation run — roster → read all check docs in one round → record
+findings as you go — and the adapter is binding on the canvas.
+
+One consequence worth stating plainly: the IDE route gives each check its own
+blind context so checks cannot contaminate each other; the canvas route shares
+one context across all checks. That is a real quality difference between the
+two routes, out of scope here, but it should be a known property rather than a
+surprise.
+
+**Corollary for this plan:** because the canvas audit reads live, the
+roster-stage content scan (fee-visibility's skip decision) is the one place
+`search_blueprint` genuinely helps an audit — and §1.5 already documents the trap
+it fixes.
+
+### Audit export cost is a different codebase
+
+The YAGNI review traced the "audits blow context" concern to the audit
+**skill's** `audit/export-<scenario>.json` generation — a vendored plugin,
+outside `src/lib/agent/`. Projecting fields on the canvas agent's
+`get_blueprint` would not have touched it. If export cost ever matters, the fix
+is scoping that export per check-doc's stated needs. Recorded so nobody
+re-derives it.
+
+### The idea worth more than this plan: finding → action
+
+The service-design review's strongest point, and none of the options here
+address it: **every proposal stops at "here's what I found."** The documented
+loop is map → compare → audit → slice, and both `04-the-assistant-and-audits.md`
+and `06-product-design-on-blueprints.md` treat surfacing an issue as half the
+job — an unmapped moment must "get it mapped… before building on it."
+
+Concretely missing today:
+
+- a gap-sweep finding that offers **"open in map and create this cell"**
+- a jargon-lint finding that offers a **drafted rewrite routed through map**
+  (proposed, never auto-applied — the edit/undo discipline still binds)
+- a predicate-selected set that one action turns into a **`custom` slice draft**
+  citing exactly those cells
+
+That last one is where search and the action bridge meet, and it is the only
+place in this whole investigation where a search primitive has a *documented*
+user workflow waiting for it. **If effort is available for one thing, it is
+probably this, not `search_blueprint` on its own.** Deserves its own plan.
+
+### A cheaper payload idea, deferred
+
+The context-engineering review noted that `links` (55,975 chars) and repeated
+UUIDs (53,424 chars) are ~75% of a full cell read — so if payload ever does
+matter, the lever is a **compact envelope** (short session-local cell codes
+instead of four repeated UUIDs, `links` as `{count}` with a separate fetch),
+not field projection. Not needed at ~10k tokens/scenario; recorded because it
+is the right answer to a question that may return.
 
 ## Future considerations
 
