@@ -6,6 +6,7 @@ import {
   type CellContentUpdate,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec, type CellSpecUpdate } from '@/lib/cellSpecMutations'
+import { updateLaneSpec, type LaneSpecUpdate } from '@/lib/laneSpecMutations'
 import {
   deleteEvidence,
   restoreEvidenceRow,
@@ -69,6 +70,21 @@ export async function executeRevert(
       const cellId = stringArg(revert.args, 'cell_id')
       const update = revert.args.update as CellSpecUpdate
       await updateCellSpec(client, cellId, update, undefined, { record: false })
+      return
+    }
+    case 'update_lane_spec': {
+      // Self-inverse, like update_cell_spec: the captured payload IS an
+      // update. The lane ids are captured too — the fan-out has to land on
+      // exactly the rows the save touched, not on whatever carries that label
+      // now.
+      const laneIds = revert.args.lane_ids
+      if (!Array.isArray(laneIds) || laneIds.length === 0) {
+        throw new Error("This change's revert is missing its lane ids.")
+      }
+      const update = revert.args.update as LaneSpecUpdate
+      await updateLaneSpec(client, laneIds as string[], update, undefined, {
+        record: false,
+      })
       return
     }
     case 'update_cell_resources': {

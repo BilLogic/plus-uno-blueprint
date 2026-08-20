@@ -56,3 +56,34 @@ export function getLayerRole(lane: {
 }): string | null {
   return lane.role ?? LEGACY_NAME_TO_ROLE[lane.name] ?? null
 }
+
+/**
+ * The role in words, for a human reading a lane's properties.
+ *
+ * The enum key is a rendering contract (`frontstage_actions` decides where the
+ * visibility line draws); it is not an answer to "what is this row". The
+ * sentences come from `references/lane-roles.md`, which is the same source the
+ * agent reads, so the two never say different things about the same key.
+ *
+ * An unknown or absent role is not an error: a custom role and a null role
+ * both render as a generic swimlane, which is exactly what this says.
+ */
+const LANE_ROLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
+  [CUSTOMER_ACTIONS_ROLE]:
+    'Customer actions — the spine of the journey. The interaction line draws below it.',
+  [FRONTSTAGE_ACTIONS_ROLE]:
+    'Frontstage — staff actions the customer can see.',
+  [BACKSTAGE_ACTIONS_ROLE]: 'Backstage — staff actions out of sight.',
+  [FRONTSTAGE_TECH_ROLE]:
+    'Frontstage technology — customer-facing systems, shown as pills.',
+  [BACKSTAGE_TECH_ROLE]: 'Backstage technology — internal systems, shown as pills.',
+  [SUPPORT_SYSTEMS_ROLE]:
+    'Support — teams, vendors and infrastructure behind the work.',
+  [VISUAL_ROLE]: 'Storyboard — the pictures for each step, not text.',
+  [STEP_VISUAL_ROLE]: 'Storyboard — per-step imagery.',
+}
+
+export function describeLaneRole(role: string | null | undefined): string {
+  if (!role) return 'A swimlane with no blueprint role.'
+  return LANE_ROLE_DESCRIPTIONS[role] ?? `Custom role: ${role}.`
+}

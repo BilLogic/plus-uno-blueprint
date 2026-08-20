@@ -162,6 +162,7 @@ export function BlueprintDividerRow({
   )
 }
 
+import { LanePropertiesButton } from '@/components/blueprint/LanePropertiesButton'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cellsInLane } from '@/lib/canvasCellQuery'
@@ -257,7 +258,7 @@ export function BlueprintLabelRow({
       )}
       <div
         className={cn(
-          'relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-3',
+          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-3',
           compact ? 'pt-3' : 'pt-4',
         )}
       >
@@ -282,6 +283,12 @@ export function BlueprintLabelRow({
             {row.label}
           </span>
         )}
+        {/* Beside the selection handle, never inside it: in Design mode the
+            label itself selects the lane's cells, and the two readings have to
+            stay visibly separate. */}
+        {row.kind === 'lane' && row.lane ? (
+          <LanePropertiesButton laneId={row.lane.id} laneName={row.label} />
+        ) : null}
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
           row.kind === 'lane' &&
           row.lane &&

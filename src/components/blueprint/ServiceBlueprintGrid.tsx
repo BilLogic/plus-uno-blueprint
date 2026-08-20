@@ -21,6 +21,7 @@ import {
 } from '@/lib/sideBySideCompareLayout'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
+import { LanePropertiesButton } from '@/components/blueprint/LanePropertiesButton'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
@@ -496,7 +497,7 @@ function BlueprintSwimLane({
         )}
         <div
           className={cn(
-            'flex w-full items-start gap-2',
+            'group/lane-header flex w-full items-start gap-2',
             compact ? 'pt-3 pb-3' : 'pt-5 pb-5',
           )}
         >
@@ -523,6 +524,7 @@ function BlueprintSwimLane({
             {laneName}
           </span>
         )}
+        <LanePropertiesButton laneId={laneId} laneName={laneName} />
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED && onToggleCollapse && (
           <LaneCollapseToggle
             laneName={laneName}

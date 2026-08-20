@@ -31,6 +31,12 @@ import {
 } from '@/lib/compareReviewStore'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { setOpenCellId } from '@/lib/openCellStore'
+import {
+  claimPanel,
+  getPanelOwner,
+  releasePanel,
+  subscribePanelOwner,
+} from '@/lib/openPanelStore'
 
 export type BlueprintCellPreviewHover = {
   cellId: string
@@ -126,6 +132,17 @@ export function BlueprintCellDetailProvider({
     setPanelState(selection ? { surface: 'details' } : null)
   }
 
+  // One panel at a time: an entity panel (lane, phase, scenario) taking the
+  // drawer closes this one. Render-phase guarded set, same idiom as above —
+  // and the panel state alone, because the claim has already moved and
+  // releasing here would close the panel that just opened.
+  const panelOwner = useSyncExternalStore(subscribePanelOwner, getPanelOwner)
+  if (panelOwner !== 'cell' && panelState !== null) {
+    setPanelState(null)
+    setSelection(null)
+    setDraftCell(null)
+  }
+
   // Tell the agent's UI-context collector which cell the human has open in
   // the side panel — the panel mounts under the canvas, out of the agent
   // panel's React reach, so this goes through the module bridge.
@@ -150,6 +167,7 @@ export function BlueprintCellDetailProvider({
   }, [selection])
 
   const selectCell = useCallback((next: BlueprintCellSelection) => {
+    claimPanel('cell')
     setSelection(next)
     setDraftCell(null)
     setPanelState({ surface: 'details' })
@@ -157,6 +175,7 @@ export function BlueprintCellDetailProvider({
   }, [])
 
   const openDraftCell = useCallback((next: DraftCellTarget) => {
+    claimPanel('cell')
     setDraftCell(next)
     setSelection(null)
     setPanelState({ surface: 'details' })
@@ -173,9 +192,11 @@ export function BlueprintCellDetailProvider({
     setDraftCell(null)
     setPanelState(null)
     setPreviewHover(null)
+    releasePanel('cell')
   }, [])
 
   const openDifferences = useCallback(() => {
+    claimPanel('cell')
     setPanelState({ surface: 'differences' })
   }, [])
 

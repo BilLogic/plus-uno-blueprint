@@ -1,8 +1,21 @@
-import { Component, type ReactNode } from 'react'
+import { Component, Fragment, type ReactNode } from 'react'
+import { X } from 'lucide-react'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { Button } from '@/components/ui/button'
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
 } from '@/components/ui/drawer'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +54,22 @@ import { cn } from '@/lib/utils'
  * thing standing between us and a collision.
  */
 export const CELL_PANEL_FOOTER_ID = 'cell-panel-editor-footer'
+
+/**
+ * How long a closed panel's content stays rendered so the exit has something
+ * to draw. Must be ≥ the exit transition in animations.css, which runs on
+ * `--motion-micro` (150ms) for the inspector posture.
+ *
+ * A timer, and not only the drawer's own completion callback, because
+ * `onOpenChangeComplete(false)` was measured NOT to fire for this drawer: the
+ * exit transition ran to its end — opacity 0, transform at
+ * `--closed-transform` — and the popup stayed in the DOM indefinitely. The
+ * same file already documents base-ui's transition flags misfiring here (its
+ * `starting` flag never fires for a root that mounts open, which is why the
+ * entry is stated through `@starting-style` instead). The callback stays
+ * wired; whichever arrives first wins.
+ */
+export const PANEL_EXIT_MS = 200
 export const LANE_PANEL_FOOTER_ID = 'lane-panel-editor-footer'
 export const PHASE_PANEL_FOOTER_ID = 'phase-panel-editor-footer'
 export const SCENARIO_PANEL_FOOTER_ID = 'scenario-panel-editor-footer'
@@ -202,5 +231,82 @@ export function Field({
       )}
       {children}
     </div>
+  )
+}
+
+/**
+ * The header every entity panel wears: where the thing sits, then ✕.
+ *
+ * The crumbs are ancestors and the last one is the thing itself, matching the
+ * cell panel's breadcrumb exactly — same sizes, same separators, same
+ * truncation — because two headers that are nearly the same read as a bug in
+ * one of them.
+ *
+ * No expand toggle. Widening the drawer trades canvas width for panel width
+ * and pays off when the panel holds a dependency table or a difference ledger;
+ * a lane's owner, KPIs and tools do not get easier to read at 1.5× the width.
+ */
+export function PanelHeader({
+  crumbs,
+  onClose,
+  closeLabel,
+  title,
+  description,
+}: {
+  /** Ancestors first, the entity itself last. Empty strings are dropped. */
+  crumbs: string[]
+  onClose: () => void
+  /** Says what closes, e.g. "Close lane properties". */
+  closeLabel: string
+  /** Screen-reader title for the dialog. */
+  title: string
+  description: string
+}) {
+  const shown = crumbs.filter((crumb) => crumb.trim().length > 0)
+  const last = shown.length - 1
+  return (
+    <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
+      <div className="min-w-0 flex-1">
+        <DrawerTitle className="sr-only">{title}</DrawerTitle>
+        <DrawerDescription className="sr-only">{description}</DrawerDescription>
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap gap-0.5 text-2xs leading-tight text-muted-foreground">
+            {shown.map((crumb, index) => (
+              <Fragment key={`${crumb}-${index}`}>
+                <BreadcrumbItem className="min-w-0">
+                  {index === last ? (
+                    <BreadcrumbPage className="truncate font-medium tracking-tight text-foreground">
+                      {crumb}
+                    </BreadcrumbPage>
+                  ) : (
+                    <span
+                      title={crumb}
+                      className="block max-w-[5.5rem] truncate font-normal"
+                    >
+                      {crumb}
+                    </span>
+                  )}
+                </BreadcrumbItem>
+                {index === last ? null : (
+                  <BreadcrumbSeparator className="shrink-0 [&>svg]:size-3" />
+                )}
+              </Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      <IconTooltip label={closeLabel} side="left">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+          aria-label={closeLabel}
+          onClick={onClose}
+        >
+          <X />
+        </Button>
+      </IconTooltip>
+    </DrawerHeader>
   )
 }

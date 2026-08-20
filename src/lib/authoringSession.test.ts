@@ -52,6 +52,7 @@ const EVERY_WRITE = Object.keys({
   update_cell_content: true,
   update_cell_resources: true,
   update_cell_spec: true,
+  update_lane_spec: true,
   add_evidence: true,
   update_evidence: true,
   delete_evidence: true,

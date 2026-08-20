@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import { BlueprintCellDetailPanel } from '@/components/blueprint/BlueprintCellDetailPanel'
+import { EntityDetailPanel } from '@/components/blueprint/EntityDetailPanel'
 import { PhaseScenarioOverviewBody } from '@/components/blueprint/PhaseScenarioOverview'
 import { CanvasPhaseSection } from '@/components/editor/CanvasPhaseSection'
 import { OverviewPhaseRowDivider } from '@/components/editor/OverviewPhaseRowDivider'
@@ -25,6 +26,7 @@ import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
+import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
 import {
   BlueprintCellDetailProvider,
   useBlueprintCellDetail,
@@ -806,6 +808,13 @@ function ServiceOverviewViewImpl({
 
   return (
     <CanvasZoomChromeProvider>
+      {/*
+        Outside the cell panel's provider so a lane affordance anywhere on the
+        canvas can reach it, and NOT gated the way the cell panel is: a lane
+        label is on screen in the phase overview too, where no scenario is
+        focused and `cellDetailEnabled` is false.
+      */}
+      <EntityDetailProvider resetKey={cellDetailResetKey}>
       <BlueprintCellDetailProvider
         resetKey={cellDetailResetKey}
         enabled={cellDetailEnabled}
@@ -1154,9 +1163,11 @@ function ServiceOverviewViewImpl({
               </div>
             ) : null}
             {cellDetailEnabled ? <BlueprintCellDetailPanel /> : null}
+            <EntityDetailPanel />
           </div>
         </div>
       </BlueprintCellDetailProvider>
+      </EntityDetailProvider>
     </CanvasZoomChromeProvider>
   )
 }
