@@ -45,7 +45,17 @@ describe('stable blueprint cell frame contract', () => {
   it('keeps storyboard geometry at 4:3 and fits image pixels inside it', () => {
     expect(visual).toContain("'aspect-[4/3]")
     expect(visual).toContain('w-full max-w-full')
-    expect(visual).toContain("'h-full w-full rounded-sm object-contain")
+    /*
+      `w-auto`, not `w-full`. The picture must be allowed to size its own box
+      so the corner radius lands on the ARTWORK — stretched to the full cell
+      the box is wider than the picture, `object-contain` letterboxes, and the
+      radius rounds empty space while the artwork keeps square corners inside
+      a cell rounded at 10px. `max-w-full` is what still keeps the pixels
+      inside the frame, which is what this contract is really about.
+    */
+    expect(visual).toContain(
+      "'h-full w-auto max-w-full rounded-[calc(var(--radius-lg)-var(--spacing)-1px)] object-contain",
+    )
     expect(VISUAL_ROW_MIN_HEIGHT).toBe(176)
     expect(VISUAL_ROW_MIN_HEIGHT_COMPACT).toBe(168)
     expect(getVisualCellButtonMaxHeight()).toBe(144)
