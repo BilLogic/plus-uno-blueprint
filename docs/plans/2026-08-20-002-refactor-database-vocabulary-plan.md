@@ -245,3 +245,34 @@ argument for generating rather than hand-editing them in this pass.
 - [ ] Update `access-and-security.md`'s object table
 - [ ] Prefer a generator; if that is out of scope, say so in the file header
       with the date it was last verified, so the next reader knows
+
+---
+
+## Phase 8 — collapse the `view_type` vocabulary
+
+Two vocabularies exist for one concept, with `viewTypeVocabulary.ts` as the
+translation seam:
+
+```
+DB      single | side-by-side | integrated
+Client  single | stacked      | merged
+```
+
+The seam's own comment says a migration was avoided because persisted
+`integrated` rows coerce harmlessly. **Checked the data: all 22 scenarios hold
+`side-by-side`, and both other values are unused.** So the migration the
+comment deferred is now three lines and loses nothing:
+
+```sql
+update public.service_scenarios set view_type = 'stacked';
+alter table public.service_scenarios drop constraint service_scenarios_view_type_check;
+alter table public.service_scenarios add constraint service_scenarios_view_type_check
+  check (view_type in ('single','stacked','merged'));
+```
+
+Then delete `src/lib/viewTypeVocabulary.ts`, `toClientViewType`,
+`dbToClientViewType`, and both seams in `phasesToSlides.ts` and
+`authoringRpc.ts`. One vocabulary — the one the product speaks.
+
+**Verify the constraint name first** (`\d service_scenarios`); it is guessed
+above.

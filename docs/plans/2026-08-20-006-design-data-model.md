@@ -20,6 +20,34 @@ one decides *how it is edited*.
 
 ---
 
+## The map — read this first
+
+Every level, what it holds, and where a user sees it. Everything after this
+section is the reasoning behind one row of this table.
+
+| Level | Rows | Fields it owns | Where you see it | Where you edit it |
+|---|---|---|---|---|
+| **Service** | 1 | `name`, `summary`, + business model: `pricing`, `revenue_model`, `funding`, `delivery_cost`, `partners` | sidebar row, top | **Service panel** |
+| **Phase** | 6 | `name`, `summary`, `business_impact`, `operational_requirements`, `loops_to_phase_id` | phase section on the canvas | **Phase panel** (ⓘ in the menubar header) |
+| **Scenario** | 22 | `name`, `summary`, `view_type` | sidebar row + breadcrumb | `summary` → hover card. `view_type` → the compare control, not a panel |
+| **Path** | 38 | `name`, `path_type`, `summary`, `note` | path label on the canvas | ⚠️ nothing yet — `summary` vs `note` is undefined, decide before building |
+| **Step** | 185 | `name` | column header | nothing to edit |
+| **Lane** | 299 rows / **166 logical** | `name`, `lane_role`, `owner_team`, `kpis`, `tools` | lane label on the rail | **Lane panel** (ⓘ on the label) |
+| **Cell** | 955 | `content`, `summary`, `function`, `form`, `value_props`, `owner`, `perceived_owner`, `links`, `picture` | the grid | **Cell panel** (plain click) |
+
+Three panels are new — service, phase, lane. The cell panel exists. Scenario,
+path and step get **no panel**, because between them they own four editable
+fields and two of those are undefined.
+
+**Two fields are computed, never stored empty-and-shown-empty:**
+
+| Shown | Computed as |
+|---|---|
+| a cell's effective owner | `coalesce(cells.owner, lanes.owner_team)` |
+| a cell's effective perceived owner | `coalesce(cells.perceived_owner, lanes.name)` — **frontstage lanes only** |
+
+---
+
 ## The proposal — every level, every field
 
 This is the corrected set. Each field has a **definition**, a **reason to
@@ -192,23 +220,44 @@ erDiagram
 
 # Open questions
 
-## `scenario.view_type` is not a spec field
+## `scenario.view_type` — not a spec field, and the two vocabularies should collapse
 
-Answering it because it looked like an undocumented property. It is a **view
-preference**, not content: which compare layout this scenario opens in.
+It is a **view preference**: which compare layout a scenario opens in. It
+belongs in no panel — it is set by using the compare control, which is where a
+view preference should be set.
+
+But the wording needs the same treatment as everything else, because there are
+two vocabularies with a translation seam between them:
 
 ```
-DB      single | side-by-side | integrated     (historical tokens)
-Client  single | stacked      | merged         (Compare v3)
+DB      single | side-by-side | integrated     historical
+Client  single | stacked      | merged         Compare v3
 ```
 
-`viewTypeVocabulary.ts` is the only place the two meet, deliberately —
-*"Everything above the two seams uses client tokens only."* Persisted
-`integrated` rows coerce to stacked, so no migration was needed and old data
-did not change meaning.
+`viewTypeVocabulary.ts` exists solely to map one to the other, and its comment
+says persisted `integrated` rows *"keep coercing to the plain stacked view …
+so no migration is needed and old data does not change meaning."*
 
-**It belongs in no panel.** It is set by using the compare control, which is
-where a view preference should be set.
+**Checked what is actually stored:**
+
+```
+side-by-side   22 scenarios
+single          0
+integrated      0
+```
+
+**Every row holds one value, and the two the seam exists to translate are
+unused.** The migration that was avoided is now three lines:
+
+```sql
+update public.service_scenarios set view_type = 'stacked';   -- all 22
+alter table public.service_scenarios drop constraint <view_type_check>;
+alter table public.service_scenarios add check (view_type in ('single','stacked','merged'));
+```
+
+Then `viewTypeVocabulary.ts` and both seams delete. One vocabulary, the one
+the product speaks. Added to
+[plan 002](2026-08-20-002-refactor-database-vocabulary-plan.md).
 
 ## Stakeholders — the one genuinely missing concept
 
@@ -252,11 +301,53 @@ erDiagram
     business_model  }o--o| stakeholders : "partners = kind:'partner'"
 ```
 
-| `kind` | Who | Replaces |
+### The drift is already visible in 11 cells
+
+Only 11 cells carry `value_props`, and the vocabularies have **already**
+diverged:
+
+| Lane name | Audience written in `value_props` |
+|---|---|
+| `Student` | `student` — case differs |
+| `Regular Tutor` **and** `Tutor` | `tutor` — two lane names, one role |
+| `Lead Tutor` | `lead tutor` |
+| *(no lane)* | **`business`** — 10 mentions, the most common audience of all |
+
+Two things fall out of that:
+
+1. **`check-value-ledger` would already be wrong.** It looks for "an actor
+   present as a lane but never named as a value audience" — `Regular Tutor`
+   and `tutor` are the same person and the check cannot know it.
+2. **The most-cited audience is not a lane at all.** The organisation receives
+   value from 10 of 22 value entries and takes no action in the journey. A
+   registry has to hold it.
+
+### `recipient`, not `user` or `customer`
+
+Asked directly, so here is the reasoning rather than a preference:
+
+| Word | Problem |
+|---|---|
+| `customer` | implies paying. Students pay nothing; the canonical lane role `customer_actions` exists in the vocabulary and **no lane in this blueprint uses it** |
+| `user` | overloaded — a system user (auth) and a service user are different things, and this app has both |
+| `recipient` | accurate, and neutral about payment. Clinical, but it is a `kind` value read by developers, not a UI label |
+
+The **names** stay concrete and human — the lane is literally called
+`Student`. `kind` is the classification behind it, not what anyone reads.
+
+| `kind` | Who | Evidence in the data |
 |---|---|---|
-| `recipient` | who the service is for — student, applicant, family | the customer half of `value_props[].for` |
-| `internal` | who delivers it — tutor, lead tutor, supervisor | lane names, the employee question |
-| `partner` | orgs it depends on — Zoom, the university, payroll | `business_model.partners`, which becomes a **derived view** of this list rather than its own free-text field |
+| `recipient` | who the service is for | the `Student` lane |
+| `staff` | who delivers it | `Tutor`, `Regular Tutor`, `Lead Tutor`, `Supervisor` |
+| `partner` | external orgs it depends on | the `Partner Action: Teacher` lane — the model already prefixes it |
+| `organisation` | the provider itself, which receives value but acts nowhere | `business`, 10 mentions, no lane |
+
+**On personas:** a persona is a *characterisation* of a stakeholder, not a
+stakeholder — "a first-time tutor, anxious about tech" describes the `Tutor`
+role, it is not a second role. `slice.md:64` already draws this line:
+*"Personas, never participants."* So a persona is at most a field **on** a
+stakeholder, and not proposed now: nothing reads one yet, and adding an
+unused field is the mistake this whole brief is about.
 
 **What this buys, concretely:**
 
@@ -338,36 +429,27 @@ If `value_props` moves from cell to step, then step gains real fields, and
 the panel and the fan-out write pattern both arrive together. Until then a
 step panel would edit a name.
 
-## `content` → `preview`? No — but `content` is the wrong word
+## `content` stays `content` — decided
 
-Pushing back on the specific rename while agreeing with the instinct.
+Considered `preview` and `moment`. **Keeping `content`.**
 
-**"Preview" is misleading.** A preview is a truncated view of something
-longer. The cell's text is not a shortened version of anything — it is the
-canonical statement of what happens in that moment. Calling it a preview
-implies the real thing lives elsewhere.
+`preview` was rejected on the argument that a preview implies a fuller version
+lives elsewhere, and the cell's text is the canonical statement of what
+happens. `moment` was floated because `upsert_cell`'s spec uses the phrase
+"a journey moment" — but it reads as invented vocabulary for a field that
+already communicates, and it carries the widest blast radius of any rename in
+plan 002 for the smallest gain.
 
-**But `content` and `summary` are a genuinely confusing pair.** Both are
-short text on the same row, and neither name says which is which.
+**The pair is still imperfect** — `content` and `summary` are both short text
+on the same row and neither name says which is which. The panel resolves it
+with labels and hints rather than column names, which is where it belongs:
 
-`upsert_cell`'s own spec already supplies a better word:
+```
+Content   what happens in this moment
+Summary   the tl;dr — what the detail fields below add up to
+```
 
-> "content is REQUIRED and must be real journey text — **a journey moment**,
-> not a system capability."
-
-| Candidate | Verdict |
-|---|---|
-| `preview` | ❌ implies a fuller version exists elsewhere |
-| `label` | ❌ a label names a thing; this states an action |
-| `moment` | ✅ **the domain word**, already used in the spec and the playbooks |
-| `content` | ⚠️ workable, but says nothing |
-
-**Recommendation: `cells.moment`.** It pairs cleanly with `summary` — the
-moment is what happens, the summary is the tl;dr of the detail around it —
-and it is the word the codebase already reaches for when it has to explain
-the field. Folded into [plan 002](2026-08-20-002-refactor-database-vocabulary-plan.md)
-as the largest of the renames; call it if you disagree, it is the one with the
-widest blast radius.
+Recorded so it is not re-opened: this was considered and closed.
 
 ## Owner inheritance — display it, do not store it
 

@@ -75,39 +75,63 @@ other consideration on this list. It is written first here for that reason.
       new parameter — but each needs a test proving it
 - [ ] Replace `resolveFirstLifecycleId` with a real current-service resolver
 
-### Front end
+### Front end — I conflated two questions; separating them
 
-The overview is the interesting part. Today `ServiceOverviewView` renders the
-phases of the one service directly. With two, the honest question is whether a
-user is ever looking at **both at once**.
+The earlier draft said "two services are two workspaces, not two columns" and
+read as a recommendation against multi-service. It was not. It answered a
+narrower question — *should two services render side by side on one canvas?* —
+and the answer to that is still **no**: a blueprint is one continuous journey,
+and two would fight over the same camera, lane rail and compare model.
 
-**Recommendation: no.** A service blueprint is a single continuous journey —
-side-by-side services would fight for the same camera, the same lane rail, and
-the same compare model, all of which assume one spine. Two services are two
-workspaces, not two columns.
+**The separate question — how hard is multi-service — has a different answer,
+and you are right that the front end is the easy part.**
 
-So:
+| Layer | Work |
+|---|---|
+| Schema | **none.** Every root table already carries the service FK |
+| Front end | **small.** A switcher, and scoping reads to the active service. The scoping code partly exists (`useLifecyclePhases`, `useSlices`) — it just resolves to "the first one" |
+| RLS | **the actual work.** Nine tables at `using (true)` |
+| `search_blueprint` | one `filter_service` parameter, three call sites inside the function |
+
+I overweighted the front end. Corrected.
+
+### Two shapes, and one of them costs nothing today
+
+| | One app per service | One app, many services |
+|---|---|---|
+| Isolation | **total** — separate deployment, separate database | RLS, correctly, on nine tables |
+| Work to support | **none. It already works** | membership table, policy rewrite, switcher, `filter_service` |
+| Switching services | a different URL | in-app |
+| Cross-service anything | impossible | possible later |
+| Who it suits | a second team with their own service and no overlap | one org running several services |
+
+**Recommendation for v1: one app per service.** It is not a compromise — it
+is the strongest isolation available, it needs no code, and it is what the
+current architecture already does. A second team gets their own deployment and
+their own Supabase project, and nothing in this plan is needed.
+
+Build the in-app version when a single org runs **two services and wants one
+place to see both** — that is the requirement RLS is worth paying for. Until
+then the deployment boundary is doing the job a membership table would do,
+with less to get wrong.
+
+**If it is built**, the shape:
 
 ```
 ┌─ sidebar ─────────────┐
-│  ⌄ PLUS Tutoring      │  ← service switcher at the very top,
-│  ─────────────────    │    above Service. One service is active.
-│  Service              │
+│  ⌄ PLUS Tutoring      │  ← switcher, dropdown-menu.tsx
+│  ─────────────────    │
+│  Service              │  ← the service panel (plan 003)
 │  Phases               │
 │    Application        │
-│    Onboarding         │
 │    …                  │
 │  Slices               │
 └───────────────────────┘
 ```
 
-- [ ] Service switcher as the sidebar's first row — a `dropdown-menu.tsx`
-      (the inventory's primitive for provider/model pickers, same shape)
-- [ ] The **Service** row (from plan 003) sits under it, showing the *active*
-      service's business model
-- [ ] Switching services is a **navigation**, not a filter: clear the camera,
-      the panel, and the compare selection. A stale cell panel from Service A
-      floating over Service B is exactly the confusion this must avoid
+- [ ] Switching a service is a **navigation**, not a filter: clear the camera,
+      the panel and the compare selection. A stale cell panel from Service A
+      over Service B is the confusion to avoid
 - [ ] Empty state for a user with no membership
 
 ### Creating the second service — the step nobody has planned
