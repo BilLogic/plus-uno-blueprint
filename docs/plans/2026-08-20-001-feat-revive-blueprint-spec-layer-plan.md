@@ -1,0 +1,515 @@
+---
+title: "Revive the spec layer — the schema is finished, the surfaces never shipped"
+type: feat
+status: active
+date: 2026-08-20
+repos: uno-blueprint
+---
+
+# Revive the spec layer
+
+## Overview
+
+Ten spec columns exist across `cells`, `phases`, `layers` and `propositions`.
+Their migrations shipped. Their column-level grants shipped. **Four audit
+checks were written against them.** Almost none of them contain data, because
+with one exception nothing in the app can write to them.
+
+This is not a modelling problem or a missing-feature problem. It is a
+**finished back end with no front door**. The plan builds the doors.
+
+**Measured today:**
+
+| Column | Level | Filled |
+|---|---|---|
+| `cells.value_props` | cell | 11 / 955 |
+| `cells.function` | cell | 11 / 955 |
+| `cells.form` | cell | 8 / 955 |
+| `cells.owner` | cell | **0 / 955** |
+| `cells.perceived_owner` | cell | **0 / 955** |
+| `phases.business_impact` | phase | **0 / 6** |
+| `phases.operational_requirements` | phase | **0 / 6** |
+| `layers.kpis` | lane | **0 / 299** |
+| `layers.owner_team` | lane | **0 / 299** |
+| `layers.tools` | lane | **0 / 299** |
+| `propositions` (whole table) | service | **0 rows** |
+
+All 11 filled cells sit in **one path** — Warm-Up › Happy Path. Somebody
+piloted it and stopped.
+
+---
+
+## Problem statement
+
+### P1 — Half the audit is dark, and the audit says so out loud
+
+`references/audit-playbook.md:48-58` defines wave-2 skip rules. Against the
+numbers above:
+
+| Check | Prerequisite | Runs today? |
+|---|---|---|
+| `check-gap-sweep` | wave 1 | ✅ always |
+| `check-jargon-lint` | wave 1 | ✅ always |
+| `check-channel-conflict` | wave 1 | ✅ always |
+| `check-kpi-alignment` | `layers.kpis` | ❌ **never** — 0/299 |
+| `check-perceived-owner` | `cells.perceived_owner` | ❌ **never** — 0/955 |
+| `check-value-ledger` | `cells.value_props` | ⚠️ **1 of 22 scenarios** |
+| `check-fee-visibility` | money mention in scope (a CONTENT scan, not a column test — `audit-playbook.md:53-55`) | ⚠️ content-dependent |
+
+The playbook is careful about this: *"Every skip is reported with its reason;
+a silent skip reads as coverage that never happened."* So `/audit` is honest —
+it just has little to be honest about.
+
+### P2 — Phases and lanes have no write surface at all
+
+Verified: `business_impact`, `operational_requirements`, `owner_team`, `kpis`
+and `tools` appear in **zero** components and **zero** hooks.
+
+And the click gestures that would open one are already spoken for:
+
+- **Phases** — `CanvasPhaseSection.tsx:180` makes the entire section
+  `role="button"` with `onClick={handleSectionClick}` → `onNavigate()`, i.e.
+  *zoom into this phase*. There is no free gesture, unlike cells where
+  ⌘-click was unclaimed.
+- **Lanes** — two separate render paths. `ServiceBlueprintGrid.tsx:497-525`
+  renders the label as an inert `<span>` with **no onClick at all**.
+  `BlueprintLabelRail.tsx:189-201` makes it a button only in Design mode, and
+  that click means *select every cell in this lane* for bulk editing — a
+  different action entirely. Any lane-properties affordance must be net-new
+  **in both paths**.
+
+### P3 — The panel host does not exist above cell zoom
+
+`ServiceOverviewView.tsx:771-774`:
+
+```ts
+cellDetailEnabled = isBlueprintCellDetailEnabled() && isDetail &&
+  (focusedScenarioId !== null || soloScenarioId != null)
+```
+
+`BlueprintCellDetailProvider` is gated **off** unless a scenario is focused, and
+its `selection` type is cell-shaped (`BlueprintCellSelection`). A phase panel
+cannot be a new `surface` value on the existing context — it needs its own
+selection type and its own mount condition.
+
+### P4 — `propositions` is a coherent design nobody could reach
+
+From the `f65efcf` migration comments:
+
+> `propositions`: "One business-model record per lifecycle. **The three
+> validation questions live as evidence rows keyed understand|value|
+> usability.**"
+
+`evidence` enforces it with `check (num_nonnulls(cell_id,
+proposition_question_key) = 1)` — every evidence row attaches to *either* a
+cell *or* one of three validation questions.
+
+**Both existing evidence rows attach to cells. `proposition_question_key` has
+never been used.** `PropositionCard.tsx` (239 lines) was deleted on 2026-07-29
+in `5bdc685`, *"remove UI the review rejected"* — at a time when `canWrite` was
+"always false in practice, so remaining mutation UI never renders." It was cut
+as dead code, not as a bad idea, and nothing brought it back.
+
+### P5 — The name collision
+
+`cells.value_props` and the `propositions` table are one word apart and mean
+completely different things (one moment's value vs the whole service's
+economics). This has already caused confusion in review.
+
+---
+
+## Proposed solution
+
+### The one piece of good news: the database is done
+
+```sql
+-- supabase/migrations/20260729120000_derived_layer.sql:299,304
+grant update (owner_team, kpis, tools) on public.layers to authenticated;
+grant update (business_impact, operational_requirements) on public.phases to authenticated;
+```
+
+Verified live: RLS is on for both tables, every write policy is scoped to
+`authenticated`, and the column-level grants are exactly the fields these
+panels would edit. **No migration is needed for any of the new writes.**
+
+That matters because AGENTS.md:26 says *"Never widen RLS; the deployed site
+stays read-only."* Nothing here widens anything.
+
+*(Untidiness worth a separate ticket, not this one: `anon` also holds
+table-level INSERT/UPDATE grants on `phases` and `layers`. Not exploitable —
+RLS has no anon write policy, so every such write is denied — but the grants
+should match the intent.)*
+
+### Rename first
+
+`propositions` → **`business_model`**. Ends the collision permanently:
+"value props" and "business model" cannot be confused.
+
+```mermaid
+erDiagram
+    service_lifecycles ||--o| business_model : "one per service (was: propositions)"
+    business_model {
+        text pricing
+        text revenue_model
+        text funding
+        text partners
+        text delivery_cost
+    }
+    evidence }o--|| cells : "cell_id"
+    evidence }o--|| business_model : "proposition_question_key: understand|value|usability"
+    cells {
+        jsonb value_props "per-moment value, NOT the business model"
+        text function
+        text form
+        text owner
+        text perceived_owner
+    }
+    phases { text business_impact
+             text operational_requirements }
+    layers { jsonb kpis
+             text owner_team
+             jsonb tools }
+```
+
+The `evidence.proposition_question_key` column keeps its name — renaming it
+would break the CHECK constraint and buys nothing.
+
+---
+
+## Technical approach
+
+### Architecture: mirror the cell stack, do not copy the cell panel
+
+The cell stack is four layers, and only the bottom two generalize:
+
+| Layer | Cell implementation | Reusable? |
+|---|---|---|
+| Read hook | `useCellSpec.ts` over `useSupabaseQuery` | ✅ generic — a phase version is ~15 lines |
+| Mutation wrapper | `cellSpecMutations.ts` → `requireRowsWritten` + `recordChange` | ✅ both helpers are entity-agnostic |
+| Panel shell | `PanelDrawerShell`, `CellDetailErrorBoundary` | ⚠️ **private, unexported** in `BlueprintCellDetailPanel.tsx` — must be lifted out and parameterized |
+| Panel body | `BlueprintCellDetailPanel.tsx` | ❌ **write lean from scratch** |
+
+**Why the body must not be copied.** It carries `resolveCellDetailPictures`,
+`resolveTechCellDetailLabel/Text/Url`, `isVisualLayer`, Figma-URL resolution,
+tech-pill entries and `dependencyCandidates` — all keyed to the cell/layer/
+step/tech model. A phase is not in a layer and is not a tech item. Trimming a
+copy is more work than writing 120 clean lines.
+
+**Three tabs do not generalize, by schema and not by convention:**
+
+- **Evidence** — `evidence.cell_id` is the only entity link column. No
+  `phase_id` exists. Reusing the tab for phases needs a schema change; out of
+  scope.
+- **Resources** — reads `cells.links`. `phases` has no `links` column.
+- **Dependencies** — walks `cell_triggers`, which references `cells.id`.
+  Phases have `loops_to_phase_id`, a different singular relationship already
+  drawn as loop arrows.
+
+### The click-grammar problem, and the proposed answer
+
+Cells got ⌘-click because it was unclaimed. Phases and lanes have no free
+gesture. Proposal:
+
+- **Phase / scenario** — an explicit info affordance in `PhaseMenubarHeader.tsx`
+  and on the scenario title badge. Deliberately **not** a modifier-click carved
+  out of `handleSectionClick`: a hidden gesture on a surface whose obvious
+  gesture is "navigate" will not be found.
+- **Lane** — a small chevron beside the label, added to **both** render paths
+  (`ServiceBlueprintGrid.tsx` and `BlueprintLabelRail.tsx`), visually distinct
+  from the Design-mode selection button so "open properties" never reads as
+  "select every cell in this lane."
+
+### `CELL_PANEL_FOOTER_ID` collides
+
+It is a single global DOM id, and the Save/Cancel row portals into it. The
+phase and lane panels each need their own footer-host id. Today the two panels
+cannot be open at once, but a literal id collision is a trap left for whoever
+changes that.
+
+### The fill campaign has no provenance marker — and that is the real risk
+
+`origin` on `cells` / `phases` / `layers` is `check (origin in ('import','app'))`
+— it records *where a row came from*, not *who wrote its spec*. There is no
+way to mark a spec field as agent-authored.
+
+That matters for a campaign that would write specs for ~944 cells into a
+blueprint whose central discipline is *"a cell with zero evidence rows is an
+ASSUMPTION"* (`f65efcf` comment). Bulk agent-written `function` and
+`value_props` text would be indistinguishable from human-authored fact.
+
+**Proposed mitigation, in preference order:**
+
+1. **Scope the campaign to one scenario at a time**, each ending in human
+   review before the next starts. The session ledger already makes every
+   agent write revertible within its session.
+2. **Require the agent to cite** — a spec claim it cannot ground in the cell's
+   own content, its lane role, or an existing evidence row does not get
+   written. Absence is a finding, which is the blueprint's own doctrine.
+3. Only if 1–2 prove insufficient: add an `origin`-style marker column. Deferred
+   — a schema change to solve a process problem is the wrong order.
+
+### The pilot is the style guide
+
+The 11 Warm-Up cells are a real, quotable house style:
+
+```
+content:  "Circulates and quietly observes the students."
+function: "Keep the classroom side steady while students transition into
+           breakout rooms."
+form:     null
+props:    2 entries
+
+content:  "Enters the student's breakout room."
+function: "Open the tutoring moment: join the assigned breakout room within
+           the first minute so the student is not left waiting."
+form:     "Prompt and unhurried; camera on where policy allows."
+props:    2 entries
+```
+
+`function` is one purposive sentence. `form` is a tone note, filled on 8 of 11
+— **it is legitimately optional**, and the campaign must not manufacture it.
+`value_props` is consistently 2 entries.
+
+---
+
+## Implementation phases
+
+### Phase 1 — Rename (no behaviour change)
+
+- [ ] Migration: `alter table public.propositions rename to business_model`
+- [ ] Regenerate `src/types/database.ts`
+- [ ] Sweep `whatif-playbook.md:76`, `slice.md:63`, `get_proposition`
+- [ ] Fix `get_proposition`'s false-absence bug: `business_model` SELECT is
+      restricted, so an anonymous read returns empty **by policy**. Report
+      "not visible to this session" separately from "no row exists"
+
+**Done when:** no file uses the word "proposition" for the service-level record.
+
+### Phase 2 — Lift the shared panel pieces
+
+- [ ] Extract `PanelDrawerShell` and `CellDetailErrorBoundary` out of
+      `BlueprintCellDetailPanel.tsx` into `src/components/blueprint/panelShell.tsx`,
+      parameterized by footer-host id
+- [ ] Export `Field` from `CellPanelEditor.tsx:53-84`
+- [ ] Cell panel keeps working, byte-identical
+
+**Done when:** cell panel behaviour is unchanged and the shell has two callers' worth of parameters.
+
+### Phase 3 — Phase / scenario panel
+
+New files:
+- `src/hooks/usePhaseSpec.ts`
+- `src/lib/phaseSpecMutations.ts` — `updatePhaseSpec`, `recordChange('update_phase_spec', …)`
+- `src/components/blueprint/PhasePanelEditor.tsx` — two textareas, no draft mode
+- `src/components/blueprint/BlueprintPhaseDetailPanel.tsx`
+- `src/contexts/BlueprintPhaseDetailContext.tsx`
+
+Edits:
+- `revertChange.ts` — `case 'update_phase_spec'` (self-inverse, mirrors `update_cell_spec`)
+- `authoringSession.ts` — ledger kind + `describeChange` + the exhaustiveness map in `authoringSession.test.ts`
+- `PhaseMenubarHeader.tsx` — the new affordance
+- `ServiceOverviewView.tsx` — mount provider + panel, **not** gated on `focusedScenarioId`
+- `uiBridge.ts` — `agentOpenPhasePanel`, following the dispatch-real-click-then-poll idiom
+- `specs.ts` / `registry.ts` — `open_phase_panel`, `update_phase` (agent parity is the stated norm: *"a surface ships with its commands"*)
+
+### Phase 4 — Lane properties
+
+Same stack: `useLayerSpec.ts`, `layerSpecMutations.ts`, `LanePanelEditor.tsx`,
+`update_layer` tool + revert entry. Affordance added to **both** lane render
+paths. `kpis` and `tools` are jsonb string arrays — reuse the `OwnerTagSelect`
+multi-value idiom AGENTS.md:38-42 points at rather than hand-rolling.
+
+**Done when:** `check-kpi-alignment` stops reporting skipped on a scenario with lane KPIs entered.
+
+### Phase 5 — Business-model card + the three validation questions
+
+- [ ] Restore the card, adapted from `73d62fc:src/components/editor/PropositionCard.tsx`
+- [ ] `useBusinessModel` hook, `businessModelMutations.ts`, revert entry
+- [ ] `update_business_model` agent tool
+- [ ] **The interesting half:** an evidence surface for `understand` / `value` /
+      `usability`, writing `evidence.proposition_question_key`. The constraint
+      already exists; nothing has ever written it
+- [ ] `create_evidence` gains an optional `question_key` alternative to `cell_id`
+
+### Phase 6 — The fill campaign
+
+- [ ] Write `docs/reference/spec-house-style.md` from the 11 pilot cells
+- [ ] One Sonnet-5 subagent per scenario, one scenario at a time
+- [ ] Each agent: read the scenario via `get_blueprint`, read `list_evidence`
+      and `list_layers`, propose specs, **write only what it can ground**
+- [ ] Human review gate between scenarios
+- [ ] Re-run `/audit` after each and record which checks came alive
+
+**Order:** lanes first (299 rows, 3 fields, most mechanical, unblocks
+`check-kpi-alignment` fastest), then `perceived_owner`, then `value_props`.
+
+---
+
+## Alternatives considered
+
+**A. Move value props up to path/scenario/phase level.** Rejected on data. The
+higher levels are *emptier*, not fuller — `phases.business_impact` is 0/6 and
+`layers.kpis` is 0/299, while cells are the only level with anything in them.
+The level is not the problem; the missing UI is.
+
+**B. Extend `BlueprintCellDetailContext` with a third `surface` value.**
+Rejected. Its `selection` is `BlueprintCellSelection` and its provider is gated
+off above scenario zoom. A phase panel needs a different selection shape and a
+different mount condition — a shared context would carry two disjoint states.
+
+**C. Copy `BlueprintCellDetailPanel.tsx` and delete the cell-specific parts.**
+Rejected. Most of the file is tech-pill, picture and dependency resolution with
+no phase analog.
+
+**D. Drop the unused columns instead of building surfaces.** Rejected — four
+audit checks are written against them. Dropping the columns means deleting
+working check code.
+
+**E. Add an agent-provenance column now.** Deferred. Process controls (scoped
+scenarios, human gates, cite-or-skip) should be tried before a schema change.
+
+---
+
+## System-wide impact
+
+### Interaction graph
+
+A panel save calls a mutation wrapper → direct table write under the
+column-scoped grant → `requireRowsWritten` (PostgREST returns 200 with an empty
+array when zero rows matched, which is otherwise indistinguishable from
+success) → `recordChange` with a captured inverse → `invalidateQueries` so the
+grid repaints. Two levels out: the ledger row appears in the change sheet, and
+its revert is dispatched through `revertChange.ts` — which is why every new
+wrapper needs a matching `case` there or the write becomes the one thing in the
+session that cannot be taken back.
+
+### Error propagation
+
+`requireRowsWritten` throws when the entity vanished underneath the edit.
+`toAuthoringError` maps PostgREST errors. The panel renders the message
+inline. No new error classes.
+
+### State lifecycle risks
+
+The baseline is frozen at mount (`useState(baselineProp)`) so a concurrent
+revert cannot silently overwrite an in-progress edit. `aliveRef` prevents a
+late-resolving save from closing a panel the user has since moved away from.
+Both idioms must be carried into the new editors, not reinvented.
+
+### API surface parity
+
+| Surface | Needs |
+|---|---|
+| Canvas UI | new panels |
+| Canvas agent | `open_phase_panel`, `update_phase`, `update_layer`, `update_business_model` |
+| Eval harness `run.mjs` | a case per new read tool — the parity test added in `77411d0` now fails otherwise |
+| `cases.mjs` WRITES | every new write name |
+| `MOBILE_READ_TOOL_NAMES` | decide per tool; mobile is view-only |
+| uno-bot | none — it reads the blueprint, it does not author it |
+
+### Integration test scenarios
+
+1. Edit a phase's `business_impact`, revert from the change sheet, confirm the
+   prior value returns — proves the revert entry is wired.
+2. Enter lane KPIs on one scenario, run `/audit`, confirm
+   `check-kpi-alignment` **runs** there and still reports skipped elsewhere.
+3. Open a cell panel and a phase panel in sequence, confirm the footer portal
+   renders into the right host each time — catches the `CELL_PANEL_FOOTER_ID`
+   collision.
+4. Attach evidence to `question_key: 'value'`, confirm the CHECK accepts it and
+   the row is not counted as cell evidence.
+5. `agentOpenPhasePanel` on a phase while the canvas sits at overview zoom —
+   proves the new mount condition, since the cell provider is off there.
+
+---
+
+## Acceptance criteria
+
+### Functional
+
+- [ ] `propositions` is named `business_model` everywhere
+- [ ] A phase's `business_impact` and `operational_requirements` are editable
+- [ ] A lane's `kpis`, `owner_team`, `tools` are editable from **both** render paths
+- [ ] The business-model card renders and saves
+- [ ] Evidence can attach to `understand` / `value` / `usability`
+- [ ] Every new write has a revert entry and a ledger label
+- [ ] Every new tool has a `run.mjs` case
+
+### Non-functional
+
+- [ ] **No migration widens RLS or adds a grant** (AGENTS.md:26)
+- [ ] No component writes a table directly (AGENTS.md:29-32)
+- [ ] Every new primitive comes from `src/components/ui/` (AGENTS.md:38-42)
+- [ ] `npm run lint` stays at zero problems
+- [ ] `npm run build` passes — it is the real type-check; bare `npx tsc --noEmit` is a documented no-op trap (AGENTS.md:63-73)
+
+### Quality gates
+
+- [ ] `authoringSession.test.ts`'s exhaustiveness map covers every new ledger kind
+- [ ] `toolParity.test.mjs` stays green — all six checks
+- [ ] Fill campaign: human review between scenarios, no exceptions
+
+---
+
+## Success metrics
+
+| Metric | Now | Target |
+|---|---|---|
+| Audit checks that can run in any scenario | **3 / 7** | **7 / 7** |
+| `check-kpi-alignment` runs | never | every scenario with lane KPIs |
+| `check-perceived-owner` runs | never | every scenario |
+| Scenarios where `check-value-ledger` runs | 1 / 22 | 22 / 22 |
+| Spec-writable entity levels | 1 (cell) | 4 (cell, phase, lane, service) |
+| `evidence.proposition_question_key` rows | 0 | ≥ 3 |
+
+The headline is the first row. Everything else is how it gets there.
+
+---
+
+## Risks
+
+| Risk | Severity | Mitigation |
+|---|---|---|
+| Bulk agent-authored specs read as human-verified fact | **High** | Scenario-at-a-time, human gate, cite-or-skip; no marker column exists |
+| A new panel ships without a revert entry | High — silent | The ledger's exhaustiveness map is a compile error by design; keep it |
+| Footer-portal id collision | Medium | Distinct id per panel, test #3 |
+| Lane affordance mistaken for lane-select | Medium | Visually distinct, and the existing selection button only appears in Design mode |
+| Rename misses a doc reference | Low | Repo-wide word sweep, same method as `7530402` |
+| Phase panel mounts where the cell panel is gated off | Medium | Test #5 targets exactly this |
+
+---
+
+## Documentation plan
+
+- `docs/reference/spec-house-style.md` — **new**, from the 11 pilot cells
+- `docs/engineering/access-and-security.md` — `business_model` rename, note that no grants changed
+- `docs/design/components.md` — the panel-shell extraction
+- `src/lib/agent/skill/references/canvas-adapter.md` — new tools
+- `docs/INDEX.md` routing row 31 currently says *"Add a field to cells end-to-end"* — generalize to any entity, then `node scripts/generate-docs-index.mjs`
+
+---
+
+## Sources
+
+### Internal
+
+- Column grants: `supabase/migrations/20260729120000_derived_layer.sql:299,304`
+- Design intent: `f65efcf` migration comments (`propositions`, `evidence`, `findings`)
+- Panel state owner: `src/contexts/BlueprintCellDetailContext.tsx:61-65,152-157`
+- Panel mount gate: `src/components/editor/ServiceOverviewView.tsx:771-774`
+- Save path: `src/components/blueprint/CellPanelEditor.tsx:290-383`
+- Frozen baseline: `CellPanelEditor.tsx:232`
+- Footer portal: `CellPanelEditor.tsx:38`, `BlueprintCellDetailPanel.tsx:1505-1510`
+- Phase click: `src/components/editor/CanvasPhaseSection.tsx:153-156,180`
+- Lane labels: `ServiceBlueprintGrid.tsx:497-525` (inert), `BlueprintLabelRail.tsx:186-201` (selection)
+- Audit waves: `src/lib/agent/skill/references/audit-playbook.md:46-58`
+- Deleted card: `73d62fc` (added), `5bdc685` (removed)
+- Conventions: `AGENTS.md:26,29-32,38-42,50-61,63-73`
+
+### AI-era note
+
+Field counts, grants, RLS policies and row samples were read from the live
+production database, not inferred. UI architecture was mapped by two Sonnet 5
+subagents working on disjoint file sets. `docs/solutions/` does not exist in
+this repo. Every file:line above came from a file that was actually opened —
+but re-verify before editing, since this branch is moving.
