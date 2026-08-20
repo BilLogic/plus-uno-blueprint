@@ -48,6 +48,19 @@ function write(next: AgentSession[]) {
   listeners.forEach((listener) => listener())
 }
 
+/**
+ * The session list as it stands, for callers outside React — the agent's
+ * list_sessions tool reads THIS rather than querying `agent_sessions`
+ * directly, and that is a scoping decision, not a convenience one:
+ * `agent_sessions` carries no owner column and its RLS policy is a blanket
+ * "authenticated manage agent sessions", so a direct query would hand the
+ * agent every user's chat history. Reading the store the session switcher
+ * reads means the agent sees exactly what the user sees.
+ */
+export function agentSessionsSnapshot(): AgentSession[] {
+  return snapshot
+}
+
 export function useAgentSessions(): AgentSession[] {
   return useSyncExternalStore(
     (listener) => {

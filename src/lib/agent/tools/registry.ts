@@ -48,11 +48,33 @@ import {
   collectAgentUiContext,
 } from '@/lib/agent/uiBridge'
 import type { DeletableKind } from '@/lib/deletionSafety'
+import { addEvidence, type EvidenceKind } from '@/lib/evidenceMutations'
+import { resolveFirstLifecycleId } from '@/lib/lifecycle'
+
+/** Mirrors the DB CHECK constraint so a bad kind fails before the insert. */
+const EVIDENCE_KINDS = new Set<string>([
+  'interview',
+  'survey',
+  'analytics',
+  'doc',
+  'meeting',
+  'decision',
+  'observation',
+  'other',
+])
 import {
   getBlueprint,
   getCell,
   getCompareDiff,
   getDeletionImpact,
+  getEvidence,
+  getProposition,
+  getSession,
+  listCellLinks,
+  listEvidence,
+  listLayers,
+  listReferences,
+  listSessions,
   listOwnerTags,
   listScenarios,
   listSlices,
@@ -135,6 +157,28 @@ export async function dispatchTool(
       return listSlices(client)
     case 'list_owner_tags':
       return listOwnerTags(client)
+    case 'list_layers':
+      return listLayers(client)
+    case 'list_references':
+      return listReferences()
+    case 'list_cell_links':
+      return listCellLinks(client, s(args, 'cell_id'))
+    case 'list_evidence':
+      return listEvidence(client, s(args, 'cell_id'))
+    case 'get_evidence': {
+      const ids = Array.isArray(args.evidence_ids)
+        ? args.evidence_ids.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : []
+      return getEvidence(client, ids)
+    }
+    case 'get_proposition':
+      return getProposition(client)
+    case 'list_sessions':
+      return listSessions(agentSessionId)
+    case 'get_session':
+      return getSession(need(args, 'session_id'))
     case 'get_ui_state': {
       const context = collectAgentUiContext()
       return context || 'No UI state is being reported right now.'
@@ -481,6 +525,30 @@ export async function dispatchTool(
         )
         await replaceSliceFrames(client, sliceId, frames)
         return `Replaced the slice's frames (${frames.length}).`
+      }
+      case 'create_evidence': {
+        const kind = need(args, 'kind')
+        if (!EVIDENCE_KINDS.has(kind)) {
+          throw new Error(
+            `kind must be one of ${[...EVIDENCE_KINDS].join(', ')} — the DB CHECK constraint rejects anything else.`,
+          )
+        }
+        const cellId = need(args, 'cell_id')
+        // Same wrapper, same lifecycle resolution and the same documented
+        // cell_key placeholder the cell panel uses (CellEvidenceTab.tsx) —
+        // so an agent-added source lands in the session ledger and can be
+        // reverted exactly like a human-added one.
+        const id = await addEvidence(client, {
+          serviceLifecycleId: await resolveFirstLifecycleId(client),
+          cellId,
+          cellKey: cellId,
+          kind: kind as EvidenceKind,
+          title: need(args, 'title'),
+          ref: s(args, 'ref') ?? null,
+          excerpt: s(args, 'excerpt') ?? null,
+          note: s(args, 'note') ?? null,
+        })
+        return `Evidence added (${id}).`
       }
       case 'create_finding': {
         const source = args.source === 'whatif' ? 'whatif' : 'audit'

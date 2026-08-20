@@ -13,6 +13,7 @@ const WRITES = new Set([
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
   'create_slice', 'update_slice', 'replace_slice_frames',
+  'create_evidence',
   'create_finding', 'update_finding',
 ])
 

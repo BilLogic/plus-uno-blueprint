@@ -60,6 +60,14 @@ const str = (description: string) => ({ type: 'string', description })
  */
 export const MOBILE_READ_TOOL_NAMES = new Set([
   'get_reference',
+  'list_references',
+  'list_layers',
+  'list_cell_links',
+  'list_evidence',
+  'get_evidence',
+  'get_proposition',
+  'list_sessions',
+  'get_session',
   'list_scenarios',
   'get_blueprint',
   'compare_blueprint',
@@ -94,6 +102,7 @@ export const WRITE_TOOL_NAMES = new Set([
   'create_slice',
   'update_slice',
   'replace_slice_frames',
+  'create_evidence',
   'create_finding',
   'update_finding',
 ])
@@ -170,6 +179,78 @@ export const TOOL_SPECS: ToolSpec[] = [
     description:
       'The owner tag vocabulary in use. ALWAYS read before writing owner or perceived_owner — reuse an existing tag unless creating one deliberately.',
     parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_layers',
+    description:
+      'The lane vocabulary actually in use, with how many lanes carry each label and role. Read before create_layer — reuse a label unless the new lane is genuinely a different kind of thing. Distinct from get_reference("layer-roles"), which says what the roles MEAN rather than which ones this blueprint uses.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_references',
+    description:
+      'The rulebook references available to get_reference, live. Use when unsure what guidance exists.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_cell_links',
+    description:
+      'The dependency arrows: which cell sets off or needs which other cell. `trigger` is temporal ("sets off"), `needs` is functional. Pass cell_id to get just the edges touching one cell — the whole graph is large. These are the same arrows the user sees on the canvas, and the read half of create_cell_link.',
+    parameters: {
+      type: 'object',
+      properties: {
+        cell_id: str('Restrict to edges into or out of this cell; omit for the whole graph (capped at 200)'),
+      },
+    },
+  },
+  {
+    name: 'list_evidence',
+    description:
+      'Sources the blueprint\'s claims rest on — interviews, analytics, docs, decisions. Pass cell_id for one cell\'s evidence. Read before asserting that a mapped moment is GROUNDED: a cell with no evidence is a claim, not a finding.',
+    parameters: {
+      type: 'object',
+      properties: {
+        cell_id: str('Restrict to evidence attached to this cell; omit for the newest 100 across the blueprint'),
+      },
+    },
+  },
+  {
+    name: 'get_evidence',
+    description:
+      'Named evidence rows in full, excerpt and note included. Use after list_evidence to read the sources you intend to cite.',
+    parameters: {
+      type: 'object',
+      properties: {
+        evidence_ids: {
+          type: 'array',
+          description: 'Evidence ids from list_evidence',
+          items: { type: 'string' },
+        },
+      },
+      required: ['evidence_ids'],
+    },
+  },
+  {
+    name: 'get_proposition',
+    description:
+      'The service\'s business model: pricing, revenue model, funding, partners, delivery cost. One row per service — no id to pass. Read before answering anything about how the service sustains itself.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_sessions',
+    description:
+      'Past chat sessions on this blueprint — titles, dates, edit counts, ids. Use when the user refers to something discussed earlier ("like we said last time"). Shows exactly the sessions the session switcher shows.',
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_session',
+    description:
+      'One past session\'s transcript, oldest turn first. Read after list_sessions when you need what was actually said, not just that a session exists.',
+    parameters: {
+      type: 'object',
+      properties: { session_id: str('Session id from list_sessions') },
+      required: ['session_id'],
+    },
   },
   {
     name: 'get_ui_state',
@@ -569,6 +650,23 @@ export const TOOL_SPECS: ToolSpec[] = [
           description: 'Filter; default open',
         },
       },
+    },
+  },
+  {
+    name: 'create_evidence',
+    description:
+      'Attach a source to a cell — the record of WHY a mapped moment is believed. kind is one of interview, survey, analytics, doc, meeting, decision, observation, other. Write evidence when the user tells you where something came from; never invent a source, and never attach one to a cell you have not read.',
+    parameters: {
+      type: 'object',
+      properties: {
+        cell_id: str('Cell the source supports'),
+        kind: str('interview | survey | analytics | doc | meeting | decision | observation | other'),
+        title: str('What the source IS, e.g. "Tutor onboarding interview #4" — required'),
+        ref: str('Link or locator, e.g. a URL or doc name; omit if none'),
+        excerpt: str('The quoted passage that carries the claim; omit if none'),
+        note: str('Why this source supports the cell; omit if none'),
+      },
+      required: ['cell_id', 'kind', 'title'],
     },
   },
   {
