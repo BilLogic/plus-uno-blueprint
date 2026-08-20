@@ -67,7 +67,7 @@ report on.
 |---|---|---|---|
 | [002](2026-08-20-002-refactor-database-vocabulary-plan.md) | **Database vocabulary** — `layers`→`lanes`, `cell_triggers`→`cell_links`, `propositions`→`business_model`, `cells.description`→`summary` | active | The code already apologises for two of these in comments. Must land **after** `refactor/agent-tool-surface` merges |
 | [006](2026-08-20-006-design-data-model.md) | **The data model** — every level, every field, a definition and a reason for each. The ERD, the two grain corrections, and four open questions | active | Decides what is worth storing, before anything is built to edit it |
-| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, **scenario** (which hosts paths), plus a step hover card, on one lifted shell | active | The front door. Everything else waits on it |
+| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, **scenario** (which hosts paths), on one lifted shell — **no new columns** | active | The front door. Everything else waits on it |
 | [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, `filter_service`, then a switcher | **active** | Decided: one app, many services. RLS first; the switcher must not ship before the RPC filter |
 | [005](2026-08-20-005-feat-spec-fill-campaign-plan.md) | **Fill campaign** — scoped, cited, human-gated | blocked on 003 | Filling fields nobody can then see is how this content got lost the first time |
 
@@ -154,10 +154,14 @@ and the fix in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md).
   nothing in the app reads. `service_lifecycles` is the real root, and its own
   comment says `'End-to-end service journey'`. It **is** the service. Plan 002
   drops the dead table and renames the real one.
-- **The storyboard row is empty everywhere.** The `visual` lane has 147 cells
-  across 38 paths: **0 with content, 0 with a description, 0 with a picture.**
-  A reserved row rendered on every canvas holding nothing. It is why the step's
-  summary gets its own column instead of borrowing the storyboard cell's.
+- **The storyboard row is empty everywhere, and it is the step's surface.**
+  The `visual` lane exists in all 38 paths and its cells occupy **215
+  `(path, step)` grid positions** — 147 written, all blank; 68 not yet created,
+  which is true of any unwritten cell. A reserved row rendered on every canvas
+  holding nothing. **No `steps.summary` column is needed**: the step's
+  description goes in its storyboard cell, which already has the cell panel, a
+  ledger entry and a revert case. Rename the lane label `Visual` → `Storyboard`;
+  `layer_role` stays `visual`.
 - **`lanes.tools` has exactly one reader.** `check-kpi-alignment.md:10-12` uses
   it for *"whether the measured thing is even instrumented"* — nothing renders
   it and no other check reads it. Fill it only after `kpis`, and only where

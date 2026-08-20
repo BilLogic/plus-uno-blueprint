@@ -143,65 +143,65 @@ and lives in its parent's panel instead.
 > and **Author note**, and the note gets muted styling so the difference is
 > visible without reading the hint.
 
-### 🧭 STEP — 185 rows, and it should get a `summary`
+### 🧭 STEP — 185 rows, and the storyboard row is its surface
 
-A step is a moment in the journey: the column every lane's cell sits under.
-Asked whether the step could borrow the storyboard cell's text instead of
-owning a field. **Checked, and it cannot** — for two measured reasons.
+**Reversed.** The previous draft proposed a new `steps.summary` column. The
+consolidation instinct is better, and the measurement supports it rather than
+blocking it.
 
-**The storyboard row is completely empty.** The `visual` lane exists in 38
-paths and is rendered on every canvas:
+**What the storyboard row actually is.** The `visual` lane exists in **all 38
+paths**, and its cells occupy a real grid position — one per `(path, step)`:
 
 ```
-147  visual cells
-  0  with content
-  0  with description
-  0  with a picture
+215  (path, step) positions across the blueprint
+147  visual cells that exist    ← 0 content, 0 description, 0 picture
+ 68  positions with no cell yet ← created on first write, like any cell
 ```
 
-A whole reserved row, blank across the entire blueprint. So there is no
-existing text to reuse — only an empty slot that would have to be filled.
+Every position is reachable. Nothing is missing structurally — 68 cells simply
+have never been written, which is true of any empty cell and is what
+`upsert_cell` is for. My earlier "47 steps have no slot" was counting
+materialised rows, not positions. **The slot is there for every step.**
 
-**And the grain is wrong.** A visual cell is per **path**; a step is per
-**scenario**:
+**So step needs no column.** It already has a row of its own, rendered on every
+canvas, aligned under the step header, with a full editor behind it:
 
-| | |
+| A new `steps.summary` would need | The storyboard row already has |
 |---|---|
-| steps | **185** |
-| steps with a visual cell at all | 138 — **47 steps have no slot to write into** |
-| steps whose visual cell exists in more than one path | 9 — the same summary typed twice, free to diverge |
+| a migration + column grant | `content`, `description`, `picture`, `links` — granted |
+| a mutation wrapper + revert case + ledger kind | `upsert_cell`, its revert, its ledger label |
+| a new hover-card component with an inline editor | the **cell panel**, plain click |
+| a hover card to *read* it — hidden by default | **visible in the grid**, always |
 
-**Recommendation: `steps.summary`, a new column.** One row per step, so no
-fan-out, no drift, and it covers all 185 rather than 138.
+The last row is the real argument. A hover card hides step-level information
+behind a gesture; the storyboard row shows it in place, in journey order, next
+to the cells it summarises. That is strictly better, and it costs nothing.
+
+**What the field means, stated so the row stops being blank:**
+
+| Field on a storyboard cell | Means |
+|---|---|
+| `content` | **what this moment is**, across every lane — the one line that makes the column legible without reading five cells |
+| `picture` | the storyboard frame, when there is one |
+| `description` | 🟡 leave empty here. On a storyboard cell there is nothing for a tl;dr to summarise |
+
+**Per-path, and that is correct.** 215 positions for 185 steps means ~30 are a
+step appearing in more than one path. A storyboard is a per-path artefact by
+nature — the same step in the happy path and the no-show path can legitimately
+show a different frame and a different line. **No fan-out**, unlike lanes:
+lanes fan out because `remove_lane` already keys on `(scenario, name)` and the
+database treats them as one thing. Nothing treats two paths' storyboard cells
+as one thing, so nothing should.
+
+**One product change to make the row mean this:** the lane is named `Visual`,
+which describes a medium, not a job. Rename the label to **Storyboard** —
+`layer_role` stays `visual` (it is the semantic key and renaming it would break
+every import). Plan 002 carries the label change.
 
 | Field | Definition | Why it exists | Not this |
 |---|---|---|---|
-| `name` | the moment — "Confirm the booking" | the column header | — |
-| `summary` **(new)** | **what this moment is, across every lane** — the one sentence that makes the column legible without reading five cells | a step is the only level a reader scans horizontally and has nothing to read. It is also the honest home for `value_props` if that question resolves step-ward | any single lane's action — that is a cell |
-
-**The storyboard cell keeps its own job.** `content` on a visual cell is a
-*frame caption* and `picture` is the frame — that is the storyboard, not the
-step's summary. Both surface in the same hover card, and neither pretends to be
-the other:
-
-```
-┌─ step header hover ──────────────────┐
-│  Confirm the booking                 │  name
-│  The student picks a slot and the    │  steps.summary
-│  system holds it for 10 minutes.     │
-│  ┌──────────┐                        │
-│  │ [frame]  │  storyboard, if the    │  visual cell picture + content,
-│  └──────────┘  visual cell has one   │  shown only when present
-└──────────────────────────────────────┘
-```
-
-**Correction to an earlier claim in this document:** it said a step "is already
-a `(scenario, name)` concept represented by many `path_steps` rows" and
-therefore shares the lane's grain problem. **Wrong.** `steps` has
-`service_scenario_id` and one row per step; `path_steps` only carries
-`column_position`. Step identity is the row id. There is no fan-out write and
-no grain problem — which is exactly why `steps.summary` is cheap and
-`lanes.owner_team` is not.
+| `steps.name` | the moment — "Confirm the booking" | the column header | — |
+| *(no other column)* | the step's description lives in its storyboard cell | reuse over a new column | a `steps.summary` — considered and rejected above |
 
 ### 🧭 LANE — 299 rows, 166 logical, 12 names
 
@@ -302,9 +302,6 @@ erDiagram
         text path_type "the kind of route"
         text summary   "WHEN this route applies"
         text note      "author aside — not fact"
-    }
-    steps {
-        text summary "what this moment is, across every lane — NEW"
     }
     lanes {
         text lane_role  "semantic key, never inferred from name"
@@ -534,22 +531,19 @@ tooltips name a control, they do not hold prose.
   selectable, can hold a control.
 - **Panel** — anything with more than one editable field.
 
-## Should step get a panel like lane? — no, a hover card
+## Should step get a panel like lane? — no, and now it needs no hover card either
 
-**Resolved, and the reason changed.** The earlier answer was "no, because a
-step has the same grain problem lanes do." **That was wrong** — `steps` has one
-row per step keyed on `service_scenario_id`; `path_steps` only positions it.
-Step identity is clean.
+`steps` owns exactly one column: `name`. Everything a reader wants about a step
+is in its **storyboard cell**, which already has the cell panel.
 
-The real answer is **volume**: a step owns two fields. A drawer for two fields
-is the same mistake the scenario panel only avoids by adopting 38 paths, and a
-step has no orphan children to adopt. So:
-
-| | |
+| Want | Surface |
 |---|---|
-| Reading a step | hover the column header — name, summary, storyboard frame |
-| Editing `summary` | inline in that hover card, the one control it holds |
-| A panel | **only if `value_props` moves to the step.** Then it has real fields, and it inherits the lane's `ⓘ` pattern |
+| Read what a step is | the storyboard row, visible in the grid |
+| Edit it | plain click on that cell — the cell panel |
+| Rename the step | inline on the column header, as today |
+
+**Escalation path, recorded:** if `value_props` moves from cell to step, `steps`
+gains real columns and inherits the lane's `ⓘ` + panel treatment. Only then.
 
 ## `content` stays `content` — decided
 
