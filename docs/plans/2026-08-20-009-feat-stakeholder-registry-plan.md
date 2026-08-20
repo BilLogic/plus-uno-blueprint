@@ -346,7 +346,7 @@ worse than the free text it replaced.
 ## Sources
 
 - `src/lib/agent/skill/references/check-value-ledger.md:16-18` — the cross-check
-- `src/lib/agent/skill/references/layer-roles.md` — the structural roles, and
+- `src/lib/agent/skill/references/lane-roles.md` — the structural roles, and
   *"Never infer semantics from the display name"*
 - `plus-uno · agents/uno-bot/src/integrations/blueprint.ts:1029-1052` —
   `fetchSlices` and its documented history of a silently-empty read

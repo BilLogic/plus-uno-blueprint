@@ -11,11 +11,11 @@ export type BlueprintPath = {
   path_type: PathType
 }
 
-export type BlueprintLayer = {
+export type BlueprintLane = {
   id: string
   /** Display label — free-form, any language. */
   name: string
-  /** Semantic role key (`layers.layer_role`); null/absent = generic swimlane. */
+  /** Semantic role key (`lanes.lane_role`); null/absent = generic swimlane. */
   role?: string | null
   row_position: number
 }
@@ -41,7 +41,7 @@ export type CellLink = {
 
 export type BlueprintCell = {
   id: string
-  layer_id: string
+  lane_id: string
   step_id: string
   /** Cell Label — primary text shown in the blueprint grid. */
   content: string
@@ -75,7 +75,7 @@ export type BlueprintCellDependency = {
 
 export type BlueprintData = {
   path: BlueprintPath
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   steps: BlueprintStep[]
   cells: BlueprintCell[]
   triggers: BlueprintCellDependency[]

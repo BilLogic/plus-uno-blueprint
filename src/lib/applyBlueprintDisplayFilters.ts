@@ -11,19 +11,19 @@ function filterHiddenVisualLayers(
   }
 
   const hiddenLayerIds = new Set(
-    data.layers
-      .filter((layer) => shouldUseVisualContent(layer))
-      .map((layer) => layer.id),
+    data.lanes
+      .filter((lane) => shouldUseVisualContent(lane))
+      .map((lane) => lane.id),
   )
 
   if (hiddenLayerIds.size === 0) {
     return data
   }
 
-  const cells = data.cells.filter((cell) => !hiddenLayerIds.has(cell.layer_id))
+  const cells = data.cells.filter((cell) => !hiddenLayerIds.has(cell.lane_id))
   const hiddenCellIds = new Set(
     data.cells
-      .filter((cell) => hiddenLayerIds.has(cell.layer_id))
+      .filter((cell) => hiddenLayerIds.has(cell.lane_id))
       .map((cell) => cell.id),
   )
   const triggers = data.triggers.filter(
@@ -34,7 +34,7 @@ function filterHiddenVisualLayers(
 
   return {
     ...data,
-    layers: data.layers.filter((layer) => !hiddenLayerIds.has(layer.id)),
+    lanes: data.lanes.filter((lane) => !hiddenLayerIds.has(lane.id)),
     cells,
     triggers,
   }

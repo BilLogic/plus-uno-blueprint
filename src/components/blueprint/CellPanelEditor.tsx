@@ -40,9 +40,9 @@ export const CELL_PANEL_FOOTER_ID = 'cell-panel-editor-footer'
 /** Where a not-yet-created cell would go — the draft the editor writes on Save. */
 export type DraftCellTarget = {
   pathId: string
-  layerId: string
+  laneId: string
   stepId: string
-  layerName: string
+  laneName: string
   stepName: string
   stepIndex: number
   scenarioName?: string
@@ -109,7 +109,7 @@ type FormState = {
 export function CellPanelEditor({
   cellId,
   draft,
-  layerName,
+  laneName,
   fallbackDescription = '',
   onDone,
 }: {
@@ -117,7 +117,7 @@ export function CellPanelEditor({
   cellId: string | null
   draft?: DraftCellTarget
   /** Selects narrative-copy versus technology-label guidance. */
-  layerName?: string
+  laneName?: string
   /**
    * What the panel displays as this cell's description when the column is
    * empty (tech cells keep prose in `links`). Seeded into the field so the
@@ -166,7 +166,7 @@ export function CellPanelEditor({
         key={cellId}
         cellId={cellId}
         draft={undefined}
-        layerName={layerName}
+        laneName={laneName}
         baseline={baseline}
         seededDescription={content.summary ?? fallbackDescription}
         onDone={onDone}
@@ -177,10 +177,10 @@ export function CellPanelEditor({
   if (!draft) return null
   return (
     <CellPanelEditorForm
-      key={`${draft.layerId}:${draft.stepId}`}
+      key={`${draft.laneId}:${draft.stepId}`}
       cellId={null}
       draft={draft}
-      layerName={layerName ?? draft.layerName}
+      laneName={laneName ?? draft.laneName}
       baseline={{
         text: '',
         description: '',
@@ -199,14 +199,14 @@ export function CellPanelEditor({
 function CellPanelEditorForm({
   cellId,
   draft,
-  layerName,
+  laneName,
   baseline: baselineProp,
   seededDescription,
   onDone,
 }: {
   cellId: string | null
   draft: DraftCellTarget | undefined
-  layerName: string | undefined
+  laneName: string | undefined
   baseline: FormState
   seededDescription: string
   onDone: () => void
@@ -259,7 +259,7 @@ function CellPanelEditorForm({
 
   const blocked = !form.text.trim()
   const isTechCell =
-    layerName === 'Front Stage Tech' || layerName === 'Back Stage Tech'
+    laneName === 'Front Stage Tech' || laneName === 'Back Stage Tech'
   const techItems = isTechCell ? parseCellContentItems(form.text) : []
   const longestTechItem = techItems.reduce(
     (longest, item) => Math.max(longest, item.length),
@@ -298,7 +298,7 @@ function CellPanelEditorForm({
         // The draft becomes real here and only here. Cancel never writes.
         targetId = await upsertCell(client, {
           pathId: draft!.pathId,
-          layerId: draft!.layerId,
+          laneId: draft!.laneId,
           stepId: draft!.stepId,
           content: form.text.trim(),
         })

@@ -30,10 +30,10 @@ where source_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-00000000080d';
 
-delete from public.layers
+delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-00000000080d';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   ('a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-00000000080d', 'Visual', 0),
   ('a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-00000000080d', 'Partner Action: Teacher', 1),
@@ -88,7 +88,7 @@ or target_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-00000000080d';
 
-insert into public.cells (id, path_id, layer_id, step_id, content, links, description)
+insert into public.cells (id, path_id, lane_id, step_id, content, links, description)
 values
   ('a0000000-0000-4000-8000-0000001b0110', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000975', '', '[]'::jsonb, null),
   ('a0000000-0000-4000-8000-0000001b0210', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000976', '', '[]'::jsonb, null),
@@ -149,7 +149,7 @@ values
   )
 on conflict (id) do update set
   path_id = excluded.path_id,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id,
   content = excluded.content,
   links = excluded.links,

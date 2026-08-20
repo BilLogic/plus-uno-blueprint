@@ -29,7 +29,7 @@ function makeBlueprint(
 ): BlueprintData {
   const laneNames =
     options.lanes ?? [...new Set(cells.map((cell) => cell.lane))]
-  const layers = laneNames.map((name, index) => ({
+  const lanes = laneNames.map((name, index) => ({
     id: `${pathId}-lane-${name}`,
     name,
     row_position: index,
@@ -42,7 +42,7 @@ function makeBlueprint(
   const stepIdByName = new Map(stepRows.map((step) => [step.name, step.id]))
   const blueprintCells: BlueprintCell[] = cells.map((cell) => ({
     id: cell.id ?? nextId(`${pathId}-cell`),
-    layer_id: `${pathId}-lane-${cell.lane}`,
+    lane_id: `${pathId}-lane-${cell.lane}`,
     step_id: stepIdByName.get(cell.step) ?? '',
     content: cell.content,
     picture: null,
@@ -57,7 +57,7 @@ function makeBlueprint(
       note: null,
       path_type: 'happy',
     },
-    layers,
+    lanes,
     steps: stepRows,
     cells: blueprintCells,
     triggers: (options.triggers ?? []).map((trigger, index) => ({
@@ -150,10 +150,10 @@ describe('buildCompareModel — alignment and verdicts', () => {
     ]
     const b = makeBlueprint('b', ['Check', 'Check'], [])
     b.cells = [
-      { ...a.cells[0], id: 'b-check-1', layer_id: 'b-lane-FS', step_id: b.steps[0].id, content: 'First check' },
-      { ...a.cells[0], id: 'b-check-2', layer_id: 'b-lane-FS', step_id: b.steps[1].id, content: 'Different second' },
+      { ...a.cells[0], id: 'b-check-1', lane_id: 'b-lane-FS', step_id: b.steps[0].id, content: 'First check' },
+      { ...a.cells[0], id: 'b-check-2', lane_id: 'b-lane-FS', step_id: b.steps[1].id, content: 'Different second' },
     ]
-    b.layers = [{ id: 'b-lane-FS', name: 'FS', row_position: 0 }]
+    b.lanes = [{ id: 'b-lane-FS', name: 'FS', row_position: 0 }]
 
     const model = buildCompareModel(pair(a, b))
     const verdicts = new Map(

@@ -32,7 +32,7 @@ import {
 } from '@/data/parallelSessionPartnerLead'
 import type { PathListItem } from '@/lib/pathSelection'
 import { itemsInSelectionOrder } from '@/lib/pathSelection'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 import type {
   IntegratedBlueprintCell,
   IntegratedBlueprintStep,
@@ -59,7 +59,7 @@ export function getComparePathArrowData(
     })),
     cells: cells.map((cell) => ({
       id: cell.id,
-      layer_id: cell.layer_id,
+      lane_id: cell.lane_id,
       step_id: cell.step_id,
       path_id: path.id,
       path_type: path.path_type,
@@ -149,7 +149,7 @@ export type CompareRowHeightSpec = {
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
   inLaneLoopCorridorAbove?: boolean
-  kind?: 'path' | 'layer' | 'interaction' | 'visibility' | 'internalInteraction'
+  kind?: 'path' | 'lane' | 'interaction' | 'visibility' | 'internalInteraction'
   collapsed?: boolean
 }
 
@@ -157,8 +157,8 @@ export type BlueprintLabelRowSpec = {
   key: string
   label: string
   height: number
-  kind: 'path' | 'layer' | 'interaction' | 'visibility' | 'internalInteraction'
-  layer?: BlueprintLayer
+  kind: 'path' | 'lane' | 'interaction' | 'visibility' | 'internalInteraction'
+  lane?: BlueprintLane
   collapsed?: boolean
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
@@ -194,7 +194,7 @@ export function getSwimlaneBodyHeightFromRowSpecs(
   )
 }
 
-/** Grow layer row heights so the swimlane board matches a shared phase height. */
+/** Grow lane row heights so the swimlane board matches a shared phase height. */
 export function expandRowSpecsToSwimlaneBodyHeight<T extends CompareRowHeightSpec>(
   rows: T[],
   targetBodyHeight: number,
@@ -203,13 +203,13 @@ export function expandRowSpecsToSwimlaneBodyHeight<T extends CompareRowHeightSpe
   if (surplus <= 0) return rows
 
   const layerRowCount = rows.filter(
-    (row) => row.kind === 'layer' && !row.collapsed,
+    (row) => row.kind === 'lane' && !row.collapsed,
   ).length
   if (layerRowCount === 0) return rows
 
   const addPerLayer = surplus / layerRowCount
   return rows.map((row) => {
-    if (row.kind !== 'layer' || row.collapsed) return row
+    if (row.kind !== 'lane' || row.collapsed) return row
     return { ...row, height: row.height + addPerLayer }
   })
 }
@@ -249,53 +249,53 @@ export function buildSideBySideLabelRowSpecs(
   compact = false,
   collapsedLayerIds: ReadonlySet<string> = new Set(),
 ): BlueprintLabelRowSpec[] {
-  const layers = getCanonicalLayers(blueprints)
+  const lanes = getCanonicalLayers(blueprints)
   const specs: BlueprintLabelRowSpec[] = []
 
-  for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-    const layer = layers[layerIndex]
-    const collapsed = isBlueprintLayerCollapsed(layer.id, collapsedLayerIds)
+  for (let layerIndex = 0; layerIndex < lanes.length; layerIndex++) {
+    const lane = lanes[layerIndex]
+    const collapsed = isBlueprintLayerCollapsed(lane.id, collapsedLayerIds)
 
     specs.push({
-      key: layer.id,
-      kind: 'layer',
-      layer,
-      label: layer.name,
+      key: lane.id,
+      kind: 'lane',
+      lane,
+      label: lane.name,
       collapsed,
       height: collapsed
         ? COMPARE_LAYER_COLLAPSED_HEIGHT
-        : getSharedLayerRowHeight(layer, blueprints, compact),
+        : getSharedLayerRowHeight(lane, blueprints, compact),
       wrapCorridorAbove:
-        !collapsed && layerHasOverheadArrowCorridor(layer, blueprints),
+        !collapsed && layerHasOverheadArrowCorridor(lane, blueprints),
       wrapCorridorBelow:
         !collapsed &&
-        layerHasWrapCorridorBelow(layer, blueprints),
+        layerHasWrapCorridorBelow(lane, blueprints),
       inLaneLoopCorridorAbove:
-        !collapsed && layerHasInLaneLoopCorridor(layer, blueprints),
-      showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
+        !collapsed && layerHasInLaneLoopCorridor(lane, blueprints),
+      showDividerBelow: shouldShowLaneDividerAfter(lane, layerIndex, lanes),
     })
 
-    if (!collapsed && layerHasInteractionLine(layer)) {
+    if (!collapsed && layerHasInteractionLine(lane)) {
       specs.push({
-        key: `${layer.id}-interaction`,
+        key: `${lane.id}-interaction`,
         kind: 'interaction',
         label: INTERACTION_LINE_LABEL,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
       })
     }
 
-    if (!collapsed && layerHasVisibilityLine(layer, layers)) {
+    if (!collapsed && layerHasVisibilityLine(lane, lanes)) {
       specs.push({
-        key: `${layer.id}-visibility`,
+        key: `${lane.id}-visibility`,
         kind: 'visibility',
         label: VISIBILITY_LINE_LABEL,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
       })
     }
 
-    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
+    if (!collapsed && layerHasInternalInteractionLine(lane, lanes)) {
       specs.push({
-        key: `${layer.id}-internal-interaction`,
+        key: `${lane.id}-internal-interaction`,
         kind: 'internalInteraction',
         label: INTERNAL_INTERACTION_LINE_LABEL,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
@@ -391,27 +391,27 @@ export function getScenarioBlueprintPanelHeight(
   return COMPARE_MIN_PANEL_HEIGHT
 }
 
-export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLayer[] {
+export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLane[] {
   const source = blueprints[0]
   if (!source) return []
-  return [...source.layers].sort((a, b) => a.row_position - b.row_position)
+  return [...source.lanes].sort((a, b) => a.row_position - b.row_position)
 }
 
-/** Map a canonical swimlane row onto a path's layer ids (paths use different layer uuids). */
+/** Map a canonical swimlane row onto a path's lane ids (paths use different lane uuids). */
 export function resolveBlueprintLayer(
-  canonicalLayer: BlueprintLayer,
-  blueprint: Pick<BlueprintData, 'layers'>,
-): BlueprintLayer {
+  canonicalLayer: BlueprintLane,
+  blueprint: Pick<BlueprintData, 'lanes'>,
+): BlueprintLane {
   return (
-    blueprint.layers.find((layer) => layer.id === canonicalLayer.id) ??
-    blueprint.layers.find((layer) => layer.name === canonicalLayer.name) ??
-    blueprint.layers.find(
-      (layer) =>
-        layer.row_position === canonicalLayer.row_position &&
-        layer.name === canonicalLayer.name,
+    blueprint.lanes.find((lane) => lane.id === canonicalLayer.id) ??
+    blueprint.lanes.find((lane) => lane.name === canonicalLayer.name) ??
+    blueprint.lanes.find(
+      (lane) =>
+        lane.row_position === canonicalLayer.row_position &&
+        lane.name === canonicalLayer.name,
     ) ??
-    blueprint.layers.find(
-      (layer) => layer.row_position === canonicalLayer.row_position,
+    blueprint.lanes.find(
+      (lane) => lane.row_position === canonicalLayer.row_position,
     ) ??
     canonicalLayer
   )
@@ -422,18 +422,18 @@ export function resolveBlueprintLayer(
  * `BlueprintData` (a single path's blueprint).
  */
 type InLaneLoopLayoutSource = {
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   steps: ReadonlyArray<{ id: string; column_position: number }>
-  cells: ReadonlyArray<{ id: string; layer_id: string; step_id: string }>
+  cells: ReadonlyArray<{ id: string; lane_id: string; step_id: string }>
   triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
 }
 
 /**
- * Generic in-lane loop-corridor rule: a layer needs loop headroom at the top
+ * Generic in-lane loop-corridor rule: a lane needs loop headroom at the top
  * of its lane when it contains a trigger whose source and target cells are
- * BOTH in that layer with the source at a later column than the target — a
- * backward in-lane loop. Derived purely from blueprint data (cell layer
- * membership + step column positions), with no scenario or layer identity;
+ * BOTH in that lane with the source at a later column than the target — a
+ * backward in-lane loop. Derived purely from blueprint data (cell lane
+ * membership + step column positions), with no scenario or lane identity;
  * this replaces the side-by-side layout's dependence on the PLUS
  * `layerHasRegularTutorInLaneLoopCorridor` cell-ID shim (which arrow
  * rendering still uses for route styling).
@@ -445,10 +445,10 @@ type InLaneLoopLayoutSource = {
  * patterns and gets the pure data-driven rule.
  */
 export function blueprintLayerHasBackwardInLaneLoop(
-  canonicalLayer: BlueprintLayer,
+  canonicalLayer: BlueprintLane,
   source: InLaneLoopLayoutSource,
 ): boolean {
-  const layer = resolveBlueprintLayer(canonicalLayer, source)
+  const lane = resolveBlueprintLayer(canonicalLayer, source)
   const cellById = new Map(source.cells.map((cell) => [cell.id, cell]))
   const columnByStepId = new Map(
     source.steps.map((step) => [step.id, step.column_position]),
@@ -472,8 +472,8 @@ export function blueprintLayerHasBackwardInLaneLoop(
     const targetCell = cellById.get(trigger.target_cell_id)
     if (!sourceCell || !targetCell) return false
     if (
-      sourceCell.layer_id !== layer.id ||
-      targetCell.layer_id !== layer.id
+      sourceCell.lane_id !== lane.id ||
+      targetCell.lane_id !== lane.id
     ) {
       return false
     }
@@ -490,7 +490,7 @@ export function blueprintLayerHasBackwardInLaneLoop(
 
 /** Canonical row needs an in-lane loop corridor when any compared variant has one. */
 export function layerHasInLaneLoopCorridor(
-  canonicalLayer: BlueprintLayer,
+  canonicalLayer: BlueprintLane,
   sources: readonly InLaneLoopLayoutSource[],
 ): boolean {
   return sources.some((source) =>
@@ -530,7 +530,7 @@ export function getCompareCellShellPaddingY(compact = false): number {
 }
 
 export function getSharedLayerRowHeight(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   blueprints: BlueprintData[],
   compact = false,
 ): number {
@@ -538,11 +538,11 @@ export function getSharedLayerRowHeight(
   const shellPad = getCompareCellShellPaddingY(compact)
   const contentHeight = Math.max(
     ...blueprints.map((blueprint) =>
-      // Each path has its own layer uuids — measure against the path's own
-      // layer, or every path but the first is measured as empty and the row
+      // Each path has its own lane uuids — measure against the path's own
+      // lane, or every path but the first is measured as empty and the row
       // ends up shorter than what actually renders.
       getLayerRowMinHeight(
-        resolveBlueprintLayer(layer, blueprint),
+        resolveBlueprintLayer(lane, blueprint),
         blueprint,
         compact,
       ),
@@ -791,26 +791,26 @@ export function getMergedComparePanelHeight(
 }
 
 export function layerHasDiscoveryRailCorridorAbove(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   blueprints: BlueprintData[],
 ): boolean {
-  return layerHasOverheadArrowCorridor(layer, blueprints)
+  return layerHasOverheadArrowCorridor(lane, blueprints)
 }
 
-export function layerHasInteractionLine(layer: BlueprintLayer): boolean {
-  return shouldShowInteractionLineAfter(layer)
+export function layerHasInteractionLine(lane: BlueprintLane): boolean {
+  return shouldShowInteractionLineAfter(lane)
 }
 
 export function layerHasVisibilityLine(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
-  return shouldShowVisibilityLineAfter(layer, layers)
+  return shouldShowVisibilityLineAfter(lane, lanes)
 }
 
 export function layerHasInternalInteractionLine(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
-  return shouldShowInternalInteractionLineAfter(layer, layers)
+  return shouldShowInternalInteractionLineAfter(lane, lanes)
 }

@@ -17,10 +17,10 @@ on conflict (id) do update set
 
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811';
-delete from public.layers where path_id = 'a0000000-0000-4000-8000-000000000811';
+delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000811';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000811';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   ('a0000000-0000-4000-8000-0000000008a0', 'a0000000-0000-4000-8000-000000000811', 'Visual', 0),
   ('a0000000-0000-4000-8000-0000000008a1', 'a0000000-0000-4000-8000-000000000811', 'Partner Action: Teacher', 1),
@@ -62,7 +62,7 @@ values
   ('a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-000000000974', 11)
 on conflict (path_id, step_id) do update set column_position = excluded.column_position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-0000001f0110', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-0000000008a0', 'a0000000-0000-4000-8000-000000009a01', ''),
   ('a0000000-0000-4000-8000-0000001f0210', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-0000000008a0', 'a0000000-0000-4000-8000-000000009a02', ''),
@@ -125,7 +125,7 @@ values
   ('a0000000-0000-4000-8000-0000001f0709', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-0000000008a8', 'a0000000-0000-4000-8000-000000009a07', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-0000001f0809', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-0000000008a8', 'a0000000-0000-4000-8000-000000009a08', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-0000001f1109', 'a0000000-0000-4000-8000-000000000811', 'a0000000-0000-4000-8000-0000000008a8', 'a0000000-0000-4000-8000-000000000974', E'Dev Team\nDesign Team')
-on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
+on conflict (id) do update set path_id = excluded.path_id, lane_id = excluded.lane_id, step_id = excluded.step_id, content = excluded.content;
 
 insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values

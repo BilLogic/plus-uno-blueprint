@@ -2,7 +2,7 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import {
   BlueprintDividerRailLabelLine,
 } from '@/components/blueprint/BlueprintDividerTag'
-import { LayerCollapseToggle } from '@/components/blueprint/LayerCollapseToggle'
+import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
@@ -25,7 +25,7 @@ import {
   getBlueprintLabelTextColor,
 } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
-import type { BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintLane } from '@/types/blueprint'
 import type { CSSProperties } from 'react'
 
 export type { BlueprintLabelRowSpec }
@@ -166,19 +166,19 @@ import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cellsInLane } from '@/lib/canvasCellQuery'
 
-/** One row of the left label column — a layer name plus its collapse toggle. */
+/** One row of the left label column — a lane name plus its collapse toggle. */
 export function BlueprintLabelRow({
   row,
-  layers,
+  lanes,
   style,
   compact,
   onToggleLayer,
 }: {
   row: BlueprintLabelRowSpec
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   style?: CSSProperties
   compact?: boolean
-  onToggleLayer?: (layerId: string) => void
+  onToggleLayer?: (laneId: string) => void
 }) {
   // Hooks first: this component returns early for divider rows, and a hook
   // after that return would run in a different order between row kinds.
@@ -188,7 +188,7 @@ export function BlueprintLabelRow({
   // View, so reading the blueprint is untouched.
   const canvasMode = useCanvasModeValue()
   const pick = useCellPick()
-  const laneId = row.kind === 'layer' ? (row.layer?.id ?? null) : null
+  const laneId = row.kind === 'lane' ? (row.lane?.id ?? null) : null
   const laneSelectable =
     canvasMode === 'design' && pick !== null && laneId !== null
   const selectLane = (event: ReactMouseEvent<HTMLElement>) => {
@@ -218,8 +218,8 @@ export function BlueprintLabelRow({
     : 0
 
   const labelColor =
-    row.layer != null
-      ? getBlueprintLabelTextColor(getBlueprintLabelSection(row.layer, layers))
+    row.lane != null
+      ? getBlueprintLabelTextColor(getBlueprintLabelSection(row.lane, lanes))
       : BLUEPRINT_THEME.headerText
 
   return (
@@ -283,13 +283,13 @@ export function BlueprintLabelRow({
           </span>
         )}
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
-          row.kind === 'layer' &&
-          row.layer &&
+          row.kind === 'lane' &&
+          row.lane &&
           onToggleLayer && (
-            <LayerCollapseToggle
-              layerName={row.label}
+            <LaneCollapseToggle
+              laneName={row.label}
               collapsed={row.collapsed ?? false}
-              onToggle={() => onToggleLayer(row.layer!.id)}
+              onToggle={() => onToggleLayer(row.lane!.id)}
               className="size-6 shrink-0"
             />
           )}

@@ -24,7 +24,7 @@ import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
 import elicitationProtocol from '@/lib/agent/skill/references/elicitation-protocol.md?raw'
 import cocreatePlaybook from '@/lib/agent/skill/references/cocreate-playbook.md?raw'
 import laneVocabulary from '@/lib/agent/skill/references/lane-vocabulary.md?raw'
-import layerRoles from '@/lib/agent/skill/references/layer-roles.md?raw'
+import laneRoles from '@/lib/agent/skill/references/lane-roles.md?raw'
 import auditPlaybook from '@/lib/agent/skill/references/audit-playbook.md?raw'
 import whatifPlaybook from '@/lib/agent/skill/references/whatif-playbook.md?raw'
 import checkGapSweep from '@/lib/agent/skill/references/check-gap-sweep.md?raw'
@@ -52,7 +52,7 @@ type Client = SupabaseClient<Database>
  */
 const REFERENCES: Record<string, string> = {
   'canvas-adapter': canvasAdapter,
-  'layer-roles': layerRoles,
+  'lane-roles': laneRoles,
   'lane-vocabulary': laneVocabulary,
   'elicitation-protocol': elicitationProtocol,
   'cocreate-playbook': cocreatePlaybook,
@@ -95,7 +95,7 @@ export const GRANULARITY_LEVELS = [
   'scenario',
   'path',
   'step',
-  'layer',
+  'lane',
   'cell',
 ] as const
 
@@ -120,7 +120,7 @@ export async function listBlueprint(
     phase?: string
     scenario?: string
     pathType?: string
-    layerRole?: string
+    laneRole?: string
     limit?: number
   },
 ): Promise<string> {
@@ -139,7 +139,7 @@ export async function listBlueprint(
     filter_phase: options.phase,
     filter_scenario: options.scenario,
     filter_path_type: options.pathType,
-    filter_layer_role: options.layerRole,
+    filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
   return renderPortalRows(
@@ -155,7 +155,7 @@ type PortalRow = {
   id: string
   snippet: string | null
   description: string | null
-  layer: string | null
+  lane: string | null
   step: string | null
   scenario: string | null
   phase: string | null
@@ -187,7 +187,7 @@ function renderPortalRows(
       : `${total} of ${total}:`
 
   const lines = rows.map((row) => {
-    const where = [row.phase, row.scenario, row.path, row.step, row.layer]
+    const where = [row.phase, row.scenario, row.path, row.step, row.lane]
       .filter(Boolean)
       .join(' › ')
     // A structural row IS its breadcrumb, so the name is not repeated; a
@@ -223,7 +223,7 @@ export async function searchBlueprint(
     phase?: string
     scenario?: string
     pathType?: string
-    layerRole?: string
+    laneRole?: string
     limit?: number
   },
 ): Promise<string> {
@@ -234,7 +234,7 @@ export async function searchBlueprint(
     filter_phase: options.phase,
     filter_scenario: options.scenario,
     filter_path_type: options.pathType,
-    filter_layer_role: options.layerRole,
+    filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
   return renderPortalRows(
@@ -255,20 +255,20 @@ export function listReferences(): string {
 }
 
 /**
- * The layer vocabulary ACTUALLY in use, distinct from the layer-roles
+ * The lane vocabulary ACTUALLY in use, distinct from the lane-roles
  * reference doc, which says what the roles mean rather than which ones this
  * blueprint uses. Reuse a label before minting one — same discipline
  * list_owner_tags enforces for owner tags.
  */
 export async function listLayers(client: Client): Promise<string> {
   const { data, error } = await client
-    .from('layers')
-    .select('name, layer_role')
+    .from('lanes')
+    .select('name, lane_role')
     .order('row_position')
   if (error) throw new Error(error.message)
   const counts = new Map<string, number>()
   for (const row of data ?? []) {
-    const key = JSON.stringify([row.name, row.layer_role ?? null])
+    const key = JSON.stringify([row.name, row.lane_role ?? null])
     counts.set(key, (counts.get(key) ?? 0) + 1)
   }
   if (counts.size === 0) return 'No lanes defined yet.'
@@ -467,20 +467,20 @@ export async function getBlueprint(
   const sections: string[] = []
   for (const raw of rows) {
     const blueprint = normalizeBlueprint(raw)
-    const { path, steps, layers, cells, triggers } = blueprint
+    const { path, steps, lanes, cells, triggers } = blueprint
     const lines: string[] = [
       `Path "${path.name}" (${path.id}, type ${path.path_type})`,
       `Steps: ${steps
         .map((step) => `${step.column_position}. "${step.name}" (${step.id})`)
         .join(' | ')}`,
     ]
-    for (const layer of layers) {
+    for (const lane of lanes) {
       lines.push(
-        `Lane "${layer.name}" (${layer.id}${layer.role ? `, role ${layer.role}` : ''}):`,
+        `Lane "${lane.name}" (${lane.id}${lane.role ? `, role ${lane.role}` : ''}):`,
       )
       const byStep = new Map<string, typeof cells>()
       for (const cell of cells) {
-        if (cell.layer_id !== layer.id) continue
+        if (cell.lane_id !== lane.id) continue
         const list = byStep.get(cell.step_id) ?? []
         list.push(cell)
         byStep.set(cell.step_id, list)
@@ -610,7 +610,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
   const { data, error } = await client
     .from('cells')
     .select(
-      'id, content, summary, owner, perceived_owner, function, form, value_props, links, layer_id, step_id, slot_position',
+      'id, content, summary, owner, perceived_owner, function, form, value_props, links, lane_id, step_id, slot_position',
     )
     .eq('id', cellId)
     .maybeSingle()
@@ -627,7 +627,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
     // search_blueprint returns `links`; this did not, so the two tools
     // disagreed about what a cell is.
     ['links', data.links ? JSON.stringify(data.links) : null],
-    ['layer_id', data.layer_id],
+    ['lane_id', data.lane_id],
     ['step_id', data.step_id],
     ['slot_position', data.slot_position],
   ]

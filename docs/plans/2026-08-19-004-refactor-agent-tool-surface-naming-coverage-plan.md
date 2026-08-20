@@ -84,7 +84,7 @@ Measured by grepping `src/lib/agent/tools/registry.ts`:
 | `evidence` | **none** | **none** | UI has it (`src/hooks/useEvidence.ts`, `src/lib/evidenceMutations.ts`); agent is blind. Straight parity gap. |
 | `propositions` | **none** | **none** | Singleton per `service_lifecycle_id` — `pricing`, `funding`, `partners`, `revenue_model`, `delivery_cost`. Never readable. |
 | `cell_triggers` | **none** (see P4) | `set_cell_dependency` | **Write-without-read.** The agent sets edges it can never observe. |
-| `layers` | grid only | `add_lane` | No live list of the layer vocabulary in use. `read_reference('layer-roles')` is a static doc, not current data. |
+| `layers` | grid only | `add_lane` | No live list of the layer vocabulary in use. `read_reference('lane-roles')` is a static doc, not current data. |
 | references | — | — | `REFERENCE_NAMES` is interpolated into `read_reference`'s *description string* (`specs.ts:68`) — a static enumeration hiding in prose. |
 | `agent_sessions` | `get_change_history` (this browser session only) | — | The persisted chat history across sessions is unreachable. |
 

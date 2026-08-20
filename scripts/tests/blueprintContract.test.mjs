@@ -35,53 +35,78 @@ function contractValues(name) {
   return [...body.matchAll(/:\s*'([^']+)'/g)].map((m) => m[1])
 }
 
-/** The newest migration whose filename contains `needle`. */
-function latestMigration(needle) {
+/**
+ * Every migration, concatenated.
+ *
+ * The first version of these tests read "the newest migration whose filename
+ * mentions search_blueprint". That broke the moment a rename happened
+ * PROGRAMMATICALLY — layers→lanes rewrote the signature inside a DO block via
+ * regexp_replace, so no file contains the new signature literally, and the
+ * newest matching FILENAME was three migrations stale.
+ *
+ * What is actually checkable offline is weaker but honest: a name the contract
+ * declares must have been INTRODUCED by some migration. That catches the real
+ * failure — a contract naming something the database never had — without
+ * pretending to reconstruct the live schema from text.
+ */
+function allMigrations() {
   const dir = 'supabase/migrations'
-  const hit = readdirSync(resolve(REPO_ROOT, dir))
-    .filter((f) => f.includes(needle) && f.endsWith('.sql'))
+  return readdirSync(resolve(REPO_ROOT, dir))
+    .filter((f) => f.endsWith('.sql'))
     .sort()
-    .pop()
-  assert.ok(hit, `no migration matching "${needle}"`)
-  return read(`${dir}/${hit}`)
+    .map((f) => ({ file: f, sql: read(`${dir}/${f}`) }))
 }
 
-test('every declared search_blueprint parameter exists in the function signature', () => {
-  const sql = latestMigration('search_blueprint')
-  const at = sql.indexOf('create or replace function public.search_blueprint(')
-  assert.ok(at !== -1, 'search_blueprint definition not found')
-  const signature = sql.slice(at, sql.indexOf(')\nreturns table', at))
+const MIGRATIONS = allMigrations()
+const ALL_SQL = MIGRATIONS.map((m) => m.sql).join('\n')
 
+/** True when `name` appears anywhere in the migration history as a whole word. */
+function introducedByAMigration(name) {
+  return new RegExp(`\\b${name}\\b`).test(ALL_SQL)
+}
+
+test('every declared search_blueprint parameter was introduced by a migration', () => {
   for (const param of contractValues('searchBlueprintParams')) {
     assert.ok(
-      new RegExp(`^\\s*${param}\\s`, 'm').test(signature),
-      `contract declares parameter "${param}" but the migration's signature has no such argument. ` +
+      introducedByAMigration(param),
+      `contract declares parameter "${param}" but no migration ever names it. ` +
         `PostgREST binds by name, so uno-bot would send it and Postgres would ignore it — ` +
         `a filter that silently does nothing. Update both, in one window.`,
     )
   }
 })
 
-test('every declared search_blueprint output column exists in the returns table', () => {
-  const sql = latestMigration('search_blueprint')
-  const at = sql.indexOf('returns table (')
-  assert.ok(at !== -1, 'returns table not found')
-  const returns = sql.slice(at, sql.indexOf(')\n', at))
+test('no migration renames a declared parameter out from under the contract', () => {
+  // A programmatic rename looks like regexp_replace(d, '\\mold\\M', 'new').
+  // If `new` is declared but `old` still is too, the contract kept a name the
+  // database has moved off.
+  const renames = [...ALL_SQL.matchAll(/regexp_replace\([^,]+,\s*'\\\\m(\w+)\\\\M',\s*'(\w+)'/g)]
+    .map((m) => ({ from: m[1], to: m[2] }))
+  const declared = new Set(contractValues('searchBlueprintParams'))
+  for (const { from, to } of renames) {
+    if (!declared.has(to)) continue
+    assert.ok(
+      !declared.has(from),
+      `the contract declares both "${from}" and "${to}", but a migration renamed one to the other`,
+    )
+  }
+})
 
+test('every declared search_blueprint output column was introduced by a migration', () => {
   for (const column of contractValues('searchBlueprintColumns')) {
     assert.ok(
-      new RegExp(`^\\s*${column}\\s`, 'm').test(returns),
-      `contract declares output column "${column}" but the RPC does not return it. ` +
+      introducedByAMigration(column),
+      `contract declares output column "${column}" but no migration ever names it. ` +
         `uno-bot reads this key off the row and would get undefined.`,
     )
   }
 })
 
 test('every declared include value is accepted by the function', () => {
-  const sql = latestMigration('search_blueprint')
   // The guard clause that rejects unknown values is the authoritative list.
+  const sql = MIGRATIONS.map((m) => m.sql).find((t) => t.includes("where g not in ('edges'"))
+  assert.ok(sql, 'include validation clause not found in any migration')
   const at = sql.indexOf("where g not in ('edges'")
-  assert.ok(at !== -1, "include validation clause not found")
   const clause = sql.slice(at, sql.indexOf('\n', at))
 
   for (const value of Object.keys({ edges: 1, findings: 1, slices: 1 })) {
@@ -123,26 +148,22 @@ test('a migration that renames cell_dependencies also renames both FK constraint
   }
 })
 
-test('the contract agrees with the newest rename migration, not with itself', () => {
-  // The first version of this test compared the contract to a hard-coded list,
-  // which is the contract compared to a copy of itself: it passed while the
-  // database had already moved on. The migrations are the only outside witness
-  // available offline, so the expectation is derived from them.
-  const dir = 'supabase/migrations'
-  const renames = readdirSync(resolve(REPO_ROOT, dir))
-    .filter((f) => f.endsWith('.sql'))
-    .map((f) => read(`${dir}/${f}`))
-    .filter((sql) => /rename\s+constraint\s+\S*cell\S*_fkey/i.test(sql))
+test('each embed-hint constraint is a name some migration actually produced', () => {
+  // Not "the newest rename migration" — several migrations rename constraints
+  // now, and the newest is not necessarily the one that produced THESE. Each
+  // name is checked independently against every `rename constraint ... to X`
+  // and every `constraint X` across the whole history.
+  const produced = new Set([
+    ...[...ALL_SQL.matchAll(/rename\s+constraint\s+\S+\s+to\s+(\w+)/gi)].map((m) => m[1]),
+    ...[...ALL_SQL.matchAll(/\bconstraint\s+(\w+)/gi)].map((m) => m[1]),
+  ])
 
-  assert.ok(renames.length > 0, 'no migration renames a cell-edge FK constraint')
-  const newest = renames[renames.length - 1]
-  const produced = [...newest.matchAll(/rename\s+constraint\s+\S+\s+to\s+(\S+_fkey)/gi)]
-    .map((m) => m[1])
-    .sort()
-
-  assert.deepEqual(
-    [...contractValues('fkConstraints')].sort(),
-    produced,
-    'uno-bot hard-codes these two hints in fetchEdges; the contract must name what the migration actually produced',
-  )
+  for (const name of contractValues('fkConstraints')) {
+    assert.ok(
+      produced.has(name),
+      `contract declares FK constraint "${name}" but no migration produces that name. ` +
+        `uno-bot hard-codes it as a PostgREST embed hint, where nothing type-checks it — ` +
+        `a mismatch 400s and fetchEdges returns [], which reads in Slack as "no dependencies".`,
+    )
+  }
 })

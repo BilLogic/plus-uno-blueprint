@@ -15,7 +15,7 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   (
     'a0000000-0000-4000-8000-000000000810',
@@ -104,7 +104,7 @@ values
 on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   -- Visual row
   ('a0000000-0000-4000-8000-000000090110', 'a0000000-0000-4000-8000-000000000702', 'a0000000-0000-4000-8000-000000000810', 'a0000000-0000-4000-8000-000000000731', ''),
@@ -138,7 +138,7 @@ values
   ('a0000000-0000-4000-8000-000000090506', 'a0000000-0000-4000-8000-000000000702', 'a0000000-0000-4000-8000-000000000806', 'a0000000-0000-4000-8000-000000000735', 'Email')
 on conflict (id) do update set
   content = excluded.content,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id;
 
 delete from public.cell_dependencies

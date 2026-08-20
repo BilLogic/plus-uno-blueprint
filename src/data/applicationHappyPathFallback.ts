@@ -162,14 +162,14 @@ const SAD_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -203,7 +203,7 @@ function buildApplicationDiscoveryFallback(
   const steps = getDiscoveryPathSteps(config)
   const finalStep = steps[steps.length - 1]!
 
-  const layers = [
+  const lanes = [
     { id: L.visual, name: 'Visual', row_position: 0 },
     { id: L.regular, name: 'Regular Tutor', row_position: 1 },
     { id: L.frontStageTech, name: 'Front Stage Tech', row_position: 2 },
@@ -538,7 +538,7 @@ function buildApplicationDiscoveryFallback(
       note: null,
       path_type: config.pathType,
     },
-    layers: [...layers],
+    lanes: [...lanes],
     steps: [...steps],
     cells,
     triggers,

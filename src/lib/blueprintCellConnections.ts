@@ -9,7 +9,7 @@ export type BlueprintCellConnectionKind = 'interaction' | 'connection'
 export type BlueprintCellConnection = {
   triggerId: string
   cellId: string
-  layerName: string
+  laneName: string
   layerRowPosition: number
   stepName: string
   stepIndex: number
@@ -36,8 +36,8 @@ function findCell(blueprint: BlueprintData, cellId: string): BlueprintCell | und
   return blueprint.cells.find((cell) => cell.id === resolvedId)
 }
 
-function resolveLayer(blueprint: BlueprintData, layerId: string) {
-  return blueprint.layers.find((layer) => layer.id === layerId)
+function resolveLayer(blueprint: BlueprintData, laneId: string) {
+  return blueprint.lanes.find((lane) => lane.id === laneId)
 }
 
 function resolveStepName(blueprint: BlueprintData, stepId: string): string {
@@ -66,16 +66,16 @@ function toConnection(
   const stepIndex = resolveStepIndex(blueprint, cell.step_id)
   if (stepIndex < 0) return null
 
-  const layer = resolveLayer(blueprint, cell.layer_id)
-  const layerName = layer?.name ?? 'Unknown layer'
-  const layerRowPosition = layer?.row_position ?? -1
-  const isTech = layer ? shouldUsePillCellContent(layer) : false
+  const lane = resolveLayer(blueprint, cell.lane_id)
+  const laneName = lane?.name ?? 'Unknown lane'
+  const layerRowPosition = lane?.row_position ?? -1
+  const isTech = lane ? shouldUsePillCellContent(lane) : false
   const techItems = isTech ? getTechPillItems(cell.content) : []
 
   return {
     triggerId: trigger.id,
     cellId,
-    layerName,
+    laneName,
     layerRowPosition,
     stepName: resolveStepName(blueprint, cell.step_id),
     stepIndex,
@@ -235,7 +235,7 @@ export function getSelectedCellLayerRowPosition(
 ): number {
   const cell = findCell(blueprint, cellId)
   if (!cell) return -1
-  return resolveLayer(blueprint, cell.layer_id)?.row_position ?? -1
+  return resolveLayer(blueprint, cell.lane_id)?.row_position ?? -1
 }
 
 function interactionDirectionFromRows(
@@ -288,15 +288,15 @@ export function buildBlueprintCellSelectionForId(
   const cell = findCell(blueprint, cellId)
   if (!cell) return null
 
-  const layer = blueprint.layers.find((entry) => entry.id === cell.layer_id)
+  const lane = blueprint.lanes.find((entry) => entry.id === cell.lane_id)
   const stepIndex = blueprint.steps.findIndex((entry) => entry.id === cell.step_id)
   const step = blueprint.steps[stepIndex]
-  if (!layer || !step || stepIndex < 0) return null
+  if (!lane || !step || stepIndex < 0) return null
 
   return buildBlueprintCellSelection({
     scenarioName,
     phaseName,
-    layerName: layer.name,
+    laneName: lane.name,
     stepId: step.id,
     stepName: step.name,
     stepIndex,

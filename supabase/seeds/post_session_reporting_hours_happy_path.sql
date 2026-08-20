@@ -24,10 +24,10 @@ where source_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-000000000812';
 
-delete from public.layers
+delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-000000000812';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   ('a0000000-0000-4000-8000-000000000920', 'a0000000-0000-4000-8000-000000000812', 'Visual', 0),
   ('a0000000-0000-4000-8000-000000000927', 'a0000000-0000-4000-8000-000000000812', 'Lead Tutor', 1),
@@ -62,7 +62,7 @@ values
 on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-0000001e0110', 'a0000000-0000-4000-8000-000000000812', 'a0000000-0000-4000-8000-000000000920', 'a0000000-0000-4000-8000-000000000992', ''),
   ('a0000000-0000-4000-8000-0000001e0102', 'a0000000-0000-4000-8000-000000000812', 'a0000000-0000-4000-8000-000000000927', 'a0000000-0000-4000-8000-000000000992', 'Report hours by week deadline.'),
@@ -77,7 +77,7 @@ values
   ('a0000000-0000-4000-8000-0000001e0308', 'a0000000-0000-4000-8000-000000000812', 'a0000000-0000-4000-8000-000000000925', 'a0000000-0000-4000-8000-000000000994', 'Workday')
 on conflict (id) do update set
   path_id = excluded.path_id,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id,
   content = excluded.content;
 

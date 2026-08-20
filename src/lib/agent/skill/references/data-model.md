@@ -23,7 +23,7 @@ and stable keys in place of UUIDs.
 ## Hierarchy
 
 ```
-service_lifecycles → phases → service_scenarios → paths → {layers, cells, cell_dependencies}
+service_lifecycles → phases → service_scenarios → paths → {lanes, cells, cell_dependencies}
                                                 → steps (scenario-scoped)
                                         paths ⇄ steps via path_steps (column order)
 ```
@@ -39,9 +39,9 @@ erDiagram
   service_scenarios ||--o{ steps : "has many"
   paths ||--o{ path_steps : "has many"
   steps ||--o{ path_steps : "has many"
-  paths ||--o{ layers : "has many"
+  paths ||--o{ lanes : "has many"
   paths ||--o{ cells : "has many"
-  layers ||--o{ cells : "has many"
+  lanes ||--o{ cells : "has many"
   steps ||--o{ cells : "has many"
   cells ||--o{ cell_dependencies : "source"
   cells ||--o{ cell_dependencies : "target"
@@ -52,8 +52,8 @@ erDiagram
   paths { uuid id PK  uuid service_scenario_id FK  text name  text summary "when this route applies — the condition that puts someone on it"  text note "the author's aside: open questions, provenance, working state"  text path_type "happy | unhappy | exception | alternative | named" }
   steps { uuid id PK  uuid service_scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
   path_steps { uuid path_id PK_FK  uuid step_id PK_FK  int column_position "unique per (path_id, column_position)" }
-  layers { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text layer_role "semantic role key; null = generic swimlane"  int row_position }
-  cells { uuid id PK  uuid path_id FK  uuid layer_id FK "unique (layer_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
+  lanes { uuid id PK  uuid path_id FK  text name "display label - free-form, any language"  text lane_role "semantic role key; null = generic swimlane"  int row_position }
+  cells { uuid id PK  uuid path_id FK  uuid lane_id FK "unique (lane_id, step_id)"  uuid step_id FK  text content "Cell Label - primary grid text"  text picture "optional image URL"  text summary "the tl;dr the detail fields add up to (renamed from description)"  jsonb links "array of {type, label, url?, description?, picture?, pictures?}" }
   cell_dependencies { uuid id PK  uuid source_cell_id FK "unique pair; source != target"  uuid target_cell_id FK  text kind "sets_off = makes the other happen, drawn | enables = must already be true, never drawn"  text label  text note }
 ```
 
@@ -67,8 +67,8 @@ erDiagram
 | `paths` | A journey variant within a scenario | `path_type` enum below; optional `note` |
 | `steps` | Scenario-scoped step columns, SHARED across paths | A step exists once per scenario; paths select/ordr via `path_steps` |
 | `path_steps` | Which steps a path uses and in what column order | `column_position` unique per path |
-| `layers` | Swimlanes, per PATH (each path carries its own layer rows) | `name` free-form any language; `layer_role` semantic key (see `references/layer-roles.md`) |
-| `cells` | Grid content at (layer × step) on a path | `unique (layer_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
+| `lanes` | Swimlanes, per PATH (each path carries its own layer rows) | `name` free-form any language; `lane_role` semantic key (see `references/lane-roles.md`) |
+| `cells` | Grid content at (layer × step) on a path | `unique (lane_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
 | `cell_dependencies` | Directed arrows cell → cell. `kind` is `sets_off` (this cell makes the other happen — drawn) or `enables` (the other must already be true — recorded, never drawn). Not inverses: "set off by" is `sets_off` read from the other end, and a precondition causes nothing | Unique pair, `source != target`, both cells must be on the same path |
 
 ## Enums
@@ -90,7 +90,7 @@ erDiagram
 
 The DB trigger `cells_validate_path_match` enforces, on every cell insert:
 
-1. `cells.path_id` must equal its layer's `layers.path_id`, and
+1. `cells.path_id` must equal its layer's `lanes.path_id`, and
 2. `(path_id, step_id)` must already exist in `path_steps`.
 
 A cell referencing a step the path never registered **aborts the import
@@ -100,7 +100,7 @@ before any adapter runs.
 ## ⚠ REQUIRED: import order
 
 ```
-paths → steps → path_steps → layers → cells → cell_dependencies
+paths → steps → path_steps → lanes → cells → cell_dependencies
 ```
 
 (with `service_lifecycles → phases → service_scenarios` before all of the
@@ -109,7 +109,7 @@ above). Any other order violates FKs or the integrity trigger.
 ## Re-import semantics
 
 Scenario-scoped **delete-and-reinsert in one transaction**: delete the
-scenario's paths/steps (FK cascades remove path_steps, layers, cells,
+scenario's paths/steps (FK cascades remove path_steps, lanes, cells,
 dependencies), then insert fresh rows in the order above. Never
 `on conflict do update` — rows removed from the IR must not survive as
 orphans. IDs are UUIDv5 from IR keys + locale (NFC-normalized), so identical
@@ -119,7 +119,7 @@ IR re-imports produce identical rows. See `references/adapter-contract.md`.
 
 All sibling order is explicit integers: `phases.order_position`,
 `service_scenarios.order_position`, `path_steps.column_position` (per path),
-`layers.row_position` (per path). The frontend sorts by these — gaps are
+`lanes.row_position` (per path). The frontend sorts by these — gaps are
 harmless, duplicates are not (validator checks).
 
 ## Working precedent
@@ -133,7 +133,7 @@ generators follow.
 
 The canvas deployment splits tech-lane touchpoints into multiple cells
 per (lane, step), ordered by `slot_position` (unique on
-`(layer_id, step_id, slot_position)`; rows predating the split carry no
+`(lane_id, step_id, slot_position)`; rows predating the split carry no
 value and read as slot 0). Deployments scaffolded from the plain
 template keep one cell per (lane, step). Tools and the IR never expose
 slot management directly — treat "the" cell of a slot as slot 0.

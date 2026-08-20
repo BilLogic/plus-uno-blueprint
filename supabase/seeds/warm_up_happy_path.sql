@@ -1,5 +1,5 @@
 -- Warm-Up Happy Path: Pre-Session → Warm-Up scenario
--- Stable keys (layer_id / step id) map to fixed UUIDs below.
+-- Stable keys (lane_id / step id) map to fixed UUIDs below.
 
 -- Path
 insert into public.paths (id, service_scenario_id, name, description, path_type)
@@ -15,8 +15,8 @@ on conflict (id) do update set
   description = excluded.description,
   path_type = excluded.path_type;
 
--- Layers (layer_id → row_position)
-insert into public.layers (id, path_id, name, row_position)
+-- Layers (lane_id → row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   (
     'a0000000-0000-4000-8000-000000000310',
@@ -143,7 +143,7 @@ on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
 -- Cells (step × layer); cell id suffix 04{step}{layer}
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   (
     'a0000000-0000-4000-8000-000000040110',

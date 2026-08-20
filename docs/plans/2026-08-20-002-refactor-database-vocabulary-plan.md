@@ -24,7 +24,7 @@ The test applied: **would a user recognise this word?** Not "is it defensible"
 
 | Table / column | Product says | Evidence |
 |---|---|---|
-| `layers` | **lane** | `layer-roles.md` has to teach the split; `BlueprintLabelRail.tsx:75` says "swim-lane grid row"; `remove_lane` is already named lane |
+| `layers` | **lane** | `lane-roles.md` has to teach the split; `BlueprintLabelRail.tsx:75` says "swim-lane grid row"; `remove_lane` is already named lane |
 | `layers.layer_role` | lane role | same |
 | `cells.layer_id` | lane | `upsert_cell`'s own spec says *"lane id from get_blueprint (parameter named layer_id **for historical reasons**)"* — the code apologises for it |
 | `cell_triggers` | **dependency** | stores `kind in ('trigger','needs')`, so the name covers **half its contents**. Target is `cell_dependencies` — see the correction below; an earlier draft said `cell_links`, which collides |

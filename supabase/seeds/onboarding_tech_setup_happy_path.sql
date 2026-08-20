@@ -24,10 +24,10 @@ where source_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-000000000800';
 
-delete from public.layers
+delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-000000000800';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   (
     'a0000000-0000-4000-8000-000000000818',
@@ -135,7 +135,7 @@ values
 on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   -- Visual row
   ('a0000000-0000-4000-8000-000000100110', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000818', 'a0000000-0000-4000-8000-000000000821', ''),
@@ -184,7 +184,7 @@ values
   ('a0000000-0000-4000-8000-000000100806', 'a0000000-0000-4000-8000-000000000800', 'a0000000-0000-4000-8000-000000000833', 'a0000000-0000-4000-8000-000000000829', E'Email\nPLUS App')
 on conflict (id) do update set
   content = excluded.content,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id;
 
 delete from public.cell_dependencies

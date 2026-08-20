@@ -95,19 +95,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular || layerId === L.lead
+    laneId === L.regular || laneId === L.lead
       ? mergeUrlLinks(metadata.links ?? [], REPORTING_HOURS_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -244,7 +244,7 @@ export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
     note: null,
     path_type: 'happy',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: REPORTING_HOURS_CELLS,
   triggers: REPORTING_HOURS_TRIGGERS,

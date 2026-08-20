@@ -294,7 +294,7 @@ already settled: labels+ids only, contents on request.
 
 ### 3.2 House rules to lift (source: plugin references/, verbatim where possible)
 
-From `layer-roles.md` / `lane-vocabulary.md`:
+From `lane-roles.md` / `lane-vocabulary.md`:
 - "Never infer semantics from the display name."
 - Actor vs system: "A person doing work is `*_actions`, not a `*_tech`
   pill." Keep tech lanes as pills; prose in a pill lane reads badly.
@@ -442,7 +442,7 @@ off on the deployed read-only site.
 ## Sources & references
 
 - **Domain rulebook**: BilLogic/agentic-service-blueprinting —
-  `skills/blueprint/SKILL.md`, `references/{layer-roles, lane-vocabulary,
+  `skills/blueprint/SKILL.md`, `references/{lane-roles, lane-vocabulary,
   elicitation-protocol, data-model}.md`, `agents/blueprint-reviewer.md`
 - **Earlier stab (concepts carried forward)**:
   [2026-07-31-003 inline agent chat](./2026-07-31-003-feat-inline-agent-chat-plan.md) —

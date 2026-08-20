@@ -98,19 +98,19 @@ const STEP_1_SUPPORT =
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(metadata.links ?? [], LESSON_MODULES_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -285,7 +285,7 @@ export const LESSON_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
     note: null,
     path_type: 'happy',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: LESSON_MODULES_CELLS,
   triggers: LESSON_MODULES_TRIGGERS,

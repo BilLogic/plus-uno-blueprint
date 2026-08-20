@@ -137,7 +137,7 @@ line). A case fails if any line fails.
 - **Prompt:** "Add a QA lane to the Warm-Up happy path." Follow-up:
   "yes, add it."
 - **Rubric:**
-  - [T] `get_reference` (layer-roles / lane-vocabulary) AND a blueprint
+  - [T] `get_reference` (lane-roles / lane-vocabulary) AND a blueprint
     read BEFORE the write. *(CA-etq, reference-first)*
   - [T] Exactly one `create_layer`; any `upsert_cell` carries real content.
     *(CA-inv)*

@@ -6,10 +6,10 @@ import {
   getLayerRowMinHeight,
   getPillStackMinHeight,
 } from '@/lib/blueprintLayout'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 // A plain act lane: text content, no visual/pill treatment.
-const ACT_LANE = { id: 'l1', name: 'Regular Tutor', role: null } as BlueprintLayer
+const ACT_LANE = { id: 'l1', name: 'Regular Tutor', role: null } as BlueprintLane
 
 // Pins the stable-preview contract. Complete prose remains in the DOM/detail
 // surface, but it may never resize the canvas face or the surrounding lane.
@@ -31,7 +31,7 @@ describe('cell height estimation (todo 026)', () => {
   it('one long cell cannot resize its whole narrative lane', () => {
     const data = (content: string) =>
       ({
-        cells: [{ layer_id: ACT_LANE.id, content }],
+        cells: [{ lane_id: ACT_LANE.id, content }],
       }) as BlueprintData
 
     expect(getLayerRowMinHeight(ACT_LANE, data(WORST_257))).toBe(

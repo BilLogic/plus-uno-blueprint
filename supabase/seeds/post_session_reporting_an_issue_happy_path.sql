@@ -24,10 +24,10 @@ where source_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-00000000080f';
 
-delete from public.layers
+delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-00000000080f';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   ('a0000000-0000-4000-8000-000000000910', 'a0000000-0000-4000-8000-00000000080f', 'Visual', 0),
   ('a0000000-0000-4000-8000-000000000917', 'a0000000-0000-4000-8000-00000000080f', 'Lead Tutor', 1),
@@ -64,7 +64,7 @@ values
 on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-0000001d0110', 'a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000910', 'a0000000-0000-4000-8000-000000000988', ''),
   ('a0000000-0000-4000-8000-0000001d0102', 'a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000917', 'a0000000-0000-4000-8000-000000000988', 'Reach out to PLUS staff with any concerns.'),
@@ -81,7 +81,7 @@ values
   ('a0000000-0000-4000-8000-0000001d0406', 'a0000000-0000-4000-8000-00000000080f', 'a0000000-0000-4000-8000-000000000913', 'a0000000-0000-4000-8000-000000000993', 'Slack, Email, Zoom')
 on conflict (id) do update set
   path_id = excluded.path_id,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id,
   content = excluded.content;
 

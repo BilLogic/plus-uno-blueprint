@@ -2,7 +2,7 @@ import type {
   BlueprintCell,
   BlueprintCellDependency,
   BlueprintData,
-  BlueprintLayer,
+  BlueprintLane,
   BlueprintStep,
 } from '@/types/blueprint'
 import type { PathType, Json } from '@/types/database'
@@ -24,7 +24,7 @@ function normalizeDependencyKind(kind: string | null | undefined): 'sets_off' | 
 
 export type RawCell = {
   id: string
-  layer_id: string
+  lane_id: string
   step_id: string
   content: string
   picture?: string | null
@@ -38,13 +38,13 @@ type RawPathStep = {
   steps: { id: string; name: string } | null
 }
 
-export type RawLayer = {
+export type RawLane = {
   id: string
   name: string
   row_position: number
   /** Semantic role column as selected from the DB. */
-  layer_role?: string | null
-  /** Normalized shape (fallback data passes BlueprintLayer directly). */
+  lane_role?: string | null
+  /** Normalized shape (fallback data passes BlueprintLane directly). */
   role?: string | null
 }
 
@@ -54,7 +54,7 @@ export type RawPath = {
   summary?: string | null
   note?: string | null
   path_type: PathType
-  layers?: RawLayer[] | null
+  lanes?: RawLane[] | null
   /** @deprecated Legacy shape; use path_steps */
   steps?: BlueprintStep[] | null
   path_steps?: RawPathStep[] | null
@@ -104,13 +104,13 @@ function flattenTriggersFromCells(cells: RawCell[]): BlueprintCellDependency[] {
   return triggers
 }
 
-/** Collapse duplicate swim lanes that share a name (e.g. legacy + fallback layer IDs). */
+/** Collapse duplicate swim lanes that share a name (e.g. legacy + fallback lane IDs). */
 export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
-  const layersByName = new Map<string, BlueprintLayer[]>()
-  for (const layer of data.layers) {
-    const group = layersByName.get(layer.name) ?? []
-    group.push(layer)
-    layersByName.set(layer.name, group)
+  const layersByName = new Map<string, BlueprintLane[]>()
+  for (const lane of data.lanes) {
+    const group = layersByName.get(lane.name) ?? []
+    group.push(lane)
+    layersByName.set(lane.name, group)
   }
 
   const duplicateGroups = [...layersByName.values()].filter(
@@ -123,13 +123,13 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
   const cellCountByLayerId = new Map<string, number>()
   for (const cell of data.cells) {
     cellCountByLayerId.set(
-      cell.layer_id,
-      (cellCountByLayerId.get(cell.layer_id) ?? 0) + 1,
+      cell.lane_id,
+      (cellCountByLayerId.get(cell.lane_id) ?? 0) + 1,
     )
   }
 
   const layerIdRemap = new Map<string, string>()
-  const keptLayers: BlueprintLayer[] = []
+  const keptLayers: BlueprintLane[] = []
 
   for (const group of layersByName.values()) {
     if (group.length === 1) {
@@ -147,22 +147,22 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
 
     keptLayers.push({
       ...canonical,
-      row_position: Math.min(...group.map((layer) => layer.row_position)),
+      row_position: Math.min(...group.map((lane) => lane.row_position)),
     })
 
-    for (const layer of group) {
-      if (layer.id !== canonical.id) {
-        layerIdRemap.set(layer.id, canonical.id)
+    for (const lane of group) {
+      if (lane.id !== canonical.id) {
+        layerIdRemap.set(lane.id, canonical.id)
       }
     }
   }
 
   const cellByLayerStep = new Map<string, BlueprintCell>()
   for (const cell of data.cells) {
-    const layerId = layerIdRemap.get(cell.layer_id) ?? cell.layer_id
-    const key = `${layerId}:${cell.step_id}`
+    const laneId = layerIdRemap.get(cell.lane_id) ?? cell.lane_id
+    const key = `${laneId}:${cell.step_id}`
     const existing = cellByLayerStep.get(key)
-    const nextCell = { ...cell, layer_id: layerId }
+    const nextCell = { ...cell, lane_id: laneId }
 
     if (!existing) {
       cellByLayerStep.set(key, nextCell)
@@ -184,33 +184,33 @@ export function deduplicateBlueprintLayers(data: BlueprintData): BlueprintData {
 
   keptLayers.sort((a, b) => a.row_position - b.row_position)
 
-  return { ...data, layers: keptLayers, cells, triggers }
+  return { ...data, lanes: keptLayers, cells, triggers }
 }
 
 export function sortBlueprintLayers(data: BlueprintData): BlueprintData {
-  const layers = [...data.layers].sort(
+  const lanes = [...data.lanes].sort(
     (a, b) => a.row_position - b.row_position,
   )
-  const unchanged = layers.every(
-    (layer, index) => layer.id === data.layers[index]?.id,
+  const unchanged = lanes.every(
+    (lane, index) => lane.id === data.lanes[index]?.id,
   )
-  return unchanged ? data : { ...data, layers }
+  return unchanged ? data : { ...data, lanes }
 }
 
 export function normalizeBlueprint(raw: RawPath): BlueprintData {
-  const layers: BlueprintLayer[] = [...(raw.layers ?? [])]
+  const lanes: BlueprintLane[] = [...(raw.lanes ?? [])]
     .sort((a, b) => a.row_position - b.row_position)
-    .map((layer) => ({
-      id: layer.id,
-      name: layer.name,
-      role: layer.layer_role ?? layer.role ?? null,
-      row_position: layer.row_position,
+    .map((lane) => ({
+      id: lane.id,
+      name: lane.name,
+      role: lane.lane_role ?? lane.role ?? null,
+      row_position: lane.row_position,
     }))
   const steps = resolveSteps(raw)
   const rawCells = raw.cells ?? []
   const cells: BlueprintCell[] = rawCells.map((cell) => ({
     id: cell.id,
-    layer_id: cell.layer_id,
+    lane_id: cell.lane_id,
     step_id: cell.step_id,
     content: cell.content,
     picture: cell.picture ?? null,
@@ -235,7 +235,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       note: raw.note ?? null,
       path_type: raw.path_type,
     },
-    layers,
+    lanes,
     steps,
     cells,
     triggers,
@@ -253,7 +253,7 @@ export function buildCellLookup(
 ): Map<string, BlueprintCell[]> {
   const map = new Map<string, BlueprintCell[]>()
   for (const cell of cells) {
-    const key = `${cell.layer_id}:${cell.step_id}`
+    const key = `${cell.lane_id}:${cell.step_id}`
     const slot = map.get(key)
     if (slot) slot.push(cell)
     else map.set(key, [cell])
@@ -269,10 +269,10 @@ export function buildCellLookup(
 /** Every cell in the slot, in `slot_position` order. */
 export function getCellsAt(
   lookup: Map<string, BlueprintCell[]>,
-  layerId: string,
+  laneId: string,
   stepId: string,
 ): BlueprintCell[] {
-  return lookup.get(`${layerId}:${stepId}`) ?? []
+  return lookup.get(`${laneId}:${stepId}`) ?? []
 }
 
 /**
@@ -282,8 +282,8 @@ export function getCellsAt(
  */
 export function getCellAt(
   lookup: Map<string, BlueprintCell[]>,
-  layerId: string,
+  laneId: string,
   stepId: string,
 ): BlueprintCell | undefined {
-  return lookup.get(`${layerId}:${stepId}`)?.[0]
+  return lookup.get(`${laneId}:${stepId}`)?.[0]
 }

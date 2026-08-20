@@ -65,7 +65,7 @@ export type DeletionImpact = {
 
 export type LaneSetEntry = {
   name: string
-  layer_role: string | null
+  lane_role: string | null
   row_position: number
 }
 
@@ -365,7 +365,7 @@ export function addStep(
  * Add a lane to **every version** of a blueprint. `atRow` inserts; omitted
  * appends.
  *
- * Scenario-scoped, not version-scoped: the call creates one `layers` row per
+ * Scenario-scoped, not version-scoped: the call creates one `lanes` row per
  * version, and adding a lane to one version alone would misalign the rows in
  * the side-by-side view. Re-read the grid afterwards.
  *
@@ -379,14 +379,14 @@ export async function addLane(
   input: {
     scenarioId: string
     name: string
-    layerRole?: string | null
+    laneRole?: string | null
     atRow?: number
   },
 ): Promise<string[]> {
   const created = await call<string[] | null>(client, 'add_lane', {
     scenario_id: input.scenarioId,
     name: input.name,
-    layer_role: input.layerRole ?? null,
+    lane_role: input.laneRole ?? null,
     at_row: input.atRow ?? null,
   })
   return created ?? []
@@ -401,11 +401,11 @@ export async function addLane(
  */
 export function upsertCell(
   client: Client,
-  input: { pathId: string; layerId: string; stepId: string; content: string },
+  input: { pathId: string; laneId: string; stepId: string; content: string },
 ): Promise<string> {
   return call<string>(client, 'upsert_cell', {
     path_id: input.pathId,
-    layer_id: input.layerId,
+    lane_id: input.laneId,
     step_id: input.stepId,
     content: input.content,
   })
@@ -568,7 +568,7 @@ export function deletionImpact(
   /**
    * The other half of the delete's identity, for the two kinds whose delete
    * is not addressed by a single id: `step` needs the path_id (remove_step
-   * is path-scoped) and `lane` derives its scenario from the layer, so it
+   * is path-scoped) and `lane` derives its scenario from the lane, so it
    * takes none. Passing it for scenario/path is harmless and ignored.
    */
   scopeId?: string,

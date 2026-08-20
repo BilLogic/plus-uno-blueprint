@@ -34,7 +34,7 @@ import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
  * body" impossible by construction rather than by a conditional check.
  *
  * NAME vs PARAMETER. Scope rides in a parameter when it is a zoom level on
- * one parent-child walk (`phase > scenario > path > step/layer > cell` —
+ * one parent-child walk (`phase > scenario > path > step/lane > cell` —
  * that is `granularity`), and in the NAME when it is a different record
  * type. Test: can you reach it by walking parent to child through the
  * grid? Evidence hangs off a cell but is not a coarser cell, so it earns a
@@ -110,30 +110,30 @@ export const WRITE_TOOL_NAMES = new Set([
 export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_reference',
-    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read layer-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
+    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read lane-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
     parameters: {
       type: 'object',
-      properties: { name: str('Reference name, e.g. "layer-roles"') },
+      properties: { name: str('Reference name, e.g. "lane-roles"') },
       required: ['name'],
     },
   },
   {
     name: 'list_blueprint',
     description:
-      'The COMPLETE set of things at one or more levels of the journey, with ids. granularity picks the level: phase, scenario, path, step, layer, cell. Optional filters narrow the scope. This is your table of contents and your "what exists" answer — every row is returned (up to limit) with the true total, so it is the only honest way to say "all N scenarios" or "every unhappy path". Start here: granularity ["phase","scenario"] is the orientation read. Use get_blueprint instead when you already know the scenario and want its grid laid out.',
+      'The COMPLETE set of things at one or more levels of the journey, with ids. granularity picks the level: phase, scenario, path, step, lane, cell. Optional filters narrow the scope. This is your table of contents and your "what exists" answer — every row is returned (up to limit) with the true total, so it is the only honest way to say "all N scenarios" or "every unhappy path". Start here: granularity ["phase","scenario"] is the orientation read. Use get_blueprint instead when you already know the scenario and want its grid laid out.',
     parameters: {
       type: 'object',
       properties: {
         granularity: {
           type: 'array',
           description:
-            'One or more of: phase, scenario, path, step, layer, cell. Ask for the level you actually need — "cell" across the whole blueprint is 955 rows.',
+            'One or more of: phase, scenario, path, step, lane, cell. Ask for the level you actually need — "cell" across the whole blueprint is 955 rows.',
           items: { type: 'string' },
         },
         phase: str('Restrict to a phase by name, e.g. "In-session"'),
         scenario: str('Restrict to a scenario by name, e.g. "Warm-Up"'),
         path_type: str('happy | alternative | unhappy | exception | named'),
-        layer_role: str(
+        lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
         limit: {
@@ -158,13 +158,13 @@ export const TOOL_SPECS: ToolSpec[] = [
         granularity: {
           type: 'array',
           description:
-            'Levels to search: phase, scenario, path, step, layer, cell. Defaults to ["cell"]. Add "path" or "scenario" when hunting for a named branch.',
+            'Levels to search: phase, scenario, path, step, lane, cell. Defaults to ["cell"]. Add "path" or "scenario" when hunting for a named branch.',
           items: { type: 'string' },
         },
         phase: str('Restrict to a phase by name'),
         scenario: str('Restrict to a scenario by name'),
         path_type: str('happy | alternative | unhappy | exception | named'),
-        layer_role: str(
+        lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
         limit: {
@@ -236,7 +236,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'list_layers',
     description:
-      'The lane vocabulary actually in use, with how many lanes carry each label and role. Read before create_layer — reuse a label unless the new lane is genuinely a different kind of thing. Distinct from get_reference("layer-roles"), which says what the roles MEAN rather than which ones this blueprint uses.',
+      'The lane vocabulary actually in use, with how many lanes carry each label and role. Read before create_layer — reuse a label unless the new lane is genuinely a different kind of thing. Distinct from get_reference("lane-roles"), which says what the roles MEAN rather than which ones this blueprint uses.',
     parameters: { type: 'object', properties: {} },
   },
   {
@@ -407,7 +407,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'annotate_cells',
     description:
-      'Draw ephemeral annotation boxes around cells on the open canvas (optional short text note above them) — use to point at things visually, like a human with a marker. Marks are scratch-layer only: never saved, cleared on reload.',
+      'Draw ephemeral annotation boxes around cells on the open canvas (optional short text note above them) — use to point at things visually, like a human with a marker. Marks are scratch-lane only: never saved, cleared on reload.',
     parameters: {
       type: 'object',
       properties: {
@@ -601,13 +601,13 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_layer',
     description:
-      'Add a lane to EVERY path of a scenario. Read layer-roles and lane-vocabulary first; lane labels are byte-identical for the same actor group across scenarios.',
+      'Add a lane to EVERY path of a scenario. Read lane-roles and lane-vocabulary first; lane labels are byte-identical for the same actor group across scenarios.',
     parameters: {
       type: 'object',
       properties: {
         scenario_id: str('Scenario id'),
         name: str('Lane label'),
-        layer_role: str(
+        lane_role: str(
           'Semantic role (e.g. frontstage_actions, backstage_tech); omit if none fits',
         ),
         at_row: { type: 'number', description: 'Insert row (1-based); omit to append' },
@@ -623,11 +623,11 @@ export const TOOL_SPECS: ToolSpec[] = [
       type: 'object',
       properties: {
         path_id: str('Path id'),
-        layer_id: str('Lane id from get_blueprint (parameter named layer_id for historical reasons)'),
+        lane_id: str('Lane id from get_blueprint (parameter named lane_id for historical reasons)'),
         step_id: str('Step id (from get_blueprint)'),
         content: str('The complete cell text — a journey moment, not a system capability. Aim for 80 characters; above 100 returns a non-blocking review warning because the canvas preview clamps to four lines. Put supporting detail in summary. Good: "Tutor greets the student and confirms today\'s goal". Bad: "Session management module".'),
       },
-      required: ['path_id', 'layer_id', 'step_id', 'content'],
+      required: ['path_id', 'lane_id', 'step_id', 'content'],
     },
   },
   {

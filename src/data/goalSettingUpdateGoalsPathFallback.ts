@@ -228,7 +228,7 @@ function updateGoalsPlusAppLink(
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<
@@ -236,7 +236,7 @@ function cell(
   > = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(
           metadata.links ?? [],
           GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS,
@@ -245,7 +245,7 @@ function cell(
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -277,7 +277,7 @@ function trigger(
 }
 
 function rowTriggers(
-  layer: string,
+  lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
@@ -289,9 +289,9 @@ function rowTriggers(
       trigger(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
@@ -587,7 +587,7 @@ export const GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK: BlueprintData = {
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'named',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: GOAL_SETTING_UPDATE_GOALS_CELLS,
   triggers: GOAL_SETTING_UPDATE_GOALS_TRIGGERS,

@@ -1,6 +1,6 @@
 # Lane Vocabulary — cross-phase drafting convergence
 
-`references/layer-roles.md` says how a role renders. This says how independent
+`references/lane-roles.md` says how a role renders. This says how independent
 drafters **converge** on the same roles and labels across many phases — so a
 10-phase lifecycle drafted by parallel agents reads as one blueprint, not ten.
 
@@ -44,7 +44,7 @@ lifecycle sells to a buyer, then serves end users. Pick per phase-type:
 If a phase genuinely has no external spine (pure internal ops), it's valid to
 have **no** `customer_actions` lane — but say so deliberately, don't just drop
 it. "Whose journey is the spine?" is the elicitation question
-(`references/layer-roles.md` §Line-anchoring).
+(`references/lane-roles.md` §Line-anchoring).
 
 ## 2. One label per actor group, lifecycle-wide
 

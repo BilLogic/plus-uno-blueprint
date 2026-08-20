@@ -8,23 +8,23 @@ export function useCollapsedBlueprintLayers() {
     () => new Set<string>(),
   )
 
-  const toggleLayer = useCallback((layerId: string) => {
+  const toggleLayer = useCallback((laneId: string) => {
     if (!BLUEPRINT_LAYER_COLLAPSE_ENABLED) return
 
     setCollapsedLayerIds((current) => {
       const next = new Set(current)
-      if (next.has(layerId)) {
-        next.delete(layerId)
+      if (next.has(laneId)) {
+        next.delete(laneId)
       } else {
-        next.add(layerId)
+        next.add(laneId)
       }
       return next
     })
   }, [])
 
   const isLayerCollapsed = useCallback(
-    (layerId: string) =>
-      BLUEPRINT_LAYER_COLLAPSE_ENABLED && collapsedLayerIds.has(layerId),
+    (laneId: string) =>
+      BLUEPRINT_LAYER_COLLAPSE_ENABLED && collapsedLayerIds.has(laneId),
     [collapsedLayerIds],
   )
 

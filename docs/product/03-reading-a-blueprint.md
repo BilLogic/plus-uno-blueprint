@@ -1,7 +1,7 @@
 ---
 audience: everyone
 summary: The vocabulary — phases, scenarios, paths, lanes, the line of visibility, steps, cells, triggers vs needs, slices, and findings.
-sources: src/lib/agent/skill/references/layer-roles.md, src/lib/agent/skill/references/lane-vocabulary.md, src/components/blueprint/ServiceBlueprintGrid.tsx
+sources: src/lib/agent/skill/references/lane-roles.md, src/lib/agent/skill/references/lane-vocabulary.md, src/components/blueprint/ServiceBlueprintGrid.tsx
 last-reviewed: 2026-08-18
 ---
 

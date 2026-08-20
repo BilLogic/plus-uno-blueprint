@@ -260,7 +260,7 @@ the lane reads `Visual`, which names a medium. It should read **Storyboard**.
 | Field | Definition | Why it exists | Not this |
 |---|---|---|---|
 | `name` | the actor or stage — "Regular Tutor", "Front Stage Tech" | the swimlane label | — |
-| `lane_role` | the semantic key that drives rendering | **never inferred from the name** — that broke every non-English blueprint (`layer-roles.md`) | a display label |
+| `lane_role` | the semantic key that drives rendering | **never inferred from the name** — that broke every non-English blueprint (`lane-roles.md`) | a display label |
 | `owner_team` | **the team that staffs this lane** | the org unit accountable for everything in the row. Answers "who do I talk to about this" once, instead of per cell | the actor's job title — that is `name` |
 | `kpis` | **what that team is measured on** | `check-kpi-alignment` compares them against what the lane's cells actually do: measured-but-never-enacted, and enacted-but-never-measured | outcomes nobody is accountable for |
 | `tools` | **systems the lane's actors use** | 🟡 **one reader, and only as a secondary signal** — see below | tools mentioned in a cell but not used by this lane |

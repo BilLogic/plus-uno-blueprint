@@ -195,7 +195,7 @@ function renderPortalRows(rows, emptyMessage, ranked) {
       ? `${rows.length} of ${total} (clipped — raise limit or narrow the filters):`
       : `${total} of ${total}:`
   const lines = rows.map((row) => {
-    const where = [row.phase, row.scenario, row.path, row.step, row.layer].filter(Boolean).join(' › ')
+    const where = [row.phase, row.scenario, row.path, row.step, row.lane].filter(Boolean).join(' › ')
     const body = row.kind === 'cell' ? `"${String(row.snippet ?? '').split('\n')[0]}"` : `"${row.snippet}"`
     const detail = row.description ? ` — ${row.description}` : ''
     const how = ranked && row.matched_by ? `  [${row.matched_by}]` : ''
@@ -211,7 +211,7 @@ async function realListBlueprint(args) {
     filter_phase: args.phase ?? null,
     filter_scenario: args.scenario ?? null,
     filter_path_type: args.path_type ?? null,
-    filter_layer_role: args.layer_role ?? null,
+    filter_lane_role: args.lane_role ?? null,
   })
   return renderPortalRows(rows, 'Nothing at that granularity within those filters.', false)
 }
@@ -224,7 +224,7 @@ async function realSearchBlueprint(args) {
     filter_phase: args.phase ?? null,
     filter_scenario: args.scenario ?? null,
     filter_path_type: args.path_type ?? null,
-    filter_layer_role: args.layer_role ?? null,
+    filter_lane_role: args.lane_role ?? null,
   })
   return renderPortalRows(
     rows,
@@ -250,7 +250,7 @@ async function realListScenarios() {
 
 async function realGetBlueprint(scenarioId) {
   const paths = await rest(
-    `paths?select=id,name,path_type,layers(id,name,layer_role,row_position),path_steps(column_position,steps(id,name))&service_scenario_id=eq.${encodeURIComponent(scenarioId)}`,
+    `paths?select=id,name,path_type,lanes(id,name,lane_role,row_position),path_steps(column_position,steps(id,name))&service_scenario_id=eq.${encodeURIComponent(scenarioId)}`,
   )
   if (!paths?.length) return 'No paths for that scenario id.'
   const out = []
@@ -260,21 +260,21 @@ async function realGetBlueprint(scenarioId) {
       .map((ps) => ps.steps)
       .filter(Boolean)
     const cells = await rest(
-      `cells?select=id,content,layer_id,step_id,owner&path_id=eq.${path.id}`,
+      `cells?select=id,content,lane_id,step_id,owner&path_id=eq.${path.id}`,
     )
     out.push(
       `path "${path.name}" (${path.id}) type=${path.path_type}`,
       `  steps: ${steps.map((s) => `"${s.name}" (${s.id})`).join(', ')}`,
-      ...(path.layers ?? [])
+      ...(path.lanes ?? [])
         .sort((a, b) => a.row_position - b.row_position)
-        .map((layer) => {
+        .map((lane) => {
           const laneCells = (cells ?? [])
-            .filter((cell) => cell.layer_id === layer.id)
+            .filter((cell) => cell.lane_id === lane.id)
             .map((cell) => {
               const step = steps.find((s) => s.id === cell.step_id)
               return `    [${step?.name ?? '?'}] "${cell.content}" (${cell.id})${cell.owner ? ` owner=${cell.owner}` : ''}`
             })
-          return `  lane "${layer.name}" (${layer.id}) role=${layer.layer_role ?? 'none'}\n${laneCells.join('\n') || '    (empty)'}`
+          return `  lane "${lane.name}" (${lane.id}) role=${lane.lane_role ?? 'none'}\n${laneCells.join('\n') || '    (empty)'}`
         }),
     )
   }
@@ -315,7 +315,7 @@ const UI_COMMANDS_SNAPSHOT = [
   "cell_panel_close — Close the open cell detail panel.",
   'cell_panel_expand — Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
   "cell_panel_tab — Switch the open cell panel's tab. arg: dependencies | evidence | resources",
-  'clear_annotations — Erase every annotation mark from the canvas scratch layer.',
+  'clear_annotations — Erase every annotation mark from the canvas scratch lane.',
   'clear_cell_selection — Clear the Design-mode cell selection.',
   "close_slice_tab — Close a slice's open tab(s). arg: slice id.",
   'exit_presentation — Leave the running presentation back onto its slice tab.',
@@ -404,10 +404,10 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
       case 'list_layers': {
-        const rows = await rest('layers?select=name,layer_role&order=row_position')
+        const rows = await rest('lanes?select=name,lane_role&order=row_position')
         const counts = new Map()
         for (const row of rows ?? []) {
-          const key = JSON.stringify([row.name, row.layer_role ?? null])
+          const key = JSON.stringify([row.name, row.lane_role ?? null])
           counts.set(key, (counts.get(key) ?? 0) + 1)
         }
         record.result = counts.size

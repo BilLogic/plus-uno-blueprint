@@ -71,14 +71,14 @@ on conflict (path_id, step_id) do update set
 
 -- Alternate path cells and triggers
 
--- Clone layers (…301–309 → …401–409)
-insert into public.layers (id, path_id, name, row_position)
+-- Clone lanes (…301–309 → …401–409)
+insert into public.lanes (id, path_id, name, row_position)
 select
   replace(l.id::text, '00000003', '00000004')::uuid,
   'a0000000-0000-4000-8000-000000000350',
   l.name,
   l.row_position
-from public.layers l
+from public.lanes l
 where l.path_id = 'a0000000-0000-4000-8000-000000000300'
 on conflict (id) do update set
   name = excluded.name,
@@ -90,7 +90,7 @@ where source_cell_id in (select id from public.cells where path_id = 'a0000000-0
 
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000350';
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000060110', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000410', 'a0000000-0000-4000-8000-000000000311', E''),
   ('a0000000-0000-4000-8000-000000060210', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000410', 'a0000000-0000-4000-8000-000000000312', E''),
@@ -145,7 +145,7 @@ Design Team'),
   ('a0000000-0000-4000-8000-000000060302', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000402', 'a0000000-0000-4000-8000-000000000314', E'Manually assign unpaired students to available tutors.'),
   ('a0000000-0000-4000-8000-000000060402', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000402', 'a0000000-0000-4000-8000-000000000315', E'Inform classroom teacher about students that are absent.'),
   ('a0000000-0000-4000-8000-000000060502', 'a0000000-0000-4000-8000-000000000350', 'a0000000-0000-4000-8000-000000000402', 'a0000000-0000-4000-8000-000000000316', E'Respond to classroom teachers "ask for help" request.')
-on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
+on conflict (id) do update set path_id = excluded.path_id, lane_id = excluded.lane_id, step_id = excluded.step_id, content = excluded.content;
 
 insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values

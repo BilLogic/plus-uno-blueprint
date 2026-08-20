@@ -139,7 +139,7 @@ export async function dispatchTool(
         : []
       if (granularity.length === 0) {
         throw new Error(
-          'granularity is required — one or more of phase, scenario, path, step, layer, cell.',
+          'granularity is required — one or more of phase, scenario, path, step, lane, cell.',
         )
       }
       return listBlueprint(client, {
@@ -147,7 +147,7 @@ export async function dispatchTool(
         phase: s(args, 'phase'),
         scenario: s(args, 'scenario'),
         pathType: s(args, 'path_type'),
-        layerRole: s(args, 'layer_role'),
+        laneRole: s(args, 'lane_role'),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
       })
     }
@@ -163,7 +163,7 @@ export async function dispatchTool(
         phase: s(args, 'phase'),
         scenario: s(args, 'scenario'),
         pathType: s(args, 'path_type'),
-        layerRole: s(args, 'layer_role'),
+        laneRole: s(args, 'lane_role'),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
       })
     }
@@ -358,13 +358,13 @@ export async function dispatchTool(
         await addLane(client, {
           scenarioId: need(args, 'scenario_id'),
           name: need(args, 'name'),
-          layerRole: s(args, 'layer_role') ?? null,
+          laneRole: s(args, 'lane_role') ?? null,
           atRow: typeof args.at_row === 'number' ? args.at_row : undefined,
         })
         return 'Added lane to every path of the scenario. Re-read the blueprint for the new lane ids.'
       }
       case 'upsert_cell': {
-        const layerId = need(args, 'layer_id')
+        const laneId = need(args, 'lane_id')
         const stepId = need(args, 'step_id')
         // Occupancy guard: the RPC upserts, so a second call on the same
         // slot would silently OVERWRITE the cell — and the recorded revert
@@ -374,7 +374,7 @@ export async function dispatchTool(
         const { data: occupied, error: occupiedError } = await client
           .from('cells')
           .select('id')
-          .eq('layer_id', layerId)
+          .eq('lane_id', laneId)
           .eq('step_id', stepId)
           .or('slot_position.is.null,slot_position.eq.0')
           .limit(1)
@@ -387,7 +387,7 @@ export async function dispatchTool(
         const lengthGuidance = getCellContentLengthGuidance(newContent)
         const id = await upsertCell(client, {
           pathId: need(args, 'path_id'),
-          layerId,
+          laneId,
           stepId,
           content: newContent,
         })

@@ -213,8 +213,8 @@ const WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID: Record<string, string> = {
   [L.support]: 'a0000000-0000-4000-8000-000000000409',
 }
 
-function mapAlternatePathLayerId(layerId: string): string {
-  return WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID[layerId] ?? layerId
+function mapAlternatePathLayerId(laneId: string): string {
+  return WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID[laneId] ?? laneId
 }
 
 const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom/Pencil'
@@ -242,7 +242,7 @@ const warmUpPartnerLeadOptions = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<
@@ -250,7 +250,7 @@ function cell(
   > = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(
           metadata.links ?? [],
           WARM_UP_REGULAR_TUTOR_ONBOARDING_LINKS,
@@ -259,7 +259,7 @@ function cell(
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -550,7 +550,7 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'happy',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: WARM_UP_CELLS,
   triggers: WARM_UP_TRIGGERS,
@@ -595,7 +595,7 @@ function buildWarmUpAlternatePathCells(): BlueprintCell[] {
   ).map((cell) => ({
     ...cell,
     id: mapHappyCellId(cell.id),
-    layer_id: mapAlternatePathLayerId(cell.layer_id),
+    lane_id: mapAlternatePathLayerId(cell.lane_id),
   }))
 
   return [
@@ -653,9 +653,9 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'alternative',
   },
-  layers: LAYERS.map((layer) => ({
-    ...layer,
-    id: mapAlternatePathLayerId(layer.id),
+  lanes: LAYERS.map((lane) => ({
+    ...lane,
+    id: mapAlternatePathLayerId(lane.id),
   })),
   steps: WARM_UP_ALTERNATE_STEPS,
   cells: buildWarmUpAlternatePathCells(),

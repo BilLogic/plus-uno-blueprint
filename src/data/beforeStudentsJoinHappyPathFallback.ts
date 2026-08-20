@@ -143,19 +143,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(metadata.links ?? [], BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -188,7 +188,7 @@ function trigger(
 
 function rowTriggers(
   _startSlot: string,
-  layer: string,
+  lane: string,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
@@ -200,9 +200,9 @@ function rowTriggers(
       trigger(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
@@ -420,7 +420,7 @@ export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
     note: null,
     path_type: 'happy',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: BEFORE_STUDENTS_JOIN_CELLS,
   triggers: BEFORE_STUDENTS_JOIN_TRIGGERS,

@@ -12,7 +12,7 @@
  *
  * The canonical key is what the migration's `mint_cell_key` builds:
  *
- *     <lifecycle>/<scenario>/<version>/<layer>/<step>        (slugified)
+ *     <lifecycle>/<scenario>/<version>/<lane>/<step>        (slugified)
  *
  * The version segment is the version's **name**. `path_type` looked right —
  * the seeded keys read `warm-up/happy/...` — but several versions of one
@@ -80,7 +80,7 @@ function canonicalKey(row) {
     slug(row.lifecycle),
     slug(row.scenario),
     slug(row.pathName) ?? slug(row.pathType),
-    slug(row.layer),
+    slug(row.lane),
     slug(row.step),
   ]
   return parts.join('/')
@@ -89,7 +89,7 @@ function canonicalKey(row) {
 /** Everything needed to key a cell, flattened from the nested read. */
 async function loadCells() {
   const rows = await rest(
-    'cells?select=id,layer:layers(name),step:steps(name),' +
+    'cells?select=id,lane:lanes(name),step:steps(name),' +
       'path:paths(name,path_type,scenario:service_scenarios(name,' +
       'phase:phases(lifecycle:service_lifecycles(name))))',
   )
@@ -103,7 +103,7 @@ async function loadCells() {
       scenario: scenario.name,
       pathType: path.path_type,
       pathName: path.name,
-      layer: row.layer?.name,
+      lane: row.lane?.name,
       step: row.step?.name,
     }
   })

@@ -6,7 +6,7 @@
  * `supabase/seed.sql`, which deletes and recreates every row. Anything typed
  * into the app that lives on those tables — Function, Form, Value, the owner
  * pair, lane metadata, phase metadata — is destroyed by that, silently. The
- * derived layer (slices, findings, evidence) survives because it was designed
+ * derived lane (slices, findings, evidence) survives because it was designed
  * to; these columns were not.
  *
  * So: `export` before any destructive database work, `restore` after.
@@ -136,10 +136,10 @@ function contextOf(row) {
 
 async function runExport() {
   const cells = await rest(
-    `cells?select=${CELL_FIELDS.join(',')},step:steps(name),layer:layers(name),${PATH_CONTEXT}`,
+    `cells?select=${CELL_FIELDS.join(',')},step:steps(name),lane:lanes(name),${PATH_CONTEXT}`,
   )
-  const layers = await rest(
-    `layers?select=name,${LAYER_FIELDS.join(',')},${PATH_CONTEXT}`,
+  const lanes = await rest(
+    `lanes?select=name,${LAYER_FIELDS.join(',')},${PATH_CONTEXT}`,
   )
   const phases = await rest(`phases?select=name,${PHASE_FIELDS.join(',')}`)
 
@@ -153,21 +153,21 @@ async function runExport() {
       .filter((row) => !isEmpty(row, CELL_FIELDS))
       .map((row) => ({
         ...contextOf(row),
-        layer: row.layer?.name ?? null,
+        lane: row.lane?.name ?? null,
         step: row.step?.name ?? null,
         ...pick(row, CELL_FIELDS),
       }))
       .sort((a, b) =>
-        sortKey(a, 'phase', 'scenario', 'path', 'layer', 'step').localeCompare(
-          sortKey(b, 'phase', 'scenario', 'path', 'layer', 'step'),
+        sortKey(a, 'phase', 'scenario', 'path', 'lane', 'step').localeCompare(
+          sortKey(b, 'phase', 'scenario', 'path', 'lane', 'step'),
         ),
       ),
-    layers: layers
+    lanes: lanes
       .filter((row) => !isEmpty(row, LAYER_FIELDS))
-      .map((row) => ({ ...contextOf(row), layer: row.name, ...pick(row, LAYER_FIELDS) }))
+      .map((row) => ({ ...contextOf(row), lane: row.name, ...pick(row, LAYER_FIELDS) }))
       .sort((a, b) =>
-        sortKey(a, 'phase', 'scenario', 'path', 'layer').localeCompare(
-          sortKey(b, 'phase', 'scenario', 'path', 'layer'),
+        sortKey(a, 'phase', 'scenario', 'path', 'lane').localeCompare(
+          sortKey(b, 'phase', 'scenario', 'path', 'lane'),
         ),
       ),
     phases: phases
@@ -179,7 +179,7 @@ async function runExport() {
   await mkdir(dirname(OUTPUT), { recursive: true })
   await writeFile(OUTPUT, `${JSON.stringify(payload, null, 2)}\n`, 'utf8')
   console.log(
-    `Exported ${payload.cells.length} cell(s), ${payload.layers.length} lane(s), ` +
+    `Exported ${payload.cells.length} cell(s), ${payload.lanes.length} lane(s), ` +
       `${payload.phases.length} phase(s) → docs/authored-fields.json`,
   )
 }
@@ -190,16 +190,16 @@ async function runRestore(dryRun) {
   // One read of the current identity map, so matching is done locally and a
   // miss can be reported precisely instead of failing mid-write.
   const cells = await rest(
-    `cells?select=id,step:steps(name),layer:layers(name),${PATH_CONTEXT}`,
+    `cells?select=id,step:steps(name),lane:lanes(name),${PATH_CONTEXT}`,
   )
-  const layers = await rest(`layers?select=id,name,${PATH_CONTEXT}`)
+  const lanes = await rest(`lanes?select=id,name,${PATH_CONTEXT}`)
   const phases = await rest('phases?select=id,name')
 
   const cellIndex = indexBy(cells, (row) => {
     const ctx = contextOf(row)
-    return keyOf(ctx.phase, ctx.scenario, ctx.path, row.layer?.name, row.step?.name)
+    return keyOf(ctx.phase, ctx.scenario, ctx.path, row.lane?.name, row.step?.name)
   })
-  const layerIndex = indexBy(layers, (row) => {
+  const layerIndex = indexBy(lanes, (row) => {
     const ctx = contextOf(row)
     return keyOf(ctx.phase, ctx.scenario, ctx.path, row.name)
   })
@@ -225,26 +225,26 @@ async function runRestore(dryRun) {
   }
 
   for (const entry of payload.cells ?? []) {
-    const label = `cell ${[entry.phase, entry.scenario, entry.path, entry.layer, entry.step]
+    const label = `cell ${[entry.phase, entry.scenario, entry.path, entry.lane, entry.step]
       .filter(Boolean)
       .join(' / ')}`
     const id = resolve(
       cellIndex,
-      keyOf(entry.phase, entry.scenario, entry.path, entry.layer, entry.step),
+      keyOf(entry.phase, entry.scenario, entry.path, entry.lane, entry.step),
       label,
     )
     if (id) writes.push({ table: 'cells', id, values: pick(entry, CELL_FIELDS) })
   }
-  for (const entry of payload.layers ?? []) {
-    const label = `lane ${[entry.phase, entry.scenario, entry.path, entry.layer]
+  for (const entry of payload.lanes ?? []) {
+    const label = `lane ${[entry.phase, entry.scenario, entry.path, entry.lane]
       .filter(Boolean)
       .join(' / ')}`
     const id = resolve(
       layerIndex,
-      keyOf(entry.phase, entry.scenario, entry.path, entry.layer),
+      keyOf(entry.phase, entry.scenario, entry.path, entry.lane),
       label,
     )
-    if (id) writes.push({ table: 'layers', id, values: pick(entry, LAYER_FIELDS) })
+    if (id) writes.push({ table: 'lanes', id, values: pick(entry, LAYER_FIELDS) })
   }
   for (const entry of payload.phases ?? []) {
     const id = resolve(phaseIndex, keyOf(entry.phase), `phase ${entry.phase}`)

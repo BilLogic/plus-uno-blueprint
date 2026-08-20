@@ -41,6 +41,16 @@ export const BLUEPRINT_CONTRACT = {
    */
   breadcrumb: {
     separator: ' · ',
+    /** Labels a parser must accept for a segment, beyond the canonical one
+     *  above. `layer` is the pre-rename spelling still present in every stored
+     *  chunk title; `lane` is what the view will emit after a re-embed. Both
+     *  map to the same breadcrumb field. */
+    aliases: { lane: ['layer'] },
+    // ⚠️ STILL 'Layer', deliberately. All 808 corpus chunks have "Layer: …"
+    // baked into their stored title, and the title is part of the EMBEDDED
+    // text — renaming this label strands every embedding until a full
+    // re-embed. The bot's parser accepts BOTH labels (see `breadcrumbAliases`),
+    // so this flips to 'Lane' in the same change that re-embeds the corpus.
     labels: ['Phase', 'Scenario', 'Path', 'Step', 'Layer'],
   },
 
@@ -54,7 +64,7 @@ export const BLUEPRINT_CONTRACT = {
     'service_scenarios',
     'steps',
     'paths',
-    'layers',
+    'lanes',
     'cells',
     'cell_dependencies',
     'findings',
@@ -92,8 +102,8 @@ export const BLUEPRINT_CONTRACT = {
    * breaking change for any caller that names it — and the caller cannot be
    * type-checked against the function signature.
    *
-   * Only the ones the bot may send are listed. `filter_layer_role` is here
-   * because plan 002 renames it to `filter_lane_role`; listing it means the
+   * Only the ones the bot may send are listed. `filter_lane_role` was
+   * `filter_layer_role` until the layers→lanes rename; listing it means a
    * rename shows up as contract drift rather than as a silent no-op filter.
    */
   searchBlueprintParams: {
@@ -105,7 +115,7 @@ export const BLUEPRINT_CONTRACT = {
     filterPhase: 'filter_phase',
     filterScenario: 'filter_scenario',
     filterPathType: 'filter_path_type',
-    filterLayerRole: 'filter_layer_role',
+    filterLaneRole: 'filter_lane_role',
     granularity: 'granularity',
     include: 'include',
   },
@@ -122,7 +132,7 @@ export const BLUEPRINT_CONTRACT = {
     title: 'title',
     snippet: 'snippet',
     description: 'description',
-    layer: 'layer',
+    lane: 'lane',
     step: 'step',
     scenario: 'scenario',
     phase: 'phase',

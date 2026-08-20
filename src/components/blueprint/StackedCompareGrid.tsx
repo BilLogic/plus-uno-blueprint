@@ -53,7 +53,7 @@ export function StackedCompareGrid({
   phaseName,
   sectionTitleLabel,
 }: StackedCompareGridProps) {
-  const { layers, rows, toggleLayer, tracks, gridTemplateColumns } =
+  const { lanes, rows, toggleLayer, tracks, gridTemplateColumns } =
     useCompareGridAxis(model, blueprints, compact)
 
   const rowTrackCss = useMemo(
@@ -89,7 +89,7 @@ export function StackedCompareGrid({
           <Fragment key={blueprint.path.id}>
             <BlueprintPathBand
               blueprint={blueprint}
-              layers={layers}
+              lanes={lanes}
               rows={rows}
               arrangement={{
                 kind: 'row',

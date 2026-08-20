@@ -110,10 +110,10 @@ import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 function cellPositionLabel(
   stepIndex: number,
   stepName: string,
-  layerName: string,
+  laneName: string,
 ): string {
   const column = stepIndex >= 0 ? `${stepIndex + 1}. ` : ''
-  return `${column}${stepName} · ${layerName}`
+  return `${column}${stepName} · ${laneName}`
 }
 
 /** Fixed panel and illustration frame so every row/step uses the same size. */
@@ -625,39 +625,39 @@ function BlueprintCellDetailPanelBody() {
   )
 
   const selectedLayer = useMemo((): { name: string; role?: string | null } | null => {
-    const layerName = selection?.layerName
-    if (!layerName) return null
+    const laneName = selection?.laneName
+    if (!laneName) return null
 
     const pathId = pathEntry?.pathId
     const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
     return (
-      blueprint?.layers.find((layer) => layer.name === layerName) ?? {
-        name: layerName,
+      blueprint?.lanes.find((lane) => lane.name === laneName) ?? {
+        name: laneName,
       }
     )
-  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+  }, [blueprints, pathEntry?.pathId, selection?.laneName])
 
   const laneChipStyle = useMemo(() => {
-    const layerName = selection?.layerName
-    if (!layerName) return null
+    const laneName = selection?.laneName
+    if (!laneName) return null
 
     const pathId = pathEntry?.pathId
     const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
     const layerRecord =
-      blueprint?.layers.find((layer) => layer.name === layerName) ?? null
+      blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
     const zone =
       layerRecord && blueprint
-        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
         : 'frontstage'
-    // Keyed by layer_role — the name argument is only the legacy fallback.
-    return getBlueprintLayerStyle(layerName, zone, layerRecord?.role)
-  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+    // Keyed by lane_role — the name argument is only the legacy fallback.
+    return getBlueprintLayerStyle(laneName, zone, layerRecord?.role)
+  }, [blueprints, pathEntry?.pathId, selection?.laneName])
 
   const otherTechEntries = useMemo(() => {
     const layerNameByCellId = new Map<string, string>()
     const stepIndexByCellId = new Map<string, number>()
     for (const entry of [...connections.incoming, ...connections.outgoing]) {
-      layerNameByCellId.set(entry.cellId, entry.layerName)
+      layerNameByCellId.set(entry.cellId, entry.laneName)
       stepIndexByCellId.set(entry.cellId, entry.stepIndex)
     }
 
@@ -666,7 +666,7 @@ function BlueprintCellDetailPanelBody() {
       id: string
       cellId: string
       item: string
-      layerName?: string
+      laneName?: string
       stepIndex?: number
     }> = []
 
@@ -674,7 +674,7 @@ function BlueprintCellDetailPanelBody() {
       id: string
       cellId: string
       item: string
-      layerName?: string
+      laneName?: string
       stepIndex?: number
     }) => {
       if (seen.has(entry.id)) return
@@ -687,7 +687,7 @@ function BlueprintCellDetailPanelBody() {
         id: entry.id,
         cellId: entry.cellId,
         item: entry.item,
-        layerName: layerNameByCellId.get(entry.cellId),
+        laneName: layerNameByCellId.get(entry.cellId),
         stepIndex: stepIndexByCellId.get(entry.cellId),
       })
     }
@@ -696,7 +696,7 @@ function BlueprintCellDetailPanelBody() {
         id: entry.id,
         cellId: entry.cellId,
         item: entry.item,
-        layerName: entry.layerName,
+        laneName: entry.laneName,
         stepIndex: entry.stepIndex,
       })
     }
@@ -739,7 +739,7 @@ function BlueprintCellDetailPanelBody() {
     if (!blueprint) return []
 
     const layerNames = new Map(
-      blueprint.layers.map((layer) => [layer.id, layer.name]),
+      blueprint.lanes.map((lane) => [lane.id, lane.name]),
     )
     const stepOrder = new Map(
       blueprint.steps.map((step, index) => [step.id, { index, name: step.name }]),
@@ -756,7 +756,7 @@ function BlueprintCellDetailPanelBody() {
           label: cellPositionLabel(
             step?.index ?? -1,
             step?.name ?? 'Unknown step',
-            layerNames.get(cell.layer_id) ?? 'Unknown lane',
+            layerNames.get(cell.lane_id) ?? 'Unknown lane',
           ),
         }
       })
@@ -782,7 +782,7 @@ function BlueprintCellDetailPanelBody() {
         targetLabel: cellPositionLabel(
           connection.stepIndex,
           connection.stepName,
-          connection.layerName,
+          connection.laneName,
         ),
         kind: connection.linkKind,
         label: connection.linkLabel,
@@ -799,7 +799,7 @@ function BlueprintCellDetailPanelBody() {
       label: cellPositionLabel(
         selection.stepIndex,
         selection.stepName,
-        selection.layerName,
+        selection.laneName,
       ),
     }
   }, [pathEntry?.pathId, resolvedCellId, selection])
@@ -932,13 +932,13 @@ function BlueprintCellDetailPanelBody() {
   if (!selection && draft) {
     const blueprint = getBlueprintForPath(blueprints, draft.pathId)
     const layerRecord =
-      blueprint?.layers.find((layer) => layer.name === draft.layerName) ?? null
+      blueprint?.lanes.find((lane) => lane.name === draft.laneName) ?? null
     const zone =
       layerRecord && blueprint
-        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
         : 'frontstage'
     const draftLaneStyle = getBlueprintLayerStyle(
-      draft.layerName,
+      draft.laneName,
       zone,
       layerRecord?.role,
     )
@@ -987,12 +987,12 @@ function BlueprintCellDetailPanelBody() {
               color: 'var(--foreground-blueprint-cell)',
             }}
           >
-            {draft.layerName}
+            {draft.laneName}
           </span>
           <CellPanelEditor
             cellId={null}
             draft={draft}
-            layerName={draft.layerName}
+            laneName={draft.laneName}
             onDone={clearSelection}
           />
         </div>
@@ -1050,7 +1050,7 @@ function BlueprintCellDetailPanelBody() {
     )
   }
 
-  const isVisualLayer = Boolean(
+  const isVisualLane = Boolean(
     selectedLayer && shouldUseVisualContent(selectedLayer),
   )
   const cellContent =
@@ -1077,12 +1077,12 @@ function BlueprintCellDetailPanelBody() {
     cellPicture: selection.paths[0]?.picture,
     cellLinks,
   })
-  const showPicture = Boolean(detailPictures?.length && !isVisualLayer)
+  const showPicture = Boolean(detailPictures?.length && !isVisualLane)
   const showTechPill = Boolean(isTechLayer && techDetailLabel)
   const showTechPillAboveTitle =
     showTechPill &&
-    (selection.layerName === 'Front Stage Tech' ||
-      selection.layerName === 'Back Stage Tech')
+    (selection.laneName === 'Front Stage Tech' ||
+      selection.laneName === 'Back Stage Tech')
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
@@ -1178,9 +1178,9 @@ function BlueprintCellDetailPanelBody() {
   )
 
   // Panel v2 header: title is the cell content snippet; the lane appears as
-  // one role-colored chip (colored by layer_role, never by name).
+  // one role-colored chip (colored by lane_role, never by name).
   const cellTitleText =
-    cellContent.split('\n')[0]?.trim() || selection.layerName
+    cellContent.split('\n')[0]?.trim() || selection.laneName
   const laneChip = laneChipStyle ? (
     <span
       className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
@@ -1188,9 +1188,9 @@ function BlueprintCellDetailPanelBody() {
         backgroundColor: laneChipStyle.lane,
         color: BLUEPRINT_THEME.cellText,
       }}
-      title={selection.layerName}
+      title={selection.laneName}
     >
-      {selection.layerName}
+      {selection.laneName}
     </span>
   ) : null
 
@@ -1345,7 +1345,7 @@ function BlueprintCellDetailPanelBody() {
       {editingCell ? (
         <CellPanelEditor
           cellId={resolvedCellId}
-          layerName={selection.layerName}
+          laneName={selection.laneName}
           // Never seed the field with the title wearing a description's
           // clothes — only prose that actually says more than the cell text.
           fallbackDescription={
@@ -1356,7 +1356,7 @@ function BlueprintCellDetailPanelBody() {
       ) : (
         <>
           {/* Basic info (text, description, owners) first; the function/form/
-              value spec is a deeper layer of the same cell and reads below it. */}
+              value spec is a deeper lane of the same cell and reads below it. */}
           <CellContentSection cellId={resolvedCellId} />
           <CellOverviewSpec cellId={resolvedCellId} />
         </>
@@ -1412,7 +1412,7 @@ function BlueprintCellDetailPanelBody() {
           </div>
         </DrawerHeader>
 
-        {isVisualLayer ? (
+        {isVisualLane ? (
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
             {titleRow}
             <VisualStepDetailStack entries={visualStepEntries} />

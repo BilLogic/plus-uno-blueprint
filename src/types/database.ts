@@ -134,7 +134,7 @@ export type Database = {
           form: string | null
           function: string | null
           id: string
-          layer_id: string
+          lane_id: string
           links: Json
           owner: string | null
           path_id: string
@@ -153,7 +153,7 @@ export type Database = {
           form?: string | null
           function?: string | null
           id?: string
-          layer_id: string
+          lane_id: string
           links?: Json
           owner?: string | null
           path_id: string
@@ -172,7 +172,7 @@ export type Database = {
           form?: string | null
           function?: string | null
           id?: string
-          layer_id?: string
+          lane_id?: string
           links?: Json
           owner?: string | null
           path_id?: string
@@ -187,9 +187,9 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'cells_layer_id_fkey'
-            columns: ['layer_id']
+            columns: ['lane_id']
             isOneToOne: false
-            referencedRelation: 'layers'
+            referencedRelation: 'lanes'
             referencedColumns: ['id']
           },
           {
@@ -326,12 +326,12 @@ export type Database = {
           },
         ]
       }
-      layers: {
+      lanes: {
         Row: {
           created_at: string
           id: string
           kpis: Json
-          layer_role: string | null
+          lane_role: string | null
           name: string
           owner_team: string | null
           path_id: string
@@ -343,7 +343,7 @@ export type Database = {
           created_at?: string
           id?: string
           kpis?: Json
-          layer_role?: string | null
+          lane_role?: string | null
           name: string
           owner_team?: string | null
           path_id: string
@@ -355,7 +355,7 @@ export type Database = {
           created_at?: string
           id?: string
           kpis?: Json
-          layer_role?: string | null
+          lane_role?: string | null
           name?: string
           owner_team?: string | null
           path_id?: string
@@ -792,7 +792,7 @@ export type Database = {
       search_blueprint: {
         Args: {
           embed_model?: string
-          filter_layer_role?: string
+          filter_lane_role?: string
           filter_path_type?: string
           filter_phase?: string
           filter_scenario?: string
@@ -807,7 +807,7 @@ export type Database = {
           description: string
           id: string
           kind: string
-          layer: string
+          lane: string
           links: Json
           matched_by: string
           path: string
@@ -832,7 +832,7 @@ export type AgentSessionRow = Database['public']['Tables']['agent_sessions']['Ro
 export type AgentMessageRow = Database['public']['Tables']['agent_messages']['Row']
 export type Cell = Database['public']['Tables']['cells']['Row']
 export type CellDependency = Database['public']['Tables']['cell_dependencies']['Row']
-export type Layer = Database['public']['Tables']['layers']['Row']
+export type Lane = Database['public']['Tables']['lanes']['Row']
 export type Path = Database['public']['Tables']['paths']['Row']
 export type PathStep = Database['public']['Tables']['path_steps']['Row']
 export type Phase = Database['public']['Tables']['phases']['Row']

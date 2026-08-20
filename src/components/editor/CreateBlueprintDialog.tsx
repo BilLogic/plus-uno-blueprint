@@ -48,7 +48,7 @@ function useLaneSources() {
       const { data, error } = await client
         .from('paths')
         .select(
-          'id,name,layers(id),service_scenario:service_scenarios(name,phase:phases(name))',
+          'id,name,lanes(id),service_scenario:service_scenarios(name,phase:phases(name))',
         )
       if (error) throw new Error(error.message)
       return (data ?? [])
@@ -57,7 +57,7 @@ function useLaneSources() {
             name?: string
             phase?: { name?: string } | null
           } | null
-          const lanes = (row.layers as unknown[] | null) ?? []
+          const lanes = (row.lanes as unknown[] | null) ?? []
           return {
             pathId: row.id as string,
             label: [scenario?.phase?.name, scenario?.name, row.name as string]

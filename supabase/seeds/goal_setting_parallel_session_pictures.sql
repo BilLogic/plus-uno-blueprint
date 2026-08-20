@@ -2,7 +2,7 @@
 
 update public.cells c
 set picture = v.picture
-from public.layers l,
+from public.lanes l,
      public.paths p,
      (
        values
@@ -32,7 +32,7 @@ from public.layers l,
            '/blueprint-images/goal-setting/happy-path/lead-tutor/step-05-respond-ask-for-help.png'
          )
      ) as v(layer_name, content, picture)
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = v.layer_name
   and c.content = v.content
@@ -41,7 +41,7 @@ where c.layer_id = l.id
 -- Partner Action: Teacher
 update public.cells c
 set picture = v.picture
-from public.layers l,
+from public.lanes l,
      public.paths p,
      (
        values
@@ -81,7 +81,7 @@ from public.layers l,
            '/blueprint-images/goal-setting/shared/partner-action/step-07-escalate-to-tutors-plus.png'
          )
      ) as v(layer_name, content, picture)
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = v.layer_name
   and c.content = v.content
@@ -90,9 +90,9 @@ where c.layer_id = l.id
 -- Front Stage Tech — Zoom/Pencil logos (all paths, all steps)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png'
-from public.layers l,
+from public.lanes l,
      public.paths p
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = 'Front Stage Tech'
   and (
@@ -106,9 +106,9 @@ where c.layer_id = l.id
 -- Front Stage Tech — Zoom/Pencil shared description (all paths, all steps)
 update public.cells c
 set description = 'The tutor connects with student via Zoom/Pencil in individual breakout room.'
-from public.layers l,
+from public.lanes l,
      public.paths p
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = 'Front Stage Tech'
   and (
@@ -146,10 +146,10 @@ where id in (
 -- Regular Tutor — step 1 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-01-join-breakout-session.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.path_steps ps
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and ps.path_id = p.id
   and ps.step_id = c.step_id
@@ -160,10 +160,10 @@ where c.layer_id = l.id
 -- Regular Tutor — step 2 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-02-share-screen.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.steps s
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
@@ -173,10 +173,10 @@ where c.layer_id = l.id
 -- Regular Tutor — step 3 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-03-goal-activity.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.steps s
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
@@ -186,10 +186,10 @@ where c.layer_id = l.id
 -- Regular Tutor — step 4 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-04-goal-strategy.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.steps s
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
@@ -199,10 +199,10 @@ where c.layer_id = l.id
 -- Regular Tutor — step 5 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-05-finalize-goals.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.steps s
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
@@ -212,10 +212,10 @@ where c.layer_id = l.id
 -- Regular Tutor — step 6 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-06-leave-breakout-room.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.steps s
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'
@@ -225,10 +225,10 @@ where c.layer_id = l.id
 -- Regular Tutor — step 7 illustration (all paths)
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/regular-tutor/step-07-next-student.png'
-from public.layers l,
+from public.lanes l,
      public.paths p,
      public.steps s
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and c.step_id = s.id
   and l.name = 'Regular Tutor'

@@ -56,7 +56,7 @@ scenario-scoped columns.
 > "Who/what supports it all — vendors, infra, internal teams?" (`support_systems`)
 > "Do you want an image row for snapshots per step?" (`visual`)
 
-Assign roles per `references/layer-roles.md`; non-spine actors get null or
+Assign roles per `references/lane-roles.md`; non-spine actors get null or
 custom roles.
 
 ## Q6 — Cells (walk the grid)

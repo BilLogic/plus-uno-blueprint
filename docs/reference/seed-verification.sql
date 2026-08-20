@@ -28,7 +28,7 @@ select
   pa.name as path,
   pa.description,
   pa.path_type,
-  (select count(*) from public.layers l where l.path_id = pa.id) as layers,
+  (select count(*) from public.lanes l where l.path_id = pa.id) as lanes,
   (select count(*) from public.path_steps ps where ps.path_id = pa.id) as steps,
   (select count(*) from public.cells c where c.path_id = pa.id) as cells,
   (select count(*) from public.cell_dependencies ct
@@ -39,7 +39,7 @@ join public.service_scenarios ss on ss.id = pa.service_scenario_id
 where pa.id = 'a0000000-0000-4000-8000-000000000300';
 
 select l.row_position, l.name as layer
-from public.layers l
+from public.lanes l
 where l.path_id = 'a0000000-0000-4000-8000-000000000300'
 order by l.row_position;
 

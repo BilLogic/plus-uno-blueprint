@@ -46,7 +46,7 @@ type BlueprintTriggerArrowsProps = {
   contentRef: RefObject<HTMLElement | null>
   scrollContainerRef: RefObject<HTMLElement | null>
   /** forward = in column gaps behind cells; wrap = loop overlay on top */
-  layer: ArrowLayer
+  lane: ArrowLayer
   /** Used when triggers do not include path_type (single-path grids). */
   pathType?: PathType
   /** When set with pathType, arrows use the stable path identity color. */
@@ -88,7 +88,7 @@ export function BlueprintTriggerArrows({
   triggers,
   contentRef,
   scrollContainerRef,
-  layer,
+  lane,
   pathType = 'happy',
   pathName,
 }: BlueprintTriggerArrowsProps) {
@@ -132,8 +132,8 @@ export function BlueprintTriggerArrows({
         trigger.source_cell_id,
         trigger.target_cell_id,
       )
-      if (layer === 'forward' && wrap) continue
-      if (layer === 'wrap' && !wrap) continue
+      if (lane === 'forward' && wrap) continue
+      if (lane === 'wrap' && !wrap) continue
 
       const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
         sourceEl,
@@ -227,8 +227,8 @@ export function BlueprintTriggerArrows({
         pair.cellAId,
         pair.cellBId,
       )
-      if (layer === 'forward' && wrap) continue
-      if (layer === 'wrap' && !wrap) continue
+      if (lane === 'forward' && wrap) continue
+      if (lane === 'wrap' && !wrap) continue
 
       const d = buildBidirectionalArrowPath(cellAEl, cellBEl, content)
       if (!d) continue
@@ -260,8 +260,8 @@ export function BlueprintTriggerArrows({
         trigger.source_cell_id,
         trigger.target_cell_id,
       )
-      if (layer === 'forward' && wrap) continue
-      if (layer === 'wrap' && !wrap) continue
+      if (lane === 'forward' && wrap) continue
+      if (lane === 'wrap' && !wrap) continue
 
       const d = buildArrowPath(
         sourceEl,
@@ -301,7 +301,7 @@ export function BlueprintTriggerArrows({
     contentRef,
     defaultArrowColor,
     defaultColorKey,
-    layer,
+    lane,
     triggers,
   ])
 
@@ -382,7 +382,7 @@ export function BlueprintTriggerArrows({
         // Keep the connector hierarchy identical to IntegratedTriggerArrows:
         // ordinary runs tuck below the z-[1] cells, while wrap runs stay
         // elevated because they travel through the empty outer corridors.
-        layer === 'forward' ? 'z-0' : 'z-[30]',
+        lane === 'forward' ? 'z-0' : 'z-[30]',
       )}
       style={svgStyle}
       overflow="visible"

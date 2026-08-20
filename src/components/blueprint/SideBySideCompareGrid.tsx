@@ -64,7 +64,7 @@ export function SideBySideCompareGrid({
   fillSwimlaneHeight = false,
 }: SideBySideCompareGridProps) {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
-  const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
+  const lanes = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
 
   const rows = useMemo(() => {
     const specs = buildSideBySideLabelRowSpecs(
@@ -148,7 +148,7 @@ export function SideBySideCompareGrid({
             <Fragment key={`label-${row.key}`}>
               <BlueprintLabelRow
                 row={row}
-                layers={layers}
+                lanes={lanes}
                 compact={compact}
                 onToggleLayer={toggleLayer}
                 style={{ gridColumn: 1, gridRow: rowIndex + 1 }}
@@ -163,7 +163,7 @@ export function SideBySideCompareGrid({
           <BlueprintPathBand
             key={blueprint.path.id}
             blueprint={blueprint}
-            layers={layers}
+            lanes={lanes}
             rows={rows}
             // The grid reserves column 1 for the label rail.
             arrangement={{

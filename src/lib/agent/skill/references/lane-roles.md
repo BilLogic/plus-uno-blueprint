@@ -1,16 +1,16 @@
-# Layer Roles
+# Lane Roles
 
 The semantic contract between blueprint content and rendering. Source of
-truth: `src/lib/layerRoles.ts` (vocabulary + legacy shim) and
+truth: `src/lib/laneRoles.ts` (vocabulary + legacy shim) and
 `src/lib/blueprintLayout.ts` (rendering + divider-line rules).
 
 ## The split: display name vs role
 
 A layer has two identities:
 
-- `display_name` (`layers.name`) — free-form label in **any language**
+- `display_name` (`lanes.name`) — free-form label in **any language**
   ("现场技术员", "Regular Tutor", "Compliance Review").
-- `role` (`layers.layer_role`) — a stable semantic key that drives rendering.
+- `role` (`lanes.lane_role`) — a stable semantic key that drives rendering.
   `null`/absent = plain generic swimlane.
 
 Never infer semantics from the display name. That was the old magic-name
@@ -60,7 +60,7 @@ elicitation), or to none.
 ## Custom roles
 
 The vocabulary is extensible. Org-defined roles (e.g. `physical_evidence`,
-`compliance_review`, `partner_ops`) are legal `layer_role` values and render
+`compliance_review`, `partner_ops`) are legal `lane_role` values and render
 as generic swimlanes — same as `null`, but the role key preserves the
 org's semantic intent in data, keeps crosswalks reusable, and lets future
 template versions attach rendering to it. Prefer a named custom role over
@@ -72,8 +72,8 @@ roles included (`blueprintLayerHasBackwardInLaneLoop`).
 
 ## Legacy name shim
 
-Content that predates `layer_role` (rows with null role) is resolved through
-`LEGACY_NAME_TO_ROLE` in `src/lib/layerRoles.ts`: exact display names like
+Content that predates `lane_role` (rows with null role) is resolved through
+`LEGACY_NAME_TO_ROLE` in `src/lib/laneRoles.ts`: exact display names like
 `'Front Stage Tech'`, `'Customer Actions'`, `'Regular Tutor'` (a PLUS spine
 actor), `'Visual'` map to roles at render time. The shim is for legacy data
 only — **new IR must always set `role` explicitly** and never rely on

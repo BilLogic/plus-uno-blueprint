@@ -20,7 +20,7 @@ nothing here relaxes one.
 | Sign-off hash gate | the human's Save gate — every write you make lands immediately but revertibly in the change sheet; the human keeps or reverts each row |
 | Scenario import / re-import | not available here — say so and point at the IDE flow |
 | Read source documents | not available — the human pastes relevant text into chat |
-| Reference docs (cited in playbooks as `references/…` or `skills/<skill>/references/…` paths) | `get_reference` serves the canvas set by BARE NAME — the filename without directory or `.md` (e.g. `skills/audit/references/check-gap-sweep.md` → `check-gap-sweep`). The set: playbooks for cocreate/audit/whatif/slice, check docs, lane-vocabulary, layer-roles, data-model, elicitation-protocol, slice-templates. The IDE-only references (ingest/translate/review-import playbooks, adapter-contract, change-request-schema) do NOT exist on the canvas — their binding rules are already translated by THIS file; never attempt to read them, and never improvise their content |
+| Reference docs (cited in playbooks as `references/…` or `skills/<skill>/references/…` paths) | `get_reference` serves the canvas set by BARE NAME — the filename without directory or `.md` (e.g. `skills/audit/references/check-gap-sweep.md` → `check-gap-sweep`). The set: playbooks for cocreate/audit/whatif/slice, check docs, lane-vocabulary, lane-roles, data-model, elicitation-protocol, slice-templates. The IDE-only references (ingest/translate/review-import playbooks, adapter-contract, change-request-schema) do NOT exist on the canvas — their binding rules are already translated by THIS file; never attempt to read them, and never improvise their content |
 
 ## Canvas audit run (`/sb:audit`)
 

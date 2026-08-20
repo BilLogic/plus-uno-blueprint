@@ -31,10 +31,10 @@ function makeBlueprint(
   pathId: string,
   steps: string[],
   cells: CellSpec[],
-  lanes?: string[],
+  laneNames?: string[],
 ): BlueprintData {
-  const laneNames = lanes ?? [...new Set(cells.map((cell) => cell.lane))]
-  const layers = laneNames.map((name, index) => ({
+  const names = laneNames ?? [...new Set(cells.map((cell) => cell.lane))]
+  const lanes = names.map((name, index) => ({
     id: `${pathId}-lane-${name}`,
     name,
     row_position: index,
@@ -47,7 +47,7 @@ function makeBlueprint(
   const stepIdByName = new Map(stepRows.map((step) => [step.name, step.id]))
   const blueprintCells: BlueprintCell[] = cells.map((cell) => ({
     id: cell.id ?? nextId(`${pathId}-cell`),
-    layer_id: `${pathId}-lane-${cell.lane}`,
+    lane_id: `${pathId}-lane-${cell.lane}`,
     step_id: stepIdByName.get(cell.step) ?? '',
     content: cell.content,
     picture: null,
@@ -62,7 +62,7 @@ function makeBlueprint(
       note: null,
       path_type: 'happy',
     },
-    layers,
+    lanes,
     steps: stepRows,
     cells: blueprintCells,
     triggers: [],

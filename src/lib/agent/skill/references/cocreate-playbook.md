@@ -30,7 +30,7 @@ Ask explicitly: **"Whose journey is the spine?"** — the actor whose lane gets
 `customer_actions` and anchors the interaction line. B2B multi-stakeholder
 and internal-ops blueprints make this genuinely non-obvious, and "no spine"
 is a legal answer (no `customer_actions` lane, no interaction line — see
-`references/layer-roles.md`).
+`references/lane-roles.md`).
 
 ## 3. Skeleton preview
 
@@ -45,7 +45,7 @@ Per scenario, in this order (mirrors the elicitation protocol):
 
 1. Steps — the columns, in order. Start with the happy path's sequence.
 2. Lanes — actors + tech + support; assign roles explicitly
-   (`references/layer-roles.md`); reference docs may suggest system names
+   (`references/lane-roles.md`); reference docs may suggest system names
    for tech lanes.
 3. Cells — walk the grid lane by lane; empty cells are fine and normal.
 4. Paths — after the happy path exists, ask what goes wrong / what's the

@@ -273,7 +273,7 @@ export function CompareDifferencesSurface({
   const totalCount = useMemo(() => countCompareDifferences(model), [model])
 
   // Lane facets (order of first appearance) + swatch colors resolved the
-  // way the cell panel resolves its lane chip: layer_role first, name second.
+  // way the cell panel resolves its lane chip: lane_role first, name second.
   const { laneFacets, laneSwatchByKey } = useMemo(() => {
     const facets: Array<{ key: string; label: string }> = []
     const seen = new Set<string>()
@@ -284,11 +284,11 @@ export function CompareDifferencesSurface({
       facets.push({ key: slot.laneKey, label: slot.laneLabel })
     }
     for (const blueprint of registration.blueprints) {
-      for (const layer of blueprint.layers) {
-        const key = facets.find((facet) => facet.label === layer.name)?.key
+      for (const lane of blueprint.lanes) {
+        const key = facets.find((facet) => facet.label === lane.name)?.key
         if (!key || swatches.has(key)) continue
-        const zone = getBlueprintLayerZone(layer, blueprint.layers)
-        swatches.set(key, getBlueprintLayerStyle(layer.name, zone, layer.role).lane)
+        const zone = getBlueprintLayerZone(lane, blueprint.lanes)
+        swatches.set(key, getBlueprintLayerStyle(lane.name, zone, lane.role).lane)
       }
     }
     return { laneFacets: facets, laneSwatchByKey: swatches }

@@ -29,7 +29,7 @@ import type { Database } from '@/types/database'
  * and after:
  *
  *   * lane — `deletion_impact('lane', <a Goal Setting "Front Stage Tech"
- *     layer>)` reported **11**; `remove_lane(scenario_id, lane_name)` deletes
+ *     lane>)` reported **11**; `remove_lane(scenario_id, lane_name)` deletes
  *     every same-named lane across every path of the scenario, which is
  *     **93**. An 8.5x undercount. Now 93.
  *   * step — counted the step across EVERY path (**12**); `remove_step(

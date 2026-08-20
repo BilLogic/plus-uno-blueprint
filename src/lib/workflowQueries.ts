@@ -3,7 +3,7 @@
 export const PATH_LIST_SELECT =
   'id, name, summary, note, path_type, service_scenario_id, created_at, updated_at'
 
-/** Blueprint grid: path with layers, path_steps, and cells */
+/** Blueprint grid: path with lanes, path_steps, and cells */
 export const PATH_BLUEPRINT_SELECT = `
   id,
   name,
@@ -11,10 +11,10 @@ export const PATH_BLUEPRINT_SELECT = `
   note,
   path_type,
   service_scenario_id,
-  layers (
+  lanes (
     id,
     name,
-    layer_role,
+    lane_role,
     row_position
   ),
   path_steps (
@@ -26,7 +26,7 @@ export const PATH_BLUEPRINT_SELECT = `
   ),
   cells (
     id,
-    layer_id,
+    lane_id,
     step_id,
     slot_position,
     content,

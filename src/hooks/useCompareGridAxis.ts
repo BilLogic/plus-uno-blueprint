@@ -12,14 +12,14 @@ import {
   getCanonicalLayers,
   type BlueprintLabelRowSpec,
 } from '@/lib/sideBySideCompareLayout'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 export type CompareGridAxis = {
   /** Canonical lanes across the compared paths. */
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   /** Lane row specs (one set — both canvases share the lane axis). */
   rows: BlueprintLabelRowSpec[]
-  toggleLayer: (layerId: string) => void
+  toggleLayer: (laneId: string) => void
   tracks: CompareGridTrack[]
   gridTemplateColumns: string
 }
@@ -37,7 +37,7 @@ export function useCompareGridAxis(
 ): CompareGridAxis {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
 
-  const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
+  const lanes = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
 
   const rows = useMemo(
     () => buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds),
@@ -60,5 +60,5 @@ export function useCompareGridAxis(
       .join(' ')}`
   }, [tracks])
 
-  return { layers, rows, toggleLayer, tracks, gridTemplateColumns }
+  return { lanes, rows, toggleLayer, tracks, gridTemplateColumns }
 }

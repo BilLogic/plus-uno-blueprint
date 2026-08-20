@@ -19,7 +19,7 @@ export type CellDependencyTechEntry = {
   id: string
   cellId: string
   item: string
-  layerName?: string
+  laneName?: string
   stepIndex?: number
 }
 
@@ -106,7 +106,7 @@ function DependencyRow({
           <span className="flex min-w-0 items-center gap-[7px]">
             <DirectionIcon direction={direction} />
             <span className="min-w-0 truncate font-normal text-foreground/90">
-              {connection.layerName}
+              {connection.laneName}
               <span className="text-muted-foreground">
                 {' '}
                 · Step {connection.stepIndex + 1}

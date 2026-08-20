@@ -209,7 +209,7 @@ export const CASES = [
 Selected phase: "In-session"
 Selected scenario: "Warm-Up"
 Active tab: base blueprint view (no slice tab)
-Cell panel open: "Mark them as present." — layer "Regular Tutor", step "Mark Student Present" (#5), scenario "Warm-Up"
+Cell panel open: "Mark them as present." — lane "Regular Tutor", step "Mark Student Present" (#5), scenario "Warm-Up"
 Canvas mode: view`,
     },
     turns: ['What am I looking at right now?'],
@@ -301,7 +301,7 @@ Canvas mode: view`,
     turns: ['Add a QA lane to the Warm-Up happy path.', 'yes, add it.'],
     // --smoke: exercises real Supabase reads + dry-run write plumbing.
     smokeCalls: [
-      ['get_reference', { name: 'layer-roles' }],
+      ['get_reference', { name: 'lane-roles' }],
       ['list_blueprint', {}],
       ['create_layer', { scenario_id: 'smoke', name: 'QA' }],
     ],
@@ -315,7 +315,7 @@ Canvas mode: view`,
           if (firstWrite === -1) return 'never wrote the lane'
           const refBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_reference')
           const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'list_blueprint')
-          if (!refBefore) return 'no get_reference before the write (layer-roles / lane-vocabulary)'
+          if (!refBefore) return 'no get_reference before the write (lane-roles / lane-vocabulary)'
           if (!readBefore) return 'no blueprint read before the write'
           return true
         },
@@ -328,7 +328,7 @@ Canvas mode: view`,
     ],
     judgeLines: [
       { id: 'narrates-batch', text: 'The narration before the write batch is short (about one line); the agent does not ask permission per cell.' },
-      { id: 'coinage-stated', text: 'If a new owner tag or unusual layer_role was coined, the agent says so explicitly; otherwise it reuses existing vocabulary.' },
+      { id: 'coinage-stated', text: 'If a new owner tag or unusual lane_role was coined, the agent says so explicitly; otherwise it reuses existing vocabulary.' },
     ],
   },
   {

@@ -81,14 +81,14 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   extras?: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>>,
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -198,7 +198,7 @@ export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     note: null,
     path_type: 'happy',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: SESSION_SIGN_UP_CELLS,
   triggers: SESSION_SIGN_UP_TRIGGERS,

@@ -12,7 +12,7 @@ import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 function cellAt(stepIndex: number, cellId: string): BlueprintCellSelection {
   return {
     scenarioName: 'Warm-Up',
-    layerName: 'Actor',
+    laneName: 'Actor',
     stepId: `step-${stepIndex}`,
     stepName: `Step ${stepIndex}`,
     stepIndex,

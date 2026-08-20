@@ -22,7 +22,7 @@ export type CellContentUpdate = {
  *
  * These columns carry a column-level grant from the authoring migration, for
  * the same reason the spec columns do: the panel can edit what a cell *says*
- * without that opening the cell's position — path, layer, step — to the same
+ * without that opening the cell's position — path, lane, step — to the same
  * path. Where a cell sits is structure, and structure goes through the RPCs.
  *
  * `content` is the one field that is never nulled. A cell with no text is a

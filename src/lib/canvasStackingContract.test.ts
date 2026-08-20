@@ -16,8 +16,8 @@ const viewport = source('../components/editor/ZoomPanViewport.tsx')
 
 describe('canvas stacking contract', () => {
   it('keeps forward connectors below cells in both arrow renderers', () => {
-    expect(legacyArrows).toContain("layer === 'forward' ? 'z-0' : 'z-[30]'")
-    expect(integratedArrows).toContain("layer === 'forward' ? 'z-0' : 'z-[30]'")
+    expect(legacyArrows).toContain("lane === 'forward' ? 'z-0' : 'z-[30]'")
+    expect(integratedArrows).toContain("lane === 'forward' ? 'z-0' : 'z-[30]'")
   })
 
   it('keeps phase connectors below badges and annotation tools', () => {
@@ -29,7 +29,7 @@ describe('canvas stacking contract', () => {
     )
   })
 
-  it('contains canvas-local layers in one stacking context', () => {
+  it('contains canvas-local lanes in one stacking context', () => {
     expect(viewport).toContain("cn('relative isolate min-h-0 flex-1', className)")
   })
 })

@@ -21,7 +21,7 @@ const VENDORED_SKILLS = resolve('src/lib/agent/skill/skills')
 // get_reference serves files by bare name.
 const FILES = [
   'references/canvas-adapter.md',
-  'references/layer-roles.md',
+  'references/lane-roles.md',
   'references/lane-vocabulary.md',
   'skills/map/references/elicitation-protocol.md',
   'skills/map/references/cocreate-playbook.md',

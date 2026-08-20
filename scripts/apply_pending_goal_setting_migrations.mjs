@@ -73,7 +73,7 @@ select
       and elem->>'label' = 'PLUS Onboarding Module 9'
   )::int as plus_onboarding_links
 from public.cells c
-join public.layers l on l.id = c.layer_id
+join public.lanes l on l.id = c.lane_id
 join public.paths p on p.id = l.path_id
 cross join lateral jsonb_array_elements(c.links) as elem
 where p.service_scenario_id = 'a0000000-0000-4000-8000-000000000204';

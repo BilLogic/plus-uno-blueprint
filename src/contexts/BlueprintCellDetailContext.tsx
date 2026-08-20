@@ -135,7 +135,7 @@ export function BlueprintCellDetailProvider({
       const cells = selection.paths
         .map((entry) => `${entry.pathName}: ${entry.cellId}`)
         .join('; ')
-      return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — layer "${selection.layerName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
+      return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — lane "${selection.laneName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
     })
   }, [selection])
 
@@ -260,7 +260,7 @@ export function BlueprintCellDetailProvider({
     }
 
     const skipHighlightZone = shouldUseVisualContent({
-      name: selection.layerName,
+      name: selection.laneName,
     })
 
     for (const path of selection.paths) {
@@ -290,14 +290,14 @@ export function BlueprintCellDetailProvider({
       // The dependency table also includes technology in the selected step,
       // even when no explicit trigger connects it to the active cell.
       const techLayerIds = new Set(
-        blueprint.layers
-          .filter((layer) => shouldUsePillCellContent(layer))
-          .map((layer) => layer.id),
+        blueprint.lanes
+          .filter((lane) => shouldUsePillCellContent(lane))
+          .map((lane) => lane.id),
       )
       for (const cell of blueprint.cells) {
         if (
           cell.step_id !== selection.stepId ||
-          !techLayerIds.has(cell.layer_id)
+          !techLayerIds.has(cell.lane_id)
         ) {
           continue
         }

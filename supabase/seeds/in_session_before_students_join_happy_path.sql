@@ -24,10 +24,10 @@ where source_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-000000000809';
 
-delete from public.layers
+delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-000000000809';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, row_position)
 values
   ('a0000000-0000-4000-8000-000000002010', 'a0000000-0000-4000-8000-000000000809', 'Visual', 0),
   ('a0000000-0000-4000-8000-000000002011', 'a0000000-0000-4000-8000-000000000809', 'Partner Action: Teacher', 1),
@@ -69,7 +69,7 @@ values
 on conflict (path_id, step_id) do update set
   column_position = excluded.column_position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000180110', 'a0000000-0000-4000-8000-000000000809', 'a0000000-0000-4000-8000-000000002010', 'a0000000-0000-4000-8000-000000000950', ''),
   ('a0000000-0000-4000-8000-000000180210', 'a0000000-0000-4000-8000-000000000809', 'a0000000-0000-4000-8000-000000002010', 'a0000000-0000-4000-8000-000000000951', ''),
@@ -107,7 +107,7 @@ values
   ('a0000000-0000-4000-8000-000000180509', 'a0000000-0000-4000-8000-000000000809', 'a0000000-0000-4000-8000-000000002018', 'a0000000-0000-4000-8000-000000000954', E'Dev team\nDesign team')
 on conflict (id) do update set
   path_id = excluded.path_id,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id,
   content = excluded.content;
 

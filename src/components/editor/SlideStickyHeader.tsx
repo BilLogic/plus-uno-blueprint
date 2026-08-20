@@ -107,7 +107,7 @@ export function SlideStickyHeader({
   ...contentProps
 }: SlideStickyHeaderProps) {
   // Collapsed: the floating pill carries this header's identity instead —
-  // one chrome layer at any width. Path filters and the zoom readout are
+  // one chrome lane at any width. Path filters and the zoom readout are
   // deliberately not folded in; they come back when the sidebar does.
   const { collapsed } = useSidebarCollapsedState()
   useCollapsedNavSummary(

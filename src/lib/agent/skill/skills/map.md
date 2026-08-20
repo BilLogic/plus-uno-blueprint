@@ -128,7 +128,7 @@ definition needed.
 | Executing a phase | `skills/map/references/ingest-playbook.md` / `cocreate-playbook.md` / `translate-playbook.md` / `review-import-playbook.md` |
 | Running the co-creation conversation | `skills/map/references/elicitation-protocol.md` (question script + right-sizing branches) |
 | Writing or checking IR structure | `references/ir-schema.json`; model background in `references/data-model.md` |
-| Assigning swimlane roles / divider lines | `references/layer-roles.md` |
+| Assigning swimlane roles / divider lines | `references/lane-roles.md` |
 | Drafting multiple phases consistently (customer spine per phase, shared actor labels) | `references/lane-vocabulary.md` |
 | Building a translation mapping | `skills/map/references/crosswalk-schema.json` |
 | Anything touching an import target | `references/adapter-contract.md` |

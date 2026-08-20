@@ -9,9 +9,9 @@ Hierarchy: **Pre-Session** (`…000103`) → **Warm-Up** (`…000203`) → **War
 | UUID | `a0000000-0000-4000-8000-000000000300` |
 | path_type | `happy` |
 
-## Layers (`layer_id` → UUID, `row_position`)
+## Layers (`lane_id` → UUID, `row_position`)
 
-| layer_id | UUID | name |
+| lane_id | UUID | name |
 | --- | --- | --- |
 | partner_action_teacher | `…000301` | Partner Action: Teacher |
 | lead_tutor | `…000302` | Lead Tutor |

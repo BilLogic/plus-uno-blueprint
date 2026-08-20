@@ -93,14 +93,14 @@ type BuildPartnerLeadOptions = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   picture?: string,
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -161,7 +161,7 @@ function trigger(
 
 function rowTriggers(
   options: BuildPartnerLeadOptions,
-  layer: PartnerLeadLayerSuffix,
+  lane: PartnerLeadLayerSuffix,
   idStart: number,
   count: number,
 ): BlueprintCellDependency[] {
@@ -174,9 +174,9 @@ function rowTriggers(
         options,
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
