@@ -789,11 +789,15 @@ export type Database = {
       }
     }
     Functions: {
-      blueprint_hybrid_search: {
+      search_blueprint: {
         Args: {
           embed_model?: string
+          filter_layer_role?: string
+          filter_path_type?: string
+          filter_phase?: string
+          filter_scenario?: string
           match_count?: number
-          q: string
+          q?: string
           query_embedding?: string
           rrf_k?: number
         }
@@ -812,20 +816,8 @@ export type Database = {
           snippet: string
           step: string
           title: string
+          total_matched: number
           updated_at: string
-        }[]
-      }
-      search_blueprint: {
-        Args: { q: string }
-        Returns: {
-          id: string
-          kind: string
-          layer: string
-          phase: string
-          scenario: string
-          snippet: string
-          step: string
-          title: string
         }[]
       }
     }
