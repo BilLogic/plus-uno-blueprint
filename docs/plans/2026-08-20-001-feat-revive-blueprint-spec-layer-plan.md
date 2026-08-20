@@ -765,3 +765,186 @@ and simply consumes the lifted shell.
   dependency editor.
 - **Draft mode** — `CellPanelEditor`'s not-yet-created-row branch. Phases,
   lanes and the service already exist; only cells are created from a panel.
+
+---
+
+# Review round 2 — naming, tenancy, and a critical pass on the fields
+
+## Correction: cells open on a PLAIN click
+
+The plan said ⌘-click. Wrong. From the grammar comment in
+`BlueprintCellButton.tsx:180-183`:
+
+> "⌘/ctrl reads, everything else picks (when there is a picker), and **a bare
+> click on a canvas with no picker opens the panel** — or closes it, when the
+> panel is already showing this exact cell."
+
+So the default gesture is a plain click. ⌘-click is the **escape hatch** for
+when a slice picker has claimed the bare click, and right-click → "View cell
+detail" is the discoverable route. The trigger table is corrected accordingly:
+
+| Entity | Opens from | Gesture |
+|---|---|---|
+| Service | left sidebar, above Phases | click |
+| Phase | info button, `PhaseMenubarHeader` | click |
+| Lane | `(i)` beside the lane label, both render paths | click |
+| Cell | the cell | **plain click** (⌘-click only when a picker owns the click) |
+
+Every new panel therefore opens on a **plain click**, matching cells.
+
+## Naming — the backend says one word, the product says another
+
+| Table / column | What the product calls it | Verdict |
+|---|---|---|
+| `layers` | **lane** | ❌ rename → `lanes` |
+| `layers.layer_role` | lane role | ❌ → `lane_role` |
+| `cells.layer_id` | lane | ❌ → `lane_id` |
+| `cell_triggers` | dependency / link | ❌ rename → `cell_links` |
+| `propositions` | business model | ❌ rename → `business_model` |
+| `service_scenarios` | scenario | ⚠️ keep — see below |
+
+**`layers` → `lanes` is the important one.** Nobody using the product
+recognises "layer". The reference doc itself has to teach the split
+(`layer-roles.md`: `display_name` vs `role`), and every conversation about it
+starts by translating. The agent surface already says `lane` in
+`create_layer`'s description — so the code is already translating at runtime.
+
+**`cell_triggers` → `cell_links`.** The table stores `kind in ('trigger',
+'needs')`. Its name claims half its contents. The agent tools already say
+`create_cell_link` / `list_cell_links`; the table should agree.
+
+**`service_scenarios` stays.** `service_` is a live family —
+`services` → `service_lifecycles` → `service_scenarios` — and renaming one
+member orphans the convention. The agent layer already exposes it as
+`scenario` (`filter_scenario`), so no user ever sees the prefix. Cost with no
+benefit.
+
+**Rename blast radius** (each is a `alter table … rename`, plus a sweep):
+PostgREST embeds in `PATH_BLUEPRINT_SELECT`, `search_blueprint`,
+`deletion_impact`, `remove_lane`, `layerRoles.ts`, `blueprintLayout.ts`, the
+generated types, and every component that names the relation. Mechanical, but
+it touches the portal and the delete path — both of which this branch just
+changed, so **sequence it after this branch merges**, not into it.
+
+## Multi-service: the schema is ready, the app is not, RLS isn't either
+
+Every table hangs off `service_lifecycle_id`, so the **schema is
+multi-service shaped**. Two things are not:
+
+**1. The app picks a service for you.** `resolveFirstLifecycleId`
+(`src/lib/lifecycle.ts:34`) is literally *"First lifecycle by `created_at`"*,
+and `registry.ts:96` comments *"One lifecycle per deployment today."* Some
+reads do scope — `useLifecyclePhases.ts:66`, `useSlices.ts:46`,
+`registry.ts:675` — but to the lifecycle that was **chosen for them**. There
+is no service picker anywhere.
+
+**2. There is no tenant isolation at all.** Checked every relevant table:
+
+```
+services · service_lifecycles · phases · service_scenarios
+cells · slices · findings · evidence · propositions
+        →  SELECT policy: using (true), all of them
+```
+
+Anyone who can read, reads **everything**. Today that is fine: one service, one
+lifecycle, one team. It is not a bug, it is an unbuilt feature — but it means
+"another team with a different service" is not a configuration change, it is a
+project:
+
+- a `service_lifecycle_id` predicate on every SELECT policy, driven by a
+  membership table
+- a service picker, and a real `lifecycleId` instead of "the first one"
+- **`search_blueprint` is not service-scoped either.** Its `scoped` CTE joins
+  cells → lanes → paths → scenarios → phases and never reaches
+  `service_lifecycle_id`. With two services it would blend them silently.
+  A `filter_service` parameter is the fix, and it should land *with* tenancy,
+  not before — an unused filter is another thing to keep true.
+
+**Recommendation:** do not build tenancy speculatively. Do add the
+`filter_service` parameter and the RLS predicate **as one piece of work**, the
+day a second service is real. Record here that the portal is the piece most
+likely to be forgotten, because it is the newest.
+
+## Critical pass on the fields — the grain is wrong in two places
+
+### 🔴 Lane fields are stored per-path, not per-lane
+
+```
+299  layer rows
+166  logical lanes   (distinct scenario × lane name)
+ 12  distinct lane names in the entire blueprint
+```
+
+"Regular Tutor" is **one** concept. It is stored as roughly 25 rows. Filling
+`owner_team` for Regular Tutor means typing it ~25 times, and nothing keeps
+those copies equal.
+
+The database already knows this: `remove_lane(scenario_id, lane_name)` deletes
+**by name across the scenario** — the delete function treats `(scenario, name)`
+as the lane's identity, not the row id. That is exactly the mismatch behind the
+8.5× undercount fixed in `20260820030000`.
+
+**So the lane panel must edit the logical lane, not the row.** Writing
+`owner_team` / `kpis` / `tools` fans out to every same-named lane in the
+scenario, matching `remove_lane`'s grain. Editing one row would create the drift
+the KPI audit then reports as a finding — the tool manufacturing its own work.
+
+Open question worth answering before building: should these three fields move to
+a `lanes` table keyed by `(scenario_id, name)`, rather than fan-out writes onto
+299 rows? That is the structurally honest fix. Fan-out is the cheaper one.
+
+### 🔴 `cells.owner` duplicates `lanes.owner_team`
+
+A cell's owning team is its lane's team, except when it deviates. Filling
+`owner` on 955 cells restates the lane 955 times.
+
+**`cells.owner` should be an exception override, not a field to populate.**
+Empty means "same as the lane" — which is also why 0/955 is not necessarily a
+failure. The fill campaign should skip it entirely and only ever write it where
+a cell genuinely differs from its lane.
+
+### 🟡 `perceived_owner` and `form` only make sense frontstage
+
+```
+241  frontstage cells
+955  cells total
+```
+
+`perceived_owner` is *"who the customer believes owns this moment (mismatch =
+deception risk)"*. A customer cannot perceive an owner for a backstage tech
+row — there is nothing to mismatch. So the field applies to **241 cells, not
+955**, and `check-perceived-owner` should read it that way.
+
+`form` is *"communication / look / feel / sound"*. Same argument: a backstage
+database write has no tone. The pilot bears it out — 8 of 11 filled, and the
+three blanks are the least presentational cells.
+
+**Fill campaign shrinks accordingly:**
+
+| Field | Naive scope | Honest scope |
+|---|---|---|
+| lane `owner_team` / `kpis` / `tools` | 299 rows × 3 | **166 logical lanes × 3**, or 12 if a vocabulary |
+| `cells.perceived_owner` | 955 | **241 frontstage** |
+| `cells.owner` | 955 | **exceptions only** |
+| `cells.form` | 955 | frontstage, and optional even there |
+| `cells.function` | 955 | 955 — genuinely per-cell |
+| `cells.value_props` | 955 | 955, but see below |
+
+### 🟡 `value_props` may be at the wrong level too
+
+Value is delivered by a *moment* — a step — and one lane's action within that
+step contributes to it. Storing it per cell means the same "student gets a
+faster start" value is restated on every cell in the step that produces it.
+
+Not proposing a move: `check-value-ledger` reads cells, and 11 pilot rows is
+too little evidence to redesign on. Recording it as the next question after the
+campaign has real data — **if the same value text repeats across a step's
+cells, that is the answer.**
+
+### ✅ Fields that are right where they are
+
+- `cells.function` — genuinely per-cell. `content` says what happens,
+  `function` says why. The pilot shows the difference clearly.
+- `phases.business_impact` / `operational_requirements` — 6 rows, phase-level
+  by nature, no duplication.
+- Business model at the **service** level — 1 row, correct.
