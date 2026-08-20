@@ -9,21 +9,31 @@ import type { LaneSetEntry, ViewType } from '@/lib/authoringRpc'
  * type; the database's copy stays as the authority.
  */
 
-export const VIEW_TYPES: ViewType[] = ['single', 'side-by-side', 'integrated']
+export const VIEW_TYPES: ViewType[] = ['single', 'stacked']
 
-/** Display names. The stored values are hyphenated; nobody should read those. */
+/**
+ * Display names.
+ *
+ * The old comment here read "the stored values are hyphenated; nobody should
+ * read those" — which was true of `side-by-side` and is the whole reason the
+ * vocabulary collapsed. The stored token is now the token the UI names.
+ */
 export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
   single: 'Single',
-  'side-by-side': 'Side by side',
-  integrated: 'Integrated',
+  stacked: 'Stacked',
 }
 
 /** What each view type is for, in the words someone choosing one would use. */
 export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
   single: 'One version at a time',
-  'side-by-side': 'Paths compared step by step',
-  integrated: 'Every version merged into one grid',
+  stacked: 'Paths compared step by step',
 }
+
+/**
+ * `merged` is deliberately absent: it is a per-session display chosen in the
+ * compare control, not a property of the scenario. The CHECK constraint
+ * rejects it, so offering it here would present a choice the write refuses.
+ */
 
 /**
  * The lanes a scenario starts with when nothing is copied.

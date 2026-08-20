@@ -15,7 +15,6 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSupabaseQuery, invalidateStructure } from '@/hooks/useSupabaseQuery'
 import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
 import { createScenario } from '@/lib/authoringRpc'
-import { clientToDbViewType } from '@/lib/viewTypeVocabulary'
 import {
   DEFAULT_LANE_SET,
   VIEW_TYPE_LABELS,
@@ -77,9 +76,8 @@ function useLaneSources() {
 const EMPTY_DRAFT: DraftBlueprint = {
   phaseId: null,
   name: '',
-  // DraftBlueprint speaks DB vocabulary (it feeds `createScenario` directly),
-  // so the client default crosses the write seam through the vocabulary map.
-  viewType: clientToDbViewType['stacked'],
+  // One vocabulary: the token stored is the token the UI names.
+  viewType: 'stacked',
   laneSourcePathId: null,
   stepCount: 5,
   pathName: 'Happy Path',

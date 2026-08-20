@@ -1,6 +1,5 @@
-import { toClientViewType } from '@/lib/viewTypeVocabulary'
 import type { Phase, ServiceScenario } from '@/types/database'
-import type { NavItem } from '@/types/nav'
+import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
   ServiceScenario,
@@ -41,9 +40,10 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         label: scenario.name,
         description: scenario.description,
         parentId: phase.id,
-        // Read seam: DB tokens become client vocabulary here (and only here);
-        // unknown values fall back to 'single' instead of leaking through.
-        viewType: toClientViewType(scenario.view_type),
+        // One vocabulary. The column now holds client tokens
+        // (`single | stacked`), so there is no seam to cross — but a row
+        // outside the CHECK still falls back rather than rendering nothing.
+        viewType: asSlideViewType(scenario.view_type),
       })
     })
   })

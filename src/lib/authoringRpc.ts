@@ -71,7 +71,9 @@ export type LaneSetEntry = {
 
 export type DependencyKind = 'trigger' | 'needs'
 
-export type ViewType = 'single' | 'side-by-side' | 'integrated'
+/** What `service_scenarios.view_type` may hold. `merged` is a display state and
+ *  the CHECK constraint rejects it — see StoredSlideViewType in types/nav.ts. */
+export type ViewType = 'single' | 'stacked'
 
 // ---------------------------------------------------------------------------
 // The call seam.
