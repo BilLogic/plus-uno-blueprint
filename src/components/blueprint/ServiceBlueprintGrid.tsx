@@ -21,7 +21,7 @@ import {
 } from '@/lib/sideBySideCompareLayout'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
-import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
+import { LaneHeaderAffordance } from '@/components/blueprint/LaneHeaderAffordance'
 import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers'
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
@@ -477,7 +477,11 @@ function BlueprintSwimLane({
     >
       <div
         className={cn(
-          'sticky left-0 z-10 flex shrink-0 flex-col self-start border-r',
+          // `self-stretch`, not `self-start`: the label block is the lane's
+          // affordance now, and a target the height of one line of text in a
+          // 200px row is a target nobody finds. The label itself still sits at
+          // the top — the button aligns its own content.
+          'sticky left-0 z-10 flex shrink-0 flex-col self-stretch border-r',
           compact ? 'px-3.5' : 'pl-5 pr-3',
         )}
         style={{
@@ -497,38 +501,17 @@ function BlueprintSwimLane({
         )}
         <div
           className={cn(
-            'group/lane-header flex w-full items-start gap-2',
+            'flex w-full flex-1 items-stretch gap-2',
             compact ? 'pt-3 pb-3' : 'pt-5 pb-5',
           )}
         >
-        {isVisualLane ? (
-          <span
-            data-blueprint-row-header=""
-            className={cn(
-              'relative min-w-0 flex-1 text-left font-bold leading-snug tracking-tight whitespace-normal break-words',
-              compact ? 'text-xs' : 'text-sm',
-            )}
-            style={{ color: laneStyle.label }}
-          >
-            {laneName}
-          </span>
-        ) : (
-          <span
-            data-blueprint-row-header=""
-            className={cn(
-              'relative min-w-0 flex-1 text-left font-bold leading-snug tracking-tight whitespace-normal break-words',
-              compact ? 'text-xs' : 'text-sm',
-            )}
-            style={{ color: laneStyle.label }}
-          >
-            {laneName}
-          </span>
-        )}
-        <EntityPropertiesButton
-          kind="lane"
-          id={laneId}
-          name={laneName}
-          revealOnHover
+        {/* One branch, not two: the visual lane's header and every other
+            lane's were byte-identical. */}
+        <LaneHeaderAffordance
+          laneId={laneId}
+          laneName={laneName}
+          color={laneStyle.label}
+          compact={compact}
         />
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED && onToggleCollapse && (
           <LaneCollapseToggle

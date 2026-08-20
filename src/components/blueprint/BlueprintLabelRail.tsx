@@ -163,6 +163,7 @@ export function BlueprintDividerRow({
 }
 
 import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
+import { LaneHeaderAffordance } from '@/components/blueprint/LaneHeaderAffordance'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cellsInLane } from '@/lib/canvasCellQuery'
@@ -274,6 +275,14 @@ export function BlueprintLabelRow({
               {row.label}
             </button>
           </IconTooltip>
+        ) : row.kind === 'lane' && row.lane ? (
+          // View mode: the label is inert prose, so the whole block becomes
+          // the way into the lane's properties.
+          <LaneHeaderAffordance
+            laneId={row.lane.id}
+            laneName={row.label}
+            color={labelColor}
+          />
         ) : (
           <span
             data-blueprint-row-header=""
@@ -283,15 +292,16 @@ export function BlueprintLabelRow({
             {row.label}
           </span>
         )}
-        {/* Beside the selection handle, never inside it: in Design mode the
-            label itself selects the lane's cells, and the two readings have to
-            stay visibly separate. */}
-        {row.kind === 'lane' && row.lane ? (
+        {/* Design mode only, and beside the selection handle rather than
+            inside it: there the label already means "select every cell in
+            this lane", and the two readings have to stay visibly separate.
+            In View mode the block itself opens the panel, so a second control
+            would be a duplicate. */}
+        {laneSelectable && row.lane ? (
           <EntityPropertiesButton
             kind="lane"
             id={row.lane.id}
             name={row.label}
-            revealOnHover
           />
         ) : null}
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
