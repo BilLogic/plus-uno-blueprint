@@ -1,5 +1,5 @@
 ---
-title: "The spec layer — the finding, and the five plans that came out of it"
+title: "The spec layer — the finding, and the plans that came out of it"
 type: brief
 status: active
 date: 2026-08-20
@@ -8,7 +8,7 @@ repos: uno-blueprint
 
 # The spec layer
 
-**One finding, five plans.** This document is the evidence; the plans are the
+**One finding, eight plans.** This document is the evidence; the plans are the
 work. Everything below was read from the live database or from a file that was
 actually opened — no inference.
 
@@ -63,7 +63,7 @@ is the one that moves the number.
 
 ---
 
-## The five plans, and the order to build them
+## The eight plans, and the order to build them
 
 | # | Plan | Status | Why now |
 |---|---|---|---|
@@ -72,10 +72,16 @@ is the one that moves the number.
 | [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, **scenario** (which hosts paths), on one lifted shell — **no new columns** | active | The front door. Everything else waits on it |
 | [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, `filter_service`, then a switcher | **active** | Decided: one app, many services. RLS first; the switcher must not ship before the RPC filter |
 | [005](2026-08-20-005-feat-spec-fill-campaign-plan.md) | **Fill campaign** — scoped, cited, human-gated | blocked on 003 | Filling fields nobody can then see is how this content got lost the first time |
+| [007](2026-08-20-007-feat-cross-repo-blueprint-contract-plan.md) | **Cross-repo contract** — uno-bot's `include` switch, and putting RPC params + FK names under the drift check | active | `cell_triggers` → `cell_links` can break uno-bot silently. This is what stops it |
+| [008](2026-08-20-008-feat-create-a-service-first-run-plan.md) | **Create a service** — an empty service, a first-run flow, and the membership row it must write | active | Today a second team's first screen is a blank product with no way to begin |
+| [009](2026-08-20-009-feat-stakeholder-registry-plan.md) | **Stakeholder registry** — one cast list replacing four free-text vocabularies | active | `check-value-ledger` would fire **six false warnings per scenario** today |
 
 ### Build order
 
 ```
+007  cross-repo contract ← Phase 2 FIRST: it is what makes 002 safe
+      │
+      ▼
 002  vocabulary          ← after refactor/agent-tool-surface merges
       │                    renames paths.description → summary, which 003 writes against
       ▼
@@ -86,8 +92,14 @@ is the one that moves the number.
 006  data model          ← reference, not work. Read alongside 002 and 003.
 
 004  multi-service       ← independent. Its steps 1–2 (RLS, filter_service)
-                           can land any time and change nothing observable.
-                           Its switcher must NOT ship before step 2.
+      │                    can land any time and change nothing observable.
+      │                    Its switcher must NOT ship before step 2.
+      ▼
+008  create a service    ← needs 002 phase 6 (the real root table)
+                           and 004 step 1 (service_members)
+
+009  stakeholder registry ← independent of all of it. Needs NO uno-bot change,
+                            by design: slices.actor stays, trigger-maintained.
 ```
 
 **Nothing here needs a migration except 002's renames and 004's membership
@@ -196,6 +208,27 @@ and the fix in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md).
   name how a lane and a step happen to be drawn today; the compare view already
   draws the same lanes in a different geometry. Plan 002 moves them to
   `lane_position` and `step_position`.
+
+---
+
+## Decisions recorded here, because they are not plans
+
+**Findings get no UI.** Five open rows, three agent tools including writes, and
+all of `/audit`'s output — readable by the agent, not by a human in the app.
+Asked and answered: **no UI is being built.** The Flagged tab in
+[plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md) already scopes open
+findings to the lane or phase you are looking at, which is the surface that
+earns its place; a standalone findings view does not.
+
+**`services.slug` is scaffolding, not intent.** Checked before plan 002 drops
+the table. The row is `"Example API"` / `example-api` /
+*"Placeholder service entry for local development"* — template residue from the
+original import, not a designed multi-service URL scheme. Nothing to preserve.
+
+**`filter_layer_role` is not a cross-repo risk.** uno-bot never passes it; the
+string appears once, in a comment. The real cross-repo break is
+`cell_triggers` → `cell_links`. Both corrected in plan 002, evidence in
+plan 007.
 
 ---
 

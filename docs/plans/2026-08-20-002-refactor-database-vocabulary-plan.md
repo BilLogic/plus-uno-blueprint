@@ -78,10 +78,18 @@ Result: one root table, named what it is, and the word "lifecycle" leaves the
 schema. `service_scenarios` also stops being confusing — the `service_` family
 becomes `services` → `service_scenarios`, two members, both real.
 
-**Check before dropping `services`:** its row is `"Example API"` with a `slug`
-column that nothing else has. If `slug` was meant for routing a future
-multi-service URL, note it in [plan 004](2026-08-20-004-feat-multi-service-support-plan.md)
-before the table goes — the column is the only trace of that intent.
+**~~Check before dropping `services`~~ — checked, nothing to preserve.** The
+row reads:
+
+```
+name         "Example API"
+slug         "example-api"
+description  "Placeholder service entry for local development"
+```
+
+`slug` was template scaffolding from the original import, not a designed
+multi-service URL scheme — the description says so in its own words. **Drop the
+table.** Recorded so this does not get re-litigated at migration time.
 
 ### 🔴 Row and column are rendering words; lane and step are the domain
 
@@ -153,13 +161,28 @@ Then the sweep. Known call sites:
 - Agent surface: `create_layer` → `create_lane`, `list_layers` → `list_lanes`,
   `filter_layer_role` → `filter_lane_role`
 
-**Trap:** `filter_layer_role` is a **parameter of the deployed RPC**, and
-uno-bot passes it by name. Renaming it is a breaking change for a consumer in
-another repo — either keep the old parameter name, or ship both repos together.
+**~~Trap:~~ corrected.** An earlier draft said `filter_layer_role` is passed
+by uno-bot and rated the rename **High / cross-repo**. **It is not.** Grepping
+the whole `plus-vibe-coding-starting-kit` tree finds the string exactly once,
+in a prose comment (`agents/uno-bot/src/integrations/blueprint.ts:493`).
+`tryHybrid` sends four keys, `tryRpc` sends one, and neither is a filter. The
+rename costs one comment edit in the bot. Full evidence in
+[plan 007](2026-08-20-007-feat-cross-repo-blueprint-contract-plan.md).
 
 ### Phase 2 — `cell_triggers` → `cell_links`
 
-Lower risk: no PostgREST embed depends on it by name except
+> 🔴 **This is the real cross-repo break, not `filter_layer_role`.** uno-bot
+> reads the table by URL (`/rest/v1/cell_triggers`), by **FK constraint name**
+> inside two PostgREST embed hints, and lists it in both contract table arrays.
+> The embed hint is a string: rename the table without renaming the
+> constraints and the request 400s, `fetchEdges` logs a warning and returns
+> `[]`, and the bot reports "no dependencies" for cells that have them —
+> the exact silent-empty failure `blueprint.ts:1005-1013` documents from last
+> time. **Rename the constraints in the same migration**, and land
+> [plan 007](2026-08-20-007-feat-cross-repo-blueprint-contract-plan.md)
+> Phase 2 first so a drifted copy fails `check:contract` instead of a request.
+
+In-repo, no PostgREST embed depends on it by name except
 `outgoing:cell_triggers!cell_triggers_source_cell_id_fkey` in
 `PATH_BLUEPRINT_SELECT`, where **the constraint name is part of the syntax** —
 so the FK constraint has to be renamed too, or the embed hint updated.
@@ -298,7 +321,9 @@ above.
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| `filter_layer_role` rename breaks uno-bot | **High** — cross-repo | Keep the old parameter name, or ship both repos in one window |
+| ~~`filter_layer_role` breaks uno-bot~~ | **None** | Verified: the bot never passes it (plan 007) |
+| `cell_triggers` rename breaks uno-bot's edge read **silently** | **Critical** — cross-repo | Rename the FK constraints in the same migration; plan 007 Phase 2 puts the names in the checked contract |
+| `search_blueprint`'s OUTPUT column `description` renamed under the bot | **High** | The RPC projection is a separate decision from the table column — make it explicitly |
 | PostgREST embed hints break silently | High | They fail loudly at request time, not build time — cover with a smoke query per embed |
 | Rename lands mid-branch and conflicts | Medium | Sequenced after `refactor/agent-tool-surface` merges |
 | Sweep misses a string in a skill doc | Low | Word-boundary sweep, same method as `7530402` |

@@ -164,6 +164,54 @@ have never been written, which is true of any empty cell and is what
 `upsert_cell` is for. My earlier "47 steps have no slot" was counting
 materialised rows, not positions. **The slot is there for every step.**
 
+> ## 🔴 Correction — the storyboard row does not render text
+>
+> **Found while planning 007–009, and it undercuts the consolidation above.**
+> The reasoning below was measured against the *data*. The *renderer* says
+> something different.
+>
+> ```tsx
+> // src/components/blueprint/BlueprintStepVisual.tsx:105-107
+> if (!hasRealPictures) {
+>   return null
+> }
+> ```
+>
+> ```tsx
+> // src/components/blueprint/MergedCompareGrid.tsx:184-185
+> // A visual lane's face comes from the walkthrough layers' pictures,
+> // NOT from its own cell text, so it merges on the picture set.
+> ```
+>
+> A visual cell's `content` is read by **no renderer**. With no pictures the
+> cell renders nothing at all — so it is not clickable either, and the cell
+> panel cannot be reached to edit it. The row's face is assembled by
+> `resolveVisualStepPictureEntries(blueprint, step.id)` from *other* lanes'
+> pictures.
+>
+> **So "reuse the surface that already exists" was wrong: for text, there is no
+> surface.** Writing a step description into a storyboard cell would put it in
+> exactly the position this whole brief exists to fix — a filled column with no
+> front door.
+>
+> ### Two honest options
+>
+> | | **A · `steps.summary` + header hover** | B · caption the storyboard row |
+> |---|---|---|
+> | Storage | one new column, one row per step | existing `cells.content`, per path |
+> | Render paths to change | **1** — the step header | **5** — `ServiceBlueprintGrid`, `BlueprintPathBand`, `CompareCellBlock`, `MergedCompareGrid`, `BlueprintStepVisual` |
+> | Grain | clean: `steps` is keyed per scenario | per path; in side-by-side compare, "which cell does the header edit" has no answer |
+> | Storyboard keeps its job | yes — pictures | it gains a second job |
+>
+> **Recommendation: A.** One useful fact points the same way — pictures are
+> *already* resolved by `step.id`, not by path. The row is conceptually
+> step-grained already, so a step-grained column is the shape the renderer is
+> reaching for.
+>
+> ⚠️ **This reverses a decision that was endorsed. Not applied to plans 003 or
+> 005 pending a call** — the sections below still describe the storyboard
+> consolidation.
+
 **So step needs no column.** It already has a row of its own, rendered on every
 canvas, aligned under the step header, with a full editor behind it:
 

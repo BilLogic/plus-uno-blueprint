@@ -133,8 +133,11 @@ supplies it synchronously.
       from Service A floating over Service B is the confusion to avoid — and
       the panel state is now five panels deep after plan 003, so this needs one
       reset function, not five call sites.
-- [ ] **Empty state** for a user whose membership list is empty — today no
-      view has one at any level.
+- [ ] **Empty state** for a user whose membership list is empty. *(Correction:
+      an earlier draft said no view has an empty state at any level. Wrong —
+      `CanvasEmptyState.tsx:42` has canvas / panel / phase variants. What is
+      missing is the split between "nothing matched your filter" and "nothing
+      exists yet"; see [plan 008](2026-08-20-008-feat-create-a-service-first-run-plan.md).)*
 
 #### What is deliberately *not* front-end work
 
@@ -236,7 +239,7 @@ RLS before UI. Always.
 | 2 | `filter_service` on `search_blueprint` — `scoped`, `structural` **and** the total count | a filter reaching two of three under-reports silently |
 | 3 | `ServiceContext` + the 10 call sites | mechanical once 1 and 2 exist |
 | 4 | The switcher, hidden at one service | the visible half, and the smallest |
-| 5 | Creating a service (below) | the first screen a second team ever sees |
+| 5 | Creating a service — now [plan 008](2026-08-20-008-feat-create-a-service-first-run-plan.md) | the first screen a second team ever sees |
 
 **The rule: the switcher does not ship before step 2.** A UI that says
 Service A while the agent answers from Service B is worse than no switcher —
