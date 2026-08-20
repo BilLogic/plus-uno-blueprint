@@ -584,7 +584,7 @@ export const GOAL_SETTING_DETAILED_PATH_FALLBACK: BlueprintData = {
   path: {
     id: GOAL_SETTING_DETAILED_PATH_ID,
     name: 'Set Goals',
-    description:
+    summary:
       'No prior personalized goals set and start of a new goal cycle.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'named',

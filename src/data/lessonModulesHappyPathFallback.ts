@@ -280,7 +280,7 @@ export const LESSON_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: LESSON_MODULES_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description:
+    summary:
       'Tutor completes lesson modules.',
     note: null,
     path_type: 'happy',

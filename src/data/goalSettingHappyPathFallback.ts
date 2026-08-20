@@ -419,7 +419,7 @@ export const GOAL_SETTING_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: GOAL_SETTING_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description:
+    summary:
       'General overview of tutors guiding students through goal-setting activities in breakout sessions. For a more detailed look at the activities, see the other paths in this scenario.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'happy',

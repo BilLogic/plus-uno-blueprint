@@ -452,7 +452,7 @@ export const TECH_SETUP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: TECH_SETUP_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description:
+    summary:
       'Tutor sets up technology and obtains clearances.',
     note: null,
     path_type: 'happy',

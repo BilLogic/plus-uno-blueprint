@@ -180,7 +180,7 @@ export function ServiceBlueprintGrid({
         >
           <PathLabelBadge
             name={path.name}
-            description={path.description}
+            description={path.summary}
             pathType={path.path_type}
             className="text-base"
           />
@@ -191,7 +191,7 @@ export function ServiceBlueprintGrid({
         <div className="mb-2 flex shrink-0 items-center gap-2 px-1">
           <PathLabelBadge
             name={path.name}
-            description={path.description}
+            description={path.summary}
             pathType={path.path_type}
             compact
           />
@@ -626,7 +626,7 @@ function BlueprintSwimLane({
                         cellLinks: cell?.links,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
-                        pathDescription: blueprint.path.description,
+                        pathDescription: blueprint.path.summary,
                         pathType: blueprint.path.path_type,
                       }
                     : undefined

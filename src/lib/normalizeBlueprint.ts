@@ -231,7 +231,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     path: {
       id: raw.id,
       name: raw.name,
-      description: raw.description ?? null,
+      summary: raw.description ?? null,
       note: raw.note ?? null,
       path_type: raw.path_type,
     },

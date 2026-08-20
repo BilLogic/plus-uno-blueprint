@@ -359,7 +359,7 @@ export const APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: APPLICATION_INTERVIEW_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description:
+    summary:
       'Tutor applies, interviews with the team, and receives an offer decision.',
     note: null,
     path_type: 'happy',

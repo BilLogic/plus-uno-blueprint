@@ -416,7 +416,7 @@ export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: BEFORE_STUDENTS_JOIN_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description: 'Teachers and tutors prepare the session before students join.',
+    summary: 'Teachers and tutors prepare the session before students join.',
     note: null,
     path_type: 'happy',
   },

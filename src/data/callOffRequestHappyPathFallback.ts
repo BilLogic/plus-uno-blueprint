@@ -307,7 +307,7 @@ export const CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: CALL_OFF_REQUEST_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description: 'Tutor calls off shift for upcoming session.',
+    summary: 'Tutor calls off shift for upcoming session.',
     note: null,
     path_type: 'happy',
   },

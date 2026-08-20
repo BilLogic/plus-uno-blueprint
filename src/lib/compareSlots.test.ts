@@ -53,7 +53,7 @@ function makeBlueprint(
     path: {
       id: pathId,
       name: pathId,
-      description: null,
+      summary: null,
       note: null,
       path_type: 'happy',
     },

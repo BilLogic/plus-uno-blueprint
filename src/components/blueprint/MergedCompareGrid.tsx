@@ -447,7 +447,7 @@ function MergedSectionFrame({
           <PathLabelBadge
             key={path.id}
             name={path.name}
-            description={path.description}
+            description={path.summary}
             pathType={path.path_type}
             compact={compact}
           />
@@ -666,7 +666,7 @@ function MergedSubCellBlock({
               cellLinks: cell?.links,
               pathId: blueprint.path.id,
               pathName: blueprint.path.name,
-              pathDescription: blueprint.path.description,
+              pathDescription: blueprint.path.summary,
               pathType: blueprint.path.path_type,
             }
           : undefined

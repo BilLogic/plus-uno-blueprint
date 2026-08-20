@@ -306,8 +306,8 @@ export function resolveBlueprintForScenario(
         ? {
             id: rawPath.id,
             name: fallback.path.name,
-            description:
-              fallback.path.description ?? rawPath.description ?? null,
+            summary:
+              fallback.path.summary ?? rawPath.description ?? null,
             note: fallback.path.note ?? rawPath.note ?? null,
             path_type: rawPath.path_type,
           }
@@ -346,8 +346,8 @@ export function resolveBlueprintForScenario(
                 ? merged.path.name
                 : rawFallback.path.name,
               description: preferNonEmpty(
-                merged.path.description,
-                rawFallback.path.description,
+                merged.path.summary,
+                rawFallback.path.summary,
               ),
               note: preferNonEmpty(merged.path.note, rawFallback.path.note),
             },

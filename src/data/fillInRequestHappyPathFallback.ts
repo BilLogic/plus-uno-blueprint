@@ -280,7 +280,7 @@ export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: FILL_IN_REQUEST_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description: 'Tutor is requested to fill in for a session.',
+    summary: 'Tutor is requested to fill in for a session.',
     note: null,
     path_type: 'happy',
   },

@@ -3,7 +3,10 @@ import type { PathType } from '@/types/database'
 export type BlueprintPath = {
   id: string
   name: string
-  description: string | null
+  /** When this route applies — the condition that puts someone on it.
+   *  Renamed from `description` with the column; `note` is the author's aside,
+   *  which is the distinction plan 006 draws between the two. */
+  summary: string | null
   note: string | null
   path_type: PathType
 }

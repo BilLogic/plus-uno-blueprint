@@ -94,7 +94,7 @@ export function ComparePathSectionFrame({
         useTypeBadge ? (
           <PathTypeBadge
             pathType={path.path_type}
-            description={path.description}
+            description={path.summary}
             compact={compact}
             className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
             style={{
@@ -106,7 +106,7 @@ export function ComparePathSectionFrame({
         ) : (
           <PathLabelBadge
             name={path.name}
-            description={path.description}
+            description={path.summary}
             pathType={path.path_type}
             compact={compact}
             className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"

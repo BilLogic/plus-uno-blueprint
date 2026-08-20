@@ -310,7 +310,7 @@ export const WRAP_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: WRAP_UP_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description:
+    summary:
       'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
     note: null,
     path_type: 'happy',

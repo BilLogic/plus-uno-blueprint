@@ -323,7 +323,7 @@ export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: HELP_REQUEST_HAPPY_PATH_ID,
     name: 'Happy Path',
-    description:
+    summary:
       'Tutors receive and resolve student help requests during the session.',
     note: getScenarioParallelNote(HELP_REQUEST_SCENARIO_ID),
     path_type: 'happy',

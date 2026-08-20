@@ -159,7 +159,7 @@ export function buildVisualWalkthroughSession(
   return {
     pathId: blueprint.path.id,
     pathName: blueprint.path.name,
-    pathDescription: blueprint.path.description,
+    pathDescription: blueprint.path.summary,
     pathType: blueprint.path.path_type,
     scenarioName: meta?.scenarioName?.trim() || undefined,
     phaseName: meta?.phaseName?.trim() || undefined,

@@ -582,7 +582,7 @@ export const GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK: BlueprintData = {
   path: {
     id: GOAL_SETTING_UPDATE_GOALS_PATH_ID,
     name: 'Update Goals',
-    description:
+    summary:
       'First tutoring day of a new goal cycle after personalized goals have been set.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'named',

@@ -415,7 +415,7 @@ export type Database = {
       paths: {
         Row: {
           created_at: string
-          description: string | null
+          summary: string | null
           id: string
           name: string
           note: string | null
@@ -425,7 +425,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name: string
           note?: string | null
@@ -435,7 +435,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name?: string
           note?: string | null

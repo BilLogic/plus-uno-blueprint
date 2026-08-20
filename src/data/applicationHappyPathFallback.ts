@@ -534,7 +534,7 @@ function buildApplicationDiscoveryFallback(
     path: {
       id: config.pathId,
       name: config.pathName,
-      description: config.pathDescription,
+      summary: config.pathDescription,
       note: null,
       path_type: config.pathType,
     },
