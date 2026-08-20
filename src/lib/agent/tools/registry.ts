@@ -74,9 +74,9 @@ import {
   getEvidence,
   getProposition,
   getSession,
-  listCellLinks,
+  listCellDependencies,
   listEvidence,
-  listLayers,
+  listLanes,
   listReferences,
   listSessions,
   listBlueprint,
@@ -205,12 +205,12 @@ export async function dispatchTool(
       return listSlices(client)
     case 'list_owner_tags':
       return listOwnerTags(client)
-    case 'list_layers':
-      return listLayers(client)
+    case 'list_lanes':
+      return listLanes(client)
     case 'list_references':
       return listReferences()
     case 'list_cell_dependencies':
-      return listCellLinks(client, s(args, 'cell_id'))
+      return listCellDependencies(client, s(args, 'cell_id'))
     case 'list_evidence':
       return listEvidence(client, s(args, 'cell_id'))
     case 'get_evidence': {
@@ -354,7 +354,7 @@ export async function dispatchTool(
         })
         return `Added step (${id}).`
       }
-      case 'create_layer': {
+      case 'create_lane': {
         await addLane(client, {
           scenarioId: need(args, 'scenario_id'),
           name: need(args, 'name'),

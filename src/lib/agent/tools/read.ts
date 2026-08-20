@@ -260,7 +260,7 @@ export function listReferences(): string {
  * blueprint uses. Reuse a label before minting one — same discipline
  * list_owner_tags enforces for owner tags.
  */
-export async function listLayers(client: Client): Promise<string> {
+export async function listLanes(client: Client): Promise<string> {
   const { data, error } = await client
     .from('lanes')
     .select('name, lane_role')
@@ -286,7 +286,7 @@ export async function listLayers(client: Client): Promise<string> {
  * the agent had no way to read back; this is the missing half of that pair.
  * Scope to one cell when you have one — the whole graph is large.
  */
-export async function listCellLinks(
+export async function listCellDependencies(
   client: Client,
   cellId?: string,
 ): Promise<string> {

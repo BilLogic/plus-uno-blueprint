@@ -389,7 +389,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       record.dryRun = true
       // The rehearsal note matters: reads are REAL and will not reflect
       // this write — without it the model re-reads, concludes the write
-      // failed, and retries (observed: doubled create_layer).
+      // failed, and retries (observed: doubled create_lane).
       record.result =
         name === 'create_finding'
           ? `Recorded ${args.severity ?? 'warn'} finding for ${args.check_name ?? '?'}. run_id ${args.run_id ?? `00000000-0000-4000-8000-00000000d${dryCounter}`}; reuse it for the rest of this run. NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
@@ -403,7 +403,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'list_blueprint': record.result = await realListBlueprint(args); return record.result
       case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
-      case 'list_layers': {
+      case 'list_lanes': {
         const rows = await rest('lanes?select=name,lane_role&order=position')
         const counts = new Map()
         for (const row of rows ?? []) {

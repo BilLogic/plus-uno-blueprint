@@ -61,7 +61,7 @@ const str = (description: string) => ({ type: 'string', description })
 export const MOBILE_READ_TOOL_NAMES = new Set([
   'get_reference',
   'list_references',
-  'list_layers',
+  'list_lanes',
   'list_cell_dependencies',
   'list_evidence',
   'get_evidence',
@@ -88,7 +88,7 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
 /** The tools that mutate data — the loop enforces batch etiquette on these. */
 export const WRITE_TOOL_NAMES = new Set([
   'create_step',
-  'create_layer',
+  'create_lane',
   'upsert_cell',
   'update_cell',
   'create_cell_dependency',
@@ -234,9 +234,9 @@ export const TOOL_SPECS: ToolSpec[] = [
     parameters: { type: 'object', properties: {} },
   },
   {
-    name: 'list_layers',
+    name: 'list_lanes',
     description:
-      'The lane vocabulary actually in use, with how many lanes carry each label and role. Read before create_layer — reuse a label unless the new lane is genuinely a different kind of thing. Distinct from get_reference("lane-roles"), which says what the roles MEAN rather than which ones this blueprint uses.',
+      'The lane vocabulary actually in use, with how many lanes carry each label and role. Read before create_lane — reuse a label unless the new lane is genuinely a different kind of thing. Distinct from get_reference("lane-roles"), which says what the roles MEAN rather than which ones this blueprint uses.',
     parameters: { type: 'object', properties: {} },
   },
   {
@@ -599,7 +599,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'create_layer',
+    name: 'create_lane',
     description:
       'Add a lane to EVERY path of a scenario. Read lane-roles and lane-vocabulary first; lane labels are byte-identical for the same actor group across scenarios.',
     parameters: {

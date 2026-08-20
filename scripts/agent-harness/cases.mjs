@@ -8,7 +8,7 @@
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const WRITES = new Set([
-  'create_step', 'create_layer', 'upsert_cell', 'update_cell',
+  'create_step', 'create_lane', 'upsert_cell', 'update_cell',
   'create_cell_dependency', 'update_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
@@ -303,7 +303,7 @@ Canvas mode: view`,
     smokeCalls: [
       ['get_reference', { name: 'lane-roles' }],
       ['list_blueprint', {}],
-      ['create_layer', { scenario_id: 'smoke', name: 'QA' }],
+      ['create_lane', { scenario_id: 'smoke', name: 'QA' }],
     ],
     smokeReply: 'Adding the QA lane now (one line of narration first).',
     traceChecks: [
@@ -322,7 +322,7 @@ Canvas mode: view`,
       },
       {
         id: 'exactly-one-add-lane',
-        fn: (trace) => calls(trace, 'create_layer').length === 1 || `${calls(trace, 'create_layer').length} create_layer calls`,
+        fn: (trace) => calls(trace, 'create_lane').length === 1 || `${calls(trace, 'create_lane').length} create_lane calls`,
       },
       narratesBeforeWrites(1),
     ],

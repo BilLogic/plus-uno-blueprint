@@ -139,7 +139,7 @@ line). A case fails if any line fails.
 - **Rubric:**
   - [T] `get_reference` (lane-roles / lane-vocabulary) AND a blueprint
     read BEFORE the write. *(CA-etq, reference-first)*
-  - [T] Exactly one `create_layer`; any `upsert_cell` carries real content.
+  - [T] Exactly one `create_lane`; any `upsert_cell` carries real content.
     *(CA-inv)*
   - [J] Narrates one line before the batch; if it coins a new owner tag
     or role, it SAYS so. *(CA-etq, CA-inv tags)*

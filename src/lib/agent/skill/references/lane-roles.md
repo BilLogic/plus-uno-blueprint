@@ -6,7 +6,7 @@ truth: `src/lib/laneRoles.ts` (vocabulary + legacy shim) and
 
 ## The split: display name vs role
 
-A layer has two identities:
+A lane has two identities:
 
 - `display_name` (`lanes.name`) — free-form label in **any language**
   ("现场技术员", "Regular Tutor", "Compliance Review").

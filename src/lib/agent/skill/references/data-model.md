@@ -67,8 +67,8 @@ erDiagram
 | `paths` | A journey variant within a scenario | `path_type` enum below; optional `note` |
 | `steps` | Scenario-scoped step columns, SHARED across paths | A step exists once per scenario; paths select/ordr via `path_steps` |
 | `path_steps` | Which steps a path uses and in what column order | `position` unique per path |
-| `lanes` | Swimlanes, per PATH (each path carries its own layer rows) | `name` free-form any language; `lane_role` semantic key (see `references/lane-roles.md`) |
-| `cells` | Grid content at (layer × step) on a path | `unique (lane_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
+| `lanes` | Swimlanes, per PATH (each path carries its own lane rows) | `name` free-form any language; `lane_role` semantic key (see `references/lane-roles.md`) |
+| `cells` | Grid content at (lane × step) on a path | `unique (lane_id, step_id)`; `links` JSONB array; `content` newline-separated items render as pills on pill-role lanes |
 | `cell_dependencies` | Directed arrows cell → cell. `kind` is `sets_off` (this cell makes the other happen — drawn) or `enables` (the other must already be true — recorded, never drawn). Not inverses: "set off by" is `sets_off` read from the other end, and a precondition causes nothing | Unique pair, `source != target`, both cells must be on the same path |
 
 ## Enums
@@ -90,7 +90,7 @@ erDiagram
 
 The DB trigger `cells_validate_path_match` enforces, on every cell insert:
 
-1. `cells.path_id` must equal its layer's `lanes.path_id`, and
+1. `cells.path_id` must equal its lane's `lanes.path_id`, and
 2. `(path_id, step_id)` must already exist in `path_steps`.
 
 A cell referencing a step the path never registered **aborts the import
