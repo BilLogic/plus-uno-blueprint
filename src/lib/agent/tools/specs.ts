@@ -693,6 +693,9 @@ export const TOOL_SPECS: ToolSpec[] = [
           enum: ['open', 'resolved', 'dismissed', 'all'],
           description: 'Filter; default open',
         },
+        cell_id: str(
+          'Only findings that name this cell. Use when the human asks "is there anything flagged here?" about a specific moment.',
+        ),
       },
     },
   },

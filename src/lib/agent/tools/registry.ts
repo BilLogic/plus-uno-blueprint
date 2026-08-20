@@ -267,6 +267,7 @@ export async function dispatchTool(
     }
     case 'list_findings': {
       const filter = s(args, 'status') ?? 'open'
+      const forCell = s(args, 'cell_id')
       let query = client
         .from('findings')
         .select('id, source, check_name, severity, note, status, cell_ids, created_at')
@@ -274,12 +275,18 @@ export async function dispatchTool(
         .limit(100)
       if (filter !== 'all')
         query = query.eq('status', filter)
+      // `cell_ids` is an array, so "which findings touch this cell" needs a
+      // containment test — there was no way to ask it before, which made a
+      // finding reachable only by reading all of them.
+      if (forCell) query = query.contains('cell_ids', [forCell])
       const { data, error } = await query
       if (error) throw new Error(error.message)
-      if (!data || data.length === 0)
+      if (!data || data.length === 0) {
+        if (forCell) return `No ${filter === 'all' ? '' : `${filter} `}findings touch cell ${forCell}.`
         return filter === 'all'
           ? 'No findings recorded yet.'
           : `No ${filter} findings.`
+      }
       return data
         .map(
           (row) =>
