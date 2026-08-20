@@ -147,6 +147,16 @@ and the fix in [plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md).
 - **`propositions` is not vestigial.** An earlier read of this called it a
   dead table and recommended dropping it. Wrong: it is a coherent design that
   was never reachable. Empty because unreachable, not because unwanted.
+- **"Lifecycle" is not a level.** `services` and `service_lifecycles` have
+  **no foreign key between them** — checked `pg_constraint` in both
+  directions. `services` holds one placeholder row, `"Example API"`, that
+  nothing in the app reads. `service_lifecycles` is the real root, and its own
+  comment says `'End-to-end service journey'`. It **is** the service. Plan 002
+  drops the dead table and renames the real one.
+- **Row and column are rendering words.** `row_position` and `column_position`
+  name how a lane and a step happen to be drawn today; the compare view already
+  draws the same lanes in a different geometry. Plan 002 moves them to
+  `lane_position` and `step_position`.
 
 ---
 

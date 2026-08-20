@@ -19,103 +19,172 @@ plan 002 lands; every file path below uses today's names.)*
 
 ---
 
-## The properties proposal
+## The proposal — every level, every field
 
-Audited every level against the question **"is this field at the right
-grain?"** Two are not.
+This is the corrected set. Each field has a **definition**, a **reason to
+exist**, and **what does not belong in it**, because five of them have never
+had documentation beyond a one-line column comment.
 
-```mermaid
-erDiagram
-    services ||--|| service_lifecycles : "1:1 today"
-    service_lifecycles ||--|| business_model : "the service's economics"
-    service_lifecycles ||--o{ phases : ""
-    phases           ||--o{ scenarios : ""
-    scenarios        ||--o{ paths : ""
-    paths            ||--o{ lanes : "⚠ per-path rows"
-    paths            ||--o{ cells : ""
-    lanes            ||--o{ cells : ""
-    cells            ||--o{ evidence : "cell_id"
-    business_model   ||--o{ evidence : "question_key: understand|value|usability"
-    cells            ||--o{ cell_links : "trigger | needs"
+*(Field names below are the proposed ones from [plan 002](2026-08-20-002-refactor-database-vocabulary-plan.md):
+`services` replaces `service_lifecycles`, `lanes` replaces `layers`,
+`summary` replaces `cells.description`.)*
 
-    business_model {
-        text pricing
-        text revenue_model
-        text funding
-        text partners
-        text delivery_cost
-    }
-    phases {
-        text business_impact
-        text operational_requirements
-    }
-    lanes {
-        text owner_team "the team that staffs this lane"
-        jsonb kpis      "what that team is measured on"
-        jsonb tools     "systems the lane's actors use"
-    }
-    cells {
-        text function        "why this moment exists"
-        text form            "tone — frontstage only"
-        jsonb value_props    "who gets what"
-        text owner           "EXCEPTION override of the lane's team"
-        text perceived_owner "frontstage only"
-    }
-```
+### 🧭 SERVICE — 1 row
 
-### Field-by-field verdict
+The root. Everything else hangs off it. **"Lifecycle" is gone** — plan 002
+found `services` and `service_lifecycles` have no foreign key between them at
+all, and the `services` row is a placeholder nothing reads.
 
-| Level | Field | Verdict | Why |
+| Field | Definition | Why it exists | Not this |
 |---|---|---|---|
-| service | pricing, revenue_model, funding, partners, delivery_cost | ✅ **correct** | 1 row, whole-service by nature |
-| phase | business_impact, operational_requirements | ✅ **correct** | 6 rows, no duplication |
-| lane | owner_team, kpis, tools | 🔴 **wrong grain** | see below |
-| cell | function | ✅ **correct** | genuinely per-cell — `content` says what happens, `function` says why |
-| cell | value_props | 🟡 **suspect** | may belong to the step; not moving on 11 rows of evidence |
-| cell | form | 🟡 **frontstage only** | a backstage write has no tone. Pilot: 8 of 11 |
-| cell | perceived_owner | 🟡 **frontstage only** | 241 of 955 cells. A customer cannot mis-perceive a backstage row |
-| cell | owner | 🔴 **duplicate** | restates the lane's `owner_team` 955 times |
+| `name`, `summary` | what the service is | orientation | — |
+| `pricing` | **what the person receiving the service pays** | a journey that never mentions money can still cost someone money; this is where that fact lives | how the org gets paid — that's `revenue_model` |
+| `revenue_model` | **how money reaches the org** — per session, subscription, institutional budget, grant-funded, free at point of use | separates "the student pays nothing" from "this service has no economics" | the amount |
+| `funding` | **who pays when the recipient does not** — grant, department, sponsor | most public-service blueprints are free to the user and funded elsewhere. Without this, `pricing: free` reads as "costs nothing" | the cost of delivery |
+| `delivery_cost` | **what it costs to run one unit** of the service | the other half of the sentence `funding` starts | headcount planning |
+| `partners` | **who the service depends on to deliver** — Zoom, the university, a payroll vendor | a dependency that fails takes the journey with it; this is the list to check | vendors nobody in the journey touches |
 
-### 🔴 The lane grain problem
+> ⚠️ **Audit note — these five overlap and that is a real risk.** For a service
+> that is free to its users, `pricing` and `revenue_model` collapse into one
+> answer. **Guidance: fill `revenue_model` first.** If it says "free at point of
+> use," then `pricing` is "Free" and `funding` carries the whole story. If the
+> two ever say the same thing, one of them should be empty.
 
-```
-299  lane rows
-166  logical lanes   (distinct scenario × name)
- 12  distinct lane names in the entire blueprint
-```
+**Validation questions** — not columns. Three evidence anchors already
+enforced by the schema (`evidence.proposition_question_key in
+('understand','value','usability')`):
 
-"Regular Tutor" is **one** concept stored as ~25 rows. And the database
-already agrees: `remove_lane(scenario_id, lane_name)` deletes **by name across
-the scenario** — the delete keys on `(scenario, name)`, not on the row id. That
-exact mismatch caused the 8.5× undercount fixed in `20260820030000`.
+| Question | What it asks |
+|---|---|
+| `understand` | Do people know what this service is and what it offers? |
+| `value` | Do people want it enough to act? |
+| `usability` | Can people actually get through it? |
 
-**Two ways to fix it:**
+Zero evidence rows use these today. Empty is meaningful: it means the claim is
+an **assumption**, which is the blueprint's own word.
+
+### 🧭 PHASE — 6 rows
+
+A named stage of the journey. **Both fields were vague; here is the split.**
+
+| Field | Definition | Why it exists | Not this |
+|---|---|---|---|
+| `name`, `summary` | the stage | orientation | — |
+| `business_impact` | **what this phase is worth, and what it costs the business** — retention, NPS, brand, opex, growth | prioritisation needs a phase-level anchor. "Which phase should we fix first" is otherwise argued from anecdote | cell-level detail; a metric that belongs to a lane (`lanes.kpis`) |
+| `operational_requirements` | **what must be true for this phase to run at all** — process, system, people, legal | the constraints that do not appear as journey steps but stop the phase dead if unmet: a licence, a staffing floor, a data-retention rule | a to-do list; anything already drawn as a cell |
+
+> **Guidance.** The test for `operational_requirements` is *"if this were
+> false, would the phase stop?"* Nice-to-haves are not requirements. The test
+> for `business_impact` is *"would this change a prioritisation decision?"* If
+> it would not, it is description, not impact.
+
+Both hints in the panel are lifted verbatim from the column comments in
+`f65efcf` — the only documentation these fields have ever had.
+
+### 🧭 SCENARIO / PATH / STEP — no panel
+
+Audited each, since all three were asked about:
+
+| Level | Rows | Fields it owns | Verdict |
+|---|---|---|---|
+| scenario | 22 | `name`, `summary`, `view_type` | **no panel** — a drawer holding one summary field is worse than editing the name inline |
+| path | 38 | `name`, `path_type`, `summary`, `note` | **no panel** — and `summary` vs `note` have no documented difference. Decide what each means *before* either gets a UI |
+| step | 185 | `name` only | **no panel** — there is nothing to edit |
+
+**But step is the open question**, and it is worth stating plainly: the
+suspicion that `value_props` belongs to the **step** rather than the cell is
+the one thing that would give steps a panel. A step is a *moment*; a lane's
+action inside it *contributes* to the value that moment delivers. If the fill
+campaign finds the same value text repeated across a step's cells, that is the
+answer — and step gets fields, and then a panel. Not decided on 11 rows.
+
+### 🧭 LANE — 299 rows, 166 logical, 12 names
+
+| Field | Definition | Why it exists | Not this |
+|---|---|---|---|
+| `name` | the actor or stage — "Regular Tutor", "Front Stage Tech" | the swimlane label | — |
+| `lane_role` | the semantic key that drives rendering | **never inferred from the name** — that broke every non-English blueprint (`layer-roles.md`) | a display label |
+| `owner_team` | **the team that staffs this lane** | the org unit accountable for everything in the row. Answers "who do I talk to about this" once, instead of per cell | the actor's job title — that is `name` |
+| `kpis` | **what that team is measured on** | `check-kpi-alignment` compares them against what the lane's cells actually do: measured-but-never-enacted, and enacted-but-never-measured | outcomes nobody is accountable for |
+| `tools` | **systems the lane's actors use** | tells the KPI check whether a measured thing is even instrumented | tools mentioned in a cell but not used by this lane |
+
+### 🧭 CELL — 955 rows
+
+| Field | Definition | Why it exists | Not this |
+|---|---|---|---|
+| `content` | **what happens** in this moment | the grid | why it happens |
+| `summary` | the tl;dr the detail fields add up to | *(renamed from `description` — the panel already labels it Summary)* | a copy of `content` |
+| `function` | **why this moment exists** | the purpose `content` cannot carry. Pilot: *content* "Enters the student's breakout room" → *function* "Open the tutoring moment: join within the first minute so the student is not left waiting" | a restatement of `content` |
+| `form` | **tone and manner** — how it should feel | 🟡 **frontstage only.** A database write has no tone. Pilot filled 8 of 11 | a description of the UI |
+| `value_props` | **who gets what** from this moment | `check-value-ledger`: cells that deliver to nobody, audiences who never receive | 🟡 possibly step-level — see above |
+| `owner` | 🔴 **an override.** The team accountable for this cell **when it differs from its lane's `owner_team`** | one cell in a lane can be handled by a different team; that exception matters | a field to populate. Empty means "same as the lane" — **0/955 is correct, not a gap** |
+| `perceived_owner` | **who the customer believes owns this moment** | a mismatch with `owner` is a deception risk, and `check-perceived-owner` looks for exactly that | 🟡 **frontstage only** — 241 of 955 cells. A customer cannot mis-perceive a backstage row |
+
+### The two grain corrections, in one place
+
+**🔴 Lane fields are stored per-path.** 299 rows hold 166 logical lanes and
+only **12 distinct names**. "Regular Tutor" is one concept stored ~25 times.
+The database already agrees: `remove_lane(scenario_id, lane_name)` deletes **by
+name across the scenario** — it keys on `(scenario, name)`, not the row id, and
+that exact mismatch caused the 8.5× undercount fixed in `20260820030000`.
 
 | | Fan-out write | Promote to a `lanes` table |
 |---|---|---|
-| Shape | panel writes all same-named rows in the scenario | new table keyed `(scenario_id, name)`, `layers` FKs to it |
+| Shape | panel writes every same-named lane in the scenario | new table keyed `(scenario_id, name)` |
 | Matches `remove_lane` | yes | yes |
-| Migration | none | real one, plus a backfill |
-| Drift | impossible after the write, possible via direct SQL | impossible by construction |
-| Effort | small | medium |
+| Migration | none | one, plus a backfill |
+| Drift | impossible after the write | impossible by construction |
 
-**Recommendation: fan-out now, promote later if drift appears.** The fan-out
-write is honest about the grain and needs no migration; the table is the
-structurally correct end state but should not gate the panel.
+**Recommendation: fan-out now.** It is honest about the grain, needs no
+migration, and the table is the right end state but should not gate the panel.
 
-Either way the panel edits **the logical lane**. Editing one row would create
-the drift `check-kpi-alignment` then reports — the tool manufacturing its own
-findings.
+**🔴 `cells.owner` duplicates `lanes.owner_team`** — see the cell table above.
+The panel shows the inherited value and only writes on override.
 
-### 🔴 `cells.owner` is an override, not a field to fill
+### The ERD
 
-A cell's owning team is its lane's team, unless it deviates. So **0/955 is not
-a failure** — empty means "same as the lane."
+```mermaid
+erDiagram
+    services   ||--o{ phases : ""
+    services   ||--|| business_model : "its economics"
+    phases     ||--o{ scenarios : ""
+    scenarios  ||--o{ paths : ""
+    scenarios  ||--o{ steps : "a moment"
+    paths      ||--o{ lanes : "per-path rows, 12 real names"
+    paths      ||--o{ cells : ""
+    lanes      ||--o{ cells : ""
+    steps      ||--o{ cells : ""
+    cells      ||--o{ evidence : "cell_id"
+    business_model ||--o{ evidence : "understand | value | usability"
+    cells      ||--o{ cell_links : "trigger | needs"
 
-**Do not populate it.** The panel shows the inherited value greyed, with an
-"override" affordance. The fill campaign skips it entirely.
-
----
+    business_model {
+        text pricing         "what the recipient pays"
+        text revenue_model   "how money reaches the org"
+        text funding         "who pays when the recipient does not"
+        text delivery_cost   "cost to run one unit"
+        text partners        "delivery dependencies"
+    }
+    phases {
+        text business_impact          "what it is worth, what it costs"
+        text operational_requirements "what must be true to run"
+    }
+    lanes {
+        text lane_role  "semantic key, never inferred from name"
+        text owner_team "the team that staffs this lane"
+        jsonb kpis      "what that team is measured on"
+        jsonb tools     "systems its actors use"
+    }
+    cells {
+        text content         "what happens"
+        text summary         "the tl;dr"
+        text function        "why it exists"
+        text form            "tone — frontstage only"
+        jsonb value_props    "who gets what"
+        text owner           "OVERRIDE of the lane's team"
+        text perceived_owner "frontstage only"
+    }
+```
 
 ## Design
 
@@ -161,8 +230,10 @@ Save/Cancel portalled to a footer host.
 │ ⤢   Goal Setting › Regular Tutor             ✕  │
 │                                                   │
 │  Regular Tutor                                    │
-│  frontstage_actions · 6 lanes · 61 cells         │  role, never inferred
-│                                                   │  from the name
+│  Frontstage · what the customer sees this actor   │  the ROLE in words,
+│  do                                               │  not the enum key
+│  Appears in 6 paths · 61 cells                    │  where it is, not
+│                                                   │  how it is stored
 │  Owner team    [ ______________________ ]        │
 │  KPIs          [ session completion    ] [×]     │  value_props row shape
 │                [ + Add a KPI            ]        │
@@ -173,9 +244,9 @@ Save/Cancel portalled to a footer host.
 │  Edits apply to all 6 "Regular Tutor" lanes      │  ← alert, variant=info
 │  in this scenario.                                │    the grain, stated
 │                                                   │
-│  ┌──────────┬──────────┐                         │
-│  │  Cells   │ Findings │                          │
-│  └──────────┴──────────┘                         │
+│  ┌──────────────┬──────────┐                     │
+│  │ 61 cells     │ Flagged  │                      │  see "Tabs" below
+│  └──────────────┴──────────┘                     │
 ├───────────────────────────────────────────────────┤
 │                            [ Cancel ]  [ Save ]   │
 └───────────────────────────────────────────────────┘
@@ -196,9 +267,9 @@ Save/Cancel portalled to a footer host.
 │  requirements   [ process / system / people /   ] │  docs these have
 │                 [ legal                         ] │
 │                                                   │
-│  ┌───────────┬──────────┐                        │
-│  │ Scenarios │ Findings │                         │
-│  └───────────┴──────────┘                        │
+│  ┌──────────────┬──────────┐                     │
+│  │ 4 scenarios  │ Flagged  │                      │
+│  └──────────────┴──────────┘                     │
 ├───────────────────────────────────────────────────┤
 │                            [ Cancel ]  [ Save ]   │
 └───────────────────────────────────────────────────┘
@@ -345,3 +416,128 @@ EDIT scripts/agent-harness/run.mjs                    a case per new read tool
 - [ ] Every icon-only button is wrapped in `IconTooltip` and keeps its own
       `aria-label`
 - [ ] `npm run build`, `npm run lint`, tests, and `toolParity` green
+
+---
+
+## Tabs — what actually goes in them
+
+The first draft put "Cells" and "Findings" tabs on the lane and phase panels
+without saying what they were for. Justified or cut:
+
+| Tab | Panel | Contents | Keep? |
+|---|---|---|---|
+| **Contents** — "61 cells" / "4 scenarios" | lane, phase | the children, in journey order, each a link that navigates and closes the panel | ✅ **keep.** It answers "what am I actually editing the spec *for*", and it is the only way to check that a KPI matches what the lane does — which is exactly what `check-kpi-alignment` asks a human to judge |
+| **Flagged** | lane, phase | open findings whose `cell_ids` fall inside this lane / phase | ✅ **keep.** Findings have **no UI anywhere** — 5 real rows a human cannot read. Scoping them to the thing you are looking at is the smallest honest way to surface them, and it costs one `list_findings(cell_id)` call per child |
+| ~~Evidence~~ | lane, phase | — | ❌ **cut.** `evidence.cell_id` is the only entity link. No lane or phase link exists without a schema change |
+| ~~Resources~~ | lane, phase | — | ❌ **cut.** Reads `cells.links`; no other level has one |
+| ~~Dependencies~~ | lane, phase | — | ❌ **cut.** Walks `cell_links` → `cells.id` |
+
+Tab labels carry their count (`61 cells`, not `Cells`) because the count is
+the useful part and the panel has room for it — the same reason the difference
+ledger puts its count at the end of the group header rather than on the tab.
+
+The **service** panel gets no Contents tab: its children are six phases already
+listed in the sidebar, and duplicating navigation inside a properties panel is
+noise.
+
+---
+
+## Interaction — how each panel opens
+
+Working rule, taken from the cell panel: **the panel is a selection, not a
+mode.** Opening one selects a thing; closing deselects. Nothing else on the
+canvas changes — no camera move, no zoom, no filter. That is why the cell panel
+can be opened and closed repeatedly while reading, and the new panels must feel
+the same.
+
+### Lane
+
+The hard case, because a lane label already means two different things and
+neither is "show me its properties":
+
+```
+ServiceBlueprintGrid.tsx:497   inert <span>, no onClick
+BlueprintLabelRail.tsx:189     a <button> in Design mode = select every cell
+                               in this lane (for bulk editing)
+```
+
+**Proposal: a dedicated affordance that appears on hover or focus, never a
+new meaning for the label itself.**
+
+```
+   rest                     hover / focus-within
+   ┌──────────────────┐     ┌──────────────────┐
+   │ Regular Tutor    │     │ Regular Tutor  ⓘ │
+   └──────────────────┘     └──────────────────┘
+                                             ↑
+                              24px target, 14px glyph, no fill of its own
+                              (SidebarNav NavRowAction sizing)
+```
+
+- Sized and inked as `NavRowAction`: `--sidebar-foreground/50` at rest →
+  full ink on hover/focus. The row already has a fill; the button adds none.
+- Wrapped in `IconTooltip`, label **"Lane properties"** — says what it does.
+  The button keeps its own `aria-label`; a tooltip is not an accessible name.
+- **Always in the tab order**, even while hidden at rest — a hover-only control
+  that keyboard users cannot reach is not an affordance.
+- Added to **both** render paths. In `BlueprintLabelRail`'s Design mode it sits
+  beside the selection button, so the two readings stay visibly separate.
+- Right-click on the lane label opens a `context-menu.tsx` with "Lane
+  properties" — the discoverable route, mirroring the cell's right-click →
+  "View cell detail".
+
+### Phase and scenario
+
+The phase section is already one big navigate button
+(`CanvasPhaseSection.tsx:180`), so the affordance goes in the chrome, not on
+the canvas shape:
+
+- **Phase:** an `ⓘ` button in `PhaseMenubarHeader`, right of the title.
+- **Scenario:** no panel *(nothing to edit — see the proposal above)*. If the
+  step question resolves in favour of scenario-level fields, it inherits this
+  same pattern on `ScenarioMenubarBreadcrumb`.
+
+### Service
+
+The one level with no shape on the canvas, so it gets a named row rather than
+an affordance:
+
+```
+┌─ sidebar ────────────┐
+│  PLUS Application    │  ← the service. Click = open the service panel.
+│  ──────────────────  │
+│  Phases              │
+│    Application       │
+│    …                 │
+│  Slices              │
+└──────────────────────┘
+```
+
+Sits above Phases, styled as a `NavSection` header row rather than a nav item,
+because it is the container of everything below it — not a sibling of Phases.
+
+### Steps
+
+**No affordance, because there is nothing to open** — a step owns only its
+name. Recorded here so the absence is a decision: if `value_props` moves to the
+step, a step header gains the same `ⓘ` treatment as a lane label, and this
+section is where that lands.
+
+### The interaction table
+
+| Entity | Affordance | Gesture | Discoverable route |
+|---|---|---|---|
+| Service | sidebar row, above Phases | click | it is a visible row |
+| Phase | `ⓘ` in `PhaseMenubarHeader` | click | visible in chrome |
+| Lane | `ⓘ` on the label, hover/focus-revealed, always tabbable | click | right-click → "Lane properties" |
+| Cell | the cell itself | **plain click** | right-click → "View cell detail" |
+| Scenario · Path · Step | — | — | nothing to edit |
+
+**Close is the shell's job and identical for all of them:** `✕`, `Escape`, or
+swipe, each routed through `onCloseRequest` and guarded by `panelEditorBusy()`
+so nothing closes mid-save (`BlueprintCellDetailPanel.tsx:274,527`).
+
+**One panel at a time.** Opening a lane panel closes a cell panel. Beyond
+simplicity, `CELL_PANEL_FOOTER_ID` is a single global DOM id that Save/Cancel
+portals into — so each panel also gets its own footer-host id, and the
+collision cannot return through the side door.

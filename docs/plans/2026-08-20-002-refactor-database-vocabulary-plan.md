@@ -10,8 +10,8 @@ brief: docs/plans/2026-08-20-001-spec-layer-brief.md
 # Database vocabulary
 
 Audited every table and column in `public` against the word the product
-actually uses. Six real divergences, five of them one word each, plus one
-family of five columns that disagree with each other.
+actually uses. Eight divergences, one dead table, and a position-column family
+that names the rendering instead of the domain.
 
 The test applied: **would a user recognise this word?** Not "is it defensible"
 — `layers` is defensible, and nobody says it.
@@ -35,29 +35,68 @@ The test applied: **would a user recognise this word?** Not "is it defensible"
 **already written down that the name is wrong** and worked around it. Those are
 not opinions, they are documented debt.
 
-### 🟡 Inconsistent with each other, not with the product
+### 🔴 "Lifecycle" should not exist — and `services` is a dead table
 
-Five column names for "ordinal within parent":
+Asked whether a service can contain several lifecycles. It cannot, and the
+answer is stronger than 1:1 — **there is no relationship at all.**
 
 ```
-phases.order_position        service_scenarios.order_position
-layers.row_position          cells.slot_position
-path_steps.column_position   slices.position   slice_items.position
+services            id, name, description, slug        1 row: "Example API"
+service_lifecycles  id, name, description              1 row: "PLUS Application"
 ```
 
-`row_position` and `column_position` are meaningful — a lane is a row, a step
-is a column, and the axis is real information. `order_position`,
-`slot_position` and `position` are three words for the same idea.
+Checked `pg_constraint` for a foreign key in either direction: **none exists.**
+`service_lifecycles` has no `service_id` column. The two tables are unrelated.
 
-**Proposal:** keep `row_position` / `column_position` (the axis is content),
-collapse the other three to `position`. Lowest value of everything here — do it
-only if the rename is happening anyway.
+- `services` holds one placeholder row named **"Example API"** — scaffolding
+  from the original template import (`9aabdf0`). Grepped the whole app:
+  **no reader.** Not a query, not a hook, not a component.
+- `service_lifecycles` is the real root. Its own comment says
+  `'End-to-end service journey'`, and every root table hangs off it —
+  `phases`, `evidence`, `findings`, `slices`, `propositions`.
+
+So "lifecycle" is not a level in the hierarchy. It **is** the service, wearing
+a word nobody uses.
+
+**Proposal:**
+
+```sql
+drop table public.services;                              -- 1 placeholder, 0 readers
+alter table public.service_lifecycles rename to services;
+-- then, on all five children:
+alter table public.<child> rename column service_lifecycle_id to service_id;
+```
+
+Result: one root table, named what it is, and the word "lifecycle" leaves the
+schema. `service_scenarios` also stops being confusing — the `service_` family
+becomes `services` → `service_scenarios`, two members, both real.
+
+**Check before dropping `services`:** its row is `"Example API"` with a `slug`
+column that nothing else has. If `slug` was meant for routing a future
+multi-service URL, note it in [plan 004](2026-08-20-004-feat-multi-service-support-plan.md)
+before the table goes — the column is the only trace of that intent.
+
+### 🔴 Row and column are rendering words; lane and step are the domain
+
+| Now | Proposed | Why |
+|---|---|---|
+| `layers.row_position` | `lanes.lane_position` | a lane renders as a row *today*. The lane is the thing; the row is how it happens to be drawn |
+| `path_steps.column_position` | `path_steps.step_position` | same — a step is a step whether it is drawn as a column, a card, or a list item |
+| `cells.slot_position` | `cells.position` | its order within a (lane, step) slot; nothing else to call it |
+| `phases.order_position` | `phases.position` | |
+| `service_scenarios.order_position` | `service_scenarios.position` | |
+| `slices.position` · `slice_items.position` | unchanged | already right |
+
+This supersedes the earlier suggestion to keep `row_position` and
+`column_position` "because the axis is information." The axis is a **rendering**
+fact — the compare view already draws the same lanes in a different geometry —
+and the whole point of this plan is that the database says the domain word.
 
 ### ✅ Keep — checked and correct
 
 | Name | Why it stays |
 |---|---|
-| `service_scenarios` | `service_` is a live family: `services` → `service_lifecycles` → `service_scenarios`. Renaming one member orphans it, and the agent layer already exposes `scenario` (`filter_scenario`), so no user sees the prefix |
+| `service_scenarios` | Once `service_lifecycles` becomes `services`, the family is `services` → `service_scenarios` — two members, both real. The agent layer already exposes it as `scenario` (`filter_scenario`), so no user sees the prefix |
 | `paths.path_type` | matches the UI's Happy / Alternate / Unhappy vocabulary |
 | `cells.function` / `form` / `value_props` | the panel labels them Function / Form / Value |
 | `deleted_structure` | internal; never surfaced |
@@ -154,3 +193,25 @@ Phases 1–4 are already touching the same files.
 | PostgREST embed hints break silently | High | They fail loudly at request time, not build time — cover with a smoke query per embed |
 | Rename lands mid-branch and conflicts | Medium | Sequenced after `refactor/agent-tool-surface` merges |
 | Sweep misses a string in a skill doc | Low | Word-boundary sweep, same method as `7530402` |
+
+### Phase 6 — retire "lifecycle"
+
+Do this **last**: it renames a column on five tables and drops one.
+
+```sql
+drop table public.services;                                -- placeholder, 0 readers
+alter table public.service_lifecycles rename to services;
+alter table public.phases        rename column service_lifecycle_id to service_id;
+alter table public.evidence      rename column service_lifecycle_id to service_id;
+alter table public.findings      rename column service_lifecycle_id to service_id;
+alter table public.slices        rename column service_lifecycle_id to service_id;
+alter table public.business_model rename column service_lifecycle_id to service_id;
+```
+
+Then: `resolveFirstLifecycleId` → `resolveFirstServiceId`, `src/lib/lifecycle.ts`
+→ `src/lib/service.ts`, `useLifecyclePhases` → `useServicePhases`, and the
+`lifecycleId` helper in `registry.ts:96`.
+
+**Sequencing note for [plan 004](2026-08-20-004-feat-multi-service-support-plan.md):**
+this rename makes multi-service *easier*, not harder — `service_id` is exactly
+the predicate every RLS policy will need, and it will already be named right.
