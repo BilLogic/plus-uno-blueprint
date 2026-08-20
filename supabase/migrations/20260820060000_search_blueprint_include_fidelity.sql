@@ -436,6 +436,11 @@ begin
            coalesce(f.note, f.check_name),
            null, null, null, null, null, null,
            jsonb_build_object('cell_ids', to_jsonb(f.cell_ids),
+                              -- as its own key: uno-bot's fetchFindings returns
+                              -- raw rows, so the model reads check_name as a
+                              -- field. Embedding it only in the title would
+                              -- force a regex over a display string.
+                              'check_name', f.check_name,
                               'severity', f.severity,
                               'status', f.status,
                               'source', f.source),
