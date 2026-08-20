@@ -1,13 +1,21 @@
 ---
 title: "One app, many services — the front end and what gates it"
 type: feat
-status: active
+status: pinned
 date: 2026-08-20
 repos: uno-blueprint, plus-uno
 brief: docs/plans/2026-08-20-001-spec-layer-brief.md
 ---
 
 # Multi-service
+
+> ## 📌 PINNED — 2026-08-20
+>
+> The service tier is parked until the model settles. Nothing in this plan is
+> started. It is kept whole rather than trimmed, so picking it back up is
+> reading, not rebuilding. See
+> [the brief](2026-08-20-001-spec-layer-brief.md#whats-pinned-and-what-it-does-not-block)
+> for what is still moving.
 
 > **Decided: one app, many services.** The earlier draft recommended one
 > deployment per service. That is overruled — the schema already carries the

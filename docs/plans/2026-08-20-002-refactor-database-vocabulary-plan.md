@@ -187,7 +187,10 @@ In-repo, no PostgREST embed depends on it by name except
 `PATH_BLUEPRINT_SELECT`, where **the constraint name is part of the syntax** —
 so the FK constraint has to be renamed too, or the embed hint updated.
 
-### Phase 3 — `propositions` → `business_model`
+### Phase 3 — `propositions` → `business_model` · 📌 **PINNED**
+
+> Service-tier naming, parked with the rest of it. Zero rows and one reader, so
+> nothing downstream waits on it.
 
 Smallest: 0 rows, 1 reader (`get_proposition`, added on this branch), 2 skill
 docs. `evidence.proposition_question_key` keeps its name — renaming it would
@@ -215,7 +218,19 @@ written against the final name and never has to be edited twice.
 `order_position` / `slot_position` / `position` → `position`. Skip unless
 Phases 1–4 are already touching the same files.
 
-### Phase 6 — retire "lifecycle"
+### Phase 6 — retire "lifecycle" · 📌 **PINNED**
+
+> This renames the root table and a column on five children. It is the service
+> tier's foundation and is parked with it.
+>
+> **What that costs the phases that are still moving: nothing.** Phases 1, 2, 4,
+> 5, 7 and 8 touch lanes, links, `description` columns, positions, schema assets
+> and `view_type` — none of them name the root table. The one consequence is
+> that `service_lifecycles` stays the root for now, so any new foreign key
+> written before this phase (notably
+> [plan 009](2026-08-20-009-feat-stakeholder-registry-plan.md)'s `service_id`)
+> must reference `public.service_lifecycles(id)` and be renamed with everything
+> else when this phase runs.
 
 Do this **last**: it renames a column on five tables and drops one.
 
@@ -238,6 +253,10 @@ this rename makes multi-service *easier*, not harder — `service_id` is exactly
 the predicate every RLS policy will need, and it will already be named right.
 
 ---
+
+> **Running order while Phase 6 is pinned:** 1 → 2 → 4 → 5 → 8 → 7. Phase 7
+> regenerates the schema assets and must come after every rename that is
+> actually shipping, or it captures a half-renamed schema.
 
 ### Phase 7 — the schema assets, which are already stale
 

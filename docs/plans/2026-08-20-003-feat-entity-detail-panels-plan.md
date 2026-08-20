@@ -1,5 +1,5 @@
 ---
-title: "Detail panels for lane, phase, service and scenario"
+title: "Detail panels for lane, phase and scenario"
 type: feat
 status: active
 date: 2026-08-20
@@ -13,6 +13,25 @@ depends-on: docs/plans/2026-08-20-002-refactor-database-vocabulary-plan.md
 The cell panel is the only way to write a spec field. Four more levels own
 fields and have no surface at all. This builds them **as one parameterised
 panel**, not five copies.
+
+> ## 📌 The **service panel** is pinned — 2026-08-20
+>
+> The service tier is parked, so this plan ships **three** panels: lane, phase,
+> scenario. The service panel's wireframe and its Validation surface stay in
+> this document, unbuilt.
+>
+> **What that changes, and it is less than it looks:**
+>
+> | | |
+> |---|---|
+> | The lifted shell | **unchanged** — it is parameterised, and three callers exercise it as well as four |
+> | `SegmentedControl` | **drops out.** It was specified for the service panel only, the one surface with two tabs. Nothing else needs it |
+> | `accordion.tsx` | **stays** — the scenario panel's paths use it. It was going to serve the Validation surface too |
+> | `ServicePanel.tsx` · `ValidationSurface.tsx` · `useBusinessModel.ts` · `businessModelMutations.ts` | **not built** |
+> | The sidebar Service row | **not built.** It was also going to host the multi-service switcher, which is pinned too — so the row has no second job waiting on it |
+> | Ledger kinds and revert cases | **2, not 3** — lane and phase. Scenario and path write through existing paths |
+>
+> Everything else in this plan is unaffected.
 
 **Scenario is in scope, and it carries paths.** Plan 006 reversed the earlier
 "no panel" verdict: the scenario owns one editable field, but its **38 paths
@@ -210,7 +229,7 @@ picker owns the bare click.
 
 | Entity | Opens from | Gesture |
 |---|---|---|
-| Service | a **Service** row at the top of the left sidebar | click |
+| ~~Service~~ | 📌 pinned | — |
 | Phase | info button in `PhaseMenubarHeader` | click |
 | Scenario | `ⓘ` in `ScenarioMenubarBreadcrumb` | click |
 | Lane | `(i)` beside the lane label, **both** render paths | click |
@@ -295,7 +314,9 @@ EDIT scripts/agent-harness/run.mjs                    a case per new read tool
 
 ## Acceptance criteria
 
-- [ ] The lifted shell serves five panels; the cell panel is unchanged
+- [ ] The lifted shell serves **three** panels plus the cell panel, and the
+      cell panel is unchanged
+- [ ] No `SegmentedControl` is introduced — nothing shipping here has two surfaces
 - [ ] The scenario panel writes `paths.summary` and `paths.note`, and the two
       are visibly different in weight — a note never reads as fact
 - [ ] `view_type` appears in no panel
@@ -464,7 +485,7 @@ reaches every geometry.
 
 | Entity | Affordance | Gesture | Discoverable route |
 |---|---|---|---|
-| Service | sidebar row, above Phases | click | it is a visible row |
+| ~~Service~~ | 📌 pinned — see the banner above | — | — |
 | Phase | `ⓘ` in `PhaseMenubarHeader` | click | visible in chrome |
 | Scenario | `ⓘ` in `ScenarioMenubarBreadcrumb` | click | visible in chrome |
 | Lane | `ⓘ` on the label, hover/focus-revealed, always tabbable | click | right-click → "Lane properties" |

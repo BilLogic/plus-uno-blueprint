@@ -10,6 +10,25 @@ related: docs/plans/2026-08-20-006-design-data-model.md
 
 # Stakeholder registry
 
+> ## 📌 One phase of this is pinned — 2026-08-20
+>
+> The service tier is parked, so **Phase 5's Stakeholders surface on the
+> service panel is not built.** Everything else ships: the table, the seed, the
+> lane and slice links, and the check fix — which is the entire reason this
+> plan exists.
+>
+> **How stakeholders are managed without that panel:** the six real ones are
+> seeded by migration (Phase 2), and `list_stakeholders` /
+> `create_stakeholder` / `update_stakeholder` are agent tools. That is enough
+> for a cast that changes about once a quarter. ⚠️ It does mean **no human-
+> facing create/edit surface** until the service panel unpins — acceptable
+> because the seed is complete, not acceptable if the cast starts changing.
+>
+> **FK target while [plan 002](2026-08-20-002-refactor-database-vocabulary-plan.md)
+> Phase 6 is pinned:** the root table is still `service_lifecycles`. Write
+> `service_id uuid references public.service_lifecycles(id)` and rename it with
+> everything else when Phase 6 runs.
+
 Four free-text fields name the same cast of characters and none of them are
 connected. One audit check already tries to cross-reference two of them by
 string match, and **it would produce six false warnings per scenario today.**
@@ -181,7 +200,8 @@ coordination window entirely.
 -- supabase/migrations/*_stakeholders.sql
 create table public.stakeholders (
   id uuid primary key default gen_random_uuid(),
-  service_id uuid not null references public.services(id) on delete cascade,
+  -- Phase 6 of plan 002 is pinned, so the root table is still service_lifecycles.
+  service_id uuid not null references public.service_lifecycles(id) on delete cascade,
   name text not null,
   kind text not null check (kind in ('recipient','staff','partner','provider')),
   note text,
@@ -242,9 +262,9 @@ alter table public.slices add column stakeholder_id uuid references public.stake
 
 ### Phase 5 — the surfaces
 
-- [ ] The **service panel** ([plan 003](2026-08-20-003-feat-entity-detail-panels-plan.md))
-      gains a Stakeholders surface — the same repeating-row editor as
-      `value_props`, with `kind` as a `select`
+- [ ] 📌 **PINNED** — the service panel's Stakeholders surface (the same
+      repeating-row editor as `value_props`, `kind` as a `select`). Waits on the
+      service tier; agent tools cover management until then
 - [ ] The **lane panel** gets a stakeholder picker, empty and clearly optional,
       because most lanes have none
 - [ ] The **cell panel**'s `for` field takes its datalist from the registry

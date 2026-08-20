@@ -70,36 +70,62 @@ is the one that moves the number.
 | [002](2026-08-20-002-refactor-database-vocabulary-plan.md) | **Database vocabulary** — `layers`→`lanes`, `cell_triggers`→`cell_links`, `propositions`→`business_model`, `cells.description`→`summary` | active | The code already apologises for two of these in comments. Must land **after** `refactor/agent-tool-surface` merges |
 | [006](2026-08-20-006-design-data-model.md) | **The data model** — every level, every field, a definition and a reason for each. The ERD, the two grain corrections, and four open questions | active | Decides what is worth storing, before anything is built to edit it |
 | [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | **Entity detail panels** — lane, phase, service, **scenario** (which hosts paths), on one lifted shell — **no new columns** | active | The front door. Everything else waits on it |
-| [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, `filter_service`, then a switcher | **active** | Decided: one app, many services. RLS first; the switcher must not ship before the RPC filter |
+| [004](2026-08-20-004-feat-multi-service-support-plan.md) | **Multi-service** — RLS, `filter_service`, then a switcher | 📌 **pinned** | Decided in principle: one app, many services. Parked until the service model settles |
 | [005](2026-08-20-005-feat-spec-fill-campaign-plan.md) | **Fill campaign** — scoped, cited, human-gated | blocked on 003 | Filling fields nobody can then see is how this content got lost the first time |
 | [007](2026-08-20-007-feat-cross-repo-blueprint-contract-plan.md) | **Cross-repo contract** — uno-bot's `include` switch, and putting RPC params + FK names under the drift check | active | `cell_triggers` → `cell_links` can break uno-bot silently. This is what stops it |
-| [008](2026-08-20-008-feat-create-a-service-first-run-plan.md) | **Create a service** — an empty service, a first-run flow, and the membership row it must write | active | Today a second team's first screen is a blank product with no way to begin |
+| [008](2026-08-20-008-feat-create-a-service-first-run-plan.md) | **Create a service** — an empty service, a first-run flow, and the membership row it must write | 📌 **pinned** | Parked with the service tier |
 | [009](2026-08-20-009-feat-stakeholder-registry-plan.md) | **Stakeholder registry** — one cast list replacing four free-text vocabularies | active | `check-value-ledger` would fire **six false warnings per scenario** today |
 
-### Build order
+## What's pinned, and what it does not block
+
+**The service tier is parked** until the model settles — 2026-08-20. Pinned:
+
+| | |
+|---|---|
+| [004](2026-08-20-004-feat-multi-service-support-plan.md) multi-service | whole plan |
+| [008](2026-08-20-008-feat-create-a-service-first-run-plan.md) create a service | whole plan |
+| [002](2026-08-20-002-refactor-database-vocabulary-plan.md) **Phase 3** | `propositions` → `business_model` |
+| [002](2026-08-20-002-refactor-database-vocabulary-plan.md) **Phase 6** | retire "lifecycle", the root-table rename |
+| [003](2026-08-20-003-feat-entity-detail-panels-plan.md) | the **service panel** and its Validation surface |
+| [009](2026-08-20-009-feat-stakeholder-registry-plan.md) **Phase 5** | the Stakeholders surface on that panel |
+
+**Three consequences, and they are all small:**
+
+1. **The root table stays `service_lifecycles`.** Any new FK written now must
+   reference it, and gets renamed with everything else when Phase 6 runs. Only
+   [009](2026-08-20-009-feat-stakeholder-registry-plan.md) writes one.
+2. **`SegmentedControl` drops out of 003.** It was specified for the service
+   panel alone — the one surface with two tabs. The lifted shell is
+   parameterised and does not care that it now serves three panels.
+3. **Stakeholders have no human-facing editor** until the service panel
+   unpins. The six real ones are seeded by migration and the agent tools cover
+   changes, which is enough for a cast that moves once a quarter.
+
+**Nothing that moves the metric is pinned.** All four dark audit checks are
+lane- and cell-level.
+
+### Build order — what is actually shipping
 
 ```
-007  cross-repo contract ← Phase 2 FIRST: it is what makes 002 safe
-      │
+007  cross-repo contract  Phases 1–2 FIRST: the RPC fidelity fix, and putting
+      │                   RPC params + output columns + FK names under the
+      │                   drift check. Phase 2 is what makes 002 Phase 2 safe.
       ▼
-002  vocabulary          ← after refactor/agent-tool-surface merges
-      │                    renames paths.description → summary, which 003 writes against
+002  vocabulary           Phases 1 · 2 · 4 · 5 · 8, then 7 last.
+      │                   ⚠️ after refactor/agent-tool-surface merges.
+      │                   Phase 4 renames paths.description → summary,
+      │                   which 003's scenario panel writes against.
       ▼
-003  panels              ← the front door. No new columns, no migration.
+007  Phases 3–4           bot switch + the renames, in the protected window
+      ▼
+003  panels               lane · phase · scenario. One new column
+      │                   (steps.summary) and its storyboard caption.
       │
-      ├──▶ 005  fill campaign   ← needs somewhere for the content to be seen
+      ├──▶ 009  stakeholder registry   independent; needs NO uno-bot change
       │
-006  data model          ← reference, not work. Read alongside 002 and 003.
+      └──▶ 005  fill campaign   needs somewhere the content can be seen
 
-004  multi-service       ← independent. Its steps 1–2 (RLS, filter_service)
-      │                    can land any time and change nothing observable.
-      │                    Its switcher must NOT ship before step 2.
-      ▼
-008  create a service    ← needs 002 phase 6 (the real root table)
-                           and 004 step 1 (service_members)
-
-009  stakeholder registry ← independent of all of it. Needs NO uno-bot change,
-                            by design: slices.actor stays, trigger-maintained.
+006  data model           reference, not work. Read alongside 002 and 003.
 ```
 
 **Nothing here needs a migration except 002's renames and 004's membership

@@ -1,7 +1,7 @@
 ---
 title: "Creating a service — the empty blueprint and the first ten minutes"
 type: feat
-status: active
+status: pinned
 date: 2026-08-20
 repos: uno-blueprint
 brief: docs/plans/2026-08-20-001-spec-layer-brief.md
@@ -9,6 +9,14 @@ related: docs/plans/2026-08-20-004-feat-multi-service-support-plan.md
 ---
 
 # Create a service
+
+> ## 📌 PINNED — 2026-08-20
+>
+> The service tier is parked until the model settles. Nothing in this plan is
+> started. It is kept whole rather than trimmed, so picking it back up is
+> reading, not rebuilding. See
+> [the brief](2026-08-20-001-spec-layer-brief.md#whats-pinned-and-what-it-does-not-block)
+> for what is still moving.
 
 **Decided: an empty service, plus a first-run flow that walks someone into
 `create_phase`.** Not a template, not import-only. This plan is that design.
