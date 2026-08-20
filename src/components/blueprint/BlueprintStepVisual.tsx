@@ -61,8 +61,44 @@ function VisualPictureStrip({
               alt=""
               loading="lazy"
               decoding="async"
+              /*
+                `w-auto`, not `w-full`, and that is the whole fix for the
+                corners.
+
+                `border-radius` clips the IMG BOX. Stretched to the full cell
+                the box is wider than the picture — measured on a 300x272
+                screenshot in a 546x372 box, `object-contain` paints it 410
+                wide and letterboxes 68px each side — so the radius rounds
+                empty space and the artwork keeps square corners inside a
+                cell rounded at 10px. Selection is where it shows, because the
+                ring draws a crisp rounded outline right around a square
+                block.
+
+                Sized to its own aspect the box IS the picture, so the radius
+                lands on the artwork's corners. `max-w-full` keeps a picture
+                wider than the cell from overflowing; that one letterboxes
+                top and bottom instead, which is the same problem in the
+                other axis and is why this is a `min`, not a fix for every
+                shape.
+
+                And the radius is the CONCENTRIC one, not a token picked by
+                eye. A rounded box inset inside another looks wrong unless its
+                radius is the outer radius MINUS THE INSET. `rounded-sm` is
+                `--radius - 4px`, one pixel proud of that here — invisible
+                while the cell face is near-transparent, and obvious the moment
+                selection paints an opaque fill behind the picture, because the
+                gap pinches at the corners. That is why hover looked right and
+                selection did not.
+
+                Spelled out of the same tokens the cell is built from, so it
+                cannot drift: `--radius-lg` is what the cell's `rounded-lg`
+                resolves to, `--spacing` is what its `p-1` resolves to, and the
+                `1px` is its border, which is a literal in the button's own
+                class with no token behind it. Change the cell's rounding or
+                padding and the picture follows.
+              */
               className={cn(
-                'h-full w-full rounded-sm object-contain object-center',
+                'h-full w-auto max-w-full rounded-[calc(var(--radius-lg)-var(--spacing)-1px)] object-contain object-center',
                 hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',
               )}
             />
