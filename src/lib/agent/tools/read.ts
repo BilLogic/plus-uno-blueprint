@@ -282,6 +282,32 @@ export async function listLanes(client: Client): Promise<string> {
 }
 
 /**
+ * The service's cast list.
+ *
+ * The registry is the answer to "who is this lane for?" and "who receives
+ * this value?" — one list, with the other spellings each name has been
+ * written as. Read it before inventing an audience: `tutor` and `Regular
+ * Tutor` are one person, and the aliases column is where that is recorded.
+ */
+export async function listStakeholders(client: Client): Promise<string> {
+  const { data, error } = await client
+    .from('stakeholders')
+    .select('id, name, kind, note, aliases')
+    .order('kind')
+    .order('name')
+  if (error) throw new Error(error.message)
+  if (!data || data.length === 0) return 'No stakeholders registered yet.'
+  return data
+    .map((row) => {
+      const aliases = (row.aliases ?? []).length
+        ? ` — also written ${(row.aliases ?? []).join(', ')}`
+        : ''
+      return `${row.name} (${row.kind}) [${row.id}]${aliases}${row.note ? ` — ${row.note}` : ''}`
+    })
+    .join('\n')
+}
+
+/**
  * The arrows, readable on their own. `create_cell_dependency` could write an edge
  * the agent had no way to read back; this is the missing half of that pair.
  * Scope to one cell when you have one — the whole graph is large.

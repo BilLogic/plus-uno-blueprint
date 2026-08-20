@@ -78,6 +78,9 @@ create table public.lanes (
   -- Semantic key, deliberately separate from the display name: inferring one
   -- from the other broke every non-English blueprint.
   lane_role text,
+  -- Null on the 224 structural rows (tech, support, storyboard, the action
+  -- rows). A null stakeholder is what tells a check "this is scaffolding".
+  stakeholder_id uuid references public.stakeholders (id),
   position integer not null default 0,
   owner_team text,
   kpis jsonb not null default '[]'::jsonb,
@@ -192,7 +195,8 @@ create table public.slices (
   slice_type text not null,
   title text not null,
   description text,
-  actor text,
+  actor text,   -- display text; a trigger keeps it equal to the linked name
+  stakeholder_id uuid references public.stakeholders (id),
   locale text not null default 'en',
   position integer not null default 0,
   origin text not null default 'import' check (origin in ('import','app')),
@@ -213,6 +217,22 @@ create table public.slice_items (
   created_by uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+-- The cast list. Four free-text fields named the same people and agreed with
+-- none of them; `check-value-ledger` could not tell an actor lane from a
+-- structural one and would have warned six times per scenario.
+create table public.stakeholders (
+  id uuid primary key default gen_random_uuid(),
+  -- service_lifecycles until plan 002 Phase 6 renames it to services.
+  service_id uuid not null references public.service_lifecycles (id) on delete cascade,
+  name text not null,
+  kind text not null check (kind in ('recipient','staff','partner','provider')),
+  note text,
+  aliases text[] not null default '{}',   -- other spellings seen in THIS blueprint
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (service_id, name)
 );
 
 -- One business-model record per lifecycle. The three validation questions live

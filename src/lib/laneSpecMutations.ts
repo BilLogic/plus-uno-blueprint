@@ -9,6 +9,12 @@ export type LaneSpecUpdate = {
   ownerTeam: string
   kpis: string[]
   tools: string[]
+  /**
+   * The registry row this lane's actor is, or null for a structural row.
+   * Fans out with everything else: the same label in the same scenario is the
+   * same person, so it cannot be two different members of the cast.
+   */
+  stakeholderId: string | null
 }
 
 /**
@@ -49,6 +55,7 @@ export async function updateLaneSpec(
       owner_team: update.ownerTeam.trim() || null,
       kpis: kpis as unknown as Json,
       tools: tools as unknown as Json,
+      stakeholder_id: update.stakeholderId,
     })
     .in('id', laneIds)
     .select('id')

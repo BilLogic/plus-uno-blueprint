@@ -18,6 +18,11 @@ import {
 } from '@/lib/scenarioSpecMutations'
 import { updateStepSummary } from '@/lib/stepSpecMutations'
 import {
+  deleteStakeholder,
+  updateStakeholder,
+  type StakeholderInput,
+} from '@/lib/stakeholderMutations'
+import {
   deleteEvidence,
   restoreEvidenceRow,
   updateEvidence,
@@ -117,6 +122,19 @@ export async function executeRevert(
         throw new Error("This change's revert is missing its summary.")
       }
       await updateScenarioSummary(client, scenarioId, summary, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'delete_stakeholder': {
+      // Undo of "added someone to the cast".
+      await deleteStakeholder(client, stringArg(revert.args, 'stakeholder_id'))
+      return
+    }
+    case 'update_stakeholder': {
+      const stakeholderId = stringArg(revert.args, 'stakeholder_id')
+      const update = revert.args.update as StakeholderInput
+      await updateStakeholder(client, stakeholderId, update, undefined, {
         record: false,
       })
       return

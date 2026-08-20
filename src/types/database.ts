@@ -337,6 +337,7 @@ export type Database = {
           path_id: string
           position: number
           tools: Json
+          stakeholder_id: string | null
           updated_at: string
         }
         Insert: {
@@ -349,6 +350,7 @@ export type Database = {
           path_id: string
           position?: number
           tools?: Json
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -361,6 +363,7 @@ export type Database = {
           path_id?: string
           position?: number
           tools?: Json
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -706,6 +709,7 @@ export type Database = {
           service_lifecycle_id: string
           slice_type: string
           title: string
+          stakeholder_id: string | null
           updated_at: string
         }
         Insert: {
@@ -720,6 +724,7 @@ export type Database = {
           service_lifecycle_id: string
           slice_type: string
           title: string
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -734,12 +739,54 @@ export type Database = {
           service_lifecycle_id?: string
           slice_type?: string
           title?: string
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: 'slices_service_lifecycle_id_fkey'
             columns: ['service_lifecycle_id']
+            isOneToOne: false
+            referencedRelation: 'service_lifecycles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      stakeholders: {
+        Row: {
+          aliases: string[]
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          note: string | null
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          note?: string | null
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          note?: string | null
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'stakeholders_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
             referencedRelation: 'service_lifecycles'
             referencedColumns: ['id']
@@ -842,6 +889,7 @@ export type Phase = Database['public']['Tables']['phases']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
 export type ServiceLifecycle = Database['public']['Tables']['service_lifecycles']['Row']
 export type Scenario = Database['public']['Tables']['scenarios']['Row']
+export type Stakeholder = Database['public']['Tables']['stakeholders']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']
 
 export type Slice = Database['public']['Tables']['slices']['Row']

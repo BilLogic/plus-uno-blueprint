@@ -17,6 +17,10 @@ import {
   replaceSliceFrames,
   updateSliceMeta,
 } from '@/lib/sliceMutations'
+import {
+  createStakeholder,
+  updateStakeholder,
+} from '@/lib/stakeholderMutations'
 import type { SliceType } from '@/lib/sliceValidation'
 import { asUpdatedAtToken } from '@/lib/optimisticConcurrency'
 import { setSharedCanvasMode } from '@/contexts/canvasModeContext'
@@ -77,6 +81,7 @@ import {
   listCellDependencies,
   listEvidence,
   listLanes,
+  listStakeholders,
   listReferences,
   listSessions,
   listBlueprint,
@@ -205,6 +210,8 @@ export async function dispatchTool(
       return listSlices(client)
     case 'list_owner_tags':
       return listOwnerTags(client)
+    case 'list_stakeholders':
+      return listStakeholders(client)
     case 'list_lanes':
       return listLanes(client)
     case 'list_references':
@@ -508,6 +515,59 @@ export async function dispatchTool(
           name: need(args, 'name'),
         })
         return 'Path renamed.'
+      }
+      case 'create_stakeholder': {
+        const kind = need(args, 'kind')
+        if (!['recipient', 'staff', 'partner', 'provider'].includes(kind))
+          throw new Error('kind must be recipient, staff, partner, or provider.')
+        const id = await createStakeholder(client, await lifecycleId(client), {
+          name: need(args, 'name'),
+          kind,
+          note: s(args, 'note') ?? null,
+          aliases: Array.isArray(args.aliases)
+            ? args.aliases.filter(
+                (value): value is string => typeof value === 'string',
+              )
+            : [],
+        })
+        return `Added stakeholder (${id}).`
+      }
+      case 'update_stakeholder': {
+        const stakeholderId = need(args, 'stakeholder_id')
+        // Read-modify-write, not a patch: the row is the unit that gets
+        // reverted, so the captured `previous` has to be the whole of it.
+        const { data: current, error } = await client
+          .from('stakeholders')
+          .select('name, kind, note, aliases')
+          .eq('id', stakeholderId)
+          .maybeSingle()
+        if (error) throw new Error(error.message)
+        if (!current) throw new Error('No stakeholder with that id.')
+        const previous = {
+          name: current.name,
+          kind: current.kind,
+          note: current.note,
+          aliases: current.aliases ?? [],
+        }
+        const kind = s(args, 'kind') ?? previous.kind
+        if (!['recipient', 'staff', 'partner', 'provider'].includes(kind))
+          throw new Error('kind must be recipient, staff, partner, or provider.')
+        await updateStakeholder(
+          client,
+          stakeholderId,
+          {
+            name: s(args, 'name') ?? previous.name,
+            kind,
+            note: s(args, 'note') ?? previous.note,
+            aliases: Array.isArray(args.aliases)
+              ? args.aliases.filter(
+                  (value): value is string => typeof value === 'string',
+                )
+              : previous.aliases,
+          },
+          previous,
+        )
+        return 'Stakeholder updated.'
       }
       case 'create_phase': {
         const id = await createPhase(client, {

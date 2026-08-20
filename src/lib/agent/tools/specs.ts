@@ -75,6 +75,7 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
   'list_slices',
   'get_slice',
   'list_owner_tags',
+  'list_stakeholders',
   'get_ui_state',
   'get_change_history',
   'open_phase',
@@ -105,6 +106,8 @@ export const WRITE_TOOL_NAMES = new Set([
   'update_evidence',
   'create_finding',
   'update_finding',
+  'create_stakeholder',
+  'update_stakeholder',
 ])
 
 export const TOOL_SPECS: ToolSpec[] = [
@@ -232,6 +235,51 @@ export const TOOL_SPECS: ToolSpec[] = [
     description:
       'The owner tag vocabulary in use. ALWAYS read before writing owner or perceived_owner — reuse an existing tag unless creating one deliberately.',
     parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_stakeholders',
+    description:
+      "The service's cast: who the blueprint is for, who staffs it, who partners on it, and the provider itself — with the other spellings each name has been written as. ALWAYS read before writing a value_props audience or linking a lane: `tutor` and `Regular Tutor` are one person, and the aliases are where that is recorded.",
+    parameters: { type: 'object', properties: {} },
+  },
+  {
+    name: 'create_stakeholder',
+    description:
+      'Add someone to the cast. Rare and deliberate — a new row means a new ACTOR in the service, not a new spelling of one who exists. A different spelling belongs in the existing row\'s aliases via update_stakeholder.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('How this actor is written on the canvas, e.g. "Lead Tutor"'),
+        kind: str('recipient | staff | partner | provider'),
+        note: str('Who they are, in one line; omit for none'),
+        aliases: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Other spellings already present in this blueprint',
+        },
+      },
+      required: ['name', 'kind'],
+    },
+  },
+  {
+    name: 'update_stakeholder',
+    description:
+      "Edit one member of the cast. Renaming also rewrites `slices.actor` on every slice linked to them — the registry owns that text. Read list_stakeholders first; the id is in its output.",
+    parameters: {
+      type: 'object',
+      properties: {
+        stakeholder_id: str('Stakeholder id'),
+        name: str('New name; omit to keep'),
+        kind: str('recipient | staff | partner | provider; omit to keep'),
+        note: str('One line; omit to keep'),
+        aliases: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Replaces the alias list; omit to keep',
+        },
+      },
+      required: ['stakeholder_id'],
+    },
   },
   {
     name: 'list_lanes',

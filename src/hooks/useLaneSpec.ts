@@ -8,6 +8,8 @@ export type LaneSpec = {
   ownerTeam: string
   kpis: string[]
   tools: string[]
+  /** Which member of the cast this lane is; null on a structural row. */
+  stakeholderId: string | null
   scenarioId: string
   scenarioName: string
   phaseName: string
@@ -49,7 +51,7 @@ export function useLaneSpec(laneId: string | null): QueryResult<LaneSpec | null>
       const { data: lane, error } = await client
         .from('lanes')
         .select(
-          'id, name, lane_role, owner_team, kpis, tools, paths!inner(scenario_id, scenarios!inner(name, phases!inner(name)))',
+          'id, name, lane_role, owner_team, kpis, tools, stakeholder_id, paths!inner(scenario_id, scenarios!inner(name, phases!inner(name)))',
         )
         .eq('id', laneId)
         .maybeSingle()
@@ -84,6 +86,7 @@ export function useLaneSpec(laneId: string | null): QueryResult<LaneSpec | null>
         ownerTeam: lane.owner_team ?? '',
         kpis: toStrings(lane.kpis),
         tools: toStrings(lane.tools),
+        stakeholderId: lane.stakeholder_id ?? null,
         scenarioId,
         scenarioName: path.scenarios.name,
         phaseName: path.scenarios.phases.name,

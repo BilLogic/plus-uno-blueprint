@@ -16,6 +16,7 @@ const WRITES = new Set([
   'create_evidence',
   'update_evidence',
   'create_finding', 'update_finding',
+  'create_stakeholder', 'update_stakeholder',
 ])
 
 const writesIn = (trace, turn) =>

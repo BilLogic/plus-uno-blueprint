@@ -14,6 +14,7 @@ import {
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelHint } from '@/components/blueprint/PanelHint'
+import { StakeholderSelect } from '@/components/blueprint/StakeholderSelect'
 import { useLaneSpec, type LaneSpec } from '@/hooks/useLaneSpec'
 import { useOwnerTags } from '@/hooks/useOwnerTags'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -69,7 +70,12 @@ export function LanePanel({
   )
 }
 
-type FormState = { ownerTeam: string; kpis: string[]; tools: string[] }
+type FormState = {
+  ownerTeam: string
+  kpis: string[]
+  tools: string[]
+  stakeholderId: string | null
+}
 
 function LanePanelBody({
   lane,
@@ -92,6 +98,7 @@ function LanePanelBody({
     ownerTeam: lane.ownerTeam,
     kpis: lane.kpis,
     tools: lane.tools,
+    stakeholderId: lane.stakeholderId,
   })
   const [form, setForm] = useState<FormState>(baseline)
   const [busy, setBusy] = useState(false)
@@ -106,6 +113,7 @@ function LanePanelBody({
     setForm((current) => ({ ...current, [key]: value }))
 
   const changed =
+    form.stakeholderId !== baseline.stakeholderId ||
     form.ownerTeam !== baseline.ownerTeam ||
     JSON.stringify(form.kpis) !== JSON.stringify(baseline.kpis) ||
     JSON.stringify(form.tools) !== JSON.stringify(baseline.tools)
@@ -180,6 +188,17 @@ function LanePanelBody({
           {describeLaneRole(resolvedRole)}
         </p>
       </PanelIdentity>
+
+      <Field
+        label="Stakeholder"
+        hint="Which member of the service's cast this lane is. Structural rows — tech, support, storyboard — have nobody."
+      >
+        <StakeholderSelect
+          value={form.stakeholderId}
+          disabled={!canEdit}
+          onChange={(next) => set('stakeholderId', next)}
+        />
+      </Field>
 
       <Field
         label="Owner team"

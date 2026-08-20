@@ -481,6 +481,15 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
         record.result = 'compare_blueprint is unavailable in this rehearsal environment — read get_blueprint and compare the paths by hand (steps align across paths by name).'
         return record.result
       case 'list_owner_tags': record.result = await realListOwnerTags(); return record.result
+      case 'list_stakeholders': {
+        const rows = await rest('stakeholders?select=id,name,kind,note,aliases&order=kind,name')
+        record.result = (rows ?? []).length
+          ? rows
+              .map((r) => `${r.name} (${r.kind}) [${r.id}]${(r.aliases ?? []).length ? ` — also written ${r.aliases.join(', ')}` : ''}${r.note ? ` — ${r.note}` : ''}`)
+              .join('\n')
+          : 'No stakeholders registered yet.'
+        return record.result
+      }
       case 'list_slices': record.result = await realListSlices(); return record.result
       case 'get_slice': {
         const rows = await rest(
