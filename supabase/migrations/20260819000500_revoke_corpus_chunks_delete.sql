@@ -1,0 +1,27 @@
+-- Step 3 of the sequence written into 20260819000200: now that the backfill
+-- prunes through semantic_search.prune_orphans(), take the table-wide DELETE
+-- back.
+--
+-- 20260819000000 granted it so the nightly orphan pass could run at all — it
+-- had been 403ing since 2026-08-18, leaving 43 chunks for hard-deleted cells in
+-- the index, 10% of sampled searches surfacing one, each a citable cell that no
+-- longer exists behind a ?cell= link resolving to nothing.
+--
+-- That grant answered a broader question than the one asked: it permits
+-- `delete from semantic_search.corpus_chunks` with any predicate, or none.
+-- prune_orphans() permits exactly the orphan set, because the WHERE lives
+-- inside the definer and the caller chooses no rows. Reads already work this
+-- way — the table is RLS-sealed and match_corpus_chunks is the only door.
+--
+-- Safe to run now, and NOT before: the sequence was
+--   1. 20260819000200 adds prune_orphans()            (additive)
+--   2. uno-bot switches to it                          (plus-uno #124, merged)
+--   3. this migration                                  (removes the wide grant)
+-- Reversing 2 and 3 would have broken the nightly prune in the window between
+-- them — the same silent failure the whole thread is about, from the other side.
+--
+-- INSERT/UPDATE stay. service_role must still write the index, and a leaked key
+-- could already rewrite the corpus with text the bot quotes as authoritative,
+-- which is a worse problem than deletion and is not addressed here. This
+-- declines to add a second one.
+revoke delete on semantic_search.corpus_chunks from service_role;
