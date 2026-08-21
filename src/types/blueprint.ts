@@ -1,3 +1,4 @@
+import type { Json } from '@/types/database'
 import type { PathType } from '@/types/database'
 import type { EntityStatus } from '@/lib/entityStatus'
 
@@ -58,6 +59,24 @@ export type BlueprintCell = {
    *  relabelled it on the way out, so this closes a documented workaround. */
   summary: string | null
   links: CellLink[]
+  /*
+    The spec block and the owner pair.
+  
+    Optional because dev fallback content does not carry them — the database
+    mapper always sets all five, and `cellSpecContract.test.ts` is what holds
+    that, not the type. Requiring them here would mean editing twenty fixture
+    files to write `null` five times each.
+  */
+  /** What this cell has to accomplish. */
+  function?: string | null
+  /** How it comes across. */
+  form?: string | null
+  /** Who gets what from it — `[{ for, value }]`. */
+  value_props?: Json | null
+  /** The team accountable for this moment. */
+  owner?: string | null
+  /** Who the person on the other side THINKS is accountable. */
+  perceived_owner?: string | null
   /**
    * Whether this cell describes something built. Absent means shipped.
    *

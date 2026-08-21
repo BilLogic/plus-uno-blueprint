@@ -1,9 +1,7 @@
-import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { Skeleton } from '@/components/ui/skeleton'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useCellSpec } from '@/hooks/useCellSpec'
+import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { parseValueProps } from '@/lib/valueProps'
 
 function SpecSection({ title, text }: { title: string; text: string }) {
@@ -31,42 +29,20 @@ type CellOverviewSpecProps = {
  */
 export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   const { client, configured } = useSupabase()
-  const specResult = useCellSpec(configured ? cellId : null)
+  const cell = useBlueprintCell(cellId)
 
   if (!configured || !client || !cellId) return null
+
   /*
-    A deferred skeleton, not a bare `return null`.
+    No skeleton, because nothing loads.
 
-    Reserving space unconditionally was the old bug: most cells have no spec
-    at all, so the block (and the tab row under it) grew for ~250ms and
-    collapsed again on EVERY cell switch. `DeferredSkeleton` holds for exactly
-    that long before painting, so a fast query still renders nothing — and a
-    slow one now says "loading" instead of looking empty, which is the
-    consistency the panels needed.
+    There used to be a `DeferredSkeleton` here, holding 250ms before painting
+    so that the block did not grow and collapse on every cell switch — a good
+    fix for a query that should not have existed. The board carries the spec
+    columns now, so this renders in the same commit as the panel around it
+    and there is no frame in which it could be empty.
   */
-  if (specResult.status !== 'ready') {
-    return (
-      <DeferredSkeleton
-        loading
-        skeleton={
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </div>
-        }
-      >
-        {null}
-      </DeferredSkeleton>
-    )
-  }
-
-  const spec = specResult.data
+  const spec = cell
   const functionText = spec?.function?.trim() ?? ''
   const formText = spec?.form?.trim() ?? ''
   const valueProps = parseValueProps(spec?.value_props ?? null)

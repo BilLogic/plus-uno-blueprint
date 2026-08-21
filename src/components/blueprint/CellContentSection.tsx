@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useCellContent } from '@/hooks/useCellContent'
+import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 
 /**
  * The owner pair, read-only.
@@ -23,12 +23,10 @@ import { useCellContent } from '@/hooks/useCellContent'
  */
 export function CellContentSection({ cellId }: { cellId: string | null }) {
   const { client, configured } = useSupabase()
-  const result = useCellContent(configured ? cellId : null)
+  // From the board, not a request — see useBlueprintCell.
+  const cell = useBlueprintCell(cellId)
 
   if (!configured || !client || !cellId) return null
-  if (result.status !== 'ready') return null
-
-  const cell = result.data
   if (!cell) return null
 
   const owner = cell.owner?.trim() ?? ''

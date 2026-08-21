@@ -11,8 +11,7 @@ import {
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
 import { invalidateCanvasBlueprintsForPath } from '@/hooks/useCanvasBlueprints'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useCellContent } from '@/hooks/useCellContent'
-import { useCellSpec } from '@/hooks/useCellSpec'
+import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { upsertCell } from '@/lib/authoringRpc'
@@ -85,23 +84,14 @@ export function CellPanelEditor({
   onDone: () => void
 }) {
   const { configured } = useSupabase()
-  const contentResult = useCellContent(configured && cellId ? cellId : null)
-  const specResult = useCellSpec(configured && cellId ? cellId : null)
+  // One read from the board, where two queries used to be. There is no
+  // loading branch left, and no error branch: the panel cannot be open
+  // without the board it was opened from.
+  const cell = useBlueprintCell(configured && cellId ? cellId : null)
 
   if (cellId) {
-    if (contentResult.status === 'loading' || specResult.status === 'loading') {
-      return null
-    }
-    if (contentResult.status === 'error' || specResult.status === 'error') {
-      return (
-        <p className="text-xs text-destructive">
-          This cell's fields could not be loaded — close the panel and try
-          again.
-        </p>
-      )
-    }
-    const content = contentResult.data
-    const spec = specResult.data
+    const content = cell
+    const spec = cell
     if (!content) return null
 
     const baseline: FormState = {

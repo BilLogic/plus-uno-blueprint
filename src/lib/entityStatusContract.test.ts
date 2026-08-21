@@ -76,6 +76,9 @@ describe('cell status survives the move off the label', () => {
       .replace(/[a-z_]+:[^(]*\([\s\S]*?\)/g, '')
       .split(',')
       .map((field) => field.trim())
+      // PostgREST needs a reserved word quoted — `"function"` — and the
+      // mapper writes the bare key. Compare identifiers, not spellings.
+      .map((field) => field.replace(/^"(.*)"$/, '$1'))
       .filter(Boolean)
 
     const source = src('lib/normalizeBlueprint.ts')

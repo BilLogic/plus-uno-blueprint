@@ -38,6 +38,11 @@ export type RawCell = {
   summary?: string | null
   status?: string | null
   links?: Json | null
+  function?: string | null
+  form?: string | null
+  value_props?: Json | null
+  owner?: string | null
+  perceived_owner?: string | null
   outgoing?: RawOutgoingDependency[] | null
 }
 
@@ -237,6 +242,14 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       ? (cell.status as EntityStatus)
       : null,
     links: normalizeCellLinks(cell.links),
+    // The spec block and the owner pair, carried with the board rather than
+    // fetched on panel open. `cellSpecContract.test.ts` fails if a column is
+    // selected above and dropped here.
+    function: cell.function ?? null,
+    form: cell.form ?? null,
+    value_props: cell.value_props ?? null,
+    owner: cell.owner ?? null,
+    perceived_owner: cell.perceived_owner ?? null,
   }))
   const dependencies =
     raw.cell_dependencies && raw.cell_dependencies.length > 0
