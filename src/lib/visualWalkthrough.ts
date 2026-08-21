@@ -5,13 +5,13 @@ import type { BlueprintData } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 
 export const VISUAL_WALKTHROUGH_LAYER_NAMES = [
-  'Partner Action: Teacher',
+  'Teacher',
   'Lead Tutor',
   'Regular Tutor',
 ] as const
 
 export const VISUAL_LAYER_SHORT_LABELS: Record<string, string> = {
-  'Partner Action: Teacher': 'Partner',
+  Teacher: 'Teacher',
   'Lead Tutor': 'Lead Tutor',
   'Regular Tutor': 'Regular Tutor',
 }

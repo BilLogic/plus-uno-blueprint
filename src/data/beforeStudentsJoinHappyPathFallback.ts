@@ -56,7 +56,7 @@ const LAYERS = [
   { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000002011',
-    name: 'Partner Action: Teacher',
+    name: 'Teacher',
     position: 1,
   },
   {

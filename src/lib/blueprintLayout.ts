@@ -214,12 +214,15 @@ export function layerHasDiscoveryRailCorridor(
   return false
 }
 
-export const PARTNER_ACTION_LAYER_NAME = 'Partner Action: Teacher'
+/*
+  The teacher's lane, by name.
 
-export function abbreviateConnectionLayerName(laneName: string): string {
-  if (laneName === PARTNER_ACTION_LAYER_NAME) return 'Teacher'
-  return laneName
-}
+  It was called `Partner Action: Teacher` until 2026-08-20 — the lane's ROLE
+  bolted onto the front of the person in it. `lane_role` and the stakeholder
+  registry both hold the role now, so the label is just the person, and the
+  helper that existed only to abbreviate the long form went with it.
+*/
+export const TEACHER_LANE_NAME = 'Teacher'
 
 export function dependenciesIncludePartnerActionOverheadWrap(
   dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
@@ -246,7 +249,7 @@ export function layerHasPartnerActionOverheadWrapCorridor(
     target_cell_id: string
   }>,
 ): boolean {
-  if (lane.name !== PARTNER_ACTION_LAYER_NAME) return false
+  if (lane.name !== TEACHER_LANE_NAME) return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
     if (blueprints.some(blueprintHasPartnerActionOverheadWrapDependencies)) {

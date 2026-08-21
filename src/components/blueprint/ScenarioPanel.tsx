@@ -26,6 +26,8 @@ import {
   updateScenarioSummary,
 } from '@/lib/scenarioSpecMutations'
 import { PATH_TYPE_LABELS } from '@/lib/pathTypeTheme'
+import { PANEL_TEXT } from '@/lib/panelText'
+import { cn } from '@/lib/utils'
 
 /**
  * The scenario's properties — and the only surface its PATHS have.
@@ -179,19 +181,8 @@ function ScenarioPanelBody({
         meta=""
       />
 
-      <PanelTextareaField
-        label="Summary"
-        hint="The situation this blueprint covers."
-        value={form.summary}
-        rows={2}
-        disabled={!canEdit}
-        onChange={(next) =>
-          setForm((current) => ({ ...current, summary: next }))
-        }
-      />
-
       <div className="flex flex-col gap-1">
-        <span className="flex items-center gap-1 text-2xs font-medium text-muted-foreground">
+        <span className={cn('flex items-center gap-1', PANEL_TEXT.sectionLabel)}>
           Paths
           {/* Why the layout control is absent, said once, on request —
               rather than a tinted banner explaining it on every open. */}
@@ -249,6 +240,20 @@ function ScenarioPanelBody({
           ))}
         </Accordion>
       </div>
+
+      {/* UNDER the paths. The paths are why this drawer exists — the
+          scenario's one editable sentence sat above them and pushed the
+          only thing you cannot reach anywhere else below the fold. */}
+      <PanelTextareaField
+        label="Summary"
+        hint="The situation this blueprint covers."
+        value={form.summary}
+        rows={2}
+        disabled={!canEdit}
+        onChange={(next) =>
+          setForm((current) => ({ ...current, summary: next }))
+        }
+      />
 
       {canEdit ? (
         <PanelFooterControls

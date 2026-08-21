@@ -23,7 +23,7 @@ import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { updateLaneSpec } from '@/lib/laneSpecMutations'
-import { describeLaneRole, getLayerRole } from '@/lib/laneRoles'
+import { describeLaneRole, getLayerRole, labelLaneRole } from '@/lib/laneRoles'
 import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
 
 /**
@@ -153,7 +153,21 @@ function LanePanelBody({
       data-busy={busy || undefined}
     >
       <PanelIdentity
-        badge={<PanelKindBadge label="Lane" laneRole={laneRole} />}
+        /* The chip says WHICH KIND of lane, in words, and carries that
+           lane's own colour — the cell panel's chip is the lane name for the
+           same reason. A generic "Lane" chip above a sentence describing the
+           role was one fact wearing two sizes. */
+        badge={
+          <span className="flex min-w-0 items-center gap-1">
+            <PanelKindBadge
+              label={labelLaneRole(resolvedRole)}
+              laneRole={laneRole}
+            />
+            <PanelHint label="What this row is for">
+              {describeLaneRole(resolvedRole)}
+            </PanelHint>
+          </span>
+        }
         title={lane.name}
         /*
           A cell count told the reader nothing they came here to learn. What
@@ -178,15 +192,7 @@ function LanePanelBody({
             ''
           )
         }
-      >
-        {/* The role in words, not the enum key: `frontstage_actions` is a
-            rendering contract, and a reader of this panel is being asked
-            whether the KPI below matches what the lane DOES. Resolved through
-            the legacy name map first — most rows predate `lane_role` and
-            carry null, and saying "no blueprint role" about a lane the canvas
-            draws the interaction line under would be a lie. */}
-        <p className={PANEL_TEXT.meta}>{describeLaneRole(resolvedRole)}</p>
-      </PanelIdentity>
+      />
 
       <Field
         label="Stakeholder"

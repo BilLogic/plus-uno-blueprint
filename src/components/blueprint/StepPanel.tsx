@@ -23,9 +23,10 @@ import { updateStepSummary } from '@/lib/stepSpecMutations'
  *
  * `summary` is the only editable field, and it is the one the storyboard row
  * has always needed — the sentence that makes a column legible without
- * reading five cells, rendered as the caption under the frame. This panel is
- * where it is written, which is why a storyboard cell opens here rather than
- * into a cell panel describing some other lane's text.
+ * reading five cells. The storyboard row itself stays pictures only, so this
+ * panel is where that sentence is read and written, and it is why a
+ * storyboard cell opens here rather than into a cell panel describing some
+ * other lane's text.
  */
 export function StepPanel({
   stepId,
@@ -156,7 +157,7 @@ function StepPanelBody({
 
       <PanelTextareaField
         label="Summary"
-        hint="What happens in this moment, across every lane. Shown as the caption under the storyboard frame."
+        hint="What happens in this moment, across every lane — the sentence that makes the column legible without reading five cells."
         placeholder="e.g. The student picks a slot; the system holds it 10 minutes."
         value={summary}
         rows={3}
@@ -166,9 +167,7 @@ function StepPanelBody({
 
       {distinct.size > 1 ? (
         <div className="flex flex-col gap-1">
-          <span className="text-2xs font-medium text-muted-foreground">
-            Columns
-          </span>
+          <span className={PANEL_TEXT.sectionLabel}>Columns</span>
           <ul className="flex flex-col gap-0.5">
             {step.positions.map((entry) => (
               <li

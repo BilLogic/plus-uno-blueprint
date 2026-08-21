@@ -1,7 +1,7 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import type { BlueprintCell, BlueprintCellDependency } from '@/types/blueprint'
 
-/** Shared Partner Action: Teacher steps for parallel in-session scenarios. */
+/** Shared Teacher steps for parallel in-session scenarios. */
 export const PARALLEL_SESSION_PARTNER_CONTENT = [
   'Circulate and quietly observe the students.',
   'Remind students to keep working while waiting.',

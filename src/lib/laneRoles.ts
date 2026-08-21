@@ -87,3 +87,19 @@ export function describeLaneRole(role: string | null | undefined): string {
   if (!role) return 'A swimlane with no blueprint role.'
   return LANE_ROLE_DESCRIPTIONS[role] ?? `Custom role: ${role}.`
 }
+
+/**
+ * The role as a CHIP — the name only, no explanation.
+ *
+ * The sentences above are one shape: "Name — what it means." A panel that
+ * shows a generic "Lane" chip AND that whole sentence underneath says the
+ * same thing twice at two sizes. So the chip takes the half before the dash
+ * and the sentence moves behind a hint, which is where an explanation belongs
+ * once the reader can see the answer.
+ */
+export function labelLaneRole(role: string | null | undefined): string {
+  if (!role) return 'Lane'
+  const described = LANE_ROLE_DESCRIPTIONS[role]
+  if (!described) return 'Lane'
+  return described.split('—')[0]!.trim()
+}

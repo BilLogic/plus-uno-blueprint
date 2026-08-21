@@ -162,7 +162,7 @@ const ALTERNATE_STEP_VISUAL_LAYER_ID =
 
 const LAYERS = [
   { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
-  { id: 'a0000000-0000-4000-8000-000000000301', name: 'Partner Action: Teacher', position: 1 },
+  { id: 'a0000000-0000-4000-8000-000000000301', name: 'Teacher', position: 1 },
   { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', position: 2 },
   { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', position: 3 },
   { id: 'a0000000-0000-4000-8000-000000000306', name: 'Front Stage Tech', position: 4 },

@@ -210,7 +210,7 @@ function cellStyleFromFill(
 const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   Visual: cellStyleFromFill('visual'),
   'Step Visual': cellStyleFromFill('visual'),
-  'Partner Action: Teacher': cellStyleFromFill('evidence',
+  'Teacher': cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
   'Lead Tutor': cellStyleFromFill('actor',
