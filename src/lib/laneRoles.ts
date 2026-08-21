@@ -12,6 +12,7 @@ export const BACKSTAGE_ACTIONS_ROLE = 'backstage_actions'
 export const FRONTSTAGE_TECH_ROLE = 'frontstage_tech'
 export const BACKSTAGE_TECH_ROLE = 'backstage_tech'
 export const SUPPORT_SYSTEMS_ROLE = 'support_systems'
+export const PARTNER_ACTIONS_ROLE = 'partner_actions'
 export const VISUAL_ROLE = 'visual'
 export const STEP_VISUAL_ROLE = 'step_visual'
 
@@ -79,6 +80,8 @@ const LANE_ROLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   [BACKSTAGE_TECH_ROLE]: 'Backstage technology — internal systems, shown as pills.',
   [SUPPORT_SYSTEMS_ROLE]:
     'Support — teams, vendors and infrastructure behind the work.',
+  [PARTNER_ACTIONS_ROLE]:
+    'Partner — a body outside PLUS, acting where the tutor can see them.',
   [VISUAL_ROLE]: 'Storyboard — the pictures for each step, not text.',
   [STEP_VISUAL_ROLE]: 'Storyboard — per-step imagery.',
 }

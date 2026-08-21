@@ -296,6 +296,14 @@ const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
   support_systems: cellStyleFromFill('support',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
+  /*
+    A partner acts where the customer can see them — CMU HR sends the
+    clearance materials, the CPO grants or refuses the clearance — so it
+    reads as frontstage, in a hue nothing else on the board uses.
+  */
+  partner_actions: cellStyleFromFill('partner-action',
+    BLUEPRINT_LABEL_TEXT.customerFacing,
+  ),
 }
 
 export type BlueprintZone = 'frontstage' | 'backstage'

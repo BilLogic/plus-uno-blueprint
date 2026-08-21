@@ -283,6 +283,7 @@ describe('blueprint cells', () => {
     ['backstage-tech', 'lime'],
     ['backstage-action', 'orange'],
     ['support', 'amber'],
+    ['partner-action', 'gray'],
   ]
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
@@ -500,7 +501,10 @@ describe('interaction states', () => {
   ]
 
   it('defines every state on every lane role', () => {
-    expect(laneRules).toHaveLength(8)
+    // Nine since `partner-action` landed (2026-08-21). The count is asserted
+    // so a role added to the type without a CSS block fails here rather than
+    // rendering an unstyled row.
+    expect(laneRules).toHaveLength(9)
     for (const { role, props } of laneRules) {
       for (const key of REQUIRED) {
         expect(`${role}:${key}`).toBe(props[key] ? `${role}:${key}` : 'MISSING')
