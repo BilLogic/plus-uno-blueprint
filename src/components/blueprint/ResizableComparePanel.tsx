@@ -337,7 +337,12 @@ export function ResizableComparePanel({
   const scrollInsetY = getComparePanelScrollInsetY(scrollChrome)
   const panelRef = useRef<HTMLDivElement>(null)
   const interactive = Boolean(onNavigate)
-  const navigable = interactive && !focusActive
+  // No handler, no affordance. A surface that renders `role="button"`, a
+  // pointer cursor and an aria-label, then does nothing when tapped, is
+  // worse than an inert one — and mobile deliberately passes no handler,
+  // because every move between scenarios and phases there belongs to the
+  // drawer (see `disableCanvasNavigation`).
+  const navigable = interactive && !focusActive && Boolean(onNavigate)
 
   const handleNavigateKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {

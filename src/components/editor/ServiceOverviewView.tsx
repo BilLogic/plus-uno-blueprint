@@ -163,8 +163,9 @@ type ServicePhaseSectionProps = {
   focusActive?: boolean
   /** Slice-tab scope: mount only this scenario's artboard within the phase. */
   onlyScenarioId?: string | null
-  onOpenPhase: (phaseId: string) => void
-  openScenario: (scenarioId: string) => void
+  /** Both OPTIONAL: mobile passes neither — see `disableCanvasNavigation`. */
+  onOpenPhase?: (phaseId: string) => void
+  openScenario?: (scenarioId: string) => void
   getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
 }
 
@@ -204,7 +205,7 @@ function ServicePhaseSection({
       isLoopArrowTo={isLoopArrowTo}
       dimmed={dimmed}
       focusActive={focusActive}
-      onNavigate={() => onOpenPhase(phase.id)}
+      onNavigate={onOpenPhase ? () => onOpenPhase(phase.id) : undefined}
     >
       <PhaseScenarioOverviewBody
         phase={phase}
@@ -381,6 +382,26 @@ function ServiceOverviewViewImpl({
     },
     [openDetail],
   )
+
+  /*
+    THE CANVAS DOES NOT NAVIGATE ON A PHONE.
+
+    Every move between scenarios and between phases belongs to the drawer
+    there. Scoping the mobile canvas to one scenario already removes the
+    siblings you could tap, but that is a statement about what is currently
+    rendered, and this is a statement about what a tap MEANS — the two want
+    to be separate, because it is the second one that survives someone
+    widening the scope later. It also covers the phase frame, which is a
+    navigation target of its own and is not a scenario at all.
+
+    Undefined rather than a no-op: `navigable` in `ResizableComparePanel` and
+    `CanvasPhaseSection` is gated on the handler existing, so this makes the
+    surfaces genuinely inert — no `role="button"`, no pointer cursor, no
+    aria-label promising a destination — instead of buttons that swallow
+    taps. Panning and pinching over them are unaffected; the pan handler
+    never consulted these.
+  */
+  const canvasNavigate = mobileShell ? undefined : openCanvasDetail
 
   const {
     pathsByScenario,
@@ -1091,8 +1112,8 @@ function ServiceOverviewViewImpl({
                                selection, below. */
                             getSelectedPathIds={resolveHappyPathIds}
                             displayViewType={overviewViewType}
-                            onOpenPhase={openCanvasDetail}
-                            openScenario={openCanvasDetail}
+                            onOpenPhase={canvasNavigate}
+                            openScenario={canvasNavigate}
                             getScenarioDisplayViewType={
                               getScenarioDisplayViewType
                             }
