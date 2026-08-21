@@ -25,8 +25,9 @@ import {
   updatePathSpec,
   updateScenarioSummary,
 } from '@/lib/scenarioSpecMutations'
-import { PATH_TYPE_LABELS } from '@/lib/pathTypeTheme'
+import { getPathTypeSuffixIfNeeded } from '@/lib/pathTypeTheme'
 import { PANEL_TEXT } from '@/lib/panelText'
+import type { PathType } from '@/types/database'
 import { cn } from '@/lib/utils'
 
 /**
@@ -75,6 +76,19 @@ export function ScenarioPanel({
       <PanelFooterHost id={SCENARIO_PANEL_FOOTER_ID} />
     </>
   )
+}
+
+/**
+ * The path-type word to show beside a path's name, or null to show nothing.
+ *
+ * `named` is not a kind of path — it is what a path is called when it has no
+ * archetype, so printing "Named path" beside "Set Goals" tells the reader
+ * nothing they could act on. And a path literally called "Happy Path" does
+ * not need "Happy path" repeated after it. `getPathTypeSuffixIfNeeded`
+ * already encodes both rules for the compare labels; this is the same call.
+ */
+function pathTypeSuffix(path: { name: string; pathType: PathType }): string | null {
+  return getPathTypeSuffixIfNeeded({ name: path.name, path_type: path.pathType })
 }
 
 type PathForm = { summary: string; note: string }
@@ -222,9 +236,15 @@ function ScenarioPanelBody({
                   <span className="truncate text-sm font-medium text-foreground">
                     {path.name}
                   </span>
-                  <span className="shrink-0 text-2xs font-normal text-muted-foreground">
-                    {PATH_TYPE_LABELS[path.pathType]}
-                  </span>
+                  {/* The type only when it ADDS something. `named` says
+                      nothing (it is the absence of an archetype, not a kind),
+                      and "Happy Path — Happy path" repeats the name back at
+                      the reader. Same rule the overview frames already use. */}
+                  {pathTypeSuffix(path) ? (
+                    <span className="shrink-0 text-2xs font-normal text-muted-foreground">
+                      {pathTypeSuffix(path)}
+                    </span>
+                  ) : null}
                 </span>
               </AccordionTrigger>
               <AccordionContent>
