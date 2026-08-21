@@ -157,16 +157,15 @@ function LanePanelBody({
            lane's own colour — the cell panel's chip is the lane name for the
            same reason. A generic "Lane" chip above a sentence describing the
            role was one fact wearing two sizes. */
+        /* No ⓘ beside it: the chip IS the word whose meaning is in question,
+           so its own hover is where a reader would look for the definition.
+           A second control for one fact was one control too many. */
         badge={
-          <span className="flex min-w-0 items-center gap-1">
-            <PanelKindBadge
-              label={labelLaneRole(resolvedRole)}
-              laneRole={laneRole}
-            />
-            <PanelHint label="What this row is for">
-              {describeLaneRole(resolvedRole)}
-            </PanelHint>
-          </span>
+          <PanelKindBadge
+            label={labelLaneRole(resolvedRole)}
+            laneRole={laneRole}
+            description={describeLaneRole(resolvedRole)}
+          />
         }
         title={lane.name}
         /*

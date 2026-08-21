@@ -5,9 +5,6 @@ import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlacehold
 export const ZOOM_TECH_LOGO =
   '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png'
 
-export const PENCIL_TECH_LOGO =
-  '/blueprint-images/goal-setting/shared/front-stage-tech/pencil-logo.png'
-
 export const SLACK_TECH_LOGO =
   '/blueprint-images/shared/front-stage-tech/slack-logo.png'
 
@@ -26,13 +23,7 @@ export const NOTION_TECH_LOGO =
 export const FIGMA_TECH_LOGO =
   '/blueprint-images/shared/back-stage-tech/figma-logo.png'
 
-export const ZOOM_PENCIL_TECH_PICTURES = [
-  ZOOM_TECH_LOGO,
-  PENCIL_TECH_LOGO,
-] as const
-
 const TECH_ITEM_DETAIL_PICTURES: Record<string, readonly string[]> = {
-  'Zoom/Pencil': ZOOM_PENCIL_TECH_PICTURES,
   Zoom: [ZOOM_TECH_LOGO],
   Slack: [SLACK_TECH_LOGO],
   Email: [EMAIL_TECH_LOGO],
@@ -91,11 +82,11 @@ export function resolveCellDetailPictures(input: {
 
   const content = input.cellContent?.trim() ?? ''
   if (
-    content === 'Zoom/Pencil' ||
-    content.startsWith('Zoom/Pencil\n') ||
-    content.startsWith('Zoom/Pencil,')
+    content === 'Zoom' ||
+    content.startsWith('Zoom\n') ||
+    content.startsWith('Zoom,')
   ) {
-    return getTechItemDetailPictures('Zoom/Pencil')
+    return getTechItemDetailPictures('Zoom')
   }
 
   if (content === 'PLUS App') {

@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
+import { describeLaneRole, getLayerRole } from '@/lib/laneRoles'
 import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
 import { CompareDifferencesSurface } from '@/components/blueprint/CompareDifferencesSurface'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
@@ -506,6 +507,21 @@ function BlueprintCellDetailPanelBody() {
         : 'frontstage'
     // Keyed by lane_role — the name argument is only the legacy fallback.
     return getBlueprintLayerStyle(laneName, zone, layerRecord?.role)
+  }, [blueprints, pathEntry?.pathId, selection?.laneName])
+
+  /* What the lane chip MEANS, for its hover. Resolved the same way the canvas
+     resolves it: the explicit role if the row carries one, else the legacy
+     name map. */
+  const laneRoleDescription = useMemo(() => {
+    const laneName = selection?.laneName
+    if (!laneName) return null
+    const pathId = pathEntry?.pathId
+    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
+    const layerRecord =
+      blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
+    return describeLaneRole(
+      getLayerRole({ name: laneName, role: layerRecord?.role ?? null }),
+    )
   }, [blueprints, pathEntry?.pathId, selection?.laneName])
 
   const otherTechEntries = useMemo(() => {
@@ -1037,6 +1053,7 @@ function BlueprintCellDetailPanelBody() {
       label={selection.laneName}
       laneRole={laneChipStyle?.lane ?? null}
       title={selection.laneName}
+      description={laneRoleDescription}
     />
   )
 
@@ -1157,8 +1174,14 @@ function BlueprintCellDetailPanelBody() {
     by side at one size, and the sentence about the cell belongs directly
     under the name of it.
   */
+  /* The LANE chip leads, on a tech cell as on every other kind.
+     It is the row the reader clicked in, and the tool chip beside it is one
+     of possibly several things that row holds — so the tool reading first
+     made a tech cell the only cell whose identity block started somewhere
+     other than its lane. */
   const identityBadges = (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      {laneChip}
       {showTechPill ? (
         <PanelKindBadge
           label={techDetailLabel!}
@@ -1166,7 +1189,6 @@ function BlueprintCellDetailPanelBody() {
           title={techDetailLabel!}
         />
       ) : null}
-      {laneChip}
     </div>
   )
 

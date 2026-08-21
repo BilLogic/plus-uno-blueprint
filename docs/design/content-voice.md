@@ -117,7 +117,7 @@ rather than a pronoun: `Marks the student present.`, not `Mark them as present.`
 **Pill lanes** (Front Stage Tech, Back Stage Tech, Support Actions) — a
 canonical proper noun. No verb, no period, one system or team per line.
 
-> `Zoom/Pencil` · `PLUS App` · `Dev Team`
+> `Zoom` · `PLUS App` · `Dev Team`
 
 Because content is a bare noun here, `description` is **not optional garnish —
 it is the only thing that makes the cell citable**, and it must say what this

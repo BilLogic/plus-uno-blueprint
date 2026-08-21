@@ -316,7 +316,7 @@ glyphs are absent and the panel is exactly what it is today.
 ┌ Dependencies ┬ Evidence ┬ Resources ┐
 │                                          │
 │ SET OFF BY                               │
-│  ← Zoom/Pencil · Enter Breakout       ✕  │
+│  ← Zoom · Enter Breakout       ✕  │
 │     "room opens"                      ✎  │
 │                                          │
 │ SETS OFF                                 │
@@ -366,7 +366,7 @@ URLs are validated `https:`-only on write **and** on render — the existing
 │ │   or click to pick   │ │
 │ └──────────────────────┘ │
 │ ① Enter breakout room  ✕ │
-│ ② Zoom/Pencil          ✕ │
+│ ② Zoom          ✕ │
 │ [narrative…]             │
 └──────────────────────────┘
 
@@ -399,7 +399,7 @@ Reordering and re-bucketing become the same drag.
 │  │ Caption [ Arrive                          ]  │  │
 │  │  ⠿ ① Enter breakout room                 ✕  │  │
 │  │       Regular Tutor · Enter Breakout          │  │
-│  │  ⠿ ② Zoom/Pencil                         ✕  │  │
+│  │  ⠿ ② Zoom                         ✕  │  │
 │  │       Front Stage Tech · Enter Breakout       │  │
 │  └───────────────────────────────────────────────┘  │
 │  ·  ·  ·  ·  ✂ split here  ·  ·  ·  ·  ·  ·  ·  ·   │ ← on hover

@@ -9,9 +9,9 @@ import {
   STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_PICTURE,
   STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_PICTURE,
   STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE,
-  STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
-  STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
-  STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  STUDENTS_JUST_JOINED_ZOOM_STEP_01_DESCRIPTION,
+  STUDENTS_JUST_JOINED_ZOOM_STEP_02_DESCRIPTION,
+  STUDENTS_JUST_JOINED_ZOOM_STEP_03_DESCRIPTION,
 } from '@/data/studentsJustJoinedPictures'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
@@ -227,17 +227,17 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
     { picture: STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE },
   ),
 
-  cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
+  cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: STUDENTS_JUST_JOINED_ZOOM_STEP_01_DESCRIPTION,
   }),
-  cell(sjjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
+  cell(sjjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: STUDENTS_JUST_JOINED_ZOOM_STEP_02_DESCRIPTION,
   }),
-  cell(sjjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
+  cell(sjjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: STUDENTS_JUST_JOINED_ZOOM_STEP_03_DESCRIPTION,
   }),
 ]
 

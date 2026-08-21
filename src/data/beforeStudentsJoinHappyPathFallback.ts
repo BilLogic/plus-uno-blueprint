@@ -29,11 +29,11 @@ import {
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FIGMA_URL,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_PICTURE,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION,
 } from '@/data/beforeStudentsJoinPictures'
 import { SUPPORT_ACTIONS_DESCRIPTION } from '@/data/supportActionsCopy'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
@@ -353,9 +353,9 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
       ),
     ],
   }),
-  cell(bsjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App, Zoom/Pencil', {
+  cell(bsjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App, Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION,
@@ -364,17 +364,17 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
       ),
     ],
   }),
-  cell(bsjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
+  cell(bsjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION,
   }),
-  cell(bsjCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
+  cell(bsjCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION,
   }),
-  cell(bsjCell('05', '06'), L.frontStageTech, STEPS[4].id, 'PLUS App, Zoom/Pencil', {
+  cell(bsjCell('05', '06'), L.frontStageTech, STEPS[4].id, 'PLUS App, Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
@@ -383,9 +383,9 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
       ),
     ],
   }),
-  cell(bsjCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom/Pencil', {
+  cell(bsjCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    summary: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION,
   }),
 
   cell(
@@ -398,7 +398,7 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
     bsjCell('02', '07'),
     L.backStage,
     STEPS[1].id,
-    'Tutor supervisor team sets up Zoom/Pencil link.',
+    'Tutor supervisor team sets up Zoom link.',
   ),
 
   cell(bsjCell('01', '09'), L.support, STEPS[0].id, 'Dev team\nDesign team', {

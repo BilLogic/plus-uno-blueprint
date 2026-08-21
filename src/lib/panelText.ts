@@ -11,7 +11,11 @@
  */
 export const PANEL_TEXT = {
   /** The thing itself: a cell's own words, an entity's name. */
-  title: 'min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground',
+  // `font-semibold`, not bold: at 14px in a narrow drawer, bold sets the
+  // title shouting over the prose directly under it, which is the thing the
+  // panel actually exists to show.
+  title:
+    'min-w-0 text-sm font-semibold leading-snug tracking-tight text-foreground',
   /** Counts and relationships under the title. Never restates the title. */
   meta: 'text-2xs leading-tight text-muted-foreground',
   /** Names a field or a group. Always the same weight, size and colour. */

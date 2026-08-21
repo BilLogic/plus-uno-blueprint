@@ -95,7 +95,7 @@ export function resolveTechCellDetailText(
     const fromLinks = getTechDescriptionFromLinks(cell.links, techItem)
     if (fromLinks) return fromLinks
 
-    if (techItem === 'Zoom/Pencil' && cell.summary?.trim()) {
+    if (techItem === 'Zoom' && cell.summary?.trim()) {
       return cell.summary.trim()
     }
 
@@ -120,7 +120,7 @@ export function resolveTechCellDetailText(
     if (fromLinks) return fromLinks
   }
 
-  if (content === 'Zoom/Pencil' && cell.summary?.trim()) {
+  if (content === 'Zoom' && cell.summary?.trim()) {
     return cell.summary.trim()
   }
 

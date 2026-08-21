@@ -191,32 +191,32 @@ const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_09_DESCRIPTION =
 const GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_11_DESCRIPTION =
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_01_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'The tutor shares screen via Zoom/Pencil screen share feature.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_03_DESCRIPTION =
+  'The tutor shares screen via Zoom screen share feature.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_04_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_05_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_06_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_07_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_07_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_08_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_08_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_09_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_09_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_10_DESCRIPTION =
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+const GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_10_DESCRIPTION =
+  "The tutor leaves the student's Zoom breakout room."
 
 function updateGoalsPlusAppLink(
   description: string,
@@ -411,8 +411,8 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     { picture: GOAL_SETTING_UPDATE_GOALS_REGULAR_TUTOR_STEP_11_PICTURE },
   ),
 
-  cell(guCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  cell(guCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
+    summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_01_DESCRIPTION,
   }),
   cell(guCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
     links: [
@@ -427,9 +427,9 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     guCell('03', '06'),
     L.frontStageTech,
     STEPS[2].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_03_DESCRIPTION,
       links: [
         updateGoalsPlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_03_DESCRIPTION,
@@ -439,16 +439,16 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
       ],
     },
   ),
-  cell(guCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
-    summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+  cell(guCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom', {
+    summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_04_DESCRIPTION,
   }),
   cell(
     guCell('05', '06'),
     L.frontStageTech,
     STEPS[4].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_05_DESCRIPTION,
       links: [
         updateGoalsPlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_05_DESCRIPTION,
@@ -462,9 +462,9 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     guCell('06', '06'),
     L.frontStageTech,
     STEPS[5].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_06_DESCRIPTION,
       links: [
         updateGoalsPlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_06_DESCRIPTION,
@@ -478,9 +478,9 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     guCell('07', '06'),
     L.frontStageTech,
     STEPS[6].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_07_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_07_DESCRIPTION,
       links: [
         updateGoalsPlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_07_DESCRIPTION,
@@ -494,9 +494,9 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     guCell('08', '06'),
     L.frontStageTech,
     STEPS[7].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_08_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_08_DESCRIPTION,
       links: [
         updateGoalsPlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_08_DESCRIPTION,
@@ -510,9 +510,9 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
     guCell('09', '06'),
     L.frontStageTech,
     STEPS[8].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_09_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_09_DESCRIPTION,
       links: [
         updateGoalsPlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_PLUS_APP_STEP_09_DESCRIPTION,
@@ -522,8 +522,8 @@ const GOAL_SETTING_UPDATE_GOALS_CELLS: BlueprintCell[] = [
       ],
     },
   ),
-  cell(guCell('10', '06'), L.frontStageTech, STEPS[9].id, 'Zoom/Pencil', {
-    summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_PENCIL_STEP_10_DESCRIPTION,
+  cell(guCell('10', '06'), L.frontStageTech, STEPS[9].id, 'Zoom', {
+    summary: GOAL_SETTING_UPDATE_GOALS_ZOOM_STEP_10_DESCRIPTION,
   }),
   cell(guCell('11', '06'), L.frontStageTech, STEPS[10].id, 'PLUS App', {
     links: [

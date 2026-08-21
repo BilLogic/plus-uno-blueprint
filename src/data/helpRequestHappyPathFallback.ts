@@ -17,11 +17,11 @@ import {
   HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
   HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
   HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_01_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_02_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_03_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION,
 } from '@/data/helpRequestPictures'
 import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
@@ -281,20 +281,20 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
     { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
 
-  cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_01_DESCRIPTION,
   }),
-  cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
-    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+  cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_02_DESCRIPTION,
   }),
-  cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
-    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_03_DESCRIPTION,
   }),
-  cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
-    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+  cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION,
   }),
-  cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil', {
-    summary: HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+  cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION,
   }),
   cell(hrCell('06', '06'), L.frontStageTech, STEPS[5].id, 'PLUS App', {
     links: [

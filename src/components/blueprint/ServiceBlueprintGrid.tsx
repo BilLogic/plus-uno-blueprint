@@ -6,14 +6,13 @@ import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
 import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import {
   BlueprintDividerRow,
+  SERVICE_DIVIDER_RULE_OVERHANG,
 } from '@/components/blueprint/BlueprintLabelRail'
 import { BlueprintDependencyArrows } from '@/components/blueprint/BlueprintDependencyArrows'
 import { ServiceStepHeaderRow } from '@/components/blueprint/CompareTrackDecorations'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import {
   ComparePathSectionFrame,
-  SERVICE_DIVIDER_RULE_LEFT,
-  SERVICE_DIVIDER_RULE_RIGHT,
   SERVICE_PATH_SECTION_INSET,
 } from '@/components/blueprint/ComparePathSectionFrame'
 import {
@@ -333,9 +332,7 @@ export function ServiceBlueprintGrid({
                       lineStyle="dashed"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
-                      labelTrackWidth={LAYER_COLUMN_WIDTH}
-                      ruleLeft={SERVICE_DIVIDER_RULE_LEFT}
-                      ruleRight={SERVICE_DIVIDER_RULE_RIGHT}
+                      ruleOverhang={SERVICE_DIVIDER_RULE_OVERHANG}
                       labelRailBg={blueprintPanelLabelRailColor(
                         BLUEPRINT_THEME.dividerBg,
                       )}
@@ -354,9 +351,7 @@ export function ServiceBlueprintGrid({
                       lineStyle="solid"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
-                      labelTrackWidth={LAYER_COLUMN_WIDTH}
-                      ruleLeft={SERVICE_DIVIDER_RULE_LEFT}
-                      ruleRight={SERVICE_DIVIDER_RULE_RIGHT}
+                      ruleOverhang={SERVICE_DIVIDER_RULE_OVERHANG}
                       labelRailBg={blueprintPanelLabelRailColor(
                         BLUEPRINT_THEME.dividerBg,
                       )}
@@ -376,9 +371,7 @@ export function ServiceBlueprintGrid({
                       lineStyle="dotted"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
-                      labelTrackWidth={LAYER_COLUMN_WIDTH}
-                      ruleLeft={SERVICE_DIVIDER_RULE_LEFT}
-                      ruleRight={SERVICE_DIVIDER_RULE_RIGHT}
+                      ruleOverhang={SERVICE_DIVIDER_RULE_OVERHANG}
                       labelRailBg={blueprintPanelLabelRailColor(
                         BLUEPRINT_THEME.dividerBg,
                       )}

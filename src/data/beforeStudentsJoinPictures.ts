@@ -61,22 +61,22 @@ export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_PICTURE =
 export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_PICTURE =
   '/blueprint-images/before-students-join/happy-path/regular-tutor/step-06-receive-breakout-rooms.png'
 
-/** Before Students Join Happy Path — Zoom/Pencil Front Stage Tech descriptions. */
+/** Before Students Join Happy Path — Zoom Front Stage Tech descriptions. */
 
-export const BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION =
-  'Tutors join the session via Zoom/Pencil.'
+export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION =
+  'Tutors join the session via Zoom.'
 
-export const BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'Tutors sign in for the session via Zoom/Pencil.'
+export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION =
+  'Tutors sign in for the session via Zoom.'
 
-export const BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'Lead tutors create breakout rooms on Zoom/Pencil.'
+export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION =
+  'Lead tutors create breakout rooms on Zoom.'
 
-export const BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'Lead tutors connect with regular tutors on Zoom/Pencil about the student list.'
+export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION =
+  'Lead tutors connect with regular tutors on Zoom about the student list.'
 
-export const BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'Lead tutors connect with regular tutors about assigned breakout rooms via Zoom/Pencil.'
+export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION =
+  'Lead tutors connect with regular tutors about assigned breakout rooms via Zoom.'
 
 /** Before Students Join Happy Path — PLUS App Front Stage Tech. */
 
@@ -96,7 +96,7 @@ export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_DESCRIPTION =
   'The tutors open the session detail page in the PLUS app to join the session.'
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION =
-  'The tutors join the Zoom/Pencil page via the join session modal in the session dashboard.'
+  'The tutors join the Zoom page via the join session modal in the session dashboard.'
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_PICTURE =
   '/blueprint-images/before-students-join/happy-path/plus-app/step-02-session-detail.png'

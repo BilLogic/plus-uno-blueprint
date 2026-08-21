@@ -383,15 +383,36 @@ export function PanelKindBadge({
   laneRole,
   tone,
   title,
+  description,
 }: {
   label: string
   laneRole?: BlueprintLaneRole | null
   /** A touchpoint's tone — the tech pill's colour, on the badge's geometry. */
   tone?: TouchpointTone | null
   title?: string
+  /**
+   * What this kind of row IS, shown on hover.
+   *
+   * It used to hang off an ⓘ beside the chip — a second control for one fact,
+   * when the chip is already the thing whose meaning is in question. Hovering
+   * the word you do not recognise is where you would look for its definition.
+   */
+  description?: string | null
 }) {
+  const explain = (chip: ReactNode) =>
+    description ? (
+      <Tooltip>
+        <TooltipTrigger render={chip as never} />
+        <TooltipContent side="bottom" className="max-w-xs text-xs">
+          {description}
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      chip
+    )
+
   if (tone) {
-    return (
+    return explain(
       <Badge
         {...blueprintToneAttrs(tone)}
         title={title}
@@ -402,24 +423,24 @@ export function PanelKindBadge({
         }}
       >
         {label}
-      </Badge>
+      </Badge>,
     )
   }
   if (!laneRole) {
     // `secondary` alone is white-on-white here — the slice header band hit the
     // same thing and answered it the same way: a faint foreground wash and a
     // named edge rung, so the chip reads as a chip on the popover surface.
-    return (
+    return explain(
       <Badge
         variant="secondary"
         className="max-w-full truncate border-muted bg-foreground/5 text-muted-foreground"
         title={title}
       >
         {label}
-      </Badge>
+      </Badge>,
     )
   }
-  return (
+  return explain(
     <Badge
       {...blueprintLaneAttrs(laneRole)}
       title={title}
@@ -438,7 +459,7 @@ export function PanelKindBadge({
       }}
     >
       {label}
-    </Badge>
+    </Badge>,
   )
 }
 

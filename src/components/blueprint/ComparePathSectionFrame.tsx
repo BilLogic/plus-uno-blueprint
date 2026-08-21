@@ -24,15 +24,6 @@ export const SERVICE_PATH_SECTION_INSET = 8
  */
 export const SERVICE_PATH_SECTION_LEFT_INSET = 0
 
-/**
- * Where a divider rule may be drawn in the service grid: clear of the path
- * outline on both sides, the same way the compare canvas keeps clear of its
- * own. 3 is the heaviest outline stroke, 8 the gap either side of it.
- */
-export const SERVICE_DIVIDER_RULE_LEFT =
-  LAYER_COLUMN_WIDTH - SERVICE_PATH_SECTION_LEFT_INSET + 3 + 8
-export const SERVICE_DIVIDER_RULE_RIGHT = -(SERVICE_PATH_SECTION_INSET - 3 - 8)
-
 type ComparePathSectionFrameProps = {
   blueprint: BlueprintData
   compact?: boolean

@@ -38,7 +38,6 @@ export const TECH_PILL_COLORS = {
   Bank: 'tomato',
   Zoom: 'indigo',
   'Zoom Recording': 'purple',
-  'Zoom/Pencil': 'indigo',
 } as const satisfies Record<string, TouchpointTone>
 
 export type TechPillName = keyof typeof TECH_PILL_COLORS
@@ -48,11 +47,14 @@ const TECH_LABEL_ALIASES: Record<string, TechPillName> = {
   workday: 'Workday (Employee View)',
   'workday (employee view)': 'Workday (Employee View)',
   'workday (employer view)': 'Workday (Employer View)',
-  'zoom/pencil': 'Zoom/Pencil',
-  'zoom/ pencil': 'Zoom/Pencil',
+  // Kept as aliases, not as names: PLUS stopped using Pencil, and any row or
+  // slice still spelling the old pair should resolve to the one tool that is
+  // left rather than mint a second touchpoint.
+  'zoom/pencil': 'Zoom',
+  'zoom/ pencil': 'Zoom',
 }
 
-function isZoomPencilLabel(label: string): boolean {
+function isLegacyZoomPencilLabel(label: string): boolean {
   return /^zoom\s*\/\s*pencil$/i.test(label.trim())
 }
 
@@ -85,7 +87,7 @@ function hashLabel(label: string): number {
 /** Resolve a raw pill label to its canonical registry key when possible. */
 export function normalizeTechPillLabel(label: string): string {
   const trimmed = label.trim()
-  if (isZoomPencilLabel(trimmed)) return 'Zoom/Pencil'
+  if (isLegacyZoomPencilLabel(trimmed)) return 'Zoom'
 
   const lower = trimmed.toLowerCase()
   return TECH_LABEL_ALIASES[lower] ?? LOWER_TO_CANONICAL[lower] ?? trimmed

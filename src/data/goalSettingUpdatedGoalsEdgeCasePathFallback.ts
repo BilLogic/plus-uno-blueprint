@@ -204,32 +204,32 @@ const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_10_DESCRIPTION =
 const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_12_DESCRIPTION =
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_01_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor shares screen via Zoom/Pencil screen share feature.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_04_DESCRIPTION =
+  'The tutor shares screen via Zoom screen share feature.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_05_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_06_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_07_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_08_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_09_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_10_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION =
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+const GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_11_DESCRIPTION =
+  "The tutor leaves the student's Zoom breakout room."
 
 function updateGoalsEdgeCasePlusAppLink(
   description: string,
@@ -431,8 +431,8 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     { picture: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_12_PICTURE },
   ),
 
-  cell(ugCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  cell(ugCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
+    summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_01_DESCRIPTION,
   }),
   cell(ugCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
     links: [
@@ -456,9 +456,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('04', '06'),
     L.frontStageTech,
     STEPS[3].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_04_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_04_DESCRIPTION,
@@ -472,9 +472,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('05', '06'),
     L.frontStageTech,
     STEPS[4].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_05_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_05_DESCRIPTION,
@@ -488,9 +488,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('06', '06'),
     L.frontStageTech,
     STEPS[5].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_06_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_06_DESCRIPTION,
@@ -504,9 +504,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('07', '06'),
     L.frontStageTech,
     STEPS[6].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_07_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_07_DESCRIPTION,
@@ -520,9 +520,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('08', '06'),
     L.frontStageTech,
     STEPS[7].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_08_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_08_DESCRIPTION,
@@ -536,9 +536,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('09', '06'),
     L.frontStageTech,
     STEPS[8].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_09_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_09_DESCRIPTION,
@@ -552,9 +552,9 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     ugCell('10', '06'),
     L.frontStageTech,
     STEPS[9].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION,
+      summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_10_DESCRIPTION,
       links: [
         updateGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_PLUS_APP_STEP_10_DESCRIPTION,
@@ -564,8 +564,8 @@ const GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
       ],
     },
   ),
-  cell(ugCell('11', '06'), L.frontStageTech, STEPS[10].id, 'Zoom/Pencil', {
-    summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION,
+  cell(ugCell('11', '06'), L.frontStageTech, STEPS[10].id, 'Zoom', {
+    summary: GOAL_SETTING_UPDATE_GOALS_EDGE_CASE_ZOOM_STEP_11_DESCRIPTION,
   }),
   cell(ugCell('12', '06'), L.frontStageTech, STEPS[11].id, 'PLUS App', {
     links: [

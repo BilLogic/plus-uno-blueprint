@@ -217,16 +217,16 @@ function mapAlternatePathLayerId(laneId: string): string {
   return WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID[laneId] ?? laneId
 }
 
-const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom/Pencil'
-const FRONT_STAGE_TECH_STEP = 'Zoom/Pencil\nPLUS App'
+const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom'
+const FRONT_STAGE_TECH_STEP = 'Zoom\nPLUS App'
 const FRONT_STAGE_TECH_PLUS_APP_ONLY = 'PLUS App'
 const SUPPORT_STEP = 'Dev Team\nDesign Team'
-const WARM_UP_ZOOM_PENCIL_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
-const WARM_UP_ZOOM_PENCIL_SHARE_SCREEN_DESCRIPTION =
-  'The student shares screen via Zoom/Pencil screen share feature.'
-const WARM_UP_ZOOM_PENCIL_LEAVE_BREAKOUT_DESCRIPTION =
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+const WARM_UP_ZOOM_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
+const WARM_UP_ZOOM_SHARE_SCREEN_DESCRIPTION =
+  'The student shares screen via Zoom screen share feature.'
+const WARM_UP_ZOOM_LEAVE_BREAKOUT_DESCRIPTION =
+  "The tutor leaves the student's Zoom breakout room."
 
 const warmUpPartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
@@ -282,7 +282,7 @@ function warmUpFrontStageTechCell(
     stepId,
     content,
     {
-      ...(content.includes('Zoom/Pencil') ? { picture: ZOOM_TECH_LOGO } : {}),
+      ...(content.includes('Zoom') ? { picture: ZOOM_TECH_LOGO } : {}),
       ...metadata,
     },
   )
@@ -355,7 +355,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040106',
     STEPS[0].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { summary: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040203', L.regular, STEPS[1].id, 'Greet student.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_02_PICTURE,
@@ -364,7 +364,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040206',
     STEPS[1].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { summary: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040303', L.regular, STEPS[2].id, 'Ask them to share screen.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_03_PICTURE,
@@ -373,7 +373,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040306',
     STEPS[2].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { summary: WARM_UP_ZOOM_PENCIL_SHARE_SCREEN_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_SHARE_SCREEN_DESCRIPTION },
   ),
   cell(
     'a0000000-0000-4000-8000-000000040403',
@@ -386,7 +386,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040406',
     STEPS[3].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { summary: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040503', L.regular, STEPS[4].id, 'Mark them as present.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_05_PICTURE,
@@ -396,7 +396,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[4].id,
     FRONT_STAGE_TECH_STEP,
     {
-      summary: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
+      summary: WARM_UP_ZOOM_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -418,7 +418,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[5].id,
     FRONT_STAGE_TECH_STEP,
     {
-      summary: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
+      summary: WARM_UP_ZOOM_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -440,7 +440,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[6].id,
     FRONT_STAGE_TECH_STEP,
     {
-      summary: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
+      summary: WARM_UP_ZOOM_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -461,7 +461,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040806',
     STEPS[7].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { summary: WARM_UP_ZOOM_PENCIL_LEAVE_BREAKOUT_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_LEAVE_BREAKOUT_DESCRIPTION },
   ),
   cell(
     'a0000000-0000-4000-8000-000000040903',
