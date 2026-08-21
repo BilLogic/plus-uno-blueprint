@@ -1,4 +1,5 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
+import type { CellMaturity } from '@/lib/cellMaturity'
 import {
   buildTechPillSelection,
   type BlueprintCellSelectionContext,
@@ -21,7 +22,7 @@ type BlueprintTechPillProps = {
   /** Pills share their cell id — only the first pill carries the badge. */
   sliceSequenceBadge?: boolean
   /** Passed through so an unbuilt touchpoint does not read as a live one. */
-  maturity?: 'planned' | 'prototype' | null
+  maturity?: CellMaturity | null
   'aria-describedby'?: string
 }
 

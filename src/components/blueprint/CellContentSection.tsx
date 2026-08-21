@@ -1,4 +1,13 @@
 import { PANEL_TEXT } from '@/lib/panelText'
+import {
+  CELL_MATURITY_LABEL,
+  CELL_MATURITY_MEANING,
+} from '@/lib/cellMaturity'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCellContent } from '@/hooks/useCellContent'
 
@@ -34,7 +43,8 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
       {cell.maturity ? (
         <OwnerCell
           label="State"
-          value={cell.maturity === 'planned' ? 'Planned — in build' : 'Prototype — design only'}
+          value={CELL_MATURITY_LABEL[cell.maturity]}
+          hint={CELL_MATURITY_MEANING[cell.maturity]}
         />
       ) : null}
       {owner ? <OwnerCell label="Owner" value={owner} /> : null}
@@ -43,13 +53,31 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
   )
 }
 
-function OwnerCell({ label, value }: { label: string; value: string }) {
+function OwnerCell({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value: string
+  hint?: string
+}) {
+  const body = <span className={PANEL_TEXT.value}>{value}</span>
   return (
     <div className="flex flex-col gap-0.5">
       <span className={PANEL_TEXT.sectionLabel}>
         {label}
       </span>
-      <span className={PANEL_TEXT.value}>{value}</span>
+      {hint ? (
+        <Tooltip>
+          <TooltipTrigger render={<span className={PANEL_TEXT.value}>{value}</span>} />
+          <TooltipContent side="bottom" className="max-w-xs text-xs">
+            {hint}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        body
+      )}
     </div>
   )
 }

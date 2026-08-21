@@ -254,30 +254,36 @@ export function BlueprintLabelRow({
         // section's own outline — two vertical lines describing one edge.
         'z-40',
       )}
+      /*
+        NO BACKGROUND HERE.
+
+        `BlueprintStickyLabelBackdrop` already paints this column, edge to
+        edge, for every row at once — and it is rendered by the same branch
+        that renders these rows, so it is never absent when they are present.
+        A second coat of the identical colour is not invisible: the row's box
+        lands on fractional coordinates under the canvas transform (353.31,
+        413.51), so the browser antialiases its edge against the surface
+        behind it and paints a one-pixel seam in the exact shape of the row.
+        Three coats of one colour, and the only thing the extra two produce is
+        a hairline rectangle around every lane.
+      */
       style={{
         ...style,
         width: COMPARE_LABEL_WIDTH,
-        backgroundColor: blueprintPanelLabelRailColor(),
       }}
     >
       {corridorAbove > 0 && (
         <div
           aria-hidden
           className="shrink-0"
-          style={{
-            height: corridorAbove,
-            backgroundColor: blueprintPanelLabelRailColor(),
-          }}
+          style={{ height: corridorAbove }}
         />
       )}
       {inLaneLoopCorridorAbove > 0 && (
         <div
           aria-hidden
           className="shrink-0"
-          style={{
-            height: inLaneLoopCorridorAbove,
-            backgroundColor: blueprintPanelLabelRailColor(),
-          }}
+          style={{ height: inLaneLoopCorridorAbove }}
         />
       )}
       <div
@@ -349,10 +355,7 @@ export function BlueprintLabelRow({
         <div
           aria-hidden
           className="shrink-0"
-          style={{
-            height: corridorBelow,
-            backgroundColor: blueprintPanelLabelRailColor(),
-          }}
+          style={{ height: corridorBelow }}
         />
       )}
     </div>

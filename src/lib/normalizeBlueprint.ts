@@ -1,3 +1,4 @@
+import { CELL_MATURITY, type CellMaturity } from '@/lib/cellMaturity'
 import type {
   BlueprintCell,
   BlueprintCellDependency,
@@ -220,10 +221,9 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     // Narrowed rather than passed through: the column is a plain text with a
     // check constraint, so a value the renderer has no treatment for should
     // read as shipped rather than as an unrecognised marker.
-    maturity:
-      cell.maturity === 'planned' || cell.maturity === 'prototype'
-        ? cell.maturity
-        : null,
+    maturity: (CELL_MATURITY as readonly string[]).includes(cell.maturity ?? '')
+      ? (cell.maturity as CellMaturity)
+      : null,
     links: normalizeCellLinks(cell.links),
   }))
   const dependencies =

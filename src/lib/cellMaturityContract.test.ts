@@ -2,6 +2,11 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
+import {
+  CELL_MATURITY,
+  CELL_MATURITY_LABEL,
+  CELL_MATURITY_MEANING,
+} from '@/lib/cellMaturity'
 
 const src = (path: string) =>
   readFileSync(join(process.cwd(), 'src', path), 'utf8')
@@ -25,7 +30,9 @@ describe('cell maturity survives the move off the label', () => {
   it('reaches the cell face, which marks itself', () => {
     const button = src('components/blueprint/BlueprintCellButton.tsx')
     expect(button).toContain('data-blueprint-cell-maturity')
-    expect(button).toMatch(/maturity &&\s*'border-dashed/)
+    expect(button).toMatch(/isUnbuilt\(maturity\) &&\s*'border-dashed/)
+    // Deprecated exists and works; a dashed edge would say the opposite.
+    expect(button).toMatch(/maturity === 'deprecated' &&/)
   })
 
   it('survives the normalizer between the query and the canvas', () => {
@@ -35,7 +42,7 @@ describe('cell maturity survives the move off the label', () => {
     // hand and this one was not among them.
     const normalize = src('lib/normalizeBlueprint.ts')
     expect(normalize).toContain('maturity?: string | null')
-    expect(normalize).toMatch(/maturity:\s*\n?\s*cell\.maturity ===/)
+    expect(normalize).toMatch(/CELL_MATURITY as readonly string\[\]\)\.includes/)
   })
 
   it('is passed by every component that draws a cell', () => {
@@ -46,6 +53,23 @@ describe('cell maturity survives the move off the label', () => {
     ]) {
       expect(src(path), path).toContain('maturity={')
     }
+  })
+
+  it('has one rung per state the panel can name', () => {
+    // The ladder, the label and the meaning are three lists that must agree.
+    // They drifted once already: `planned` and `prototype` were two words for
+    // "not built" that did not order, and the one marked `planned` was code
+    // already in QA.
+    for (const rung of CELL_MATURITY) {
+      expect(CELL_MATURITY_LABEL[rung], rung).toBeTruthy()
+      expect(CELL_MATURITY_MEANING[rung], rung).toBeTruthy()
+    }
+    expect(Object.keys(CELL_MATURITY_LABEL).sort()).toEqual(
+      [...CELL_MATURITY].sort(),
+    )
+    expect(Object.keys(CELL_MATURITY_MEANING).sort()).toEqual(
+      [...CELL_MATURITY].sort(),
+    )
   })
 
   it('is named in the panel, not left to the summary prose', () => {

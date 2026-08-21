@@ -1,4 +1,5 @@
 import type { PathType } from '@/types/database'
+import type { CellMaturity } from '@/lib/cellMaturity'
 
 export type BlueprintPath = {
   id: string
@@ -63,7 +64,7 @@ export type BlueprintCell = {
    * maturity inside a touchpoint NAME: a pill read "Planned — swap flow UI"
    * and the vocabulary gained a product called that. Fifty cells carried it.
    */
-  maturity?: 'planned' | 'prototype' | null
+  maturity?: CellMaturity | null
   /**
    * Order within a slot (one lane, one step). Tech lanes hold one cell per
    * touchpoint; everything else holds a single cell at 0. Optional because

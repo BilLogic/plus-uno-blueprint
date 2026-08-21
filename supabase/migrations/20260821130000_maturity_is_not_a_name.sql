@@ -28,9 +28,13 @@ update cells set maturity = 'prototype' where summary like 'PROTOTYPE (explorato
 update cells set maturity = 'planned'
 where maturity is null and (summary like '%PLANNED (Card%' or content like 'Planned — %');
 
-update cells set content = overlay(content placing upper(substring(content from 12 for 1)) from 12 for 1)
+-- 'Planned — ' is TEN characters, not eleven: the em dash is one character
+-- however many bytes it takes. Stripping from 12 removed the prefix AND the
+-- first letter of every label under it — "Planned — completes…" came out as
+-- "Ompletes…" across fifty cells. From 11.
+update cells set content = overlay(content placing upper(substring(content from 11 for 1)) from 11 for 1)
 where content like 'Planned — %';
-update cells set content = substring(content from 12) where content like 'Planned — %';
+update cells set content = substring(content from 11) where content like 'Planned — %';
 
 do $$
 declare n int;
@@ -41,6 +45,14 @@ begin
   if n <> 54 then raise exception 'expected 54 unbuilt cells, found %', n; end if;
   select count(*) into n from cells where maturity is not null and coalesce(summary,'') = '';
   if n > 0 then raise exception '% unbuilt cells say nothing about why', n; end if;
+  -- The off-by-one above left labels like 'Ompletes', 'Econfirmation',
+  -- 'Rap-up dashboard'. A label whose first two characters are an upper
+  -- followed by a lower is normal; one that is ALSO not a word is not
+  -- checkable in SQL, so assert the shapes the bug actually produced.
+  select count(*) into n from cells
+   where maturity is not null
+     and content ~ '^(Ompletes|Econfirmation|Rap-up|Utomated|Scalation|Hanks|Uns|Loses|Hecks|Eminds|Edesigned|Ession|Adence|Atch|Ans|Reates|Igns|Eviews|Roposal|He named|0-minute|Oft-conflict|Cknowledges|Andidate|Ills|Leared|Nvite|Un 2026|Upervisor|Ccepts|Esign|Oth|Wap|Icks|Hooses|Ees|Navailable|I debrief|I generates)';
+  if n > 0 then raise exception '% labels lost their first character', n; end if;
   select count(*) into n from cells c join lanes l on l.id=c.lane_id join paths p on p.id=l.path_id
    where p.name like 'Prototype:%' and c.maturity is null and c.content <> 'Zoom/Pencil';
   if n > 0 then raise exception '% cells on a prototype path read as shipped', n; end if;

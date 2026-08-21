@@ -23,6 +23,7 @@ import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
+import { isUnbuilt, type CellMaturity } from '@/lib/cellMaturity'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
@@ -65,7 +66,7 @@ type BlueprintCellButtonProps = {
    * most expensive thing this blueprint can get wrong. A dashed edge and a
    * drained fill carry it instead.
    */
-  maturity?: 'planned' | 'prototype' | null
+  maturity?: CellMaturity | null
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
@@ -304,10 +305,17 @@ export function BlueprintCellButton({
       // 200 ms of a slice pick. Same rule blueprint.css states for the slice
       // dim and CanvasPhaseSection now follows; saturation lands on frame one.
       dimUnpicked && 'opacity-60 saturate-[.6] transition-opacity',
-      // Dashed, drained, and slightly transparent: three cheap signals that
+      // Dashed, drained and slightly transparent: three cheap signals that
       // agree, so the cell still reads as unbuilt at the zoom where a canvas
       // is usually seen and the dashes have collapsed into a grey line.
-      maturity && 'border-dashed saturate-[.55] opacity-90',
+      isUnbuilt(maturity) && 'border-dashed saturate-[.55] opacity-90',
+      // Deprecated is not unbuilt — it exists, it works, it is going away. A
+      // dashed edge would say the opposite, so it keeps its solid face and
+      // fades instead.
+      maturity === 'deprecated' && 'saturate-[.35] opacity-75',
+      // At risk gets NOTHING here. It is a working surface people rely on;
+      // dimming it would tell a reader not to, which is the wrong advice. The
+      // panel names it, and a check can find it.
       )}
       style={surfaceStyle}
     >

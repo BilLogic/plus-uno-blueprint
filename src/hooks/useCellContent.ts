@@ -1,13 +1,14 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { CellLink } from '@/types/blueprint'
+import { CELL_MATURITY, type CellMaturity } from '@/lib/cellMaturity'
 
 export type CellContent = {
   content: string
   summary: string | null
   owner: string | null
   perceived_owner: string | null
-  maturity: 'planned' | 'prototype' | null
+  maturity: CellMaturity | null
   links: CellLink[]
 }
 
@@ -46,10 +47,11 @@ export function useCellContent(
         summary: data.summary ?? null,
         owner: data.owner ?? null,
         perceived_owner: data.perceived_owner ?? null,
-        maturity:
-          data.maturity === 'planned' || data.maturity === 'prototype'
-            ? data.maturity
-            : null,
+        maturity: (CELL_MATURITY as readonly string[]).includes(
+          data.maturity ?? '',
+        )
+          ? (data.maturity as CellMaturity)
+          : null,
         links: (data.links ?? []) as unknown as CellLink[],
       }
     },
