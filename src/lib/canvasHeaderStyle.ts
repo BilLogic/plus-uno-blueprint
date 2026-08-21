@@ -25,15 +25,22 @@ export const CANVAS_HEADER_BOX = 'rounded-md px-2 py-1.5 gap-1.5'
  * Hover and selected were the same wash, so an open panel gave the canvas no
  * way to say which label it belonged to. Selected is the deeper wash plus the
  * ring a SELECTED CELL wears — one selection vocabulary on one canvas.
+ *
+ * `ring-inset` on both rings, and this is the whole fix for the cut-off
+ * header: an outset ring is painted OUTSIDE the element's box, and both
+ * headers sit inside a clipping parent — the label rail is `overflow-hidden`
+ * and the column header row is a fixed-height track. A ring drawn outside a
+ * box that fills its container has nowhere to go, so it came back sheared off
+ * along whichever edge it met. Drawn inside, it is always whole.
  */
 export const CANVAS_HEADER_STATE = [
   'transition-colors duration-(--motion-micro)',
   'hover:bg-foreground/5',
   // Selected wears the CELL's selection vocabulary — a 2px soft ring — so an
   // open panel marks its header the same way an open cell marks itself.
-  'aria-pressed:bg-foreground/10 aria-pressed:ring-2',
+  'aria-pressed:bg-foreground/10 aria-pressed:ring-2 aria-pressed:ring-inset',
   'aria-pressed:ring-[color:var(--ring-blueprint-cell-soft,var(--ring))]',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50',
 ].join(' ')
 
 /** The ⓘ: transparent at rest, full ink once the header is live or open. */

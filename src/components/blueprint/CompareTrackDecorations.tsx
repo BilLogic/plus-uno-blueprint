@@ -34,9 +34,10 @@ export function CompareStepHeaderRow({
           // row (single-path stacked, merged), the frame's opaque fill is
           // an absolutely-positioned later sibling — without a stacking
           // order the labels paint UNDER it and the header "vanishes".
-          // `self-end` keeps the label sitting just above the grid it names,
-          // the same place the single-path axis puts it.
-          className="z-[1] self-end"
+          // `self-stretch`, not `self-end`: the target is the whole header
+          // block. The label still sits at the bottom of it — the button
+          // aligns its own content — so it reads where it always did.
+          className="z-[1] self-stretch"
           style={{ gridColumn: trackIndex + 2, gridRow: 1 }}
         />
       ))}
@@ -64,7 +65,7 @@ export function ServiceStepHeaderRow({
         style={{ width: LAYER_COLUMN_WIDTH + playGutter }}
       />
       {steps.map((step, index) => (
-        <div key={step.id} className="flex shrink-0 items-end justify-center">
+        <div key={step.id} className="flex shrink-0 items-stretch justify-center">
           <StepHeaderAffordance
             stepId={step.id}
             name={step.name}

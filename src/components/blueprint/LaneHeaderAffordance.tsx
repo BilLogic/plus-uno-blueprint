@@ -26,11 +26,15 @@ import { cn } from '@/lib/utils'
  * thing it does differently from the column header it shares a treatment
  * with.
  *
- * The box hugs the label. It used to `self-stretch`, which made it 156 x 192
- * — a rounded rectangle the height of the whole lane row, wearing a 2px ring
- * when open, sitting a few pixels from the path outline. Two rectangles that
- * close to each other read as one layout bug, and the affordance was never
- * the thing that needed to be 192px tall.
+ * The box IS the block the grid gives the lane — full width of the rail's
+ * content column, full height of the row. A label sitting in a 192px row with
+ * a target the height of one line of text is a target nobody finds, and the
+ * selected state has to mark the row, not a chip inside it.
+ *
+ * What was actually wrong was never the size: it was that the ring drew
+ * OUTSIDE the box, inside a rail that clips, so the wash and the ring came
+ * back sheared along the edge they met. `ring-inset` in CANVAS_HEADER_STATE
+ * fixes that at the source, for this header and the column header both.
  *
  * NOT used where the label already means something else. In the compare
  * rail's Design mode the label is a *selection* handle — clicking takes every
@@ -73,7 +77,7 @@ export function LaneHeaderAffordance({
               // rail, which clips (`overflow-hidden`) — so the hover surface
               // came back cut off on one edge and left a hairline artefact
               // where it met the clip. The rail's own padding gives the room.
-              'group/lane-header flex w-fit min-w-0 max-w-full items-start text-left',
+              'group/lane-header flex min-w-0 flex-1 items-start self-stretch text-left',
               CANVAS_HEADER_BOX,
               CANVAS_HEADER_STATE,
               className,

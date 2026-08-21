@@ -312,7 +312,10 @@ export function BlueprintLabelRow({
           // rather than crowding it. The divider labels below sit in the same
           // column and were the ones reading as if they touched it.
           'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-8',
-          compact ? 'pt-3' : 'pt-4',
+          // Bottom padding to match the top: the block stretches to fill this
+          // container, so without it the selected wash ran flush into the
+          // row's edge and read as clipped even when it was not.
+          compact ? 'pt-3 pb-3' : 'pt-4 pb-4',
         )}
       >
         {laneSelectable ? (

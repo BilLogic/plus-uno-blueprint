@@ -18,6 +18,11 @@ import { cn } from '@/lib/utils'
  * lane's row header — same size, weight, radius, padding and states — and
  * centred rather than top-left, because that is what a column label is.
  *
+ * It fills the block the grid gives the column, the way the lane header fills
+ * its row: the whole header cell is the target and the whole header cell is
+ * what the selected state marks. The label still sits at the bottom of that
+ * block, just above the cells it names.
+ *
  * The ⓘ is positioned rather than laid out: an icon in the flex row shifts
  * the label off the column's centre by half its width, whether it is visible
  * or not. Out of flow, the label stays centred over the cells it names and
@@ -53,7 +58,7 @@ export function StepHeaderAffordance({
               toggleEntity({ kind: 'step', id: stepId })
             }}
             className={cn(
-              'group/step-header relative flex min-w-0 items-center justify-center',
+              'group/step-header relative flex h-full min-w-0 items-end justify-center',
               CANVAS_HEADER_BOX,
               CANVAS_HEADER_STATE,
               className,
