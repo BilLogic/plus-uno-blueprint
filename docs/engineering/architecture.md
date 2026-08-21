@@ -32,7 +32,7 @@ EditorErrorBoundary → EditorShell
 
 `EditorShell` (`src/components/editor/EditorShell.tsx`) is one breakpoint
 deciding which app this is: below `md` the view-only `MobileShell` — the
-same desktop-parity canvas, scoped to the selected phase, behind mobile
+same desktop-parity canvas, scoped to the selected scenario, behind mobile
 chrome (top bar, nav drawer, agent sheet) — at or above it the desktop
 editor, byte-for-byte the pre-mobile tree. The check is **synchronous**
 (`matchMedia` through `useSyncExternalStore`, `src/hooks/useMobileShell.ts`)

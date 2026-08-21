@@ -1,15 +1,15 @@
 # PLUS Uno Blueprint
 
-A living service-blueprint editor for the PLUS tutoring program: the
+A living service-blueprint editor for the PLUS tutoring program. The
 whole service journey — every phase, scenario, and touchpoint, above and
-below the line of visibility — mapped as an explorable canvas, readable
+below the line of visibility — mapped as an explorable canvas: readable
 by anyone, editable by the service team, and worked on by AI agents
 under the same rules as humans.
 
 Built with React + Vite, [shadcn/ui](https://ui.shadcn.com/) (base-ui
 flavor), and [Supabase](https://supabase.com/). Desktop is the full
-editor; phones get the same canvas, view-only and scoped to one phase
-at a time.
+editor; phones get the same canvas, view-only and scoped to one
+scenario at a time — the drawer is the only way to move between them.
 
 **Start here → [`docs/INDEX.md`](docs/INDEX.md)** — the documentation
 map, routed by task. Quick picks:
