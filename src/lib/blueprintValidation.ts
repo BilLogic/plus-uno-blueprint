@@ -95,7 +95,11 @@ export function validateDraftBlueprint(draft: DraftBlueprint): string[] {
     problems.push('A scenario needs a name.')
   }
   if (!draft.pathName.trim()) {
-    problems.push('The first version needs a name — "Happy Path" is the usual one.')
+    problems.push(
+      // Not "Happy Path": a type is not a name, and the board stopped using
+      // one as a name in Aug 2026. `path_type` already carries the archetype.
+      'The first version needs a name — say what the route is, e.g. "Signs up without conflicts".',
+    )
   }
   if (!VIEW_TYPES.includes(draft.viewType)) {
     problems.push('Pick how the versions should be laid out.')

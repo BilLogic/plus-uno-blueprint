@@ -117,16 +117,10 @@ const customRegistry = (weight: 1000 | 1100) =>
   )
 
 export const PATH_COLOR_REGISTRY: Record<string, string> = {
-  'happy:Happy Path': PATH_TYPE_COLORS.happy,
-  'unhappy:Sad Path': PATH_TYPE_COLORS.unhappy,
-  'alternative:Alternate Path': PATH_TYPE_COLORS.alternative,
   ...customRegistry(1100),
 }
 
 export const PATH_ARROW_COLOR_REGISTRY: Record<string, string> = {
-  'happy:Happy Path': PATH_TYPE_ARROW_COLORS.happy,
-  'unhappy:Sad Path': PATH_TYPE_ARROW_COLORS.unhappy,
-  'alternative:Alternate Path': PATH_TYPE_ARROW_COLORS.alternative,
   ...customRegistry(1000),
 }
 

@@ -491,7 +491,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       properties: {
         phase_id: str('Phase id from list_blueprint'),
         name: str('Scenario name'),
-        path_name: str('First path name; defaults to "Happy Path"'),
+        path_name: str('First path name; say what the route is, not its type. Defaults to "Main path"'),
         step_count: { type: 'number', description: 'Initial step columns (default 5)' },
         lane_source_path_id: str('Path id whose lanes to copy; omit for none'),
       },

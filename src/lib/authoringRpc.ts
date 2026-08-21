@@ -272,7 +272,7 @@ export function createScenario(
     lane_source_path_id: input.laneSourcePathId ?? null,
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
-    path_name: input.pathName ?? 'Happy Path',
+    path_name: input.pathName ?? 'Main path',
   })
 }
 

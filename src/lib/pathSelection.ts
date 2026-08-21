@@ -8,17 +8,19 @@ export type PathListItem = {
   path_type: PathType
 }
 
-/** Prefer the canonical "Happy Path" when several paths share path_type happy. */
+/**
+ * The path a scenario opens on: its happy one, or its first.
+ *
+ * There used to be a name check ahead of this — `/^happy\s*path$/i` — to break
+ * ties when a scenario held several `happy` paths that could only be told
+ * apart by which was literally called "Happy Path". No path is named after its
+ * type any more (2026-08-21), so that branch could never match again, and
+ * every scenario holds exactly one `happy` path for it to have disambiguated.
+ */
 export function pickPreferredPath<T extends { name: string; path_type: PathType }>(
   paths: readonly T[],
 ): T | undefined {
   if (paths.length === 0) return undefined
-  const namedHappy = paths.find(
-    (path) =>
-      path.path_type === 'happy' &&
-      /^happy\s*path$/i.test(path.name.trim()),
-  )
-  if (namedHappy) return namedHappy
   return paths.find((path) => path.path_type === 'happy') ?? paths[0]
 }
 

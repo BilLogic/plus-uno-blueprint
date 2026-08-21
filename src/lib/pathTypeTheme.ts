@@ -83,28 +83,18 @@ export function getPathTypeSuffixIfNeeded(path: {
 }
 
 /**
- * Generic path names (Happy Path, Alternate Path, …) can show a type badge.
- * Custom paths (Set Goals, Check Goals, …) should show their title instead.
+ * Overview frames: show the type badge for every path that HAS an archetype.
+ *
+ * This used to fire only for paths literally named "Happy Path" / "Alternate
+ * Path" — a badge beside a name that already said the type was the only case
+ * where it read as informative. Since 2026-08-21 no path is named after its
+ * type, so the badge is the only place the archetype appears and it earns its
+ * place on all of them. `custom` still shows nothing: it is the absence of an
+ * archetype, not one of them.
  */
-const GENERIC_PATH_TYPE_NAMES = new Set([
-  'happy path',
-  'sad path',
-  'unhappy path',
-  'alternate path',
-  'alternative path',
-  'exception',
-  'exception path',
-])
-
-export function isGenericPathTypeName(name: string): boolean {
-  return GENERIC_PATH_TYPE_NAMES.has(name.trim().toLowerCase())
-}
-
-/** Overview frames: type badge only for generic archetype names — never for `custom`. */
 export function shouldShowPathTypeBadge(path: {
   name: string
   path_type?: PathType
 }): boolean {
-  if (path.path_type === 'custom') return false
-  return isGenericPathTypeName(path.name)
+  return path.path_type !== undefined && path.path_type !== 'custom'
 }

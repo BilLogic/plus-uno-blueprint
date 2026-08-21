@@ -80,7 +80,7 @@ const EMPTY_DRAFT: DraftBlueprint = {
   viewType: 'stacked',
   laneSourcePathId: null,
   stepCount: 5,
-  pathName: 'Happy Path',
+  pathName: '',
 }
 
 /**
@@ -284,7 +284,7 @@ export function CreateBlueprintDialog({
             </span>
             <Input
               value={draft.pathName}
-              placeholder="Happy Path"
+              placeholder="e.g. Signs up without conflicts"
               onChange={(event) => set('pathName', event.target.value)}
             />
           </label>
