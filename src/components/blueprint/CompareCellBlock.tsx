@@ -66,7 +66,6 @@ export function CompareCellBlock({
   flushBottom,
   selectionContext,
   visualPictures,
-  stepId: visualStepId,
   slotCells,
   pathMembership,
 }: {
@@ -80,8 +79,6 @@ export function CompareCellBlock({
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
-  /** The step behind a storyboard frame — see BlueprintStepVisual. */
-  stepId?: string
   /** Every cell in a tech slot — one per touchpoint since the split. */
   slotCells?: BlueprintCell[]
   /** Member paths of this rendered cell — one outline segment each. */
@@ -135,7 +132,6 @@ export function CompareCellBlock({
           }
           fill={laneStyle.lane}
           pictures={visualPictures}
-          stepId={visualStepId}
           selection={
             selectionContext
               ? buildBlueprintCellSelection(selectionContext)

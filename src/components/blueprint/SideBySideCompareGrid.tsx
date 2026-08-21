@@ -10,7 +10,7 @@ import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers
 import { BLUEPRINT_LAYER_ROW_GAP } from '@/lib/blueprintLayout'
 import {
   COMPARE_CARD_GAP,
-  COMPARE_LABEL_WIDTH,
+  COMPARE_LABEL_TRACK_WIDTH,
   getCompareBoardWrapperPadding,
   buildSideBySideLabelRowSpecs,
   getCanonicalLayers,
@@ -92,7 +92,7 @@ export function SideBySideCompareGrid({
 
   const gridTemplateColumns = useMemo(
     () =>
-      `${COMPARE_LABEL_WIDTH}px ${blueprints
+      `${COMPARE_LABEL_TRACK_WIDTH}px ${blueprints
         .map(
           (blueprint) =>
             `${getCompareCardWidth(blueprint.steps.length, compact)}px`,

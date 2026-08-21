@@ -85,6 +85,19 @@ export const COMPARE_CARD_PADDING_X = 12
 // 208: room for two-word lane names ("Front Stage Actions") and the
 // canonical "LINE OF …" divider labels without clipping at the rail edge.
 export const COMPARE_LABEL_WIDTH = 208
+/**
+ * The rail's grid TRACK is wider than the rail it paints.
+ *
+ * The rail used to be just another column, so the gap between it and the
+ * board was the same 24px used between two step columns — and the path
+ * outline, insetting itself back into that gap, landed 16px from the rail
+ * and 5px from the first cell. The outline read as an edge belonging to the
+ * rail rather than a frame around the board. The extra track keeps the two
+ * apart; the painted rail still stops at COMPARE_LABEL_WIDTH.
+ */
+export const COMPARE_RAIL_GUTTER = 24
+export const COMPARE_LABEL_TRACK_WIDTH =
+  COMPARE_LABEL_WIDTH + COMPARE_RAIL_GUTTER
 export const COMPARE_PANEL_PADDING = 24
 /** Extra inset on the right edge of the compare blueprint grid. */
 export const COMPARE_PANEL_PADDING_RIGHT = 40
@@ -104,8 +117,16 @@ export function getCompareBoardWrapperPadding(): {
   }
 }
 export const COMPARE_PATH_SECTION_TOP_INSET = 20
-/** Horizontal inset for path section frames; bottom matches top for symmetric gray padding. */
-export const COMPARE_PATH_SECTION_INSET = 8
+/**
+ * Horizontal breathing room inside a path outline.
+ *
+ * One constant used to serve both axes at 8px, which after the 3px border
+ * left 5px between the outline and the first cell against 17px above it —
+ * a visibly squashed rectangle. The two axes are separate now.
+ */
+export const COMPARE_PATH_SECTION_H_INSET = 16
+/** @deprecated Split into COMPARE_PATH_SECTION_H_INSET and the top/bottom pair. */
+export const COMPARE_PATH_SECTION_INSET = COMPARE_PATH_SECTION_H_INSET
 export const COMPARE_PATH_SECTION_BOTTOM_INSET = COMPARE_PATH_SECTION_TOP_INSET
 /** Space reserved above compare body rows for section title badges. */
 export const COMPARE_PATH_IDENTITY_HEIGHT = COMPARE_PATH_SECTION_TOP_INSET
@@ -576,7 +597,7 @@ export function getCompareDividerBandWidth(
   blueprints: BlueprintData[],
   compact = false,
 ): number {
-  if (blueprints.length === 0) return COMPARE_LABEL_WIDTH
+  if (blueprints.length === 0) return COMPARE_LABEL_TRACK_WIDTH
 
   const cardsWidth = blueprints.reduce(
     (sum, blueprint) => sum + getCompareCardWidth(blueprint.steps.length, compact),
@@ -584,7 +605,7 @@ export function getCompareDividerBandWidth(
   )
 
   return (
-    COMPARE_LABEL_WIDTH +
+    COMPARE_LABEL_TRACK_WIDTH +
     cardsWidth +
     blueprints.length * COMPARE_CARD_GAP
   )
@@ -685,7 +706,7 @@ export function getStackedCompareBandBodyHeight(
 /** Stacked board width for a canonical column count: rail + step columns. */
 export function getStackedCompareGridWidth(columnCount: number): number {
   return (
-    COMPARE_LABEL_WIDTH +
+    COMPARE_LABEL_TRACK_WIDTH +
     STEP_COLUMN_GAP +
     getStepColumnsWidth(Math.max(1, columnCount)) +
     COMPARE_PANEL_PADDING +

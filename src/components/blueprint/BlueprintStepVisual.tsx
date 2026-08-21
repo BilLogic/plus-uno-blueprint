@@ -4,7 +4,6 @@ import type { BlueprintLaneRole } from '@/lib/blueprintCellStyle'
 import { hasEmbeddedVisualFrame } from '@/lib/visualWalkthrough'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
-import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import type { CSSProperties } from 'react'
 
 export type BlueprintStepVisualPicture = {
@@ -21,13 +20,6 @@ type BlueprintStepVisualProps = {
   stepIndex?: number
   opacity?: number
   pictures?: readonly string[] | readonly BlueprintStepVisualPicture[]
-  /**
-   * The step this frame belongs to. With it, the cell opens the STEP panel
-   * rather than a cell panel: the storyboard row's content IS the step —
-   * its frames and its summary — and the cell panel could only describe it
-   * through whichever other lane happened to supply the picture.
-   */
-  stepId?: string | null
   /** Larger walkthrough/presentation layout — images scale to fit without clipping. */
   presentation?: boolean
   'aria-describedby'?: string
@@ -96,12 +88,9 @@ export function BlueprintStepVisual({
   stepIndex,
   opacity,
   pictures,
-  stepId,
   presentation = false,
   'aria-describedby': ariaDescribedBy,
 }: BlueprintStepVisualProps) {
-  const { openEntity, closeEntity, selection: entitySelection } =
-    useEntityDetail()
   const displayPictures = normalizePictures(pictures ?? [])
   const hasRealPictures = displayPictures.length > 0
   // Counts what is actually here — images for one step, not people. The old
@@ -129,7 +118,14 @@ export function BlueprintStepVisual({
     right sentence in the wrong place: the storyboard row is a PICTURE row —
     its whole job is to be scannable at a glance — and prose under every frame
     turned it into a second text lane. The summary reads in the step panel,
-    which this cell opens, and in the column header's card.
+    which the column header opens, and in that header's hover card.
+
+    AND THE CELL SELECTS ITSELF. It briefly opened the STEP panel instead, on
+    the argument that the storyboard row's content IS the step. It is not:
+    the frame is a cell, with its own id, its own links and its own place in
+    a slice, and a click that silently selected a different object left no
+    way to reach any of that. The step is one click away on its column
+    header, which is what a column header is for.
   */
   if (presentation) {
     return (
@@ -164,23 +160,6 @@ export function BlueprintStepVisual({
       } as CSSProperties}
       selection={selection}
       cellId={cellId}
-      onOpen={
-        stepId
-          ? () => {
-              // Second click on the open step closes it — the same toggle a
-              // cell panel gives, so the storyboard cell does not become the
-              // one shape you cannot click twice.
-              if (
-                entitySelection?.kind === 'step' &&
-                entitySelection.id === stepId
-              ) {
-                closeEntity()
-                return
-              }
-              openEntity({ kind: 'step', id: stepId })
-            }
-          : undefined
-      }
       stepIndex={stepIndex}
       opacity={opacity}
       aria-label={ariaLabel}

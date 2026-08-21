@@ -1,12 +1,12 @@
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import {
-  BlueprintDividerRailLabelLine,
+  BlueprintDividerRailLabel,
+  BlueprintDividerRule,
 } from '@/components/blueprint/BlueprintDividerTag'
 import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
-  BLUEPRINT_DIVIDER_LINE_END_INSET,
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
@@ -15,9 +15,12 @@ import {
   BLUEPRINT_LAYER_COLLAPSE_ENABLED,
 } from '@/lib/blueprintLayerCollapse'
 import {
+  COMPARE_LABEL_TRACK_WIDTH,
   COMPARE_LABEL_WIDTH,
+  COMPARE_PATH_SECTION_H_INSET,
   type BlueprintLabelRowSpec,
 } from '@/lib/sideBySideCompareLayout'
+import { STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
 import {
   BLUEPRINT_THEME,
   blueprintPanelLabelRailColor,
@@ -96,13 +99,45 @@ export function BlueprintSwimLaneDivider({
   )
 }
 
-/** Interaction / visibility row — label and rule share one row so the line meets the text. */
+/**
+ * The heaviest stroke a path outline draws. The divider rule clears it by
+ * BLUEPRINT_DIVIDER_RULE_PAD so the two never touch.
+ */
+const PATH_FRAME_BORDER = 3
+const BLUEPRINT_DIVIDER_RULE_PAD = 8
+
+/**
+ * Where the rule may be drawn on the compare canvas: from just inside the
+ * path outline's left border to just inside its right one.
+ *
+ * The rule used to be laid out beside its caption in a box spanning the
+ * whole band, so it began in the label rail and was painted straight
+ * THROUGH the outline's left border on its way across. A blueprint's line of
+ * interaction belongs to the board it divides; the caption naming it belongs
+ * to the rail, next to the lane names.
+ */
+export const COMPARE_DIVIDER_RULE_LEFT =
+  COMPARE_LABEL_TRACK_WIDTH +
+  STEP_COLUMN_GAP -
+  COMPARE_PATH_SECTION_H_INSET +
+  PATH_FRAME_BORDER +
+  BLUEPRINT_DIVIDER_RULE_PAD
+export const COMPARE_DIVIDER_RULE_RIGHT = -(
+  COMPARE_PATH_SECTION_H_INSET -
+  PATH_FRAME_BORDER -
+  BLUEPRINT_DIVIDER_RULE_PAD
+)
+
+/** Interaction / visibility row — caption in the rail, rule across the board. */
 export function BlueprintDividerRow({
   rowIndex,
   label,
   lineStyle,
   compact,
   labelWidth = COMPARE_LABEL_WIDTH,
+  labelTrackWidth = COMPARE_LABEL_TRACK_WIDTH,
+  ruleLeft = COMPARE_DIVIDER_RULE_LEFT,
+  ruleRight = COMPARE_DIVIDER_RULE_RIGHT,
   labelRailBg = blueprintPanelLabelRailColor(BLUEPRINT_THEME.dividerBg),
   className,
   style,
@@ -111,7 +146,14 @@ export function BlueprintDividerRow({
   label: string
   lineStyle: 'dashed' | 'dotted' | 'solid'
   compact?: boolean
+  /** Painted width of the rail — the grey the caption sits on. */
   labelWidth?: number
+  /** Track the caption may use: the rail plus the gutter before the board. */
+  labelTrackWidth?: number
+  /** Rule start, from the row's left edge. */
+  ruleLeft?: number
+  /** Rule end, as a CSS `right` offset — negative reaches past the row. */
+  ruleRight?: number
   labelRailBg?: string
   className?: string
   style?: CSSProperties
@@ -138,7 +180,6 @@ export function BlueprintDividerRow({
         ...gridPlacement,
         ...style,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-        paddingRight: BLUEPRINT_DIVIDER_LINE_END_INSET,
       }}
     >
       <div
@@ -150,14 +191,20 @@ export function BlueprintDividerRow({
           backgroundColor: labelRailBg,
         }}
       />
-      <div className="absolute inset-y-0 left-0 right-0 z-10 flex items-center pl-5">
-        <BlueprintDividerRailLabelLine
-          label={label}
-          lineStyle={lineStyle}
-          compact={compact}
-          className="min-w-0 flex-1"
-        />
+      {/* The caption reads down the rail with the lane names, so it takes the
+          rail's own left inset and stops inside the gutter rather than
+          running on into the board. */}
+      <div
+        className="absolute inset-y-0 left-0 z-10 flex items-center pl-5 pr-2"
+        style={{ width: labelTrackWidth }}
+      >
+        <BlueprintDividerRailLabel label={label} compact={compact} />
       </div>
+      <BlueprintDividerRule
+        lineStyle={lineStyle}
+        className="absolute z-10"
+        style={{ left: ruleLeft, right: ruleRight, top: '50%' }}
+      />
     </div>
   )
 }

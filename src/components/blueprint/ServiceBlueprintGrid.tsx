@@ -12,6 +12,8 @@ import { ServiceStepHeaderRow } from '@/components/blueprint/CompareTrackDecorat
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
 import {
   ComparePathSectionFrame,
+  SERVICE_DIVIDER_RULE_LEFT,
+  SERVICE_DIVIDER_RULE_RIGHT,
   SERVICE_PATH_SECTION_INSET,
 } from '@/components/blueprint/ComparePathSectionFrame'
 import {
@@ -331,6 +333,9 @@ export function ServiceBlueprintGrid({
                       lineStyle="dashed"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
+                      labelTrackWidth={LAYER_COLUMN_WIDTH}
+                      ruleLeft={SERVICE_DIVIDER_RULE_LEFT}
+                      ruleRight={SERVICE_DIVIDER_RULE_RIGHT}
                       labelRailBg={blueprintPanelLabelRailColor(
                         BLUEPRINT_THEME.dividerBg,
                       )}
@@ -349,6 +354,9 @@ export function ServiceBlueprintGrid({
                       lineStyle="solid"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
+                      labelTrackWidth={LAYER_COLUMN_WIDTH}
+                      ruleLeft={SERVICE_DIVIDER_RULE_LEFT}
+                      ruleRight={SERVICE_DIVIDER_RULE_RIGHT}
                       labelRailBg={blueprintPanelLabelRailColor(
                         BLUEPRINT_THEME.dividerBg,
                       )}
@@ -368,6 +376,9 @@ export function ServiceBlueprintGrid({
                       lineStyle="dotted"
                       compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
+                      labelTrackWidth={LAYER_COLUMN_WIDTH}
+                      ruleLeft={SERVICE_DIVIDER_RULE_LEFT}
+                      ruleRight={SERVICE_DIVIDER_RULE_RIGHT}
                       labelRailBg={blueprintPanelLabelRailColor(
                         BLUEPRINT_THEME.dividerBg,
                       )}
@@ -594,7 +605,6 @@ function BlueprintSwimLane({
                 rowMinHeight={rowMinHeight}
                 flushBottom={flushBottom}
                 visualPictures={visualPictures}
-                stepId={step.id}
                 slotCells={slotCells}
                 selectionContext={
                   scenarioName && (cell?.id || isVisualLane || showEmptyCells)
@@ -684,7 +694,6 @@ function BlueprintCellBlock({
   flushBottom,
   selectionContext,
   visualPictures,
-  stepId: visualStepId,
   slotCells,
 }: {
   stepIndex: number
@@ -700,8 +709,6 @@ function BlueprintCellBlock({
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
-  /** The step behind a storyboard frame — see BlueprintStepVisual. */
-  stepId?: string
   /** Every cell in a tech slot — one per touchpoint since the split. */
   slotCells?: BlueprintCell[]
 }) {
@@ -759,7 +766,6 @@ function BlueprintCellBlock({
           compact={compact}
           fill={laneStyle.lane}
           pictures={visualPictures}
-          stepId={visualStepId}
           selection={
             selectionContext
               ? buildBlueprintCellSelection(selectionContext)

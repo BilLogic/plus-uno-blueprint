@@ -6,16 +6,32 @@ import {
 } from '@/lib/pathTypeTheme'
 import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
 import {
-  COMPARE_PATH_SECTION_INSET,
+  COMPARE_PATH_SECTION_H_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
   COMPARE_PATH_SECTION_BOTTOM_INSET,
-  COMPARE_LABEL_WIDTH,
+  COMPARE_LABEL_TRACK_WIDTH,
 } from '@/lib/sideBySideCompareLayout'
 import { LAYER_COLUMN_WIDTH, STEP_COLUMN_GAP } from '@/lib/blueprintLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
 /** Uniform inset for single-path service blueprint section frames. */
 export const SERVICE_PATH_SECTION_INSET = 8
+/**
+ * The service grid's rail carries its own full-height divider, so the frame
+ * starts where the step columns start rather than insetting back over it.
+ * Without this the outline sat 8px INSIDE the rail, giving that view two
+ * vertical lines 8px apart describing one edge.
+ */
+export const SERVICE_PATH_SECTION_LEFT_INSET = 0
+
+/**
+ * Where a divider rule may be drawn in the service grid: clear of the path
+ * outline on both sides, the same way the compare canvas keeps clear of its
+ * own. 3 is the heaviest outline stroke, 8 the gap either side of it.
+ */
+export const SERVICE_DIVIDER_RULE_LEFT =
+  LAYER_COLUMN_WIDTH - SERVICE_PATH_SECTION_LEFT_INSET + 3 + 8
+export const SERVICE_DIVIDER_RULE_RIGHT = -(SERVICE_PATH_SECTION_INSET - 3 - 8)
 
 type ComparePathSectionFrameProps = {
   blueprint: BlueprintData
@@ -50,20 +66,20 @@ export function ComparePathSectionFrame({
   const labelAxisOffset = excludeLabelRail
     ? variant === 'service'
       ? LAYER_COLUMN_WIDTH
-      : COMPARE_LABEL_WIDTH + STEP_COLUMN_GAP
+      : COMPARE_LABEL_TRACK_WIDTH + STEP_COLUMN_GAP
     : 0
 
   const inset =
     variant === 'compare'
       ? {
           top: -COMPARE_PATH_SECTION_TOP_INSET,
-          left: labelAxisOffset - COMPARE_PATH_SECTION_INSET,
-          right: -COMPARE_PATH_SECTION_INSET,
+          left: labelAxisOffset - COMPARE_PATH_SECTION_H_INSET,
+          right: -COMPARE_PATH_SECTION_H_INSET,
           bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
         }
       : {
           top: -SERVICE_PATH_SECTION_INSET,
-          left: labelAxisOffset - SERVICE_PATH_SECTION_INSET,
+          left: labelAxisOffset - SERVICE_PATH_SECTION_LEFT_INSET,
           right: -SERVICE_PATH_SECTION_INSET,
           bottom: -SERVICE_PATH_SECTION_INSET,
         }
@@ -74,8 +90,8 @@ export function ComparePathSectionFrame({
       : -SERVICE_PATH_SECTION_INSET
   const titleLeft =
     variant === 'compare'
-      ? labelAxisOffset + COMPARE_PATH_SECTION_INSET + 2
-      : labelAxisOffset + SERVICE_PATH_SECTION_INSET + 2
+      ? labelAxisOffset - COMPARE_PATH_SECTION_H_INSET + 10
+      : labelAxisOffset - SERVICE_PATH_SECTION_LEFT_INSET + 10
 
   return (
     <>

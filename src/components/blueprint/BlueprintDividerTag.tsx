@@ -87,27 +87,7 @@ export function BlueprintDividerTag({
   )
 }
 
-/** Label + rule in one row — line starts flush at the label's right edge. */
 export type BlueprintDividerLineStyle = 'dashed' | 'dotted' | 'solid'
-
-export function BlueprintDividerRailLabelLine({
-  label,
-  lineStyle,
-  compact,
-  className,
-}: {
-  label: string
-  lineStyle: BlueprintDividerLineStyle
-  compact?: boolean
-  className?: string
-}) {
-  return (
-    <div className={cn('flex min-w-0 items-center', className)}>
-      <BlueprintDividerRailLabel label={label} compact={compact} />
-      <BlueprintDividerRule lineStyle={lineStyle} className="min-w-0 flex-1" />
-    </div>
-  )
-}
 
 type BlueprintDividerRuleProps = {
   lineStyle: BlueprintDividerLineStyle
@@ -146,28 +126,5 @@ export function BlueprintDividerRule({
       className={cn('h-px shrink-0 self-center', className)}
       style={{ ...lineStyleProps, ...style }}
     />
-  )
-}
-
-type BlueprintDividerLabelLineProps = {
-  label: string
-  lineStyle: BlueprintDividerLineStyle
-  compact?: boolean
-  /** Tag + rule as one inline flex cluster (no gap between pill and line). */
-  className?: string
-}
-
-/** Pill and rule in a single flex row — line starts flush at the tag's right edge. */
-export function BlueprintDividerLabelLine({
-  label,
-  lineStyle,
-  compact,
-  className,
-}: BlueprintDividerLabelLineProps) {
-  return (
-    <div className={cn('flex min-w-0 items-center', className)}>
-      <BlueprintDividerTag label={label} compact={compact} connected />
-      <BlueprintDividerRule lineStyle={lineStyle} className="min-w-0 flex-1" />
-    </div>
   )
 }

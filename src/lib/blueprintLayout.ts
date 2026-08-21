@@ -162,8 +162,6 @@ export const VISIBILITY_LINE_LABEL = 'LINE OF VISIBILITY'
 export const INTERNAL_INTERACTION_LINE_LABEL = 'LINE OF INTERNAL INTERACTION'
 
 export const BLUEPRINT_DIVIDER_ROW_HEIGHT = 28
-/** Right inset so interaction / visibility lines stop before the board edge. */
-export const BLUEPRINT_DIVIDER_LINE_END_INSET = 16
 /** Transparent margin above the interaction line for the Regular Tutor loop arrow. */
 export const BLUEPRINT_WRAP_CORRIDOR_MARGIN = 36
 /** Space above the Regular Tutor row for overhead-rail arrows (Discovery, Call-off, etc.). */

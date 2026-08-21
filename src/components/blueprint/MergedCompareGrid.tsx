@@ -45,9 +45,9 @@ import {
   type CompareModel,
 } from '@/lib/compareSlots'
 import {
-  COMPARE_LABEL_WIDTH,
+  COMPARE_LABEL_TRACK_WIDTH,
   COMPARE_PATH_SECTION_BOTTOM_INSET,
-  COMPARE_PATH_SECTION_INSET,
+  COMPARE_PATH_SECTION_H_INSET,
   COMPARE_PATH_SECTION_TOP_INSET,
   COMPARE_STACKED_HEADER_GAP,
   COMPARE_STEP_HEADER_HEIGHT,
@@ -302,7 +302,7 @@ export function MergedCompareGrid({
             rowCount={rows.length}
             bleedTop={COMPARE_STACKED_HEADER_GAP}
             bleedBottom={COMPARE_PATH_SECTION_BOTTOM_INSET - 3}
-            bleedLeft={COMPARE_PATH_SECTION_INSET - 3}
+            bleedLeft={COMPARE_PATH_SECTION_H_INSET - 3}
           />
           {rows.map((row, rowIndex) =>
             row.kind === 'interaction' ||
@@ -425,8 +425,10 @@ function MergedSectionFrame({
         style={{
           top: -COMPARE_PATH_SECTION_TOP_INSET,
           left:
-            COMPARE_LABEL_WIDTH + STEP_COLUMN_GAP - COMPARE_PATH_SECTION_INSET,
-          right: -COMPARE_PATH_SECTION_INSET,
+            COMPARE_LABEL_TRACK_WIDTH +
+            STEP_COLUMN_GAP -
+            COMPARE_PATH_SECTION_H_INSET,
+          right: -COMPARE_PATH_SECTION_H_INSET,
           bottom: -COMPARE_PATH_SECTION_BOTTOM_INSET,
           backgroundColor: blueprintPanelSectionFillColor(),
         }}
@@ -436,10 +438,10 @@ function MergedSectionFrame({
         style={{
           top: -COMPARE_PATH_SECTION_TOP_INSET,
           left:
-            COMPARE_LABEL_WIDTH +
-            STEP_COLUMN_GAP +
-            COMPARE_PATH_SECTION_INSET +
-            2,
+            COMPARE_LABEL_TRACK_WIDTH +
+            STEP_COLUMN_GAP -
+            COMPARE_PATH_SECTION_H_INSET +
+            10,
           transform: 'translateY(-50%)',
         }}
       >
@@ -645,7 +647,6 @@ function MergedSubCellBlock({
       compact={compact}
       flushBottom={flushBottom}
       visualPictures={visualPictures}
-      stepId={step.id}
       slotCells={variant === 'pills' ? cells : undefined}
       pathMembership={pathMembership}
       selectionContext={
