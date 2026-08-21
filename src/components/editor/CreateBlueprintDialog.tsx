@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSupabaseQuery, invalidateStructure } from '@/hooks/useSupabaseQuery'
-import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
+import { useServicePhases } from '@/hooks/useServicePhases'
 import { createScenario } from '@/lib/authoringRpc'
 import {
   DEFAULT_LANE_SET,
@@ -109,7 +109,7 @@ export function CreateBlueprintDialog({
   fixedPhaseId?: string | null
 }) {
   const { client } = useSupabase()
-  const phases = useLifecyclePhases()
+  const phases = useServicePhases()
   const laneSources = useLaneSources()
   const [draft, setDraft] = useState<DraftBlueprint>(EMPTY_DRAFT)
   const [busy, setBusy] = useState(false)

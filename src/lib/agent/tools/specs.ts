@@ -472,7 +472,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_phase',
     description:
-      'Create a new phase in the service lifecycle. Propose the structure as text and get a nod first.',
+      'Create a new phase in the service. Propose the structure as text and get a nod first.',
     parameters: {
       type: 'object',
       properties: {

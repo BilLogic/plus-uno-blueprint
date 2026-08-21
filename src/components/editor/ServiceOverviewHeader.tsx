@@ -36,7 +36,7 @@ import { cn } from '@/lib/utils'
  * flickers in over it would be the loudest thing on a loading screen.
  */
 export function ServiceOverviewHeader() {
-  const result = useServiceSpec(null)
+  const result = useServiceSpec()
   const service = result.status === 'ready' ? result.data : null
   if (!service) return null
 

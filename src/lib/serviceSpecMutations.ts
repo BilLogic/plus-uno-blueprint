@@ -86,8 +86,13 @@ export async function updateBusinessModel(
       previous === undefined
         ? undefined
         : {
+            // Nested under `update`, like update_cell_content and
+            // update_lane_spec — executeRevert hands this straight back to
+            // this function, so the payload must be the shape the parameter
+            // takes. Spreading the camelCase fields flat produced args no
+            // caller on either side could consume.
             fn: 'update_business_model',
-            args: { service_id: serviceId, ...previous },
+            args: { service_id: serviceId, update: previous },
           },
     )
   }

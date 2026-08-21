@@ -22,11 +22,19 @@ export type ServiceSpec = {
  * Two round-trips rather than one — the counts cannot be taken from the same
  * row — so this panel paints its placeholder like the other three.
  */
-export function useServiceSpec(serviceId: string | null): QueryResult<ServiceSpec | null> {
+export function useServiceSpec(): QueryResult<ServiceSpec | null> {
   const fallback = useCallback(() => null, [])
 
   return useSupabaseQuery<ServiceSpec | null>(
-    `service-spec:${serviceId ?? 'first'}`,
+    // One service per deployment, so the query takes the first by `created_at`
+    // and the key is a constant. It used to accept a `serviceId` it never read
+    // while still baking it into the cache key — so a real id would have
+    // cached the FIRST service's data under that id's key, and ServicePanel's
+    // hardcoded invalidation of `service-spec:first` would then have missed
+    // it. Both callers passed null, so the lie never cost anything; the
+    // parameter is gone rather than honoured because multi-service is plan
+    // 004 and pinned.
+    'service-spec:first',
     async (client) => {
       const { data: service, error } = await client
         .from('services')

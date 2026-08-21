@@ -19,6 +19,10 @@ describe('path identity', () => {
     // scenario held at most one path per type and wrong the moment Goal
     // Setting held five of one. Only `happy` keeps a type dash, because a
     // scenario can only ever have one.
+    //
+    // Dash uniqueness is load-bearing, not decorative: every `exception` path
+    // takes the type colour, so within a scenario the dash is the ONLY channel
+    // separating one exception from another.
     const paths = [
       { path_type: 'happy', name: 'Signs up without conflicts' },
       { path_type: 'exception', name: 'Missed hours' },
@@ -29,6 +33,19 @@ describe('path identity', () => {
     expect(dashes[0]).toBeUndefined() // happy stays solid
     const nonHappy = dashes.slice(1)
     expect(new Set(nonHappy).size).toBe(nonHappy.length)
+  })
+
+  it('separates the sibling paths the board actually holds', () => {
+    // These two shipped identical — same family, same dash — under the old
+    // character-sum hash. They are the reason it was replaced, and they are
+    // pinned here because a synthetic pair would not have caught it: the names
+    // are neither anagrams nor near-misses, they simply summed alike.
+    const a = { path_type: 'variant', name: 'Lead works from a dashboard' } as const
+    const b = { path_type: 'variant', name: 'Redesigned reflection' } as const
+    const identical =
+      getPathColor(a) === getPathColor(b) &&
+      getPathDashArray(a) === getPathDashArray(b)
+    expect(identical).toBe(false)
   })
 
   it('keeps a variant\'s colour wherever it appears', () => {
@@ -56,6 +73,20 @@ describe('path identity', () => {
     const a = { path_type: 'variant', name: 'Alpha' } as const
     const b = { path_type: 'variant', name: 'Beta' } as const
     // They may share a hue slot, but not both a hue and a dash.
+    const same =
+      getPathColor(a) === getPathColor(b) &&
+      getPathDashArray(a) === getPathDashArray(b)
+    expect(same).toBe(false)
+  })
+
+  it('separates two names built from the same letters', () => {
+    // 'Alpha'/'Beta' above pass under any hash, including a plain character
+    // sum — their letters differ. Anagrams are the case a sum cannot see, and
+    // they are not hypothetical here: 'Check Goals' and 'Goals Check' are both
+    // plausible names for sibling routes in one scenario, and under the old
+    // sum they took the same colour AND the same dash.
+    const a = { path_type: 'variant', name: 'Check Goals' } as const
+    const b = { path_type: 'variant', name: 'Goals Check' } as const
     const same =
       getPathColor(a) === getPathColor(b) &&
       getPathDashArray(a) === getPathDashArray(b)

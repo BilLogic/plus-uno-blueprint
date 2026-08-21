@@ -142,12 +142,12 @@ export const coverContent: CoverContent = {
           id: 'blueprints-organized',
           heading: 'How a blueprint is organized',
           paragraphs: [
-            'A **lifecycle** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
+            'A **service** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
             'Every path is a grid. That is the next level down.',
           ],
           figure: {
             src: '/cover/data-model-hierarchy.svg',
-            alt: 'How a blueprint is organized — lifecycle to phase to scenario to path',
+            alt: 'How a blueprint is organized — service to phase to scenario to path',
             width: 880,
             height: 634,
           },

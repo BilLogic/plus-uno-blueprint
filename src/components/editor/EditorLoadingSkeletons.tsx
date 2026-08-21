@@ -73,7 +73,7 @@ export type OverviewSkeletonPhase = {
 /**
  * Neutral shape used only when nav metadata has not arrived within the
  * skeleton hold — a cold boot where even the phase list is still in flight.
- * Every other case is shaped from the real lifecycle.
+ * Every other case is shaped from the real service.
  */
 const UNKNOWN_SHAPE: OverviewSkeletonPhase[] = [
   { id: 'unknown', scenarioCount: 2 },

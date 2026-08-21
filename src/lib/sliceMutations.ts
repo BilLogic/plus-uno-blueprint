@@ -88,7 +88,7 @@ export async function deleteSlice(
 }
 
 export type NewSlice = {
-  lifecycleId: string
+  serviceId: string
   title: string
   description: string
   sliceType: SliceType
@@ -119,7 +119,7 @@ export async function createSlice(
   const { data, error } = await client
     .from('slices')
     .insert({
-      service_id: input.lifecycleId,
+      service_id: input.serviceId,
       title: input.title.trim(),
       description: input.description.trim() || null,
       slice_type: input.sliceType,

@@ -378,9 +378,19 @@ describe('path badges', () => {
   })
 
   it('separates two unregistered named paths', () => {
-    const a = getPathColor({ path_type: 'variant', name: 'Alpha' })
-    const b = getPathColor({ path_type: 'variant', name: 'Beta' })
-    expect(a === b).toBe(false)
+    // The guarantee for a variant is the PAIR, not the hue alone. There are
+    // four open families and seven dashes, deliberately coprime — 28 distinct
+    // identities — so two arbitrary names sharing a family is a one-in-four
+    // coincidence no hash can rule out, and demanding otherwise asserts
+    // something the system does not provide. (An `exception` is the opposite
+    // case: it takes the type colour, so its dash must carry the whole load —
+    // pinned in pathColorTheme.test.ts.)
+    const a = { path_type: 'variant', name: 'Alpha' } as const
+    const b = { path_type: 'variant', name: 'Beta' } as const
+    const identical =
+      getPathColor(a) === getPathColor(b) &&
+      getPathDashArray(a) === getPathDashArray(b)
+    expect(identical).toBe(false)
   })
 
   it('tells the live board\'s variants apart without colour', () => {

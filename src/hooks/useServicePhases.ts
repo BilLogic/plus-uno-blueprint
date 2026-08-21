@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery'
-import { findFirstLifecycleId } from '@/lib/lifecycle'
+import { findFirstServiceId } from '@/lib/service'
 import { phasesToSlides, type PhaseRow } from '@/lib/phasesToSlides'
 import type { NavItem } from '@/types/nav'
 
-const LIFECYCLE_PHASES_SELECT = `
+const SERVICE_PHASES_SELECT = `
   id,
   name,
   summary,
@@ -22,63 +22,63 @@ const LIFECYCLE_PHASES_SELECT = `
 `
 
 /**
- * Same projection plus the owning lifecycle, for the unpinned read that
- * cannot filter server-side because the lifecycle id is still in flight.
+ * Same projection plus the owning service, for the unpinned read that
+ * cannot filter server-side because the service id is still in flight.
  */
-const LIFECYCLE_PHASES_SELECT_WITH_OWNER = `service_id,${LIFECYCLE_PHASES_SELECT}`
+const SERVICE_PHASES_SELECT_WITH_OWNER = `service_id,${SERVICE_PHASES_SELECT}`
 
 type PhaseQueryRow = PhaseRow & { service_id?: string }
 
 const NO_PHASES: PhaseRow[] = []
 
 /**
- * Load the phases (and nested scenarios) of one service lifecycle.
+ * Load the phases (and nested scenarios) of one service.
  *
- * With no explicit `lifecycleId`, the first lifecycle by `created_at` is used
- * — the common case is a single lifecycle per database. Pass an id to pin a
- * specific lifecycle in multi-lifecycle databases.
+ * With no explicit `serviceId`, the first service by `created_at` is used
+ * — the common case is a single service per database. Pass an id to pin a
+ * specific service in multi-service databases.
  *
- * Both reads go out in the same tick. Resolving the lifecycle *then*
+ * Both reads go out in the same tick. Resolving the service *then*
  * querying its phases put a full serial round trip in front of the canvas
  * mount, which is exactly the window where the unfitted viewport used to
  * show. Unpinned, the phases read is therefore unfiltered and narrowed to
- * the resolved lifecycle client-side — no extra rows in the single-lifecycle
+ * the resolved service client-side — no extra rows in the single-service
  * databases this targets. The result goes through the shared query cache, so
  * the lookup survives remounts and is shared with every other consumer of
- * `findFirstLifecycleId`.
+ * `findFirstServiceId`.
  */
-export function useLifecyclePhases(lifecycleId?: string) {
+export function useServicePhases(serviceId?: string) {
   const { configured } = useSupabase()
   const fallback = useCallback(() => null, [])
 
   const result = useSupabaseQuery<PhaseRow[]>(
-    `lifecycle-phases:${lifecycleId ?? 'first'}`,
+    `service-phases:${serviceId ?? 'first'}`,
     async (client) => {
-      const lifecycleIdPromise = lifecycleId
-        ? Promise.resolve<string | null>(lifecycleId)
-        : findFirstLifecycleId(client)
+      const serviceIdPromise = serviceId
+        ? Promise.resolve<string | null>(serviceId)
+        : findFirstServiceId(client)
 
       const rowsPromise = (
-        lifecycleId
+        serviceId
           ? client
               .from('phases')
-              .select(LIFECYCLE_PHASES_SELECT)
-              .eq('service_id', lifecycleId)
-          : client.from('phases').select(LIFECYCLE_PHASES_SELECT_WITH_OWNER)
+              .select(SERVICE_PHASES_SELECT)
+              .eq('service_id', serviceId)
+          : client.from('phases').select(SERVICE_PHASES_SELECT_WITH_OWNER)
       ).order('position', { ascending: true })
 
-      const [resolvedLifecycleId, { data, error }] = await Promise.all([
-        lifecycleIdPromise,
+      const [resolvedServiceId, { data, error }] = await Promise.all([
+        serviceIdPromise,
         rowsPromise,
       ])
       if (error) throw new Error(error.message)
       // Empty database — the caller falls back to local sample slides.
-      if (!resolvedLifecycleId) return NO_PHASES
+      if (!resolvedServiceId) return NO_PHASES
 
       const rows = (data ?? []) as PhaseQueryRow[]
-      if (lifecycleId) return rows as PhaseRow[]
+      if (serviceId) return rows as PhaseRow[]
       return rows.filter(
-        (row) => row.service_id === resolvedLifecycleId,
+        (row) => row.service_id === resolvedServiceId,
       )
     },
     fallback,

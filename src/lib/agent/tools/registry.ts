@@ -57,7 +57,7 @@ import {
   updateEvidence,
   type EvidenceKind,
 } from '@/lib/evidenceMutations'
-import { resolveFirstLifecycleId } from '@/lib/lifecycle'
+import { resolveFirstServiceId } from '@/lib/service'
 
 /** Mirrors the DB CHECK constraint so a bad kind fails before the insert. */
 const EVIDENCE_KINDS = new Set<string>([
@@ -96,18 +96,18 @@ type Client = SupabaseClient<Database>
 // Tool specs and rosters live in `specs.ts` (imported directly by their
 // consumers — one canonical path); this module owns only dispatch.
 
-// One lifecycle per deployment today; cached after the first ask.
-let cachedLifecycleId: string | null = null
-async function lifecycleId(client: Client): Promise<string> {
-  if (cachedLifecycleId) return cachedLifecycleId
+// One service per deployment today; cached after the first ask.
+let cachedServiceId: string | null = null
+async function serviceId(client: Client): Promise<string> {
+  if (cachedServiceId) return cachedServiceId
   const { data, error } = await client
     .from('services')
     .select('id')
     .limit(1)
     .maybeSingle()
   if (error) throw new Error(error.message)
-  if (!data) throw new Error('No service lifecycle exists yet.')
-  cachedLifecycleId = data.id
+  if (!data) throw new Error('No service exists yet.')
+  cachedServiceId = data.id
   return data.id
 }
 
@@ -522,7 +522,7 @@ export async function dispatchTool(
         const kind = need(args, 'kind')
         if (!['recipient', 'staff', 'partner', 'provider'].includes(kind))
           throw new Error('kind must be recipient, staff, partner, or provider.')
-        const id = await createStakeholder(client, await lifecycleId(client), {
+        const id = await createStakeholder(client, await serviceId(client), {
           name: need(args, 'name'),
           kind,
           note: s(args, 'note') ?? null,
@@ -573,7 +573,7 @@ export async function dispatchTool(
       }
       case 'create_phase': {
         const id = await createPhase(client, {
-          lifecycleId: await lifecycleId(client),
+          serviceId: await serviceId(client),
           name: need(args, 'name'),
           summary: s(args, 'summary') ?? null,
         })
@@ -624,7 +624,7 @@ export async function dispatchTool(
         if (cellIds.length === 0)
           throw new Error('cell_ids must be a non-empty array of existing cell ids.')
         const slice = await createSlice(client, {
-          lifecycleId: await lifecycleId(client),
+          serviceId: await serviceId(client),
           title: need(args, 'title'),
           description: s(args, 'description') ?? '',
           sliceType: need(args, 'slice_type') as SliceType,
@@ -681,12 +681,12 @@ export async function dispatchTool(
           )
         }
         const cellId = need(args, 'cell_id')
-        // Same wrapper, same lifecycle resolution and the same documented
+        // Same wrapper, same service resolution and the same documented
         // cell_key placeholder the cell panel uses (CellEvidenceTab.tsx) —
         // so an agent-added source lands in the session ledger and can be
         // reverted exactly like a human-added one.
         const id = await addEvidence(client, {
-          serviceLifecycleId: await resolveFirstLifecycleId(client),
+          serviceId: await resolveFirstServiceId(client),
           cellId,
           cellKey: cellId,
           kind: kind as EvidenceKind,
@@ -730,11 +730,11 @@ export async function dispatchTool(
           throw new Error('A zero-cell finding needs a scope (e.g. "scenario:Warm-Up").')
         const runId = s(args, 'run_id') ?? crypto.randomUUID()
         const fingerprint = await findingFingerprint(checkName, cellIds, scope)
-        const lifecycle = await lifecycleId(client)
+        const resolvedServiceId = await serviceId(client)
         const { data: existing, error: readError } = await client
           .from('findings')
           .select('id, status')
-          .eq('service_id', lifecycle)
+          .eq('service_id', resolvedServiceId)
           .eq('fingerprint', fingerprint)
           .order('updated_at', { ascending: false })
         if (readError) throw new Error(readError.message)
@@ -751,7 +751,7 @@ export async function dispatchTool(
         if (dismissed)
           return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. run_id ${runId}; reuse it for the rest of this run.`
         const { error: insertError } = await client.from('findings').insert({
-          service_id: lifecycle,
+          service_id: resolvedServiceId,
           run_id: runId,
           source,
           check_name: checkName,

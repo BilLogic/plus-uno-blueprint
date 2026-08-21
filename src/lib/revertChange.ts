@@ -16,6 +16,11 @@ import {
   updateScenarioSummary,
   type PathSpecUpdate,
 } from '@/lib/scenarioSpecMutations'
+import {
+  updateBusinessModel,
+  updateServiceSummary,
+  type BusinessModelUpdate,
+} from '@/lib/serviceSpecMutations'
 import { updateStepSummary } from '@/lib/stepSpecMutations'
 import {
   deleteStakeholder,
@@ -298,6 +303,26 @@ export async function executeRevert(
         .eq('perceived_owner', from)
         .in('id', ids as string[])
       if (perceivedUpdate.error) throw toAuthoringError(perceivedUpdate.error)
+      return
+    }
+    case 'update_service_summary': {
+      // Self-inverse, like update_cell_spec. Both service writes are direct
+      // table updates, not RPCs — without these two cases they fell to the
+      // default branch below and called a Postgres function that has never
+      // existed, so every service edit recorded an undo that could only 404.
+      const serviceId = stringArg(revert.args, 'service_id')
+      const summary = stringArg(revert.args, 'summary')
+      await updateServiceSummary(client, serviceId, summary, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'update_business_model': {
+      const serviceId = stringArg(revert.args, 'service_id')
+      const update = revert.args.update as BusinessModelUpdate
+      await updateBusinessModel(client, serviceId, update, undefined, {
+        record: false,
+      })
       return
     }
     default: {

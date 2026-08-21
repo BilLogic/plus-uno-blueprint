@@ -32,7 +32,7 @@ export {
 
 type CanvasPhaseSectionProps = {
   title: string
-  /** 1-based lifecycle position. Phases ARE an ordered sequence in time, so
+  /** 1-based phase position. Phases ARE an ordered sequence in time, so
    * the ordinal is information — it prefixes the badge (`01 · Application`)
    * in the same time-marker register the mobile reader uses. */
   ordinal: number
@@ -101,7 +101,7 @@ function isBlueprintPanelTarget(target: EventTarget | null): boolean {
   )
 }
 
-/** Figma-style canvas section grouping a lifecycle phase and its scenarios. */
+/** Figma-style canvas section grouping a service phase and its scenarios. */
 export function CanvasPhaseSection({
   title,
   ordinal,

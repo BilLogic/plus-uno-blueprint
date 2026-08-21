@@ -236,7 +236,8 @@ function CellPanelEditorForm({
     form.text !== baseline.text ||
     effectiveDescription !== baseline.description ||
     form.owner !== baseline.owner ||
-    form.perceivedOwner !== baseline.perceivedOwner
+    form.perceivedOwner !== baseline.perceivedOwner ||
+    form.status !== baseline.status
   const specChanged =
     form.functionText !== baseline.functionText ||
     form.formText !== baseline.formText ||
@@ -312,7 +313,7 @@ function CellPanelEditorForm({
         )
       }
 
-      invalidateQueries('lifecycle-phases')
+      invalidateQueries('service-phases')
       // Content edit: only the edited path's scenario is stale (todo 029).
       // Existing-cell edits mount with draft undefined and don't know their
       // path, so they fall back to invalidating every scenario's blueprint.

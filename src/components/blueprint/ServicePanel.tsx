@@ -34,7 +34,7 @@ export const SERVICE_PANEL_FOOTER_ID = 'service-panel-footer'
  * is noise.
  */
 export function ServicePanel({ onClose }: { onClose: () => void }) {
-  const result = useServiceSpec(null)
+  const result = useServiceSpec()
   const service = result.status === 'ready' ? result.data : null
 
   return (
@@ -52,6 +52,13 @@ export function ServicePanel({ onClose }: { onClose: () => void }) {
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
             The service could not be loaded.
+          </p>
+        ) : result.status === 'ready' ? (
+          // Resolved, and there is no service row. Without this branch the
+          // panel falls through to the skeleton and animates forever, telling
+          // the reader it is still loading something that will never arrive.
+          <p className="text-sm text-muted-foreground">
+            No service has been created yet.
           </p>
         ) : (
           <ServicePanelLoading />

@@ -191,12 +191,36 @@ export function getPathDashArrayFromKey(colorKey: string): string | undefined {
   })
 }
 
+/**
+ * FNV-1a, for its avalanche: one changed character moves the whole value.
+ *
+ * This was a plain sum of character codes until 2026-08-21, which has almost
+ * no avalanche and is order-invariant besides. Two consequences, one
+ * theoretical and one that had already shipped:
+ *
+ *   - Anagrams collided exactly. "Check Goals" and "Goals Check" — both
+ *     plausible names for sibling routes here — took the same slot, so the
+ *     same colour AND the same dash.
+ *   - Worse, the live board carried a real collision: Wrap-Up's two variants,
+ *     "Lead works from a dashboard" and "Redesigned reflection", landed on
+ *     family 1 dash 3 together. Two sibling paths in one scenario, drawn
+ *     identically, with nothing on screen to tell them apart.
+ *
+ * The second is why the dash matters so much for `exception` paths in
+ * particular: they take the type colour, so every exception in a scenario is
+ * the same red and the dash is their ONLY distinguishing channel. Variants get
+ * a family as well, so for them it is the pair that must differ.
+ *
+ * Verified against all 17 non-happy paths on the board, grouped by scenario:
+ * zero collisions. `Math.imul` keeps the 32-bit multiply exact.
+ */
 function hashKey(key: string): number {
-  let hash = 0
+  let hash = 0x811c9dc5
   for (const char of key) {
-    hash = (hash + char.charCodeAt(0)) | 0
+    hash ^= char.charCodeAt(0)
+    hash = Math.imul(hash, 0x01000193)
   }
-  return Math.abs(hash)
+  return Math.abs(hash | 0)
 }
 
 /**

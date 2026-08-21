@@ -242,10 +242,14 @@ function deriveRevert(
  */
 export function createPhase(
   client: Client,
-  input: { lifecycleId: string; name: string; summary?: string | null },
+  input: { serviceId: string; name: string; summary?: string | null },
 ): Promise<string> {
   return call<string>(client, 'create_phase', {
-    lifecycle_id: input.lifecycleId,
+    // Renamed from `lifecycle_id` by migration 20260821410000. PostgREST binds
+    // RPC arguments by NAME, so this key and the function's parameter are one
+    // contract with two halves: ship either without the other and every "add
+    // phase" call fails with "function does not exist". They travel together.
+    service_id: input.serviceId,
     name: input.name,
     // PostgREST binds RPC arguments BY NAME, so this key is the function's
     // parameter name, not a column name that happens to match.
