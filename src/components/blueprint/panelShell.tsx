@@ -32,7 +32,9 @@ import { useMobileShell } from '@/hooks/useMobileShell'
 import { PANEL_TEXT } from '@/lib/panelText'
 import {
   blueprintLaneAttrs,
+  blueprintToneAttrs,
   type BlueprintLaneRole,
+  type TouchpointTone,
 } from '@/lib/blueprintCellStyle'
 import { panelEditorBusy } from '@/lib/panelEditorBusy'
 import { cn } from '@/lib/utils'
@@ -342,6 +344,7 @@ export function PanelIdentity({
    * title it read as an afterthought and indented away from its own heading.
    */
   badge?: ReactNode
+  /** Empty when a badge already says it — a tech cell named by its tool. */
   title: string
   /** Counts and relationships — never a restatement of the title. */
   meta: ReactNode
@@ -350,7 +353,7 @@ export function PanelIdentity({
   return (
     <div className="flex min-w-0 flex-col items-start gap-1.5">
       {badge}
-      <p className={PANEL_TEXT.title}>{title}</p>
+      {title ? <p className={PANEL_TEXT.title}>{title}</p> : null}
       {meta ? <p className={PANEL_TEXT.meta}>{meta}</p> : null}
       {children}
     </div>
@@ -358,9 +361,14 @@ export function PanelIdentity({
 }
 
 /**
- * The kind chip. Tinted with the LANE's own cell colour when there is one, so
+ * The kind chip. Tinted with the LANE's own cell colour when there is one —
+ * or with a TOUCHPOINT's tone, which is the same mechanism one row down — so
  * the panel and the cell you clicked are visibly the same object; neutral
  * `secondary` for the levels that have no colour on the canvas.
+ *
+ * One geometry for all three. A tech cell used to stack a pill-shaped tool
+ * chip above a differently-sized lane chip; two chips naming two things about
+ * one cell belong side by side, at one size.
  *
  * The tint comes from `data-blueprint-lane` — the attribute blueprint.css
  * turns into a lane's surface and ink steps — not from an inline colour. The
@@ -372,12 +380,30 @@ export function PanelIdentity({
 export function PanelKindBadge({
   label,
   laneRole,
+  tone,
   title,
 }: {
   label: string
   laneRole?: BlueprintLaneRole | null
+  /** A touchpoint's tone — the tech pill's colour, on the badge's geometry. */
+  tone?: TouchpointTone | null
   title?: string
 }) {
+  if (tone) {
+    return (
+      <Badge
+        {...blueprintToneAttrs(tone)}
+        title={title}
+        className="max-w-full truncate border-transparent"
+        style={{
+          backgroundColor: 'var(--background-blueprint-cell)',
+          color: 'var(--foreground-blueprint-cell)',
+        }}
+      >
+        {label}
+      </Badge>
+    )
+  }
   if (!laneRole) {
     // `secondary` alone is white-on-white here — the slice header band hit the
     // same thing and answered it the same way: a faint foreground wash and a

@@ -29,7 +29,6 @@ import {
 } from '@/components/blueprint/panelShell'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { IconTooltip } from '@/components/editor/IconTooltip'
-import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
 
 import {
@@ -91,6 +90,8 @@ import {
   URL_LINK_TYPE,
 } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import { getTouchpointTone } from '@/lib/techPillColors'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
@@ -929,10 +930,6 @@ function BlueprintCellDetailPanelBody() {
   })
   const showPicture = Boolean(detailPictures?.length && !isVisualLane)
   const showTechPill = Boolean(isTechLayer && techDetailLabel)
-  const showTechPillAboveTitle =
-    showTechPill &&
-    (selection.laneName === 'Front Stage Tech' ||
-      selection.laneName === 'Back Stage Tech')
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
@@ -1042,24 +1039,7 @@ function BlueprintCellDetailPanelBody() {
     />
   )
 
-  const titleRow = (
-    <PanelIdentity
-      badge={laneChip}
-      title={cellTitleText}
-      // The breadcrumb already says which path; a count only earns its line
-      // when the same cell is read across several of them.
-      meta={selection.paths.length > 1 ? `${selection.paths.length} paths` : ''}
-    />
-  )
 
-  const selectedTechPill = showTechPill ? (
-    <TechPillFace
-      item={techDetailLabel!}
-      compact
-      inline
-      className="w-fit shrink-0 !px-2 !py-0.5 !text-3xs leading-none"
-    />
-  ) : null
 
   const pictureBlock = showPicture ? (
     <div className="flex w-full flex-col items-center gap-3">
@@ -1167,30 +1147,58 @@ function BlueprintCellDetailPanelBody() {
     detailDescriptionText.trim() === cellContent.trim()
   const editingCell = canEdit && resolvedCellId !== null
 
+  /*
+    Identity, then prose — one group, tight spacing.
+
+    A tech cell used to STACK a pill-shaped tool chip above a differently
+    sized lane chip, and the description then floated away from both behind a
+    `-mt-3` correction. Two chips naming two things about one cell belong side
+    by side at one size, and the sentence about the cell belongs directly
+    under the name of it.
+  */
+  const identityBadges = (
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      {showTechPill ? (
+        <PanelKindBadge
+          label={techDetailLabel!}
+          tone={getTouchpointTone(techDetailLabel!)}
+          title={techDetailLabel!}
+        />
+      ) : null}
+      {laneChip}
+    </div>
+  )
+
   const overviewContent = (
     <>
       {pictureBlock}
-      <div className="flex min-w-0 flex-col gap-2">
-        {showTechPillAboveTitle ? selectedTechPill : null}
+      <div className="flex min-w-0 flex-col gap-1.5">
         {/* In edit mode the form's TEXT field *is* the title; repeating it
             above the field would be the same word twice on one screen. */}
         {editingCell ? (
-          titleRepeatsPill ? null : laneChip
-        ) : titleRepeatsPill ? (
-          laneChip
+          identityBadges
         ) : (
-          titleRow
+          <PanelIdentity
+            badge={identityBadges}
+            // Empty when the tool badge already carries it.
+            title={titleRepeatsPill ? '' : cellTitleText}
+            meta={
+              selection.paths.length > 1
+                ? `${selection.paths.length} paths`
+                : ''
+            }
+          />
         )}
-        {showTechPill && !showTechPillAboveTitle ? selectedTechPill : null}
-        {editingCell && titleRepeatsPill ? laneChip : null}
+        {/* The description paragraph is the reading view; the editor shows the
+            same text inside its DESCRIPTION field instead. */}
+        {!editingCell &&
+        detailDescriptionText.trim() &&
+        !descriptionRepeatsTitle ? (
+          <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
+            {detailDescriptionText.trim()}
+          </p>
+        ) : null}
       </div>
-      {/* The description paragraph is the reading view; the editor shows the
-          same text inside its DESCRIPTION field instead. */}
-      {!editingCell && detailDescriptionText.trim() && !descriptionRepeatsTitle ? (
-        <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
-          {detailDescriptionText.trim()}
-        </p>
-      ) : null}
       {editingCell ? (
         <CellPanelEditor
           cellId={resolvedCellId}
@@ -1263,7 +1271,17 @@ function BlueprintCellDetailPanelBody() {
 
         {isVisualLane ? (
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
-            {titleRow}
+            {/*
+              A storyboard cell opens the STEP panel now, so this branch is
+              reached only by a deep link or the agent. It titles itself with
+              the STEP, not the lane: the frames below belong to the moment,
+              not to the row they were drawn on.
+            */}
+            <PanelIdentity
+              badge={laneChip}
+              title={selection.stepName}
+              meta=""
+            />
             <VisualStepDetailStack entries={visualStepEntries} />
           </div>
         ) : (

@@ -33,12 +33,34 @@ export const DEPENDENCY_KIND_HINTS: Record<DependencyKind, string> = {
   enables: 'Makes the next step possible, without causing it.',
 }
 
+/*
+  DISPLAY WORDING — 2026-08-20.
+
+  The stored key stays `sets_off`; the words a reader sees are "Leads to" and
+  "Follows". "Sets off" reads as an alarm going off rather than as one moment
+  handing to the next, and the panel's own headings ("SET OFF BY" / "SETS
+  OFF") were the clearest place it showed. `enables` needs no translation —
+  it is already the plain word for what it means.
+
+  Renaming the COLUMN would be a third rename of the same enum plus a
+  cross-repo deploy for a wording preference; the label is where the wording
+  belongs, and the key is what the arrows, the RPC and uno-bot all agree on.
+*/
+
 /** The stored value IS the label, minus the underscore — that is the point of
  *  the rename. These match the Dependencies tab's group headings. */
 export const DEPENDENCY_KIND_LABELS: Record<DependencyKind, string> = {
-  sets_off: 'Sets off',
+  sets_off: 'Leads to',
   enables: 'Enables',
 }
+
+/** The two directions, for a panel that groups edges by which way they point. */
+export const DEPENDENCY_DIRECTION_LABELS = {
+  /** Edges arriving at this cell — what came before it. */
+  incoming: 'Follows',
+  /** Edges leaving it — what it hands to. */
+  outgoing: 'Leads to',
+} as const
 
 export type DraftDependency = {
   sourceCellId: string

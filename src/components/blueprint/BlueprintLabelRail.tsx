@@ -228,13 +228,15 @@ export function BlueprintLabelRow({
     <div
       className={cn(
         'sticky left-0 isolate flex h-full min-h-0 flex-col overflow-hidden',
-        'z-40 border-r ',
+        // No right border. The rail already reads as its own column through
+        // its fill, and the hairline landed a few pixels from the path
+        // section's own outline — two vertical lines describing one edge.
+        'z-40',
       )}
       style={{
         ...style,
         width: COMPARE_LABEL_WIDTH,
         backgroundColor: blueprintPanelLabelRailColor(),
-        borderColor: BLUEPRINT_THEME.laneDivider,
       }}
     >
       {corridorAbove > 0 && (
@@ -259,7 +261,10 @@ export function BlueprintLabelRow({
       )}
       <div
         className={cn(
-          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-3',
+          // `pr-6`: the label block ends well clear of the path outline
+          // rather than crowding it, which is what made the divider labels
+          // read as touching the container.
+          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-6',
           compact ? 'pt-3' : 'pt-4',
         )}
       >

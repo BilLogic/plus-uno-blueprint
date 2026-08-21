@@ -14,6 +14,7 @@ import {
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelHint } from '@/components/blueprint/PanelHint'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { StakeholderSelect } from '@/components/blueprint/StakeholderSelect'
 import { useLaneSpec, type LaneSpec } from '@/hooks/useLaneSpec'
 import { useOwnerTags } from '@/hooks/useOwnerTags'
@@ -157,25 +158,28 @@ function LanePanelBody({
       <PanelIdentity
         badge={<PanelKindBadge label="Lane" laneRole={laneRole} />}
         title={lane.name}
+        /*
+          A cell count told the reader nothing they came here to learn. What
+          IS worth a line is the one surprise this panel holds: an edit here
+          moves several rows. Nothing else, and nothing at all when it does
+          not apply.
+        */
         meta={
-          <>
-            {lane.cellCount === 1 ? '1 cell' : `${lane.cellCount} cells`}
-            {/* The grain, on request rather than as a permanent banner: a
-                lane row belongs to ONE path, so the label you are editing is
-                several rows and every one of them moves. */}
-            {canEdit && fanOut > 1 ? (
-              <>
-                {' · '}
-                <span className="whitespace-nowrap">edits apply to all {fanOut}</span>{' '}
-                <PanelHint label="What a save touches">
-                  A lane row belongs to one path, so “{lane.name}” is {fanOut}{' '}
-                  rows in {lane.scenarioName}. Saving writes all of them —
-                  otherwise the same lane would claim a different owner
-                  depending on which path you were looking at.
-                </PanelHint>
-              </>
-            ) : null}
-          </>
+          canEdit && fanOut > 1 ? (
+            <>
+              <span className="whitespace-nowrap">
+                Edits apply to all {fanOut} “{lane.name}” lanes
+              </span>{' '}
+              <PanelHint label="What a save touches">
+                A lane row belongs to one path, so “{lane.name}” is {fanOut}{' '}
+                rows in {lane.scenarioName}. Saving writes all of them —
+                otherwise the same lane would claim a different owner
+                depending on which path you were looking at.
+              </PanelHint>
+            </>
+          ) : (
+            ''
+          )
         }
       >
         {/* The role in words, not the enum key: `frontstage_actions` is a
@@ -204,20 +208,33 @@ function LanePanelBody({
         label="Owner team"
         hint="The team accountable for this lane. A cell can override it."
       >
-        <Input
-          value={form.ownerTeam}
-          disabled={!canEdit}
-          // A datalist suggests, never blocks — same treatment as the cell
-          // panel's owner field, and the same vocabulary behind it.
-          list="lane-owner-tags"
-          className="h-7 text-xs"
-          onChange={(event) => set('ownerTeam', event.target.value)}
-        />
-        <datalist id="lane-owner-tags">
-          {ownerTags.map((tag) => (
-            <option key={tag} value={tag} />
-          ))}
-        </datalist>
+        {canEdit ? (
+          <>
+            <Input
+              value={form.ownerTeam}
+              // A datalist suggests, never blocks — same treatment as the
+              // cell panel's owner field, and the same vocabulary behind it.
+              list="lane-owner-tags"
+              className="h-7 text-xs"
+              onChange={(event) => set('ownerTeam', event.target.value)}
+            />
+            <datalist id="lane-owner-tags">
+              {ownerTags.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+          </>
+        ) : (
+          // A disabled empty input reads as a broken control. Read-only is
+          // prose, the same as every other value in these panels.
+          <p className={PANEL_TEXT.value}>
+            {form.ownerTeam || (
+              <span className="text-muted-foreground">
+                Not specified — no team recorded for this lane.
+              </span>
+            )}
+          </p>
+        )}
       </Field>
 
       <StringListField

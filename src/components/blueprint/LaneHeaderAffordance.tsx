@@ -1,4 +1,9 @@
 import { Info } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
@@ -43,44 +48,54 @@ export function LaneHeaderAffordance({
   const open = selection?.kind === 'lane' && selection.id === laneId
 
   return (
-    <button
-      type="button"
-      data-blueprint-row-header=""
-      data-lane-header-affordance=""
-      aria-label={`View details: ${laneName}`}
-      aria-pressed={open}
-      onClick={(event) => {
-        // The canvas pans on pointer-down anywhere it does not recognise;
-        // opening a panel is neither a pan nor a selection.
-        event.stopPropagation()
-        openEntity({ kind: 'lane', id: laneId })
-      }}
-      className={cn(
-        'group/lane-header -mx-2 -my-1 flex min-w-0 flex-1 items-start self-stretch text-left',
-        CANVAS_HEADER_BOX,
-        CANVAS_HEADER_STATE,
-        className,
-      )}
-    >
-      <span
-        className={cn(
-          'min-w-0 flex-1 whitespace-normal break-words',
-          CANVAS_HEADER_TEXT,
-        )}
-        style={color ? { color } : undefined}
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            data-blueprint-row-header=""
+            data-lane-header-affordance=""
+            aria-label={`View details: ${laneName}`}
+            aria-pressed={open}
+            onClick={(event) => {
+              // The canvas pans on pointer-down anywhere it does not
+              // recognise; opening a panel is neither a pan nor a selection.
+              event.stopPropagation()
+              openEntity({ kind: 'lane', id: laneId })
+            }}
+            className={cn(
+              'group/lane-header -mx-2 -my-1 flex min-w-0 flex-1 items-start self-stretch text-left',
+              CANVAS_HEADER_BOX,
+              CANVAS_HEADER_STATE,
+              className,
+            )}
+          />
+        }
       >
-        {laneName}
-      </span>
-      {/* Optically on the label's first line: the glyph's own box is taller
-          than the cap height it has to sit beside. */}
-      <Info
-        className={cn(CANVAS_HEADER_HINT, 'mt-px', {
-          'group-hover/lane-header:opacity-100': true,
-          'group-focus-visible/lane-header:opacity-100': true,
-          'group-aria-pressed/lane-header:opacity-100': true,
-        })}
-        aria-hidden
-      />
-    </button>
+        <span
+          className={cn(
+            'min-w-0 flex-1 whitespace-normal break-words',
+            CANVAS_HEADER_TEXT,
+          )}
+          style={color ? { color } : undefined}
+        >
+          {laneName}
+        </span>
+        {/* Optically on the label's first line: the glyph's own box is taller
+            than the cap height it has to sit beside. */}
+        <Info
+          className={cn(
+            CANVAS_HEADER_HINT,
+            'mt-px',
+            'group-hover/lane-header:opacity-100',
+            'group-focus-visible/lane-header:opacity-100',
+            'group-aria-pressed/lane-header:opacity-100',
+          )}
+          aria-hidden
+        />
+      </TooltipTrigger>
+      {/* Same words as the column header's: one affordance, one sentence. */}
+      <TooltipContent side="right">View details</TooltipContent>
+    </Tooltip>
   )
 }

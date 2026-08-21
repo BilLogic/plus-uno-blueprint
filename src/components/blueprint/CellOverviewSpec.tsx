@@ -1,3 +1,5 @@
+import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -32,11 +34,37 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   const specResult = useCellSpec(configured ? cellId : null)
 
   if (!configured || !client || !cellId) return null
-  // Nothing is rendered while the query is in flight — not even a reserved
-  // placeholder. Most cells have no spec at all, so reserving space meant the
-  // block (and everything below it, including the tab row) grew for ~250 ms
-  // and then collapsed again on *every* cell switch.
-  if (specResult.status !== 'ready') return null
+  /*
+    A deferred skeleton, not a bare `return null`.
+
+    Reserving space unconditionally was the old bug: most cells have no spec
+    at all, so the block (and the tab row under it) grew for ~250ms and
+    collapsed again on EVERY cell switch. `DeferredSkeleton` holds for exactly
+    that long before painting, so a fast query still renders nothing — and a
+    slow one now says "loading" instead of looking empty, which is the
+    consistency the panels needed.
+  */
+  if (specResult.status !== 'ready') {
+    return (
+      <DeferredSkeleton
+        loading
+        skeleton={
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          </div>
+        }
+      >
+        {null}
+      </DeferredSkeleton>
+    )
+  }
 
   const spec = specResult.data
   const functionText = spec?.function?.trim() ?? ''

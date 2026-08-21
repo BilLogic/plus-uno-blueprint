@@ -10,6 +10,7 @@ import {
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { useStepSpec, type StepSpec } from '@/hooks/useStepSpec'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { invalidateCanvasBlueprintsForScenario } from '@/hooks/useCanvasBlueprints'
@@ -128,13 +129,34 @@ function StepPanelBody({
       <PanelIdentity
         badge={<PanelKindBadge label="Step" />}
         title={step.name}
-        meta={[
-          `${step.cellCount} cell${step.cellCount === 1 ? '' : 's'}`,
-          positionLabel,
-        ]
-          .filter(Boolean)
-          .join(' · ')}
+        // Only the surprise: a step that sits at a DIFFERENT column depending
+        // on the path. A cell count is bookkeeping, not something a reader of
+        // this panel came for.
+        meta={positionLabel ?? ''}
       />
+
+      {step.frames.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {step.frames.map((frame) => (
+            <figure key={frame.picture} className="flex flex-col gap-1">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted/20">
+                <img
+                  src={frame.picture}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-contain object-center"
+                />
+              </div>
+              {/* Provenance, quietly: which lane drew this frame. The frame's
+                  MEANING is the summary below, not this label. */}
+              <figcaption className={PANEL_TEXT.meta}>
+                {frame.laneName}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      ) : null}
 
       <PanelTextareaField
         label="Summary"

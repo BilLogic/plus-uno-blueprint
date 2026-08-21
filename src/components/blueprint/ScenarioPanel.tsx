@@ -75,11 +75,6 @@ export function ScenarioPanel({
   )
 }
 
-/** "1 path" / "2 paths" — the panels' one counting voice. */
-function plural(count: number, noun: string): string {
-  return `${count} ${noun}${count === 1 ? '' : 's'}`
-}
-
 type PathForm = { summary: string; note: string }
 type FormState = {
   summary: string
@@ -183,10 +178,9 @@ function ScenarioPanelBody({
       <PanelIdentity
         badge={<PanelKindBadge label="Scenario" />}
         title={scenario.name}
-        meta={`${plural(scenario.paths.length, 'path')} · ${plural(
-          scenario.stepCount,
-          'step',
-        )} · ${plural(scenario.cellCount, 'cell')}`}
+        // The paths are listed below and the steps are the columns on screen;
+        // counting them again is noise. Nothing here earns the line.
+        meta=""
       />
 
       <PanelTextareaField

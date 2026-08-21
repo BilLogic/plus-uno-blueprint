@@ -12,6 +12,15 @@ export type StepSpec = {
   /** Path names that include this step, with its position on each. */
   positions: { pathName: string; position: number }[]
   cellCount: number
+  /**
+   * The storyboard frames for this moment, with the lane each came from.
+   *
+   * The panel that opens from a storyboard cell has to SHOW the storyboard —
+   * it is the face the reader clicked. The lane name rides along as quiet
+   * provenance, not as the frame's meaning: the meaning is the summary below
+   * it, which is what the caption on the canvas says too.
+   */
+  frames: { laneName: string; picture: string }[]
 }
 
 /**
@@ -59,6 +68,27 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         .eq('step_id', stepId)
       if (countError) throw new Error(countError.message)
 
+      const { data: pictured, error: pictureError } = await client
+        .from('cells')
+        .select('picture, lanes!inner(name, position)')
+        .eq('step_id', stepId)
+        .not('picture', 'is', null)
+      if (pictureError) throw new Error(pictureError.message)
+
+      // One frame per picture, deduplicated: the same step is drawn once per
+      // path, and the paths share their imagery.
+      const seen = new Set<string>()
+      const frames: { laneName: string; picture: string }[] = []
+      for (const row of (pictured ?? []) as unknown as Array<{
+        picture: string | null
+        lanes: { name: string; position: number }
+      }>) {
+        const picture = row.picture?.trim()
+        if (!picture || seen.has(picture)) continue
+        seen.add(picture)
+        frames.push({ laneName: row.lanes.name, picture })
+      }
+
       const scenario = step.scenarios as unknown as {
         name: string
         phases: { name: string }
@@ -73,6 +103,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         phaseName: scenario.phases.name,
         positions,
         cellCount: count ?? 0,
+        frames,
       }
     },
     fallback,

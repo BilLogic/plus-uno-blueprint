@@ -7,7 +7,9 @@
  * measures the canvas region itself and only falls back to the old number.
  */
 export const BLUEPRINT_MENUBAR_HEADER_CLASS =
-  'relative min-h-9 w-full max-w-full shrink-0 items-center gap-3 rounded-none border-0 bg-transparent px-3 py-1 shadow-none'
+  // `h-auto` beats the Menubar primitive's own `h-8`, which cropped the second
+  // row: the bar sizes to its content the way the slice header band does.
+  'relative h-auto min-h-9 w-full max-w-full shrink-0 items-center gap-3 rounded-none border-0 bg-transparent px-3 py-1.5 shadow-none'
 
 /** Docked navbar bar — same surface/elevation as the side nav. */
 export const BLUEPRINT_NAVBAR_BAR_CLASS =
@@ -40,7 +42,7 @@ export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
 
 /** Flattens the menubar when it sits inside the docked navbar bar. */
 export const BLUEPRINT_MENUBAR_FLAT_CLASS =
-  'relative min-h-9 rounded-none border-0 bg-transparent px-0 py-1 shadow-none'
+  'relative h-auto min-h-9 rounded-none border-0 bg-transparent px-0 py-1.5 shadow-none'
 
 /**
  * Left-aligned title + paths control row. Right padding keeps the row clear

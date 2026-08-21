@@ -271,3 +271,33 @@
     transition-duration: 0s;
   }
 }
+
+/*
+ * The skeleton's breath.
+ *
+ * Tailwind's `animate-pulse` is `cubic-bezier(0.4,0,0.6,1)` at 2s — a curve
+ * that sits at both extremes and snaps between them, which on a panel full of
+ * bars reads as flicker rather than as waiting. This holds the same rhythm on
+ * the structural ease and a narrower opacity range, so a loading panel is
+ * quiet next to the drawer sliding in beside it.
+ */
+@keyframes skeleton-breath {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+[data-slot='skeleton'] {
+  animation: skeleton-breath 1.6s var(--ease-structural) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot='skeleton'] {
+    animation: none;
+    opacity: 0.7;
+  }
+}

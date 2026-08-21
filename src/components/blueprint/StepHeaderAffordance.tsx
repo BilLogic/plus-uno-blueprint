@@ -80,7 +80,10 @@ export function StepHeaderAffordance({
           aria-hidden
         />
       </TooltipTrigger>
-      <TooltipContent side="bottom">{name} — view details</TooltipContent>
+      {/* The label is right there; repeating it in the tooltip says nothing.
+          Above, because the header sits at the top of the grid and a tooltip
+          below it lands on the first row of cells. */}
+      <TooltipContent side="top">View details</TooltipContent>
     </Tooltip>
   )
 }

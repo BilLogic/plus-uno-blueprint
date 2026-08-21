@@ -13,6 +13,7 @@ import type {
   BlueprintCellConnection,
   BlueprintCellConnections,
 } from '@/lib/blueprintCellConnections'
+import { DEPENDENCY_DIRECTION_LABELS } from '@/lib/dependencyValidation'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
@@ -192,8 +193,8 @@ type CellDependencySectionsProps = {
 } & SelectHandlers
 
 /**
- * Dependencies tab: grouped SET OFF BY (incoming `sets_off`) / SETS OFF
- * (outgoing `sets_off`) / DEPENDS ON (`enables`, both directions). The
+ * Dependencies tab: grouped Follows (incoming `sets_off`) / Leads to
+ * (outgoing `sets_off`) / Enables (`enables`, both directions). The
  * group headings are the stored kind values, minus the underscore — that is
  * the point of the rename: the product word and the column agree. Rows keep
  * the hover-preview and click-to-navigate behavior, with the direction
@@ -265,7 +266,7 @@ export function CellDependencySections({
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       {setOffBy.length > 0 ? (
-        <DependencyGroup title="Set off by">
+        <DependencyGroup title={DEPENDENCY_DIRECTION_LABELS.incoming}>
           {setOffBy.map((connection) => (
             <DependencyRow
               key={`in:${connection.dependencyId}`}
@@ -277,7 +278,7 @@ export function CellDependencySections({
         </DependencyGroup>
       ) : null}
       {setsOff.length > 0 ? (
-        <DependencyGroup title="Sets off">
+        <DependencyGroup title={DEPENDENCY_DIRECTION_LABELS.outgoing}>
           {setsOff.map((connection) => (
             <DependencyRow
               key={`out:${connection.dependencyId}`}

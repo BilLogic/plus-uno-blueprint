@@ -126,11 +126,9 @@ function PhasePanelBody({
       <PanelIdentity
         badge={<PanelKindBadge label="Phase" />}
         title={phase.name}
-        meta={`${phase.scenarioCount} scenario${
-          phase.scenarioCount === 1 ? '' : 's'
-        } · ${phase.cellCount} cell${phase.cellCount === 1 ? '' : 's'}${
-          phase.loopsToName ? ` · loops to ${phase.loopsToName}` : ''
-        }`}
+        // The scenarios are in the sidebar; the loop is the one relationship
+        // a reader cannot see from the canvas.
+        meta={phase.loopsToName ? `Loops back to ${phase.loopsToName}` : ''}
       />
 
       <PanelTextareaField

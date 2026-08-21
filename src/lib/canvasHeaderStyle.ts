@@ -23,13 +23,16 @@ export const CANVAS_HEADER_BOX = 'rounded-md px-2 py-1.5 gap-1.5'
  * Rest → hover → selected, as three distinguishable states.
  *
  * Hover and selected were the same wash, so an open panel gave the canvas no
- * way to say which label it belonged to. Selected is now the deeper wash plus
- * a named edge rung, which reads as "this one" without inventing a colour.
+ * way to say which label it belonged to. Selected is the deeper wash plus the
+ * ring a SELECTED CELL wears — one selection vocabulary on one canvas.
  */
 export const CANVAS_HEADER_STATE = [
   'transition-colors duration-(--motion-micro)',
   'hover:bg-foreground/5',
-  'aria-pressed:bg-foreground/10 aria-pressed:ring-1 aria-pressed:ring-border-muted',
+  // Selected wears the CELL's selection vocabulary — a 2px soft ring — so an
+  // open panel marks its header the same way an open cell marks itself.
+  'aria-pressed:bg-foreground/10 aria-pressed:ring-2',
+  'aria-pressed:ring-[color:var(--ring-blueprint-cell-soft,var(--ring))]',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
 ].join(' ')
 
