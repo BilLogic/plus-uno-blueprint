@@ -215,7 +215,11 @@ export function CanvasPhaseSection({
         className="pointer-events-auto absolute z-30 max-w-[min(100%,28rem)] border-transparent font-mono text-2xs uppercase tracking-wider"
         style={{
           top: -sectionTopInset,
-          left: sectionInset,
+          // Flush with the phase FRAME's left edge (which sits at
+          // `-sectionInset`), not inset a second time from it: a label that
+          // names a container reads as belonging to it only when their edges
+          // agree.
+          left: -sectionInset,
           transform: 'translateY(-50%)',
         }}
       />
