@@ -12,17 +12,17 @@ wording lives in `skills/map/references/elicitation-protocol.md` — follow its 
 keep it dialogic: reflect back what you heard, propose structure, let the
 user correct. The user is the source of truth; you are the notation.
 
-## 1. Right-size first (⚠ do this before any lifecycle ceremony)
+## 1. Right-size first (⚠ do this before any service ceremony)
 
 The elicitation protocol's opening branch:
 
 - **Single flow?** ("I just want to map how refunds work") → auto-wrap in a
-  default lifecycle + one phase, skip straight to the scenario questions.
-  A founder mapping one flow must not sit through lifecycle taxonomy.
+  default service + one phase, skip straight to the scenario questions.
+  A founder mapping one flow must not sit through service taxonomy.
 - **Huge multi-actor journey?** → chunk it: outline all scenarios, then
   build **one scenario per session**, tracked per-scenario in
   `blueprint-workspace.json`. Partial completion (2 of 6 now) is first-class.
-- **In between** → the standard order: lifecycle → phases → scenarios.
+- **In between** → the standard order: service → phases → scenarios.
 
 ## 2. The spine question
 
@@ -34,7 +34,7 @@ is a legal answer (no `customer_actions` lane, no interaction line — see
 
 ## 3. Skeleton preview
 
-Same rule as ingestion: propose the outline (lifecycle → phases → scenarios,
+Same rule as ingestion: propose the outline (service → phases → scenarios,
 then per-scenario: actors/lanes, step columns, path variants) as markdown
 and get agreement **before** writing IR. Structure mistakes are cheap here,
 expensive later.

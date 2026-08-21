@@ -40,6 +40,15 @@ import sliceTemplates from '@/lib/agent/skill/references/slice-templates.md?raw'
 type Client = SupabaseClient<Database>
 
 /**
+ * Every id on this board is a UUID, and any id that reaches a PostgREST filter
+ * STRING has to be checked against this first. The typed builder escapes what
+ * it is given; `.or()` does not — it takes raw filter grammar, where a comma
+ * starts another clause.
+ */
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
  * Read tools return COMPACT TEXT, not JSON dumps — the model reads them the
  * way a person skims a grid, and ids ride along in parentheses so every
  * later write can name its target precisely.
@@ -321,6 +330,14 @@ export async function listCellDependencies(
     .select('id, source_cell_id, target_cell_id, kind, label, note')
     .limit(200)
   if (cellId) {
+    // Validated before it reaches the filter string. PostgREST parses `.or()`
+    // as its own grammar, in which a comma separates clauses — so a cell_id
+    // carrying one would append arbitrary extra conditions. The argument comes
+    // straight from a model's tool call, which is untrusted input by
+    // construction, and the arg helper only checks it is a non-empty string.
+    if (!UUID.test(cellId)) {
+      throw new Error(`"${cellId}" is not a cell id.`)
+    }
     query = query.or(`source_cell_id.eq.${cellId},target_cell_id.eq.${cellId}`)
   }
   const { data, error } = await query

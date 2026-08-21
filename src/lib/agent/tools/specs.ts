@@ -123,7 +123,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'list_blueprint',
     description:
-      'The COMPLETE set of things at one or more levels of the journey, with ids. granularity picks the level: phase, scenario, path, step, lane, cell. Optional filters narrow the scope. This is your table of contents and your "what exists" answer — every row is returned (up to limit) with the true total, so it is the only honest way to say "all N scenarios" or "every unhappy path". Start here: granularity ["phase","scenario"] is the orientation read. Use get_blueprint instead when you already know the scenario and want its grid laid out.',
+      'The COMPLETE set of things at one or more levels of the journey, with ids. granularity picks the level: phase, scenario, path, step, lane, cell. Optional filters narrow the scope. This is your table of contents and your "what exists" answer — every row is returned (up to limit) with the true total, so it is the only honest way to say "all N scenarios" or "every exception path". Start here: granularity ["phase","scenario"] is the orientation read. Use get_blueprint instead when you already know the scenario and want its grid laid out.',
     parameters: {
       type: 'object',
       properties: {
@@ -135,7 +135,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         },
         phase: str('Restrict to a phase by name, e.g. "In-session"'),
         scenario: str('Restrict to a scenario by name, e.g. "Warm-Up"'),
-        path_type: str('happy | alternative | unhappy | exception | named'),
+        path_type: str('happy | variant | exception'),
         lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
@@ -166,7 +166,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         },
         phase: str('Restrict to a phase by name'),
         scenario: str('Restrict to a scenario by name'),
-        path_type: str('happy | alternative | unhappy | exception | named'),
+        path_type: str('happy | variant | exception'),
         lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
@@ -501,7 +501,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_path',
     description:
-      'Add a path to a scenario — alternative/unhappy/exception. lane_source_path_id copies the sibling\'s lane stack (preferred).',
+      'Add a path to a scenario — variant or exception. lane_source_path_id copies the sibling\'s lane stack (preferred).',
     parameters: {
       type: 'object',
       properties: {
@@ -510,7 +510,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         path_type: {
           type: 'string',
           enum: ['happy', 'variant', 'exception'],
-          description: 'Default alternative',
+          description: 'Default variant',
         },
         lane_source_path_id: str('Sibling path id whose lanes to copy; omit for none'),
       },

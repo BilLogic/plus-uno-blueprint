@@ -69,7 +69,7 @@ actually breaks:
 - ⚠ **REQUIRED — respect `origin`.** `generated` regenerates freely;
   `customized` needs explicit confirmation; `human` is never overwritten by
   an agent.
-- ⚠ **REQUIRED — confirm the import target** (project ref / lifecycle id)
+- ⚠ **REQUIRED — confirm the import target** (project ref / service id)
   before any write, and never default-assume Supabase — the adapter rules in
   `references/adapter-contract.md` apply to slices unchanged.
 - ⚠ **REQUIRED — secrets.** Image-model keys (Gemini `AIza…`, OpenAI `sk-…`)
