@@ -388,6 +388,7 @@ function ServiceOverviewViewImpl({
     progress: blueprintsProgress,
     viewType: overviewViewType,
     resolveSelectedPathIds,
+    resolveHappyPathIds,
   } = usePhaseBlueprintFilters({
     scenarioIds,
     slides,
@@ -808,14 +809,22 @@ function ServiceOverviewViewImpl({
       pathsByScenario,
       [activeSlide.id],
     )
-    const scopedPathIds = new Set(scopedPaths.map((path) => path.id))
+
+    /*
+      A PathOption's `id` is the FILTER KEY (`${type}:${name}`), not a row id —
+      its own doc comment says so. `overviewSelectedPathIds` holds real uuids.
+      Intersecting the two directly matched nothing and the header read "Paths
+      shown: none", which is what the `pathIds` field on the option exists to
+      prevent: it carries the uuids the option was folded from.
+    */
+    const drawn = new Set(overviewSelectedPathIds)
 
     return {
       slide: activeSlide,
       paths: scopedPaths,
-      selectedPathIds: overviewSelectedPathIds.filter((id) =>
-        scopedPathIds.has(id),
-      ),
+      selectedPathIds: scopedPaths
+        .filter((path) => (path.pathIds ?? []).some((id) => drawn.has(id)))
+        .map((path) => path.id),
     }
   }, [activeSlide, isDetail, overviewSelectedPathIds, pathsByScenario])
 
@@ -1068,7 +1077,10 @@ function ServiceOverviewViewImpl({
                             slides={slides}
                             pathsByScenario={pathsByScenario}
                             blueprintsByPathId={blueprintsByPathId}
-                            getSelectedPathIds={resolveSelectedPathIds}
+                            /* A phase row is a survey — the happy path only.
+                               A focused scenario uses the reader's own
+                               selection, below. */
+                            getSelectedPathIds={resolveHappyPathIds}
                             displayViewType={overviewViewType}
                             onOpenPhase={openCanvasDetail}
                             openScenario={openCanvasDetail}

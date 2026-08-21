@@ -10,6 +10,7 @@ import { queryClient } from '@/lib/queryClient'
 import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
 import { resolveBlueprintForScenario } from '@/lib/resolveBlueprint'
 import type { RawPath } from '@/lib/normalizeBlueprint'
+import { asEntityStatus, DEFAULT_ENTITY_STATUS } from '@/lib/entityStatus'
 import type { PathListItem } from '@/lib/pathSelection'
 import { pickPreferredPath } from '@/lib/pathSelection'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
@@ -44,7 +45,10 @@ function buildFallbackMaps(scenarioIds: string[]): CanvasBlueprintMaps {
   const blueprintsByPathId = new Map<string, BlueprintData>()
 
   for (const scenarioId of scenarioIds) {
-    const paths = getFallbackPathsForScenario(scenarioId)
+    const paths = getFallbackPathsForScenario(scenarioId).map((path) => ({
+      ...path,
+      status: DEFAULT_ENTITY_STATUS,
+    }))
     if (paths.length > 0) {
       pathsByScenario.set(scenarioId, paths)
     }
@@ -108,13 +112,23 @@ function deriveFromRows(
             summary: path.summary ?? null,
             note: path.note ?? null,
             path_type: path.path_type,
+            // Drives the status badge on every path row. Omitted here, it
+            // arrives `undefined` and the badge silently never renders.
+            status: asEntityStatus(path.status) ?? DEFAULT_ENTITY_STATUS,
           })),
         ),
       )
     } else {
       const fallbackPaths = getFallbackPathsForScenario(scenarioId)
       if (fallbackPaths.length > 0) {
-        pathsMap.set(scenarioId, fallbackPaths)
+        // Dev fallback content describes the service as it runs today.
+        pathsMap.set(
+          scenarioId,
+          fallbackPaths.map((path) => ({
+            ...path,
+            status: DEFAULT_ENTITY_STATUS,
+          })),
+        )
       }
     }
 

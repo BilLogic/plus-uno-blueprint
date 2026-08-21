@@ -1,81 +1,108 @@
 # Path names
 
-> **Applied 2026-08-21** — migration `20260821210000_a_path_is_not_its_type.sql`.
-> All 24 renamed, including the 13 solitary paths. Kept as the record of where
-> each name came from.
+> **Second pass, 2026-08-21.** The first pass named paths for what happens on
+> them, which restated the scenario: `Session Reflection › Completes the
+> reflection form` said it twice. This pass follows the rule below instead.
+> Not applied — verify first.
 
-24 paths are named after their type rather than their route: 23 called
-`Happy Path` and one called `Alternate Path`. A type is not a name, so these
-say nothing that `path_type` does not already carry, and in a compare view two
-scenarios side by side both read `Happy Path`.
+## The rule
 
-Every proposal below is derived from that path's own first four steps, quoted in
-the right-hand column. Nothing here is invented.
+> **The scenario names the activity. The path names which way through it.**
+> `Scenario › Path` should read with no word doing double duty.
 
+A path name captures the **condition** that puts someone on this route rather
+than a sibling — not the activity, which the scenario already supplied. Every
+name below is taken from that path's own `summary` (the "Applies when" field),
+never invented.
+
+Where a scenario has exactly one route there is no condition to name, and the
+name falls back to **`Standard`**. That is 9 of 39. Making something up for
+those would be worse than admitting there is one way through.
 
 ---
 
 ## The rename
 
-| Scenario | Routes | Proposed name | Derived from |
-| --- | ---: | --- | --- |
-| **Application** |
-| Discovery | 1 | Discovers and applies | Discovers PLUS → … |
-| Interview & Offer | 2 | Group interview to offer | Applies → group interview → offer decision |
-| **Onboarding** |
-| Tech Setup | 1 | Clearances then I-9 | Clearance email → Obtain → Send → I-9 meeting |
-| Onboarding Modules | 1 | Reads the module end to end | Module opening → Accessing content → Reading lesson |
-| Lesson Modules | 1 | Works through the lesson | Open lesson → Work through questions → Finish |
-| Session Sign Up | 2 | Signs up without conflicts | Sign up → Review scheduling *(sibling is the soft-conflict gate)* |
-| Tutor Profile & Maintenance | 1 | Completes and updates the profile | Complete profile → Update identity → Update background |
-| **Pre-session** |
-| Standard Scheduling | 2 | Views schedule and reconfirms | Sessions loaded → Views schedule & syncs calendar → Reconfirm |
-| Call-off Request | 3 | **Call-off 12h+ (auto-approved)** | "Files call-off (12h+, auto-approved)" — mirrors the sibling `Late call-off (<12h)` |
-| Fill-in Request | 1 | Takes a slot from the pool | Session enters pool → Browses Fill-In tab → Takes the slot |
-| Session Prep & Resources | 1 | Finds and assigns resources | Browse library → Consult Resource Assistant → Assign |
-| **In-session** |
-| Before Students Join | 1 | Room setup before students arrive | Set up classroom → Open session → Share Zoom link |
-| Student Just Joined | 2 | Full room joins on time | Students join → Share screen and log in *(sibling: No or Few Students Join)* |
-| Warm-Up | 2 | **Screen shared at greeting** | Enter → Greet → **Ask to Share Screen** → Remind → Mark Present |
-| Warm-Up *(was `Alternate Path`)* | 2 | **No screen share** | Same steps **minus** Ask to Share Screen — that is the whole difference |
-| Goal Setting | 6 | **Overview (all conditions)** | Its own summary already says so: *"Overview path (no longer maintained cell-by-cell)"* |
-| Student Kickoff Interview | 1 | Conducts the kickoff interview | Open → Choose full or short → Conduct → Record |
-| Help Request | 2 | Tutor resolves it in the room | Receive request → Visit student → Resolve *(sibling: Escalation)* |
-| Wrap-Up | 3 | Debrief and close out | Close breakouts → Thank students → Debrief with tutors |
-| **Post-session** |
-| Session Reflection | 1 | Completes the reflection form | Open form → Session info → Student Reflection → Evaluation |
-| Personalized Coaching | 1 | Reflection into AI Coach | Complete reflection → Open AI Coach → Review impact |
-| Reporting Hours | 2 | Hours reported and approved | Report → Approve → Paycheck *(sibling: Missed hours)* |
-| Reporting an Issue | 1 | Raised and resolved with supervisors | Reach out → Request assistance → Follow up → Resolve |
-| **Program Administration** |
-| Supervisor Program Administration | 1 | Runs the program day to day | Monitor tutors → Manage sessions → students → groups |
+| Scenario | Type | Now | Proposed | From its own "Applies when" |
+| --- | --- | --- | --- | --- |
+| **Before Students Join** | happy | Room setup before students arrive | **Setup goes to plan** | *"setup goes to plan and the session opens before students arrive"* |
+| **Call-off Request** | happy | Call-off 12h+ (auto-approved) | **12+ hours ahead** | auto-approval threshold |
+| | exception | Late call-off (<12h) | **Under 12 hours** | *"filed under 12 hours before session start"* |
+| | variant | Swap instead of call-off | **Swap offered instead** | *"the swap flow… diverges at the initial need"* |
+| **Discovery** | happy | Discovers and applies | **Standard** | no condition — one route |
+| **Fill-in Request** | happy | Takes a slot from the pool | **Slot gets covered** | *"tutor is requested to fill in"* |
+| **Goal Setting** | happy | Overview (all conditions) | **All conditions** | *"overview path… runs as one of the named paths"* |
+| | variant | Set Goals | **No prior goals** | *"no prior personalized goals set and start of a new goal cycle"* |
+| | variant | Update Goals | **New cycle, goals exist** | *"first tutoring day of a new goal cycle after goals have been set"* |
+| | variant | Check Goals | **Mid-cycle check** | *"goals already set, but deadline not reached"* |
+| | exception | Set Goals Edge Case | **Missed last session, no goals** | *"did not set goals last session and has no prior goals"* |
+| | exception | Update Goals Edge Case | **Missed last session, has goals** | *"did not set goals last session and has prior goals"* |
+| **Help Request** | happy | Tutor resolves it in the room | **Resolved in the room** | *"the tutor is free to take the request and can resolve it in the room"* |
+| | exception | Escalation | **Routed out** | *"cannot be resolved in-room and is routed out"* |
+| **Interview & Offer** | happy | Group interview to offer | **Standard** | no condition — one route |
+| | variant | Supervisor-registration clearance | **Supervisor-registered clearance** | *"the Jun 2026 supervisor-registration clearance"* |
+| **Lesson Modules** | happy | Works through the lesson | **Standard** | no condition |
+| **Onboarding Modules** | happy | Reads the module end to end | **Standard** | no condition |
+| **Personalized Coaching** | happy | Reflection into AI Coach | **After a reflection** | the coach needs a completed reflection |
+| **Reporting an Issue** | happy | Raised and resolved with supervisors | **Standard** | no condition |
+| **Reporting Hours** | happy | Hours reported and approved | **Reported on time** | against its sibling below |
+| | exception | Missed hours | **Deadline missed** | *"misses the weekly Workday reporting deadline"* |
+| **Session Prep & Resources** | happy | Finds and assigns resources | **Standard** | no condition |
+| **Session Reflection** | happy | Completes the reflection form | **Filed in one sitting** | *"the session happened, the tutor has a recording, and they fill the form in one sitting"* |
+| **Session Sign Up** | happy | Signs up without conflicts | **No conflicts** | against its sibling below |
+| | variant | Soft-conflict sign-up gate | **Soft-conflict gate** | *"the proposed soft-conflict gate"* |
+| **Standard Scheduling** | happy | Views schedule and reconfirms | **Schedule as issued** | *"tutors receive semester schedule"* |
+| | variant | In-app session creation & reconfirmation | **Created in the app** | *"in-app session creation & reconfirmation"* |
+| **Student Just Joined** | happy | Full room joins on time | **Full room, on time** | *"students arrive and are placed into their breakout room without a hitch"* |
+| | exception | No or Few Students Join | **Few or none by 10 min** | *"few or no students have joined by 10 minutes after start"* |
+| **Student Kickoff Interview** | happy | Conducts the kickoff interview | **New student** | *"with a new student"* |
+| **Supervisor Program Administration** | happy | Runs the program day to day | **Standard** | no condition |
+| **Tech Setup** | happy | Clearances then I-9 | **Standard** | no condition |
+| **Tutor Profile & Maintenance** | happy | Completes and updates the profile | **Standard** | no condition |
+| **Warm-Up** | happy | Screen shared at greeting | **Student shares screen** | *"engaged or partially engaged student shares their screen"* |
+| | variant | No screen share | **No screen share** | *"the Ask Student to Share Screen step is skipped"* — unchanged |
+| **Wrap-Up** | happy | Debrief and close out | **Rooms close on time** | *"rooms close on time and every tutor files their reflection"* |
+| | variant | Lead Dashboard Wrap-Up | **Lead works from a dashboard** | *"the lead tutor working from a dashboard of room attendance"* |
+| | variant | Reflection redesign | **Redesigned reflection** | *"the reflection redesign"* |
 
 ---
 
-## Three worth a second look
+## How they read
 
-**Warm-Up.** The two paths differ by exactly one step — whether the student is
-asked to share their screen. The proposed pair says that and nothing else, which
-is what makes them a pair. If the real distinction is something else, this is
-the one to correct.
+The point of the rule is the pair, so read them as pairs:
 
-**Call-off Request.** `Call-off 12h+ (auto-approved)` is deliberately shaped
-like its sibling `Late call-off (<12h)`, so the threshold is legible from the
-two names together. This is the strongest name in the set because the branch is
-a genuine rule.
+> Call-off Request › **12+ hours ahead**
+> Call-off Request › **Under 12 hours**
+>
+> Goal Setting › **No prior goals**
+> Goal Setting › **Mid-cycle check**
+> Goal Setting › **Missed last session, has goals**
+>
+> Student Just Joined › **Full room, on time**
+> Student Just Joined › **Few or none by 10 min**
+>
+> Warm-Up › **Student shares screen**
+> Warm-Up › **No screen share**
 
-**Goal Setting.** Not a route at all — its own summary says it is an unmaintained
-overview and points at the five real paths. `Overview (all conditions)` says
-that in the name, so nobody reads it as a sixth variant.
+Each pair now reads as a question and its answers. None of them repeats a word
+from the scenario.
 
 ---
 
-## The solitary-path question, decided
+## The nine `Standard`s
 
-Thirteen of these scenarios have exactly one path, and a route that is the only
-route arguably needs no name of its own — `Session Reflection › Completes the
-reflection form` is close to saying the same thing twice.
+Discovery · Interview & Offer · Lesson Modules · Onboarding Modules ·
+Reporting an Issue · Session Prep & Resources · Supervisor Program
+Administration · Tech Setup · Tutor Profile & Maintenance
 
-**Decided: name all 24.** Consistency wins. Every path reads as a route, there
-is no rule about when a name is required, and the redundancy is visible only in
-the panel where the scenario name sits directly above.
+Each has exactly one route and no branching condition anywhere in its content.
+`Discovery › Standard` is not informative, but it is *honest*, and the green dot
+beside it already says "this is the main route".
+
+Three ways to go, if nine identical names is too many:
+
+1. **Keep `Standard`** — consistent, and the repetition is itself information: these are the scenarios with nothing to choose.
+2. **Leave them as they are** — the first-pass activity names, accepting the redundancy only where there is no alternative.
+3. **Empty name** — the row shows the scenario name and the dot. Needs a UI rule for a blank name.
+
+This draft assumes **(1)**.
