@@ -31,17 +31,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
 
   const owner = cell.owner?.trim() ?? ''
   const perceived = cell.perceived_owner?.trim() ?? ''
-  /*
-    `live` shows nothing, here as everywhere else.
-
-    It used to show nothing because the column was NULL on 879 cells and this
-    guard skipped it. The column is `not null default 'live'` now, so without
-    an explicit test every one of those cells would carry a "State: Live" row —
-    a label repeated 879 times that tells the reader what they already assume,
-    and by the second panel it has taught them to skip the one place status
-    actually says something.
-  */
-  const status = cell.status === 'live' ? null : cell.status
+  const status = cell.status
   if (!owner && !perceived && !status) return null
 
   return (

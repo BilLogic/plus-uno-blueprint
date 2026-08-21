@@ -225,11 +225,20 @@ function ScenarioPanelBody({
                   <span className="truncate text-sm font-medium text-foreground">
                     {path.name}
                   </span>
-                  <StatusBadge status={path.status} />
                 </span>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="flex flex-col gap-3 pb-3">
+                  {/* A property of the route, listed with its other
+                      properties — not a chip on the header. The header is a
+                      dot and a name; everything you can say ABOUT the route
+                      lives inside it. */}
+                  <div className="flex flex-col gap-0.5">
+                    <span className={PANEL_TEXT.sectionLabel}>Status</span>
+                    <div className="flex min-w-0">
+                      <StatusBadge status={path.status} />
+                    </div>
+                  </div>
                   <PanelTextareaField
                     label="Applies when"
                     hint="The condition that puts someone on this route rather than another."

@@ -7,22 +7,33 @@ import {
 import {
   ENTITY_STATUS_MEANING,
   ENTITY_STATUS_SHORT,
+  isUnbuilt,
   type EntityStatus,
 } from '@/lib/entityStatus'
 import { cn } from '@/lib/utils'
 
 /**
- * How far along a path or a cell is — `live` says nothing, everything else
- * says one word.
+ * How far along a path or a cell is.
  *
- * **Nothing renders for `live`.** It is the default and it is most of the
- * board: a badge on every row saying "Live" is a badge nobody reads, and by the
- * second scenario it would have taught the reader to skip the one place the
- * status actually matters. Same convention cells already use — an unmarked
- * cell is a current one.
+ * Every status renders, `live` included. It was hidden at first on the
+ * argument that the default is most of the board and a badge nobody reads is
+ * worse than no badge — but that reasoning only holds in a dense list. In a
+ * properties block a labelled field with no value reads as broken, and "is
+ * this live?" is the first question a reader brings to a route they have not
+ * seen before. Answering it costs one word.
+ *
+ * Three treatments, because the six values are not three kinds of the same
+ * thing:
+ *
+ * - **live** — quiet and solid. The norm, stated.
+ * - **unbuilt** (proposed / planned / built) — muted, and DASHED, echoing the
+ *   dashed border those cells already carry on the canvas. One vocabulary for
+ *   "this does not exist yet", in the panel and on the board.
+ * - **at_risk / deprecated** — the warning tint. These describe something live
+ *   and going wrong, which is the one case worth a colour.
  *
  * The word is the whole control, so the definition hovers off the word itself
- * rather than off an icon beside it (see docs/reference/panel-affordances.md).
+ * rather than an icon beside it (docs/reference/panel-affordances.md).
  */
 export function StatusBadge({
   status,
@@ -31,7 +42,7 @@ export function StatusBadge({
   status: EntityStatus | null | undefined
   className?: string
 }) {
-  if (!status || status === 'live') return null
+  if (!status) return null
 
   return (
     <Tooltip>
@@ -41,10 +52,8 @@ export function StatusBadge({
             variant="outline"
             className={cn(
               'shrink-0 gap-0 px-1.5 py-0 text-2xs font-normal',
-              // Unbuilt is quiet — it describes something nobody can use yet,
-              // so it must not out-shout the name it sits beside. `at_risk`
-              // and `deprecated` describe something live and going wrong,
-              // which is the one case worth a colour.
+              status === 'live' && 'text-foreground/80',
+              isUnbuilt(status) && 'border-dashed text-muted-foreground',
               (status === 'at_risk' || status === 'deprecated') &&
                 'border-warning-400 bg-warning-200 text-foreground',
               className,
