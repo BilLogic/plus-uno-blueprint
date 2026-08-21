@@ -8,6 +8,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const KIND_LABELS: Record<EntityDetailKind, string> = {
+  service: 'Service properties',
   lane: 'Lane properties',
   phase: 'Phase properties',
   scenario: 'Scenario properties',
@@ -15,7 +16,7 @@ const KIND_LABELS: Record<EntityDetailKind, string> = {
 }
 
 /**
- * The ⓘ that opens an entity's properties. One component for all three levels,
+ * The ⓘ that opens an entity's properties. One component for every level,
  * so the affordance reads as one family and nobody has to learn it twice.
  *
  * On a LANE it is `revealOnHover`, and that is the interesting case: a lane

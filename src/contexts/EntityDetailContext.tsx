@@ -18,11 +18,16 @@ import {
 /**
  * The levels of the tree that own spec fields and are not a cell.
  *
- * The service is absent on purpose: the service tier is pinned, and adding a
- * member here before its panel exists would put a kind in the union that
- * nothing can open.
+ * `service` joined on 2026-08-21 when the tier was unpinned. It is the only
+ * member whose `id` the opener does not need to know — there is one service —
+ * but it carries one anyway so every member of the union has the same shape.
  */
-export type EntityDetailKind = 'lane' | 'phase' | 'scenario' | 'step'
+export type EntityDetailKind =
+  | 'service'
+  | 'lane'
+  | 'phase'
+  | 'scenario'
+  | 'step'
 
 export type EntityDetailSelection = {
   kind: EntityDetailKind

@@ -517,7 +517,7 @@ export type Database = {
           },
         ]
       }
-      propositions: {
+      business_model: {
         Row: {
           created_at: string
           created_by: string | null
@@ -553,7 +553,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'propositions_service_id_fkey'
+            foreignKeyName: 'business_model_service_id_fkey'
             columns: ['service_id']
             isOneToOne: true
             referencedRelation: 'services'
@@ -564,21 +564,21 @@ export type Database = {
       services: {
         Row: {
           created_at: string
-          description: string | null
+          summary: string | null
           id: string
           name: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name?: string
           updated_at?: string
@@ -876,5 +876,5 @@ export type Slice = Database['public']['Tables']['slices']['Row']
 export type SliceItem = Database['public']['Tables']['slice_items']['Row']
 export type Finding = Database['public']['Tables']['findings']['Row']
 export type Evidence = Database['public']['Tables']['evidence']['Row']
-export type Proposition = Database['public']['Tables']['propositions']['Row']
+export type Proposition = Database['public']['Tables']['business_model']['Row']
 export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row']

@@ -59,6 +59,8 @@ export type WriteFn =
   | 'update_lane_spec'
   | 'update_phase_spec'
   | 'update_scenario_spec'
+  | 'update_service_summary'
+  | 'update_business_model'
   | 'update_path_spec'
   | 'update_step_spec'
   | 'create_stakeholder'
@@ -267,6 +269,8 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   update_lane_spec: () => 'Edited a lane’s owner, KPIs & tools',
   update_phase_spec: () => 'Edited a phase’s summary, impact & requirements',
   update_scenario_spec: () => 'Edited a scenario’s summary',
+  update_service_summary: () => 'Edited the service’s summary',
+  update_business_model: () => 'Edited the business model',
   update_path_spec: () => 'Edited a path’s summary & note',
   update_step_spec: () => 'Edited a step’s summary',
   create_stakeholder: (entry) => `Added stakeholder${named(entry)}`,

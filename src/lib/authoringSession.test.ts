@@ -57,6 +57,8 @@ const EVERY_WRITE = Object.keys({
   update_scenario_spec: true,
   update_path_spec: true,
   update_step_spec: true,
+  update_service_summary: true,
+  update_business_model: true,
   create_stakeholder: true,
   update_stakeholder: true,
   add_evidence: true,

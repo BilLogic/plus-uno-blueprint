@@ -146,3 +146,16 @@ export function ScenarioPanelLoading({ paths = 1 }: { paths?: number }) {
     </Frame>
   )
 }
+
+/** Service: a summary and the five business-model fields. */
+export function ServicePanelLoading() {
+  return (
+    <Frame>
+      <IdentitySkeleton />
+      <FieldSkeleton rows={3} />
+      {[0, 1, 2, 3, 4].map((key) => (
+        <FieldSkeleton key={key} rows={2} />
+      ))}
+    </Frame>
+  )
+}

@@ -24,6 +24,7 @@ import { CanvasLoadProgress } from '@/components/editor/CanvasLoadProgress'
 import { ServiceOverviewCanvasSkeleton } from '@/components/editor/EditorLoadingSkeletons'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { NavbarZoomIndicator } from '@/components/editor/EditorZoomIndicator'
+import { ServiceOverviewHeader } from '@/components/editor/ServiceOverviewHeader'
 import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
 import { ZoomPanViewport } from '@/components/editor/ZoomPanViewport'
 import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
@@ -878,10 +879,18 @@ function ServiceOverviewViewImpl({
               paths={focusedHeader.paths}
               selectedPathIds={focusedHeader.selectedPathIds}
             />
-          ) : // Overview: no navbar. The workspace tab in the top nav already
-          // names the view; a bar holding only a repeated title read as a
-          // broken fragment. The zoom pill floats over the canvas instead.
-          null}
+          ) : (
+            /*
+              Overview: the service's own header.
+
+              This was deliberately empty — "a bar holding only a repeated
+              title read as a broken fragment" — and that was right while the
+              row had nothing to do. It now opens the service panel, which is
+              the second job it was waiting for, and it is the same title +
+              summary shape the phase and scenario headers use one level down.
+            */
+            <ServiceOverviewHeader />
+          )}
           <div
             className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
             data-slide-canvas

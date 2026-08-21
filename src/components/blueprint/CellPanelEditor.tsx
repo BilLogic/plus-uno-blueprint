@@ -23,6 +23,11 @@ import {
 } from '@/lib/cellContentLimits'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { updateCellContent } from '@/lib/cellContentMutations'
+import {
+  DEFAULT_ENTITY_STATUS,
+  type EntityStatus,
+} from '@/lib/entityStatus'
+import { StatusSelect } from '@/components/blueprint/StatusSelect'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { parseValueProps, type ValueProp } from '@/lib/valueProps'
 import { cn } from '@/lib/utils'
@@ -47,6 +52,7 @@ type FormState = {
   functionText: string
   formText: string
   valueProps: ValueProp[]
+  status: EntityStatus
 }
 
 /**
@@ -106,6 +112,7 @@ export function CellPanelEditor({
       functionText: spec?.function ?? '',
       formText: spec?.form ?? '',
       valueProps: parseValueProps(spec?.value_props ?? null),
+      status: content.status ?? DEFAULT_ENTITY_STATUS,
     }
 
     return (
@@ -131,6 +138,7 @@ export function CellPanelEditor({
       baseline={{
         text: '',
         description: '',
+        status: DEFAULT_ENTITY_STATUS,
         owner: '',
         perceivedOwner: '',
         functionText: '',
@@ -268,6 +276,7 @@ function CellPanelEditorForm({
             summary: cellId ? effectiveDescription : form.description,
             owner: form.owner,
             perceivedOwner: form.perceivedOwner,
+            status: form.status,
           },
           cellId
             ? {
@@ -275,6 +284,7 @@ function CellPanelEditorForm({
                 summary: baseline.description,
                 owner: baseline.owner,
                 perceivedOwner: baseline.perceivedOwner,
+                status: baseline.status,
               }
             : undefined,
           // The create already logs "Added a cell"; its field fill-in is
@@ -369,6 +379,16 @@ function CellPanelEditorForm({
             set('description', event.target.value)
           }}
           className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        />
+      </Field>
+
+      <Field
+        label="Status"
+        hint="How far along the thing this cell describes is, from proposed to live to on its way out."
+      >
+        <StatusSelect
+          value={form.status}
+          onChange={(next) => set('status', next)}
         />
       </Field>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ServicePanel } from '@/components/blueprint/ServicePanel'
 import { LanePanel } from '@/components/blueprint/LanePanel'
 import { PhasePanel } from '@/components/blueprint/PhasePanel'
 import { ScenarioPanel } from '@/components/blueprint/ScenarioPanel'
@@ -15,7 +16,8 @@ import {
 import { useCanvasTopOffset } from '@/hooks/useCanvasTopOffset'
 
 /**
- * The drawer for everything that is not a cell: lane, phase, scenario.
+ * The drawer for everything that is not a cell: service, lane, phase,
+ * scenario, step.
  *
  * ONE drawer for all three, at one tree position, so switching from a lane to
  * a phase is a content swap inside the open drawer rather than a close and a
@@ -78,6 +80,9 @@ function EntityDetailPanelBody() {
       onCloseRequest={closeEntity}
       onClosed={() => setClosing(null)}
     >
+      {shown?.kind === 'service' ? (
+        <ServicePanel onClose={closeEntity} />
+      ) : null}
       {shown?.kind === 'lane' ? (
         <LanePanel laneId={shown.id} onClose={closeEntity} />
       ) : null}

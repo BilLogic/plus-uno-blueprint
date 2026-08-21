@@ -73,7 +73,7 @@ Score every cell in scope on three signals, then present the top 3–5 with
 per-signal reasoning:
 - evidence weight (rows attached; zero rows = assumption — flag it, since
   an assumption-heavy "priority" is really a research task);
-- proposition expression (does the cell carry the value the propositions
+- proposition expression (does the cell carry the value the business_model
   claim — value_props where present);
 - backstage `enables` chain depth (impact-tracer, reversed: how much
   machinery serves this moment).

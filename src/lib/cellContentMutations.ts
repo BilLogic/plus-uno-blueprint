@@ -1,3 +1,4 @@
+import type { EntityStatus } from '@/lib/entityStatus'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
@@ -15,6 +16,7 @@ export type CellContentUpdate = {
   summary: string
   owner: string
   perceivedOwner: string
+  status: EntityStatus
 }
 
 /**
@@ -58,6 +60,9 @@ export async function updateCellContent(
       summary: update.summary.trim() || null,
       owner: update.owner.trim() || null,
       perceived_owner: update.perceivedOwner.trim() || null,
+      // Never null: the column is `not null default 'live'`, and a cell with
+      // no status would read as unassessed rather than current.
+      status: update.status,
     })
     .eq('id', cellId)
     .select('id')

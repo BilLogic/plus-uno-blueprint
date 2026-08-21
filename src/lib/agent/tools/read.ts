@@ -459,7 +459,7 @@ export async function getSession(sessionId: string): Promise<string> {
  */
 export async function getProposition(client: Client): Promise<string> {
   const { data, error } = await client
-    .from('propositions')
+    .from('business_model')
     .select('pricing, funding, partners, revenue_model, delivery_cost')
     .limit(1)
     .maybeSingle()
