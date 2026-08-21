@@ -20,7 +20,7 @@ const path = (id: string, name: string, path_type: PathType = 'happy') => ({
 describe('resolveDefaultPathId', () => {
   const paths = [
     path('p-happy', 'Happy Path', 'happy'),
-    path('p-unhappy', 'Reschedule', 'unhappy'),
+    path('p-unhappy', 'Reschedule', 'exception'),
   ]
 
   it('a stored path that still exists wins', () => {

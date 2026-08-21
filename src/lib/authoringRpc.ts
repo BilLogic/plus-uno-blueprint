@@ -521,7 +521,7 @@ export function createPath(
   return call<string>(client, 'create_path', {
     scenario_id: input.scenarioId,
     name: input.name,
-    path_type: input.pathType ?? 'alternative',
+    path_type: input.pathType ?? 'variant',
     lane_source_path_id: input.laneSourcePathId ?? null,
   })
 }
@@ -546,7 +546,7 @@ export function duplicatePath(
   return call<string>(client, 'duplicate_path', {
     source_path_id: input.sourcePathId,
     name: input.name,
-    path_type: input.pathType ?? 'alternative',
+    path_type: input.pathType ?? 'variant',
     copy_cells: input.copyCells ?? true,
     copy_dependencies: input.copyDependencies ?? true,
   })

@@ -11,18 +11,14 @@ export { PATH_TYPE_ARROW_COLORS, PATH_TYPE_COLORS } from '@/lib/pathColorTheme'
 
 export const PATH_TYPE_SHORT_LABELS: Record<PathType, string> = {
   happy: 'Happy',
-  unhappy: 'Unhappy',
+  variant: 'Variant',
   exception: 'Exception',
-  alternative: 'Alternative',
-  custom: 'Custom',
 }
 
 export const PATH_TYPE_LABELS: Record<PathType, string> = {
-  happy: 'Happy path',
-  unhappy: 'Unhappy path',
+  happy: 'Happy',
+  variant: 'Variant',
   exception: 'Exception',
-  alternative: 'Alternative',
-  custom: 'Custom',
 }
 export const PATH_TYPE_SECTION_BORDER_WIDTH = 3
 
@@ -65,7 +61,7 @@ export function getPathTypeSuffixIfNeeded(path: {
   name: string
   path_type: PathType
 }): string | null {
-  if (path.path_type === 'custom') return null
+  if (path.path_type === 'variant') return null
 
   const short = PATH_TYPE_SHORT_LABELS[path.path_type]
   const full = PATH_TYPE_LABELS[path.path_type]
@@ -96,5 +92,5 @@ export function shouldShowPathTypeBadge(path: {
   name: string
   path_type?: PathType
 }): boolean {
-  return path.path_type !== undefined && path.path_type !== 'custom'
+  return path.path_type !== undefined && path.path_type !== 'variant'
 }

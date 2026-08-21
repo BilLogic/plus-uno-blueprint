@@ -1,19 +1,19 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { CellLink } from '@/types/blueprint'
-import { CELL_MATURITY, type CellMaturity } from '@/lib/cellMaturity'
+import { ENTITY_STATUS, type EntityStatus } from '@/lib/entityStatus'
 
 export type CellContent = {
   content: string
   summary: string | null
   owner: string | null
   perceived_owner: string | null
-  maturity: CellMaturity | null
+  status: EntityStatus | null
   links: CellLink[]
 }
 
 const CELL_CONTENT_SELECT =
-  'content, summary, owner, perceived_owner, maturity, links'
+  'content, summary, owner, perceived_owner, status, links'
 
 /**
  * The cell's own editable text, read on demand.
@@ -47,10 +47,10 @@ export function useCellContent(
         summary: data.summary ?? null,
         owner: data.owner ?? null,
         perceived_owner: data.perceived_owner ?? null,
-        maturity: (CELL_MATURITY as readonly string[]).includes(
-          data.maturity ?? '',
+        status: (ENTITY_STATUS as readonly string[]).includes(
+          data.status ?? '',
         )
-          ? (data.maturity as CellMaturity)
+          ? (data.status as EntityStatus)
           : null,
         links: (data.links ?? []) as unknown as CellLink[],
       }

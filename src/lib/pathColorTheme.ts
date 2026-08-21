@@ -29,11 +29,9 @@ export type PathColorInput = {
  */
 export const PATH_TYPE_COLORS: Record<PathType, string> = {
   happy: 'var(--color-green-1100)',
-  unhappy: 'var(--color-orange-1100)',
+  /** Fallback only — variant and exception paths read the open set below. */
+  variant: 'var(--color-indigo-1100)',
   exception: 'var(--color-red-1100)',
-  alternative: 'var(--color-blue-1100)',
-  /** Fallback only — custom paths should use per-title registry colors. */
-  custom: 'var(--color-indigo-1100)',
 }
 
 /**
@@ -43,10 +41,8 @@ export const PATH_TYPE_COLORS: Record<PathType, string> = {
  */
 export const PATH_TYPE_ARROW_COLORS: Record<PathType, string> = {
   happy: 'var(--color-green-1000)',
-  unhappy: 'var(--color-orange-1000)',
+  variant: 'var(--color-indigo-1000)',
   exception: 'var(--color-red-1000)',
-  alternative: 'var(--color-blue-1000)',
-  custom: 'var(--color-indigo-1000)',
 }
 
 /** Stable identity for path colors across scenarios (same type + name → same color). */
@@ -60,8 +56,8 @@ export function getPathColorKey(path: PathColorInput): string {
  *
  * Deliberately disjoint from the eight lane families, and `palette.test.ts`
  * holds that. Before this, the open set drew on ten families including green,
- * blue, violet and pink, so a custom path could render as a 2px line in exactly
- * the hue of the lane it crossed. Four of the five custom paths on the live
+ * blue, violet and pink, so a non-happy path could render as a 2px line in exactly
+ * the hue of the lane it crossed. Four of the five non-happy paths on the live
  * board did: `Check Goals` was violet over the violet frontstage-tech lane,
  * `Update Goals` pink over the pink frontstage-action lane.
  *
@@ -73,7 +69,7 @@ export function getPathColorKey(path: PathColorInput): string {
  * The order puts distant hues next to each other, so adjacent hashes do not
  * land on neighbours.
  */
-const PATH_CUSTOM_FAMILIES = [
+const PATH_OPEN_FAMILIES = [
   'indigo',
   'tomato',
   'purple',
@@ -87,17 +83,17 @@ const step = (family: string, weight: 1000 | 1100) =>
   `var(--color-${family}-${weight})`
 
 /**
- * Pinned custom paths, as a *slot* in the open set rather than a colour.
+ * Pinned non-happy paths, as a *slot* in the open set rather than a colour.
  *
  * Colour and stroke pattern are both read from this one number, so the pair can
  * never drift — the same guarantee the hash gives an unregistered path, stated
  * explicitly for the ones that actually render. Pinning only the colour is what
  * left all five of these sharing a single dash: they were in the registry, so
- * `getPathDashArray` fell through to the type default and every custom path on
+ * `getPathDashArray` fell through to the type default and every non-happy path on
  * the board came out `7 4 2 4`. Colour was doing all the work, which is the
  * exact failure SC 1.4.1 describes.
  */
-const CUSTOM_PATH_SLOTS: Record<string, number> = {
+const PINNED_PATH_SLOTS: Record<string, number> = {
   'Set Goals': 0,
   'Update Goals': 1,
   'Check Goals': 2,
@@ -105,28 +101,14 @@ const CUSTOM_PATH_SLOTS: Record<string, number> = {
   'Update Goals Edge Case': 4,
 }
 
-const slotColor = (slot: number, weight: 1000 | 1100) =>
-  step(PATH_CUSTOM_FAMILIES[slot % PATH_CUSTOM_FAMILIES.length], weight)
-
-const customRegistry = (weight: 1000 | 1100) =>
-  Object.fromEntries(
-    Object.entries(CUSTOM_PATH_SLOTS).map(([name, slot]) => [
-      `custom:${name}`,
-      slotColor(slot, weight),
-    ]),
-  )
-
-export const PATH_COLOR_REGISTRY: Record<string, string> = {
-  ...customRegistry(1100),
-}
-
-export const PATH_ARROW_COLOR_REGISTRY: Record<string, string> = {
-  ...customRegistry(1000),
-}
-
-/** Hash fallback for a path with no registry entry. Step 1100, the badge weight. */
-const EXTENDED_PATH_COLORS = PATH_CUSTOM_FAMILIES.map((f) =>
+/** The open set, by slot. Step 1100, the badge weight. */
+const EXTENDED_PATH_COLORS = PATH_OPEN_FAMILIES.map((f) =>
   step(f, 1100),
+) as readonly string[]
+
+/** The same set one step lighter, for arrow strokes. */
+const EXTENDED_ARROW_COLORS = PATH_OPEN_FAMILIES.map((f) =>
+  step(f, 1000),
 ) as readonly string[]
 
 /**
@@ -142,17 +124,15 @@ const EXTENDED_PATH_COLORS = PATH_CUSTOM_FAMILIES.map((f) =>
  */
 const PATH_TYPE_DASH: Record<PathType, string | undefined> = {
   happy: undefined,
-  unhappy: '7 4',
+  variant: '12 5',
   exception: '2 4',
-  alternative: '12 5',
-  custom: '7 4 2 4',
 }
 
 /**
  * Extra patterns for the types that can have many distinct paths at once, hashed
  * the same way `EXTENDED_PATH_COLORS` is so a path's dash and colour stay paired.
  *
- * One per family in `PATH_CUSTOM_FAMILIES`. There used to be five against ten
+ * One per family in `PATH_OPEN_FAMILIES`. There used to be five against ten
  * colours, which meant two open paths could share a dash — fine while colour is
  * visible, and exactly the case SC 1.4.1 is about when it is not. Matching the
  * lengths makes the pattern a real second channel rather than a decoration.
@@ -171,26 +151,19 @@ const EXTENDED_PATH_DASHES = [
  * Dash pattern for a path's arrows and section borders, paired with
  * {@link getPathColor} through the same slot so the two never come apart.
  *
- * Custom paths always read the open set: pinned slot if the name is known,
- * hashed otherwise. The other types use their own pattern, except an
- * `alternative` path nobody has pinned, which hashes like a custom one.
+ * The happy path is the one route a scenario can only have one of, so it takes
+ * the type default — solid — and every other route reads the open set, pinned
+ * by slot where we know the name and hashed where we do not.
+ *
+ * The dash is not decoration. Only seven colour families are disjoint from the
+ * eight the lanes use, which is not enough to give `variant` and `exception` a
+ * hue each AND keep paths of the same type apart — so hue cannot carry type,
+ * and the pattern is what a reader who cannot separate the hues has left.
+ * SC 1.4.1.
  */
 export function getPathDashArray(path: PathColorInput): string | undefined {
-  if (path.path_type === 'custom') {
-    // A custom path's identity is its name, so its pattern comes from its slot —
-    // pinned if we know it, hashed if we do not. Never the type default: every
-    // custom path would share it, and colour would be the only thing telling
-    // them apart.
-    const slot = CUSTOM_PATH_SLOTS[path.name] ?? hashKey(getPathColorKey(path))
-    return EXTENDED_PATH_DASHES[slot % EXTENDED_PATH_DASHES.length]
-  }
-  if (path.path_type === 'alternative') {
-    const key = getPathColorKey(path)
-    if (!PATH_COLOR_REGISTRY[key]) {
-      return EXTENDED_PATH_DASHES[hashKey(key) % EXTENDED_PATH_DASHES.length]
-    }
-  }
-  return PATH_TYPE_DASH[path.path_type]
+  if (path.path_type === 'happy') return PATH_TYPE_DASH.happy
+  return EXTENDED_PATH_DASHES[pathSlot(path) % EXTENDED_PATH_DASHES.length]
 }
 
 /**
@@ -216,29 +189,28 @@ function hashKey(key: string): number {
   return Math.abs(hash)
 }
 
+/**
+ * The one number a non-happy path's colour AND dash are both read from, so the
+ * two can never come apart.
+ *
+ * Keyed on the NAME alone, never `${type}:${name}`. The registry used to key on
+ * both, which meant re-typing a path silently dropped it out of its pinned slot
+ * and back into the hash — and that is exactly what happened on 2026-08-21 when
+ * the five Goal Setting paths moved off `custom`. A path's identity is what it
+ * is called; its type is a fact about it.
+ */
+function pathSlot(path: PathColorInput): number {
+  return PINNED_PATH_SLOTS[path.name] ?? hashKey(path.name)
+}
+
 export function getPathColor(path: PathColorInput): string {
-  const key = getPathColorKey(path)
-  const known = PATH_COLOR_REGISTRY[key]
-  if (known) return known
-
-  if (path.path_type === 'alternative' || path.path_type === 'custom') {
-    // Same index the dash is read from, so the pair holds.
-    return EXTENDED_PATH_COLORS[hashKey(key) % EXTENDED_PATH_COLORS.length]
-  }
-
-  return PATH_TYPE_COLORS[path.path_type]
+  if (path.path_type === 'happy') return PATH_TYPE_COLORS.happy
+  return EXTENDED_PATH_COLORS[pathSlot(path) % EXTENDED_PATH_COLORS.length]
 }
 
 export function getPathArrowColor(path: PathColorInput): string {
-  const key = getPathColorKey(path)
-  const known = PATH_ARROW_COLOR_REGISTRY[key]
-  if (known) return known
-
-  if (path.path_type === 'alternative' || path.path_type === 'custom') {
-    return getPathColor(path)
-  }
-
-  return PATH_TYPE_ARROW_COLORS[path.path_type]
+  if (path.path_type === 'happy') return PATH_TYPE_ARROW_COLORS.happy
+  return EXTENDED_ARROW_COLORS[pathSlot(path) % EXTENDED_ARROW_COLORS.length]
 }
 
 /**

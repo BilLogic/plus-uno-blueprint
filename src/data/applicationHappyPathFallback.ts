@@ -145,7 +145,7 @@ const SAD_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathName: 'Sad Path',
   pathDescription:
     'Potential tutors discover and are not interested in joining PLUS.',
-  pathType: 'unhappy',
+  pathType: 'exception',
   cellSlotPrefix: '72',
   dependencySlotPrefix: '728',
   finalRegularTutorContent: 'Not interested in joining PLUS.',

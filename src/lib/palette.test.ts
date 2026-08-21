@@ -356,7 +356,7 @@ describe('path badges', () => {
     const open = [
       ...new Set(
         Array.from({ length: 40 }, (_, i) =>
-          getPathColor({ path_type: 'custom', name: `Path ${i}` }),
+          getPathColor({ path_type: 'variant', name: `Path ${i}` }),
         ),
       ),
     ]
@@ -376,8 +376,8 @@ describe('path badges', () => {
   })
 
   it('separates two unregistered named paths', () => {
-    const a = getPathColor({ path_type: 'custom', name: 'Alpha' })
-    const b = getPathColor({ path_type: 'custom', name: 'Beta' })
+    const a = getPathColor({ path_type: 'variant', name: 'Alpha' })
+    const b = getPathColor({ path_type: 'variant', name: 'Beta' })
     expect(a === b).toBe(false)
   })
 
@@ -393,11 +393,11 @@ describe('path badges', () => {
       'Update Goals Edge Case',
     ]
     const dashes = live.map((name) =>
-      getPathDashArray({ path_type: 'custom', name }),
+      getPathDashArray({ path_type: 'variant', name }),
     )
     expect(new Set(dashes).size).toBe(live.length)
     const colours = live.map((name) =>
-      getPathColor({ path_type: 'custom', name }),
+      getPathColor({ path_type: 'variant', name }),
     )
     expect(new Set(colours).size).toBe(live.length)
   })
@@ -407,7 +407,7 @@ describe('path badges', () => {
     // channel for SC 1.4.1 only if the two lists are the same length.
     const seen = new Map<string, string | undefined>()
     for (let i = 0; i < 40; i++) {
-      const path = { path_type: 'custom' as const, name: `Path ${i}` }
+      const path = { path_type: 'variant' as const, name: `Path ${i}` }
       const colour = getPathColor(path)
       const dash = getPathDashArray(path)
       if (seen.has(colour)) expect(seen.get(colour)).toBe(dash)
@@ -448,7 +448,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     const lanes = familiesIn('lane')
     const pathFamilies = new Set(
       Array.from({ length: 40 }, (_, i) =>
-        getPathColor({ path_type: 'custom', name: `Path ${i}` }),
+        getPathColor({ path_type: 'variant', name: `Path ${i}` }),
       ).map((token) => /--color-([a-z]+)-/.exec(token)![1]),
     )
     expect(pathFamilies.size).toBeGreaterThan(1)

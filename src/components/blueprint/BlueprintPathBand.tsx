@@ -379,7 +379,7 @@ function CompareLayerRow({
         cellId={cell?.id ?? (isVisualLane ? `visual-${step.id}` : undefined)}
         stepIndex={stepIndex}
         content={cell?.content}
-        maturity={cell?.maturity}
+        status={cell?.status}
         laneStyle={laneStyle}
         variant={variant}
         compact={compact}

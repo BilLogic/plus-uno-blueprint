@@ -27,10 +27,10 @@ const MAX_PATHS_PER_COLUMN = 2
 
 const PRIMARY_COLUMN_PATH_TYPES = new Set<PathType>([
   'happy',
-  'alternative',
-  'custom',
+  'variant',
+  'variant',
 ])
-const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['unhappy', 'exception'])
+const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['exception', 'exception'])
 
 export function formatPathPickerLabel(name: string): string {
   return name.replace(/^Warm-Up\s+/i, '')

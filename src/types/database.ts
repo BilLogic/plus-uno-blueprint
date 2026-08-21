@@ -17,7 +17,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type PathType = 'happy' | 'unhappy' | 'exception' | 'alternative' | 'custom'
+export type PathType = 'happy' | 'variant' | 'exception'
 
 export type Database = {
   public: {
@@ -136,7 +136,7 @@ export type Database = {
           id: string
           lane_id: string
           links: Json
-          maturity: string | null
+          status: string | null
           owner: string | null
           path_id: string
           perceived_owner: string | null
@@ -156,7 +156,7 @@ export type Database = {
           id?: string
           lane_id: string
           links?: Json
-          maturity?: string | null
+          status?: string | null
           owner?: string | null
           path_id: string
           perceived_owner?: string | null
@@ -176,7 +176,7 @@ export type Database = {
           id?: string
           lane_id?: string
           links?: Json
-          maturity?: string | null
+          status?: string | null
           owner?: string | null
           path_id?: string
           perceived_owner?: string | null

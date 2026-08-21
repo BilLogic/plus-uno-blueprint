@@ -1,8 +1,8 @@
 import { PANEL_TEXT } from '@/lib/panelText'
 import {
-  CELL_MATURITY_LABEL,
-  CELL_MATURITY_MEANING,
-} from '@/lib/cellMaturity'
+  ENTITY_STATUS_LABEL,
+  ENTITY_STATUS_MEANING,
+} from '@/lib/entityStatus'
 import {
   Tooltip,
   TooltipContent,
@@ -34,17 +34,17 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
 
   const owner = cell.owner?.trim() ?? ''
   const perceived = cell.perceived_owner?.trim() ?? ''
-  if (!owner && !perceived && !cell.maturity) return null
+  if (!owner && !perceived && !cell.status) return null
 
   return (
     <div className="flex flex-wrap gap-x-6 gap-y-1">
       {/* First, because it changes how everything under it should be read:
           a spec for something unbuilt is a proposal, not a description. */}
-      {cell.maturity ? (
+      {cell.status ? (
         <OwnerCell
           label="State"
-          value={CELL_MATURITY_LABEL[cell.maturity]}
-          hint={CELL_MATURITY_MEANING[cell.maturity]}
+          value={ENTITY_STATUS_LABEL[cell.status]}
+          hint={ENTITY_STATUS_MEANING[cell.status]}
         />
       ) : null}
       {owner ? <OwnerCell label="Owner" value={owner} /> : null}

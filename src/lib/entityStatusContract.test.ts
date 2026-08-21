@@ -3,18 +3,18 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
 import {
-  CELL_MATURITY,
-  CELL_MATURITY_LABEL,
-  CELL_MATURITY_MEANING,
-} from '@/lib/cellMaturity'
+  ENTITY_STATUS,
+  ENTITY_STATUS_LABEL,
+  ENTITY_STATUS_MEANING,
+} from '@/lib/entityStatus'
 
 const src = (path: string) =>
   readFileSync(join(process.cwd(), 'src', path), 'utf8')
 
 /**
- * `cells.maturity` replaced a `Planned — ` prefix on the cell's own label.
+ * `cells.status` replaced a `Planned — ` prefix on the cell's own label.
  *
- * That prefix was wrong — a maturity is not part of a touchpoint's NAME, and
+ * That prefix was wrong — a status is not part of a touchpoint's NAME, and
  * the vocabulary had gained products called "Planned — swap flow UI" — but it
  * had one virtue: the canvas said it for free, on every one of the fifty cells
  * that carried it. A column that nothing renders is strictly worse than the
@@ -22,17 +22,17 @@ const src = (path: string) =>
  *
  * These assertions are the price of having moved it.
  */
-describe('cell maturity survives the move off the label', () => {
+describe('cell status survives the move off the label', () => {
   it('is read by the query the canvas draws from', () => {
-    expect(PATH_BLUEPRINT_SELECT).toContain('maturity')
+    expect(PATH_BLUEPRINT_SELECT).toContain('status')
   })
 
   it('reaches the cell face, which marks itself', () => {
     const button = src('components/blueprint/BlueprintCellButton.tsx')
-    expect(button).toContain('data-blueprint-cell-maturity')
-    expect(button).toMatch(/isUnbuilt\(maturity\) &&\s*'border-dashed/)
+    expect(button).toContain('data-blueprint-cell-status')
+    expect(button).toMatch(/isUnbuilt\(status\) &&\s*'border-dashed/)
     // Deprecated exists and works; a dashed edge would say the opposite.
-    expect(button).toMatch(/maturity === 'deprecated' &&/)
+    expect(button).toMatch(/status === 'deprecated' &&/)
   })
 
   it('loses NOTHING between the query and the canvas', () => {
@@ -44,7 +44,7 @@ describe('cell maturity survives the move off the label', () => {
       `undefined`, and every check a developer would run stays green:
       typecheck passes because the field is optional, the tests pass because
       none of them look, and the canvas quietly does nothing. It has happened
-      twice — `maturity`, caught the same day, and `position`, which was
+      twice — `status`, caught the same day, and `position`, which was
       selected, typed and SORTED ON for two weeks while the sort compared
       undefined to undefined across 63 slots.
 
@@ -100,8 +100,8 @@ describe('cell maturity survives the move off the label', () => {
     // because the mapper that builds a BlueprintCell listed its fields by
     // hand and this one was not among them.
     const normalize = src('lib/normalizeBlueprint.ts')
-    expect(normalize).toContain('maturity?: string | null')
-    expect(normalize).toMatch(/CELL_MATURITY as readonly string\[\]\)\.includes/)
+    expect(normalize).toContain('status?: string | null')
+    expect(normalize).toMatch(/ENTITY_STATUS as readonly string\[\]\)\.includes/)
   })
 
   it('is passed by every component that draws a cell', () => {
@@ -110,7 +110,7 @@ describe('cell maturity survives the move off the label', () => {
       'components/blueprint/ServiceBlueprintGrid.tsx',
       'components/blueprint/BlueprintTechPill.tsx',
     ]) {
-      expect(src(path), path).toContain('maturity={')
+      expect(src(path), path).toContain('status={')
     }
   })
 
@@ -119,25 +119,25 @@ describe('cell maturity survives the move off the label', () => {
     // They drifted once already: `planned` and `prototype` were two words for
     // "not built" that did not order, and the one marked `planned` was code
     // already in QA.
-    for (const rung of CELL_MATURITY) {
-      expect(CELL_MATURITY_LABEL[rung], rung).toBeTruthy()
-      expect(CELL_MATURITY_MEANING[rung], rung).toBeTruthy()
+    for (const rung of ENTITY_STATUS) {
+      expect(ENTITY_STATUS_LABEL[rung], rung).toBeTruthy()
+      expect(ENTITY_STATUS_MEANING[rung], rung).toBeTruthy()
     }
-    expect(Object.keys(CELL_MATURITY_LABEL).sort()).toEqual(
-      [...CELL_MATURITY].sort(),
+    expect(Object.keys(ENTITY_STATUS_LABEL).sort()).toEqual(
+      [...ENTITY_STATUS].sort(),
     )
-    expect(Object.keys(CELL_MATURITY_MEANING).sort()).toEqual(
-      [...CELL_MATURITY].sort(),
+    expect(Object.keys(ENTITY_STATUS_MEANING).sort()).toEqual(
+      [...ENTITY_STATUS].sort(),
     )
   })
 
   it('is named in the panel, not left to the summary prose', () => {
     expect(src('components/blueprint/CellContentSection.tsx')).toContain(
-      'cell.maturity',
+      'cell.status',
     )
   })
 
-  it('no cell label carries the maturity it used to', () => {
+  it('no cell label carries the status it used to', () => {
     // The fallbacks are the offline copy of the board; a `Planned — ` here
     // would put the prefix back on a canvas no migration can reach.
     const dir = join(process.cwd(), 'src', 'data')

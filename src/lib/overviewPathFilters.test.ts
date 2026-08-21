@@ -40,14 +40,14 @@ describe('collectOverviewPathOptions', () => {
           's1',
           [
             path('id-a', 'Happy Path', 'happy'),
-            path('id-b', 'Card Declined', 'unhappy'),
+            path('id-b', 'Card Declined', 'exception'),
           ],
         ],
       ]),
     )
 
     expect(options.map((option) => option.id)).toEqual([
-      'unhappy:Card Declined',
+      'exception:Card Declined',
       'happy:Happy Path',
     ])
     expect(options.map((option) => option.pathIds)).toEqual([['id-b'], ['id-a']])

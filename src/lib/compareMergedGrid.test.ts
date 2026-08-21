@@ -156,7 +156,7 @@ describe('buildMergedArrowRemap', () => {
         source_cell_id: 'b1',
         target_cell_id: 'b2',
         path_id: 'b',
-        path_type: 'alternative',
+        path_type: 'variant',
         opacity: 1,
       },
     ]

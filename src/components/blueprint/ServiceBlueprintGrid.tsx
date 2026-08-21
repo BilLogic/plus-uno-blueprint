@@ -590,7 +590,7 @@ function BlueprintSwimLane({
                       : undefined)
                 }
                 content={cell?.content ?? (showEmptyCells ? '' : undefined)}
-                maturity={cell?.maturity}
+                status={cell?.status}
                 laneStyle={laneStyle}
                 variant={variant}
                 width={STEP_COLUMN_WIDTH}
@@ -689,7 +689,7 @@ function BlueprintCellBlock({
   selectionContext,
   visualPictures,
   slotCells,
-  maturity,
+  status,
 }: {
   stepIndex: number
   cellId?: string
@@ -706,7 +706,7 @@ function BlueprintCellBlock({
   /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
   /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
-  maturity?: BlueprintCell['maturity']
+  status?: BlueprintCell['status']
   slotCells?: BlueprintCell[]
 }) {
   const shellPadding = cn(
@@ -725,7 +725,7 @@ function BlueprintCellBlock({
       ? (slotCells && slotCells.length > 0
           ? slotCells
           : content !== undefined
-            ? [{ id: cellId, content, picture: null, summary: null, maturity, links: [] }]
+            ? [{ id: cellId, content, picture: null, summary: null, status, links: [] }]
             : []
         ).flatMap((slotCell) =>
           getTechPillItems(slotCell.content ?? '').map((item) => ({
@@ -804,7 +804,7 @@ function BlueprintCellBlock({
                 index === 0 ||
                 slotCell.id !== pillEntries[index - 1]?.cell.id
               }
-              maturity={slotCell.maturity ?? maturity}
+              status={slotCell.status ?? status}
             />
           ) : (
             <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />
@@ -815,7 +815,7 @@ function BlueprintCellBlock({
       <BlueprintCellButton
         fill={laneStyle.lane}
         compact={compact}
-        maturity={maturity}
+        status={status}
         selection={
           selectionContext
             ? buildBlueprintCellSelection(selectionContext)

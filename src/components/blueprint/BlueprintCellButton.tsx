@@ -23,7 +23,7 @@ import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
-import { isUnbuilt, type CellMaturity } from '@/lib/cellMaturity'
+import { isUnbuilt, type EntityStatus } from '@/lib/entityStatus'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
@@ -60,13 +60,13 @@ type BlueprintCellButtonProps = {
   /**
    * Unbuilt cells have to LOOK unbuilt.
    *
-   * When the maturity lived in the label, the canvas said it for free — every
+   * When the status lived in the label, the canvas said it for free — every
    * such pill began "Planned — ". Moving it to its own column would have made
    * fifty design explorations read as shipped surfaces, which is the single
    * most expensive thing this blueprint can get wrong. A dashed edge and a
    * drained fill carry it instead.
    */
-  maturity?: CellMaturity | null
+  status?: EntityStatus | null
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
@@ -97,7 +97,7 @@ export function BlueprintCellButton({
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
   'data-blueprint-tech-pill': techPillLabel,
-  maturity,
+  status,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
   const isInteractive = Boolean(detail?.enabled && selection && detail)
@@ -286,7 +286,7 @@ export function BlueprintCellButton({
       aria-describedby={ariaDescribedBy}
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
-      {...(maturity ? { 'data-blueprint-cell-maturity': maturity } : {})}
+      {...(status ? { 'data-blueprint-cell-status': status } : {})}
       {...(isSliceMember ? { 'data-slice-member': '' } : {})}
       {...(isPicked ? { 'data-slice-picked': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
@@ -308,11 +308,11 @@ export function BlueprintCellButton({
       // Dashed, drained and slightly transparent: three cheap signals that
       // agree, so the cell still reads as unbuilt at the zoom where a canvas
       // is usually seen and the dashes have collapsed into a grey line.
-      isUnbuilt(maturity) && 'border-dashed saturate-[.55] opacity-90',
+      isUnbuilt(status) && 'border-dashed saturate-[.55] opacity-90',
       // Deprecated is not unbuilt — it exists, it works, it is going away. A
       // dashed edge would say the opposite, so it keeps its solid face and
       // fades instead.
-      maturity === 'deprecated' && 'saturate-[.35] opacity-75',
+      status === 'deprecated' && 'saturate-[.35] opacity-75',
       // At risk gets NOTHING here. It is a working surface people rely on;
       // dimming it would tell a reader not to, which is the wrong advice. The
       // panel names it, and a check can find it.

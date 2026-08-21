@@ -1,4 +1,4 @@
-import { CELL_MATURITY, type CellMaturity } from '@/lib/cellMaturity'
+import { ENTITY_STATUS, type EntityStatus } from '@/lib/entityStatus'
 import type {
   BlueprintCell,
   BlueprintCellDependency,
@@ -31,7 +31,7 @@ export type RawCell = {
   content: string
   picture?: string | null
   summary?: string | null
-  maturity?: string | null
+  status?: string | null
   links?: Json | null
   outgoing?: RawOutgoingDependency[] | null
 }
@@ -227,8 +227,8 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     // Narrowed rather than passed through: the column is a plain text with a
     // check constraint, so a value the renderer has no treatment for should
     // read as shipped rather than as an unrecognised marker.
-    maturity: (CELL_MATURITY as readonly string[]).includes(cell.maturity ?? '')
-      ? (cell.maturity as CellMaturity)
+    status: (ENTITY_STATUS as readonly string[]).includes(cell.status ?? '')
+      ? (cell.status as EntityStatus)
       : null,
     links: normalizeCellLinks(cell.links),
   }))

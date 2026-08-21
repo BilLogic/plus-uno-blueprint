@@ -651,7 +651,7 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
     name: 'Alternate Path',
     summary: 'Not engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
-    path_type: 'alternative',
+    path_type: 'variant',
   },
   lanes: LAYERS.map((lane) => ({
     ...lane,
