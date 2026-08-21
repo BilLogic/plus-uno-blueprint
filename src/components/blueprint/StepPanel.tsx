@@ -9,6 +9,8 @@ import {
   PanelLoading,
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
+import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import { useStepSpec, type StepSpec } from '@/hooks/useStepSpec'
@@ -145,7 +147,7 @@ function StepPanelBody({
 
       {step.frames.length > 0 ? (
         <div className="flex flex-col gap-1">
-          <span className={PANEL_TEXT.sectionLabel}>Storyboard</span>
+          <PanelTermLabel term="Storyboard" definition={PANEL_TERMS.storyboard} />
           {/*
             A ROW of frames, not a stack of full-width ones. A step is drawn
             once per actor lane, so three frames stacked at 4:3 pushed the
@@ -181,7 +183,7 @@ function StepPanelBody({
 
       {distinct.size > 1 ? (
         <div className="flex flex-col gap-1">
-          <span className={PANEL_TEXT.sectionLabel}>Columns</span>
+          <PanelTermLabel term="Columns" definition={PANEL_TERMS.columns} />
           <ul className="flex flex-col gap-0.5">
             {step.positions.map((entry) => (
               <li

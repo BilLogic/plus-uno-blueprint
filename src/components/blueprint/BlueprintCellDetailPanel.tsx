@@ -53,6 +53,11 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   useBlueprintCellDetail,
   type BlueprintPanelSurface,
 } from '@/contexts/BlueprintCellDetailContext'
@@ -93,6 +98,8 @@ import {
 } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { getTouchpointTone } from '@/lib/techPillColors'
+import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
@@ -132,11 +139,27 @@ type PanelTab = 'dependencies' | 'evidence' | 'resources'
 const PANEL_TABS: Array<{
   value: PanelTab
   label: string
+  definition: string
   icon: typeof Workflow
 }> = [
-  { value: 'dependencies', label: 'Dependencies', icon: Workflow },
-  { value: 'evidence', label: 'Evidence', icon: FileSearch },
-  { value: 'resources', label: 'Resources', icon: Link2 },
+  {
+    value: 'dependencies',
+    label: 'Dependencies',
+    definition: PANEL_TERMS.dependencies,
+    icon: Workflow,
+  },
+  {
+    value: 'evidence',
+    label: 'Evidence',
+    definition: PANEL_TERMS.evidence,
+    icon: FileSearch,
+  },
+  {
+    value: 'resources',
+    label: 'Resources',
+    definition: PANEL_TERMS.resources,
+    icon: Link2,
+  },
 ]
 
 function isFigmaUrl(url: string): boolean {
@@ -1194,7 +1217,7 @@ function BlueprintCellDetailPanelBody() {
   */
   const touchpointField = showTechPill ? (
     <div className="flex flex-col gap-0.5">
-      <span className={PANEL_TEXT.sectionLabel}>Touchpoint</span>
+      <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />
       <div className="flex min-w-0">
         <PanelKindBadge
           label={techDetailLabel!}
@@ -1346,16 +1369,29 @@ function BlueprintCellDetailPanelBody() {
                   variant="line"
                   className="h-auto w-full justify-start gap-4 rounded-none border-b border-muted px-4 pb-0"
                 >
-                  {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
-                    <TabsTrigger
-                      key={value}
-                      value={value}
-                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-2xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
-                    >
-                      <TabIcon className="size-3" aria-hidden />
-                      {label}
-                    </TabsTrigger>
-                  ))}
+                  {PANEL_TABS.map(
+                    ({ value, label, definition, icon: TabIcon }) => (
+                      /* The tab IS the word whose meaning is in question, so
+                         the definition hovers off the tab. A tab is already
+                         focusable, so keyboard reaches it for free. */
+                      <Tooltip key={value}>
+                        <TooltipTrigger
+                          render={
+                            <TabsTrigger
+                              value={value}
+                              className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-2xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                            />
+                          }
+                        >
+                          <TabIcon className="size-3" aria-hidden />
+                          {label}
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-64">
+                          {definition}
+                        </TooltipContent>
+                      </Tooltip>
+                    ),
+                  )}
                 </TabsList>
                 {/*
                   Reserved height: the three tabs have very different

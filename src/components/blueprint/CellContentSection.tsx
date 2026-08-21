@@ -1,3 +1,5 @@
+import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import {
@@ -43,7 +45,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
           {/* "Status", not "State" — one name for one property. The paths
               picker calls it status, the column is called status, and a
               second word for it is a second thing to learn. */}
-          <span className={PANEL_TEXT.sectionLabel}>Status</span>
+          <PanelTermLabel term="Status" definition={PANEL_TERMS.status} />
           {/* A badge, not text: a governed six-value set the reader scans
               for. See docs/reference/panel-affordances.md § Badge or text. */}
           <StatusBadge status={status} />
