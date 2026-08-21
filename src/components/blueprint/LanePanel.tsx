@@ -13,7 +13,8 @@ import {
   PanelKindBadge,
   PanelLoading,
 } from '@/components/blueprint/panelShell'
-import { PanelHint } from '@/components/blueprint/PanelHint'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertTriangle } from 'lucide-react'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { StakeholderSelect } from '@/components/blueprint/StakeholderSelect'
 import { useLaneSpec, type LaneSpec } from '@/hooks/useLaneSpec'
@@ -174,24 +175,30 @@ function LanePanelBody({
           moves several rows. Nothing else, and nothing at all when it does
           not apply.
         */
-        meta={
-          canEdit && fanOut > 1 ? (
-            <>
-              <span className="whitespace-nowrap">
-                Edits apply to all {fanOut} “{lane.name}” lanes
-              </span>{' '}
-              <PanelHint label="What a save touches">
-                A lane row belongs to one path, so “{lane.name}” is {fanOut}{' '}
-                rows in {lane.scenarioName}. Saving writes all of them —
-                otherwise the same lane would claim a different owner
-                depending on which path you were looking at.
-              </PanelHint>
-            </>
-          ) : (
-            ''
-          )
-        }
+        meta=""
       />
+
+      {/*
+        An inline Alert, not a hover and not an ⓘ.
+
+        This is a consequence the reader would be surprised by — one Save
+        writes several rows — and the whole point of saying it is that they
+        must not miss it. A hover can be missed by never hovering, and an ⓘ
+        can be missed by never clicking. Something that must be read is
+        always visible; that is the rule, and `Alert` is how the design
+        system already says it.
+      */}
+      {canEdit && fanOut > 1 ? (
+        <Alert variant="warning">
+          <AlertTriangle aria-hidden />
+          <AlertDescription className="text-xs">
+            Saving writes all {fanOut} “{lane.name}” lanes in{' '}
+            {lane.scenarioName}. A lane row belongs to one path, so the same
+            lane would otherwise claim a different owner depending on which
+            path you were looking at.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <Field
         label="Stakeholder"

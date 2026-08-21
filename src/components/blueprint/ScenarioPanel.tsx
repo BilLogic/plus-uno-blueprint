@@ -14,7 +14,6 @@ import {
   PanelKindBadge,
   PanelLoading,
 } from '@/components/blueprint/panelShell'
-import { PanelHint } from '@/components/blueprint/PanelHint'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { useScenarioSpec, type ScenarioSpec } from '@/hooks/useScenarioSpec'
 import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
@@ -28,7 +27,6 @@ import {
 import { getPathTypeSuffixIfNeeded } from '@/lib/pathTypeTheme'
 import { PANEL_TEXT } from '@/lib/panelText'
 import type { PathType } from '@/types/database'
-import { cn } from '@/lib/utils'
 
 /**
  * The scenario's properties — and the only surface its PATHS have.
@@ -214,17 +212,10 @@ function ScenarioPanelBody({
       />
 
       <div className="flex flex-col gap-1">
-        <span className={cn('flex items-center gap-1', PANEL_TEXT.sectionLabel)}>
-          Paths
-          {/* Why the layout control is absent, said once, on request —
-              rather than a tinted banner explaining it on every open. */}
-          <PanelHint label="Where the layout is set">
-            How the paths are laid out — one at a time, side by side, merged —
-            is a view preference, set by the compare control on the canvas. A
-            properties panel is the wrong place to change what you are
-            currently looking at.
-          </PanelHint>
-        </span>
+        {/* No ⓘ. It explained where the layout control ISN'T, which is a
+            question nobody arrives with — and the label itself is the thing
+            worth defining, so the definition hangs off the label. */}
+        <span className={PANEL_TEXT.sectionLabel}>Paths</span>
         {/* Several open at once: comparing two routes is the reason to read
             this panel, and an accordion that closes one to open the next
             makes that impossible. */}

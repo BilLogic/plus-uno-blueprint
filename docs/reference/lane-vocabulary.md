@@ -15,25 +15,47 @@ labels*. This one names the teams a lane can be owned by.
 > board's content disagree, the disagreement is written down below rather than
 > resolved by guessing.*
 
-**Status: the list is settled. Five mappings are not.**
+**Status: the list is settled. Three mappings are not.**
 
 ---
 
-## Team ≠ stakeholder
+## One registry, not two vocabularies
 
-Two different columns, easy to conflate:
+Teams and stakeholders were drafted as two separate lists. They are not — a
+party is a party, and the same row can be a lane's owner in one place and an
+actor in another. **`public.stakeholders` already exists** (`useValueAudiences`
+reads it today: `id, service_id, name, kind, note, aliases`), so this is one
+table gaining a parent link, not a new one being invented.
 
-| | `stakeholders` | `lanes.owner_team` |
+```
+Design ──┬── Product Design
+         ├── Design Ops
+         ├── Instructional Design
+         └── Marketing
+Dev
+Product
+Research
+Tutor Supervisors
+Partnership
+
+Regular Tutor · Lead Tutor · Teacher · Student      (actors)
+CMU HR · CPO                                        (partners, outside PLUS)
+```
+
+`lanes.owner_team` becomes a reference into that table. Every row is available
+as a value; which ones are *sensible* values is a matter of kind, not of a
+second list:
+
+| kind | Can own a lane? | Why |
 | --- | --- | --- |
-| Answers | who appears in the blueprint as an actor | who is accountable for what happens in this row |
-| Holds | Regular Tutor, Lead Tutor, Teacher, Student, Supervisor | the teams below |
-| A row can have | one, via `lanes.stakeholder_id` | one, as a value from this list |
+| `staff` | yes | A team accountable for work. |
+| `partner` | see open question 3 | Real work, outside PLUS's control. |
+| `recipient` | no | The person the service is for. |
+| actor rows (Regular Tutor, Lead Tutor, Teacher) | no | Name a person doing the work, not a group accountable for it. |
 
-Tutors are the clearest case. **Regular Tutor** and **Lead Tutor** are the same
-population in two rota roles — they are *actors*, the people the service is
-staffed by, and they are never an owning team. The **Supervisor** stakeholder
-and the **Tutor Supervisors** team coincide in exactly one place (Supervisor
-Program Administration) and are distinct everywhere else.
+The one column the registry is missing is the **parent link** that makes
+Instructional Design roll up to Design. Adding it is the change to fold into
+plan `2026-08-20-009`.
 
 ---
 
@@ -41,12 +63,29 @@ Program Administration) and are distinct everywhere else.
 
 | Team | Owns | Recognise it by |
 | --- | --- | --- |
-| **Design** | The screens and flows the tutor sees, and the design system behind them. | Figma, branding, anything described as a screen or a flow rather than as code. |
+| **Design** | The screens and flows the tutor sees, the design system behind them, how the service is taught, and how it is presented to the outside world. Four sub-teams — see below. | Figma, branding, module content, the marketing site. |
 | **Dev** | The PLUS app itself — every servlet, job and integration behind a `frontstage_tech` or `backstage_tech` pill. | A pill that is software PLUS built. |
 | **Product** | What gets built and in what order. Roadmap, requirements, the decision that a flow should exist. | Anything whose answer is a prioritisation rather than an artefact. |
 | **Research** | Study design and its inputs to the product — student ordering, session condition, engagement baseline, the reflection questions as a research instrument. | Anything whose reason for existing is a study rather than a service need. |
 | **Tutor Supervisors** | Recruiting, clearance chasing, session and roster administration, call-off decisions, hours approval, reflection follow-up. The default owner of `backstage_actions` in most scenarios. | Anything a named PLUS staff member does to a tutor's record, schedule or pay. |
 | **Partnership** | The relationship with schools and districts, and the public face that reaches people before they are tutors. | Anything where the counterparty is an institution rather than a tutor. |
+
+### Design's sub-teams
+
+Design is the one team with named parts, and the parts are worth recording as
+values in their own right — a lane owned by Instructional Design says something
+a lane owned by "Design" does not.
+
+| Sub-team | Owns |
+| --- | --- |
+| **Product Design** | The screens and flows a tutor moves through. |
+| **Design Ops** | The design system, the libraries, and how design work ships. |
+| **Instructional Design** | Onboarding modules, lesson modules, quizzes, supplementary materials, and the reflection questions as pedagogy. |
+| **Marketing** | The public face — the marketing site, social channels, the Handshake posting. |
+
+`owner_team` takes the **most specific** value that is true. *"What does Design
+own?"* is answered by rolling the four up, which is what the parent link in the
+registry is for.
 
 ### Lanes that take no team
 
@@ -111,34 +150,23 @@ service is experienced — and never appears in `owner_team`.
 
 ---
 
-## Five mappings still open
+## Three mappings still open
 
-The list is settled; where some existing content lands in it is not. Each of
-these blocks a group of lanes.
+The list is settled, and Instructional Design and Marketing are placed. Three
+questions remain, each blocking a group of lanes.
 
-**1. Instructional Design — 9 cells name it. Which team owns it?**
-Onboarding modules, lesson modules, quizzes, supplementary materials, and the
-reflection questions as pedagogy. It was its own team in the old draft and is
-not on the given list. Product? Research? Or a seventh team that was simply
-missed?
-
-**2. Marketing — 11 cells name it. Is that Partnership?**
-The marketing site, social channels, the Handshake posting. Grouped under
-Partnership above on the reasoning that both are "reaching people before they
-are tutors" — but that is my inference, not something the content says.
-
-**3. Product is never named anywhere on the board.**
+**1. Product is never named anywhere on the board.**
 Zero cells mention a product team, product manager or PM. Either the work it
 owns is currently attributed to Design or Dev, or the board genuinely does not
 depict it. Which lanes should carry it?
 
-**4. `Discovery › Back Stage Actions` names three teams at once.**
+**2. `Discovery › Back Stage Actions` names three teams at once.**
 *"Design team manages content and messaging on the website; the dev team
 implements it in code"* alongside *"Marketing team creates social media
 posts…"*. `owner_team` takes one value. Split the lane, or name one accountable
 and leave the rest in prose?
 
-**5. Does an external body ever own a lane?**
+**3. Does an external body ever own a lane?**
 Interview & Offer has clearance work that is genuinely CPO's, not the
 supervisors'. NULL, or a `partner` value outside the team list?
 
