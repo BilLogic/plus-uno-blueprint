@@ -10,12 +10,23 @@
  * a constant does not.
  */
 export const PANEL_TEXT = {
-  /** The thing itself: a cell's own words, an entity's name. */
-  // `font-semibold`, not bold: at 14px in a narrow drawer, bold sets the
-  // title shouting over the prose directly under it, which is the thing the
-  // panel actually exists to show.
-  title:
-    'min-w-0 text-sm font-semibold leading-snug tracking-tight text-foreground',
+  /**
+   * The thing itself: a cell's own words, an entity's name.
+   *
+   * `font-semibold`, not bold: at 14px in a narrow drawer, bold sets the title
+   * shouting over the prose directly under it, which is what the panel exists
+   * to show.
+   *
+   * And NOT `tracking-tight leading-snug`, which is what it carried until
+   * 2026-08-21. Both are display-type devices — they exist to pull a large
+   * heading back together, where default tracking reads loose. At 14px they do
+   * the opposite, and this "title" is very often a whole sentence rather than
+   * a short name ("Pings the assigned tutor if a late joiner has not been
+   * moved to their breakout room."). Negative tracking plus 1.375 leading on a
+   * semibold sentence is the worst of the available combinations: the letters
+   * crowd and the lines crowd at once. Default tracking, normal leading.
+   */
+  title: 'min-w-0 text-sm font-semibold leading-normal text-foreground',
   /** Counts and relationships under the title. Never restates the title. */
   meta: 'text-2xs leading-tight text-muted-foreground',
   /** Names a field or a group. Always the same weight, size and colour. */

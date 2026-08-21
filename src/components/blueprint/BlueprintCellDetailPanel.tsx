@@ -755,7 +755,7 @@ function BlueprintCellDetailPanelBody() {
               onValueChange={setPanelSurface}
             />
           ) : (
-            <span className="text-sm font-bold tracking-tight">
+            <span className="text-sm font-semibold">
               Differences
             </span>
           )}
@@ -824,7 +824,7 @@ function BlueprintCellDetailPanelBody() {
         {surfaceSwitcher}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
-            <DrawerTitle className="text-sm font-bold tracking-tight">
+            <DrawerTitle className="text-sm font-semibold">
               New cell
             </DrawerTitle>
             <DrawerDescription className="text-2xs text-muted-foreground">
@@ -889,7 +889,7 @@ function BlueprintCellDetailPanelBody() {
         {surfaceSwitcher}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
-            <DrawerTitle className="text-sm font-bold tracking-tight">
+            <DrawerTitle className="text-sm font-semibold">
               Cell details
             </DrawerTitle>
             <DrawerDescription className="sr-only">
@@ -1033,7 +1033,7 @@ function BlueprintCellDetailPanelBody() {
           </>
         ) : null}
         <BreadcrumbItem className="min-w-0">
-          <BreadcrumbPage className="truncate font-medium tracking-tight text-foreground">
+          <BreadcrumbPage className="truncate font-medium text-foreground">
             {stepCrumbLabel}
           </BreadcrumbPage>
         </BreadcrumbItem>
@@ -1180,17 +1180,30 @@ function BlueprintCellDetailPanelBody() {
      made a tech cell the only cell whose identity block started somewhere
      other than its lane. */
   const identityBadges = (
-    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-      {laneChip}
-      {showTechPill ? (
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">{laneChip}</div>
+  )
+
+  /*
+    The touchpoint, as a LABELLED field rather than a second chip beside the
+    lane.
+    
+    Two badges in a row read as two facts of the same kind — "this row, and
+    also this row" — when they are a lane and the tool used in it. Naming the
+    field says which is which, and it matches how Status and Owner already
+    present a governed value: label above, badge below.
+  */
+  const touchpointField = showTechPill ? (
+    <div className="flex flex-col gap-0.5">
+      <span className={PANEL_TEXT.sectionLabel}>Touchpoint</span>
+      <div className="flex min-w-0">
         <PanelKindBadge
           label={techDetailLabel!}
           tone={getTouchpointTone(techDetailLabel!)}
           title={techDetailLabel!}
         />
-      ) : null}
+      </div>
     </div>
-  )
+  ) : null
 
   const overviewContent = (
     <>
@@ -1203,7 +1216,7 @@ function BlueprintCellDetailPanelBody() {
         ) : (
           <PanelIdentity
             badge={identityBadges}
-            // Empty when the tool badge already carries it.
+            // Empty when the touchpoint field below already carries it.
             title={titleRepeatsPill ? '' : cellTitleText}
             meta={
               selection.paths.length > 1
@@ -1212,6 +1225,7 @@ function BlueprintCellDetailPanelBody() {
             }
           />
         )}
+        {touchpointField}
         {/* LABELLED, like every other panel's summary. This was the one place
             in five panels where a field's read-only rendering skipped the
             label and printed bare prose, which is why "Summary" appeared on

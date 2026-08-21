@@ -1,8 +1,5 @@
 import { PANEL_TEXT } from '@/lib/panelText'
-import {
-  ENTITY_STATUS_LABEL,
-  ENTITY_STATUS_MEANING,
-} from '@/lib/entityStatus'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import {
   Tooltip,
   TooltipContent,
@@ -34,18 +31,33 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
 
   const owner = cell.owner?.trim() ?? ''
   const perceived = cell.perceived_owner?.trim() ?? ''
-  if (!owner && !perceived && !cell.status) return null
+  /*
+    `live` shows nothing, here as everywhere else.
+
+    It used to show nothing because the column was NULL on 879 cells and this
+    guard skipped it. The column is `not null default 'live'` now, so without
+    an explicit test every one of those cells would carry a "State: Live" row —
+    a label repeated 879 times that tells the reader what they already assume,
+    and by the second panel it has taught them to skip the one place status
+    actually says something.
+  */
+  const status = cell.status === 'live' ? null : cell.status
+  if (!owner && !perceived && !status) return null
 
   return (
     <div className="flex flex-wrap gap-x-6 gap-y-1">
       {/* First, because it changes how everything under it should be read:
           a spec for something unbuilt is a proposal, not a description. */}
-      {cell.status ? (
-        <OwnerCell
-          label="State"
-          value={ENTITY_STATUS_LABEL[cell.status]}
-          hint={ENTITY_STATUS_MEANING[cell.status]}
-        />
+      {status ? (
+        <div className="flex flex-col gap-0.5">
+          {/* "Status", not "State" — one name for one property. The paths
+              picker calls it status, the column is called status, and a
+              second word for it is a second thing to learn. */}
+          <span className={PANEL_TEXT.sectionLabel}>Status</span>
+          {/* A badge, not text: a governed six-value set the reader scans
+              for. See docs/reference/panel-affordances.md § Badge or text. */}
+          <StatusBadge status={status} />
+        </div>
       ) : null}
       {owner ? <OwnerCell label="Owner" value={owner} /> : null}
       {perceived ? <OwnerCell label="Perceived owner" value={perceived} /> : null}

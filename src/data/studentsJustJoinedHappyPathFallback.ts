@@ -244,7 +244,7 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
 export const STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: STUDENTS_JUST_JOINED_HAPPY_PATH_ID,
-    name: 'Full room joins on time',
+    name: 'Full room, on time',
     summary:
       'Teachers and tutors welcome students as they join the session.',
     note: null,

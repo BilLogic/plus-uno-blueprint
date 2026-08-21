@@ -415,7 +415,7 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
 export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: BEFORE_STUDENTS_JOIN_HAPPY_PATH_ID,
-    name: 'Room setup before students arrive',
+    name: 'Setup goes to plan',
     summary: 'Teachers and tutors prepare the session before students join.',
     note: null,
     path_type: 'happy',

@@ -309,7 +309,7 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
 export const WRAP_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: WRAP_UP_HAPPY_PATH_ID,
-    name: 'Debrief and close out',
+    name: 'Rooms close on time',
     summary:
       'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
     note: null,

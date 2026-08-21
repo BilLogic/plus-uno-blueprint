@@ -322,7 +322,7 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
 export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: HELP_REQUEST_HAPPY_PATH_ID,
-    name: 'Tutor resolves it in the room',
+    name: 'Resolved in the room',
     summary:
       'Tutors receive and resolve student help requests during the session.',
     note: getScenarioParallelNote(HELP_REQUEST_SCENARIO_ID),

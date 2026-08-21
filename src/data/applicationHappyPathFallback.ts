@@ -123,7 +123,7 @@ type ApplicationDiscoveryPathConfig = {
 
 const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathId: APPLICATION_HAPPY_PATH_ID,
-  pathName: 'Discovers and applies',
+  pathName: 'Standard',
   pathDescription: 'Potential tutors discover and want to join PLUS.',
   pathType: 'happy',
   cellSlotPrefix: '07',

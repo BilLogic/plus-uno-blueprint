@@ -449,7 +449,7 @@ const ONBOARDING_MODULES_CELLS: BlueprintCell[] = [
 export const ONBOARDING_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: ONBOARDING_MODULES_HAPPY_PATH_ID,
-    name: 'Reads the module end to end',
+    name: 'Standard',
     summary:
       'Tutor completes onboarding modules.',
     note: null,

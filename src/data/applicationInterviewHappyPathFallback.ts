@@ -358,7 +358,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
 export const APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: APPLICATION_INTERVIEW_HAPPY_PATH_ID,
-    name: 'Group interview to offer',
+    name: 'Standard',
     summary:
       'Tutor applies, interviews with the team, and receives an offer decision.',
     note: null,

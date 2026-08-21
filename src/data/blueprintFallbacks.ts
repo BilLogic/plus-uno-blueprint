@@ -544,7 +544,7 @@ const WARM_UP_TRIGGERS: BlueprintCellDependency[] = [
 export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: PATH_ID,
-    name: 'Screen shared at greeting',
+    name: 'Student shares screen',
     summary:
       'Engaged or partially engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
