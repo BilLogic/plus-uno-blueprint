@@ -101,7 +101,7 @@ let cachedLifecycleId: string | null = null
 async function lifecycleId(client: Client): Promise<string> {
   if (cachedLifecycleId) return cachedLifecycleId
   const { data, error } = await client
-    .from('service_lifecycles')
+    .from('services')
     .select('id')
     .limit(1)
     .maybeSingle()
@@ -732,7 +732,7 @@ export async function dispatchTool(
         const { data: existing, error: readError } = await client
           .from('findings')
           .select('id, status')
-          .eq('service_lifecycle_id', lifecycle)
+          .eq('service_id', lifecycle)
           .eq('fingerprint', fingerprint)
           .order('updated_at', { ascending: false })
         if (readError) throw new Error(readError.message)
@@ -749,7 +749,7 @@ export async function dispatchTool(
         if (dismissed)
           return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. run_id ${runId}; reuse it for the rest of this run.`
         const { error: insertError } = await client.from('findings').insert({
-          service_lifecycle_id: lifecycle,
+          service_id: lifecycle,
           run_id: runId,
           source,
           check_name: checkName,

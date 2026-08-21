@@ -54,7 +54,7 @@ export async function addEvidence(
   const { data, error } = await client
     .from('evidence')
     .insert({
-      service_lifecycle_id: draft.serviceLifecycleId,
+      service_id: draft.serviceLifecycleId,
       cell_id: draft.cellId,
       cell_key: draft.cellKey,
       kind: draft.kind,

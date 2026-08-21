@@ -226,7 +226,7 @@ export type Database = {
           observed_at: string | null
           proposition_question_key: string | null
           ref: string | null
-          service_lifecycle_id: string
+          service_id: string
           title: string
           updated_at: string
         }
@@ -243,7 +243,7 @@ export type Database = {
           observed_at?: string | null
           proposition_question_key?: string | null
           ref?: string | null
-          service_lifecycle_id: string
+          service_id: string
           title: string
           updated_at?: string
         }
@@ -260,16 +260,16 @@ export type Database = {
           observed_at?: string | null
           proposition_question_key?: string | null
           ref?: string | null
-          service_lifecycle_id?: string
+          service_id?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'evidence_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'evidence_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -284,7 +284,7 @@ export type Database = {
           id: string
           note: string | null
           run_id: string
-          service_lifecycle_id: string
+          service_id: string
           severity: string
           source: string
           status: string
@@ -299,7 +299,7 @@ export type Database = {
           id?: string
           note?: string | null
           run_id: string
-          service_lifecycle_id: string
+          service_id: string
           severity: string
           source: string
           status?: string
@@ -314,7 +314,7 @@ export type Database = {
           id?: string
           note?: string | null
           run_id?: string
-          service_lifecycle_id?: string
+          service_id?: string
           severity?: string
           source?: string
           status?: string
@@ -322,10 +322,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'findings_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'findings_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -472,7 +472,7 @@ export type Database = {
           name: string
           operational_requirements: string | null
           position: number
-          service_lifecycle_id: string
+          service_id: string
           summary: string | null
           updated_at: string
         }
@@ -484,7 +484,7 @@ export type Database = {
           name: string
           operational_requirements?: string | null
           position?: number
-          service_lifecycle_id: string
+          service_id: string
           summary?: string | null
           updated_at?: string
         }
@@ -496,7 +496,7 @@ export type Database = {
           name?: string
           operational_requirements?: string | null
           position?: number
-          service_lifecycle_id?: string
+          service_id?: string
           summary?: string | null
           updated_at?: string
         }
@@ -509,10 +509,10 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'phases_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'phases_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -526,7 +526,7 @@ export type Database = {
           partners: string | null
           pricing: string | null
           revenue_model: string | null
-          service_lifecycle_id: string
+          service_id: string
           updated_at: string
         }
         Insert: {
@@ -537,7 +537,7 @@ export type Database = {
           partners?: string | null
           pricing?: string | null
           revenue_model?: string | null
-          service_lifecycle_id: string
+          service_id: string
           updated_at?: string
         }
         Update: {
@@ -548,20 +548,20 @@ export type Database = {
           partners?: string | null
           pricing?: string | null
           revenue_model?: string | null
-          service_lifecycle_id?: string
+          service_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'propositions_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'propositions_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: true
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
       }
-      service_lifecycles: {
+      services: {
         Row: {
           created_at: string
           description: string | null
@@ -626,33 +626,6 @@ export type Database = {
           },
         ]
       }
-      services: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       slice_items: {
         Row: {
           caption: string | null
@@ -713,7 +686,7 @@ export type Database = {
           locale: string
           origin: string
           position: number
-          service_lifecycle_id: string
+          service_id: string
           slice_type: string
           title: string
           stakeholder_id: string | null
@@ -728,7 +701,7 @@ export type Database = {
           locale?: string
           origin?: string
           position?: number
-          service_lifecycle_id: string
+          service_id: string
           slice_type: string
           title: string
           stakeholder_id?: string | null
@@ -743,7 +716,7 @@ export type Database = {
           locale?: string
           origin?: string
           position?: number
-          service_lifecycle_id?: string
+          service_id?: string
           slice_type?: string
           title?: string
           stakeholder_id?: string | null
@@ -751,10 +724,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'slices_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'slices_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -795,7 +768,7 @@ export type Database = {
             foreignKeyName: 'stakeholders_service_id_fkey'
             columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -894,7 +867,7 @@ export type Path = Database['public']['Tables']['paths']['Row']
 export type PathStep = Database['public']['Tables']['path_steps']['Row']
 export type Phase = Database['public']['Tables']['phases']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
-export type ServiceLifecycle = Database['public']['Tables']['service_lifecycles']['Row']
+export type ServiceLifecycle = Database['public']['Tables']['services']['Row']
 export type Scenario = Database['public']['Tables']['scenarios']['Row']
 export type Stakeholder = Database['public']['Tables']['stakeholders']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']

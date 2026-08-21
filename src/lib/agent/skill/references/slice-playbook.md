@@ -106,7 +106,7 @@ differently:
 
 ```bash
 python3 skills/slice/scripts/slice_tools.py sql --ir blueprint/<file>.json --slices slices/<key>.json \
-  --locale <locale> --lifecycle-id <service_lifecycles.id>
+  --locale <locale> --lifecycle-id <services.id>
 ```
 
 One transaction, delete-then-insert per slice, so a regenerated slice never

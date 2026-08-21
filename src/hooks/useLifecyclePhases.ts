@@ -25,9 +25,9 @@ const LIFECYCLE_PHASES_SELECT = `
  * Same projection plus the owning lifecycle, for the unpinned read that
  * cannot filter server-side because the lifecycle id is still in flight.
  */
-const LIFECYCLE_PHASES_SELECT_WITH_OWNER = `service_lifecycle_id,${LIFECYCLE_PHASES_SELECT}`
+const LIFECYCLE_PHASES_SELECT_WITH_OWNER = `service_id,${LIFECYCLE_PHASES_SELECT}`
 
-type PhaseQueryRow = PhaseRow & { service_lifecycle_id?: string }
+type PhaseQueryRow = PhaseRow & { service_id?: string }
 
 const NO_PHASES: PhaseRow[] = []
 
@@ -63,7 +63,7 @@ export function useLifecyclePhases(lifecycleId?: string) {
           ? client
               .from('phases')
               .select(LIFECYCLE_PHASES_SELECT)
-              .eq('service_lifecycle_id', lifecycleId)
+              .eq('service_id', lifecycleId)
           : client.from('phases').select(LIFECYCLE_PHASES_SELECT_WITH_OWNER)
       ).order('position', { ascending: true })
 
@@ -78,7 +78,7 @@ export function useLifecyclePhases(lifecycleId?: string) {
       const rows = (data ?? []) as PhaseQueryRow[]
       if (lifecycleId) return rows as PhaseRow[]
       return rows.filter(
-        (row) => row.service_lifecycle_id === resolvedLifecycleId,
+        (row) => row.service_id === resolvedLifecycleId,
       )
     },
     fallback,

@@ -7,7 +7,7 @@ type Client = SupabaseClient<Database>
  * Shared first-lifecycle lookup — the settled result is cached module-level
  * and concurrent callers share one in-flight query, so the `useSlices` /
  * `useLifecyclePhases` / evidence-insert chains do not each hit
- * `service_lifecycles`. Errors are not cached; the next caller retries.
+ * `services`. Errors are not cached; the next caller retries.
  */
 let firstLifecycleId: Promise<string | null> | null = null
 
@@ -16,7 +16,7 @@ export function findFirstLifecycleId(client: Client): Promise<string | null> {
   if (!firstLifecycleId) {
     firstLifecycleId = (async () => {
       const { data, error } = await client
-        .from('service_lifecycles')
+        .from('services')
         .select('id')
         .order('created_at', { ascending: true })
         .limit(1)

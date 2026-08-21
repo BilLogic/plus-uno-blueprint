@@ -35,7 +35,7 @@ export function usePhaseSpec(
       const { data: phase, error } = await client
         .from('phases')
         .select(
-          'id, name, summary, business_impact, operational_requirements, loops_to_phase_id, service_lifecycles!inner(name)',
+          'id, name, summary, business_impact, operational_requirements, loops_to_phase_id, services!inner(name)',
         )
         .eq('id', phaseId)
         .maybeSingle()
@@ -72,7 +72,7 @@ export function usePhaseSpec(
         loopsToName = target?.name ?? null
       }
 
-      const service = phase.service_lifecycles as unknown as { name: string }
+      const service = phase.services as unknown as { name: string }
 
       return {
         id: phase.id,

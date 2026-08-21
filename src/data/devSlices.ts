@@ -16,7 +16,7 @@ const DEV_LIFECYCLE_ID = 'a0000000-0000-4000-8000-000000000001'
 export const DEV_FALLBACK_SLICES: Slice[] = [
   {
     id: DEV_SLICE_ID,
-    service_lifecycle_id: DEV_LIFECYCLE_ID,
+    service_id: DEV_LIFECYCLE_ID,
     title: 'Warm-up walkthrough',
     description:
       'How a regular tutor warms a student up, from entering the breakout room to tracking engagement.',

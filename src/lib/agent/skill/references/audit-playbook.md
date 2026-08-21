@@ -81,7 +81,7 @@ that disagree on a separator split the finding history).
   `check_name + ':scope:' + scenario_key + ':' + <reason-slug>`
   (e.g. `gap-sweep:scope:warm-up:orphan-step-cooldown`).
 - The DB backstop: `findings_open_fingerprint_idx` — unique on
-  `(service_lifecycle_id, fingerprint) where status = 'open'`. An insert
+  `(service_id, fingerprint) where status = 'open'`. An insert
   conflict means the dedupe logic missed; treat it as update-in-place,
   never as "insert with a tweaked fingerprint".
 

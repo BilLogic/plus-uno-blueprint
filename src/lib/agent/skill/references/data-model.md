@@ -23,7 +23,7 @@ and stable keys in place of UUIDs.
 ## Hierarchy
 
 ```
-service_lifecycles → phases → scenarios → paths → {lanes, cells, cell_dependencies}
+services → phases → scenarios → paths → {lanes, cells, cell_dependencies}
                                                 → steps (scenario-scoped)
                                         paths ⇄ steps via path_steps (column order)
 ```
@@ -32,7 +32,7 @@ service_lifecycles → phases → scenarios → paths → {lanes, cells, cell_de
 
 ```mermaid
 erDiagram
-  service_lifecycles ||--o{ phases : "has many"
+  services ||--o{ phases : "has many"
   phases ||--o{ scenarios : "has many"
   phases |o--o| phases : "loops_to_phase_id"
   scenarios ||--o{ paths : "has many"
@@ -46,8 +46,8 @@ erDiagram
   cells ||--o{ cell_dependencies : "source"
   cells ||--o{ cell_dependencies : "target"
 
-  service_lifecycles { uuid id PK  text name  text description }
-  phases { uuid id PK  uuid service_lifecycle_id FK  text name  text description  int position  uuid loops_to_phase_id FK "optional self-reference" }
+  services { uuid id PK  text name  text description }
+  phases { uuid id PK  uuid service_id FK  text name  text description  int position  uuid loops_to_phase_id FK "optional self-reference" }
   scenarios { uuid id PK  uuid phase_id FK  text name  text description  int position  text view_type "single | stacked — merged is session-only, never stored" }
   paths { uuid id PK  uuid scenario_id FK  text name  text summary "when this route applies — the condition that puts someone on it"  text note "the author's aside: open questions, provenance, working state"  text path_type "happy | unhappy | exception | alternative | named" }
   steps { uuid id PK  uuid scenario_id FK "columns are scenario-scoped, shared across paths"  text name }
@@ -61,7 +61,7 @@ erDiagram
 
 | Table | Purpose | Notes |
 | --- | --- | --- |
-| `service_lifecycles` | Top container (one per blueprint deployment, usually) | |
+| `services` | Top container (one per blueprint deployment, usually) | |
 | `phases` | Lifecycle stages, ordered by `position` | `loops_to_phase_id` self-reference renders the lifecycle loop |
 | `scenarios` | The unit users navigate; owns steps and paths | `view_type` enum below |
 | `paths` | A journey variant within a scenario | `path_type` enum below; optional `note` |
@@ -103,7 +103,7 @@ before any adapter runs.
 paths → steps → path_steps → lanes → cells → cell_dependencies
 ```
 
-(with `service_lifecycles → phases → scenarios` before all of the
+(with `services → phases → scenarios` before all of the
 above). Any other order violates FKs or the integrity trigger.
 
 ## Re-import semantics

@@ -43,7 +43,7 @@ export function useSlices(lifecycleId?: string): QueryResult<SliceListEntry[]> {
       const { data, error } = await client
         .from('slices')
         .select('*, slice_items (id, position, cell_ids)')
-        .eq('service_lifecycle_id', resolvedLifecycleId)
+        .eq('service_id', resolvedLifecycleId)
         .order('position', { ascending: true })
       if (error) throw new Error(error.message)
       return data ?? []
