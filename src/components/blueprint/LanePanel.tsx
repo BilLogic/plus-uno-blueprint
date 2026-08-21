@@ -9,10 +9,11 @@ import {
   PanelFooterControls,
   PanelFooterHost,
   PanelHeader,
+  PanelEmpty,
   PanelIdentity,
   PanelKindBadge,
-  PanelLoading,
 } from '@/components/blueprint/panelShell'
+import { LanePanelLoading } from '@/components/blueprint/panelLoading'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
 import { PANEL_TEXT } from '@/lib/panelText'
@@ -26,6 +27,15 @@ import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { updateLaneSpec } from '@/lib/laneSpecMutations'
 import { describeLaneRole, getLayerRole, labelLaneRole } from '@/lib/laneRoles'
 import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
+
+/** Nothing an author has said about this lane — the stakeholder is structural. */
+function isLaneEmpty(lane: LaneSpec): boolean {
+  return (
+    !lane.ownerTeam.trim() &&
+    lane.kpis.length === 0 &&
+    lane.tools.length === 0
+  )
+}
 
 /**
  * The lane's properties: who owns it, what it is measured by, what it runs on.
@@ -42,6 +52,8 @@ export function LanePanel({
   laneId: string
   onClose: () => void
 }) {
+  const { canWrite } = useSupabase()
+  const canEdit = useCanvasModeValue() === 'design' && canWrite
   const result = useLaneSpec(laneId)
   const lane = result.status === 'ready' ? result.data : null
 
@@ -58,14 +70,16 @@ export function LanePanel({
         onClose={onClose}
       />
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
-        {lane ? (
+        {lane && isLaneEmpty(lane) && !canEdit ? (
+          <PanelEmpty subject="lane" />
+        ) : lane ? (
           <LanePanelBody key={lane.id} lane={lane} onDone={onClose} />
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
             That lane could not be loaded.
           </p>
         ) : (
-          <PanelLoading />
+          <LanePanelLoading />
         )}
       </div>
       <PanelFooterHost id={LANE_PANEL_FOOTER_ID} />

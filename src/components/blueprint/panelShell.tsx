@@ -27,8 +27,6 @@ import {
   CELL_DETAIL_PANEL_TOP_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import { Badge } from '@/components/ui/badge'
-import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import { PANEL_TEXT } from '@/lib/panelText'
 import {
@@ -464,30 +462,22 @@ export function PanelKindBadge({
 }
 
 /**
- * What a panel shows while its query is in flight.
+ * What a panel shows when its entity has nothing recorded.
  *
- * `deferred-skeleton.tsx` and not the word "Loading…": the inventory names it
- * for empty and loading states, and a panel that opens on a spelt-out
- * placeholder reads slower than one that opens on the shape of its content.
- * The hold means a fast query never paints a skeleton at all.
+ * The fourth state, and the one all four panels were missing: they had
+ * loading and error, so a lane with no owner, no KPIs and no tools rendered a
+ * full form of blank fields, which reads as a loaded form the reader has to
+ * inspect to discover is empty.
+ *
+ * View mode only. In Edit mode a blank form is CORRECT — it is how a value
+ * gets recorded — which is why this cannot be lifted from a reference
+ * implementation that has no view/edit split.
  */
-export function PanelLoading() {
+export function PanelEmpty({ subject }: { subject: string }) {
   return (
-    <DeferredSkeleton
-      loading
-      skeleton={
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-40" />
-          </div>
-          <Skeleton className="h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
-        </div>
-      }
-    >
-      {null}
-    </DeferredSkeleton>
+    <p className="text-sm text-muted-foreground">
+      Nothing recorded for this {subject} yet.
+    </p>
   )
 }
 

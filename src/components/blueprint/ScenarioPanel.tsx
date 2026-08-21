@@ -12,8 +12,8 @@ import {
   PanelHeader,
   PanelIdentity,
   PanelKindBadge,
-  PanelLoading,
 } from '@/components/blueprint/panelShell'
+import { ScenarioPanelLoading } from '@/components/blueprint/panelLoading'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { useScenarioSpec, type ScenarioSpec } from '@/hooks/useScenarioSpec'
 import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
@@ -69,7 +69,7 @@ export function ScenarioPanel({
             That scenario could not be loaded.
           </p>
         ) : (
-          <PanelLoading />
+          <ScenarioPanelLoading />
         )}
       </div>
       <PanelFooterHost id={SCENARIO_PANEL_FOOTER_ID} />

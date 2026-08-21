@@ -6,8 +6,8 @@ import {
   PanelHeader,
   PanelIdentity,
   PanelKindBadge,
-  PanelLoading,
 } from '@/components/blueprint/panelShell'
+import { StepPanelLoading } from '@/components/blueprint/panelLoading'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
@@ -58,7 +58,7 @@ export function StepPanel({
             That step could not be loaded.
           </p>
         ) : (
-          <PanelLoading />
+          <StepPanelLoading />
         )}
       </div>
       <PanelFooterHost id={STEP_PANEL_FOOTER_ID} />

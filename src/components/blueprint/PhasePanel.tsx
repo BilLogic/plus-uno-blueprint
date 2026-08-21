@@ -6,8 +6,8 @@ import {
   PanelHeader,
   PanelIdentity,
   PanelKindBadge,
-  PanelLoading,
 } from '@/components/blueprint/panelShell'
+import { PhasePanelLoading } from '@/components/blueprint/panelLoading'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { usePhaseSpec, type PhaseSpec } from '@/hooks/usePhaseSpec'
 import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
@@ -54,7 +54,7 @@ export function PhasePanel({
             That phase could not be loaded.
           </p>
         ) : (
-          <PanelLoading />
+          <PhasePanelLoading />
         )}
       </div>
       <PanelFooterHost id={PHASE_PANEL_FOOTER_ID} />
