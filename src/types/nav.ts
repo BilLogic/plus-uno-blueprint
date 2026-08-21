@@ -176,7 +176,7 @@ export const FALLBACK_NAV: NavItem[] = [
   {
     id: 'a0000000-0000-4000-8000-000000000120',
     index: 1,
-    label: 'Tech Setup',
+    label: 'Employment & Access',
     parentId: 'a0000000-0000-4000-8000-000000000102',
     viewType: 'stacked',
     description:

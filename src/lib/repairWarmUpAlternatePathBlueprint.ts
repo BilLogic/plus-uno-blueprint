@@ -1,3 +1,14 @@
+/**
+ * Legacy drift on Warm-Up's second path, patched on the way in.
+ *
+ * **Both faults are fixed at source as of 2026-08-21** — the lane positions by
+ * migration `20260821270000`, and the cell-to-lane assignment was already
+ * clean (0 of 28 misfiled when checked). Against the live database every
+ * function here is now a no-op.
+ *
+ * It stays for the no-DB dev fallback, which has not been verified. When
+ * somebody confirms the fixture agrees with the board, this file goes.
+ */
 import type { BlueprintCell, BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 const WARM_UP_ALTERNATE_PATH_ID =
