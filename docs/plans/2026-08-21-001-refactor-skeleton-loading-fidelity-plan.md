@@ -7,6 +7,37 @@ date: 2026-08-21
 
 # Skeleton loading fidelity
 
+## Decisions settled (2026-08-21)
+
+Three questions came up while this plan was being written. All three are closed;
+recording them here so the reasoning is not re-litigated.
+
+**1. Does the board keep preloading `summary` and `links`? — Yes.**
+Neither is drawn on the canvas. Together they are **274 KB of the board's
+~374 KB payload**, carried in memory so the panel opens instantly
+(`blueprintCellSelection.ts` hands them to the panel at click time), and used in
+bulk by compare's difference signatures (`compareSlots.ts` compares on content,
+summary and links). Deferring them to cell-open was considered and rejected:
+**current load speed is fine**, and the change would trade a faster board for a
+skeleton on every first cell open. Revisit only if board load becomes a
+complaint.
+
+**2. Do cell panels get skeletons? — No, because nothing will be loading.**
+Follows from (1). Once the last per-cell columns move into the board query, the
+cell panel has nothing in flight and therefore nothing to place a skeleton for.
+A skeleton for a surface that renders in the same commit as its parent is not a
+low-fidelity placeholder; it is a bug.
+
+**3. What is the rule when this comes up again?**
+> **One value per cell → ships with the board. Unlimited values per cell → gets
+> its own query.**
+
+Function, form, owner, summary — one each, bounded. Evidence sources —
+unbounded. Size today is not the test; that property does not change as the
+board grows.
+
+---
+
 ## Overview
 
 Four entity panels share one generic placeholder that resembles none of them.
@@ -93,14 +124,22 @@ select (select count(*) from cells)                                as cells,
 | | value |
 | --- | ---: |
 | cells | **935** |
-| cells with any spec | **11** |
-| total spec payload, whole board | **2,459 bytes** |
+| cells with `function` | **11** |
+| cells with `form` | **8** |
+| cells with `value_props` | **11** |
+| total spec payload, whole board | **7,772 bytes** |
+| cells with `owner` / `perceived_owner` | **0 / 0** |
 | evidence rows, whole board | **2** |
+
+*(An earlier revision of this plan said 2,459 bytes. That query summed
+`pg_column_size(a) + pg_column_size(b) + pg_column_size(c)` per row — NULL if
+any one column is NULL, so `sum()` skipped almost every row. Columns measured
+separately above.)*
 
 `useCellSpec` is keyed `cell-spec:<id>` — 935 distinct cache keys, one request
 each. With `staleTime: Infinity` ([queryClient.ts:18](../../src/lib/queryClient.ts)) each is
 fetched once per session, so browsing 100 cells costs 100 round-trips. They are
-guarding **2.4 KB**, and 924 of every 935 return nothing at all. `useEvidence`
+guarding **7.8 KB**, and 924 of every 935 return nothing at all. `useEvidence`
 is the same pattern guarding two rows.
 
 The entire dataset is smaller than the request headers used to fetch it. The
@@ -110,7 +149,7 @@ correct query is no query.
 **This is the plan's central finding, and it inverts the obvious instinct.**
 "Fetch on demand rather than up front" is normally the performance-conscious
 choice. Here per-cell fetching *is* the performance problem: it converts one
-2.4 KB response into up to 935 sequential ones, each gated behind a panel open.
+7.8 KB response into up to 935 sequential ones, each gated behind a panel open.
 
 ## Proposed solution
 
@@ -118,9 +157,19 @@ Split the work by whether the query deserves to exist.
 
 ### Tier A — delete the query (cells)
 
-`cell-spec` and `evidence` become **one service-wide fetch each**, landing with
-the board. `CellOverviewSpec` and `CellEvidenceTab` read from memory, have no
-loading state, and their skeletons are deleted as dead code.
+Opening one cell fires **three** per-cell round-trips today, not two:
+
+| Hook | Fetches | Reality |
+| --- | --- | --- |
+| `useCellContent` | content, summary, maturity, links, **owner, perceived_owner** | **Four of six are already in the board query.** The other two are empty on all 935 cells — this trip fetches nothing. |
+| `useCellSpec` | function, form, value_props | 7.8 KB across the whole board |
+| `useEvidence` | evidence rows | 2 rows in the entire database |
+
+All three move into the board query — `owner`, `perceived_owner`, `function`,
+`form`, `value_props`, and an evidence index. **+8.3 KB on a ~374 KB payload,
+about 2%.** `CellOverviewSpec`, `CellContentSection` and `CellEvidenceTab` then
+read from memory, have no loading state, and their skeletons are deleted as
+dead code.
 
 ### Tier B — keep the query, fix the placeholder (entities)
 
@@ -209,8 +258,8 @@ PanelEmpty                                         (NEW — the fourth state)
 
 #### Unit 1 — Cell spec and evidence load once, with the board
 
-**Goal.** Delete 935 potential round-trips guarding 2.4 KB, and with them two
-skeletons and two loading states.
+**Goal.** Delete three per-cell round-trips, and with them two skeletons and two
+loading states.
 
 **Files**
 - `src/hooks/useCellSpec.ts` — becomes a lookup into a service-wide result
