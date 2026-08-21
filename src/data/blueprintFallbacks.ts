@@ -544,11 +544,12 @@ const WARM_UP_TRIGGERS: BlueprintCellDependency[] = [
 export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: PATH_ID,
-    name: 'Happy Path',
+    name: 'Screen shared at greeting',
     summary:
       'Engaged or partially engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],
@@ -648,10 +649,11 @@ const WARM_UP_ALTERNATE_TRIGGERS: BlueprintCellDependency[] =
 export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
   path: {
     id: WARM_UP_ALTERNATE_PATH_ID,
-    name: 'Alternate Path',
+    name: 'No screen share',
     summary: 'Not engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'variant',
+    status: 'live',
   },
   lanes: LAYERS.map((lane) => ({
     ...lane,

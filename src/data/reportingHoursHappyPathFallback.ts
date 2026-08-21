@@ -239,10 +239,11 @@ const REPORTING_HOURS_CELLS: BlueprintCell[] = [
 export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: REPORTING_HOURS_HAPPY_PATH_ID,
-    name: 'Happy Path',
+    name: 'Hours reported and approved',
     summary: 'Tutor reports hours after tutoring session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

@@ -379,7 +379,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   const sectionTitleInfoTooltip = sectionTitleLabel
     ? getScenarioParallelTooltip(slide)
     : null
-  const showPathTypeBadge = Boolean(sectionTitleLabel)
 
   // The chrome this panel will actually have — a locked panel has no resize
   // handle, and an estimate that budgets one is dead gray space.
@@ -492,7 +491,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             scrollContainerRef={scrollContainerRef}
             scenarioName={scenarioName}
             phaseName={phaseName}
-            sectionTitleLabel={sectionTitleLabel}
           />
         )}
       </ResizableComparePanel>
@@ -514,7 +512,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             phaseName={phaseName}
             headerTitleLabel={sectionTitleLabel}
             headerTitleDescription={sectionTitleDescription}
-            showPathTypeBadge={showPathTypeBadge}
             fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
             fillSwimlaneHeight={fillSwimlaneHeight}
           />

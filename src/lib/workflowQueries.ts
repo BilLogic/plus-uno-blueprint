@@ -10,6 +10,7 @@ export const PATH_BLUEPRINT_SELECT = `
   summary,
   note,
   path_type,
+  status,
   scenario_id,
   lanes (
     id,

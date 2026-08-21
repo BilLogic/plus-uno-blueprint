@@ -123,7 +123,7 @@ type ApplicationDiscoveryPathConfig = {
 
 const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathId: APPLICATION_HAPPY_PATH_ID,
-  pathName: 'Happy Path',
+  pathName: 'Discovers and applies',
   pathDescription: 'Potential tutors discover and want to join PLUS.',
   pathType: 'happy',
   cellSlotPrefix: '07',
@@ -537,6 +537,7 @@ function buildApplicationDiscoveryFallback(
       summary: config.pathDescription,
       note: null,
       path_type: config.pathType,
+      status: 'live',
     },
     lanes: [...lanes],
     steps: [...steps],

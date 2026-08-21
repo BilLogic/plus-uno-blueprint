@@ -1,4 +1,5 @@
 import type { PathType } from '@/types/database'
+import type { EntityStatus } from '@/lib/entityStatus'
 
 export type PathListItem = {
   id: string
@@ -6,6 +7,8 @@ export type PathListItem = {
   summary: string | null
   note: string | null
   path_type: PathType
+  /** How far along this route is. Drives the status badge on every path row. */
+  status?: EntityStatus | null
 }
 
 /**

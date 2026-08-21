@@ -31,7 +31,6 @@ type SideBySideCompareGridProps = {
   scenarioName?: string
   phaseName?: string
   /** When set, scenario title sits on the gray panel edge; path frames show path type. */
-  sectionTitleLabel?: string
   sectionTitleDescription?: string | null
   /** Shared swimlane board height for phase overview alignment. */
   fixedSwimlaneBodyHeight?: number
@@ -59,7 +58,6 @@ export function SideBySideCompareGrid({
   scrollContainerRef: scrollContainerRefProp,
   scenarioName,
   phaseName,
-  sectionTitleLabel,
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
 }: SideBySideCompareGridProps) {
@@ -101,7 +99,6 @@ export function SideBySideCompareGrid({
     [blueprints, compact],
   )
 
-  const showPathTypeBadge = Boolean(sectionTitleLabel)
 
   if (blueprints.length === 0) {
     return (
@@ -175,7 +172,6 @@ export function SideBySideCompareGrid({
             scrollContainerRef={scrollContainerRefProp}
             scenarioName={scenarioName}
             phaseName={phaseName}
-            showPathTypeBadge={showPathTypeBadge}
             fillSwimlaneHeight={fillSwimlaneHeight}
           />
         ))}

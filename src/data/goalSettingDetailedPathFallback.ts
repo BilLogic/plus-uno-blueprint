@@ -588,6 +588,7 @@ export const GOAL_SETTING_DETAILED_PATH_FALLBACK: BlueprintData = {
       'No prior personalized goals set and start of a new goal cycle.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'variant',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

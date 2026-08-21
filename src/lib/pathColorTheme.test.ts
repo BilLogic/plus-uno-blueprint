@@ -31,15 +31,25 @@ describe('path identity', () => {
     expect(new Set(nonHappy).size).toBe(nonHappy.length)
   })
 
-  it('keeps a path\'s colour when its TYPE changes', () => {
-    // The slot is keyed on the name alone. Keying it on `${type}:${name}` is
+  it('keeps a variant\'s colour wherever it appears', () => {
+    // The slot is keyed on the NAME alone. Keying it on `${type}:${name}` is
     // what dropped the five Goal Setting paths out of their pinned slots when
     // they moved off `custom` on 2026-08-21 — a re-type silently re-coloured
     // them, and the dash moved with it.
-    const asVariant = { path_type: 'variant', name: 'Set Goals' } as const
-    const asException = { path_type: 'exception', name: 'Set Goals' } as const
-    expect(getPathColor(asVariant)).toBe(getPathColor(asException))
-    expect(getPathDashArray(asVariant)).toBe(getPathDashArray(asException))
+    const here = { path_type: 'variant', name: 'Set Goals' } as const
+    const there = { path_type: 'variant', name: 'Set Goals' } as const
+    expect(getPathColor(here)).toBe(getPathColor(there))
+    expect(getPathDashArray(here)).toBe(getPathDashArray(there))
+  })
+
+  it('fixes green on happy and red on exception, whatever they are called', () => {
+    // The two a reader should never have to decode.
+    expect(getPathColor({ path_type: 'happy', name: 'Anything at all' })).toBe(
+      getPathColor({ path_type: 'happy', name: 'Something else' }),
+    )
+    expect(
+      getPathColor({ path_type: 'exception', name: 'Missed hours' }),
+    ).toBe(getPathColor({ path_type: 'exception', name: 'Escalation' }))
   })
 
   it('separates two unregistered named paths', () => {

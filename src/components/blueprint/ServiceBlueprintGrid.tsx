@@ -92,7 +92,6 @@ type ServiceBlueprintGridProps = {
   /** When set, scenario title sits on the gray panel; path frame shows path type. */
   headerTitleLabel?: string
   headerTitleDescription?: string | null
-  showPathTypeBadge?: boolean
   fixedSwimlaneBodyHeight?: number
   fillSwimlaneHeight?: boolean
   /** Render empty cell shells for missing / blank cells (homepage template). */
@@ -112,7 +111,6 @@ export function ServiceBlueprintGrid({
   scenarioName,
   phaseName,
   headerTitleLabel,
-  showPathTypeBadge = false,
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
   showEmptyCells = false,
@@ -234,8 +232,7 @@ export function ServiceBlueprintGrid({
             <ComparePathSectionFrame
               blueprint={data}
               compact={compact}
-              showTitle={showPathTypeBadge}
-              showPathTypeBadge={showPathTypeBadge}
+              showTitle
               variant="service"
               excludeLabelRail
             />

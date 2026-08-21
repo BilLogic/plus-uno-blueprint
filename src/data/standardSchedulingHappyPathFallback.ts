@@ -183,10 +183,11 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
 export const STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: STANDARD_SCHEDULING_HAPPY_PATH_ID,
-    name: 'Happy Path',
+    name: 'Views schedule and reconfirms',
     summary: 'Tutors receive semester schedule.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

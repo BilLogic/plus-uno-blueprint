@@ -1,3 +1,4 @@
+import type { EntityStatus } from '@/lib/entityStatus'
 /**
  * Supabase database types for the `public` schema.
  *
@@ -136,7 +137,7 @@ export type Database = {
           id: string
           lane_id: string
           links: Json
-          status: string | null
+          status: EntityStatus
           owner: string | null
           path_id: string
           perceived_owner: string | null
@@ -156,7 +157,7 @@ export type Database = {
           id?: string
           lane_id: string
           links?: Json
-          status?: string | null
+          status?: EntityStatus
           owner?: string | null
           path_id: string
           perceived_owner?: string | null
@@ -176,7 +177,7 @@ export type Database = {
           id?: string
           lane_id?: string
           links?: Json
-          status?: string | null
+          status?: EntityStatus
           owner?: string | null
           path_id?: string
           perceived_owner?: string | null
@@ -426,6 +427,7 @@ export type Database = {
           name: string
           note: string | null
           path_type: PathType
+          status: EntityStatus
           scenario_id: string
           updated_at: string
         }
@@ -436,6 +438,7 @@ export type Database = {
           name: string
           note?: string | null
           path_type: PathType
+          status?: EntityStatus
           scenario_id: string
           updated_at?: string
         }
@@ -446,6 +449,7 @@ export type Database = {
           name?: string
           note?: string | null
           path_type?: PathType
+          status?: EntityStatus
           scenario_id?: string
           updated_at?: string
         }

@@ -1,8 +1,6 @@
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
-import { PathTypeBadge } from '@/components/blueprint/PathTypeBadge'
 import {
   getPathTypeSectionBorderStyle,
-  shouldShowPathTypeBadge,
 } from '@/lib/pathTypeTheme'
 import { blueprintPanelSectionFillColor } from '@/lib/blueprintTheme'
 import {
@@ -33,7 +31,6 @@ type ComparePathSectionFrameProps = {
    * Overview mode: prefer a path-type badge for generic names (Happy Path, etc.).
    * Named paths (Set Goals, …) always show their title.
    */
-  showPathTypeBadge?: boolean
   /** Compare uses extra top inset for the title badge; service uses uniform inset. */
   variant?: 'compare' | 'service'
   /** Row-axis labels sit outside the path boundary in every arrangement. */
@@ -45,7 +42,6 @@ export function ComparePathSectionFrame({
   blueprint,
   compact,
   showTitle = true,
-  showPathTypeBadge = false,
   variant = 'compare',
   excludeLabelRail = false,
 }: ComparePathSectionFrameProps) {
@@ -53,7 +49,6 @@ export function ComparePathSectionFrame({
   const pathBorder = getPathTypeSectionBorderStyle(path.path_type, path)
   const { borderColor, borderStyle, borderWidth } = pathBorder
   const sectionFill = blueprintPanelSectionFillColor()
-  const useTypeBadge = showPathTypeBadge && shouldShowPathTypeBadge(path)
   const labelAxisOffset = excludeLabelRail
     ? variant === 'service'
       ? LAYER_COLUMN_WIDTH
@@ -98,32 +93,18 @@ export function ComparePathSectionFrame({
         }}
       />
       {showTitle ? (
-        useTypeBadge ? (
-          <PathTypeBadge
-            pathType={path.path_type}
-            description={path.summary}
-            compact={compact}
-            className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
-            style={{
-              top: titleTop,
-              left: titleLeft,
-              transform: 'translateY(-50%)',
-            }}
-          />
-        ) : (
-          <PathLabelBadge
-            name={path.name}
-            description={path.summary}
-            pathType={path.path_type}
-            compact={compact}
-            className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
-            style={{
-              top: titleTop,
-              left: titleLeft,
-              transform: 'translateY(-50%)',
-            }}
-          />
-        )
+        <PathLabelBadge
+          name={path.name}
+          description={path.summary}
+          pathType={path.path_type}
+          compact={compact}
+          className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
+          style={{
+            top: titleTop,
+            left: titleLeft,
+            transform: 'translateY(-50%)',
+          }}
+        />
       ) : null}
     </>
   )

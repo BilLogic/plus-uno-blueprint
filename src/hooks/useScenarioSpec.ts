@@ -1,6 +1,11 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { PathType } from '@/types/database'
+import {
+  asEntityStatus,
+  DEFAULT_ENTITY_STATUS,
+  type EntityStatus,
+} from '@/lib/entityStatus'
 
 export type ScenarioPathSpec = {
   id: string
@@ -10,6 +15,8 @@ export type ScenarioPathSpec = {
   summary: string
   /** The author's aside: open questions, provenance, working state. */
   note: string
+  /** How far along this route is. `live` on all but six today. */
+  status: EntityStatus
 }
 
 export type ScenarioSpec = {
@@ -43,7 +50,7 @@ export function useScenarioSpec(
       const { data: scenario, error } = await client
         .from('scenarios')
         .select(
-          'id, name, summary, phases!inner(name), paths(id, name, path_type, summary, note, created_at)',
+          'id, name, summary, phases!inner(name), paths(id, name, path_type, status, summary, note, created_at)',
         )
         .eq('id', scenarioId)
         .maybeSingle()
@@ -54,6 +61,7 @@ export function useScenarioSpec(
         id: string
         name: string
         path_type: PathType
+        status: EntityStatus | null
         summary: string | null
         note: string | null
         created_at: string
@@ -67,6 +75,7 @@ export function useScenarioSpec(
           pathType: path.path_type,
           summary: path.summary ?? '',
           note: path.note ?? '',
+          status: asEntityStatus(path.status) ?? DEFAULT_ENTITY_STATUS,
         }))
 
       const { count: stepCount, error: stepError } = await client

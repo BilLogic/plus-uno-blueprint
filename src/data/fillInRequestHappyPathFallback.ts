@@ -279,10 +279,11 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
 export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: FILL_IN_REQUEST_HAPPY_PATH_ID,
-    name: 'Happy Path',
+    name: 'Takes a slot from the pool',
     summary: 'Tutor is requested to fill in for a session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

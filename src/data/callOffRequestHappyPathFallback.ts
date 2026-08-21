@@ -306,10 +306,11 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
 export const CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: CALL_OFF_REQUEST_HAPPY_PATH_ID,
-    name: 'Happy Path',
+    name: 'Call-off 12h+ (auto-approved)',
     summary: 'Tutor calls off shift for upcoming session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

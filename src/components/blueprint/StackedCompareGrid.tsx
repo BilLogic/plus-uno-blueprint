@@ -28,7 +28,6 @@ type StackedCompareGridProps = {
   scenarioName?: string
   phaseName?: string
   /** When set, scenario title sits on the gray panel edge; path frames show path type. */
-  sectionTitleLabel?: string
 }
 
 /**
@@ -51,7 +50,6 @@ export function StackedCompareGrid({
   scrollContainerRef,
   scenarioName,
   phaseName,
-  sectionTitleLabel,
 }: StackedCompareGridProps) {
   const { lanes, rows, toggleLayer, tracks, gridTemplateColumns } =
     useCompareGridAxis(model, blueprints, compact)
@@ -61,7 +59,6 @@ export function StackedCompareGrid({
     [rows],
   )
 
-  const showPathTypeBadge = Boolean(sectionTitleLabel)
 
   if (blueprints.length === 0) {
     return (
@@ -106,7 +103,6 @@ export function StackedCompareGrid({
               scrollContainerRef={scrollContainerRef}
               scenarioName={scenarioName}
               phaseName={phaseName}
-              showPathTypeBadge={showPathTypeBadge}
             />
           </Fragment>
         ))}

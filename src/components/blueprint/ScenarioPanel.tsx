@@ -24,9 +24,9 @@ import {
   updatePathSpec,
   updateScenarioSummary,
 } from '@/lib/scenarioSpecMutations'
-import { getPathTypeSuffixIfNeeded } from '@/lib/pathTypeTheme'
+import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import { PANEL_TEXT } from '@/lib/panelText'
-import type { PathType } from '@/types/database'
 
 /**
  * The scenario's properties — and the only surface its PATHS have.
@@ -74,19 +74,6 @@ export function ScenarioPanel({
       <PanelFooterHost id={SCENARIO_PANEL_FOOTER_ID} />
     </>
   )
-}
-
-/**
- * The path-type word to show beside a path's name, or null to show nothing.
- *
- * `named` is not a kind of path — it is what a path is called when it has no
- * archetype, so printing "Named path" beside "Set Goals" tells the reader
- * nothing they could act on. And a path literally called "Happy Path" does
- * not need "Happy path" repeated after it. `getPathTypeSuffixIfNeeded`
- * already encodes both rules for the compare labels; this is the same call.
- */
-function pathTypeSuffix(path: { name: string; pathType: PathType }): string | null {
-  return getPathTypeSuffixIfNeeded({ name: path.name, path_type: path.pathType })
 }
 
 type PathForm = { summary: string; note: string }
@@ -223,19 +210,22 @@ function ScenarioPanelBody({
           {scenario.paths.map((path) => (
             <AccordionItem key={path.id} value={path.id}>
               <AccordionTrigger className="w-full min-w-0 gap-1.5 py-2 hover:no-underline">
-                <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                {/*
+                  Dot, name, status — and no type badge.
+
+                  The dot IS the type: green for the scenario's main route, red
+                  for an exception, and one of four other hues for a variant.
+                  A badge beside it saying "Happy" would be that same fact a
+                  second time, which is what the plain-text type here used to
+                  be. The dash pattern carries it for a reader who cannot
+                  separate the hues (SC 1.4.1).
+                */}
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <PathTypeColorKey type={path.pathType} name={path.name} />
                   <span className="truncate text-sm font-medium text-foreground">
                     {path.name}
                   </span>
-                  {/* The type only when it ADDS something. `named` says
-                      nothing (it is the absence of an archetype, not a kind),
-                      and "Happy Path — Happy path" repeats the name back at
-                      the reader. Same rule the overview frames already use. */}
-                  {pathTypeSuffix(path) ? (
-                    <span className="shrink-0 text-2xs font-normal text-muted-foreground">
-                      {pathTypeSuffix(path)}
-                    </span>
-                  ) : null}
+                  <StatusBadge status={path.status} />
                 </span>
               </AccordionTrigger>
               <AccordionContent>

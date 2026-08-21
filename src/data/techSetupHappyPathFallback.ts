@@ -451,11 +451,12 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
 export const TECH_SETUP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: TECH_SETUP_HAPPY_PATH_ID,
-    name: 'Happy Path',
+    name: 'Clearances then I-9',
     summary:
       'Tutor sets up technology and obtains clearances.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

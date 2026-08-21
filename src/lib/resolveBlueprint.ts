@@ -1,3 +1,4 @@
+import { asEntityStatus } from '@/lib/entityStatus'
 import {
   DISCOVERY_SCENARIO_ID,
 } from '@/data/applicationHappyPathFallback'
@@ -310,6 +311,8 @@ export function resolveBlueprintForScenario(
               fallback.path.summary ?? rawPath.summary ?? null,
             note: fallback.path.note ?? rawPath.note ?? null,
             path_type: rawPath.path_type,
+            status:
+              asEntityStatus(rawPath.status) ?? fallback.path.status,
           }
         : fallback.path,
     })

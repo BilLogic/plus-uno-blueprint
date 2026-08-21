@@ -3,6 +3,8 @@ import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
 import { filterToolbarButtonClass } from '@/lib/filterToolbarButton'
 import { cn } from '@/lib/utils'
 import type { PathType } from '@/types/database'
+import type { EntityStatus } from '@/lib/entityStatus'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
 
 export type PathOption = {
   /**
@@ -15,6 +17,8 @@ export type PathOption = {
   name: string
   summary: string | null
   path_type: PathType
+  /** How far along this route is. Omitted on options built before it existed. */
+  status?: EntityStatus | null
   /**
    * The real path uuids folded into this option, in the order they were
    * collected. Present only on options built by `collectOverviewPathOptions`;
@@ -105,6 +109,7 @@ function PathNotionPill({
       >
         <span>{pathLabel}</span>
       </PathDescriptionTooltip>
+      <StatusBadge status={path.status} />
     </button>
   )
 }
@@ -137,6 +142,7 @@ export function PathToolbarButton({
       >
         <span>{pathLabel}</span>
       </PathDescriptionTooltip>
+      <StatusBadge status={path.status} />
     </button>
   )
 }
@@ -195,6 +201,7 @@ function PathCheckbox({
       >
         <span className="min-w-0 cursor-default text-left">{pathLabel}</span>
       </PathDescriptionTooltip>
+      <StatusBadge status={path.status} />
     </label>
   )
 }

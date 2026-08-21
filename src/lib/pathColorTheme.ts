@@ -51,33 +51,29 @@ export function getPathColorKey(path: PathColorInput): string {
 }
 
 /**
- * The families a path may be drawn from once its identity is a *name* rather
- * than a type — the same seven the touchpoint tones use.
+ * The families a VARIANT may be drawn from.
+ *
+ * Green and red are spoken for: green is always the happy path, red is always
+ * an exception. Those two are fixed so a reader can trust them at a glance
+ * without learning anything — red means trouble, everywhere, always. What is
+ * left identifies variants, which are the only type a scenario holds several
+ * of at once.
  *
  * Deliberately disjoint from the eight lane families, and `palette.test.ts`
  * holds that. Before this, the open set drew on ten families including green,
- * blue, violet and pink, so a non-happy path could render as a 2px line in exactly
- * the hue of the lane it crossed. Four of the five non-happy paths on the live
- * board did: `Check Goals` was violet over the violet frontstage-tech lane,
+ * blue, violet and pink, so a path could render as a 2px line in exactly the
+ * hue of the lane it crossed. Four of the five open paths on the live board
+ * did: `Check Goals` was violet over the violet frontstage-tech lane,
  * `Update Goals` pink over the pink frontstage-action lane.
  *
- * Sharing the tone set rather than inventing a third one is safe because the
- * two never render at the same weight: a tone is a step-400 pill fill, a path
- * is a step-1100 line and badge. Seven hundred steps apart, they cannot be
- * mistaken for each other, and there is one palette to learn instead of two.
+ * Crimson and tomato went out with red: a variant that reads as trouble is
+ * worse than one that reads as nothing in particular.
  *
- * The order puts distant hues next to each other, so adjacent hashes do not
- * land on neighbours.
+ * Sharing the touchpoint tone set rather than inventing a third is safe because
+ * the two never render at the same weight — a tone is a step-400 pill fill, a
+ * path is a step-1100 line.
  */
-const PATH_OPEN_FAMILIES = [
-  'indigo',
-  'tomato',
-  'purple',
-  'gold',
-  'crimson',
-  'yellow',
-  'red',
-] as const
+const PATH_OPEN_FAMILIES = ['indigo', 'purple', 'gold', 'yellow'] as const
 
 const step = (family: string, weight: 1000 | 1100) =>
   `var(--color-${family}-${weight})`
@@ -148,6 +144,20 @@ const EXTENDED_PATH_DASHES = [
 ] as const
 
 /**
+ * How many distinct (colour, dash) pairs exist before one repeats.
+ *
+ * Colour and dash index the same slot through lists of different length, so
+ * the pair's period is their lowest common multiple. The lengths are kept
+ * COPRIME on purpose: equal lengths would lock one colour to one dash, making
+ * the second channel redundant with the first — two paths sharing a colour
+ * would share a dash too, and be indistinguishable to a reader who cannot
+ * separate the hues (SC 1.4.1).
+ */
+export const PATH_IDENTITY_PERIOD =
+  PATH_OPEN_FAMILIES.length * EXTENDED_PATH_DASHES.length
+
+
+/**
  * Dash pattern for a path's arrows and section borders, paired with
  * {@link getPathColor} through the same slot so the two never come apart.
  *
@@ -204,12 +214,12 @@ function pathSlot(path: PathColorInput): number {
 }
 
 export function getPathColor(path: PathColorInput): string {
-  if (path.path_type === 'happy') return PATH_TYPE_COLORS.happy
+  if (path.path_type !== 'variant') return PATH_TYPE_COLORS[path.path_type]
   return EXTENDED_PATH_COLORS[pathSlot(path) % EXTENDED_PATH_COLORS.length]
 }
 
 export function getPathArrowColor(path: PathColorInput): string {
-  if (path.path_type === 'happy') return PATH_TYPE_ARROW_COLORS.happy
+  if (path.path_type !== 'variant') return PATH_TYPE_ARROW_COLORS[path.path_type]
   return EXTENDED_ARROW_COLORS[pathSlot(path) % EXTENDED_ARROW_COLORS.length]
 }
 

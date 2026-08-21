@@ -9,7 +9,8 @@ export type BlueprintPath = {
    *  which is the distinction plan 006 draws between the two. */
   summary: string | null
   note: string | null
-  path_type: PathType
+  path_type: PathType  /** How far along this route is. `live` unless somebody said otherwise. */
+  status: EntityStatus
 }
 
 export type BlueprintLane = {

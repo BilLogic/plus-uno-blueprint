@@ -192,11 +192,12 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
 export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: SESSION_SIGN_UP_HAPPY_PATH_ID,
-    name: 'Happy Path',
+    name: 'Signs up without conflicts',
     summary:
       'Tutor signs up for recurring sessions for the rest of the semester.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
   lanes: [...LAYERS],
   steps: [...STEPS],

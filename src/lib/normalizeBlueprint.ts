@@ -1,4 +1,9 @@
-import { ENTITY_STATUS, type EntityStatus } from '@/lib/entityStatus'
+import {
+  asEntityStatus,
+  DEFAULT_ENTITY_STATUS,
+  ENTITY_STATUS,
+  type EntityStatus,
+} from '@/lib/entityStatus'
 import type {
   BlueprintCell,
   BlueprintCellDependency,
@@ -57,6 +62,7 @@ export type RawPath = {
   summary?: string | null
   note?: string | null
   path_type: PathType
+  status?: string | null
   lanes?: RawLane[] | null
   /** @deprecated Legacy shape; use path_steps */
   steps?: BlueprintStep[] | null
@@ -249,6 +255,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       summary: raw.summary ?? null,
       note: raw.note ?? null,
       path_type: raw.path_type,
+      status: asEntityStatus(raw.status) ?? DEFAULT_ENTITY_STATUS,
     },
     lanes,
     steps,
