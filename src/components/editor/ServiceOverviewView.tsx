@@ -386,8 +386,6 @@ function ServiceOverviewViewImpl({
     blueprintsByPathId,
     loading: blueprintsLoading,
     progress: blueprintsProgress,
-    filterPaths: overviewPaths,
-    filterSelectedPathIds: overviewSelectedPathIds,
     viewType: overviewViewType,
     resolveSelectedPathIds,
   } = usePhaseBlueprintFilters({
@@ -396,6 +394,22 @@ function ServiceOverviewViewImpl({
     getScenarioDisplayViewType,
     setScenarioDisplayViewType,
   })
+
+  /*
+    What the canvas is actually drawing — one happy path per scenario.
+
+    This used to be a user selection made from a phase-level filter. That
+    filter is gone (decided 2026-08-21: paths belong to a scenario), so the
+    set is derived rather than chosen, and the camera keys and gates below
+    read it exactly as they read the selection before.
+  */
+  const overviewSelectedPathIds = useMemo(() => {
+    const ids: string[] = []
+    for (const [scenarioId, paths] of pathsByScenario) {
+      ids.push(...resolveSelectedPathIds(scenarioId, paths))
+    }
+    return ids
+  }, [pathsByScenario, resolveSelectedPathIds])
 
   const overviewReady = !slidesLoading && !blueprintsLoading
   // Content holds until the bar has visibly REACHED 100%: readiness flips
@@ -754,8 +768,10 @@ function ServiceOverviewViewImpl({
     }
   }, [overviewSettled, overviewEl])
 
+  // Only reachable when every scenario in scope came back with no paths at
+  // all — a real empty state, not a filter the reader cleared.
   const noPathsSelected =
-    overviewPaths.length > 0 && overviewSelectedPathIds.length === 0
+    pathsByScenario.size > 0 && overviewSelectedPathIds.length === 0
 
   const postToPreLoop = soloPhase
     ? null
@@ -778,25 +794,30 @@ function ServiceOverviewViewImpl({
   const focusedHeader = useMemo(() => {
     if (!isDetail) return null
 
-    const scopeScenarioIds = isSubslide(activeSlide)
-      ? [activeSlide.id]
-      : getSubslides(activeSlide.id, slides).map((scenario) => scenario.id)
+    /*
+      Paths only when a SCENARIO is focused. A phase header offers none:
+      its board draws one happy path per scenario and there is nothing to
+      choose between. The header still renders — title, view type — it just
+      has no path control on it.
+    */
+    if (!isSubslide(activeSlide)) {
+      return { slide: activeSlide, paths: [], selectedPathIds: [] }
+    }
 
     const scopedPaths = collectOverviewPathOptionsForScenarios(
       pathsByScenario,
-      scopeScenarioIds,
+      [activeSlide.id],
     )
     const scopedPathIds = new Set(scopedPaths.map((path) => path.id))
-    const scopedSelectedPathIds = overviewSelectedPathIds.filter((id) =>
-      scopedPathIds.has(id),
-    )
 
     return {
       slide: activeSlide,
       paths: scopedPaths,
-      selectedPathIds: scopedSelectedPathIds,
+      selectedPathIds: overviewSelectedPathIds.filter((id) =>
+        scopedPathIds.has(id),
+      ),
     }
-  }, [activeSlide, isDetail, overviewSelectedPathIds, pathsByScenario, slides])
+  }, [activeSlide, isDetail, overviewSelectedPathIds, pathsByScenario])
 
   // The viewport below has already scheduled this fit with animation
   // suppressed (child effects run before parent effects), so release the
