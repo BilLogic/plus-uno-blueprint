@@ -1,7 +1,7 @@
 ---
 title: "One cell per touchpoint, and names that are names"
 type: refactor
-status: active
+status: completed
 date: 2026-08-20
 repos: uno-blueprint
 related: docs/plans/2026-08-20-006-design-data-model.md, docs/plans/2026-08-20-005-feat-spec-fill-campaign-plan.md
@@ -98,9 +98,29 @@ Same class of defect, smaller:
 
 ## Acceptance criteria
 
-- [ ] No tech-lane cell's `content` contains a sentence, an em dash, or a `+`
-- [ ] Every split cell's `tech_description` links moved with it
-- [ ] Every dependency edge still resolves to a cell that exists
-- [ ] `docs/reference/touchpoint-vocabulary.md` lists the closed set
-- [ ] No lane name contains its own role
-- [ ] `check-jargon-lint` re-run; record which findings changed
+- [x] No tech-lane cell's `content` contains a sentence, an em dash, or a `+`
+      — asserted in `20260820190000`, which fails if one survives
+- [x] Every split cell's `tech_description` links moved with it — measured
+      first: none of the renamed rows carried a link keyed to its own content
+- [x] Every dependency edge still resolves to a cell that exists — the six
+      split sources had no edges at all, so no edge had to pick a half
+- [x] `docs/reference/touchpoint-vocabulary.md` lists the closed set
+- [x] No lane name contains its own role — `20260820200000`
+- [ ] `check-jargon-lint` re-run; record which findings changed — it is an
+      AGENT check (`src/lib/agent/skill/references/check-jargon-lint.md`), not
+      a script, so it runs on the next audit pass rather than from here
+
+## What was done, and what was deliberately not
+
+**Done** — 57 tech cells renamed to touchpoint names with the sentence moved
+into `summary`, six cells holding two touchpoints split into two cells each,
+one support-lane sentence, and `Partner Action: Teacher` renamed to `Teacher`
+across the stakeholder row, the 16 lane rows, `slices.actor` (by trigger), and
+twelve offline fallbacks plus the theme and layout constants in the app.
+Average tech pill is now 13 characters.
+
+**Held back — the twelve `Planned — …` rows.** Their prefix is a MATURITY,
+not part of the name, and this database has no column for one. Dropping the
+word would make an unbuilt surface read as shipped on the canvas, which is a
+worse defect than a long pill. They need `cells.maturity` plus a renderer
+marker, which is its own plan.

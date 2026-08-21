@@ -128,4 +128,44 @@ begin
   end if;
 end $$;
 
+/*
+  The support lane, same rule.
+
+  Its pills are TEAM names and were already names — one row was the exception,
+  a sentence about how recruiting happens. The other long support cells are
+  the `Planned — …` class, held back with the rest of them.
+*/
+update public.cells
+set content = 'Referral culture',
+    summary = 'Current and former tutors informally recruit their peers.'
+where id = 'e0000000-0000-4000-8000-000000000615';
+
+/*
+  Convergence, second pass.
+
+  Once the sentences were gone the near-duplicates were visible: the same
+  touchpoint under two names, and one qualifier-in-a-name per pair. The
+  vocabulary converges the way lane labels do — reuse the existing name — and
+  the qualifier moves into `summary` where it can say more than a parenthesis.
+*/
+update public.cells as c
+set content = v.content,
+    summary = coalesce(v.summary, c.summary)
+from (values
+  ('a0000000-0000-4000-8000-000000100606', 'Workday', $q$The tutor completes payroll onboarding tasks in the employee view of Workday, including entering personal and employment information.$q$),
+  ('a0000000-0000-4000-8000-000000100608', 'Workday', $q$The supervisor team completes the matching student employment paperwork in the employer view of Workday.$q$),
+  ('b2000000-0000-4000-8000-000000000034', 'Slack', $q$The school's own Slack channel, where supervisors pick up in-session issues.$q$),
+  ('a0000000-0000-4000-8000-000000140108', 'PLUS App database', null),
+  ('e0000000-0000-4000-8000-000000000651', 'LessonLLMFeedback', null),
+  ('e0000000-0000-4000-8000-000000000652', 'Accredible', null),
+  ('c2000000-0000-4000-8000-000000000041', 'Reflection form', null),
+  ('b0000000-0000-4000-8000-0000001e1206', 'Slack', $q$Where supervisors chase the tutor about the missing hours.$q$)
+) as v(id, content, summary)
+where c.id = v.id::uuid;
+
+-- `Slack / email` was two channels in one pill.
+insert into public.cells (path_id, lane_id, step_id, content, summary, position, origin)
+select path_id, lane_id, step_id, 'Email', $q$The other channel supervisors use to chase missing hours.$q$, position + 1, origin
+from public.cells where id = 'b0000000-0000-4000-8000-0000001e1206';
+
 commit;
