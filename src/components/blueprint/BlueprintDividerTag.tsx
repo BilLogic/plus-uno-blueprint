@@ -48,7 +48,6 @@ export function BlueprintDividerRailLabel({
       className={cn(
         'relative shrink-0 font-medium uppercase leading-none tracking-[0.08em]',
         compact ? 'text-3xs' : 'text-2xs',
-        meaning && 'cursor-help',
       )}
       style={{ color: BLUEPRINT_THEME.dividerLabel }}
     >
