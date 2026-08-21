@@ -67,6 +67,7 @@ export function CompareCellBlock({
   selectionContext,
   visualPictures,
   slotCells,
+  maturity,
   pathMembership,
 }: {
   cellId?: string
@@ -80,6 +81,8 @@ export function CompareCellBlock({
   visualPictures?: Array<{ picture: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
+  /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
+  maturity?: BlueprintCell['maturity']
   slotCells?: BlueprintCell[]
   /** Member paths of this rendered cell — one outline segment each. */
   pathMembership?: readonly CompareCellPathMembership[]
@@ -186,6 +189,7 @@ export function CompareCellBlock({
               sliceSequenceBadge={
                 index === 0 || slotCell?.id !== all[index - 1]?.slotCell?.id
               }
+              maturity={slotCell?.maturity ?? maturity}
               className={
                 hasMembershipOutline ? 'compare-membership-outline' : undefined
               }
@@ -216,6 +220,7 @@ export function CompareCellBlock({
         }
         cellId={cellId}
         stepIndex={stepIndex}
+        maturity={maturity}
         className={cn(
           'flex-none overflow-hidden',
           hasMembershipOutline && 'compare-membership-outline',

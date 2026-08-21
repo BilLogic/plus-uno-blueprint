@@ -57,6 +57,14 @@ export type BlueprintCell = {
   summary: string | null
   links: CellLink[]
   /**
+   * Whether this cell describes something built. Absent means shipped.
+   *
+   * The state used to be a `Planned — ` prefix on `content`, which put a
+   * maturity inside a touchpoint NAME: a pill read "Planned — swap flow UI"
+   * and the vocabulary gained a product called that. Fifty cells carried it.
+   */
+  maturity?: 'planned' | 'prototype' | null
+  /**
    * Order within a slot (one lane, one step). Tech lanes hold one cell per
    * touchpoint; everything else holds a single cell at 0. Optional because
    * rows predating the split never carry it — absent reads as 0.

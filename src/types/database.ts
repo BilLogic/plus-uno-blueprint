@@ -136,6 +136,7 @@ export type Database = {
           id: string
           lane_id: string
           links: Json
+          maturity: string | null
           owner: string | null
           path_id: string
           perceived_owner: string | null
@@ -155,6 +156,7 @@ export type Database = {
           id?: string
           lane_id: string
           links?: Json
+          maturity?: string | null
           owner?: string | null
           path_id: string
           perceived_owner?: string | null
@@ -174,6 +176,7 @@ export type Database = {
           id?: string
           lane_id?: string
           links?: Json
+          maturity?: string | null
           owner?: string | null
           path_id?: string
           perceived_owner?: string | null

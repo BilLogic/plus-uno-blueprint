@@ -20,6 +20,8 @@ type BlueprintTechPillProps = {
   className?: string
   /** Pills share their cell id — only the first pill carries the badge. */
   sliceSequenceBadge?: boolean
+  /** Passed through so an unbuilt touchpoint does not read as a live one. */
+  maturity?: 'planned' | 'prototype' | null
   'aria-describedby'?: string
 }
 
@@ -36,11 +38,13 @@ export function BlueprintTechPill({
   style,
   className,
   sliceSequenceBadge = false,
+  maturity,
   'aria-describedby': ariaDescribedBy,
 }: BlueprintTechPillProps) {
   const fixedHeight = compact ? PILL_ITEM_HEIGHT_COMPACT : PILL_ITEM_HEIGHT
   return (
     <BlueprintCellButton
+      maturity={maturity}
       fill="frontstage-tech"
       tone={getTouchpointTone(item)}
       selection={buildTechPillSelection(selectionContext, item)}

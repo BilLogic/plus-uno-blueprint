@@ -597,6 +597,7 @@ function BlueprintSwimLane({
                       : undefined)
                 }
                 content={cell?.content ?? (showEmptyCells ? '' : undefined)}
+                maturity={cell?.maturity}
                 laneStyle={laneStyle}
                 variant={variant}
                 width={STEP_COLUMN_WIDTH}
@@ -695,6 +696,7 @@ function BlueprintCellBlock({
   selectionContext,
   visualPictures,
   slotCells,
+  maturity,
 }: {
   stepIndex: number
   cellId?: string
@@ -710,6 +712,8 @@ function BlueprintCellBlock({
   visualPictures?: Array<{ picture: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
+  /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
+  maturity?: BlueprintCell['maturity']
   slotCells?: BlueprintCell[]
 }) {
   const shellPadding = cn(
@@ -728,7 +732,7 @@ function BlueprintCellBlock({
       ? (slotCells && slotCells.length > 0
           ? slotCells
           : content !== undefined
-            ? [{ id: cellId, content, picture: null, summary: null, links: [] }]
+            ? [{ id: cellId, content, picture: null, summary: null, maturity, links: [] }]
             : []
         ).flatMap((slotCell) =>
           getTechPillItems(slotCell.content ?? '').map((item) => ({
@@ -807,6 +811,7 @@ function BlueprintCellBlock({
                 index === 0 ||
                 slotCell.id !== pillEntries[index - 1]?.cell.id
               }
+              maturity={slotCell.maturity ?? maturity}
             />
           ) : (
             <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />
@@ -817,6 +822,7 @@ function BlueprintCellBlock({
       <BlueprintCellButton
         fill={laneStyle.lane}
         compact={compact}
+        maturity={maturity}
         selection={
           selectionContext
             ? buildBlueprintCellSelection(selectionContext)

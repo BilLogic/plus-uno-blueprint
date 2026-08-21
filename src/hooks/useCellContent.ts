@@ -7,10 +7,12 @@ export type CellContent = {
   summary: string | null
   owner: string | null
   perceived_owner: string | null
+  maturity: 'planned' | 'prototype' | null
   links: CellLink[]
 }
 
-const CELL_CONTENT_SELECT = 'content, summary, owner, perceived_owner, links'
+const CELL_CONTENT_SELECT =
+  'content, summary, owner, perceived_owner, maturity, links'
 
 /**
  * The cell's own editable text, read on demand.
@@ -44,6 +46,10 @@ export function useCellContent(
         summary: data.summary ?? null,
         owner: data.owner ?? null,
         perceived_owner: data.perceived_owner ?? null,
+        maturity:
+          data.maturity === 'planned' || data.maturity === 'prototype'
+            ? data.maturity
+            : null,
         links: (data.links ?? []) as unknown as CellLink[],
       }
     },

@@ -56,6 +56,16 @@ type BlueprintCellButtonProps = {
    * grammar — is unchanged; only the open verb is swapped.
    */
   onOpen?: () => void
+  /**
+   * Unbuilt cells have to LOOK unbuilt.
+   *
+   * When the maturity lived in the label, the canvas said it for free — every
+   * such pill began "Planned — ". Moving it to its own column would have made
+   * fifty design explorations read as shipped surfaces, which is the single
+   * most expensive thing this blueprint can get wrong. A dashed edge and a
+   * drained fill carry it instead.
+   */
+  maturity?: 'planned' | 'prototype' | null
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
@@ -86,6 +96,7 @@ export function BlueprintCellButton({
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
   'data-blueprint-tech-pill': techPillLabel,
+  maturity,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
   const isInteractive = Boolean(detail?.enabled && selection && detail)
@@ -274,6 +285,7 @@ export function BlueprintCellButton({
       aria-describedby={ariaDescribedBy}
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
+      {...(maturity ? { 'data-blueprint-cell-maturity': maturity } : {})}
       {...(isSliceMember ? { 'data-slice-member': '' } : {})}
       {...(isPicked ? { 'data-slice-picked': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
@@ -292,6 +304,10 @@ export function BlueprintCellButton({
       // 200 ms of a slice pick. Same rule blueprint.css states for the slice
       // dim and CanvasPhaseSection now follows; saturation lands on frame one.
       dimUnpicked && 'opacity-60 saturate-[.6] transition-opacity',
+      // Dashed, drained, and slightly transparent: three cheap signals that
+      // agree, so the cell still reads as unbuilt at the zoom where a canvas
+      // is usually seen and the dashes have collapsed into a grey line.
+      maturity && 'border-dashed saturate-[.55] opacity-90',
       )}
       style={surfaceStyle}
     >

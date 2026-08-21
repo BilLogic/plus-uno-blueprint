@@ -25,10 +25,18 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
 
   const owner = cell.owner?.trim() ?? ''
   const perceived = cell.perceived_owner?.trim() ?? ''
-  if (!owner && !perceived) return null
+  if (!owner && !perceived && !cell.maturity) return null
 
   return (
     <div className="flex flex-wrap gap-x-6 gap-y-1">
+      {/* First, because it changes how everything under it should be read:
+          a spec for something unbuilt is a proposal, not a description. */}
+      {cell.maturity ? (
+        <OwnerCell
+          label="State"
+          value={cell.maturity === 'planned' ? 'Planned — in build' : 'Prototype — design only'}
+        />
+      ) : null}
       {owner ? <OwnerCell label="Owner" value={owner} /> : null}
       {perceived ? <OwnerCell label="Perceived owner" value={perceived} /> : null}
     </div>
