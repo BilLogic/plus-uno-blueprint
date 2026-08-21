@@ -28,7 +28,7 @@ Counted 2026-08-20, after the touchpoint sweep (`20260820190000`).
 | `Google Quiz` | 1 | The onboarding module quiz. |
 | `Handshake` | 1 | The job board, candidate side. |
 | `Kickoff interview page` | 1 | `kickoff_interview.jsp`. |
-| `Marketing Website` | 1 | plus.cs.cmu.edu and its recruiting pages. |
+| `Marketing Website` | 1 | tutors.plus and its recruiting pages — /for-tutors, /for-schools, /for-researchers. This entry said `plus.cs.cmu.edu` until Aug 2026 with no citation behind it; the site was read live on 2026-08-08 and every URL in the blueprint's own links is on `tutors.plus`. |
 | `On-campus booth` | 1 | The job-fair table. |
 | `PLUS AI Debrief Summaries` | 1 | Lead-tutor debrief surface. |
 | `PLUS Reflection Automated Notification` | 1 | The auto-prompt to start a reflection. |

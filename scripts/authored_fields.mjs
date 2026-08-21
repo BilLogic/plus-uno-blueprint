@@ -47,7 +47,28 @@ import { fileURLToPath } from 'node:url'
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT = resolve(REPO_ROOT, 'docs/authored-fields.json')
 
-const CELL_FIELDS = ['function', 'form', 'value_props', 'owner', 'perceived_owner']
+/*
+  `content`, `summary`, `links` and `maturity` were added here in Aug 2026,
+  after a session wrote ~900 summaries and it turned out nothing in the repo
+  would have survived a `supabase:reset`.
+
+  The original list covered only the fields typed into the app's authoring UI,
+  on the reasoning that everything else came from `seed.sql`. That stopped
+  being true: seed.sql carries no cells at all any more (9KB, no INSERT into
+  cells, last touched Aug 19), so the blueprint's actual prose lives in the
+  database and nowhere else. These four are that prose.
+*/
+const CELL_FIELDS = [
+  'content',
+  'summary',
+  'links',
+  'maturity',
+  'function',
+  'form',
+  'value_props',
+  'owner',
+  'perceived_owner',
+]
 const LAYER_FIELDS = ['owner_team', 'kpis', 'tools']
 const PHASE_FIELDS = ['business_impact', 'operational_requirements']
 
