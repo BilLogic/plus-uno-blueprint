@@ -83,3 +83,26 @@ report it as a gap.
 
 Do **not** write to the storyboard cell's own `content`. No renderer reads it,
 and filling an invisible field is the mistake this campaign exists to correct.
+
+## A pill's summary belongs to its STEP, not to its name
+
+The same touchpoint appears all over the board. `PLUS App` is on 59 cells,
+`Zoom` on 56. It is tempting — and it is wrong — to write one summary per
+touchpoint and copy it wherever that name appears.
+
+`PLUS App` in Fill-in Request is the Fill-In tab. In Goal Setting it is the
+student list and its Action column. In Tech Setup it is a first sign-in.
+`Email` in Interview & Offer schedules an interview; in Reporting an Issue it
+is how a tutor raises a problem and how the answer comes back. `Zoom` at the
+recruiting info session is not a breakout room.
+
+**Content equality is not meaning equality.** A summary answers what this
+system does *at this step*, which is the only reason the cell is on this
+column rather than another.
+
+This was learned the expensive way in Aug 2026: a propagation keyed on
+`(content, lane_role)` filled 100 empty summaries by copying the most common
+sentence for each pill name, and put "The Fill-In tab." on 44 Goal Setting
+cells. Copy a summary across twins only when the twins are the same MOMENT —
+the same step under several path variants of one scenario — never merely the
+same tool.
