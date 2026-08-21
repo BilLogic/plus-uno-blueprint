@@ -10,6 +10,7 @@ import {
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { PANEL_TEXT } from '@/lib/panelText'
+import { cn } from '@/lib/utils'
 import { useStepSpec, type StepSpec } from '@/hooks/useStepSpec'
 import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
@@ -132,29 +133,6 @@ function StepPanelBody({
         meta={positionLabel ?? ''}
       />
 
-      {step.frames.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          {step.frames.map((frame) => (
-            <figure key={frame.picture} className="flex flex-col gap-1">
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted/20">
-                <img
-                  src={frame.picture}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  className="absolute inset-0 h-full w-full object-contain object-center"
-                />
-              </div>
-              {/* Provenance, quietly: which lane drew this frame. The frame's
-                  MEANING is the summary below, not this label. */}
-              <figcaption className={PANEL_TEXT.meta}>
-                {frame.laneName}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      ) : null}
-
       <PanelTextareaField
         label="Summary"
         hint="What happens in this moment, across every lane — the sentence that makes the column legible without reading five cells."
@@ -164,6 +142,42 @@ function StepPanelBody({
         disabled={!canEdit}
         onChange={setSummary}
       />
+
+      {step.frames.length > 0 ? (
+        <div className="flex flex-col gap-1">
+          <span className={PANEL_TEXT.sectionLabel}>Storyboard</span>
+          {/*
+            A ROW of frames, not a stack of full-width ones. A step is drawn
+            once per actor lane, so three frames stacked at 4:3 pushed the
+            sentence this panel exists for below the fold. Side by side they
+            read as what they are — the same moment from each lane — and the
+            row scrolls rather than the page.
+          */}
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 blueprint-scroll">
+            {step.frames.map((frame) => (
+              <figure
+                key={frame.picture}
+                className="flex w-32 shrink-0 flex-col gap-1"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted/20">
+                  <img
+                    src={frame.picture}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-contain object-center"
+                  />
+                </div>
+                {/* Provenance, quietly: which lane drew this frame. The
+                    frame's MEANING is the summary above it. */}
+                <figcaption className={cn(PANEL_TEXT.meta, 'truncate')}>
+                  {frame.laneName}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {distinct.size > 1 ? (
         <div className="flex flex-col gap-1">

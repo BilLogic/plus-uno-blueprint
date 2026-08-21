@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
+import { VISUAL_LAYER_ROLES } from '@/lib/blueprintLayout'
+import { getLayerRole } from '@/lib/laneRoles'
 
 export type StepSpec = {
   id: string
@@ -70,21 +72,37 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
 
       const { data: pictured, error: pictureError } = await client
         .from('cells')
-        .select('picture, lanes!inner(name, position)')
+        .select('picture, lanes!inner(name, position, lane_role)')
         .eq('step_id', stepId)
         .not('picture', 'is', null)
       if (pictureError) throw new Error(pictureError.message)
 
-      // One frame per picture, deduplicated: the same step is drawn once per
-      // path, and the paths share their imagery.
+      /*
+        STORYBOARD lanes only, deduplicated.
+
+        Every pictured cell used to qualify, so a tech cell's product logo
+        turned up in the panel as if it were a frame of the story — a Zoom
+        mark stacked under two drawings of people. A frame is what the
+        storyboard row draws; a logo is a pill's decoration.
+
+        The dedupe is because the same step is drawn once per path and the
+        paths share their imagery.
+      */
       const seen = new Set<string>()
       const frames: { laneName: string; picture: string }[] = []
       for (const row of (pictured ?? []) as unknown as Array<{
         picture: string | null
-        lanes: { name: string; position: number }
+        lanes: { name: string; position: number; lane_role: string | null }
       }>) {
         const picture = row.picture?.trim()
         if (!picture || seen.has(picture)) continue
+        const role = getLayerRole({
+          name: row.lanes.name,
+          role: row.lanes.lane_role,
+        })
+        if (!role || !(VISUAL_LAYER_ROLES as readonly string[]).includes(role)) {
+          continue
+        }
         seen.add(picture)
         frames.push({ laneName: row.lanes.name, picture })
       }
