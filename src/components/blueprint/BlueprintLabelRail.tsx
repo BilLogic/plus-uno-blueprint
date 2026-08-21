@@ -116,7 +116,7 @@ export function BlueprintDividerRow({
   compact,
   labelWidth = COMPARE_LABEL_WIDTH,
   ruleOverhang = COMPARE_DIVIDER_RULE_OVERHANG,
-  labelRailBg = blueprintPanelLabelRailColor(BLUEPRINT_THEME.dividerBg),
+  labelRailBg,
   className,
   style,
 }: {
@@ -128,6 +128,17 @@ export function BlueprintDividerRow({
   labelWidth?: number
   /** How far past the row's right edge the rule runs, clearing the outline. */
   ruleOverhang?: number
+  /**
+   * Rail fill, for the arrangements that have no backdrop behind this row.
+   *
+   * Undefined by default, and that is the point. In the compare grids
+   * `BlueprintStickyLabelBackdrop` already paints this column across every
+   * row — divider rows included — so a second coat of the identical colour
+   * here does the same thing it did on the lane rows: the patch lands on
+   * fractional coordinates under the canvas transform and the browser
+   * antialiases a one-pixel seam in the exact shape of the divider row. The
+   * service grid is a flex column with no backdrop, so it passes its own.
+   */
   labelRailBg?: string
   className?: string
   style?: CSSProperties
@@ -156,15 +167,17 @@ export function BlueprintDividerRow({
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
       }}
     >
-      <div
-        aria-hidden
-        className="sticky left-0 top-0 z-0"
-        style={{
-          width: labelWidth,
-          height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-          backgroundColor: labelRailBg,
-        }}
-      />
+      {labelRailBg ? (
+        <div
+          aria-hidden
+          className="sticky left-0 top-0 z-0"
+          style={{
+            width: labelWidth,
+            height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
+            backgroundColor: labelRailBg,
+          }}
+        />
+      ) : null}
       {/* Caption and rule in ONE row, so the line begins where the words end
           — the two are one object and had drifted into two. The row's left
           inset matches the lane labels above it; its right end reaches past

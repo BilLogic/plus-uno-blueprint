@@ -35,6 +35,65 @@ describe('cell maturity survives the move off the label', () => {
     expect(button).toMatch(/maturity === 'deprecated' &&/)
   })
 
+  it('loses NOTHING between the query and the canvas', () => {
+    /*
+      The general form of the bug, rather than one field's version of it.
+
+      `normalizeBlueprint` builds a BlueprintCell by listing its fields by
+      hand. A column added to the select and not added there arrives as
+      `undefined`, and every check a developer would run stays green:
+      typecheck passes because the field is optional, the tests pass because
+      none of them look, and the canvas quietly does nothing. It has happened
+      twice — `maturity`, caught the same day, and `position`, which was
+      selected, typed and SORTED ON for two weeks while the sort compared
+      undefined to undefined across 63 slots.
+
+      So: every field the query asks for must appear in the mapper. Not a
+      field-by-field assertion that has to be remembered; a comparison of the
+      two lists, which cannot be forgotten.
+    */
+    const open = PATH_BLUEPRINT_SELECT.indexOf('cells (')
+    expect(open, 'the select no longer has a cells block').toBeGreaterThan(-1)
+    let depth = 0
+    let end = -1
+    for (let i = PATH_BLUEPRINT_SELECT.indexOf('(', open); i < PATH_BLUEPRINT_SELECT.length; i += 1) {
+      const ch = PATH_BLUEPRINT_SELECT[i]
+      if (ch === '(') depth += 1
+      else if (ch === ')') {
+        depth -= 1
+        if (depth === 0) {
+          end = i
+          break
+        }
+      }
+    }
+    const inner = PATH_BLUEPRINT_SELECT.slice(
+      PATH_BLUEPRINT_SELECT.indexOf('(', open) + 1,
+      end,
+    )
+    // Drop the embedded relations — those are mapped separately.
+    const selected = inner
+      .replace(/[a-z_]+:[^(]*\([\s\S]*?\)/g, '')
+      .split(',')
+      .map((field) => field.trim())
+      .filter(Boolean)
+
+    const source = src('lib/normalizeBlueprint.ts')
+    const mapStart = source.indexOf('rawCells.map((cell) => ({')
+    expect(mapStart, 'the cell mapper moved').toBeGreaterThan(-1)
+    const mapper = source.slice(mapStart, source.indexOf('}))', mapStart))
+
+    const missing = selected.filter(
+      (field) => !new RegExp(`(^|\\s)${field}:`, 'm').test(mapper),
+    )
+    expect(
+      missing,
+      `selected by the query and dropped by the mapper: ${missing.join(', ')}`,
+    ).toEqual([])
+    // And the reverse is worth knowing too: a mapper field nothing selects.
+    expect(selected.length).toBeGreaterThan(5)
+  })
+
   it('survives the normalizer between the query and the canvas', () => {
     // It did not, the first time: the query read the column, every component
     // passed it on, the tests were green, and the canvas drew nothing —

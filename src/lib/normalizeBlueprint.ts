@@ -27,6 +27,7 @@ export type RawCell = {
   id: string
   lane_id: string
   step_id: string
+  position?: number | null
   content: string
   picture?: string | null
   summary?: string | null
@@ -215,6 +216,11 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     id: cell.id,
     lane_id: cell.lane_id,
     step_id: cell.step_id,
+    // Without this the slot sort below is `0 - 0` for every pair, and the
+    // 63 slots that hold more than one cell render in whatever order the
+    // database happened to return. Selected since the tech-cell split in
+    // August, typed on BlueprintCell, sorted on — and never mapped.
+    position: cell.position ?? 0,
     content: cell.content,
     picture: cell.picture ?? null,
     summary: cell.summary ?? null,
