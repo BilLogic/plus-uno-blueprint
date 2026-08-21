@@ -14,7 +14,7 @@ const PATH_TYPES: PathType[] = [
   'unhappy',
   'exception',
   'alternative',
-  'named',
+  'custom',
 ]
 
 type BlueprintArrowMarkerDefsProps = {

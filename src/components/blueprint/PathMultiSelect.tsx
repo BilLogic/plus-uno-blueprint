@@ -28,7 +28,7 @@ const MAX_PATHS_PER_COLUMN = 2
 const PRIMARY_COLUMN_PATH_TYPES = new Set<PathType>([
   'happy',
   'alternative',
-  'named',
+  'custom',
 ])
 const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['unhappy', 'exception'])
 

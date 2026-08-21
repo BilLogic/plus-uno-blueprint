@@ -509,7 +509,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         name: str('Path name'),
         path_type: {
           type: 'string',
-          enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'],
+          enum: ['happy', 'unhappy', 'exception', 'alternative', 'custom'],
           description: 'Default alternative',
         },
         lane_source_path_id: str('Sibling path id whose lanes to copy; omit for none'),
@@ -526,7 +526,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       properties: {
         source_path_id: str('Path to copy'),
         name: str('New path name'),
-        path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'named'], description: 'Default alternative' },
+        path_type: { type: 'string', enum: ['happy', 'unhappy', 'exception', 'alternative', 'custom'], description: 'Default alternative' },
         copy_cells: { type: 'boolean', description: 'Default true' },
       },
       required: ['source_path_id', 'name'],

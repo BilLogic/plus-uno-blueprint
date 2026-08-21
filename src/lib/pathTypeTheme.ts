@@ -14,7 +14,7 @@ export const PATH_TYPE_SHORT_LABELS: Record<PathType, string> = {
   unhappy: 'Unhappy',
   exception: 'Exception',
   alternative: 'Alternative',
-  named: 'Path',
+  custom: 'Custom',
 }
 
 export const PATH_TYPE_LABELS: Record<PathType, string> = {
@@ -22,7 +22,7 @@ export const PATH_TYPE_LABELS: Record<PathType, string> = {
   unhappy: 'Unhappy path',
   exception: 'Exception',
   alternative: 'Alternative',
-  named: 'Named path',
+  custom: 'Custom',
 }
 export const PATH_TYPE_SECTION_BORDER_WIDTH = 3
 
@@ -65,7 +65,7 @@ export function getPathTypeSuffixIfNeeded(path: {
   name: string
   path_type: PathType
 }): string | null {
-  if (path.path_type === 'named') return null
+  if (path.path_type === 'custom') return null
 
   const short = PATH_TYPE_SHORT_LABELS[path.path_type]
   const full = PATH_TYPE_LABELS[path.path_type]
@@ -84,7 +84,7 @@ export function getPathTypeSuffixIfNeeded(path: {
 
 /**
  * Generic path names (Happy Path, Alternate Path, …) can show a type badge.
- * Named activity paths (Set Goals, Check Goals, …) should show their title instead.
+ * Custom paths (Set Goals, Check Goals, …) should show their title instead.
  */
 const GENERIC_PATH_TYPE_NAMES = new Set([
   'happy path',
@@ -100,11 +100,11 @@ export function isGenericPathTypeName(name: string): boolean {
   return GENERIC_PATH_TYPE_NAMES.has(name.trim().toLowerCase())
 }
 
-/** Overview frames: type badge only for generic archetype names — never for `named`. */
+/** Overview frames: type badge only for generic archetype names — never for `custom`. */
 export function shouldShowPathTypeBadge(path: {
   name: string
   path_type?: PathType
 }): boolean {
-  if (path.path_type === 'named') return false
+  if (path.path_type === 'custom') return false
   return isGenericPathTypeName(path.name)
 }

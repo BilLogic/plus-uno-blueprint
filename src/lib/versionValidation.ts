@@ -16,7 +16,7 @@ export type VersionMode = 'blank' | 'duplicate'
  * list here was previously `happy | alternative | edge-case | sad`, of which
  * **two did not exist**: picking "Edge case" or "Sad path" built a row the
  * database rejected, so half the dropdown could not be submitted. In the other
- * direction `named` was unreachable, and `named` is what Goal Setting's five
+ * direction `custom` was unreachable, and `custom` is what Goal Setting's five
  * paths are — the app could not have created the data it was already showing.
  *
  * Keep this in step with the constraint. If a new type is wanted, the
@@ -27,7 +27,7 @@ export const PATH_TYPES = [
   'alternative',
   'unhappy',
   'exception',
-  'named',
+  'custom',
 ] as const
 export type PathType = (typeof PATH_TYPES)[number]
 
@@ -36,7 +36,7 @@ export const PATH_TYPE_LABELS: Record<PathType, string> = {
   alternative: 'Alternative',
   unhappy: 'Unhappy path',
   exception: 'Exception',
-  named: 'Named variant',
+  custom: 'Custom',
 }
 
 export type DraftVersion = {

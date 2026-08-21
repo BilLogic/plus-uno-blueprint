@@ -32,8 +32,8 @@ describe('path identity', () => {
   })
 
   it('separates two unregistered named paths', () => {
-    const a = { path_type: 'named', name: 'Alpha' } as const
-    const b = { path_type: 'named', name: 'Beta' } as const
+    const a = { path_type: 'custom', name: 'Alpha' } as const
+    const b = { path_type: 'custom', name: 'Beta' } as const
     // They may share a hue slot, but not both a hue and a dash.
     const same =
       getPathColor(a) === getPathColor(b) &&
