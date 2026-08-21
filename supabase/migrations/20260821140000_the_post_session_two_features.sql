@@ -112,4 +112,44 @@ insert into cells (id, path_id, lane_id, step_id, position, content, summary, or
  'Nobody reads the ratings back — inside the app they are written, echoed to the tutor who gave them, and otherwise untouched.',
  'No supervisor view, no export, no aggregation. Their only working consequence is unlocking the next insight. Whether anything outside the app consumes them cannot be answered from the app.','import');
 
+do $$
+declare n int;
+begin
+  -- This migration inserts against `(select step_id from cells where id=…)`.
+  -- A subquery that returns NULL inserts a row with no step and nothing here
+  -- would have noticed — which is the whole reason for this block. It was
+  -- added after the fact, when a review pointed out this was the only
+  -- migration in its window with no closing assertion.
+  select count(*) into n from cells where step_id is null or lane_id is null;
+  if n > 0 then raise exception '% cells landed with no step or no lane', n; end if;
+
+  -- Every cell this migration wrote must sit on the Personalized Coaching
+  -- path, not merely on a step that path happens to contain.
+  select count(*) into n from cells c
+   where c.id in ('c2000000-0000-4000-8000-0000000000b1','c2000000-0000-4000-8000-0000000000b2',
+                  'c2000000-0000-4000-8000-0000000000b3','c2000000-0000-4000-8000-0000000000b4',
+                  'c2000000-0000-4000-8000-0000000000b5','c2000000-0000-4000-8000-0000000000b6',
+                  'c2000000-0000-4000-8000-0000000000b7','c2000000-0000-4000-8000-0000000000b8')
+     and c.lane_id not in (select id from lanes where path_id = 'c2000000-0000-4000-8000-000000000002');
+  if n > 0 then raise exception '% inserted cells sit on a foreign path', n; end if;
+
+  -- The position shift must leave a contiguous run with the new step at 2.
+  select count(*) into n from path_steps where path_id = 'c2000000-0000-4000-8000-000000000002';
+  if n <> 8 then raise exception 'expected 8 steps on the growth loop, found %', n; end if;
+  select count(*) into n from (
+    select position, count(*) from path_steps
+     where path_id = 'c2000000-0000-4000-8000-000000000002'
+     group by position having count(*) > 1
+  ) x;
+  if n > 0 then raise exception 'the position shift collided on % slots', n; end if;
+  select count(*) into n from path_steps
+   where path_id = 'c2000000-0000-4000-8000-000000000002'
+     and step_id = 'c2000000-0000-4000-8000-0000000000a1' and position <> 2;
+  if n > 0 then raise exception 'Open AI Coach did not land at position 2'; end if;
+
+  select count(*) into n from cells where content ilike '%thumbs up%'
+     or content ilike '%AI Growth Insights%';
+  if n > 0 then raise exception '% cells describe AI Coach as it is not', n; end if;
+end $$;
+
 commit;
