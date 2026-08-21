@@ -68,7 +68,7 @@ lifecycle phases — phases live in `phases`.
 migration: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
 
-**Edges** — `cell_dependencies`, `kind` = `sets_off` (this cell makes the
+**Edges** — `cell_dependencies`, `kind` = `leads_to` (this cell makes the
 other happen; drawn as an arrow) or `enables` (the other must already be
 true; panel-only), unique per (source, target, kind).
 

@@ -22,6 +22,7 @@ import { CellPanelEditor } from '@/components/blueprint/CellPanelEditor'
 import {
   CELL_PANEL_FOOTER_ID,
   DetailPanelErrorBoundary,
+  Field,
   PanelDrawerShell,
   PanelFooterHost,
   PanelIdentity,
@@ -1189,14 +1190,19 @@ function BlueprintCellDetailPanelBody() {
             }
           />
         )}
-        {/* The description paragraph is the reading view; the editor shows the
-            same text inside its DESCRIPTION field instead. */}
+        {/* LABELLED, like every other panel's summary. This was the one place
+            in five panels where a field's read-only rendering skipped the
+            label and printed bare prose, which is why "Summary" appeared on
+            some things and not others. The editor shows the same text inside
+            its own Summary field. */}
         {!editingCell &&
         detailDescriptionText.trim() &&
         !descriptionRepeatsTitle ? (
-          <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
-            {detailDescriptionText.trim()}
-          </p>
+          <Field label="Summary" hint="The tl;dr the detail fields add up to.">
+            <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
+              {detailDescriptionText.trim()}
+            </p>
+          </Field>
         ) : null}
       </div>
       {editingCell ? (

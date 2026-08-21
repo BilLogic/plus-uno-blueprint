@@ -8,7 +8,7 @@ import type { DependencyKind } from '@/lib/authoringRpc'
  * being rejected is a rule you have to guess at first.
  */
 
-export const DEPENDENCY_KINDS: DependencyKind[] = ['sets_off', 'enables']
+export const DEPENDENCY_KINDS: DependencyKind[] = ['leads_to', 'enables']
 
 /**
  * What each kind means, and — the part that matters — whether it draws.
@@ -29,15 +29,15 @@ export const DEPENDENCY_KINDS: DependencyKind[] = ['sets_off', 'enables']
  * greeting — the student arriving does — but nothing works without it.
  */
 export const DEPENDENCY_KIND_HINTS: Record<DependencyKind, string> = {
-  sets_off: 'One step hands off to the next. Draws an arrow.',
+  leads_to: 'One step hands off to the next. Draws an arrow.',
   enables: 'Makes the next step possible, without causing it.',
 }
 
 /*
   DISPLAY WORDING — 2026-08-20.
 
-  The stored key stays `sets_off`; the words a reader sees are "Leads to" and
-  "Follows". "Sets off" reads as an alarm going off rather than as one moment
+  The stored key stays `leads_to`; the words a reader sees are "Leads to" and
+  "Follows". "Leads to" reads as an alarm going off rather than as one moment
   handing to the next, and the panel's own headings ("SET OFF BY" / "SETS
   OFF") were the clearest place it showed. `enables` needs no translation —
   it is already the plain word for what it means.
@@ -50,7 +50,7 @@ export const DEPENDENCY_KIND_HINTS: Record<DependencyKind, string> = {
 /** The stored value IS the label, minus the underscore — that is the point of
  *  the rename. These match the Dependencies tab's group headings. */
 export const DEPENDENCY_KIND_LABELS: Record<DependencyKind, string> = {
-  sets_off: 'Leads to',
+  leads_to: 'Leads to',
   enables: 'Enables',
 }
 

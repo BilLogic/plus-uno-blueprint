@@ -65,7 +65,7 @@ make on desktop, and never imply you made it.
 
 ## ⚠ App-only invariants
 
-Per-tool write rules (content required, sets_off-vs-enables semantics,
+Per-tool write rules (content required, leads_to-vs-enables semantics,
 step-name alignment, tag vocabularies, create-vs-edit split) live in the
 tool descriptions — trust them at call time. Adapter-only additions:
 

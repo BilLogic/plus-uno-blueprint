@@ -11,15 +11,15 @@ import { normalizeCellLinks } from '@/lib/cellMetadata'
 type RawOutgoingDependency = {
   id: string
   target_cell_id: string
-  /** Fallback data omits these — default kind 'sets_off', label/note null. */
+  /** Fallback data omits these — default kind 'leads_to', label/note null. */
   kind?: string | null
   label?: string | null
   note?: string | null
 }
 
 /** Normalize a raw kind column value; anything unknown is a plain dependency. */
-function normalizeDependencyKind(kind: string | null | undefined): 'sets_off' | 'enables' {
-  return kind === 'enables' ? 'enables' : 'sets_off'
+function normalizeDependencyKind(kind: string | null | undefined): 'leads_to' | 'enables' {
+  return kind === 'enables' ? 'enables' : 'leads_to'
 }
 
 export type RawCell = {

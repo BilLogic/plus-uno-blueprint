@@ -193,8 +193,8 @@ type CellDependencySectionsProps = {
 } & SelectHandlers
 
 /**
- * Dependencies tab: grouped Follows (incoming `sets_off`) / Leads to
- * (outgoing `sets_off`) / Enables (`enables`, both directions). The
+ * Dependencies tab: grouped Follows (incoming `leads_to`) / Leads to
+ * (outgoing `leads_to`) / Enables (`enables`, both directions). The
  * group headings are the stored kind values, minus the underscore — that is
  * the point of the rename: the product word and the column agree. Rows keep
  * the hover-preview and click-to-navigate behavior, with the direction
@@ -210,10 +210,10 @@ export function CellDependencySections({
   className,
 }: CellDependencySectionsProps) {
   const setOffBy = connections.incoming.filter(
-    (connection) => connection.linkKind === 'sets_off',
+    (connection) => connection.linkKind === 'leads_to',
   )
   const setsOff = connections.outgoing.filter(
-    (connection) => connection.linkKind === 'sets_off',
+    (connection) => connection.linkKind === 'leads_to',
   )
 
   const enablesById = new Map<
@@ -302,7 +302,7 @@ export function CellDependencySections({
         </DependencyGroup>
       ) : null}
       {remainingTech.length > 0 ? (
-        <DependencyGroup title="Tech in this step">
+        <DependencyGroup title="Also on this step">
           <li className="px-2 py-1.5">
             <span className="flex flex-wrap gap-1">
               {remainingTech.map((entry) => (

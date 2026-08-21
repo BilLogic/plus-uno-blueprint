@@ -33,6 +33,14 @@ export type EntityDetailSelection = {
 type EntityDetailContextValue = {
   selection: EntityDetailSelection | null
   openEntity: (selection: EntityDetailSelection) => void
+  /**
+   * Open it, or close it if it is already the one open.
+   *
+   * The canvas's own grammar: a bare click on the cell the panel is showing
+   * closes it. An affordance that only ever opens leaves the reader hunting
+   * for the ✕ after every glance.
+   */
+  toggleEntity: (selection: EntityDetailSelection) => void
   closeEntity: () => void
   isOpen: boolean
 }
@@ -59,6 +67,20 @@ export function EntityDetailProvider({
     setSelection(next)
   }, [])
 
+  const toggleEntity = useCallback(
+    (next: EntityDetailSelection) => {
+      setSelection((current) => {
+        if (current && current.kind === next.kind && current.id === next.id) {
+          releasePanel('entity')
+          return null
+        }
+        claimPanel('entity')
+        return next
+      })
+    },
+    [],
+  )
+
   const closeEntity = useCallback(() => {
     setSelection(null)
     releasePanel('entity')
@@ -76,10 +98,11 @@ export function EntityDetailProvider({
     () => ({
       selection,
       openEntity,
+      toggleEntity,
       closeEntity,
       isOpen: selection !== null,
     }),
-    [selection, openEntity, closeEntity],
+    [selection, openEntity, toggleEntity, closeEntity],
   )
 
   return (
@@ -102,6 +125,7 @@ export function useEntityDetail(): EntityDetailContextValue {
 const INERT: EntityDetailContextValue = {
   selection: null,
   openEntity: () => {},
+  toggleEntity: () => {},
   closeEntity: () => {},
   isOpen: false,
 }

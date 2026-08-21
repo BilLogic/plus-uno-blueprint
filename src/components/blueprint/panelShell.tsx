@@ -1,4 +1,5 @@
 import { Component, Fragment, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import {
   Breadcrumb,
@@ -281,7 +282,7 @@ export function PanelHeader({
         <DrawerTitle className="sr-only">{title}</DrawerTitle>
         <DrawerDescription className="sr-only">{description}</DrawerDescription>
         <Breadcrumb className="min-w-0">
-          <BreadcrumbList className="flex-nowrap gap-0.5 text-2xs leading-tight text-muted-foreground">
+          <BreadcrumbList className={cn('flex-nowrap gap-0.5', PANEL_TEXT.meta)}>
             {shown.map((crumb, index) => (
               <Fragment key={`${crumb}-${index}`}>
                 <BreadcrumbItem className="min-w-0">
@@ -466,5 +467,55 @@ export function PanelLoading() {
     >
       {null}
     </DeferredSkeleton>
+  )
+}
+
+/**
+ * Save and Cancel, portalled to the drawer's footer host.
+ *
+ * The four entity panels each carried this block verbatim — twenty-two lines,
+ * byte-identical, four times. One panel changing its disabled logic without
+ * the others is the failure that costs; this is the fix.
+ *
+ * Falls back to rendering inline when the host is not there yet, which is the
+ * first paint and nothing else.
+ */
+export function PanelFooterControls({
+  footerHost,
+  busy,
+  changed,
+  error,
+  onSave,
+  onCancel,
+}: {
+  footerHost: HTMLElement | null
+  busy: boolean
+  /** Save stays disabled until something actually differs from the baseline. */
+  changed: boolean
+  error: string | null
+  onSave: () => void
+  onCancel: () => void
+}) {
+  const controls = (
+    <div className="flex items-center gap-2">
+      <Button type="button" size="sm" disabled={busy || !changed} onClick={onSave}>
+        {busy ? 'Saving…' : 'Save'}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={busy}
+        onClick={onCancel}
+      >
+        Cancel
+      </Button>
+    </div>
+  )
+  return (
+    <>
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {footerHost ? createPortal(controls, footerHost) : controls}
+    </>
   )
 }

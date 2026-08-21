@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import {
   Accordion,
   AccordionContent,
@@ -9,6 +7,7 @@ import {
 } from '@/components/ui/accordion'
 import {
   SCENARIO_PANEL_FOOTER_ID,
+  PanelFooterControls,
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
@@ -18,6 +17,7 @@ import {
 import { PanelHint } from '@/components/blueprint/PanelHint'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { useScenarioSpec, type ScenarioSpec } from '@/hooks/useScenarioSpec'
+import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -107,17 +107,13 @@ function ScenarioPanelBody({
   const [form, setForm] = useState<FormState>(baseline)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // One path open at a time — the ledger's step-groups precedent. A scenario
-  // averages under two paths, so this is about keeping `note` from competing
-  // with `summary` for attention rather than about saving space.
+  // The first path opens; the rest are one click away and stay open once
+  // opened. A scenario averages under two paths, so nothing here is a space
+  // problem.
   const [openPath, setOpenPath] = useState<string[]>(
     scenario.paths[0] ? [scenario.paths[0].id] : [],
   )
-  const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot DOM lookup of the portal host; it only exists after the panel's first commit
-    setFooterHost(document.getElementById(SCENARIO_PANEL_FOOTER_ID))
-  }, [])
+  const footerHost = usePanelFooterHost(SCENARIO_PANEL_FOOTER_ID)
 
   const setPath = (pathId: string, key: keyof PathForm, value: string) =>
     setForm((current) => ({
@@ -206,7 +202,10 @@ function ScenarioPanelBody({
             currently looking at.
           </PanelHint>
         </span>
-        <Accordion value={openPath} onValueChange={setOpenPath}>
+        {/* Several open at once: comparing two routes is the reason to read
+            this panel, and an accordion that closes one to open the next
+            makes that impossible. */}
+        <Accordion multiple value={openPath} onValueChange={setOpenPath}>
           {scenario.paths.map((path) => (
             <AccordionItem key={path.id} value={path.id}>
               <AccordionTrigger className="w-full min-w-0 gap-1.5 py-2 hover:no-underline">
@@ -251,34 +250,16 @@ function ScenarioPanelBody({
         </Accordion>
       </div>
 
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
-
-      {canEdit
-        ? (() => {
-            const controls = (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={busy || !changed}
-                  onClick={handleSave}
-                >
-                  {busy ? 'Saving…' : 'Save'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={onDone}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )
-            return footerHost ? createPortal(controls, footerHost) : controls
-          })()
-        : null}
+      {canEdit ? (
+        <PanelFooterControls
+          footerHost={footerHost}
+          busy={busy}
+          changed={changed}
+          error={error}
+          onSave={handleSave}
+          onCancel={onDone}
+        />
+      ) : null}
     </div>
   )
 }

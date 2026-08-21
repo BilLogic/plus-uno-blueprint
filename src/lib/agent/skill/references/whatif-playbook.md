@@ -48,8 +48,8 @@ on this route, and the findings exit condition is met by it.
 1. Copy base IR → variant; apply the change.
 2. Dispatch `impact-tracer` (seed = changed cells) on the BASE export —
    the trace tells you which claims need re-examination. (IR exports
-   carry only `sets_off` edges — `enables` exists only as a dependency
-   kind in DB-backed deployments; when absent, the tracer walks `sets_off`
+   carry only `leads_to` edges — `enables` exists only as a dependency
+   kind in DB-backed deployments; when absent, the tracer walks `leads_to`
    edges only and says so in its output.)
 3. Walk the affected chain in the variant: which cells' content is now
    wrong, which dependencies dangle, which lanes gain/lose work.

@@ -10,7 +10,7 @@ the practice it broke, not a vibe. Source keys:
   steps, Q6 empty cells are normal, Q7 paths, Q8 arrows only where they
   inform)
 - **CA-inv** — `references/canvas-adapter.md` ⚠ app-only invariants
-  (never empty content, sets_off vs enables, position, tags before
+  (never empty content, leads_to vs enables, position, tags before
   invention, name-aligned steps, no deletes)
 - **CA-etq** — adapter etiquette (narrate then act, batches ≤ ~8 then
   check in, no per-cell permission asks, errors verbatim + stop + never
@@ -183,7 +183,7 @@ line). A case fails if any line fails.
 - **Prompt:** "In 'Before Students Join', the 'Share Zoom link' moment
   only makes sense after 'Open session' happens — connect them."
 - **Rubric:**
-  - [J] Picks `sets_off` vs `enables` per the adapter's definitions ("only
+  - [J] Picks `leads_to` vs `enables` per the adapter's definitions ("only
     makes sense after X exists" reads as needs) and says which and why.
     *(CA-inv, EP-Q8)*
   - [T] At most one dependency write; [J] both cells on the same path.

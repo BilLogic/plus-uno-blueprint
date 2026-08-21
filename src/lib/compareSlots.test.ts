@@ -24,7 +24,7 @@ function makeBlueprint(
   cells: CellSpec[],
   options: {
     lanes?: string[]
-    dependencies?: Array<{ source: string; target: string; kind?: 'sets_off' | 'enables' }>
+    dependencies?: Array<{ source: string; target: string; kind?: 'leads_to' | 'enables' }>
   } = {},
 ): BlueprintData {
   const laneNames =

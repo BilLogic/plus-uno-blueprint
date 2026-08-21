@@ -17,7 +17,7 @@
 %%   scenarios.view_type         ∈ (single | stacked)   merged is session-only,
 %%                                                      never stored
 %%   paths.path_type             ∈ (happy | unhappy | exception | alternative | named)
-%%   cell_dependencies.kind      ∈ (sets_off | enables)
+%%   cell_dependencies.kind      ∈ (leads_to | enables)
 %%   origin (cells/lanes/paths/phases/scenarios/steps/slices) ∈ (import | app)
 %%
 %% Integrity: cells.path_id must match lanes.path_id AND (path_id, step_id) must
@@ -145,7 +145,7 @@ erDiagram
     uuid id PK
     uuid source_cell_id FK
     uuid target_cell_id FK
-    text kind "sets_off = makes it happen, drawn | enables = makes it possible, never drawn"
+    text kind "leads_to = makes it happen, drawn | enables = makes it possible, never drawn"
     text label
     text note
   }

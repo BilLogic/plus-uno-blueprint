@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import {
   PHASE_PANEL_FOOTER_ID,
+  PanelFooterControls,
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
@@ -11,6 +10,7 @@ import {
 } from '@/components/blueprint/panelShell'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { usePhaseSpec, type PhaseSpec } from '@/hooks/usePhaseSpec'
+import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -88,11 +88,7 @@ function PhasePanelBody({
   const [form, setForm] = useState<FormState>(baseline)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot DOM lookup of the portal host; it only exists after the panel's first commit
-    setFooterHost(document.getElementById(PHASE_PANEL_FOOTER_ID))
-  }, [])
+  const footerHost = usePanelFooterHost(PHASE_PANEL_FOOTER_ID)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
@@ -156,34 +152,16 @@ function PhasePanelBody({
         onChange={(next) => set('operationalRequirements', next)}
       />
 
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
-
-      {canEdit
-        ? (() => {
-            const controls = (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={busy || !changed}
-                  onClick={handleSave}
-                >
-                  {busy ? 'Saving…' : 'Save'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={onDone}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )
-            return footerHost ? createPortal(controls, footerHost) : controls
-          })()
-        : null}
+      {canEdit ? (
+        <PanelFooterControls
+          footerHost={footerHost}
+          busy={busy}
+          changed={changed}
+          error={error}
+          onSave={handleSave}
+          onCancel={onDone}
+        />
+      ) : null}
     </div>
   )
 }

@@ -11,6 +11,7 @@ import {
   useStakeholders,
   type StakeholderKind,
 } from '@/hooks/useStakeholders'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
 /**
@@ -38,7 +39,7 @@ export function StakeholderSelect({
 
   if (disabled) {
     return (
-      <p className="text-sm text-foreground/80">
+      <p className={PANEL_TEXT.value}>
         {selected ? (
           <>
             {selected.name}{' '}

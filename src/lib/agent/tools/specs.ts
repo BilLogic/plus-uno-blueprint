@@ -296,7 +296,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'list_cell_dependencies',
     description:
-      'The dependencies: which cell sets off, or depends on, which other cell. `sets_off` means this cell makes the other one happen (drawn as an arrow); `enables` means the other must already be true (recorded, never drawn). Pass cell_id to get just the edges touching one cell — the whole graph is large. These are the same arrows the user sees on the canvas, and the read half of create_cell_dependency.',
+      'The dependencies: which cell sets off, or depends on, which other cell. `leads_to` means this cell makes the other one happen (drawn as an arrow); `enables` means the other must already be true (recorded, never drawn). Pass cell_id to get just the edges touching one cell — the whole graph is large. These are the same arrows the user sees on the canvas, and the read half of create_cell_dependency.',
     parameters: {
       type: 'object',
       properties: {
@@ -708,13 +708,13 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_cell_dependency',
     description:
-      'Connect two cells on the SAME path. kind "sets_off" = the source makes the target happen (drawn as an arrow); "enables" = the target must already be true for the source to work (panel-only, never drawn) — "only makes sense after X" / "cannot happen without X" reads as enables. They are NOT inverses: a precondition causes nothing, so do not record one as sets_off. State which kind you chose and why in your reply. Arrows only where they add information.',
+      'Connect two cells on the SAME path. kind "leads_to" = the source makes the target happen (drawn as an arrow); "enables" = the target must already be true for the source to work (panel-only, never drawn) — "only makes sense after X" / "cannot happen without X" reads as enables. They are NOT inverses: a precondition causes nothing, so do not record one as leads_to. State which kind you chose and why in your reply. Arrows only where they add information.',
     parameters: {
       type: 'object',
       properties: {
         source_cell_id: str('Source cell id'),
         target_cell_id: str('Target cell id'),
-        kind: { type: 'string', enum: ['sets_off', 'enables'], description: 'Default sets_off' },
+        kind: { type: 'string', enum: ['leads_to', 'enables'], description: 'Default leads_to' },
         label: str('Short arrow label; omit for none'),
       },
       required: ['source_cell_id', 'target_cell_id'],

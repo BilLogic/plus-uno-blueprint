@@ -35,7 +35,14 @@ export const CELL_DETAIL_PANEL_TOP_GAP_PX = 16
  * drawer clear of the bottom canvas chrome (the annotation toolbar band) with
  * the same 16px breathing room as CELL_DETAIL_PANEL_TOP_GAP_PX.
  */
-export const CELL_DETAIL_PANEL_BOTTOM_CLASS = '!bottom-[61px]'
+/**
+ * Height of the bottom canvas chrome (the annotation toolbar band) plus the
+ * same 16px breathing room the top gap uses. Named, because a bare
+ * `bottom-[61px]` is a number nobody can check against the thing it clears.
+ */
+export const CELL_DETAIL_PANEL_BOTTOM_GAP_PX = 61
+export const CELL_DETAIL_PANEL_BOTTOM_CLASS =
+  `!bottom-[${CELL_DETAIL_PANEL_BOTTOM_GAP_PX}px]`
 
 /** The canvas region the panel measures against. */
 export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
@@ -54,8 +61,6 @@ export const BLUEPRINT_MENUBAR_TITLE_CLASS =
 export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
   'min-w-0 max-w-full truncate px-1.5 text-xs text-muted-foreground'
 
+/** The canvas title's own type. `EntityTitleAffordance` is its one consumer. */
 export const BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS =
-  'shrink-0 text-sm font-semibold tracking-tight text-foreground'
-
-export const BLUEPRINT_MENUBAR_SEPARATOR_CLASS =
-  'shrink-0 text-xs text-muted-foreground/70'
+  'min-w-0 truncate text-sm font-semibold tracking-tight text-foreground'

@@ -14,9 +14,9 @@ export type BlueprintCellConnection = {
   stepName: string
   stepIndex: number
   kind: BlueprintCellConnectionKind
-  /** From the dependency row: `sets_off` (makes the next thing happen) vs
+  /** From the dependency row: `leads_to` (makes the next thing happen) vs
    *  `enables` (must already be true, causes nothing). */
-  linkKind: 'sets_off' | 'enables'
+  linkKind: 'leads_to' | 'enables'
   /** Short edge label chip (e.g. a channel tag like "Email"). */
   linkLabel: string | null
   /** Why-line shown under the dependency row. */
@@ -80,7 +80,7 @@ function toConnection(
     stepName: resolveStepName(blueprint, cell.step_id),
     stepIndex,
     kind: stepIndex === selectedStepIndex ? 'interaction' : 'connection',
-    linkKind: dependency.kind === 'enables' ? 'enables' : 'sets_off',
+    linkKind: dependency.kind === 'enables' ? 'enables' : 'leads_to',
     linkLabel: dependency.label ?? null,
     linkNote: dependency.note ?? null,
     isTech,

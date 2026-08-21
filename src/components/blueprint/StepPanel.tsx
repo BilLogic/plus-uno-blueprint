@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import {
   STEP_PANEL_FOOTER_ID,
+  PanelFooterControls,
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
@@ -12,6 +11,7 @@ import {
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { useStepSpec, type StepSpec } from '@/hooks/useStepSpec'
+import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { invalidateCanvasBlueprintsForScenario } from '@/hooks/useCanvasBlueprints'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -76,11 +76,7 @@ function StepPanelBody({
   const [summary, setSummary] = useState(baseline)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot DOM lookup of the portal host; it only exists after the panel's first commit
-    setFooterHost(document.getElementById(STEP_PANEL_FOOTER_ID))
-  }, [])
+  const footerHost = usePanelFooterHost(STEP_PANEL_FOOTER_ID)
 
   const changed = summary !== baseline
 
@@ -177,7 +173,7 @@ function StepPanelBody({
             {step.positions.map((entry) => (
               <li
                 key={`${entry.pathName}-${entry.position}`}
-                className="text-sm text-foreground/80"
+                className={PANEL_TEXT.value}
               >
                 <span className="font-medium text-foreground">
                   {entry.pathName}
@@ -189,34 +185,16 @@ function StepPanelBody({
         </div>
       ) : null}
 
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
-
-      {canEdit
-        ? (() => {
-            const controls = (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={busy || !changed}
-                  onClick={handleSave}
-                >
-                  {busy ? 'Saving…' : 'Save'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={onDone}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )
-            return footerHost ? createPortal(controls, footerHost) : controls
-          })()
-        : null}
+      {canEdit ? (
+        <PanelFooterControls
+          footerHost={footerHost}
+          busy={busy}
+          changed={changed}
+          error={error}
+          onSave={handleSave}
+          onCancel={onDone}
+        />
+      ) : null}
     </div>
   )
 }

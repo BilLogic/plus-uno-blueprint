@@ -44,7 +44,7 @@ export function LaneHeaderAffordance({
   color?: string
   className?: string
 }) {
-  const { openEntity, selection } = useEntityDetail()
+  const { toggleEntity, selection } = useEntityDetail()
   const open = selection?.kind === 'lane' && selection.id === laneId
 
   return (
@@ -61,10 +61,14 @@ export function LaneHeaderAffordance({
               // The canvas pans on pointer-down anywhere it does not
               // recognise; opening a panel is neither a pan nor a selection.
               event.stopPropagation()
-              openEntity({ kind: 'lane', id: laneId })
+              toggleEntity({ kind: 'lane', id: laneId })
             }}
             className={cn(
-              'group/lane-header -mx-2 -my-1 flex min-w-0 flex-1 items-start self-stretch text-left',
+              // No negative margins. They pulled the ink block outside the
+              // rail, which clips (`overflow-hidden`) — so the hover surface
+              // came back cut off on one edge and left a hairline artefact
+              // where it met the clip. The rail's own padding gives the room.
+              'group/lane-header flex min-w-0 flex-1 items-start self-stretch text-left',
               CANVAS_HEADER_BOX,
               CANVAS_HEADER_STATE,
               className,

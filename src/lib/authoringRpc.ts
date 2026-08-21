@@ -69,7 +69,7 @@ export type LaneSetEntry = {
   position: number
 }
 
-export type DependencyKind = 'sets_off' | 'enables'
+export type DependencyKind = 'leads_to' | 'enables'
 
 /** What `scenarios.view_type` may hold. `merged` is a display state and
  *  the CHECK constraint rejects it — see StoredSlideViewType in types/nav.ts. */
@@ -472,7 +472,7 @@ export function reorderLanes(
 /**
  * Add or update one dependency between two cells in the same version.
  *
- * `sets_off` draws an arrow; `enables` records a dependency that deliberately
+ * `leads_to` draws an arrow; `enables` records a dependency that deliberately
  * does not — a blueprint where every relationship is an arrow is unreadable,
  * and most "this depends on that" facts are not handoffs.
  */
@@ -489,7 +489,7 @@ export function setCellDependency(
   return call<string>(client, 'set_cell_dependency', {
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
-    kind: input.kind ?? 'sets_off',
+    kind: input.kind ?? 'leads_to',
     label: input.label ?? null,
     note: input.note ?? null,
   })

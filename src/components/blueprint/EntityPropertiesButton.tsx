@@ -48,7 +48,7 @@ export function EntityPropertiesButton({
   revealOnHover?: boolean
   className?: string
 }) {
-  const { openEntity } = useEntityDetail()
+  const { toggleEntity } = useEntityDetail()
   const label = KIND_LABELS[kind]
   return (
     <IconTooltip label={label}>
@@ -70,7 +70,7 @@ export function EntityPropertiesButton({
           // listen above this: opening a panel is not a selection, not a
           // navigation and not a pan.
           event.stopPropagation()
-          openEntity({ kind, id })
+          toggleEntity({ kind, id })
         }}
       >
         <Info className="size-3.5" />

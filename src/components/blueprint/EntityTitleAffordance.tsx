@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react'
+import { BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS } from '@/components/editor/menubarHeaderLayout'
 import {
   Tooltip,
   TooltipContent,
@@ -34,7 +35,7 @@ export function EntityTitleAffordance({
   label: string
   className?: string
 }) {
-  const { openEntity, selection } = useEntityDetail()
+  const { toggleEntity, selection } = useEntityDetail()
   const open = selection?.kind === kind && selection.id === id
 
   return (
@@ -56,14 +57,12 @@ export function EntityTitleAffordance({
             )}
             onClick={(event) => {
               event.stopPropagation()
-              openEntity({ kind, id })
+              toggleEntity({ kind, id })
             }}
           />
         }
       >
-        <h2 className="min-w-0 truncate text-sm font-semibold tracking-tight text-foreground">
-          {label}
-        </h2>
+        <h2 className={BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS}>{label}</h2>
         <Info
           className={cn(
             'size-3.5 shrink-0 text-muted-foreground/50',

@@ -261,10 +261,10 @@ export function BlueprintLabelRow({
       )}
       <div
         className={cn(
-          // `pr-6`: the label block ends well clear of the path outline
-          // rather than crowding it, which is what made the divider labels
-          // read as touching the container.
-          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-6',
+          // `pr-8`: the label block ends well clear of the path outline
+          // rather than crowding it. The divider labels below sit in the same
+          // column and were the ones reading as if they touched it.
+          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-8',
           compact ? 'pt-3' : 'pt-4',
         )}
       >

@@ -256,7 +256,7 @@ export function MergedCompareGrid({
         const key = [
           dependency.source_cell_id,
           dependency.target_cell_id,
-          raw?.kind ?? 'sets_off',
+          raw?.kind ?? 'leads_to',
           raw?.label ?? '',
         ].join(' | ')
         if (drawnEdges.has(key)) return false
@@ -645,7 +645,6 @@ function MergedSubCellBlock({
       compact={compact}
       flushBottom={flushBottom}
       visualPictures={visualPictures}
-      stepSummary={step.summary}
       stepId={step.id}
       slotCells={variant === 'pills' ? cells : undefined}
       pathMembership={pathMembership}

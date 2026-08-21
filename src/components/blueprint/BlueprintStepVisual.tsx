@@ -21,11 +21,6 @@ type BlueprintStepVisualProps = {
   stepIndex?: number
   opacity?: number
   pictures?: readonly string[] | readonly BlueprintStepVisualPicture[]
-  /** `steps.summary` — what this moment is, across every lane. Rendered under
-   *  the frame, as a sibling of the per-picture labels rather than a new
-   *  treatment. Absent on a step nobody has described yet, which is most of
-   *  them. */
-  caption?: string | null
   /**
    * The step this frame belongs to. With it, the cell opens the STEP panel
    * rather than a cell panel: the storyboard row's content IS the step —
@@ -101,7 +96,6 @@ export function BlueprintStepVisual({
   stepIndex,
   opacity,
   pictures,
-  caption,
   stepId,
   presentation = false,
   'aria-describedby': ariaDescribedBy,
@@ -120,7 +114,6 @@ export function BlueprintStepVisual({
     : 'Empty step visual'
   const inlineMaxHeight = getVisualCellButtonMaxHeight(compact)
 
-  const captionText = caption?.trim()
   // A caption without a frame renders NOTHING here, deliberately. The visual
   // row's face is its pictures; giving it a text mode would make `showCell`
   // learn a second reason to draw and would put prose in a picture row. A step
@@ -129,26 +122,15 @@ export function BlueprintStepVisual({
     return null
   }
 
-  // A hairline separates the step's caption from the PER-PICTURE labels the
-  // strip already renders: without it the two run together and the caption
-  // reads as a fourth, overflowing label. Clamped to two lines because the
-  // cell is a fixed 4/3 box — an unclamped summary takes height straight out
-  // of the frame it is supposed to be describing.
-  const captionEl = captionText ? (
-    <p
-      data-blueprint-step-caption=""
-      title={captionText}
-      className={cn(
-        'mt-0.5 w-full shrink-0 border-t border-muted px-1 pt-0.5',
-        'line-clamp-2 text-center text-[8px] font-normal leading-tight tracking-tight',
-        'text-foreground/65',
-      )}
-      style={{ textWrap: 'balance' } as CSSProperties}
-    >
-      {captionText}
-    </p>
-  ) : null
+  /*
+    NO CAPTION ON THE CELL.
 
+    `steps.summary` was briefly rendered here, under the frame. It is the
+    right sentence in the wrong place: the storyboard row is a PICTURE row —
+    its whole job is to be scannable at a glance — and prose under every frame
+    turned it into a second text lane. The summary reads in the step panel,
+    which this cell opens, and in the column header's card.
+  */
   if (presentation) {
     return (
       <div
@@ -162,7 +144,6 @@ export function BlueprintStepVisual({
         aria-label={ariaLabel}
       >
         <VisualPictureStrip pictures={displayPictures} />
-        {captionEl}
       </div>
     )
   }
@@ -205,10 +186,7 @@ export function BlueprintStepVisual({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
     >
-      <div className="flex h-full min-h-0 w-full flex-col items-stretch overflow-hidden">
-        <VisualPictureStrip pictures={displayPictures} className="min-h-0 flex-1" />
-        {captionEl}
-      </div>
+      <VisualPictureStrip pictures={displayPictures} className="min-h-0 flex-1" />
     </BlueprintCellButton>
   )
 }

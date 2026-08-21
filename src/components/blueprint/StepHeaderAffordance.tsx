@@ -34,7 +34,7 @@ export function StepHeaderAffordance({
   className?: string
   style?: React.CSSProperties
 }) {
-  const { openEntity, selection } = useEntityDetail()
+  const { toggleEntity, selection } = useEntityDetail()
   const open = selection?.kind === 'step' && selection.id === stepId
 
   return (
@@ -50,7 +50,7 @@ export function StepHeaderAffordance({
             style={style}
             onClick={(event) => {
               event.stopPropagation()
-              openEntity({ kind: 'step', id: stepId })
+              toggleEntity({ kind: 'step', id: stepId })
             }}
             className={cn(
               'group/step-header relative flex min-w-0 items-center justify-center',

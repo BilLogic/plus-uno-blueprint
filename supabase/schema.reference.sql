@@ -137,10 +137,10 @@ create table public.cell_dependencies (
   id uuid primary key default gen_random_uuid(),
   source_cell_id uuid not null references public.cells (id) on delete cascade,
   target_cell_id uuid not null references public.cells (id) on delete cascade,
-  -- sets_off = the source makes the target happen (drawn as an arrow)
+  -- leads_to = the source makes the target happen (drawn as an arrow)
   -- enables   = the source makes the target possible without causing it (never drawn)
   -- Both read SOURCE-FIRST, which is why neither is `depends_on`.
-  kind text not null default 'sets_off' check (kind in ('sets_off','enables')),
+  kind text not null default 'leads_to' check (kind in ('leads_to','enables')),
   label text,
   note text,
   created_at timestamptz not null default now(),

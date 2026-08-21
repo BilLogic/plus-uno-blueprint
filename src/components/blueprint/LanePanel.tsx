@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -7,6 +6,7 @@ import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   Field,
   LANE_PANEL_FOOTER_ID,
+  PanelFooterControls,
   PanelFooterHost,
   PanelHeader,
   PanelIdentity,
@@ -18,6 +18,7 @@ import { PANEL_TEXT } from '@/lib/panelText'
 import { StakeholderSelect } from '@/components/blueprint/StakeholderSelect'
 import { useLaneSpec, type LaneSpec } from '@/hooks/useLaneSpec'
 import { useOwnerTags } from '@/hooks/useOwnerTags'
+import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -104,11 +105,7 @@ function LanePanelBody({
   const [form, setForm] = useState<FormState>(baseline)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [footerHost, setFooterHost] = useState<HTMLElement | null>(null)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot DOM lookup of the portal host; it only exists after the panel's first commit
-    setFooterHost(document.getElementById(LANE_PANEL_FOOTER_ID))
-  }, [])
+  const footerHost = usePanelFooterHost(LANE_PANEL_FOOTER_ID)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
@@ -188,9 +185,7 @@ function LanePanelBody({
             the legacy name map first — most rows predate `lane_role` and
             carry null, and saying "no blueprint role" about a lane the canvas
             draws the interaction line under would be a lie. */}
-        <p className="text-2xs leading-tight text-muted-foreground">
-          {describeLaneRole(resolvedRole)}
-        </p>
+        <p className={PANEL_TEXT.meta}>{describeLaneRole(resolvedRole)}</p>
       </PanelIdentity>
 
       <Field
@@ -259,34 +254,16 @@ function LanePanelBody({
         onChange={(next) => set('tools', next)}
       />
 
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
-
-      {canEdit
-        ? (() => {
-            const controls = (
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={busy || !changed}
-                  onClick={handleSave}
-                >
-                  {busy ? 'Saving…' : 'Save'}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  disabled={busy}
-                  onClick={onDone}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )
-            return footerHost ? createPortal(controls, footerHost) : controls
-          })()
-        : null}
+      {canEdit ? (
+        <PanelFooterControls
+          footerHost={footerHost}
+          busy={busy}
+          changed={changed}
+          error={error}
+          onSave={handleSave}
+          onCancel={onDone}
+        />
+      ) : null}
     </div>
   )
 }

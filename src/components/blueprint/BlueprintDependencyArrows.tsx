@@ -107,7 +107,7 @@ export function BlueprintDependencyArrows({
     const content = contentRef.current
     // `enables` is panel-only by design: a precondition causes nothing, so
     // drawing it as an arrow would claim a handoff that never happens.
-    const arrowDependencies = dependencies.filter((t) => (t.kind ?? 'sets_off') === 'sets_off')
+    const arrowDependencies = dependencies.filter((t) => (t.kind ?? 'leads_to') === 'leads_to')
     if (!content || arrowDependencies.length === 0) {
       setSegments([])
       return
