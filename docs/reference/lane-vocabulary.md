@@ -15,7 +15,7 @@ labels*. This one names the teams a lane can be owned by.
 > board's content disagree, the disagreement is written down below rather than
 > resolved by guessing.*
 
-**Status: the list is settled. Three mappings are not.**
+**Status: settled. Ready to write.**
 
 ---
 
@@ -150,29 +150,49 @@ service is experienced — and never appears in `owner_team`.
 
 ---
 
-## Three mappings still open
+## Resolved: Product, Discovery, and external bodies
 
-The list is settled, and Instructional Design and Marketing are placed. Three
-questions remain, each blocking a group of lanes.
+**Product owns nothing on this board — and that is not a gap.**
+Zero cells name a product team, manager or PM. A service blueprint depicts the
+service as it is experienced and operated; deciding *what gets built and in what
+order* does not appear as a lane in any scenario. Product stays in the registry
+as a valid value so a future board can use it, and is written on no lane today.
 
-**1. Product is never named anywhere on the board.**
-Zero cells mention a product team, product manager or PM. Either the work it
-owns is currently attributed to Design or Dev, or the board genuinely does not
-depict it. Which lanes should carry it?
+**`Discovery › Back Stage Actions` is owned by Design.**
+The cell names three groups — *"Design team manages content and messaging on the
+website; the dev team implements it in code"* and *"Marketing team creates social
+media posts"* — but Design owns the whole of it in fact, and Marketing is one of
+its sub-teams. One row, one value, no split. Dev's implementation stays in the
+prose where it belongs: it describes how the work lands, not who is accountable
+for the row.
 
-**2. `Discovery › Back Stage Actions` names three teams at once.**
-*"Design team manages content and messaging on the website; the dev team
-implements it in code"* alongside *"Marketing team creates social media
-posts…"*. `owner_team` takes one value. Split the lane, or name one accountable
-and leave the rest in prose?
+**No external body owns a lane, because no lane is theirs.**
+The question was whether CPO and CMU HR sit below the line of visibility. They
+do not — and the board is unambiguous about it. Every clearance cell, by lane
+role:
 
-**3. Does an external body ever own a lane?**
-Interview & Offer has clearance work that is genuinely CPO's, not the
-supervisors'. NULL, or a `partner` value outside the team list?
+| Lane | Role | Cell |
+| --- | --- | --- |
+| Regular Tutor | `customer_actions` | *"Completes PA Act 153 clearances with the CPO."* |
+| Front Stage Actions | `frontstage_actions` | *"CMU HR department sends clearance materials."* |
+| Back Stage Actions | `backstage_actions` | *"Tutor supervisor team forwards accepted candidates to the CPO."* |
+| Support Actions | — | *"Child protection laws"* |
+
+The tutor deals with the CPO **directly, in their own lane** — that is above the
+line of interaction, not below visibility. CMU HR appears in **Front Stage
+Actions**, which the tutor sees by definition. What is genuinely below the line
+is the *supervisors* forwarding and chasing, and that work is theirs, not the
+CPO's. And the support lane holds *"Child protection laws"* — the regulation,
+not the organisation.
+
+So: **external bodies are actors inside cells, never lane owners.** The clearance
+lanes go to **Tutor Supervisors**, who are the group you can actually ask about
+a stuck clearance. Where a single cell's doer really is external — the CMU HR
+one above — that is what the cell-level `owner` override exists for.
 
 ---
 
-## Once these are closed
+## What this unlocks
 
 Roughly 110 of the 173 (scenario, lane) groups become fillable — about **200 of
 306 rows**. The rest are the actor and storyboard lanes above, which stay empty

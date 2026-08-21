@@ -1,4 +1,8 @@
-# Path names — draft for verification
+# Path names
+
+> **Applied 2026-08-21** — migration `20260821210000_a_path_is_not_its_type.sql`.
+> All 24 renamed, including the 13 solitary paths. Kept as the record of where
+> each name came from.
 
 24 paths are named after their type rather than their route: 23 called
 `Happy Path` and one called `Alternate Path`. A type is not a name, so these
@@ -8,7 +12,6 @@ scenarios side by side both read `Happy Path`.
 Every proposal below is derived from that path's own first four steps, quoted in
 the right-hand column. Nothing here is invented.
 
-**Nothing is written yet.** Verify or amend, then it goes in one migration.
 
 ---
 
@@ -67,21 +70,12 @@ that in the name, so nobody reads it as a sixth variant.
 
 ---
 
-## One open question
+## The solitary-path question, decided
 
-**Thirteen of these scenarios have exactly one path.** A route that is the only
-route is arguably not something that needs its own name — the scenario name
-already says what it is, and `Session Reflection › Completes the reflection
-form` is close to saying the same thing twice.
+Thirteen of these scenarios have exactly one path, and a route that is the only
+route arguably needs no name of its own — `Session Reflection › Completes the
+reflection form` is close to saying the same thing twice.
 
-Two ways to go:
-
-1. **Name all 24** (what this draft does). Consistent; every path reads as a
-   route. Costs some redundancy on solitary paths.
-2. **Name only the 11 that have siblings**, and let solitary paths render as the
-   scenario name with the `Happy` type badge beside it. Less redundant; costs
-   consistency, and adds a rule about when a name is required.
-
-This draft assumes **(1)** because the instruction was that a path should have
-both a proper name and a type. Flagging it because the redundancy is real and
-visible on 13 of 24 rows.
+**Decided: name all 24.** Consistency wins. Every path reads as a route, there
+is no rule about when a name is required, and the redundancy is visible only in
+the panel where the scenario name sits directly above.
