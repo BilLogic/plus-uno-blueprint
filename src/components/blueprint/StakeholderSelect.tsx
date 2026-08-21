@@ -77,13 +77,25 @@ export function StakeholderSelect({
         }
       />
       <PopoverContent align="start" className="w-56 gap-0.5 p-1">
+        {/* "None", not the sentence that used to sit here — the hint slot is
+            `shrink-0` and holds one word ("Staff", "Partner"), so a sentence
+            pushed the popover wider than its own `w-56` and bled out of it.
+            What a structural row is belongs on the field's own hint, which
+            already says it. */}
         <StakeholderRow
           label="Nobody"
-          hint="A structural row — tech, support, storyboard."
+          hint="None"
           selected={value === null}
           onSelect={() => pick(null)}
         />
-        {stakeholders.map((entry) => (
+        {stakeholders
+          /*
+            Teams are in the same registry — one table for every party — but a
+            stakeholder is who appears in the blueprint as an ACTOR, and Design
+            does not stand in a room. Teams reach a lane through `owner_team`.
+          */
+          .filter((entry) => entry.kind !== 'team')
+          .map((entry) => (
           <StakeholderRow
             key={entry.id}
             label={entry.name}
@@ -123,7 +135,9 @@ function StakeholderRow({
         aria-hidden
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      <span className="shrink-0 text-2xs text-muted-foreground">{hint}</span>
+      <span className="max-w-24 shrink-0 truncate text-2xs text-muted-foreground">
+        {hint}
+      </span>
     </button>
   )
 }

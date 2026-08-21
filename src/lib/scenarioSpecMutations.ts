@@ -1,3 +1,4 @@
+import type { EntityStatus } from '@/lib/entityStatus'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
@@ -45,6 +46,7 @@ export async function updateScenarioSummary(
 export type PathSpecUpdate = {
   summary: string
   note: string
+  status: EntityStatus
 }
 
 /**
@@ -67,6 +69,7 @@ export async function updatePathSpec(
     .update({
       summary: update.summary.trim() || null,
       note: update.note.trim() || null,
+      status: update.status,
     })
     .eq('id', pathId)
     .select('id')

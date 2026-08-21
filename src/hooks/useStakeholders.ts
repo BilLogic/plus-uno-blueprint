@@ -2,13 +2,27 @@ import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import type { Stakeholder } from '@/types/database'
 
-export type StakeholderKind = 'recipient' | 'staff' | 'partner' | 'provider'
+/**
+ * What sort of party a registry row is.
+ *
+ * The first four are ACTORS — they appear in the blueprint as somebody in the
+ * room, and can be a lane's `stakeholder_id`. `team` is an accountable group:
+ * it reaches a lane through `owner_team` and is never its stakeholder, because
+ * Design does not stand in a room.
+ */
+export type StakeholderKind =
+  | 'recipient'
+  | 'staff'
+  | 'partner'
+  | 'provider'
+  | 'team'
 
 export const STAKEHOLDER_KIND_LABELS: Record<StakeholderKind, string> = {
   recipient: 'Recipient',
   staff: 'Staff',
   partner: 'Partner',
   provider: 'Provider',
+  team: 'Team',
 }
 
 /**

@@ -26,6 +26,8 @@ import {
 } from '@/lib/scenarioSpecMutations'
 import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
+import { StatusSelect } from '@/components/blueprint/StatusSelect'
+import type { EntityStatus } from '@/lib/entityStatus'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 
@@ -77,7 +79,7 @@ export function ScenarioPanel({
   )
 }
 
-type PathForm = { summary: string; note: string }
+type PathForm = { summary: string; note: string; status: EntityStatus }
 type FormState = {
   summary: string
   paths: Record<string, PathForm>
@@ -89,7 +91,7 @@ function buildBaseline(scenario: ScenarioSpec): FormState {
     paths: Object.fromEntries(
       scenario.paths.map((path) => [
         path.id,
-        { summary: path.summary, note: path.note },
+        { summary: path.summary, note: path.note, status: path.status },
       ]),
     ),
   }
@@ -117,7 +119,11 @@ function ScenarioPanelBody({
   )
   const footerHost = usePanelFooterHost(SCENARIO_PANEL_FOOTER_ID)
 
-  const setPath = (pathId: string, key: keyof PathForm, value: string) =>
+  const setPath = <K extends keyof PathForm>(
+    pathId: string,
+    key: K,
+    value: PathForm[K],
+  ) =>
     setForm((current) => ({
       ...current,
       paths: {
@@ -129,7 +135,11 @@ function ScenarioPanelBody({
   const changedPaths = scenario.paths.filter((path) => {
     const now = form.paths[path.id]
     const was = baseline.paths[path.id]
-    return now.summary !== was.summary || now.note !== was.note
+    return (
+      now.summary !== was.summary ||
+      now.note !== was.note ||
+      now.status !== was.status
+    )
   })
   const summaryChanged = form.summary !== baseline.summary
   const changed = summaryChanged || changedPaths.length > 0
@@ -240,7 +250,14 @@ function ScenarioPanelBody({
                       definition={PANEL_TERMS.status}
                     />
                     <div className="flex min-w-0">
-                      <StatusBadge status={path.status} />
+                      {canEdit ? (
+                        <StatusSelect
+                          value={form.paths[path.id].status}
+                          onChange={(next) => setPath(path.id, 'status', next)}
+                        />
+                      ) : (
+                        <StatusBadge status={form.paths[path.id].status} />
+                      )}
                     </div>
                   </div>
                   <PanelTextareaField
