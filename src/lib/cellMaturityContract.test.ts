@@ -28,6 +28,16 @@ describe('cell maturity survives the move off the label', () => {
     expect(button).toMatch(/maturity &&\s*'border-dashed/)
   })
 
+  it('survives the normalizer between the query and the canvas', () => {
+    // It did not, the first time: the query read the column, every component
+    // passed it on, the tests were green, and the canvas drew nothing —
+    // because the mapper that builds a BlueprintCell listed its fields by
+    // hand and this one was not among them.
+    const normalize = src('lib/normalizeBlueprint.ts')
+    expect(normalize).toContain('maturity?: string | null')
+    expect(normalize).toMatch(/maturity:\s*\n?\s*cell\.maturity ===/)
+  })
+
   it('is passed by every component that draws a cell', () => {
     for (const path of [
       'components/blueprint/CompareCellBlock.tsx',
