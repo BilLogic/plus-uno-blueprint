@@ -36,10 +36,13 @@ export const CANVAS_HEADER_BOX = 'rounded-md px-2 py-1.5 gap-1.5'
 export const CANVAS_HEADER_STATE = [
   'transition-colors duration-(--motion-micro)',
   'hover:bg-foreground/5',
-  // Selected wears the CELL's selection vocabulary — a 2px soft ring — so an
-  // open panel marks its header the same way an open cell marks itself.
-  'aria-pressed:bg-foreground/10 aria-pressed:ring-2 aria-pressed:ring-inset',
-  'aria-pressed:ring-[color:var(--ring-blueprint-cell-soft,var(--ring))]',
+  // Neutral, not the brand colour. A header is chrome — it names an axis; it
+  // is not one of the coloured objects on the board. Borrowing the CELL's
+  // teal selection ring put the loudest hue in the app on the quietest thing
+  // in it, and two selected headers read as more important than the cells
+  // they label. Ink at 30% says "this one" without competing.
+  'aria-pressed:bg-foreground/[0.07] aria-pressed:ring-2 aria-pressed:ring-inset',
+  'aria-pressed:ring-foreground/30',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50',
 ].join(' ')
 

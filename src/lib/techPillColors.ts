@@ -19,12 +19,11 @@ export const TECH_PILL_COLORS = {
   Email: 'purple',
   Figma: 'purple',
   'Google Docs/ Slides': 'crimson',
-  'Google Form Application': 'gold',
+  'Google Form': 'gold',
   'Google Quiz': 'red',
   'Google Quiz embedded in Notion': 'red',
   'Google Quizzes': 'tomato',
   Handshake: 'indigo',
-  'Handshake Employer Profile': 'indigo',
   'Marketing Website': 'indigo',
   Notion: 'gold',
   'On-campus booth': 'yellow',
@@ -52,6 +51,13 @@ const TECH_LABEL_ALIASES: Record<string, TechPillName> = {
   // left rather than mint a second touchpoint.
   'zoom/pencil': 'Zoom',
   'zoom/ pencil': 'Zoom',
+  // A pill names the THING; which form, which profile, which tooling is the
+  // summary's job. These are the labels that carried their own specification
+  // until Aug 2026, kept so an older slice still resolves.
+  'handshake employer profile': 'Handshake',
+  'google form application': 'Google Form',
+  'acceptance form (google form)': 'Google Form',
+  'tutor sign-up form (google form)': 'Google Form',
 }
 
 function isLegacyZoomPencilLabel(label: string): boolean {

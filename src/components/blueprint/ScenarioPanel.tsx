@@ -181,6 +181,24 @@ function ScenarioPanelBody({
         meta=""
       />
 
+      {/* Directly under the title. It is the scenario's own sentence — what
+          this whole board is about — and a reader arrives wanting it before
+          they want the routes through it. It sat under the paths on the
+          argument that the paths are why the drawer exists; that was right
+          about the paths and wrong about the order, because an accordion of
+          six routes pushes the one sentence describing all of them out of
+          sight. */}
+      <PanelTextareaField
+        label="Summary"
+        hint="The situation this blueprint covers."
+        value={form.summary}
+        rows={2}
+        disabled={!canEdit}
+        onChange={(next) =>
+          setForm((current) => ({ ...current, summary: next }))
+        }
+      />
+
       <div className="flex flex-col gap-1">
         <span className={cn('flex items-center gap-1', PANEL_TEXT.sectionLabel)}>
           Paths
@@ -212,8 +230,8 @@ function ScenarioPanelBody({
               <AccordionContent>
                 <div className="flex flex-col gap-3 pb-3">
                   <PanelTextareaField
-                    label="Route"
-                    hint="When this route applies — the condition that puts someone on it."
+                    label="Applies when"
+                    hint="The condition that puts someone on this route rather than another."
                     placeholder="e.g. the student joins on time"
                     value={form.paths[path.id].summary}
                     rows={2}
@@ -240,20 +258,6 @@ function ScenarioPanelBody({
           ))}
         </Accordion>
       </div>
-
-      {/* UNDER the paths. The paths are why this drawer exists — the
-          scenario's one editable sentence sat above them and pushed the
-          only thing you cannot reach anywhere else below the fold. */}
-      <PanelTextareaField
-        label="Summary"
-        hint="The situation this blueprint covers."
-        value={form.summary}
-        rows={2}
-        disabled={!canEdit}
-        onChange={(next) =>
-          setForm((current) => ({ ...current, summary: next }))
-        }
-      />
 
       {canEdit ? (
         <PanelFooterControls
