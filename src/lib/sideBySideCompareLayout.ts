@@ -95,18 +95,29 @@ export const COMPARE_LABEL_WIDTH = 208
  * rail rather than a frame around the board. The extra track keeps the two
  * apart; the painted rail still stops at COMPARE_LABEL_WIDTH.
  *
- * 24 -> 12 on 2026-08-21. The gutter is DEAD SPACE by construction — track
- * minus painted rail — and at 24 it stacked with the outline's own 8px offset
- * (STEP_COLUMN_GAP - COMPARE_PATH_SECTION_H_INSET) into a 32px void between
- * the last thing in the rail and the frame around the board. Read against the
- * 14px a cell gets inside that frame, the rail looked marooned.
+ * 24 -> 6 on 2026-08-21, so the label sits in one rhythm instead of two.
  *
- * 12 keeps 20px between rail and outline, still clear of the 16px that
- * originally made the outline read as the rail's own edge, and it moves the
- * outline AWAY from the first cell rather than toward it — the other half of
- * the complaint this constant was born from.
+ * The rail crosses two gaps on its way to the board, and they were different
+ * sizes:
+ *
+ *   label box -> painted rail edge   BLUEPRINT_SLOT_INSET        14px
+ *   painted rail edge -> outline     GUTTER + (STEP_COLUMN_GAP
+ *                                     - COMPARE_PATH_SECTION_H_INSET)
+ *
+ * The second is the one this constant moves, and the +8 is fixed, so 6 is the
+ * value that makes it 14 too. At the old 24 the second gap was 32px against
+ * the first's 14 — the rail read as marooned, which is what it looked like.
+ *
+ * The gutter is DEAD SPACE by construction (track minus painted rail), and it
+ * earns its keep: at 0 the outline landed 16px from the rail and 5px from the
+ * first cell, and read as an edge belonging to the rail rather than a frame
+ * around the board. 6 keeps the two apart while matching the inset the label
+ * already has on its other side.
+ *
+ * Coupled to BLUEPRINT_SLOT_INSET by design — if that inset changes, this
+ * wants to change with it. The contract test pins the pair.
  */
-export const COMPARE_RAIL_GUTTER = 12
+export const COMPARE_RAIL_GUTTER = 6
 export const COMPARE_LABEL_TRACK_WIDTH =
   COMPARE_LABEL_WIDTH + COMPARE_RAIL_GUTTER
 export const COMPARE_PANEL_PADDING = 24
