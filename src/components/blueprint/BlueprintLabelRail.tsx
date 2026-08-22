@@ -301,10 +301,16 @@ export function BlueprintLabelRow({
       )}
       <div
         className={cn(
-          // `pr-8`: the label block ends well clear of the path outline
-          // rather than crowding it. The divider labels below sit in the same
-          // column and were the ones reading as if they touched it.
-          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-8',
+          // Right inset matches the left. It was `pr-8` — 32px against a 20px
+          // left — set so the DIVIDER labels below, which share this column,
+          // stopped reading as if they touched the path outline. They no
+          // longer need it: a divider is now a caption and a rule in one row
+          // (`BlueprintDividerRow`), and the rule is what separates the words
+          // from the outline. So the asymmetry was one element carrying
+          // padding for another element's problem, and it left the lane label
+          // floating in the middle of its block with the hover surface
+          // stopping well short of the edge.
+          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-5',
           // Bottom padding to match the top: the block stretches to fill this
           // container, so without it the selected wash ran flush into the
           // row's edge and read as clipped even when it was not.
