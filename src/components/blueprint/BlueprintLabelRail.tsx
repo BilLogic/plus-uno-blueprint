@@ -28,7 +28,6 @@ import {
 import {
   BLUEPRINT_SLOT_INSET,
   BLUEPRINT_SLOT_INSET_COMPACT,
-  BLUEPRINT_SLOT_INSET_LEFT,
 } from '@/lib/canvasHeaderStyle'
 import { cn } from '@/lib/utils'
 import type { BlueprintLane } from '@/types/blueprint'
@@ -184,12 +183,16 @@ export function BlueprintDividerRow({
         />
       ) : null}
       {/* Caption and rule in ONE row, so the line begins where the words end
-          — the two are one object and had drifted into two. The left inset is
-          the SAME token the lane labels above it use, so the column reads as
-          one; the right end reaches past the path outline, because a line of
-          interaction belongs to the blueprint rather than to one path's box. */}
+          — the two are one object and had drifted into two.
+
+          NO left inset, deliberately, and it is the one row in this column
+          that gets none. A lane label is a label IN the rail, so it sits
+          inside the rail's padding. A line of interaction is not: it names a
+          boundary of the whole blueprint, starts at the far edge, and runs
+          out past the path outline. Insetting it bought nothing and spent
+          14px of the room its longest caption needs before the board. */}
       <div
-        className={cn('absolute inset-y-0 left-0 z-10 flex items-center', BLUEPRINT_SLOT_INSET_LEFT)}
+        className="absolute inset-y-0 left-0 z-10 flex items-center"
         style={{ right: -ruleOverhang }}
       >
         <BlueprintDividerRailLabel label={label} compact={compact} />

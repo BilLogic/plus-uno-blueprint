@@ -11,18 +11,19 @@
  * What made it hard: "LINE OF INTERNAL INTERACTION" is ~221px at `text-2xs`
  * and is `shrink-0`, so at the old 208px rail it overflowed and the gutter was
  * the only thing between those words and the board. Every value that made the
- * lane row look right put the caption on the outline, and vice versa. Widening
- * the rail to 214 — and giving the caption the same left inset as the lane
- * label, which bought 6 of those pixels — took the text out of the gutter's
- * job, and left the gutter free to serve the geometry.
+ * lane row look right put the caption on the outline, and vice versa.
  *
- * Measured in the browser at zoom 1 after the change: 30 / 30, caption clear.
+ * Two changes took the text out of the gutter's job: widening the rail to 214,
+ * and dropping the caption's left inset entirely. A lane label is a label IN
+ * the rail and sits inside its padding; a line of interaction names a boundary
+ * of the whole blueprint, so it starts at the far edge and runs out past the
+ * outline. Flush-left is not a shortcut here, it is what the thing is.
+ *
+ * Measured in the browser after the change: 30 / 30 / 30 — the caption, the
+ * lane label and the first cell all sit the same distance from the frame.
  */
 import { describe, expect, it } from 'vitest'
-import {
-  BLUEPRINT_SLOT_INSET,
-  BLUEPRINT_SLOT_INSET_LEFT,
-} from '@/lib/canvasHeaderStyle'
+import { BLUEPRINT_SLOT_INSET } from '@/lib/canvasHeaderStyle'
 import {
   COMPARE_LABEL_WIDTH,
   COMPARE_PATH_SECTION_H_INSET,
@@ -43,7 +44,7 @@ function insetPx(className: string): number {
  * type scale, its tracking, or the caption vocabulary changes — every other
  * number here is downstream of it.
  */
-const LONGEST_CAPTION_PX = 221
+const LONGEST_CAPTION_PX = 200
 
 const SLOT = insetPx(BLUEPRINT_SLOT_INSET)
 
@@ -65,18 +66,22 @@ describe('the outline sits evenly between the rail and the board', () => {
 })
 
 describe('the longest divider caption stays out of it', () => {
-  it('fits inside the painted rail', () => {
-    // The whole reason the two gaps could not be equal before. While this is
-    // false, the gutter is carrying the caption instead of the geometry, and
-    // every value is a compromise between them.
-    const roomForCaption = COMPARE_LABEL_WIDTH - insetPx(BLUEPRINT_SLOT_INSET_LEFT)
-    expect(roomForCaption).toBeGreaterThanOrEqual(LONGEST_CAPTION_PX - 21)
-    expect(COMPARE_LABEL_WIDTH).toBeGreaterThan(208) // the width it overflowed
+  it('clears the outline by the same 30px as everything else', () => {
+    // The caption gets NO left inset — the one row in this column that does
+    // not — so it ends at LONGEST_CAPTION_PX from the rail's left edge, and
+    // the outline sits at the rail's width plus the gutter and the frame's
+    // own offset.
+    const captionToOutline =
+      COMPARE_LABEL_WIDTH +
+      COMPARE_RAIL_GUTTER +
+      (STEP_COLUMN_GAP - COMPARE_PATH_SECTION_H_INSET) -
+      LONGEST_CAPTION_PX
+    expect(captionToOutline).toBe(LABEL_TO_OUTLINE)
   })
 
-  it('starts on the same line as the lane labels above it', () => {
-    // `pl-5` put the captions 6px left of the lane labels and the column read
-    // as two columns. It also cost 6px of the room the caption needed.
-    expect(insetPx(BLUEPRINT_SLOT_INSET_LEFT)).toBe(SLOT)
+  it('fits inside the painted rail', () => {
+    // While this is false the gutter is carrying the caption instead of the
+    // geometry, and every value is a compromise between the two.
+    expect(LONGEST_CAPTION_PX).toBeLessThan(COMPARE_LABEL_WIDTH)
   })
 })
