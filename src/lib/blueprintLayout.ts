@@ -490,6 +490,15 @@ export const BLUEPRINT_ARTBOARD_HEIGHT_BUFFER = 32
 export const BLUEPRINT_ARTBOARD_WIDTH_BUFFER = 32
 
 /** Outer gutter around each cell (Tailwind p-3 ≈ 12px per side). */
+/**
+ * Half the hit target for an insert affordance, on BOTH axes.
+ *
+ * Was declared separately in BlueprintColumnHandles and BlueprintLaneHandles,
+ * same name and same value in two files — so a column insert 8px wide and a
+ * lane insert 10px tall was a bug nothing would have caught.
+ */
+export const BLUEPRINT_INSERT_HIT_HALF = 8
+
 export const BLUEPRINT_CELL_GUTTER = 12
 
 /** Stable canvas face for narrative cells; complete prose lives in detail. */

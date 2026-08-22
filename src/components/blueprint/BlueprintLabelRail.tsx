@@ -19,6 +19,7 @@ import {
   COMPARE_PATH_SECTION_H_INSET,
   type BlueprintLabelRowSpec,
 } from '@/lib/sideBySideCompareLayout'
+import { SERVICE_PATH_SECTION_INSET } from '@/components/blueprint/ComparePathSectionFrame'
 import {
   BLUEPRINT_THEME,
   blueprintPanelLabelRailColor,
@@ -109,8 +110,16 @@ export function BlueprintSwimLaneDivider({
  * carries on out the other side. Stopping it inside the frame made three
  * lines that each looked like a stray dash floating in a card.
  */
-export const COMPARE_DIVIDER_RULE_OVERHANG = COMPARE_PATH_SECTION_H_INSET + 12
-export const SERVICE_DIVIDER_RULE_OVERHANG = 20
+const DIVIDER_RULE_BLEED = 12
+export const COMPARE_DIVIDER_RULE_OVERHANG =
+  COMPARE_PATH_SECTION_H_INSET + DIVIDER_RULE_BLEED
+/**
+ * The same formula, not the same number. It was written out as `20` — the
+ * addition already done by hand — so changing SERVICE_PATH_SECTION_INSET moved
+ * the compare rule and silently left the service one behind.
+ */
+export const SERVICE_DIVIDER_RULE_OVERHANG =
+  SERVICE_PATH_SECTION_INSET + DIVIDER_RULE_BLEED
 
 /** Interaction / visibility row — caption in the rail, rule straight across. */
 export function BlueprintDividerRow({

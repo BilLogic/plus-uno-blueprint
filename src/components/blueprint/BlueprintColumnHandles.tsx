@@ -1,3 +1,4 @@
+import { BLUEPRINT_INSERT_HIT_HALF } from '@/lib/blueprintLayout'
 import { useLayoutEffect, useState, type RefObject } from 'react'
 import { Plus } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
@@ -19,7 +20,6 @@ type Column = { left: number; width: number }
  * row/column inserts do — the visible mark is a hairline, the thing you have
  * to hit is a finger's width.
  */
-const INSERT_HIT_HALF_PX = 8
 
 /**
  * Column handles above the grid, in Design mode only.
@@ -175,8 +175,8 @@ export function BlueprintColumnHandles({
                 }}
                 className="group/insert pointer-events-auto absolute z-40 flex justify-center"
                 style={{
-                  left: boundary.x - INSERT_HIT_HALF_PX,
-                  width: INSERT_HIT_HALF_PX * 2,
+                  left: boundary.x - BLUEPRINT_INSERT_HIT_HALF,
+                  width: BLUEPRINT_INSERT_HIT_HALF * 2,
                   top: -32,
                   height: bodyHeight + 32,
                 }}

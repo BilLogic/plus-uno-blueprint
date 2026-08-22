@@ -16,6 +16,7 @@ import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisua
 import {
   BLUEPRINT_LAYER_ROW_GAP,
   STEP_COLUMN_GAP,
+  VISUAL_PLAY_GUTTER,
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
@@ -39,8 +40,6 @@ import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import type { BlueprintData, BlueprintStep } from '@/types/blueprint'
 
-/** Left gutter on the white board so the play control clears Visual cells. */
-const VISUAL_PLAY_GUTTER = 28
 
 /**
  * How one band is placed inside its parent grid.
