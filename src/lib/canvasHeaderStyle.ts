@@ -66,3 +66,13 @@ export const BLUEPRINT_SLOT_INSET = 'px-3.5'
 
 /** The same inset at compact density. */
 export const BLUEPRINT_SLOT_INSET_COMPACT = 'px-3'
+
+/**
+ * The left half of the same inset, for a row that only has a left edge to
+ * honour — the divider caption, which runs off toward the board and lets its
+ * rule cross the outline rather than stopping at it.
+ *
+ * It was `pl-5`, so the "LINE OF …" captions started 6px left of the lane
+ * labels stacked directly above them and the column read as two columns.
+ */
+export const BLUEPRINT_SLOT_INSET_LEFT = 'pl-3.5'
