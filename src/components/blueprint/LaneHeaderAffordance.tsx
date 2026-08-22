@@ -5,6 +5,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
+import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
@@ -56,15 +57,24 @@ export function LaneHeaderAffordance({
 }) {
   const { toggleEntity, selection } = useEntityDetail()
   const detail = useBlueprintCellDetailOptional()
+  const boardInScope = useScenarioBoardInScope()
   /*
-    The same gate the CELLS use (BlueprintCellButton) — a header is live only
-    where a scenario is the focus. Zoomed out, every lane on every board wore
-    hover, a focus ring and a pointer, and clicking one opened a panel reading
-    "Nothing recorded for this lane yet." One board's worth of detail is not
-    addressable from a view that shows many, so the label goes back to being
-    what it looks like from there: a word naming a row.
+    TWO facts, and the bug was shipping with only the first.
+
+    `detail.enabled` is the feature flag and the detail view — but it is ONE
+    boolean on a provider mounted above the entire canvas, and every scenario
+    board stays mounted behind the focused one. So focusing any single
+    scenario turned this header live on all of them: 176 lane headers wearing
+    hover, a focus ring and a pointer, and a click on a band the reader had
+    never chosen opening a panel reading "Nothing recorded for this lane
+    yet." — an affordance offering emptiness on somebody else's board.
+
+    `boardInScope` is the missing half: this board is the focused/solo
+    scenario, not merely a mounted one. One board's worth of detail is not
+    addressable from a view that shows many, so everywhere else the label goes
+    back to being what it looks like from there: a word naming a row.
   */
-  const isInteractive = Boolean(detail?.enabled)
+  const isInteractive = Boolean(detail?.enabled) && boardInScope
   const open = selection?.kind === 'lane' && selection.id === laneId
 
   const label = (

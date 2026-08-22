@@ -813,6 +813,16 @@ function ServiceOverviewViewImpl({
     isBlueprintCellDetailEnabled() &&
     isDetail &&
     (focusedScenarioId !== null || soloScenarioId != null)
+  /*
+    WHICH scenario that is. `cellDetailEnabled` is one boolean for the whole
+    canvas and every scenario board stays mounted behind the focused one, so
+    the flag alone said "live" to all of them — 176 lane headers and 125 step
+    headers wearing hover and a pointer, and a click on any of them opening a
+    panel reading "Nothing recorded for this lane yet." Each board compares
+    this id against its own (see `scenarioBoardScopeContext`), so only the
+    board the reader chose carries live axis headers.
+  */
+  const cellDetailScenarioId = focusedScenarioId ?? soloScenarioId ?? null
 
   const focusedHeader = useMemo(() => {
     if (!isDetail) return null
@@ -865,13 +875,17 @@ function ServiceOverviewViewImpl({
         the canvas can reach it. Ungated on purpose: the SERVICE, PHASE and
         SCENARIO titles are what the overview offers, and they are the whole
         point of that view. The two AXIS headers inside a board — lane and
-        step — gate themselves on `cellDetailEnabled` instead, the same way
-        their cells do, so a board nobody has chosen has nothing live in it.
+        step — gate themselves instead, and on BOTH halves: `cellDetailEnabled`
+        below, plus their own board being `cellDetailScenarioId`. The flag
+        alone is one boolean for the whole canvas, so focusing one scenario
+        made the headers live on all 23 mounted boards and a click on a band
+        nobody had chosen opened "Nothing recorded for this lane yet."
       */}
       <EntityDetailProvider resetKey={cellDetailResetKey}>
       <BlueprintCellDetailProvider
         resetKey={cellDetailResetKey}
         enabled={cellDetailEnabled}
+        scenarioId={cellDetailScenarioId}
         blueprints={cellDetailBlueprints}
       >
         <CanvasFocusEscapeHandler />

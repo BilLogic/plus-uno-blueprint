@@ -52,6 +52,13 @@ export type BlueprintPanelState = { surface: BlueprintPanelSurface }
 
 type BlueprintCellDetailContextValue = {
   enabled: boolean
+  /**
+   * The scenario the detail view is scoped to — the focused one, or the one a
+   * slice tab / phone shell renders solo. `enabled` says the feature is live;
+   * this says WHICH of the mounted boards it is live on, and the two axis
+   * headers need both (see `scenarioBoardScopeContext`).
+   */
+  scenarioId: string | null
   blueprints: BlueprintData[]
   selection: BlueprintCellSelection | null
   selectCell: (selection: BlueprintCellSelection) => void
@@ -95,6 +102,8 @@ type BlueprintCellDetailProviderProps = {
   /** Clears the open panel when the active scenario or slide changes. */
   resetKey?: string
   enabled?: boolean
+  /** See `scenarioId` on the context value. */
+  scenarioId?: string | null
   blueprints?: BlueprintData[]
 }
 
@@ -102,6 +111,7 @@ export function BlueprintCellDetailProvider({
   children,
   resetKey,
   enabled = false,
+  scenarioId = null,
   blueprints = [],
 }: BlueprintCellDetailProviderProps) {
   const [selection, setSelection] = useState<BlueprintCellSelection | null>(null)
@@ -333,6 +343,7 @@ export function BlueprintCellDetailProvider({
   const value = useMemo(
     () => ({
       enabled,
+      scenarioId,
       blueprints,
       selection,
       selectCell,
@@ -350,6 +361,7 @@ export function BlueprintCellDetailProvider({
     }),
     [
       enabled,
+      scenarioId,
       blueprints,
       selection,
       selectCell,

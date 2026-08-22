@@ -92,6 +92,26 @@ describe('stable blueprint cell frame contract', () => {
     expect(css).toContain('[data-blueprint-row-header]')
   })
 
+  it('gates both axis headers on the board, not just the provider flag', () => {
+    /*
+      Reported three times. `detail.enabled` is ONE boolean on a provider
+      mounted above the whole canvas, and every scenario board stays mounted
+      behind the focused one — so focusing a single scenario made 176 lane and
+      125 step headers live across 23 boards, and a click on a band the reader
+      had never chosen opened "Nothing recorded for this lane yet."
+
+      Both halves or nothing: the flag AND this board being the scoped one.
+    */
+    for (const header of [laneHeader, stepHeader]) {
+      expect(header).toContain('useScenarioBoardInScope()')
+      expect(header).toContain(
+        'const isInteractive = Boolean(detail?.enabled) && boardInScope',
+      )
+    }
+    // The one producer of that scope — the component that owns one scenario.
+    expect(scenarioPanel).toContain('<ScenarioBoardScopeContext.Provider')
+  })
+
   it('clamps only the narrative preview while retaining its full text node', () => {
     expect(serviceGrid).toContain(
       '<p className="m-auto line-clamp-4 w-full whitespace-pre-wrap">{content}</p>',

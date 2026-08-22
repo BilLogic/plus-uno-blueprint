@@ -94,8 +94,19 @@ export const COMPARE_LABEL_WIDTH = 208
  * and 5px from the first cell. The outline read as an edge belonging to the
  * rail rather than a frame around the board. The extra track keeps the two
  * apart; the painted rail still stops at COMPARE_LABEL_WIDTH.
+ *
+ * 24 -> 12 on 2026-08-21. The gutter is DEAD SPACE by construction — track
+ * minus painted rail — and at 24 it stacked with the outline's own 8px offset
+ * (STEP_COLUMN_GAP - COMPARE_PATH_SECTION_H_INSET) into a 32px void between
+ * the last thing in the rail and the frame around the board. Read against the
+ * 14px a cell gets inside that frame, the rail looked marooned.
+ *
+ * 12 keeps 20px between rail and outline, still clear of the 16px that
+ * originally made the outline read as the rail's own edge, and it moves the
+ * outline AWAY from the first cell rather than toward it — the other half of
+ * the complaint this constant was born from.
  */
-export const COMPARE_RAIL_GUTTER = 24
+export const COMPARE_RAIL_GUTTER = 12
 export const COMPARE_LABEL_TRACK_WIDTH =
   COMPARE_LABEL_WIDTH + COMPARE_RAIL_GUTTER
 export const COMPARE_PANEL_PADDING = 24

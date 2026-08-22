@@ -5,6 +5,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
+import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
@@ -41,13 +42,15 @@ export function StepHeaderAffordance({
 }) {
   const { toggleEntity, selection } = useEntityDetail()
   const detail = useBlueprintCellDetailOptional()
+  const boardInScope = useScenarioBoardInScope()
   /*
-    The same gate the CELLS use (BlueprintCellButton), and the same one the
-    lane header uses: a header is live only where a scenario is the focus.
-    Zoomed out it opened a panel with nothing in it for a step the reader had
-    not chosen to look at.
+    Both halves, exactly as the lane header takes them — see the long note
+    there. The provider flag alone left 125 step headers live across every
+    mounted board, so a column on a scenario the reader had not chosen opened
+    a panel with nothing in it. The board's own scope is what says this is the
+    board they are looking at.
   */
-  const isInteractive = Boolean(detail?.enabled)
+  const isInteractive = Boolean(detail?.enabled) && boardInScope
   const open = selection?.kind === 'step' && selection.id === stepId
 
   const label = (
