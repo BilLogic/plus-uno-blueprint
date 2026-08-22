@@ -19,6 +19,10 @@ import {
   getTechPillItems,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
+import {
+  BLUEPRINT_SLOT_INSET,
+  BLUEPRINT_SLOT_INSET_COMPACT,
+} from '@/lib/canvasHeaderStyle'
 import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell } from '@/types/blueprint'
@@ -96,7 +100,7 @@ export function CompareCellBlock({
     ? membershipDescriptionId
     : undefined
   const shellPadding = cn(
-    compact ? 'px-3' : 'px-3.5',
+    compact ? BLUEPRINT_SLOT_INSET_COMPACT : BLUEPRINT_SLOT_INSET,
     compact ? 'pt-3' : 'pt-4',
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )

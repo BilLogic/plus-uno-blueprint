@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
@@ -39,7 +40,43 @@ export function StepHeaderAffordance({
   style?: React.CSSProperties
 }) {
   const { toggleEntity, selection } = useEntityDetail()
+  const detail = useBlueprintCellDetailOptional()
+  /*
+    The same gate the CELLS use (BlueprintCellButton), and the same one the
+    lane header uses: a header is live only where a scenario is the focus.
+    Zoomed out it opened a panel with nothing in it for a step the reader had
+    not chosen to look at.
+  */
+  const isInteractive = Boolean(detail?.enabled)
   const open = selection?.kind === 'step' && selection.id === stepId
+
+  const label = (
+    <span
+      className={cn(
+        'min-w-0 truncate text-center text-muted-foreground',
+        CANVAS_HEADER_TEXT,
+      )}
+    >
+      {name}
+    </span>
+  )
+
+  // Inert prose, not a disabled button — see LaneHeaderAffordance.
+  if (!isInteractive) {
+    return (
+      <div
+        data-blueprint-column-header=""
+        style={style}
+        className={cn(
+          'group/step-header relative flex h-full min-w-0 items-center justify-center',
+          CANVAS_HEADER_BOX,
+          className,
+        )}
+      >
+        {label}
+      </div>
+    )
+  }
 
   return (
     <Tooltip>
@@ -65,14 +102,7 @@ export function StepHeaderAffordance({
           />
         }
       >
-        <span
-          className={cn(
-            'min-w-0 truncate text-center text-muted-foreground',
-            CANVAS_HEADER_TEXT,
-          )}
-        >
-          {name}
-        </span>
+        {label}
         <Info
           className={cn(
             CANVAS_HEADER_HINT,

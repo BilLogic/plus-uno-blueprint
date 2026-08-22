@@ -25,6 +25,10 @@ import {
   getBlueprintLabelSection,
   getBlueprintLabelTextColor,
 } from '@/lib/blueprintTheme'
+import {
+  BLUEPRINT_SLOT_INSET,
+  BLUEPRINT_SLOT_INSET_COMPACT,
+} from '@/lib/canvasHeaderStyle'
 import { cn } from '@/lib/utils'
 import type { BlueprintLane } from '@/types/blueprint'
 import type { CSSProperties } from 'react'
@@ -301,20 +305,13 @@ export function BlueprintLabelRow({
       )}
       <div
         className={cn(
-          // `pr-3` — deliberately smaller than the `pl-5` opposite it, because
-          // the two edges are not doing the same job. The left inset holds the
-          // label off the viewport edge; the right one only has to keep it
-          // from touching the path outline, and the outline is a line, not a
-          // neighbour that needs room.
-          //
-          // It was `pr-8` (32px), set so the DIVIDER labels sharing this
-          // column stopped reading as if they touched the outline. They no
-          // longer need it — a divider is a caption and a rule in one row now,
-          // and the rule is what separates the words from the outline — so
-          // that padding was one element carrying another's problem, and it
-          // left the label floating with its hover surface stopping short of
-          // the edge it belongs to.
-          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-3',
+          // The label's inset is the cell slot's inset — same token, both
+          // edges. Asymmetric padding here (`pl-5 pr-3`) put the lane's name
+          // on a different rhythm from the cells it names, and the two
+          // numbers lived in different files with nothing holding them
+          // together.
+          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2',
+          compact ? BLUEPRINT_SLOT_INSET_COMPACT : BLUEPRINT_SLOT_INSET,
           // Bottom padding to match the top: the block stretches to fill this
           // container, so without it the selected wash ran flush into the
           // row's edge and read as clipped even when it was not.

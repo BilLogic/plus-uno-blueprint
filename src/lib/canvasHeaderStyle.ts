@@ -51,3 +51,18 @@ export const CANVAS_HEADER_HINT = [
   'size-3.5 shrink-0 text-muted-foreground/50 opacity-0',
   'transition-opacity duration-(--motion-micro)',
 ].join(' ')
+
+/**
+ * The horizontal inset of one column of the board — the lane label and the
+ * cell slot beside it, one value.
+ *
+ * The rail carried `pl-5 pr-3` while the slot carried `px-3.5`, so the label
+ * started 6px further in than the cells it names and stopped 2px short of
+ * them on the other edge. Nothing enforced the relationship; the two numbers
+ * were set in separate files and drifted. Reading them from here is what
+ * makes the rail sit on the grid's rhythm rather than near it.
+ */
+export const BLUEPRINT_SLOT_INSET = 'px-3.5'
+
+/** The same inset at compact density. */
+export const BLUEPRINT_SLOT_INSET_COMPACT = 'px-3'

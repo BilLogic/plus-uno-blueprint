@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
@@ -54,7 +55,46 @@ export function LaneHeaderAffordance({
   className?: string
 }) {
   const { toggleEntity, selection } = useEntityDetail()
+  const detail = useBlueprintCellDetailOptional()
+  /*
+    The same gate the CELLS use (BlueprintCellButton) — a header is live only
+    where a scenario is the focus. Zoomed out, every lane on every board wore
+    hover, a focus ring and a pointer, and clicking one opened a panel reading
+    "Nothing recorded for this lane yet." One board's worth of detail is not
+    addressable from a view that shows many, so the label goes back to being
+    what it looks like from there: a word naming a row.
+  */
+  const isInteractive = Boolean(detail?.enabled)
   const open = selection?.kind === 'lane' && selection.id === laneId
+
+  const label = (
+    <span
+      className={cn(
+        'min-w-0 flex-1 whitespace-normal break-words',
+        CANVAS_HEADER_TEXT,
+      )}
+      style={color ? { color } : undefined}
+    >
+      {laneName}
+    </span>
+  )
+
+  // Inert prose, not a disabled button: there is nothing to enable here, so a
+  // control that announces itself and refuses is worse than no control.
+  if (!isInteractive) {
+    return (
+      <div
+        data-blueprint-row-header=""
+        className={cn(
+          'group/lane-header flex min-w-0 flex-1 items-start self-stretch text-left',
+          CANVAS_HEADER_BOX,
+          className,
+        )}
+      >
+        {label}
+      </div>
+    )
+  }
 
   return (
     <Tooltip>
@@ -85,15 +125,7 @@ export function LaneHeaderAffordance({
           />
         }
       >
-        <span
-          className={cn(
-            'min-w-0 flex-1 whitespace-normal break-words',
-            CANVAS_HEADER_TEXT,
-          )}
-          style={color ? { color } : undefined}
-        >
-          {laneName}
-        </span>
+        {label}
         {/* Optically on the label's first line: the glyph's own box is taller
             than the cap height it has to sit beside. */}
         <Info

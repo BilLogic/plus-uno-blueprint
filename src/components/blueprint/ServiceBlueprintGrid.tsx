@@ -55,6 +55,10 @@ import {
   shouldUseVisualContent,
 } from '@/lib/blueprintLayout'
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
+import {
+  BLUEPRINT_SLOT_INSET,
+  BLUEPRINT_SLOT_INSET_COMPACT,
+} from '@/lib/canvasHeaderStyle'
 import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
@@ -483,7 +487,8 @@ function BlueprintSwimLane({
           // 200px row is a target nobody finds. The label itself still sits at
           // the top — the button aligns its own content.
           'sticky left-0 z-10 flex shrink-0 flex-col self-stretch border-r',
-          compact ? 'px-3.5' : 'pl-5 pr-3',
+          // Same inset as the cell slot beside it — see BLUEPRINT_SLOT_INSET.
+          compact ? BLUEPRINT_SLOT_INSET_COMPACT : BLUEPRINT_SLOT_INSET,
         )}
         style={{
           width: LAYER_COLUMN_WIDTH,
@@ -707,7 +712,7 @@ function BlueprintCellBlock({
   slotCells?: BlueprintCell[]
 }) {
   const shellPadding = cn(
-    compact ? 'px-3' : 'px-3.5',
+    compact ? BLUEPRINT_SLOT_INSET_COMPACT : BLUEPRINT_SLOT_INSET,
     compact ? 'pt-3' : 'pt-4',
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
