@@ -95,29 +95,39 @@ export const COMPARE_LABEL_WIDTH = 208
  * rail rather than a frame around the board. The extra track keeps the two
  * apart; the painted rail still stops at COMPARE_LABEL_WIDTH.
  *
- * 24 -> 6 on 2026-08-21, so the label sits in one rhythm instead of two.
+ * SIZED BY THE LONGEST DIVIDER CAPTION, not by taste.
  *
- * The rail crosses two gaps on its way to the board, and they were different
- * sizes:
+ * It looks like dead space — track minus painted rail — and on a lane row it
+ * is. On a divider row it is not: "LINE OF INTERNAL INTERACTION" measures
+ * 221px at `text-2xs` with its tracking, and the painted rail offers only
+ * COMPARE_LABEL_WIDTH - pl-5 = 188. The caption is `shrink-0`, so it does not
+ * wrap or truncate — it overflows ~14px PAST the painted rail, into this
+ * gutter, and the gutter is the only thing between those words and the path
+ * outline.
  *
- *   label box -> painted rail edge   BLUEPRINT_SLOT_INSET        14px
- *   painted rail edge -> outline     GUTTER + (STEP_COLUMN_GAP
- *                                     - COMPARE_PATH_SECTION_H_INSET)
+ * The arithmetic, so the next person does not have to rediscover it:
  *
- * The second is the one this constant moves, and the +8 is fixed, so 6 is the
- * value that makes it 14 too. At the old 24 the second gap was 32px against
- * the first's 14 — the rail read as marooned, which is what it looked like.
+ *   outline sits at   railEdge + GUTTER + (STEP_COLUMN_GAP
+ *                                          - COMPARE_PATH_SECTION_H_INSET)
+ *   caption ends at   railEdge + CAPTION_OVERFLOW
+ *   clearance      =  GUTTER + 8 - CAPTION_OVERFLOW
  *
- * The gutter is DEAD SPACE by construction (track minus painted rail), and it
- * earns its keep: at 0 the outline landed 16px from the rail and 5px from the
- * first cell, and read as an edge belonging to the rail rather than a frame
- * around the board. 6 keeps the two apart while matching the inset the label
- * already has on its other side.
+ * At 20 that clearance is 14px — the same inset a lane label and a cell get,
+ * applied to the element that actually constrains this column.
  *
- * Coupled to BLUEPRINT_SLOT_INSET by design — if that inset changes, this
- * wants to change with it. The contract test pins the pair.
+ * Tried on 2026-08-21 and reverted: 6, chosen to make railEdge -> outline
+ * equal the 14px a lane label has on its other side. It made the two gaps
+ * match on lane rows and left the long caption 2px from the outline, reading
+ * as though the words touched the board. The two cannot be equal while a
+ * caption is wider than the rail it sits in — this space is occupied, just
+ * not on every row.
+ *
+ * The real lever, if the gutter must shrink: COMPARE_LABEL_WIDTH. Widen the
+ * painted rail to 255 and the longest caption fits inside it with its 14px,
+ * and the gutter is free to be small. That costs 47px of horizontal room on
+ * every board, which is why it is a decision rather than a tweak.
  */
-export const COMPARE_RAIL_GUTTER = 6
+export const COMPARE_RAIL_GUTTER = 20
 export const COMPARE_LABEL_TRACK_WIDTH =
   COMPARE_LABEL_WIDTH + COMPARE_RAIL_GUTTER
 export const COMPARE_PANEL_PADDING = 24
