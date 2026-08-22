@@ -3,7 +3,9 @@ title: "One visual vocabulary: five layers, five defects, and a value written on
 type: refactor
 status: active
 date: 2026-08-22
+updated: 2026-08-22 — benchmarked against supabase/supabase @ master; issue ledger added
 repos: uno-blueprint
+benchmark: github.com/supabase/supabase packages/config + packages/ui/build/css
 ---
 
 # One visual vocabulary
@@ -42,6 +44,177 @@ clean, straightforward, easy to audit and comprehensive."* This plan takes that
 seriously — several proposals below delete rungs and move values rather than
 renaming what ships.
 
+**The benchmark is not a comparison — it is a diff against our own upstream.**
+`src/styles/` was forked file-for-file from Supabase's config layer on
+2026-08-04 (`a169838`, `65a94b6`: "mirror Supabase's CSS architecture"). So
+Part 0 below reads as *where we diverged, what we inherited, and what upstream
+does that we should pull*. Two of the five live defects are fork divergences.
+
+---
+
+## The ledger — every issue caught, and the fix proposed
+
+One row per finding. "Phase" refers to Part 5. Evidence for each row is in the
+part named in the last column.
+
+| # | Issue | Where | Proposed fix | Phase | Detail |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Dark mode runs `--surface-hue: 34` (warm brown), not the brand hue | `themes/light.css:7` declares on `:root`; upstream scopes to `[data-theme='light']` | Restore upstream's shape: every dial gets a default in `semantic.css`, themes override under scoped selectors; add a light/dark key-parity test | 1 | Part 1 D1, Part 0 §1 |
+| 2 | Divider caption contrast 2.63:1 (AA needs 4.5) | `BLUEPRINT_THEME.dividerLabel` = gray-900 | Move to gray-1100 (~5.6:1); add cross-family pair to `palette.test.ts` | 1 | Part 1 D2 |
+| 3 | Annotation checkmarks 1.13:1 in dark | `isPaleAnnotationSwatch()` pairs a frozen ink with a flipping fill | Delete the conditional; use `[data-blueprint-fill]` derivation; long-term, L3 frozen layer | 1 → 4 | Part 1 D3, Part 3 |
+| 4 | Bare `rounded` is a literal 4px that ignores `--radius` | 11 sites | Role ladder replaces it; `tokenDiscipline` forbids bare `rounded` | 1 → 4 | Part 1 D4 |
+| 5 | `palette.test.ts` asserts paths are off lane families but samples only `variant`; `happy` collides with `actor` | `palette.test.ts:469` | Extend sampling to all of `PATH_TYPE_COLORS`; narrow the documented claim | 1 | Part 1 D5, Part 6 |
+| 6 | `scale` ramp is byte-exact slate/gray, 24 values, 0 consumers | `colors.css` (inherited verbatim) | Delete | 3 | Part 2 |
+| 7 | `--colors-gray-*` is a third neutral ramp | `global.css` (inherited verbatim) | Delete | 3 | Part 2 |
+| 8 | **33 Figma-export primitives with zero consumers** (`--spacing-xs…xl`, `--sizing-*`, `--borderradius-*`, `--borderwidth-*`, `--icon-*`, …) | `global.css` — upstream ships the same dead set | Delete the primitive half of `global.css`; keep only `--card-padding-x` | 3 | Part 0 §2 |
+| 9 | 24 zero-consumer semantic names; `--color-tertiary-foreground` and `--color-foreground-contrast` each declared twice | `semantic.css`, `theme.css` | Delete | 3 | Part 2 |
+| 10 | `BLUEPRINT_THEME`: 13 keys, 8 distinct values; a background and a text colour share one | `blueprintTheme.ts` | One key per distinct value | 4 | Part 2 |
+| 11 | `--ring-blueprint-cell` ≡ `-soft`, `--background-blueprint-cell` ≡ `-origin` in 16/16 blocks | `blueprint.css` | Collapse to six L4 domain names | 4 | Part 2, Part 3 |
+| 12 | Two radius systems at once — shadcn's dial-derived `--radius-sm…xl` and upstream's literal `--radius-panel: 6px` — plus unused `2xl/3xl/4xl` | `theme.css:12-15, 415` | Six role-named rungs; retire `-panel`, `3xl`, `4xl` | 4 | Part 3 Radius |
+| 13 | Two card radii ship (18px / 14px); three region frames at two radii and three border widths | project cards, `Card`, canvas frames | `--radius-card`, `--radius-region`, `--border-region` | 4 | Part 3 |
+| 14 | 3px region outline declared twice; the common path reads the literal | `blueprintLayout.ts`, `pathTypeTheme.ts`, `CompareDifferencesSurface.tsx` | `--border-region` + `BLUEPRINT_REGION_OUTLINE_WIDTH` as the one TS owner | 4 | Part 3 Border |
+| 15 | Focus pulse 1300ms in TS, 1260ms in CSS — already drifted | `animations.css`, focus hook | `--motion-ambient: 1260ms`, TS reads it | 4 | Part 3 Motion |
+| 16 | `--default-transition-duration: 150ms` is an unpinned third copy of `--motion-micro`, consumed by ~130 bare `transition` classes | Tailwind default | Bind the default to `var(--motion-micro)` | 4 | Part 3 Motion |
+| 17 | One role ("small uppercase label") has eight treatments across 15 sites; no text-role utilities exist at all | components | `typography.css` with `@utility` roles — upstream's form, not a TS map | 4 | Part 3 Type, Part 0 §3 |
+| 18 | `tracking-tight` at ≤14px in ~12 sites, contradicting `panelText.ts:20-27` | `menubarHeaderLayout.ts:72` and others | Three trackings; `tracking-tight` only ≥24px, enforced | 4 | Part 3 Type |
+| 19 | z-50 cell detail panel wears the weakest shadow; eight floating surfaces picked `shadow-md/lg` by eye | components | Shadow rung is a function of the z band | 4 | Part 3 Shadow |
+| 20 | Layout constants declared in TS **and** re-declared in CSS (the 2026-08-21 rail/slot inset bug) | `canvasHeaderStyle.ts`, `BlueprintLabelRail.tsx`, `theme.css --width-cell-panel*` | TS owns every layout number and pushes it as a CSS var at the boundary (upstream `sidebar.tsx` pattern); CSS never redeclares | 4 | Part 3 Spacing, Part 0 §2 |
+| 21 | Four guards sample only where the property holds (`tokenDiscipline`, `palette`, `motion`, `canvasStacking`) | `src/lib/*.test.ts` | Extend coverage before any rename | 2 | Part 4 |
+| 22 | Palette fully allocated (9 lanes + 7 tones = 16/16) and nothing says so | `colors.css`, `pathColorTheme.ts` | State it in code; reserve explicit headroom | 4 | Part 6 |
+| 23 | Five foundations docs make claims this plan falsifies | `docs/design/foundations/*.md` | Rewrite after Phase 4 | 5 | Part 5 |
+| 24 | `compat.css` has no exit condition | `compat.css` (17 lines — already trimmed from upstream's 56) | Header states: alias only, dated, deleted when consumers reach 0 | 3 | Part 0 §4 |
+
+---
+
+## Part 0 — Benchmark: the diff against upstream
+
+Upstream: `supabase/supabase @ master`, fetched 2026-08-22. Files compared
+line-for-line: `packages/ui/build/css/{source/semantic,source/compat,
+source/global,themes/light,themes/dark}.css`, `packages/config/css/{theme,
+colors,utilities}.css`, `packages/config/typography.css`,
+`packages/ui/src/lib/constants.ts`, `packages/ui/src/components/shadcn/ui/sidebar.tsx`.
+
+| File | Upstream lines | Ours | Changed | What changed |
+| --- | --- | --- | --- | --- |
+| `themes/light.css` | 60 | 85 | 83 | selector `[data-theme='light']` → **`:root`**; code-block/secondary dropped; success added; brand ramp re-derived at 177.6 |
+| `themes/dark.css` | 44 | 56 | 54 | same selector change; same additions |
+| `semantic.css` | 267 | 553 | 664 | **dial defaults removed**; +sidebar(12), chart(5), annotation(5), success(4), canvas, `--tone-span-abs` |
+| `compat.css` | 56 | 17 | 63 | synonym layer cut from ~30 aliases to 5 — **ahead of upstream** |
+| `theme.css` | 377 | 459 | 352 | upstream's `background-color-surface-75…400`, `text-color-*`, `foreground-light/lighter/muted` registrations **removed** (ahead); +lime family, chart, sidebar, `--radius-sm…4xl`, `--text-2xs/3xs`, `--width-cell-panel*`, `--shadow-floating` |
+| `global.css` | 141 | 151 | 10 | **byte-identical apart from 10 lines** — the Figma-export primitives came across untouched |
+| `colors.css` | 429 | 489 | 488 | +lime; otherwise the same 15 Radix ramps incl. `scale` |
+| `typography.css` | 81 | — | — | **not forked**. Upstream's text-role utilities do not exist here |
+
+### §1 Colour — upstream is better on dial defaults; we are ahead on synonyms
+
+**D1 is a fork divergence, and upstream does not have it.** Upstream
+`semantic.css:10-22` declares a default for *every* dial in `:root` —
+`--hue: 159; --surface-hue: var(--hue); --primary-hue: var(--hue); --chroma …` —
+and the theme files override under `[data-theme='light'], .light` /
+`[data-theme='dark'], .dark`. Because the light block is attribute-scoped, a
+dial it sets and dark does not set falls back to the `:root` default, not to
+light's value. We changed light's selector to `:root, .light` (so light is the
+default with no attribute) and deleted the `:root` defaults from `semantic.css`
+— the twelve "upstream-only" declarations in the diff are exactly the dial
+defaults. That combination is what lets dark inherit light's `--surface-hue`.
+
+The plan's parity test still stands, but the structural fix is to **restore
+upstream's shape**: defaults in `semantic.css`, overrides scoped. The test then
+guards against the *next* divergence rather than being the only thing holding
+the line.
+
+**Upstream also has a mode-invariant layer, implicitly.** `--primary` is
+"mode-invariant and decoupled from the `--chroma` knob", and
+`--expressive-chroma: 0.14` is a flat constant so status colours survive a
+grayscale brand. Part 3's L3 makes that implicit layer explicit and names it —
+upstream's form, with the label upstream never wrote.
+
+**Upstream's mess we did not inherit.** Three raw colour formats (HSL triplets,
+`hsl()`, `oklch()`); ~17 background synonyms collapsing to 7 values;
+`foreground-lighter` ≡ `foreground-muted`; two disjoint brand scales with
+`brand` ≠ `primary`. Our `compat.css` and `theme.css` already cut most of this.
+The one piece we *did* inherit is the `scale` ramp (row 6) and the
+`--colors-gray-*` export (row 7) — both are upstream dead weight too.
+
+**Upstream's guard we should copy: enforcement by construction.**
+`packages/config/unset-tw-colors.css` sets every Tailwind default colour to
+`initial`, so `text-gray-500` resolves to *their* gray or nothing. We forked
+that file (23 lines) and it is in the import order — good. Upstream has no token
+lint at all (no stylelint, no `eslint-plugin-tailwindcss`, 22 ratchet rules none
+of them style) and raw `text-gray-*` survives in five studio files. Our
+`tokenDiscipline` test is ahead; Part 4 widens it.
+
+### §2 Spacing / layout — upstream pattern: TypeScript owns, CSS receives
+
+Upstream uses Tailwind spacing bare with four named tokens total
+(`--breakpoint-xs`, `--width-listbox`, `--spacing-content: 21px`,
+`--spacing-card: var(--card-padding-x)`). Every *layout* number — sidebar width,
+control heights, page widths — lives in TypeScript (`sidebar.tsx:20-22`
+`SIDEBAR_WIDTH = '13rem'`; `constants.ts` `SIZE.height`, `PAGE_SIZE_CLASSES`)
+and is pushed into CSS at the component boundary as a custom property
+(`style={{ '--sidebar-width': SIDEBAR_WIDTH }}`). CSS never re-declares it.
+
+That is the rule row 20 adopts. The 2026-08-21 rail bug was the rail and the
+slot each declaring the same inset; under upstream's pattern there is one
+declaration in `blueprintLayout.ts` and `BlueprintLabelRail` reads it as a var.
+
+**Inherited dead weight, verified:** the 33 Figma-export primitives in
+`global.css` (`--spacing-xs…xl`, `--sizing-xs…xl` on an odd 1.5× scale,
+`--borderradius-*`, `--borderwidth-none…lg`, `--icon-*`, `--padding-x-*`,
+`--input-sm-height`, `--datatable-*`, `--font-family-body`,
+`--content-width-screen-xl`) have **zero references** outside the file, in ours
+and in upstream. Only `--card-padding-x` is live. Row 8.
+
+### §3 Typography — the one file we did not fork is the one we need
+
+Upstream `packages/config/typography.css` defines text roles as Tailwind v4
+`@utility` blocks — `heading-title/section/subSection/default/compact/meta`,
+`text-default/subTitle/compact`, `text-link`, `text-code-inline` — then binds
+`h1…h6/body/small/strong` to them in `@layer base`. Roles compose with variants
+(`md:heading-title`), are greppable in one file, and the type *scale* is set
+once in the app's globals (`--text-sm: 0.8125rem`, `--font-weight-normal: 450`).
+
+We have no `typography.css` and no role utilities. Our roles live as TS string
+constants (`PANEL_TEXT`, `panelText.ts`) — which is how eight treatments of one
+role came to exist. **Part 3's `textRoles.ts` is withdrawn in favour of
+`src/styles/typography.css` in upstream's form.** Keep a TS constant only
+where layout math needs the number (line-height for rail geometry).
+
+Upstream also has no tracking tokens — `tracking-tight`/`wider` appear only
+inside the heading utilities, never at call sites. That is the enforcement
+mechanism for row 18: if tracking is only reachable through a role, it cannot
+be mis-applied at 12px.
+
+Upstream wart to avoid: type scale and fonts defined in the *app* globals, not
+the shared package, and `--color-typography-body-{light,dark}` pairs holding
+identical values.
+
+### §4 Radius / border / shadow — upstream is minimal; we are double
+
+Upstream: Tailwind v4 default radii bare, **one** custom rung (`--radius-panel:
+6px`), no border-width tokens (the real system is the border *colour* alpha
+ladder), no shadow ladder, `focus-ring`/`focus-inset` as canonical utilities.
+
+Ours: shadcn's `--radius-sm/md/lg/xl` derived from `--radius` **and**
+upstream's literal `--radius-panel` **and** registered `2xl/3xl/4xl` — three
+sources for one axis. Row 12. Part 3's six role rungs replace all three. The
+border alpha ladder (`border` 2%+20%·c → `stronger` 5%+45%) we inherited intact
+and it is good; Part 3's three border *widths* sit beside it, not instead.
+
+Upstream's `compat.css` header is worth copying verbatim in spirit: *"nothing
+new should reference these; delete as consumers migrate."* Ours has the layer
+but not the sentence. Row 24.
+
+### §5 What upstream gets wrong that this plan must not repeat
+
+- Docs drift: the token docs page cites a generator that `require`s a path not
+  in the tree, a `packages/ui/internals/tokens` that does not exist, and HSL
+  opacity mechanics superseded by OKLCH. Phase 5 rewrites our foundations docs
+  *after* Phase 4, with the token files as the source, not before.
+- Identical `-light`/`-dark` pairs and three colour formats: the "value written
+  once" rule in Part 2 is the guard.
+- No enforcement beyond `unset-tw-colors`: Phase 2 before Phase 4.
+
 ---
 
 ## Part 1 — The five live defects
@@ -66,9 +239,16 @@ dark    --surface-hue: 34    --background: oklch(0.19  0.0025 34)   ← --hue is
 "carry a trace of the brand hue." They carry a trace of hue 34 — warm brown —
 instead of the brand's blue-green. A documented intent the cascade defeats.
 
-**Fix:** add `--surface-hue: var(--hue)` to `dark.css`. **Then prevent the
-class:** a three-line test comparing the key sets of `light.css` and `dark.css`
-would have caught this and will catch the next one.
+**Root cause (from the benchmark, Part 0 §1):** upstream declares a default for
+every dial in `semantic.css` `:root` and scopes each theme file to
+`[data-theme='…']`. The fork moved light onto `:root` and deleted the defaults,
+so a dial light sets and dark omits now inherits light's value instead of
+falling back to the default.
+
+**Fix:** restore upstream's shape — dial defaults back in `semantic.css`, theme
+overrides under scoped selectors (keep `:root` only as the defaults block).
+**Then prevent the class:** a three-line test comparing the key sets of
+`light.css` and `dark.css` would have caught this and will catch the next one.
 
 ### D2 — The divider caption fails WCAG AA in both themes
 
@@ -167,10 +347,13 @@ exactly one layer**.
 ### Colour — five layers, ~35 semantic names (down from 81)
 
 ```
-L0  DIALS        ~20, per theme, PARITY ENFORCED BY TEST
+L0  DIALS        ~20. DEFAULT in semantic.css :root (upstream's shape),
+                 OVERRIDE per theme under [data-theme] / .light / .dark,
+                 PARITY ENFORCED BY TEST
                  --hue --surface-hue --chroma --surface --contrast
                  --{warning,destructive,info,success}-lightness …
-                 ↓ every dial in BOTH files, no inheritance. D1 cannot recur.
+                 ↓ a dial one theme omits falls to the default, never to
+                   the other theme. D1 cannot recur.
 L1  PRIMITIVES   16 families × 12 steps  (delete `scale`, delete the
                  --colors-gray-* half of global.css)
                  ↓ referenced only by L2 and the 5 sanctioned board modules
@@ -202,9 +385,32 @@ The sizes are already disciplined. **The roles are not** — one semantic role,
 "small uppercase label", has **eight** distinct treatments across 15 sites.
 
 `PANEL_TEXT` already proved the fix works: name the role, and repetition
-survives. It is consumed 20 times and has not drifted. The plan widens it to
-`src/lib/textRoles.ts` with 11 roles including `eyebrow`, `timeMarker`,
-`displayTitle`, `badge`.
+survives. It is consumed 20 times and has not drifted.
+
+**The home for roles is `src/styles/typography.css`, as `@utility` blocks —
+upstream's form (Part 0 §3), not a TS map.** A role utility composes with
+variants, is greppable in one file, and — the part that matters for row 18 —
+is the only place a tracking value is allowed to appear. Eleven roles,
+mirroring upstream's names where the role is the same:
+
+```css
+@utility heading-title    { @apply text-2xl tracking-tight; }      /* display, ≥24px */
+@utility heading-section  { @apply text-xl; }
+@utility heading-default  { @apply text-sm font-medium; }
+@utility heading-meta     { @apply text-xs uppercase tracking-wider font-medium; } /* eyebrow */
+@utility text-default     { @apply text-base; }
+@utility text-compact     { @apply text-xs; }
+@utility text-caption     { @apply text-2xs leading-tight; }
+@utility text-time-marker { @apply text-3xs uppercase tracking-wider tabular-nums; }
+@utility text-badge       { @apply text-2xs font-medium leading-none; }
+@utility text-link        { @apply underline underline-offset-4 …; }
+@utility text-code-inline { @apply text-xs font-mono …; }
+```
+
+`PANEL_TEXT` becomes `@apply text-compact` and its TS constant is deleted; a
+TS constant survives only where layout math needs the number (the rail's
+line-height). `h1…h6/body/small/strong` bind to roles in `@layer base`, as
+upstream does.
 
 **Tracking collapses to three values**, and the rule gets teeth:
 
@@ -223,6 +429,29 @@ typography", which will reintroduce it.
 
 `leading-snug` (25 uses at 11–14px) is the second half of the pair the rule
 rejected and was never cleaned up.
+
+### Spacing / layout — one owner, and it is TypeScript
+
+Tailwind's spacing scale stays bare — upstream runs on it with four named
+tokens, and 974 utilities here are on-scale. The problem is the *layout
+numbers*: slot insets, rail widths, gutters, panel widths. Today
+`canvasHeaderStyle.ts` declares `BLUEPRINT_SLOT_INSET = 'px-3.5'` as a class
+string, `blueprintLayout.ts` declares pixel constants, and `theme.css`
+declares `--width-cell-panel` — three vocabularies for one kind of value, and
+the rail/slot inset bug on 2026-08-21 was two of them disagreeing.
+
+**Rule, from upstream's `sidebar.tsx`:** every layout number is declared once,
+in TypeScript, as a number. A component that needs it in CSS pushes it across
+the boundary as a custom property on its root element:
+
+```tsx
+<div style={{ '--blueprint-slot-inset': `${BLUEPRINT_SLOT_INSET}px` } as CSSProperties}>
+```
+
+CSS and class strings read the var; they never re-declare the value.
+`theme.css` loses `--width-cell-panel*`; `canvasHeaderStyle.ts` loses its
+`px-*` string twins. `railRhythmContract.test.ts` already asserts the geometry
+from the numbers — under this rule it is asserting the only copy.
 
 ### Radius — six rungs named by ROLE
 
@@ -333,14 +562,17 @@ Phase 4**, because it is the only thing that will tell us whether a 900-site
 rename broke something.
 
 **Phase 3 — delete the dead.** `scale` (24 values + 12 registrations), the
-`--colors-gray-*` half of `global.css`, the 24 zero-consumer semantic names,
-the double-declared pairs, `--radius-panel`, `--radius-3xl`/`4xl`,
-`--ring-blueprint-cell`, `--background-blueprint-cell-origin`. Deletion only —
-no renames — so the diff is reviewable and any breakage is a missing import
-rather than a wrong value.
+`--colors-gray-*` half of `global.css` **and its 33 Figma-export primitives**
+(row 8 — the file shrinks to `--card-padding-x` and the font-face block), the
+24 zero-consumer semantic names, the double-declared pairs, `--radius-panel`,
+`--radius-3xl`/`4xl`, `--ring-blueprint-cell`,
+`--background-blueprint-cell-origin`. Give `compat.css` upstream's exit
+sentence. Deletion only — no renames — so the diff is reviewable and any
+breakage is a missing import rather than a wrong value.
 
-**Phase 4 — the layers.** Colour L0–L4, `textRoles.ts`, the radius and shadow
-ladders. This is the large one. Do it axis by axis, not all at once.
+**Phase 4 — the layers.** Colour L0–L4 (restoring dial defaults to
+`semantic.css` first), `typography.css`, the spacing ownership rule, the radius
+and shadow ladders. This is the large one. Do it axis by axis, not all at once.
 
 **Phase 5 — the docs.** `color.md`, `typography.md`, `elevation.md`,
 `layout.md`, `motion.md` all contain claims this plan falsifies: the
@@ -385,6 +617,10 @@ something. Narrowing the documented claim is the honest fix, not a reallocation.
 - [ ] Every floating surface uses the shadow rung its z band names
 - [ ] `BLUEPRINT_THEME` has one key per distinct value
 - [ ] The allocated-palette constraint is stated in code, next to the families
+- [ ] Every dial has a default in `semantic.css`; theme files only override
+- [ ] `global.css` declares no custom property with zero consumers
+- [ ] Every text role is an `@utility` in `typography.css`; `tracking-*` appears in no component
+- [ ] No layout number is declared in both a `.ts` file and a `.css` file
 
 ### The guards
 
@@ -409,3 +645,5 @@ something. Narrowing the documented claim is the honest fix, not a reallocation.
 - Type/radius/border/shadow/motion audit, 2026-08-22
 - Live verification: `--surface-hue` in both themes; divider caption contrast; bare `rounded` against a mutated dial; `palette.test.ts:469`'s sampling
 - `docs/design/foundations/{color,typography,elevation,layout,motion}.md` — the documented rules this plan measures against
+- Benchmark, `supabase/supabase @ master` fetched 2026-08-22 — `packages/ui/build/css/source/semantic.css` (dial defaults, mode-invariant `--primary`), `packages/ui/build/css/themes/{light,dark}.css` (scoped selectors), `packages/ui/build/css/source/compat.css` (exit sentence), `packages/ui/build/css/source/global.css` (the same dead primitives), `packages/config/css/theme.css`, `packages/config/unset-tw-colors.css`, `packages/config/typography.css` (`@utility` roles), `packages/ui/src/lib/constants.ts` and `packages/ui/src/components/shadcn/ui/sidebar.tsx` (TS-owns-layout pattern), `apps/design-system/content/docs/{color-usage,tailwind-classes,typography}.mdx` (docs drift)
+- Fork point: `a169838` / `65a94b6` (2026-08-04) "mirror Supabase's CSS architecture"
