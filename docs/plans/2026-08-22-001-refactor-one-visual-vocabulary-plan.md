@@ -3,7 +3,7 @@ title: "One visual vocabulary: five layers, five defects, and a value written on
 type: refactor
 status: active
 date: 2026-08-22
-updated: 2026-08-22 — benchmarked against supabase/supabase @ master; issue ledger added
+updated: 2026-08-22 — benchmarked against supabase/supabase @ master; issue ledger added; Part 7 scopes the audit extension; Part 8 records Lane F/A/B results — rows 1, 2, 8 re-spec'd, rows 25-34 added
 repos: uno-blueprint
 benchmark: github.com/supabase/supabase packages/config + packages/ui/build/css
 ---
@@ -59,14 +59,14 @@ part named in the last column.
 
 | # | Issue | Where | Proposed fix | Phase | Detail |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Dark mode runs `--surface-hue: 34` (warm brown), not the brand hue | `themes/light.css:7` declares on `:root`; upstream scopes to `[data-theme='light']` | Restore upstream's shape: every dial gets a default in `semantic.css`, themes override under scoped selectors; add a light/dark key-parity test | 1 | Part 1 D1, Part 0 §1 |
-| 2 | Divider caption contrast 2.63:1 (AA needs 4.5) | `BLUEPRINT_THEME.dividerLabel` = gray-900 | Move to gray-1100 (~5.6:1); add cross-family pair to `palette.test.ts` | 1 | Part 1 D2 |
-| 3 | Annotation checkmarks 1.13:1 in dark | `isPaleAnnotationSwatch()` pairs a frozen ink with a flipping fill | Delete the conditional; use `[data-blueprint-fill]` derivation; long-term, L3 frozen layer | 1 → 4 | Part 1 D3, Part 3 |
+| 1 | Dark mode runs `--surface-hue: 34` (warm brown), not the brand hue | `themes/light.css:31` declares on `:root, .light` | ⚠ **Fix re-spec'd — the stated root cause is wrong.** The defaults were never deleted; they lose on source order. See Part 8 §D1 | 1 | Part 8 §D1, Part 1 D1 |
+| 2 | Divider caption contrast 2.63:1 (AA needs 4.5) | `BLUEPRINT_THEME.dividerLabel` = gray-900 | ⚠ **gray-1100 does NOT clear AA in light (4.11:1).** Use step 1200. See Part 8 §D2 | 1 | Part 8 §D2, Part 1 D2 |
+| 3 | Annotation checkmarks 1.13:1 in dark — **and the one 'safe' swatch is broken too, and light mode fails on the stroke row** | `isPaleAnnotationSwatch()` pairs a frozen ink with a flipping fill | Delete the conditional; use `[data-blueprint-fill]` derivation; long-term, L3 frozen layer | 1 → 4 | Part 1 D3, Part 3 |
 | 4 | Bare `rounded` is a literal 4px that ignores `--radius` | 11 sites | Role ladder replaces it; `tokenDiscipline` forbids bare `rounded` | 1 → 4 | Part 1 D4 |
-| 5 | `palette.test.ts` asserts paths are off lane families but samples only `variant`; `happy` collides with `actor` | `palette.test.ts:469` | Extend sampling to all of `PATH_TYPE_COLORS`; narrow the documented claim | 1 | Part 1 D5, Part 6 |
+| 5 | `palette.test.ts` asserts paths are off lane families but samples only `variant`; `happy` collides with `actor`. **Verified by extending the test — it fails.** Also: `pathColorTheme.ts:62` says eight lane families; there are nine | `palette.test.ts:469` | Extend sampling to all of `PATH_TYPE_COLORS`; narrow the documented claim | 1 | Part 1 D5, Part 6 |
 | 6 | `scale` ramp is byte-exact slate/gray, 24 values, 0 consumers | `colors.css` (inherited verbatim) | Delete | 3 | Part 2 |
 | 7 | `--colors-gray-*` is a third neutral ramp | `global.css` (inherited verbatim) | Delete | 3 | Part 2 |
-| 8 | **33 Figma-export primitives with zero consumers** (`--spacing-xs…xl`, `--sizing-*`, `--borderradius-*`, `--borderwidth-*`, `--icon-*`, …) | `global.css` — upstream ships the same dead set | Delete the primitive half of `global.css`; keep only `--card-padding-x` | 3 | Part 0 §2 |
+| 8 | **37** Figma-export primitives with zero consumers (not 33) | `global.css` — upstream ships the same dead set | ⚠ **Deleting `--padding-x-sm` breaks `--card-padding-x`; eight colour primitives in the file are live.** See Part 8 §Row 8 | 3 | Part 8 §Row 8, Part 0 §2 |
 | 9 | 24 zero-consumer semantic names; `--color-tertiary-foreground` and `--color-foreground-contrast` each declared twice | `semantic.css`, `theme.css` | Delete | 3 | Part 2 |
 | 10 | `BLUEPRINT_THEME`: 13 keys, 8 distinct values; a background and a text colour share one | `blueprintTheme.ts` | One key per distinct value | 4 | Part 2 |
 | 11 | `--ring-blueprint-cell` ≡ `-soft`, `--background-blueprint-cell` ≡ `-origin` in 16/16 blocks | `blueprint.css` | Collapse to six L4 domain names | 4 | Part 2, Part 3 |
@@ -83,6 +83,16 @@ part named in the last column.
 | 22 | Palette fully allocated (9 lanes + 7 tones = 16/16) and nothing says so | `colors.css`, `pathColorTheme.ts` | State it in code; reserve explicit headroom | 4 | Part 6 |
 | 23 | Five foundations docs make claims this plan falsifies | `docs/design/foundations/*.md` | Rewrite after Phase 4 | 5 | Part 5 |
 | 24 | `compat.css` has no exit condition | `compat.css` (17 lines — already trimmed from upstream's 56) | Header states: alias only, dated, deleted when consumers reach 0 | 3 | Part 0 §4 |
+| 25 | **Tailwind's content scan includes `docs/**/*.md`, so this plan generates the classes it cites as evidence** — `bg-field` appears in compiled CSS solely because line 828 mentions it | build config | Exclude `docs/` from the content scan before any deletion is verified against compiled output; grep `dist/**/*.js` too | 2 | Part 8 §Row 8 |
+| 26 | The mobile boundary is declared three times mechanically and once in prose — `MOBILE_BREAKPOINT = 768`, `MOBILE_SHELL_QUERY = '(max-width: 767px)'`, Tailwind's `md:` (18 uses) | `use-mobile.ts:3` (vendored), `useMobileShell.ts:14`, `EditorShell.tsx:86` | Ours derives from the vendored constant, or a test pins them; `md:` usage documented as the same line | 4 | Part 8 §Lane B |
+| 27 | Three z-index values are each spelled two ways — `z-30`/`z-[30]`, `z-60`/`z-[60]`, `z-1`/`z-[1]` — plus four off-scale arbitraries (`z-[5]`, `z-[35]`, `z-[45]`, `z-[9999]`) | 107 sites; one `z-index` in all of `src/styles/` | A z band vocabulary, which Part 3's shadow rung already presumes exists | 4 | Part 8 §Lane B |
+| 28 | 19 distinct `size-*` values; three of them carry 257 of ~345 uses and none is named | components | Name the three; Phase 3 deletes the dead `--icon-*` and replaces nothing | 4 | Part 8 §Lane B |
+| 29 | **`carousel.tsx` is a stale pre-base-nova vendor copy that drops the arrow-key handler** — an a11y regression against vendor | `ui/carousel.tsx` (13 hunks, 12 revert) | Re-vendor; first port our `api.off("reInit", onSelect)` leak fix back upstream-side | 1 | Part 8 §Lane A |
+| 30 | `card.tsx` replaces vendor's `[--card-spacing:--spacing(4)]` custom property with hardcoded `gap-4/py-4/px-4/p-4` plus four hand-written `group-data-[size=sm]/card:*` duplicates | `ui/card.tsx:15,28,76,87` | Revert to the custom-property mechanism; keep only the `ring-border-overlay` swap | 4 | Part 8 §Lane A |
+| 31 | `spinner.tsx` is a local `DelayedSpinner` squatting in a vendor filename; the vendor `Spinner` export no longer exists | `ui/spinner.tsx` | Restore vendor `spinner.tsx`; move `DelayedSpinner` beside `deferred-skeleton.tsx` | 3 | Part 8 §Lane A |
+| 32 | `dialog.tsx` silently drops the `DialogOverlay`/`DialogPortal` exports and vendor's link styling in `DialogDescription`, while `accordion`/`marker`/`tooltip` keep that recipe | `ui/dialog.tsx:133, 146-148` | Revert both; 3 further dialog divergences are UNCLEAR and need a decision, not a guess | 4 | Part 8 §Lane A |
+| 33 | `"use client"` sits on a third, different set of 8 files — vendor output has 9, the registry JSON 18 — and it is a no-op in a Vite SPA | 8 files in `ui/` | One repo-wide policy (recommend: strip all), recorded in the vendoring notes. Do not revert file-by-file; it returns on the next `shadcn add` | 3 | Part 8 §Lane A |
+| 34 | `navigation-menu.tsx` (168 lines) has zero importers outside `components/ui/` | `ui/navigation-menu.tsx` | Deletion candidate | 3 | Part 8 §Lane A |
 
 ---
 
@@ -596,6 +606,546 @@ headroom.
 
 It also explains D5: `happy` cannot move off green without displacing
 something. Narrowing the documented claim is the honest fix, not a reallocation.
+
+---
+
+## Part 7 — Audit scope extension
+
+Parts 0–6 audited `src/components/blueprint/`, `src/components/editor/`,
+`src/lib/` and `src/styles/` across seven axes. That is roughly half the
+frontend and most, but not all, of the axes. This part records what the sweep
+does **not** yet cover, and the method for each gap. It is scope, not findings:
+every row below is work to do, and the ledger above grows as each lane reports.
+
+Rule for the extension: **one ledger**. New findings become new rows in the
+table at the top of this plan, in the same shape, with the same evidence bar
+(a claim is verified live or it is marked as unverified). Proposals stay
+unratified until reviewed.
+
+### The un-audited half
+
+| Area | Files | Lines | Arbitrary utils | Alpha modifiers |
+| --- | --- | --- | --- | --- |
+| `src/components/ui/` | 34 | 4,688 | 33 | 93 |
+| `src/components/mobile/` | 11 | 1,290 | 4 | 3 |
+| `src/components/cover/` | 11 | 1,595 | 5 | 6 |
+| `src/hooks/` | 30 | 3,910 | 0 | 0 |
+| `src/contexts/` | 18 | 3,076 | 0 | 0 |
+| `src/data/` | 48 | 11,397 | — | — |
+
+`src/components/ui/` is the design system itself and the second-densest
+arbitrary-value site in the repo, entirely outside Parts 1–3. `hooks/` and
+`contexts/` measure clean on both counts, which is itself worth recording —
+they are the proof that the plumbing claim in the Overview holds where nobody
+was watching.
+
+### Lane A — coverage, with a vendor oracle
+
+Audit the six areas above on all seven existing axes. Every finding carries a
+`vendor` / `ours` tag.
+
+`src/components/ui/` is vendored shadcn in its base-ui flavour
+(`components.json`: `style: base-nova`, `shadcn@4.13.0`, `@base-ui/react@1.7.0`),
+so its findings get a second tag against a **pristine baseline**:
+
+```
+npx shadcn@latest add <component> --overwrite   # into a scratch dir, not src/
+diff scratch/<component>.tsx src/components/ui/<component>.tsx
+```
+
+Every hunk is then one of two things:
+
+- **`revert`** — a local edit with no stated reason. Restore the vendor line.
+  Divergence from a vendored primitive is a maintenance tax paid on every
+  upgrade; it must buy something.
+- **`justified-divergence`** — a deliberate edit. It stays, and this audit is
+  where the justification finally gets written down.
+
+This is the only lane in the sweep with a hard oracle: the vendor file either
+matches or it does not. It is therefore the lane to run first and the lane to
+run mechanically.
+
+Upstream sanctions divergence — `packages/config/unset-tw-colors.css` overrides
+Tailwind's defaults wholesale — so the test is not "did we change it" but
+"did we say why".
+
+### Lane B — the axes Parts 1–3 do not treat
+
+| Axis | Sites | Why it is an axis, not a nit |
+| --- | --- | --- |
+| **Alpha / opacity** | 299 | Named only as a `tokenDiscipline` blind spot in Part 4; no ladder is proposed anywhere. Tailwind v4's `withAlpha` emits `color-mix(in oklab, <value> <alpha>, transparent)`, so alpha over an alpha token is **multiplicative** — 299 unaudited multiplications, and the border ladder this plan praises is itself alpha-based |
+| **z-index** | 107 | `canvasStackingContract.test.ts` pins `z-[30]` in its arbitrary spelling and thereby *enforces* the off-scale form (row 21). Part 3's shadow ladder is defined as a function of the z band, so the band vocabulary has to be real before that rule is testable |
+| **Icon sizing** | — | `global.css`'s dead `--icon-*` primitives (row 8) are deleted by Phase 3; nothing replaces them and no rule says what sizes an icon may be |
+| **Breakpoints** | — | Upstream ships exactly one custom breakpoint (`--breakpoint-xs`); we have a mobile shell with its own vocabulary and no stated relationship between the two |
+
+**Open research question for the alpha axis**, to be answered from upstream
+before any ladder is proposed: is `border-border/60` — a tokenised base with an
+untokenised alpha — Supabase **convention** or **exception**? Upstream's border
+system is an alpha ladder authored in the token (`border` 2%+20%·c →
+`stronger` 5%+45%), which suggests call-site alpha is the exception and the
+ladder is the convention. If that holds, the proposal is to ban the modifier
+on ladder tokens rather than to name the 299 values.
+
+### Lane C — three finding classes, never merged
+
+A single "one-off value" count is unactionable, because three different defects
+wear that name and each has a different fix, cost, and owner:
+
+| Class | Shape | Repo-wide | Fix cost |
+| --- | --- | --- | --- |
+| **(i) arbitrary utility** | `w-[13px]` — off-scale, mechanically greppable | 115 | mechanical; a lint rule closes the class |
+| **(ii) on-scale but role-less** | `rounded-xl` where no rule says which things are `xl` | most of the ledger above | Phase 4's rename; the expensive one |
+| **(iii) alpha modifier** | `border-border/60` — tokenised base, untokenised alpha | 299 | blocked on Lane B's research question |
+
+Every count this audit publishes is broken down by class.
+
+### Lane D — two more upstream surfaces
+
+Part 0 diffed eight files, all of them config/ui CSS. Two more surfaces get
+read, chosen because they bear on decisions this plan already makes:
+
+- **Enforcement setup** — their lint, ratchet, and CI. Part 0 §1 already
+  records that upstream has *no* style enforcement beyond `unset-tw-colors.css`
+  and that raw `text-gray-*` survives in five studio files. Confirm it, because
+  Phase 2 is premised on us being ahead here, and "ahead of upstream" is a claim
+  worth being right about.
+- **`packages/ui/src/components/ui-patterns/`** — how they compose vendored
+  primitives into product components. Directly comparable to our
+  `components/ui` → `components/blueprint` relationship, which Lane A is about
+  to put under a microscope.
+
+Explicitly **not** read: their data layer, their routing, their server
+conventions. This plan is about tokens; architecture is a different plan.
+
+### Lane E — the dev documentation
+
+`docs/` holds 118 markdown files. Excluding `plans/`, the dev-facing set is
+**29 files / 3,197 lines**: `design/` (14), `engineering/` (7),
+`reference/` (7), `AGENTS.md`, `docs/INDEX.md`.
+
+Out of scope, deliberately:
+
+- `product/` (6 files) — user-facing prose, not developer documentation.
+- `ideation/`, `brainstorms/`, `plans/` — `AGENTS.md` declares these HISTORY and
+  tells readers not to trust them as current. Rewriting them would destroy the
+  decision trail that makes the rest of the docs auditable.
+
+The set splits by whether Phase 4 changes what the doc describes:
+
+**Rewrite now — Phase 4 does not touch these.** Frontend only; the backend and
+agent docs wait for their own pass.
+
+- `docs/engineering/codebase-guide.md`, `docs/engineering/architecture.md`
+  (frontend sections)
+- `docs/reference/ui-inventory.md` — the need→primitive map Lane A is about to
+  falsify or confirm
+- `docs/design/components.md`, `interaction.md`, `responsive.md`,
+  `accessibility.md`, `content-voice.md`
+- `docs/engineering/standards.md` — **already false today**: it defines the
+  Supabase benchmark as a 4-tier token model, and Part 3 replaces it with five
+  layers. It is the doc every agent reads on boot, which makes it the highest-
+  leverage single fix in this lane.
+- `AGENTS.md` and `docs/INDEX.md` — only where they point at the above.
+
+**Deferred to Phase 5** — `docs/design/foundations/*.md` (7 files). Row 23
+already books these; Part 3 changes the structure they describe, so writing
+them now means writing them twice.
+
+**Deferred to a later pass** — `access-and-security.md`, `operations.md`,
+`agent-system.md`, `agent-tools.md`. Backend and agent surface; out of scope
+for a frontend cleanup.
+
+Method is the same as every other lane: find the claims the code falsifies,
+list them, then fix. Part 0 §5 records upstream's docs drifting exactly this
+way — a generator that `require`s a path not in the tree, a package that does
+not exist, HSL mechanics superseded by OKLCH. The lesson taken is that docs
+rot silently unless something measures them, so the audit output is a list of
+falsified claims, not an impression.
+
+### Lane F — verify before extending
+
+Nineteen of the twenty-four rows above rest on grep and read evidence; five
+claim live verification. Re-verify **six** before the ledger grows:
+
+- **D1–D5** — cheap and high-consequence. Measure the contrasts, mutate the
+  dial, re-run `palette.test.ts` against all of `PATH_TYPE_COLORS`.
+- **Row 8** — "33 primitives, zero consumers". Deletion rows are where a wrong
+  claim costs the most, and this plan's own Risks table already names
+  `--field` and `--control-raised` as live via compiled class names rather than
+  source. **Grep the compiled output, not the source**, before any deletion row
+  is trusted.
+
+The remaining rows are trusted until Phase 3 touches them, at which point the
+same compiled-output check applies.
+
+### Execution
+
+Lanes split by whether the finding has an oracle:
+
+| Mode | Lanes | Why |
+| --- | --- | --- |
+| **Parallel, mechanical** | A (vendor diff, 34 components), B (axis counts), C (class counts), F (the five measurements) | Each has a check that either passes or fails. An agent cannot drift on a diff or a contrast ratio |
+| **Single context** | D (upstream conventions), E (docs) | Judgment work. Parallel agents produce contradictory readings that then have to be refereed, and the value in Part 0 came from one careful pass |
+
+Synthesis is single-context regardless: every lane reports into the one ledger,
+in the one shape.
+
+### What this extension does not change
+
+Phases 1–5 in Part 5 stand as written. Lane F runs before the ledger grows;
+Lanes A–E feed rows into it; the phases absorb those rows in the same order —
+defects first, guards second, deletions third, structure fourth, docs fifth.
+The one adjustment is that Lane E's "rewrite now" set does not wait for
+Phase 4, because nothing in Phase 4 touches it.
+
+---
+
+## Part 8 — Verification results
+
+Lane F (re-verify before extending) and Lane A (vendor diff) ran 2026-08-22.
+Lane B's mechanical counts ran alongside them. This part records what survived
+contact and what did not.
+
+**Headline: five of the six re-verified rows are real, and two of the Phase 1
+fixes as written would not have fixed the defect.** That is what Lane F was
+for. Every measurement below was recomputed, not re-read.
+
+### D1 — CONFIRMED, root cause REFUTED
+
+The cascade bug is real. `--surface-hue` resolves to **34** under `.dark` while
+`--hue` is 177.6 in both themes, and `dark.css:20` sets `--chroma: 0.005`, so
+unlike light mode (`--chroma: 0`, hue moot) the warm-brown hue is genuinely
+visible on every token derived through it (`semantic.css:92, 115, 120`).
+
+**But the stated root cause is wrong.** The plan says upstream's dial defaults
+were deleted from `semantic.css`. They were not — `semantic.css:34-35` still
+declares `--surface-hue: var(--hue)` and `--primary-hue: var(--hue)` at
+`:root, .dark, .light`. They lose on **source order**: semantic's rule and
+light's rule are both specificity (0,1,0), light imports later (`:29` vs `:27`
+in the entry sheet), and `:root` matches `<html class="dark">` because
+next-themes puts the class on `documentElement` (`App.tsx:23`).
+
+So "restore the defaults" is not the fix. The fix is that `themes/light.css`
+must stop matching bare `:root` — scope it as upstream does, or change the
+order. Row 1's proposed fix needs re-speccing before Phase 1 executes it.
+
+Three further corrections:
+
+- The declaration is at **`light.css:31`**, not `:7` (`:7` is where the
+  selector list begins).
+- The entry stylesheet is **`src/styles/tailwind.config.css`**, not
+  `src/index.css`.
+- The blast radius is **two** properties, not one. `--radius`
+  (`light.css:11`) is also declared in light and absent from dark. It is
+  mode-invariant by design so it leaks harmlessly — but the proposed
+  key-parity test will fail on it without an explicit exemption.
+
+Worth fixing alongside the declaration: `dark.css:18-19` carries a comment
+asserting that `--surface-hue` "is left at its `var(--hue)` default". It is the
+artifact that made the bug invisible.
+
+### D2 — CONFIRMED, but the proposed fix does not clear AA
+
+Both measurements are exact. The tokens are plain `hsl()` literals in
+`colors.css` (light `:root` L32, dark `@media screen { .dark }` L265-267), so
+no OKLCH conversion is involved:
+
+| Theme | ink `gray-900` | ground `slate-500` | Ratio |
+| --- | --- | --- | --- |
+| light | rgb(143,143,143) | rgb(230,232,235) | **2.639:1** |
+| dark | rgb(112,112,112) | rgb(43,47,49) | **2.739:1** |
+
+Font size confirmed at 11px (`--text-2xs`, `theme.css:457`); compact boards
+render `--text-3xs` = 10px, which is worse. Both are below the large-text
+threshold, so 4.5:1 applies and both themes fail.
+
+**Step 1100 does not fix it.**
+
+| Candidate ink on `slate-500` | light | dark |
+| --- | --- | --- |
+| gray-900 (current) | 2.639 | 2.739 |
+| gray-1100 (proposed) | **4.108** ✗ | 5.199 |
+| slate-1100 | **4.122** ✗ | 5.218 |
+| gray-1200 | 14.647 | 11.609 |
+
+The plan's "~5.6:1" was read off the dark side only, and even there it is 5.20.
+**Step 1200 is the smallest rung clearing 4.5:1 in both themes.** Re-spec row 2.
+
+### D3 — CONFIRMED, and understated in two ways
+
+`isPaleAnnotationSwatch()` (`canvasAnnotations.ts:196-200`) is a pure membership
+test — `Boolean(color) && color !== ANNOTATION_INK`. The plan's ranges are exact:
+fill swatches (step 300) measure 1.129–1.195 in dark against 16.20–17.95 in
+light; sticky swatches (step 500) measure 1.334–1.717 against 13.59–14.79.
+
+Two things the plan does not say:
+
+1. **The one exception is broken too.** The Ink swatch takes the `text-white`
+   branch, and `--color-slate-1200` flips to near-white in dark, so it measures
+   **1.171:1** — white on white. The framing "every swatch but one" implies that
+   branch is safe. The same theme-flip breaks both branches, in opposite
+   directions, which strengthens rather than weakens the L3-frozen-layer
+   argument in Part 3.
+2. **Light mode fails as well.** The stroke row (step 1100) puts the frozen
+   near-black check on saturated mid-tones: **2.499** (violet) to **3.769**
+   (lime) in light. Violet is below even 3:1. The plan characterises light as
+   uniformly 13–17:1, which holds only for the fill and sticky rows.
+
+Minor: "1.00:1 on paper" is really **1.002:1** — plate ink is `hsl(0,0%,8.6%)`
+and dark `--color-gray-100` is `hsl(0,0%,8.5%)`. Functionally identical, but it
+is a coincidence of two independently-authored near-blacks, not one shared
+value. The benign reading would be the wrong one.
+
+The applicable criterion is SC 1.4.11 (3:1) rather than 1.4.3 — the check is
+`aria-hidden` with state carried on `aria-pressed`. Every dark-mode value still
+fails that lower bar by a wide margin.
+
+### D4 — CONFIRMED exactly, mechanism proven by compilation
+
+`--radius: 0.625rem` is at `themes/light.css:11` inside a plain `:root, .light`
+block, and it is the only `--radius:` declaration in `src/`.
+`tailwindcss@4.3.3`'s own `theme.css:502-509` declares `--radius: 0.25rem` under
+`@theme default inline reference` — `inline` substitutes the literal into the
+utility, `reference` emits no custom property, and `default` means only a *user*
+`@theme` can override it. A plain `:root` rule cannot. Compiled to confirm:
+
+```
+.rounded    { border-radius: 0.25rem; }        ← literal, ignores :root
+.rounded-lg { border-radius: var(--radius); }  ← honours it
+```
+
+Exactly 11 sites, as stated: `EditorErrorBoundary.tsx:65`,
+`AgentMarkdown.tsx:59`, `SliceHeaderBand.tsx:98`,
+`CanvasAnnotationLayer.tsx:1308`, `EditorLoadingSkeletons.tsx:188` and `:194`,
+`CompareDifferencesSurface.tsx:56` and `:69`, `PathMultiSelect.tsx:187`,
+`coverInline.tsx:28`, `BlueprintDividerTag.tsx:80`.
+
+Two notes for the fix: `BlueprintDividerTag.tsx:80` is
+`connected ? 'rounded-l rounded-r-none' : 'rounded'`, so its two branches
+already disagree with each other (4px vs `--radius`); and
+`coverPage.test.tsx:196` asserts on the literal string `'rounded'` in a
+duplicate-class check, so any rename must update it.
+
+### D5 — CONFIRMED by making the test fail
+
+`palette.test.ts:469` samples 40 synthetic names all hard-coded to
+`path_type: 'variant'`. `getPathColor` (`pathColorTheme.ts:239`) short-circuits
+every other type, so the sample can only produce `PATH_OPEN_FAMILIES` —
+indigo, purple, gold, yellow — which are genuinely lane-disjoint. `happy`
+(green) and `exception` (red) are structurally unreachable. The name says
+"named paths"; the sample says "variant paths".
+
+Proof: baseline 123 passing. A throwaway test extending the sampling four ways
+produced 3 failures, `expected [ 'green' ] to deeply equal []`. Temp file
+deleted; suite back to 123.
+
+Exactly one lane collision, the one the plan named: `happy`
+(`--color-green-1100`) against the `actor` lane (green, `blueprint.css:383-390`)
+— a green path line drawn across a green actor lane. `laneVsTone` came back
+empty, so the existing `:461` assertion is sound. `exception` → red collides
+with `[data-blueprint-tone='red']`, but neither the test nor the docs assert
+path-vs-tone disjointness either way.
+
+Two additions:
+
+- **`pathColorTheme.ts:62` says "the eight lane families". There are nine** —
+  slate, blue, green, violet, pink, lime, orange, gray, amber. The comment went
+  stale the day `partner-action` was added (2026-08-21).
+- **The tone gap is structural, not incidental.** The `interaction states`
+  regex at `palette.test.ts:491` matches `[data-blueprint-lane=…]` only, so all
+  seven tones are excluded from every contrast assertion in the file. Lanes get
+  a 7-property completeness check plus ring/text/hover/pressed per theme; tones
+  get set membership and a `size > 0` guard.
+
+The documented claim this falsifies, `docs/design/foundations/color.md:63-66`,
+says lane families are disjoint from "the path-**type** and touchpoint-tone
+families" and that `palette.test.ts` holds it — i.e. the doc claims precisely
+the property the test never samples. It is the cleanest instance of Part 4's
+pattern in the repo.
+
+### Row 8 — PARTIALLY CONFIRMED, and one deletion breaks the build
+
+`global.css` is 151 lines, one `:root` block, **139** custom properties (100
+colour, 39 non-colour). The Figma-export block is dead, as claimed. Four
+specifics are wrong.
+
+**The count is 37 dead, not 33.** The plan's list omits `--panel`, `--panel2`,
+`--xxl`, `--options-icon`, `--card-padding-x-md` — 39 non-colour properties,
+minus 1 live, minus those 5, is exactly 33.
+
+**`--padding-x-sm` cannot be deleted.** The plan lists `--padding-x-*` as dead
+*and* says keep `--card-padding-x` — but `global.css:141` is
+`--card-padding-x: var(--padding-x-sm)`. Deleting it leaves `--card-padding-x`
+resolving to nothing. Keep it, or inline `1rem`.
+
+**Eight colour primitives in the same file are live**, and "delete the primitive
+half of `global.css`, keep only `--card-padding-x`" reads as killing them:
+`--colors-black` (`semantic.css:520`), `--colors-gray-dark-100`
+(`semantic.css:510`), `--colors-gray-dark-300` (`semantic.css:507`),
+`--colors-gray-dark-800/-1100` and `--colors-gray-light-100/-800`
+(`utilities.css:78-89`, the swatch checkerboard), and **`--colors-white`
+(`CanvasPenCursor.tsx:111`, `color="hsl(var(--colors-white))"`)**. That last
+one has zero occurrences in compiled CSS and one in the JS bundle — a
+compiled-CSS-only check calls it dead and is wrong. Six of these live consumers
+sit inside **row 7's** delete territory, which needs the same re-check.
+
+Also: there is no `@font-face` block in `global.css` — faces come from
+`@fontsource-variable/*` imports in `tailwind.config.css`. The post-deletion
+file is a one-line `:root` plus the live colour primitives, not what the plan
+describes.
+
+`--card-padding-x` is live **by reference only**: `theme.css:417` sets
+`--spacing-card: var(--card-padding-x)`, but `--spacing-card` has zero `var()`
+consumers in compiled CSS and no `p-card`/`px-card` utility is generated.
+
+#### The verification method validates itself (row 25)
+
+This is the finding with the widest consequence. The plan's Risks table says
+*"`--field` and `--control-raised` are live via `bg-field`/`bg-control` — grep
+compiled output, not source."* Checking it:
+
+- `.bg-control` does not exist in compiled CSS at all — `theme.css:48`
+  deliberately declines to register `--color-control`.
+- `.bg-field{background-color:var(--field)}` **does** exist — and the only
+  occurrence of the string `bg-field` anywhere in the repo, excluding
+  `node_modules` and `dist`, is **line 828 of this plan document**.
+
+Tailwind v4's automatic content detection scans the non-gitignored tree
+including `docs/**/*.md`. The risk row generated the very class it cites as
+evidence.
+
+Consequences, which are not confined to row 8:
+
+1. Every Phase 3 deletion verified by "grep compiled output" is unsound until
+   `docs/` is excluded from the content scan.
+2. Compiled CSS alone was never sufficient — `--colors-white` proves the JS
+   bundle carries token references too. Grep `dist/**/*.js` as well.
+3. `--control-raised` has one compiled consumer (`--control:
+   var(--control-raised)`, `semantic.css:344`) and `--control` itself has zero
+   `var()` consumers. Neither token is in `global.css`, so row 8's verdict
+   stands — but the Risks row's warning is itself refuted and must be rewritten.
+
+### Lane A — the vendor diff reverses a scope premise
+
+Baselines obtained for **33 of 34** components from the real `base-nova`
+registry via `shadcn@4.13.0`. Only `deferred-skeleton` is locally authored
+(registry 404). Five components Part 7 guessed were local — `attachment`,
+`bubble`, `marker`, `message`, `message-scroller` — are genuine upstream
+components, and four of them are byte-identical to vendor.
+
+**69 hunks: 23 revert, 41 justified, 5 unclear.** Six files are byte-identical
+to vendor. The divergences concentrate in three files: `carousel` (13 hunks,
+12 revert), `dialog` (9, 5 revert), `card` (4, 3 revert).
+
+**The decisive result: the token debt in `components/ui` is inherited, not
+authored.**
+
+| | ours | vendor | ours-only |
+| --- | --- | --- | --- |
+| alpha modifiers | 93 | 96 | **13** |
+| arbitrary values (all bracketed) | 99 | 89 | **7** |
+| arbitrary values (hard literals only) | 40 | 39 | **1** |
+
+The 13 ours-only alphas are deliberate, commented status-role work. The nine
+vendor-only alphas are mostly `ring-foreground/10`, which this repo
+systematically replaced with the `ring-border-overlay` token — so **net, the
+repo reduced alpha-on-overlay usage against upstream**. The seven ours-only
+arbitraries are six `ring-[color:var(--ring-blueprint-cell-soft,…)]` in
+`button.tsx:47,49` (a `var()` reference, not a magic number — keep) and
+`marker.tsx:63`'s `max-w-[85%]`, the single hardcoded literal this repo added
+to a vendored file.
+
+**Part 7's framing was true but misleading.** `components/ui` is the
+second-densest arbitrary-value site in the repo, and almost none of it is ours.
+The refactor budget does not belong there. What *does* belong there is the
+revert list, because those are regressions against a baseline we can diff.
+
+Highest-value reverts, in order:
+
+1. **`carousel.tsx` — the whole file (row 29).** Not a divergence but a stale
+   copy from the pre-base-nova Radix era (`ArrowLeft` rather than
+   `ChevronLeftIcon`, old Prettier trailing commas, no comments). It drops the
+   arrow-key handler (`handleKeyDown`, vendor `:78-90`) — an **accessibility
+   regression against vendor** — plus vertical-orientation support, `opts` in
+   context, and the `useCarousel` export. One consumer. Salvage first: our
+   `api.off("reInit", onSelect)` at `:88` fixes a listener leak vendor still
+   has; port it back after re-vendoring.
+2. **`card.tsx` (row 30).** Vendor's `[--card-spacing:--spacing(4)]` mechanism
+   was replaced with hardcoded `gap-4/py-4/px-4/p-4` plus four hand-written
+   `group-data-[size=sm]/card:*` duplicates. This is precisely the defect shape
+   the rest of this plan is about — a token replaced by its own value, four
+   times — and it arrived by editing a vendored file.
+3. **`spinner.tsx` (row 31).** A local `DelayedSpinner` squatting in a vendor
+   filename; the vendor `Spinner` export no longer exists.
+4. **`dialog.tsx` (row 32).** Drops the `DialogOverlay`/`DialogPortal` exports
+   and vendor's link styling in `DialogDescription`, while `accordion`,
+   `marker` and `tooltip` all keep that same recipe. Plus four hunks of pure
+   churn.
+5. **`drawer.tsx:75`** moves the overlay to `bg-black/20` and removes
+   `supports-backdrop-filter:backdrop-blur-xs`, uncommented, while
+   `dialog.tsx:34` moves the *other* way and adds `backdrop-blur-sm`. Two
+   overlays in one family disagreeing for no stated reason.
+
+Five hunks are **unclear and must not be guessed**: `command.tsx:74`
+(`border-input/30` → `border-muted`, a surface token used as a border),
+`dialog.tsx:34` (overlay rewritten to `data-starting-style`),
+`dialog.tsx:60` (`bg-popover` → `bg-card`, inconsistent with every other
+overlay in the family), `dialog.tsx:92,118` (header and title restyled — note
+the title takes `tracking-tight` at `text-lg` = 18px, which row 18's proposed
+"≥24px display only" rule would forbid), and `marker.tsx:63`.
+
+**The 41 justified divergences hold up.** Every token they depend on exists in
+`src/styles/`; the `accordion-down`/`accordion-up` keyframes really are absent,
+validating those fix comments; `skeleton.tsx`'s claim that the pulse moved to
+`animations.css` keyed on `[data-slot=skeleton]` is confirmed at `:284-300`
+including the reduced-motion branch; and `popover.tsx`'s added `anchor` prop is
+a real base-ui `Positioner` prop vendor forgot to forward. The `text-sm` →
+`text-xs` menu-item change is applied consistently across all three menu
+families with a shared cross-referencing comment. This is the part of the
+codebase that already works the way this plan wants the rest to work.
+
+### Lane B — three axes, three instances of the same shape
+
+**z-index (row 27).** 107 sites, 15 spellings, and three values each spelled
+two ways: `z-30` (15) / `z-[30]` (4), `z-60` (3) / `z-[60]` (1), `z-1` (1) /
+`z-[1]` (8). Row 21 already notes that `canvasStackingContract.test.ts` pins the
+arbitrary spelling — it pins the *minority* spelling of a value that also has 15
+scale-form uses. Four off-scale arbitraries: `z-[5]`, `z-[35]`, `z-[45]`,
+`z-[9999]`. All of `src/styles/` contains one `z-index` declaration
+(`blueprint.css:176`).
+
+**Breakpoints (row 26).** The mobile boundary is declared three times
+mechanically and once in prose:
+
+- `use-mobile.ts:3` — `MOBILE_BREAKPOINT = 768`, vendored, consumed by
+  `ui/sidebar.tsx`
+- `useMobileShell.ts:14` — `MOBILE_SHELL_QUERY = '(max-width: 767px)'`,
+  consumed by seven files
+- Tailwind's default `md:` = 768px, used 18 times — silently the same line
+- `EditorShell.tsx:86` states "(767px)" in a comment
+
+They agree today only because 767 = 768 − 1. This is the 2026-08-21 rail/slot
+bug in a different subsystem: one boundary, two owners, two files. The vendor
+dimension makes it interesting — `use-mobile.ts` is vendored, so the fix is
+neither revert nor diverge, but *ours derives from vendor, or a test pins them*.
+Separately, `--breakpoint-xs: 480px` is registered and `xs:` is used four times.
+
+**Icon sizing (row 28).** 19 distinct `size-*` values. `size-3.5` (99),
+`size-3` (84) and `size-4` (74) carry 257 of roughly 345 uses and not one of
+them is named. `size-1`, `size-1.5` and `size-2` are 4–8px. Phase 3 deletes the
+dead `--icon-*` primitives and puts nothing in their place.
+
+### What this changes about sequencing
+
+Phase 1 cannot execute rows 1 and 2 as written — both need re-speccing first,
+and row 2's re-spec is a one-token change (1100 → 1200) while row 1's is
+structural. Row 29 (`carousel.tsx`) is an accessibility regression against a
+known-good baseline and belongs **in Phase 1**, not in a later cleanup: it is a
+revert, not a redesign, and the diff already exists.
+
+Row 25 is a Phase 2 prerequisite, not a Phase 3 detail. Until `docs/` leaves
+Tailwind's content scan, no deletion in Phase 3 can be verified by the method
+Phase 3 specifies.
 
 ---
 
