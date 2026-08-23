@@ -49,6 +49,18 @@ reading view. An earlier vertical "reader" existed and was deleted in the
   scenarios. So the shell must not disclose siblings at all. A phase-only
   selection (the agent bridge and boot links can still produce one) resolves
   to that phase's first scenario rather than falling back to the row.
+- **The canvas does not navigate.** Every move between scenarios and between
+  phases belongs to the drawer. Scoping the canvas to one scenario removes
+  the siblings there were to tap, but that is a statement about what is
+  currently rendered; this is a statement about what a tap MEANS, and it is
+  the one that survives someone widening the scope later. It also covers the
+  phase frame, which is a navigation target in its own right and is not a
+  scenario at all. `ServiceOverviewView` passes no navigate handler when
+  `useMobileShell()` is true, and `navigable` in `ResizableComparePanel` and
+  `CanvasPhaseSection` is gated on the handler existing — so the surfaces are
+  genuinely inert (no `role="button"`, no pointer cursor, no aria-label
+  promising a destination) rather than buttons that swallow taps. Panning and
+  pinching over them are unaffected.
 - **Chrome:** `MobileTopBar` (menu · title · contextual right slot) up top;
   `MobileNavSheet` — a left sheet holding a rail + panel, the same IA and
   `NavRow` components as the desktop sidebar, with Blueprints/Slices surfaces

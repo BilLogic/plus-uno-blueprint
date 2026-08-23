@@ -56,7 +56,11 @@ export type PhaseScenarioOverviewProps = {
 
 type PhaseScenarioOverviewBodyProps = PhaseScenarioOverviewProps & {
   getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
-  openDetail: (scenarioId: string) => void
+  /**
+   * Opens a scenario from the canvas. OPTIONAL: mobile passes nothing, so a
+   * tap on a board cannot move between scenarios — the drawer owns that.
+   */
+  openDetail?: (scenarioId: string) => void
 }
 
 function PhaseScenarioConnector({ width }: { width: number }) {
@@ -403,6 +407,10 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   */
   const navigateByScenario = useMemo(() => {
     const handlers = new Map<string, () => void>()
+    // No opener means no navigation: the Map stays empty, every panel gets
+    // `onNavigate === undefined`, and `navigable` above is false — inert,
+    // not a dead button.
+    if (!openDetail) return handlers
     for (const scenario of scenarios) {
       handlers.set(scenario.id, () => openDetail(scenario.id))
     }
