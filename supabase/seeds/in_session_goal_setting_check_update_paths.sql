@@ -2,16 +2,16 @@
 -- Stable keys map to src/data/goalSettingCheckGoalsPathFallback.ts and goalSettingUpdateGoalsPathFallback.ts
 
 -- Check Goals
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000000204', 'Check Goals', 'Goals already set, but deadline not reached.', 'named')
-on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
-delete from public.cell_triggers where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814');
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814';
-delete from public.layers where path_id = 'a0000000-0000-4000-8000-000000000814';
+delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000814';
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
-  ('a0000000-0000-4000-8000-0000000008b0', 'a0000000-0000-4000-8000-000000000814', 'Visual', 0),
+  ('a0000000-0000-4000-8000-0000000008b0', 'a0000000-0000-4000-8000-000000000814', 'Storyboard', 0),
   ('a0000000-0000-4000-8000-0000000008b1', 'a0000000-0000-4000-8000-000000000814', 'Partner Action: Teacher', 1),
   ('a0000000-0000-4000-8000-0000000008b2', 'a0000000-0000-4000-8000-000000000814', 'Lead Tutor', 2),
   ('a0000000-0000-4000-8000-0000000008b3', 'a0000000-0000-4000-8000-000000000814', 'Regular Tutor', 3),
@@ -20,8 +20,8 @@ values
   ('a0000000-0000-4000-8000-0000000008b7', 'a0000000-0000-4000-8000-000000000814', 'Back Stage Tech', 6),
   ('a0000000-0000-4000-8000-0000000008b6', 'a0000000-0000-4000-8000-000000000814', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000000814', 'Support Actions', 8)
-on conflict (id) do update set name = excluded.name, row_position = excluded.row_position, path_id = excluded.path_id;
-insert into public.steps (id, service_scenario_id, name)
+on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
+insert into public.steps (id, scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009b01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
   ('a0000000-0000-4000-8000-000000009b02', 'a0000000-0000-4000-8000-000000000204', 'Click on ''Check Goals'' CTA in the Action column'),
@@ -31,8 +31,8 @@ values
   ('a0000000-0000-4000-8000-000000009b06', 'a0000000-0000-4000-8000-000000000204', 'Finalize checking goal with the student.'),
   ('a0000000-0000-4000-8000-000000009b07', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room'),
   ('a0000000-0000-4000-8000-000000009b08', 'a0000000-0000-4000-8000-000000000204', 'Move on to the next student in sorted order set by researchers.')
-on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
-insert into public.path_steps (path_id, step_id, column_position)
+on conflict (id) do update set name = excluded.name, scenario_id = excluded.scenario_id;
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b01', 1),
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b02', 2),
@@ -42,8 +42,8 @@ values
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b06', 6),
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b07', 7),
   ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000009b08', 8)
-on conflict (path_id, step_id) do update set column_position = excluded.column_position;
-insert into public.cells (id, path_id, layer_id, step_id, content)
+on conflict (path_id, step_id) do update set position = excluded.position;
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000a00110', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b0', 'a0000000-0000-4000-8000-000000009b01', ''),
   ('a0000000-0000-4000-8000-000000a00210', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b0', 'a0000000-0000-4000-8000-000000009b02', ''),
@@ -91,8 +91,8 @@ values
   ('a0000000-0000-4000-8000-000000a00509', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000009b05', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-000000a00609', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000009b06', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-000000a00809', 'a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-0000000008b8', 'a0000000-0000-4000-8000-000000009b08', 'Researchers set student order, Dev Team, Design Team.')
-on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+on conflict (id) do update set path_id = excluded.path_id, lane_id = excluded.lane_id, step_id = excluded.step_id, content = excluded.content;
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-00000009c001', 'a0000000-0000-4000-8000-000000a00101', 'a0000000-0000-4000-8000-000000a00201'),
   ('a0000000-0000-4000-8000-00000009c002', 'a0000000-0000-4000-8000-000000a00201', 'a0000000-0000-4000-8000-000000a00301'),
@@ -129,16 +129,16 @@ values
 on conflict (id) do update set source_cell_id = excluded.source_cell_id, target_cell_id = excluded.target_cell_id;
 
 -- Update Goals
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000000204', 'Update Goals', 'First tutoring day of a new goal cycle after personalized goals have been set.', 'named')
-on conflict (id) do update set service_scenario_id = excluded.service_scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
-delete from public.cell_triggers where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815');
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815';
-delete from public.layers where path_id = 'a0000000-0000-4000-8000-000000000815';
+delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.path_steps where path_id = 'a0000000-0000-4000-8000-000000000815';
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
-  ('a0000000-0000-4000-8000-0000000008d0', 'a0000000-0000-4000-8000-000000000815', 'Visual', 0),
+  ('a0000000-0000-4000-8000-0000000008d0', 'a0000000-0000-4000-8000-000000000815', 'Storyboard', 0),
   ('a0000000-0000-4000-8000-0000000008d1', 'a0000000-0000-4000-8000-000000000815', 'Partner Action: Teacher', 1),
   ('a0000000-0000-4000-8000-0000000008d2', 'a0000000-0000-4000-8000-000000000815', 'Lead Tutor', 2),
   ('a0000000-0000-4000-8000-0000000008d3', 'a0000000-0000-4000-8000-000000000815', 'Regular Tutor', 3),
@@ -147,8 +147,8 @@ values
   ('a0000000-0000-4000-8000-0000000008d7', 'a0000000-0000-4000-8000-000000000815', 'Back Stage Tech', 6),
   ('a0000000-0000-4000-8000-0000000008d6', 'a0000000-0000-4000-8000-000000000815', 'Back Stage Actions', 7),
   ('a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000000815', 'Support Actions', 8)
-on conflict (id) do update set name = excluded.name, row_position = excluded.row_position, path_id = excluded.path_id;
-insert into public.steps (id, service_scenario_id, name)
+on conflict (id) do update set name = excluded.name, position = excluded.position, path_id = excluded.path_id;
+insert into public.steps (id, scenario_id, name)
 values
   ('a0000000-0000-4000-8000-000000009d01', 'a0000000-0000-4000-8000-000000000204', 'Join breakout session'),
   ('a0000000-0000-4000-8000-000000009d02', 'a0000000-0000-4000-8000-000000000204', 'Click on ''Update Goals'' CTA in the Action column'),
@@ -161,8 +161,8 @@ values
   ('a0000000-0000-4000-8000-000000009d09', 'a0000000-0000-4000-8000-000000000204', 'Finalize updating goal with the student'),
   ('a0000000-0000-4000-8000-000000009d0a', 'a0000000-0000-4000-8000-000000000204', 'Leave breakout room'),
   ('a0000000-0000-4000-8000-000000009d0b', 'a0000000-0000-4000-8000-000000000204', 'Move on to the next student in sorted order set by researchers.')
-on conflict (id) do update set name = excluded.name, service_scenario_id = excluded.service_scenario_id;
-insert into public.path_steps (path_id, step_id, column_position)
+on conflict (id) do update set name = excluded.name, scenario_id = excluded.scenario_id;
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d01', 1),
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d02', 2),
@@ -175,8 +175,8 @@ values
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d09', 9),
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d0a', 10),
   ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000009d0b', 11)
-on conflict (path_id, step_id) do update set column_position = excluded.column_position;
-insert into public.cells (id, path_id, layer_id, step_id, content)
+on conflict (path_id, step_id) do update set position = excluded.position;
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000b00110', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d0', 'a0000000-0000-4000-8000-000000009d01', ''),
   ('a0000000-0000-4000-8000-000000b00210', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d0', 'a0000000-0000-4000-8000-000000009d02', ''),
@@ -238,8 +238,8 @@ values
   ('a0000000-0000-4000-8000-000000b00709', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000009d07', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-000000b00809', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000009d08', E'Dev Team\nDesign Team'),
   ('a0000000-0000-4000-8000-000000b01109', 'a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-0000000008d8', 'a0000000-0000-4000-8000-000000009d0b', 'Dev Team, Design Team')
-on conflict (id) do update set path_id = excluded.path_id, layer_id = excluded.layer_id, step_id = excluded.step_id, content = excluded.content;
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+on conflict (id) do update set path_id = excluded.path_id, lane_id = excluded.lane_id, step_id = excluded.step_id, content = excluded.content;
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-00000009e001', 'a0000000-0000-4000-8000-000000b00101', 'a0000000-0000-4000-8000-000000b00201'),
   ('a0000000-0000-4000-8000-00000009e002', 'a0000000-0000-4000-8000-000000b00201', 'a0000000-0000-4000-8000-000000b00301'),

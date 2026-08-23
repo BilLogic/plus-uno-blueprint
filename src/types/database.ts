@@ -1,3 +1,4 @@
+import type { EntityStatus } from '@/lib/entityStatus'
 /**
  * Supabase database types for the `public` schema.
  *
@@ -17,7 +18,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type PathType = 'happy' | 'unhappy' | 'exception' | 'alternative' | 'named'
+export type PathType = 'happy' | 'variant' | 'exception'
 
 export type Database = {
   public: {
@@ -78,7 +79,7 @@ export type Database = {
         }
         Relationships: []
       }
-      cell_triggers: {
+      cell_dependencies: {
         Row: {
           created_at: string
           id: string
@@ -111,14 +112,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'cell_triggers_source_cell_id_fkey'
+            foreignKeyName: 'cell_dependencies_source_cell_id_fkey'
             columns: ['source_cell_id']
             isOneToOne: false
             referencedRelation: 'cells'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'cell_triggers_target_cell_id_fkey'
+            foreignKeyName: 'cell_dependencies_target_cell_id_fkey'
             columns: ['target_cell_id']
             isOneToOne: false
             referencedRelation: 'cells'
@@ -130,18 +131,19 @@ export type Database = {
         Row: {
           content: string
           created_at: string
-          description: string | null
+          summary: string | null
           form: string | null
           function: string | null
           id: string
-          layer_id: string
+          lane_id: string
           links: Json
+          status: EntityStatus
           owner: string | null
           path_id: string
           perceived_owner: string | null
           picture: string | null
           search_tsv: unknown
-          slot_position: number
+          position: number
           step_id: string
           updated_at: string
           value_props: Json
@@ -149,18 +151,19 @@ export type Database = {
         Insert: {
           content?: string
           created_at?: string
-          description?: string | null
+          summary?: string | null
           form?: string | null
           function?: string | null
           id?: string
-          layer_id: string
+          lane_id: string
           links?: Json
+          status?: EntityStatus
           owner?: string | null
           path_id: string
           perceived_owner?: string | null
           picture?: string | null
           search_tsv?: unknown
-          slot_position?: number
+          position?: number
           step_id: string
           updated_at?: string
           value_props?: Json
@@ -168,18 +171,19 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
-          description?: string | null
+          summary?: string | null
           form?: string | null
           function?: string | null
           id?: string
-          layer_id?: string
+          lane_id?: string
           links?: Json
+          status?: EntityStatus
           owner?: string | null
           path_id?: string
           perceived_owner?: string | null
           picture?: string | null
           search_tsv?: unknown
-          slot_position?: number
+          position?: number
           step_id?: string
           updated_at?: string
           value_props?: Json
@@ -187,9 +191,9 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'cells_layer_id_fkey'
-            columns: ['layer_id']
+            columns: ['lane_id']
             isOneToOne: false
-            referencedRelation: 'layers'
+            referencedRelation: 'lanes'
             referencedColumns: ['id']
           },
           {
@@ -222,7 +226,7 @@ export type Database = {
           observed_at: string | null
           proposition_question_key: string | null
           ref: string | null
-          service_lifecycle_id: string
+          service_id: string
           title: string
           updated_at: string
         }
@@ -239,7 +243,7 @@ export type Database = {
           observed_at?: string | null
           proposition_question_key?: string | null
           ref?: string | null
-          service_lifecycle_id: string
+          service_id: string
           title: string
           updated_at?: string
         }
@@ -256,16 +260,16 @@ export type Database = {
           observed_at?: string | null
           proposition_question_key?: string | null
           ref?: string | null
-          service_lifecycle_id?: string
+          service_id?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'evidence_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'evidence_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -280,7 +284,7 @@ export type Database = {
           id: string
           note: string | null
           run_id: string
-          service_lifecycle_id: string
+          service_id: string
           severity: string
           source: string
           status: string
@@ -295,7 +299,7 @@ export type Database = {
           id?: string
           note?: string | null
           run_id: string
-          service_lifecycle_id: string
+          service_id: string
           severity: string
           source: string
           status?: string
@@ -310,7 +314,7 @@ export type Database = {
           id?: string
           note?: string | null
           run_id?: string
-          service_lifecycle_id?: string
+          service_id?: string
           severity?: string
           source?: string
           status?: string
@@ -318,49 +322,52 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'findings_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'findings_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
       }
-      layers: {
+      lanes: {
         Row: {
           created_at: string
           id: string
           kpis: Json
-          layer_role: string | null
+          lane_role: string | null
           name: string
           owner_team: string | null
           path_id: string
-          row_position: number
+          position: number
           tools: Json
+          stakeholder_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           kpis?: Json
-          layer_role?: string | null
+          lane_role?: string | null
           name: string
           owner_team?: string | null
           path_id: string
-          row_position?: number
+          position?: number
           tools?: Json
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           kpis?: Json
-          layer_role?: string | null
+          lane_role?: string | null
           name?: string
           owner_team?: string | null
           path_id?: string
-          row_position?: number
+          position?: number
           tools?: Json
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -375,21 +382,21 @@ export type Database = {
       }
       path_steps: {
         Row: {
-          column_position: number
+          position: number
           created_at: string
           path_id: string
           step_id: string
           updated_at: string
         }
         Insert: {
-          column_position?: number
+          position?: number
           created_at?: string
           path_id: string
           step_id: string
           updated_at?: string
         }
         Update: {
-          column_position?: number
+          position?: number
           created_at?: string
           path_id?: string
           step_id?: string
@@ -415,40 +422,43 @@ export type Database = {
       paths: {
         Row: {
           created_at: string
-          description: string | null
+          summary: string | null
           id: string
           name: string
           note: string | null
           path_type: PathType
-          service_scenario_id: string
+          status: EntityStatus
+          scenario_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name: string
           note?: string | null
           path_type: PathType
-          service_scenario_id: string
+          status?: EntityStatus
+          scenario_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name?: string
           note?: string | null
           path_type?: PathType
-          service_scenario_id?: string
+          status?: EntityStatus
+          scenario_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: 'paths_service_scenario_id_fkey'
-            columns: ['service_scenario_id']
+            columns: ['scenario_id']
             isOneToOne: false
-            referencedRelation: 'service_scenarios'
+            referencedRelation: 'scenarios'
             referencedColumns: ['id']
           },
         ]
@@ -457,37 +467,37 @@ export type Database = {
         Row: {
           business_impact: string | null
           created_at: string
-          description: string | null
           id: string
           loops_to_phase_id: string | null
           name: string
           operational_requirements: string | null
-          order_position: number
-          service_lifecycle_id: string
+          position: number
+          service_id: string
+          summary: string | null
           updated_at: string
         }
         Insert: {
           business_impact?: string | null
           created_at?: string
-          description?: string | null
           id?: string
           loops_to_phase_id?: string | null
           name: string
           operational_requirements?: string | null
-          order_position?: number
-          service_lifecycle_id: string
+          position?: number
+          service_id: string
+          summary?: string | null
           updated_at?: string
         }
         Update: {
           business_impact?: string | null
           created_at?: string
-          description?: string | null
           id?: string
           loops_to_phase_id?: string | null
           name?: string
           operational_requirements?: string | null
-          order_position?: number
-          service_lifecycle_id?: string
+          position?: number
+          service_id?: string
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -499,15 +509,15 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'phases_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'phases_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
       }
-      propositions: {
+      business_model: {
         Row: {
           created_at: string
           created_by: string | null
@@ -516,7 +526,7 @@ export type Database = {
           partners: string | null
           pricing: string | null
           revenue_model: string | null
-          service_lifecycle_id: string
+          service_id: string
           updated_at: string
         }
         Insert: {
@@ -527,7 +537,7 @@ export type Database = {
           partners?: string | null
           pricing?: string | null
           revenue_model?: string | null
-          service_lifecycle_id: string
+          service_id: string
           updated_at?: string
         }
         Update: {
@@ -538,71 +548,71 @@ export type Database = {
           partners?: string | null
           pricing?: string | null
           revenue_model?: string | null
-          service_lifecycle_id?: string
+          service_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'propositions_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'business_model_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: true
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
       }
-      service_lifecycles: {
+      services: {
         Row: {
           created_at: string
-          description: string | null
+          summary: string | null
           id: string
           name: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
+          summary?: string | null
           id?: string
           name?: string
           updated_at?: string
         }
         Relationships: []
       }
-      service_scenarios: {
+      scenarios: {
         Row: {
           created_at: string
-          description: string | null
           id: string
           name: string
-          order_position: number
+          position: number
           phase_id: string
+          summary: string | null
           updated_at: string
           view_type: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
           id?: string
           name: string
-          order_position?: number
+          position?: number
           phase_id: string
+          summary?: string | null
           updated_at?: string
           view_type?: string
         }
         Update: {
           created_at?: string
-          description?: string | null
           id?: string
           name?: string
-          order_position?: number
+          position?: number
           phase_id?: string
+          summary?: string | null
           updated_at?: string
           view_type?: string
         }
@@ -615,33 +625,6 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
-      }
-      services: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          slug?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       slice_items: {
         Row: {
@@ -703,9 +686,10 @@ export type Database = {
           locale: string
           origin: string
           position: number
-          service_lifecycle_id: string
+          service_id: string
           slice_type: string
           title: string
+          stakeholder_id: string | null
           updated_at: string
         }
         Insert: {
@@ -717,9 +701,10 @@ export type Database = {
           locale?: string
           origin?: string
           position?: number
-          service_lifecycle_id: string
+          service_id: string
           slice_type: string
           title: string
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -731,17 +716,59 @@ export type Database = {
           locale?: string
           origin?: string
           position?: number
-          service_lifecycle_id?: string
+          service_id?: string
           slice_type?: string
           title?: string
+          stakeholder_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'slices_service_lifecycle_id_fkey'
-            columns: ['service_lifecycle_id']
+            foreignKeyName: 'slices_service_id_fkey'
+            columns: ['service_id']
             isOneToOne: false
-            referencedRelation: 'service_lifecycles'
+            referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      stakeholders: {
+        Row: {
+          aliases: string[]
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          note: string | null
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          kind: string
+          name: string
+          note?: string | null
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          note?: string | null
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'stakeholders_service_id_fkey'
+            columns: ['service_id']
+            isOneToOne: false
+            referencedRelation: 'services'
             referencedColumns: ['id']
           },
         ]
@@ -751,29 +778,32 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          service_scenario_id: string
+          scenario_id: string
+          summary: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          service_scenario_id: string
+          scenario_id: string
+          summary?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          service_scenario_id?: string
+          scenario_id?: string
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: 'steps_service_scenario_id_fkey'
-            columns: ['service_scenario_id']
+            columns: ['scenario_id']
             isOneToOne: false
-            referencedRelation: 'service_scenarios'
+            referencedRelation: 'scenarios'
             referencedColumns: ['id']
           },
         ]
@@ -792,10 +822,12 @@ export type Database = {
       search_blueprint: {
         Args: {
           embed_model?: string
-          filter_layer_role?: string
+          filter_lane_role?: string
           filter_path_type?: string
           filter_phase?: string
           filter_scenario?: string
+          granularity?: string[]
+          include?: string[]
           match_count?: number
           q?: string
           query_embedding?: string
@@ -805,7 +837,7 @@ export type Database = {
           description: string
           id: string
           kind: string
-          layer: string
+          lane: string
           links: Json
           matched_by: string
           path: string
@@ -829,19 +861,19 @@ export type Database = {
 export type AgentSessionRow = Database['public']['Tables']['agent_sessions']['Row']
 export type AgentMessageRow = Database['public']['Tables']['agent_messages']['Row']
 export type Cell = Database['public']['Tables']['cells']['Row']
-export type CellTrigger = Database['public']['Tables']['cell_triggers']['Row']
-export type Layer = Database['public']['Tables']['layers']['Row']
+export type CellDependency = Database['public']['Tables']['cell_dependencies']['Row']
+export type Lane = Database['public']['Tables']['lanes']['Row']
 export type Path = Database['public']['Tables']['paths']['Row']
 export type PathStep = Database['public']['Tables']['path_steps']['Row']
 export type Phase = Database['public']['Tables']['phases']['Row']
 export type Service = Database['public']['Tables']['services']['Row']
-export type ServiceLifecycle = Database['public']['Tables']['service_lifecycles']['Row']
-export type ServiceScenario = Database['public']['Tables']['service_scenarios']['Row']
+export type Scenario = Database['public']['Tables']['scenarios']['Row']
+export type Stakeholder = Database['public']['Tables']['stakeholders']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']
 
 export type Slice = Database['public']['Tables']['slices']['Row']
 export type SliceItem = Database['public']['Tables']['slice_items']['Row']
 export type Finding = Database['public']['Tables']['findings']['Row']
 export type Evidence = Database['public']['Tables']['evidence']['Row']
-export type Proposition = Database['public']['Tables']['propositions']['Row']
+export type Proposition = Database['public']['Tables']['business_model']['Row']
 export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row']

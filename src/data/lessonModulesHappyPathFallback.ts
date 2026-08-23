@@ -20,7 +20,7 @@ import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescripti
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -32,36 +32,36 @@ export const LESSON_MODULES_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000001240'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000001241',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001243',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001242',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001245',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001244',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000001246',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -69,17 +69,17 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000861',
     name: 'Open lesson',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000862',
     name: 'Work through questions',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000863',
     name: 'Finish lesson',
-    column_position: 3,
+    position: 3,
   },
 ] as const
 
@@ -98,19 +98,19 @@ const STEP_1_SUPPORT =
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(metadata.links ?? [], LESSON_MODULES_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -123,44 +123,44 @@ function lmCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000012${stepSlot}${layerSuffix}`
 }
 
-function lmTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000090${triggerSlot}`
+function lmDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000090${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: lmTrigger(slot),
+    id: lmDependency(slot),
     source_cell_id: lmCell(fromStep, fromLayer),
     target_cell_id: lmCell(toStep, toLayer),
   }
 }
 
-const LESSON_MODULES_TRIGGERS: BlueprintCellTrigger[] = [
+const LESSON_MODULES_TRIGGERS: BlueprintCellDependency[] = [
   // Regular Tutor → Front Stage Tech
-  trigger('001', '01', '03', '01', '06'),
-  trigger('002', '02', '03', '02', '06'),
-  trigger('003', '03', '03', '03', '06'),
+  dependency('001', '01', '03', '01', '06'),
+  dependency('002', '02', '03', '02', '06'),
+  dependency('003', '03', '03', '03', '06'),
 
   // Regular Tutor forward chain
-  trigger('011', '01', '03', '02', '03'),
-  trigger('012', '02', '03', '03', '03'),
+  dependency('011', '01', '03', '02', '03'),
+  dependency('012', '02', '03', '03', '03'),
   // Loop to next lesson
-  trigger('013', '03', '03', '01', '03'),
+  dependency('013', '03', '03', '01', '03'),
 
   // Step 1 — assignment → PLUS app
-  trigger('031', '01', '07', '01', '06'),
+  dependency('031', '01', '07', '01', '06'),
 
   // Steps 2–3 — instructional design → Notion → PLUS app
-  trigger('032', '02', '07', '02', '08'),
-  trigger('033', '03', '07', '03', '08'),
-  trigger('034', '02', '08', '02', '06'),
-  trigger('035', '03', '08', '03', '06'),
+  dependency('032', '02', '07', '02', '08'),
+  dependency('033', '03', '07', '03', '08'),
+  dependency('034', '02', '08', '02', '06'),
+  dependency('035', '03', '08', '03', '06'),
 ]
 
 const LESSON_MODULES_CELLS: BlueprintCell[] = [
@@ -198,7 +198,7 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     'Tutor supervisor team assigns lessons.',
   ),
   cell(lmCell('01', '09'), L.support, STEPS[0].id, STEP_1_SUPPORT, {
-    description: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
+    summary: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
   }),
 
   // Step 2 — work through questions
@@ -235,7 +235,7 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(lmCell('02', '09'), L.support, STEPS[1].id, STEP_1_SUPPORT, {
-    description: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
+    summary: LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
   }),
 
   // Step 3 — finish lesson
@@ -272,21 +272,22 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(lmCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign Team', {
-    description: LESSON_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
+    summary: LESSON_MODULES_DEV_DESIGN_SUPPORT_DESCRIPTION,
   }),
 ]
 
 export const LESSON_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: LESSON_MODULES_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'Standard',
+    summary:
       'Tutor completes lesson modules.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: LESSON_MODULES_CELLS,
-  triggers: LESSON_MODULES_TRIGGERS,
+  dependencies: LESSON_MODULES_TRIGGERS,
 }

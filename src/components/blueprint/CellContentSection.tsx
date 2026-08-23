@@ -1,5 +1,14 @@
+import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { PANEL_TERMS } from '@/lib/panelTerms'
+import { PANEL_TEXT } from '@/lib/panelText'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useCellContent } from '@/hooks/useCellContent'
+import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 
 /**
  * The owner pair, read-only.
@@ -14,33 +23,63 @@ import { useCellContent } from '@/hooks/useCellContent'
  */
 export function CellContentSection({ cellId }: { cellId: string | null }) {
   const { client, configured } = useSupabase()
-  const result = useCellContent(configured ? cellId : null)
+  // From the board, not a request — see useBlueprintCell.
+  const cell = useBlueprintCell(cellId)
 
   if (!configured || !client || !cellId) return null
-  if (result.status !== 'ready') return null
-
-  const cell = result.data
   if (!cell) return null
 
   const owner = cell.owner?.trim() ?? ''
   const perceived = cell.perceived_owner?.trim() ?? ''
-  if (!owner && !perceived) return null
+  const status = cell.status
+  if (!owner && !perceived && !status) return null
 
   return (
     <div className="flex flex-wrap gap-x-6 gap-y-1">
+      {/* First, because it changes how everything under it should be read:
+          a spec for something unbuilt is a proposal, not a description. */}
+      {status ? (
+        <div className="flex flex-col gap-0.5">
+          {/* "Status", not "State" — one name for one property. The paths
+              picker calls it status, the column is called status, and a
+              second word for it is a second thing to learn. */}
+          <PanelTermLabel term="Status" definition={PANEL_TERMS.status} />
+          {/* A badge, not text: a governed six-value set the reader scans
+              for. See docs/reference/panel-affordances.md § Badge or text. */}
+          <StatusBadge status={status} />
+        </div>
+      ) : null}
       {owner ? <OwnerCell label="Owner" value={owner} /> : null}
       {perceived ? <OwnerCell label="Perceived owner" value={perceived} /> : null}
     </div>
   )
 }
 
-function OwnerCell({ label, value }: { label: string; value: string }) {
+function OwnerCell({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value: string
+  hint?: string
+}) {
+  const body = <span className={PANEL_TEXT.value}>{value}</span>
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-2xs font-medium text-muted-foreground">
+      <span className={PANEL_TEXT.sectionLabel}>
         {label}
       </span>
-      <span className="text-sm text-foreground/80">{value}</span>
+      {hint ? (
+        <Tooltip>
+          <TooltipTrigger render={<span className={PANEL_TEXT.value}>{value}</span>} />
+          <TooltipContent side="bottom" className="max-w-xs text-xs">
+            {hint}
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        body
+      )}
     </div>
   )
 }

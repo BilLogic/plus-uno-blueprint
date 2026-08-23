@@ -20,7 +20,7 @@ type CellSpec = {
   lane: string
   step: string
   content: string
-  description?: string
+  summary?: string
   id?: string
 }
 
@@ -31,41 +31,42 @@ function makeBlueprint(
   pathId: string,
   steps: string[],
   cells: CellSpec[],
-  lanes?: string[],
+  laneNames?: string[],
 ): BlueprintData {
-  const laneNames = lanes ?? [...new Set(cells.map((cell) => cell.lane))]
-  const layers = laneNames.map((name, index) => ({
+  const names = laneNames ?? [...new Set(cells.map((cell) => cell.lane))]
+  const lanes = names.map((name, index) => ({
     id: `${pathId}-lane-${name}`,
     name,
-    row_position: index,
+    position: index,
   }))
   const stepRows = steps.map((name, index) => ({
     id: `${pathId}-step-${index}`,
     name,
-    column_position: index,
+    position: index,
   }))
   const stepIdByName = new Map(stepRows.map((step) => [step.name, step.id]))
   const blueprintCells: BlueprintCell[] = cells.map((cell) => ({
     id: cell.id ?? nextId(`${pathId}-cell`),
-    layer_id: `${pathId}-lane-${cell.lane}`,
+    lane_id: `${pathId}-lane-${cell.lane}`,
     step_id: stepIdByName.get(cell.step) ?? '',
     content: cell.content,
     picture: null,
-    description: cell.description ?? null,
+    summary: cell.summary ?? null,
     links: [],
   }))
   return {
     path: {
       id: pathId,
       name: pathId,
-      description: null,
+      summary: null,
       note: null,
       path_type: 'happy',
+    status: 'live',
     },
-    layers,
+    lanes,
     steps: stepRows,
     cells: blueprintCells,
-    triggers: [],
+    dependencies: [],
   }
 }
 
@@ -89,7 +90,7 @@ function fixture() {
         lane: 'Front Stage',
         step: 'Ship',
         content: 'Ship order',
-        description: 'Courier A',
+        summary: 'Courier A',
       },
       { lane: 'Front Stage', step: 'Rate', content: 'Rate purchase' },
     ],
@@ -106,7 +107,7 @@ function fixture() {
         lane: 'Front Stage',
         step: 'Ship',
         content: 'Ship order',
-        description: 'Courier B',
+        summary: 'Courier B',
       },
       { lane: 'Front Stage', step: 'Rate', content: 'Rate the call' },
     ],

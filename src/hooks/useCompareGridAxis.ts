@@ -7,19 +7,19 @@ import {
 } from '@/lib/compareGridTracks'
 import type { CompareModel } from '@/lib/compareSlots'
 import {
-  COMPARE_LABEL_WIDTH,
+  COMPARE_LABEL_TRACK_WIDTH,
   buildSideBySideLabelRowSpecs,
   getCanonicalLayers,
   type BlueprintLabelRowSpec,
 } from '@/lib/sideBySideCompareLayout'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 export type CompareGridAxis = {
   /** Canonical lanes across the compared paths. */
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   /** Lane row specs (one set — both canvases share the lane axis). */
   rows: BlueprintLabelRowSpec[]
-  toggleLayer: (layerId: string) => void
+  toggleLayer: (laneId: string) => void
   tracks: CompareGridTrack[]
   gridTemplateColumns: string
 }
@@ -37,7 +37,7 @@ export function useCompareGridAxis(
 ): CompareGridAxis {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
 
-  const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
+  const lanes = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
 
   const rows = useMemo(
     () => buildSideBySideLabelRowSpecs(blueprints, compact, collapsedLayerIds),
@@ -53,12 +53,12 @@ export function useCompareGridAxis(
   // whole subgrid per frame and draw arrows against intermediate geometry.
   const gridTemplateColumns = useMemo(() => {
     if (tracks.length === 0) {
-      return `${COMPARE_LABEL_WIDTH}px ${STEP_COLUMN_WIDTH}px`
+      return `${COMPARE_LABEL_TRACK_WIDTH}px ${STEP_COLUMN_WIDTH}px`
     }
-    return `${COMPARE_LABEL_WIDTH}px ${tracks
+    return `${COMPARE_LABEL_TRACK_WIDTH}px ${tracks
       .map(() => `${STEP_COLUMN_WIDTH}px`)
       .join(' ')}`
   }, [tracks])
 
-  return { layers, rows, toggleLayer, tracks, gridTemplateColumns }
+  return { lanes, rows, toggleLayer, tracks, gridTemplateColumns }
 }

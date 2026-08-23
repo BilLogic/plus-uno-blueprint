@@ -1,9 +1,20 @@
-import type { BlueprintCell, BlueprintData, BlueprintLayer } from '@/types/blueprint'
+/**
+ * Legacy drift on Warm-Up's second path, patched on the way in.
+ *
+ * **Both faults are fixed at source as of 2026-08-21** — the lane positions by
+ * migration `20260821270000`, and the cell-to-lane assignment was already
+ * clean (0 of 28 misfiled when checked). Against the live database every
+ * function here is now a no-op.
+ *
+ * It stays for the no-DB dev fallback, which has not been verified. When
+ * somebody confirms the fixture agrees with the board, this file goes.
+ */
+import type { BlueprintCell, BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 const WARM_UP_ALTERNATE_PATH_ID =
   'a0000000-0000-4000-8000-000000000350'
 
-/** Alternate-path layer ids keyed by warm-up cell id suffix (…060103 → 03). */
+/** Alternate-path lane ids keyed by warm-up cell id suffix (…060103 → 03). */
 const WARM_UP_ALTERNATE_LAYER_ID_BY_CELL_SUFFIX: Record<string, string> = {
   '01': 'a0000000-0000-4000-8000-000000000401',
   '02': 'a0000000-0000-4000-8000-000000000402',
@@ -29,33 +40,33 @@ export function resolveWarmUpAlternateCellLayerId(
 export function assignWarmUpAlternateCellLayerId(
   cell: BlueprintCell,
 ): BlueprintCell {
-  const layerId = resolveWarmUpAlternateCellLayerId(cell.id)
-  if (!layerId || cell.layer_id === layerId) return cell
-  return { ...cell, layer_id: layerId }
+  const laneId = resolveWarmUpAlternateCellLayerId(cell.id)
+  if (!laneId || cell.lane_id === laneId) return cell
+  return { ...cell, lane_id: laneId }
 }
 
-/** Align layer row positions with reference swimlanes (fixes legacy DB drift). */
+/** Align lane row positions with reference swimlanes (fixes legacy DB drift). */
 export function repairWarmUpPathLayerPositions(
   data: BlueprintData,
-  referenceLayers: readonly BlueprintLayer[],
+  referenceLayers: readonly BlueprintLane[],
 ): BlueprintData {
   const rowByName = new Map(
-    referenceLayers.map((layer) => [layer.name, layer.row_position]),
+    referenceLayers.map((lane) => [lane.name, lane.position]),
   )
-  const layers = data.layers.map((layer) => {
-    const rowPosition = rowByName.get(layer.name)
-    if (rowPosition === undefined || layer.row_position === rowPosition) {
-      return layer
+  const lanes = data.lanes.map((lane) => {
+    const position = rowByName.get(lane.name)
+    if (position === undefined || lane.position === position) {
+      return lane
     }
-    return { ...layer, row_position: rowPosition }
+    return { ...lane, position: position }
   })
-  layers.sort((a, b) => a.row_position - b.row_position)
+  lanes.sort((a, b) => a.position - b.position)
 
-  const changed = layers.some(
-    (layer, index) => layer.row_position !== data.layers[index]?.row_position,
+  const changed = lanes.some(
+    (lane, index) => lane.position !== data.lanes[index]?.position,
   )
 
-  return changed ? { ...data, layers } : data
+  return changed ? { ...data, lanes } : data
 }
 
 /** Correct swimlane assignment for Warm-Up Alternate Path cells. */
@@ -66,7 +77,7 @@ export function repairWarmUpAlternatePathBlueprint(
 
   const cells = data.cells.map(assignWarmUpAlternateCellLayerId)
   const cellsChanged = cells.some(
-    (cell, index) => cell.layer_id !== data.cells[index]?.layer_id,
+    (cell, index) => cell.lane_id !== data.cells[index]?.lane_id,
   )
 
   if (!cellsChanged) {

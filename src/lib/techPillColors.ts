@@ -19,12 +19,11 @@ export const TECH_PILL_COLORS = {
   Email: 'purple',
   Figma: 'purple',
   'Google Docs/ Slides': 'crimson',
-  'Google Form Application': 'gold',
+  'Google Form': 'gold',
   'Google Quiz': 'red',
   'Google Quiz embedded in Notion': 'red',
   'Google Quizzes': 'tomato',
   Handshake: 'indigo',
-  'Handshake Employer Profile': 'indigo',
   'Marketing Website': 'indigo',
   Notion: 'gold',
   'On-campus booth': 'yellow',
@@ -38,7 +37,6 @@ export const TECH_PILL_COLORS = {
   Bank: 'tomato',
   Zoom: 'indigo',
   'Zoom Recording': 'purple',
-  'Zoom/Pencil': 'indigo',
 } as const satisfies Record<string, TouchpointTone>
 
 export type TechPillName = keyof typeof TECH_PILL_COLORS
@@ -48,11 +46,21 @@ const TECH_LABEL_ALIASES: Record<string, TechPillName> = {
   workday: 'Workday (Employee View)',
   'workday (employee view)': 'Workday (Employee View)',
   'workday (employer view)': 'Workday (Employer View)',
-  'zoom/pencil': 'Zoom/Pencil',
-  'zoom/ pencil': 'Zoom/Pencil',
+  // Kept as aliases, not as names: PLUS stopped using Pencil, and any row or
+  // slice still spelling the old pair should resolve to the one tool that is
+  // left rather than mint a second touchpoint.
+  'zoom/pencil': 'Zoom',
+  'zoom/ pencil': 'Zoom',
+  // A pill names the THING; which form, which profile, which tooling is the
+  // summary's job. These are the labels that carried their own specification
+  // until Aug 2026, kept so an older slice still resolves.
+  'handshake employer profile': 'Handshake',
+  'google form application': 'Google Form',
+  'acceptance form (google form)': 'Google Form',
+  'tutor sign-up form (google form)': 'Google Form',
 }
 
-function isZoomPencilLabel(label: string): boolean {
+function isLegacyZoomPencilLabel(label: string): boolean {
   return /^zoom\s*\/\s*pencil$/i.test(label.trim())
 }
 
@@ -85,7 +93,7 @@ function hashLabel(label: string): number {
 /** Resolve a raw pill label to its canonical registry key when possible. */
 export function normalizeTechPillLabel(label: string): string {
   const trimmed = label.trim()
-  if (isZoomPencilLabel(trimmed)) return 'Zoom/Pencil'
+  if (isLegacyZoomPencilLabel(trimmed)) return 'Zoom'
 
   const lower = trimmed.toLowerCase()
   return TECH_LABEL_ALIASES[lower] ?? LOWER_TO_CANONICAL[lower] ?? trimmed

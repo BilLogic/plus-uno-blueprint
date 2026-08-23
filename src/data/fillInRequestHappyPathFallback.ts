@@ -23,7 +23,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -36,36 +36,36 @@ export const FILL_IN_REQUEST_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000903'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000904',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000906',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000905',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000908',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000907',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000909',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -73,22 +73,22 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000897',
     name: 'Initial request',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000898',
     name: 'Send request',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000899',
     name: 'Tutor response',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000900',
     name: 'Finalize assignment',
-    column_position: 4,
+    position: 4,
   },
 ] as const
 
@@ -104,14 +104,14 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'description' | 'links' | 'picture'>>,
+  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'picture'>>,
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -123,37 +123,37 @@ function fillCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000015${stepSlot}${layerSuffix}`
 }
 
-function fillTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000094${triggerSlot}`
+function fillDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000094${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: fillTrigger(slot),
+    id: fillDependency(slot),
     source_cell_id: fillCell(fromStep, fromLayer),
     target_cell_id: fillCell(toStep, toLayer),
   }
 }
 
-const FILL_IN_REQUEST_TRIGGERS: BlueprintCellTrigger[] = [
-  trigger('001', '01', '07', '01', '08'),
-  trigger('009', '01', '06', '01', '07'),
-  trigger('002', '01', '07', '02', '04'),
-  trigger('003', '02', '04', '02', '06'),
-  trigger('010', '02', '06', '02', '03'),
-  trigger('004', '02', '03', '03', '03'),
-  trigger('005', '03', '03', '03', '06'),
-  trigger('011', '03', '06', '03', '04'),
-  trigger('012', '03', '03', '04', '03'),
-  trigger('006', '03', '04', '04', '07'),
-  trigger('013', '04', '07', '04', '06'),
-  trigger('014', '04', '06', '04', '03'),
+const FILL_IN_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
+  dependency('001', '01', '07', '01', '08'),
+  dependency('009', '01', '06', '01', '07'),
+  dependency('002', '01', '07', '02', '04'),
+  dependency('003', '02', '04', '02', '06'),
+  dependency('010', '02', '06', '02', '03'),
+  dependency('004', '02', '03', '03', '03'),
+  dependency('005', '03', '03', '03', '06'),
+  dependency('011', '03', '06', '03', '04'),
+  dependency('012', '03', '03', '04', '03'),
+  dependency('006', '03', '04', '04', '07'),
+  dependency('013', '04', '07', '04', '06'),
+  dependency('014', '04', '06', '04', '03'),
 ]
 
 const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
@@ -170,7 +170,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     STEPS[0].id,
     'Google Spreadsheet',
     {
-      description: FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+      summary: FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
       links: [
         techDescriptionLink(
           'Google Spreadsheet',
@@ -190,7 +190,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(fillCell('01', '09'), L.support, STEPS[0].id, 'Dev Team', {
-    description: FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION,
+    summary: FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION,
   }),
 
   cell(fillCell('02', '10'), L.visual, STEPS[1].id, ''),
@@ -272,20 +272,21 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     'Tutor supervisor team adds tutor to session if tutor confirms request.',
   ),
   cell(fillCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
-    description: FILL_IN_REQUEST_SUPPORT_STEP_04_DESCRIPTION,
+    summary: FILL_IN_REQUEST_SUPPORT_STEP_04_DESCRIPTION,
   }),
 ]
 
 export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: FILL_IN_REQUEST_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description: 'Tutor is requested to fill in for a session.',
+    name: 'Slot gets covered',
+    summary: 'Tutor is requested to fill in for a session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: FILL_IN_REQUEST_CELLS,
-  triggers: FILL_IN_REQUEST_TRIGGERS,
+  dependencies: FILL_IN_REQUEST_TRIGGERS,
 }

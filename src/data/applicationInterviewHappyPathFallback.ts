@@ -23,7 +23,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 export const APPLICATION_INTERVIEW_HAPPY_PATH_ID =
@@ -32,36 +32,36 @@ export const APPLICATION_INTERVIEW_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000810'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000803',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000806',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000804',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000808',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000807',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000809',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -69,27 +69,27 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000731',
     name: 'Applies',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000732',
     name: 'Receives email invitation for group interview',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000733',
     name: 'Group interviews',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000734',
     name: 'Waits for offer decision',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000735',
     name: 'Receives offer decision',
-    column_position: 5,
+    position: 5,
   },
 ] as const
 
@@ -105,16 +105,16 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -126,53 +126,53 @@ function iCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000009${stepSlot}${layerSuffix}`
 }
 
-function iTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function iDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: iTrigger(slot),
+    id: iDependency(slot),
     source_cell_id: iCell(fromStep, fromLayer),
     target_cell_id: iCell(toStep, toLayer),
   }
 }
 
-const INTERVIEW_TRIGGERS: BlueprintCellTrigger[] = [
+const INTERVIEW_TRIGGERS: BlueprintCellDependency[] = [
   // Step 1 — application form setup
-  trigger('001', '01', '07', '01', '06'),
-  trigger('002', '01', '07', '02', '07'),
-  trigger('005', '01', '03', '01', '06'),
+  dependency('001', '01', '07', '01', '06'),
+  dependency('002', '01', '07', '02', '07'),
+  dependency('005', '01', '03', '01', '06'),
 
   // Applies → review & invitation
-  trigger('003', '02', '07', '02', '04'),
-  trigger('004', '02', '04', '02', '06'),
-  trigger('006', '02', '06', '02', '03'),
+  dependency('003', '02', '07', '02', '04'),
+  dependency('004', '02', '04', '02', '06'),
+  dependency('006', '02', '06', '02', '03'),
 
   // Regular Tutor forward chain
-  trigger('011', '01', '03', '02', '03'),
-  trigger('012', '02', '03', '03', '03'),
-  trigger('013', '03', '03', '04', '03'),
-  trigger('014', '04', '03', '05', '03'),
+  dependency('011', '01', '03', '02', '03'),
+  dependency('012', '02', '03', '03', '03'),
+  dependency('013', '03', '03', '04', '03'),
+  dependency('014', '04', '03', '05', '03'),
 
   // Group interview
-  trigger('023', '03', '04', '03', '06'),
-  trigger('024', '03', '03', '03', '06'),
-  trigger('025', '03', '07', '03', '08'),
+  dependency('023', '03', '04', '03', '06'),
+  dependency('024', '03', '03', '03', '06'),
+  dependency('025', '03', '07', '03', '08'),
 
   // Decision processing → offer
-  trigger('031', '03', '07', '04', '07'),
-  trigger('032', '04', '07', '04', '08'),
+  dependency('031', '03', '07', '04', '07'),
+  dependency('032', '04', '07', '04', '08'),
   // Step 4 back stage → step 5 front stage
-  trigger('041', '04', '07', '05', '04'),
-  trigger('042', '05', '04', '05', '06'),
-  trigger('043', '05', '06', '05', '03'),
+  dependency('041', '04', '07', '05', '04'),
+  dependency('042', '05', '04', '05', '06'),
+  dependency('043', '05', '06', '05', '03'),
 ]
 
 const INTERVIEW_CELLS: BlueprintCell[] = [
@@ -358,14 +358,15 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
 export const APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: APPLICATION_INTERVIEW_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'Standard',
+    summary:
       'Tutor applies, interviews with the team, and receives an offer decision.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: INTERVIEW_CELLS,
-  triggers: INTERVIEW_TRIGGERS,
+  dependencies: INTERVIEW_TRIGGERS,
 }

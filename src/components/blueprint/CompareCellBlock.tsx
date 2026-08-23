@@ -19,6 +19,10 @@ import {
   getTechPillItems,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
+import {
+  BLUEPRINT_SLOT_INSET,
+  BLUEPRINT_SLOT_INSET_COMPACT,
+} from '@/lib/canvasHeaderStyle'
 import type { BlueprintLayerStyle } from '@/lib/blueprintTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell } from '@/types/blueprint'
@@ -67,6 +71,7 @@ export function CompareCellBlock({
   selectionContext,
   visualPictures,
   slotCells,
+  status,
   pathMembership,
 }: {
   cellId?: string
@@ -78,7 +83,10 @@ export function CompareCellBlock({
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
   visualPictures?: Array<{ picture: string; label: string }>
+  /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
+  /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
+  status?: BlueprintCell['status']
   slotCells?: BlueprintCell[]
   /** Member paths of this rendered cell — one outline segment each. */
   pathMembership?: readonly CompareCellPathMembership[]
@@ -92,7 +100,7 @@ export function CompareCellBlock({
     ? membershipDescriptionId
     : undefined
   const shellPadding = cn(
-    compact ? 'px-3' : 'px-3.5',
+    compact ? BLUEPRINT_SLOT_INSET_COMPACT : BLUEPRINT_SLOT_INSET,
     compact ? 'pt-3' : 'pt-4',
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
@@ -175,7 +183,7 @@ export function CompareCellBlock({
                       cellId: slotCell.id,
                       cellContent: slotCell.content ?? '',
                       cellPicture: slotCell.picture ?? null,
-                      cellDescription: slotCell.description ?? null,
+                      cellDescription: slotCell.summary ?? null,
                       cellLinks: slotCell.links,
                     }
                   : selectionContext
@@ -185,6 +193,7 @@ export function CompareCellBlock({
               sliceSequenceBadge={
                 index === 0 || slotCell?.id !== all[index - 1]?.slotCell?.id
               }
+              status={slotCell?.status ?? status}
               className={
                 hasMembershipOutline ? 'compare-membership-outline' : undefined
               }
@@ -215,6 +224,7 @@ export function CompareCellBlock({
         }
         cellId={cellId}
         stepIndex={stepIndex}
+        status={status}
         className={cn(
           'flex-none overflow-hidden',
           hasMembershipOutline && 'compare-membership-outline',

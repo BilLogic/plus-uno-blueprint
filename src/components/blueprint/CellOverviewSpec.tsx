@@ -1,14 +1,16 @@
+import { PANEL_TEXT } from '@/lib/panelText'
+import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useCellSpec } from '@/hooks/useCellSpec'
+import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { parseValueProps } from '@/lib/valueProps'
 
 function SpecSection({ title, text }: { title: string; text: string }) {
   return (
     <section className="flex flex-col gap-1">
-      <h3 className="text-2xs font-medium text-muted-foreground">
+      <h3 className={PANEL_TEXT.sectionLabel}>
         {title}
       </h3>
-      <p className="text-sm whitespace-pre-wrap text-foreground/80">{text}</p>
+      <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>{text}</p>
     </section>
   )
 }
@@ -27,16 +29,20 @@ type CellOverviewSpecProps = {
  */
 export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
   const { client, configured } = useSupabase()
-  const specResult = useCellSpec(configured ? cellId : null)
+  const cell = useBlueprintCell(cellId)
 
   if (!configured || !client || !cellId) return null
-  // Nothing is rendered while the query is in flight — not even a reserved
-  // placeholder. Most cells have no spec at all, so reserving space meant the
-  // block (and everything below it, including the tab row) grew for ~250 ms
-  // and then collapsed again on *every* cell switch.
-  if (specResult.status !== 'ready') return null
 
-  const spec = specResult.data
+  /*
+    No skeleton, because nothing loads.
+
+    There used to be a `DeferredSkeleton` here, holding 250ms before painting
+    so that the block did not grow and collapse on every cell switch — a good
+    fix for a query that should not have existed. The board carries the spec
+    columns now, so this renders in the same commit as the panel around it
+    and there is no frame in which it could be empty.
+  */
+  const spec = cell
   const functionText = spec?.function?.trim() ?? ''
   const formText = spec?.form?.trim() ?? ''
   const valueProps = parseValueProps(spec?.value_props ?? null)
@@ -50,7 +56,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
       {formText ? <SpecSection title="Form" text={formText} /> : null}
       {valueProps.length > 0 ? (
         <section className="flex flex-col gap-1">
-          <h3 className="text-2xs font-medium text-muted-foreground">
+          <h3 className={PANEL_TEXT.sectionLabel}>
             Value
           </h3>
           <ul className="flex flex-col gap-1">

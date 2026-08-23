@@ -1,7 +1,7 @@
 ---
 audience: designers
 summary: UI copy rules, error and empty-state wording, the agent's honest voice, and the naming conventions the interface must keep straight.
-sources: src/lib/agent/uiBridge.ts, src/lib/viewTypeVocabulary.ts, src/components/mobile/MobileShell.tsx, src/types/nav.ts
+sources: src/lib/agent/uiBridge.ts, src/types/nav.ts, src/components/mobile/MobileShell.tsx
 last-reviewed: 2026-08-18
 ---
 
@@ -54,11 +54,12 @@ the same everywhere:
   (`MobileNavSheet`'s surfaces are titled "Blueprints" and "Slices", matching
   the desktop rail). Never revive the retired "Journey"/"Map"/"reader"
   vocabulary — those views no longer exist.
-- **Stacked / Merged** — the compare view names shown in UI. The database
-  keeps the historical tokens `side-by-side` / `integrated`; the two
-  vocabularies meet only at the read seam (`src/lib/viewTypeVocabulary.ts`),
-  and `merged` is session-only, never persisted. UI copy never surfaces the
-  stored tokens.
+- **Stacked / Merged** — the compare view names shown in UI. `stacked` is now
+  also the STORED token: the database used to keep `side-by-side` /
+  `integrated` behind a translation module, and that module was deleted once
+  the data showed all 22 rows holding one value. `merged` stays session-only —
+  the CHECK constraint is `single | stacked` — so it names a display, never a
+  stored state.
 - **Line of visibility** — always spelled out, in full, lowercase. Never
   "LoV", "the line", or "visibility rule". It is the blueprint discipline's
   most load-bearing term and abbreviation erodes it.
@@ -116,7 +117,7 @@ rather than a pronoun: `Marks the student present.`, not `Mark them as present.`
 **Pill lanes** (Front Stage Tech, Back Stage Tech, Support Actions) — a
 canonical proper noun. No verb, no period, one system or team per line.
 
-> `Zoom/Pencil` · `PLUS App` · `Dev Team`
+> `Zoom` · `PLUS App` · `Dev Team`
 
 Because content is a bare noun here, `description` is **not optional garnish —
 it is the only thing that makes the cell citable**, and it must say what this

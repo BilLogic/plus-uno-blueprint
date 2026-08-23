@@ -98,7 +98,7 @@ reported, never silent — when they are absent or empty.
 
 | Wave | Check | Asks |
 | --- | --- | --- |
-| 1 | `gap-sweep` | Which experienced moments have no cell — empty stretches, dangling triggers, uncovered steps |
+| 1 | `gap-sweep` | Which experienced moments have no cell — empty stretches, dangling dependencies, uncovered steps |
 | 1 | `jargon-lint` | Which customer-facing cell texts use words the customer would never say |
 | 1 | `channel-conflict` | Where do simultaneous cells compete for the same actor or channel |
 | 2 | `kpi-alignment` | Do lane KPIs reward what the cells actually do (lane `kpis`/`tools`) |

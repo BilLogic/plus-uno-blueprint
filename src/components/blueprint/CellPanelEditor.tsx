@@ -3,17 +3,15 @@ import { createPortal } from 'react-dom'
 import { Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import {
+  CELL_PANEL_FOOTER_ID,
+  Field,
+} from '@/components/blueprint/panelShell'
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
 import { invalidateCanvasBlueprintsForPath } from '@/hooks/useCanvasBlueprints'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { useCellContent } from '@/hooks/useCellContent'
-import { useCellSpec } from '@/hooks/useCellSpec'
+import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { upsertCell } from '@/lib/authoringRpc'
@@ -25,62 +23,25 @@ import {
 } from '@/lib/cellContentLimits'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { updateCellContent } from '@/lib/cellContentMutations'
+import {
+  DEFAULT_ENTITY_STATUS,
+  type EntityStatus,
+} from '@/lib/entityStatus'
+import { StatusSelect } from '@/components/blueprint/StatusSelect'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { parseValueProps, type ValueProp } from '@/lib/valueProps'
 import { cn } from '@/lib/utils'
 
-/**
- * The one place the panel's Save and Cancel live: a host element pinned to
- * the drawer's bottom edge, below the scroll region and the tabs. The form
- * portals its buttons here so they read as controls for the whole panel —
- * one Save for everything on it — instead of a row buried mid-scroll.
- */
-export const CELL_PANEL_FOOTER_ID = 'cell-panel-editor-footer'
-
 /** Where a not-yet-created cell would go — the draft the editor writes on Save. */
 export type DraftCellTarget = {
   pathId: string
-  layerId: string
+  laneId: string
   stepId: string
-  layerName: string
+  laneName: string
   stepName: string
   stepIndex: number
   scenarioName?: string
   phaseName?: string
-}
-
-/** Label with its explanation folded into a hover tooltip, not inline text. */
-function Field({
-  label,
-  hint,
-  required = false,
-  children,
-}: {
-  label: string
-  hint?: string
-  /** Draws the asterisk — the only signal a field cannot be left empty. */
-  required?: boolean
-  children: React.ReactNode
-}) {
-  const labelText = (
-    <span className="w-fit text-2xs font-medium text-muted-foreground">
-      {label}
-      {required ? <span className="ml-0.5 text-destructive">*</span> : null}
-    </span>
-  )
-  return (
-    <div className="flex flex-col gap-1">
-      {hint ? (
-        <Tooltip>
-          <TooltipTrigger render={labelText} />
-          <TooltipContent side="left">{hint}</TooltipContent>
-        </Tooltip>
-      ) : (
-        labelText
-      )}
-      {children}
-    </div>
-  )
 }
 
 type FormState = {
@@ -91,6 +52,7 @@ type FormState = {
   functionText: string
   formText: string
   valueProps: ValueProp[]
+  status: EntityStatus
 }
 
 /**
@@ -109,7 +71,7 @@ type FormState = {
 export function CellPanelEditor({
   cellId,
   draft,
-  layerName,
+  laneName,
   fallbackDescription = '',
   onDone,
 }: {
@@ -117,7 +79,7 @@ export function CellPanelEditor({
   cellId: string | null
   draft?: DraftCellTarget
   /** Selects narrative-copy versus technology-label guidance. */
-  layerName?: string
+  laneName?: string
   /**
    * What the panel displays as this cell's description when the column is
    * empty (tech cells keep prose in `links`). Seeded into the field so the
@@ -128,23 +90,14 @@ export function CellPanelEditor({
   onDone: () => void
 }) {
   const { configured } = useSupabase()
-  const contentResult = useCellContent(configured && cellId ? cellId : null)
-  const specResult = useCellSpec(configured && cellId ? cellId : null)
+  // One read from the board, where two queries used to be. There is no
+  // loading branch left, and no error branch: the panel cannot be open
+  // without the board it was opened from.
+  const cell = useBlueprintCell(configured && cellId ? cellId : null)
 
   if (cellId) {
-    if (contentResult.status === 'loading' || specResult.status === 'loading') {
-      return null
-    }
-    if (contentResult.status === 'error' || specResult.status === 'error') {
-      return (
-        <p className="text-xs text-destructive">
-          This cell's fields could not be loaded — close the panel and try
-          again.
-        </p>
-      )
-    }
-    const content = contentResult.data
-    const spec = specResult.data
+    const content = cell
+    const spec = cell
     if (!content) return null
 
     const baseline: FormState = {
@@ -153,12 +106,13 @@ export function CellPanelEditor({
       // fallback below, but diffs and reverts compare against this — an
       // owner-only edit must not smuggle the fallback prose into the
       // description column, and undo must restore what the DB actually held.
-      description: content.description ?? '',
+      description: content.summary ?? '',
       owner: content.owner ?? '',
       perceivedOwner: content.perceived_owner ?? '',
       functionText: spec?.function ?? '',
       formText: spec?.form ?? '',
       valueProps: parseValueProps(spec?.value_props ?? null),
+      status: content.status ?? DEFAULT_ENTITY_STATUS,
     }
 
     return (
@@ -166,9 +120,9 @@ export function CellPanelEditor({
         key={cellId}
         cellId={cellId}
         draft={undefined}
-        layerName={layerName}
+        laneName={laneName}
         baseline={baseline}
-        seededDescription={content.description ?? fallbackDescription}
+        seededDescription={content.summary ?? fallbackDescription}
         onDone={onDone}
       />
     )
@@ -177,13 +131,14 @@ export function CellPanelEditor({
   if (!draft) return null
   return (
     <CellPanelEditorForm
-      key={`${draft.layerId}:${draft.stepId}`}
+      key={`${draft.laneId}:${draft.stepId}`}
       cellId={null}
       draft={draft}
-      layerName={layerName ?? draft.layerName}
+      laneName={laneName ?? draft.laneName}
       baseline={{
         text: '',
         description: '',
+        status: DEFAULT_ENTITY_STATUS,
         owner: '',
         perceivedOwner: '',
         functionText: '',
@@ -199,14 +154,14 @@ export function CellPanelEditor({
 function CellPanelEditorForm({
   cellId,
   draft,
-  layerName,
+  laneName,
   baseline: baselineProp,
   seededDescription,
   onDone,
 }: {
   cellId: string | null
   draft: DraftCellTarget | undefined
-  layerName: string | undefined
+  laneName: string | undefined
   baseline: FormState
   seededDescription: string
   onDone: () => void
@@ -259,7 +214,7 @@ function CellPanelEditorForm({
 
   const blocked = !form.text.trim()
   const isTechCell =
-    layerName === 'Front Stage Tech' || layerName === 'Back Stage Tech'
+    laneName === 'Front Stage Tech' || laneName === 'Back Stage Tech'
   const techItems = isTechCell ? parseCellContentItems(form.text) : []
   const longestTechItem = techItems.reduce(
     (longest, item) => Math.max(longest, item.length),
@@ -281,7 +236,8 @@ function CellPanelEditorForm({
     form.text !== baseline.text ||
     effectiveDescription !== baseline.description ||
     form.owner !== baseline.owner ||
-    form.perceivedOwner !== baseline.perceivedOwner
+    form.perceivedOwner !== baseline.perceivedOwner ||
+    form.status !== baseline.status
   const specChanged =
     form.functionText !== baseline.functionText ||
     form.formText !== baseline.formText ||
@@ -298,7 +254,7 @@ function CellPanelEditorForm({
         // The draft becomes real here and only here. Cancel never writes.
         targetId = await upsertCell(client, {
           pathId: draft!.pathId,
-          layerId: draft!.layerId,
+          laneId: draft!.laneId,
           stepId: draft!.stepId,
           content: form.text.trim(),
         })
@@ -318,16 +274,18 @@ function CellPanelEditorForm({
           targetId,
           {
             content: form.text,
-            description: cellId ? effectiveDescription : form.description,
+            summary: cellId ? effectiveDescription : form.description,
             owner: form.owner,
             perceivedOwner: form.perceivedOwner,
+            status: form.status,
           },
           cellId
             ? {
                 content: baseline.text,
-                description: baseline.description,
+                summary: baseline.description,
                 owner: baseline.owner,
                 perceivedOwner: baseline.perceivedOwner,
+                status: baseline.status,
               }
             : undefined,
           // The create already logs "Added a cell"; its field fill-in is
@@ -355,7 +313,7 @@ function CellPanelEditorForm({
         )
       }
 
-      invalidateQueries('lifecycle-phases')
+      invalidateQueries('service-phases')
       // Content edit: only the edited path's scenario is stale (todo 029).
       // Existing-cell edits mount with draft undefined and don't know their
       // path, so they fall back to invalidating every scenario's blueprint.
@@ -385,7 +343,7 @@ function CellPanelEditorForm({
   return (
     <div
       className="flex flex-col gap-3"
-      data-cell-panel-editor=""
+      data-panel-editor=""
       // Read by the panel's dismiss paths: Escape while a save is in flight
       // must not close the drawer — "cancelled" a beat after clicking Create
       // would otherwise materialize the cell into a panel-less silence.
@@ -410,9 +368,9 @@ function CellPanelEditorForm({
         </p>
       </Field>
 
-      {/* "Summary", not "Description": it is the tl;dr that consolidates
-          what the detailed fields (function, form, value) spell out. The
-          column stays `description` — a label rename is not a migration. */}
+      {/* The tl;dr that consolidates what the detailed fields (function,
+          form, value) spell out. The column is `summary` too now — this used
+          to carry a note explaining why the label and the column disagreed. */}
       <Field label="Summary" hint="The tl;dr — what the detailed fields below add up to.">
         <textarea
           value={form.description}
@@ -422,6 +380,16 @@ function CellPanelEditorForm({
             set('description', event.target.value)
           }}
           className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        />
+      </Field>
+
+      <Field
+        label="Status"
+        hint="How far along the thing this cell describes is, from proposed to live to on its way out."
+      >
+        <StatusSelect
+          value={form.status}
+          onChange={(next) => set('status', next)}
         />
       </Field>
 

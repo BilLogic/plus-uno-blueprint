@@ -53,23 +53,24 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `src/types/database.ts`.
 
 **Core hierarchy** — `service_lifecycles` → `phases` (ordered, optional
-`loops_to_phase_id`) → `service_scenarios` (`view_type`: single /
+`loops_to_phase_id`) → `scenarios` (`view_type`: single /
 side-by-side / integrated — integrated is merged at runtime, each path
 stored separately) → `paths` (`path_type`: happy / unhappy / exception /
 alternative / named). Steps are scenario-scoped (`steps`), joined to paths
-with per-path column order via `path_steps`. `layers` are a path's rows;
-`cells` sit at layer × step per path, with a trigger
+with per-path column order via `path_steps`. `lanes` are a path's rows;
+`cells` sit at lane × step per path, with a trigger
 (`cells_validate_path_match`) enforcing path integrity.
 **Naming trap:** DB `steps` are blueprint *columns* (journey moments), not
 lifecycle phases — phases live in `phases`.
 
-**Cells** carry the grid label (`content` — never empty), `description`,
+**Cells** carry the grid label (`content` — never empty), `summary`,
 `picture`, `links` (JSONB), and the spec columns from the derived-layer
 migration: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
 
-**Edges** — `cell_triggers`, `kind` = `trigger` (temporal) or `needs`
-(functional, panel-only), unique per (source, target, kind).
+**Edges** — `cell_dependencies`, `kind` = `leads_to` (this cell makes the
+other happen; drawn as an arrow) or `enables` (the other must already be
+true; panel-only), unique per (source, target, kind).
 
 **Derived layer** (`20260729120000_derived_layer.sql`) — `slices` +
 `slice_items` (stakeholder views), `evidence`, `propositions`, `findings`.
@@ -99,7 +100,7 @@ unchanged.
 | `match_corpus_chunks()` | Vector-only lookup. Legacy; the portal superseded it for the bot. |
 | `prune_orphans()` | Deletes exactly the chunks whose cell no longer qualifies. Returns the count. |
 | `index_health()` | Counts only — total, eligible, orphaned, stale, last embed. |
-| `public.search_blueprint()` | **The portal — every consumer's one search entry point.** Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_type` / `filter_layer_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
+| `public.search_blueprint()` | **The portal — every consumer's one search entry point.** Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_type` / `filter_lane_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
 
 **The pattern to keep: narrow doors, not wide grants.** The table is sealed and
 every capability is a `security definer` function that permits exactly one

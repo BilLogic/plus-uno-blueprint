@@ -23,11 +23,11 @@ import {
 } from '@/lib/annotationCapture'
 
 /**
- * The way marks get out of the scratch layer.
+ * The way marks get out of the scratch lane.
  *
  * Annotations are not saved, on purpose: persisting every stroke turns markup
  * into a record, and people stop scribbling freely once a scribble is
- * permanent. Costing nothing is the point of the layer. So instead of quiet
+ * permanent. Costing nothing is the point of the lane. So instead of quiet
  * persistence there is one explicit action, and it appears only once there is
  * something to capture — the affordance is also the notice that reloading will
  * lose them.
@@ -46,11 +46,11 @@ export function AnnotationCaptureMenu() {
    * runs once, when someone asks for it, and the camera has usually moved
    * several times since the marks were drawn.
    */
-  // Marks live in the annotation layer's local space; cell rects come from
-  // the DOM in screen space. Undo the camera by measuring the layer itself:
+  // Marks live in the annotation lane's local space; cell rects come from
+  // the DOM in screen space. Undo the camera by measuring the lane itself:
   // its on-screen rect vs its layout size gives the zoom, its origin the pan.
   const layerElement = document.querySelector<HTMLElement>(
-    '[data-canvas-annotation-layer]',
+    '[data-canvas-annotation-lane]',
   )
   const layerRect = layerElement?.getBoundingClientRect()
   const scale =

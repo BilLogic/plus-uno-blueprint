@@ -1,4 +1,4 @@
-import { Component, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
   ExternalLink,
@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { ArrowLeft } from 'lucide-react'
+import { describeLaneRole, getLayerRole } from '@/lib/laneRoles'
 import { CellDependencyEditor } from '@/components/blueprint/CellDependencyEditor'
 import { CompareDifferencesSurface } from '@/components/blueprint/CompareDifferencesSurface'
 import { CellDependencySections } from '@/components/blueprint/CellDependencySections'
@@ -18,29 +19,26 @@ import { CellEvidenceTab } from '@/components/blueprint/CellEvidenceTab'
 import { CellInSlicesFooter } from '@/components/blueprint/CellInSlicesFooter'
 import { CellOverviewSpec } from '@/components/blueprint/CellOverviewSpec'
 import { CellContentSection } from '@/components/blueprint/CellContentSection'
+import { CellPanelEditor } from '@/components/blueprint/CellPanelEditor'
 import {
   CELL_PANEL_FOOTER_ID,
-  CellPanelEditor,
-} from '@/components/blueprint/CellPanelEditor'
+  DetailPanelErrorBoundary,
+  Field,
+  PanelDrawerShell,
+  PanelFooterHost,
+  PanelIdentity,
+  PanelKindBadge,
+} from '@/components/blueprint/panelShell'
 import { CellResourcesTab } from '@/components/blueprint/CellResourcesTab'
 import { IconTooltip } from '@/components/editor/IconTooltip'
-import { TechPillFace } from '@/components/blueprint/TechPillFace'
 import { VisualStepDetailStack } from '@/components/blueprint/VisualStepDetailStack'
-import {
-  CANVAS_REGION_SELECTOR,
-  CELL_DETAIL_PANEL_BOTTOM_CLASS,
-  CELL_DETAIL_PANEL_TOP_CLASS,
-  CELL_DETAIL_PANEL_TOP_GAP_PX,
-  CELL_DETAIL_PANEL_TOP_VAR,
-} from '@/components/editor/menubarHeaderLayout'
+
 import {
   SegmentedControl,
   SegmentedControlItem,
 } from '@/components/editor/SegmentedControl'
 import { Button } from '@/components/ui/button'
 import {
-  Drawer,
-  DrawerContent,
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
@@ -55,11 +53,18 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   useBlueprintCellDetail,
   type BlueprintPanelSurface,
 } from '@/contexts/BlueprintCellDetailContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useCanvasTopOffset } from '@/hooks/useCanvasTopOffset'
 import { useMobileShell } from '@/hooks/useMobileShell'
+import { panelEditorBusy } from '@/lib/panelEditorBusy'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import {
   setCompareLedgerOpen,
@@ -79,7 +84,6 @@ import {
   scrollBlueprintTechPillIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
-import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
 import {
   getBlueprintLayerStyle,
@@ -93,6 +97,10 @@ import {
   URL_LINK_TYPE,
 } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import { getTouchpointTone } from '@/lib/techPillColors'
+import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { PANEL_TERMS } from '@/lib/panelTerms'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
@@ -110,10 +118,10 @@ import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 function cellPositionLabel(
   stepIndex: number,
   stepName: string,
-  layerName: string,
+  laneName: string,
 ): string {
   const column = stepIndex >= 0 ? `${stepIndex + 1}. ` : ''
-  return `${column}${stepName} · ${layerName}`
+  return `${column}${stepName} · ${laneName}`
 }
 
 /** Fixed panel and illustration frame so every row/step uses the same size. */
@@ -131,11 +139,27 @@ type PanelTab = 'dependencies' | 'evidence' | 'resources'
 const PANEL_TABS: Array<{
   value: PanelTab
   label: string
+  definition: string
   icon: typeof Workflow
 }> = [
-  { value: 'dependencies', label: 'Dependencies', icon: Workflow },
-  { value: 'evidence', label: 'Evidence', icon: FileSearch },
-  { value: 'resources', label: 'Resources', icon: Link2 },
+  {
+    value: 'dependencies',
+    label: 'Dependencies',
+    definition: PANEL_TERMS.dependencies,
+    icon: Workflow,
+  },
+  {
+    value: 'evidence',
+    label: 'Evidence',
+    definition: PANEL_TERMS.evidence,
+    icon: FileSearch,
+  },
+  {
+    value: 'resources',
+    label: 'Resources',
+    definition: PANEL_TERMS.resources,
+    icon: Link2,
+  },
 ]
 
 function isFigmaUrl(url: string): boolean {
@@ -160,154 +184,6 @@ function resolveFigmaUrl(
   }
 
   return null
-}
-
-/**
- * Publishes the canvas region's top edge so the portalled drawer can sit
- * below whatever chrome that surface stacks above it — the base view's navbar
- * alone, or a slice tab's header band on top of it. Re-measured on resize and
- * whenever the panel opens; the surface's own transitions (sidebar wipe, tab
- * strip) do not move the canvas top, so no observer is needed.
- */
-function useCanvasTopOffset(active: boolean) {
-  useEffect(() => {
-    if (!active) return
-
-    const measure = () => {
-      const canvas = document.querySelector(CANVAS_REGION_SELECTOR)
-      const top = canvas?.getBoundingClientRect().top ?? 0
-      document.documentElement.style.setProperty(
-        CELL_DETAIL_PANEL_TOP_VAR,
-        `${Math.max(0, top) + CELL_DETAIL_PANEL_TOP_GAP_PX}px`,
-      )
-    }
-
-    measure()
-    window.addEventListener('resize', measure)
-    return () => {
-      window.removeEventListener('resize', measure)
-      document.documentElement.style.removeProperty(CELL_DETAIL_PANEL_TOP_VAR)
-    }
-  }, [active])
-}
-
-/**
- * True while the panel's editor has a save in flight. Every dismiss path
- * (Escape, ✕-driven close requests) checks this: closing mid-save reads as
- * "cancelled", but the write lands anyway — for a draft that means a cell
- * materializing after the panel that explained it is gone.
- */
-function panelEditorBusy(): boolean {
-  return document.querySelector('[data-cell-panel-editor][data-busy]') !== null
-}
-
-/**
- * A render error in the drawer must cost the drawer, not the app.
- *
- * This panel is the one surface that renders arbitrary cell content —
- * pictures, links, tech pills, prose — outside the canvas's providers, which
- * makes it the most likely place for a render throw. Without a boundary that
- * throw unmounted the entire editor to a white page, which is how a broken
- * pill icon read as "loading is broken". React error boundaries are still
- * class-only.
- */
-class CellDetailErrorBoundary extends Component<
-  { children: ReactNode },
-  { failed: boolean }
-> {
-  state = { failed: false }
-  static getDerivedStateFromError() {
-    return { failed: true }
-  }
-  componentDidCatch(error: unknown) {
-    console.error('[cell-detail] panel render failed:', error)
-  }
-  render() {
-    if (this.state.failed) {
-      return (
-        <div className="fixed right-4 bottom-16 z-40 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground shadow-md">
-          This cell's details failed to display. The canvas is unaffected.
-        </div>
-      )
-    }
-    return this.props.children
-  }
-}
-
-/**
- * The one drawer shell every surface of the panel renders through. Each
- * render branch (details, draft, placeholder, differences) returns this at
- * the same tree position, so React reconciles them as the SAME drawer —
- * a surface switch is a content swap inside the open drawer, never a
- * close-reopen.
- */
-function PanelDrawerShell({
-  open,
-  expanded,
-  onCloseRequest,
-  onClosed,
-  children,
-}: {
-  open: boolean
-  expanded: boolean
-  onCloseRequest: () => void
-  onClosed: () => void
-  children: ReactNode
-}) {
-  // Same drawer, two postures: the desktop right-pinned card, or — below
-  // md — a bottom sheet the width of the phone. One component, mirroring
-  // the AgentDock docked/floating precedent; the reconciliation guarantee
-  // above (same tree position) holds in both postures.
-  const mobile = useMobileShell()
-  return (
-    <Drawer
-      // Keyed on posture: a resize across the breakpoint while open would
-      // otherwise reinterpret an in-flight swipe's x-offset against the
-      // other posture's axis. A flip remounts the drawer clean instead.
-      key={mobile ? 'mobile' : 'desktop'}
-      open={open}
-      onOpenChange={(next) => {
-        // Only close *requests* (✕, Escape, swipe) arrive here, and with
-        // `open` derived from panelState they can only fire while the panel
-        // is open — the delayed-callback-wipes-new-selection class of bug
-        // died with the second owner.
-        if (!next && !panelEditorBusy()) onCloseRequest()
-      }}
-      onOpenChangeComplete={(next) => {
-        if (!next) onClosed()
-      }}
-      modal={false}
-      disablePointerDismissal
-      swipeDirection={mobile ? 'down' : 'right'}
-      // A bottom sheet says how to dismiss itself with a grab handle; the
-      // desktop inspector has its own ✕ and does not read as draggable.
-      showSwipeHandle={mobile}
-    >
-      <DrawerContent
-        data-cell-detail-panel=""
-        // The posture the MOTION keys off (animations.css): a sheet rises
-        // from the bottom edge, an inspector lifts in beside the cell it
-        // came from. Two vocabularies, one component.
-        data-cell-detail-posture={mobile ? 'sheet' : 'inspector'}
-        className={cn(
-          mobile
-            ? '!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[70svh] w-auto border-t border-border bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
-            : cn(
-                CELL_DETAIL_PANEL_TOP_CLASS,
-                CELL_DETAIL_PANEL_BOTTOM_CLASS,
-                '!right-4 !left-auto !m-0 !h-auto !max-h-none rounded-2xl border border-border bg-popover shadow-sm after:hidden [--drawer-inset:1rem] md:!right-8 md:[--drawer-inset:2rem]',
-                expanded
-                  ? 'w-(--width-cell-panel-expanded)'
-                  : 'w-(--width-cell-panel)',
-              ),
-        )}
-        onPointerDown={(event) => event.stopPropagation()}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {children}
-      </DrawerContent>
-    </Drawer>
-  )
 }
 
 /**
@@ -350,9 +226,12 @@ function PanelSurfaceSwitcher({
  */
 export function BlueprintCellDetailPanel() {
   return (
-    <CellDetailErrorBoundary>
+    <DetailPanelErrorBoundary
+      logPrefix="cell-detail"
+      message="This cell's details failed to display. The canvas is unaffected."
+    >
       <BlueprintCellDetailPanelBody />
-    </CellDetailErrorBoundary>
+    </DetailPanelErrorBoundary>
   )
 }
 
@@ -588,14 +467,14 @@ function BlueprintCellDetailPanelBody() {
 
   const selectedCell = useMemo((): Pick<
     BlueprintCell,
-    'content' | 'description' | 'links' | 'picture'
+    'content' | 'summary' | 'links' | 'picture'
   > | null => {
     const pathId = pathEntry?.pathId
     if (!resolvedCellId || !pathId) {
       if (!pathEntry) return null
       return {
         content: pathEntry.content,
-        description: pathEntry.description ?? null,
+        summary: pathEntry.description ?? null,
         picture: pathEntry.picture ?? null,
         links: pathEntry.links ?? [],
       }
@@ -608,7 +487,7 @@ function BlueprintCellDetailPanelBody() {
 
     return {
       content: pathEntry?.content ?? '',
-      description: pathEntry?.description ?? null,
+      summary: pathEntry?.description ?? null,
       picture: pathEntry?.picture ?? null,
       links: pathEntry?.links ?? [],
     }
@@ -625,39 +504,54 @@ function BlueprintCellDetailPanelBody() {
   )
 
   const selectedLayer = useMemo((): { name: string; role?: string | null } | null => {
-    const layerName = selection?.layerName
-    if (!layerName) return null
+    const laneName = selection?.laneName
+    if (!laneName) return null
 
     const pathId = pathEntry?.pathId
     const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
     return (
-      blueprint?.layers.find((layer) => layer.name === layerName) ?? {
-        name: layerName,
+      blueprint?.lanes.find((lane) => lane.name === laneName) ?? {
+        name: laneName,
       }
     )
-  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+  }, [blueprints, pathEntry?.pathId, selection?.laneName])
 
   const laneChipStyle = useMemo(() => {
-    const layerName = selection?.layerName
-    if (!layerName) return null
+    const laneName = selection?.laneName
+    if (!laneName) return null
 
     const pathId = pathEntry?.pathId
     const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
     const layerRecord =
-      blueprint?.layers.find((layer) => layer.name === layerName) ?? null
+      blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
     const zone =
       layerRecord && blueprint
-        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
         : 'frontstage'
-    // Keyed by layer_role — the name argument is only the legacy fallback.
-    return getBlueprintLayerStyle(layerName, zone, layerRecord?.role)
-  }, [blueprints, pathEntry?.pathId, selection?.layerName])
+    // Keyed by lane_role — the name argument is only the legacy fallback.
+    return getBlueprintLayerStyle(laneName, zone, layerRecord?.role)
+  }, [blueprints, pathEntry?.pathId, selection?.laneName])
+
+  /* What the lane chip MEANS, for its hover. Resolved the same way the canvas
+     resolves it: the explicit role if the row carries one, else the legacy
+     name map. */
+  const laneRoleDescription = useMemo(() => {
+    const laneName = selection?.laneName
+    if (!laneName) return null
+    const pathId = pathEntry?.pathId
+    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
+    const layerRecord =
+      blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
+    return describeLaneRole(
+      getLayerRole({ name: laneName, role: layerRecord?.role ?? null }),
+    )
+  }, [blueprints, pathEntry?.pathId, selection?.laneName])
 
   const otherTechEntries = useMemo(() => {
     const layerNameByCellId = new Map<string, string>()
     const stepIndexByCellId = new Map<string, number>()
     for (const entry of [...connections.incoming, ...connections.outgoing]) {
-      layerNameByCellId.set(entry.cellId, entry.layerName)
+      layerNameByCellId.set(entry.cellId, entry.laneName)
       stepIndexByCellId.set(entry.cellId, entry.stepIndex)
     }
 
@@ -666,7 +560,7 @@ function BlueprintCellDetailPanelBody() {
       id: string
       cellId: string
       item: string
-      layerName?: string
+      laneName?: string
       stepIndex?: number
     }> = []
 
@@ -674,7 +568,7 @@ function BlueprintCellDetailPanelBody() {
       id: string
       cellId: string
       item: string
-      layerName?: string
+      laneName?: string
       stepIndex?: number
     }) => {
       if (seen.has(entry.id)) return
@@ -687,7 +581,7 @@ function BlueprintCellDetailPanelBody() {
         id: entry.id,
         cellId: entry.cellId,
         item: entry.item,
-        layerName: layerNameByCellId.get(entry.cellId),
+        laneName: layerNameByCellId.get(entry.cellId),
         stepIndex: stepIndexByCellId.get(entry.cellId),
       })
     }
@@ -696,7 +590,7 @@ function BlueprintCellDetailPanelBody() {
         id: entry.id,
         cellId: entry.cellId,
         item: entry.item,
-        layerName: entry.layerName,
+        laneName: entry.laneName,
         stepIndex: entry.stepIndex,
       })
     }
@@ -739,7 +633,7 @@ function BlueprintCellDetailPanelBody() {
     if (!blueprint) return []
 
     const layerNames = new Map(
-      blueprint.layers.map((layer) => [layer.id, layer.name]),
+      blueprint.lanes.map((lane) => [lane.id, lane.name]),
     )
     const stepOrder = new Map(
       blueprint.steps.map((step, index) => [step.id, { index, name: step.name }]),
@@ -756,7 +650,7 @@ function BlueprintCellDetailPanelBody() {
           label: cellPositionLabel(
             step?.index ?? -1,
             step?.name ?? 'Unknown step',
-            layerNames.get(cell.layer_id) ?? 'Unknown lane',
+            layerNames.get(cell.lane_id) ?? 'Unknown lane',
           ),
         }
       })
@@ -777,12 +671,12 @@ function BlueprintCellDetailPanelBody() {
   const existingDependencies = useMemo<ExistingDependency[]>(
     () =>
       connections.outgoing.map((connection) => ({
-        id: connection.triggerId,
+        id: connection.dependencyId,
         targetCellId: connection.cellId,
         targetLabel: cellPositionLabel(
           connection.stepIndex,
           connection.stepName,
-          connection.layerName,
+          connection.laneName,
         ),
         kind: connection.linkKind,
         label: connection.linkLabel,
@@ -799,7 +693,7 @@ function BlueprintCellDetailPanelBody() {
       label: cellPositionLabel(
         selection.stepIndex,
         selection.stepName,
-        selection.layerName,
+        selection.laneName,
       ),
     }
   }, [pathEntry?.pathId, resolvedCellId, selection])
@@ -884,7 +778,7 @@ function BlueprintCellDetailPanelBody() {
               onValueChange={setPanelSurface}
             />
           ) : (
-            <span className="text-sm font-bold tracking-tight">
+            <span className="text-sm font-semibold">
               Differences
             </span>
           )}
@@ -932,13 +826,13 @@ function BlueprintCellDetailPanelBody() {
   if (!selection && draft) {
     const blueprint = getBlueprintForPath(blueprints, draft.pathId)
     const layerRecord =
-      blueprint?.layers.find((layer) => layer.name === draft.layerName) ?? null
+      blueprint?.lanes.find((lane) => lane.name === draft.laneName) ?? null
     const zone =
       layerRecord && blueprint
-        ? getBlueprintLayerZone(layerRecord, blueprint.layers)
+        ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
         : 'frontstage'
     const draftLaneStyle = getBlueprintLayerStyle(
-      draft.layerName,
+      draft.laneName,
       zone,
       layerRecord?.role,
     )
@@ -953,7 +847,7 @@ function BlueprintCellDetailPanelBody() {
         {surfaceSwitcher}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
-            <DrawerTitle className="text-sm font-bold tracking-tight">
+            <DrawerTitle className="text-sm font-semibold">
               New cell
             </DrawerTitle>
             <DrawerDescription className="text-2xs text-muted-foreground">
@@ -987,20 +881,17 @@ function BlueprintCellDetailPanelBody() {
               color: 'var(--foreground-blueprint-cell)',
             }}
           >
-            {draft.layerName}
+            {draft.laneName}
           </span>
           <CellPanelEditor
             cellId={null}
             draft={draft}
-            layerName={draft.layerName}
+            laneName={draft.laneName}
             onDone={clearSelection}
           />
         </div>
         {/* The editor portals Create/Cancel here — panel-level footing. */}
-        <div
-          id={CELL_PANEL_FOOTER_ID}
-          className="shrink-0 border-t border-muted px-4 py-3 empty:hidden"
-        />
+        <PanelFooterHost id={CELL_PANEL_FOOTER_ID} />
       </PanelDrawerShell>
     )
   }
@@ -1021,7 +912,7 @@ function BlueprintCellDetailPanelBody() {
         {surfaceSwitcher}
         <DrawerHeader className="flex-row items-center justify-between gap-2 pb-3 text-left">
           <div className="min-w-0 flex-1">
-            <DrawerTitle className="text-sm font-bold tracking-tight">
+            <DrawerTitle className="text-sm font-semibold">
               Cell details
             </DrawerTitle>
             <DrawerDescription className="sr-only">
@@ -1050,7 +941,7 @@ function BlueprintCellDetailPanelBody() {
     )
   }
 
-  const isVisualLayer = Boolean(
+  const isVisualLane = Boolean(
     selectedLayer && shouldUseVisualContent(selectedLayer),
   )
   const cellContent =
@@ -1077,12 +968,8 @@ function BlueprintCellDetailPanelBody() {
     cellPicture: selection.paths[0]?.picture,
     cellLinks,
   })
-  const showPicture = Boolean(detailPictures?.length && !isVisualLayer)
+  const showPicture = Boolean(detailPictures?.length && !isVisualLane)
   const showTechPill = Boolean(isTechLayer && techDetailLabel)
-  const showTechPillAboveTitle =
-    showTechPill &&
-    (selection.layerName === 'Front Stage Tech' ||
-      selection.layerName === 'Back Stage Tech')
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
@@ -1169,7 +1056,7 @@ function BlueprintCellDetailPanelBody() {
           </>
         ) : null}
         <BreadcrumbItem className="min-w-0">
-          <BreadcrumbPage className="truncate font-medium tracking-tight text-foreground">
+          <BreadcrumbPage className="truncate font-medium text-foreground">
             {stepCrumbLabel}
           </BreadcrumbPage>
         </BreadcrumbItem>
@@ -1178,39 +1065,22 @@ function BlueprintCellDetailPanelBody() {
   )
 
   // Panel v2 header: title is the cell content snippet; the lane appears as
-  // one role-colored chip (colored by layer_role, never by name).
+  // one role-colored chip (colored by lane_role, never by name).
   const cellTitleText =
-    cellContent.split('\n')[0]?.trim() || selection.layerName
-  const laneChip = laneChipStyle ? (
-    <span
-      className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
-      style={{
-        backgroundColor: laneChipStyle.lane,
-        color: BLUEPRINT_THEME.cellText,
-      }}
-      title={selection.layerName}
-    >
-      {selection.layerName}
-    </span>
-  ) : null
-
-  const titleRow = (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <p className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
-        {cellTitleText}
-      </p>
-      {laneChip}
-    </div>
+    cellContent.split('\n')[0]?.trim() || selection.laneName
+  /* The lane chip, tinted with that lane's own cell colour. Rendered on its
+     own in the two cases where the title would repeat what is already on
+     screen (the editor's TEXT field, a tech pill's own label). */
+  const laneChip = (
+    <PanelKindBadge
+      label={selection.laneName}
+      laneRole={laneChipStyle?.lane ?? null}
+      title={selection.laneName}
+      description={laneRoleDescription}
+    />
   )
 
-  const selectedTechPill = showTechPill ? (
-    <TechPillFace
-      item={techDetailLabel!}
-      compact
-      inline
-      className="w-fit shrink-0 !px-2 !py-0.5 !text-3xs leading-none"
-    />
-  ) : null
+
 
   const pictureBlock = showPicture ? (
     <div className="flex w-full flex-col items-center gap-3">
@@ -1318,34 +1188,86 @@ function BlueprintCellDetailPanelBody() {
     detailDescriptionText.trim() === cellContent.trim()
   const editingCell = canEdit && resolvedCellId !== null
 
+  /*
+    Identity, then prose — one group, tight spacing.
+
+    A tech cell used to STACK a pill-shaped tool chip above a differently
+    sized lane chip, and the description then floated away from both behind a
+    `-mt-3` correction. Two chips naming two things about one cell belong side
+    by side at one size, and the sentence about the cell belongs directly
+    under the name of it.
+  */
+  /* The LANE chip leads, on a tech cell as on every other kind.
+     It is the row the reader clicked in, and the tool chip beside it is one
+     of possibly several things that row holds — so the tool reading first
+     made a tech cell the only cell whose identity block started somewhere
+     other than its lane. */
+  const identityBadges = (
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">{laneChip}</div>
+  )
+
+  /*
+    The touchpoint, as a LABELLED field rather than a second chip beside the
+    lane.
+    
+    Two badges in a row read as two facts of the same kind — "this row, and
+    also this row" — when they are a lane and the tool used in it. Naming the
+    field says which is which, and it matches how Status and Owner already
+    present a governed value: label above, badge below.
+  */
+  const touchpointField = showTechPill ? (
+    <div className="flex flex-col gap-0.5">
+      <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />
+      <div className="flex min-w-0">
+        <PanelKindBadge
+          label={techDetailLabel!}
+          tone={getTouchpointTone(techDetailLabel!)}
+          title={techDetailLabel!}
+        />
+      </div>
+    </div>
+  ) : null
+
   const overviewContent = (
     <>
       {pictureBlock}
-      <div className="flex min-w-0 flex-col gap-2">
-        {showTechPillAboveTitle ? selectedTechPill : null}
+      <div className="flex min-w-0 flex-col gap-1.5">
         {/* In edit mode the form's TEXT field *is* the title; repeating it
             above the field would be the same word twice on one screen. */}
         {editingCell ? (
-          titleRepeatsPill ? null : laneChip
-        ) : titleRepeatsPill ? (
-          laneChip
+          identityBadges
         ) : (
-          titleRow
+          <PanelIdentity
+            badge={identityBadges}
+            // Empty when the touchpoint field below already carries it.
+            title={titleRepeatsPill ? '' : cellTitleText}
+            meta={
+              selection.paths.length > 1
+                ? `${selection.paths.length} paths`
+                : ''
+            }
+          />
         )}
-        {showTechPill && !showTechPillAboveTitle ? selectedTechPill : null}
-        {editingCell && titleRepeatsPill ? laneChip : null}
+        {touchpointField}
+        {/* LABELLED, like every other panel's summary. This was the one place
+            in five panels where a field's read-only rendering skipped the
+            label and printed bare prose, which is why "Summary" appeared on
+            some things and not others. The editor shows the same text inside
+            its own Summary field. */}
+        {!editingCell &&
+        detailDescriptionText.trim() &&
+        !descriptionRepeatsTitle ? (
+          <Field label="Summary" hint="The tl;dr the detail fields add up to.">
+            <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
+              {detailDescriptionText.trim()}
+            </p>
+          </Field>
+        ) : null}
       </div>
-      {/* The description paragraph is the reading view; the editor shows the
-          same text inside its DESCRIPTION field instead. */}
-      {!editingCell && detailDescriptionText.trim() && !descriptionRepeatsTitle ? (
-        <p className="-mt-3 text-sm whitespace-pre-wrap text-foreground/75">
-          {detailDescriptionText.trim()}
-        </p>
-      ) : null}
       {editingCell ? (
         <CellPanelEditor
           cellId={resolvedCellId}
-          layerName={selection.layerName}
+          laneName={selection.laneName}
           // Never seed the field with the title wearing a description's
           // clothes — only prose that actually says more than the cell text.
           fallbackDescription={
@@ -1356,7 +1278,7 @@ function BlueprintCellDetailPanelBody() {
       ) : (
         <>
           {/* Basic info (text, description, owners) first; the function/form/
-              value spec is a deeper layer of the same cell and reads below it. */}
+              value spec is a deeper lane of the same cell and reads below it. */}
           <CellContentSection cellId={resolvedCellId} />
           <CellOverviewSpec cellId={resolvedCellId} />
         </>
@@ -1412,9 +1334,19 @@ function BlueprintCellDetailPanelBody() {
           </div>
         </DrawerHeader>
 
-        {isVisualLayer ? (
+        {isVisualLane ? (
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
-            {titleRow}
+            {/*
+              A storyboard cell opens the STEP panel now, so this branch is
+              reached only by a deep link or the agent. It titles itself with
+              the STEP, not the lane: the frames below belong to the moment,
+              not to the row they were drawn on.
+            */}
+            <PanelIdentity
+              badge={laneChip}
+              title={selection.stepName}
+              meta=""
+            />
             <VisualStepDetailStack entries={visualStepEntries} />
           </div>
         ) : (
@@ -1437,16 +1369,29 @@ function BlueprintCellDetailPanelBody() {
                   variant="line"
                   className="h-auto w-full justify-start gap-4 rounded-none border-b border-muted px-4 pb-0"
                 >
-                  {PANEL_TABS.map(({ value, label, icon: TabIcon }) => (
-                    <TabsTrigger
-                      key={value}
-                      value={value}
-                      className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-2xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
-                    >
-                      <TabIcon className="size-3" aria-hidden />
-                      {label}
-                    </TabsTrigger>
-                  ))}
+                  {PANEL_TABS.map(
+                    ({ value, label, definition, icon: TabIcon }) => (
+                      /* The tab IS the word whose meaning is in question, so
+                         the definition hovers off the tab. A tab is already
+                         focusable, so keyboard reaches it for free. */
+                      <Tooltip key={value}>
+                        <TooltipTrigger
+                          render={
+                            <TabsTrigger
+                              value={value}
+                              className="h-auto flex-none gap-1.5 rounded-none px-0 pb-2 pt-0 text-2xs font-normal text-muted-foreground/60 hover:text-muted-foreground data-active:text-foreground/90 after:bottom-[-1px] after:bg-foreground/70"
+                            />
+                          }
+                        >
+                          <TabIcon className="size-3" aria-hidden />
+                          {label}
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-64">
+                          {definition}
+                        </TooltipContent>
+                      </Tooltip>
+                    ),
+                  )}
                 </TabsList>
                 {/*
                   Reserved height: the three tabs have very different
@@ -1502,12 +1447,7 @@ function BlueprintCellDetailPanelBody() {
             </div>
             {/* The editor portals Save/Cancel here — below the tabs, shared
                 footing for every property the panel holds. */}
-            {editingCell ? (
-              <div
-                id={CELL_PANEL_FOOTER_ID}
-                className="shrink-0 border-t border-muted px-4 py-3 empty:hidden"
-              />
-            ) : null}
+            {editingCell ? <PanelFooterHost id={CELL_PANEL_FOOTER_ID} /> : null}
             <CellInSlicesFooter cellId={pathEntry?.cellId ?? null} />
           </>
         )}

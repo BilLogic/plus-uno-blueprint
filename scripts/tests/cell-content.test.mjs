@@ -150,7 +150,7 @@ test('a content write that matches no row throws instead of succeeding', async (
       updateCellContent(
         client,
         'cell-gone',
-        { content: 'New text', description: '', owner: '', perceivedOwner: '' },
+        { content: 'New text', summary: '', owner: '', perceivedOwner: '' },
         undefined,
         { record: false },
       ),
@@ -187,7 +187,7 @@ test('a content write that matches its row still resolves', async () => {
   await updateCellContent(
     client,
     'cell-1',
-    { content: 'New text', description: '', owner: '', perceivedOwner: '' },
+    { content: 'New text', summary: '', owner: '', perceivedOwner: '' },
     undefined,
     { record: false },
   )

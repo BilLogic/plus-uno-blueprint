@@ -31,7 +31,7 @@
  *                                                  # provider, machinery only
  *   GEMINI_API_KEY comes from env or gitignored .env.local.
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { CASES } from './cases.mjs'
@@ -112,7 +112,7 @@ const adapterDoc = readFileSync(resolve(REFERENCES_DIR, 'canvas-adapter.md'), 'u
 function buildSystem(skillId, contextNote) {
   const parts = [
     ROLE,
-    '\n\n--- canvas-adapter reference (read_reference has more) ---\n',
+    '\n\n--- canvas-adapter reference (get_reference has more) ---\n',
     adapterDoc,
   ]
   if (skillId) {
@@ -166,14 +166,81 @@ const MUTATING_UI_COMMANDS = new Set([
 const isWriteCall = (name, args) =>
   WRITE_TOOL_NAMES.has(name) ||
   (name === 'ui_command' && MUTATING_UI_COMMANDS.has(String(args?.command ?? '')))
+/** POST to a Postgres function, for the tools that go through the portal. */
+async function rpc(fn, body) {
+  const response = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      apikey: env.VITE_SUPABASE_ANON_KEY,
+      authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) throw new Error(`rpc ${fn} ${response.status}: ${(await response.text()).slice(0, 200)}`)
+  return response.json()
+}
+
+/**
+ * Mirrors `renderPortalRows` in src/lib/agent/tools/read.ts. Both portal
+ * doors render the same way in the app, so they must here too — a harness
+ * that formats results differently rehearses a different agent.
+ */
+function renderPortalRows(rows, emptyMessage, ranked) {
+  if (!rows?.length) return emptyMessage
+  const total = Number(rows[0].total_matched ?? rows.length)
+  const header = ranked
+    ? `${rows.length} shown of ${total} matching:`
+    : rows.length < total
+      ? `${rows.length} of ${total} (clipped — raise limit or narrow the filters):`
+      : `${total} of ${total}:`
+  const lines = rows.map((row) => {
+    const where = [row.phase, row.scenario, row.path, row.step, row.lane].filter(Boolean).join(' › ')
+    const body = row.kind === 'cell' ? `"${String(row.snippet ?? '').split('\n')[0]}"` : `"${row.snippet}"`
+    const detail = row.description ? ` — ${row.description}` : ''
+    const how = ranked && row.matched_by ? `  [${row.matched_by}]` : ''
+    return `[${row.kind}] ${body} · ${where}${detail} (${row.id})${how}`
+  })
+  return [header, ...lines].join('\n')
+}
+
+async function realListBlueprint(args) {
+  const rows = await rpc('search_blueprint', {
+    granularity: Array.isArray(args.granularity) ? args.granularity : ['cell'],
+    match_count: Math.min(Number(args.limit) || 200, 500),
+    filter_phase: args.phase ?? null,
+    filter_scenario: args.scenario ?? null,
+    filter_path_type: args.path_type ?? null,
+    filter_lane_role: args.lane_role ?? null,
+  })
+  return renderPortalRows(rows, 'Nothing at that granularity within those filters.', false)
+}
+
+async function realSearchBlueprint(args) {
+  const rows = await rpc('search_blueprint', {
+    q: String(args.query ?? ''),
+    granularity: Array.isArray(args.granularity) && args.granularity.length ? args.granularity : ['cell'],
+    match_count: Math.min(Number(args.limit) || 15, 100),
+    filter_phase: args.phase ?? null,
+    filter_scenario: args.scenario ?? null,
+    filter_path_type: args.path_type ?? null,
+    filter_lane_role: args.lane_role ?? null,
+  })
+  return renderPortalRows(
+    rows,
+    `Nothing matches the words "${args.query}". That means no row USES those words — it does not mean the blueprint has no such moment. Try the board's own vocabulary, or list_blueprint to see what exists.`,
+    true,
+  )
+}
+
 async function realListScenarios() {
   const data = await rest(
-    'phases?select=id,name,order_position,service_scenarios(id,name,order_position)&order=order_position',
+    'phases?select=id,name,position,scenarios(id,name,position)&order=position',
   )
   return data
     .map((phase) => {
-      const scenarios = (phase.service_scenarios ?? [])
-        .sort((a, b) => a.order_position - b.order_position)
+      const scenarios = (phase.scenarios ?? [])
+        .sort((a, b) => a.position - b.position)
         .map((s) => `  - scenario "${s.name}" (${s.id})`)
         .join('\n')
       return `phase "${phase.name}" (${phase.id})\n${scenarios}`
@@ -183,31 +250,31 @@ async function realListScenarios() {
 
 async function realGetBlueprint(scenarioId) {
   const paths = await rest(
-    `paths?select=id,name,path_type,layers(id,name,layer_role,row_position),path_steps(column_position,steps(id,name))&service_scenario_id=eq.${encodeURIComponent(scenarioId)}`,
+    `paths?select=id,name,path_type,lanes(id,name,lane_role,position),path_steps(position,steps(id,name))&scenario_id=eq.${encodeURIComponent(scenarioId)}`,
   )
   if (!paths?.length) return 'No paths for that scenario id.'
   const out = []
   for (const path of paths) {
     const steps = (path.path_steps ?? [])
-      .sort((a, b) => a.column_position - b.column_position)
+      .sort((a, b) => a.position - b.position)
       .map((ps) => ps.steps)
       .filter(Boolean)
     const cells = await rest(
-      `cells?select=id,content,layer_id,step_id,owner&path_id=eq.${path.id}`,
+      `cells?select=id,content,lane_id,step_id,owner&path_id=eq.${path.id}`,
     )
     out.push(
       `path "${path.name}" (${path.id}) type=${path.path_type}`,
       `  steps: ${steps.map((s) => `"${s.name}" (${s.id})`).join(', ')}`,
-      ...(path.layers ?? [])
-        .sort((a, b) => a.row_position - b.row_position)
-        .map((layer) => {
+      ...(path.lanes ?? [])
+        .sort((a, b) => a.position - b.position)
+        .map((lane) => {
           const laneCells = (cells ?? [])
-            .filter((cell) => cell.layer_id === layer.id)
+            .filter((cell) => cell.lane_id === lane.id)
             .map((cell) => {
               const step = steps.find((s) => s.id === cell.step_id)
               return `    [${step?.name ?? '?'}] "${cell.content}" (${cell.id})${cell.owner ? ` owner=${cell.owner}` : ''}`
             })
-          return `  lane "${layer.name}" (${layer.id}) role=${layer.layer_role ?? 'none'}\n${laneCells.join('\n') || '    (empty)'}`
+          return `  lane "${lane.name}" (${lane.id}) role=${lane.lane_role ?? 'none'}\n${laneCells.join('\n') || '    (empty)'}`
         }),
     )
   }
@@ -248,7 +315,7 @@ const UI_COMMANDS_SNAPSHOT = [
   "cell_panel_close — Close the open cell detail panel.",
   'cell_panel_expand — Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
   "cell_panel_tab — Switch the open cell panel's tab. arg: dependencies | evidence | resources",
-  'clear_annotations — Erase every annotation mark from the canvas scratch layer.',
+  'clear_annotations — Erase every annotation mark from the canvas scratch lane.',
   'clear_cell_selection — Clear the Design-mode cell selection.',
   "close_slice_tab — Close a slice's open tab(s). arg: slice id.",
   'exit_presentation — Leave the running presentation back onto its slice tab.',
@@ -259,7 +326,7 @@ const UI_COMMANDS_SNAPSHOT = [
   "revert_all_changes — WITHHELD, and listed here so you can see that it is: reverting the WHOLE session — the human's own edits included — is a human-only control (Revert all, in the Changes sheet). Firing this explains that and does nothing. Use revert_my_changes for your own edits.",
   "revert_my_changes — Take back the changes YOU made in this agent session, newest first, leaving the human's own edits and other sessions' edits alone. Reports what it took back and names anything it could not, with the reason. Prefer this over firing undo_last_change repeatedly — that walks the whole session including the human's edits, in no guaranteed order, and reports nothing. [changes data]",
   "select_cells — Gather cells into the Design-mode selection (for Make slice etc.). arg: comma-separated cell ids, or \"all\". Replaces the current selection. Needs design mode.",
-  "set_scenario_view — Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path's version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged.",
+  "set_scenario_view — Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path's version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged — accepted from a caller, never stored (the column holds single | stacked).",
   'toggle_path_filter — Toggle a path variant\'s visibility (the PATHS checkboxes). arg: the path key (type:name, e.g. "happy:Happy Path") or a path name.',
   "toggle_phase_expanded — Expand/collapse a phase's accordion in the sidebar. arg: phase id.",
   "undo_last_change — Undo the newest revertible change of this session (same as ⌘Z). One at a time. Note this reverts whatever is newest — INCLUDING the human's own edit if theirs came last; say whose change you are undoing before firing it. [changes data]",
@@ -322,26 +389,107 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       record.dryRun = true
       // The rehearsal note matters: reads are REAL and will not reflect
       // this write — without it the model re-reads, concludes the write
-      // failed, and retries (observed: doubled add_lane).
+      // failed, and retries (observed: doubled create_lane).
       record.result =
-        name === 'record_finding'
+        name === 'create_finding'
           ? `Recorded ${args.severity ?? 'warn'} finding for ${args.check_name ?? '?'}. run_id ${args.run_id ?? `00000000-0000-4000-8000-00000000d${dryCounter}`}; reuse it for the rest of this run. NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
           : `Done (${name} accepted, ref dry-${dryCounter}). NOTE: this is a rehearsal environment — reads will not show this change; do NOT re-read to verify or retry this write.`
       return record.result
     }
     switch (name) {
-      case 'read_reference':
+      case 'get_reference':
         record.result = readFileSync(resolve(REFERENCES_DIR, `${String(args.name).replace(/[^a-z-]/g, '')}.md`), 'utf8')
         return record.result
-      case 'list_scenarios': record.result = await realListScenarios(); return record.result
+      case 'list_blueprint': record.result = await realListBlueprint(args); return record.result
+      case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
       case 'get_blueprint': record.result = await realGetBlueprint(args.scenario_id); return record.result
+      case 'list_lanes': {
+        const rows = await rest('lanes?select=name,lane_role&order=position')
+        const counts = new Map()
+        for (const row of rows ?? []) {
+          const key = JSON.stringify([row.name, row.lane_role ?? null])
+          counts.set(key, (counts.get(key) ?? 0) + 1)
+        }
+        record.result = counts.size
+          ? [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([key, count]) => {
+              const [name, role] = JSON.parse(key)
+              return `${name}${role ? ` (role ${role})` : ''} — ${count} lane${count === 1 ? '' : 's'}`
+            }).join('\n')
+          : 'No lanes defined yet.'
+        return record.result
+      }
+      case 'list_references':
+        // Same source the app's REFERENCE_NAMES lists, read off disk —
+        // the harness has no access to that module's export.
+        record.result = readdirSync(REFERENCES_DIR)
+          .filter((f) => f.endsWith('.md'))
+          .map((f) => `- ${f.slice(0, -3)}`)
+          .sort()
+          .join('\n')
+        return record.result
+      case 'list_cell_dependencies': {
+        const scope = args.cell_id
+          ? `&or=(source_cell_id.eq.${encodeURIComponent(String(args.cell_id))},target_cell_id.eq.${encodeURIComponent(String(args.cell_id))})`
+          : ''
+        const rows = await rest(`cell_dependencies?select=id,source_cell_id,target_cell_id,kind,label,note&limit=200${scope}`)
+        record.result = rows?.length
+          ? [`${rows.length} link(s):`, ...rows.map((e) => `${e.source_cell_id} --${e.kind ?? 'leads_to'}--> ${e.target_cell_id}${e.label ? ` "${e.label}"` : ''} (${e.id})`)].join('\n')
+          : args.cell_id ? `No links on cell ${args.cell_id}.` : 'No links recorded yet.'
+        return record.result
+      }
+      case 'list_evidence': {
+        const scope = args.cell_id ? `&cell_id=eq.${encodeURIComponent(String(args.cell_id))}` : ''
+        const rows = await rest(`evidence?select=id,cell_id,kind,title,ref,excerpt,note,observed_at&order=created_at.desc&limit=100${scope}`)
+        record.result = rows?.length
+          ? [`${rows.length} evidence row(s):`, ...rows.map((r) => `[${r.kind}] "${r.title}"${r.ref ? ` ref=${r.ref}` : ''}${r.cell_id ? ` cell=${r.cell_id}` : ''} (${r.id})`)].join('\n')
+          : args.cell_id ? `No evidence attached to cell ${args.cell_id}.` : 'No evidence recorded yet.'
+        return record.result
+      }
+      case 'get_evidence': {
+        const ids = Array.isArray(args.evidence_ids) ? args.evidence_ids : []
+        if (!ids.length) { record.result = 'Pass at least one evidence id.'; return record.result }
+        const rows = await rest(`evidence?select=id,cell_id,kind,title,ref,excerpt,note,observed_at&id=in.(${ids.map(encodeURIComponent).join(',')})`)
+        record.result = rows?.length
+          ? rows.map((r) => [`[${r.kind}] "${r.title}" (${r.id})`, r.excerpt ? `  excerpt: ${r.excerpt}` : '', r.note ? `  note: ${r.note}` : ''].filter(Boolean).join('\n')).join('\n')
+          : 'No evidence with those ids.'
+        return record.result
+      }
+      case 'get_proposition': {
+        const rows = await rest('propositions?select=pricing,funding,partners,revenue_model,delivery_cost&limit=1')
+        const row = rows?.[0]
+        if (!row) { record.result = 'No proposition recorded for this service yet.'; return record.result }
+        const filled = Object.entries(row).filter(([, v]) => v !== null && v !== '')
+        record.result = filled.length
+          ? filled.map(([k, v]) => `${k}: ${v}`).join('\n')
+          : 'The proposition row exists but is empty.'
+        return record.result
+      }
+      // The session store is browser state (localStorage plus a merged DB
+      // list), and the harness has no browser. Saying so is the honest
+      // rehearsal: the agent learns the tool exists and that this
+      // environment cannot answer it, rather than seeing a crash.
+      case 'list_sessions':
+        record.result = 'Past sessions are not available in this rehearsal environment (no browser session store).'
+        return record.result
+      case 'get_session':
+        record.result = 'Session transcripts are not available in this rehearsal environment (no browser session store).'
+        return record.result
       case 'get_cell': record.result = await realGetCell(args.cell_id); return record.result
-      case 'get_compare_diff':
+      case 'compare_blueprint':
         // The compare model is a client-bundle computation (compareSlots.ts);
         // the harness has no bundler, so rehearsal falls back to the raw grids.
-        record.result = 'get_compare_diff is unavailable in this rehearsal environment — read get_blueprint and compare the paths by hand (steps align across paths by name).'
+        record.result = 'compare_blueprint is unavailable in this rehearsal environment — read get_blueprint and compare the paths by hand (steps align across paths by name).'
         return record.result
       case 'list_owner_tags': record.result = await realListOwnerTags(); return record.result
+      case 'list_stakeholders': {
+        const rows = await rest('stakeholders?select=id,name,kind,note,aliases&order=kind,name')
+        record.result = (rows ?? []).length
+          ? rows
+              .map((r) => `${r.name} (${r.kind}) [${r.id}]${(r.aliases ?? []).length ? ` — also written ${r.aliases.join(', ')}` : ''}${r.note ? ` — ${r.note}` : ''}`)
+              .join('\n')
+          : 'No stakeholders registered yet.'
+        return record.result
+      }
       case 'list_slices': record.result = await realListSlices(); return record.result
       case 'get_slice': {
         const rows = await rest(
@@ -373,7 +521,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'annotate_cells': record.result = `Drew boxes around ${Array.isArray(args.cell_ids) ? args.cell_ids.length : 0} cell(s).`; return record.result
       case 'get_ui_state': record.result = 'No UI state is being reported right now.'; return record.result
       case 'get_change_history': record.result = 'No changes recorded in this browser session yet.'; return record.result
-      case 'get_deletion_impact':
+      case 'measure_deletion_impact':
         record.result = `Deleting this ${args.kind} would destroy:\n  4 cells\n  2 arrows\nWarnings:\n  1 slice will lose frames: \u201cTutor journey\u201d.\nWhat survives:\n  Archived to the recovery table first \u2014 nothing is destroyed without a copy behind it.\nRelay these sentences as they are. You cannot perform this delete \u2014 only the human can, through the confirm dialog, by typing the name.`
         return record.result
       case 'open_phase': record.result = 'Opened the phase on the canvas.'; return record.result

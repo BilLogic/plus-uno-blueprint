@@ -13,7 +13,7 @@ import {
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -26,41 +26,41 @@ export const REPORTING_HOURS_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000920'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000927',
     name: 'Lead Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000921',
     name: 'Regular Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000923',
     name: 'Front Stage Tech',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000922',
     name: 'Front Stage Actions',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000925',
     name: 'Back Stage Tech',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000924',
     name: 'Back Stage Actions',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000926',
     name: 'Support Actions',
-    row_position: 7,
+    position: 7,
   },
 ] as const
 
@@ -68,17 +68,17 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000992',
     name: 'Report hours',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000994',
     name: 'Approve hours',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000995',
     name: 'Receive paycheck',
-    column_position: 3,
+    position: 3,
   },
 ] as const
 
@@ -95,19 +95,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular || layerId === L.lead
+    laneId === L.regular || laneId === L.lead
       ? mergeUrlLinks(metadata.links ?? [], REPORTING_HOURS_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -120,19 +120,19 @@ function hoursCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001e${stepSlot}${layerSuffix}`
 }
 
-function hoursTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function hoursDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: hoursTrigger(slot),
+    id: hoursDependency(slot),
     source_cell_id: hoursCell(fromStep, fromLayer),
     target_cell_id: hoursCell(toStep, toLayer),
   }
@@ -143,14 +143,14 @@ const APPROVE_HOURS_STEP_ID = STEPS[1].id
 const RECEIVE_PAYCHECK_STEP_ID = STEPS[2].id
 
 /** Report hours → approve hours → receive paycheck. */
-const REPORTING_HOURS_TRIGGERS: BlueprintCellTrigger[] = [
-  trigger('090', '01', '03', '01', '06'),
-  trigger('091', '01', '02', '01', '06'),
-  trigger('094', '01', '06', '03', '07'),
-  trigger('085', '03', '07', '03', '08'),
-  trigger('086', '03', '08', '02', '06'),
-  trigger('092', '02', '06', '02', '02'),
-  trigger('093', '02', '06', '02', '03'),
+const REPORTING_HOURS_TRIGGERS: BlueprintCellDependency[] = [
+  dependency('090', '01', '03', '01', '06'),
+  dependency('091', '01', '02', '01', '06'),
+  dependency('094', '01', '06', '03', '07'),
+  dependency('085', '03', '07', '03', '08'),
+  dependency('086', '03', '08', '02', '06'),
+  dependency('092', '02', '06', '02', '02'),
+  dependency('093', '02', '06', '02', '03'),
 ]
 
 const REPORTING_HOURS_CELLS: BlueprintCell[] = [
@@ -239,13 +239,14 @@ const REPORTING_HOURS_CELLS: BlueprintCell[] = [
 export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: REPORTING_HOURS_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description: 'Tutor reports hours after tutoring session.',
+    name: 'Reported on time',
+    summary: 'Tutor reports hours after tutoring session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: REPORTING_HOURS_CELLS,
-  triggers: REPORTING_HOURS_TRIGGERS,
+  dependencies: REPORTING_HOURS_TRIGGERS,
 }

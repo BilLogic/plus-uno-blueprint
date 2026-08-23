@@ -1,4 +1,4 @@
-import type { BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintLane } from '@/types/blueprint'
 import {
   BLUEPRINT_CELL_BORDER_COLOR,
   type BlueprintLaneRole,
@@ -155,19 +155,19 @@ export type BlueprintLabelSection =
   | 'backstage'
 
 export function getBlueprintLabelSection(
-  layer: BlueprintLayer,
-  layers: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes: BlueprintLane[],
 ): BlueprintLabelSection {
-  if (isBackstageBlueprintLayer(layer, layers)) {
+  if (isBackstageBlueprintLayer(lane, lanes)) {
     return 'backstage'
   }
 
-  const layerIndex = layers.findIndex((entry) => entry.id === layer.id)
-  const interactionAfterIndex = layers.findIndex((entry) =>
+  const layerIndex = lanes.findIndex((entry) => entry.id === lane.id)
+  const interactionAfterIndex = lanes.findIndex((entry) =>
     shouldShowInteractionLineAfter(entry),
   )
-  const visibilityAfterIndex = layers.findIndex((entry) =>
-    shouldShowVisibilityLineAfter(entry, layers),
+  const visibilityAfterIndex = lanes.findIndex((entry) =>
+    shouldShowVisibilityLineAfter(entry, lanes),
   )
 
   if (
@@ -210,7 +210,7 @@ function cellStyleFromFill(
 const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   Visual: cellStyleFromFill('visual'),
   'Step Visual': cellStyleFromFill('visual'),
-  'Partner Action: Teacher': cellStyleFromFill('evidence',
+  'Teacher': cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
   'Lead Tutor': cellStyleFromFill('actor',
@@ -269,7 +269,7 @@ const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill('support',
 )
 
 /**
- * Canonical cell fills keyed by `layer_role` — the intentional coloring system.
+ * Canonical cell fills keyed by `lane_role` — the intentional coloring system.
  * Roles are locale-independent, so non-English lane labels still color correctly
  * (name-keyed `LAYER_STYLES` above is the legacy fallback for pre-role content).
  */
@@ -296,18 +296,26 @@ const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
   support_systems: cellStyleFromFill('support',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
+  /*
+    A partner acts where the customer can see them — CMU HR sends the
+    clearance materials, the CPO grants or refuses the clearance — so it
+    reads as frontstage, in a hue nothing else on the board uses.
+  */
+  partner_actions: cellStyleFromFill('partner-action',
+    BLUEPRINT_LABEL_TEXT.customerFacing,
+  ),
 }
 
 export type BlueprintZone = 'frontstage' | 'backstage'
 
 export function getBlueprintLayerStyle(
-  layerName: string,
+  laneName: string,
   zone: BlueprintZone,
   role?: string | null,
 ): BlueprintLayerStyle {
   return (
     (role ? ROLE_STYLES[role] : undefined) ??
-    LAYER_STYLES[layerName] ??
+    LAYER_STYLES[laneName] ??
     (zone === 'backstage' ? BACKSTAGE_FALLBACK : FRONTSTAGE_FALLBACK)
   )
 }
@@ -319,20 +327,20 @@ export function getBlueprintZoneColor(zone: BlueprintZone): string {
 }
 
 export function isBackstageBlueprintLayer(
-  layer: BlueprintLayer,
-  layers: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes: BlueprintLane[],
 ): boolean {
-  const visibilityAfterIndex = layers.findIndex((entry) =>
-    shouldShowVisibilityLineAfter(entry, layers),
+  const visibilityAfterIndex = lanes.findIndex((entry) =>
+    shouldShowVisibilityLineAfter(entry, lanes),
   )
   if (visibilityAfterIndex === -1) return false
-  const layerIndex = layers.findIndex((entry) => entry.id === layer.id)
+  const layerIndex = lanes.findIndex((entry) => entry.id === lane.id)
   return layerIndex > visibilityAfterIndex
 }
 
 export function getBlueprintLayerZone(
-  layer: BlueprintLayer,
-  layers: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes: BlueprintLane[],
 ): BlueprintZone {
-  return isBackstageBlueprintLayer(layer, layers) ? 'backstage' : 'frontstage'
+  return isBackstageBlueprintLayer(lane, lanes) ? 'backstage' : 'frontstage'
 }

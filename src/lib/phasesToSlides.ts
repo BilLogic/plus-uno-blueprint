@@ -1,24 +1,30 @@
-import { toClientViewType } from '@/lib/viewTypeVocabulary'
-import type { Phase, ServiceScenario } from '@/types/database'
-import type { NavItem } from '@/types/nav'
+import type { Phase, Scenario } from '@/types/database'
+import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
-  ServiceScenario,
-  'id' | 'name' | 'description' | 'order_position' | 'phase_id' | 'view_type'
+  Scenario,
+  'id' | 'name' | 'summary' | 'position' | 'phase_id' | 'view_type'
 >
 
 export type PhaseRow = Pick<
   Phase,
-  'id' | 'name' | 'description' | 'order_position' | 'loops_to_phase_id'
+  'id' | 'name' | 'summary' | 'position' | 'loops_to_phase_id'
 > & {
-  service_scenarios?: ScenarioRow[]
+  scenarios?: ScenarioRow[]
 }
 
-/** Map phases and nested scenarios to editor slides (scenarios = subsides under their phase). */
+/**
+ * Map phases and nested scenarios to editor slides (scenarios = subsides under
+ * their phase).
+ *
+ * This is the seam where the COLUMN `summary` becomes the slide's
+ * `description` prop. The prop is a display API shared by every slide kind and
+ * keeps its name; only the field read off the row was renamed.
+ */
 export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
   const slides: NavItem[] = []
   const sortedPhases = [...phases].sort(
-    (a, b) => a.order_position - b.order_position,
+    (a, b) => a.position - b.position,
   )
 
   sortedPhases.forEach((phase, phaseIndex) => {
@@ -26,12 +32,12 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
       id: phase.id,
       index: phaseIndex + 1,
       label: phase.name,
-      description: phase.description,
+      description: phase.summary,
       loopToId: phase.loops_to_phase_id ?? undefined,
     })
 
-    const scenarios = [...(phase.service_scenarios ?? [])].sort(
-      (a, b) => a.order_position - b.order_position,
+    const scenarios = [...(phase.scenarios ?? [])].sort(
+      (a, b) => a.position - b.position,
     )
 
     scenarios.forEach((scenario, scenarioIndex) => {
@@ -39,11 +45,12 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         id: scenario.id,
         index: scenarioIndex + 1,
         label: scenario.name,
-        description: scenario.description,
+        description: scenario.summary,
         parentId: phase.id,
-        // Read seam: DB tokens become client vocabulary here (and only here);
-        // unknown values fall back to 'single' instead of leaking through.
-        viewType: toClientViewType(scenario.view_type),
+        // One vocabulary. The column now holds client tokens
+        // (`single | stacked`), so there is no seam to cross — but a row
+        // outside the CHECK still falls back rather than rendering nothing.
+        viewType: asSlideViewType(scenario.view_type),
       })
     })
   })

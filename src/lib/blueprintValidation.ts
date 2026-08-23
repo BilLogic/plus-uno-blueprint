@@ -9,21 +9,31 @@ import type { LaneSetEntry, ViewType } from '@/lib/authoringRpc'
  * type; the database's copy stays as the authority.
  */
 
-export const VIEW_TYPES: ViewType[] = ['single', 'side-by-side', 'integrated']
+export const VIEW_TYPES: ViewType[] = ['single', 'stacked']
 
-/** Display names. The stored values are hyphenated; nobody should read those. */
+/**
+ * Display names.
+ *
+ * The old comment here read "the stored values are hyphenated; nobody should
+ * read those" — which was true of `side-by-side` and is the whole reason the
+ * vocabulary collapsed. The stored token is now the token the UI names.
+ */
 export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
   single: 'Single',
-  'side-by-side': 'Side by side',
-  integrated: 'Integrated',
+  stacked: 'Stacked',
 }
 
 /** What each view type is for, in the words someone choosing one would use. */
 export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
   single: 'One version at a time',
-  'side-by-side': 'Paths compared step by step',
-  integrated: 'Every version merged into one grid',
+  stacked: 'Paths compared step by step',
 }
+
+/**
+ * `merged` is deliberately absent: it is a per-session display chosen in the
+ * compare control, not a property of the scenario. The CHECK constraint
+ * rejects it, so offering it here would present a choice the write refuses.
+ */
 
 /**
  * The lanes a scenario starts with when nothing is copied.
@@ -46,13 +56,13 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  *   line up against any existing one in the side-by-side view.
  */
 export const DEFAULT_LANE_SET: LaneSetEntry[] = [
-  { name: 'Visual', layer_role: 'visual', row_position: 0 },
-  { name: 'Regular Tutor', layer_role: null, row_position: 1 },
-  { name: 'Front Stage Tech', layer_role: 'frontstage_tech', row_position: 2 },
-  { name: 'Front Stage Actions', layer_role: 'frontstage_actions', row_position: 3 },
-  { name: 'Back Stage Tech', layer_role: 'backstage_tech', row_position: 4 },
-  { name: 'Back Stage Actions', layer_role: 'backstage_actions', row_position: 5 },
-  { name: 'Support Actions', layer_role: null, row_position: 6 },
+  { name: 'Storyboard', lane_role: 'visual', position: 0 },
+  { name: 'Regular Tutor', lane_role: null, position: 1 },
+  { name: 'Front Stage Tech', lane_role: 'frontstage_tech', position: 2 },
+  { name: 'Front Stage Actions', lane_role: 'frontstage_actions', position: 3 },
+  { name: 'Back Stage Tech', lane_role: 'backstage_tech', position: 4 },
+  { name: 'Back Stage Actions', lane_role: 'backstage_actions', position: 5 },
+  { name: 'Support Actions', lane_role: null, position: 6 },
 ]
 
 /** Columns beyond this read as a process map, not a blueprint. */
@@ -85,7 +95,11 @@ export function validateDraftBlueprint(draft: DraftBlueprint): string[] {
     problems.push('A scenario needs a name.')
   }
   if (!draft.pathName.trim()) {
-    problems.push('The first version needs a name — "Happy Path" is the usual one.')
+    problems.push(
+      // Not "Happy Path": a type is not a name, and the board stopped using
+      // one as a name in Aug 2026. `path_type` already carries the archetype.
+      'The first version needs a name — say what the route is, e.g. "Signs up without conflicts".',
+    )
   }
   if (!VIEW_TYPES.includes(draft.viewType)) {
     problems.push('Pick how the versions should be laid out.')

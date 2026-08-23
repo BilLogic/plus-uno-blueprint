@@ -3,9 +3,9 @@
 
 update public.cells c
 set picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png'
-from public.layers l,
+from public.lanes l,
      public.paths p
-where c.layer_id = l.id
+where c.lane_id = l.id
   and c.path_id = p.id
   and l.name = 'Front Stage Tech'
   and (
@@ -15,4 +15,4 @@ where c.layer_id = l.id
     or c.content like '%, Zoom/Pencil,%'
     or c.content like 'Zoom/Pencil' || E'\n%'
   )
-  and p.service_scenario_id = 'a0000000-0000-4000-8000-000000000203';
+  and p.scenario_id = 'a0000000-0000-4000-8000-000000000203';

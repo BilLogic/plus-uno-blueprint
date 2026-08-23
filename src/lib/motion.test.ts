@@ -64,15 +64,20 @@ test('every keyframe animation is disabled under reduced motion', () => {
   const animated = [...css.matchAll(/^(\[[^\n]+\])\s*\{\n\s*animation:/gm)]
     .map((m) => m[1])
     // Attribute-selector chains: the reduced-motion block lists ancestors,
-    // so match on the leading data attribute.
-    .map((sel) => sel.match(/\[data-[a-z-]+\]/)![0])
-  const reduced = css.match(
-    /@media \(prefers-reduced-motion: reduce\) \{([\s\S]+?)\n\}/,
-  )
-  assert.ok(reduced, 'reduced-motion block exists')
+    // so match on the leading data attribute. The value is part of it —
+    // `[data-slot='skeleton']` is a different surface from `[data-slot]`, and
+    // a pattern that stopped at the name matched nothing and threw here.
+    .map((sel) => sel.match(/\[data-[a-z-]+(?:=[^\]]*)?\]/)![0])
+  // EVERY block, not the first one. The file has two, and a rule that lands
+  // in the second was reported as uncovered by a test reading only the first.
+  const reduced = [
+    ...css.matchAll(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]+?)\n\}/g),
+  ].map((match) => match[1])
+  assert.ok(reduced.length > 0, 'reduced-motion block exists')
+  const covered = reduced.join('\n')
   for (const sel of new Set(animated)) {
     assert.ok(
-      reduced![1].includes(sel),
+      covered.includes(sel),
       `${sel} is covered by the reduced-motion block`,
     )
   }
@@ -82,7 +87,7 @@ test('every keyframe animation is disabled under reduced motion', () => {
  * The reveal's stage ladder exists in TypeScript (canvasRevealContext) and
  * in blueprint.css as `[data-canvas-reveal='N']`. Nothing else links them:
  * inserting a stage means correct edits in both, and three-of-four correct
- * edits leave the suite green while a layer reveals on the wrong beat.
+ * edits leave the suite green while a lane reveals on the wrong beat.
  */
 const blueprintCss = readFileSync(
   resolve(__dirname, '../styles/blueprint.css'),
@@ -95,7 +100,7 @@ test('reveal stages match between canvasRevealContext and blueprint.css', () => 
   ].map((match) => Number(match[1]))
   assert.ok(stages.length > 0, 'blueprint.css keys rules on reveal stages')
   // The attribute is removed at DONE, so the highest stage any rule can
-  // match is the last layer.
+  // match is the last lane.
   assert.equal(Math.max(...stages), CANVAS_REVEAL_ARROWS)
   assert.equal(CANVAS_REVEAL_ARROWS + 1, CANVAS_REVEAL_DONE)
 })
@@ -104,7 +109,7 @@ test('reveal stages match between canvasRevealContext and blueprint.css', () => 
  * Each reveal beat runs inside the chain's per-stage watchdog. The beats are
  * CSS (`--reveal-beat-*`, derived from `--motion-fade`); the watchdog is TS.
  * If a beat ever grew past it, the watchdog would advance the chain out from
- * under a layer still animating — and nothing else would notice.
+ * under a lane still animating — and nothing else would notice.
  */
 test('every reveal beat fits inside the stage watchdog', () => {
   const beats = [

@@ -6,9 +6,9 @@ function source(relativePath: string): string {
   return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf8')
 }
 
-const legacyArrows = source('../components/blueprint/BlueprintTriggerArrows.tsx')
+const legacyArrows = source('../components/blueprint/BlueprintDependencyArrows.tsx')
 const integratedArrows = source(
-  '../components/blueprint/IntegratedTriggerArrows.tsx',
+  '../components/blueprint/IntegratedDependencyArrows.tsx',
 )
 const phaseSection = source('../components/editor/CanvasPhaseSection.tsx')
 const phaseLoop = source('../components/editor/PhaseOverviewPhaseLoopArrow.tsx')
@@ -16,8 +16,8 @@ const viewport = source('../components/editor/ZoomPanViewport.tsx')
 
 describe('canvas stacking contract', () => {
   it('keeps forward connectors below cells in both arrow renderers', () => {
-    expect(legacyArrows).toContain("layer === 'forward' ? 'z-0' : 'z-[30]'")
-    expect(integratedArrows).toContain("layer === 'forward' ? 'z-0' : 'z-[30]'")
+    expect(legacyArrows).toContain("lane === 'forward' ? 'z-0' : 'z-[30]'")
+    expect(integratedArrows).toContain("lane === 'forward' ? 'z-0' : 'z-[30]'")
   })
 
   it('keeps phase connectors below badges and annotation tools', () => {
@@ -29,7 +29,7 @@ describe('canvas stacking contract', () => {
     )
   })
 
-  it('contains canvas-local layers in one stacking context', () => {
+  it('contains canvas-local lanes in one stacking context', () => {
     expect(viewport).toContain("cn('relative isolate min-h-0 flex-1', className)")
   })
 })

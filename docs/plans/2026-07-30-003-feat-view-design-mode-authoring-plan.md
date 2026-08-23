@@ -172,7 +172,7 @@ the button that counts the selection**, and closes when you click away:
 │              │                    [⟲ reading order]│              │
 │              │  ⠿  ① Enter breakout room        ✕ │              │
 │              │       Regular Tutor · Enter Breakout│              │
-│              │  ⠿  ② Zoom/Pencil                ✕ │              │
+│              │  ⠿  ② Zoom                ✕ │              │
 │              │       Front Stage Tech · Enter Break│              │
 │              │  ⠿  ③ Greet student              ✕ │              │
 │              │       Regular Tutor · Greet Student │              │
@@ -234,7 +234,7 @@ fixes below:
 │ ┌ 1 · Arrive ─────────┐ ┌ 2 · Connect ────────┐ ┌ + ┐       │
 │ │ ① Enter breakout    │ │ ③ Greet student     │ └───┘       │
 │ │    Regular Tutor  ✕ │ │    Regular Tutor  ✕ │             │
-│ │ ② Zoom/Pencil     ✕ │ │ ④ Ask to share    ✕ │             │
+│ │ ② Zoom     ✕ │ │ ④ Ask to share    ✕ │             │
 │ │    Front Stage Tech │ │    Regular Tutor    │             │
 │ │ [narrative…]        │ │ [narrative…]        │             │
 │ │ Split  Merge→    🗑 │ │ Split  Merge→    🗑 │             │

@@ -1,3 +1,8 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { getBlueprintFillStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
@@ -10,6 +15,24 @@ type BlueprintDividerTagProps = {
   connected?: boolean
 }
 
+/**
+ * What each divider line means, in the words a service designer would use.
+ *
+ * These three lines are the whole grammar of a service blueprint and the
+ * canvas states them as three unexplained captions. A reader who does not
+ * already know the convention has nowhere to find out, which is exactly the
+ * kind of thing a tooltip is for — the label names it, the tooltip says what
+ * it separates.
+ */
+const DIVIDER_MEANINGS: Record<string, string> = {
+  'line of interaction':
+    'Above it, what the customer does. Below it, the staff and systems they interact with directly.',
+  'line of visibility':
+    'Everything below this line happens out of the customer\'s sight.',
+  'line of internal interaction':
+    'Below it, the support work that never touches the customer — the teams and systems the backstage relies on.',
+}
+
 /** Light label-rail divider caption — reference blueprint interaction/visibility rows. */
 export function BlueprintDividerRailLabel({
   label,
@@ -18,7 +41,8 @@ export function BlueprintDividerRailLabel({
   label: string
   compact?: boolean
 }) {
-  return (
+  const meaning = DIVIDER_MEANINGS[label.trim().toLowerCase()]
+  const caption = (
     <span
       data-blueprint-row-header=""
       className={cn(
@@ -29,6 +53,15 @@ export function BlueprintDividerRailLabel({
     >
       {label}
     </span>
+  )
+  if (!meaning) return caption
+  return (
+    <Tooltip>
+      <TooltipTrigger render={caption} />
+      <TooltipContent side="top" className="max-w-xs">
+        {meaning}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -53,27 +86,7 @@ export function BlueprintDividerTag({
   )
 }
 
-/** Label + rule in one row — line starts flush at the label's right edge. */
 export type BlueprintDividerLineStyle = 'dashed' | 'dotted' | 'solid'
-
-export function BlueprintDividerRailLabelLine({
-  label,
-  lineStyle,
-  compact,
-  className,
-}: {
-  label: string
-  lineStyle: BlueprintDividerLineStyle
-  compact?: boolean
-  className?: string
-}) {
-  return (
-    <div className={cn('flex min-w-0 items-center', className)}>
-      <BlueprintDividerRailLabel label={label} compact={compact} />
-      <BlueprintDividerRule lineStyle={lineStyle} className="min-w-0 flex-1" />
-    </div>
-  )
-}
 
 type BlueprintDividerRuleProps = {
   lineStyle: BlueprintDividerLineStyle
@@ -112,28 +125,5 @@ export function BlueprintDividerRule({
       className={cn('h-px shrink-0 self-center', className)}
       style={{ ...lineStyleProps, ...style }}
     />
-  )
-}
-
-type BlueprintDividerLabelLineProps = {
-  label: string
-  lineStyle: BlueprintDividerLineStyle
-  compact?: boolean
-  /** Tag + rule as one inline flex cluster (no gap between pill and line). */
-  className?: string
-}
-
-/** Pill and rule in a single flex row — line starts flush at the tag's right edge. */
-export function BlueprintDividerLabelLine({
-  label,
-  lineStyle,
-  compact,
-  className,
-}: BlueprintDividerLabelLineProps) {
-  return (
-    <div className={cn('flex min-w-0 items-center', className)}>
-      <BlueprintDividerTag label={label} compact={compact} connected />
-      <BlueprintDividerRule lineStyle={lineStyle} className="min-w-0 flex-1" />
-    </div>
   )
 }

@@ -23,20 +23,20 @@ export const HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE =
 export const HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID =
   'a0000000-0000-4000-8000-00000000097a'
 
-export const HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+export const HELP_REQUEST_ZOOM_STEP_01_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-export const HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+export const HELP_REQUEST_ZOOM_STEP_02_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-export const HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+export const HELP_REQUEST_ZOOM_STEP_03_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-export const HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+export const HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-export const HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+export const HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION =
+  "The tutor leaves the student's Zoom breakout room."
 
 export const HELP_REQUEST_PLUS_APP_STEP_06_PICTURE =
   '/blueprint-images/help-request/happy-path/plus-app/step-05-your-students.png'

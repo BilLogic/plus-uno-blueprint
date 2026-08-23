@@ -1,3 +1,4 @@
+import { BLUEPRINT_INSERT_HIT_HALF } from '@/lib/blueprintLayout'
 import {
   useLayoutEffect,
   useRef,
@@ -17,7 +18,6 @@ import { addLane } from '@/lib/authoringRpc'
 type Boundary = { at: number; y: number }
 
 /** Hit band half-height around a boundary, wider than the drawn line. */
-const INSERT_HIT_HALF_PX = 8
 
 /**
  * Insert handles between lanes — the missing "add row".
@@ -88,15 +88,15 @@ function BlueprintLaneHandlesActive({
     }
 
     const rows = Array.from(
-      body.querySelectorAll<HTMLElement>('[data-blueprint-row][data-layer-id]'),
+      body.querySelectorAll<HTMLElement>('[data-blueprint-row][data-lane-id]'),
     )
     if (rows.length === 0) return
 
     const bodyBox = body.getBoundingClientRect()
     // Client rects are camera-SCALED, but this overlay renders inside the
-    // scaled layer in layout px — divide the deltas back down or every
+    // scaled lane in layout px — divide the deltas back down or every
     // boundary drifts by (scale − 1) · y, worst at the bottom lanes (the
-    // same un-projection the annotation layer needed).
+    // same un-projection the annotation lane needed).
     const scale = body.offsetWidth > 0 ? bodyBox.width / body.offsetWidth : 1
     const next: Boundary[] = rows.map((row, index) => ({
       at: index,
@@ -129,7 +129,7 @@ function BlueprintLaneHandlesActive({
       await addLane(client, {
         scenarioId: selectedScenarioId,
         name: trimmed,
-        atRow: naming.at,
+        atPosition: naming.at,
       })
       invalidateStructure()
       setNaming(null)
@@ -150,8 +150,8 @@ function BlueprintLaneHandlesActive({
           key={boundary.at}
           className="group/lane-insert pointer-events-auto absolute left-0 flex w-full items-center"
           style={{
-            top: boundary.y - INSERT_HIT_HALF_PX,
-            height: INSERT_HIT_HALF_PX * 2,
+            top: boundary.y - BLUEPRINT_INSERT_HIT_HALF,
+            height: BLUEPRINT_INSERT_HIT_HALF * 2,
           }}
         >
           <IconTooltip label="Insert a lane here">

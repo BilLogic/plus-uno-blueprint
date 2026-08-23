@@ -11,11 +11,12 @@ import {
   BlueprintSwimLaneDivider,
 } from '@/components/blueprint/BlueprintLabelRail'
 import { ComparePathSectionFrame } from '@/components/blueprint/ComparePathSectionFrame'
-import { IntegratedTriggerArrows } from '@/components/blueprint/IntegratedTriggerArrows'
+import { IntegratedDependencyArrows } from '@/components/blueprint/IntegratedDependencyArrows'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
 import {
   BLUEPRINT_LAYER_ROW_GAP,
   STEP_COLUMN_GAP,
+  VISUAL_PLAY_GUTTER,
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
@@ -39,8 +40,6 @@ import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import type { BlueprintData, BlueprintStep } from '@/types/blueprint'
 
-/** Left gutter on the white board so the play control clears Visual cells. */
-const VISUAL_PLAY_GUTTER = 28
 
 /**
  * How one band is placed inside its parent grid.
@@ -61,38 +60,36 @@ export type PathBandArrangement =
       tracks: readonly CompareGridTrack[]
       rowTrackCss: string
       marginTop?: number
-      onToggleLayer?: (layerId: string) => void
+      onToggleLayer?: (laneId: string) => void
     }
 
 type BlueprintPathBandProps = {
   blueprint: BlueprintData
-  layers: BlueprintData['layers']
+  lanes: BlueprintData['lanes']
   rows: BlueprintLabelRowSpec[]
   arrangement: PathBandArrangement
   compact?: boolean
   scrollContainerRef?: RefObject<HTMLDivElement | null>
   scenarioName?: string
   phaseName?: string
-  showPathTypeBadge?: boolean
   fillSwimlaneHeight?: boolean
 }
 
 /**
- * One path's full lane-row band — section frame, trigger arrows, design-mode
+ * One path's full lane-row band — section frame, dependency arrows, design-mode
  * handles and the cells themselves. Both compare arrangements compose this
  * component; only the placement (`arrangement`) differs. The rendering of a
  * cell is identical in both, down to its `data-blueprint-cell` anchors.
  */
 export function BlueprintPathBand({
   blueprint,
-  layers,
+  lanes,
   rows,
   arrangement,
   compact,
   scrollContainerRef,
   scenarioName,
   phaseName,
-  showPathTypeBadge = false,
   fillSwimlaneHeight = false,
 }: BlueprintPathBandProps) {
   const bandRef = useRef<HTMLDivElement>(null)
@@ -156,7 +153,6 @@ export function BlueprintPathBand({
       <ComparePathSectionFrame
         blueprint={blueprint}
         compact={compact}
-        showPathTypeBadge={showPathTypeBadge}
         excludeLabelRail={arrangement.kind === 'row'}
       />
       {arrangement.kind === 'row' ? (
@@ -184,7 +180,7 @@ export function BlueprintPathBand({
               <Fragment key={`rail-${row.key}`}>
                 <BlueprintLabelRow
                   row={row}
-                  layers={layers}
+                  lanes={lanes}
                   compact={compact}
                   onToggleLayer={arrangement.onToggleLayer}
                   style={{
@@ -202,9 +198,9 @@ export function BlueprintPathBand({
           )}
         </>
       ) : null}
-      <IntegratedTriggerArrows
-        layer="forward"
-        triggers={arrowData.triggers}
+      <IntegratedDependencyArrows
+        lane="forward"
+        dependencies={arrowData.dependencies}
         cells={arrowData.cells}
         steps={arrowData.steps}
         paths={arrowPaths}
@@ -217,7 +213,7 @@ export function BlueprintPathBand({
           row={row}
           rowIndex={rowIndex}
           blueprint={blueprint}
-          layers={layers}
+          lanes={lanes}
           compact={compact}
           scenarioName={scenarioName}
           phaseName={phaseName}
@@ -229,9 +225,9 @@ export function BlueprintPathBand({
           }
         />
       ))}
-      <IntegratedTriggerArrows
-        layer="wrap"
-        triggers={arrowData.triggers}
+      <IntegratedDependencyArrows
+        lane="wrap"
+        dependencies={arrowData.dependencies}
         cells={arrowData.cells}
         steps={arrowData.steps}
         paths={arrowPaths}
@@ -246,7 +242,7 @@ function CompareCardRow({
   row,
   rowIndex,
   blueprint,
-  layers,
+  lanes,
   compact,
   scenarioName,
   phaseName,
@@ -258,7 +254,7 @@ function CompareCardRow({
   row: BlueprintLabelRowSpec
   rowIndex: number
   blueprint: BlueprintData
-  layers: BlueprintData['layers']
+  lanes: BlueprintData['lanes']
   compact?: boolean
   scenarioName?: string
   phaseName?: string
@@ -273,11 +269,11 @@ function CompareCardRow({
       rowIndex={rowIndex}
       cellTracksOnly={stackedTracks !== undefined}
     >
-      {row.layer ? (
+      {row.lane ? (
         <CompareLayerRow
           blueprint={blueprint}
-          layer={row.layer}
-          layers={layers}
+          lane={row.lane}
+          lanes={lanes}
           compact={compact}
           scenarioName={scenarioName}
           phaseName={phaseName}
@@ -293,8 +289,8 @@ function CompareCardRow({
 
 function CompareLayerRow({
   blueprint,
-  layer,
-  layers,
+  lane,
+  lanes,
   compact,
   scenarioName,
   phaseName,
@@ -304,8 +300,8 @@ function CompareLayerRow({
   stackedTracks,
 }: {
   blueprint: BlueprintData
-  layer: BlueprintData['layers'][number]
-  layers: BlueprintData['layers']
+  lane: BlueprintData['lanes'][number]
+  lanes: BlueprintData['lanes']
   compact?: boolean
   scenarioName?: string
   phaseName?: string
@@ -315,8 +311,8 @@ function CompareLayerRow({
   stackedTracks?: readonly CompareGridTrack[]
 }) {
   const blueprintLayer = useMemo(
-    () => resolveBlueprintLayer(layer, blueprint),
-    [blueprint, layer],
+    () => resolveBlueprintLayer(lane, blueprint),
+    [blueprint, lane],
   )
   const cellLookup = useMemo(
     () => buildCellLookup(blueprint.cells),
@@ -326,30 +322,30 @@ function CompareLayerRow({
     () => new Map(blueprint.steps.map((step, index) => [step.id, index])),
     [blueprint.steps],
   )
-  const isPillLayer = shouldUsePillCellContent(layer)
+  const isPillLane = shouldUsePillCellContent(lane)
   const laneStyle = getBlueprintLayerStyle(
-    layer.name,
-    getBlueprintLayerZone(layer, layers),
-    layer.role,
+    lane.name,
+    getBlueprintLayerZone(lane, lanes),
+    lane.role,
   )
-  const flushBottom = layerPrecedesBlueprintDivider(layer, layers)
-  const isVisualLayer = shouldUseVisualContent(layer)
+  const flushBottom = layerPrecedesBlueprintDivider(lane, lanes)
+  const isVisualLane = shouldUseVisualContent(lane)
   const renderPlay =
-    showPlay && isVisualLayer && (playGutter > 0 || stackedTracks !== undefined)
+    showPlay && isVisualLane && (playGutter > 0 || stackedTracks !== undefined)
 
   const renderStepCell = (step: BlueprintStep, stepIndex: number) => {
     const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
     // Tech slots hold one cell per touchpoint since the split.
-    const slotCells = isPillLayer
+    const slotCells = isPillLane
       ? getCellsAt(cellLookup, blueprintLayer.id, step.id)
       : undefined
-    const variant = isVisualLayer ? 'visual' : isPillLayer ? 'pills' : 'default'
-    const visualPictures = isVisualLayer
+    const variant = isVisualLane ? 'visual' : isPillLane ? 'pills' : 'default'
+    const visualPictures = isVisualLane
       ? resolveVisualStepPictureEntries(blueprint, step.id)
       : undefined
-    const showCell = isVisualLayer
+    const showCell = isVisualLane
       ? (visualPictures?.length ?? 0) > 0
-      : isPillLayer
+      : isPillLane
         ? (slotCells ?? []).some((entry) =>
             hasBlueprintCellContent(entry.content, variant),
           )
@@ -361,9 +357,9 @@ function CompareLayerRow({
       return (
         <BlueprintEmptyCellSlot
           pathId={blueprint.path.id}
-          layerId={blueprintLayer.id}
+          laneId={blueprintLayer.id}
           stepId={step.id}
-          layerName={layer.name}
+          laneName={lane.name}
           stepName={step.name}
           stepIndex={stepIndex}
           scenarioName={scenarioName}
@@ -376,9 +372,10 @@ function CompareLayerRow({
 
     return (
       <CompareCellBlock
-        cellId={cell?.id ?? (isVisualLayer ? `visual-${step.id}` : undefined)}
+        cellId={cell?.id ?? (isVisualLane ? `visual-${step.id}` : undefined)}
         stepIndex={stepIndex}
         content={cell?.content}
+        status={cell?.status}
         laneStyle={laneStyle}
         variant={variant}
         compact={compact}
@@ -386,22 +383,22 @@ function CompareLayerRow({
         visualPictures={visualPictures}
         slotCells={slotCells}
         selectionContext={
-          scenarioName && (cell?.id || isVisualLayer)
+          scenarioName && (cell?.id || isVisualLane)
             ? {
                 scenarioName,
                 phaseName,
-                layerName: layer.name,
+                laneName: lane.name,
                 stepId: step.id,
                 stepName: step.name,
                 stepIndex,
                 cellId: cell?.id ?? `visual-${step.id}`,
                 cellContent: cell?.content ?? '',
                 cellPicture: cell?.picture ?? null,
-                cellDescription: cell?.description ?? null,
+                cellDescription: cell?.summary ?? null,
                 cellLinks: cell?.links,
                 pathId: blueprint.path.id,
                 pathName: blueprint.path.name,
-                pathDescription: blueprint.path.description,
+                pathDescription: blueprint.path.summary,
                 pathType: blueprint.path.path_type,
               }
             : undefined
@@ -500,7 +497,7 @@ function CompareLayerRow({
     >
       {playButton}
       {blueprint.steps.map((step, stepIndex) => (
-        <Fragment key={`${layer.id}-${step.id}`}>
+        <Fragment key={`${lane.id}-${step.id}`}>
           {renderStepCell(step, stepIndex)}
           {stepIndex < blueprint.steps.length - 1 && (
             <div

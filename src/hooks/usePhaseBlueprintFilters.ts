@@ -1,13 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { useCanvasBlueprints } from '@/hooks/useCanvasBlueprints'
 import { usePathSelectionsByScenario } from '@/hooks/usePathSelection'
-import {
-  collectOverviewPathOptions,
-  getOverviewPathKey,
-  isOverviewPathFilterChecked,
-  toggleOverviewPathFilter,
-} from '@/lib/overviewPathFilters'
 import type { BlueprintData } from '@/types/blueprint'
 import type { PathListItem } from '@/lib/pathSelection'
 import { getSubslides, isSubslide, type NavItem, type SlideViewType } from '@/types/nav'
@@ -26,15 +19,27 @@ export type PhaseBlueprintFilters = {
   loading: boolean
   /** Real fetch progress: settled request chunks over total. */
   progress: { loaded: number; total: number }
-  filterPaths: PathOption[]
-  filterSelectedPathIds: string[]
   viewType: SlideViewType
   setViewType: (viewType: SlideViewType) => void
-  toggleFilterPath: (pathKey: string) => void
+  /** This view's selection for a scenario — what a focused scenario draws. */
   resolveSelectedPathIds: (scenarioId: string, paths: PathListItem[]) => string[]
+  /** The scenario's happy path alone — what a phase row draws. */
+  resolveHappyPathIds: (scenarioId: string, paths: PathListItem[]) => string[]
 }
 
-/** View/path filters scoped to a set of scenarios (one phase or the full overview). */
+/**
+ * View settings for a set of scenarios — one phase, or the whole service.
+ *
+ * **No path filter.** A phase canvas draws each scenario's happy path and
+ * nothing else (decided 2026-08-21). Paths belong to a scenario, and the
+ * cross-scenario filter that used to sit in the phase header aggregated by
+ * `${type}:${name}` so that one row could toggle the "Happy Path" in all 23
+ * scenarios at once. Every path has its own name now, so that fold folds
+ * nothing: it listed 39 unrelated routes as though they were one choice.
+ *
+ * Variants and exceptions are reachable where they belong — inside the
+ * scenario, via `ScenarioSlideFilters`.
+ */
 export function usePhaseBlueprintFilters({
   scenarioIds,
   slides,
@@ -53,31 +58,21 @@ export function usePhaseBlueprintFilters({
     progress,
   } = useCanvasBlueprints(activeScenarioIds)
 
+  /*
+    Feeds the shared path-selection store and reads back this view's
+    selections. The phase header no longer offers a path FILTER, but the store
+    still has to be fed: it is what the focused-scenario picker reads, and it
+    is where the happy-path default is seeded. Dropping this call left
+    `activePathKeys` empty and every scenario opened on "Paths shown: none".
+  */
+  const { getSelectedPathIds } = usePathSelectionsByScenario(
+    pathsByScenario,
+    activeScenarioIds,
+  )
+
   // `activeScenarioIds` is the scope: the store may prune any of these that
   // came back with no paths, which is how a deleted — or reverted-duplicate —
   // scenario leaves the catalog instead of outliving the session in it.
-  const { getSelectedPathIds, togglePathKey, activePathKeys } =
-    usePathSelectionsByScenario(pathsByScenario, activeScenarioIds)
-
-  const filterPaths = useMemo(
-    () => collectOverviewPathOptions(pathsByScenario),
-    [pathsByScenario],
-  )
-
-  const filterSelectedPathIds = useMemo(
-    () =>
-      filterPaths
-        .filter((path) =>
-          isOverviewPathFilterChecked(
-            getOverviewPathKey(path),
-            pathsByScenario,
-            activePathKeys,
-          ),
-        )
-        .map((path) => path.id),
-    [filterPaths, pathsByScenario, activePathKeys],
-  )
-
   const viewType = useMemo(() => {
     if (activeScenarioIds.length === 0) return 'stacked' as SlideViewType
 
@@ -106,24 +101,25 @@ export function usePhaseBlueprintFilters({
     [activeScenarioIds, setScenarioDisplayViewType],
   )
 
-  const toggleFilterPath = useCallback(
-    (pathKey: string) => {
-      toggleOverviewPathFilter(
-        pathKey,
-        pathsByScenario,
-        getSelectedPathIds,
-        togglePathKey,
-      )
-    },
-    [pathsByScenario, getSelectedPathIds, togglePathKey],
+  const resolveSelectedPathIds = useCallback(
+    (scenarioId: string, _paths: PathListItem[]) => getSelectedPathIds(scenarioId),
+    [getSelectedPathIds],
   )
 
-  const resolveSelectedPathIds = useCallback(
-    (scenarioId: string, _paths: PathListItem[]) => {
-      // Empty selection is intentional — do not fall back to happy path.
-      return getSelectedPathIds(scenarioId)
+  /**
+   * The happy path, and only it — what a PHASE row draws.
+   *
+   * A phase canvas is a survey: six variants of Goal Setting on it is noise,
+   * and the scenario is where you go to see them (decided 2026-08-21). A
+   * focused scenario still uses {@link resolveSelectedPathIds}, so the picker
+   * inside it works.
+   */
+  const resolveHappyPathIds = useCallback(
+    (_scenarioId: string, paths: PathListItem[]) => {
+      const happy = paths.find((path) => path.path_type === 'happy')
+      return happy ? [happy.id] : paths[0] ? [paths[0].id] : []
     },
-    [getSelectedPathIds],
+    [],
   )
 
   return {
@@ -131,12 +127,10 @@ export function usePhaseBlueprintFilters({
     blueprintsByPathId,
     loading,
     progress,
-    filterPaths,
-    filterSelectedPathIds,
     viewType,
     setViewType,
-    toggleFilterPath,
     resolveSelectedPathIds,
+    resolveHappyPathIds,
   }
 }
 

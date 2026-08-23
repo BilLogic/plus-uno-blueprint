@@ -29,18 +29,18 @@ import {
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FIGMA_URL,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_PICTURE,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION,
-  BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION,
+  BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION,
 } from '@/data/beforeStudentsJoinPictures'
 import { SUPPORT_ACTIONS_DESCRIPTION } from '@/data/supportActionsCopy'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -53,46 +53,46 @@ export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000002010'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000002011',
-    name: 'Partner Action: Teacher',
-    row_position: 1,
+    name: 'Teacher',
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002012',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002013',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002015',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002014',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002017',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002016',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000002018',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -100,32 +100,32 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000950',
     name: 'Set up classroom',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000951',
     name: 'Open session',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000952',
     name: 'Share Zoom link',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000953',
     name: 'Prepare breakout rooms',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000954',
     name: 'Review room order',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000955',
     name: 'Distribute breakout list',
-    column_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -143,19 +143,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(metadata.links ?? [], BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -168,64 +168,64 @@ function bsjCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000018${stepSlot}${layerSuffix}`
 }
 
-function bsjTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000096${triggerSlot}`
+function bsjDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000096${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: bsjTrigger(slot),
+    id: bsjDependency(slot),
     source_cell_id: bsjCell(fromStep, fromLayer),
     target_cell_id: bsjCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   _startSlot: string,
-  layer: string,
+  lane: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-const BEFORE_STUDENTS_JOIN_TRIGGERS: BlueprintCellTrigger[] = [
-  ...rowTriggers('01', '01', 1, 5),
-  ...rowTriggers('01', '02', 10, 5),
-  trigger('020', '01', '03', '02', '03'),
-  trigger('021', '02', '03', '03', '03'),
-  trigger('022', '03', '03', '05', '03'),
-  trigger('023', '05', '03', '06', '03'),
-  trigger('031', '05', '02', '05', '03'),
-  trigger('032', '06', '02', '06', '03'),
-  trigger('041', '01', '03', '01', '06'),
-  trigger('042', '02', '03', '02', '06'),
-  trigger('043', '03', '03', '03', '06'),
-  trigger('044', '05', '03', '05', '06'),
-  trigger('045', '06', '03', '06', '06'),
+const BEFORE_STUDENTS_JOIN_TRIGGERS: BlueprintCellDependency[] = [
+  ...rowDependencies('01', '01', 1, 5),
+  ...rowDependencies('01', '02', 10, 5),
+  dependency('020', '01', '03', '02', '03'),
+  dependency('021', '02', '03', '03', '03'),
+  dependency('022', '03', '03', '05', '03'),
+  dependency('023', '05', '03', '06', '03'),
+  dependency('031', '05', '02', '05', '03'),
+  dependency('032', '06', '02', '06', '03'),
+  dependency('041', '01', '03', '01', '06'),
+  dependency('042', '02', '03', '02', '06'),
+  dependency('043', '03', '03', '03', '06'),
+  dependency('044', '05', '03', '05', '06'),
+  dependency('045', '06', '03', '06', '06'),
   // Back Stage Actions → Front Stage Tech
-  trigger('061', '01', '07', '01', '06'),
-  trigger('062', '02', '07', '02', '06'),
+  dependency('061', '01', '07', '01', '06'),
+  dependency('062', '02', '07', '02', '06'),
 ]
 
 function beforeStudentsJoinPlusAppLink(
@@ -353,9 +353,9 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
       ),
     ],
   }),
-  cell(bsjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App, Zoom/Pencil', {
+  cell(bsjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App, Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION,
@@ -364,17 +364,17 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
       ),
     ],
   }),
-  cell(bsjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
+  cell(bsjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION,
   }),
-  cell(bsjCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
+  cell(bsjCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION,
   }),
-  cell(bsjCell('05', '06'), L.frontStageTech, STEPS[4].id, 'PLUS App, Zoom/Pencil', {
+  cell(bsjCell('05', '06'), L.frontStageTech, STEPS[4].id, 'PLUS App, Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
@@ -383,9 +383,9 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
       ),
     ],
   }),
-  cell(bsjCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom/Pencil', {
+  cell(bsjCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: BEFORE_STUDENTS_JOIN_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+    summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION,
   }),
 
   cell(
@@ -398,30 +398,31 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
     bsjCell('02', '07'),
     L.backStage,
     STEPS[1].id,
-    'Tutor supervisor team sets up Zoom/Pencil link.',
+    'Tutor supervisor team sets up Zoom link.',
   ),
 
   cell(bsjCell('01', '09'), L.support, STEPS[0].id, 'Dev team\nDesign team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(bsjCell('02', '09'), L.support, STEPS[1].id, 'Dev team\nDesign team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(bsjCell('05', '09'), L.support, STEPS[4].id, 'Dev team\nDesign team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 
 export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: BEFORE_STUDENTS_JOIN_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description: 'Teachers and tutors prepare the session before students join.',
+    name: 'Setup goes to plan',
+    summary: 'Teachers and tutors prepare the session before students join.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: BEFORE_STUDENTS_JOIN_CELLS,
-  triggers: BEFORE_STUDENTS_JOIN_TRIGGERS,
+  dependencies: BEFORE_STUDENTS_JOIN_TRIGGERS,
 }

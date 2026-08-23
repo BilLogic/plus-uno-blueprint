@@ -372,7 +372,13 @@ export function ResizableComparePanel({
           description={panelTitleDescription}
           infoTooltip={panelTitleInfoTooltip}
           tone="panel"
-          className="pointer-events-auto absolute z-30 max-w-[min(calc(100%-3rem),28rem)]"
+          className={cn(
+            'pointer-events-auto absolute z-30 max-w-[min(calc(100%-3rem),28rem)]',
+            // The focused scenario's label steps up a size. On a board of
+            // twenty-two panels the one you are IN should say so at a glance,
+            // and the badge is the only chrome each panel carries.
+            focusActive && 'px-2.5 py-1 text-sm',
+          )}
           style={{
             top: 0,
             left: COMPARE_PANEL_PADDING,

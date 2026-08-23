@@ -48,7 +48,7 @@ function isZoneCompareSlot(slot: CompareSlot): boolean {
  * model's column-then-lane order (a tested invariant upstream).
  */
 export function deriveCompareZones(model: CompareModel): CompareZone[] {
-  const columnPosition = new Map(
+  const position = new Map(
     model.columns.map((column, index) => [column.columnKey, index + 1]),
   )
   const columnLabel = new Map(
@@ -59,8 +59,8 @@ export function deriveCompareZones(model: CompareModel): CompareZone[] {
   for (const run of model.runs) {
     if (run.kind !== 'divergent') continue
     const keys = run.columnKeys
-    const start = columnPosition.get(keys[0]) ?? 0
-    const end = columnPosition.get(keys[keys.length - 1]) ?? start
+    const start = position.get(keys[0]) ?? 0
+    const end = position.get(keys[keys.length - 1]) ?? start
     const keySet = new Set(keys)
     const firstLabel = columnLabel.get(keys[0]) ?? ''
     const lastLabel = columnLabel.get(keys[keys.length - 1]) ?? firstLabel

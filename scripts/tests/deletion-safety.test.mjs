@@ -15,6 +15,7 @@ import {
   DELETION_NOUNS,
   confirmationMatches,
   deletionReadiness,
+  readDeletionImpact,
   splitByRecoverability,
   summarizeImpact,
   summarizeSliceImpact,
@@ -144,25 +145,34 @@ test('a slice delete admits it has no archive behind it', () => {
   assert.ok(warnings.some((line) => /no archive for slices/.test(line)))
 })
 
+/**
+ * `lane` and `step` used to be unrepresentable here, because their
+ * `deletion_impact` branch counted something other than what their delete
+ * removed. Migration 20260820030000 reconciled the predicates with the
+ * deletes — measured on production, lane went from 11 to 93 (it had
+ * undercounted by 8.5x) and step from 12 to 5 — so both are deletable now
+ * and both need a noun for the confirm sentence.
+ */
 test('every deletable kind has a noun for the confirm sentence', () => {
-  for (const kind of ['scenario', 'path', 'slice']) {
-    assert.equal(typeof DELETION_NOUNS[kind], 'string')
-    assert.ok(DELETION_NOUNS[kind].length > 0)
+  for (const kind of ['scenario', 'path', 'step', 'lane', 'slice']) {
+    assert.ok(
+      typeof DELETION_NOUNS[kind] === 'string' && DELETION_NOUNS[kind].length > 0,
+      `${kind} has no noun`,
+    )
   }
 })
 
 /**
- * `lane` and `step` are deliberately NOT deletable through this dialog: their
- * `deletion_impact` branch counts something other than what their delete
- * removes (lane undercounts across paths, step overcounts across paths). The
- * type makes them unrepresentable; this holds the vocabulary to it, so
- * re-adding a noun without first reconciling the two SQL predicates fails
- * here rather than shipping a dialog with the wrong numbers in it.
+ * The half of the fix that cannot be expressed in the type: `remove_step` is
+ * path-scoped, so a step impact without its path has no true number to
+ * report. Refusing beats guessing — an unscoped count would be an overcount,
+ * and an overcount in a delete dialog reads as "this is bigger than it is".
  */
-test('the kinds whose impact does not match their delete are not deletable', () => {
-  for (const kind of ['lane', 'step']) {
-    assert.equal(DELETION_NOUNS[kind], undefined)
-  }
+test('a step impact refuses without the path it is scoped to', async () => {
+  await assert.rejects(
+    async () => readDeletionImpact({}, 'step', 'some-step-id'),
+    /path/i,
+  )
 })
 
 test('the confirmation is exact and case-sensitive', () => {

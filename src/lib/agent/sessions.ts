@@ -6,7 +6,7 @@ import {
 } from '@/lib/agent/persistence'
 
 /**
- * Agent sessions. localStorage is the always-there layer; when the session
+ * Agent sessions. localStorage is the always-there lane; when the session
  * is authenticated (local dev), every mutation also writes through to
  * agent_sessions and `hydrateAgentSessions` merges the DB list in on boot —
  * so sessions survive reloads and browsers, and read-only visitors lose
@@ -46,6 +46,19 @@ function write(next: AgentSession[]) {
     // Session-only fallback is fine for a prototype store.
   }
   listeners.forEach((listener) => listener())
+}
+
+/**
+ * The session list as it stands, for callers outside React — the agent's
+ * list_sessions tool reads THIS rather than querying `agent_sessions`
+ * directly, and that is a scoping decision, not a convenience one:
+ * `agent_sessions` carries no owner column and its RLS policy is a blanket
+ * "authenticated manage agent sessions", so a direct query would hand the
+ * agent every user's chat history. Reading the store the session switcher
+ * reads means the agent sees exactly what the user sees.
+ */
+export function agentSessionsSnapshot(): AgentSession[] {
+  return snapshot
 }
 
 export function useAgentSessions(): AgentSession[] {

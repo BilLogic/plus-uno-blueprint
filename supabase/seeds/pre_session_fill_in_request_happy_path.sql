@@ -1,7 +1,7 @@
 -- Pre-session → Fill-in Request scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/fillInRequestHappyPathFallback.ts
 
-insert into public.paths (id, service_scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, description, path_type)
 values (
   'a0000000-0000-4000-8000-000000000807',
   'a0000000-0000-4000-8000-000000000127',
@@ -10,12 +10,12 @@ values (
   'happy'
 )
 on conflict (id) do update set
-  service_scenario_id = excluded.service_scenario_id,
+  scenario_id = excluded.scenario_id,
   name = excluded.name,
   description = excluded.description,
   path_type = excluded.path_type;
 
-delete from public.cell_triggers
+delete from public.cell_dependencies
 where source_cell_id in (
   select id from public.cells
   where path_id = 'a0000000-0000-4000-8000-000000000807'
@@ -24,15 +24,15 @@ where source_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-000000000807';
 
-delete from public.layers
+delete from public.lanes
 where path_id = 'a0000000-0000-4000-8000-000000000807';
 
-insert into public.layers (id, path_id, name, row_position)
+insert into public.lanes (id, path_id, name, position)
 values
   (
     'a0000000-0000-4000-8000-000000000903',
     'a0000000-0000-4000-8000-000000000807',
-    'Visual',
+    'Storyboard',
     0
   ),
   (
@@ -73,10 +73,10 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  row_position = excluded.row_position,
+  position = excluded.position,
   path_id = excluded.path_id;
 
-insert into public.steps (id, service_scenario_id, name)
+insert into public.steps (id, scenario_id, name)
 values
   (
     'a0000000-0000-4000-8000-000000000897',
@@ -100,21 +100,21 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  service_scenario_id = excluded.service_scenario_id;
+  scenario_id = excluded.scenario_id;
 
 delete from public.path_steps
 where path_id = 'a0000000-0000-4000-8000-000000000807';
 
-insert into public.path_steps (path_id, step_id, column_position)
+insert into public.path_steps (path_id, step_id, position)
 values
   ('a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000897', 1),
   ('a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000898', 2),
   ('a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000899', 3),
   ('a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000900', 4)
 on conflict (path_id, step_id) do update set
-  column_position = excluded.column_position;
+  position = excluded.position;
 
-insert into public.cells (id, path_id, layer_id, step_id, content)
+insert into public.cells (id, path_id, lane_id, step_id, content)
 values
   ('a0000000-0000-4000-8000-000000150110', 'a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000903', 'a0000000-0000-4000-8000-000000000897', ''),
   ('a0000000-0000-4000-8000-000000150107', 'a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000907', 'a0000000-0000-4000-8000-000000000897', 'Tutor supervisor team receives call off request and reviews tutor availabilities.'),
@@ -139,11 +139,11 @@ values
   ('a0000000-0000-4000-8000-000000150409', 'a0000000-0000-4000-8000-000000000807', 'a0000000-0000-4000-8000-000000000909', 'a0000000-0000-4000-8000-000000000900', E'Dev Team\nDesign Team')
 on conflict (id) do update set
   path_id = excluded.path_id,
-  layer_id = excluded.layer_id,
+  lane_id = excluded.lane_id,
   step_id = excluded.step_id,
   content = excluded.content;
 
-insert into public.cell_triggers (id, source_cell_id, target_cell_id)
+insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-000000094001', 'a0000000-0000-4000-8000-000000150107', 'a0000000-0000-4000-8000-000000150108'),
   ('a0000000-0000-4000-8000-000000094009', 'a0000000-0000-4000-8000-000000150106', 'a0000000-0000-4000-8000-000000150107'),

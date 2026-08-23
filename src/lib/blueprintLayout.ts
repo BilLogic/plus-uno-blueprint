@@ -9,14 +9,14 @@ import {
   STEP_VISUAL_ROLE,
   SUPPORT_SYSTEMS_ROLE,
   VISUAL_ROLE,
-} from '@/lib/layerRoles'
+} from '@/lib/laneRoles'
 import {
-  isParallelSessionLeadBottomWrapTrigger,
-  isParallelSessionPartnerWrapTrigger,
+  isParallelSessionLeadBottomWrapDependency,
+  isParallelSessionPartnerWrapDependency,
 } from '@/data/parallelSessionPartnerLead'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
-/** Minimal layer shape for role-driven layout checks. */
+/** Minimal lane shape for role-driven layout checks. */
 type LayerRoleSource = { name: string; role?: string | null }
 
 /** Roles whose cells list multiple items as inline pills (newline-separated content). */
@@ -40,8 +40,8 @@ export function getVisualCellButtonMaxHeight(compact = false): number {
   return rowHeight - shellVerticalPad
 }
 
-export function shouldUsePillCellContent(layer: LayerRoleSource): boolean {
-  const role = getLayerRole(layer)
+export function shouldUsePillCellContent(lane: LayerRoleSource): boolean {
+  const role = getLayerRole(lane)
   return (
     role !== null && (PILL_CELL_LAYER_ROLES as readonly string[]).includes(role)
   )
@@ -67,33 +67,33 @@ export function hasBlueprintCellContent(
   return true
 }
 
-export function shouldUseVisualContent(layer: LayerRoleSource): boolean {
-  const role = getLayerRole(layer)
+export function shouldUseVisualContent(lane: LayerRoleSource): boolean {
+  const role = getLayerRole(lane)
   return (
     role !== null && (VISUAL_LAYER_ROLES as readonly string[]).includes(role)
   )
 }
 
 /** The standard service-blueprint interaction line follows the spine actor. */
-export function shouldShowInteractionLineAfter(layer: BlueprintLayer): boolean {
-  return getLayerRole(layer) === CUSTOMER_ACTIONS_ROLE
+export function shouldShowInteractionLineAfter(lane: BlueprintLane): boolean {
+  return getLayerRole(lane) === CUSTOMER_ACTIONS_ROLE
 }
 
-/** The visibility line is drawn after frontstage layers (above backstage layers). */
+/** The visibility line is drawn after frontstage lanes (above backstage lanes). */
 export function shouldShowVisibilityLineAfter(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
-  const role = getLayerRole(layer)
+  const role = getLayerRole(lane)
   if (role !== FRONTSTAGE_ACTIONS_ROLE && role !== FRONTSTAGE_TECH_ROLE) {
     return false
   }
 
   // Frontstage tech can sit above frontstage actions — the visibility line
   // follows the actions lane, not the tech lane.
-  if (role === FRONTSTAGE_TECH_ROLE && layers) {
-    const index = layers.findIndex((entry) => entry.id === layer.id)
-    const next = layers[index + 1]
+  if (role === FRONTSTAGE_TECH_ROLE && lanes) {
+    const index = lanes.findIndex((entry) => entry.id === lane.id)
+    const next = lanes[index + 1]
     if (next && getLayerRole(next) === FRONTSTAGE_ACTIONS_ROLE) {
       return false
     }
@@ -108,51 +108,51 @@ export function shouldShowVisibilityLineAfter(
  * "Support Actions" swimlane that must still anchor the divider without
  * picking up support_systems pill-cell rendering.
  */
-function isSupportHandoffLayer(layer: LayerRoleSource): boolean {
-  if (getLayerRole(layer) === SUPPORT_SYSTEMS_ROLE) return true
+function isSupportHandoffLayer(lane: LayerRoleSource): boolean {
+  if (getLayerRole(lane) === SUPPORT_SYSTEMS_ROLE) return true
   return (
-    layer.name === 'Support Actions' || layer.name === 'Tech Support Actions'
+    lane.name === 'Support Actions' || lane.name === 'Tech Support Actions'
   )
 }
 
 /**
  * The internal interaction line marks the hand-off from backstage actions to
  * support systems / support actions, so it draws after a backstage-actions
- * layer only when a support handoff lane follows.
+ * lane only when a support handoff lane follows.
  */
 export function shouldShowInternalInteractionLineAfter(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
-  if (getLayerRole(layer) !== BACKSTAGE_ACTIONS_ROLE) return false
-  if (!layers) return false
-  const index = layers.findIndex((entry) => entry.id === layer.id)
-  const next = layers[index + 1]
+  if (getLayerRole(lane) !== BACKSTAGE_ACTIONS_ROLE) return false
+  if (!lanes) return false
+  const index = lanes.findIndex((entry) => entry.id === lane.id)
+  const next = lanes[index + 1]
   return next !== undefined && isSupportHandoffLayer(next)
 }
 
 /** Light rule between swim lanes; omitted before interaction/visibility dividers. */
 export function shouldShowLaneDividerAfter(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   layerIndex: number,
-  layers: BlueprintLayer[],
+  lanes: BlueprintLane[],
 ): boolean {
-  if (layerIndex >= layers.length - 1) return false
-  if (shouldShowInteractionLineAfter(layer)) return false
-  if (shouldShowVisibilityLineAfter(layer, layers)) return false
-  if (shouldShowInternalInteractionLineAfter(layer, layers)) return false
+  if (layerIndex >= lanes.length - 1) return false
+  if (shouldShowInteractionLineAfter(lane)) return false
+  if (shouldShowVisibilityLineAfter(lane, lanes)) return false
+  if (shouldShowInternalInteractionLineAfter(lane, lanes)) return false
   return true
 }
 
-/** Layer row is immediately followed by a blueprint divider band. */
+/** Lane row is immediately followed by a blueprint divider band. */
 export function layerPrecedesBlueprintDivider(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
   return (
-    shouldShowInteractionLineAfter(layer) ||
-    shouldShowVisibilityLineAfter(layer, layers) ||
-    shouldShowInternalInteractionLineAfter(layer, layers)
+    shouldShowInteractionLineAfter(lane) ||
+    shouldShowVisibilityLineAfter(lane, lanes) ||
+    shouldShowInternalInteractionLineAfter(lane, lanes)
   )
 }
 
@@ -162,8 +162,6 @@ export const VISIBILITY_LINE_LABEL = 'LINE OF VISIBILITY'
 export const INTERNAL_INTERACTION_LINE_LABEL = 'LINE OF INTERNAL INTERACTION'
 
 export const BLUEPRINT_DIVIDER_ROW_HEIGHT = 28
-/** Right inset so interaction / visibility lines stop before the board edge. */
-export const BLUEPRINT_DIVIDER_LINE_END_INSET = 16
 /** Transparent margin above the interaction line for the Regular Tutor loop arrow. */
 export const BLUEPRINT_WRAP_CORRIDOR_MARGIN = 36
 /** Space above the Regular Tutor row for overhead-rail arrows (Discovery, Call-off, etc.). */
@@ -175,12 +173,12 @@ export const BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN = 32
 export const OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN =
   /000000(?:07|72|17)(\d{2})03$/
 
-/** Application discovery triggers that span forward across Regular Tutor columns. */
-export function triggersIncludeDiscoveryRail(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+/** Application discovery dependencies that span forward across Regular Tutor columns. */
+export function dependenciesIncludeDiscoveryRail(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) => {
-    const { source_cell_id: src, target_cell_id: tgt } = trigger
+  return dependencies.some((dependency) => {
+    const { source_cell_id: src, target_cell_id: tgt } = dependency
     return (
       OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(src) &&
       OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(tgt) &&
@@ -189,71 +187,74 @@ export function triggersIncludeDiscoveryRail(
   })
 }
 
-export function blueprintHasDiscoveryRailTriggers(
+export function blueprintHasDiscoveryRailDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeDiscoveryRail(data.triggers)
+  return dependenciesIncludeDiscoveryRail(data.dependencies)
 }
 
 export function layerHasDiscoveryRailCorridor(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
-  if (layer.name !== 'Regular Tutor') return false
+  if (lane.name !== 'Regular Tutor') return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasDiscoveryRailTriggers)) return true
+    if (blueprints.some(blueprintHasDiscoveryRailDependencies)) return true
   }
-  if (extraTriggers && triggersIncludeDiscoveryRail(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludeDiscoveryRail(extraDependencies)) {
     return true
   }
   return false
 }
 
-export const PARTNER_ACTION_LAYER_NAME = 'Partner Action: Teacher'
+/*
+  The teacher's lane, by name.
 
-export function abbreviateConnectionLayerName(layerName: string): string {
-  if (layerName === PARTNER_ACTION_LAYER_NAME) return 'Teacher'
-  return layerName
-}
+  It was called `Partner Action: Teacher` until 2026-08-20 — the lane's ROLE
+  bolted onto the front of the person in it. `lane_role` and the stakeholder
+  registry both hold the role now, so the label is just the person, and the
+  helper that existed only to abbreviate the long form went with it.
+*/
+export const TEACHER_LANE_NAME = 'Teacher'
 
-export function triggersIncludePartnerActionOverheadWrap(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludePartnerActionOverheadWrap(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) =>
-    isParallelSessionPartnerWrapTrigger(
-      trigger.source_cell_id,
-      trigger.target_cell_id,
+  return dependencies.some((dependency) =>
+    isParallelSessionPartnerWrapDependency(
+      dependency.source_cell_id,
+      dependency.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasPartnerActionOverheadWrapTriggers(
+export function blueprintHasPartnerActionOverheadWrapDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludePartnerActionOverheadWrap(data.triggers)
+  return dependenciesIncludePartnerActionOverheadWrap(data.dependencies)
 }
 
 export function layerHasPartnerActionOverheadWrapCorridor(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
-  if (layer.name !== PARTNER_ACTION_LAYER_NAME) return false
+  if (lane.name !== TEACHER_LANE_NAME) return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasPartnerActionOverheadWrapTriggers)) {
+    if (blueprints.some(blueprintHasPartnerActionOverheadWrapDependencies)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludePartnerActionOverheadWrap(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludePartnerActionOverheadWrap(extraDependencies)) {
     return true
   }
   return false
@@ -261,87 +262,87 @@ export function layerHasPartnerActionOverheadWrapCorridor(
 
 export const LEAD_TUTOR_LAYER_NAME = 'Lead Tutor'
 
-export function triggersIncludeLeadTutorBottomWrap(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludeLeadTutorBottomWrap(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) =>
-    isParallelSessionLeadBottomWrapTrigger(
-      trigger.source_cell_id,
-      trigger.target_cell_id,
+  return dependencies.some((dependency) =>
+    isParallelSessionLeadBottomWrapDependency(
+      dependency.source_cell_id,
+      dependency.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasLeadTutorBottomWrapTriggers(
+export function blueprintHasLeadTutorBottomWrapDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeLeadTutorBottomWrap(data.triggers)
+  return dependenciesIncludeLeadTutorBottomWrap(data.dependencies)
 }
 
 export function layerHasLeadTutorBottomWrapCorridor(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
-  if (layer.name !== LEAD_TUTOR_LAYER_NAME) return false
+  if (lane.name !== LEAD_TUTOR_LAYER_NAME) return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasLeadTutorBottomWrapTriggers)) {
+    if (blueprints.some(blueprintHasLeadTutorBottomWrapDependencies)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludeLeadTutorBottomWrap(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludeLeadTutorBottomWrap(extraDependencies)) {
     return true
   }
   return false
 }
 
 /** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function triggersIncludeLeadTutorOverheadWrap(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludeLeadTutorOverheadWrap(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggersIncludeLeadTutorBottomWrap(triggers)
+  return dependenciesIncludeLeadTutorBottomWrap(dependencies)
 }
 
 /** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function blueprintHasLeadTutorOverheadWrapTriggers(
+export function blueprintHasLeadTutorOverheadWrapDependencies(
   data: BlueprintData,
 ): boolean {
-  return blueprintHasLeadTutorBottomWrapTriggers(data)
+  return blueprintHasLeadTutorBottomWrapDependencies(data)
 }
 
 /** @deprecated Lead Tutor loops route below the row, not overhead. */
 export function layerHasLeadTutorOverheadWrapCorridor(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
-  return layerHasLeadTutorBottomWrapCorridor(layer, data, extraTriggers)
+  return layerHasLeadTutorBottomWrapCorridor(lane, data, extraDependencies)
 }
 
 export function layerHasWrapCorridorBelow(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
   return (
-    shouldShowInteractionLineAfter(layer) ||
-    layerHasLeadTutorBottomWrapCorridor(layer, data, extraTriggers)
+    shouldShowInteractionLineAfter(lane) ||
+    layerHasLeadTutorBottomWrapCorridor(lane, data, extraDependencies)
   )
 }
 
 const REGULAR_TUTOR_LAYER_CELL_ID_PATTERN = /(\d{2})03$/
 
-export function isRegularTutorInLaneLoopTrigger(
+export function isRegularTutorInLaneLoopDependency(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
@@ -354,101 +355,101 @@ export function isRegularTutorInLaneLoopTrigger(
   return targetStep < sourceStep
 }
 
-export function triggersIncludeRegularTutorInLaneLoop(
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+export function dependenciesIncludeRegularTutorInLaneLoop(
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
 ): boolean {
-  return triggers.some((trigger) =>
-    isRegularTutorInLaneLoopTrigger(
-      trigger.source_cell_id,
-      trigger.target_cell_id,
+  return dependencies.some((dependency) =>
+    isRegularTutorInLaneLoopDependency(
+      dependency.source_cell_id,
+      dependency.target_cell_id,
     ),
   )
 }
 
-export function blueprintHasRegularTutorInLaneLoopTriggers(
+export function blueprintHasRegularTutorInLaneLoopDependencies(
   data: BlueprintData,
 ): boolean {
-  return triggersIncludeRegularTutorInLaneLoop(data.triggers)
+  return dependenciesIncludeRegularTutorInLaneLoop(data.dependencies)
 }
 
 export function layerHasRegularTutorInLaneLoopCorridor(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
-  if (layer.name !== 'Regular Tutor') return false
+  if (lane.name !== 'Regular Tutor') return false
   if (data) {
     const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasRegularTutorInLaneLoopTriggers)) {
+    if (blueprints.some(blueprintHasRegularTutorInLaneLoopDependencies)) {
       return true
     }
   }
-  if (extraTriggers && triggersIncludeRegularTutorInLaneLoop(extraTriggers)) {
+  if (extraDependencies && dependenciesIncludeRegularTutorInLaneLoop(extraDependencies)) {
     return true
   }
   return false
 }
 
 export function countRegularTutorInLaneLoopCorridorMargins(
-  layers: BlueprintLayer[],
+  lanes: BlueprintLane[],
   data?: BlueprintData,
 ): number {
   if (!data) return 0
-  return layers.filter((layer) =>
-    layerHasRegularTutorInLaneLoopCorridor(layer, data),
+  return lanes.filter((lane) =>
+    layerHasRegularTutorInLaneLoopCorridor(lane, data),
   ).length
 }
 
 export function layerHasOverheadArrowCorridor(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraTriggers?: ReadonlyArray<{
+  extraDependencies?: ReadonlyArray<{
     source_cell_id: string
     target_cell_id: string
   }>,
 ): boolean {
   return (
-    layerHasDiscoveryRailCorridor(layer, data, extraTriggers) ||
-    layerHasPartnerActionOverheadWrapCorridor(layer, data, extraTriggers)
+    layerHasDiscoveryRailCorridor(lane, data, extraDependencies) ||
+    layerHasPartnerActionOverheadWrapCorridor(lane, data, extraDependencies)
   )
 }
 
 export function countDiscoveryRailCorridorMargins(
-  layers: BlueprintLayer[],
+  lanes: BlueprintLane[],
   data: BlueprintData,
 ): number {
-  return layers.filter((layer) =>
-    layerHasDiscoveryRailCorridor(layer, data),
+  return lanes.filter((lane) =>
+    layerHasDiscoveryRailCorridor(lane, data),
   ).length
 }
 
-export function countBlueprintDividerRows(layers: BlueprintLayer[]): number {
-  return layers.filter(
-    (layer) =>
-      shouldShowInteractionLineAfter(layer) ||
-      shouldShowVisibilityLineAfter(layer, layers) ||
-      shouldShowInternalInteractionLineAfter(layer, layers),
+export function countBlueprintDividerRows(lanes: BlueprintLane[]): number {
+  return lanes.filter(
+    (lane) =>
+      shouldShowInteractionLineAfter(lane) ||
+      shouldShowVisibilityLineAfter(lane, lanes) ||
+      shouldShowInternalInteractionLineAfter(lane, lanes),
   ).length
 }
 
 export function countBlueprintWrapCorridorMargins(
-  layers: BlueprintLayer[],
+  lanes: BlueprintLane[],
   data?: BlueprintData,
 ): number {
-  return layers.filter(
-    (layer) =>
-      shouldShowInteractionLineAfter(layer) ||
+  return lanes.filter(
+    (lane) =>
+      shouldShowInteractionLineAfter(lane) ||
       (data !== undefined &&
-        layerHasLeadTutorBottomWrapCorridor(layer, data)),
+        layerHasLeadTutorBottomWrapCorridor(lane, data)),
   ).length
 }
 
 export const LAYER_COLUMN_WIDTH = 220
 export const STEP_COLUMN_WIDTH = 220
-/** Visible space between step columns where trigger arrows are drawn. */
+/** Visible space between step columns where dependency arrows are drawn. */
 export const STEP_COLUMN_GAP = 24
 /** Left gutter on the white board so the play control clears Visual cells. */
 export const VISUAL_PLAY_GUTTER = 28
@@ -489,6 +490,15 @@ export const BLUEPRINT_ARTBOARD_HEIGHT_BUFFER = 32
 export const BLUEPRINT_ARTBOARD_WIDTH_BUFFER = 32
 
 /** Outer gutter around each cell (Tailwind p-3 ≈ 12px per side). */
+/**
+ * Half the hit target for an insert affordance, on BOTH axes.
+ *
+ * Was declared separately in BlueprintColumnHandles and BlueprintLaneHandles,
+ * same name and same value in two files — so a column insert 8px wide and a
+ * lane insert 10px tall was a bug nothing would have caught.
+ */
+export const BLUEPRINT_INSERT_HIT_HALF = 8
+
 export const BLUEPRINT_CELL_GUTTER = 12
 
 /** Stable canvas face for narrative cells; complete prose lives in detail. */
@@ -502,14 +512,14 @@ const PILL_CELL_PADDING = BLUEPRINT_CELL_GUTTER * 2
 
 export function getMaxPillCountInLayer(
   data: BlueprintData,
-  layerId: string,
+  laneId: string,
 ): number {
   // Summed per *slot*, not maxed per cell: since the split a slot holds one
   // cell per touchpoint, and a row sized to the tallest single cell would be
   // one pill tall over a stack of three.
   const perStep = new Map<string, number>()
   for (const cell of data.cells) {
-    if (cell.layer_id === layerId && cell.content?.trim()) {
+    if (cell.lane_id === laneId && cell.content?.trim()) {
       const count = parseCellContentItems(cell.content).length
       perStep.set(cell.step_id, (perStep.get(cell.step_id) ?? 0) + count)
     }
@@ -534,11 +544,11 @@ export function getPillStackMinHeight(
 
 /** Minimum inner content height for a single cell (excludes compare shell padding). */
 export function getCellContentMinHeight(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   content: string | undefined,
   compact = false,
 ): number {
-  if (shouldUseVisualContent(layer)) {
+  if (shouldUseVisualContent(lane)) {
     return compact
       ? VISUAL_ROW_MIN_HEIGHT_COMPACT
       : VISUAL_ROW_MIN_HEIGHT
@@ -546,7 +556,7 @@ export function getCellContentMinHeight(
 
   if (!content?.trim()) return 0
 
-  if (shouldUsePillCellContent(layer)) {
+  if (shouldUsePillCellContent(lane)) {
     return getPillStackMinHeight(
       parseCellContentItems(content).length,
       compact,
@@ -557,7 +567,7 @@ export function getCellContentMinHeight(
 }
 
 function getDefaultCellMinHeight(
-  _layer: BlueprintLayer,
+  _layer: BlueprintLane,
   _data: BlueprintData,
   compact = false,
 ): number {
@@ -569,7 +579,7 @@ function getDefaultCellMinHeight(
 }
 
 export function getLayerRowMinHeight(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   data: BlueprintData,
   compact = false,
   options?: { fitVertically?: boolean },
@@ -577,17 +587,17 @@ export function getLayerRowMinHeight(
   const fitVertically = options?.fitVertically ?? false
   const base = fitVertically && compact
     ? BLUEPRINT_ROW_MIN_HEIGHT_COMPACT
-    : getDefaultCellMinHeight(layer, data, compact)
+    : getDefaultCellMinHeight(lane, data, compact)
 
-  if (shouldUseVisualContent(layer)) {
+  if (shouldUseVisualContent(lane)) {
     return compact
       ? VISUAL_ROW_MIN_HEIGHT_COMPACT
       : VISUAL_ROW_MIN_HEIGHT
   }
 
-  if (!shouldUsePillCellContent(layer)) return base
+  if (!shouldUsePillCellContent(lane)) return base
 
-  const pillCount = getMaxPillCountInLayer(data, layer.id)
+  const pillCount = getMaxPillCountInLayer(data, lane.id)
   return Math.max(base, getPillStackMinHeight(pillCount, compact))
 }
 
@@ -598,22 +608,22 @@ export function getBlueprintGridMinHeight(
   const { compact = false, includeHeader = true } = options ?? {}
   const header = compact ? BLUEPRINT_HEADER_HEIGHT_COMPACT : BLUEPRINT_HEADER_HEIGHT
   const dividers =
-    countBlueprintDividerRows(data.layers) * BLUEPRINT_DIVIDER_ROW_HEIGHT
+    countBlueprintDividerRows(data.lanes) * BLUEPRINT_DIVIDER_ROW_HEIGHT
   const wrapCorridorMargins =
-    countBlueprintWrapCorridorMargins(data.layers, data) *
+    countBlueprintWrapCorridorMargins(data.lanes, data) *
     BLUEPRINT_WRAP_CORRIDOR_MARGIN
   const discoveryRailCorridorMargins =
-    countDiscoveryRailCorridorMargins(data.layers, data) *
+    countDiscoveryRailCorridorMargins(data.lanes, data) *
     BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
   const regularTutorLoopCorridorMargins =
-    countRegularTutorInLaneLoopCorridorMargins(data.layers, data) *
+    countRegularTutorInLaneLoopCorridorMargins(data.lanes, data) *
     BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
-  const layerRows = data.layers.reduce(
-    (sum, layer) => sum + getLayerRowMinHeight(layer, data, compact),
+  const layerRows = data.lanes.reduce(
+    (sum, lane) => sum + getLayerRowMinHeight(lane, data, compact),
     0,
   )
   const rowCount =
-    data.layers.length + countBlueprintDividerRows(data.layers)
+    data.lanes.length + countBlueprintDividerRows(data.lanes)
   const rowGaps = Math.max(0, rowCount - 1) * BLUEPRINT_LAYER_ROW_GAP
   return (
     (includeHeader ? header : 0) +

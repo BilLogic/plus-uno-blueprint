@@ -1,12 +1,12 @@
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import {
-  BlueprintDividerRailLabelLine,
+  BlueprintDividerRailLabel,
+  BlueprintDividerRule,
 } from '@/components/blueprint/BlueprintDividerTag'
-import { LayerCollapseToggle } from '@/components/blueprint/LayerCollapseToggle'
+import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
-  BLUEPRINT_DIVIDER_LINE_END_INSET,
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
@@ -16,16 +16,22 @@ import {
 } from '@/lib/blueprintLayerCollapse'
 import {
   COMPARE_LABEL_WIDTH,
+  COMPARE_PATH_SECTION_H_INSET,
   type BlueprintLabelRowSpec,
 } from '@/lib/sideBySideCompareLayout'
+import { SERVICE_PATH_SECTION_INSET } from '@/components/blueprint/ComparePathSectionFrame'
 import {
   BLUEPRINT_THEME,
   blueprintPanelLabelRailColor,
   getBlueprintLabelSection,
   getBlueprintLabelTextColor,
 } from '@/lib/blueprintTheme'
+import {
+  BLUEPRINT_SLOT_INSET,
+  BLUEPRINT_SLOT_INSET_COMPACT,
+} from '@/lib/canvasHeaderStyle'
 import { cn } from '@/lib/utils'
-import type { BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintLane } from '@/types/blueprint'
 import type { CSSProperties } from 'react'
 
 export type { BlueprintLabelRowSpec }
@@ -96,14 +102,34 @@ export function BlueprintSwimLaneDivider({
   )
 }
 
-/** Interaction / visibility row — label and rule share one row so the line meets the text. */
+/**
+ * How far a divider rule runs PAST the path outline it crosses.
+ *
+ * A line of interaction is a property of the whole blueprint, not of one
+ * path's box: it starts at its caption in the rail, crosses the outline, and
+ * carries on out the other side. Stopping it inside the frame made three
+ * lines that each looked like a stray dash floating in a card.
+ */
+const DIVIDER_RULE_BLEED = 12
+export const COMPARE_DIVIDER_RULE_OVERHANG =
+  COMPARE_PATH_SECTION_H_INSET + DIVIDER_RULE_BLEED
+/**
+ * The same formula, not the same number. It was written out as `20` — the
+ * addition already done by hand — so changing SERVICE_PATH_SECTION_INSET moved
+ * the compare rule and silently left the service one behind.
+ */
+export const SERVICE_DIVIDER_RULE_OVERHANG =
+  SERVICE_PATH_SECTION_INSET + DIVIDER_RULE_BLEED
+
+/** Interaction / visibility row — caption in the rail, rule straight across. */
 export function BlueprintDividerRow({
   rowIndex,
   label,
   lineStyle,
   compact,
   labelWidth = COMPARE_LABEL_WIDTH,
-  labelRailBg = blueprintPanelLabelRailColor(BLUEPRINT_THEME.dividerBg),
+  ruleOverhang = COMPARE_DIVIDER_RULE_OVERHANG,
+  labelRailBg,
   className,
   style,
 }: {
@@ -111,7 +137,21 @@ export function BlueprintDividerRow({
   label: string
   lineStyle: 'dashed' | 'dotted' | 'solid'
   compact?: boolean
+  /** Painted width of the rail — the grey the caption sits on. */
   labelWidth?: number
+  /** How far past the row's right edge the rule runs, clearing the outline. */
+  ruleOverhang?: number
+  /**
+   * Rail fill, for the arrangements that have no backdrop behind this row.
+   *
+   * Undefined by default, and that is the point. In the compare grids
+   * `BlueprintStickyLabelBackdrop` already paints this column across every
+   * row — divider rows included — so a second coat of the identical colour
+   * here does the same thing it did on the lane rows: the patch lands on
+   * fractional coordinates under the canvas transform and the browser
+   * antialiases a one-pixel seam in the exact shape of the divider row. The
+   * service grid is a flex column with no backdrop, so it passes its own.
+   */
   labelRailBg?: string
   className?: string
   style?: CSSProperties
@@ -138,47 +178,61 @@ export function BlueprintDividerRow({
         ...gridPlacement,
         ...style,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-        paddingRight: BLUEPRINT_DIVIDER_LINE_END_INSET,
       }}
     >
+      {labelRailBg ? (
+        <div
+          aria-hidden
+          className="sticky left-0 top-0 z-0"
+          style={{
+            width: labelWidth,
+            height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
+            backgroundColor: labelRailBg,
+          }}
+        />
+      ) : null}
+      {/* Caption and rule in ONE row, so the line begins where the words end
+          — the two are one object and had drifted into two.
+
+          NO left inset, deliberately, and it is the one row in this column
+          that gets none. A lane label is a label IN the rail, so it sits
+          inside the rail's padding. A line of interaction is not: it names a
+          boundary of the whole blueprint, starts at the far edge, and runs
+          out past the path outline. Insetting it bought nothing and spent
+          14px of the room its longest caption needs before the board. */}
       <div
-        aria-hidden
-        className="sticky left-0 top-0 z-0"
-        style={{
-          width: labelWidth,
-          height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
-          backgroundColor: labelRailBg,
-        }}
-      />
-      <div className="absolute inset-y-0 left-0 right-0 z-10 flex items-center pl-5">
-        <BlueprintDividerRailLabelLine
-          label={label}
+        className="absolute inset-y-0 left-0 z-10 flex items-center"
+        style={{ right: -ruleOverhang }}
+      >
+        <BlueprintDividerRailLabel label={label} compact={compact} />
+        <BlueprintDividerRule
           lineStyle={lineStyle}
-          compact={compact}
-          className="min-w-0 flex-1"
+          className="ml-2 min-w-0 flex-1"
         />
       </div>
     </div>
   )
 }
 
+import { EntityPropertiesButton } from '@/components/blueprint/EntityPropertiesButton'
+import { LaneHeaderAffordance } from '@/components/blueprint/LaneHeaderAffordance'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { cellsInLane } from '@/lib/canvasCellQuery'
 
-/** One row of the left label column — a layer name plus its collapse toggle. */
+/** One row of the left label column — a lane name plus its collapse toggle. */
 export function BlueprintLabelRow({
   row,
-  layers,
+  lanes,
   style,
   compact,
   onToggleLayer,
 }: {
   row: BlueprintLabelRowSpec
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   style?: CSSProperties
   compact?: boolean
-  onToggleLayer?: (layerId: string) => void
+  onToggleLayer?: (laneId: string) => void
 }) {
   // Hooks first: this component returns early for divider rows, and a hook
   // after that return would run in a different order between row kinds.
@@ -188,7 +242,7 @@ export function BlueprintLabelRow({
   // View, so reading the blueprint is untouched.
   const canvasMode = useCanvasModeValue()
   const pick = useCellPick()
-  const laneId = row.kind === 'layer' ? (row.layer?.id ?? null) : null
+  const laneId = row.kind === 'lane' ? (row.lane?.id ?? null) : null
   const laneSelectable =
     canvasMode === 'design' && pick !== null && laneId !== null
   const selectLane = (event: ReactMouseEvent<HTMLElement>) => {
@@ -218,47 +272,64 @@ export function BlueprintLabelRow({
     : 0
 
   const labelColor =
-    row.layer != null
-      ? getBlueprintLabelTextColor(getBlueprintLabelSection(row.layer, layers))
+    row.lane != null
+      ? getBlueprintLabelTextColor(getBlueprintLabelSection(row.lane, lanes))
       : BLUEPRINT_THEME.headerText
 
   return (
     <div
       className={cn(
         'sticky left-0 isolate flex h-full min-h-0 flex-col overflow-hidden',
-        'z-40 border-r ',
+        // No right border. The rail already reads as its own column through
+        // its fill, and the hairline landed a few pixels from the path
+        // section's own outline — two vertical lines describing one edge.
+        'z-40',
       )}
+      /*
+        NO BACKGROUND HERE.
+
+        `BlueprintStickyLabelBackdrop` already paints this column, edge to
+        edge, for every row at once — and it is rendered by the same branch
+        that renders these rows, so it is never absent when they are present.
+        A second coat of the identical colour is not invisible: the row's box
+        lands on fractional coordinates under the canvas transform (353.31,
+        413.51), so the browser antialiases its edge against the surface
+        behind it and paints a one-pixel seam in the exact shape of the row.
+        Three coats of one colour, and the only thing the extra two produce is
+        a hairline rectangle around every lane.
+      */
       style={{
         ...style,
         width: COMPARE_LABEL_WIDTH,
-        backgroundColor: blueprintPanelLabelRailColor(),
-        borderColor: BLUEPRINT_THEME.laneDivider,
       }}
     >
       {corridorAbove > 0 && (
         <div
           aria-hidden
           className="shrink-0"
-          style={{
-            height: corridorAbove,
-            backgroundColor: blueprintPanelLabelRailColor(),
-          }}
+          style={{ height: corridorAbove }}
         />
       )}
       {inLaneLoopCorridorAbove > 0 && (
         <div
           aria-hidden
           className="shrink-0"
-          style={{
-            height: inLaneLoopCorridorAbove,
-            backgroundColor: blueprintPanelLabelRailColor(),
-          }}
+          style={{ height: inLaneLoopCorridorAbove }}
         />
       )}
       <div
         className={cn(
-          'relative flex min-h-0 flex-1 items-start gap-2 pl-5 pr-3',
-          compact ? 'pt-3' : 'pt-4',
+          // The label's inset is the cell slot's inset — same token, both
+          // edges. Asymmetric padding here (`pl-5 pr-3`) put the lane's name
+          // on a different rhythm from the cells it names, and the two
+          // numbers lived in different files with nothing holding them
+          // together.
+          'group/lane-header relative flex min-h-0 flex-1 items-start gap-2',
+          compact ? BLUEPRINT_SLOT_INSET_COMPACT : BLUEPRINT_SLOT_INSET,
+          // Bottom padding to match the top: the block stretches to fill this
+          // container, so without it the selected wash ran flush into the
+          // row's edge and read as clipped even when it was not.
+          compact ? 'pt-3 pb-3' : 'pt-4 pb-4',
         )}
       >
         {laneSelectable ? (
@@ -267,29 +338,49 @@ export function BlueprintLabelRow({
               type="button"
               onClick={selectLane}
               data-blueprint-row-header=""
-              className="group/lane relative min-w-0 flex-1 cursor-pointer rounded-sm text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words underline-offset-4 hover:underline"
+              className="group/lane relative min-w-0 flex-1 cursor-pointer rounded-sm text-left text-sm font-semibold leading-normal whitespace-normal break-words underline-offset-4 hover:underline"
               style={{ color: labelColor }}
             >
               {row.label}
             </button>
           </IconTooltip>
+        ) : row.kind === 'lane' && row.lane ? (
+          // View mode: the label is inert prose, so the whole block becomes
+          // the way into the lane's properties.
+          <LaneHeaderAffordance
+            laneId={row.lane.id}
+            laneName={row.label}
+            color={labelColor}
+          />
         ) : (
           <span
             data-blueprint-row-header=""
-            className="relative min-w-0 flex-1 text-left text-sm font-bold leading-snug tracking-tight whitespace-normal break-words"
+            className="relative min-w-0 flex-1 text-left text-sm font-semibold leading-normal whitespace-normal break-words"
             style={{ color: labelColor }}
           >
             {row.label}
           </span>
         )}
+        {/* Design mode only, and beside the selection handle rather than
+            inside it: there the label already means "select every cell in
+            this lane", and the two readings have to stay visibly separate.
+            In View mode the block itself opens the panel, so a second control
+            would be a duplicate. */}
+        {laneSelectable && row.lane ? (
+          <EntityPropertiesButton
+            kind="lane"
+            id={row.lane.id}
+            name={row.label}
+          />
+        ) : null}
         {BLUEPRINT_LAYER_COLLAPSE_ENABLED &&
-          row.kind === 'layer' &&
-          row.layer &&
+          row.kind === 'lane' &&
+          row.lane &&
           onToggleLayer && (
-            <LayerCollapseToggle
-              layerName={row.label}
+            <LaneCollapseToggle
+              laneName={row.label}
               collapsed={row.collapsed ?? false}
-              onToggle={() => onToggleLayer(row.layer!.id)}
+              onToggle={() => onToggleLayer(row.lane!.id)}
               className="size-6 shrink-0"
             />
           )}
@@ -298,10 +389,7 @@ export function BlueprintLabelRow({
         <div
           aria-hidden
           className="shrink-0"
-          style={{
-            height: corridorBelow,
-            backgroundColor: blueprintPanelLabelRailColor(),
-          }}
+          style={{ height: corridorBelow }}
         />
       )}
     </div>

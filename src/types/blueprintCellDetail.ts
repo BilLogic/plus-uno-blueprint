@@ -26,9 +26,9 @@ export type BlueprintPanelSurface = 'details' | 'differences'
 
 export type BlueprintCellSelection = {
   scenarioName: string
-  /** Parent lifecycle phase label when known (e.g. Pre-Session). */
+  /** Parent phase label when known (e.g. Pre-Session). */
   phaseName?: string
-  layerName: string
+  laneName: string
   stepId: string
   stepName: string
   stepIndex: number

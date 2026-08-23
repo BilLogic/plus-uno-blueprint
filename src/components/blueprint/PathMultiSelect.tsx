@@ -3,6 +3,8 @@ import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
 import { filterToolbarButtonClass } from '@/lib/filterToolbarButton'
 import { cn } from '@/lib/utils'
 import type { PathType } from '@/types/database'
+import type { EntityStatus } from '@/lib/entityStatus'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
 
 export type PathOption = {
   /**
@@ -13,8 +15,10 @@ export type PathOption = {
    */
   id: string
   name: string
-  description: string | null
+  summary: string | null
   path_type: PathType
+  /** How far along this route is. Omitted on options built before it existed. */
+  status?: EntityStatus | null
   /**
    * The real path uuids folded into this option, in the order they were
    * collected. Present only on options built by `collectOverviewPathOptions`;
@@ -27,10 +31,10 @@ const MAX_PATHS_PER_COLUMN = 2
 
 const PRIMARY_COLUMN_PATH_TYPES = new Set<PathType>([
   'happy',
-  'alternative',
-  'named',
+  'variant',
+  'variant',
 ])
-const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['unhappy', 'exception'])
+const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['exception', 'exception'])
 
 export function formatPathPickerLabel(name: string): string {
   return name.replace(/^Warm-Up\s+/i, '')
@@ -99,12 +103,13 @@ function PathNotionPill({
     >
       <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
-        description={path.description}
+        description={path.summary}
         pathName={path.name}
         side="top"
       >
         <span>{pathLabel}</span>
       </PathDescriptionTooltip>
+      <StatusBadge status={path.status} />
     </button>
   )
 }
@@ -131,12 +136,13 @@ export function PathToolbarButton({
     >
       <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
-        description={path.description}
+        description={path.summary}
         pathName={path.name}
         side="top"
       >
         <span>{pathLabel}</span>
       </PathDescriptionTooltip>
+      <StatusBadge status={path.status} />
     </button>
   )
 }
@@ -189,12 +195,13 @@ function PathCheckbox({
       />
       <PathTypeColorKey type={path.path_type} name={path.name} />
       <PathDescriptionTooltip
-        description={path.description}
+        description={path.summary}
         pathName={path.name}
         side="top"
       >
         <span className="min-w-0 cursor-default text-left">{pathLabel}</span>
       </PathDescriptionTooltip>
+      <StatusBadge status={path.status} />
     </label>
   )
 }

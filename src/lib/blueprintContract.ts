@@ -41,6 +41,16 @@ export const BLUEPRINT_CONTRACT = {
    */
   breadcrumb: {
     separator: ' · ',
+    /** Labels a parser must accept for a segment, beyond the canonical one
+     *  above. `layer` is the pre-rename spelling still present in every stored
+     *  chunk title; `lane` is what the view will emit after a re-embed. Both
+     *  map to the same breadcrumb field. */
+    aliases: { lane: ['layer'] },
+    // ⚠️ STILL 'Layer', deliberately. All 808 corpus chunks have "Layer: …"
+    // baked into their stored title, and the title is part of the EMBEDDED
+    // text — renaming this label strands every embedding until a full
+    // re-embed. The bot's parser accepts BOTH labels (see `breadcrumbAliases`),
+    // so this flips to 'Lane' in the same change that re-embeds the corpus.
     labels: ['Phase', 'Scenario', 'Path', 'Step', 'Layer'],
   },
 
@@ -51,12 +61,12 @@ export const BLUEPRINT_CONTRACT = {
    */
   publicReadTables: [
     'phases',
-    'service_scenarios',
+    'scenarios',
     'steps',
     'paths',
-    'layers',
+    'lanes',
     'cells',
-    'cell_triggers',
+    'cell_dependencies',
     'findings',
     'slices',
     'slice_items',
@@ -64,12 +74,87 @@ export const BLUEPRINT_CONTRACT = {
   ],
 
   /** Tables the bot actively reads (probe list for /health/blueprint). */
-  botReadTables: ['cells', 'cell_triggers', 'findings', 'slices'],
+  botReadTables: ['cells', 'cell_dependencies', 'findings', 'slices'],
+
+  /**
+   * PostgREST embed-hint constraint names. These are the sharpest edge in the
+   * whole contract: an embed hint is a STRING inside a `select=`, so nothing
+   * type-checks it on either side. Rename `cell_dependencies` without renaming its
+   * constraints and the request 400s, the bot's fetchEdges logs a warning and
+   * returns [], and Slack reports "no dependencies" for cells that have them —
+   * the same silent-empty failure the bot already documents from the
+   * `cell_id=in.(…)` era.
+   */
+  fkConstraints: {
+    cellDependencySource: 'cell_dependencies_source_cell_id_fkey',
+    cellDependencyTarget: 'cell_dependencies_target_cell_id_fkey',
+  },
 
   /** RPCs the bot calls. DDL is versioned in this repo's supabase/migrations. */
   rpcs: {
     searchBlueprint: 'search_blueprint',
     matchCorpusChunks: 'semantic_search.match_corpus_chunks',
+  },
+
+  /**
+   * `search_blueprint` parameter names, as sent on the wire. PostgREST binds
+   * RPC arguments BY NAME, so renaming a parameter in a migration is a
+   * breaking change for any caller that names it — and the caller cannot be
+   * type-checked against the function signature.
+   *
+   * Only the ones the bot may send are listed. `filter_lane_role` was
+   * `filter_layer_role` until the layers→lanes rename; listing it means a
+   * rename shows up as contract drift rather than as a silent no-op filter.
+   */
+  searchBlueprintParams: {
+    q: 'q',
+    queryEmbedding: 'query_embedding',
+    matchCount: 'match_count',
+    embedModel: 'embed_model',
+    rrfK: 'rrf_k',
+    filterPhase: 'filter_phase',
+    filterScenario: 'filter_scenario',
+    filterPathType: 'filter_path_type',
+    filterLaneRole: 'filter_lane_role',
+    granularity: 'granularity',
+    include: 'include',
+  },
+
+  /**
+   * `search_blueprint` OUTPUT column names the bot reads by key. Separate from
+   * the underlying table columns on purpose: `cells.description` becomes
+   * `cells.summary` in plan 002, but the RPC's projection is its own decision
+   * and this is the name on the wire.
+   */
+  searchBlueprintColumns: {
+    kind: 'kind',
+    id: 'id',
+    title: 'title',
+    snippet: 'snippet',
+    description: 'description',
+    lane: 'lane',
+    step: 'step',
+    scenario: 'scenario',
+    phase: 'phase',
+    path: 'path',
+    links: 'links',
+    updatedAt: 'updated_at',
+    similarity: 'similarity',
+    matchedBy: 'matched_by',
+    totalMatched: 'total_matched',
+  },
+
+  /**
+   * Values `include` accepts, and the `kind` each one tags its rows with.
+   * `slices` is listed because the RPC supports it — the bot deliberately does
+   * NOT use it and keeps its own fetchSlices, which answers a different
+   * question (title/actor ILIKE on the query text, plus an unfiltered
+   * head-count). See the v5 migration header.
+   */
+  searchBlueprintInclude: {
+    edges: 'edge',
+    findings: 'finding',
+    slices: 'slice',
   },
 } as const
 

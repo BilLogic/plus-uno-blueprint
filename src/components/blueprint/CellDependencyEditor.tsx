@@ -31,7 +31,7 @@ export type ExistingDependency = {
 /**
  * Connect this cell to another one in the same version.
  *
- * `trigger` draws an arrow; `needs` does not, and that asymmetry is the whole
+ * `leads_to` draws an arrow; `enables` does not, and that asymmetry is the whole
  * point of having two kinds. A blueprint where every relationship is drawn is
  * unreadable, and most "this depends on that" facts are constraints rather
  * than handoffs — worth recording, not worth drawing.
@@ -55,7 +55,7 @@ export function CellDependencyEditor({
   const [draft, setDraft] = useState<DraftDependency>({
     sourceCellId: source.cellId,
     targetCellId: null,
-    kind: 'trigger',
+    kind: 'leads_to',
     label: '',
     note: '',
   })
@@ -69,7 +69,7 @@ export function CellDependencyEditor({
   const refresh = () => {
     // Arrows are drawn from the grid read, so the canvas has to re-read —
     // invalidating a panel-local query would leave the line on screen.
-    invalidateQueries('lifecycle-phases')
+    invalidateQueries('service-phases')
   }
 
   const handleAdd = async () => {

@@ -10,7 +10,7 @@ import { useCollapsedBlueprintLayers } from '@/hooks/useCollapsedBlueprintLayers
 import { BLUEPRINT_LAYER_ROW_GAP } from '@/lib/blueprintLayout'
 import {
   COMPARE_CARD_GAP,
-  COMPARE_LABEL_WIDTH,
+  COMPARE_LABEL_TRACK_WIDTH,
   getCompareBoardWrapperPadding,
   buildSideBySideLabelRowSpecs,
   getCanonicalLayers,
@@ -31,7 +31,6 @@ type SideBySideCompareGridProps = {
   scenarioName?: string
   phaseName?: string
   /** When set, scenario title sits on the gray panel edge; path frames show path type. */
-  sectionTitleLabel?: string
   sectionTitleDescription?: string | null
   /** Shared swimlane board height for phase overview alignment. */
   fixedSwimlaneBodyHeight?: number
@@ -59,12 +58,11 @@ export function SideBySideCompareGrid({
   scrollContainerRef: scrollContainerRefProp,
   scenarioName,
   phaseName,
-  sectionTitleLabel,
   fixedSwimlaneBodyHeight,
   fillSwimlaneHeight = false,
 }: SideBySideCompareGridProps) {
   const { collapsedLayerIds, toggleLayer } = useCollapsedBlueprintLayers()
-  const layers = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
+  const lanes = useMemo(() => getCanonicalLayers(blueprints), [blueprints])
 
   const rows = useMemo(() => {
     const specs = buildSideBySideLabelRowSpecs(
@@ -92,7 +90,7 @@ export function SideBySideCompareGrid({
 
   const gridTemplateColumns = useMemo(
     () =>
-      `${COMPARE_LABEL_WIDTH}px ${blueprints
+      `${COMPARE_LABEL_TRACK_WIDTH}px ${blueprints
         .map(
           (blueprint) =>
             `${getCompareCardWidth(blueprint.steps.length, compact)}px`,
@@ -101,7 +99,6 @@ export function SideBySideCompareGrid({
     [blueprints, compact],
   )
 
-  const showPathTypeBadge = Boolean(sectionTitleLabel)
 
   if (blueprints.length === 0) {
     return (
@@ -148,7 +145,7 @@ export function SideBySideCompareGrid({
             <Fragment key={`label-${row.key}`}>
               <BlueprintLabelRow
                 row={row}
-                layers={layers}
+                lanes={lanes}
                 compact={compact}
                 onToggleLayer={toggleLayer}
                 style={{ gridColumn: 1, gridRow: rowIndex + 1 }}
@@ -163,7 +160,7 @@ export function SideBySideCompareGrid({
           <BlueprintPathBand
             key={blueprint.path.id}
             blueprint={blueprint}
-            layers={layers}
+            lanes={lanes}
             rows={rows}
             // The grid reserves column 1 for the label rail.
             arrangement={{
@@ -175,7 +172,6 @@ export function SideBySideCompareGrid({
             scrollContainerRef={scrollContainerRefProp}
             scenarioName={scenarioName}
             phaseName={phaseName}
-            showPathTypeBadge={showPathTypeBadge}
             fillSwimlaneHeight={fillSwimlaneHeight}
           />
         ))}

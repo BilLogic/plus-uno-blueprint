@@ -1,3 +1,4 @@
+import { asEntityStatus } from '@/lib/entityStatus'
 import {
   DISCOVERY_SCENARIO_ID,
 } from '@/data/applicationHappyPathFallback'
@@ -26,7 +27,7 @@ import type { CellLink } from '@/types/blueprint'
 export type BlueprintSource = 'database' | 'fallback' | null
 
 export function isBlueprintEmpty(data: BlueprintData): boolean {
-  return data.layers.length === 0
+  return data.lanes.length === 0
 }
 
 function repairBlueprintLayerPositionsFromFallback(
@@ -38,7 +39,7 @@ function repairBlueprintLayerPositionsFromFallback(
   }
 
   return sortBlueprintLayers(
-    repairWarmUpPathLayerPositions(data, fallback.layers),
+    repairWarmUpPathLayerPositions(data, fallback.lanes),
   )
 }
 
@@ -113,7 +114,7 @@ function fillMissingCellLinks(
  * - Field values already present in the DB (non-empty after trim) are kept.
  * - Fallback values only fill DB fields that are null/empty (a placeholder
  *   step visual counts as empty when the fallback has a real picture).
- * - Fallback layers/cells/steps/triggers/links that are entirely missing from
+ * - Fallback lanes/cells/steps/dependencies/links that are entirely missing from
  *   the DB are appended; nothing in the DB is removed or repositioned.
  */
 function mergeMissingBlueprintContent(
@@ -124,26 +125,26 @@ function mergeMissingBlueprintContent(
   const fallback = getBlueprintFallback(scenarioId, pathId ?? data.path.id)
   if (!fallback) return data
 
-  const layerIds = new Set(data.layers.map((layer) => layer.id))
+  const layerIds = new Set(data.lanes.map((lane) => lane.id))
   const layerIdByName = new Map(
-    data.layers.map((layer) => [layer.name, layer.id]),
+    data.lanes.map((lane) => [lane.name, lane.id]),
   )
   const fallbackLayerIdRemap = new Map<string, string>()
-  const layers = [...data.layers]
-  for (const layer of fallback.layers) {
-    if (layerIds.has(layer.id)) continue
+  const lanes = [...data.lanes]
+  for (const lane of fallback.lanes) {
+    if (layerIds.has(lane.id)) continue
 
-    const existingLayerId = layerIdByName.get(layer.name)
+    const existingLayerId = layerIdByName.get(lane.name)
     if (existingLayerId) {
-      fallbackLayerIdRemap.set(layer.id, existingLayerId)
+      fallbackLayerIdRemap.set(lane.id, existingLayerId)
       continue
     }
 
-    layers.push(layer)
-    layerIds.add(layer.id)
-    layerIdByName.set(layer.name, layer.id)
+    lanes.push(lane)
+    layerIds.add(lane.id)
+    layerIdByName.set(lane.name, lane.id)
   }
-  layers.sort((a, b) => a.row_position - b.row_position)
+  lanes.sort((a, b) => a.position - b.position)
 
   const fallbackCellById = new Map(
     fallback.cells.map((cell) => [cell.id, cell]),
@@ -170,8 +171,8 @@ function mergeMissingBlueprintContent(
       }
     }
 
-    if (fallbackCell.description?.trim() && !cell.description?.trim()) {
-      next = { ...next, description: fallbackCell.description }
+    if (fallbackCell.summary?.trim() && !cell.summary?.trim()) {
+      next = { ...next, summary: fallbackCell.summary }
       changed = true
     }
 
@@ -192,9 +193,9 @@ function mergeMissingBlueprintContent(
   for (const cell of fallback.cells) {
     if (cellIds.has(cell.id)) continue
 
-    const layerId =
-      fallbackLayerIdRemap.get(cell.layer_id) ?? cell.layer_id
-    cells.push({ ...cell, layer_id: layerId })
+    const laneId =
+      fallbackLayerIdRemap.get(cell.lane_id) ?? cell.lane_id
+    cells.push({ ...cell, lane_id: laneId })
     cellIds.add(cell.id)
   }
 
@@ -205,31 +206,31 @@ function mergeMissingBlueprintContent(
       steps.push(step)
     }
   }
-  steps.sort((a, b) => a.column_position - b.column_position)
+  steps.sort((a, b) => a.position - b.position)
 
-  const triggerKeys = new Set(
-    data.triggers.map(
-      (trigger) => `${trigger.source_cell_id}:${trigger.target_cell_id}`,
+  const dependencyKeys = new Set(
+    data.dependencies.map(
+      (dependency) => `${dependency.source_cell_id}:${dependency.target_cell_id}`,
     ),
   )
-  const triggers = [...data.triggers]
-  for (const trigger of fallback.triggers) {
-    const key = `${trigger.source_cell_id}:${trigger.target_cell_id}`
-    if (!triggerKeys.has(key)) {
-      triggers.push(trigger)
-      triggerKeys.add(key)
+  const dependencies = [...data.dependencies]
+  for (const dependency of fallback.dependencies) {
+    const key = `${dependency.source_cell_id}:${dependency.target_cell_id}`
+    if (!dependencyKeys.has(key)) {
+      dependencies.push(dependency)
+      dependencyKeys.add(key)
     }
   }
 
   const changed =
     cellsChanged ||
-    layers.length !== data.layers.length ||
+    lanes.length !== data.lanes.length ||
     cells.length !== data.cells.length ||
     steps.length !== data.steps.length ||
-    triggers.length !== data.triggers.length
+    dependencies.length !== data.dependencies.length
 
   const merged = changed
-    ? { ...data, layers, cells, steps, triggers }
+    ? { ...data, lanes, cells, steps, dependencies }
     : data
 
   return deduplicateBlueprintLayers(merged)
@@ -266,11 +267,11 @@ function applyPlusLegacyRepairs(
       repaired = repairWarmUpAlternatePathBlueprint(repaired)
     }
 
-    // Warm-Up legacy DB drift: realign layer row positions to the fallback
+    // Warm-Up legacy DB drift: realign lane row positions to the fallback
     // reference swimlanes. Only for the Warm-Up scenario — DB row positions
     // win everywhere else.
     if (fallback) {
-      repaired = repairWarmUpPathLayerPositions(repaired, fallback.layers)
+      repaired = repairWarmUpPathLayerPositions(repaired, fallback.lanes)
     }
   }
 
@@ -281,7 +282,7 @@ function sortBlueprintSteps(data: BlueprintData): BlueprintData {
   return {
     ...data,
     steps: [...data.steps].sort(
-      (a, b) => a.column_position - b.column_position,
+      (a, b) => a.position - b.position,
     ),
   }
 }
@@ -306,10 +307,12 @@ export function resolveBlueprintForScenario(
         ? {
             id: rawPath.id,
             name: fallback.path.name,
-            description:
-              fallback.path.description ?? rawPath.description ?? null,
+            summary:
+              fallback.path.summary ?? rawPath.summary ?? null,
             note: fallback.path.note ?? rawPath.note ?? null,
             path_type: rawPath.path_type,
+            status:
+              asEntityStatus(rawPath.status) ?? fallback.path.status,
           }
         : fallback.path,
     })
@@ -346,8 +349,8 @@ export function resolveBlueprintForScenario(
                 ? merged.path.name
                 : rawFallback.path.name,
               description: preferNonEmpty(
-                merged.path.description,
-                rawFallback.path.description,
+                merged.path.summary,
+                rawFallback.path.summary,
               ),
               note: preferNonEmpty(merged.path.note, rawFallback.path.note),
             },

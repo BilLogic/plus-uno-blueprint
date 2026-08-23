@@ -17,6 +17,10 @@ import {
   replaceSliceFrames,
   updateSliceMeta,
 } from '@/lib/sliceMutations'
+import {
+  createStakeholder,
+  updateStakeholder,
+} from '@/lib/stakeholderMutations'
 import type { SliceType } from '@/lib/sliceValidation'
 import { asUpdatedAtToken } from '@/lib/optimisticConcurrency'
 import { setSharedCanvasMode } from '@/contexts/canvasModeContext'
@@ -49,12 +53,40 @@ import {
 } from '@/lib/agent/uiBridge'
 import type { DeletableKind } from '@/lib/deletionSafety'
 import {
+  addEvidence,
+  updateEvidence,
+  type EvidenceKind,
+} from '@/lib/evidenceMutations'
+import { resolveFirstServiceId } from '@/lib/service'
+
+/** Mirrors the DB CHECK constraint so a bad kind fails before the insert. */
+const EVIDENCE_KINDS = new Set<string>([
+  'interview',
+  'survey',
+  'analytics',
+  'doc',
+  'meeting',
+  'decision',
+  'observation',
+  'other',
+])
+import {
   getBlueprint,
   getCell,
   getCompareDiff,
   getDeletionImpact,
+  getEvidence,
+  getProposition,
+  getSession,
+  listCellDependencies,
+  listEvidence,
+  listLanes,
+  listStakeholders,
+  listReferences,
+  listSessions,
+  listBlueprint,
+  searchBlueprint,
   listOwnerTags,
-  listScenarios,
   listSlices,
   readReference,
 } from '@/lib/agent/tools/read'
@@ -64,18 +96,18 @@ type Client = SupabaseClient<Database>
 // Tool specs and rosters live in `specs.ts` (imported directly by their
 // consumers — one canonical path); this module owns only dispatch.
 
-// One lifecycle per deployment today; cached after the first ask.
-let cachedLifecycleId: string | null = null
-async function lifecycleId(client: Client): Promise<string> {
-  if (cachedLifecycleId) return cachedLifecycleId
+// One service per deployment today; cached after the first ask.
+let cachedServiceId: string | null = null
+async function serviceId(client: Client): Promise<string> {
+  if (cachedServiceId) return cachedServiceId
   const { data, error } = await client
-    .from('service_lifecycles')
+    .from('services')
     .select('id')
     .limit(1)
     .maybeSingle()
   if (error) throw new Error(error.message)
-  if (!data) throw new Error('No service lifecycle exists yet.')
-  cachedLifecycleId = data.id
+  if (!data) throw new Error('No service exists yet.')
+  cachedServiceId = data.id
   return data.id
 }
 
@@ -102,13 +134,47 @@ export async function dispatchTool(
   args: Record<string, unknown>,
 ): Promise<string> {
   switch (name) {
-    case 'read_reference':
+    case 'get_reference':
       return readReference(need(args, 'name'))
-    case 'list_scenarios':
-      return listScenarios(client)
+    case 'list_blueprint': {
+      const granularity = Array.isArray(args.granularity)
+        ? args.granularity.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : []
+      if (granularity.length === 0) {
+        throw new Error(
+          'granularity is required — one or more of phase, scenario, path, step, lane, cell.',
+        )
+      }
+      return listBlueprint(client, {
+        granularity,
+        phase: s(args, 'phase'),
+        scenario: s(args, 'scenario'),
+        pathType: s(args, 'path_type'),
+        laneRole: s(args, 'lane_role'),
+        limit: typeof args.limit === 'number' ? args.limit : undefined,
+      })
+    }
+    case 'search_blueprint': {
+      const granularity = Array.isArray(args.granularity)
+        ? args.granularity.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : undefined
+      return searchBlueprint(client, {
+        query: need(args, 'query'),
+        granularity: granularity?.length ? granularity : undefined,
+        phase: s(args, 'phase'),
+        scenario: s(args, 'scenario'),
+        pathType: s(args, 'path_type'),
+        laneRole: s(args, 'lane_role'),
+        limit: typeof args.limit === 'number' ? args.limit : undefined,
+      })
+    }
     case 'get_blueprint':
       return getBlueprint(client, need(args, 'scenario_id'))
-    case 'get_compare_diff': {
+    case 'compare_blueprint': {
       const pathIds = Array.isArray(args.path_ids)
         ? args.path_ids.filter(
             (value): value is string => typeof value === 'string',
@@ -118,23 +184,56 @@ export async function dispatchTool(
     }
     case 'get_cell':
       return getCell(client, need(args, 'cell_id'))
-    case 'get_deletion_impact': {
+    case 'measure_deletion_impact': {
       const kind = s(args, 'kind')
-      // Validated against the UI's vocabulary, not the RPC's: `lane` and
-      // `step` are answerable server-side but their counts do not match what
-      // their delete removes, so quoting them would put a wrong number in
-      // front of a human about to delete. See `deletionSafety.ts`.
-      if (kind !== 'scenario' && kind !== 'path' && kind !== 'slice') {
+      // lane and step were withheld here because their counts did not match
+      // their deletes; migration 20260820030000 made them match, so all five
+      // are offered now. `step` still needs its path — the delete is
+      // path-scoped and there is no true count without it.
+      const kinds = ['scenario', 'path', 'step', 'lane', 'slice']
+      if (!kind || !kinds.includes(kind)) {
+        throw new Error(`kind must be one of ${kinds.join(', ')}.`)
+      }
+      if (kind === 'step' && !s(args, 'scope_id')) {
         throw new Error(
-          'kind must be scenario, path, or slice — lane and step impacts do not match their deletes and are not offered.',
+          'A step impact needs scope_id = the path id — deleting a step removes only the cells on ONE path, so without it there is no true number to quote.',
         )
       }
-      return getDeletionImpact(client, kind as DeletableKind, need(args, 'target_id'))
+      return getDeletionImpact(
+        client,
+        kind as DeletableKind,
+        need(args, 'target_id'),
+        s(args, 'scope_id'),
+      )
     }
     case 'list_slices':
       return listSlices(client)
     case 'list_owner_tags':
       return listOwnerTags(client)
+    case 'list_stakeholders':
+      return listStakeholders(client)
+    case 'list_lanes':
+      return listLanes(client)
+    case 'list_references':
+      return listReferences()
+    case 'list_cell_dependencies':
+      return listCellDependencies(client, s(args, 'cell_id'))
+    case 'list_evidence':
+      return listEvidence(client, s(args, 'cell_id'))
+    case 'get_evidence': {
+      const ids = Array.isArray(args.evidence_ids)
+        ? args.evidence_ids.filter(
+            (value): value is string => typeof value === 'string',
+          )
+        : []
+      return getEvidence(client, ids)
+    }
+    case 'get_proposition':
+      return getProposition(client)
+    case 'list_sessions':
+      return listSessions(agentSessionId)
+    case 'get_session':
+      return getSession(need(args, 'session_id'))
     case 'get_ui_state': {
       const context = collectAgentUiContext()
       return context || 'No UI state is being reported right now.'
@@ -175,6 +274,7 @@ export async function dispatchTool(
     }
     case 'list_findings': {
       const filter = s(args, 'status') ?? 'open'
+      const forCell = s(args, 'cell_id')
       let query = client
         .from('findings')
         .select('id, source, check_name, severity, note, status, cell_ids, created_at')
@@ -182,12 +282,18 @@ export async function dispatchTool(
         .limit(100)
       if (filter !== 'all')
         query = query.eq('status', filter)
+      // `cell_ids` is an array, so "which findings touch this cell" needs a
+      // containment test — there was no way to ask it before, which made a
+      // finding reachable only by reading all of them.
+      if (forCell) query = query.contains('cell_ids', [forCell])
       const { data, error } = await query
       if (error) throw new Error(error.message)
-      if (!data || data.length === 0)
+      if (!data || data.length === 0) {
+        if (forCell) return `No ${filter === 'all' ? '' : `${filter} `}findings touch cell ${forCell}.`
         return filter === 'all'
           ? 'No findings recorded yet.'
           : `No ${filter} findings.`
+      }
       return data
         .map(
           (row) =>
@@ -246,7 +352,7 @@ export async function dispatchTool(
   setAgentAttribution(agentSessionId)
   try {
     switch (name) {
-      case 'add_step': {
+      case 'create_step': {
         const at = typeof args.at_position === 'number' ? args.at_position : undefined
         const id = await addStep(client, {
           pathId: need(args, 'path_id'),
@@ -255,116 +361,148 @@ export async function dispatchTool(
         })
         return `Added step (${id}).`
       }
-      case 'add_lane': {
+      case 'create_lane': {
         await addLane(client, {
           scenarioId: need(args, 'scenario_id'),
           name: need(args, 'name'),
-          layerRole: s(args, 'layer_role') ?? null,
-          atRow: typeof args.at_row === 'number' ? args.at_row : undefined,
+          laneRole: s(args, 'lane_role') ?? null,
+          atPosition: typeof args.at_position === 'number' ? args.at_position : undefined,
         })
         return 'Added lane to every path of the scenario. Re-read the blueprint for the new lane ids.'
       }
       case 'upsert_cell': {
-        const layerId = need(args, 'layer_id')
+        const laneId = need(args, 'lane_id')
         const stepId = need(args, 'step_id')
         // Occupancy guard: the RPC upserts, so a second call on the same
         // slot would silently OVERWRITE the cell — and the recorded revert
         // for a "create" is a delete, so a human undoing the agent's edit
         // would destroy a pre-existing cell. Creation tool means creation
-        // only; edits go through update_cell_content.
+        // only; edits go through update_cell.
         const { data: occupied, error: occupiedError } = await client
           .from('cells')
           .select('id')
-          .eq('layer_id', layerId)
+          .eq('lane_id', laneId)
           .eq('step_id', stepId)
-          .or('slot_position.is.null,slot_position.eq.0')
+          .or('position.is.null,position.eq.0')
           .limit(1)
         if (occupiedError) throw new Error(occupiedError.message)
         if (occupied && occupied.length > 0)
           throw new Error(
-            `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell_content to edit the existing cell.`,
+            `A cell already exists at that slot (${occupied[0].id}) — upsert_cell only creates. Use update_cell to edit the existing cell.`,
           )
         const newContent = need(args, 'content')
         const lengthGuidance = getCellContentLengthGuidance(newContent)
         const id = await upsertCell(client, {
           pathId: need(args, 'path_id'),
-          layerId,
+          laneId,
           stepId,
           content: newContent,
         })
         return `Created cell (${id}).${lengthGuidance.message ? ` ${lengthGuidance.message}` : ''}`
       }
-      case 'update_cell_content': {
+      /**
+       * One tool over BOTH cell-write wrappers.
+       *
+       * They stay two functions underneath because they carry two separate
+       * column-level grants and two ledger entries — the revert sheet still
+       * distinguishes "Edited a cell's text" from "Specified function &
+       * form", so a user can take back one without the other. What the
+       * merge removes is the model having to know which half a field
+       * lives in, which is an implementation detail it kept guessing at.
+       *
+       * Each wrapper is called ONLY if this call names a field it owns, so
+       * editing just `function` still produces exactly one ledger row.
+       */
+      case 'update_cell': {
         const cellId = need(args, 'cell_id')
-        const nextContent = s(args, 'content')
-        const lengthGuidance =
-          nextContent === undefined
-            ? null
-            : getCellContentLengthGuidance(nextContent)
         const { data, error } = await client
           .from('cells')
-          .select('content, description, owner, perceived_owner')
+          .select(
+            'content, summary, status, owner, perceived_owner, function, form, value_props',
+          )
           .eq('id', cellId)
           .maybeSingle()
         if (error) throw new Error(error.message)
         if (!data) throw new Error(`No cell with id ${cellId}.`)
-        const previous: CellContentUpdate = {
-          content: data.content ?? '',
-          description: data.description ?? '',
-          owner: data.owner ?? '',
-          perceivedOwner: data.perceived_owner ?? '',
+
+        const touchesText =
+          s(args, 'content') !== undefined ||
+          s(args, 'summary') !== undefined ||
+          s(args, 'owner') !== undefined ||
+          s(args, 'perceived_owner') !== undefined
+        const touchesSpec =
+          s(args, 'function') !== undefined ||
+          s(args, 'form') !== undefined ||
+          Array.isArray(args.value_props)
+        if (!touchesText && !touchesSpec) {
+          throw new Error(
+            'Name at least one field to change: content, summary, owner, perceived_owner, function, form or value_props.',
+          )
         }
-        await updateCellContent(
-          client,
-          cellId,
-          {
-            content: s(args, 'content') ?? previous.content,
-            description: s(args, 'summary') ?? previous.description,
-            owner: s(args, 'owner') ?? previous.owner,
-            perceivedOwner: s(args, 'perceived_owner') ?? previous.perceivedOwner,
-          },
-          previous,
-        )
-        return `Cell updated.${lengthGuidance?.message ? ` ${lengthGuidance.message}` : ''}`
-      }
-      case 'update_cell_spec': {
-        const cellId = need(args, 'cell_id')
-        const { data, error } = await client
-          .from('cells')
-          .select('function, form, value_props')
-          .eq('id', cellId)
-          .maybeSingle()
-        if (error) throw new Error(error.message)
-        if (!data) throw new Error(`No cell with id ${cellId}.`)
-        const prevProps = Array.isArray(data.value_props)
-          ? (data.value_props as Array<{ for?: string; value?: string }>).map(
-              (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
-            )
-          : []
-        const previous = {
-          function: data.function ?? '',
-          form: data.form ?? '',
-          valueProps: prevProps,
+
+        const notes: string[] = []
+
+        if (touchesText) {
+          const nextContent = s(args, 'content')
+          const lengthGuidance =
+            nextContent === undefined
+              ? null
+              : getCellContentLengthGuidance(nextContent)
+          const previous: CellContentUpdate = {
+            content: data.content ?? '',
+            summary: data.summary ?? '',
+            owner: data.owner ?? '',
+            perceivedOwner: data.perceived_owner ?? '',
+            status: data.status ?? 'live',
+          }
+          await updateCellContent(
+            client,
+            cellId,
+            {
+              content: nextContent ?? previous.content,
+              summary: s(args, 'summary') ?? previous.summary,
+              owner: s(args, 'owner') ?? previous.owner,
+              status: previous.status,
+              perceivedOwner:
+                s(args, 'perceived_owner') ?? previous.perceivedOwner,
+            },
+            previous,
+          )
+          if (lengthGuidance?.message) notes.push(lengthGuidance.message)
         }
-        const nextProps = Array.isArray(args.value_props)
-          ? (args.value_props as Array<{ for?: string; value?: string }>).map(
-              (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
-            )
-          : previous.valueProps
-        await updateCellSpec(
-          client,
-          cellId,
-          {
-            function: s(args, 'function') ?? previous.function,
-            form: s(args, 'form') ?? previous.form,
-            valueProps: nextProps,
-          },
-          previous,
-        )
-        return 'Cell spec updated.'
+
+        if (touchesSpec) {
+          const prevProps = Array.isArray(data.value_props)
+            ? (data.value_props as Array<{ for?: string; value?: string }>).map(
+                (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
+              )
+            : []
+          const previous = {
+            function: data.function ?? '',
+            form: data.form ?? '',
+            valueProps: prevProps,
+          }
+          const nextProps = Array.isArray(args.value_props)
+            ? (args.value_props as Array<{ for?: string; value?: string }>).map(
+                (entry) => ({ for: entry.for ?? '', value: entry.value ?? '' }),
+              )
+            : previous.valueProps
+          await updateCellSpec(
+            client,
+            cellId,
+            {
+              function: s(args, 'function') ?? previous.function,
+              form: s(args, 'form') ?? previous.form,
+              valueProps: nextProps,
+            },
+            previous,
+          )
+        }
+
+        return `Cell updated.${notes.length ? ` ${notes.join(' ')}` : ''}`
       }
-      case 'set_cell_dependency': {
-        const kind = args.kind === 'needs' ? 'needs' : 'trigger'
+      case 'create_cell_dependency': {
+        const kind = args.kind === 'enables' ? 'enables' : 'leads_to'
         const id = await setCellDependency(client, {
           sourceCellId: need(args, 'source_cell_id'),
           targetCellId: need(args, 'target_cell_id'),
@@ -373,18 +511,71 @@ export async function dispatchTool(
         })
         return `Dependency set (${id}).`
       }
-      case 'rename_path': {
+      case 'update_path': {
         await renamePath(client, {
           pathId: need(args, 'path_id'),
           name: need(args, 'name'),
         })
         return 'Path renamed.'
       }
+      case 'create_stakeholder': {
+        const kind = need(args, 'kind')
+        if (!['recipient', 'staff', 'partner', 'provider'].includes(kind))
+          throw new Error('kind must be recipient, staff, partner, or provider.')
+        const id = await createStakeholder(client, await serviceId(client), {
+          name: need(args, 'name'),
+          kind,
+          note: s(args, 'note') ?? null,
+          aliases: Array.isArray(args.aliases)
+            ? args.aliases.filter(
+                (value): value is string => typeof value === 'string',
+              )
+            : [],
+        })
+        return `Added stakeholder (${id}).`
+      }
+      case 'update_stakeholder': {
+        const stakeholderId = need(args, 'stakeholder_id')
+        // Read-modify-write, not a patch: the row is the unit that gets
+        // reverted, so the captured `previous` has to be the whole of it.
+        const { data: current, error } = await client
+          .from('stakeholders')
+          .select('name, kind, note, aliases')
+          .eq('id', stakeholderId)
+          .maybeSingle()
+        if (error) throw new Error(error.message)
+        if (!current) throw new Error('No stakeholder with that id.')
+        const previous = {
+          name: current.name,
+          kind: current.kind,
+          note: current.note,
+          aliases: current.aliases ?? [],
+        }
+        const kind = s(args, 'kind') ?? previous.kind
+        if (!['recipient', 'staff', 'partner', 'provider'].includes(kind))
+          throw new Error('kind must be recipient, staff, partner, or provider.')
+        await updateStakeholder(
+          client,
+          stakeholderId,
+          {
+            name: s(args, 'name') ?? previous.name,
+            kind,
+            note: s(args, 'note') ?? previous.note,
+            aliases: Array.isArray(args.aliases)
+              ? args.aliases.filter(
+                  (value): value is string => typeof value === 'string',
+                )
+              : previous.aliases,
+          },
+          previous,
+        )
+        return 'Stakeholder updated.'
+      }
       case 'create_phase': {
         const id = await createPhase(client, {
-          lifecycleId: await lifecycleId(client),
+          serviceId: await serviceId(client),
           name: need(args, 'name'),
-          description: s(args, 'description') ?? null,
+          summary: s(args, 'summary') ?? null,
         })
         return `Created phase (${id}).`
       }
@@ -433,7 +624,7 @@ export async function dispatchTool(
         if (cellIds.length === 0)
           throw new Error('cell_ids must be a non-empty array of existing cell ids.')
         const slice = await createSlice(client, {
-          lifecycleId: await lifecycleId(client),
+          serviceId: await serviceId(client),
           title: need(args, 'title'),
           description: s(args, 'description') ?? '',
           sliceType: need(args, 'slice_type') as SliceType,
@@ -482,7 +673,47 @@ export async function dispatchTool(
         await replaceSliceFrames(client, sliceId, frames)
         return `Replaced the slice's frames (${frames.length}).`
       }
-      case 'record_finding': {
+      case 'create_evidence': {
+        const kind = need(args, 'kind')
+        if (!EVIDENCE_KINDS.has(kind)) {
+          throw new Error(
+            `kind must be one of ${[...EVIDENCE_KINDS].join(', ')} — the DB CHECK constraint rejects anything else.`,
+          )
+        }
+        const cellId = need(args, 'cell_id')
+        // Same wrapper, same service resolution and the same documented
+        // cell_key placeholder the cell panel uses (CellEvidenceTab.tsx) —
+        // so an agent-added source lands in the session ledger and can be
+        // reverted exactly like a human-added one.
+        const id = await addEvidence(client, {
+          serviceId: await resolveFirstServiceId(client),
+          cellId,
+          cellKey: cellId,
+          kind: kind as EvidenceKind,
+          title: need(args, 'title'),
+          ref: s(args, 'ref') ?? null,
+          excerpt: s(args, 'excerpt') ?? null,
+          note: s(args, 'note') ?? null,
+        })
+        return `Evidence added (${id}).`
+      }
+      case 'update_evidence': {
+        const kind = s(args, 'kind')
+        if (kind && !EVIDENCE_KINDS.has(kind)) {
+          throw new Error(
+            `kind must be one of ${[...EVIDENCE_KINDS].join(', ')} — the DB CHECK constraint rejects anything else.`,
+          )
+        }
+        await updateEvidence(client, need(args, 'evidence_id'), {
+          kind: kind as EvidenceKind | undefined,
+          title: s(args, 'title'),
+          ref: s(args, 'ref'),
+          excerpt: s(args, 'excerpt'),
+          note: s(args, 'note'),
+        })
+        return 'Evidence updated.'
+      }
+      case 'create_finding': {
         const source = args.source === 'whatif' ? 'whatif' : 'audit'
         const checkName = need(args, 'check_name')
         const severityArg = s(args, 'severity')
@@ -499,11 +730,11 @@ export async function dispatchTool(
           throw new Error('A zero-cell finding needs a scope (e.g. "scenario:Warm-Up").')
         const runId = s(args, 'run_id') ?? crypto.randomUUID()
         const fingerprint = await findingFingerprint(checkName, cellIds, scope)
-        const lifecycle = await lifecycleId(client)
+        const resolvedServiceId = await serviceId(client)
         const { data: existing, error: readError } = await client
           .from('findings')
           .select('id, status')
-          .eq('service_lifecycle_id', lifecycle)
+          .eq('service_id', resolvedServiceId)
           .eq('fingerprint', fingerprint)
           .order('updated_at', { ascending: false })
         if (readError) throw new Error(readError.message)
@@ -520,7 +751,7 @@ export async function dispatchTool(
         if (dismissed)
           return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. run_id ${runId}; reuse it for the rest of this run.`
         const { error: insertError } = await client.from('findings').insert({
-          service_lifecycle_id: lifecycle,
+          service_id: resolvedServiceId,
           run_id: runId,
           source,
           check_name: checkName,
@@ -534,7 +765,7 @@ export async function dispatchTool(
         const reopened = existing && existing.length > 0
         return `Recorded ${severityArg} finding for ${checkName}${reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. run_id ${runId}; reuse it for the rest of this run.`
       }
-      case 'set_finding_status': {
+      case 'update_finding': {
         const status = s(args, 'status')
         if (status !== 'open' && status !== 'resolved' && status !== 'dismissed')
           throw new Error('status must be open, resolved, or dismissed.')

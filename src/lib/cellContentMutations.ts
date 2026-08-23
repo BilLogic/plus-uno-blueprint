@@ -1,3 +1,4 @@
+import type { EntityStatus } from '@/lib/entityStatus'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
@@ -12,9 +13,10 @@ type Client = SupabaseClient<Database>
 export type CellContentUpdate = {
   /** The text in the cell on the grid. */
   content: string
-  description: string
+  summary: string
   owner: string
   perceivedOwner: string
+  status: EntityStatus
 }
 
 /**
@@ -22,7 +24,7 @@ export type CellContentUpdate = {
  *
  * These columns carry a column-level grant from the authoring migration, for
  * the same reason the spec columns do: the panel can edit what a cell *says*
- * without that opening the cell's position — path, layer, step — to the same
+ * without that opening the cell's position — path, lane, step — to the same
  * path. Where a cell sits is structure, and structure goes through the RPCs.
  *
  * `content` is the one field that is never nulled. A cell with no text is a
@@ -55,9 +57,12 @@ export async function updateCellContent(
       content,
       // Empty means "not specified", stored as null so the read path has one
       // kind of empty to check rather than two.
-      description: update.description.trim() || null,
+      summary: update.summary.trim() || null,
       owner: update.owner.trim() || null,
       perceived_owner: update.perceivedOwner.trim() || null,
+      // Never null: the column is `not null default 'live'`, and a cell with
+      // no status would read as unassessed rather than current.
+      status: update.status,
     })
     .eq('id', cellId)
     .select('id')

@@ -42,20 +42,3 @@ export function collectOverviewPathOptionsForScenarios(
   }
   return collectOverviewPathOptions(scoped)
 }
-
-export function isOverviewPathFilterChecked(
-  pathKey: string,
-  _pathsByScenario: Map<string, PathListItem[]>,
-  activePathKeys: readonly string[],
-): boolean {
-  return activePathKeys.includes(pathKey)
-}
-
-export function toggleOverviewPathFilter(
-  pathKey: string,
-  _pathsByScenario: Map<string, PathListItem[]>,
-  _getSelectedPathIds: (scenarioId: string) => string[],
-  togglePathKey: (pathKey: string) => void,
-): void {
-  togglePathKey(pathKey)
-}

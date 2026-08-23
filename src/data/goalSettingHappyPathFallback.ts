@@ -9,7 +9,7 @@ import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescripti
 import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
   GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
@@ -30,7 +30,7 @@ import {
 } from '@/data/goalSettingParallelSessionPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -43,46 +43,46 @@ export const GOAL_SETTING_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000850'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000857',
-    name: 'Partner Action: Teacher',
-    row_position: 1,
+    name: 'Teacher',
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000858',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000851',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000853',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000852',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000855',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000854',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000856',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -90,37 +90,37 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000970',
     name: 'Join breakout session',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000971',
     name: 'Share screen',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000972',
     name: 'Set or check goal',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000973',
     name: 'Complete goal strategy',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000984',
     name: 'Finalize goal activity with student',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000985',
     name: 'Leave breakout room',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000974',
     name: 'Next student',
-    column_position: 7,
+    position: 7,
   },
 ] as const
 
@@ -136,13 +136,13 @@ const L = {
   support: 'a0000000-0000-4000-8000-000000000856',
 } as const
 
-const GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS = [
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
-  'The tutor shares screen via Zoom/Pencil screen share feature.',
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.',
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+const GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS = [
+  'The tutor connects with student via Zoom in individual breakout room.',
+  'The tutor shares screen via Zoom screen share feature.',
+  'The tutor connects with student via Zoom in individual breakout room.',
+  'The tutor connects with student via Zoom in individual breakout room.',
+  'The tutor connects with student via Zoom in individual breakout room.',
+  "The tutor leaves the student's Zoom breakout room."
 ] as const
 
 const GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS = [
@@ -167,15 +167,15 @@ function happyPathPlusAppLink(
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(
           metadata.links ?? [],
           GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS,
@@ -184,7 +184,7 @@ function cell(
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -202,57 +202,57 @@ function gsCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001a${stepSlot}${layerSuffix}`
 }
 
-function gsTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function gsDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: gsTrigger(slot),
+    id: gsDependency(slot),
     source_cell_id: gsCell(fromStep, fromLayer),
     target_cell_id: gsCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
-  layer: string,
+function rowDependencies(
+  lane: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -261,13 +261,13 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     gsCell(stepSlot, layerSuffix),
-  triggerId: (slot: string) => gsTrigger(slot),
+  dependencyId: (slot: string) => gsDependency(slot),
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
@@ -275,11 +275,11 @@ const partnerLeadOptions = {
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
 }
 
-const GOAL_SETTING_TRIGGERS: BlueprintCellTrigger[] = [
-  ...buildParallelSessionPartnerLeadTriggers(partnerLeadOptions),
-  ...rowTriggers('03', 50, 6),
-  ...columnLaneTriggers('03', '06', 61, 7),
-  trigger('060', '07', '03', '01', '03'),
+const GOAL_SETTING_TRIGGERS: BlueprintCellDependency[] = [
+  ...buildParallelSessionPartnerLeadDependencies(partnerLeadOptions),
+  ...rowDependencies('03', 50, 6),
+  ...columnLaneDependencies('03', '06', 61, 7),
+  dependency('060', '07', '03', '01', '03'),
 ]
 
 const GOAL_SETTING_CELLS: BlueprintCell[] = [
@@ -326,25 +326,25 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     { picture: GOAL_SETTING_HAPPY_REGULAR_TUTOR_STEP_07_PICTURE },
   ),
 
-  cell(gsCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[0],
+  cell(gsCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS[0],
   }),
-  cell(gsCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil, PLUS App', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[1],
+  cell(gsCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom, PLUS App', {
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS[1],
     links: [happyPathPlusAppLink(
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[0],
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_02_PICTURE,
     )],
   }),
-  cell(gsCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil, PLUS App', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[2],
+  cell(gsCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom, PLUS App', {
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS[2],
     links: [happyPathPlusAppLink(
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[1],
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_03_PICTURE,
     )],
   }),
-  cell(gsCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil, PLUS App', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[3],
+  cell(gsCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom, PLUS App', {
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS[3],
     links: [happyPathPlusAppLink(
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[2],
       GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_04_PICTURE,
@@ -354,17 +354,17 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
     gsCell('05', '06'),
     L.frontStageTech,
     STEPS[4].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[4],
+      summary: GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS[4],
       links: [happyPathPlusAppLink(
         GOAL_SETTING_HAPPY_PATH_PLUS_APP_DESCRIPTIONS[3],
         GOAL_SETTING_HAPPY_PATH_PLUS_APP_STEP_05_PICTURE,
       )],
     },
   ),
-  cell(gsCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_HAPPY_PATH_ZOOM_PENCIL_DESCRIPTIONS[5],
+  cell(gsCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom', {
+    summary: GOAL_SETTING_HAPPY_PATH_ZOOM_DESCRIPTIONS[5],
   }),
   cell(gsCell('07', '06'), L.frontStageTech, STEPS[6].id, 'PLUS App', {
     links: [happyPathPlusAppLink(
@@ -399,33 +399,34 @@ const GOAL_SETTING_CELLS: BlueprintCell[] = [
   ),
 
   cell(gsCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('03', '09'), L.support, STEPS[2].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('05', '09'), L.support, STEPS[4].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(gsCell('07', '09'), L.support, STEPS[6].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 
 export const GOAL_SETTING_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: GOAL_SETTING_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'All conditions',
+    summary:
       'General overview of tutors guiding students through goal-setting activities in breakout sessions. For a more detailed look at the activities, see the other paths in this scenario.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: GOAL_SETTING_CELLS,
-  triggers: GOAL_SETTING_TRIGGERS,
+  dependencies: GOAL_SETTING_TRIGGERS,
 }

@@ -23,6 +23,7 @@ import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
+import { isUnbuilt, type EntityStatus } from '@/lib/entityStatus'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
@@ -47,6 +48,25 @@ type BlueprintCellButtonProps = {
    * first pill only; plain cell faces leave the default (true).
    */
   sliceSequenceBadge?: boolean
+  /**
+   * What a plain click OPENS, when the answer is not "this cell's panel".
+   *
+   * The storyboard cell is the one case: its face is the step's frames and
+   * its caption is `steps.summary`, so the thing behind it is the STEP. Every
+   * other gesture — picking, the emphasis ring, the close-on-second-click
+   * grammar — is unchanged; only the open verb is swapped.
+   */
+  onOpen?: () => void
+  /**
+   * Unbuilt cells have to LOOK unbuilt.
+   *
+   * When the status lived in the label, the canvas said it for free — every
+   * such pill began "Planned — ". Moving it to its own column would have made
+   * fifty design explorations read as shipped surfaces, which is the single
+   * most expensive thing this blueprint can get wrong. A dashed edge and a
+   * drained fill carry it instead.
+   */
+  status?: EntityStatus | null
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
@@ -72,10 +92,12 @@ export function BlueprintCellButton({
   variant = 'cell',
   opacity,
   sliceSequenceBadge = true,
+  onOpen,
   children,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
   'data-blueprint-tech-pill': techPillLabel,
+  status,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
   const isInteractive = Boolean(detail?.enabled && selection && detail)
@@ -193,6 +215,10 @@ export function BlueprintCellButton({
       the discoverable route to the same place.
     */
     if (clickOpensDetail(event)) {
+      if (onOpen) {
+        onOpen()
+        return
+      }
       detail!.selectCell(selection!)
       return
     }
@@ -228,6 +254,14 @@ export function BlueprintCellButton({
       detail!.closePanel()
       return
     }
+    // Both open paths route through `onOpen` when there is one — the modifier
+    // above and the bare click here. Hooking only the modifier is how the
+    // storyboard kept opening a cell panel on an ordinary click while the
+    // ⌘-click opened its step: one gesture, two answers.
+    if (onOpen) {
+      onOpen()
+      return
+    }
     detail!.selectCell(selection!)
   }
 
@@ -252,6 +286,7 @@ export function BlueprintCellButton({
       aria-describedby={ariaDescribedBy}
       aria-pressed={isInteractive ? isActive : undefined}
       data-blueprint-cell-emphasis={emphasis}
+      {...(status ? { 'data-blueprint-cell-status': status } : {})}
       {...(isSliceMember ? { 'data-slice-member': '' } : {})}
       {...(isPicked ? { 'data-slice-picked': '' } : {})}
       {...(isPreviewHover ? { 'data-blueprint-cell-preview-hover': '' } : {})}
@@ -270,6 +305,17 @@ export function BlueprintCellButton({
       // 200 ms of a slice pick. Same rule blueprint.css states for the slice
       // dim and CanvasPhaseSection now follows; saturation lands on frame one.
       dimUnpicked && 'opacity-60 saturate-[.6] transition-opacity',
+      // Dashed, drained and slightly transparent: three cheap signals that
+      // agree, so the cell still reads as unbuilt at the zoom where a canvas
+      // is usually seen and the dashes have collapsed into a grey line.
+      isUnbuilt(status) && 'border-dashed saturate-[.55] opacity-90',
+      // Deprecated is not unbuilt — it exists, it works, it is going away. A
+      // dashed edge would say the opposite, so it keeps its solid face and
+      // fades instead.
+      status === 'deprecated' && 'saturate-[.35] opacity-75',
+      // At risk gets NOTHING here. It is a working surface people rely on;
+      // dimming it would tell a reader not to, which is the wrong advice. The
+      // panel names it, and a check can find it.
       )}
       style={surfaceStyle}
     >

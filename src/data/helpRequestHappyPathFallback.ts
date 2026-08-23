@@ -17,21 +17,21 @@ import {
   HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
   HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
   HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
-  HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_01_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_02_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_03_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION,
+  HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION,
 } from '@/data/helpRequestPictures'
 import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
   PARALLEL_SESSION_PARTNER_CONTENT,
 } from '@/data/parallelSessionPartnerLead'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -45,46 +45,46 @@ export const HELP_REQUEST_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000860'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000867',
-    name: 'Partner Action: Teacher',
-    row_position: 1,
+    name: 'Teacher',
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000868',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000861',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000863',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000862',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000865',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000864',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000866',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -92,37 +92,37 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000975',
     name: 'Receive help request',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000976',
     name: 'Finish conversation',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000977',
     name: 'Visit student',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000978',
     name: 'Resolve issue',
-    column_position: 4,
+    position: 4,
   },
   {
     id: HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID,
     name: 'Leave breakout room',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000979',
     name: 'Next student',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000987',
     name: PARALLEL_SESSION_PARTNER_CONTENT[6]!,
-    column_position: 7,
+    position: 7,
   },
 ] as const
 
@@ -140,19 +140,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(metadata.links ?? [], HELP_REQUEST_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -165,57 +165,57 @@ function hrCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001b${stepSlot}${layerSuffix}`
 }
 
-function hrTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000099${triggerSlot}`
+function hrDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000099${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: hrTrigger(slot),
+    id: hrDependency(slot),
     source_cell_id: hrCell(fromStep, fromLayer),
     target_cell_id: hrCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
-  layer: string,
+function rowDependencies(
+  lane: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -224,13 +224,13 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     hrCell(stepSlot, layerSuffix),
-  triggerId: (slot: string) => hrTrigger(slot),
+  dependencyId: (slot: string) => hrDependency(slot),
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
@@ -239,13 +239,13 @@ const partnerLeadOptions = {
 }
 
 const HELP_REQUEST_PARTNER_LEAD_TRIGGERS =
-  buildParallelSessionPartnerLeadTriggers(partnerLeadOptions)
+  buildParallelSessionPartnerLeadDependencies(partnerLeadOptions)
 
-const HELP_REQUEST_TRIGGERS: BlueprintCellTrigger[] = [
+const HELP_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
   ...HELP_REQUEST_PARTNER_LEAD_TRIGGERS,
-  ...rowTriggers('03', 50, 5),
-  ...columnLaneTriggers('03', '06', 113, 6),
-  trigger('060', '06', '03', '01', '03'),
+  ...rowDependencies('03', 50, 5),
+  ...columnLaneDependencies('03', '06', 113, 6),
+  dependency('060', '06', '03', '01', '03'),
 ]
 
 const HELP_REQUEST_CELLS: BlueprintCell[] = [
@@ -281,20 +281,20 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
     { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE },
   ),
 
-  cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_01_DESCRIPTION,
   }),
-  cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+  cell(hrCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_02_DESCRIPTION,
   }),
-  cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  cell(hrCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_03_DESCRIPTION,
   }),
-  cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+  cell(hrCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION,
   }),
-  cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil', {
-    description: HELP_REQUEST_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+  cell(hrCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom', {
+    summary: HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION,
   }),
   cell(hrCell('06', '06'), L.frontStageTech, STEPS[5].id, 'PLUS App', {
     links: [
@@ -315,21 +315,22 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ),
 
   cell(hrCell('06', '09'), L.support, STEPS[5].id, 'Dev Team\nDesign Team', {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 
 export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: HELP_REQUEST_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'Resolved in the room',
+    summary:
       'Tutors receive and resolve student help requests during the session.',
     note: getScenarioParallelNote(HELP_REQUEST_SCENARIO_ID),
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: HELP_REQUEST_CELLS,
-  triggers: HELP_REQUEST_TRIGGERS,
+  dependencies: HELP_REQUEST_TRIGGERS,
 }

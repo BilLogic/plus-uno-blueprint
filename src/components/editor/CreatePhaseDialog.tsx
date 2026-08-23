@@ -29,12 +29,12 @@ import { createPhase } from '@/lib/authoringRpc'
  * blueprint.
  */
 export function CreatePhaseDialog({
-  lifecycleId,
+  serviceId,
   open,
   onOpenChange,
   onCreated,
 }: {
-  lifecycleId: string | null
+  serviceId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onCreated?: (phaseId: string) => void
@@ -45,14 +45,14 @@ export function CreatePhaseDialog({
   const [error, setError] = useState<string | null>(null)
 
   const trimmed = name.trim()
-  const ready = trimmed.length > 0 && !busy && client !== null && lifecycleId !== null
+  const ready = trimmed.length > 0 && !busy && client !== null && serviceId !== null
 
   const handleCreate = async () => {
-    if (!client || !lifecycleId || !ready) return
+    if (!client || !serviceId || !ready) return
     setBusy(true)
     setError(null)
     try {
-      const phaseId = await createPhase(client, { lifecycleId, name: trimmed })
+      const phaseId = await createPhase(client, { serviceId, name: trimmed })
       invalidateStructure()
       setName('')
       onOpenChange(false)

@@ -1,7 +1,7 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
-import type { BlueprintCell, BlueprintCellTrigger } from '@/types/blueprint'
+import type { BlueprintCell, BlueprintCellDependency } from '@/types/blueprint'
 
-/** Shared Partner Action: Teacher steps for parallel in-session scenarios. */
+/** Shared Teacher steps for parallel in-session scenarios. */
 export const PARALLEL_SESSION_PARTNER_CONTENT = [
   'Circulate and quietly observe the students.',
   'Remind students to keep working while waiting.',
@@ -31,7 +31,7 @@ export const PARALLEL_SESSION_LEAD_COLUMN_COUNT =
 export const PARALLEL_SESSION_PARTNER_CELL_ID_PATTERN =
   /000000(?:04|06|1a|1b|1f|a0|b0|c0|d0)(\d{2})01$/
 
-export function isParallelSessionPartnerWrapTrigger(
+export function isParallelSessionPartnerWrapDependency(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
@@ -52,7 +52,7 @@ export function isParallelSessionPartnerWrapTrigger(
 export const PARALLEL_SESSION_LEAD_CELL_ID_PATTERN =
   /000000(?:04|06|1a|1b|1f|a0|b0|c0|d0)(\d{2})02$/
 
-export function isParallelSessionLeadWrapTrigger(
+export function isParallelSessionLeadWrapDependency(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
@@ -65,25 +65,25 @@ export function isParallelSessionLeadWrapTrigger(
   return targetStep < sourceStep
 }
 
-export function isParallelSessionOverheadWrapTrigger(
+export function isParallelSessionOverheadWrapDependency(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
-  return isParallelSessionPartnerWrapTrigger(sourceCellId, targetCellId)
+  return isParallelSessionPartnerWrapDependency(sourceCellId, targetCellId)
 }
 
-export function isParallelSessionLeadBottomWrapTrigger(
+export function isParallelSessionLeadBottomWrapDependency(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
-  return isParallelSessionLeadWrapTrigger(sourceCellId, targetCellId)
+  return isParallelSessionLeadWrapDependency(sourceCellId, targetCellId)
 }
 
 type PartnerLeadLayerSuffix = '01' | '02'
 
 type BuildPartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: PartnerLeadLayerSuffix) => string
-  triggerId: (slot: string) => string
+  dependencyId: (slot: string) => string
   partnerLayerId: string
   leadLayerId: string
   stepIdForColumn: (column: number) => string
@@ -93,14 +93,14 @@ type BuildPartnerLeadOptions = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   picture?: string,
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -144,56 +144,56 @@ export function buildParallelSessionPartnerLeadCells(
   return cells
 }
 
-function trigger(
+function dependency(
   options: BuildPartnerLeadOptions,
   slot: string,
   fromStep: string,
   fromLayer: PartnerLeadLayerSuffix,
   toStep: string,
   toLayer: PartnerLeadLayerSuffix,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: options.triggerId(slot),
+    id: options.dependencyId(slot),
     source_cell_id: options.cellId(fromStep, fromLayer),
     target_cell_id: options.cellId(toStep, toLayer),
   }
 }
 
-function rowTriggers(
+function rowDependencies(
   options: BuildPartnerLeadOptions,
-  layer: PartnerLeadLayerSuffix,
+  lane: PartnerLeadLayerSuffix,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         options,
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-export function buildParallelSessionPartnerLeadTriggers(
+export function buildParallelSessionPartnerLeadDependencies(
   options: BuildPartnerLeadOptions,
-): BlueprintCellTrigger[] {
+): BlueprintCellDependency[] {
   return [
-    ...rowTriggers(options, '01', 1, PARALLEL_SESSION_PARTNER_COLUMN_COUNT - 1),
-    ...rowTriggers(options, '02', 20, PARALLEL_SESSION_LEAD_COLUMN_COUNT - 1),
-    trigger(options, '033', '04', '02', '04', '01'),
-    trigger(options, '034', '04', '01', '04', '02'),
-    trigger(options, '035', '05', '02', '05', '01'),
-    trigger(options, '036', '05', '01', '05', '02'),
-    trigger(
+    ...rowDependencies(options, '01', 1, PARALLEL_SESSION_PARTNER_COLUMN_COUNT - 1),
+    ...rowDependencies(options, '02', 20, PARALLEL_SESSION_LEAD_COLUMN_COUNT - 1),
+    dependency(options, '033', '04', '02', '04', '01'),
+    dependency(options, '034', '04', '01', '04', '02'),
+    dependency(options, '035', '05', '02', '05', '01'),
+    dependency(options, '036', '05', '01', '05', '02'),
+    dependency(
       options,
       '041',
       String(PARALLEL_SESSION_PARTNER_COLUMN_COUNT).padStart(2, '0'),
@@ -201,7 +201,7 @@ export function buildParallelSessionPartnerLeadTriggers(
       '01',
       '01',
     ),
-    trigger(
+    dependency(
       options,
       '042',
       String(PARALLEL_SESSION_LEAD_COLUMN_COUNT).padStart(2, '0'),

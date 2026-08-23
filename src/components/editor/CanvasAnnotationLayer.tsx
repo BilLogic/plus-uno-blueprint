@@ -179,7 +179,7 @@ function clientToLocal(
   }
 }
 
-/** Live CSS scale of the annotation layer (more reliable than React zoom state). */
+/** Live CSS scale of the annotation lane (more reliable than React zoom state). */
 function getLayerScale(el: HTMLElement): number {
   const rect = el.getBoundingClientRect()
   return Math.max(rect.width / Math.max(el.offsetWidth, 1), 0.05)
@@ -1514,7 +1514,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
     }
 
     window.addEventListener('keydown', onKeyDown)
-    // Capture so we observe the click even when the layer has pointer-events: none.
+    // Capture so we observe the click even when the lane has pointer-events: none.
     document.addEventListener('pointerdown', onPointerDown, true)
     return () => {
       window.removeEventListener('keydown', onKeyDown)
@@ -1676,12 +1676,12 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerId !== activePointerIdRef.current) return
-      const layer = layerRef.current
+      const lane = layerRef.current
       const current = draftRef.current
-      if (!layer || !current) return
+      if (!lane || !current) return
       event.preventDefault()
 
-      const scale = getLayerScale(layer)
+      const scale = getLayerScale(lane)
 
       if (current.type === 'pen') {
         const minDist = Math.max(0.35 / scale, 0.25)
@@ -1692,7 +1692,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
         const samples = coalesced.length > 0 ? coalesced : [event]
         for (const sample of samples) {
           appendPenPoint(
-            clientToLocal(layer, sample.clientX, sample.clientY),
+            clientToLocal(lane, sample.clientX, sample.clientY),
             minDist,
           )
         }
@@ -1702,14 +1702,14 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
       if (current.type === 'eraser') {
         const radius = ANNOTATION_ERASER_SCREEN_RADIUS / scale
         eraseToPoint(
-          clientToLocal(layer, event.clientX, event.clientY),
+          clientToLocal(lane, event.clientX, event.clientY),
           radius,
         )
         return
       }
 
       if (current.type === 'rect' || current.type === 'ellipse') {
-        const point = clientToLocal(layer, event.clientX, event.clientY)
+        const point = clientToLocal(lane, event.clientX, event.clientY)
         draftRef.current = {
           ...current,
           x1: point.x,
@@ -1721,25 +1721,25 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
 
     const onUp = (event: PointerEvent) => {
       if (event.pointerId !== activePointerIdRef.current) return
-      const layer = layerRef.current
+      const lane = layerRef.current
       const current = draftRef.current
 
-      if (layer && current?.type === 'pen') {
-        const scale = getLayerScale(layer)
+      if (lane && current?.type === 'pen') {
+        const scale = getLayerScale(lane)
         appendPenPoint(
-          clientToLocal(layer, event.clientX, event.clientY),
+          clientToLocal(lane, event.clientX, event.clientY),
           Math.max(0.35 / scale, 0.25),
         )
       }
-      if (layer && current?.type === 'eraser') {
+      if (lane && current?.type === 'eraser') {
         eraseToPoint(
-          clientToLocal(layer, event.clientX, event.clientY),
-          ANNOTATION_ERASER_SCREEN_RADIUS / getLayerScale(layer),
+          clientToLocal(lane, event.clientX, event.clientY),
+          ANNOTATION_ERASER_SCREEN_RADIUS / getLayerScale(lane),
         )
       }
 
       try {
-        layer?.releasePointerCapture(pointerId)
+        lane?.releasePointerCapture(pointerId)
       } catch {
         // Already released.
       }
@@ -2023,7 +2023,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
   return (
     <div
       ref={layerRef}
-      data-canvas-annotation-layer=""
+      data-canvas-annotation-lane=""
       className={cn(
         'absolute inset-0 z-[60] touch-none',
         layerInteractive ? 'pointer-events-auto' : 'pointer-events-none',

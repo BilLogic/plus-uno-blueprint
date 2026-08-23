@@ -25,13 +25,13 @@ export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_PICTURE =
 export const STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE =
   '/blueprint-images/students-just-joined/happy-path/regular-tutor/step-03-move-breakout-room.png'
 
-/** Students Just Joined Happy Path — Zoom/Pencil Front Stage Tech. */
+/** Students Just Joined Happy Path — Zoom Front Stage Tech. */
 
-export const STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The lead tutor greets students on Zoom/Pencil as they join the session.'
+export const STUDENTS_JUST_JOINED_ZOOM_STEP_01_DESCRIPTION =
+  'The lead tutor greets students on Zoom as they join the session.'
 
-export const STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_02_DESCRIPTION =
-  'Lead tutors utilize the mute function on Zoom/Pencil if necessary.'
+export const STUDENTS_JUST_JOINED_ZOOM_STEP_02_DESCRIPTION =
+  'Lead tutors utilize the mute function on Zoom if necessary.'
 
-export const STUDENTS_JUST_JOINED_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'Regular tutors move their students to their corresponding breakout room on Zoom/Pencil.'
+export const STUDENTS_JUST_JOINED_ZOOM_STEP_03_DESCRIPTION =
+  'Regular tutors move their students to their corresponding breakout room on Zoom.'

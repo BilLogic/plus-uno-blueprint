@@ -69,7 +69,7 @@ that disagree on a separator split the finding history).
 
 - Sorted, so cell order never changes identity.
 - `cell_keys` use the qualified key convention
-  `<lifecycle>/<phase>/<scenario>/<path>/<layer>/<step>` (the same
+  `<service>/<phase>/<scenario>/<path>/<layer>/<step>` (the same
   convention slice-schema.json defines; IR cells carry layer+step — the
   rest of the path comes from their position in the tree). On a live
   canvas, cell ids stand in for keys (separate dedupe space, by design).
@@ -81,7 +81,7 @@ that disagree on a separator split the finding history).
   `check_name + ':scope:' + scenario_key + ':' + <reason-slug>`
   (e.g. `gap-sweep:scope:warm-up:orphan-step-cooldown`).
 - The DB backstop: `findings_open_fingerprint_idx` — unique on
-  `(service_lifecycle_id, fingerprint) where status = 'open'`. An insert
+  `(service_id, fingerprint) where status = 'open'`. An insert
   conflict means the dedupe logic missed; treat it as update-in-place,
   never as "insert with a tweaked fingerprint".
 

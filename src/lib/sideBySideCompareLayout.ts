@@ -27,30 +27,30 @@ import {
   isBlueprintLayerCollapsed,
 } from '@/lib/blueprintLayerCollapse'
 import {
-  isParallelSessionLeadBottomWrapTrigger,
-  isParallelSessionPartnerWrapTrigger,
+  isParallelSessionLeadBottomWrapDependency,
+  isParallelSessionPartnerWrapDependency,
 } from '@/data/parallelSessionPartnerLead'
 import type { PathListItem } from '@/lib/pathSelection'
 import { itemsInSelectionOrder } from '@/lib/pathSelection'
-import type { BlueprintData, BlueprintLayer } from '@/types/blueprint'
+import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 import type {
   IntegratedBlueprintCell,
   IntegratedBlueprintStep,
-  IntegratedBlueprintTrigger,
+  IntegratedBlueprintDependency,
 } from '@/types/integratedBlueprint'
 import type { SlideViewType } from '@/types/nav'
 
 export type ComparePathArrowData = {
-  triggers: IntegratedBlueprintTrigger[]
+  dependencies: IntegratedBlueprintDependency[]
   cells: IntegratedBlueprintCell[]
   steps: IntegratedBlueprintStep[]
 }
 
-/** One path's arrow inputs (fold's trigger-drop retired 2026-08-17). */
+/** One path's arrow inputs (fold's dependency-drop retired 2026-08-17). */
 export function getComparePathArrowData(
   blueprint: BlueprintData,
 ): ComparePathArrowData {
-  const { path, cells, triggers, steps } = blueprint
+  const { path, cells, dependencies, steps } = blueprint
 
   return {
     steps: steps.map((step) => ({
@@ -59,20 +59,20 @@ export function getComparePathArrowData(
     })),
     cells: cells.map((cell) => ({
       id: cell.id,
-      layer_id: cell.layer_id,
+      lane_id: cell.lane_id,
       step_id: cell.step_id,
       path_id: path.id,
       path_type: path.path_type,
       content: cell.content,
       picture: cell.picture,
-      description: cell.description,
+      description: cell.summary,
       links: cell.links,
       opacity: 1,
     })),
-    triggers: triggers.map((trigger) => ({
-        id: trigger.id,
-        source_cell_id: trigger.source_cell_id,
-        target_cell_id: trigger.target_cell_id,
+    dependencies: dependencies.map((dependency) => ({
+        id: dependency.id,
+        source_cell_id: dependency.source_cell_id,
+        target_cell_id: dependency.target_cell_id,
         path_id: path.id,
         path_type: path.path_type,
         opacity: 1,
@@ -82,9 +82,56 @@ export function getComparePathArrowData(
 
 export const COMPARE_CARD_GAP = 20
 export const COMPARE_CARD_PADDING_X = 12
-// 208: room for two-word lane names ("Front Stage Actions") and the
-// canonical "LINE OF …" divider labels without clipping at the rail edge.
-export const COMPARE_LABEL_WIDTH = 208
+/**
+ * The painted rail: room for two-word lane names ("Front Stage Actions") and,
+ * the binding case, the canonical "LINE OF …" divider captions.
+ *
+ * 208 -> 214 on 2026-08-21. "LINE OF INTERNAL INTERACTION" measures ~221px at
+ * `text-2xs` with its tracking and is `shrink-0` — it neither wraps nor
+ * truncates — so at 208 it overflowed the painted rail and the only thing
+ * between those words and the path outline was COMPARE_RAIL_GUTTER. That made
+ * the gutter carry a constraint it should not have, and forced it wide enough
+ * to leave the lane label stranded.
+ *
+ * 214 is what the caption needs once it shares the lane label's left inset
+ * (BLUEPRINT_SLOT_INSET_LEFT, 14px, down from 20). The caption now ends inside
+ * the rail, the gutter is free to be small, and both gaps land where they
+ * should — see COMPARE_RAIL_GUTTER.
+ */
+export const COMPARE_LABEL_WIDTH = 214
+/**
+ * The rail's grid TRACK is wider than the rail it paints.
+ *
+ * The rail used to be just another column, so the gap between it and the board
+ * was the same 24px used between two step columns — and the path outline,
+ * insetting itself back into that gap, landed 16px from the rail and 5px from
+ * the first cell. It read as an edge belonging to the rail rather than a frame
+ * around the board. This track keeps the two apart; the painted rail still
+ * stops at COMPARE_LABEL_WIDTH.
+ *
+ * 8 makes the frame sit evenly between what is outside it and what is inside:
+ *
+ *   lane label -> outline    BLUEPRINT_SLOT_INSET (14) + GUTTER (8)
+ *                            + (STEP_COLUMN_GAP - H_INSET) (8)   = 30
+ *   outline -> first cell    COMPARE_PATH_SECTION_H_INSET (16)
+ *                            + the cell's own inset (14)          = 30
+ *
+ * Two earlier values, both wrong for reasons worth keeping:
+ *
+ *   24 — sized so the long divider caption cleared the outline while it still
+ *        overflowed the painted rail. It bought that clearance by stranding
+ *        the lane label 46px from the frame.
+ *    6 — sized to make the lane label's two sides match. It got the lane row
+ *        right and left the caption 2px from the outline, reading as though
+ *        the words touched the board.
+ *
+ * Neither could be right, because the caption was wider than the rail it sat
+ * in. Widening COMPARE_LABEL_WIDTH to 214 removed that constraint from this
+ * constant, which is why 8 can now serve the geometry instead of the text.
+ */
+export const COMPARE_RAIL_GUTTER = 8
+export const COMPARE_LABEL_TRACK_WIDTH =
+  COMPARE_LABEL_WIDTH + COMPARE_RAIL_GUTTER
 export const COMPARE_PANEL_PADDING = 24
 /** Extra inset on the right edge of the compare blueprint grid. */
 export const COMPARE_PANEL_PADDING_RIGHT = 40
@@ -104,8 +151,16 @@ export function getCompareBoardWrapperPadding(): {
   }
 }
 export const COMPARE_PATH_SECTION_TOP_INSET = 20
-/** Horizontal inset for path section frames; bottom matches top for symmetric gray padding. */
-export const COMPARE_PATH_SECTION_INSET = 8
+/**
+ * Horizontal breathing room inside a path outline.
+ *
+ * One constant used to serve both axes at 8px, which after the 3px border
+ * left 5px between the outline and the first cell against 17px above it —
+ * a visibly squashed rectangle. The two axes are separate now.
+ */
+export const COMPARE_PATH_SECTION_H_INSET = 16
+/** @deprecated Split into COMPARE_PATH_SECTION_H_INSET and the top/bottom pair. */
+export const COMPARE_PATH_SECTION_INSET = COMPARE_PATH_SECTION_H_INSET
 export const COMPARE_PATH_SECTION_BOTTOM_INSET = COMPARE_PATH_SECTION_TOP_INSET
 /** Space reserved above compare body rows for section title badges. */
 export const COMPARE_PATH_IDENTITY_HEIGHT = COMPARE_PATH_SECTION_TOP_INSET
@@ -149,7 +204,7 @@ export type CompareRowHeightSpec = {
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
   inLaneLoopCorridorAbove?: boolean
-  kind?: 'path' | 'layer' | 'interaction' | 'visibility' | 'internalInteraction'
+  kind?: 'path' | 'lane' | 'interaction' | 'visibility' | 'internalInteraction'
   collapsed?: boolean
 }
 
@@ -157,8 +212,8 @@ export type BlueprintLabelRowSpec = {
   key: string
   label: string
   height: number
-  kind: 'path' | 'layer' | 'interaction' | 'visibility' | 'internalInteraction'
-  layer?: BlueprintLayer
+  kind: 'path' | 'lane' | 'interaction' | 'visibility' | 'internalInteraction'
+  lane?: BlueprintLane
   collapsed?: boolean
   wrapCorridorAbove?: boolean
   wrapCorridorBelow?: boolean
@@ -194,7 +249,7 @@ export function getSwimlaneBodyHeightFromRowSpecs(
   )
 }
 
-/** Grow layer row heights so the swimlane board matches a shared phase height. */
+/** Grow lane row heights so the swimlane board matches a shared phase height. */
 export function expandRowSpecsToSwimlaneBodyHeight<T extends CompareRowHeightSpec>(
   rows: T[],
   targetBodyHeight: number,
@@ -203,13 +258,13 @@ export function expandRowSpecsToSwimlaneBodyHeight<T extends CompareRowHeightSpe
   if (surplus <= 0) return rows
 
   const layerRowCount = rows.filter(
-    (row) => row.kind === 'layer' && !row.collapsed,
+    (row) => row.kind === 'lane' && !row.collapsed,
   ).length
   if (layerRowCount === 0) return rows
 
   const addPerLayer = surplus / layerRowCount
   return rows.map((row) => {
-    if (row.kind !== 'layer' || row.collapsed) return row
+    if (row.kind !== 'lane' || row.collapsed) return row
     return { ...row, height: row.height + addPerLayer }
   })
 }
@@ -249,53 +304,53 @@ export function buildSideBySideLabelRowSpecs(
   compact = false,
   collapsedLayerIds: ReadonlySet<string> = new Set(),
 ): BlueprintLabelRowSpec[] {
-  const layers = getCanonicalLayers(blueprints)
+  const lanes = getCanonicalLayers(blueprints)
   const specs: BlueprintLabelRowSpec[] = []
 
-  for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
-    const layer = layers[layerIndex]
-    const collapsed = isBlueprintLayerCollapsed(layer.id, collapsedLayerIds)
+  for (let layerIndex = 0; layerIndex < lanes.length; layerIndex++) {
+    const lane = lanes[layerIndex]
+    const collapsed = isBlueprintLayerCollapsed(lane.id, collapsedLayerIds)
 
     specs.push({
-      key: layer.id,
-      kind: 'layer',
-      layer,
-      label: layer.name,
+      key: lane.id,
+      kind: 'lane',
+      lane,
+      label: lane.name,
       collapsed,
       height: collapsed
         ? COMPARE_LAYER_COLLAPSED_HEIGHT
-        : getSharedLayerRowHeight(layer, blueprints, compact),
+        : getSharedLayerRowHeight(lane, blueprints, compact),
       wrapCorridorAbove:
-        !collapsed && layerHasOverheadArrowCorridor(layer, blueprints),
+        !collapsed && layerHasOverheadArrowCorridor(lane, blueprints),
       wrapCorridorBelow:
         !collapsed &&
-        layerHasWrapCorridorBelow(layer, blueprints),
+        layerHasWrapCorridorBelow(lane, blueprints),
       inLaneLoopCorridorAbove:
-        !collapsed && layerHasInLaneLoopCorridor(layer, blueprints),
-      showDividerBelow: shouldShowLaneDividerAfter(layer, layerIndex, layers),
+        !collapsed && layerHasInLaneLoopCorridor(lane, blueprints),
+      showDividerBelow: shouldShowLaneDividerAfter(lane, layerIndex, lanes),
     })
 
-    if (!collapsed && layerHasInteractionLine(layer)) {
+    if (!collapsed && layerHasInteractionLine(lane)) {
       specs.push({
-        key: `${layer.id}-interaction`,
+        key: `${lane.id}-interaction`,
         kind: 'interaction',
         label: INTERACTION_LINE_LABEL,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
       })
     }
 
-    if (!collapsed && layerHasVisibilityLine(layer, layers)) {
+    if (!collapsed && layerHasVisibilityLine(lane, lanes)) {
       specs.push({
-        key: `${layer.id}-visibility`,
+        key: `${lane.id}-visibility`,
         kind: 'visibility',
         label: VISIBILITY_LINE_LABEL,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
       })
     }
 
-    if (!collapsed && layerHasInternalInteractionLine(layer, layers)) {
+    if (!collapsed && layerHasInternalInteractionLine(lane, lanes)) {
       specs.push({
-        key: `${layer.id}-internal-interaction`,
+        key: `${lane.id}-internal-interaction`,
         kind: 'internalInteraction',
         label: INTERNAL_INTERACTION_LINE_LABEL,
         height: BLUEPRINT_DIVIDER_ROW_HEIGHT,
@@ -391,27 +446,27 @@ export function getScenarioBlueprintPanelHeight(
   return COMPARE_MIN_PANEL_HEIGHT
 }
 
-export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLayer[] {
+export function getCanonicalLayers(blueprints: BlueprintData[]): BlueprintLane[] {
   const source = blueprints[0]
   if (!source) return []
-  return [...source.layers].sort((a, b) => a.row_position - b.row_position)
+  return [...source.lanes].sort((a, b) => a.position - b.position)
 }
 
-/** Map a canonical swimlane row onto a path's layer ids (paths use different layer uuids). */
+/** Map a canonical swimlane row onto a path's lane ids (paths use different lane uuids). */
 export function resolveBlueprintLayer(
-  canonicalLayer: BlueprintLayer,
-  blueprint: Pick<BlueprintData, 'layers'>,
-): BlueprintLayer {
+  canonicalLayer: BlueprintLane,
+  blueprint: Pick<BlueprintData, 'lanes'>,
+): BlueprintLane {
   return (
-    blueprint.layers.find((layer) => layer.id === canonicalLayer.id) ??
-    blueprint.layers.find((layer) => layer.name === canonicalLayer.name) ??
-    blueprint.layers.find(
-      (layer) =>
-        layer.row_position === canonicalLayer.row_position &&
-        layer.name === canonicalLayer.name,
+    blueprint.lanes.find((lane) => lane.id === canonicalLayer.id) ??
+    blueprint.lanes.find((lane) => lane.name === canonicalLayer.name) ??
+    blueprint.lanes.find(
+      (lane) =>
+        lane.position === canonicalLayer.position &&
+        lane.name === canonicalLayer.name,
     ) ??
-    blueprint.layers.find(
-      (layer) => layer.row_position === canonicalLayer.row_position,
+    blueprint.lanes.find(
+      (lane) => lane.position === canonicalLayer.position,
     ) ??
     canonicalLayer
   )
@@ -422,18 +477,18 @@ export function resolveBlueprintLayer(
  * `BlueprintData` (a single path's blueprint).
  */
 type InLaneLoopLayoutSource = {
-  layers: BlueprintLayer[]
-  steps: ReadonlyArray<{ id: string; column_position: number }>
-  cells: ReadonlyArray<{ id: string; layer_id: string; step_id: string }>
-  triggers: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
+  lanes: BlueprintLane[]
+  steps: ReadonlyArray<{ id: string; position: number }>
+  cells: ReadonlyArray<{ id: string; lane_id: string; step_id: string }>
+  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>
 }
 
 /**
- * Generic in-lane loop-corridor rule: a layer needs loop headroom at the top
- * of its lane when it contains a trigger whose source and target cells are
- * BOTH in that layer with the source at a later column than the target — a
- * backward in-lane loop. Derived purely from blueprint data (cell layer
- * membership + step column positions), with no scenario or layer identity;
+ * Generic in-lane loop-corridor rule: a lane needs loop headroom at the top
+ * of its lane when it contains a dependency whose source and target cells are
+ * BOTH in that lane with the source at a later column than the target — a
+ * backward in-lane loop. Derived purely from blueprint data (cell lane
+ * membership + step column positions), with no scenario or lane identity;
  * this replaces the side-by-side layout's dependence on the PLUS
  * `layerHasRegularTutorInLaneLoopCorridor` cell-ID shim (which arrow
  * rendering still uses for route styling).
@@ -445,35 +500,35 @@ type InLaneLoopLayoutSource = {
  * patterns and gets the pure data-driven rule.
  */
 export function blueprintLayerHasBackwardInLaneLoop(
-  canonicalLayer: BlueprintLayer,
+  canonicalLayer: BlueprintLane,
   source: InLaneLoopLayoutSource,
 ): boolean {
-  const layer = resolveBlueprintLayer(canonicalLayer, source)
+  const lane = resolveBlueprintLayer(canonicalLayer, source)
   const cellById = new Map(source.cells.map((cell) => [cell.id, cell]))
   const columnByStepId = new Map(
-    source.steps.map((step) => [step.id, step.column_position]),
+    source.steps.map((step) => [step.id, step.position]),
   )
 
-  return source.triggers.some((trigger) => {
+  return source.dependencies.some((dependency) => {
     if (
-      isParallelSessionPartnerWrapTrigger(
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+      isParallelSessionPartnerWrapDependency(
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       ) ||
-      isParallelSessionLeadBottomWrapTrigger(
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+      isParallelSessionLeadBottomWrapDependency(
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
     ) {
       return false
     }
 
-    const sourceCell = cellById.get(trigger.source_cell_id)
-    const targetCell = cellById.get(trigger.target_cell_id)
+    const sourceCell = cellById.get(dependency.source_cell_id)
+    const targetCell = cellById.get(dependency.target_cell_id)
     if (!sourceCell || !targetCell) return false
     if (
-      sourceCell.layer_id !== layer.id ||
-      targetCell.layer_id !== layer.id
+      sourceCell.lane_id !== lane.id ||
+      targetCell.lane_id !== lane.id
     ) {
       return false
     }
@@ -490,7 +545,7 @@ export function blueprintLayerHasBackwardInLaneLoop(
 
 /** Canonical row needs an in-lane loop corridor when any compared variant has one. */
 export function layerHasInLaneLoopCorridor(
-  canonicalLayer: BlueprintLayer,
+  canonicalLayer: BlueprintLane,
   sources: readonly InLaneLoopLayoutSource[],
 ): boolean {
   return sources.some((source) =>
@@ -530,7 +585,7 @@ export function getCompareCellShellPaddingY(compact = false): number {
 }
 
 export function getSharedLayerRowHeight(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   blueprints: BlueprintData[],
   compact = false,
 ): number {
@@ -538,11 +593,11 @@ export function getSharedLayerRowHeight(
   const shellPad = getCompareCellShellPaddingY(compact)
   const contentHeight = Math.max(
     ...blueprints.map((blueprint) =>
-      // Each path has its own layer uuids — measure against the path's own
-      // layer, or every path but the first is measured as empty and the row
+      // Each path has its own lane uuids — measure against the path's own
+      // lane, or every path but the first is measured as empty and the row
       // ends up shorter than what actually renders.
       getLayerRowMinHeight(
-        resolveBlueprintLayer(layer, blueprint),
+        resolveBlueprintLayer(lane, blueprint),
         blueprint,
         compact,
       ),
@@ -576,7 +631,7 @@ export function getCompareDividerBandWidth(
   blueprints: BlueprintData[],
   compact = false,
 ): number {
-  if (blueprints.length === 0) return COMPARE_LABEL_WIDTH
+  if (blueprints.length === 0) return COMPARE_LABEL_TRACK_WIDTH
 
   const cardsWidth = blueprints.reduce(
     (sum, blueprint) => sum + getCompareCardWidth(blueprint.steps.length, compact),
@@ -584,7 +639,7 @@ export function getCompareDividerBandWidth(
   )
 
   return (
-    COMPARE_LABEL_WIDTH +
+    COMPARE_LABEL_TRACK_WIDTH +
     cardsWidth +
     blueprints.length * COMPARE_CARD_GAP
   )
@@ -685,7 +740,7 @@ export function getStackedCompareBandBodyHeight(
 /** Stacked board width for a canonical column count: rail + step columns. */
 export function getStackedCompareGridWidth(columnCount: number): number {
   return (
-    COMPARE_LABEL_WIDTH +
+    COMPARE_LABEL_TRACK_WIDTH +
     STEP_COLUMN_GAP +
     getStepColumnsWidth(Math.max(1, columnCount)) +
     COMPARE_PANEL_PADDING +
@@ -791,26 +846,26 @@ export function getMergedComparePanelHeight(
 }
 
 export function layerHasDiscoveryRailCorridorAbove(
-  layer: BlueprintLayer,
+  lane: BlueprintLane,
   blueprints: BlueprintData[],
 ): boolean {
-  return layerHasOverheadArrowCorridor(layer, blueprints)
+  return layerHasOverheadArrowCorridor(lane, blueprints)
 }
 
-export function layerHasInteractionLine(layer: BlueprintLayer): boolean {
-  return shouldShowInteractionLineAfter(layer)
+export function layerHasInteractionLine(lane: BlueprintLane): boolean {
+  return shouldShowInteractionLineAfter(lane)
 }
 
 export function layerHasVisibilityLine(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
-  return shouldShowVisibilityLineAfter(layer, layers)
+  return shouldShowVisibilityLineAfter(lane, lanes)
 }
 
 export function layerHasInternalInteractionLine(
-  layer: BlueprintLayer,
-  layers?: BlueprintLayer[],
+  lane: BlueprintLane,
+  lanes?: BlueprintLane[],
 ): boolean {
-  return shouldShowInternalInteractionLineAfter(layer, layers)
+  return shouldShowInternalInteractionLineAfter(lane, lanes)
 }

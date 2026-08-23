@@ -1,26 +1,37 @@
+import type { Json } from '@/types/database'
 import type { PathType } from '@/types/database'
+import type { EntityStatus } from '@/lib/entityStatus'
 
 export type BlueprintPath = {
   id: string
   name: string
-  description: string | null
+  /** When this route applies — the condition that puts someone on it.
+   *  Renamed from `description` with the column; `note` is the author's aside,
+   *  which is the distinction plan 006 draws between the two. */
+  summary: string | null
   note: string | null
-  path_type: PathType
+  path_type: PathType  /** How far along this route is. `live` unless somebody said otherwise. */
+  status: EntityStatus
 }
 
-export type BlueprintLayer = {
+export type BlueprintLane = {
   id: string
   /** Display label — free-form, any language. */
   name: string
-  /** Semantic role key (`layers.layer_role`); null/absent = generic swimlane. */
+  /** Semantic role key (`lanes.lane_role`); null/absent = generic swimlane. */
   role?: string | null
-  row_position: number
+  position: number
 }
 
 export type BlueprintStep = {
   id: string
   name: string
-  column_position: number
+  position: number
+  /** What this moment is, across every lane — the one sentence that makes the
+   *  column legible without reading five cells. Shown as the caption under the
+   *  storyboard frame, and in the step header's hover card when there is no
+   *  frame to caption. Optional because fallback data predates the column. */
+  summary?: string | null
 }
 
 /** Structured link on a cell (stored as JSONB; type is usually "url"). */
@@ -38,27 +49,58 @@ export type CellLink = {
 
 export type BlueprintCell = {
   id: string
-  layer_id: string
+  lane_id: string
   step_id: string
   /** Cell Label — primary text shown in the blueprint grid. */
   content: string
   picture: string | null
-  description: string | null
+  /** The tl;dr the detail fields add up to. Renamed from `description` with the
+   *  column — CellPanelEditor already labelled it "Summary" and getCell already
+   *  relabelled it on the way out, so this closes a documented workaround. */
+  summary: string | null
   links: CellLink[]
+  /*
+    The spec block and the owner pair.
+  
+    Optional because dev fallback content does not carry them — the database
+    mapper always sets all five, and `cellSpecContract.test.ts` is what holds
+    that, not the type. Requiring them here would mean editing twenty fixture
+    files to write `null` five times each.
+  */
+  /** What this cell has to accomplish. */
+  function?: string | null
+  /** How it comes across. */
+  form?: string | null
+  /** Who gets what from it — `[{ for, value }]`. */
+  value_props?: Json | null
+  /** The team accountable for this moment. */
+  owner?: string | null
+  /** Who the person on the other side THINKS is accountable. */
+  perceived_owner?: string | null
+  /**
+   * Whether this cell describes something built. Absent means shipped.
+   *
+   * The state used to be a `Planned — ` prefix on `content`, which put a
+   * status inside a touchpoint NAME: a pill read "Planned — swap flow UI"
+   * and the vocabulary gained a product called that. Fifty cells carried it.
+   */
+  status?: EntityStatus | null
   /**
    * Order within a slot (one lane, one step). Tech lanes hold one cell per
    * touchpoint; everything else holds a single cell at 0. Optional because
    * rows predating the split never carry it — absent reads as 0.
    */
-  slot_position?: number
+  position?: number
 }
 
-export type BlueprintCellTrigger = {
+export type BlueprintCellDependency = {
   id: string
   source_cell_id: string
   target_cell_id: string
-  /** trigger = temporal "sets off" (default); needs = functional dependency. */
-  kind?: 'trigger' | 'needs'
+  /** `leads_to` (default) — this cell makes the other one happen; drawn as an
+   *  arrow. `enables` — the other cell must already be true; recorded, never
+   *  drawn. Not inverses: a loaded roster does not set off a greeting. */
+  kind?: 'leads_to' | 'enables'
   /** Short edge label, e.g. a channel tag like "Email". */
   label?: string | null
   /** Why-line shown in the cell panel dependencies tab. */
@@ -67,8 +109,8 @@ export type BlueprintCellTrigger = {
 
 export type BlueprintData = {
   path: BlueprintPath
-  layers: BlueprintLayer[]
+  lanes: BlueprintLane[]
   steps: BlueprintStep[]
   cells: BlueprintCell[]
-  triggers: BlueprintCellTrigger[]
+  dependencies: BlueprintCellDependency[]
 }

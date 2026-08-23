@@ -19,7 +19,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -32,66 +32,66 @@ export const REPORTING_AN_ISSUE_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000910'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000917',
     name: 'Lead Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000911',
     name: 'Regular Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000913',
     name: 'Front Stage Tech',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000912',
     name: 'Front Stage Actions',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000915',
     name: 'Back Stage Tech',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000914',
     name: 'Back Stage Actions',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000916',
     name: 'Support Actions',
-    row_position: 7,
+    position: 7,
   },
 ] as const
 
 const STEP_REACH_OUT = {
   id: 'a0000000-0000-4000-8000-000000000988',
   name: 'Reach out',
-  column_position: 1,
+  position: 1,
 } as const
 
 const STEP_REQUEST_ASSISTANCE = {
   id: 'a0000000-0000-4000-8000-000000000991',
   name: 'Request assistance',
-  column_position: 2,
+  position: 2,
 } as const
 
 const STEP_FOLLOW_UP = {
   id: 'a0000000-0000-4000-8000-000000000993',
   name: 'Follow up',
-  column_position: 3,
+  position: 3,
 } as const
 
 const STEP_RESOLVE_CONCERN = {
   id: 'a0000000-0000-4000-8000-000000000990',
   name: 'Resolve concern',
-  column_position: 4,
+  position: 4,
 } as const
 
 /** Visual column order: Reach out → Request assistance → Follow up → Resolve concern. */
@@ -115,19 +115,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular || layerId === L.lead
+    laneId === L.regular || laneId === L.lead
       ? mergeUrlLinks(metadata.links ?? [], REPORTING_AN_ISSUE_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -140,35 +140,35 @@ function issueCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001d${stepSlot}${layerSuffix}`
 }
 
-function issueTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000098${triggerSlot}`
+function issueDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000098${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: issueTrigger(slot),
+    id: issueDependency(slot),
     source_cell_id: issueCell(fromStep, fromLayer),
     target_cell_id: issueCell(toStep, toLayer),
   }
 }
 
-const REPORTING_AN_ISSUE_TRIGGERS: BlueprintCellTrigger[] = [
-  trigger('070', '01', '03', '01', '06'),
-  trigger('074', '01', '02', '01', '06'),
-  trigger('076', '01', '06', '01', '04'),
-  trigger('078', '01', '04', '03', '04'),
-  trigger('081', '01', '04', '02', '07'),
-  trigger('077', '03', '04', '04', '06'),
-  trigger('073', '04', '06', '04', '03'),
-  trigger('075', '04', '06', '04', '02'),
-  trigger('079', '04', '02', '02', '07'),
-  trigger('080', '04', '03', '02', '07'),
+const REPORTING_AN_ISSUE_TRIGGERS: BlueprintCellDependency[] = [
+  dependency('070', '01', '03', '01', '06'),
+  dependency('074', '01', '02', '01', '06'),
+  dependency('076', '01', '06', '01', '04'),
+  dependency('078', '01', '04', '03', '04'),
+  dependency('081', '01', '04', '02', '07'),
+  dependency('077', '03', '04', '04', '06'),
+  dependency('073', '04', '06', '04', '03'),
+  dependency('075', '04', '06', '04', '02'),
+  dependency('079', '04', '02', '02', '07'),
+  dependency('080', '04', '03', '02', '07'),
 ]
 
 const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
@@ -276,13 +276,14 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
 export const REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: REPORTING_AN_ISSUE_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description: 'Tutor reports an issue after tutoring session.',
+    name: 'Standard',
+    summary: 'Tutor reports an issue after tutoring session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: REPORTING_AN_ISSUE_CELLS,
-  triggers: REPORTING_AN_ISSUE_TRIGGERS,
+  dependencies: REPORTING_AN_ISSUE_TRIGGERS,
 }

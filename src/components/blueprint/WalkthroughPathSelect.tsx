@@ -36,7 +36,7 @@ export function WalkthroughPathSelect({
     return (
       <PathLabelBadge
         name={selected.path.name}
-        description={selected.path.description}
+        description={selected.path.summary}
         pathType={selected.path.path_type}
         compact
         className={className}
@@ -86,7 +86,7 @@ export function WalkthroughPathSelect({
                   name={blueprint.path.name}
                 />
                 <PathDescriptionTooltip
-                  description={blueprint.path.description}
+                  description={blueprint.path.summary}
                   pathName={blueprint.path.name}
                   side="right"
                 >

@@ -10,7 +10,7 @@ the practice it broke, not a vibe. Source keys:
   steps, Q6 empty cells are normal, Q7 paths, Q8 arrows only where they
   inform)
 - **CA-inv** — `references/canvas-adapter.md` ⚠ app-only invariants
-  (never empty content, trigger vs needs, slot_position, tags before
+  (never empty content, leads_to vs enables, position, tags before
   invention, name-aligned steps, no deletes)
 - **CA-etq** — adapter etiquette (narrate then act, batches ≤ ~8 then
   check in, no per-cell permission asks, errors verbatim + stop + never
@@ -68,10 +68,10 @@ line). A case fails if any line fails.
   - [T] Reads the audit playbook or a check doc before reporting.
     *(audit skill roster)*
   - [T] Reads the blueprint. *(CA-etq)*
-  - [T] Records at least one finding via `record_finding`; the only
-    write tools used are `record_finding`/`set_finding_status` — an
+  - [T] Records at least one finding via `create_finding`; the only
+    write tools used are `create_finding`/`update_finding` — an
     audit never edits cells. *(audit = reads + findings)*
-  - [T] One run, one run_id: at most one `record_finding` omits run_id.
+  - [T] One run, one run_id: at most one `create_finding` omits run_id.
     *(audit-playbook §1)*
   - [J] Findings follow the check roster (wave 2 run or reported
     skipped), are presented as recorded-for-triage rows, and cite cells
@@ -137,9 +137,9 @@ line). A case fails if any line fails.
 - **Prompt:** "Add a QA lane to the Warm-Up happy path." Follow-up:
   "yes, add it."
 - **Rubric:**
-  - [T] `read_reference` (layer-roles / lane-vocabulary) AND a blueprint
+  - [T] `get_reference` (lane-roles / lane-vocabulary) AND a blueprint
     read BEFORE the write. *(CA-etq, reference-first)*
-  - [T] Exactly one `add_lane`; any `upsert_cell` carries real content.
+  - [T] Exactly one `create_lane`; any `upsert_cell` carries real content.
     *(CA-inv)*
   - [J] Narrates one line before the batch; if it coins a new owner tag
     or role, it SAYS so. *(CA-etq, CA-inv tags)*
@@ -177,13 +177,13 @@ line). A case fails if any line fails.
 - **Rubric:**
   - [J] Points at the rename-everywhere mechanism (the app's owner-tag
     dropdown rename); [T] no per-cell rewrite loop (no
-    update_cell_content fan-out).
+    update_cell fan-out).
 
 ### C5 · dependency-semantics
 - **Prompt:** "In 'Before Students Join', the 'Share Zoom link' moment
   only makes sense after 'Open session' happens — connect them."
 - **Rubric:**
-  - [J] Picks `trigger` vs `needs` per the adapter's definitions ("only
+  - [J] Picks `leads_to` vs `enables` per the adapter's definitions ("only
     makes sense after X exists" reads as needs) and says which and why.
     *(CA-inv, EP-Q8)*
   - [T] At most one dependency write; [J] both cells on the same path.
@@ -282,7 +282,7 @@ line). A case fails if any line fails.
   no leaked tool syntax/JSON in prose.
 
 ### E2 · error-etiquette
-- **Setup:** harness forces the first `update_cell_content` to fail with
+- **Setup:** harness forces the first `update_cell` to fail with
   "write rejected: revision conflict — the cell changed since you read
   it; re-read before retrying" (an unambiguous transient failure — the
   earlier "row not found" mock tricked the model into believing it had

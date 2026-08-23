@@ -93,3 +93,67 @@ test('every write tool is dispatchable', () => {
     )
   }
 })
+
+/** Every `name:` at the top level of the TOOL_SPECS array literal. */
+function specNames(source) {
+  const at = source.indexOf('TOOL_SPECS: ToolSpec[] = [')
+  assert.ok(at !== -1, 'TOOL_SPECS array not found')
+  const names = [
+    ...source.slice(at).matchAll(/^ {2}\{\n {4}name: '([a-z_]+)'/gm),
+  ].map((m) => m[1])
+  assert.ok(names.length > 0, 'no tool names parsed out of TOOL_SPECS')
+  return names
+}
+
+/**
+ * The write roster had this check; the read half did not, so a renamed or
+ * newly added READ tool could sit in specs.ts with no dispatch case and
+ * fail only at runtime, in front of a user. Covering every spec — not just
+ * the write roster — closes that and subsumes the check above.
+ */
+test('every tool spec is dispatchable', () => {
+  for (const name of specNames(specs)) {
+    assert.ok(
+      registry.includes(`case '${name}':`),
+      `${name} is declared in TOOL_SPECS but has no dispatch case in registry.ts`,
+    )
+  }
+})
+
+/**
+ * The harness runs its OWN tool implementations (registry.ts cannot load
+ * from Node), and nothing checked that it covers the roster it imports. It
+ * bit: renaming list_scenarios to list_blueprint rewrote the harness's case
+ * LABEL and left it calling the old phases query, so the harness answered
+ * list_blueprint with the pre-granularity shape and silently rehearsed a
+ * different agent than the app runs. Writes are exempt — they short-circuit
+ * to a generic dry-run response before this switch.
+ */
+test('every read tool has a harness implementation', () => {
+  const writes = setMembers(specs, 'WRITE_TOOL_NAMES')
+  for (const name of specNames(specs)) {
+    if (writes.has(name)) continue
+    assert.ok(
+      harness.includes(`case '${name}':`),
+      `${name} is a read tool with no case in scripts/agent-harness/run.mjs — the harness would throw on it`,
+    )
+  }
+})
+
+/**
+ * The other direction: a dispatch case with no spec is dead code the model
+ * can never reach — the residue a rename leaves when specs.ts moves on and
+ * registry.ts keeps the old arm.
+ */
+test('every dispatch case has a tool spec', () => {
+  const declared = new Set(specNames(specs))
+  const dispatched = [...registry.matchAll(/case '([a-z_]+)':/g)].map(
+    (m) => m[1],
+  )
+  const orphans = dispatched.filter((name) => !declared.has(name))
+  assert.deepEqual(
+    orphans,
+    [],
+    `registry.ts dispatches tools that no longer exist in TOOL_SPECS: ${orphans.join(', ')}`,
+  )
+})

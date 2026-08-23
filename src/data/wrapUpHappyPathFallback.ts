@@ -18,14 +18,14 @@ import {
   WRAP_UP_PLUS_APP_STEP_04_DESCRIPTION,
   WRAP_UP_PLUS_APP_STEP_04_FIGMA_URL,
   WRAP_UP_PLUS_APP_STEP_04_PICTURE,
-  WRAP_UP_ZOOM_PENCIL_STEP_01_DESCRIPTION,
-  WRAP_UP_ZOOM_PENCIL_STEP_02_DESCRIPTION,
-  WRAP_UP_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+  WRAP_UP_ZOOM_STEP_01_DESCRIPTION,
+  WRAP_UP_ZOOM_STEP_02_DESCRIPTION,
+  WRAP_UP_ZOOM_STEP_03_DESCRIPTION,
 } from '@/data/wrapUpPictures'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -38,46 +38,46 @@ export const WRAP_UP_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000870'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000871',
-    name: 'Partner Action: Teacher',
-    row_position: 1,
+    name: 'Teacher',
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000872',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000873',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000875',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000874',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000877',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000876',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000878',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -85,22 +85,22 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000980',
     name: 'Close breakout sessions',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000981',
     name: 'Thank students',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000982',
     name: 'Debrief with tutors',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000983',
     name: 'Complete wrap-up',
-    column_position: 4,
+    position: 4,
   },
 ] as const
 
@@ -118,19 +118,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(metadata.links ?? [], WRAP_UP_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (metadata.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -143,57 +143,57 @@ function wuCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-0000001c${stepSlot}${layerSuffix}`
 }
 
-function wuTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-00000009a${triggerSlot}`
+function wuDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-00000009a${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: wuTrigger(slot),
+    id: wuDependency(slot),
     source_cell_id: wuCell(fromStep, fromLayer),
     target_cell_id: wuCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
-  layer: string,
+function rowDependencies(
+  lane: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -202,16 +202,16 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-const WRAP_UP_TRIGGERS: BlueprintCellTrigger[] = [
-  ...rowTriggers('01', 1, 3),
-  ...rowTriggers('02', 10, 3),
-  ...rowTriggers('03', 20, 3),
-  ...columnLaneTriggers('03', '06', 113, 4),
-  trigger('033', '03', '02', '03', '03'),
-  trigger('034', '03', '03', '03', '02'),
+const WRAP_UP_TRIGGERS: BlueprintCellDependency[] = [
+  ...rowDependencies('01', 1, 3),
+  ...rowDependencies('02', 10, 3),
+  ...rowDependencies('03', 20, 3),
+  ...columnLaneDependencies('03', '06', 113, 4),
+  dependency('033', '03', '02', '03', '03'),
+  dependency('034', '03', '03', '03', '02'),
 ]
 
 const WRAP_UP_CELLS: BlueprintCell[] = [
@@ -278,17 +278,17 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
     { picture: WRAP_UP_REGULAR_TUTOR_STEP_04_PICTURE },
   ),
 
-  cell(wuCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
+  cell(wuCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: WRAP_UP_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+    summary: WRAP_UP_ZOOM_STEP_01_DESCRIPTION,
   }),
-  cell(wuCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom/Pencil', {
+  cell(wuCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: WRAP_UP_ZOOM_PENCIL_STEP_02_DESCRIPTION,
+    summary: WRAP_UP_ZOOM_STEP_02_DESCRIPTION,
   }),
-  cell(wuCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom/Pencil', {
+  cell(wuCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
     picture: ZOOM_TECH_LOGO,
-    description: WRAP_UP_ZOOM_PENCIL_STEP_03_DESCRIPTION,
+    summary: WRAP_UP_ZOOM_STEP_03_DESCRIPTION,
   }),
   cell(wuCell('04', '06'), L.frontStageTech, STEPS[3].id, 'PLUS App', {
     links: [
@@ -302,21 +302,22 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
   }),
 
   cell(wuCell('04', '09'), L.support, STEPS[3].id, 'Dev Team\nDesign Team', {
-    description: SUPPORT_ACTIONS_DESCRIPTION,
+    summary: SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 
 export const WRAP_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: WRAP_UP_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'Rooms close on time',
+    summary:
       'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: WRAP_UP_CELLS,
-  triggers: WRAP_UP_TRIGGERS,
+  dependencies: WRAP_UP_TRIGGERS,
 }

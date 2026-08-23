@@ -36,6 +36,7 @@ import {
   getBlueprintLayerZone,
 } from '@/lib/blueprintTheme'
 import { getPathBadgeStyle, getPathColor } from '@/lib/pathColorTheme'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
@@ -273,7 +274,7 @@ export function CompareDifferencesSurface({
   const totalCount = useMemo(() => countCompareDifferences(model), [model])
 
   // Lane facets (order of first appearance) + swatch colors resolved the
-  // way the cell panel resolves its lane chip: layer_role first, name second.
+  // way the cell panel resolves its lane chip: lane_role first, name second.
   const { laneFacets, laneSwatchByKey } = useMemo(() => {
     const facets: Array<{ key: string; label: string }> = []
     const seen = new Set<string>()
@@ -284,11 +285,11 @@ export function CompareDifferencesSurface({
       facets.push({ key: slot.laneKey, label: slot.laneLabel })
     }
     for (const blueprint of registration.blueprints) {
-      for (const layer of blueprint.layers) {
-        const key = facets.find((facet) => facet.label === layer.name)?.key
+      for (const lane of blueprint.lanes) {
+        const key = facets.find((facet) => facet.label === lane.name)?.key
         if (!key || swatches.has(key)) continue
-        const zone = getBlueprintLayerZone(layer, blueprint.layers)
-        swatches.set(key, getBlueprintLayerStyle(layer.name, zone, layer.role).lane)
+        const zone = getBlueprintLayerZone(lane, blueprint.lanes)
+        swatches.set(key, getBlueprintLayerStyle(lane.name, zone, lane.role).lane)
       }
     }
     return { laneFacets: facets, laneSwatchByKey: swatches }
@@ -443,9 +444,9 @@ export function CompareDifferencesSurface({
               ) : null}
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 gap-2 p-3">
-              <p className="text-3xs font-medium uppercase tracking-wide text-muted-foreground">
-                Lanes
-              </p>
+              {/* The panel's one section-label role — these three group the
+                  filter chips exactly as a field label groups a field. */}
+              <p className={PANEL_TEXT.sectionLabel}>Lanes</p>
               <div className="flex flex-wrap gap-1">
                 {laneFacets.map((facet) => (
                   <FilterChip
@@ -456,9 +457,7 @@ export function CompareDifferencesSurface({
                   />
                 ))}
               </div>
-              <p className="pt-1 text-3xs font-medium uppercase tracking-wide text-muted-foreground">
-                Verdict
-              </p>
+              <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Verdict</p>
               <div className="flex flex-wrap gap-1">
                 <FilterChip
                   label="≠ divergent"
@@ -475,9 +474,7 @@ export function CompareDifferencesSurface({
                   filter for a step with no differences filters to nothing. */}
               {stepGroups.length > 0 ? (
                 <>
-                  <p className="pt-1 text-3xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Steps
-                  </p>
+                  <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Steps</p>
                   <div className="flex flex-wrap gap-1">
                     {stepGroups.map((group) => (
                       <FilterChip
@@ -498,7 +495,7 @@ export function CompareDifferencesSurface({
         </div>
         <p className="flex items-center gap-1 text-3xs text-muted-foreground/80">
           <Info className="size-3 shrink-0" aria-hidden />
-          triggers/needs are not compared
+          dependency edges are not compared
         </p>
       </div>
 

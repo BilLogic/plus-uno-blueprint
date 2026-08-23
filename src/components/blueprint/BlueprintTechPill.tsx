@@ -1,4 +1,5 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
+import type { EntityStatus } from '@/lib/entityStatus'
 import {
   buildTechPillSelection,
   type BlueprintCellSelectionContext,
@@ -20,11 +21,13 @@ type BlueprintTechPillProps = {
   className?: string
   /** Pills share their cell id — only the first pill carries the badge. */
   sliceSequenceBadge?: boolean
+  /** Passed through so an unbuilt touchpoint does not read as a live one. */
+  status?: EntityStatus | null
   'aria-describedby'?: string
 }
 
 /**
- * One tech/tool pill inside a Tech-layer cell. Pills share their cell's id, so
+ * One tech/tool pill inside a Tech-lane cell. Pills share their cell's id, so
  * only the first carries the slice sequence badge.
  */
 export function BlueprintTechPill({
@@ -36,11 +39,13 @@ export function BlueprintTechPill({
   style,
   className,
   sliceSequenceBadge = false,
+  status,
   'aria-describedby': ariaDescribedBy,
 }: BlueprintTechPillProps) {
   const fixedHeight = compact ? PILL_ITEM_HEIGHT_COMPACT : PILL_ITEM_HEIGHT
   return (
     <BlueprintCellButton
+      status={status}
       fill="frontstage-tech"
       tone={getTouchpointTone(item)}
       selection={buildTechPillSelection(selectionContext, item)}

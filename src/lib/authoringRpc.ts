@@ -65,13 +65,15 @@ export type DeletionImpact = {
 
 export type LaneSetEntry = {
   name: string
-  layer_role: string | null
-  row_position: number
+  lane_role: string | null
+  position: number
 }
 
-export type DependencyKind = 'trigger' | 'needs'
+export type DependencyKind = 'leads_to' | 'enables'
 
-export type ViewType = 'single' | 'side-by-side' | 'integrated'
+/** What `scenarios.view_type` may hold. `merged` is a display state and
+ *  the CHECK constraint rejects it — see StoredSlideViewType in types/nav.ts. */
+export type ViewType = 'single' | 'stacked'
 
 // ---------------------------------------------------------------------------
 // The call seam.
@@ -240,12 +242,18 @@ function deriveRevert(
  */
 export function createPhase(
   client: Client,
-  input: { lifecycleId: string; name: string; description?: string | null },
+  input: { serviceId: string; name: string; summary?: string | null },
 ): Promise<string> {
   return call<string>(client, 'create_phase', {
-    lifecycle_id: input.lifecycleId,
+    // Renamed from `lifecycle_id` by migration 20260821410000. PostgREST binds
+    // RPC arguments by NAME, so this key and the function's parameter are one
+    // contract with two halves: ship either without the other and every "add
+    // phase" call fails with "function does not exist". They travel together.
+    service_id: input.serviceId,
     name: input.name,
-    description: input.description ?? null,
+    // PostgREST binds RPC arguments BY NAME, so this key is the function's
+    // parameter name, not a column name that happens to match.
+    summary: input.summary ?? null,
   })
 }
 
@@ -268,7 +276,7 @@ export function createScenario(
     lane_source_path_id: input.laneSourcePathId ?? null,
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
-    path_name: input.pathName ?? 'Happy Path',
+    path_name: input.pathName ?? 'Main path',
   })
 }
 
@@ -360,10 +368,10 @@ export function addStep(
 }
 
 /**
- * Add a lane to **every version** of a blueprint. `atRow` inserts; omitted
+ * Add a lane to **every version** of a blueprint. `atPosition` inserts; omitted
  * appends.
  *
- * Scenario-scoped, not version-scoped: the call creates one `layers` row per
+ * Scenario-scoped, not version-scoped: the call creates one `lanes` row per
  * version, and adding a lane to one version alone would misalign the rows in
  * the side-by-side view. Re-read the grid afterwards.
  *
@@ -377,15 +385,15 @@ export async function addLane(
   input: {
     scenarioId: string
     name: string
-    layerRole?: string | null
-    atRow?: number
+    laneRole?: string | null
+    atPosition?: number
   },
 ): Promise<string[]> {
   const created = await call<string[] | null>(client, 'add_lane', {
     scenario_id: input.scenarioId,
     name: input.name,
-    layer_role: input.layerRole ?? null,
-    at_row: input.atRow ?? null,
+    lane_role: input.laneRole ?? null,
+    at_position: input.atPosition ?? null,
   })
   return created ?? []
 }
@@ -395,15 +403,15 @@ export async function addLane(
  *
  * The link between column and version is ensured inside the function, so a
  * caller may drop a cell into a column the version does not carry yet and get
- * the column linked rather than a trigger exception.
+ * the column linked rather than a database trigger exception.
  */
 export function upsertCell(
   client: Client,
-  input: { pathId: string; layerId: string; stepId: string; content: string },
+  input: { pathId: string; laneId: string; stepId: string; content: string },
 ): Promise<string> {
   return call<string>(client, 'upsert_cell', {
     path_id: input.pathId,
-    layer_id: input.layerId,
+    lane_id: input.laneId,
     step_id: input.stepId,
     content: input.content,
   })
@@ -468,7 +476,7 @@ export function reorderLanes(
 /**
  * Add or update one dependency between two cells in the same version.
  *
- * `trigger` draws an arrow; `needs` records a dependency that deliberately
+ * `leads_to` draws an arrow; `enables` records a dependency that deliberately
  * does not — a blueprint where every relationship is an arrow is unreadable,
  * and most "this depends on that" facts are not handoffs.
  */
@@ -485,7 +493,7 @@ export function setCellDependency(
   return call<string>(client, 'set_cell_dependency', {
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
-    kind: input.kind ?? 'trigger',
+    kind: input.kind ?? 'leads_to',
     label: input.label ?? null,
     note: input.note ?? null,
   })
@@ -517,7 +525,7 @@ export function createPath(
   return call<string>(client, 'create_path', {
     scenario_id: input.scenarioId,
     name: input.name,
-    path_type: input.pathType ?? 'alternative',
+    path_type: input.pathType ?? 'variant',
     lane_source_path_id: input.laneSourcePathId ?? null,
   })
 }
@@ -542,7 +550,7 @@ export function duplicatePath(
   return call<string>(client, 'duplicate_path', {
     source_path_id: input.sourcePathId,
     name: input.name,
-    path_type: input.pathType ?? 'alternative',
+    path_type: input.pathType ?? 'variant',
     copy_cells: input.copyCells ?? true,
     copy_dependencies: input.copyDependencies ?? true,
   })
@@ -563,10 +571,18 @@ export function deletionImpact(
   client: Client,
   kind: DeletionKind,
   targetId: string,
+  /**
+   * The other half of the delete's identity, for the two kinds whose delete
+   * is not addressed by a single id: `step` needs the path_id (remove_step
+   * is path-scoped) and `lane` derives its scenario from the lane, so it
+   * takes none. Passing it for scenario/path is harmless and ignored.
+   */
+  scopeId?: string,
 ): Promise<DeletionImpact> {
   return read<DeletionImpact>(client, 'deletion_impact', {
     kind,
     target_id: targetId,
+    scope_id: scopeId ?? null,
   })
 }
 

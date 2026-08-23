@@ -11,7 +11,7 @@ import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -23,36 +23,36 @@ export const SESSION_SIGN_UP_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000878'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000879',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000881',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000880',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000883',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000882',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000884',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -60,12 +60,12 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000891',
     name: 'Sign up',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000892',
     name: 'Review scheduling',
-    column_position: 2,
+    position: 2,
   },
 ] as const
 
@@ -81,14 +81,14 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>>,
+  extras?: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>>,
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -100,33 +100,33 @@ function ssCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000013${stepSlot}${layerSuffix}`
 }
 
-function ssTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000092${triggerSlot}`
+function ssDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000092${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: ssTrigger(slot),
+    id: ssDependency(slot),
     source_cell_id: ssCell(fromStep, fromLayer),
     target_cell_id: ssCell(toStep, toLayer),
   }
 }
 
-const SESSION_SIGN_UP_TRIGGERS: BlueprintCellTrigger[] = [
+const SESSION_SIGN_UP_TRIGGERS: BlueprintCellDependency[] = [
   // Regular Tutor → PLUS app
-  trigger('003', '01', '03', '01', '06'),
+  dependency('003', '01', '03', '01', '06'),
   // PLUS app → Dev team stores scheduling info
-  trigger('001', '01', '06', '01', '07'),
+  dependency('001', '01', '06', '01', '07'),
   // Dev team → Google Spreadsheet
-  trigger('004', '01', '07', '01', '08'),
+  dependency('004', '01', '07', '01', '08'),
   // Google Spreadsheet → Tutor supervisor review
-  trigger('005', '01', '08', '02', '07'),
+  dependency('005', '01', '08', '02', '07'),
 ]
 
 const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
@@ -143,7 +143,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     { picture: SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_PICTURE },
   ),
   cell(ssCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS app', {
-    description: SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
+    summary: SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
     links: [
       techDescriptionLink(
         'PLUS app',
@@ -165,7 +165,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     STEPS[0].id,
     'Google Spreadsheet',
     {
-      description: SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+      summary: SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
       links: [
         techDescriptionLink(
           'Google Spreadsheet',
@@ -176,7 +176,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     },
   ),
   cell(ssCell('01', '09'), L.support, STEPS[0].id, 'Dev Team\nDesign Team', {
-    description: SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
+    summary: SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
   }),
 
   // Step 2 — Review scheduling
@@ -192,14 +192,15 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
 export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: SESSION_SIGN_UP_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'No conflicts',
+    summary:
       'Tutor signs up for recurring sessions for the rest of the semester.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: SESSION_SIGN_UP_CELLS,
-  triggers: SESSION_SIGN_UP_TRIGGERS,
+  dependencies: SESSION_SIGN_UP_TRIGGERS,
 }

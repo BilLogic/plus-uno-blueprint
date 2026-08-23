@@ -1,14 +1,14 @@
 import {
   BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
-  isRegularTutorInLaneLoopTrigger,
+  isRegularTutorInLaneLoopDependency,
   OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN,
   STEP_COLUMN_GAP,
 } from '@/lib/blueprintLayout'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
-  isParallelSessionLeadBottomWrapTrigger,
-  isParallelSessionOverheadWrapTrigger,
+  isParallelSessionLeadBottomWrapDependency,
+  isParallelSessionOverheadWrapDependency,
 } from '@/data/parallelSessionPartnerLead'
 
 export type Point = { x: number; y: number }
@@ -55,7 +55,7 @@ export const ARROW_DETOUR_CLEARANCE = 8
 /** Target shorter than this fraction of source height → align to target center. */
 export const ARROW_TARGET_MUCH_SMALLER_RATIO = 0.65
 
-function isCrossLayerForwardTrigger(
+function isCrossLayerForwardDependency(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
 ): boolean {
@@ -70,7 +70,7 @@ function isCrossLayerForwardTrigger(
 }
 
 /**
- * Forward cross-column connector between different layer rows: exit the source
+ * Forward cross-column connector between different lane rows: exit the source
  * horizontally, travel in the column gap, then rise or drop into the target.
  */
 export function buildCrossLayerForwardArrowPath(
@@ -679,7 +679,7 @@ export function parseStepIndex(cellEl: HTMLElement): number | null {
   return Number.isFinite(index) ? index : null
 }
 
-export function isWrapTrigger(
+export function isWrapDependency(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   sourceCellId?: string,
@@ -728,7 +728,7 @@ let activeMeasurementPass: MeasurementPass | null = null
  * Wrapping an update in a pass makes each element measured exactly once for the
  * duration. Safe because a pass only ever reads layout — nothing inside mutates
  * the DOM, so no cached box can go stale mid-pass. Passes nest (the two arrow
- * layers each run their own) and a pass that sees a different root than the one
+ * lanes each run their own) and a pass that sees a different root than the one
  * it started on drops its caches rather than mixing two coordinate spaces.
  */
 export function runArrowMeasurementPass<T>(run: () => T): T {
@@ -863,7 +863,7 @@ export const WRAP_LOOP_CORRIDOR_INSET = 10
 export const REGULAR_TUTOR_LOOP_TOP_INSET = 8
 
 /** Backward loop on the Regular Tutor row (e.g. Set Goals step 11 → step 1). */
-export function isRegularTutorInLaneWrapTrigger(
+export function isRegularTutorInLaneWrapDependency(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   sourceCellId?: string,
@@ -872,14 +872,14 @@ export function isRegularTutorInLaneWrapTrigger(
   if (
     sourceCellId &&
     targetCellId &&
-    isParallelSessionLeadBottomWrapTrigger(sourceCellId, targetCellId)
+    isParallelSessionLeadBottomWrapDependency(sourceCellId, targetCellId)
   ) {
     return false
   }
   if (
     sourceCellId &&
     targetCellId &&
-    isParallelSessionOverheadWrapTrigger(sourceCellId, targetCellId)
+    isParallelSessionOverheadWrapDependency(sourceCellId, targetCellId)
   ) {
     return false
   }
@@ -895,7 +895,7 @@ export function isRegularTutorInLaneWrapTrigger(
   if (!sourceRow || !targetRow || sourceRow !== targetRow) return false
 
   if (sourceCellId && targetCellId) {
-    return isRegularTutorInLaneLoopTrigger(
+    return isRegularTutorInLaneLoopDependency(
       resolveArrowLogicCellId(sourceCellId),
       resolveArrowLogicCellId(targetCellId),
     )
@@ -1093,7 +1093,7 @@ export function getWrapCorridorBounds(
   }
 }
 
-/** Y center of the corridor between a layer row and the interaction line. */
+/** Y center of the corridor between a lane row and the interaction line. */
 export function getWrapCorridorY(
   sourceEl: HTMLElement,
   root: HTMLElement,
@@ -1214,36 +1214,36 @@ export function buildVerticalArrowPath(
   return `M ${source.x} ${source.y} L ${source.x} ${lineEndY}`
 }
 
-export type BidirectionalTriggerLink = {
+export type BidirectionalDependencyLink = {
   id: string
   source_cell_id: string
   target_cell_id: string
 }
 
-export type BidirectionalTriggerPair<T extends BidirectionalTriggerLink> = {
+export type BidirectionalDependencyPair<T extends BidirectionalDependencyLink> = {
   first: T
   second: T
   cellAId: string
   cellBId: string
 }
 
-/** Pairs of triggers that connect the same two cells in opposite directions. */
-export function findBidirectionalTriggerPairs<T extends BidirectionalTriggerLink>(
-  triggers: T[],
-): { pairs: BidirectionalTriggerPair<T>[]; remaining: T[] } {
+/** Pairs of dependencies that connect the same two cells in opposite directions. */
+export function findBidirectionalDependencyPairs<T extends BidirectionalDependencyLink>(
+  dependencies: T[],
+): { pairs: BidirectionalDependencyPair<T>[]; remaining: T[] } {
   const pending = new Map<string, T>()
   const pairedIds = new Set<string>()
-  const pairs: BidirectionalTriggerPair<T>[] = []
+  const pairs: BidirectionalDependencyPair<T>[] = []
 
-  for (const trigger of triggers) {
-    const reverseKey = `${trigger.target_cell_id}->${trigger.source_cell_id}`
+  for (const dependency of dependencies) {
+    const reverseKey = `${dependency.target_cell_id}->${dependency.source_cell_id}`
     const reverse = pending.get(reverseKey)
     if (reverse) {
-      pairedIds.add(trigger.id)
+      pairedIds.add(dependency.id)
       pairedIds.add(reverse.id)
       pairs.push({
         first: reverse,
-        second: trigger,
+        second: dependency,
         cellAId: reverse.source_cell_id,
         cellBId: reverse.target_cell_id,
       })
@@ -1252,14 +1252,14 @@ export function findBidirectionalTriggerPairs<T extends BidirectionalTriggerLink
     }
 
     pending.set(
-      `${trigger.source_cell_id}->${trigger.target_cell_id}`,
-      trigger,
+      `${dependency.source_cell_id}->${dependency.target_cell_id}`,
+      dependency,
     )
   }
 
   return {
     pairs,
-    remaining: triggers.filter((trigger) => !pairedIds.has(trigger.id)),
+    remaining: dependencies.filter((dependency) => !pairedIds.has(dependency.id)),
   }
 }
 
@@ -1319,7 +1319,7 @@ const SAME_STEP_FRONT_STAGE_TECH_TO_REGULAR_TUTOR_PATTERN =
   /(\d{2})06$/
 
 /** Same-column Front Stage Tech → Regular Tutor (e.g. Reporting an Issue step 4). */
-export function isSameStepFrontStageTechToRegularTutorTrigger(
+export function isSameStepFrontStageTechToRegularTutorDependency(
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
@@ -1337,7 +1337,7 @@ export function isSameStepFrontStageTechToRegularTutorTrigger(
 }
 
 /** Same-column Front Stage Tech → Lead Tutor (e.g. Reporting an Issue step 4). */
-export function isSameStepFrontStageTechToLeadTutorTrigger(
+export function isSameStepFrontStageTechToLeadTutorDependency(
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
@@ -1362,34 +1362,34 @@ const REPORTING_AN_ISSUE_FST_TO_LEAD_TUTOR_TRIGGER_ID =
 const INTEGRATED_TRIGGER_ID_PATTERN =
   /^integrated-trigger-[0-9a-f-]{36}-([0-9a-f-]{36})$/i
 
-/** Map integrated overlay trigger ids back to canonical trigger ids. */
-export function resolveArrowLogicTriggerId(triggerId: string): string {
-  const match = INTEGRATED_TRIGGER_ID_PATTERN.exec(triggerId)
-  return match ? match[1]! : triggerId
+/** Map integrated overlay dependency ids back to canonical dependency ids. */
+export function resolveArrowLogicDependencyId(dependencyId: string): string {
+  const match = INTEGRATED_TRIGGER_ID_PATTERN.exec(dependencyId)
+  return match ? match[1]! : dependencyId
 }
 
-export function isReportingAnIssueFrontStageTechToRegularTutorTrigger(
-  triggerId?: string,
+export function isReportingAnIssueFrontStageTechToRegularTutorDependency(
+  dependencyId?: string,
   _sourceCellId?: string,
   _targetCellId?: string,
 ): boolean {
-  if (!triggerId) return false
+  if (!dependencyId) return false
 
   return (
-    resolveArrowLogicTriggerId(triggerId) ===
+    resolveArrowLogicDependencyId(dependencyId) ===
     REPORTING_AN_ISSUE_FST_TO_REGULAR_TUTOR_TRIGGER_ID
   )
 }
 
-export function isReportingAnIssueFrontStageTechToLeadTutorTrigger(
-  triggerId?: string,
+export function isReportingAnIssueFrontStageTechToLeadTutorDependency(
+  dependencyId?: string,
   _sourceCellId?: string,
   _targetCellId?: string,
 ): boolean {
-  if (!triggerId) return false
+  if (!dependencyId) return false
 
   return (
-    resolveArrowLogicTriggerId(triggerId) ===
+    resolveArrowLogicDependencyId(dependencyId) ===
     REPORTING_AN_ISSUE_FST_TO_LEAD_TUTOR_TRIGGER_ID
   )
 }
@@ -1399,15 +1399,15 @@ const REPORTING_AN_ISSUE_TUTOR_TO_FST_STEP_1_TRIGGER_IDS = new Set([
   'a0000000-0000-4000-8000-000000098074',
 ])
 
-export function isReportingAnIssueTutorToFrontStageTechStep1Trigger(
-  triggerId?: string,
+export function isReportingAnIssueTutorToFrontStageTechStep1Dependency(
+  dependencyId?: string,
   _sourceCellId?: string,
   _targetCellId?: string,
 ): boolean {
-  if (!triggerId) return false
+  if (!dependencyId) return false
 
   return REPORTING_AN_ISSUE_TUTOR_TO_FST_STEP_1_TRIGGER_IDS.has(
-    resolveArrowLogicTriggerId(triggerId),
+    resolveArrowLogicDependencyId(dependencyId),
   )
 }
 
@@ -1458,14 +1458,14 @@ const SESSION_SIGN_UP_FST_STEP_1_CELL_ID_SUFFIX = '000000130106'
 const SESSION_SIGN_UP_BSA_STEP_1_CELL_ID_SUFFIX = '000000130107'
 
 /** Session Sign Up step 1 — Front Stage Tech → Back Stage Actions. */
-export function isSessionSignUpFrontStageTechToBackStageActionStep1Trigger(
-  triggerId?: string,
+export function isSessionSignUpFrontStageTechToBackStageActionStep1Dependency(
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       SESSION_SIGN_UP_FST_TO_BSA_STEP_1_TRIGGER_ID
   ) {
     return true
@@ -1487,14 +1487,14 @@ const FILL_IN_REQUEST_FST_STEP_1_CELL_ID_SUFFIX = '000000150106'
 const FILL_IN_REQUEST_BSA_STEP_1_CELL_ID_SUFFIX = '000000150107'
 
 /** Fill-in Request step 1 — Front Stage Tech → Back Stage Actions. */
-export function isFillInRequestFrontStageTechToBackStageActionStep1Trigger(
-  triggerId?: string,
+export function isFillInRequestFrontStageTechToBackStageActionStep1Dependency(
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       FILL_IN_REQUEST_FST_TO_BSA_STEP_1_TRIGGER_ID
   ) {
     return true
@@ -1515,14 +1515,14 @@ const REPORTING_HOURS_LEAD_TUTOR_TO_FST_STEP_1_TRIGGER_ID =
 const REPORTING_HOURS_LEAD_TUTOR_STEP_1_CELL_ID_SUFFIX = '0000001e0102'
 const REPORTING_HOURS_FST_STEP_1_CELL_ID_SUFFIX = '0000001e0106'
 
-export function isReportingHoursLeadTutorToFrontStageTechStep1Trigger(
-  triggerId?: string,
+export function isReportingHoursLeadTutorToFrontStageTechStep1Dependency(
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       REPORTING_HOURS_LEAD_TUTOR_TO_FST_STEP_1_TRIGGER_ID
   ) {
     return true
@@ -1543,13 +1543,13 @@ export const REPORTING_HOURS_FST_STEP_1_TO_BSA_STEP_2_TRIGGER_ID =
 const REPORTING_HOURS_BSA_STEP_2_CELL_ID_SUFFIX = '0000001e0307'
 
 export function isReportingHoursFrontStageTechStep1ToBackStageActionStep2Connection(
-  triggerId?: string,
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       REPORTING_HOURS_FST_STEP_1_TO_BSA_STEP_2_TRIGGER_ID
   ) {
     return true
@@ -1572,13 +1572,13 @@ const CALL_OFF_BSA_STEP_5_CELL_ID_SUFFIX = '000000170507'
 
 /** Call-off Request — Front Stage Actions step 3 → Back Stage Actions step 5. */
 export function isCallOffFrontStageActionStep3ToBackStageActionStep5Connection(
-  triggerId?: string,
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       CALL_OFF_FSA_STEP_3_TO_BSA_STEP_5_TRIGGER_ID
   ) {
     return true
@@ -1616,13 +1616,13 @@ const REPORTING_HOURS_FST_STEP_3_CELL_ID_SUFFIX = '0000001e0206'
 const REPORTING_HOURS_LEAD_TUTOR_STEP_3_CELL_ID_SUFFIX = '0000001e0202'
 
 export function isReportingHoursFrontStageTechStep3ToLeadTutorConnection(
-  triggerId?: string,
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       REPORTING_HOURS_FST_STEP_3_TO_LEAD_TUTOR_TRIGGER_ID
   ) {
     return true
@@ -1689,13 +1689,13 @@ const REPORTING_AN_ISSUE_FSA_STEP_1_CELL_ID_SUFFIX = '0000001d0104'
 const REPORTING_AN_ISSUE_RESOLVE_BSA_CELL_ID_SUFFIX = '0000001d0207'
 
 export function isReportingAnIssueFrontStageActionStep1ToResolveConnection(
-  triggerId?: string,
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   if (
-    triggerId &&
-    resolveArrowLogicTriggerId(triggerId) ===
+    dependencyId &&
+    resolveArrowLogicDependencyId(dependencyId) ===
       REPORTING_AN_ISSUE_FSA_STEP_1_TO_RESOLVE_TRIGGER_ID
   ) {
     return true
@@ -1716,13 +1716,13 @@ const REPORTING_AN_ISSUE_SPANNING_TO_TOP_ENTRY_TRIGGER_IDS = new Set([
   'a0000000-0000-4000-8000-000000098080',
 ])
 
-export function isReportingAnIssueSpanningToTopEntryTrigger(
-  triggerId?: string,
+export function isReportingAnIssueSpanningToTopEntryDependency(
+  dependencyId?: string,
 ): boolean {
-  if (!triggerId) return false
+  if (!dependencyId) return false
 
   return REPORTING_AN_ISSUE_SPANNING_TO_TOP_ENTRY_TRIGGER_IDS.has(
-    resolveArrowLogicTriggerId(triggerId),
+    resolveArrowLogicDependencyId(dependencyId),
   )
 }
 
@@ -1769,26 +1769,26 @@ export function buildReportingAnIssueSpanningToTopEntryPath(
   return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
 }
 
-export function isReportingAnIssueFrontStageActionToFrontStageTechTrigger(
-  triggerId?: string,
+export function isReportingAnIssueFrontStageActionToFrontStageTechDependency(
+  dependencyId?: string,
   _sourceCellId?: string,
   _targetCellId?: string,
 ): boolean {
-  if (!triggerId) return false
+  if (!dependencyId) return false
 
   return (
-    resolveArrowLogicTriggerId(triggerId) ===
+    resolveArrowLogicDependencyId(dependencyId) ===
     REPORTING_AN_ISSUE_FSA_TO_FST_TRIGGER_ID
   )
 }
 
-export function isReportingAnIssueFrontStageActionStep1ToResolveTrigger(
-  triggerId?: string,
+export function isReportingAnIssueFrontStageActionStep1ToResolveDependency(
+  dependencyId?: string,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
   return isReportingAnIssueFrontStageActionStep1ToResolveConnection(
-    triggerId,
+    dependencyId,
     sourceCellId,
     targetCellId,
   )
@@ -1822,31 +1822,31 @@ export function buildReportingAnIssueFrontStageActionStep1ToResolvePath(
   return buildRoundedPolylinePath(points, ARROW_CORNER_RADIUS)
 }
 
-export function partitionReportingAnIssueFsaStep1ToResolveTriggers<
+export function partitionReportingAnIssueFsaStep1ToResolveDependencies<
   T extends {
     id: string
     source_cell_id: string
     target_cell_id: string
   },
->(triggers: T[]): { resolveTriggers: T[]; otherTriggers: T[] } {
-  const resolveTriggers: T[] = []
-  const otherTriggers: T[] = []
+>(dependencies: T[]): { resolveDependencies: T[]; otherDependencies: T[] } {
+  const resolveDependencies: T[] = []
+  const otherDependencies: T[] = []
 
-  for (const trigger of triggers) {
+  for (const dependency of dependencies) {
     if (
       isReportingAnIssueFrontStageActionStep1ToResolveConnection(
-        trigger.id,
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+        dependency.id,
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
     ) {
-      resolveTriggers.push(trigger)
+      resolveDependencies.push(dependency)
     } else {
-      otherTriggers.push(trigger)
+      otherDependencies.push(dependency)
     }
   }
 
-  return { resolveTriggers, otherTriggers }
+  return { resolveDependencies, otherDependencies }
 }
 
 /**
@@ -1905,15 +1905,15 @@ const DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_4_TRIGGER_IDS = new Set([
   'a0000000-0000-4000-8000-000000728006',
 ])
 
-export function isDiscoveryFrontStageActionToRegularTutorTrigger(
-  triggerId?: string,
+export function isDiscoveryFrontStageActionToRegularTutorDependency(
+  dependencyId?: string,
   _sourceCellId?: string,
   _targetCellId?: string,
 ): boolean {
-  if (!triggerId) return false
+  if (!dependencyId) return false
 
   return DISCOVERY_FSA_TO_REGULAR_TUTOR_TRIGGER_IDS.has(
-    resolveArrowLogicTriggerId(triggerId),
+    resolveArrowLogicDependencyId(dependencyId),
   )
 }
 
@@ -2026,12 +2026,12 @@ export function buildDiscoveryFrontStageActionToRegularTutorSameStepPath(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
-  triggerId?: string,
+  dependencyId?: string,
 ): string {
   if (
-    triggerId &&
+    dependencyId &&
     DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_1_TRIGGER_IDS.has(
-      resolveArrowLogicTriggerId(triggerId),
+      resolveArrowLogicDependencyId(dependencyId),
     )
   ) {
     return buildDiscoveryFrontStageActionToRegularTutorStep1Path(
@@ -2042,9 +2042,9 @@ export function buildDiscoveryFrontStageActionToRegularTutorSameStepPath(
   }
 
   if (
-    triggerId &&
+    dependencyId &&
     DISCOVERY_FSA_TO_REGULAR_TUTOR_STEP_4_TRIGGER_IDS.has(
-      resolveArrowLogicTriggerId(triggerId),
+      resolveArrowLogicDependencyId(dependencyId),
     )
   ) {
     return buildDiscoveryFrontStageActionToRegularTutorStep4Path(
@@ -2147,7 +2147,7 @@ function parseRegularTutorStepFromCellId(cellId: string): number | null {
 /** Horizontal discovery rail above the Regular Tutor row. */
 export const DISCOVERY_RAIL_CLEARANCE = 10
 
-export function isRegularTutorRailTrigger(
+export function isRegularTutorRailDependency(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   sourceCellId?: string,
@@ -2176,14 +2176,14 @@ export function isRegularTutorRailTrigger(
   return true
 }
 
-/** @deprecated Use isRegularTutorRailTrigger. */
-export function isApplicationRegularTutorRailTrigger(
+/** @deprecated Use isRegularTutorRailDependency. */
+export function isApplicationRegularTutorRailDependency(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   sourceCellId?: string,
   targetCellId?: string,
 ): boolean {
-  return isRegularTutorRailTrigger(
+  return isRegularTutorRailDependency(
     sourceEl,
     targetEl,
     sourceCellId,
@@ -2246,7 +2246,7 @@ export function buildApplicationRegularTutorRailPath(
 }
 
 /**
- * Merged bus for multiple Regular Tutor forward triggers that share a target:
+ * Merged bus for multiple Regular Tutor forward dependencies that share a target:
  * the leftmost source rises to the rail, the trunk runs to the target column,
  * intermediate sources get vertical taps, and the path ends with a downward
  * arrow into the target.
@@ -2291,7 +2291,7 @@ export function buildApplicationRegularTutorRailBusPath(
 export type OverheadRailFanOutGroup = {
   sourceCellId: string
   sourceEl: HTMLElement
-  branches: Array<{ triggerId: string; targetEl: HTMLElement }>
+  branches: Array<{ dependencyId: string; targetEl: HTMLElement }>
 }
 
 /** Shared trunk: up from the source, then across above all branch targets. */
@@ -2331,53 +2331,53 @@ export function buildOverheadRailFanOutDropPath(
   return `M ${target.x} ${railY} L ${target.x} ${lineEndY}`
 }
 
-/** Trigger ids that share a source and fan out to multiple overhead-rail targets. */
-export function collectOverheadRailFanOutTriggerIds<
-  T extends DiscoveryRailTrigger,
->(triggers: readonly T[]): Set<string> {
+/** Dependency ids that share a source and fan out to multiple overhead-rail targets. */
+export function collectOverheadRailFanOutDependencyIds<
+  T extends DiscoveryRailDependency,
+>(dependencies: readonly T[]): Set<string> {
   const bySource = new Map<string, T[]>()
 
-  for (const trigger of triggers) {
+  for (const dependency of dependencies) {
     if (
-      !isRegularTutorRailTriggerByCellId(
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+      !isRegularTutorRailDependencyByCellId(
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
     ) {
       continue
     }
 
-    const list = bySource.get(trigger.source_cell_id) ?? []
-    list.push(trigger)
-    bySource.set(trigger.source_cell_id, list)
+    const list = bySource.get(dependency.source_cell_id) ?? []
+    list.push(dependency)
+    bySource.set(dependency.source_cell_id, list)
   }
 
   const fanOutIds = new Set<string>()
   for (const list of bySource.values()) {
-    const targetIds = new Set(list.map((trigger) => trigger.target_cell_id))
+    const targetIds = new Set(list.map((dependency) => dependency.target_cell_id))
     if (targetIds.size < 2) continue
-    for (const trigger of list) {
-      fanOutIds.add(trigger.id)
+    for (const dependency of list) {
+      fanOutIds.add(dependency.id)
     }
   }
 
   return fanOutIds
 }
 
-export type DiscoveryRailTrigger = {
+export type DiscoveryRailDependency = {
   id: string
   source_cell_id: string
   target_cell_id: string
 }
 
-/** Group overhead-rail triggers into merge buses and source fan-outs. */
-export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
-  triggers: T[],
+/** Group overhead-rail dependencies into merge buses and source fan-outs. */
+export function groupDiscoveryRailDependencies<T extends DiscoveryRailDependency>(
+  dependencies: T[],
   content: HTMLElement,
 ): {
   busGroups: {
     targetCellId: string
-    triggerIds: string[]
+    dependencyIds: string[]
     sourceEls: HTMLElement[]
     targetEl: HTMLElement
   }[]
@@ -2386,65 +2386,65 @@ export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
 } {
   const remaining: T[] = []
   const railEntries: Array<{
-    trigger: T
+    dependency: T
     sourceEl: HTMLElement
     targetEl: HTMLElement
   }> = []
 
-  for (const trigger of triggers) {
+  for (const dependency of dependencies) {
     if (
-      !isRegularTutorRailTriggerByCellId(
-        trigger.source_cell_id,
-        trigger.target_cell_id,
+      !isRegularTutorRailDependencyByCellId(
+        dependency.source_cell_id,
+        dependency.target_cell_id,
       )
     ) {
-      remaining.push(trigger)
+      remaining.push(dependency)
       continue
     }
 
     const sourceEl = content.querySelector<HTMLElement>(
-      `[data-blueprint-cell="${trigger.source_cell_id}"]`,
+      `[data-blueprint-cell="${dependency.source_cell_id}"]`,
     )
     const targetEl = content.querySelector<HTMLElement>(
-      `[data-blueprint-cell="${trigger.target_cell_id}"]`,
+      `[data-blueprint-cell="${dependency.target_cell_id}"]`,
     )
     if (!sourceEl || !targetEl) continue
 
-    railEntries.push({ trigger, sourceEl, targetEl })
+    railEntries.push({ dependency, sourceEl, targetEl })
   }
 
-  const fanOutTriggerIds = collectOverheadRailFanOutTriggerIds(
-    railEntries.map((entry) => entry.trigger),
+  const fanOutDependencyIds = collectOverheadRailFanOutDependencyIds(
+    railEntries.map((entry) => entry.dependency),
   )
   const fanOutGroups: OverheadRailFanOutGroup[] = []
   const bySource = new Map<
     string,
     {
       sourceEl: HTMLElement
-      branches: Array<{ triggerId: string; targetEl: HTMLElement }>
+      branches: Array<{ dependencyId: string; targetEl: HTMLElement }>
       targetIds: Set<string>
     }
   >()
 
   for (const entry of railEntries) {
-    if (!fanOutTriggerIds.has(entry.trigger.id)) continue
+    if (!fanOutDependencyIds.has(entry.dependency.id)) continue
 
-    const existing = bySource.get(entry.trigger.source_cell_id)
+    const existing = bySource.get(entry.dependency.source_cell_id)
     if (existing) {
-      if (!existing.targetIds.has(entry.trigger.target_cell_id)) {
-        existing.targetIds.add(entry.trigger.target_cell_id)
+      if (!existing.targetIds.has(entry.dependency.target_cell_id)) {
+        existing.targetIds.add(entry.dependency.target_cell_id)
         existing.branches.push({
-          triggerId: entry.trigger.id,
+          dependencyId: entry.dependency.id,
           targetEl: entry.targetEl,
         })
       }
     } else {
-      bySource.set(entry.trigger.source_cell_id, {
+      bySource.set(entry.dependency.source_cell_id, {
         sourceEl: entry.sourceEl,
         branches: [
-          { triggerId: entry.trigger.id, targetEl: entry.targetEl },
+          { dependencyId: entry.dependency.id, targetEl: entry.targetEl },
         ],
-        targetIds: new Set([entry.trigger.target_cell_id]),
+        targetIds: new Set([entry.dependency.target_cell_id]),
       })
     }
   }
@@ -2462,19 +2462,19 @@ export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
 
   const byTarget = new Map<
     string,
-    { triggerIds: string[]; sourceEls: HTMLElement[]; targetEl: HTMLElement }
+    { dependencyIds: string[]; sourceEls: HTMLElement[]; targetEl: HTMLElement }
   >()
 
   for (const entry of railEntries) {
-    if (fanOutTriggerIds.has(entry.trigger.id)) continue
+    if (fanOutDependencyIds.has(entry.dependency.id)) continue
 
-    const existing = byTarget.get(entry.trigger.target_cell_id)
+    const existing = byTarget.get(entry.dependency.target_cell_id)
     if (existing) {
-      existing.triggerIds.push(entry.trigger.id)
+      existing.dependencyIds.push(entry.dependency.id)
       existing.sourceEls.push(entry.sourceEl)
     } else {
-      byTarget.set(entry.trigger.target_cell_id, {
-        triggerIds: [entry.trigger.id],
+      byTarget.set(entry.dependency.target_cell_id, {
+        dependencyIds: [entry.dependency.id],
         sourceEls: [entry.sourceEl],
         targetEl: entry.targetEl,
       })
@@ -2485,20 +2485,20 @@ export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
     .filter(([, group]) => group.sourceEls.length >= 2)
     .map(([targetCellId, group]) => ({
       targetCellId,
-      triggerIds: group.triggerIds,
+      dependencyIds: group.dependencyIds,
       sourceEls: group.sourceEls,
       targetEl: group.targetEl,
     }))
 
   for (const entry of railEntries) {
-    if (fanOutTriggerIds.has(entry.trigger.id)) continue
+    if (fanOutDependencyIds.has(entry.dependency.id)) continue
 
     const busGroup = busGroups.find((group) =>
-      group.triggerIds.includes(entry.trigger.id),
+      group.dependencyIds.includes(entry.dependency.id),
     )
     if (busGroup) continue
 
-    remaining.push(entry.trigger)
+    remaining.push(entry.dependency)
   }
 
   return {
@@ -2508,7 +2508,7 @@ export function groupDiscoveryRailTriggers<T extends DiscoveryRailTrigger>(
   }
 }
 
-function isRegularTutorRailTriggerByCellId(
+function isRegularTutorRailDependencyByCellId(
   sourceCellId: string,
   targetCellId: string,
 ): boolean {
@@ -2747,13 +2747,13 @@ export function buildWrapArrowPath(
   if (
     sourceCellId &&
     targetCellId &&
-    isParallelSessionOverheadWrapTrigger(sourceCellId, targetCellId)
+    isParallelSessionOverheadWrapDependency(sourceCellId, targetCellId)
   ) {
     return buildOverheadWrapArrowPath(sourceEl, targetEl, root)
   }
 
   if (
-    isRegularTutorInLaneWrapTrigger(
+    isRegularTutorInLaneWrapDependency(
       sourceEl,
       targetEl,
       sourceCellId,
@@ -2767,7 +2767,7 @@ export function buildWrapArrowPath(
   const isLeadTutorBottomWrap =
     sourceCellId !== undefined &&
     targetCellId !== undefined &&
-    isParallelSessionLeadBottomWrapTrigger(sourceCellId, targetCellId)
+    isParallelSessionLeadBottomWrapDependency(sourceCellId, targetCellId)
   const corridorY = isLeadTutorBottomWrap
     ? getWrapCorridorY(sourceEl, root)
     : getWrapLoopRouteY(sourceEl, root)
@@ -2874,11 +2874,11 @@ export function buildArrowPath(
   root: HTMLElement,
   sourceCellId?: string,
   targetCellId?: string,
-  triggerId?: string,
+  dependencyId?: string,
 ): string {
   if (
     isReportingAnIssueFrontStageActionStep1ToResolveConnection(
-      triggerId,
+      dependencyId,
       sourceCellId,
       targetCellId,
     )
@@ -2892,12 +2892,12 @@ export function buildArrowPath(
 
   if (
     isReportingHoursFrontStageTechStep1ToBackStageActionStep2Connection(
-      triggerId,
+      dependencyId,
       sourceCellId,
       targetCellId,
     ) ||
     isCallOffFrontStageActionStep3ToBackStageActionStep5Connection(
-      triggerId,
+      dependencyId,
       sourceCellId,
       targetCellId,
     )
@@ -2918,8 +2918,8 @@ export function buildArrowPath(
     sourceStep === targetStep
   ) {
     if (
-      isReportingAnIssueTutorToFrontStageTechStep1Trigger(
-        triggerId,
+      isReportingAnIssueTutorToFrontStageTechStep1Dependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       )
@@ -2932,13 +2932,13 @@ export function buildArrowPath(
     }
 
     if (
-      isSessionSignUpFrontStageTechToBackStageActionStep1Trigger(
-        triggerId,
+      isSessionSignUpFrontStageTechToBackStageActionStep1Dependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       ) ||
-      isFillInRequestFrontStageTechToBackStageActionStep1Trigger(
-        triggerId,
+      isFillInRequestFrontStageTechToBackStageActionStep1Dependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       )
@@ -2951,8 +2951,8 @@ export function buildArrowPath(
     }
 
     if (
-      isReportingHoursLeadTutorToFrontStageTechStep1Trigger(
-        triggerId,
+      isReportingHoursLeadTutorToFrontStageTechStep1Dependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       )
@@ -2966,7 +2966,7 @@ export function buildArrowPath(
 
     if (
       isReportingHoursFrontStageTechStep3ToLeadTutorConnection(
-        triggerId,
+        dependencyId,
         sourceCellId,
         targetCellId,
       )
@@ -2979,13 +2979,13 @@ export function buildArrowPath(
     }
 
     if (
-      isReportingAnIssueFrontStageTechToRegularTutorTrigger(
-        triggerId,
+      isReportingAnIssueFrontStageTechToRegularTutorDependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       ) ||
-      isReportingAnIssueFrontStageTechToLeadTutorTrigger(
-        triggerId,
+      isReportingAnIssueFrontStageTechToLeadTutorDependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       )
@@ -2998,8 +2998,8 @@ export function buildArrowPath(
     }
 
     if (
-      isDiscoveryFrontStageActionToRegularTutorTrigger(
-        triggerId,
+      isDiscoveryFrontStageActionToRegularTutorDependency(
+        dependencyId,
         sourceCellId,
         targetCellId,
       )
@@ -3008,7 +3008,7 @@ export function buildArrowPath(
         sourceEl,
         targetEl,
         root,
-        triggerId,
+        dependencyId,
       )
     }
 
@@ -3047,7 +3047,7 @@ export function buildArrowPath(
     return buildVerticalArrowPath(anchors.source, anchors.target)
   }
 
-  if (isWrapTrigger(sourceEl, targetEl, sourceCellId, targetCellId)) {
+  if (isWrapDependency(sourceEl, targetEl, sourceCellId, targetCellId)) {
     return buildWrapArrowPath(
       sourceEl,
       targetEl,
@@ -3077,7 +3077,7 @@ export function buildArrowPath(
     targetStep !== null &&
     targetStep === sourceStep + 1 &&
     getLayerRow(sourceEl) === getLayerRow(targetEl) &&
-    !isRegularTutorRailTrigger(
+    !isRegularTutorRailDependency(
       sourceEl,
       targetEl,
       sourceCellId,
@@ -3088,7 +3088,7 @@ export function buildArrowPath(
   }
 
   if (
-    isRegularTutorRailTrigger(
+    isRegularTutorRailDependency(
       sourceEl,
       targetEl,
       sourceCellId,
@@ -3099,8 +3099,8 @@ export function buildArrowPath(
   }
 
   if (
-    isReportingAnIssueFrontStageActionToFrontStageTechTrigger(
-      triggerId,
+    isReportingAnIssueFrontStageActionToFrontStageTechDependency(
+      dependencyId,
       sourceCellId,
       targetCellId,
     )
@@ -3112,7 +3112,7 @@ export function buildArrowPath(
     )
   }
 
-  if (isReportingAnIssueSpanningToTopEntryTrigger(triggerId)) {
+  if (isReportingAnIssueSpanningToTopEntryDependency(dependencyId)) {
     return buildReportingAnIssueSpanningToTopEntryPath(
       sourceEl,
       targetEl,
@@ -3121,19 +3121,19 @@ export function buildArrowPath(
   }
 
   if (
-    isCrossLayerForwardTrigger(sourceEl, targetEl) &&
+    isCrossLayerForwardDependency(sourceEl, targetEl) &&
     !isReportingAnIssueFrontStageActionStep1ToResolveConnection(
-      triggerId,
+      dependencyId,
       sourceCellId,
       targetCellId,
     ) &&
     !isReportingHoursFrontStageTechStep1ToBackStageActionStep2Connection(
-      triggerId,
+      dependencyId,
       sourceCellId,
       targetCellId,
     ) &&
     !isCallOffFrontStageActionStep3ToBackStageActionStep5Connection(
-      triggerId,
+      dependencyId,
       sourceCellId,
       targetCellId,
     )

@@ -11,10 +11,10 @@ import type { PathType } from '@/types/database'
 
 const PATH_TYPES: PathType[] = [
   'happy',
-  'unhappy',
   'exception',
-  'alternative',
-  'named',
+  'exception',
+  'variant',
+  'variant',
 ]
 
 type BlueprintArrowMarkerDefsProps = {

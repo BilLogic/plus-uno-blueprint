@@ -28,7 +28,7 @@ export type ExistingVersion = { pathId: string; name: string }
 const EMPTY: DraftVersion = {
   mode: 'blank',
   name: '',
-  pathType: 'alternative',
+  pathType: 'variant',
   sourcePathId: null,
   copyCells: true,
   copyDependencies: true,

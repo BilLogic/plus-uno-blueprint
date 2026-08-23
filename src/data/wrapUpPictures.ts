@@ -46,16 +46,16 @@ export const WRAP_UP_REGULAR_TUTOR_STEP_03_PICTURE =
 export const WRAP_UP_REGULAR_TUTOR_STEP_04_PICTURE =
   '/blueprint-images/wrap-up/happy-path/regular-tutor/step-04-reflection-upload-recording.png'
 
-/** Wrap-Up Happy Path — Zoom/Pencil Front Stage Tech (steps 1–3). */
+/** Wrap-Up Happy Path — Zoom Front Stage Tech (steps 1–3). */
 
-export const WRAP_UP_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'Tutor connects with the other tutors and students via Zoom/Pencil.'
+export const WRAP_UP_ZOOM_STEP_01_DESCRIPTION =
+  'Tutor connects with the other tutors and students via Zoom.'
 
-export const WRAP_UP_ZOOM_PENCIL_STEP_02_DESCRIPTION =
-  'Tutors connect with the students via Zoom/Pencil.'
+export const WRAP_UP_ZOOM_STEP_02_DESCRIPTION =
+  'Tutors connect with the students via Zoom.'
 
-export const WRAP_UP_ZOOM_PENCIL_STEP_03_DESCRIPTION =
-  'Tutors connect with lead tutors via Zoom/Pencil.'
+export const WRAP_UP_ZOOM_STEP_03_DESCRIPTION =
+  'Tutors connect with lead tutors via Zoom.'
 
 /** Wrap-Up Happy Path — PLUS App step 4 (Complete wrap-up). */
 

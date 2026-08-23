@@ -59,7 +59,7 @@ Built fresh every round by `buildSystem` (`loop.ts`):
    there is no copy to drift.
 2. `canvas-adapter.md` embedded in full — the plugin rulebook's
    translation to this app's tools. The deeper references sit behind the
-   `read_reference` tool instead (runtime progressive disclosure).
+   `get_reference` tool instead (runtime progressive disclosure).
 3. The active skill's SKILL.md, when the message invoked one, plus a
    framing note: canvas agent, not IDE agent — skip file/script mechanics,
    keep the judgment.
@@ -116,7 +116,7 @@ get** from the `sb` plugin. The contract:
   `PLUGIN_REPO`). Skills and references are authored THERE, never in this
   repo.
 - **Vendored copy**: `src/lib/agent/skill/{references,skills}/`, bundled
-  via `?raw` imports and served through `read_reference`.
+  via `?raw` imports and served through `get_reference`.
 - **Sync**: `node scripts/sync-agent-skill.mjs` copies plugin → app;
   `--check` exits 1 on drift without copying (CI-safe; an absent plugin
   checkout does not fail the check). Edit a vendored file directly and the

@@ -6,7 +6,7 @@ import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 export type BlueprintCellSelectionContext = {
   scenarioName: string
   phaseName?: string
-  layerName: string
+  laneName: string
   stepId: string
   stepName: string
   stepIndex: number
@@ -27,7 +27,7 @@ export function buildBlueprintCellSelection(
   return {
     scenarioName: context.scenarioName,
     phaseName: context.phaseName,
-    layerName: context.layerName,
+    laneName: context.laneName,
     stepId: context.stepId,
     stepName: context.stepName,
     stepIndex: context.stepIndex,
@@ -54,7 +54,7 @@ export function buildTechPillSelection(
   return {
     scenarioName: context.scenarioName,
     phaseName: context.phaseName,
-    layerName: context.layerName,
+    laneName: context.laneName,
     stepId: context.stepId,
     stepName: context.stepName,
     stepIndex: context.stepIndex,
@@ -85,7 +85,7 @@ export function isSameBlueprintCellSelection(
 ): boolean {
   if (!current) return false
   if (current.scenarioName !== next.scenarioName) return false
-  if (current.layerName !== next.layerName) return false
+  if (current.laneName !== next.laneName) return false
   if (current.stepName !== next.stepName) return false
   if (current.stepIndex !== next.stepIndex) return false
   if ((current.techItem ?? null) !== (next.techItem ?? null)) return false

@@ -9,11 +9,21 @@ import { ORG_NAME } from '@/config'
 export type EditorView = 'landing' | 'home' | 'detail'
 
 /**
- * How blueprint paths are laid out on a scenario slide — CLIENT vocabulary.
- * The DB keeps `side-by-side`/`integrated`; the two meet only in
- * `src/lib/viewTypeVocabulary.ts`. `'merged'` is session-only, never persisted.
+ * How blueprint paths are laid out on a scenario slide.
+ *
+ * ONE vocabulary — the database stores these same tokens. It used to speak
+ * `single | side-by-side | integrated` with `viewTypeVocabulary.ts` translating;
+ * all 22 rows held `side-by-side` and the other two were unused, so the
+ * translation was deleted rather than maintained.
+ *
+ * `'merged'` is the exception and stays session-only: the CHECK constraint is
+ * `single | stacked`, so merged cannot be persisted and a write path holding a
+ * SlideViewType has to decide what it means rather than being coerced.
  */
 export type SlideViewType = 'single' | 'stacked' | 'merged'
+
+/** Tokens the database is allowed to hold — merged is a display state. */
+export type StoredSlideViewType = Extract<SlideViewType, 'single' | 'stacked'>
 
 export const SLIDE_VIEW_TYPES: SlideViewType[] = ['single', 'stacked', 'merged']
 
@@ -166,7 +176,7 @@ export const FALLBACK_NAV: NavItem[] = [
   {
     id: 'a0000000-0000-4000-8000-000000000120',
     index: 1,
-    label: 'Tech Setup',
+    label: 'Employment & Access',
     parentId: 'a0000000-0000-4000-8000-000000000102',
     viewType: 'stacked',
     description:
@@ -335,10 +345,20 @@ export function getBlueprintScenarioId(slide: NavItem): string | undefined {
   return undefined
 }
 
+/**
+ * A raw `scenarios.view_type` as a SlideViewType.
+ *
+ * Not a translation — the stored tokens ARE these tokens. It is a guard: a row
+ * outside the CHECK constraint falls back to the plain single view rather than
+ * crashing a render, which is the behaviour the old vocabulary map provided and
+ * the only part of it worth keeping.
+ */
+export function asSlideViewType(raw: string): SlideViewType {
+  return raw === 'stacked' || raw === 'single' ? raw : 'single'
+}
+
 export function getSlideViewType(slide: NavItem): SlideViewType {
-  // `slide.viewType` is already client vocabulary: the raw DB value is mapped
-  // at the read seam (`phasesToSlides` via `viewTypeVocabulary`), where a
-  // persisted 'integrated' keeps coercing to the plain stacked view.
+  // Already the stored token — see asSlideViewType.
   if (slide.viewType) return slide.viewType
   if (isSubslide(slide)) return 'stacked'
   if (hasBlueprintFallback(slide.id)) return 'stacked'

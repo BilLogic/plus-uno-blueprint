@@ -13,27 +13,65 @@ import {
  * resolve the tokens against the stylesheet.
  */
 describe('path identity', () => {
-  it('gives every non-happy type a distinct dash pattern', () => {
-    // Only the closed types resolve to their own `PATH_TYPE_DASH` entry. A
-    // `named` path — and an `alternative` one with no registry entry — hashes
-    // into the open set instead, so asking for its "type dash" measures the
-    // hash rather than the type. Those are covered by the colour+dash pairing
-    // assertion in palette.test.ts.
-    const closed = [
-      { path_type: 'happy', name: 'Happy Path' },
-      { path_type: 'unhappy', name: 'Sad Path' },
-      { path_type: 'exception', name: 'Boom' },
-      { path_type: 'alternative', name: 'Alternate Path' },
+  it('gives every non-happy path its own dash pattern', () => {
+    // The dash belongs to the PATH, not to its type. It used to belong to the
+    // type — one entry in `PATH_TYPE_DASH` each — which was fine while a
+    // scenario held at most one path per type and wrong the moment Goal
+    // Setting held five of one. Only `happy` keeps a type dash, because a
+    // scenario can only ever have one.
+    //
+    // Dash uniqueness is load-bearing, not decorative: every `exception` path
+    // takes the type colour, so within a scenario the dash is the ONLY channel
+    // separating one exception from another.
+    const paths = [
+      { path_type: 'happy', name: 'Signs up without conflicts' },
+      { path_type: 'exception', name: 'Missed hours' },
+      { path_type: 'exception', name: 'Escalation' },
+      { path_type: 'variant', name: 'No screen share' },
     ] as const
-    const dashes = closed.map(getPathDashArray)
+    const dashes = paths.map(getPathDashArray)
     expect(dashes[0]).toBeUndefined() // happy stays solid
     const nonHappy = dashes.slice(1)
     expect(new Set(nonHappy).size).toBe(nonHappy.length)
   })
 
+  it('separates the sibling paths the board actually holds', () => {
+    // These two shipped identical — same family, same dash — under the old
+    // character-sum hash. They are the reason it was replaced, and they are
+    // pinned here because a synthetic pair would not have caught it: the names
+    // are neither anagrams nor near-misses, they simply summed alike.
+    const a = { path_type: 'variant', name: 'Lead works from a dashboard' } as const
+    const b = { path_type: 'variant', name: 'Redesigned reflection' } as const
+    const identical =
+      getPathColor(a) === getPathColor(b) &&
+      getPathDashArray(a) === getPathDashArray(b)
+    expect(identical).toBe(false)
+  })
+
+  it('keeps a variant\'s colour wherever it appears', () => {
+    // The slot is keyed on the NAME alone. Keying it on `${type}:${name}` is
+    // what dropped the five Goal Setting paths out of their pinned slots when
+    // they moved off `custom` on 2026-08-21 — a re-type silently re-coloured
+    // them, and the dash moved with it.
+    const here = { path_type: 'variant', name: 'Set Goals' } as const
+    const there = { path_type: 'variant', name: 'Set Goals' } as const
+    expect(getPathColor(here)).toBe(getPathColor(there))
+    expect(getPathDashArray(here)).toBe(getPathDashArray(there))
+  })
+
+  it('fixes green on happy and red on exception, whatever they are called', () => {
+    // The two a reader should never have to decode.
+    expect(getPathColor({ path_type: 'happy', name: 'Anything at all' })).toBe(
+      getPathColor({ path_type: 'happy', name: 'Something else' }),
+    )
+    expect(
+      getPathColor({ path_type: 'exception', name: 'Missed hours' }),
+    ).toBe(getPathColor({ path_type: 'exception', name: 'Escalation' }))
+  })
+
   it('separates two unregistered named paths', () => {
-    const a = { path_type: 'named', name: 'Alpha' } as const
-    const b = { path_type: 'named', name: 'Beta' } as const
+    const a = { path_type: 'variant', name: 'Alpha' } as const
+    const b = { path_type: 'variant', name: 'Beta' } as const
     // They may share a hue slot, but not both a hue and a dash.
     const same =
       getPathColor(a) === getPathColor(b) &&
@@ -41,9 +79,23 @@ describe('path identity', () => {
     expect(same).toBe(false)
   })
 
+  it('separates two names built from the same letters', () => {
+    // 'Alpha'/'Beta' above pass under any hash, including a plain character
+    // sum — their letters differ. Anagrams are the case a sum cannot see, and
+    // they are not hypothetical here: 'Check Goals' and 'Goals Check' are both
+    // plausible names for sibling routes in one scenario, and under the old
+    // sum they took the same colour AND the same dash.
+    const a = { path_type: 'variant', name: 'Check Goals' } as const
+    const b = { path_type: 'variant', name: 'Goals Check' } as const
+    const same =
+      getPathColor(a) === getPathColor(b) &&
+      getPathDashArray(a) === getPathDashArray(b)
+    expect(same).toBe(false)
+  })
+
   it('reads the same dash from a colour key as from the path', () => {
-    const path = { path_type: 'unhappy', name: 'Sad Path' } as const
-    expect(getPathDashArrayFromKey('unhappy:Sad Path')).toBe(
+    const path = { path_type: 'exception', name: 'Sad Path' } as const
+    expect(getPathDashArrayFromKey('exception:Sad Path')).toBe(
       getPathDashArray(path),
     )
     // Bare key with no colon is the legacy default-path form.

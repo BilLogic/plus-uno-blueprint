@@ -10,7 +10,7 @@ import {
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -23,36 +23,36 @@ export const STANDARD_SCHEDULING_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000885'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000886',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000888',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000887',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000890',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000889',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000895',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -60,12 +60,12 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000894',
     name: 'Review schedules',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000896',
     name: 'Receive schedule',
-    column_position: 2,
+    position: 2,
   },
 ] as const
 
@@ -81,14 +81,14 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'description' | 'links' | 'picture'>>,
+  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'picture'>>,
 ): BlueprintCell {
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -100,33 +100,33 @@ function schedCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000014${stepSlot}${layerSuffix}`
 }
 
-function schedTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000093${triggerSlot}`
+function schedDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000093${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: schedTrigger(slot),
+    id: schedDependency(slot),
     source_cell_id: schedCell(fromStep, fromLayer),
     target_cell_id: schedCell(toStep, toLayer),
   }
 }
 
-const STANDARD_SCHEDULING_TRIGGERS: BlueprintCellTrigger[] = [
+const STANDARD_SCHEDULING_TRIGGERS: BlueprintCellDependency[] = [
   // Google Spreadsheet → Tutor supervisor review
-  trigger('003', '01', '08', '01', '07'),
+  dependency('003', '01', '08', '01', '07'),
   // Supervisor review → send schedule to tutors
-  trigger('001', '01', '07', '02', '04'),
+  dependency('001', '01', '07', '02', '04'),
   // Supervisor sends schedule → PLUS App
-  trigger('002', '02', '04', '02', '06'),
+  dependency('002', '02', '04', '02', '06'),
   // PLUS App → tutor receives schedule
-  trigger('004', '02', '06', '02', '03'),
+  dependency('004', '02', '06', '02', '03'),
 ]
 
 const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
@@ -139,7 +139,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     'Tutor supervisor team receives and reviews tutor schedules from the Dev Team.',
   ),
   cell(schedCell('01', '08'), L.backStageTech, STEPS[0].id, 'Google Spreadsheet', {
-    description: STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
     links: [
       techDescriptionLink(
         'Google Spreadsheet',
@@ -149,7 +149,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(schedCell('01', '09'), L.support, STEPS[0].id, 'Dev Team', {
-    description: STANDARD_SCHEDULING_SUPPORT_STEP_01_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_SUPPORT_STEP_01_DESCRIPTION,
   }),
 
   cell(schedCell('02', '10'), L.visual, STEPS[1].id, ''),
@@ -167,7 +167,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     'Tutor supervisor team sends schedule.',
   ),
   cell(schedCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
-    description: STANDARD_SCHEDULING_PLUS_APP_STEP_02_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_PLUS_APP_STEP_02_DESCRIPTION,
     links: [
       techDescriptionLink(
         'PLUS App',
@@ -176,20 +176,21 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     ],
   }),
   cell(schedCell('02', '09'), L.support, STEPS[1].id, 'Dev Team\nDesign Team', {
-    description: STANDARD_SCHEDULING_SUPPORT_STEP_02_DESCRIPTION,
+    summary: STANDARD_SCHEDULING_SUPPORT_STEP_02_DESCRIPTION,
   }),
 ]
 
 export const STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: STANDARD_SCHEDULING_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description: 'Tutors receive semester schedule.',
+    name: 'Schedule as issued',
+    summary: 'Tutors receive semester schedule.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: STANDARD_SCHEDULING_CELLS,
-  triggers: STANDARD_SCHEDULING_TRIGGERS,
+  dependencies: STANDARD_SCHEDULING_TRIGGERS,
 }

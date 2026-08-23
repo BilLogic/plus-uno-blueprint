@@ -42,8 +42,8 @@ The five labels currently wearing a colour nobody picked:
 | `Google Spreadsheet` | 4 | purple |
 | `Shift Swap Google Form` | 2 | purple |
 | `PLUS App (Real-time student progress display)` | 1 | red |
-| `Zoom/Pencil / PLUS App` | 1 | indigo |
-| `Zoom/Pencil / PLUS App (Student Progress Dashboard)` | 1 | purple |
+| `Zoom / PLUS App` | 1 | indigo |
+| `Zoom / PLUS App (Student Progress Dashboard)` | 1 | purple |
 
 Two of the four dead seed entries are simply never used
 (`Google Quiz embedded in Notion`, `Zoom Recording`). `Google Quizzes` is a
@@ -60,8 +60,8 @@ colour today, and it is the whole reason this plan exists.
 It also produces the one genuinely undecided question. Two live labels name
 *two* touchpoints in one pill:
 
-- `Zoom/Pencil / PLUS App`
-- `Zoom/Pencil / PLUS App (Student Progress Dashboard)`
+- `Zoom / PLUS App`
+- `Zoom / PLUS App (Student Progress Dashboard)`
 
 The split pattern does not break on ` / `, so each is currently one pill wearing
 one colour. See **Open question 1**.
@@ -191,7 +191,7 @@ will actually look like. Label each swatch with its family name, following
 
 Selecting a swatch upserts `{name: canonical, tone}` and bumps the reload token.
 
-**Verification.** Change Zoom to `gold`; all 3 Zoom pills change, `Zoom/Pencil`
+**Verification.** Change Zoom to `gold`; all 3 Zoom pills change, `Zoom`
 (a different touchpoint) does not. Reload the page and the change persists. Sign
 out and the control is not offered.
 
@@ -223,7 +223,7 @@ it is deterministic, which a random colour would not be.
 
 ## Open questions — decide before Unit 1
 
-1. **Are `Zoom/Pencil / PLUS App` and its Dashboard variant one touchpoint or
+1. **Are `Zoom / PLUS App` and its Dashboard variant one touchpoint or
    two?** If two, `parseCellContentItems` must also split on ` / `, which changes
    206 pills' parsing and is a bigger change than this plan — it would become its
    own unit ahead of the migration. If one, they are simply two more touchpoints

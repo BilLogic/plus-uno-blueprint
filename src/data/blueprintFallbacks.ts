@@ -131,7 +131,7 @@ import {
 } from '@/lib/repairWarmUpAlternatePathBlueprint'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
   GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
@@ -139,7 +139,7 @@ import {
 } from '@/data/goalSettingParallelSessionPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -161,27 +161,27 @@ const ALTERNATE_STEP_VISUAL_LAYER_ID =
   'a0000000-0000-4000-8000-000000000410'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
-  { id: 'a0000000-0000-4000-8000-000000000301', name: 'Partner Action: Teacher', row_position: 1 },
-  { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', row_position: 2 },
-  { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', row_position: 3 },
-  { id: 'a0000000-0000-4000-8000-000000000306', name: 'Front Stage Tech', row_position: 4 },
-  { id: 'a0000000-0000-4000-8000-000000000304', name: 'Front Stage Actions', row_position: 5 },
-  { id: 'a0000000-0000-4000-8000-000000000308', name: 'Back Stage Tech', row_position: 6 },
-  { id: 'a0000000-0000-4000-8000-000000000307', name: 'Back Stage Actions', row_position: 7 },
-  { id: 'a0000000-0000-4000-8000-000000000309', name: 'Support Actions', row_position: 8 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
+  { id: 'a0000000-0000-4000-8000-000000000301', name: 'Teacher', position: 1 },
+  { id: 'a0000000-0000-4000-8000-000000000302', name: 'Lead Tutor', position: 2 },
+  { id: 'a0000000-0000-4000-8000-000000000303', name: 'Regular Tutor', position: 3 },
+  { id: 'a0000000-0000-4000-8000-000000000306', name: 'Front Stage Tech', position: 4 },
+  { id: 'a0000000-0000-4000-8000-000000000304', name: 'Front Stage Actions', position: 5 },
+  { id: 'a0000000-0000-4000-8000-000000000308', name: 'Back Stage Tech', position: 6 },
+  { id: 'a0000000-0000-4000-8000-000000000307', name: 'Back Stage Actions', position: 7 },
+  { id: 'a0000000-0000-4000-8000-000000000309', name: 'Support Actions', position: 8 },
 ] as const
 
 const STEPS = [
-  { id: 'a0000000-0000-4000-8000-000000000311', name: 'Enter Breakout Room', column_position: 1 },
-  { id: 'a0000000-0000-4000-8000-000000000312', name: 'Greet Student', column_position: 2 },
-  { id: 'a0000000-0000-4000-8000-000000000313', name: 'Ask Student to Share Screen', column_position: 3 },
-  { id: 'a0000000-0000-4000-8000-000000000314', name: 'Remind Student They Can Ask for Help', column_position: 4 },
-  { id: 'a0000000-0000-4000-8000-000000000315', name: 'Mark Student Present', column_position: 5 },
-  { id: 'a0000000-0000-4000-8000-000000000316', name: 'Select Engagement level', column_position: 6 },
-  { id: 'a0000000-0000-4000-8000-000000000317', name: 'Mark Student Helped', column_position: 7 },
-  { id: 'a0000000-0000-4000-8000-000000000319', name: 'Leave Breakout Room', column_position: 8 },
-  { id: 'a0000000-0000-4000-8000-000000000318', name: 'Move to Next Student', column_position: 9 },
+  { id: 'a0000000-0000-4000-8000-000000000311', name: 'Enter Breakout Room', position: 1 },
+  { id: 'a0000000-0000-4000-8000-000000000312', name: 'Greet Student', position: 2 },
+  { id: 'a0000000-0000-4000-8000-000000000313', name: 'Ask Student to Share Screen', position: 3 },
+  { id: 'a0000000-0000-4000-8000-000000000314', name: 'Remind Student They Can Ask for Help', position: 4 },
+  { id: 'a0000000-0000-4000-8000-000000000315', name: 'Mark Student Present', position: 5 },
+  { id: 'a0000000-0000-4000-8000-000000000316', name: 'Select Engagement level', position: 6 },
+  { id: 'a0000000-0000-4000-8000-000000000317', name: 'Mark Student Helped', position: 7 },
+  { id: 'a0000000-0000-4000-8000-000000000319', name: 'Leave Breakout Room', position: 8 },
+  { id: 'a0000000-0000-4000-8000-000000000318', name: 'Move to Next Student', position: 9 },
 ] as const
 
 const L = {
@@ -213,25 +213,25 @@ const WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID: Record<string, string> = {
   [L.support]: 'a0000000-0000-4000-8000-000000000409',
 }
 
-function mapAlternatePathLayerId(layerId: string): string {
-  return WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID[layerId] ?? layerId
+function mapAlternatePathLayerId(laneId: string): string {
+  return WARM_UP_HAPPY_TO_ALTERNATE_LAYER_ID[laneId] ?? laneId
 }
 
-const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom/Pencil'
-const FRONT_STAGE_TECH_STEP = 'Zoom/Pencil\nPLUS App'
+const FRONT_STAGE_TECH_ZOOM_ONLY = 'Zoom'
+const FRONT_STAGE_TECH_STEP = 'Zoom\nPLUS App'
 const FRONT_STAGE_TECH_PLUS_APP_ONLY = 'PLUS App'
 const SUPPORT_STEP = 'Dev Team\nDesign Team'
-const WARM_UP_ZOOM_PENCIL_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
-const WARM_UP_ZOOM_PENCIL_SHARE_SCREEN_DESCRIPTION =
-  'The student shares screen via Zoom/Pencil screen share feature.'
-const WARM_UP_ZOOM_PENCIL_LEAVE_BREAKOUT_DESCRIPTION =
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+const WARM_UP_ZOOM_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
+const WARM_UP_ZOOM_SHARE_SCREEN_DESCRIPTION =
+  'The student shares screen via Zoom screen share feature.'
+const WARM_UP_ZOOM_LEAVE_BREAKOUT_DESCRIPTION =
+  "The tutor leaves the student's Zoom breakout room."
 
 const warmUpPartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     `a0000000-0000-4000-8000-00000004${stepSlot}${layerSuffix}`,
-  triggerId: (slot: string) =>
+  dependencyId: (slot: string) =>
     `a0000000-0000-4000-8000-00000005${slot}`,
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
@@ -242,15 +242,15 @@ const warmUpPartnerLeadOptions = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(
           metadata.links ?? [],
           WARM_UP_REGULAR_TUTOR_ONBOARDING_LINKS,
@@ -259,7 +259,7 @@ function cell(
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -273,7 +273,7 @@ function warmUpFrontStageTechCell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'description' | 'links'>
+    Pick<BlueprintCell, 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   return cell(
@@ -282,7 +282,7 @@ function warmUpFrontStageTechCell(
     stepId,
     content,
     {
-      ...(content.includes('Zoom/Pencil') ? { picture: ZOOM_TECH_LOGO } : {}),
+      ...(content.includes('Zoom') ? { picture: ZOOM_TECH_LOGO } : {}),
       ...metadata,
     },
   )
@@ -311,16 +311,16 @@ const WARM_UP_ALTERNATE_RT_TO_FRONT_TECH_STEP_SLOTS = [
   '09',
 ] as const
 
-function buildRegularTutorToFrontStageTechTriggers(
+function buildRegularTutorToFrontStageTechDependencies(
   cellPrefix: '04' | '06',
-  triggerPrefix: '05' | '07',
+  dependencyPrefix: '05' | '07',
   idStart: number,
   stepSlots: readonly string[],
-): BlueprintCellTrigger[] {
+): BlueprintCellDependency[] {
   return stepSlots.map((step, index) => {
-    const triggerSlot = String(idStart + index).padStart(4, '0')
+    const dependencySlot = String(idStart + index).padStart(4, '0')
     return {
-      id: `a0000000-0000-4000-8000-000000${triggerPrefix}${triggerSlot}`,
+      id: `a0000000-0000-4000-8000-000000${dependencyPrefix}${dependencySlot}`,
       source_cell_id: `a0000000-0000-4000-8000-000000${cellPrefix}${step}03`,
       target_cell_id: `a0000000-0000-4000-8000-000000${cellPrefix}${step}06`,
     }
@@ -328,7 +328,7 @@ function buildRegularTutorToFrontStageTechTriggers(
 }
 
 const WARM_UP_RT_TO_FRONT_TECH_TRIGGERS =
-  buildRegularTutorToFrontStageTechTriggers(
+  buildRegularTutorToFrontStageTechDependencies(
     '04',
     '05',
     113,
@@ -336,7 +336,7 @@ const WARM_UP_RT_TO_FRONT_TECH_TRIGGERS =
   )
 
 const WARM_UP_ALTERNATE_RT_TO_FRONT_TECH_TRIGGERS =
-  buildRegularTutorToFrontStageTechTriggers(
+  buildRegularTutorToFrontStageTechDependencies(
     '06',
     '07',
     113,
@@ -355,7 +355,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040106',
     STEPS[0].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040203', L.regular, STEPS[1].id, 'Greet student.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_02_PICTURE,
@@ -364,7 +364,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040206',
     STEPS[1].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040303', L.regular, STEPS[2].id, 'Ask them to share screen.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_03_PICTURE,
@@ -373,7 +373,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040306',
     STEPS[2].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_SHARE_SCREEN_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_SHARE_SCREEN_DESCRIPTION },
   ),
   cell(
     'a0000000-0000-4000-8000-000000040403',
@@ -386,7 +386,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040406',
     STEPS[3].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040503', L.regular, STEPS[4].id, 'Mark them as present.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_05_PICTURE,
@@ -396,7 +396,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[4].id,
     FRONT_STAGE_TECH_STEP,
     {
-      description: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
+      summary: WARM_UP_ZOOM_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -408,7 +408,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     },
   ),
   cell('a0000000-0000-4000-8000-000000040509', L.support, STEPS[4].id, SUPPORT_STEP, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell('a0000000-0000-4000-8000-000000040603', L.regular, STEPS[5].id, 'Select engagement level.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_06_PICTURE,
@@ -418,7 +418,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[5].id,
     FRONT_STAGE_TECH_STEP,
     {
-      description: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
+      summary: WARM_UP_ZOOM_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -430,7 +430,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     },
   ),
   cell('a0000000-0000-4000-8000-000000040609', L.support, STEPS[5].id, SUPPORT_STEP, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell('a0000000-0000-4000-8000-000000040703', L.regular, STEPS[6].id, 'Mark them as helped.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_07_PICTURE,
@@ -440,7 +440,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     STEPS[6].id,
     FRONT_STAGE_TECH_STEP,
     {
-      description: WARM_UP_ZOOM_PENCIL_DESCRIPTION,
+      summary: WARM_UP_ZOOM_DESCRIPTION,
       links: [
         techDescriptionLink(
           'PLUS App',
@@ -452,7 +452,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     },
   ),
   cell('a0000000-0000-4000-8000-000000040709', L.support, STEPS[6].id, SUPPORT_STEP, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell('a0000000-0000-4000-8000-000000040803', L.regular, STEPS[7].id, 'Leave breakout room.', {
     picture: WARM_UP_REGULAR_TUTOR_STEP_08_PICTURE,
@@ -461,7 +461,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     'a0000000-0000-4000-8000-000000040806',
     STEPS[7].id,
     FRONT_STAGE_TECH_ZOOM_ONLY,
-    { description: WARM_UP_ZOOM_PENCIL_LEAVE_BREAKOUT_DESCRIPTION },
+    { summary: WARM_UP_ZOOM_LEAVE_BREAKOUT_DESCRIPTION },
   ),
   cell(
     'a0000000-0000-4000-8000-000000040903',
@@ -487,12 +487,12 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     },
   ),
   cell('a0000000-0000-4000-8000-000000040909', L.support, STEPS[8].id, SUPPORT_STEP, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 
-const WARM_UP_TRIGGERS: BlueprintCellTrigger[] = [
-  ...buildParallelSessionPartnerLeadTriggers(warmUpPartnerLeadOptions),
+const WARM_UP_TRIGGERS: BlueprintCellDependency[] = [
+  ...buildParallelSessionPartnerLeadDependencies(warmUpPartnerLeadOptions),
   {
     id: 'a0000000-0000-4000-8000-000000050101',
     source_cell_id: 'a0000000-0000-4000-8000-000000040103',
@@ -544,23 +544,24 @@ const WARM_UP_TRIGGERS: BlueprintCellTrigger[] = [
 export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: PATH_ID,
-    name: 'Happy Path',
-    description:
+    name: 'Student shares screen',
+    summary:
       'Engaged or partially engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: WARM_UP_CELLS,
-  triggers: WARM_UP_TRIGGERS,
+  dependencies: WARM_UP_TRIGGERS,
 }
 
 function mapHappyCellId(id: string): string {
   return id.replace('00000004', '00000006')
 }
 
-function mapHappyTriggerId(id: string): string {
+function mapHappyDependencyId(id: string): string {
   return id.replace('00000005', '00000007')
 }
 
@@ -573,13 +574,13 @@ const WARM_UP_ALTERNATE_STEPS = STEPS.filter(
   (step) => step.id !== WARM_UP_STEP_3_ID,
 ).map((step, index) => ({
   ...step,
-  column_position: index + 1,
+  position: index + 1,
 }))
 
 const warmUpAlternatePartnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     `a0000000-0000-4000-8000-00000006${stepSlot}${layerSuffix}`,
-  triggerId: (slot: string) => `a0000000-0000-4000-8000-00000007${slot}`,
+  dependencyId: (slot: string) => `a0000000-0000-4000-8000-00000007${slot}`,
   partnerLayerId: mapAlternatePathLayerId(L.partner),
   leadLayerId: mapAlternatePathLayerId(L.lead),
   stepIdForColumn: (column: number) => WARM_UP_ALTERNATE_STEPS[column - 1]!.id,
@@ -595,7 +596,7 @@ function buildWarmUpAlternatePathCells(): BlueprintCell[] {
   ).map((cell) => ({
     ...cell,
     id: mapHappyCellId(cell.id),
-    layer_id: mapAlternatePathLayerId(cell.layer_id),
+    lane_id: mapAlternatePathLayerId(cell.lane_id),
   }))
 
   return [
@@ -618,21 +619,21 @@ const WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS = new Set([
   'a0000000-0000-4000-8000-000000050112',
 ])
 
-function buildWarmUpAlternatePathTriggers(): BlueprintCellTrigger[] {
-  const regularTutorTriggers = WARM_UP_TRIGGERS.filter(
-    (trigger) =>
-      WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS.has(trigger.id) &&
-      trigger.id !== 'a0000000-0000-4000-8000-000000050102' &&
-      trigger.id !== 'a0000000-0000-4000-8000-000000050103',
-  ).map((trigger) => ({
-    id: mapHappyTriggerId(trigger.id),
-    source_cell_id: mapHappyCellId(trigger.source_cell_id),
-    target_cell_id: mapHappyCellId(trigger.target_cell_id),
+function buildWarmUpAlternatePathDependencies(): BlueprintCellDependency[] {
+  const regularTutorDependencies = WARM_UP_TRIGGERS.filter(
+    (dependency) =>
+      WARM_UP_ALTERNATE_REGULAR_TUTOR_TRIGGER_IDS.has(dependency.id) &&
+      dependency.id !== 'a0000000-0000-4000-8000-000000050102' &&
+      dependency.id !== 'a0000000-0000-4000-8000-000000050103',
+  ).map((dependency) => ({
+    id: mapHappyDependencyId(dependency.id),
+    source_cell_id: mapHappyCellId(dependency.source_cell_id),
+    target_cell_id: mapHappyCellId(dependency.target_cell_id),
   }))
 
   return [
-    ...buildParallelSessionPartnerLeadTriggers(warmUpAlternatePartnerLeadOptions),
-    ...regularTutorTriggers,
+    ...buildParallelSessionPartnerLeadDependencies(warmUpAlternatePartnerLeadOptions),
+    ...regularTutorDependencies,
     {
       id: 'a0000000-0000-4000-8000-000000070102',
       source_cell_id: 'a0000000-0000-4000-8000-000000060203',
@@ -642,24 +643,25 @@ function buildWarmUpAlternatePathTriggers(): BlueprintCellTrigger[] {
   ]
 }
 
-const WARM_UP_ALTERNATE_TRIGGERS: BlueprintCellTrigger[] =
-  buildWarmUpAlternatePathTriggers()
+const WARM_UP_ALTERNATE_TRIGGERS: BlueprintCellDependency[] =
+  buildWarmUpAlternatePathDependencies()
 
 export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
   path: {
     id: WARM_UP_ALTERNATE_PATH_ID,
-    name: 'Alternate Path',
-    description: 'Not engaged student warm-up.',
+    name: 'No screen share',
+    summary: 'Not engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
-    path_type: 'alternative',
+    path_type: 'variant',
+    status: 'live',
   },
-  layers: LAYERS.map((layer) => ({
-    ...layer,
-    id: mapAlternatePathLayerId(layer.id),
+  lanes: LAYERS.map((lane) => ({
+    ...lane,
+    id: mapAlternatePathLayerId(lane.id),
   })),
   steps: WARM_UP_ALTERNATE_STEPS,
   cells: buildWarmUpAlternatePathCells(),
-  triggers: WARM_UP_ALTERNATE_TRIGGERS,
+  dependencies: WARM_UP_ALTERNATE_TRIGGERS,
 }
 
 const FALLBACK_BY_PATH: Record<string, BlueprintData> = {
@@ -696,7 +698,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
   Array<{
     id: string
     name: string
-    description: string | null
+    summary: string | null
     note: string | null
     path_type: BlueprintData['path']['path_type']
   }>
@@ -705,14 +707,14 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: WARM_UP_HAPPY_PATH_FALLBACK.path.id,
       name: WARM_UP_HAPPY_PATH_FALLBACK.path.name,
-      description: WARM_UP_HAPPY_PATH_FALLBACK.path.description,
+      summary: WARM_UP_HAPPY_PATH_FALLBACK.path.summary,
       note: WARM_UP_HAPPY_PATH_FALLBACK.path.note,
       path_type: WARM_UP_HAPPY_PATH_FALLBACK.path.path_type,
     },
     {
       id: WARM_UP_ALTERNATE_PATH_FALLBACK.path.id,
       name: WARM_UP_ALTERNATE_PATH_FALLBACK.path.name,
-      description: WARM_UP_ALTERNATE_PATH_FALLBACK.path.description,
+      summary: WARM_UP_ALTERNATE_PATH_FALLBACK.path.summary,
       note: WARM_UP_ALTERNATE_PATH_FALLBACK.path.note,
       path_type: WARM_UP_ALTERNATE_PATH_FALLBACK.path.path_type,
     },
@@ -721,7 +723,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: APPLICATION_HAPPY_PATH_FALLBACK.path.id,
       name: APPLICATION_HAPPY_PATH_FALLBACK.path.name,
-      description: APPLICATION_HAPPY_PATH_FALLBACK.path.description,
+      summary: APPLICATION_HAPPY_PATH_FALLBACK.path.summary,
       note: APPLICATION_HAPPY_PATH_FALLBACK.path.note,
       path_type: APPLICATION_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -730,7 +732,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.id,
       name: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.name,
-      description: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.description,
+      summary: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.summary,
       note: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.note,
       path_type: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -739,7 +741,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: TECH_SETUP_HAPPY_PATH_FALLBACK.path.id,
       name: TECH_SETUP_HAPPY_PATH_FALLBACK.path.name,
-      description: TECH_SETUP_HAPPY_PATH_FALLBACK.path.description,
+      summary: TECH_SETUP_HAPPY_PATH_FALLBACK.path.summary,
       note: TECH_SETUP_HAPPY_PATH_FALLBACK.path.note,
       path_type: TECH_SETUP_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -748,7 +750,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.id,
       name: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.name,
-      description: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.description,
+      summary: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.summary,
       note: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.note,
       path_type: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -757,7 +759,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.id,
       name: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.name,
-      description: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.description,
+      summary: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.summary,
       note: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.note,
       path_type: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -766,7 +768,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.id,
       name: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.name,
-      description: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.description,
+      summary: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.summary,
       note: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.note,
       path_type: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -775,7 +777,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.id,
       name: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.name,
-      description: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.description,
+      summary: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.summary,
       note: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.note,
       path_type: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -784,7 +786,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.id,
       name: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.name,
-      description: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.description,
+      summary: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.summary,
       note: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.note,
       path_type: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -793,7 +795,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.id,
       name: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.name,
-      description: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.description,
+      summary: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.summary,
       note: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.note,
       path_type: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -802,7 +804,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.id,
       name: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.name,
-      description: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.description,
+      summary: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.summary,
       note: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.note,
       path_type: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -811,7 +813,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.id,
       name: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.name,
-      description: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.description,
+      summary: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.summary,
       note: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.note,
       path_type: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -820,44 +822,44 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.name,
-      description: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.description,
+      summary: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.name,
-      description: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.description,
+      summary: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.name,
-      description: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.description,
+      summary: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.name,
-      description: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.description,
+      summary: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.name,
-      description:
-        GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.description,
+      summary:
+        GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.note,
       path_type: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.path_type,
     },
     {
       id: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.name,
-      description:
-        GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.description,
+      summary:
+        GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.note,
       path_type:
         GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.path_type,
@@ -867,7 +869,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.id,
       name: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.name,
-      description: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.description,
+      summary: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.summary,
       note: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.note,
       path_type: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -876,7 +878,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: WRAP_UP_HAPPY_PATH_FALLBACK.path.id,
       name: WRAP_UP_HAPPY_PATH_FALLBACK.path.name,
-      description: WRAP_UP_HAPPY_PATH_FALLBACK.path.description,
+      summary: WRAP_UP_HAPPY_PATH_FALLBACK.path.summary,
       note: WRAP_UP_HAPPY_PATH_FALLBACK.path.note,
       path_type: WRAP_UP_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -885,7 +887,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.id,
       name: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.name,
-      description: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.description,
+      summary: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.summary,
       note: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.note,
       path_type: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -894,7 +896,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     {
       id: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.id,
       name: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.name,
-      description: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.description,
+      summary: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.summary,
       note: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.note,
       path_type: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.path_type,
     },
@@ -914,7 +916,7 @@ const FALLBACK_BY_SCENARIO: Record<string, BlueprintData> = {
 const EMPTY_FALLBACK_PATHS: Array<{
   id: string
   name: string
-  description: string | null
+  summary: string | null
   note: string | null
   path_type: BlueprintData['path']['path_type']
 }> = []
@@ -949,7 +951,7 @@ export function mergePathsWithFallback<
   T extends {
     id: string
     name: string
-    description: string | null
+    summary: string | null
     note: string | null
     path_type: BlueprintData['path']['path_type']
   },
@@ -968,7 +970,7 @@ export function mergePathsWithFallback<
       merged.set(fallbackPath.id, {
         ...existing,
         name: fallbackPath.name,
-        description: fallbackPath.description,
+        summary: fallbackPath.summary,
         note: fallbackPath.note ?? existing.note,
       })
     } else {
@@ -997,7 +999,7 @@ export function getFallbackPathsForScenario(
 ): Array<{
   id: string
   name: string
-  description: string | null
+  summary: string | null
   note: string | null
   path_type: BlueprintData['path']['path_type']
 }> {
@@ -1013,7 +1015,7 @@ function withPathIdentity(
   path: {
     id: string
     name: string
-    description?: string | null
+    summary?: string | null
     note?: string | null
     path_type: BlueprintData['path']['path_type']
   },
@@ -1024,7 +1026,7 @@ function withPathIdentity(
       ...data.path,
       id: path.id,
       name: path.name,
-      description: path.description ?? data.path.description,
+      summary: path.summary ?? data.path.summary,
       note: path.note ?? data.path.note,
       path_type: path.path_type,
     },

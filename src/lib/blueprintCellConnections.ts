@@ -2,20 +2,21 @@ import { buildBlueprintCellSelection, getTechPillItems } from '@/lib/blueprintCe
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { shouldUsePillCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
-import type { BlueprintCell, BlueprintCellTrigger, BlueprintData } from '@/types/blueprint'
+import type { BlueprintCell, BlueprintCellDependency, BlueprintData } from '@/types/blueprint'
 
 export type BlueprintCellConnectionKind = 'interaction' | 'connection'
 
 export type BlueprintCellConnection = {
-  triggerId: string
+  dependencyId: string
   cellId: string
-  layerName: string
+  laneName: string
   layerRowPosition: number
   stepName: string
   stepIndex: number
   kind: BlueprintCellConnectionKind
-  /** Link semantics from the trigger row: temporal trigger vs functional need. */
-  linkKind: 'trigger' | 'needs'
+  /** From the dependency row: `leads_to` (makes the next thing happen) vs
+   *  `enables` (must already be true, causes nothing). */
+  linkKind: 'leads_to' | 'enables'
   /** Short edge label chip (e.g. a channel tag like "Email"). */
   linkLabel: string | null
   /** Why-line shown under the dependency row. */
@@ -35,8 +36,8 @@ function findCell(blueprint: BlueprintData, cellId: string): BlueprintCell | und
   return blueprint.cells.find((cell) => cell.id === resolvedId)
 }
 
-function resolveLayer(blueprint: BlueprintData, layerId: string) {
-  return blueprint.layers.find((layer) => layer.id === layerId)
+function resolveLayer(blueprint: BlueprintData, laneId: string) {
+  return blueprint.lanes.find((lane) => lane.id === laneId)
 }
 
 function resolveStepName(blueprint: BlueprintData, stepId: string): string {
@@ -55,7 +56,7 @@ function resolveStepIndex(blueprint: BlueprintData, stepId: string): number {
 
 function toConnection(
   blueprint: BlueprintData,
-  trigger: BlueprintCellTrigger,
+  dependency: BlueprintCellDependency,
   cellId: string,
   selectedStepIndex: number,
 ): BlueprintCellConnection | null {
@@ -65,23 +66,23 @@ function toConnection(
   const stepIndex = resolveStepIndex(blueprint, cell.step_id)
   if (stepIndex < 0) return null
 
-  const layer = resolveLayer(blueprint, cell.layer_id)
-  const layerName = layer?.name ?? 'Unknown layer'
-  const layerRowPosition = layer?.row_position ?? -1
-  const isTech = layer ? shouldUsePillCellContent(layer) : false
+  const lane = resolveLayer(blueprint, cell.lane_id)
+  const laneName = lane?.name ?? 'Unknown lane'
+  const layerRowPosition = lane?.position ?? -1
+  const isTech = lane ? shouldUsePillCellContent(lane) : false
   const techItems = isTech ? getTechPillItems(cell.content) : []
 
   return {
-    triggerId: trigger.id,
+    dependencyId: dependency.id,
     cellId,
-    layerName,
+    laneName,
     layerRowPosition,
     stepName: resolveStepName(blueprint, cell.step_id),
     stepIndex,
     kind: stepIndex === selectedStepIndex ? 'interaction' : 'connection',
-    linkKind: trigger.kind === 'needs' ? 'needs' : 'trigger',
-    linkLabel: trigger.label ?? null,
-    linkNote: trigger.note ?? null,
+    linkKind: dependency.kind === 'enables' ? 'enables' : 'leads_to',
+    linkLabel: dependency.label ?? null,
+    linkNote: dependency.note ?? null,
     isTech,
     techItems,
     contentPreview: contentPreview(cell.content),
@@ -109,21 +110,21 @@ export function getBlueprintCellConnections(
   const incoming: BlueprintCellConnection[] = []
   const outgoing: BlueprintCellConnection[] = []
 
-  for (const trigger of blueprint.triggers) {
-    if (trigger.target_cell_id === resolvedCellId) {
+  for (const dependency of blueprint.dependencies) {
+    if (dependency.target_cell_id === resolvedCellId) {
       const connection = toConnection(
         blueprint,
-        trigger,
-        trigger.source_cell_id,
+        dependency,
+        dependency.source_cell_id,
         selectedStepIndex,
       )
       if (connection) incoming.push(connection)
     }
-    if (trigger.source_cell_id === resolvedCellId) {
+    if (dependency.source_cell_id === resolvedCellId) {
       const connection = toConnection(
         blueprint,
-        trigger,
-        trigger.target_cell_id,
+        dependency,
+        dependency.target_cell_id,
         selectedStepIndex,
       )
       if (connection) outgoing.push(connection)
@@ -234,7 +235,7 @@ export function getSelectedCellLayerRowPosition(
 ): number {
   const cell = findCell(blueprint, cellId)
   if (!cell) return -1
-  return resolveLayer(blueprint, cell.layer_id)?.row_position ?? -1
+  return resolveLayer(blueprint, cell.lane_id)?.position ?? -1
 }
 
 function interactionDirectionFromRows(
@@ -287,26 +288,26 @@ export function buildBlueprintCellSelectionForId(
   const cell = findCell(blueprint, cellId)
   if (!cell) return null
 
-  const layer = blueprint.layers.find((entry) => entry.id === cell.layer_id)
+  const lane = blueprint.lanes.find((entry) => entry.id === cell.lane_id)
   const stepIndex = blueprint.steps.findIndex((entry) => entry.id === cell.step_id)
   const step = blueprint.steps[stepIndex]
-  if (!layer || !step || stepIndex < 0) return null
+  if (!lane || !step || stepIndex < 0) return null
 
   return buildBlueprintCellSelection({
     scenarioName,
     phaseName,
-    layerName: layer.name,
+    laneName: lane.name,
     stepId: step.id,
     stepName: step.name,
     stepIndex,
     cellId: cell.id,
     cellContent: cell.content,
     cellPicture: cell.picture,
-    cellDescription: cell.description,
+    cellDescription: cell.summary,
     cellLinks: cell.links,
     pathId: blueprint.path.id,
     pathName: blueprint.path.name,
-    pathDescription: blueprint.path.description,
+    pathDescription: blueprint.path.summary,
     pathType: blueprint.path.path_type,
   })
 }

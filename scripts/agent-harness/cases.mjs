@@ -8,12 +8,15 @@
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
 const WRITES = new Set([
-  'add_step', 'add_lane', 'upsert_cell', 'update_cell_content',
-  'update_cell_spec', 'set_cell_dependency', 'rename_path',
+  'create_step', 'create_lane', 'upsert_cell', 'update_cell',
+  'create_cell_dependency', 'update_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
   'create_slice', 'update_slice', 'replace_slice_frames',
-  'record_finding', 'set_finding_status',
+  'create_evidence',
+  'update_evidence',
+  'create_finding', 'update_finding',
+  'create_stakeholder', 'update_stakeholder',
 ])
 
 const writesIn = (trace, turn) =>
@@ -108,7 +111,7 @@ export const CASES = [
         id: 'reads-before-proposing',
         fn: (trace) =>
           calls(trace, 'get_blueprint').length > 0 ||
-          calls(trace, 'list_scenarios').length > 0 ||
+          calls(trace, 'list_blueprint').length > 0 ||
           'proposed without reading anything',
       },
     ],
@@ -125,7 +128,7 @@ export const CASES = [
       {
         id: 'reads-check-docs',
         fn: (trace) =>
-          calls(trace, 'read_reference').some((t) =>
+          calls(trace, 'get_reference').some((t) =>
             String(t.args.name ?? '').startsWith('check-') ||
             t.args.name === 'audit-playbook',
           ) || 'never read the audit playbook or any check doc',
@@ -137,7 +140,7 @@ export const CASES = [
       {
         id: 'records-findings',
         fn: (trace) =>
-          calls(trace, 'record_finding').length > 0 ||
+          calls(trace, 'create_finding').length > 0 ||
           'ran an audit but never recorded a finding row',
       },
       {
@@ -146,8 +149,8 @@ export const CASES = [
           const offenders = toolCalls(trace).filter(
             (t) =>
               WRITES.has(t.name) &&
-              t.name !== 'record_finding' &&
-              t.name !== 'set_finding_status',
+              t.name !== 'create_finding' &&
+              t.name !== 'update_finding',
           )
           return (
             offenders.length === 0 ||
@@ -158,12 +161,12 @@ export const CASES = [
       {
         id: 'one-run-id',
         fn: (trace) => {
-          const recs = calls(trace, 'record_finding')
+          const recs = calls(trace, 'create_finding')
           const omitted = recs.filter((t) => !t.args.run_id).length
           return (
             recs.length <= 1 ||
             omitted <= 1 ||
-            `${omitted} record_finding calls minted their own run_id — one run, one run_id`
+            `${omitted} create_finding calls minted their own run_id — one run, one run_id`
           )
         },
       },
@@ -207,7 +210,7 @@ export const CASES = [
 Selected phase: "In-session"
 Selected scenario: "Warm-Up"
 Active tab: base blueprint view (no slice tab)
-Cell panel open: "Mark them as present." — layer "Regular Tutor", step "Mark Student Present" (#5), scenario "Warm-Up"
+Cell panel open: "Mark them as present." — lane "Regular Tutor", step "Mark Student Present" (#5), scenario "Warm-Up"
 Canvas mode: view`,
     },
     turns: ['What am I looking at right now?'],
@@ -250,9 +253,9 @@ Canvas mode: view`,
   {
     id: 'B3', title: 'annotation-marks',
     prepare: async ({ rest }) => {
-      const [scenario] = await rest('service_scenarios?select=id&name=eq.Warm-Up')
+      const [scenario] = await rest('scenarios?select=id&name=eq.Warm-Up')
       const [path] = await rest(
-        `paths?select=id&service_scenario_id=eq.${scenario.id}&path_type=eq.happy`,
+        `paths?select=id&scenario_id=eq.${scenario.id}&path_type=eq.happy`,
       )
       const cells = (
         await rest(`cells?select=id,content&path_id=eq.${path.id}&content=neq.&limit=2`)
@@ -299,9 +302,9 @@ Canvas mode: view`,
     turns: ['Add a QA lane to the Warm-Up happy path.', 'yes, add it.'],
     // --smoke: exercises real Supabase reads + dry-run write plumbing.
     smokeCalls: [
-      ['read_reference', { name: 'layer-roles' }],
-      ['list_scenarios', {}],
-      ['add_lane', { scenario_id: 'smoke', name: 'QA' }],
+      ['get_reference', { name: 'lane-roles' }],
+      ['list_blueprint', {}],
+      ['create_lane', { scenario_id: 'smoke', name: 'QA' }],
     ],
     smokeReply: 'Adding the QA lane now (one line of narration first).',
     traceChecks: [
@@ -311,22 +314,22 @@ Canvas mode: view`,
         fn: (trace) => {
           const firstWrite = firstIndex(trace, (t) => WRITES.has(t.name))
           if (firstWrite === -1) return 'never wrote the lane'
-          const refBefore = trace.slice(0, firstWrite).some((t) => t.name === 'read_reference')
-          const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'list_scenarios')
-          if (!refBefore) return 'no read_reference before the write (layer-roles / lane-vocabulary)'
+          const refBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_reference')
+          const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'list_blueprint')
+          if (!refBefore) return 'no get_reference before the write (lane-roles / lane-vocabulary)'
           if (!readBefore) return 'no blueprint read before the write'
           return true
         },
       },
       {
         id: 'exactly-one-add-lane',
-        fn: (trace) => calls(trace, 'add_lane').length === 1 || `${calls(trace, 'add_lane').length} add_lane calls`,
+        fn: (trace) => calls(trace, 'create_lane').length === 1 || `${calls(trace, 'create_lane').length} create_lane calls`,
       },
       narratesBeforeWrites(1),
     ],
     judgeLines: [
       { id: 'narrates-batch', text: 'The narration before the write batch is short (about one line); the agent does not ask permission per cell.' },
-      { id: 'coinage-stated', text: 'If a new owner tag or unusual layer_role was coined, the agent says so explicitly; otherwise it reuses existing vocabulary.' },
+      { id: 'coinage-stated', text: 'If a new owner tag or unusual lane_role was coined, the agent says so explicitly; otherwise it reuses existing vocabulary.' },
     ],
   },
   {
@@ -356,7 +359,7 @@ Canvas mode: view`,
       {
         id: 'reads-before-updates',
         fn: (trace) => {
-          const firstWrite = firstIndex(trace, (t) => t.name === 'update_cell_content')
+          const firstWrite = firstIndex(trace, (t) => t.name === 'update_cell')
           if (firstWrite === -1) return true // proposing first is also fine
           const readBefore = trace.slice(0, firstWrite).some((t) => t.name === 'get_blueprint' || t.name === 'get_cell')
           return readBefore || 'updated specs without reading the cells first'
@@ -365,7 +368,7 @@ Canvas mode: view`,
       {
         id: 'owners-from-vocabulary',
         fn: (trace) => {
-          const ownerWrites = calls(trace, 'update_cell_content').filter((t) => t.args.owner)
+          const ownerWrites = calls(trace, 'update_cell').filter((t) => t.args.owner)
           if (ownerWrites.length === 0) return true
           const tagsCall = calls(trace, 'list_owner_tags')[0]
           if (!tagsCall) return 'wrote owners without list_owner_tags'
@@ -385,7 +388,7 @@ Canvas mode: view`,
     traceChecks: [
       {
         id: 'no-per-cell-fanout',
-        fn: (trace) => calls(trace, 'update_cell_content').length <= 2 || `${calls(trace, 'update_cell_content').length}-cell rewrite fan-out`,
+        fn: (trace) => calls(trace, 'update_cell').length <= 2 || `${calls(trace, 'update_cell').length}-cell rewrite fan-out`,
       },
     ],
     judgeLines: [
@@ -398,7 +401,7 @@ Canvas mode: view`,
     traceChecks: [
       {
         id: 'one-dependency',
-        fn: (trace) => calls(trace, 'set_cell_dependency').length <= 1 || 'multiple dependency writes',
+        fn: (trace) => calls(trace, 'create_cell_dependency').length <= 1 || 'multiple dependency writes',
       },
     ],
     judgeLines: [
@@ -597,7 +600,7 @@ Canvas mode: view`,
     // targets — the mock, not the model, caused that. A revision conflict
     // has one correct response: report it, re-read, retry the SAME cell.
     mocks: {
-      update_cell_content: (() => {
+      update_cell: (() => {
         let first = true
         return () => {
           if (first) {

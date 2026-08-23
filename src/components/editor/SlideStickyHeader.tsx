@@ -39,7 +39,7 @@ function resolveScenarioDescription(
   if (slide.description?.trim()) return slide.description
 
   const selectedPath = paths.find((path) => selectedPathIds.includes(path.id))
-  return selectedPath?.description ?? paths[0]?.description ?? null
+  return selectedPath?.summary ?? paths[0]?.summary ?? null
 }
 
 function SlideHeaderContent({
@@ -66,7 +66,7 @@ function SlideHeaderContent({
   const description = isScenario
     ? resolveScenarioDescription(slide, paths, selectedPathIds)
     : slide.description ??
-      paths[0]?.description ??
+      paths[0]?.summary ??
       'Scenarios in this phase and how they connect.'
 
   return (
@@ -107,7 +107,7 @@ export function SlideStickyHeader({
   ...contentProps
 }: SlideStickyHeaderProps) {
   // Collapsed: the floating pill carries this header's identity instead —
-  // one chrome layer at any width. Path filters and the zoom readout are
+  // one chrome lane at any width. Path filters and the zoom readout are
   // deliberately not folded in; they come back when the sidebar does.
   const { collapsed } = useSidebarCollapsedState()
   useCollapsedNavSummary(

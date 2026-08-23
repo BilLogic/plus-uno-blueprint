@@ -1,0 +1,9 @@
+-- "Session did not happen" was a sentence inside a cell summary. Replacing the
+-- whole form with a reasons list is not a footnote — it is a different route
+-- through the same scenario, sharing only "Open the form" and "Submit".
+--
+-- Applied 2026-08-21 via the Supabase migration API; the executable body is
+-- recorded in that migration. Kept here so the history names it.
+--
+-- Result: Session Reflection holds two paths — the happy route and an
+-- exception route of nine cells across four steps, two of them new.

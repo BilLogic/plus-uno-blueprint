@@ -6,6 +6,7 @@ import {
   PATH_TYPE_COLORS,
   getPathColor,
   getPathDashArray,
+  PATH_IDENTITY_PERIOD,
 } from '@/lib/pathColorTheme'
 
 /**
@@ -282,6 +283,7 @@ describe('blueprint cells', () => {
     ['backstage-tech', 'lime'],
     ['backstage-action', 'orange'],
     ['support', 'amber'],
+    ['partner-action', 'gray'],
   ]
 
   describe.each(['light', 'dark'] as const)('%s', (theme) => {
@@ -356,7 +358,7 @@ describe('path badges', () => {
     const open = [
       ...new Set(
         Array.from({ length: 40 }, (_, i) =>
-          getPathColor({ path_type: 'named', name: `Path ${i}` }),
+          getPathColor({ path_type: 'variant', name: `Path ${i}` }),
         ),
       ),
     ]
@@ -376,44 +378,67 @@ describe('path badges', () => {
   })
 
   it('separates two unregistered named paths', () => {
-    const a = getPathColor({ path_type: 'named', name: 'Alpha' })
-    const b = getPathColor({ path_type: 'named', name: 'Beta' })
-    expect(a === b).toBe(false)
+    // The guarantee for a variant is the PAIR, not the hue alone. There are
+    // four open families and seven dashes, deliberately coprime — 28 distinct
+    // identities — so two arbitrary names sharing a family is a one-in-four
+    // coincidence no hash can rule out, and demanding otherwise asserts
+    // something the system does not provide. (An `exception` is the opposite
+    // case: it takes the type colour, so its dash must carry the whole load —
+    // pinned in pathColorTheme.test.ts.)
+    const a = { path_type: 'variant', name: 'Alpha' } as const
+    const b = { path_type: 'variant', name: 'Beta' } as const
+    const identical =
+      getPathColor(a) === getPathColor(b) &&
+      getPathDashArray(a) === getPathDashArray(b)
+    expect(identical).toBe(false)
   })
 
-  it('tells the named paths on the live board apart without colour', () => {
-    // These five are what the database actually holds. They were all rendering
-    // `7 4 2 4` — registered, so the dash fell through to the type default —
-    // which left colour as the only channel (SC 1.4.1).
-    const live = [
-      'Set Goals',
-      'Check Goals',
-      'Update Goals',
-      'Set Goals Edge Case',
-      'Update Goals Edge Case',
-    ]
-    const dashes = live.map((name) =>
-      getPathDashArray({ path_type: 'named', name }),
+  it('tells the live board\'s variants apart without colour', () => {
+    // Goal Setting's three variants render side by side. They were all coming
+    // out `7 4 2 4` — registered, so the dash fell through to the type default
+    // — which left colour as the only channel (SC 1.4.1).
+    const variants = ['Set Goals', 'Check Goals', 'Update Goals']
+    const dashes = variants.map((name) =>
+      getPathDashArray({ path_type: 'variant', name }),
     )
-    expect(new Set(dashes).size).toBe(live.length)
-    const colours = live.map((name) =>
-      getPathColor({ path_type: 'named', name }),
+    expect(new Set(dashes).size).toBe(variants.length)
+    const colours = variants.map((name) =>
+      getPathColor({ path_type: 'variant', name }),
     )
-    expect(new Set(colours).size).toBe(live.length)
+    expect(new Set(colours).size).toBe(variants.length)
   })
 
-  it('pairs a distinct dash with every family in the open set', () => {
-    // Colour and dash hash off the same key, so the pattern is a real second
-    // channel for SC 1.4.1 only if the two lists are the same length.
-    const seen = new Map<string, string | undefined>()
-    for (let i = 0; i < 40; i++) {
-      const path = { path_type: 'named' as const, name: `Path ${i}` }
-      const colour = getPathColor(path)
-      const dash = getPathDashArray(path)
-      if (seen.has(colour)) expect(seen.get(colour)).toBe(dash)
-      else seen.set(colour, dash)
-    }
-    expect(new Set(seen.values()).size).toBe(seen.size)
+  it('tells two exceptions in one scenario apart, though both are red', () => {
+    // Red is fixed for every exception — a reader should never have to work
+    // out whether red means trouble here. So within a scenario the dash is
+    // the ONLY thing separating two of them, and it has to.
+    const both = ['Set Goals Edge Case', 'Update Goals Edge Case']
+    const colours = both.map((name) =>
+      getPathColor({ path_type: 'exception', name }),
+    )
+    expect(new Set(colours).size).toBe(1) // both red, by design
+    const dashes = both.map((name) =>
+      getPathDashArray({ path_type: 'exception', name }),
+    )
+    expect(new Set(dashes).size).toBe(2)
+  })
+
+  it('never repeats a colour AND a dash together', () => {
+    // Colour and dash index the same slot through lists of DIFFERENT length —
+    // 4 variant families, 7 dash patterns — so a repeated colour lands on a
+    // different dash and the pair stays unique for lcm(4,7) = 28 paths.
+    //
+    // This used to assert the opposite: one colour, always one dash. That made
+    // the second channel redundant with the first, which is the same as having
+    // one — two paths sharing a colour shared a dash too and were
+    // indistinguishable (SC 1.4.1). The lengths are coprime on purpose.
+    expect(PATH_IDENTITY_PERIOD).toBe(28)
+
+    const slots = Array.from({ length: PATH_IDENTITY_PERIOD }, (_, i) => i)
+    const pairs = new Set(
+      slots.map((i) => `${i % 4}|${i % 7}`),
+    )
+    expect(pairs.size).toBe(PATH_IDENTITY_PERIOD)
   })
 })
 
@@ -448,7 +473,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     const lanes = familiesIn('lane')
     const pathFamilies = new Set(
       Array.from({ length: 40 }, (_, i) =>
-        getPathColor({ path_type: 'named', name: `Path ${i}` }),
+        getPathColor({ path_type: 'variant', name: `Path ${i}` }),
       ).map((token) => /--color-([a-z]+)-/.exec(token)![1]),
     )
     expect(pathFamilies.size).toBeGreaterThan(1)
@@ -486,7 +511,10 @@ describe('interaction states', () => {
   ]
 
   it('defines every state on every lane role', () => {
-    expect(laneRules).toHaveLength(8)
+    // Nine since `partner-action` landed (2026-08-21). The count is asserted
+    // so a role added to the type without a CSS block fails here rather than
+    // rendering an unstyled row.
+    expect(laneRules).toHaveLength(9)
     for (const { role, props } of laneRules) {
       for (const key of REQUIRED) {
         expect(`${role}:${key}`).toBe(props[key] ? `${role}:${key}` : 'MISSING')

@@ -1,39 +1,58 @@
 /** Supabase nested selects for the Service Blueprint schema */
 
 export const PATH_LIST_SELECT =
-  'id, name, description, note, path_type, service_scenario_id, created_at, updated_at'
+  'id, name, summary, note, path_type, scenario_id, created_at, updated_at'
 
-/** Blueprint grid: path with layers, path_steps, and cells */
+/** Blueprint grid: path with lanes, path_steps, and cells */
+/*
+  The board carries every column the cell panel renders.
+
+  function / form / value_props / owner / perceived_owner used to be fetched
+  per cell on panel open — up to three round-trips each. 935 cells hold 7.8 KB
+  of spec between them and the owner pair is empty board-wide, against a board
+  that already ships ~374 KB, so on-demand cost three requests to save 2%.
+  See docs/plans/2026-08-21-001-refactor-skeleton-loading-fidelity-plan.md.
+
+  Nothing in here may carry a comment: PostgREST parses this string.
+*/
 export const PATH_BLUEPRINT_SELECT = `
   id,
   name,
-  description,
+  summary,
   note,
   path_type,
-  service_scenario_id,
-  layers (
+  status,
+  scenario_id,
+  lanes (
     id,
     name,
-    layer_role,
-    row_position
+    lane_role,
+    position
   ),
   path_steps (
-    column_position,
+    position,
     steps (
       id,
-      name
+      name,
+      summary
     )
   ),
   cells (
     id,
-    layer_id,
+    lane_id,
     step_id,
-    slot_position,
+    position,
     content,
     picture,
-    description,
+    summary,
+    status,
     links,
-    outgoing:cell_triggers!cell_triggers_source_cell_id_fkey (
+    "function",
+    form,
+    value_props,
+    owner,
+    perceived_owner,
+    outgoing:cell_dependencies!cell_dependencies_source_cell_id_fkey (
       id,
       target_cell_id,
       kind,

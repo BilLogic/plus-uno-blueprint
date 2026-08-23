@@ -13,13 +13,15 @@ import type {
   BlueprintCellConnection,
   BlueprintCellConnections,
 } from '@/lib/blueprintCellConnections'
+import { DEPENDENCY_DIRECTION_LABELS } from '@/lib/dependencyValidation'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
 export type CellDependencyTechEntry = {
   id: string
   cellId: string
   item: string
-  layerName?: string
+  laneName?: string
   stepIndex?: number
 }
 
@@ -106,7 +108,7 @@ function DependencyRow({
           <span className="flex min-w-0 items-center gap-[7px]">
             <DirectionIcon direction={direction} />
             <span className="min-w-0 truncate font-normal text-foreground/90">
-              {connection.layerName}
+              {connection.laneName}
               <span className="text-muted-foreground">
                 {' '}
                 · Step {connection.stepIndex + 1}
@@ -170,7 +172,10 @@ function DependencyGroup({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-3xs font-semibold tracking-wide text-muted-foreground uppercase">
+      {/* The same section-label role the spec sections use. Two treatments
+          for one job — 11px medium sentence case here, 10px semibold
+          uppercase there — read as two unrelated panels. */}
+      <p className={PANEL_TEXT.sectionLabel}>
         {title}
       </p>
       <ul className="flex flex-col">{children}</ul>
@@ -180,7 +185,7 @@ function DependencyGroup({
 
 type CellDependencySectionsProps = {
   connections: BlueprintCellConnections
-  /** Same-step tech without an explicit trigger (kept from panel v1). */
+  /** Same-step tech without an explicit dependency (kept from panel v1). */
   otherTech: CellDependencyTechEntry[]
   /** Lane row position of the selected cell — orients up/down glyphs. */
   selectedLayerRowPosition?: number
@@ -188,8 +193,10 @@ type CellDependencySectionsProps = {
 } & SelectHandlers
 
 /**
- * Dependencies tab: grouped SET OFF BY (incoming triggers) / SETS OFF
- * (outgoing triggers) / NEEDS (functional links, both directions). Rows keep
+ * Dependencies tab: grouped Follows (incoming `leads_to`) / Leads to
+ * (outgoing `leads_to`) / Enables (`enables`, both directions). The
+ * group headings are the stored kind values, minus the underscore — that is
+ * the point of the rename: the product word and the column agree. Rows keep
  * the hover-preview and click-to-navigate behavior, with the direction
  * glyphs and indented detail lines from the previous dependency table.
  * Read-only — link editing is an agent path.
@@ -203,32 +210,32 @@ export function CellDependencySections({
   className,
 }: CellDependencySectionsProps) {
   const setOffBy = connections.incoming.filter(
-    (connection) => connection.linkKind === 'trigger',
+    (connection) => connection.linkKind === 'leads_to',
   )
   const setsOff = connections.outgoing.filter(
-    (connection) => connection.linkKind === 'trigger',
+    (connection) => connection.linkKind === 'leads_to',
   )
 
-  const needsById = new Map<
+  const enablesById = new Map<
     string,
     { connection: BlueprintCellConnection; flow: RowFlow }
   >()
   for (const connection of connections.incoming) {
-    if (connection.linkKind !== 'needs') continue
-    if (!needsById.has(connection.triggerId)) {
-      needsById.set(connection.triggerId, { connection, flow: 'in' })
+    if (connection.linkKind !== 'enables') continue
+    if (!enablesById.has(connection.dependencyId)) {
+      enablesById.set(connection.dependencyId, { connection, flow: 'in' })
     }
   }
   for (const connection of connections.outgoing) {
-    if (connection.linkKind !== 'needs') continue
-    const existing = needsById.get(connection.triggerId)
+    if (connection.linkKind !== 'enables') continue
+    const existing = enablesById.get(connection.dependencyId)
     if (existing) {
       existing.flow = 'both'
     } else {
-      needsById.set(connection.triggerId, { connection, flow: 'out' })
+      enablesById.set(connection.dependencyId, { connection, flow: 'out' })
     }
   }
-  const needs = [...needsById.values()]
+  const enables = [...enablesById.values()]
 
   const linkedTechIds = new Set(
     [...connections.incoming, ...connections.outgoing].flatMap((connection) =>
@@ -242,7 +249,7 @@ export function CellDependencySections({
   if (
     setOffBy.length === 0 &&
     setsOff.length === 0 &&
-    needs.length === 0 &&
+    enables.length === 0 &&
     remainingTech.length === 0
   ) {
     return (
@@ -259,10 +266,10 @@ export function CellDependencySections({
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       {setOffBy.length > 0 ? (
-        <DependencyGroup title="Set off by">
+        <DependencyGroup title={DEPENDENCY_DIRECTION_LABELS.incoming}>
           {setOffBy.map((connection) => (
             <DependencyRow
-              key={`in:${connection.triggerId}`}
+              key={`in:${connection.dependencyId}`}
               connection={connection}
               direction={direction(connection, 'in')}
               {...handlers}
@@ -271,10 +278,10 @@ export function CellDependencySections({
         </DependencyGroup>
       ) : null}
       {setsOff.length > 0 ? (
-        <DependencyGroup title="Sets off">
+        <DependencyGroup title={DEPENDENCY_DIRECTION_LABELS.outgoing}>
           {setsOff.map((connection) => (
             <DependencyRow
-              key={`out:${connection.triggerId}`}
+              key={`out:${connection.dependencyId}`}
               connection={connection}
               direction={direction(connection, 'out')}
               {...handlers}
@@ -282,11 +289,11 @@ export function CellDependencySections({
           ))}
         </DependencyGroup>
       ) : null}
-      {needs.length > 0 ? (
-        <DependencyGroup title="Needs">
-          {needs.map(({ connection, flow }) => (
+      {enables.length > 0 ? (
+        <DependencyGroup title="Enables">
+          {enables.map(({ connection, flow }) => (
             <DependencyRow
-              key={`needs:${connection.triggerId}`}
+              key={`needs:${connection.dependencyId}`}
               connection={connection}
               direction={direction(connection, flow)}
               {...handlers}
@@ -295,7 +302,7 @@ export function CellDependencySections({
         </DependencyGroup>
       ) : null}
       {remainingTech.length > 0 ? (
-        <DependencyGroup title="Tech in this step">
+        <DependencyGroup title="Also on this step">
           <li className="px-2 py-1.5">
             <span className="flex flex-wrap gap-1">
               {remainingTech.map((entry) => (

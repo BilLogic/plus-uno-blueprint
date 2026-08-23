@@ -4,6 +4,7 @@ import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGri
 import { MergedCompareGrid } from '@/components/blueprint/MergedCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
+import { ScenarioBoardScopeContext } from '@/contexts/scenarioBoardScopeContext'
 import { useEditor } from '@/contexts/EditorContext'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
@@ -184,6 +185,22 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   */
   const cellDetail = useBlueprintCellDetailOptional()
   const openDifferences = cellDetail?.openDifferences
+  /*
+    Is THIS board the one the detail view is scoped to? Every scenario stays
+    mounted behind the focused one, and the cell-detail provider's `enabled`
+    is a single boolean above all of them — which is why the two axis headers
+    went live on all 23 boards at once, and why a lane header on a band the
+    reader had not chosen opened "Nothing recorded for this lane yet."
+    Published as a context rather than threaded as a prop: the headers sit
+    five components down (rail → band → grid → panel body) and nothing in
+    between has any business knowing about focus.
+
+    Not `focusActive` — that is the CAMERA's focus, and it is false on the one
+    board a slice tab or the phone shell renders solo, where the detail view
+    is nonetheless scoped to exactly that scenario.
+  */
+  const boardInDetailScope =
+    cellDetail?.scenarioId != null && cellDetail.scenarioId === slide.id
   const compareMode = compareModel ? displayViewType : null
   const previousCompareModeRef = useRef<SlideViewType | null>(null)
   useEffect(() => {
@@ -379,7 +396,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   const sectionTitleInfoTooltip = sectionTitleLabel
     ? getScenarioParallelTooltip(slide)
     : null
-  const showPathTypeBadge = Boolean(sectionTitleLabel)
 
   // The chrome this panel will actually have — a locked panel has no resize
   // handle, and an estimate that budgets one is dead gray space.
@@ -473,6 +489,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
 
   if (useSideBySideLayout) {
     return (
+      <ScenarioBoardScopeContext.Provider value={boardInDetailScope}>
       <ResizableComparePanel
         {...comparePanelProps}
         fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}`}
@@ -492,14 +509,16 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             scrollContainerRef={scrollContainerRef}
             scenarioName={scenarioName}
             phaseName={phaseName}
-            sectionTitleLabel={sectionTitleLabel}
           />
         )}
       </ResizableComparePanel>
+      </ScenarioBoardScopeContext.Provider>
     )
   }
 
   return (
+    /* Same scope for the single-path board — see the compare branch above. */
+    <ScenarioBoardScopeContext.Provider value={boardInDetailScope}>
     <ResizableComparePanel
       {...comparePanelProps}
       fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}:single`}
@@ -514,12 +533,12 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
             phaseName={phaseName}
             headerTitleLabel={sectionTitleLabel}
             headerTitleDescription={sectionTitleDescription}
-            showPathTypeBadge={showPathTypeBadge}
             fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
             fillSwimlaneHeight={fillSwimlaneHeight}
           />
         ))}
       </div>
     </ResizableComparePanel>
+    </ScenarioBoardScopeContext.Provider>
   )
 })

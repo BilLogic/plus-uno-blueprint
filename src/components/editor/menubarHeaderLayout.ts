@@ -1,6 +1,15 @@
-/** Shared layout classes for blueprint canvas menubar headers. */
+/**
+ * Shared layout classes for blueprint canvas menubar headers.
+ *
+ * `min-h-9` rather than `h-9`: the bar carries two rows now — the title, then
+ * the summary under it, the slice header band's shape — and a fixed height
+ * cropped the second one. Nothing measures this constant; the detail panel
+ * measures the canvas region itself and only falls back to the old number.
+ */
 export const BLUEPRINT_MENUBAR_HEADER_CLASS =
-  'relative h-9 w-full max-w-full shrink-0 items-center gap-3 rounded-none border-0 bg-transparent px-3 py-0 shadow-none'
+  // `h-auto` beats the Menubar primitive's own `h-8`, which cropped the second
+  // row: the bar sizes to its content the way the slice header band does.
+  'relative h-auto min-h-9 w-full max-w-full shrink-0 items-center gap-3 rounded-none border-0 bg-transparent px-3 py-1.5 shadow-none'
 
 /** Docked navbar bar — same surface/elevation as the side nav. */
 export const BLUEPRINT_NAVBAR_BAR_CLASS =
@@ -26,6 +35,19 @@ export const CELL_DETAIL_PANEL_TOP_GAP_PX = 16
  * drawer clear of the bottom canvas chrome (the annotation toolbar band) with
  * the same 16px breathing room as CELL_DETAIL_PANEL_TOP_GAP_PX.
  */
+/**
+ * Height of the bottom canvas chrome (the annotation toolbar band) plus the
+ * same 16px breathing room the top gap uses. Named, because a bare
+ * `bottom-[61px]` is a number nobody can check against the thing it clears.
+ */
+export const CELL_DETAIL_PANEL_BOTTOM_GAP_PX = 61
+/*
+  Written out, not interpolated. Tailwind reads SOURCE text: a template
+  literal produces a class at runtime that the compiler never saw, so
+  `!bottom-[61px]` had no rule behind it and the drawer ran to the bottom of
+  the viewport, under the annotation toolbar. The test below keeps the literal
+  and the constant in step.
+*/
 export const CELL_DETAIL_PANEL_BOTTOM_CLASS = '!bottom-[61px]'
 
 /** The canvas region the panel measures against. */
@@ -33,20 +55,18 @@ export const CANVAS_REGION_SELECTOR = '[data-slide-canvas]'
 
 /** Flattens the menubar when it sits inside the docked navbar bar. */
 export const BLUEPRINT_MENUBAR_FLAT_CLASS =
-  'relative h-9 rounded-none border-0 bg-transparent px-0 py-0 shadow-none'
+  'relative h-auto min-h-9 rounded-none border-0 bg-transparent px-0 py-1.5 shadow-none'
 
 /**
  * Left-aligned title + paths control row. Right padding keeps the row clear
  * of the absolutely-positioned zoom indicator / Reset View cluster.
  */
 export const BLUEPRINT_MENUBAR_TITLE_CLASS =
-  'relative z-10 flex h-full min-w-0 max-w-[calc(100%-9rem)] items-center gap-2.5 px-1'
+  'relative z-10 flex min-w-0 max-w-[calc(100%-9rem)] flex-col items-start gap-0.5 px-1'
 
 export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
-  'min-w-0 truncate text-xs text-muted-foreground'
+  'min-w-0 max-w-full truncate px-1.5 text-xs text-muted-foreground'
 
+/** The canvas title's own type. `EntityTitleAffordance` is its one consumer. */
 export const BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS =
-  'shrink-0 text-sm font-semibold tracking-tight text-foreground'
-
-export const BLUEPRINT_MENUBAR_SEPARATOR_CLASS =
-  'shrink-0 text-xs text-muted-foreground/70'
+  'min-w-0 truncate text-sm font-semibold tracking-tight text-foreground'

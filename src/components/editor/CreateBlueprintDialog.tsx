@@ -13,9 +13,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSupabaseQuery, invalidateStructure } from '@/hooks/useSupabaseQuery'
-import { useLifecyclePhases } from '@/hooks/useLifecyclePhases'
+import { useServicePhases } from '@/hooks/useServicePhases'
 import { createScenario } from '@/lib/authoringRpc'
-import { clientToDbViewType } from '@/lib/viewTypeVocabulary'
 import {
   DEFAULT_LANE_SET,
   VIEW_TYPE_LABELS,
@@ -49,7 +48,7 @@ function useLaneSources() {
       const { data, error } = await client
         .from('paths')
         .select(
-          'id,name,layers(id),service_scenario:service_scenarios(name,phase:phases(name))',
+          'id,name,lanes(id),service_scenario:scenarios(name,phase:phases(name))',
         )
       if (error) throw new Error(error.message)
       return (data ?? [])
@@ -58,7 +57,7 @@ function useLaneSources() {
             name?: string
             phase?: { name?: string } | null
           } | null
-          const lanes = (row.layers as unknown[] | null) ?? []
+          const lanes = (row.lanes as unknown[] | null) ?? []
           return {
             pathId: row.id as string,
             label: [scenario?.phase?.name, scenario?.name, row.name as string]
@@ -77,12 +76,11 @@ function useLaneSources() {
 const EMPTY_DRAFT: DraftBlueprint = {
   phaseId: null,
   name: '',
-  // DraftBlueprint speaks DB vocabulary (it feeds `createScenario` directly),
-  // so the client default crosses the write seam through the vocabulary map.
-  viewType: clientToDbViewType['stacked'],
+  // One vocabulary: the token stored is the token the UI names.
+  viewType: 'stacked',
   laneSourcePathId: null,
   stepCount: 5,
-  pathName: 'Happy Path',
+  pathName: '',
 }
 
 /**
@@ -111,7 +109,7 @@ export function CreateBlueprintDialog({
   fixedPhaseId?: string | null
 }) {
   const { client } = useSupabase()
-  const phases = useLifecyclePhases()
+  const phases = useServicePhases()
   const laneSources = useLaneSources()
   const [draft, setDraft] = useState<DraftBlueprint>(EMPTY_DRAFT)
   const [busy, setBusy] = useState(false)
@@ -286,7 +284,7 @@ export function CreateBlueprintDialog({
             </span>
             <Input
               value={draft.pathName}
-              placeholder="Happy Path"
+              placeholder="e.g. Signs up without conflicts"
               onChange={(event) => set('pathName', event.target.value)}
             />
           </label>

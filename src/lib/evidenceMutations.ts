@@ -20,7 +20,7 @@ export type EvidenceKind =
   | 'other'
 
 export type EvidenceDraft = {
-  serviceLifecycleId: string
+  serviceId: string
   cellId: string
   /** IR key-path placeholder until the map skill mints real ones. */
   cellKey: string
@@ -54,7 +54,7 @@ export async function addEvidence(
   const { data, error } = await client
     .from('evidence')
     .insert({
-      service_lifecycle_id: draft.serviceLifecycleId,
+      service_id: draft.serviceId,
       cell_id: draft.cellId,
       cell_key: draft.cellKey,
       kind: draft.kind,
@@ -110,6 +110,76 @@ export async function deleteEvidence(
 }
 
 /** The revert side of `delete_evidence`: reinsert the captured row as-was. */
+/** The editable half of an evidence row. Never `cell_id` — moving a source
+ *  to a different cell is a delete plus an add, not an edit. */
+export type EvidenceUpdate = {
+  kind?: EvidenceKind
+  title?: string
+  ref?: string | null
+  excerpt?: string | null
+  note?: string | null
+}
+
+/**
+ * Edit one evidence row, capturing its prior values so the revert can put
+ * them back — the same shape `updateCellSpec` uses, and the reason this
+ * could not simply be a table write: an edit with no inverse would be the
+ * one change in the session log that cannot be taken back.
+ *
+ * Reads before writing so a partial patch keeps the fields it did not name.
+ */
+export async function updateEvidence(
+  client: Client,
+  evidenceId: string,
+  update: EvidenceUpdate,
+  options: { record?: boolean } = {},
+): Promise<void> {
+  const { data: before, error: readError } = await client
+    .from('evidence')
+    .select('id, kind, title, ref, excerpt, note')
+    .eq('id', evidenceId)
+    .maybeSingle()
+  if (readError) throw toAuthoringError(readError)
+  if (!before) throw new Error(`No evidence with id ${evidenceId}.`)
+
+  const next = {
+    kind: update.kind ?? before.kind,
+    title: update.title?.trim() || before.title,
+    ref: update.ref === undefined ? before.ref : update.ref?.trim() || null,
+    excerpt:
+      update.excerpt === undefined
+        ? before.excerpt
+        : update.excerpt?.trim() || null,
+    note: update.note === undefined ? before.note : update.note?.trim() || null,
+  }
+
+  const { error } = await client
+    .from('evidence')
+    .update(next)
+    .eq('id', evidenceId)
+  if (error) throw toAuthoringError(error)
+
+  if (options.record !== false) {
+    recordChange(
+      'update_evidence',
+      { evidence_id: evidenceId, title: next.title },
+      {
+        fn: 'update_evidence',
+        args: {
+          evidence_id: evidenceId,
+          update: {
+            kind: before.kind as EvidenceKind,
+            title: before.title,
+            ref: before.ref,
+            excerpt: before.excerpt,
+            note: before.note,
+          },
+        },
+      },
+    )
+  }
+}
+
 export async function restoreEvidenceRow(
   client: Client,
   row: EvidenceRow,

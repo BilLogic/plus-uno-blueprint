@@ -1,7 +1,8 @@
 import { Columns2, Diff, GitCompareArrows } from 'lucide-react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
-import { NavbarSlideTitleNav } from '@/components/editor/NavbarSlideTitleNav'
+import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
 import {
+  BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
   BLUEPRINT_MENUBAR_HEADER_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
@@ -20,7 +21,6 @@ import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailCo
 import { useEditor } from '@/contexts/EditorContext'
 import { countCompareDifferences } from '@/lib/compareLedger'
 import { useCompareReviewState } from '@/lib/compareReviewStore'
-import { getScenarioParallelTooltip } from '@/lib/scenarioParallelInfo'
 import {
   getSlideDisplayLabel,
   isSubslide,
@@ -47,7 +47,7 @@ function resolveHeaderDescription(
     if (slide.description?.trim()) return slide.description
 
     const selectedPath = paths.find((path) => selectedPathIds.includes(path.id))
-    return selectedPath?.description ?? paths[0]?.description ?? null
+    return selectedPath?.summary ?? paths[0]?.summary ?? null
   }
 
   return (
@@ -203,7 +203,6 @@ export function PhaseMenubarHeader({
   const label = getSlideDisplayLabel(slide, slides)
   const isScenario = isSubslide(slide)
   const description = resolveHeaderDescription(slide, paths, selectedPathIds)
-  const infoTooltip = isScenario ? getScenarioParallelTooltip(slide) : null
 
   return (
     <Menubar
@@ -214,12 +213,28 @@ export function PhaseMenubarHeader({
       onClick={(event) => event.stopPropagation()}
     >
       <div className={BLUEPRINT_MENUBAR_TITLE_CLASS}>
-        <NavbarSlideTitleNav
+        {/*
+          Title and summary on one row, the slice header band's shape adapted
+          to a 36px bar: identity first, then what this thing is, truncated.
+          The summary used to live only inside the title's hover tooltip,
+          which is a strange place for the one sentence that says what you are
+          looking at.
+        */}
+        <EntityTitleAffordance
+          kind={isScenario ? 'scenario' : 'phase'}
+          id={slide.id}
           label={label}
-          description={description}
-          infoTooltip={infoTooltip}
-          className="shrink-0"
         />
+        {description ? (
+          // Its own row, aligned under the title — the slice header band's
+          // shape. Inline after a separator, the summary competed with the
+          // name for the same line and truncated first on a narrow canvas.
+          // `title` and not a tooltip: this is truncated prose, and the full
+          // text is one click away in the panel the title opens.
+          <p className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS} title={description}>
+            {description}
+          </p>
+        ) : null}
       </div>
       {/* Compare controls moved to the navbar's right cluster
           (CompareControlsCluster) — the title keeps the left edge to

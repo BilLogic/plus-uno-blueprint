@@ -118,11 +118,11 @@ export const coverContent: CoverContent = {
           heading: 'Where you reach it from',
           paragraphs: [
             'Four ways to work the same blueprint. The app is where people read, compare, and present. The in-app agent drafts changes in place, using the same write path the interface uses. Agentic tools reach the same rows from an IDE or a terminal — that is where the four skills run. A chat bot answers questions and links back to the exact cell it read.',
-            'All four sit on one shared context layer, so what any surface reads is what the others wrote. Who may do what follows from the account a surface signs in with, not from which surface it is.',
+            'All four sit on one shared context lane, so what any surface reads is what the others wrote. Who may do what follows from the account a surface signs in with, not from which surface it is.',
           ],
           figure: {
             src: '/cover/four-ways-in.svg',
-            alt: 'Four ways into the blueprint — the app, the in-app agent, agentic tools, and a chat bot — over one shared context layer',
+            alt: 'Four ways into the blueprint — the app, the in-app agent, agentic tools, and a chat bot — over one shared context lane',
             width: 880,
             height: 334,
           },
@@ -142,12 +142,12 @@ export const coverContent: CoverContent = {
           id: 'blueprints-organized',
           heading: 'How a blueprint is organized',
           paragraphs: [
-            'A **lifecycle** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
+            'A **service** holds ordered **phases**, and a phase may loop back to an earlier one — which is how renewals and repeat visits are modeled without duplicating the journey. A phase holds **scenarios**: the distinct situations someone can be in. A scenario holds **paths** — variants of that same situation, the one that goes well and the ones where something does not.',
             'Every path is a grid. That is the next level down.',
           ],
           figure: {
             src: '/cover/data-model-hierarchy.svg',
-            alt: 'How a blueprint is organized — lifecycle to phase to scenario to path',
+            alt: 'How a blueprint is organized — service to phase to scenario to path',
             width: 880,
             height: 634,
           },
@@ -157,12 +157,12 @@ export const coverContent: CoverContent = {
           id: 'blueprints-path',
           heading: 'Inside a single path',
           paragraphs: [
-            'Lanes are rows, one actor each. Steps are columns, time running left to right. A **cell** is the intersection — what that actor does at that moment. Arrows are **triggers**: one cell setting another in motion.',
+            'Lanes are rows, one actor each. Steps are columns, time running left to right. A **cell** is the intersection — what that actor does at that moment. Arrows are **dependencies**: one cell setting another in motion.',
             "The divider lines — **line of interaction**, **line of visibility**, **line of internal interaction** — are derived from the lanes' roles rather than drawn on top of them, so they cannot drift out of agreement with the lanes they separate. Steps are canonical per scenario and each path includes a subset in its own order, which is what makes comparing two paths exact rather than approximate.",
           ],
           figure: {
             src: '/cover/blueprint-anatomy.svg',
-            alt: 'Inside a single path — lanes, steps, cells, triggers, and the derived divider lines',
+            alt: 'Inside a single path — lanes, steps, cells, dependencies, and the derived divider lines',
             width: 880,
             height: 544,
           },

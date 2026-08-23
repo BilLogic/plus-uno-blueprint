@@ -63,7 +63,7 @@ A **plugin with one skill** (`service-blueprinting` — kept under the SKILL.md 
 │   ├── ir-schema.json                   # JSON Schema for the IR
 │   ├── adapter-contract.md              # backend adapter operations (see Phase 1)
 │   ├── crosswalk-schema.json            # translation mapping artifact (see Phase 2)
-│   ├── layer-roles.md                   # semantic role ↔ display-name contract + custom roles
+│   ├── lane-roles.md                   # semantic role ↔ display-name contract + custom roles
 │   ├── elicitation-protocol.md          # co-creation question script with right-sizing branches
 │   ├── customization.md                 # roles, theming, view types, portfolio conventions, template upgrades
 │   └── generalization-audit.md          # hardcoded-ID/shim inventory + status

@@ -23,7 +23,7 @@ const path = (id: string, name: string, path_type: string): PathListItem =>
   ({ id, name, path_type }) as PathListItem
 
 const catalog = {
-  s1: [path('p1', 'Happy Path', 'happy'), path('p2', 'Rejected', 'unhappy')],
+  s1: [path('p1', 'Happy Path', 'happy'), path('p2', 'Rejected', 'exception')],
   s2: [path('p3', 'First visit', 'happy')],
   s3: [path('p4', 'Guided mapping', 'happy')],
 }

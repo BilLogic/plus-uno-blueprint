@@ -3,7 +3,7 @@ import { collectOverviewPathOptions } from '@/lib/overviewPathFilters'
 import type { PathListItem } from '@/lib/pathSelection'
 
 function path(id: string, name: string, path_type: PathListItem['path_type']) {
-  return { id, name, description: null, note: null, path_type }
+  return { id, name, summary: null, note: null, path_type }
 }
 
 describe('collectOverviewPathOptions', () => {
@@ -40,14 +40,14 @@ describe('collectOverviewPathOptions', () => {
           's1',
           [
             path('id-a', 'Happy Path', 'happy'),
-            path('id-b', 'Card Declined', 'unhappy'),
+            path('id-b', 'Card Declined', 'exception'),
           ],
         ],
       ]),
     )
 
     expect(options.map((option) => option.id)).toEqual([
-      'unhappy:Card Declined',
+      'exception:Card Declined',
       'happy:Happy Path',
     ])
     expect(options.map((option) => option.pathIds)).toEqual([['id-b'], ['id-a']])

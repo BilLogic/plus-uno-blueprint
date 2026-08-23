@@ -8,6 +8,7 @@ import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { getPathColor } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
 
 /**
  * The top-bar path control (plan 2026-08-17-002 U2): desktop reads and
@@ -63,7 +64,7 @@ export function PathSelectorMenu({ options }: { options: PathOption[] }) {
           </button>
         }
       />
-      <PopoverContent align="end" className="w-56 p-1.5">
+      <PopoverContent align="end" className="w-72 p-1.5">
         <ul className="flex flex-col gap-0.5">
           {options.map((option) => {
             const checked = activePathKeys.includes(option.id)
@@ -87,6 +88,9 @@ export function PathSelectorMenu({ options }: { options: PathOption[] }) {
                     style={{ backgroundColor: getPathColor(option) }}
                   />
                   <span className="min-w-0 flex-1 truncate">{option.name}</span>
+                  {/* Dot, name, status — the same three the scenario panel and
+                      the path picker show, in the same order. */}
+                  <StatusBadge status={option.status} />
                   <Check
                     className={cn('size-3.5 shrink-0', !checked && 'invisible')}
                     aria-hidden

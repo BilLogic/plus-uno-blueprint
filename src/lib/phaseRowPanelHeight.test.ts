@@ -103,7 +103,7 @@ describe('panel height estimates and the chrome they assume', () => {
     // The regression: these took no options, so every estimate assumed the
     // unlocked panel. An aligned phase row is always locked.
     const blueprints = [
-      { id: 'bp', steps: [], layers: [] },
+      { id: 'bp', steps: [], lanes: [] },
     ] as unknown as Parameters<typeof getStackedComparePanelHeight>[0]
 
     const locked = getStackedComparePanelHeight(blueprints, false, {

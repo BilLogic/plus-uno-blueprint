@@ -22,7 +22,7 @@ import {
 } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -35,36 +35,36 @@ export const CALL_OFF_REQUEST_HAPPY_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-000000000971'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-000000000972',
     name: 'Regular Tutor',
-    row_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000974',
     name: 'Front Stage Tech',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000973',
     name: 'Front Stage Actions',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000976',
     name: 'Back Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000975',
     name: 'Back Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000977',
     name: 'Support Actions',
-    row_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -72,32 +72,32 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000000940',
     name: 'Initial need',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000941',
     name: 'Early call-off',
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000942',
     name: 'Late call-off',
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000943',
     name: 'Peer support',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000944',
     name: 'Internal decision',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000000945',
     name: 'Final notification',
-    column_position: 6,
+    position: 6,
   },
 ] as const
 
@@ -113,19 +113,19 @@ const L = {
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
-  extras: Partial<Pick<BlueprintCell, 'picture' | 'description' | 'links'>> = {},
+  extras: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(extras.links ?? [], CALL_OFF_REQUEST_REGULAR_TUTOR_ONBOARDING_LINKS)
       : (extras.links ?? EMPTY_CELL_METADATA.links)
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -138,40 +138,40 @@ function callOffCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-00000017${stepSlot}${layerSuffix}`
 }
 
-function callOffTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-000000095${triggerSlot}`
+function callOffDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-000000095${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: callOffTrigger(slot),
+    id: callOffDependency(slot),
     source_cell_id: callOffCell(fromStep, fromLayer),
     target_cell_id: callOffCell(toStep, toLayer),
   }
 }
 
-const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellTrigger[] = [
-  trigger('001', '01', '03', '02', '03'),
-  trigger('003', '01', '03', '03', '03'),
-  trigger('002', '02', '03', '02', '06'),
-  trigger('004', '02', '06', '02', '07'),
-  trigger('011', '02', '07', '05', '07'),
-  trigger('005', '03', '03', '03', '06'),
-  trigger('010', '03', '06', '03', '04'),
-  trigger('012', '03', '04', '05', '07'),
-  trigger('006', '03', '03', '04', '03'),
-  trigger('007', '04', '03', '04', '06'),
-  trigger('013', '04', '04', '04', '06'),
-  trigger('014', '05', '07', '05', '08'),
-  trigger('008', '05', '07', '06', '04'),
-  trigger('015', '06', '04', '06', '06'),
-  trigger('016', '06', '03', '06', '06'),
+const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
+  dependency('001', '01', '03', '02', '03'),
+  dependency('003', '01', '03', '03', '03'),
+  dependency('002', '02', '03', '02', '06'),
+  dependency('004', '02', '06', '02', '07'),
+  dependency('011', '02', '07', '05', '07'),
+  dependency('005', '03', '03', '03', '06'),
+  dependency('010', '03', '06', '03', '04'),
+  dependency('012', '03', '04', '05', '07'),
+  dependency('006', '03', '03', '04', '03'),
+  dependency('007', '04', '03', '04', '06'),
+  dependency('013', '04', '04', '04', '06'),
+  dependency('014', '05', '07', '05', '08'),
+  dependency('008', '05', '07', '06', '04'),
+  dependency('015', '06', '04', '06', '06'),
+  dependency('016', '06', '03', '06', '06'),
 ]
 
 const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
@@ -275,7 +275,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     },
   ),
   cell(callOffCell('05', '09'), L.support, STEPS[4].id, 'Dev Team', {
-    description: CALL_OFF_REQUEST_SUPPORT_STEP_05_DESCRIPTION,
+    summary: CALL_OFF_REQUEST_SUPPORT_STEP_05_DESCRIPTION,
   }),
 
   cell(callOffCell('06', '10'), L.visual, STEPS[5].id, ''),
@@ -306,13 +306,14 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
 export const CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
   path: {
     id: CALL_OFF_REQUEST_HAPPY_PATH_ID,
-    name: 'Happy Path',
-    description: 'Tutor calls off shift for upcoming session.',
+    name: 'Call-off 12h+ (auto-approved)',
+    summary: 'Tutor calls off shift for upcoming session.',
     note: null,
     path_type: 'happy',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: CALL_OFF_REQUEST_CELLS,
-  triggers: CALL_OFF_REQUEST_TRIGGERS,
+  dependencies: CALL_OFF_REQUEST_TRIGGERS,
 }

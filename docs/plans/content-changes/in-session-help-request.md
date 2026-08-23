@@ -18,7 +18,7 @@ Status of scenario today: 33 cells over 8 steps (one step orphaned, never render
 
 | Lane › Step | Property | Proposed value | Evidence |
 |---|---|---|---|
-| Front Stage Tech › Resolve issue (second cell alongside "Zoom/Pencil") | content | "Slack (school + support channels)" | Notion routing table (report 04b) |
+| Front Stage Tech › Resolve issue (second cell alongside "Zoom") | content | "Slack (school + support channels)" | Notion routing table (report 04b) |
 | (same cell) | description | "Escalations leave Zoom: classroom-side issues go to the school's Slack channel, app/tech issues to the support channel, each with its own template. Urgent issues have separate contacts and expected wait behavior." | Notion "Find the Right Support…"; "Report Urgent Session Issues" (https://app.notion.com/p/3a2b7cca498280b9b30dfc740b9a54ce) |
 | Back Stage Actions › Resolve issue | content | "Supervisors monitor school Slack channels during sessions" | Notion "When No or Few Students Join" (4 supervisors tagged; report 04b) |
 | Support Actions › Resolve issue | content | "Support channel triage (ticketing tool pending)" | Slack 2026-06-18 (report 02 #18) |

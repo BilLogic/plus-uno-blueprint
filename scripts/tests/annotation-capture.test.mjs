@@ -3,7 +3,7 @@
  * Annotation capture (phase 7).
  *
  * Marks stay ephemeral by design, so the thing worth testing is not storage
- * but the one path *out* of the scratch layer: what a mark covers, and whether
+ * but the one path *out* of the scratch lane: what a mark covers, and whether
  * the sentence shown before it is handed over is honest about it.
  *
  * Run: npm test

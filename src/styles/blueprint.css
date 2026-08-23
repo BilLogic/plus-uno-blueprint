@@ -435,7 +435,22 @@
   }
 
   /* support */
-[data-blueprint-lane='support'] {
+/* partner-action — a body outside PLUS.
+     Gray is the only family neither a lane, a path nor a touchpoint tone
+     draws from (palette.test.ts holds all three disjoint), and it is the apt
+     one anyway: an external actor should not wear a colour that says it is
+     one of ours. */
+[data-blueprint-lane='partner-action'] {
+    --background-blueprint-cell-origin: var(--color-gray-500);
+    --background-blueprint-cell: var(--color-gray-500);
+    --background-blueprint-cell-hover: var(--color-gray-600);
+    --background-blueprint-cell-pressed: var(--color-gray-700);
+    --ring-blueprint-cell: var(--color-gray-1100);
+    --ring-blueprint-cell-soft: var(--color-gray-1100);
+    --foreground-blueprint-cell: var(--color-gray-1200);
+  }
+
+  [data-blueprint-lane='support'] {
     --background-blueprint-cell-origin: var(--color-amber-500);
     --background-blueprint-cell: var(--color-amber-500);
     --background-blueprint-cell-hover: var(--color-amber-600);
@@ -452,6 +467,10 @@
    * Named after the hue on purpose: a touchpoint's colour is chosen by whoever
    * owns the blueprint, so the hue is the meaning here.
    */
+  /* Was painted entirely in --color-gray-* — every token in the block — so a
+     touchpoint on the crimson tone rendered gray. It passed the lane/tone
+     disjointness test only because no lane used gray either, until the
+     partner lane did. */
   [data-blueprint-tone='crimson'] {
     --background-blueprint-cell-origin: var(--color-crimson-400);
     --background-blueprint-cell: var(--color-crimson-400);
@@ -780,7 +799,7 @@
    *   1  phase frames + lane structure fade in
    *   2  scenario panels rise in
    *   3  cells fade in
-   *   4  trigger arrows fade in
+   *   4  dependency arrows fade in
    *
    * The attribute is REMOVED at stage 5, so none of this matches afterwards:
    * the cells' own transition-property list and the panels' hover

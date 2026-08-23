@@ -31,6 +31,12 @@ const pathFrame = source(
   '../components/blueprint/ComparePathSectionFrame.tsx',
 )
 const techPill = source('../components/blueprint/BlueprintTechPill.tsx')
+const laneHeader = source(
+  '../components/blueprint/LaneHeaderAffordance.tsx',
+)
+const stepHeader = source(
+  '../components/blueprint/StepHeaderAffordance.tsx',
+)
 const css = source('../styles/blueprint.css')
 const agentRegistry = source('./agent/tools/registry.ts')
 const agentSpecs = source('./agent/tools/specs.ts')
@@ -39,7 +45,17 @@ describe('stable blueprint cell frame contract', () => {
   it('keeps storyboard geometry at 4:3 and fits image pixels inside it', () => {
     expect(visual).toContain("'aspect-[4/3]")
     expect(visual).toContain('w-full max-w-full')
-    expect(visual).toContain("'h-full w-full rounded-sm object-contain")
+    /*
+      `w-auto`, not `w-full`. The picture must be allowed to size its own box
+      so the corner radius lands on the ARTWORK — stretched to the full cell
+      the box is wider than the picture, `object-contain` letterboxes, and the
+      radius rounds empty space while the artwork keeps square corners inside
+      a cell rounded at 10px. `max-w-full` is what still keeps the pixels
+      inside the frame, which is what this contract is really about.
+    */
+    expect(visual).toContain(
+      "'h-full w-auto max-w-full rounded-[calc(var(--radius-lg)-var(--spacing)-1px)] object-contain",
+    )
     expect(VISUAL_ROW_MIN_HEIGHT).toBe(176)
     expect(VISUAL_ROW_MIN_HEIGHT_COMPACT).toBe(168)
     expect(getVisualCellButtonMaxHeight()).toBe(144)
@@ -60,12 +76,40 @@ describe('stable blueprint cell frame contract', () => {
   })
 
   it('retains both header axes and skeletonizes their paint at blocks tier', () => {
-    expect(compareDecorations).toContain('data-blueprint-column-header=""')
+    // Both axes are affordances now, and each carries its own attribute —
+    // the one blueprint.css skeletonizes at the blocks tier.
+    expect(compareDecorations).toContain('<StepHeaderAffordance')
+    expect(stepHeader).toContain('data-blueprint-column-header=""')
     expect(serviceGrid).toContain('<ServiceStepHeaderRow')
-    expect(serviceGrid).toContain('data-blueprint-row-header=""')
+    // The row-header axis moved into the lane affordance when the label
+    // block became the control; the attribute is what blueprint.css
+    // skeletonizes at the blocks tier, so it is the attribute under test —
+    // not the file it happens to live in.
+    expect(serviceGrid).toContain('<LaneHeaderAffordance')
+    expect(laneHeader).toContain('data-blueprint-row-header=""')
     expect(css).toContain("[data-semantic-tier='blocks']")
     expect(css).toMatch(/\[data-blueprint-column-header\]\s*>\s*span/)
     expect(css).toContain('[data-blueprint-row-header]')
+  })
+
+  it('gates both axis headers on the board, not just the provider flag', () => {
+    /*
+      Reported three times. `detail.enabled` is ONE boolean on a provider
+      mounted above the whole canvas, and every scenario board stays mounted
+      behind the focused one — so focusing a single scenario made 176 lane and
+      125 step headers live across 23 boards, and a click on a band the reader
+      had never chosen opened "Nothing recorded for this lane yet."
+
+      Both halves or nothing: the flag AND this board being the scoped one.
+    */
+    for (const header of [laneHeader, stepHeader]) {
+      expect(header).toContain('useScenarioBoardInScope()')
+      expect(header).toContain(
+        'const isInteractive = Boolean(detail?.enabled) && boardInScope',
+      )
+    }
+    // The one producer of that scope — the component that owns one scenario.
+    expect(scenarioPanel).toContain('<ScenarioBoardScopeContext.Provider')
   })
 
   it('clamps only the narrative preview while retaining its full text node', () => {

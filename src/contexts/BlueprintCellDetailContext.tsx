@@ -31,6 +31,12 @@ import {
 } from '@/lib/compareReviewStore'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { setOpenCellId } from '@/lib/openCellStore'
+import {
+  claimPanel,
+  getPanelOwner,
+  releasePanel,
+  subscribePanelOwner,
+} from '@/lib/openPanelStore'
 
 export type BlueprintCellPreviewHover = {
   cellId: string
@@ -46,6 +52,13 @@ export type BlueprintPanelState = { surface: BlueprintPanelSurface }
 
 type BlueprintCellDetailContextValue = {
   enabled: boolean
+  /**
+   * The scenario the detail view is scoped to — the focused one, or the one a
+   * slice tab / phone shell renders solo. `enabled` says the feature is live;
+   * this says WHICH of the mounted boards it is live on, and the two axis
+   * headers need both (see `scenarioBoardScopeContext`).
+   */
+  scenarioId: string | null
   blueprints: BlueprintData[]
   selection: BlueprintCellSelection | null
   selectCell: (selection: BlueprintCellSelection) => void
@@ -89,6 +102,8 @@ type BlueprintCellDetailProviderProps = {
   /** Clears the open panel when the active scenario or slide changes. */
   resetKey?: string
   enabled?: boolean
+  /** See `scenarioId` on the context value. */
+  scenarioId?: string | null
   blueprints?: BlueprintData[]
 }
 
@@ -96,6 +111,7 @@ export function BlueprintCellDetailProvider({
   children,
   resetKey,
   enabled = false,
+  scenarioId = null,
   blueprints = [],
 }: BlueprintCellDetailProviderProps) {
   const [selection, setSelection] = useState<BlueprintCellSelection | null>(null)
@@ -126,6 +142,17 @@ export function BlueprintCellDetailProvider({
     setPanelState(selection ? { surface: 'details' } : null)
   }
 
+  // One panel at a time: an entity panel (lane, phase, scenario) taking the
+  // drawer closes this one. Render-phase guarded set, same idiom as above —
+  // and the panel state alone, because the claim has already moved and
+  // releasing here would close the panel that just opened.
+  const panelOwner = useSyncExternalStore(subscribePanelOwner, getPanelOwner)
+  if (panelOwner !== 'cell' && panelState !== null) {
+    setPanelState(null)
+    setSelection(null)
+    setDraftCell(null)
+  }
+
   // Tell the agent's UI-context collector which cell the human has open in
   // the side panel — the panel mounts under the canvas, out of the agent
   // panel's React reach, so this goes through the module bridge.
@@ -135,7 +162,7 @@ export function BlueprintCellDetailProvider({
       const cells = selection.paths
         .map((entry) => `${entry.pathName}: ${entry.cellId}`)
         .join('; ')
-      return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — layer "${selection.layerName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
+      return `Cell panel open: "${selection.paths[0]?.content ?? selection.stepName}" — lane "${selection.laneName}", step "${selection.stepName}" (#${selection.stepIndex}), scenario "${selection.scenarioName}". Cell ids by path: ${cells}`
     })
   }, [selection])
 
@@ -150,6 +177,7 @@ export function BlueprintCellDetailProvider({
   }, [selection])
 
   const selectCell = useCallback((next: BlueprintCellSelection) => {
+    claimPanel('cell')
     setSelection(next)
     setDraftCell(null)
     setPanelState({ surface: 'details' })
@@ -157,6 +185,7 @@ export function BlueprintCellDetailProvider({
   }, [])
 
   const openDraftCell = useCallback((next: DraftCellTarget) => {
+    claimPanel('cell')
     setDraftCell(next)
     setSelection(null)
     setPanelState({ surface: 'details' })
@@ -173,9 +202,11 @@ export function BlueprintCellDetailProvider({
     setDraftCell(null)
     setPanelState(null)
     setPreviewHover(null)
+    releasePanel('cell')
   }, [])
 
   const openDifferences = useCallback(() => {
+    claimPanel('cell')
     setPanelState({ surface: 'differences' })
   }, [])
 
@@ -260,7 +291,7 @@ export function BlueprintCellDetailProvider({
     }
 
     const skipHighlightZone = shouldUseVisualContent({
-      name: selection.layerName,
+      name: selection.laneName,
     })
 
     for (const path of selection.paths) {
@@ -288,16 +319,16 @@ export function BlueprintCellDetailProvider({
       }
 
       // The dependency table also includes technology in the selected step,
-      // even when no explicit trigger connects it to the active cell.
+      // even when no explicit dependency connects it to the active cell.
       const techLayerIds = new Set(
-        blueprint.layers
-          .filter((layer) => shouldUsePillCellContent(layer))
-          .map((layer) => layer.id),
+        blueprint.lanes
+          .filter((lane) => shouldUsePillCellContent(lane))
+          .map((lane) => lane.id),
       )
       for (const cell of blueprint.cells) {
         if (
           cell.step_id !== selection.stepId ||
-          !techLayerIds.has(cell.layer_id)
+          !techLayerIds.has(cell.lane_id)
         ) {
           continue
         }
@@ -312,6 +343,7 @@ export function BlueprintCellDetailProvider({
   const value = useMemo(
     () => ({
       enabled,
+      scenarioId,
       blueprints,
       selection,
       selectCell,
@@ -329,6 +361,7 @@ export function BlueprintCellDetailProvider({
     }),
     [
       enabled,
+      scenarioId,
       blueprints,
       selection,
       selectCell,

@@ -241,6 +241,35 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
         if (activePathKeys === null) {
           const defaults = defaultPathKeysFromCatalog(catalog)
           if (defaults.length > 0) activePathKeys = defaults
+        } else {
+          /*
+            Top up for scenarios that JUST entered the catalog.
+
+            The default used to be computed once and never revisited, which
+            worked only because every scenario's happy path was called "Happy
+            Path" and therefore shared the key `happy:Happy Path` — one key
+            covered all 23. Since paths got their own names (2026-08-21) each
+            key belongs to exactly one scenario, so a scenario loaded after the
+            first sync had no active key at all and its board opened on "Paths
+            shown: none".
+
+            Only scenarios that just GAINED paths are topped up — absent
+            before, or present with an empty list because their blueprints
+            were still in flight when the default was first computed.
+            Recomputing on every sync would resurrect a path the reader had
+            just deselected.
+          */
+          const added = Object.keys(catalog).filter(
+            (id) => !prev.catalog[id]?.length && catalog[id]?.length,
+          )
+          if (added.length > 0) {
+            const scoped: PathCatalog = {}
+            for (const id of added) scoped[id] = catalog[id]!
+            const fresh = defaultPathKeysFromCatalog(scoped).filter(
+              (key) => !activePathKeys!.includes(key),
+            )
+            if (fresh.length > 0) activePathKeys = [...activePathKeys, ...fresh]
+          }
         }
         const keysChanged = activePathKeys !== prev.activePathKeys
         const selections = deriveSelections(

@@ -4,7 +4,7 @@ import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescripti
 import { GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/goalSettingRegularTutorLinks'
 import {
   buildParallelSessionPartnerLeadCells,
-  buildParallelSessionPartnerLeadTriggers,
+  buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
   GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
@@ -43,7 +43,7 @@ import {
 } from '@/data/goalSettingHappyPathFallback'
 import type {
   BlueprintCell,
-  BlueprintCellTrigger,
+  BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
 
@@ -55,46 +55,46 @@ export const GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_ID =
 const STEP_VISUAL_LAYER_ID = 'a0000000-0000-4000-8000-0000000008e0'
 
 const LAYERS = [
-  { id: STEP_VISUAL_LAYER_ID, name: 'Visual', row_position: 0 },
+  { id: STEP_VISUAL_LAYER_ID, name: 'Storyboard', position: 0 },
   {
     id: 'a0000000-0000-4000-8000-0000000008e1',
-    name: 'Partner Action: Teacher',
-    row_position: 1,
+    name: 'Teacher',
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e2',
     name: 'Lead Tutor',
-    row_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e3',
     name: 'Regular Tutor',
-    row_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e4',
     name: 'Front Stage Tech',
-    row_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e5',
     name: 'Front Stage Actions',
-    row_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e7',
     name: 'Back Stage Tech',
-    row_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e6',
     name: 'Back Stage Actions',
-    row_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-0000000008e8',
     name: 'Support Actions',
-    row_position: 8,
+    position: 8,
   },
 ] as const
 
@@ -102,62 +102,62 @@ const STEPS = [
   {
     id: 'a0000000-0000-4000-8000-000000009f01',
     name: 'Join breakout session',
-    column_position: 1,
+    position: 1,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f02',
     name: "Sees action color in dashboard is warning and CTA copy is 'Set Goals' within a mid-cycle goal check-in session.",
-    column_position: 2,
+    position: 2,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f03',
     name: "Click on 'Set Goals' CTA in the action column",
-    column_position: 3,
+    position: 3,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f04',
     name: 'Share screen',
-    column_position: 4,
+    position: 4,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f05',
     name: 'Explain to student what goal setting is',
-    column_position: 5,
+    position: 5,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f06',
     name: 'Once student understands, starts setting first goal while sharing screen',
-    column_position: 6,
+    position: 6,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f07',
     name: 'Fill out goal settings and quantity with the student',
-    column_position: 7,
+    position: 7,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f08',
     name: 'If prompted, fill out goal achievement strategy with the student',
-    column_position: 8,
+    position: 8,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f09',
     name: 'Save goal',
-    column_position: 9,
+    position: 9,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f0a',
     name: 'Finalize goal setting with student',
-    column_position: 10,
+    position: 10,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f0b',
     name: 'Leave breakout room',
-    column_position: 11,
+    position: 11,
   },
   {
     id: 'a0000000-0000-4000-8000-000000009f0c',
     name: 'Move on to the next student in sorted order set by researchers',
-    column_position: 12,
+    position: 12,
   },
 ] as const
 
@@ -201,32 +201,32 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_10_DESCRIPTION =
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_12_DESCRIPTION =
   'The tutor navigates back to the Student Dashboard screen in the PLUS app to move on to the next student in the researcher sorted list.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_01_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION =
-  'The tutor shares screen via Zoom/Pencil screen share feature.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_04_DESCRIPTION =
+  'The tutor shares screen via Zoom screen share feature.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_05_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_06_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_07_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_08_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_09_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION =
-  'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_10_DESCRIPTION =
+  'The tutor connects with student via Zoom in individual breakout room.'
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION =
-  "The tutor leaves the student's Zoom/Pencil breakout room."
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_11_DESCRIPTION =
+  "The tutor leaves the student's Zoom breakout room."
 
 function setGoalsEdgeCasePlusAppLink(
   description: string,
@@ -238,15 +238,15 @@ function setGoalsEdgeCasePlusAppLink(
 
 function cell(
   id: string,
-  layerId: string,
+  laneId: string,
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'description' | 'links'>
+    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
-    layerId === L.regular
+    laneId === L.regular
       ? mergeUrlLinks(
           metadata.links ?? [],
           GOAL_SETTING_REGULAR_TUTOR_ONBOARDING_LINKS,
@@ -255,7 +255,7 @@ function cell(
 
   return {
     id,
-    layer_id: layerId,
+    lane_id: laneId,
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
@@ -268,57 +268,57 @@ function geCell(stepSlot: string, layerSuffix: string): string {
   return `a0000000-0000-4000-8000-000000c0${stepSlot}${layerSuffix}`
 }
 
-function geTrigger(triggerSlot: string): string {
-  return `a0000000-0000-4000-8000-00000009f${triggerSlot}`
+function geDependency(dependencySlot: string): string {
+  return `a0000000-0000-4000-8000-00000009f${dependencySlot}`
 }
 
-function trigger(
+function dependency(
   slot: string,
   fromStep: string,
   fromLayer: string,
   toStep: string,
   toLayer: string,
-): BlueprintCellTrigger {
+): BlueprintCellDependency {
   return {
-    id: geTrigger(slot),
+    id: geDependency(slot),
     source_cell_id: geCell(fromStep, fromLayer),
     target_cell_id: geCell(toStep, toLayer),
   }
 }
 
-function rowTriggers(
-  layer: string,
+function rowDependencies(
+  lane: string,
   idStart: number,
   count: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < count; i++) {
     const from = String(i + 1).padStart(2, '0')
     const to = String(i + 2).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         from,
-        layer,
+        lane,
         to,
-        layer,
+        lane,
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
-function columnLaneTriggers(
+function columnLaneDependencies(
   fromLayer: string,
   toLayer: string,
   idStart: number,
   stepCount: number,
-): BlueprintCellTrigger[] {
-  const triggers: BlueprintCellTrigger[] = []
+): BlueprintCellDependency[] {
+  const dependencies: BlueprintCellDependency[] = []
   for (let i = 0; i < stepCount; i++) {
     const step = String(i + 1).padStart(2, '0')
-    triggers.push(
-      trigger(
+    dependencies.push(
+      dependency(
         String(idStart + i).padStart(3, '0'),
         step,
         fromLayer,
@@ -327,13 +327,13 @@ function columnLaneTriggers(
       ),
     )
   }
-  return triggers
+  return dependencies
 }
 
 const partnerLeadOptions = {
   cellId: (stepSlot: string, layerSuffix: '01' | '02') =>
     geCell(stepSlot, layerSuffix),
-  triggerId: (slot: string) => geTrigger(slot),
+  dependencyId: (slot: string) => geDependency(slot),
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
@@ -341,11 +341,11 @@ const partnerLeadOptions = {
   partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
 }
 
-const GOAL_SETTING_SET_GOALS_EDGE_CASE_TRIGGERS: BlueprintCellTrigger[] = [
-  ...buildParallelSessionPartnerLeadTriggers(partnerLeadOptions),
-  ...rowTriggers('03', 50, 11),
-  ...columnLaneTriggers('03', '06', 70, 12),
-  trigger('062', '12', '03', '01', '03'),
+const GOAL_SETTING_SET_GOALS_EDGE_CASE_TRIGGERS: BlueprintCellDependency[] = [
+  ...buildParallelSessionPartnerLeadDependencies(partnerLeadOptions),
+  ...rowDependencies('03', 50, 11),
+  ...columnLaneDependencies('03', '06', 70, 12),
+  dependency('062', '12', '03', '01', '03'),
 ]
 
 const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
@@ -428,8 +428,8 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     { picture: GOAL_SETTING_SET_GOALS_EDGE_CASE_REGULAR_TUTOR_STEP_12_PICTURE },
   ),
 
-  cell(geCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_01_DESCRIPTION,
+  cell(geCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
+    summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_01_DESCRIPTION,
   }),
   cell(geCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
     links: [
@@ -453,9 +453,9 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('04', '06'),
     L.frontStageTech,
     STEPS[3].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_04_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_04_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_04_DESCRIPTION,
@@ -465,16 +465,16 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
       ],
     },
   ),
-  cell(geCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_05_DESCRIPTION,
+  cell(geCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Zoom', {
+    summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_05_DESCRIPTION,
   }),
   cell(
     geCell('06', '06'),
     L.frontStageTech,
     STEPS[5].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_06_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_06_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_06_DESCRIPTION,
@@ -488,9 +488,9 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('07', '06'),
     L.frontStageTech,
     STEPS[6].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_07_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_07_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_07_DESCRIPTION,
@@ -504,9 +504,9 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('08', '06'),
     L.frontStageTech,
     STEPS[7].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_08_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_08_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_08_DESCRIPTION,
@@ -520,9 +520,9 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('09', '06'),
     L.frontStageTech,
     STEPS[8].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_09_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_09_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_09_DESCRIPTION,
@@ -536,9 +536,9 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
     geCell('10', '06'),
     L.frontStageTech,
     STEPS[9].id,
-    'Zoom/Pencil, PLUS App',
+    'Zoom, PLUS App',
     {
-      description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_10_DESCRIPTION,
+      summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_10_DESCRIPTION,
       links: [
         setGoalsEdgeCasePlusAppLink(
           GOAL_SETTING_SET_GOALS_EDGE_CASE_PLUS_APP_STEP_10_DESCRIPTION,
@@ -548,8 +548,8 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
       ],
     },
   ),
-  cell(geCell('11', '06'), L.frontStageTech, STEPS[10].id, 'Zoom/Pencil', {
-    description: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_PENCIL_STEP_11_DESCRIPTION,
+  cell(geCell('11', '06'), L.frontStageTech, STEPS[10].id, 'Zoom', {
+    summary: GOAL_SETTING_SET_GOALS_EDGE_CASE_ZOOM_STEP_11_DESCRIPTION,
   }),
   cell(geCell('12', '06'), L.frontStageTech, STEPS[11].id, 'PLUS App', {
     links: [
@@ -575,31 +575,31 @@ const GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS: BlueprintCell[] = [
   ),
 
   cell(geCell('02', '09'), L.support, STEPS[1].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('03', '09'), L.support, STEPS[2].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('04', '09'), L.support, STEPS[3].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('06', '09'), L.support, STEPS[5].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('07', '09'), L.support, STEPS[6].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('08', '09'), L.support, STEPS[7].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('09', '09'), L.support, STEPS[8].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('10', '09'), L.support, STEPS[9].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell(geCell('12', '09'), L.support, STEPS[11].id, SUPPORT_DEV_DESIGN, {
-    description: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
+    summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
 ]
 
@@ -607,13 +607,14 @@ export const GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK: BlueprintData = {
   path: {
     id: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_ID,
     name: 'Set Goals Edge Case',
-    description:
+    summary:
       'Goal cycle began and deadline not reached, but student did not set goals last session and student has no prior goals.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
-    path_type: 'named',
+    path_type: 'variant',
+    status: 'live',
   },
-  layers: [...LAYERS],
+  lanes: [...LAYERS],
   steps: [...STEPS],
   cells: GOAL_SETTING_SET_GOALS_EDGE_CASE_CELLS,
-  triggers: GOAL_SETTING_SET_GOALS_EDGE_CASE_TRIGGERS,
+  dependencies: GOAL_SETTING_SET_GOALS_EDGE_CASE_TRIGGERS,
 }

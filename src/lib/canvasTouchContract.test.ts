@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
  *
  * `touch-action` is NOT inherited, and the board hangs inside
  * `[data-zoom-pan-content]`, which carries a transform and is therefore a
- * composited layer. WebKit does not reliably resolve an ancestor's `none`
+ * composited lane. WebKit does not reliably resolve an ancestor's `none`
  * across that boundary — so with the rule set on the viewport alone, a
  * finger on a cell was taken as a native pan/zoom, which cancels the pointer
  * stream the canvas listens to. Panning and pinching worked on empty canvas
@@ -65,7 +65,7 @@ describe('canvas touch contract', () => {
     /*
       `touch-action` is consulted by the compositor BEFORE the touch is
       delivered, and it is exactly that consultation that is unreliable
-      across the transformed content layer. `preventDefault` needs no such
+      across the transformed content lane. `preventDefault` needs no such
       resolution: the event is already in hand.
 
       Non-passive is the whole point — `preventDefault` on a passive
