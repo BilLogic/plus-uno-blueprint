@@ -38,3 +38,31 @@ merge. None fixed yet; triage before working.
 
 - 2026-08-05: Collected from kieran-typescript / architecture / simplicity
   reviewers.
+
+## Cross-references (triaged 2026-08-23)
+
+Five of the eight items are absorbed by the two frontend issues. Do not fix
+them here; they are tracked with their evidence.
+
+- **Item 1** (`useSupabaseQuery.ts:86-94`, `fallback()` re-invoked every render
+  while errored) → #57, query group. The audit found the same file's error
+  branch is also what makes a timed-out read permanent, so the two are one fix.
+- **Item 2** (`useSupabaseQuery.ts:58`, gated hooks share the `[null]` cache
+  entry) → #57, query group.
+- **Item 5** (`compat.css` aliases unconsumed) → #56, ledger row 24.
+- **Item 6** (`unset-tw-colors.css` unsets families that were never Tailwind
+  built-ins) → #56, Phase 2. Note this item is only half the problem: the file
+  also **misses** nine palettes that ARE built-ins (`zinc`, `neutral`, `stone`,
+  `emerald`, `teal`, `cyan`, `sky`, `fuchsia`, `rose`), which therefore resolve
+  to stock Tailwind values. We use none of them today; upstream has the same
+  hole and has fallen into it (live `text-sky-800`, `fill-teal-600`,
+  `text-emerald-400`). The fix is an allowlist, not a trimmed denylist.
+- **Item 8** (`--surface-hue` declared in both `semantic.css` and
+  `themes/light.css`, "works by import order") → **this is defect D1 in #56**,
+  written down here on 2026-08-05 and filed as p3 polish. It is now a live
+  user-visible bug: dark mode renders every surface at hue 34, warm brown,
+  instead of the brand hue 177.6. The line reference has moved to
+  `themes/light.css:31`. The item's own second option — "document it as the
+  sanctioned exception" — is the wrong branch; the cascade does not survive it.
+
+Items 3, 4 and 7 are unabsorbed and stay here.

@@ -88,3 +88,15 @@ fixed and verified; these are the remainder.
 - [ ] P2 items 1–3 closed (correctness/safety)
 - [ ] P2 items 4–6 closed (drift guards)
 - [ ] P3 swept in one pass
+
+## Cross-references (triaged 2026-08-23)
+
+- **P2 item 2** (`SessionChangesSheet` revert is fire-and-forget) → #57, silent
+  failures group. Status as of 2026-08-23: the **agent** path was hardened to
+  rethrow, carrying a comment recording that a rejected revert used to reach the
+  console only while the model was told it had succeeded. The **human keyboard
+  path** (Cmd-Z, `SessionChangesSheet.tsx:167-169`) still has exactly the bug
+  this item describes. The prescription here — "await it, return the real
+  outcome" — remains correct for the half that was missed.
+
+Remaining items are unabsorbed and stay here.
