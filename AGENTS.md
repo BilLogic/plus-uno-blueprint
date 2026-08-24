@@ -26,10 +26,13 @@ the code is newer; say so and follow the code.
 - Never widen RLS or write policies; the deployed site stays read-only.
 - Local writes authenticate as the dev auth user (auto sign-in from
   `.env.local`); **never the service-role key**.
-- Every DB write goes through the wrappers (`authoringRpc.ts`,
-  `cellContentMutations.ts`, `cellSpecMutations.ts`,
-  `sliceMutations.ts`, `evidenceMutations.ts`) so it lands in the session ledger with a captured
-  revert. No raw table writes from components. Deletes are human-only.
+- Every DB write goes through `authoringRpc.ts` or a `src/lib/*Mutations.ts`
+  module, so it lands in the session ledger with a captured revert. Components,
+  contexts and hooks read; they never write to a table. That boundary is
+  enforced by `writeBoundaryContract.test.ts`, not by convention — it was prose
+  for months and was false for some of them. In a mutation module: capture the
+  previous value as the inverse **before** the write, write with `.select()` so
+  a zero-row update fails loudly, then `recordChange`. Deletes are human-only.
 - Watch for literal NUL bytes in generated source (breaks git diffing);
   write the six-character backslash-u0000 escape, never the raw byte.
 

@@ -83,6 +83,7 @@ export type WriteFn =
   | 'duplicate_slice'
   | 'update_slice_meta'
   | 'replace_slice_frames'
+  | 'set_slice_illustration'
 
 export type ChangeEntry = {
   id: string
@@ -315,6 +316,10 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
       ? 'Rebuilt a slice’s frames'
       : `Rebuilt a slice’s frames (${count} now)`
   },
+  set_slice_illustration: (entry) =>
+    entry.args.cleared === true
+      ? 'Removed a storyboard image'
+      : 'Set a storyboard image',
 }
 
 export function describeChange(entry: ChangeEntry): string {
