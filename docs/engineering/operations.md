@@ -62,22 +62,27 @@ is the single seam to hook.
 
 ## Local dev servers and auth redirects
 
-The recommended local dev ports — the ones agent-assisted sessions should
-reach for — are:
+There is one local dev port: **`5173`**. `vite.config.ts` sets no `server.port`,
+so Vite uses its default, and `.claude/launch.json` declares `5173` to match —
+agent-driven preview and a hand-run `npm run dev` land on the same origin.
 
-- **`5199`** — the canonical agent/preview port (`.claude/launch.json`
-  starts `npm run dev` here; browser-driven verification targets it).
-- **`5173`** — Vite's default when running `npm run dev` by hand.
+> Until 2026-08-23 this section named `5199` as "the canonical agent/preview
+> port" and claimed `.claude/launch.json` started the server there. It never
+> did; the string `5199` appeared nowhere else in the repo. Anyone who followed
+> it registered a redirect origin nothing serves.
 
-Both origins are registered in the hosted project's auth **Redirect URLs**
-(Supabase dashboard → Authentication → URL Configuration), alongside the
-**Site URL** `https://uno-blueprint.netlify.app`. That allowlist is what
-makes emailed auth links work: magic-link and recovery emails redirect to
-the requesting origin only if it is on the list, otherwise Supabase
-silently falls back to the Site URL. If a mailed link lands somewhere
-unexpected, check this configuration first. Use another port and mailed
-links will not come back to it — either add the origin there or stick to
-the two above.
+The origin has to be in the hosted project's auth **Redirect URLs** (Supabase
+dashboard → Authentication → URL Configuration), alongside the **Site URL**
+`https://uno-blueprint.netlify.app`. That allowlist is what makes emailed auth
+links work: magic-link and recovery emails redirect to the requesting origin
+only if it is on the list, otherwise Supabase silently falls back to the Site
+URL. If a mailed link lands somewhere unexpected, check this configuration
+first.
+
+**Unverified:** the allowlist is dashboard state and cannot be read from this
+repo, so it may still carry the fictional `5199` and may or may not carry
+`5173`. Confirm `http://localhost:5173` is listed before relying on a mailed
+link locally. Using any other port means adding that origin there too.
 
 ## Inviting people
 
