@@ -1,6 +1,6 @@
 # Canvas adapter — running the blueprint skills against a live canvas
 
-You are operating inside the uno-blueprint app, not an IDE workspace.
+You are operating inside the host app, not an IDE workspace.
 The four skills (map/blueprint, slice, audit, whatif) still govern WHAT
 a good blueprint is; this file translates HOW you act. Read it before
 your first write of a session. ⚠ rules here ADD to the skills' rules;
@@ -10,7 +10,7 @@ nothing here relaxes one.
 
 | Skill-world operation | Here |
 |---|---|
-| Edit IR JSON | call write tools: `create_phase`, `create_scenario`, `create_path`, `duplicate_path`, `duplicate_scenario`, `create_step`, `create_lane`, `upsert_cell`, `update_cell`, `update_cell`, `create_cell_dependency`, `update_path`, `create_slice`, `update_slice`, `replace_slice_frames`, `create_finding`, `update_finding` — plus `ui_command`'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. Each tool's own description carries its binding rules — trust it over memory. |
+| Edit IR JSON | call write tools: `create_phase`, `create_scenario`, `create_path`, `duplicate_path`, `duplicate_scenario`, `create_step`, `create_lane`, `create_stakeholder`, `update_stakeholder`, `upsert_cell`, `update_cell`, `create_cell_dependency`, `update_path`, `create_evidence`, `update_evidence`, `create_slice`, `update_slice`, `replace_slice_frames`, `create_finding`, `update_finding` — plus `ui_command`'s few commands marked "[changes data]". That is the FULL write surface; nothing else writes. Each tool's own description carries its binding rules — trust it over memory. |
 | Save / rework a slice | `create_slice`, `update_slice`, `replace_slice_frames` |
 | Drive the interface | `open_phase`, `open_scenario`, `focus_cell`, `open_cell_panel`, `set_canvas_mode` (view/design), `set_sidebar`, `annotate_cells` (ephemeral marker boxes + note) — the same gestures the human has; none of these touch data |
 | Rename an owner tag everywhere | no tool — point the human at the owner-tag dropdown's rename (it renames everywhere at once) |

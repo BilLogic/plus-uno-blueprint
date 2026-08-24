@@ -52,7 +52,7 @@ slice that asserts it.
 ```bash
 python3 skills/slice/scripts/slice_tools.py select \
   --ir blueprint/<file>.json --scenario <phase>/<scenario> \
-  --path <path> --type journey --layer <lane> --key <slice-key> --actor "<label>"
+  --path <path> --type journey --lane <lane> --key <slice-key> --actor "<label>"
 ```
 
 Emits a slice-file skeleton on stdout: frames already grouped, captions
@@ -75,7 +75,7 @@ Rules that are not style preferences:
 - **Cite, never quote.** Slices land in public-read tables. Reference
   evidence by cell key or title; never paste an interview excerpt or a
   proposition figure into a caption, narrative, or doc.
-- **Personas, not people.** "A first-time tutor", never a participant's name,
+- **Personas, not people.** "A first-week field technician", never a participant's name,
   employer, or contact string.
 - **No claim without a cell.** If a sentence cannot point at a cell in its own
   frame, delete the sentence or add the cell.

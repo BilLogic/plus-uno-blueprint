@@ -11,11 +11,15 @@ All value_props across the scenario: build audience → cells and
 cells-without-props lists. Then `list_stakeholders` — the registry is what
 says who exists and what else each of them has been called.
 
+Lane roles resolve PER PATH (`paths[].lanes[]`) — the same lane key can carry
+different roles in different scenarios/paths, so never resolve a role from the
+key alone.
+
 ## Resolve audiences through the registry, not by string match
 An audience matches a stakeholder when it equals the stakeholder's `name` or
-any of its `aliases`, case-insensitively. `tutor` and `Regular Tutor` are one
-person; `business` is the provider, PLUS, which is not a lane and never can
-be.
+any of its `aliases`, case-insensitively. `tech` and `Field Technician` are one
+person; `business` is the provider organisation, which is not a lane and
+never can be.
 
 ## Only lanes with a stakeholder are actors
 A lane whose `stakeholder_id` is null is STRUCTURAL — Front Stage Tech, Back

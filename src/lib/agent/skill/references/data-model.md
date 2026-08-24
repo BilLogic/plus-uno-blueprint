@@ -1,7 +1,19 @@
 # Data Model
 
 The template's blueprint data model. Source of truth:
-`supabase/migrations/20260716200000_template_schema.sql` (snapshot:
+`supabase/migrations/20260716200000_template_schema.sql` plus the
+derived-layer migrations (`20260729120000_derived_layer.sql`,
+`20260730090000_derived_layer_grants_hardening.sql`,
+`20260803001000_slices_origin_allows_human.sql`) and the authoring
+migrations (`20260818000000_authoring_foundation.sql` — provenance
+`origin` columns, `cells.cell_key` identity, `position`,
+`deleted_structure`, direct-column grants;
+`20260818001000_authoring_operations.sql` — the `SECURITY DEFINER` RPCs
+that are the only sanctioned write path for structure;
+`20260818002000_service_account_tier.sql` — OPTIONAL recipe splitting
+`authenticated` into service/regular tiers via RESTRICTIVE policies;
+`20260819000000_agent_surface.sql` — `agent_sessions`/`agent_messages`
+chat persistence plus the findings write path for in-app runs) (snapshot:
 `supabase/schema.reference.sql`, diagram: `docs/erd.mmd`). The IR
 (`references/ir-schema.json`) mirrors this shape one-to-one with locale maps
 and stable keys in place of UUIDs.
@@ -17,8 +29,9 @@ and stable keys in place of UUIDs.
 - Re-import semantics
 - Ordering fields
 - Working precedent
-- Canvas dialect: cell slots
-- Derived layer: findings and slices
+- Cell slots (`position`)
+- Derived layer: slices, findings, evidence, propositions
+- Spec fields on IR-owned tables
 
 ## Hierarchy
 
@@ -142,23 +155,67 @@ harmless, duplicates are not (validator checks).
 deterministic IDs and correct insert order — it is the pattern the IR
 generators follow.
 
-## Canvas dialect: cell slots
+## Cell slots (`position`)
 
-The canvas deployment splits tech-lane touchpoints into multiple cells
-per (lane, step), ordered by `position` (unique on
-`(lane_id, step_id, position)`; rows predating the split carry no
-value and read as slot 0). Deployments scaffolded from the plain
-template keep one cell per (lane, step). Tools and the IR never expose
-slot management directly — treat "the" cell of a slot as slot 0.
+`cells.position int not null default 0` is a first-class column
+(since `20260818000000_authoring_foundation.sql`): a (lane, step) slot may
+hold several cells — one touchpoint per row in tech-role lanes — ordered
+by `position`, with uniqueness widened to
+`(lane_id, step_id, position)` (constraint
+`cells_layer_step_slot_unique`). The slot contract: single-cell slots sit
+at 0; tech-lane touchpoints occupy 0..n; the interactive `upsert_cell` RPC
+always addresses slot 0, so siblings are created only by dedicated
+touchpoint operations (and the migration's one-time split, where the
+original row keeps the first item — preserving its id, `cell_key`, arrows,
+slice references and evidence — and each further item becomes a sibling
+with the parent's key plus an ordinal suffix). Tools and the IR never
+expose slot management directly — treat "the" cell of a slot as slot 0.
 
-## Derived layer: findings and slices
+## Derived layer: slices, findings, evidence, propositions
 
-Both skills' outputs land in three derived tables (present in the canvas
-deployment; template workspaces without them must route through the
-upgrade recipe rather than failing mid-import):
+The skills' outputs land in five derived tables plus one view
+(DDL: `supabase/migrations/20260729120000_derived_layer.sql`).
+Workspaces provisioned before that migration must route through the
+upgrade recipe rather than failing mid-import.
+
+Design invariants: derived tables reference cells SOFTLY — `cell_ids
+uuid[]` paired 1:1 with `cell_keys text[]` (IR key-paths for orphan
+recovery), no FK — so the importer's scenario-scoped delete-and-reinsert
+never cascades into user-authored rows. The hard FK each table does carry
+is `service_id` (cascade): services are upserted, never
+deleted, by the importer, and for `evidence` that FK is the
+retention/deletion story for interview excerpts.
+"Assumption" is a derived state — a cell with zero evidence rows —
+deliberately never stored.
 
 | Table | What it is | Notes |
 |---|---|---|
-| `findings` | One triageable audit/whatif finding | `source` (`audit`\|`whatif`), `check_name`, `severity` (`info`\|`warn`\|`critical`), `note`, `cell_ids`/`cell_keys`, `status` (`open`\|`resolved`\|`dismissed`), `run_id`, `fingerprint` (dedupe: open updates in place, dismissed stays dismissed, resolved reopens as a new row) |
-| `slices` | A stakeholder view that REFERENCES cells | `title`, `description`, `slice_type` (`journey`\|`lane`\|`step`\|`custom`), `actor`, `origin` |
-| `slice_items` | One frame of a slice | `position`, `cell_ids` (ordered), `caption`, `narrative` — full-replacement semantics on rework |
+| `slices` | A saved 1D cut through the grid that REFERENCES cells (never copies them) | `title`, `description`, `slice_type` (`journey`\|`step`\|`lane`\|`cell`\|`custom`), `actor`, `locale`, `position`, `origin` (`generated` = safe to regenerate \| `customized` = skill output human-edited, regeneration must confirm \| `human` = authored in the app, never the skill's to regenerate) |
+| `slice_items` | One frame of a slice | `position` (unique per slice, deferrable), `cell_ids`/`cell_keys` (equal cardinality enforced; empty = title-only divider frame), `caption`, `narrative`, `illustration` JSONB — full-replacement semantics on rework |
+| `findings` | One triageable audit/whatif finding | `source` (`audit`\|`whatif`\|`import-sweep`), `check_name`, `severity` (`info`\|`warn`\|`critical`), `note`, `cell_ids`/`cell_keys`, `status` (`open`\|`resolved`\|`dismissed`), `run_id` (FK-less by design — no runs table), `fingerprint` (check_name + sorted-cell_keys hash + reason slug — audit-playbook §2) |
+| `evidence` | One provenance row for a cell OR a proposition question | Exactly one of `cell_id` / `proposition_question_key` (`understand`\|`value`\|`usability`); `cell_id` ⇄ `cell_key` always paired; `kind` (`interview`\|`survey`\|`analytics`\|`doc`\|`meeting`\|`decision`\|`observation`\|`other`); `observed_at` is date-only by design (timestamps could re-identify participants); restricted SELECT — excerpts may hold interview content |
+| `propositions` | One business-model record per service (PK = `service_id`) | `funding`, `pricing`, `delivery_cost`, `revenue_model`, `partners`; restricted SELECT |
+
+**Findings dedupe is DB-backed**: the partial unique index
+`findings_open_fingerprint_idx` on `(service_id, fingerprint)
+where status = 'open'` allows at most one OPEN finding per fingerprint.
+Skill-side rule it backstops: open updates in place, dismissed stays
+dismissed, resolved reopens as a new row (a reopen collision surfaces as
+23505 by design).
+
+**Public count surface**: the `evidence_counts` view (`cell_id → n`)
+exposes evidence row counts — never content — to anonymous readers; it
+powers the assumption lens on public deploys.
+
+## Spec fields on IR-owned tables
+
+The derived-layer migration also adds human-editable spec columns to
+three IR-owned tables (writable via column-scoped grants; the content
+columns stay import-owned):
+
+- `cells`: `function` (role/responsibility — what it must do), `form`
+  (communication/look/feel — what it must convey), `value_props` (JSONB
+  array of `{for, value}`), `owner`, `perceived_owner` (mismatch =
+  deception risk)
+- `lanes`: `owner_team`, `kpis` (string array), `tools` (string array)
+- `phases`: `business_impact`, `operational_requirements`

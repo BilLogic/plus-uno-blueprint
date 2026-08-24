@@ -35,6 +35,7 @@ const FILES = [
   'skills/audit/references/check-perceived-owner.md',
   'skills/audit/references/check-value-ledger.md',
   'skills/audit/references/check-fee-visibility.md',
+  'skills/audit/references/check-obsolete-source.md',
   'skills/slice/references/slice-playbook.md',
   'skills/slice/references/slice-templates.md',
 ]
