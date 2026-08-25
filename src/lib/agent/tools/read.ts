@@ -34,6 +34,7 @@ import checkKpiAlignment from '@/lib/agent/skill/references/check-kpi-alignment.
 import checkPerceivedOwner from '@/lib/agent/skill/references/check-perceived-owner.md?raw'
 import checkValueLedger from '@/lib/agent/skill/references/check-value-ledger.md?raw'
 import checkFeeVisibility from '@/lib/agent/skill/references/check-fee-visibility.md?raw'
+import checkObsoleteSource from '@/lib/agent/skill/references/check-obsolete-source.md?raw'
 import slicePlaybook from '@/lib/agent/skill/references/slice-playbook.md?raw'
 import sliceTemplates from '@/lib/agent/skill/references/slice-templates.md?raw'
 
@@ -57,7 +58,7 @@ const UUID =
 /**
  * The same reference files the IDE skills read from disk, served as a tool.
  * One progressive-disclosure mechanism, two consumers: editing a file in
- * the plugin repo upgrades both (vendored here by scripts/sync-agent-skill).
+ * the plugin repo upgrades both (vendored here, taken from upstream).
  */
 const REFERENCES: Record<string, string> = {
   'canvas-adapter': canvasAdapter,
@@ -75,6 +76,7 @@ const REFERENCES: Record<string, string> = {
   'check-perceived-owner': checkPerceivedOwner,
   'check-value-ledger': checkValueLedger,
   'check-fee-visibility': checkFeeVisibility,
+  'check-obsolete-source': checkObsoleteSource,
   'slice-playbook': slicePlaybook,
   'slice-templates': sliceTemplates,
 }

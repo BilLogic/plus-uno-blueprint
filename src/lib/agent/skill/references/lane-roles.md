@@ -9,7 +9,7 @@ truth: `src/lib/laneRoles.ts` (vocabulary + legacy shim) and
 A lane has two identities:
 
 - `display_name` (`lanes.name`) — free-form label in **any language**
-  ("现场技术员", "Regular Tutor", "Compliance Review").
+  ("现场技术员", "Field Technician", "Compliance Review").
 - `role` (`lanes.lane_role`) — a stable semantic key that drives rendering.
   `null`/absent = plain generic swimlane.
 
@@ -74,8 +74,8 @@ roles included (`blueprintLayerHasBackwardInLaneLoop`).
 
 Content that predates `lane_role` (rows with null role) is resolved through
 `LEGACY_NAME_TO_ROLE` in `src/lib/laneRoles.ts`: exact display names like
-`'Front Stage Tech'`, `'Customer Actions'`, `'Regular Tutor'` (a PLUS spine
-actor), `'Visual'` map to roles at render time. The shim is for legacy data
+`'Front Stage Tech'`, `'Customer Actions'`, `'Visual'` map to roles at render
+time; a deployment adds its own spine actors to that map. The shim is for legacy data
 only — **new IR must always set `role` explicitly** and never rely on
 name matching. The validator warns on near-miss names that look like they
 wanted a role (`'Frontstage Tech'`, `'前台技术'` → "did you mean

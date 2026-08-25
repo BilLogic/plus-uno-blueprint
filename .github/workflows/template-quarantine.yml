@@ -1,0 +1,51 @@
+# This repo now shares history with agentic-service-blueprinting (the graft in
+# #105), so upstream changes arrive as an ordinary `git merge template/main`.
+# Most of src/ SHOULD arrive that way. A handful of paths never should — this
+# instance's migrations, its blueprint data, its generated database types, its
+# agent persona — and a merge that quietly takes the package's version of those
+# is a data-shaped regression, not a conflict anyone would notice in review.
+#
+# The alternative was .gitattributes with a `merge=ours` driver. It was rejected
+# because the driver is DEFINED in .git/config, which is not committed: a fresh
+# clone keeps the declaration and loses the protection, silently. Same shape as
+# the deleted sync-agent-skill.mjs, whose --check exited 0 when it could not see
+# its source. This check is clone-independent and fails loudly.
+#
+# No secrets and no network: a template merge is identified by ancestry alone.
+name: template-quarantine
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quarantine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Ancestry is the whole mechanism — a shallow clone cannot tell a
+          # template merge from any other, and the check refuses to guess.
+          fetch-depth: 0
+
+      - name: Resolve the range to inspect
+        id: range
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch --no-tags origin "${{ github.base_ref }}"
+            echo "range=origin/${{ github.base_ref }}..HEAD" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "push" ] && \
+               [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "range=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            # A first push or a manual run has no natural range. Inspect the
+            # whole branch rather than reporting "nothing to check" — a guard
+            # that passes when it cannot see is the thing this replaces.
+            echo "range=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check template merges against the quarantine manifest
+        run: node scripts/check-template-quarantine.mjs "${{ steps.range.outputs.range }}"

@@ -1,8 +1,8 @@
 ---
 audience: developers
-summary: The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill sync contract.
-sources: src/lib/agent/loop.ts, src/lib/agent/skills.ts, src/lib/agent/uiBridge.ts, src/lib/agent/uiCommands.ts, src/lib/agent/sessions.ts, src/lib/agent/persistence.ts, src/lib/agent/role.md, scripts/sync-agent-skill.mjs
-last-reviewed: 2026-08-08
+summary: The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill vendoring contract.
+sources: src/lib/agent/loop.ts, src/lib/agent/skills.ts, src/lib/agent/uiBridge.ts, src/lib/agent/uiCommands.ts, src/lib/agent/sessions.ts, src/lib/agent/persistence.ts, src/lib/agent/role.md
+last-reviewed: 2026-08-25
 ---
 
 # The in-app agent
@@ -111,20 +111,22 @@ The slash commands (`/sb:map`, `/sb:slice`, `/sb:audit`, `/sb:whatif`,
 plus bare aliases — `skills.ts`) load the **same SKILL.md files IDE humans
 get** from the `sb` plugin. The contract:
 
-- **Canonical home**: the plugin repo
-  (`/Users/billguo/Desktop/agentic-service-blueprinting` — override with
-  `PLUGIN_REPO`). Skills and references are authored THERE, never in this
-  repo.
+- **Canonical home**: the `agentic-service-blueprinting` repo. Skills and
+  references are authored THERE, never in this repo.
 - **Vendored copy**: `src/lib/agent/skill/{references,skills}/`, bundled
   via `?raw` imports and served through `get_reference`.
-- **Sync**: `node scripts/sync-agent-skill.mjs` copies plugin → app;
-  `--check` exits 1 on drift without copying (CI-safe; an absent plugin
-  checkout does not fail the check). Edit a vendored file directly and the
-  next sync overwrites it — change the plugin, then sync.
-- Adding a reference means updating the plugin, the sync script's `FILES`
-  list, and `referenceNames.ts` — `read.ts` asserts the record matches
-  the name list at module init, so a miss fails the first test that
-  touches the tools.
+- **How it updates**: by taking upstream's copy. The package vendors the
+  same tree internally and guards it there, so once this repo shares
+  history with the template the files arrive on an ordinary merge. There
+  is no sync script here. `scripts/sync-agent-skill.mjs` was deleted: its
+  `--check` exited 0 when the sibling checkout was absent, so it gated
+  nothing, and by the time that was noticed the drift had inverted — a
+  vocabulary rename had landed in the vendored copy and a sync would have
+  reverted it.
+- Adding a reference means adding it upstream, taking the file here, and
+  updating `referenceNames.ts` — `read.ts` asserts the record matches the
+  name list at module init, so a miss fails the first test that touches
+  the tools.
 
 Known follow-ups for the whole agent subsystem are tracked in
 `todos/021-pending-p2-agent-harness-review-followups.md`.

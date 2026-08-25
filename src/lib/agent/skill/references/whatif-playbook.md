@@ -118,7 +118,7 @@ Legacy `__file__` entries get the same two checks against the whole-file
 
 ## §5 Canvas note
 
-Inside the uno-blueprint canvas agent whatif is fully live — the
+Inside the canvas agent whatif is fully live — the
 `/sb:whatif` row of `references/canvas-adapter.md` is the ONLY canonical
 canvas translation (conversational variant, direct promotion on
 acceptance, optimistic-concurrency staleness). Read that row; nothing
