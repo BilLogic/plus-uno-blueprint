@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes'
 import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { EditorShell } from '@/components/editor/EditorShell'
 import { ScenarioPathSelectionReset } from '@/components/editor/ScenarioPathSelectionReset'
+import { WriteFailureNotices } from '@/components/editor/WriteFailureNotices'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { EditorProvider } from '@/contexts/EditorContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
@@ -30,6 +31,9 @@ function App() {
                   <EditorErrorBoundary>
                     <EditorShell />
                   </EditorErrorBoundary>
+                  {/* Outside the boundary: a write can fail as the shell
+                      falls over, and the notice is what says so. */}
+                  <WriteFailureNotices />
                 </TooltipProvider>
               </PathSelectionProvider>
             </ViewStateProvider>

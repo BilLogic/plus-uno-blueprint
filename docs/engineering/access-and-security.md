@@ -2,7 +2,7 @@
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
 sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Access and security
@@ -162,6 +162,12 @@ What the wrappers buy, and why bypassing them is never acceptable:
 - **Reverts are identity-keyed** and pass `record: false` so undoing an
   edit never logs a new edit. Read `authoringSession.ts` and
   `revertChange.ts` before touching reverts or deletes.
+- **A failed write is said out loud.** `reportWriteFailure`
+  (`src/lib/writeFailures.ts`) is the one surface for a failure whose
+  control is already gone — a cell delete closes its own menu, ⌘Z has no
+  control at all. A path that still has its form or dialog on screen keeps
+  reporting there (`CreatePhaseDialog` is the pattern). Neither channel is
+  the console: a write that only logs reads to the user as a success.
 - **Deletes are human-only.** The agent tool surface contains no delete;
   the UI routes deletes through impact preview (`get_deletion_impact`)
   and a confirm dialog. Never automate one.
