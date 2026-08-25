@@ -770,16 +770,46 @@
    * Chromium walks the ancestor chain correctly and never showed this, which
    * is why it survived verification — the browser pane is Chromium.
    *
-   * The blanket descendant selector is safe here BECAUSE the board holds no
-   * scrollable region: the canvas pans instead of scrolling, so there is no
-   * gesture inside it that belongs to the browser. Anything that does need
-   * native scrolling (the cell detail sheet) is portalled out of this
-   * subtree. Not scoped to `pointer: coarse` — `touch-action` is inert for
-   * mouse input, and a touchscreen laptop needs it too.
+   * The blanket descendant selector reaches one thing it should not, and the
+   * exception below is that thing. The board is NOT free of scrollable
+   * regions — `ServiceBlueprintGrid` renders one, several levels inside the
+   * viewport — and blanket `none` there meant a finger could not reach rows
+   * a trackpad reached happily, because the wheel path hands those same
+   * elements their deltas. Everything else in the subtree pans instead of
+   * scrolling, and anything needing native scrolling outright (the cell
+   * detail sheet) is portalled out. Not scoped to `pointer: coarse` —
+   * `touch-action` is inert for mouse input, and a touchscreen laptop needs
+   * it too.
    */
   [data-zoom-pan-content],
   [data-zoom-pan-content] * {
     touch-action: none;
+  }
+
+  /*
+   * The board's own scrollable regions get their axes back.
+   *
+   * `pan-x pan-y`, not `auto`: scrolling is handed to the browser, while
+   * pinch-zoom stays the canvas's — a two-finger gesture over an overflowing
+   * grid must still zoom the board, and the JS claim in `useZoomPanViewport`
+   * says the same thing from the other side (one finger over a scrolling
+   * region is released, two fingers are always claimed).
+   *
+   * `.blueprint-scroll` is the class every scroll container in the app
+   * already carries, so this states an intent that is authored, not
+   * inferred. The behavioural determination is `canvasScrollRegions.ts`,
+   * which both input paths consult and which asks whether the element
+   * actually overflows — something CSS cannot see. A region that carries the
+   * class but overflows nothing has no scroll for the browser to start, so
+   * the pointer stream reaches the camera as before.
+   *
+   * Descendants too, for the same reason the blanket rule exists: the
+   * browser reads the touched element's own value, and a finger inside a
+   * grid lands on a cell, never on the scroll container itself.
+   */
+  [data-zoom-pan-content] .blueprint-scroll,
+  [data-zoom-pan-content] .blueprint-scroll * {
+    touch-action: pan-x pan-y;
   }
 }
 

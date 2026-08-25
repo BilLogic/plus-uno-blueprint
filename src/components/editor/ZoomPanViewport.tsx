@@ -198,8 +198,13 @@ function ZoomPanViewportInner({
     >
       <div
         ref={containerRef}
+        // Focusable, NOT tabbable. `-1` keeps the tab order exactly as it
+        // was — hundreds of cells, no new stop — while giving a click on the
+        // board somewhere for focus to land, which is what puts the arrow-key
+        // pan within reach of a reader who has not tabbed into a cell yet.
+        tabIndex={-1}
         className={cn(
-          'absolute inset-0 overflow-hidden touch-none',
+          'absolute inset-0 overflow-hidden touch-none outline-none',
           (isPanning || isSpaceHeld) && 'cursor-grab',
           isPanning && 'cursor-grabbing',
         )}

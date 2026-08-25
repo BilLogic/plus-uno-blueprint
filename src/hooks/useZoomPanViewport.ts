@@ -23,6 +23,22 @@ import {
   pulseBlueprintCells,
   type FocusCellsResult,
 } from '@/lib/canvasFocusCells'
+import {
+  gestureScaleFactor,
+  shouldApplyGestureZoom,
+} from '@/lib/canvasGestureZoom'
+import {
+  computeFocusRevealPan,
+  resolveKeyboardPan,
+} from '@/lib/canvasKeyboardCamera'
+import {
+  hasScrollableRegion,
+  scrollableAncestorCanConsume,
+} from '@/lib/canvasScrollRegions'
+import {
+  normalizeWheelDelta,
+  wheelZoomScaleFactor,
+} from '@/lib/canvasWheelDelta'
 import { MOTION_CAMERA_MS, prefersReducedMotion } from '@/lib/motion'
 import {
   BLUEPRINT_VIEWPORT_ARTBOARD_MARGIN,
@@ -215,47 +231,6 @@ function measureFitBounds(
     width: targetRect.width / safeZoom,
     height: targetRect.height / safeZoom,
   }
-}
-
-/**
- * True when something between `target` and `container` can still scroll in
- * the direction of this wheel delta — in which case the wheel belongs to it,
- * not to the camera. At-the-end counts as "cannot": a list scrolled to its
- * bottom hands further downward wheel to the canvas, which is how native
- * scroll chaining behaves everywhere else.
- */
-function scrollableAncestorCanConsume(
-  target: Node,
-  container: HTMLElement,
-  deltaX: number,
-  deltaY: number,
-): boolean {
-  let node: Node | null = target
-  while (node && node !== container) {
-    if (node instanceof HTMLElement) {
-      const style = getComputedStyle(node)
-      const scrollsY =
-        node.scrollHeight > node.clientHeight &&
-        /auto|scroll/.test(style.overflowY)
-      const scrollsX =
-        node.scrollWidth > node.clientWidth &&
-        /auto|scroll/.test(style.overflowX)
-      if (scrollsY && deltaY !== 0) {
-        const atTop = node.scrollTop <= 0
-        const atBottom =
-          node.scrollTop + node.clientHeight >= node.scrollHeight - 1
-        if ((deltaY < 0 && !atTop) || (deltaY > 0 && !atBottom)) return true
-      }
-      if (scrollsX && deltaX !== 0) {
-        const atLeft = node.scrollLeft <= 0
-        const atRight =
-          node.scrollLeft + node.clientWidth >= node.scrollWidth - 1
-        if ((deltaX < 0 && !atLeft) || (deltaX > 0 && !atRight)) return true
-      }
-    }
-    node = node.parentNode
-  }
-  return false
 }
 
 /** Sub-pixel camera deltas aren't worth a React commit. */
@@ -1088,6 +1063,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     const onWheel = (e: WheelEvent) => {
       const el = containerRef.current
       if (!el) return
+      /*
+        Pixels, once, at the door. Firefox reports LINES for a wheel mouse and
+        Chromium reports pixels, and the camera used to consume both raw — the
+        same notch moved the board 3px on one browser and 100 on the other.
+        Every consumer below this line, including the sign-only scroll test,
+        reads the same unit.
+      */
+      const { deltaX, deltaY } = normalizeWheelDelta(e)
       const target = e.target
       if (!(target instanceof Node) || !el.contains(target)) {
         // Not the canvas — but an unprevented ctrl+wheel is still a browser
@@ -1105,7 +1088,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         // Immediate: a second viewport's window listener must not also apply
         // the same tick, squaring the scale factor.
         e.stopImmediatePropagation()
-        const scaleFactor = Math.exp(-e.deltaY * 0.01)
+        /*
+          The factor is clamped per event, not per gesture. A trackpad pinch
+          is dozens of events of a few pixels each and is unaffected; a wheel
+          mouse delivers a whole notch in ONE event, which at the trackpad's
+          rate was a 2.7x scale change from a single click of the wheel.
+        */
+        const scaleFactor = wheelZoomScaleFactor(deltaY)
         /*
           `syncReact: false` — and this is the whole bug.
 
@@ -1126,12 +1115,13 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         return
       }
 
-      if (e.deltaX !== 0 || e.deltaY !== 0) {
+      if (deltaX !== 0 || deltaY !== 0) {
         // A scrollable *inside* the canvas that can still consume this delta
-        // keeps it — an overflowing cell body, a text editor. Hijacking those
-        // scrolls pans the whole canvas while the text under the pointer
-        // sits unread, which is the exact jank this handler exists to fight.
-        if (scrollableAncestorCanConsume(target, el, e.deltaX, e.deltaY)) {
+        // keeps it — an overflowing grid, a cell body, a text editor.
+        // Hijacking those scrolls pans the whole canvas while the text under
+        // the pointer sits unread, which is the exact jank this handler
+        // exists to fight. The touch path asks the same function.
+        if (scrollableAncestorCanConsume(target, el, deltaX, deltaY)) {
           return
         }
         e.preventDefault()
@@ -1141,8 +1131,8 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         const { pan: p, zoom: z } = transformRef.current
         commitTransform(
           {
-            x: p.x - e.deltaX,
-            y: p.y - e.deltaY,
+            x: p.x - deltaX,
+            y: p.y - deltaY,
           },
           z,
           false,
@@ -1162,39 +1152,6 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   }, [cancelFitAnimation, commitTransform, syncZoomToReact, zoomAtPoint])
 
   /**
-   * Safari's own pinch, swallowed.
-   *
-   * WebKit ships non-standard `gesture*` events alongside the pointer
-   * stream, and on iOS an unprevented `gesturestart` is a *page* zoom —
-   * the visual viewport rescaling the whole app while the canvas sits
-   * still, which is what "pinch does not work" looks like on a phone.
-   * `touch-action: none` does not cover them. Preventing the default is
-   * the entire job: the pinch itself is already handled by the pointer map
-   * below, so these listeners must never also apply a transform.
-   *
-   * Bound on the window in capture and filtered by containment, for the
-   * same three reasons the wheel listener is (see above) — chiefly that a
-   * listener attached from a ref read once may never attach at all.
-   */
-  useEffect(() => {
-    const swallow = (event: Event) => {
-      const el = containerRef.current
-      const target = event.target
-      if (!el || !(target instanceof Node) || !el.contains(target)) return
-      event.preventDefault()
-    }
-    const options = { passive: false, capture: true } as const
-    window.addEventListener('gesturestart', swallow, options)
-    window.addEventListener('gesturechange', swallow, options)
-    window.addEventListener('gestureend', swallow, options)
-    return () => {
-      window.removeEventListener('gesturestart', swallow, { capture: true })
-      window.removeEventListener('gesturechange', swallow, { capture: true })
-      window.removeEventListener('gestureend', swallow, { capture: true })
-    }
-  }, [])
-
-  /**
    * Touch gestures ride the SAME Pointer Events as mouse pan — no parallel
    * TouchEvent code path. Every touch pointer is tracked in a map; one
    * finger pans (same rules as a mouse drag), and the moment a second
@@ -1209,6 +1166,12 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    */
   const touchPoints = useRef(new Map<number, { x: number; y: number }>())
   const pinchStart = useRef<{ dist: number; x: number; y: number } | null>(null)
+  /**
+   * The last cumulative scale a WebKit `gesture*` stream reported. Safari
+   * counts from 1 per gesture; the camera multiplies, so each event is
+   * applied as its ratio against this.
+   */
+  const gestureScaleRef = useRef(1)
   /**
    * A finger down on a CELL is ambiguous: a tap (open it) or the start of a
    * board drag — phones expect both from anywhere. Neither is committed at
@@ -1289,6 +1252,19 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
           }
           cancelFitAnimation()
           userAdjustedViewRef.current = true
+          return
+        }
+        /*
+          One finger inside a scrolling region scrolls it, and the camera
+          stays out of the way — the same answer the wheel path gives the
+          same element. Leaving without a pending pan is what makes that
+          possible: the board can no longer steal the gesture at the slop
+          line, and the tap is untouched (no `preventDefault` here), so a
+          cell inside an overflowing grid still opens on a tap.
+        */
+        const container = containerRef.current
+        if (container && hasScrollableRegion(e.target as Node, container)) {
+          suppressNextClick.current = false
           return
         }
       }
@@ -1514,6 +1490,96 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   }, [handlePointerDown, handlePointerMove, handlePointerUp])
 
   /**
+   * Safari's own pinch — prevented on the page, applied to the camera.
+   *
+   * WebKit ships non-standard `gesture*` events alongside the pointer
+   * stream, and an unprevented `gesturestart` is a *page* zoom — the visual
+   * viewport rescaling the whole app while the canvas sits still, which is
+   * what "pinch does not work" looks like. `touch-action: none` does not
+   * cover them. That half always worked; the other half never did, because
+   * these handlers dropped the `scale` the gesture carries on the grounds
+   * that the pointer map below already pinches.
+   *
+   * Which is true on iOS and false on macOS. A trackpad pinch on the desktop
+   * produces gesture events and nothing else — no touch pointers, no
+   * synthesised ctrl+wheel — so swallowing the gesture was the whole
+   * interaction. The gate is the touch-pointer count (`shouldApplyGestureZoom`):
+   * zero means nothing else is applying this pinch, and the moment a finger
+   * is down the pointer map owns it and scale must not land twice.
+   *
+   * Bound on the window in capture and filtered by containment, for the
+   * same three reasons the wheel listener is (see above) — chiefly that a
+   * listener attached from a ref read once may never attach at all.
+   *
+   * Placed here rather than beside the wheel listener because it reads the
+   * touch pointer map that the block above owns.
+   */
+  useEffect(() => {
+    /** WebKit-only; no lib.dom type exists for it. */
+    type WebKitGestureEvent = Event & {
+      scale?: number
+      clientX?: number
+      clientY?: number
+    }
+    const inCanvas = (event: Event) => {
+      const el = containerRef.current
+      const target = event.target
+      return !!el && target instanceof Node && el.contains(target)
+        ? el
+        : null
+    }
+    const onGestureStart = (event: Event) => {
+      if (!inCanvas(event)) return
+      event.preventDefault()
+      gestureScaleRef.current = 1
+    }
+    const onGestureChange = (event: Event) => {
+      const el = inCanvas(event)
+      if (!el) return
+      event.preventDefault()
+      const gesture = event as WebKitGestureEvent
+      const factor = gestureScaleFactor(
+        gestureScaleRef.current,
+        gesture.scale ?? gestureScaleRef.current,
+      )
+      if (Number.isFinite(gesture.scale)) {
+        gestureScaleRef.current = gesture.scale as number
+      }
+      if (!shouldApplyGestureZoom(touchPoints.current.size)) return
+      if (factor === 1) return
+      const rect = el.getBoundingClientRect()
+      // Anchored at the pointer, like the wheel. A gesture event without
+      // coordinates (older WebKit) falls back to the viewport centre.
+      zoomAtPoint(
+        gesture.clientX ?? rect.left + rect.width / 2,
+        gesture.clientY ?? rect.top + rect.height / 2,
+        factor,
+        false,
+      )
+      syncZoomToReact()
+    }
+    const onGestureEnd = (event: Event) => {
+      if (!inCanvas(event)) return
+      event.preventDefault()
+      gestureScaleRef.current = 1
+      syncZoomToReact()
+    }
+    const options = { passive: false, capture: true } as const
+    window.addEventListener('gesturestart', onGestureStart, options)
+    window.addEventListener('gesturechange', onGestureChange, options)
+    window.addEventListener('gestureend', onGestureEnd, options)
+    return () => {
+      window.removeEventListener('gesturestart', onGestureStart, {
+        capture: true,
+      })
+      window.removeEventListener('gesturechange', onGestureChange, {
+        capture: true,
+      })
+      window.removeEventListener('gestureend', onGestureEnd, { capture: true })
+    }
+  }, [syncZoomToReact, zoomAtPoint])
+
+  /**
    * The gesture is claimed OUTRIGHT, not merely declared.
    *
    * `touch-action: none` is a *declaration* the compositor consults before
@@ -1542,6 +1608,15 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * first would suppress the synthesized click that a tap depends on;
    * multi-touch synthesizes no click, and preventing it there is what stops
    * WebKit's page pinch-zoom, which `touch-action` cannot reach at all.
+   *
+   * And `touchmove` is NOT claimed inside a genuinely scrollable region.
+   * The claim used to be unconditional, justified by "the board holds no
+   * scrollable region" — but `ServiceBlueprintGrid` renders one, so a finger
+   * could not reach rows a trackpad reached happily. One finger over a
+   * scrolling region is that region's; two fingers are always the canvas's
+   * pinch, wherever they land. `hasScrollableRegion` is the same
+   * determination the wheel path makes, which is what keeps the two from
+   * diverging again.
    */
   useEffect(() => {
     const el = containerRef.current
@@ -1550,7 +1625,15 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       if (event.touches.length >= 2 && event.cancelable) event.preventDefault()
     }
     const claimMove = (event: TouchEvent) => {
-      if (event.cancelable) event.preventDefault()
+      if (!event.cancelable) return
+      const target = event.target
+      if (
+        event.touches.length < 2 &&
+        target instanceof Node &&
+        hasScrollableRegion(target, el)
+      )
+        return
+      event.preventDefault()
     }
     const options = { passive: false } as const
     el.addEventListener('touchstart', claimPinch, options)
@@ -1710,6 +1793,100 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [fitToView, zoomIn, zoomOut])
+
+  /**
+   * Keyboard pan, and a camera that follows focus.
+   *
+   * The board's cells are real buttons in the tab order, and the viewport is
+   * transform-based with its overflow hidden — so the browser's own
+   * scroll-into-view has nothing to scroll, and focus landed on cells nobody
+   * could see. Both halves here reach `panBy`, the pan primitive the pointer
+   * and the agent's `canvas_camera` already share; there is no second camera.
+   *
+   * Bound to the CONTAINER, not the window, which is what scopes it to the
+   * viewport the reader is actually in — two mounted viewports would
+   * otherwise both answer one arrow press. The container carries
+   * `tabIndex={-1}` so clicking the board focuses it without adding a tab
+   * stop; tab order is untouched by this.
+   */
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    /*
+      The camera's maths assumes an unscrolled container: every client-space
+      conversion in this file reads `getBoundingClientRect` and adds nothing
+      back for scroll. An `overflow: hidden` box still HAS scroll offsets,
+      and the browser writes to them when focus moves to a descendant that
+      is out of view — silently shifting the whole board a few hundred pixels
+      out from under the camera's idea of where it is. Zeroing them is the
+      cheapest way to keep that assumption true, and the `scroll` listener
+      catches the write we did not see coming.
+    */
+    const unscroll = () => {
+      if (el.scrollLeft !== 0) el.scrollLeft = 0
+      if (el.scrollTop !== 0) el.scrollTop = 0
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return
+      if (isEditableKeyboardTarget(event.target)) return
+      const step = resolveKeyboardPan(event)
+      if (!step) return
+      // Arrows scroll the page by default, and this container is the one
+      // place that must never scroll.
+      event.preventDefault()
+      panBy(step.dx, step.dy)
+    }
+
+    const onFocusIn = (event: FocusEvent) => {
+      unscroll()
+      const content = contentRef.current
+      const target = event.target
+      if (
+        !content ||
+        !(target instanceof HTMLElement) ||
+        !content.contains(target)
+      )
+        return
+      /*
+        Never mid-flight. A fit ease (⌘0, a navigation) has a destination the
+        reader asked for, and nudging the camera at a focus event that lands
+        during it fights that ease and restarts it from a moving camera —
+        the "glide, brake, glide" this file has fixed twice. The fit lands,
+        and the next focus move corrects from there.
+      */
+      if (fitAnimationRef.current !== null) return
+      /*
+        Keyboard focus only. `:focus-visible` is the browser's own answer to
+        "did this focus come from a key press", and a mouse click on a
+        partly-visible cell should open it, not also move the board under the
+        cursor. Engines that cannot answer get the movement — better a nudge
+        than a keyboard user stranded off-screen.
+      */
+      try {
+        if (!target.matches(':focus-visible')) return
+      } catch {
+        // Selector unsupported (jsdom, very old WebKit) — follow focus.
+      }
+      const { dx, dy } = computeFocusRevealPan(
+        target.getBoundingClientRect(),
+        el.getBoundingClientRect(),
+      )
+      if (dx === 0 && dy === 0) return
+      panBy(dx, dy)
+    }
+
+    unscroll()
+    el.addEventListener('keydown', onKeyDown)
+    el.addEventListener('focusin', onFocusIn)
+    el.addEventListener('scroll', unscroll)
+    return () => {
+      el.removeEventListener('keydown', onKeyDown)
+      el.removeEventListener('focusin', onFocusIn)
+      el.removeEventListener('scroll', unscroll)
+    }
+  }, [panBy])
 
   return {
     containerRef,
