@@ -44,7 +44,7 @@ export function useScenarioSpec(
 
   return useSupabaseQuery<ScenarioSpec | null>(
     `scenario-spec:${scenarioId ?? 'none'}`,
-    async (client) => {
+    async (client, signal) => {
       if (!scenarioId) return null
 
       const { data: scenario, error } = await client
@@ -53,6 +53,7 @@ export function useScenarioSpec(
           'id, name, summary, phases!inner(name), paths(id, name, path_type, status, summary, note, created_at)',
         )
         .eq('id', scenarioId)
+        .abortSignal(signal)
         .maybeSingle()
       if (error) throw new Error(error.message)
       if (!scenario) return null
@@ -82,6 +83,7 @@ export function useScenarioSpec(
         .from('steps')
         .select('id', { count: 'exact', head: true })
         .eq('scenario_id', scenarioId)
+        .abortSignal(signal)
       if (stepError) throw new Error(stepError.message)
 
       let cellCount = 0
@@ -93,6 +95,7 @@ export function useScenarioSpec(
             'path_id',
             paths.map((path) => path.id),
           )
+          .abortSignal(signal)
         if (cellError) throw new Error(cellError.message)
         cellCount = count ?? 0
       }

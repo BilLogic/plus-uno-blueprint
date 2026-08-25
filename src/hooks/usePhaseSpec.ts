@@ -29,7 +29,7 @@ export function usePhaseSpec(
 
   return useSupabaseQuery<PhaseSpec | null>(
     `phase-spec:${phaseId ?? 'none'}`,
-    async (client) => {
+    async (client, signal) => {
       if (!phaseId) return null
 
       const { data: phase, error } = await client
@@ -38,6 +38,7 @@ export function usePhaseSpec(
           'id, name, summary, business_impact, operational_requirements, loops_to_phase_id, services!inner(name)',
         )
         .eq('id', phaseId)
+        .abortSignal(signal)
         .maybeSingle()
       if (error) throw new Error(error.message)
       if (!phase) return null
@@ -46,6 +47,7 @@ export function usePhaseSpec(
         .from('scenarios')
         .select('id, paths(id)')
         .eq('phase_id', phaseId)
+        .abortSignal(signal)
       if (scenarioError) throw new Error(scenarioError.message)
 
       const pathIds = (scenarios ?? []).flatMap((scenario) =>
@@ -58,6 +60,7 @@ export function usePhaseSpec(
           .from('cells')
           .select('id', { count: 'exact', head: true })
           .in('path_id', pathIds)
+          .abortSignal(signal)
         if (countError) throw new Error(countError.message)
         cellCount = count ?? 0
       }
@@ -68,6 +71,7 @@ export function usePhaseSpec(
           .from('phases')
           .select('name')
           .eq('id', phase.loops_to_phase_id)
+          .abortSignal(signal)
           .maybeSingle()
         loopsToName = target?.name ?? null
       }

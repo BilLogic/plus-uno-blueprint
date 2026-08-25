@@ -19,10 +19,18 @@ export function useValueAudiences(): QueryResult<string[]> {
 
   return useSupabaseQuery<string[]>(
     'value-audiences',
-    async (client) => {
+    async (client, signal) => {
       const [registry, cells] = await Promise.all([
-        client.from('stakeholders').select('name, aliases').order('name'),
-        client.from('cells').select('value_props').not('value_props', 'is', null),
+        client
+          .from('stakeholders')
+          .select('name, aliases')
+          .order('name')
+          .abortSignal(signal),
+        client
+          .from('cells')
+          .select('value_props')
+          .not('value_props', 'is', null)
+          .abortSignal(signal),
       ])
       if (registry.error) throw new Error(registry.error.message)
       if (cells.error) throw new Error(cells.error.message)

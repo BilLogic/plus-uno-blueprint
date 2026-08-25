@@ -1,4 +1,37 @@
 import { QueryClient } from '@tanstack/react-query'
+import { SupabaseTimeoutError } from '@/lib/supabaseFetchTimeout'
+
+/**
+ * The read policy, named so a test can build a throwaway client that behaves
+ * exactly like the app's rather than restating these values and drifting.
+ */
+export const QUERY_DEFAULTS = {
+  /*
+   * Blueprint data is edited through explicit mutations, never by another
+   * client, so there is nothing to poll for: a tab switch should reuse the
+   * cached response rather than refetch. Revalidation is explicit — either
+   * the key changes (reload tokens baked into keys, e.g. `useEvidence`) or
+   * a mutation calls `invalidateQueries`.
+   */
+  staleTime: Infinity,
+  gcTime: Infinity,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  /*
+   * One retry, and only for a deadline.
+   *
+   * `withSupabaseTimeout` bounds each attempt and aborts the request it
+   * bounded, so a timeout means this attempt was too slow — not that the
+   * database refused. Left unretried, that verdict stuck: stale time is
+   * infinite and errors win over stale data, so the view showed a timeout
+   * and the bundled fixture until a mutation invalidated it or the page
+   * was reloaded. Everything else (a constraint, a policy, a missing row)
+   * answers the same way however often it is asked, so it is not retried
+   * and the fallback is not delayed.
+   */
+  retry: (failureCount: number, error: Error) =>
+    failureCount < 1 && error instanceof SupabaseTimeoutError,
+}
 
 /**
  * Module-level client so `invalidateQueries` can stay a plain function call at
@@ -6,27 +39,7 @@ import { QueryClient } from '@tanstack/react-query'
  * SSR, which is the case where a module singleton is safe.
  */
 export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      /*
-       * Blueprint data is edited through explicit mutations, never by another
-       * client, so there is nothing to poll for: a tab switch should reuse the
-       * cached response rather than refetch. Revalidation is explicit — either
-       * the key changes (reload tokens baked into keys, e.g. `useEvidence`) or
-       * a mutation calls `invalidateQueries`.
-       */
-      staleTime: Infinity,
-      gcTime: Infinity,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      /*
-       * `raceSupabaseQuery` already bounds each attempt with a timeout, and a
-       * failed read falls back to the bundled fixture rather than blocking the
-       * UI. Retrying would just delay that fallback by the retry schedule.
-       */
-      retry: false,
-    },
-  },
+  defaultOptions: { queries: QUERY_DEFAULTS },
 })
 
 /**

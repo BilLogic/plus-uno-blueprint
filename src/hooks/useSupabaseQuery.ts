@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { raceSupabaseQuery } from '@/lib/supabaseFetchTimeout'
+import { withSupabaseTimeout } from '@/lib/supabaseFetchTimeout'
 import type { Database } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -32,6 +32,10 @@ export { invalidateQueries, invalidateStructure } from '@/lib/queryClient'
  * `ready`/`'fallback'` when it returns data, `error` when it returns null.
  * Database errors and timeouts surface as `error` with `fallback` populated.
  *
+ * `fetcher` is handed the query's abort signal alongside the client and must
+ * pass it to the request (`.abortSignal(signal)`): that is what makes leaving
+ * a view, or changing its key, stop the read it started.
+ *
  * The caching, dedupe and invalidation underneath are TanStack Query's; this
  * wrapper exists so callers keep a single discriminated union to switch on
  * instead of the `isPending`/`isError`/`data` triple, and so the no-DB branch —
@@ -40,7 +44,10 @@ export { invalidateQueries, invalidateStructure } from '@/lib/queryClient'
  */
 export function useSupabaseQuery<T>(
   key: string | null,
-  fetcher: (client: SupabaseClient<Database>) => PromiseLike<T>,
+  fetcher: (
+    client: SupabaseClient<Database>,
+    signal: AbortSignal,
+  ) => PromiseLike<T>,
   fallback: () => T | null,
 ): QueryResult<T> {
   const { client, configured } = useSupabase()
@@ -57,15 +64,13 @@ export function useSupabaseQuery<T>(
   const query = useQuery<T>({
     queryKey: [key],
     enabled: key !== null && !noDb,
-    queryFn: async () => {
-      const outcome = await raceSupabaseQuery(
+    queryFn: ({ signal }) =>
+      withSupabaseTimeout(signal, (deadline) =>
         // The async wrapper turns a synchronous fetcher throw into a rejection
         // (surfaced as the error state) instead of an unhandled exception.
-        (async () => fetcherRef.current(client as SupabaseClient<Database>))(),
-      )
-      if (outcome === 'timeout') throw new Error('The request timed out')
-      return outcome as T
-    },
+        (async () =>
+          fetcherRef.current(client as SupabaseClient<Database>, deadline))(),
+      ),
   })
 
   // No-DB mode resolves synchronously; memoized so callers get a stable

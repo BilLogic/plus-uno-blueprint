@@ -53,7 +53,7 @@ export function useServicePhases(serviceId?: string) {
 
   const result = useSupabaseQuery<PhaseRow[]>(
     `service-phases:${serviceId ?? 'first'}`,
-    async (client) => {
+    async (client, signal) => {
       const serviceIdPromise = serviceId
         ? Promise.resolve<string | null>(serviceId)
         : findFirstServiceId(client)
@@ -65,7 +65,9 @@ export function useServicePhases(serviceId?: string) {
               .select(SERVICE_PHASES_SELECT)
               .eq('service_id', serviceId)
           : client.from('phases').select(SERVICE_PHASES_SELECT_WITH_OWNER)
-      ).order('position', { ascending: true })
+      )
+        .order('position', { ascending: true })
+        .abortSignal(signal)
 
       const [resolvedServiceId, { data, error }] = await Promise.all([
         serviceIdPromise,

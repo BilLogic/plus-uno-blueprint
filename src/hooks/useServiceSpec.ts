@@ -35,12 +35,13 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
     // parameter is gone rather than honoured because multi-service is plan
     // 004 and pinned.
     'service-spec:first',
-    async (client) => {
+    async (client, signal) => {
       const { data: service, error } = await client
         .from('services')
         .select('id, name, summary, business_model(funding, pricing, delivery_cost, revenue_model, partners)')
         .order('created_at')
         .limit(1)
+        .abortSignal(signal)
         .maybeSingle()
       if (error) throw new Error(error.message)
       if (!service) return null
@@ -62,6 +63,7 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
         .from('phases')
         .select('id, scenarios(id)')
         .eq('service_id', service.id)
+        .abortSignal(signal)
       if (phaseError) throw new Error(phaseError.message)
 
       const rows = phases ?? []

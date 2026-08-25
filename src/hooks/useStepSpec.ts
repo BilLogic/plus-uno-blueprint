@@ -38,7 +38,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
 
   return useSupabaseQuery<StepSpec | null>(
     `step-spec:${stepId ?? 'none'}`,
-    async (client) => {
+    async (client, signal) => {
       if (!stepId) return null
 
       const { data: step, error } = await client
@@ -47,6 +47,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
           'id, name, summary, scenario_id, scenarios!inner(name, phases!inner(name))',
         )
         .eq('id', stepId)
+        .abortSignal(signal)
         .maybeSingle()
       if (error) throw new Error(error.message)
       if (!step) return null
@@ -55,6 +56,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         .from('path_steps')
         .select('position, paths!inner(name, created_at)')
         .eq('step_id', stepId)
+        .abortSignal(signal)
       if (membershipError) throw new Error(membershipError.message)
 
       const positions = ((memberships ?? []) as unknown as Array<{
@@ -68,6 +70,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         .from('cells')
         .select('id', { count: 'exact', head: true })
         .eq('step_id', stepId)
+        .abortSignal(signal)
       if (countError) throw new Error(countError.message)
 
       const { data: pictured, error: pictureError } = await client
@@ -75,6 +78,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         .select('picture, lanes!inner(name, position, lane_role)')
         .eq('step_id', stepId)
         .not('picture', 'is', null)
+        .abortSignal(signal)
       if (pictureError) throw new Error(pictureError.message)
 
       /*
