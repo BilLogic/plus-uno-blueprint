@@ -2,6 +2,14 @@ import { QueryClient } from '@tanstack/react-query'
 import { SupabaseTimeoutError } from '@/lib/supabaseFetchTimeout'
 
 /**
+ * How long an unused response is kept before it is collected. Long enough
+ * that the tabs and panels people move between stay warm, short enough that
+ * a day-long session does not accumulate every cell's evidence, every slice
+ * and every per-scenario payload it ever opened.
+ */
+const CACHE_RETENTION_MS = 30 * 60 * 1000
+
+/**
  * The read policy, named so a test can build a throwaway client that behaves
  * exactly like the app's rather than restating these values and drifting.
  */
@@ -14,7 +22,15 @@ export const QUERY_DEFAULTS = {
    * a mutation calls `invalidateQueries`.
    */
   staleTime: Infinity,
-  gcTime: Infinity,
+  /*
+   * Staleness and collection are separate decisions, and only the first
+   * one the header above argues for. `gcTime: Infinity` meant nothing was
+   * ever released: a long session held every response it had ever made,
+   * mounted or not. Collection costs nothing while a query is mounted —
+   * the clock only starts once the last observer unmounts — and a
+   * refetch after half an hour away is not a refetch anyone waits on.
+   */
+  gcTime: CACHE_RETENTION_MS,
   refetchOnWindowFocus: false,
   refetchOnReconnect: false,
   /*

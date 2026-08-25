@@ -15,6 +15,7 @@ import {
   SupabaseTimeoutError,
   withSupabaseTimeout,
 } from '@/lib/supabaseFetchTimeout'
+import { sliceScenarioKey } from '@/hooks/useSliceScenarioId'
 
 /** A request that never answers on its own — only its signal ends it. */
 function pending(signal: AbortSignal): Promise<never> {
@@ -164,5 +165,29 @@ describe('recovering from a timed-out read', () => {
     expect(attempts).toBe(1)
     unsubscribe()
     client.clear()
+  })
+})
+
+describe('cache retention', () => {
+  it('keeps responses fresh forever but does not keep them forever', () => {
+    expect(QUERY_DEFAULTS.staleTime).toBe(Infinity)
+    expect(Number.isFinite(QUERY_DEFAULTS.gcTime)).toBe(true)
+    expect(QUERY_DEFAULTS.gcTime).toBeGreaterThan(0)
+  })
+})
+
+describe('sliceScenarioKey', () => {
+  it('gives every permutation of the same cells one key', () => {
+    expect(sliceScenarioKey(['c', 'a', 'b'])).toBe(sliceScenarioKey(['a', 'b', 'c']))
+  })
+
+  it('still tells different cell sets apart', () => {
+    expect(sliceScenarioKey(['a', 'b'])).not.toBe(sliceScenarioKey(['a', 'c']))
+  })
+
+  it('does not reorder the caller’s own array', () => {
+    const ids = ['c', 'a']
+    sliceScenarioKey(ids)
+    expect(ids).toEqual(['c', 'a'])
   })
 })
