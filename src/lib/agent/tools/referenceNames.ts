@@ -24,6 +24,7 @@ export const REFERENCE_NAMES: readonly string[] = [
   'check-perceived-owner',
   'check-value-ledger',
   'check-fee-visibility',
+  'check-obsolete-source',
   'slice-playbook',
   'slice-templates',
 ]
