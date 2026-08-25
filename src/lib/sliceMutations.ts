@@ -3,10 +3,11 @@ import { recordChange } from '@/lib/authoringSession'
 import {
   asUpdatedAtToken,
   readWriteOutcome,
+  requireRowsWritten,
   type UpdatedAtToken,
 } from '@/lib/optimisticConcurrency'
 import { originAfterEdit, type DraftFrame, type SliceType } from '@/lib/sliceValidation'
-import type { Database, Slice } from '@/types/database'
+import type { Database, Json, Slice } from '@/types/database'
 
 type Client = SupabaseClient<Database>
 
@@ -389,4 +390,76 @@ function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
 /** The token a guarded update needs, taken verbatim from a loaded row. */
 export function sliceToken(slice: Pick<Slice, 'updated_at'>): UpdatedAtToken {
   return asUpdatedAtToken(slice.updated_at)
+}
+
+/**
+ * Set or clear the storyboard image on one frame.
+ *
+ * This lived in `SliceStoryboardField` as a bare `.from('slice_items').update()`
+ * until 2026-08-23 — the only raw table write left in the component tree, and
+ * the one thing `AGENTS.md` says never happens. Two consequences followed from
+ * it, and both are fixed here rather than in the component:
+ *
+ * 1. **It never reached the ledger.** Replacing a storyboard overwrites the
+ *    file in storage (the upload is an upsert onto a path derived from the row
+ *    id), so the picture is gone; without a ledger entry there was also no
+ *    record that it had ever been there, and no revert control. Now the prior
+ *    `illustration` value is read before the write and carried as the inverse.
+ * 2. **A zero-row update read as success.** `.update().eq()` with no `.select()`
+ *    returns `error: null` when nothing matched, so removing the image from a
+ *    frame that had been merged away reported success and cleared nothing.
+ *
+ * The inverse is this same function with the previous value, which makes it
+ * self-inverting and keyed on `item_id` — an out-of-order revert restores the
+ * picture to the frame it came from, not to whichever frame now sits in that
+ * position.
+ *
+ * The file itself is deliberately never deleted: reverting to a previous
+ * `src` has to find the picture still there. That matches the remove path's
+ * existing reasoning — another frame may point at the same path after a merge.
+ *
+ * `record: false` is for the revert path, which must not log its own undo.
+ */
+export async function setSliceFrameIllustration(
+  client: Client,
+  sliceId: string,
+  itemId: string,
+  illustration: Json | null,
+  options?: { record?: boolean },
+): Promise<void> {
+  const record = options?.record !== false
+
+  // Before the write, while the previous value is still knowable.
+  let previous: Json | null = null
+  if (record) {
+    const { data, error } = await client
+      .from('slice_items')
+      .select('illustration')
+      .eq('id', itemId)
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    if (!data) {
+      throw new Error('That frame no longer exists — nothing was written.')
+    }
+    previous = data.illustration
+  }
+
+  const { data: written, error } = await client
+    .from('slice_items')
+    .update({ illustration })
+    .eq('id', itemId)
+    .select('id')
+  if (error) throw new Error(error.message)
+  requireRowsWritten(written, 'frame')
+
+  if (record) {
+    recordChange(
+      'set_slice_illustration',
+      { slice_id: sliceId, item_id: itemId, cleared: illustration === null },
+      {
+        fn: 'set_slice_illustration',
+        args: { slice_id: sliceId, item_id: itemId, illustration: previous },
+      },
+    )
+  }
 }

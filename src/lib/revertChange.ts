@@ -33,6 +33,7 @@ import {
   updateEvidence,
   type EvidenceUpdate,
 } from '@/lib/evidenceMutations'
+import { setSliceFrameIllustration } from '@/lib/sliceMutations'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
@@ -214,6 +215,20 @@ export async function executeRevert(
         throw new Error('This change’s captured evidence row is malformed.')
       }
       await restoreEvidenceRow(client, row)
+      return
+    }
+    case 'set_slice_illustration': {
+      // Self-inverting: the undo of "set a storyboard image" is setting the
+      // previous value back, which may be null (the frame had none). Keyed on
+      // item_id, not position, so a revert after a reorder still lands on the
+      // frame the picture came from. `record: false` — a revert must not log
+      // its own undo.
+      const sliceId = stringArg(revert.args, 'slice_id')
+      const itemId = stringArg(revert.args, 'item_id')
+      const illustration = (revert.args.illustration ?? null) as Json | null
+      await setSliceFrameIllustration(client, sliceId, itemId, illustration, {
+        record: false,
+      })
       return
     }
     case 'restore_slice_frames': {

@@ -14,6 +14,7 @@ import {
   parseSliceIllustration,
   sliceIllustrationUrl,
 } from '@/lib/sliceCells'
+import { setSliceFrameIllustration } from '@/lib/sliceMutations'
 import type { Json } from '@/types/database'
 
 /**
@@ -80,16 +81,10 @@ export function SliceStoryboardField({
         data: { publicUrl },
       } = client.storage.from(STORYBOARD_BUCKET).getPublicUrl(path)
 
-      const { error } = await client
-        .from('slice_items')
-        .update({
-          illustration: {
-            src: publicUrl,
-            updated_at: new Date().toISOString(),
-          } as unknown as Json,
-        })
-        .eq('id', itemId)
-      if (error) throw new Error(error.message)
+      await setSliceFrameIllustration(client, sliceId, itemId, {
+        src: publicUrl,
+        updated_at: new Date().toISOString(),
+      } as unknown as Json)
 
       refresh()
     } catch (uploadError) {
@@ -117,11 +112,7 @@ export function SliceStoryboardField({
       // The row is cleared but the file is left in place: another frame may
       // point at the same path after a merge, and a delete here would break a
       // picture nobody asked to remove. Storage is cheap; a blank slide is not.
-      const { error } = await client
-        .from('slice_items')
-        .update({ illustration: null })
-        .eq('id', itemId)
-      if (error) throw new Error(error.message)
+      await setSliceFrameIllustration(client, sliceId, itemId, null)
       refresh()
     } catch (removeError) {
       console.error(
