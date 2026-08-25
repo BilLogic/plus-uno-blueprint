@@ -4,8 +4,7 @@
  * uno-bot (the "le goat" Slack bot, a Cloudflare Worker in the PLUS-UNO
  * kit repo) reads this app's database and deep-links back into it. Every
  * constant both sides must agree on lives HERE and is vendored bot-ward by
- * the bot repo's scripts/sync-blueprint-contract.mjs — the same one-way
- * pattern as scripts/sync-agent-skill.mjs (plugin → app). Two coordination
+ * the bot repo's scripts/sync-blueprint-contract.mjs. Two coordination
  * bugs shipped silently before this file existed (a renamed slices column
  * and a re-shaped findings column each made a bot read return empty for
  * weeks); a drifted copy now fails the bot's --check sync instead.

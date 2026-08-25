@@ -57,7 +57,7 @@ const UUID =
 /**
  * The same reference files the IDE skills read from disk, served as a tool.
  * One progressive-disclosure mechanism, two consumers: editing a file in
- * the plugin repo upgrades both (vendored here by scripts/sync-agent-skill).
+ * the plugin repo upgrades both (vendored here, taken from upstream).
  */
 const REFERENCES: Record<string, string> = {
   'canvas-adapter': canvasAdapter,

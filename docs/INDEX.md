@@ -2,7 +2,7 @@
 
 # uno-blueprint documentation map
 
-Three layers, never mixed: **reference** (below — living, always true),
+Three lanes, never mixed: **reference** (below — living, always true),
 **history** (`plans/`, `ideation/` — decision-era snapshots, content
 never edited; check a plan's frontmatter `status`/`distilled-into`
 before treating it as truth), and the **queue** (`todos/`).
@@ -69,7 +69,7 @@ before treating it as truth), and the **queue** (`todos/`).
 | design/README.md | designers | The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations. |
 | design/responsive.md | designers, developers | The breakpoint contract (this doc is its single owner) — the 768px gate, the view-only desktop-parity mobile shell, tablet stance, semantic zoom, and the deliberate non-goals. |
 | engineering/access-and-security.md | developers | Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments. |
-| engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill sync contract. |
+| engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill vendoring contract. |
 | engineering/agent-tools.md | developers | The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest. |
 | engineering/architecture.md | developers | How the app fits together — provider stack, module stores, the canvas stack, data flow, the mobile fork, and the performance constraints that shape all of it. |
 | engineering/codebase-guide.md | developers | Where things live in src/ and which existing pattern to copy before inventing one. |

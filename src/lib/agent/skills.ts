@@ -6,7 +6,7 @@ import whatifSkill from '@/lib/agent/skill/skills/whatif.md?raw'
 /**
  * The four-skill architecture, in the composer. These are the SAME SKILL.md
  * files IDE humans get from the `sb` plugin (agentic-service-blueprinting
- * repo) — vendored by scripts/sync-agent-skill.mjs, never authored here.
+ * repo) — vendored from upstream, never authored here.
  * A /command loads its skill into the system prompt for that message only.
  *
  * Commands are namespaced `sb:` to match the plugin invocation exactly —
