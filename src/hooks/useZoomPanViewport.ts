@@ -265,6 +265,31 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   } = options
 
   const containerRef = useRef<HTMLDivElement>(null)
+  /**
+   * The container as a value, not only as a ref — and the reason is a bug
+   * class this file has already been bitten by once.
+   *
+   * An effect that reads `containerRef.current` once attaches nothing if it
+   * runs before that node exists, and with stable deps it is never retried:
+   * the canvas is then permanently dead to whatever that effect was binding.
+   * The wheel and gesture listeners escaped by moving to window-in-capture
+   * (see their comments below); the three that must stay scoped to the
+   * element — native pointer capture, the touch claim, and the keyboard
+   * camera — escape by depending on the node instead of reading it. A
+   * container that mounts late, or remounts, re-runs them.
+   *
+   * `containerRef` is still the truth for handlers, which run at gesture
+   * time and want the current node with no render in between. This is only
+   * for effects.
+   */
+  const [containerNode, setContainerNode] = useState<HTMLDivElement | null>(
+    null,
+  )
+  /** Returned as `containerRef` — a ref callback is still a ref to JSX. */
+  const attachContainer = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node
+    setContainerNode(node)
+  }, [])
   const contentRef = useRef<HTMLDivElement>(null)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -1474,20 +1499,20 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
   // at the viewport boundary first preserves the pending-touch decision and
   // pointer capture regardless of descendant handlers.
   useEffect(() => {
-    const el = containerRef.current
+    const el = containerNode
     if (!el) return
-    const options = { capture: true } as const
-    el.addEventListener('pointerdown', handlePointerDown, options)
-    el.addEventListener('pointermove', handlePointerMove, options)
-    el.addEventListener('pointerup', handlePointerUp, options)
-    el.addEventListener('pointercancel', handlePointerUp, options)
+    const captureOptions = { capture: true } as const
+    el.addEventListener('pointerdown', handlePointerDown, captureOptions)
+    el.addEventListener('pointermove', handlePointerMove, captureOptions)
+    el.addEventListener('pointerup', handlePointerUp, captureOptions)
+    el.addEventListener('pointercancel', handlePointerUp, captureOptions)
     return () => {
-      el.removeEventListener('pointerdown', handlePointerDown, options)
-      el.removeEventListener('pointermove', handlePointerMove, options)
-      el.removeEventListener('pointerup', handlePointerUp, options)
-      el.removeEventListener('pointercancel', handlePointerUp, options)
+      el.removeEventListener('pointerdown', handlePointerDown, captureOptions)
+      el.removeEventListener('pointermove', handlePointerMove, captureOptions)
+      el.removeEventListener('pointerup', handlePointerUp, captureOptions)
+      el.removeEventListener('pointercancel', handlePointerUp, captureOptions)
     }
-  }, [handlePointerDown, handlePointerMove, handlePointerUp])
+  }, [containerNode, handlePointerDown, handlePointerMove, handlePointerUp])
 
   /**
    * Safari's own pinch — prevented on the page, applied to the camera.
@@ -1564,10 +1589,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       gestureScaleRef.current = 1
       syncZoomToReact()
     }
-    const options = { passive: false, capture: true } as const
-    window.addEventListener('gesturestart', onGestureStart, options)
-    window.addEventListener('gesturechange', onGestureChange, options)
-    window.addEventListener('gestureend', onGestureEnd, options)
+    const gestureOptions = { passive: false, capture: true } as const
+    window.addEventListener('gesturestart', onGestureStart, gestureOptions)
+    window.addEventListener('gesturechange', onGestureChange, gestureOptions)
+    window.addEventListener('gestureend', onGestureEnd, gestureOptions)
     return () => {
       window.removeEventListener('gesturestart', onGestureStart, {
         capture: true,
@@ -1619,7 +1644,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * diverging again.
    */
   useEffect(() => {
-    const el = containerRef.current
+    const el = containerNode
     if (!el) return
     const claimPinch = (event: TouchEvent) => {
       if (event.touches.length >= 2 && event.cancelable) event.preventDefault()
@@ -1635,14 +1660,19 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
         return
       event.preventDefault()
     }
-    const options = { passive: false } as const
-    el.addEventListener('touchstart', claimPinch, options)
-    el.addEventListener('touchmove', claimMove, options)
+    // Non-passive is the whole point: `preventDefault` on a passive listener
+    // is a no-op with a console warning, and preventing the default IS the
+    // claim. `canvasTouchContract.test.ts` dispatches real touch events at
+    // this listener and asserts what got prevented, which is the only way to
+    // see the difference from outside.
+    const touchClaimOptions = { passive: false } as const
+    el.addEventListener('touchstart', claimPinch, touchClaimOptions)
+    el.addEventListener('touchmove', claimMove, touchClaimOptions)
     return () => {
       el.removeEventListener('touchstart', claimPinch)
       el.removeEventListener('touchmove', claimMove)
     }
-  }, [])
+  }, [containerNode])
 
   useEffect(() => {
     if (panEnabled) return
@@ -1819,7 +1849,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    * stop; tab order is untouched by this.
    */
   useEffect(() => {
-    const el = containerRef.current
+    const el = containerNode
     if (!el) return
 
     /*
@@ -1832,9 +1862,14 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       cheapest way to keep that assumption true, and the `scroll` listener
       catches the write we did not see coming.
     */
+    // Written through the ref rather than through `el`: the node arrives here
+    // as state so the effect can depend on it, and state is not a thing to
+    // mutate. The ref holds the same node and is the handler's truth anyway.
     const unscroll = () => {
-      if (el.scrollLeft !== 0) el.scrollLeft = 0
-      if (el.scrollTop !== 0) el.scrollTop = 0
+      const node = containerRef.current
+      if (!node) return
+      if (node.scrollLeft !== 0) node.scrollLeft = 0
+      if (node.scrollTop !== 0) node.scrollTop = 0
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1895,10 +1930,10 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
       el.removeEventListener('focusin', onFocusIn)
       el.removeEventListener('scroll', unscroll)
     }
-  }, [panBy])
+  }, [containerNode, panBy])
 
   return {
-    containerRef,
+    containerRef: attachContainer,
     contentRef,
     pan,
     zoom,

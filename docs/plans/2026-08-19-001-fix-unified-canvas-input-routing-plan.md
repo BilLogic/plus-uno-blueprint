@@ -9,6 +9,15 @@ date: 2026-08-19
 
 ## Overview
 
+> **Partly reversed, 2026-08-26.** `canvasInputPolicy.ts` was built as
+> specified below and then never called: ownership stayed inlined in
+> `handlePointerDown`, and the two drifted. Issue #57 deleted the module and
+> its test rather than wiring them up, because changing the canvas to match
+> the table is a larger decision than this plan settled. Everything else here
+> stands; the interaction matrix lives in the handler and in
+> `guidelines/composition/canvas.md`.
+
+
 Replace the canvas's competing, propagation-dependent gesture handlers with one small input-routing pipeline. The viewport will observe every relevant input stream first, classify the gesture, resolve it against the active mode/tool and target capabilities, and dispatch exactly one semantic intent: pan, pinch, marquee, draw, manipulate, activate, native scroll, or context menu.
 
 This fixes the reported mobile failure where a drag beginning inside a lane/container can be invisible to the camera, while preserving UNO's intentional desktop grammar: Design-mode selection, Shift selection, Cmd/Ctrl-click detail opening, Hand-tool navigation, wheel/trackpad navigation, keyboard zoom, Cmd/Ctrl-A, Escape precedence, and nested scrolling.

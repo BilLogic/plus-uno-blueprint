@@ -14,7 +14,10 @@ import {
   ANNOTATION_INK,
   ANNOTATION_AGENT_INK,
 } from '@/lib/canvasAnnotations'
-import { CanvasAnnotationContext } from '@/contexts/canvasAnnotationContext'
+import {
+  CanvasAnnotationContext,
+  CanvasAnnotationToolContext,
+} from '@/contexts/canvasAnnotationContext'
 import {
   registerAgentAnnotator,
   registerAgentUiContext,
@@ -177,7 +180,12 @@ export function CanvasAnnotationProvider({
     [annotations.length, mode, tool],
   )
 
-  const value = useMemo(
+  /**
+   * Two values, deliberately. The tool half is memoized on the tool fields
+   * alone, so a mark added or dragged cannot change its identity — which is
+   * what keeps a drag off the board's cells. See `canvasAnnotationContext`.
+   */
+  const toolValue = useMemo(
     () => ({
       tool,
       setTool,
@@ -185,6 +193,16 @@ export function CanvasAnnotationProvider({
       setPenColor,
       penStrokeWidth,
       setPenStrokeWidth,
+      // The hand is a *navigation* tool, not an annotation tool — counting
+      // it here disabled the viewport's drag-pan the moment the hand was
+      // picked, which is the exact gesture the hand exists to provide.
+      isAnnotating: tool !== 'select' && tool !== 'hand',
+    }),
+    [tool, penColor, penStrokeWidth],
+  )
+
+  const value = useMemo(
+    () => ({
       annotations,
       addAnnotation,
       updateAnnotation,
@@ -193,15 +211,8 @@ export function CanvasAnnotationProvider({
       clearAnnotations,
       selectedId,
       setSelectedId,
-      // The hand is a *navigation* tool, not an annotation tool — counting
-      // it here disabled the viewport's drag-pan the moment the hand was
-      // picked, which is the exact gesture the hand exists to provide.
-      isAnnotating: tool !== 'select' && tool !== 'hand',
     }),
     [
-      tool,
-      penColor,
-      penStrokeWidth,
       annotations,
       addAnnotation,
       updateAnnotation,
@@ -213,8 +224,10 @@ export function CanvasAnnotationProvider({
   )
 
   return (
-    <CanvasAnnotationContext.Provider value={value}>
-      {children}
-    </CanvasAnnotationContext.Provider>
+    <CanvasAnnotationToolContext.Provider value={toolValue}>
+      <CanvasAnnotationContext.Provider value={value}>
+        {children}
+      </CanvasAnnotationContext.Provider>
+    </CanvasAnnotationToolContext.Provider>
   )
 }

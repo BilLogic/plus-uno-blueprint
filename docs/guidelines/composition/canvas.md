@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
 summary: The board and the chrome around it — click grammar, canvas modes, panel-as-selection, camera behaviour, the phase-row height contract and the touch contract.
-sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, src/lib/canvasInputPolicy.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, src/lib/canvasScrollRegions.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
 claims:
   - src/components/blueprint/BlueprintArrowMarkerDefs.tsx
   - src/components/blueprint/BlueprintCellButton.tsx
@@ -222,9 +222,10 @@ exactly.
 
 ## The touch contract
 
-Owned by the native-capture boundary in `useZoomPanViewport.ts`, with the
-pure ownership table in `canvasInputPolicy.ts`; this contract governs the canvas on any
-touch screen — on a phone the canvas is the whole surface:
+Owned by the native-capture boundary in `useZoomPanViewport.ts` — its
+`handlePointerDown` is where ownership of a gesture is actually decided, and
+there is no second copy of that decision to consult. This contract governs the
+canvas on any touch screen; on a phone the canvas is the whole surface:
 
 - **Tap opens.** A finger that lifts inside the slop is a tap and behaves as
   a (bare) click.
