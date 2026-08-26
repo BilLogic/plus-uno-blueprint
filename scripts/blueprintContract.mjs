@@ -55,7 +55,9 @@ export function readContract(root = REPO_ROOT) {
     'fkConstraints',
     'rpcs',
     'searchBlueprintParams',
+    'searchBlueprintGranularity',
     'searchBlueprintColumns',
+    'searchBlueprintKinds',
     'searchBlueprintInclude',
   ]) {
     if (!(key in value)) {
