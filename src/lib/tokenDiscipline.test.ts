@@ -61,6 +61,29 @@ const FOREIGN_RAMPS = [
 const UTILITY_PREFIXES =
   'bg|text|border|ring|fill|stroke|from|to|via|shadow|outline|divide|accent|caret|placeholder|decoration'
 
+/**
+ * A variant chain in front of a utility, as `classUses` sees it.
+ *
+ * `classUses` records each whitespace-delimited token WHOLE — `sm:z-[40]` is
+ * one utility, not a variant plus `z-[40]` — so any rule anchored with `^` has
+ * to spell the prefix out or it only holds at the default breakpoint. That is
+ * exactly what went wrong: `/^z-\[\d+\]$/` read `sm:z-[40]` as a different
+ * utility from `z-[40]` and passed it, and the radius rule had the same hole.
+ *
+ * Three shapes cover what this tree writes, and they chain, hence the `*`:
+ * a plain variant (`sm:`, `hover:`, `before:`), a variant carrying a bracketed
+ * argument (`peer-data-[variant=inset]:`, which `ui/sidebar.tsx` writes), and a
+ * bare arbitrary selector (`[&>svg]:`). The bracketed two are why this is not
+ * simply `(?:[\w-]+:)*` — `[\w-]+` stops at the `[`, so that shorter form
+ * holds at every breakpoint but not behind a data-attribute variant, which is
+ * the same class of hole one step along.
+ *
+ * Shared rather than repeated so the three anchored rules below cannot drift
+ * apart again: one of them being widened and the others not is the state this
+ * constant exists to end.
+ */
+const VARIANTS = '(?:[\\w-]+(?:-\\[[^\\]]*\\])?:|\\[[^\\]]*\\]:)*'
+
 test('the model reads more than the component tree', () => {
   // A rule is only as good as its sample, and this file's sample used to be
   // one directory. If the reader ever narrows again, every assertion below
@@ -148,12 +171,21 @@ test('neutral border and ring strengths come from a named rung', () => {
  * the rule is "a radius utility names its rung". `rounded-full` and
  * `rounded-none` are exempt because neither is a rung — they are the two ends,
  * and neither reads the dial by design.
+ *
+ * `VARIANTS` is what makes that hold past the default breakpoint: anchored
+ * straight at `rounded`, this pattern read `md:rounded` as a different utility
+ * and let it through. Widening it reports nothing new, and the reason is worth
+ * writing down rather than assuming — the tree has nine variant-prefixed
+ * radius uses and every one already names a rung (`before:rounded-full`,
+ * `after:rounded-full`, `data-active:before:rounded-full`,
+ * `md:peer-data-[variant=inset]:rounded-xl`). There is no legitimate bare
+ * variant use to exempt, so none is claimed.
  */
 const SIDES = 'l|r|t|b|tl|tr|bl|br|s|e|ss|se|es|ee'
 
 test('every radius utility names a rung, so the dial reaches all of them', () => {
   const offenders = classUsesMatching(
-    new RegExp(`^rounded(?:-(?:${SIDES}))?$`),
+    new RegExp(`^${VARIANTS}rounded(?:-(?:${SIDES}))?$`),
   )
   assert.deepEqual(
     offenders,
@@ -171,9 +203,15 @@ test('every radius utility names a rung, so the dial reaches all of them', () =>
  * enforced the minority form. Tailwind v4 takes a bare integer for z-index, so
  * the bracket buys nothing at all: every arbitrary spelling has a plain one,
  * and the plain one is the vocabulary.
+ *
+ * `VARIANTS` again, and the widening reports nothing new here either — but
+ * not because a variant is hiding one. There is no `z-[…]` left anywhere in
+ * the tree, at any breakpoint: the two variant-prefixed z-index uses that
+ * exist are `focus:z-10` and `focus-visible:z-10` in `ui/toggle-group.tsx`,
+ * both already the bare integer this rule asks for. Nothing to exempt.
  */
 test('z-index is spelled one way, so a contract cannot pin the other', () => {
-  const offenders = classUsesMatching(/^z-\[\d+\]$/)
+  const offenders = classUsesMatching(new RegExp(`^${VARIANTS}z-\\[\\d+\\]$`))
   assert.deepEqual(
     offenders,
     [],
@@ -182,7 +220,7 @@ test('z-index is spelled one way, so a contract cannot pin the other', () => {
 })
 
 /**
- * A font size in px is a rung that was never added.
+ * A font size written out is a rung that was never added.
  *
  * The type scale bottoms out below Tailwind's, on purpose: `--text-2xs` (11px)
  * and `--text-3xs` (10px) exist because the editor's dense chrome kept writing
@@ -192,28 +230,85 @@ test('z-index is spelled one way, so a contract cannot pin the other', () => {
  * way for the next call site to find it. They are `--text-4xs`/`--text-5xs`
  * now, and this is what stops the sixth.
  *
- * Scoped to px because px is the unit a rung is: every `--text-*` this
- * codebase declares is an absolute size, commented in px, and a px literal is
- * unambiguously one of them written out longhand. `em` is deliberately not a
- * rung — `text-[0.85em]` on markdown code is a proportion of whatever encloses
- * it, which no fixed size can express. The two `rem` display sizes
- * (`text-[2.5rem]`, `text-[2.25rem]`) are a real gap at the TOP of the scale,
- * and closing it means adding rungs above `text-xl`; that is a separate change
- * and this rule does not yet claim it.
+ * The rule read px only, which left the identical gap open at the top of the
+ * scale: the two display headings were written in rem — `text-[2.5rem]` on the
+ * scenario slide title, `text-[2.25rem]` on the cover title — and a px-scoped
+ * pattern stepped straight over both. 40px is `--text-5xl` now and 36px was
+ * already Tailwind's `text-4xl`, so the rule reads both units and the top of
+ * the ladder is named the way the bottom is.
  *
- * The leading `(?:[\w-]+:)*` matters. `classUses` records each whitespace-
- * delimited token whole, variants included, so an anchored pattern without it
- * reads `sm:text-[9px]` as a different utility and lets it through — a guard
- * that only holds at the default breakpoint. The radius and z-index rules
- * above are anchored the same way and have the same hole; that is filed
- * separately rather than widened here, because each needs its own look at
- * what its variants legitimately do.
+ * `em` is NOT covered, and that is a rule rather than a hole. `text-[0.85em]`
+ * on markdown inline code and `text-[0.8em]` in `coverInline` are a proportion
+ * of whatever encloses them — the same code at a different enclosing size is a
+ * different number of pixels, which is the point — and no fixed rung can
+ * express that. A rung is an absolute size: every `--text-*` this codebase
+ * declares is one, commented in px.
+ *
+ * The other exemption is vendored, and it is a named list rather than a
+ * narrower pattern — see `VENDORED_FONT_SIZE_LITERALS` directly below. A
+ * pattern narrowed to dodge a real case reads, to the next person, as a rule
+ * that never covered it.
  */
-test('font sizes come from a named rung, not a px literal', () => {
-  const offenders = classUsesMatching(/^(?:[\w-]+:)*text-\[\d+(?:\.\d+)?px\]$/)
+
+/**
+ * Vendored shadcn files that carry an arbitrary font size from upstream.
+ *
+ * `docs/adr/0003-vendored-primitives-stay-pristine.md`: `src/components/ui/` is
+ * regenerated by the shadcn CLI, and a divergence there with no stated reason
+ * is a defect that gets reverted. Retuning upstream's `text-[0.8rem]` to a rung
+ * would be exactly that divergence — deleted by the next `npx shadcn add
+ * button`, and until then one more hunk in the vendor diff. The ADR's answer to
+ * a product need the primitive does not meet is a wrapper in
+ * `components/blueprint/`, not an edit here, and nothing needs one: these two
+ * are upstream's own sizing, not a size this app reached for.
+ *
+ * Named here rather than carved out of the pattern, because the pattern is what
+ * the next reader will take for the whole rule. Each entry is asserted below to
+ * still carry a literal, so a re-vendor that drops one fails loudly instead of
+ * leaving a dead exemption behind to widen quietly.
+ */
+const VENDORED_FONT_SIZE_LITERALS: ReadonlyArray<{
+  file: string
+  because: string
+}> = [
+  {
+    file: 'components/ui/button.tsx',
+    because: 'upstream shadcn button sizing (ADR 0003 — the CLI owns this file)',
+  },
+  {
+    file: 'components/ui/toggle.tsx',
+    because: 'upstream shadcn toggle sizing (ADR 0003 — the CLI owns this file)',
+  },
+]
+
+/** Absolute font-size literals: px and rem, at any breakpoint. Not `em`. */
+const FONT_SIZE_LITERAL = new RegExp(
+  `^${VARIANTS}text-\\[\\d*(?:\\.\\d+)?(?:px|rem)\\]$`,
+)
+
+const isVendored = (use: string): boolean =>
+  VENDORED_FONT_SIZE_LITERALS.some((entry) => use.startsWith(`${entry.file}:`))
+
+test('font sizes come from a named rung, not a px or rem literal', () => {
+  const offenders = classUsesMatching(FONT_SIZE_LITERAL).filter(
+    (use) => !isVendored(use),
+  )
   assert.deepEqual(
     offenders,
     [],
-    `Arbitrary px font size — add a rung to the sub-xs scale in styles/theme.css and name it (text-2xs / -3xs / -4xs / -5xs):\n${offenders.join('\n')}`,
+    `Arbitrary font size — name the rung in styles/theme.css instead (text-2xs / -3xs / -4xs / -5xs below text-xs, text-4xl / -5xl above text-3xl):\n${offenders.join('\n')}`,
+  )
+})
+
+test('every vendored font-size exemption is still a file that needs one', () => {
+  const literals = classUsesMatching(FONT_SIZE_LITERAL)
+  const stale = VENDORED_FONT_SIZE_LITERALS.filter(
+    (entry) => !literals.some((use) => use.startsWith(`${entry.file}:`)),
+  ).map((entry) => entry.file)
+  assert.deepEqual(
+    stale,
+    [],
+    `Exempted from the font-size rule but no longer carrying a literal: ${stale.join(', ')}. ` +
+      'If the file moved, move the exemption with it; if the re-vendor dropped the literal, delete the exemption.',
   )
 })
