@@ -21,8 +21,15 @@ export type AgentSkillCommand = {
   aliases: string[]
   label: string
   description: string
-  /** SKILL.md content; null while the plugin has not shipped the skill. */
-  content: string | null
+  /**
+   * SKILL.md content, read from the installed package at build time.
+   *
+   * Not nullable: this used to allow null for "the plugin has not shipped
+   * this skill yet", which four `?raw` imports made impossible — a missing
+   * SKILL.md is a build failure, not a null. The disabled-row and
+   * skip-the-parse branches that guarded against it were unreachable.
+   */
+  content: string
 }
 
 export const AGENT_SKILL_COMMANDS: AgentSkillCommand[] = [

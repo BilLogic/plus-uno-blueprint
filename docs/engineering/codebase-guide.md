@@ -55,7 +55,7 @@ ScenarioPathSelectionReset → EditorErrorBoundary → EditorShell → WriteFail
 
 - `SupabaseProvider` (`src/contexts/SupabaseProvider.tsx`) owns the client
   singleton, the auth session, and the capability flags (`canWrite`,
-  `canAgent`, `isServiceAccount`). See
+  `canAgent`). See
   [access-and-security](access-and-security.md) for what those flags do and
   do not enforce.
 - `EditorProvider` / `ViewStateProvider` own navigation: which phase,
@@ -142,7 +142,9 @@ Reviewers keep re-teaching these; copy them instead.
   docked in the sidebar or floating over the canvas, with placement in a
   module store (`src/lib/agent/placement.ts`) so the conversation and the
   in-flight drag survive the mount-point swap. Copy this shape whenever a
-  surface must move between homes without losing state.
+  surface must move between homes without losing state — including its
+  gate/window split, which is what keeps two mount points from meaning two
+  live components.
 - **Detail panel with responsive postures** → the shared shell
   `src/components/blueprint/panelShell.tsx`: right-pinned inspector card on
   desktop, `Drawer` sheet on mobile. Which posture a given surface *should*

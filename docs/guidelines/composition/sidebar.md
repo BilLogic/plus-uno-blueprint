@@ -32,7 +32,11 @@ Figma's sidebar IA, split:
   of the rail bar.
 
 A rail button takes `selected` **or** `toggled`, never both — that is what keeps
-the two vocabularies from blurring. The one collapse toggle sits in the top
+the two vocabularies from blurring, and the props say the same thing one level
+up: `onSelectPanel` carries a `SidebarPanel`, which is Blueprints or Slices and
+nothing else, while ✦ has its own `onToggleAgent`. The chat was briefly a third
+member of that union, which meant every consumer stripped a value the state
+could never hold. The one collapse toggle sits in the top
 slot, the same corner the floating pill occupies when collapsed; ⚙ is pinned
 under a spacer so keys are reachable from any surface.
 
