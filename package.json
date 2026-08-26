@@ -24,7 +24,11 @@
     "docs:index": "node scripts/generate-docs-index.mjs",
     "check:contract": "vitest run scripts/tests/blueprintContract.test.mjs",
     "check:contract:live": "node scripts/check-blueprint-contract.mjs",
-    "check:bot-probe": "node scripts/check-bot-contract-probe.mjs"
+    "check:bot-probe": "node scripts/check-bot-contract-probe.mjs",
+    "check:identifiers": "node scripts/check-retired-identifiers.mjs",
+    "check:identifiers:live": "node scripts/check-retired-identifiers.mjs --service-role",
+    "check:database-names": "node scripts/check-database-names.mjs",
+    "check:copy": "vitest run scripts/tests/retired-copy.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
