@@ -305,9 +305,9 @@
    * produces the softer glow, so one token serves both.
    *
    * This never renders over a blueprint cell: those resolve
-   * `--ring-blueprint-cell-soft`, which the `[data-blueprint-lane]` rules in
+   * `--ring-blueprint-cell`, which the `[data-blueprint-lane]` rules in
    * blueprint.css always set, so the fallback in
-   * `var(--ring-blueprint-cell-soft, var(--ring))` is unreachable. `--ring` only ever sits on app chrome.
+   * `var(--ring-blueprint-cell, var(--ring))` is unreachable. `--ring` only ever sits on app chrome.
    */
   /*
    * The soft rung, below `--border`.
