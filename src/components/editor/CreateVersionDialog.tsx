@@ -22,6 +22,7 @@ import {
   type DraftVersion,
   type PathType,
 } from '@/lib/versionValidation'
+import { errorMessage } from '@/lib/utils'
 
 export type ExistingVersion = { pathId: string; name: string }
 
@@ -98,9 +99,7 @@ export function CreateVersionDialog({
       onOpenChange(false)
       onCreated?.(pathId)
     } catch (createError) {
-      setError(
-        createError instanceof Error ? createError.message : String(createError),
-      )
+      setError(errorMessage(createError))
     } finally {
       setBusy(false)
     }

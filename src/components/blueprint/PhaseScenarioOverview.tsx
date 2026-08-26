@@ -55,7 +55,7 @@ export type PhaseScenarioOverviewProps = {
 }
 
 type PhaseScenarioOverviewBodyProps = PhaseScenarioOverviewProps & {
-  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
+  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType | undefined
   /**
    * Opens a scenario from the canvas. OPTIONAL: mobile passes nothing, so a
    * tap on a board cannot move between scenarios — the drawer owns that.
@@ -153,18 +153,16 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     for *one* scenario, and a phase-level 'stacked' silently clobbering
     it is exactly how a toggle looks broken while its state is correct.
 
+    "Has no override" is `undefined`, which is why this reads as a plain
+    `??` chain: the test used to be `perScenario !== 'stacked'`, and that
+    made an explicit 'stacked' indistinguishable from no choice at all.
+
     The resolved mode is passed through at every camera level. Overview and
     focus must render the same grid; navigation changes framing, not topology.
   */
   const resolveViewType = useCallback(
-    (scenario: NavItem): SlideViewType => {
-      const perScenario = getScenarioDisplayViewType(scenario)
-      const resolved =
-        perScenario !== 'stacked'
-          ? perScenario
-          : (displayViewTypeProp ?? perScenario)
-      return resolved
-    },
+    (scenario: NavItem): SlideViewType =>
+      getScenarioDisplayViewType(scenario) ?? displayViewTypeProp ?? 'stacked',
     [displayViewTypeProp, getScenarioDisplayViewType],
   )
   const scenarioGap = isOverview ? OVERVIEW_SCENARIO_GAP : DEFAULT_SCENARIO_GAP

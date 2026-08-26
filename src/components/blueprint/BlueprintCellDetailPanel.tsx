@@ -503,24 +503,24 @@ function BlueprintCellDetailPanelBody() {
     [connections],
   )
 
-  const selectedLayer = useMemo((): { name: string; role?: string | null } | null => {
-    const laneName = selection?.laneName
+  /*
+    ONE lane resolution for the whole panel.
+
+    The lane a cell sits in answers three questions — which row record it is
+    (visual/pill content rules), what colour the chip wears, and what the row
+    MEANS on hover — and each used to walk `blueprint.lanes` for itself. Three
+    lookups of one fact is three chances to disagree, and the draft branch had
+    already drifted into a fourth.
+
+    Reads the DRAFT's lane when there is no selection: a cell being created
+    sits in a real row, and the chip above the new-cell form is the same chip
+    the panel shows once it is saved.
+  */
+  const laneResolution = useMemo(() => {
+    const laneName = selection?.laneName ?? draft?.laneName
     if (!laneName) return null
 
-    const pathId = pathEntry?.pathId
-    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
-    return (
-      blueprint?.lanes.find((lane) => lane.name === laneName) ?? {
-        name: laneName,
-      }
-    )
-  }, [blueprints, pathEntry?.pathId, selection?.laneName])
-
-  const laneChipStyle = useMemo(() => {
-    const laneName = selection?.laneName
-    if (!laneName) return null
-
-    const pathId = pathEntry?.pathId
+    const pathId = pathEntry?.pathId ?? draft?.pathId
     const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
     const layerRecord =
       blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
@@ -528,24 +528,44 @@ function BlueprintCellDetailPanelBody() {
       layerRecord && blueprint
         ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
         : 'frontstage'
-    // Keyed by lane_role — the name argument is only the legacy fallback.
-    return getBlueprintLayerStyle(laneName, zone, layerRecord?.role)
-  }, [blueprints, pathEntry?.pathId, selection?.laneName])
+    return {
+      laneName,
+      /** The row record, or a name-only stand-in when the lane is unknown. */
+      layer: layerRecord ?? { name: laneName },
+      // Keyed by lane_role — the name argument is only the legacy fallback.
+      style: getBlueprintLayerStyle(laneName, zone, layerRecord?.role),
+      /* What the chip MEANS, for its hover. Resolved the way the canvas
+         resolves it: the explicit role if the row carries one, else the
+         legacy name map. */
+      description: describeLaneRole(
+        getLayerRole({ name: laneName, role: layerRecord?.role ?? null }),
+      ),
+    }
+  }, [blueprints, draft?.laneName, draft?.pathId, pathEntry?.pathId, selection?.laneName])
 
-  /* What the lane chip MEANS, for its hover. Resolved the same way the canvas
-     resolves it: the explicit role if the row carries one, else the legacy
-     name map. */
-  const laneRoleDescription = useMemo(() => {
-    const laneName = selection?.laneName
-    if (!laneName) return null
-    const pathId = pathEntry?.pathId
-    const blueprint = pathId ? getBlueprintForPath(blueprints, pathId) : null
-    const layerRecord =
-      blueprint?.lanes.find((lane) => lane.name === laneName) ?? null
-    return describeLaneRole(
-      getLayerRole({ name: laneName, role: layerRecord?.role ?? null }),
-    )
-  }, [blueprints, pathEntry?.pathId, selection?.laneName])
+  const selectedLayer = selection ? (laneResolution?.layer ?? null) : null
+
+  /*
+    The lane chip, tinted with that lane's own cell colour. Defined here
+    rather than in the details branch because the DRAFT branch renders it
+    too — the row a new cell is being written into is the first thing that
+    branch says, and it used to say it through a hand-rolled span whose
+    `backgroundColor: style.lane` was a role key ("actor"), not a colour.
+    The browser dropped the declaration and the chip had rendered untinted
+    since the day it shipped, which is the same fault PanelKindBadge exists
+    to have fixed once.
+
+    Rendered on its own in the two cases where the title would repeat what is
+    already on screen (the editor's TEXT field, a tech pill's own label).
+  */
+  const laneChip = laneResolution ? (
+    <PanelKindBadge
+      label={laneResolution.laneName}
+      laneRole={laneResolution.style.lane}
+      title={laneResolution.laneName}
+      description={laneResolution.description}
+    />
+  ) : null
 
   const otherTechEntries = useMemo(() => {
     const layerNameByCellId = new Map<string, string>()
@@ -824,19 +844,6 @@ function BlueprintCellDetailPanelBody() {
     draft entirely — a cancelled cell never existed.
   */
   if (!selection && draft) {
-    const blueprint = getBlueprintForPath(blueprints, draft.pathId)
-    const layerRecord =
-      blueprint?.lanes.find((lane) => lane.name === draft.laneName) ?? null
-    const zone =
-      layerRecord && blueprint
-        ? getBlueprintLayerZone(layerRecord, blueprint.lanes)
-        : 'frontstage'
-    const draftLaneStyle = getBlueprintLayerStyle(
-      draft.laneName,
-      zone,
-      layerRecord?.role,
-    )
-
     return (
       <PanelDrawerShell
         open={drawerOpen}
@@ -874,15 +881,7 @@ function BlueprintCellDetailPanelBody() {
           </IconTooltip>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
-          <span
-            className="w-fit max-w-full truncate rounded-full px-2 py-0.5 text-3xs font-medium leading-tight"
-            style={{
-              backgroundColor: draftLaneStyle.lane,
-              color: 'var(--foreground-blueprint-cell)',
-            }}
-          >
-            {draft.laneName}
-          </span>
+          {laneChip}
           <CellPanelEditor
             cellId={null}
             draft={draft}
@@ -1068,17 +1067,6 @@ function BlueprintCellDetailPanelBody() {
   // one role-colored chip (colored by lane_role, never by name).
   const cellTitleText =
     cellContent.split('\n')[0]?.trim() || selection.laneName
-  /* The lane chip, tinted with that lane's own cell colour. Rendered on its
-     own in the two cases where the title would repeat what is already on
-     screen (the editor's TEXT field, a tech pill's own label). */
-  const laneChip = (
-    <PanelKindBadge
-      label={selection.laneName}
-      laneRole={laneChipStyle?.lane ?? null}
-      title={selection.laneName}
-      description={laneRoleDescription}
-    />
-  )
 
 
 

@@ -79,6 +79,19 @@ export const CELL_PANEL_FOOTER_ID = 'cell-panel-editor-footer'
  * wired; whichever arrives first wins.
  */
 export const PANEL_EXIT_MS = 200
+
+/**
+ * The multi-line field treatment, in one place.
+ *
+ * A bare `<textarea>` with the cell panel's border, padding and focus ring —
+ * NOT `input-group.tsx`, which the inventory reserves for the composer, where
+ * the group owns the border and the single focus ring. The cell editor had
+ * three copies of this string and `PanelTextareaField` a fourth, and a
+ * four-way copy of a focus ring is how one field ends up focusing differently
+ * from the field above it.
+ */
+export const PANEL_TEXTAREA_CLASS =
+  'w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 export const LANE_PANEL_FOOTER_ID = 'lane-panel-editor-footer'
 export const PHASE_PANEL_FOOTER_ID = 'phase-panel-editor-footer'
 export const SCENARIO_PANEL_FOOTER_ID = 'scenario-panel-editor-footer'

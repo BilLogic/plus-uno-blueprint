@@ -64,7 +64,9 @@ function resolveHeaderDescription(
  */
 function CompareViewToggle({ slide }: { slide: NavItem }) {
   const { getScenarioDisplayViewType, setScenarioDisplayViewType } = useEditor()
-  const current = getScenarioDisplayViewType(slide)
+  // A scenario that has never been toggled reads as Stacked here — the
+  // control has to point at a segment, and Stacked is the default view.
+  const current = getScenarioDisplayViewType(slide) ?? 'stacked'
 
   const segments: Array<{
     value: SlideViewType

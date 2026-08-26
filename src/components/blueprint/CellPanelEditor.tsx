@@ -7,6 +7,7 @@ import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   CELL_PANEL_FOOTER_ID,
   Field,
+  PANEL_TEXTAREA_CLASS,
 } from '@/components/blueprint/panelShell'
 import { OwnerTagSelect } from '@/components/blueprint/OwnerTagSelect'
 import { invalidateCanvasBlueprintsForPath } from '@/hooks/useCanvasBlueprints'
@@ -30,7 +31,7 @@ import {
 import { StatusSelect } from '@/components/blueprint/StatusSelect'
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { parseValueProps, type ValueProp } from '@/lib/valueProps'
-import { cn } from '@/lib/utils'
+import { cn, errorMessage } from '@/lib/utils'
 
 /** Where a not-yet-created cell would go — the draft the editor writes on Save. */
 export type DraftCellTarget = {
@@ -331,9 +332,7 @@ function CellPanelEditorForm({
       if (aliveRef.current) onDone()
     } catch (saveError) {
       if (aliveRef.current) {
-        setError(
-          saveError instanceof Error ? saveError.message : String(saveError),
-        )
+        setError(errorMessage(saveError))
       }
     } finally {
       if (aliveRef.current) setBusy(false)
@@ -379,7 +378,7 @@ function CellPanelEditorForm({
             setDescriptionTouched(true)
             set('description', event.target.value)
           }}
-          className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className={PANEL_TEXTAREA_CLASS}
         />
       </Field>
 
@@ -418,7 +417,7 @@ function CellPanelEditorForm({
           value={form.functionText}
           rows={2}
           onChange={(event) => set('functionText', event.target.value)}
-          className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className={PANEL_TEXTAREA_CLASS}
         />
       </Field>
       <Field label="Form" hint="How it comes across.">
@@ -426,7 +425,7 @@ function CellPanelEditorForm({
           value={form.formText}
           rows={2}
           onChange={(event) => set('formText', event.target.value)}
-          className="w-full resize-y rounded-md border border-input bg-transparent px-2 py-1.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className={PANEL_TEXTAREA_CLASS}
         />
       </Field>
 

@@ -1,3 +1,4 @@
+import { groupBy } from '@/lib/utils'
 import type { BlueprintData } from '@/types/blueprint'
 
 /**
@@ -375,12 +376,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
   })
 
   // Columns: verdict rollup + agreement grouping.
-  const slotsByColumn = new Map<string, CompareSlot[]>()
-  for (const slot of slots) {
-    const list = slotsByColumn.get(slot.columnKey)
-    if (list) list.push(slot)
-    else slotsByColumn.set(slot.columnKey, [slot])
-  }
+  const slotsByColumn = groupBy(slots, (slot) => slot.columnKey)
 
   const columns: CompareColumn[] = columnSeeds.map((seed) => {
     const columnSlots = slotsByColumn.get(seed.key) ?? []
@@ -406,21 +402,18 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
 
     // Column signature per path: joined lane->signature pairs; absent
     // paths group together under a distinct absence marker.
-    const groupByColumnSignature = new Map<string, string[]>()
-    for (const pathId of pathIds) {
-      const signature = perPathPresent[pathId]
-        ? columnSlots
-            .map((slot) => {
-              const entry = slot.perPath[pathId]
-              return `${slot.laneKey}=${entry?.present ? entry.signature : ''}`
-            })
-            .join(KEY_SEPARATOR)
-        : `${KEY_SEPARATOR}absent`
-      const group = groupByColumnSignature.get(signature)
-      if (group) group.push(pathId)
-      else groupByColumnSignature.set(signature, [pathId])
-    }
-    const agreementGroups = [...groupByColumnSignature.values()]
+    const agreementGroups = [
+      ...groupBy(pathIds, (pathId) =>
+        perPathPresent[pathId]
+          ? columnSlots
+              .map((slot) => {
+                const entry = slot.perPath[pathId]
+                return `${slot.laneKey}=${entry?.present ? entry.signature : ''}`
+              })
+              .join(KEY_SEPARATOR)
+          : `${KEY_SEPARATOR}absent`,
+      ).values(),
+    ]
 
     return {
       columnKey: seed.key,

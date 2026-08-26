@@ -166,7 +166,7 @@ type ServicePhaseSectionProps = {
   /** Both OPTIONAL: mobile passes neither — see `disableCanvasNavigation`. */
   onOpenPhase?: (phaseId: string) => void
   openScenario?: (scenarioId: string) => void
-  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
+  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType | undefined
 }
 
 function ServicePhaseSection({
@@ -527,7 +527,7 @@ function ServiceOverviewViewImpl({
   const focusedComparisonCameraKey = getFocusedComparisonCameraKey({
     isFocusedScenario: isSubslide(activeSlide),
     selectedPathIds: overviewSelectedPathIds,
-    displayViewType: getScenarioDisplayViewType(activeSlide),
+    displayViewType: getScenarioDisplayViewType(activeSlide) ?? 'stacked',
   })
   const fitKey = overviewReady
     ? `service-canvas:${view}:${cameraTargetId ?? 'none'}:${phases.length}-${scenarioIds.length}:${focusNonce}:${focusedComparisonCameraKey}`

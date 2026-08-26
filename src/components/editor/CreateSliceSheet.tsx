@@ -17,6 +17,7 @@ import { findFirstServiceId } from '@/lib/service'
 import { createSlice } from '@/lib/sliceMutations'
 import { deriveSliceType, describeSliceType } from '@/lib/sliceType'
 import { validateDraftSlice, type DraftFrame } from '@/lib/sliceValidation'
+import { errorMessage } from '@/lib/utils'
 
 /** One screen per cell. The starting shape, and the only one worth seeding. */
 function seedScreens(cellIds: readonly string[]): DraftFrame[] {
@@ -143,8 +144,7 @@ export function CreateSliceSheet({
       // at it, and the tab is also where it gets edited.
       openTab({ kind: 'slice', sliceId: slice.id })
     } catch (createError) {
-      const message =
-        createError instanceof Error ? createError.message : String(createError)
+      const message = errorMessage(createError)
       // In the preview state every write comes back "permission denied", and
       // raw PostgREST text reads like a bug when it is actually the answer.
       setError(

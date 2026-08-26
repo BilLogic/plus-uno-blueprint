@@ -18,6 +18,7 @@ import {
   validateDraftSlice,
   type DraftFrame,
 } from '@/lib/sliceValidation'
+import { errorMessage } from '@/lib/utils'
 
 /** The saved slice, as frames the editor can mutate. */
 function toDraftFrames(detail: SliceDetail): DraftFrame[] {
@@ -156,7 +157,7 @@ export function SliceEditSession({
       invalidateQueries(`slice:${detail.slice.id}`)
       onClose()
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : String(saveError))
+      setError(errorMessage(saveError))
     } finally {
       setBusy(false)
     }
