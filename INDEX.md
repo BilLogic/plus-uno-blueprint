@@ -46,6 +46,7 @@ cannot do).
 | Coding standards, the Supabase benchmark, tooling traps, how to run and write tests | docs/engineering/standards.md |
 | Deploy, rollback, environments, monitoring, troubleshooting | docs/engineering/operations.md |
 | Anything crossing a repo boundary — the database, uno-bot, the deploy | docs/connectors/overview.md |
+| Merge from the template, or find out what is still PLUS-specific here | docs/engineering/template-relationship.md |
 | Is this plan file still true? | its frontmatter `status` + `distilled-into` |
 
 ## Reading paths by role
@@ -108,6 +109,7 @@ frontmatter. History is deliberately absent, and the queue does not live here.
 | docs/engineering/codebase-guide.md | developers | Where things live, how the app fits together, and which existing pattern to copy — provider stack, module stores, the canvas stack, data flow, and the performance budget the always-mounted board sets. |
 | docs/engineering/operations.md | developers | Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist. |
 | docs/engineering/standards.md | developers | The quality bar — token discipline against the Supabase benchmark, comment philosophy, what earns a test and how to run them, tooling traps, review workflow. |
+| docs/engineering/template-relationship.md | developers | This app is one deployment of the agentic-service-blueprinting template — how upstream changes arrive, which paths never take them, and which PLUS couplings are still hardcoded here. |
 | docs/reference/lane-vocabulary.md | agents and authors | The closed list of teams a lane's owner_team may name, the actor/team split the stakeholders registry enforces, and the reasoning four 2026-08-21 migrations carried out. |
 | docs/reference/panel-affordances.md | designers, developers | Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — and the badge-or-text rule that turns on whether a value's set is governed. |
 | docs/reference/path-names.md | agents and authors | The rule that a path name states its condition rather than its activity, and the applied rename table — shipped in migration 20260821250000. |

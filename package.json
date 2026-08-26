@@ -20,6 +20,7 @@
     "authoring:check": "node scripts/check_authoring_key.mjs",
     "check:template-quarantine": "node scripts/check-template-quarantine.mjs",
     "check:harness": "node scripts/check-harness-claims.mjs",
+    "template:divergence": "node scripts/measure-template-divergence.mjs",
     "docs:index": "node scripts/generate-docs-index.mjs"
   },
   "dependencies": {

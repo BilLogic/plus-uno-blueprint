@@ -1,5 +1,5 @@
 {
-  "$comment": "Paths the template must never change here. See docs/connectors/plus-uno.md and plus-uno-blueprint#105. Enforced by scripts/check-template-quarantine.mjs.",
+  "$comment": "Paths the template must never change here. See docs/engineering/template-relationship.md and plus-uno-blueprint#105. Enforced by scripts/check-template-quarantine.mjs.",
   "templateRootCommit": "6fe51a98340d07997b3ecf30f8702e667c946985",
   "quarantine": [
     {

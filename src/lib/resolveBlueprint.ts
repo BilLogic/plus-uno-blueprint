@@ -242,8 +242,9 @@ function mergeMissingBlueprintContent(
 // Instance-specific data fixups for the original PLUS content. Every repair
 // below is gated on hardcoded PLUS scenario/path UUIDs (and the shims are
 // additionally ID-gated internally), so foreign (non-PLUS) content provably
-// never enters these code paths. The shim modules themselves are deleted by
-// the template scrub — do not add new callers.
+// never enters these code paths. The shim modules do not exist upstream and
+// are quarantined here (scripts/template-quarantine.json), so a template
+// merge can neither take them nor remove them — do not add new callers.
 // ---------------------------------------------------------------------------
 
 function applyPlusLegacyRepairs(

@@ -1,10 +1,20 @@
 ---
 title: Generalization audit — PLUS-specific code inventory
 date: 2026-07-16
-status: draft
+status: superseded
+summary: The 2026-07-16 inventory of PLUS-specific couplings, written when the plan was to scrub this tree into a template rather than to receive one.
+distilled-into: docs/engineering/template-relationship.md
 ---
 
 # Generalization Audit
+
+> Superseded by
+> [engineering/template-relationship.md](../engineering/template-relationship.md).
+> The **template scrub** this doc plans was never written and will not be: the
+> template became its own repo and did the scrubbing upstream, so the direction
+> reversed. More than half the findings below have since been closed by other
+> work. Kept as the decision-era record; measure against the successor before
+> treating any row here as current.
 
 Inventory of every hardcoded PLUS-specific ID, flag, shim, and magic string that blocks other orgs from using this app as a template. Produced for Phase 0-A of [the skill plan](plans/2026-07-16-001-feat-service-blueprint-agent-skill-plan.md).
 
