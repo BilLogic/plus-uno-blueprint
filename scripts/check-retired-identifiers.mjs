@@ -152,11 +152,17 @@ export function identifierText(definition) {
     .replace(/'(?:[^']|'')*'/g, " '' ")
 }
 
-/** Every finding the migration series produces, in reporting order. */
-export function staticFindings(schema) {
+/**
+ * Every finding the migration series produces, in reporting order.
+ *
+ * `applyExemptions: false` returns the unfiltered set, which is what the
+ * staleness test reads: an exemption whose subject has been fixed is a dead
+ * entry, and a dead entry is how the last one aged into permanence.
+ */
+export function staticFindings(schema, { applyExemptions = true } = {}) {
   const findings = []
   const say = (identifier, detail) => {
-    if (exempt(identifier)) return
+    if (applyExemptions && exempt(identifier)) return
     const words = retiredFragmentsIn(detail ?? identifier)
     findings.push({
       identifier,
