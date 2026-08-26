@@ -16,12 +16,28 @@
 -- than around it — `src/lib/blueprintContract.ts` declares two constraint
 -- names and both are already correct.
 --
--- Comments: #142 counted three stale ones. A comment sweep hits five,
--- because two more carry a retired word inside a longer sentence:
--- `cells` still reads "Content at layer × step intersection", and
--- `lanes.lane_role` still points a reader at `layers.name`. They are the
--- same defect and they are corrected here, or the assertion at the foot of
--- this file could not pass.
+-- Comments: #142 counted three stale ones. A comment sweep finds six.
+-- Two more carry a retired word inside a longer sentence — `cells` still
+-- reads "Content at layer × step intersection", and `lanes.lane_role` still
+-- points a reader at `layers.name`. They are the same defect and they are
+-- corrected here, or the assertion at the foot of this file could not pass.
+--
+-- The sixth is `paths.path_type`, and finding it needed the database. Its
+-- LIVE comment ends "Maturity stays in the name — (Planned) …, (Prototype)
+-- …". That sentence appears in NO file under supabase/migrations: this
+-- repo's `20260821220000_three_kinds_of_route.sql` sets the same comment
+-- without it. The applied row in `supabase_migrations.schema_migrations`
+-- (version 20260821184939) does contain it. The file and the SQL that
+-- actually ran differ in CONTENT, not merely in version number, which makes
+-- this the sharpest evidence #148 has: a replay of the migration files is a
+-- replay of a schema nobody deployed.
+--
+-- It is also the only one of the six that is worse than stale wording.
+-- `maturity` was retired by `20260821240000_status_not_maturity.sql`, which
+-- moved it to `paths.status` on the `entity_status` domain — so the sentence
+-- instructs an author to encode, in a name, the thing a queryable column
+-- already carries. Deleting it would leave the question unanswered where an
+-- author looks, so it is replaced by a sentence naming the column.
 --
 -- Three comments are deliberate and are NOT swept. `services` and
 -- `business_model` each record the rename that produced them: a historical
@@ -36,7 +52,8 @@
 -- pg_indexes, pg_policies, pg_trigger and pg_description after the fact. It
 -- was proved RED before it was proved green: run its `retired` pattern against
 -- production BEFORE the DDL and it names all twenty-two objects, eight of them
--- in the index sweep because the two primary-key indexes appear there too.
+-- in the index sweep because the two primary-key indexes appear there too,
+-- plus the six comments.
 --
 --   select conname from pg_constraint c join pg_namespace n
 --     on n.oid = c.connamespace
@@ -109,6 +126,13 @@ comment on column public.lanes.lane_role is
 
 comment on column public.slices.slice_type is
   'How the cut was made: journey (experience closure for an actor) | step (one column) | lane (one lane across the whole service) | cell (single-cell spec) | custom.';
+
+-- Invisible to a file-based replay; see the header and #148. The three-route
+-- sentence is kept verbatim from `20260821220000`. What replaces the maturity
+-- sentence is not a deletion: the question it answered — where does "how far
+-- along is this route" live — now gets the true answer.
+comment on column public.paths.path_type is
+  'How this route relates to the scenario''s main one: happy (it IS the main route), variant (equally normal, chosen by condition), exception (a rule or a failure diverts it). How far along the route is does not belong in its NAME: paths.status carries that, on the entity_status domain — proposed, planned, built, live, at_risk, deprecated.';
 
 comment on column public.cells.cell_key is
   'THE STATEMENT OF RECORD for the cell-key format. Five slugified segments, service/scenario/path/lane/step — e.g. plus-application/before-students-join/happy-path/back-stage-actions/open-session. A phase is NOT a segment. Written by the import pipeline for origin=import, minted by upsert_cell for origin=app. Survives re-import; slice_items.cell_keys matches against it.';
