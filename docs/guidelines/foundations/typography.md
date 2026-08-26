@@ -54,7 +54,7 @@ number would be decoration, which this system refuses.
 
 The register is a *visual* treatment: accessible names keep the plain title
 (the phase section's `aria-label` says "Open Arrival phase", not
-"zero one dot arrival"). See [accessibility](../accessibility.md).
+"zero one dot arrival"). See [accessibility](accessibility.md).
 
 ## Everything else stays quiet
 
@@ -63,4 +63,4 @@ viewport without mid-word truncation. Muted hierarchy is carried by
 `text-muted-foreground` / `text-tertiary-foreground` (see
 [color](color.md)), not by additional faces or sizes. If a new surface seems
 to need a new typographic voice, that is a deviation — see the
-[Deviating](../README.md#deviating) protocol.
+[Deviating](../overview.md#deviating) protocol.

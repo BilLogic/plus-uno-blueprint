@@ -167,7 +167,8 @@ export function BlueprintCellDetailProvider({
   }, [selection])
 
   // Publish the open cell so the URL can carry it (`?cell=`) — that address is
-  // the share link, and the same one uno-bot builds when it cites this cell.
+  // the share link, and the same one uno-bot builds when it cites this cell
+  // (docs/connectors/plus-uno.md).
   // First path only: a multi-path selection is one cell read across variants,
   // and the first entry is the one the panel opens on.
   useEffect(() => {

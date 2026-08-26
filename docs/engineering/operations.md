@@ -2,7 +2,7 @@
 audience: developers
 summary: Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist.
 sources: README.md, .env.example, src/components/EditorErrorBoundary.tsx, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, package.json
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Operations
@@ -63,13 +63,14 @@ is the single seam to hook.
 ## Local dev servers and auth redirects
 
 There is one local dev port: **`5173`**. `vite.config.ts` sets no `server.port`,
-so Vite uses its default, and `.claude/launch.json` declares `5173` to match —
-agent-driven preview and a hand-run `npm run dev` land on the same origin.
+so Vite uses its default and that is the whole story — the repo declares no
+preview port of its own.
 
 > Until 2026-08-23 this section named `5199` as "the canonical agent/preview
-> port" and claimed `.claude/launch.json` started the server there. It never
-> did; the string `5199` appeared nowhere else in the repo. Anyone who followed
-> it registered a redirect origin nothing serves.
+> port" and credited `.claude/launch.json` with starting the server there.
+> Both halves were fiction: `5199` appeared nowhere else in the repo, and **no
+> `.claude/launch.json` has ever existed here**. An agent harness that wants a
+> declared port has to add one; until then, `npm run dev` on 5173 is it.
 
 The origin has to be in the hosted project's auth **Redirect URLs** (Supabase
 dashboard → Authentication → URL Configuration), alongside the **Site URL**

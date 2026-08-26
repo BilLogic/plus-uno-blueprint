@@ -1,9 +1,24 @@
+---
+audience: agents and authors
+summary: The closed list of teams a lane's owner_team may name, the actor/team split the stakeholders registry enforces, and the reasoning four 2026-08-21 migrations carried out.
+sources: supabase/migrations/20260821280000_the_registry_gains_teams.sql, supabase/migrations/20260821290000_every_lane_that_owns_work_names_its_team.sql, supabase/migrations/20260821300000_a_team_is_not_a_stakeholder_kind.sql, supabase/migrations/20260821320000_perceived_owner_where_it_differs.sql, supabase/migrations/20260821380000_no_outsider_owns_a_lane.sql
+last-reviewed: 2026-08-25
+---
+
 # Lane vocabulary — the team list
 
 `docs/reference/spec-house-style.md` says `lanes.owner_team` must come **"from
-the closed list"**. This is that list. Until now it did not exist, which is why
-`owner_team` is empty on all 306 lanes: the field had a rule and no vocabulary
-to satisfy it.
+the closed list"**. This is that list.
+
+> **This document has been carried out.** It was written as a proposal while
+> `owner_team` was empty on every lane. Four migrations on 2026-08-21 executed
+> it — two of them citing this file by name — so read the reasoning as the
+> record of a decision, not as a plan. What shipped: `20260821280000` gave
+> `stakeholders` its `parent_id`; `20260821290000` filled `owner_team` by the
+> rule below (158 lanes) and installed the trigger that enforces it;
+> `20260821300000` added the `team` kind and moved the ten teams onto it;
+> `20260821320000` wrote `perceived_owner` on the Reporting-an-Issue cells;
+> `20260821380000` then NULLed three outsider-owned lanes, leaving **155**.
 
 Not to be confused with `src/lib/agent/skill/references/lane-vocabulary.md`,
 which tells parallel drafting agents how to converge on lane *roles* and *actor
@@ -15,17 +30,18 @@ labels*. This one names the teams a lane can be owned by.
 > board's content disagree, the disagreement is written down below rather than
 > resolved by guessing.*
 
-**Status: settled. Ready to write.**
+**Status: written.** See the migrations above.
 
 ---
 
 ## One registry, not two vocabularies
 
 Teams and stakeholders were drafted as two separate lists. They are not — a
-party is a party, and the same row can be a lane's owner in one place and an
-actor in another. **`public.stakeholders` already exists** (`useValueAudiences`
-reads it today: `id, service_id, name, kind, note, aliases`), so this is one
-table gaining a parent link, not a new one being invented.
+party is a party. **`public.stakeholders` already exists** — `id`,
+`service_id`, `name`, `kind`, `note`, `aliases`, plus the `parent_id` and
+`updated_at` it has since gained (`useValueAudiences` reads two of those
+columns: `name, aliases`) — so this was one table gaining a parent link, not a
+new one being invented.
 
 ```
 Design ──┬── Product Design
@@ -46,16 +62,26 @@ CMU HR · CPO                                        (partners, outside PLUS)
 as a value; which ones are *sensible* values is a matter of kind, not of a
 second list:
 
-| kind | Can own a lane? | Why |
-| --- | --- | --- |
-| `staff` | yes | A team accountable for work. |
-| `partner` | see open question 3 | Real work, outside PLUS's control. |
-| `recipient` | no | The person the service is for. |
-| actor rows (Regular Tutor, Lead Tutor, Teacher) | no | Name a person doing the work, not a group accountable for it. |
+`20260821300000` settled this by splitting the axis rather than answering per
+kind: it added a `team` kind to the CHECK and moved the ten teams onto it. The
+rule now reads off the column comment:
 
-The one column the registry is missing is the **parent link** that makes
-Instructional Design roll up to Design. Adding it is the change to fold into
-plan `2026-08-20-009`.
+| kind | Can be a lane's `stakeholder_id`? | Can be its `owner_team`? |
+| --- | --- | --- |
+| `team` | **no** | yes |
+| `partner` | yes | yes |
+| `staff` / `recipient` / `provider` | yes | **no** |
+
+So `staff`, `recipient` and `provider` are **actors** — they can be a lane's
+stakeholder. `team` is a group accountable for work and is never a stakeholder.
+`partner` is the one kind on both sides, because CPO both acts in a lane and
+owns one. (`20260821380000` then narrowed that in practice, NULLing the three
+outsider-owned lanes; the constraint still allows it.)
+
+The registry's missing **parent link** — the one that makes Instructional Design
+roll up to Design — shipped as `stakeholders.parent_id` in `20260821280000`,
+asserted at exactly four sub-teams, one level deep. Plan `2026-08-20-009` is
+`status: completed`.
 
 ---
 
@@ -136,9 +162,11 @@ people.** Every occurrence is in a tutor-perspective cell:
 A tutor does not know the org chart. They know there is a PLUS, and someone at
 it answers `help@tutors.plus`. That is the Tutor Supervisors seen from outside.
 
-**This is the first real use for `perceived_owner`.** The board has `owner` and
-`perceived_owner` side by side and `perceived_owner` is empty everywhere. These
-cells are exactly the distinction those two columns were built for:
+**This was the first real use for `perceived_owner`**, and it shipped as
+written: `20260821320000` writes it on exactly these cells and asserts that no
+cell sets `perceived_owner` equal to `owner`. The board has `owner` and
+`perceived_owner` side by side, and these cells are the distinction those two
+columns were built for:
 
 | | |
 | --- | --- |
@@ -194,17 +222,29 @@ one above — that is what the cell-level `owner` override exists for.
 
 ## What this unlocks
 
-Roughly 110 of the 173 (scenario, lane) groups become fillable — about **200 of
-306 rows**. The rest are the actor and storyboard lanes above, which stay empty
-by rule.
+The projection was roughly 110 of the 173 (scenario, lane) groups, about 200
+rows. The rule as run filled **158**, and `20260821380000` took three back:
+**155**. The rest are the actor and storyboard lanes above, which stay empty by
+rule. (Counts in this file are quoted as "306 lanes" throughout; three
+`partner_actions` lanes were added by `20260821260000` after that count was
+taken, so read 306 as the order of magnitude, not the current total.)
 
 `owner_team` is **per scenario, not per lane name**. `Back Stage Actions` is
 owned by the Tutor Supervisors in six scenarios, by Research in Goal Setting and
-Help Request, and by whoever owns instructional design in the two module
-scenarios. A blueprint-wide mapping from lane name to team would be wrong in a
-quarter of the board.
+Help Request, by Design in Discovery, and by whoever owns instructional design
+in the two module scenarios. A blueprint-wide mapping from lane name to team
+would be wrong in a quarter of the board.
 
-**Display:** `owner_team` renders as a **badge**, not text — see
-[panel-affordances.md](./panel-affordances.md) § Badge or text. Six teams
-across 306 lanes is a vocabulary a reader learns by seeing it repeat, and
-"which lanes does Research own?" is a scanning question.
+**Enforced:** `20260821290000` installs a trigger
+(`lanes_owner_team_is_a_party()`) that rejects an `owner_team` naming nobody in
+the registry. The closed list is a database constraint, not a convention.
+
+**Display:** `owner_team` *should* render as a **badge**, not text — see
+[panel-affordances.md](./panel-affordances.md) § Badge or text. A short team
+vocabulary is one a reader learns by seeing it repeat, and "which lanes does
+Research own?" is a scanning question.
+⚠️ **Not what the code does today**: `LanePanel.tsx:228-257` renders Owner team
+as an `<Input list="lane-owner-tags">` when editable and plain prose when not.
+Nothing checks the rule. Whether the badge is still wanted now that the value is
+a registry reference rather than free text is an open UI question — filed, not
+swept.

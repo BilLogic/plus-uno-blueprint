@@ -1,69 +1,63 @@
 # PLUS Uno Blueprint
 
-A living service-blueprint editor for the PLUS tutoring program. The
-whole service journey — every phase, scenario, and touchpoint, above and
-below the line of visibility — mapped as an explorable canvas: readable
-by anyone, editable by the service team, and worked on by AI agents
-under the same rules as humans.
+A living service-blueprint editor for the PLUS tutoring program. The whole
+service journey — every phase, scenario, and touchpoint, above and below the
+line of visibility — mapped as an explorable canvas: readable by anyone,
+editable by the service team, and worked on by AI agents under the same rules as
+humans.
 
-Built with React + Vite, [shadcn/ui](https://ui.shadcn.com/) (base-ui
-flavor), and [Supabase](https://supabase.com/). Desktop is the full
-editor; phones get the same canvas, view-only and scoped to one
-scenario at a time — the drawer is the only way to move between them.
+Built with React + Vite, [shadcn/ui](https://ui.shadcn.com/) (base-ui flavor),
+and [Supabase](https://supabase.com/). Desktop is the full editor; phones get
+the same canvas, view-only and scoped to one scenario at a time — the drawer is
+the only way to move between them.
 
-**Start here → [`docs/INDEX.md`](docs/INDEX.md)** — the documentation
-map, routed by task. Quick picks:
+## Five files at the root
 
-- *"What is this?"* → [`docs/product/01-overview.md`](docs/product/01-overview.md)
-- *Working on the code* → [`AGENTS.md`](AGENTS.md) + [`docs/engineering/`](docs/engineering/)
-- *Design work* → [`docs/design/README.md`](docs/design/README.md)
+Each answers one question. Read the one you have.
 
-## Setup
+| File | Answers |
+|---|---|
+| **README.md** (this) | What is this? |
+| [**SETUP.md**](SETUP.md) | How do I get it running? |
+| [**CONTEXT.md**](CONTEXT.md) | What do these words mean? |
+| [**INDEX.md**](INDEX.md) | Where do I go for my task? — generated from every doc's frontmatter |
+| [**AGENTS.md**](AGENTS.md) | What must I not do? — in force for every session |
 
-```bash
-npm install
-cp .env.example .env
-```
+Quick picks: *"what is this product?"* →
+[`docs/product/01-overview.md`](docs/product/01-overview.md) · *design work* →
+[`docs/guidelines/overview.md`](docs/guidelines/overview.md) · *where does code
+live* → [`docs/engineering/codebase-guide.md`](docs/engineering/codebase-guide.md).
 
-### Local Supabase (Docker required)
+## How `docs/` is arranged
 
-```bash
-npm run supabase:start
-npm run supabase:reset   # applies migrations in supabase/migrations/
-```
+Three lanes, never mixed.
 
-Copy `API URL` and `anon key` from the CLI output into `.env`:
+- **Reference** — living, always true. `product/` (what the thing is and how to
+  read it), `guidelines/` (the design system: `foundations/`, `components/`,
+  `composition/`), `engineering/` (how the code works), `reference/` (fixed
+  vocabularies and id maps), `adr/` (decisions that are surprising or hard to
+  reverse), `connectors/` (everything crossing a repo boundary).
+- **History** — `plans/`, `ideation/`, `brainstorms/`. Decision-era snapshots,
+  never edited after the fact. Check a plan's frontmatter `status` before
+  treating it as current.
+- **The queue** — `todos/`.
 
-```env
-VITE_SUPABASE_URL=http://127.0.0.1:54321
-VITE_SUPABASE_ANON_KEY=<anon-key-from-cli>
-```
+`overview.md` is authored; `index.md` is generated. Every doc carries a
+frontmatter `summary`, and a doc without one fails the index build.
 
-### Hosted Supabase
-
-Create a project at [supabase.com](https://supabase.com), run migrations
-(`supabase link` then `supabase db push`), and set `.env` from
-**Settings → API**.
-
-## Scripts
+## Commands
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Vite dev server |
-| `npm test` | vitest (`src/**/*.test.ts` + `scripts/tests/**/*.test.mjs`) |
+| `npm run dev` | Vite dev server on 5173 |
+| `npm test` | vitest (`src/**/*.test.ts(x)` + `scripts/tests/**/*.test.mjs`) |
 | `npm run lint` | eslint — the baseline is zero problems |
-| `npm run build` | Production build (also the real type-check) |
-| `npm run supabase:start` / `:stop` / `:reset` | Local Supabase lifecycle |
-| `npm run supabase:types` / `:types:local` | Regenerate `src/types/database.ts` |
-| `node scripts/generate-docs-index.mjs` | Regenerate `docs/INDEX.md` after doc moves |
+| `npm run typecheck` | the type-check; `npm run build` runs it and bundles |
+| `npm run check:harness` | every assembled component is claimed by one composition doc |
+| `npm run docs:index` | regenerate `INDEX.md` after a doc move |
+| `npm run supabase:start` / `:stop` / `:reset` | local Supabase lifecycle |
+| `npm run supabase:types` / `:types:local` | regenerate `src/types/database.ts` |
 
-## Where things are documented
-
-Everything deeper lives under `docs/`, mapped by
-[`docs/INDEX.md`](docs/INDEX.md): the data model and access enforcement
-in `engineering/access-and-security.md`, app architecture in
-`engineering/architecture.md`, the design system in `design/`, product
-and practice guides in `product/`, decision records in `decisions/`.
-`docs/plans/` and `docs/ideation/` are history — snapshots, not current
-truth. Deploys ship from `main` via Netlify; environments and rollback
-in `engineering/operations.md`.
+Deploys ship from `main` via Netlify — push to main is production. Environments,
+rollback and troubleshooting:
+[`docs/engineering/operations.md`](docs/engineering/operations.md).

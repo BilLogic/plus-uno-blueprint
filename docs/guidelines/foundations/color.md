@@ -2,7 +2,7 @@
 audience: designers
 summary: The four color-token tiers, semantic-only consumption, dark mode as a class, the forced-colors stance, lane tints, and the agent-ink precedent.
 sources: src/styles/colors.css, src/styles/semantic.css, src/styles/theme.css, src/styles/blueprint.css, src/styles/themes/, src/lib/canvasAnnotations.ts
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Color
@@ -26,7 +26,7 @@ authoritative statement is the header comment in `src/styles/blueprint.css`):
 | 1 Primitive | `src/styles/colors.css` | `--color-{family}-{step}` — Radix scales + the brand ramp. Values only; components must not touch these. |
 | 2 Semantic | `src/styles/semantic.css` | `--background`, `--primary`, `--warning`, `--sidebar-*` — every role, derived in OKLCH from a handful of theme dials (`src/styles/themes/light.css`, `dark.css`). |
 | 3 Tailwind | `src/styles/theme.css` | `@theme inline` indirection so `bg-canvas`, `text-muted-foreground` exist as utilities. Never write `var(--color-canvas)` by hand — `@theme inline` keys are not emitted as properties. |
-| 4 Component | `src/styles/blueprint.css` | `--{property}-blueprint-{part}-{state}` — variables a component sets on itself so shared rules can read them. Not design tokens: every value assigned is a tier-1/2 reference; nothing at tier 4 introduces a color. |
+| 4 Component | `src/styles/blueprint.css` | `--{property}-blueprint-{part}-{state}` — variables a component sets on itself so shared rules can read them. Not design tokens: every value assigned is a tier-1/2 reference. The one carve-out is `--shadow-blueprint-annotation-fill`, whose per-theme `rgb()` alphas are a shadow, not a meaning-carrying color. |
 
 Interaction states have **no tokens** by design (Supabase defines none):
 state is expressed at the call site via alpha on the resting token
@@ -54,7 +54,7 @@ focus (`Highlight` outline), pressed/selected state
 (`Highlight`/`HighlightText`, keyed off `aria-pressed`/`aria-selected`), and
 gives blueprint cells a `CanvasText` border so the grid survives flattened
 fills. The semantic-zoom blocks tier does the same (`blueprint.css`). Details
-in [accessibility](../accessibility.md).
+in [accessibility](accessibility.md).
 
 ## Lane tints
 

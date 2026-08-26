@@ -11,6 +11,8 @@
  *
  * Keep this module dependency-free: the bot compiles it in a Worker
  * context with no access to app imports.
+ *
+ * The relationship, its history and its guard: docs/connectors/plus-uno.md.
  */
 
 export const BLUEPRINT_CONTRACT = {

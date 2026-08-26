@@ -1,0 +1,166 @@
+---
+audience: designers, developers
+summary: The slice focus tab and its dim, presentation's dark subtree, the two editing surfaces that split by what they are good at, the storyboard field, and slide mode.
+sources: src/components/editor/SliceView.tsx, src/components/editor/SlicePresentation.tsx, src/components/editor/SliceFrameEditor.tsx, src/components/editor/SliceScreenComposer.tsx, src/lib/storyboardUpload.ts, src/styles/blueprint.css, src/styles/semantic.css
+claims:
+  - src/components/blueprint/ScenarioSlideFilters.tsx
+  - src/components/blueprint/ScenarioSlideHeader.tsx
+  - src/components/editor/CanvasSlideConnectors.tsx
+  - src/components/editor/SliceEditSession.tsx
+  - src/components/editor/SliceFrameEditor.tsx
+  - src/components/editor/SliceHeaderBand.tsx
+  - src/components/editor/SlicePresentation.tsx
+  - src/components/editor/SliceScreenComposer.tsx
+  - src/components/editor/SliceStoryboardField.tsx
+  - src/components/editor/SliceView.tsx
+  - src/components/editor/SlideArtboard.tsx
+  - src/components/editor/SlideModeView.tsx
+  - src/components/editor/SlideNav.tsx
+  - src/components/editor/SlideStickyHeader.tsx
+last-reviewed: 2026-08-25
+---
+
+# Slice view
+
+A slice is a saved cut of the board for one audience — a view, not a copy. On
+screen it is **the normal blueprint**, with membership applied on top: same
+zoom/pan canvas, same cell panel, opened on the slice's scenario, with
+non-members dimmed and members ringed and numbered.
+
+Three postures: the **focus tab** (the live canvas with the membership overlay),
+**presentation** (a dark full-bleed stage, its own tab, or full-bleed on mobile),
+and **slide mode**, which is a sidebar surface rather than a slice concept at
+all.
+
+Design mode **is** edit mode here — the tab *is* the editor, so the frame strip
+and the picker mount at the surface rather than behind a separate Edit button.
+Two overlapping "clicks mean something else" states was one too many.
+
+## The dim
+
+The slice dim is CSS, not React, driven by one container attribute and one
+per-cell attribute:
+
+- **Members** keep a role-accent ring and a soft shadow lift, and they keep it
+  whether or not the dim is up. The ring takes the lane's accent so members pop
+  at overview zoom.
+- **Non-members** go to `opacity: 0.6` with `saturate(0.3) grayscale(0.55)`.
+
+The opacity number is the interesting part, because it used to be 0.22.
+Opacity composites the cell's black text against the canvas along with its fill,
+so at 0.22 the text measured **1.61:1** against its own cell. Measured across
+the lane fills: 0.45 gives ~3.0:1, 0.55 ~4.2:1, 0.6 ~5.0:1. **The desaturate
+does the de-emphasis work the opacity used to overreach for.** If you are
+tempted to push the dim further, push the saturation, not the alpha.
+
+There is no scrim plane — per-cell dim, desaturate and grey — because the slice
+tab wraps the normal blueprint view and the grid keeps its own stacking
+contexts.
+
+A separate draft state, `data-slice-picked`, uses the **primary** accent rather
+than the member ring, deliberately: while picking, "in this draft" and "in some
+saved slice" are different states that can both be true on the same cell.
+
+**Editing lifts the dim entirely** — you cannot pick a cell you cannot see.
+Clicking a member re-focuses, clicking elsewhere lifts the dim, and chrome (the
+cell panel, the navbar, canvas nav, the zoom indicator, the annotation toolbar,
+the walkthrough modal) is neutral. A drag past 5px is a pan, not a click. While
+de-focused a floating "Showing all · Back to slice" pill appears, and it counts
+as chrome so clicking it does not re-trigger the rule.
+
+## Presentation, and why the semantic layer re-derives per scope
+
+The presentation stage carries `.dark` **regardless of the app theme**, and the
+slice header band rides at the top of it in dark tokens with Return where the
+focus tab shows Present — presentation is a mode of the slice, not a separate
+screen. Frames render synchronously from the cached slice data; navigation never
+refetches. Keyboard is scoped to the container, not to `window`.
+
+That subtree `.dark` is the reason for one of the design system's more surprising
+rules, and it is worth knowing here because this surface is the only thing that
+forces it: **every semantic derivation is re-declared at each scope that can
+override a dial** (`:root, .dark, .light`). Custom properties resolve their
+`var()`s at computed-value time, which happens *before* inheritance — so a
+descendant that re-declares a dial cannot retroactively re-derive anything
+declared only at `:root`. `.light` is in the list for the same reason: it lets a
+subtree force light inside a dark ancestor. See
+[foundations/color.md](../foundations/color.md).
+
+`SliceHeaderBand` is one component in two modes, so switching between them reads
+as a mode change on one object rather than two unrelated screens. Every colour
+is a token, so it picks up dark tokens for free inside the stage. When the
+sidebar is collapsed the band renders nothing and hands its identity and primary
+action to the floating pill.
+
+## Two editing surfaces, split by what they are good at
+
+Clicking a cell on the canvas adds it to the **active frame**, or removes it from
+wherever it is. That single rule is what makes the two surfaces one editor
+rather than two: **the strip says where new cells land, the canvas says which
+cells.**
+
+**Drag lives in the strip, never on the artboard.** The canvas is a pan/zoom
+surface, and a drag that starts on a cell is already the camera's gesture. So
+the canvas adds and removes by clicking, and the strip decides grouping and
+order. Inside the strip there are two deliberately distinct drag targets: a cell
+chip moves between frames, a frame header reorders frames. Drop position is read
+from the pointer's Y against the chip's midpoint — top half inserts before,
+bottom half after — and shown as a 2px primary rule above or below the chip.
+(Those two indicators are the file's arbitrary `shadow-[…]` literals; they are
+hairline rules, not shadows, and there is no token for a directional insertion
+bar. See [foundations/elevation.md](../foundations/elevation.md).)
+
+Chip labels use the cell's described label, not its id: `070110` is an address,
+and nobody recognises their content by address.
+
+`SliceScreenComposer` does ordering **and** grouping in one list. Presets were
+the wrong idea — grouping is something people shape cell by cell, and since they
+are already dragging to reorder, both belong in one gesture space. Cells between
+two dividers are one screen, so reordering and re-bucketing are the same drag.
+
+Its drag is **pointer events, not HTML5 drag-and-drop**, and the reason is worth
+carrying to the next drag surface: that API failed here twice — first silently
+refusing to start without a `dataTransfer` payload, then fighting the popover for
+the pointer — and its failures all present the same way, the row snapping back
+and the user being told, in effect, that they imagined the gesture. Pointer
+capture has one owner and no such moods.
+
+> Note the live divergence: `SliceFrameEditor` still uses HTML5 drag-and-drop
+> while `SliceScreenComposer` documents why it abandoned it. If a third drag
+> surface appears, copy the composer.
+
+"Screen" is the word in the composer on purpose: a **frame** is the row in
+`slice_items`, a **screen** is what the reader sees in presentation. The code
+keeps `frame`.
+
+## The storyboard field
+
+Offered only on a **saved** frame, because the image is stored at a path derived
+from the frame's row id — an unsaved frame has no id, and inventing one leaves a
+file nothing ever points at.
+
+The file is checked before it is sent, size before mime, against a 5 MiB cap
+that matches the bucket's own limit. Upload is an upsert onto the derived path,
+so replacing an image overwrites it, and the `updated_at` stamp written
+alongside is what busts the CDN cache.
+
+## Slide mode and the rest
+
+- **`SlideNav`'s expansion state lives in `EditorContext`, not locally.** Local
+  state died on every mode switch, skeleton swap and presentation tab, since all
+  of those unmount the sidebar. It is also deliberately never derived from
+  selection — that is what makes collapsing a phase leave the camera alone.
+- Slide mode's sidebar `+` affordances belong to Edit mode; in View the sidebar
+  navigates and nothing more.
+- `SlideStickyHeader` composes the phase menubar header, the compare controls and
+  the path selector; its description falls back to the selected path's summary.
+- `ScenarioSlideFilters` is a path-filter wrapper that stops pointer and click
+  propagation so canvas gestures do not fire underneath it.
+- **Loading is one vocabulary for the whole chain.** One label, one skeleton hold
+  key for slice → scenario → blueprint, and the header band stays a skeleton
+  through stage two: the band is canvas furniture like the toolbar — it waits,
+  and both arrive on the beat the board opens its first lane.
+
+> `SlideArtboard` and `CanvasSlideConnectors` are the artboard-canvas machinery
+> and have no live importers today. They are documented as claimed rather than
+> described in depth; do not infer a shipped surface from their presence.

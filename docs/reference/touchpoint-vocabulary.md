@@ -1,3 +1,10 @@
+---
+audience: agents and authors
+summary: Every name a tech pill may carry, with cell counts taken after the 2026-08-20 touchpoint sweep, and the rule that a pill is a name rather than a description.
+sources: supabase/migrations/20260820190000_touchpoint_cells_are_names.sql, supabase/migrations/20260821120000_one_word_for_unbuilt.sql, supabase/migrations/20260821130000_maturity_is_not_a_name.sql
+last-reviewed: 2026-08-25
+---
+
 # Touchpoint vocabulary
 
 Every name a tech pill is allowed to carry, and what it means. A pill is a
@@ -90,9 +97,19 @@ Counted 2026-08-20, after the touchpoint sweep (`20260820190000`).
 | `WizardSession` | 1 | One Resource Assistant run. |
 | `Zoom` | 1 | Zoom used by staff rather than in a session. |
 
-## Not in this list
+## Unbuilt surfaces carry a status, not a prefix
 
-Twelve cells still read `Planned — …`. That prefix is a MATURITY, not part of
-a name, and no column holds one yet; dropping the word would make an unbuilt
-surface read as shipped. See
-`docs/plans/2026-08-20-010-refactor-touchpoint-cells-and-labels-plan.md`.
+Cells used to read `Planned — …`, and this file used to say that the prefix was
+a maturity no column held. **A column holds one now.**
+`20260821130000_maturity_is_not_a_name.sql` added `cells.maturity` — since
+renamed `cells.status`, on the six-value `entity_status` domain — and stripped
+the prefix from **fifty** cells, not the twelve counted here.
+
+Four entries in the tables above are unbuilt product names rather than surfaces
+you can open — `PLUS AI Debrief Summaries`, `PLUS Reflection Automated
+Notification`, `PLUS Session Sign-Off & Submission Tracker`, `PLUS Wrap-Up
+Dashboard`. `20260821120000_one_word_for_unbuilt.sql` says they "had been
+admitted into the touchpoint vocabulary as though they were surfaces you could
+open." Their cells now carry the status; **this table has no column for the
+distinction**, so read those four rows against `cells.status` before treating
+them like `Zoom`.

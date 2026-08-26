@@ -2,14 +2,22 @@
 audience: designers
 summary: The accessibility bar — forced-colors restatements, reduced motion everywhere, the global focus catch-all, aria state on toggles, 44px targets, and plain screen-reader names.
 sources: src/styles/base.css, src/styles/blueprint.css, src/styles/animations.css, src/components/editor/CanvasPhaseSection.tsx, src/components/blueprint/BlueprintLabelRail.tsx, src/lib/canvasAnnotations.ts
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Accessibility
 
-This is a bar, not a checklist appendix: each item below is enforced by a
-mechanism in code, and new work is expected to ride those mechanisms rather
-than re-earn them.
+This is a bar, not a checklist appendix: each item below has an **owner in
+code**, and new work is expected to ride that owner rather than re-earn it.
+
+Owners are not all checkers, and the difference matters. Forced colors, reduced
+motion and screen-reader naming ride mechanisms that fail loudly when bypassed
+(`src/lib/motion.test.ts` pins every animation's reduced path). **Focus and the
+44px floor are convention only** — no lint rule, no test — and both have
+violations in the tree: `SidebarNav.tsx:217,232` write
+`focus-visible:outline-none` with no equal replacement, and nothing asserts
+`size-11` on a touch target. Treat those two as rules a reviewer enforces, not
+rules the build enforces.
 
 ## Forced colors
 
@@ -35,7 +43,7 @@ Everywhere, no exceptions: every animation ships a reduced path, and an
 instant swap is acceptable. CSS goes through the `prefers-reduced-motion`
 block in `animations.css` (or `motion-reduce:` utilities); JS reads
 `prefersReducedMotion()` live, never cached at mount. Policy details in
-[motion](foundations/motion.md#reduced-motion).
+[motion](motion.md#reduced-motion).
 
 ## Focus
 
@@ -59,7 +67,7 @@ rows follow the same rule.
 ## Touch targets
 
 44px minimum on touch surfaces — the `size-11` pattern
-([iconography](foundations/iconography.md#glyph-vs-hit-area)). Glyphs stay
+([iconography](iconography.md#glyph-vs-hit-area)). Glyphs stay
 small; targets do not.
 
 ## Screen-reader naming: plain names

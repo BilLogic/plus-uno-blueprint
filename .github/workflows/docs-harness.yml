@@ -1,0 +1,38 @@
+# The docs half of the harness, guarded the same way the code is.
+#
+# Two invariants, both of which used to be true only as long as someone
+# remembered them:
+#
+#   1. Every assembled component under blueprint/, editor/, cover/ and mobile/
+#      is claimed by exactly one composition doc. A new surface nobody
+#      documented fails here, and an obsoleted one shows up as a red build
+#      rather than as rot.
+#   2. INDEX.md is generated. Hand-editing it drifts silently — that is
+#      literally how the previous index came to say "Three layers, never
+#      mixed" under its own GENERATED banner.
+#
+# No secrets and no network beyond the install.
+name: docs-harness
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Every assembled component is claimed by exactly one doc
+        run: npm run check:harness
+
+      - name: The index is generated, not hand-edited
+        run: node scripts/generate-docs-index.mjs --check

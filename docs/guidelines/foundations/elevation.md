@@ -2,7 +2,7 @@
 audience: designers
 summary: Flat by default — elevation is a lightness ladder, shadows are rare and tokenized, and the z-index bands are a short fixed map.
 sources: src/styles/semantic.css, src/styles/theme.css, src/components/editor/EditorShell.tsx, src/components/mobile/MobileShell.tsx
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Elevation
@@ -17,13 +17,18 @@ themes. The translucent state surfaces (`--muted`, `--accent`, `--tertiary`)
 are alpha overlays tuned to the same ladder. A surface says how high it is by
 which background token it uses; no shadow needed.
 
-Shadows follow Supabase's stance: **no bespoke shadow tokens**. Tailwind's
-default scale plus exactly one addition in `src/styles/theme.css` —
-`--shadow-floating`, the shared shadow for anything floating over the canvas
-(toolbars, menus, the agent's floating window). If it floats over the board,
-it uses `--shadow-floating`; if it doesn't float, it almost certainly needs no
-shadow. One-off `box-shadow` literals are review-blockers (the last two were
-hunted down in the 2026-08-07 review polish).
+Shadows follow Supabase's stance: **near-no bespoke shadow tokens**. Tailwind's
+default scale plus two additions: `--shadow-floating` in `src/styles/theme.css`,
+the shared shadow for anything floating over the canvas (toolbars, menus, the
+agent's floating window); and `--shadow-blueprint-annotation-fill`
+(`src/styles/blueprint.css`, light and dark), scoped to the annotation surface.
+If it floats over the board, it uses `--shadow-floating`; if it doesn't float,
+it almost certainly needs no shadow.
+
+One-off `box-shadow` literals are a review rule with no checker behind it, and
+two ship today — the slice frame editor's drop indicators
+(`SliceFrameEditor.tsx:254,257`). They are the standing counter-example, not a
+precedent.
 
 ## When a surface earns elevation
 
@@ -40,13 +45,21 @@ Small fixed bands, not an arms race. The shell's map:
 
 | Band | Belongs to |
 |---|---|
+| `z-0` / `z-1` | Ground: the transformed canvas content and its arrow layers |
 | `z-10` | In-surface pins: phase badges on the canvas |
 | `z-20` | Shell columns — the sidebar over the canvas edge |
 | `z-30` | Shell furniture over content: the sidebar resize handle, corner overlays, the mobile agent FAB and Reset View |
 | `z-40` | Full-screen takeovers: the mobile slice-presentation overlay, the agent's floating window |
 | `z-50` | Topmost transients: menus, popovers, tooltips (the primitives' default), canvas flow arrows |
+| `z-60` | The annotation surface, which must sit over every transient it is drawn on top of |
 
 Rules: pick the band by *role*, never bump a value to win a local fight — a
-stacking bug means two things are in the wrong band, and the fix is moving
-one, not inventing `z-45`. Arbitrary `z-[…]` values are a smell; if a new band
-seems needed, that is a change to this table, proposed as such.
+stacking bug means two things are in the wrong band, and the fix is moving one,
+not inventing a step between two bands.
+
+**Known debt, named rather than denied.** The canvas grid still carries
+arbitrary values that predate this table and belong in it:
+`BlueprintLabelRail.tsx:62,93,176` (`z-[35]`, `z-[5]`, `z-[45]`),
+`BlueprintDependencyArrows.tsx:385` (`z-[30]`) and `CanvasPenCursor.tsx:99`
+(`z-[9999]`). Nothing checks for them. New arbitrary `z-[…]` values are still a
+smell; a new band is a change to this table, proposed as such.

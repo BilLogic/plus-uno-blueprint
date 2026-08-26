@@ -1,9 +1,21 @@
+---
+audience: agents and authors
+summary: The rule that a path name states its condition rather than its activity, and the applied rename table — shipped in migration 20260821250000.
+sources: supabase/migrations/20260821250000_a_path_names_its_condition.sql
+last-reviewed: 2026-08-25
+---
+
 # Path names
 
-> **Second pass, 2026-08-21.** The first pass named paths for what happens on
-> them, which restated the scenario: `Session Reflection › Completes the
-> reflection form` said it twice. This pass follows the rule below instead.
-> Not applied — verify first.
+> **Second pass, 2026-08-21 — APPLIED.** The first pass named paths for what
+> happens on them, which restated the scenario: `Session Reflection › Completes
+> the reflection form` said it twice. This pass follows the rule below instead,
+> and shipped whole in
+> `supabase/migrations/20260821250000_a_path_names_its_condition.sql` — every
+> row of the table below, guarded by a pre-flight assertion that each old name
+> matched exactly one path, and followed by assertions of no duplicate
+> non-`Standard` names and exactly nine `Standard` paths. Read the "Was" column
+> as history, not as a to-do.
 
 ## The rule
 
@@ -99,10 +111,12 @@ Each has exactly one route and no branching condition anywhere in its content.
 `Discovery › Standard` is not informative, but it is *honest*, and the green dot
 beside it already says "this is the main route".
 
-Three ways to go, if nine identical names is too many:
+Three options were weighed — keep `Standard`, keep the first-pass activity
+names, or allow a blank name with a UI rule for it. **`Standard` won and
+shipped**: consistent, and the repetition is itself information — these are the
+scenarios with nothing to choose.
 
-1. **Keep `Standard`** — consistent, and the repetition is itself information: these are the scenarios with nothing to choose.
-2. **Leave them as they are** — the first-pass activity names, accepting the redundancy only where there is no alternative.
-3. **Empty name** — the row shows the scenario name and the dot. Needs a UI rule for a blank name.
-
-This draft assumes **(1)**.
+One straggler: `src/data/callOffRequestHappyPathFallback.ts:309` still carries
+the pre-rename string `'Call-off 12h+ (auto-approved)'` where the database now
+holds `'12+ hours ahead'`. It is the only one of the 38 old names still live in
+`src/`.

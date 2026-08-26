@@ -45,6 +45,8 @@ export const DEPENDENCY_KIND_HINTS: Record<DependencyKind, string> = {
   Renaming the COLUMN would be a third rename of the same enum plus a
   cross-repo deploy for a wording preference; the label is where the wording
   belongs, and the key is what the arrows, the RPC and uno-bot all agree on.
+
+  The cross-repo relationship: docs/connectors/plus-uno.md.
 */
 
 /** The stored value IS the label, minus the underscore — that is the point of

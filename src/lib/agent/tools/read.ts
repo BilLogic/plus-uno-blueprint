@@ -114,7 +114,8 @@ export const GRANULARITY_LEVELS = [
  * The COMPLETE set at one or more rungs of the journey walk, straight off
  * `public.search_blueprint` in its filter-only mode — the same portal
  * uno-bot and any CLI reader call, so relevance and scoping are the
- * database's job once rather than each consumer's job separately.
+ * database's job once rather than each consumer's job separately
+ * (docs/connectors/plus-uno.md).
  *
  * This is what `list_scenarios` was: granularity ['phase','scenario'] with
  * no filters. It is also what uno-bot's fetchBlueprintIndex was, one rung

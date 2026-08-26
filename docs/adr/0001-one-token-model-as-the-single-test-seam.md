@@ -1,5 +1,7 @@
 ---
 status: accepted
+audience: developers
+summary: Style enforcement rides one token model, so a new rule is a test against tokens rather than a second scanner.
 ---
 
 # One token model is the single seam for style enforcement

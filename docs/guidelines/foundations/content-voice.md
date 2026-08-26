@@ -2,7 +2,7 @@
 audience: designers
 summary: UI copy rules, error and empty-state wording, the agent's honest voice, and the naming conventions the interface must keep straight.
 sources: src/lib/agent/uiBridge.ts, src/types/nav.ts, src/components/mobile/MobileShell.tsx
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Content and voice
@@ -23,13 +23,17 @@ last-reviewed: 2026-08-18
 ## Error and empty states: direct and actionable
 
 State what is true, then what to do — no apology theater, no jargon, no dead
-ends. The house pattern is the mobile overflow's **"Editing is available on
-desktop"**: it names the capability, where it lives, and implies the action,
-in five words, without "sorry", "oops", or "unavailable". An error names what
-failed at the user's altitude and offers the recovery (retry, go back,
-reload); an empty state says what would be here and how to get the first one.
+ends. The shape to copy is **"Editing happens on desktop"** — it names the
+capability, says where it lives, implies the action, and spends no word on
+"sorry", "oops", or "unavailable". (The shipped instance is agent-facing, in
+`src/lib/agent/loop.ts`: "The mobile shell is view-only… Editing happens on
+desktop; describe the change instead." There is no user-facing string of this
+kind today, because the Edit switch is absent on mobile rather than disabled.)
+An error names what failed at the user's altitude and offers the recovery
+(retry, go back, reload); an empty state says what would be here and how to get
+the first one.
 Visual recipes for these states live in
-[components](components.md#empty-loading-and-error-states).
+[components](../components/overview.md#empty-loading-and-error-states).
 
 ## The agent's voice: honest, verified, plain
 
@@ -54,6 +58,12 @@ the same everywhere:
   (`MobileNavSheet`'s surfaces are titled "Blueprints" and "Slices", matching
   the desktop rail). Never revive the retired "Journey"/"Map"/"reader"
   vocabulary — those views no longer exist.
+  ⚠️ **The rule is broken in shipped copy**: the agent's system prompt
+  (`src/lib/agent/loop.ts:409`) still tells the model "The mobile view is a
+  vertical journey reader… a Map view shows the 2-D board", and three component
+  docblocks (`EditorShell.tsx:86`, `MobileTopBar.tsx:17`,
+  `MobilePathSelector.tsx:14`) describe the same deleted views. The rule stands;
+  the prompt is wrong and is filed, not swept.
 - **Stacked / Merged** — the compare view names shown in UI. `stacked` is now
   also the STORED token: the database used to keep `side-by-side` /
   `integrated` behind a translation module, and that module was deleted once

@@ -1,3 +1,10 @@
+---
+audience: developers
+summary: The do-not-reinvent contract — every agent-surface need mapped to an existing ui/ primitive, plus the agent-parity commands and read tools for each surface.
+sources: src/components/ui/, src/lib/agent/tools/specs.ts, src/lib/agent/uiCommands.ts
+last-reviewed: 2026-08-25
+---
+
 # Agent-UX component inventory
 
 The do-not-reinvent contract: every agent-surface need maps to an
@@ -39,22 +46,25 @@ precedent — check `OwnerTagSelect`, `SessionChangesSheet`,
 | Ledger group count                   | trailing number at the END of the group header row                | post-filter, right-aligned. With the menubar Diff pill these are the app's ONLY two difference counts — no totals in the panel header, none on the panel tab                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Ledger filter                        | `popover.tsx` + pressed chips                                     | lane + verdict + STEP facets (divergent steps only, canonical order), empty = all; same grammar as `differences_filter`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Fly-to-cell + counterpart pulse      | `lib/canvasFocusCells` registry → `useZoomPanViewport.focusCells` | resolve at call time by scenario id; pulse = `[data-blueprint-cell-pulse]`, reduced-motion aware                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Cross-surface compare state          | `lib/compareReviewStore` (module store + `useSyncExternalStore`)  | model registration, active zone, ledger filters, ledger-open flag, fold state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `[⇤ Fold]` menubar toggle            | `button.tsx` ghost + `aria-pressed` + `tooltip.tsx`               | pressed styling is ghost's OWN `aria-pressed:` rule (brand-tint `bg-sidebar-selected`, re-asserted on hover) — never hand-written at the call site; disabled at 0 differences or 0 foldable columns; tooltip carries the "Fold N shared steps" count                                                                                                                                                                                                                                                                                                                                                                                     |
+| Cross-surface compare state          | `lib/compareReviewStore` (module store + `useSyncExternalStore`)  | model registration, active zone, ledger filters, ledger-open flag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `[Diff N]` menubar toggle            | `button.tsx` ghost + `aria-pressed` + counter pill                | `Diff` lucide icon + the word "Diff" + a `rounded-full` mono pill; pressed = panel open on Differences, and clicking then closes the panel via the context's atomic `closePanel`                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Folded pleats                        | `blueprint/BlueprintPathBand` `ComparePleatCell` + `tooltip.tsx`  | one fixed 28px track per shared run fragment (pin-split, `lib/compareFold`); click expands; `gridTemplateColumns` never animates                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| Pinned-column explainer              | `Link2` glyph in the column header + `tooltip.tsx`                | one-hop pin rule (`computePinnedColumns`) — "kept expanded — feeds a divergent step"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Fly-to while folded                  | `lib/compareZoneNavigation.focusCompareCells`                     | THE compare focus gesture: auto-expands the target's pleat, waits two rAFs, aborts on a newer generation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Fly-to a compare cell                | `lib/compareZoneNavigation.focusCompareCells`                     | THE compare focus gesture: `resolveFocusCells(slideId)` then `focusCells(cellIds)`. A straight fly — the fold auto-expand step retired with fold, so no target is ever hidden                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 Agent parity for these surfaces: ui commands `differences_open`,
 `differences_close`, `panel_surface <details|differences>`,
 `differences_filter <lane:"…" verdict:… step:"…">`, `jump_divergence
-<next|prev|step number>`, `collapse_shared <true|false|empty toggles>`,
-`toggle_pleat <columnKey or 1-based pleat index>`; read tool
-`get_compare_diff` (headless `buildCompareModel` — grounds step numbers,
-lane/step names, columnKeys and cell ids); `get_ui_state` gains a `compare`
-line (mode, paths, counts, active step, ledger open + filters, fold
-state).
+<next|prev|step number>`; read tool `compare_blueprint` (headless
+`buildCompareModel` — grounds step numbers, lane/step names, columnKeys and
+cell ids); `get_ui_state` gains a `compare` line (mode, path names, step
+groups, lane/verdict/step filters, active index).
+
+> **Fold is gone.** The `[⇤ Fold]` toggle, folded pleats, pinned columns and
+> the `collapse_shared` / `toggle_pleat` commands were retired 2026-08-17 —
+> agent-only canvas state with no human toggle. `ComparePleatCell`,
+> `lib/compareFold` and `computePinnedColumns` have zero hits in `src/`; the
+> only surviving trace is the retirement comment at
+> `ScenarioBlueprintPanel.tsx:362`. Nothing here should be revived without
+> re-deciding that.
 
 ## Session ledger, deletion & duplication
 
@@ -70,8 +80,8 @@ arguments, and its description says so plus the `"X (copy)"` naming
 convention, so both surfaces agree); write tools `create_slice`,
 `update_slice`, `replace_slice_frames` — all four slice writes now land
 in the ledger with a captured inverse, so an agent frame rewrite shows a
-revertible row like a human's; read tool `get_deletion_impact
-<scenario|path|slice> <id>` dispatching the SAME `readDeletionImpact`
+revertible row like a human's; read tool `measure_deletion_impact`
+`<scenario|path|slice> <id>` dispatching the SAME `readDeletionImpact`
 branch the dialog uses and relaying `ImpactSummary`'s facts, warnings
 and reassurances **verbatim** (rewording them is how the "nothing is
 destroyed" over-promise returns on a second surface); ui commands
