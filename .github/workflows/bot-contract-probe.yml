@@ -7,6 +7,13 @@
 #
 # No secrets: /health/blueprint is unauthenticated by design — it returns
 # only per-probe booleans (table names are public-read anyway), never data.
+#
+# The probe asks the BOT whether its reads still work. Nothing asked the
+# DATABASE whether src/lib/blueprintContract.ts still describes it — and the
+# `Phase` breadcrumb segment was added to semantic_search.blueprint_chunks_src
+# on 2026-08-17 with no migration, so no static check could have seen it and a
+# human found it two days later with pg_get_viewdef. The `live` job below is
+# that missing question.
 name: bot-contract-probe
 
 on:
@@ -32,3 +39,23 @@ jobs:
             echo "::error::uno-bot reports a broken blueprint read — a schema change here likely broke the bot. Probe output above; bot repo: PLUS-UNO/plus-vibe-coding-starting-kit/agents/uno-bot."
             exit 1
           }
+
+  live:
+    runs-on: ubuntu-latest
+    # Unset today, so this job is skipped and says so by not existing rather
+    # than by passing. Setting both turns it on: the anon key is publishable —
+    # it ships in the app bundle — so these are repository VARIABLES, not
+    # secrets, and the check stays as secret-free as the probe above it.
+    # docs/connectors/plus-uno.md carries the reasoning and the limits.
+    if: ${{ vars.SUPABASE_URL != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: The contract matches the live database
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+        run: npm run check:contract:live

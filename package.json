@@ -21,7 +21,8 @@
     "check:template-quarantine": "node scripts/check-template-quarantine.mjs",
     "check:harness": "node scripts/check-harness-claims.mjs",
     "template:divergence": "node scripts/measure-template-divergence.mjs",
-    "docs:index": "node scripts/generate-docs-index.mjs"
+    "docs:index": "node scripts/generate-docs-index.mjs",
+    "check:contract:live": "node scripts/check-blueprint-contract.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
