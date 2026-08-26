@@ -1,6 +1,10 @@
 import type { ToolSpec } from '@/lib/agent/providers/provider'
 import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 
+/** Re-exported so the eval harness, which bundles this module, resolves
+ * the same reference vocabulary the app serves. */
+export { REFERENCE_NAMES }
+
 /**
  * The static allow-list — the agent's entire reach. Each write dispatches
  * onto the SAME wrapper the UI calls, so RLS, validation, session logging

@@ -16,7 +16,8 @@
  *   — rolldown bundles it at startup, so the harness offers byte-identical
  *   declarations to the app's. Likewise role.md, canvas-adapter.md and the
  *   skill files are the SAME FILES the app loads (`?raw` there,
- *   readFileSync here). No copies, so no drift.
+ *   readFileSync here), resolved out of the installed
+ *   agentic-service-blueprinting package. No copies, so no drift.
  * - MIRRORED BY HAND: the system-prompt ASSEMBLY (buildSystem + the tier /
  *   mobile injections), the Gemini provider glue, the batch limiter and
  *   the round cap follow src/lib/agent/loop.ts and providers/google.ts by
@@ -105,9 +106,32 @@ async function rest(pathAndQuery) {
 const ROLE = readFileSync(resolve(ROOT, 'src/lib/agent/role.md'), 'utf8').trimEnd()
 
 
-const REFERENCES_DIR = resolve(ROOT, 'src/lib/agent/skill/references')
-const SKILLS_DIR = resolve(ROOT, 'src/lib/agent/skill/skills')
-const adapterDoc = readFileSync(resolve(REFERENCES_DIR, 'canvas-adapter.md'), 'utf8')
+// The rulebook is the INSTALLED package, not a copy in this repo — the
+// same files the app pulls in with `?raw`, read here with readFileSync.
+// Shared core lives at references/; each skill's own materials under
+// skills/<name>/references/, so the lookup is by name across both.
+const PACKAGE = dirname(
+  fileURLToPath(import.meta.resolve('agentic-service-blueprinting/package.json')),
+)
+const SKILL_IDS = ['map', 'slice', 'audit', 'whatif']
+const REFERENCE_PATHS = new Map()
+for (const dir of [
+  resolve(PACKAGE, 'references'),
+  ...SKILL_IDS.map((id) => resolve(PACKAGE, 'skills', id, 'references')),
+]) {
+  for (const file of readdirSync(dir)) {
+    if (file.endsWith('.md')) REFERENCE_PATHS.set(file.slice(0, -3), resolve(dir, file))
+  }
+}
+// The app serves a subset — the IDE-only playbooks and schemas stay out.
+// Resolving through REFERENCE_NAMES keeps the harness offering exactly the
+// list the app offers, and throws here if the package stopped shipping one.
+function referencePath(name) {
+  const path = REFERENCE_PATHS.get(name)
+  if (!path) throw new Error(`reference "${name}" is not in the installed package`)
+  return path
+}
+const adapterDoc = readFileSync(referencePath('canvas-adapter'), 'utf8')
 
 function buildSystem(skillId, contextNote) {
   const parts = [
@@ -116,7 +140,7 @@ function buildSystem(skillId, contextNote) {
     adapterDoc,
   ]
   if (skillId) {
-    const content = readFileSync(resolve(SKILLS_DIR, `${skillId}.md`), 'utf8')
+    const content = readFileSync(resolve(PACKAGE, 'skills', skillId, 'SKILL.md'), 'utf8')
     parts.push(
       `\n\n--- active skill: /sb:${skillId} (invoked by the user; the same SKILL.md IDE agents follow) ---\n${content}\n\nYou are the canvas agent, not an IDE agent: skip the skill's file/script/CLI mechanics and act through your tools, translated by the canvas-adapter above. The skill's judgment — what makes a good blueprint/slice, the order of questions, the quality bars — applies in full.`,
     )
@@ -150,7 +174,7 @@ async function loadToolSpecs() {
     `data:text/javascript;base64,${Buffer.from(output[0].code).toString('base64')}`
   )
 }
-const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES } =
+const { TOOL_SPECS, WRITE_TOOL_NAMES, MOBILE_READ_TOOL_NAMES, REFERENCE_NAMES } =
   await loadToolSpecs()
 
 // `ui_command` is interface-only EXCEPT the commands the live list marks
@@ -398,7 +422,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
     }
     switch (name) {
       case 'get_reference':
-        record.result = readFileSync(resolve(REFERENCES_DIR, `${String(args.name).replace(/[^a-z-]/g, '')}.md`), 'utf8')
+        record.result = readFileSync(referencePath(String(args.name).replace(/[^a-z-]/g, '')), 'utf8')
         return record.result
       case 'list_blueprint': record.result = await realListBlueprint(args); return record.result
       case 'search_blueprint': record.result = await realSearchBlueprint(args); return record.result
@@ -419,11 +443,10 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
         return record.result
       }
       case 'list_references':
-        // Same source the app's REFERENCE_NAMES lists, read off disk —
-        // the harness has no access to that module's export.
-        record.result = readdirSync(REFERENCES_DIR)
-          .filter((f) => f.endsWith('.md'))
-          .map((f) => `- ${f.slice(0, -3)}`)
+        // The app's own REFERENCE_NAMES, re-exported from specs.ts and
+        // bundled with the tool declarations — one list, not two.
+        record.result = [...REFERENCE_NAMES]
+          .map((name) => `- ${name}`)
           .sort()
           .join('\n')
         return record.result

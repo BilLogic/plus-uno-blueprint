@@ -45,15 +45,16 @@ const cases = read('scripts/agent-harness/cases.mjs')
 
 test('harness imports the app tool specs instead of forking them', () => {
   // The wiring: rolldown bundles specs.ts and the harness destructures the
-  // three exports from the bundle.
+  // rosters from the bundle — including REFERENCE_NAMES, so the harness
+  // offers exactly the reference list the app offers.
   assert.ok(
     harness.includes('src/lib/agent/tools/specs.ts'),
     'run.mjs no longer bundles src/lib/agent/tools/specs.ts',
   )
   assert.match(
     harness,
-    /\{\s*TOOL_SPECS,\s*WRITE_TOOL_NAMES,\s*MOBILE_READ_TOOL_NAMES\s*\}/,
-    'run.mjs no longer imports TOOL_SPECS/WRITE_TOOL_NAMES/MOBILE_READ_TOOL_NAMES from the specs bundle',
+    /\{\s*TOOL_SPECS,\s*WRITE_TOOL_NAMES,\s*MOBILE_READ_TOOL_NAMES,\s*REFERENCE_NAMES\s*\}/,
+    'run.mjs no longer imports TOOL_SPECS/WRITE_TOOL_NAMES/MOBILE_READ_TOOL_NAMES/REFERENCE_NAMES from the specs bundle',
   )
   // And no fork crept back: a local spec array would re-declare tool
   // objects (`name: '...'` entries) and a local write set would shadow the

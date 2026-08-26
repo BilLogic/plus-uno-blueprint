@@ -1,12 +1,13 @@
-import mapSkill from '@/lib/agent/skill/skills/map.md?raw'
-import sliceSkill from '@/lib/agent/skill/skills/slice.md?raw'
-import auditSkill from '@/lib/agent/skill/skills/audit.md?raw'
-import whatifSkill from '@/lib/agent/skill/skills/whatif.md?raw'
+import mapSkill from 'agentic-service-blueprinting/skills/map/SKILL.md?raw'
+import sliceSkill from 'agentic-service-blueprinting/skills/slice/SKILL.md?raw'
+import auditSkill from 'agentic-service-blueprinting/skills/audit/SKILL.md?raw'
+import whatifSkill from 'agentic-service-blueprinting/skills/whatif/SKILL.md?raw'
 
 /**
- * The four-skill architecture, in the composer. These are the SAME SKILL.md
- * files IDE humans get from the `sb` plugin (agentic-service-blueprinting
- * repo) — vendored from upstream, never authored here.
+ * The four-skill architecture, in the composer. These are literally the
+ * SKILL.md files IDE humans get from the `sb` plugin — read out of the
+ * installed `agentic-service-blueprinting` package, pinned in the lockfile.
+ * There is no copy here to edit, so there is nothing here to fork.
  * A /command loads its skill into the system prompt for that message only.
  *
  * Commands are namespaced `sb:` to match the plugin invocation exactly —

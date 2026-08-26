@@ -20,7 +20,7 @@ import { collectAgentUiContext } from '@/lib/agent/uiBridge'
 import { agentUiCommandMutates } from '@/lib/agent/uiCommands'
 import type { AgentAttachment } from '@/lib/agent/attachments'
 import type { AgentSkillCommand } from '@/lib/agent/skills'
-import canvasAdapterDoc from '@/lib/agent/skill/references/canvas-adapter.md?raw'
+import canvasAdapterDoc from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'
 import roleDoc from '@/lib/agent/role.md?raw'
 import {
   hasKey,
