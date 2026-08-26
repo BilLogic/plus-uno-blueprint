@@ -2,18 +2,29 @@
 /**
  * A failed write says so — and says it where the person is looking.
  *
- * Two halves. The rendering half asserts the message a user actually reads,
- * because "the failure reached the console" is precisely the behaviour this
- * replaces. The contract half reads the four failing paths as source: each is
- * an event handler wired into a canvas, a sidebar or a window keydown, and
- * standing all of that up would test the harness rather than the honesty. The
- * question here is which channel each `catch` reports to, and that is a fact
- * about the source.
+ * Three halves, in descending order of how much they can see.
+ *
+ * The rendering half asserts the message a user actually reads, because "the
+ * failure reached the console" is precisely the behaviour this replaces.
+ *
+ * The ⌘Z half drives the whole path: a real key press, a revert that rejects,
+ * a notice on screen. That is the case the surface was built for — the undo
+ * has no control of its own to report into — so it is the one that gets stood
+ * up rather than read.
+ *
+ * The contract half reads the remaining three paths as source, and this is
+ * the compromise: each is an event handler wired into a canvas, a sidebar or
+ * a context menu, and standing all of them up would test the harness rather
+ * than the honesty. It used to assert the absence of four exact strings, one
+ * of which pinned ten spaces of indentation — a reformat would have made it
+ * vacuously true. It now asserts a shape instead: every `catch` block in
+ * those files reports through `reportWriteFailure`, with whitespace collapsed
+ * first so that only the channel is being read, never the layout.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { act, cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WriteFailureNotices } from '@/components/editor/WriteFailureNotices'
 import { AuthoringError } from '@/lib/authoringErrors'
 import {
@@ -22,6 +33,21 @@ import {
   resetWriteFailures,
   writeFailureSnapshot,
 } from '@/lib/writeFailures'
+import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
+import {
+  clearSession,
+  recordChange,
+  sessionSnapshot,
+} from '@/lib/authoringSession'
+
+vi.mock('@/lib/revertChange', () => ({
+  executeRevert: vi.fn(async () => {
+    throw new AuthoringError('That lane no longer exists.', 'cells: lane_id …')
+  }),
+}))
+vi.mock('@/contexts/SupabaseProvider', () => ({
+  useSupabase: () => ({ client: {}, session: null, status: 'ready' }),
+}))
 
 afterEach(() => {
   cleanup()
@@ -84,9 +110,75 @@ describe('WriteFailureNotices', () => {
 })
 
 /**
- * The four paths that failed silently, and the `catch` in each. A path that
- * moves is a failing test rather than a quietly unaudited file — the anchors
- * are read eagerly and asserted present.
+ * ⌘Z, end to end.
+ *
+ * The revert rejects, no control is on screen to say so, and the notice is
+ * the only thing standing between the user and the belief that their change
+ * was taken back. The agent's own undo was hardened to rethrow for exactly
+ * this reason; this is the keyboard path saying the same thing to a person.
+ */
+describe('⌘Z, when the revert fails', () => {
+  beforeEach(() => {
+    clearSession()
+    resetWriteFailures()
+  })
+
+  it('puts the failure on screen instead of only in the console', async () => {
+    quiet()
+    recordChange(
+      'add_step',
+      { phase_id: 'p1' },
+      { fn: 'delete_step', args: { step_id: 's1' } },
+    )
+    render(
+      <>
+        <SessionChangesSheet />
+        <WriteFailureNotices />
+      </>,
+    )
+
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'z',
+          metaKey: true,
+          bubbles: true,
+          cancelable: true,
+        }),
+      )
+    })
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/was not taken back\. That lane no longer exists\./),
+      ).toBeDefined()
+    })
+  })
+
+  it('leaves the change in the ledger, so it can be tried again', async () => {
+    quiet()
+    recordChange(
+      'add_step',
+      { phase_id: 'p1' },
+      { fn: 'delete_step', args: { step_id: 's1' } },
+    )
+    render(<SessionChangesSheet />)
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'z', metaKey: true }),
+      )
+    })
+    await waitFor(() => expect(writeFailureSnapshot()).toHaveLength(1))
+    expect(sessionSnapshot()).toHaveLength(1)
+  })
+})
+
+/**
+ * The three remaining paths that failed silently, and the `catch` in each.
+ *
+ * Read as source, for the reason at the top of the file — but read for shape
+ * rather than for characters. A path that moves is a failing test rather than
+ * a quietly unaudited file: the anchors are asserted present.
  */
 const FAILING_PATHS = [
   {
@@ -101,24 +193,60 @@ const FAILING_PATHS = [
     file: 'src/components/editor/SlicesSidebarSection.tsx',
     subject: 'was not duplicated',
   },
-  {
-    file: 'src/components/editor/SessionChangesSheet.tsx',
-    subject: 'was not taken back',
-  },
 ] as const
+
+/**
+ * Every `catch (…) { … }` body in a file, whitespace collapsed.
+ *
+ * Brace-matched rather than pattern-matched, because a `catch` body holds
+ * braces of its own and a regex that stops at the first `}` reads a tenth of
+ * it. Comments are stripped first so that the word `console.error` inside a
+ * comment explaining why it is gone does not fail the file.
+ */
+function catchBodies(source: string): string[] {
+  const withoutComments = source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ')
+  const bodies: string[] = []
+  const opener = /\bcatch\b[^{]*\{/g
+  let match: RegExpExecArray | null
+  while ((match = opener.exec(withoutComments)) !== null) {
+    let depth = 1
+    let index = match.index + match[0].length
+    const start = index
+    while (index < withoutComments.length && depth > 0) {
+      const char = withoutComments[index]
+      if (char === '{') depth += 1
+      else if (char === '}') depth -= 1
+      index += 1
+    }
+    bodies.push(withoutComments.slice(start, index - 1).replace(/\s+/g, ' ').trim())
+  }
+  return bodies
+}
 
 describe('the paths that used to fail in silence', () => {
   for (const { file, subject } of FAILING_PATHS) {
     it(`${file} reports to the user, not the console`, () => {
       const source = readFileSync(join(process.cwd(), file), 'utf8')
-      expect(source).toContain(`reportWriteFailure(`)
-      expect(source).toContain(subject)
-      // The old channel, gone from these paths: `console.error` alone is
-      // indistinguishable from success at the user's altitude.
-      expect(source).not.toContain("console.error('[authoring] delete_cell")
-      expect(source).not.toContain("console.error('[authoring] add_step")
-      expect(source).not.toContain("console.error(\n          '[slices] duplicate")
-      expect(source).not.toContain("console.error('[authoring] ⌘Z revert")
+      expect(source, `${file} no longer names what did not happen`).toContain(
+        subject,
+      )
+
+      const bodies = catchBodies(source)
+      expect(bodies.length, `no catch block found in ${file}`).toBeGreaterThan(0)
+      for (const body of bodies) {
+        // A `catch` that swallows deliberately is allowed to say nothing —
+        // the pointer-capture guards are the standing example. What is not
+        // allowed is reporting a failed write to the console and stopping
+        // there, which is indistinguishable from success at the user's
+        // altitude.
+        if (!body.includes('console.error')) continue
+        expect(
+          body,
+          `a catch in ${file} reports to the console alone:\n  ${body}`,
+        ).toContain('reportWriteFailure(')
+      }
     })
   }
 })
