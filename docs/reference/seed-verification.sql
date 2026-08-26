@@ -1,15 +1,15 @@
 -- Verify Service Blueprint seed (run after npm run supabase:reset)
 
--- Lifecycle phases
+-- Service phases
 select
-  sl.name as lifecycle,
+  s.name as service,
   p.position,
   p.name as phase,
   loop_p.name as loops_to
-from public.service_lifecycles sl
-join public.phases p on p.service_lifecycle_id = sl.id
+from public.services s
+join public.phases p on p.service_id = s.id
 left join public.phases loop_p on loop_p.id = p.loops_to_phase_id
-where sl.id = 'a0000000-0000-4000-8000-000000000001'
+where s.id = 'a0000000-0000-4000-8000-000000000001'
 order by p.position;
 
 -- In-session scenarios
@@ -33,7 +33,7 @@ select
   (select count(*) from public.cells c where c.path_id = pa.id) as cells,
   (select count(*) from public.cell_dependencies ct
    join public.cells c on c.id = ct.source_cell_id
-   where c.path_id = pa.id) as triggers
+   where c.path_id = pa.id) as dependencies
 from public.paths pa
 join public.scenarios ss on ss.id = pa.scenario_id
 where pa.id = 'a0000000-0000-4000-8000-000000000300';
