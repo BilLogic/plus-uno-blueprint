@@ -22,7 +22,9 @@
     "check:harness": "node scripts/check-harness-claims.mjs",
     "template:divergence": "node scripts/measure-template-divergence.mjs",
     "docs:index": "node scripts/generate-docs-index.mjs",
-    "check:contract:live": "node scripts/check-blueprint-contract.mjs"
+    "check:contract": "vitest run scripts/tests/blueprintContract.test.mjs",
+    "check:contract:live": "node scripts/check-blueprint-contract.mjs",
+    "check:bot-probe": "node scripts/check-bot-contract-probe.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

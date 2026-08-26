@@ -1,22 +1,36 @@
 # The cross-repo forcing function: uno-bot (the "le goat" Slack bot) reads
 # this app's database, and schema changes here have twice broken its reads
 # SILENTLY (renamed slices column, re-shaped findings column — each returned
-# empty for weeks). The bot exposes a public, boolean-only probe that runs
-# its exact selects; this workflow turns any breakage into a red build here,
-# where the breaking change ships.
+# empty for weeks). src/lib/blueprintContract.ts is the canonical copy of every
+# constant both sides agree on; these three jobs are what hold it to reality.
 #
-# No secrets: /health/blueprint is unauthenticated by design — it returns
-# only per-probe booleans (table names are public-read anyway), never data.
+#   contract  — the contract against the migrations in this repo. No network,
+#               no credentials, runs on every pull request. This is where a
+#               rename is caught at the moment it is written.
+#   probe     — the contract against uno-bot's live reads, via its
+#               unauthenticated /health/blueprint. Asserts SHAPE: a probe key
+#               for every declared bot read and RPC, each true, and no probe
+#               the contract does not declare. It used to `grep -q '"ok":true'`,
+#               which passes on any body containing those six characters and
+#               says nothing about which reads the bot still covers.
+#   live      — the contract against the database itself. This is the edge
+#               nothing covered: the `Phase` breadcrumb segment was added to
+#               semantic_search.blueprint_chunks_src on 2026-08-17 with NO
+#               migration, so no static check could have seen it, and a human
+#               found it two days later with pg_get_viewdef. It needs a project
+#               URL and an anon key, which this repo deliberately does not
+#               commit, so the job does not run until they are set as
+#               repository variables — see docs/connectors/plus-uno.md. Its
+#               absence is visible here as a job that does not appear, never as
+#               a green check that verified nothing.
 #
-# The probe asks the BOT whether its reads still work. Nothing asked the
-# DATABASE whether src/lib/blueprintContract.ts still describes it — and the
-# `Phase` breadcrumb segment was added to semantic_search.blueprint_chunks_src
-# on 2026-08-17 with no migration, so no static check could have seen it and a
-# human found it two days later with pg_get_viewdef. The `live` job below is
-# that missing question.
+# No secrets in `contract` or `probe`: /health/blueprint is unauthenticated by
+# design — it returns only per-probe booleans (table names are public-read
+# anyway), never data. A shape assertion did not change that.
 name: bot-contract-probe
 
 on:
+  pull_request:
   push:
     branches: [main]
     paths:
@@ -28,26 +42,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  probe:
+  contract:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe uno-bot blueprint reads
-        run: |
-          body=$(curl -sS --max-time 30 https://uno-bot.bryanhuang628.workers.dev/health/blueprint)
-          echo "$body"
-          echo "$body" | grep -q '"ok":true' || {
-            echo "::error::uno-bot reports a broken blueprint read — a schema change here likely broke the bot. Probe output above; bot repo: PLUS-UNO/plus-vibe-coding-starting-kit/agents/uno-bot."
-            exit 1
-          }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: The contract matches the migrations that define it
+        run: npm run check:contract
+
+  probe:
+    runs-on: ubuntu-latest
+    # A pull request changes nothing the deployed bot reads, so probing live
+    # from one reports main's health under this PR's name. Push and schedule
+    # are the moments that mean something.
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: uno-bot's blueprint reads still match the contract
+        run: npm run check:bot-probe
 
   live:
     runs-on: ubuntu-latest
-    # Unset today, so this job is skipped and says so by not existing rather
-    # than by passing. Setting both turns it on: the anon key is publishable —
-    # it ships in the app bundle — so these are repository VARIABLES, not
-    # secrets, and the check stays as secret-free as the probe above it.
-    # docs/connectors/plus-uno.md carries the reasoning and the limits.
-    if: ${{ vars.SUPABASE_URL != '' }}
+    # Unset today, so this job is skipped and says so by not existing. Setting
+    # both turns it on: the anon key is publishable — it ships in the app
+    # bundle — so these are repository VARIABLES, not secrets, and the check
+    # stays as secret-free as the probe beside it.
+    if: ${{ vars.SUPABASE_URL != '' && github.event_name != 'pull_request' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
