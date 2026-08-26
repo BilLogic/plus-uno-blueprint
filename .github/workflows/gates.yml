@@ -1,0 +1,57 @@
+# The gates every change passes: types, lint, tests, and a build that runs.
+#
+# This workflow is late. Until it existed, `npm test` had never run in CI on
+# this repo — 720 tests that only ran when somebody remembered, including
+# seven in `blueprintContract.test.mjs` that had guarded the bot's read
+# surface since August without a single automated run. The lint gate was
+# blocked behind a 78-problem baseline for the same stretch; that baseline
+# is now zero, so the gate can be a gate rather than an aspiration.
+#
+# `pull_request`, never `pull_request_target`: a fork's run gets a read-only
+# token and no secrets, and it checks out untrusted code. `pull_request_target`
+# runs in the base repo's context with secrets available, which combined with
+# checking out the PR head hands an attacker this repo's token.
+name: gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege at the top. A job needing more raises it for itself, so the
+# escalation shows up in the diff.
+permissions:
+  contents: read
+
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: typecheck · lint · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` honours the lockfile exactly. `npm install` would let a pull
+      # request's package.json pull a version the lockfile never pinned — and
+      # the agent's skill text arrives through that lockfile as a pinned git
+      # dependency, so this is a correctness gate as well as a supply one.
+      - run: npm ci
+
+      # `tsc -b`, not a bare `tsc --noEmit`: tsconfig.json uses project
+      # references, so a bare run typechecks nothing and exits 0.
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
