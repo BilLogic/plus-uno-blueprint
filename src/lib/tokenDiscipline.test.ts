@@ -283,15 +283,15 @@ const VENDORED_FONT_SIZE_LITERALS: ReadonlyArray<{
 
 /** Absolute font-size literals: px and rem, at any breakpoint. Not `em`. */
 const FONT_SIZE_LITERAL = new RegExp(
-  `^${VARIANTS}text-\\[\\d*(?:\\.\\d+)?(?:px|rem)\\]$`,
+  `^${VARIANTS}text-\\[(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:px|rem)\\]$`,
 )
 
-const isVendored = (use: string): boolean =>
+const isExempt = (use: string): boolean =>
   VENDORED_FONT_SIZE_LITERALS.some((entry) => use.startsWith(`${entry.file}:`))
 
 test('font sizes come from a named rung, not a px or rem literal', () => {
   const offenders = classUsesMatching(FONT_SIZE_LITERAL).filter(
-    (use) => !isVendored(use),
+    (use) => !isExempt(use),
   )
   assert.deepEqual(
     offenders,

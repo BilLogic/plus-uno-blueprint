@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { StrictMode, useState } from 'react'
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { StrictMode } from 'react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MOBILE_SHELL_QUERY } from '@/hooks/useMobileShell'
 import {
@@ -9,6 +9,7 @@ import {
   collapseSidebarByUser,
   initialSidebarCollapse,
   reconcileSidebarCollapse,
+  useSidebarCollapse,
   useSidebarOverlay,
   type SidebarCollapse,
 } from '@/hooks/useSidebarOverlay'
@@ -67,19 +68,23 @@ function fakeViewport(width: number) {
 }
 
 /**
- * The three lines `DesktopEditorShell` wires together, and nothing else —
- * rendering the real shell would need every provider in the app to prove a
- * fact about two numbers and a reducer. StrictMode is deliberate: the
+ * The shell's own wiring, called rather than re-implemented.
+ *
+ * This used to copy the three lines `DesktopEditorShell` composes, which left
+ * the copy free to stay green while the shell drifted away from it. They are
+ * one `useSidebarCollapse` now, so what runs here is what runs there.
+ *
+ * Rendering the real shell is still out of reach — it would need every
+ * provider in the app to prove a fact about two numbers and a reducer — so
+ * the hook gets a button for a body. StrictMode is deliberate: the
  * render-phase reconcile has to survive a double-invoked render without
  * laundering the gate's own collapse into the reader's.
  */
 function Shell() {
-  const overlay = useSidebarOverlay()
-  const [sidebar, setSidebar] = useState<SidebarCollapse>(initialSidebarCollapse)
-  if (sidebar.narrow !== overlay) setSidebar(reconcileSidebarCollapse(sidebar, overlay))
+  const { collapsed, setCollapsedByUser } = useSidebarCollapse()
   return (
-    <button onClick={() => setSidebar((s) => collapseSidebarByUser(s, !s.collapsed))}>
-      {sidebar.collapsed ? 'collapsed' : 'expanded'}
+    <button onClick={() => setCollapsedByUser(!collapsed)}>
+      {collapsed ? 'collapsed' : 'expanded'}
     </button>
   )
 }
@@ -213,5 +218,55 @@ describe('collapseSidebarByUser', () => {
       auto: false,
       narrow: true,
     })
+  })
+})
+
+describe('Escape, which is what the missing scrim has to buy', () => {
+  it('shuts the overlay from anywhere, since focus is usually out on the canvas', () => {
+    const viewport = fakeViewport(SIDEBAR_OVERLAY_BREAKPOINT)
+    render(
+      <StrictMode>
+        <Shell />
+      </StrictMode>,
+    )
+    expect(sidebarState()).toBe('expanded')
+
+    // Below the gate and reopened by the reader — the overlay posture, drawn
+    // over the canvas with nothing to click outside it.
+    act(() => viewport.resizeTo(SIDEBAR_OVERLAY_BREAKPOINT - 1))
+    fireEvent.click(screen.getByRole('button'))
+    expect(sidebarState()).toBe('expanded')
+
+    act(() => {
+      fireEvent.keyDown(document, { key: 'Escape' })
+    })
+    expect(sidebarState()).toBe('collapsed')
+  })
+
+  it('leaves a sidebar in the flow alone, and leaves a handled Escape alone', () => {
+    const viewport = fakeViewport(SIDEBAR_OVERLAY_BREAKPOINT)
+    render(
+      <StrictMode>
+        <Shell />
+      </StrictMode>,
+    )
+
+    // Above the gate the sidebar is a column, not a panel over anything.
+    // Closing it on Escape would rearrange the page for no reason.
+    act(() => {
+      fireEvent.keyDown(document, { key: 'Escape' })
+    })
+    expect(sidebarState()).toBe('expanded')
+
+    // Below the gate, an Escape something else already answered is not ours
+    // to take — a dialog or an inline editor closes, the panel stays.
+    act(() => viewport.resizeTo(SIDEBAR_OVERLAY_BREAKPOINT - 1))
+    fireEvent.click(screen.getByRole('button'))
+    act(() => {
+      const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true })
+      event.preventDefault()
+      document.dispatchEvent(event)
+    })
+    expect(sidebarState()).toBe('expanded')
   })
 })

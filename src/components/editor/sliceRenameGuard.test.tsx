@@ -46,20 +46,18 @@ import type { Database } from '@/types/database'
  * reproduced since: five consecutive full-suite runs on an idle machine, and
  * 5/5 in isolation.
  *
- * What the measurements do and do not say. Whichever test runs FIRST here
- * takes ~940 ms while the other three take 30-60 ms, and moving a different
- * test to the front moves the ~940 ms with it — so that cost is the first
- * render in the file paying for jsdom, React, and an import graph that reaches
- * the whole of `SlicesSidebarSection` plus the supabase and session mocks.
- * That cost is NOT inside the `waitFor` budget, though: cutting
- * `asyncUtilTimeout` to 200 ms leaves all four tests passing, so the awaited
- * work itself settles well inside a fifth of the old default.
+ * What the measurements do and do not say. The awaited work is fast: cutting
+ * `asyncUtilTimeout` to 200 ms leaves all four tests passing, so every wait in
+ * this file settles inside a fifth of the old default. What is slow is
+ * standing the file up — vitest bills it separately as `environment`, seconds
+ * of it, and the first test in the file pays visibly more than the three
+ * behind it.
  *
- * Which means the observed failure needed the machine to be roughly five times
- * slower than idle for that stretch. Four concurrent suite runs, each forking
- * its own workers, will do that. Nothing about the assertion is wrong; the
- * default budget simply had no headroom for a saturated host, and a test that
- * only passes on an unloaded machine is a test that will fail in CI eventually.
+ * An earlier version of this comment read that first-test figure as the wait
+ * itself and it is not: the two are accounted separately, and the 200 ms run
+ * proves the wait is nowhere near the budget. The point that survives is the
+ * one that matters — the awaited work needs the host responsive, and nothing
+ * here reserved headroom for a host that is not.
  *
  * `testTimeout` is raised alongside it so that if a wait ever does hang for a
  * real reason, the failure that surfaces is `waitFor`'s — which names the text

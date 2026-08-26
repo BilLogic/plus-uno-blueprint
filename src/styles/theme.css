@@ -475,8 +475,9 @@
  * what --radius-2xl / -3xl / -4xl above already do to Tailwind's fixed
  * 16 / 24 / 32 — the large rungs are this app's ladder, not upstream's. 48px
  * is a size nothing here renders, and a rung nothing renders is an invitation
- * to render it; text-5xl had no call site when this was retuned, so the
- * change names a size rather than resizing anything.
+ * to render it. Nothing in the tree wrote text-5xl before this change, so
+ * retuning it resized nothing; the slide title below now writes it, and
+ * writes it at the 40px it already rendered.
  *
  * The --line-height pairing is unset for the same reason the rungs above
  * declare none. Tailwind ships one with its own 5xl (1.0), and both display

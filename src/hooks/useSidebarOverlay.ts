@@ -1,4 +1,5 @@
-import { useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import { suppressCanvasResizeRefit } from '@/lib/canvasChromeResize'
 
 /**
  * The width below which the sidebar stops sharing the row with the canvas.
@@ -64,8 +65,10 @@ export function useSidebarOverlay(): boolean {
  *
  * `narrow` is which side of the gate the state was last reconciled against,
  * so a reconcile that did not cross is a no-op. Without it the pass is not
- * idempotent, and StrictMode's double-invoked mount effect alone would read
- * the fresh auto-collapse as a pre-existing user one.
+ * idempotent, and StrictMode's double-invoked *render* alone would read the
+ * fresh auto-collapse as a pre-existing user one. There is no mount effect in
+ * this path — the reconcile happens during render, which is why idempotence
+ * is the whole safety argument.
  */
 export type SidebarCollapse = {
   collapsed: boolean
@@ -102,4 +105,56 @@ export function collapseSidebarByUser(
   collapsed: boolean,
 ): SidebarCollapse {
   return { ...state, collapsed, auto: false }
+}
+
+/**
+ * The gate, the state, the reconcile and the ways out — assembled once.
+ *
+ * The pieces below are individually testable and were individually tested,
+ * which is exactly how a test can stay green while the shell that assembles
+ * them drifts. There is one caller and one test; they now share this, so a
+ * change to the wiring is a change to the thing under test.
+ *
+ * The reconcile runs during render rather than in an effect. That is the
+ * shape `lastTabKind` and `lastLanding` already use in the shell, and it is
+ * required here rather than merely tidy: a crossing has to land in the same
+ * commit the posture flips, or the aside paints one frame open-and-in-flow at
+ * a width it cannot have. `reconcileSidebarCollapse` returns the identical
+ * object when nothing crossed, so StrictMode's replayed render bails without
+ * a second setState.
+ */
+export function useSidebarCollapse() {
+  const overlay = useSidebarOverlay()
+  const [sidebar, setSidebar] = useState<SidebarCollapse>(initialSidebarCollapse)
+  if (sidebar.narrow !== overlay) setSidebar(reconcileSidebarCollapse(sidebar, overlay))
+
+  const setCollapsedByUser = useCallback((collapsed: boolean) => {
+    // The width ease resizes the canvas container. Chrome moving, not the
+    // reader navigating — the camera holds still.
+    suppressCanvasResizeRefit()
+    setSidebar((state) => collapseSidebarByUser(state, collapsed))
+  }, [])
+
+  // Escape shuts the overlay, and only the overlay.
+  //
+  // A panel drawn over the canvas needs a way out that is not "find the
+  // toggle", and with no scrim there is nowhere to click. Above the gate the
+  // sidebar is a column in the flow, where Escape closing it would rearrange
+  // the page for no reason — so this is gated on `overlay`, not `collapsed`.
+  //
+  // Bound at the document because the reader's focus is usually still out on
+  // the canvas when they want the panel gone. Guarded on `defaultPrevented`
+  // so a dialog, a menu, or an inline editor that has already answered
+  // Escape keeps it.
+  useEffect(() => {
+    if (!overlay || sidebar.collapsed) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      setCollapsedByUser(true)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [overlay, sidebar.collapsed, setCollapsedByUser])
+
+  return { overlay, collapsed: sidebar.collapsed, setCollapsedByUser }
 }

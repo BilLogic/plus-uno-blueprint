@@ -3,11 +3,8 @@ import { useEditor } from '@/contexts/EditorContext'
 import { MobileShell } from '@/components/mobile/MobileShell'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import {
-  collapseSidebarByUser,
-  initialSidebarCollapse,
-  reconcileSidebarCollapse,
-  useSidebarOverlay,
-  type SidebarCollapse,
+
+  useSidebarCollapse,
 } from '@/hooks/useSidebarOverlay'
 import {
   RAIL_WIDTH,
@@ -137,18 +134,17 @@ function DesktopEditorShell() {
     itself made — `useSidebarOverlay` has the argument for why a bare boolean
     cannot tell the two apart.
   */
-  const overlay = useSidebarOverlay()
-  const [sidebar, setSidebar] = useState<SidebarCollapse>(initialSidebarCollapse)
-  // Adjusted during render off the side of the gate the state was last
-  // reconciled against — the same shape `lastTabKind` and `lastLanding` use
-  // below, and the reason `narrow` is carried in the state rather than kept
-  // in a ref: a crossing must land in the same commit the posture flips, or
-  // the aside paints one frame open-and-in-flow at a width it cannot have.
-  if (sidebar.narrow !== overlay) setSidebar(reconcileSidebarCollapse(sidebar, overlay))
-  const sidebarCollapsed = sidebar.collapsed
+  const {
+    overlay,
+    collapsed: sidebarCollapsed,
+    setCollapsedByUser,
+  } = useSidebarCollapse()
   useEffect(() => {
     // A crossing wipes the aside open or shut, which resizes the canvas
-    // container — chrome moving, not the reader navigating.
+    // container — chrome moving, not the reader navigating. This also runs
+    // once on mount, where nothing crossed; suppressing a refit the reader
+    // never triggered is the same answer, so it is left unguarded rather
+    // than carrying a ref to tell the first run apart.
     suppressCanvasResizeRefit()
   }, [overlay])
   const isLanding = view === 'landing'
@@ -310,9 +306,8 @@ function DesktopEditorShell() {
   // choosing a surface you cannot see is not a choice.
   const revealSidebar = useCallback(() => {
     if (!sidebarCollapsed) return
-    suppressCanvasResizeRefit()
-    setSidebar((state) => collapseSidebarByUser(state, false))
-  }, [sidebarCollapsed])
+    setCollapsedByUser(false)
+  }, [sidebarCollapsed, setCollapsedByUser])
 
   // Publish the collapsed state so canvas navbars can host the expand
   // control themselves — see sidebarCollapsedContext for why the pill is
@@ -336,14 +331,11 @@ function DesktopEditorShell() {
         selectScenario,
         openAgentSurface: () => {
           toggleAgentOpen(true)
-          setSidebar((state) => collapseSidebarByUser(state, false))
+          setCollapsedByUser(false)
         },
-        setSidebarCollapsed: (collapsed) => {
-          suppressCanvasResizeRefit()
-          setSidebar((state) => collapseSidebarByUser(state, collapsed))
-        },
+        setSidebarCollapsed: setCollapsedByUser,
       }),
-    [selectPhase, selectScenario],
+    [selectPhase, selectScenario, setCollapsedByUser],
   )
 
   // The read side: what the shell itself knows about what's on screen.
@@ -472,10 +464,7 @@ function DesktopEditorShell() {
   }, [])
 
   const toggleSidebar = () => {
-    // The width ease resizes the canvas container for 320 ms. That is
-    // chrome moving, not the user navigating — the camera holds still.
-    suppressCanvasResizeRefit()
-    setSidebar((state) => collapseSidebarByUser(state, !state.collapsed))
+    setCollapsedByUser(!sidebarCollapsed)
   }
 
   // Shared drag-resize. During a drag the width transition is off —
@@ -684,10 +673,22 @@ function DesktopEditorShell() {
                 same band (foundations/elevation.md), merely floating, and
                 `shadow-floating` is the token that says floating.
 
-                No scrim, for the reason `CreateSliceSheet` gives: dimming
-                the canvas dims the very thing the sidebar is for getting
-                around. Nothing strands either — the rail's own collapse
-                toggle is on screen the whole time the panel is open.
+                No scrim — but NOT on `CreateSliceSheet`'s reasoning, which
+                is conditioned on a sheet that "sits beside" a canvas left
+                lit. This panel is `absolute inset-y-0 left-0`; it occludes
+                the strip it covers, so the thing that doctrine protects is
+                already hidden and citing it here would be borrowing an
+                argument that does not reach.
+
+                The reason that does reach is narrower: a scrim announces a
+                mode the reader must leave, and this is a column that came
+                back, not a dialog. What a scrim usually buys — somewhere to
+                click to get out — is bought here instead by the rail's own
+                collapse toggle, which stays on screen the whole time, and by
+                Escape below. Outside-click is deliberately NOT wired: the
+                surface it would swallow clicks from is the canvas, where a
+                click selects a cell, and losing that first click to a
+                dismissal is worse than one extra keystroke.
               */
               overlay
                 ? cn('absolute inset-y-0 left-0', !railOnly && 'shadow-floating')

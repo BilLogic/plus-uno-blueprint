@@ -201,11 +201,27 @@ squeeze the collapse was for. The gate is `SIDEBAR_OVERLAY_BREAKPOINT`
 (`src/hooks/useSidebarOverlay.ts`); [foundations/layout.md](../foundations/layout.md#breakpoints--two-gates-owned-here)
 owns the gate list and the argument for where it lives.
 
-**No scrim behind the floating panel**, for the reason
-[`CreateSliceSheet`](dialogs-sheets-and-forms.md) gives about sheets: dimming
-the canvas dims the one thing the sidebar exists to get around. Nothing strands
-either — the rail's own collapse toggle is on screen the entire time the panel
-is open.
+**No scrim behind the floating panel** — but not on the reason
+[`CreateSliceSheet`](dialogs-sheets-and-forms.md) gives, which is conditioned
+on a sheet that sits *beside* a canvas left lit. This panel is absolutely
+positioned over the canvas and occludes the strip it covers, so the thing that
+argument protects is already hidden.
+
+The reason that does reach is narrower: a scrim announces a mode the reader
+has to leave, and this is a column that came back, not a dialog. What a scrim
+usually buys is somewhere to click to get out, and that is bought here twice
+over — the rail's own collapse toggle is on screen the entire time, and
+**Escape shuts the panel** from wherever focus happens to be, which is usually
+still out on the canvas.
+
+Escape is gated on the overlay posture, not on being collapsed: above the gate
+the sidebar is a column in the flow, where closing it on a keystroke would
+rearrange the page for no reason. It also stands down for an Escape something
+else already handled, so a dialog or an inline editor keeps its own.
+
+**Outside-click is deliberately not wired.** The surface it would swallow
+clicks from is the canvas, where a click selects a cell — losing that first
+click to a dismissal is worse than one extra keystroke.
 
 **A collapse the gate imposed is not the same state as a collapse the reader
 asked for**, and the sidebar state says which. Widening the window gives back

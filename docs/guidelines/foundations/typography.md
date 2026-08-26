@@ -24,12 +24,26 @@ comment in `theme.css` for the failure mode that placement prevents.
 
 ## Scale
 
-Tailwind's default type scale, extended downward by two named steps in
-`theme.css`: `--text-2xs` and `--text-3xs` (illustratively 11px and 10px —
-the file owns the values). They exist because the editor's dense chrome
-(badges, kickers, axis labels) uses those sizes constantly and named steps
-beat scattered `text-[11px]` literals. Deliberately no bundled line-height:
-the utilities set font-size only, and call sites keep their own leading.
+Tailwind's default type scale, extended at both ends in `theme.css`, which
+owns the values:
+
+- **Downward, four named steps** — `--text-2xs`, `--text-3xs`, `--text-4xs`,
+  `--text-5xs` (illustratively 11, 10, 9 and 8px). They exist because the
+  editor's dense chrome (badges, kickers, axis labels) uses those sizes
+  constantly and named steps beat scattered `text-[11px]` literals.
+- **Upward, one retuned step** — `--text-5xl`, moved off Tailwind's 3rem to
+  the 40px the scenario slide title actually renders. A retune rather than a
+  new name, which is what `--radius-2xl` / `-3xl` / `-4xl` already do to
+  Tailwind's fixed radii: the large rungs are this app's ladder, not
+  upstream's. 36px needed nothing — that is `text-4xl` exactly.
+
+Deliberately no bundled line-height at either end: the utilities set font-size
+only, and call sites keep their own leading.
+
+Both ends are guarded. `src/lib/tokenDiscipline.test.ts` fails a px *or* rem
+font-size literal anywhere in the tree, at any breakpoint, outside the two
+vendored exemptions it names — so the next unnamed size is a red test rather
+than a scattered literal.
 
 ## The time-marker register
 
