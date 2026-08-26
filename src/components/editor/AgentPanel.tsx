@@ -1421,7 +1421,7 @@ export function AgentSettingsRailButton() {
                 render={
                   <button
                     type="button"
-                    aria-label="Agent settings"
+                    aria-label="Sign in and agent settings"
                     className="flex size-9 items-center justify-center rounded-md text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                   >
                     <Settings className="size-4" aria-hidden />
@@ -1431,7 +1431,7 @@ export function AgentSettingsRailButton() {
             }
           />
           <TooltipContent side="right" className="text-xs">
-            Agent settings
+            Sign in and agent settings
           </TooltipContent>
         </Tooltip>
         <PopoverContent side="right" align="end" className="w-72 p-3">
