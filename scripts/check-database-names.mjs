@@ -36,6 +36,19 @@ import { replacementFor, retiredFragmentsIn } from './retired-vocabulary.mjs'
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 const ROOTS = ['src', 'scripts']
 const SOURCE = /\.(?:[cm]?[jt]sx?)$/
+/**
+ * Test files are out of subject.
+ *
+ * Two reasons, and the second is the one that matters. A test that names a
+ * dead relation fails the moment it runs, which is what a test is for — the
+ * whole reason this check exists is that application code carrying the same
+ * string does NOT fail until a user finds it. And a guard's own fixtures have
+ * to be able to name dead relations: `scripts/tests/retired-copy.test.mjs`
+ * proves the copy guard ignores `.from('service_lifecycles')` by writing
+ * exactly that, and a check that flagged its sibling's evidence would be
+ * pressure to weaken one of the two.
+ */
+const TEST_FILE = /\.test\.[cm]?[jt]sx?$/
 
 /**
  * Database names allowed to keep a retired spelling. Same shape and same two
@@ -126,6 +139,44 @@ function selectClause(value) {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+/**
+ * The same source with every comment blanked out, line numbers intact.
+ *
+ * A comment naming a relation is not a use of it — the same rule
+ * `stripComments` states in `src/lib/tokenModel.ts`. This check flagged its
+ * own docstring the first time it ran, which is the cheapest possible
+ * demonstration of why.
+ */
+export function withoutComments(code) {
+  let out = ''
+  let i = 0
+  while (i < code.length) {
+    const char = code[i]
+    if (char === '/' && (code[i + 1] === '/' || code[i + 1] === '*')) {
+      const block = code[i + 1] === '*'
+      const end = block ? code.indexOf('*/', i + 2) : code.indexOf('\n', i)
+      const stop = end === -1 ? code.length : block ? end + 2 : end
+      out += code.slice(i, stop).replace(/[^\n]/g, ' ')
+      i = stop
+      continue
+    }
+    if (char === "'" || char === '"' || char === '`') {
+      const start = i
+      i += 1
+      while (i < code.length && code[i] !== char) {
+        if (code[i] === '\\') i += 1
+        i += 1
+      }
+      i += 1
+      out += code.slice(start, i)
+      continue
+    }
+    out += char
+    i += 1
+  }
+  return out
+}
+
 /** `alias:relation(` — the PostgREST embedded-relationship syntax. */
 const EMBED_SYNTAX = /[A-Za-z_]\w*\s*:\s*[A-Za-z_]\w*\s*\(/
 
@@ -152,9 +203,10 @@ export function namedObjects(code) {
       }
     }
   }
-  for (const match of code.matchAll(/\.(from|rpc|select)\s*\(\s*(['"`])((?:[^\\]|\\.)*?)\2/g)) {
+  const bare = withoutComments(code)
+  for (const match of bare.matchAll(/\.(from|rpc|select)\s*\(\s*(['"`])((?:[^\\]|\\.)*?)\2/g)) {
     const kind = match[1]
-    const line = (code.slice(0, match.index).match(/\n/g) ?? []).length + 1
+    const line = (bare.slice(0, match.index).match(/\n/g) ?? []).length + 1
     for (const name of databaseNames(match[3], kind)) {
       out.push({ line, name, kind: kind === 'select' ? 'embed hint' : `.${kind}()` })
     }
@@ -179,6 +231,7 @@ function sourceFilesUnder(root) {
       if (entry.name === 'node_modules' || entry.name.startsWith('.')) return []
       const full = join(abs, entry.name)
       if (entry.isDirectory()) return sourceFilesUnder(full)
+      if (TEST_FILE.test(entry.name)) return []
       return SOURCE.test(entry.name) ? [full] : []
     })
 }
