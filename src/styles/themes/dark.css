@@ -25,7 +25,7 @@
      later in source order, so light's warm brown won in BOTH themes and
      every token derived through the surface hue rendered at 34°. The comment
      is what made it invisible. A dial this file needs is a dial this file
-     declares; `themeDialParity.test.ts` now holds that for every dial. */
+     declares; `themeDials.test.ts` now holds that for every dial. */
   --surface-hue: var(--hue);
   --chroma: 0.005;
   --surface: 0.19;

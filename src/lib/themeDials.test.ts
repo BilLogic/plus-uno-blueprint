@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  declarations,
   declarationsIn,
   namesIn,
   resolveValue,
@@ -149,6 +150,61 @@ describe('what the dials resolve to', () => {
       resolveValue('--hue', 'dark'),
     )
     expect(resolveValue('--surface-hue', 'light')).toBe('34')
+  })
+
+  it('leaves no root declaration that cannot win under either theme', () => {
+    /*
+     * The fourth combination the invariant in `semantic.css` forbids: a name
+     * declared there AND in every theme file.
+     *
+     * `themes/light.css` opens on `:root, .light` and imports after
+     * `semantic.css`, so for any name both themes declare, the semantic
+     * declaration loses under light (to light) and under dark (to dark). It
+     * is not a fallback; nothing can ever read it. `--surface-hue: var(--hue)`
+     * sat on the semantic root block in exactly that state, saying the thing
+     * `themes/dark.css` used to only claim in a comment — and #121 fixed the
+     * comment without noticing the declaration behind it was the same lie in
+     * a different font.
+     *
+     * Stated over every root-scoped declaration in the sheet tree rather than
+     * over a list of dial names, because the shape is not specific to dials
+     * and a list would sample where the property already holds.
+     */
+    const ROOT_SELECTORS = new Set([
+      ':root',
+      '.light',
+      '.dark',
+      ':root.light',
+      ':root.dark',
+      'html.light',
+      'html.dark',
+    ])
+    const unreachable = declarations()
+      .filter((entry) =>
+        entry.selector
+          .split(',')
+          .some((part) => ROOT_SELECTORS.has(part.trim())),
+      )
+      // `print.css` is a separate cascade; `themeDials` above holds it.
+      .filter(
+        (entry) =>
+          !entry.context.some(
+            (rule) => /^@media\b/.test(rule) && /\bprint\b/.test(rule),
+          ),
+      )
+      .filter(
+        (entry) =>
+          !entry.context.some(
+            (rule) => rule && !/^@(media|supports|layer)\b/.test(rule),
+          ),
+      )
+      .filter(
+        (entry) =>
+          winningDeclaration(entry.name, 'light') !== entry &&
+          winningDeclaration(entry.name, 'dark') !== entry,
+      )
+      .map((entry) => `${entry.file}:${entry.line} ${entry.name}`)
+    expect(unreachable).toEqual([])
   })
 
   it('keeps the radius dial out of the theme files entirely', () => {
