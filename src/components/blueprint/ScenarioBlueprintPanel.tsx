@@ -79,7 +79,7 @@ export type ScenarioBlueprintPanelProps = {
 }
 
 type ScenarioBlueprintPanelBodyProps = ScenarioBlueprintPanelProps & {
-  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType
+  getScenarioDisplayViewType: (scenario: NavItem) => SlideViewType | undefined
 }
 
 /** One scenario's blueprint inside a compare panel — title badge, filters and grid. */
@@ -124,7 +124,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     ? getSlideDisplayLabel(parentPhase, slides)
     : undefined
   const storedViewType =
-    displayViewTypeProp ?? getScenarioDisplayViewType(slide)
+    displayViewTypeProp ?? getScenarioDisplayViewType(slide) ?? 'stacked'
   // Compare needs two sides. The toggle hides below 2 selected paths, but
   // the stored override survives — falling back here keeps a scenario from
   // being stranded in a compare it can no longer leave.

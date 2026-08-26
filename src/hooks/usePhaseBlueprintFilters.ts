@@ -9,7 +9,7 @@ type UsePhaseBlueprintFiltersOptions = {
   scenarioIds: string[]
   slides: NavItem[]
   enabled?: boolean
-  getScenarioDisplayViewType: (slide: NavItem) => SlideViewType
+  getScenarioDisplayViewType: (slide: NavItem) => SlideViewType | undefined
   setScenarioDisplayViewType: (scenarioId: string, viewType: SlideViewType) => void
 }
 
@@ -79,7 +79,7 @@ export function usePhaseBlueprintFilters({
     const viewTypes = activeScenarioIds.map((scenarioId) => {
       const scenario = slides.find((slide) => slide.id === scenarioId)
       const scenarioViewType = scenario
-        ? getScenarioDisplayViewType(scenario)
+        ? (getScenarioDisplayViewType(scenario) ?? 'stacked')
         : ('stacked' as SlideViewType)
       // 'merged' is a focused-scenario mode; overview rows render stacked.
       return scenarioViewType === 'merged'

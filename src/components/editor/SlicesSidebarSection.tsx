@@ -317,9 +317,7 @@ function RenameSliceDialog({
       })
     } catch (renameError) {
       setBusy(false)
-      setError(
-        renameError instanceof Error ? renameError.message : String(renameError),
-      )
+      setError(errorMessage(renameError))
       return
     }
     setBusy(false)

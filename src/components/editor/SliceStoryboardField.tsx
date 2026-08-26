@@ -15,6 +15,7 @@ import {
   sliceIllustrationUrl,
 } from '@/lib/sliceCells'
 import { setSliceFrameIllustration } from '@/lib/sliceMutations'
+import { errorMessage } from '@/lib/utils'
 import type { Json } from '@/types/database'
 
 /**
@@ -91,8 +92,7 @@ export function SliceStoryboardField({
       // The bucket still allows PNG only until the authoring migration widens
       // it, so a JPEG that passes the local check can still be refused here.
       // Saying so is more use than the storage error text.
-      const message =
-        uploadError instanceof Error ? uploadError.message : String(uploadError)
+      const message = errorMessage(uploadError)
       console.error('[storyboard] upload failed:', message)
       setProblem(
         /mime|content type/i.test(message)

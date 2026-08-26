@@ -69,7 +69,8 @@ type EditorContextValue = {
   slides: NavItem[]
   /** Slides from DB/fallback (same as slides; kept for callers). */
   baseSlides: NavItem[]
-  getScenarioDisplayViewType: (slide: NavItem) => SlideViewType
+  /** The scenario's own choice, or `undefined` when it has not made one. */
+  getScenarioDisplayViewType: (slide: NavItem) => SlideViewType | undefined
   setScenarioDisplayViewType: (
     scenarioId: string,
     viewType: SlideViewType,
@@ -343,9 +344,20 @@ export function EditorProvider({ children }: EditorProviderProps) {
     Record<string, SlideViewType>
   >({})
 
+  /*
+    Absent means ABSENT, not 'stacked'.
+
+    Defaulting here made "this scenario is explicitly stacked" and "this
+    scenario has never been set" the same answer, and the one reader that
+    needs to tell them apart — PhaseScenarioOverview, deciding whether the
+    per-scenario choice beats the phase-wide one — had to treat 'stacked' as
+    the unset sentinel. That worked only because 'stacked' is also the
+    default; the day a phase is showing 'single', a scenario deliberately set
+    back to 'stacked' would silently lose. Each reader now applies its own
+    default, and there is exactly one value that means "unset".
+  */
   const getScenarioDisplayViewType = useCallback(
-    (slide: NavItem): SlideViewType =>
-      viewTypeOverrides[slide.id] ?? 'stacked',
+    (slide: NavItem): SlideViewType | undefined => viewTypeOverrides[slide.id],
     [viewTypeOverrides],
   )
 
