@@ -1,9 +1,9 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 /**
- * No component, context or hook writes to a table directly.
+ * Nothing writes to a table except the modules that own the write path.
  *
  * `AGENTS.md` has stated this since the ledger was built, and on 2026-08-23 a
  * docs audit found it was false: `SliceStoryboardField.tsx` set and cleared
@@ -21,12 +21,58 @@ import { expect, test } from 'vitest'
  * module or `authoringRpc.ts`, where the inverse is captured before the write
  * and `recordChange` runs after it.
  *
+ * **The guard itself was the next thing to be wrong.** It scanned three named
+ * roots — `components/`, `contexts/`, `hooks/` — so `src/lib` was invisible to
+ * it, and `agent/tools/registry.ts` wrote `findings` straight from the tool
+ * dispatcher for as long as that hole existed: no ledger entry, no captured
+ * inverse, ⌘Z stepping over the write to undo somebody else's edit instead. A
+ * named-roots list can only ever cover the directories that existed the day it
+ * was written. So the walk now starts at `src/` and the exemptions are named
+ * one by one: a new directory is covered the moment it appears, and a new
+ * writer has to argue for itself here.
+ *
  * Reads are untouched — the hooks are full of `.from(...).select(...)` and that
  * is the correct place for them. Storage is untouched too: `client.storage
  * .from(BUCKET)` takes an identifier, not a quoted table name, so an upload
  * cannot trip this.
  */
-const ROOTS = ['../components', '../contexts', '../hooks'] as const
+const SRC = resolve(__dirname, '..')
+
+/**
+ * A `src`-relative path that owns part of the write path, and why.
+ *
+ * The `*Mutations.ts` family is matched by shape rather than listed, because
+ * adding one is the *sanctioned* way to add a write and should not need an
+ * edit here. The pattern is anchored at `lib/` on purpose: a
+ * `components/FooMutations.ts` is not a mutation module, it is this test being
+ * routed around.
+ */
+const MUTATION_MODULE = /^lib\/[A-Za-z]+Mutations\.ts$/
+
+/**
+ * The writers that are deliberately outside the `*Mutations` family. Each is
+ * asserted to exist below, so a rename fails loudly instead of quietly
+ * widening the exemption to nothing.
+ */
+const EXEMPT: ReadonlyArray<{ path: string; because: string }> = [
+  {
+    path: 'lib/revertChange.ts',
+    because:
+      'the ledger’s own inverse-applier — it cannot record a change, recording one is what it undoes',
+  },
+  {
+    path: 'lib/agent/persistence.ts',
+    because:
+      'the agent transcript (agent_sessions / agent_messages), which is not blueprint data and has nothing to revert',
+  },
+]
+
+function isExempt(relative: string): boolean {
+  return (
+    MUTATION_MODULE.test(relative) ||
+    EXEMPT.some((entry) => entry.path === relative)
+  )
+}
 
 /** `.from('table')` followed by a write verb, across at most a few lines. */
 const TABLE_WRITE =
@@ -45,20 +91,29 @@ function walk(dir: string): string[] {
   return out
 }
 
-test('components, contexts and hooks never write to a table directly', () => {
+test('every exempted writer still exists', () => {
+  const missing = EXEMPT.filter(
+    (entry) => !existsSync(resolve(SRC, entry.path)),
+  ).map((entry) => entry.path)
+  expect(
+    missing,
+    `Exempted from the write boundary but no longer present: ${missing.join(', ')}. ` +
+      'If it moved, move the exemption with it; if it is gone, delete the exemption.',
+  ).toEqual([])
+})
+
+test('nothing outside the mutation layer writes to a table directly', () => {
   const offenders: string[] = []
 
-  for (const root of ROOTS) {
-    for (const file of walk(resolve(__dirname, root))) {
-      const source = readFileSync(file, 'utf-8')
-      for (const match of source.matchAll(TABLE_WRITE)) {
-        const line = source.slice(0, match.index).split('\n').length
-        const table = match[0].match(/'([a-z_]+)'/)?.[1] ?? '?'
-        const verb = match[1]
-        offenders.push(
-          `${file.split('/src/')[1]}:${line} — ${verb} on '${table}'`,
-        )
-      }
+  for (const file of walk(SRC)) {
+    const relative = file.slice(SRC.length + 1)
+    if (isExempt(relative)) continue
+    const source = readFileSync(file, 'utf-8')
+    for (const match of source.matchAll(TABLE_WRITE)) {
+      const line = source.slice(0, match.index).split('\n').length
+      const table = match[0].match(/'([a-z_]+)'/)?.[1] ?? '?'
+      const verb = match[1]
+      offenders.push(`${relative}:${line} — ${verb} on '${table}'`)
     }
   }
 
