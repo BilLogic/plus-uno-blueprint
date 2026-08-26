@@ -5,6 +5,7 @@ import {
   readWriteOutcome,
   requireRowsWritten,
   type UpdatedAtToken,
+  type WriteOutcome,
 } from '@/lib/optimisticConcurrency'
 import { originAfterEdit, type DraftFrame, type SliceType } from '@/lib/sliceValidation'
 import type { Database, Json, Slice } from '@/types/database'
@@ -312,6 +313,13 @@ export type SliceMetaUpdate = {
  *
  * Recorded only on `ok`. A conflict wrote nothing, and the ledger's whole
  * claim is that it lists writes that landed.
+ *
+ * The token is the caller's problem, and it stops being a safe one wherever a
+ * person types between loading the row and saving it: that caller wants
+ * `updateSliceMetaFromSeed` below. The frame editor's Save is deliberately not
+ * that caller — it re-sends the row's own values and wants *any* concurrent
+ * write to stop it before the frames are rewritten, which is precisely what a
+ * stamp answers and a field comparison does not.
  */
 export async function updateSliceMeta(
   client: Client,
@@ -361,6 +369,50 @@ export async function updateSliceMeta(
   }
 
   return outcome
+}
+
+/**
+ * The same update, guarded against the row a form was **seeded** from rather
+ * than against a token the caller happens to hold.
+ *
+ * `updateSliceMeta` can only be as honest as its token, and a long-lived form
+ * has no honest one. Sending the stamp captured when the form opened fails
+ * renames nobody raced, because an unrelated write bumps `updated_at` without
+ * touching a field the form shows. Sending the freshest stamp the client has
+ * seen fails nothing at all: by the time someone else's rename has been
+ * refetched, it is the token, and the guard waves the overwrite through. Both
+ * were shipped in turn, and neither is visible at the call site — only the
+ * *value* of the token differs.
+ *
+ * So the comparison moves off the stamp and onto the fields. The row is read
+ * back here, at submit, and matched against what the form was seeded from: a
+ * row whose meta still says what the user was looking at is safe to write, at
+ * whatever stamp it now carries, and a row whose meta has moved is a conflict
+ * however recently this client learned of it. A missing row is a conflict too
+ * — deleted, or hidden by RLS, which is the same ambiguity a zero-row guarded
+ * update leaves and the same "reopen it" the caller prints for it.
+ *
+ * The freshly read stamp still goes to `updateSliceMeta` as the token, so the
+ * window between this read and that write stays guarded.
+ *
+ * One extra round trip per save. That is the price of a guard that answers
+ * both questions, and a rename is not a hot path.
+ */
+export async function updateSliceMetaFromSeed(
+  client: Client,
+  sliceId: string,
+  seeded: SliceMetaFields,
+  update: SliceMetaUpdate,
+): Promise<WriteOutcome<Slice>> {
+  const { data: current, error } = await client
+    .from('slices')
+    .select('title, description, slice_type, actor, origin, updated_at')
+    .eq('id', sliceId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!current || metaMoved(seeded, current)) return { status: 'conflict' }
+
+  return updateSliceMeta(client, sliceId, sliceToken(current), update)
 }
 
 /** The subset of `slices` a meta update writes — what is compared and restored. */
