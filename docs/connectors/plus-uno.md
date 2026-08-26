@@ -110,12 +110,26 @@ Two things stay out of reach of the anon role, and therefore out of CI:
 - **`semantic_search.match_corpus_chunks`**, for the same reason. The bot calls
   it over its own service-role connection. It is covered statically only.
 
-One divergence surfaced while wiring this up and is **not** fixed here: the live
-`blueprint_chunks_src` carries the `Phase` segment, the `lanes`/`scenarios`
-renames and `cells.summary`, while the last migration to define the view still
-emits four segments off `layers`/`service_scenarios`/`cells.description`. The
-database is right and the migration series is stale, so a `supabase db reset`
-would rebuild the view wrong. That is a migration to write, not a check to add.
+One divergence surfaced while wiring this up and is now closed by
+`supabase/migrations/20260826000000_the_embedding_view_the_database_actually_runs.sql`
+(plus-uno-blueprint#130). It is worth recording what it actually was, because
+the first diagnosis was half wrong.
+
+The live `blueprint_chunks_src` carries the `Phase` breadcrumb segment, the
+`lanes`/`scenarios` renames, `cells.summary`, and seven appended chunk fields
+(Function, Form, Value, Owner, Perceived owner, Lane owner team, Lane KPIs).
+Only the `Phase` segment and those seven fields were ever a divergence. A view
+stores its dependencies as column numbers on table OIDs rather than as text, so
+the renames rewrote themselves through the view for free — a replay of the
+series already produced `lanes`, `scenarios` and `c.summary`. What it could not
+produce was the material no migration had ever contained; `'Perceived owner: '`
+and `'Lane KPIs: '` appeared nowhere in this repository until that migration
+landed.
+
+The failure was silent rather than loud: a rebuilt environment got the same 784
+rows with shorter chunks — five breadcrumb segments collapsed to four, and every
+chunk missing the fields that carry ownership and value. Embeddings built on top
+of that would be wrong with nothing to announce it.
 
 ## When you change the schema
 

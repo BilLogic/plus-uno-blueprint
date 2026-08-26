@@ -23,6 +23,7 @@ import { invalidateEvidence, useEvidence } from '@/hooks/useEvidence'
 import { addEvidence } from '@/lib/evidenceMutations'
 import { resolveFirstServiceId } from '@/lib/service'
 import { safeExternalHref } from '@/lib/sliceCells'
+import { errorMessage } from '@/lib/utils'
 import type { Database, Evidence } from '@/types/database'
 
 const EVIDENCE_KINDS = [
@@ -151,9 +152,7 @@ function AddSourceForm({
       onAdded()
     } catch (submitError) {
       setError(
-        submitError instanceof Error
-          ? submitError.message
-          : String(submitError),
+        errorMessage(submitError),
       )
     } finally {
       setBusy(false)

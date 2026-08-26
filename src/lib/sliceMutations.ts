@@ -5,6 +5,7 @@ import {
   readWriteOutcome,
   requireRowsWritten,
   type UpdatedAtToken,
+  type WriteOutcome,
 } from '@/lib/optimisticConcurrency'
 import { originAfterEdit, type DraftFrame, type SliceType } from '@/lib/sliceValidation'
 import type { Database, Json, Slice } from '@/types/database'
@@ -312,6 +313,15 @@ export type SliceMetaUpdate = {
  *
  * Recorded only on `ok`. A conflict wrote nothing, and the ledger's whole
  * claim is that it lists writes that landed.
+ *
+ * The token is the caller's problem, and it stops being a safe one wherever a
+ * person types between loading the row and saving it: that caller wants
+ * `updateSliceMetaFromSeed` below. Two callers are deliberately not that one.
+ * The frame editor's Save re-sends the row's own values and wants *any*
+ * concurrent write to stop it before the frames are rewritten, which is
+ * precisely what a stamp answers and a field comparison does not; and the
+ * agent's `update_slice` tool reads and writes in the same breath, with no
+ * person typing in between for a stamp to go stale under.
  */
 export async function updateSliceMeta(
   client: Client,
@@ -363,6 +373,50 @@ export async function updateSliceMeta(
   return outcome
 }
 
+/**
+ * The same update, guarded against the row a form was **seeded** from rather
+ * than against a token the caller happens to hold.
+ *
+ * `updateSliceMeta` can only be as honest as its token, and a long-lived form
+ * has no honest one. Sending the stamp captured when the form opened fails
+ * renames nobody raced, because an unrelated write bumps `updated_at` without
+ * touching a field the form shows. Sending the freshest stamp the client has
+ * seen fails nothing at all: by the time someone else's rename has been
+ * refetched, it is the token, and the guard waves the overwrite through. Both
+ * were shipped in turn, and neither is visible at the call site — only the
+ * *value* of the token differs.
+ *
+ * So the comparison moves off the stamp and onto the fields. The row is read
+ * back here, at submit, and matched against what the form was seeded from: a
+ * row whose meta still says what the user was looking at is safe to write, at
+ * whatever stamp it now carries, and a row whose meta has moved is a conflict
+ * however recently this client learned of it. A missing row is a conflict too
+ * — deleted, or hidden by RLS, which is the same ambiguity a zero-row guarded
+ * update leaves and the same "reopen it" the caller prints for it.
+ *
+ * The freshly read stamp still goes to `updateSliceMeta` as the token, so the
+ * window between this read and that write stays guarded.
+ *
+ * One extra round trip per save. That is the price of a guard that answers
+ * both questions, and a rename is not a hot path.
+ */
+export async function updateSliceMetaFromSeed(
+  client: Client,
+  sliceId: string,
+  seeded: SliceMetaFields,
+  update: SliceMetaUpdate,
+): Promise<WriteOutcome<Slice>> {
+  const { data: current, error } = await client
+    .from('slices')
+    .select('title, description, slice_type, actor, origin, updated_at')
+    .eq('id', sliceId)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!current || seedMoved(seeded, current)) return { status: 'conflict' }
+
+  return updateSliceMeta(client, sliceId, sliceToken(current), update)
+}
+
 /** The subset of `slices` a meta update writes — what is compared and restored. */
 type SliceMetaFields = Pick<
   Slice,
@@ -376,6 +430,11 @@ type SliceMetaFields = Pick<
  * caller's intent: `origin` is rewritten by `originAfterEdit` rather than
  * passed through, and the trimming happens in the update itself, so comparing
  * `before` to the arguments would call a no-op save a change (and vice versa).
+ *
+ * This is the ledger's question — "did anything actually change?" — and both
+ * sides of it are values the database stored, so a derived `origin` moving is
+ * a real move. `seedMoved` above answers a different question and must not be
+ * folded into this one.
  */
 function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
   return (
@@ -384,6 +443,29 @@ function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
     before.slice_type !== after.slice_type ||
     before.actor !== after.actor ||
     before.origin !== after.origin
+  )
+}
+
+/**
+ * Did the row move out from under the form between opening and submitting?
+ *
+ * Not `metaMoved`. That one compares two rows the database actually stored,
+ * which is the right question for the ledger and the wrong one here: `origin`
+ * is DERIVED on write by `originAfterEdit`, not preserved. A frame-editor Save
+ * on an agent-authored slice flips `agent` to `customized` without a person
+ * touching a word of it, and comparing the raw field would then refuse a
+ * rename that would have stored the very same value.
+ *
+ * So `origin` is compared through the same projection the write applies. The
+ * four fields that ARE round-tripped are compared verbatim.
+ */
+function seedMoved(seeded: SliceMetaFields, current: SliceMetaFields): boolean {
+  return (
+    seeded.title !== current.title ||
+    seeded.description !== current.description ||
+    seeded.slice_type !== current.slice_type ||
+    seeded.actor !== current.actor ||
+    originAfterEdit(seeded.origin) !== originAfterEdit(current.origin)
   )
 }
 

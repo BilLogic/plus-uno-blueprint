@@ -180,3 +180,40 @@ test('z-index is spelled one way, so a contract cannot pin the other', () => {
     `Arbitrary z-index — Tailwind v4 takes the bare number, so write z-30 not z-[30]:\n${offenders.join('\n')}`,
   )
 })
+
+/**
+ * A font size in px is a rung that was never added.
+ *
+ * The type scale bottoms out below Tailwind's, on purpose: `--text-2xs` (11px)
+ * and `--text-3xs` (10px) exist because the editor's dense chrome kept writing
+ * `text-[11px]`/`text-[10px]`, and naming them made the ladder reusable. The
+ * next two literals went in anyway — `text-[9px]` on a sequence badge,
+ * `text-[8px]` on a visual-lane caption — each one a size with no name and no
+ * way for the next call site to find it. They are `--text-4xs`/`--text-5xs`
+ * now, and this is what stops the sixth.
+ *
+ * Scoped to px because px is the unit a rung is: every `--text-*` this
+ * codebase declares is an absolute size, commented in px, and a px literal is
+ * unambiguously one of them written out longhand. `em` is deliberately not a
+ * rung — `text-[0.85em]` on markdown code is a proportion of whatever encloses
+ * it, which no fixed size can express. The two `rem` display sizes
+ * (`text-[2.5rem]`, `text-[2.25rem]`) are a real gap at the TOP of the scale,
+ * and closing it means adding rungs above `text-xl`; that is a separate change
+ * and this rule does not yet claim it.
+ *
+ * The leading `(?:[\w-]+:)*` matters. `classUses` records each whitespace-
+ * delimited token whole, variants included, so an anchored pattern without it
+ * reads `sm:text-[9px]` as a different utility and lets it through — a guard
+ * that only holds at the default breakpoint. The radius and z-index rules
+ * above are anchored the same way and have the same hole; that is filed
+ * separately rather than widened here, because each needs its own look at
+ * what its variants legitimately do.
+ */
+test('font sizes come from a named rung, not a px literal', () => {
+  const offenders = classUsesMatching(/^(?:[\w-]+:)*text-\[\d+(?:\.\d+)?px\]$/)
+  assert.deepEqual(
+    offenders,
+    [],
+    `Arbitrary px font size — add a rung to the sub-xs scale in styles/theme.css and name it (text-2xs / -3xs / -4xs / -5xs):\n${offenders.join('\n')}`,
+  )
+})

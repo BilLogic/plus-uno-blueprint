@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { withSupabaseTimeout } from '@/lib/supabaseFetchTimeout'
+import { errorMessage } from '@/lib/utils'
 import type { Database } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -95,7 +96,7 @@ export function useSupabaseQuery<T>(
       error
         ? {
             status: 'error',
-            message: error instanceof Error ? error.message : String(error),
+            message: errorMessage(error),
             fallback: fallback(),
           }
         : null,

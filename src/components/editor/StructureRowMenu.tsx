@@ -152,9 +152,7 @@ export function StructureRowContextMenu({
       // from a menu item that does not work: the click closed the menu and
       // nothing appeared, anywhere.
       setDuplicateError(
-        duplicateFailure instanceof Error
-          ? duplicateFailure.message
-          : String(duplicateFailure),
+        errorMessage(duplicateFailure),
       )
     } finally {
       setBusy(false)

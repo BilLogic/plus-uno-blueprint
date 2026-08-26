@@ -212,9 +212,17 @@
 
      The `filter` makes each of these cells its own render surface, which
      re-rasterizes as the camera scale changes — so it was measured before it
-     was kept. It is free to ~112 cells and only bites past ~170; a v1 slice is
-     single-scenario, which caps the dim at one board (~56 cells on the widest
-     one we have). Numbers and method:
+     was kept. It is free to ~112 cells and only bites past ~170, and the sweep
+     that established that ran up to 338 — the In-session PHASE canvas, the
+     widest thing this app draws, where 338 cells cost 14.4 ms mean / 33.4 ms
+     p95, well past the knee.
+
+     The dim never sees that canvas. A v1 slice is single-scenario
+     (`soloScenarioId` in SliceView), so `data-slice-focus` is only ever set on
+     one scenario board: 31 of 37 cells on the dev fallback slice, ~56 on the
+     widest board we have. Both sit in the flat stretch, so the threshold
+     holds — with ~3× headroom, spent only if slices ever go multi-scenario.
+     Numbers and method:
      docs/guidelines/composition/slice-view.md#what-the-filter-costs-measured */
   [data-slice-focus='focused']
     [data-blueprint-cell-anchor]:not([data-slice-member]) {

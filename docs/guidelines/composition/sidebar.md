@@ -9,7 +9,7 @@ claims:
   - src/components/editor/SidebarNav.tsx
   - src/components/editor/SlicesSidebarSection.tsx
   - src/components/editor/StructureRowMenu.tsx
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 ---
 
 # Sidebar
