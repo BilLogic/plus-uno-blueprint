@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery'
-import { findFirstServiceId } from '@/lib/service'
+import { awaitOrAbort, findFirstServiceId } from '@/lib/service'
 import { phasesToSlides, type PhaseRow } from '@/lib/phasesToSlides'
 import type { NavItem } from '@/types/nav'
 
@@ -56,7 +56,7 @@ export function useServicePhases(serviceId?: string) {
     async (client, signal) => {
       const serviceIdPromise = serviceId
         ? Promise.resolve<string | null>(serviceId)
-        : findFirstServiceId(client)
+        : awaitOrAbort(findFirstServiceId(client), signal)
 
       const rowsPromise = (
         serviceId

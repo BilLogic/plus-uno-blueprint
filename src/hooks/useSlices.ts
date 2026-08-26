@@ -3,7 +3,7 @@ import {
   DEV_FALLBACK_SLICE_ITEMS,
 } from '@/data/devSlices'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
-import { findFirstServiceId } from '@/lib/service'
+import { awaitOrAbort, findFirstServiceId } from '@/lib/service'
 import type { Slice, SliceItem } from '@/types/database'
 
 /** Slim frame projection carried on the list — powers client-side
@@ -36,7 +36,7 @@ export function useSlices(serviceId?: string): QueryResult<SliceListEntry[]> {
     async (client, signal) => {
       let resolvedServiceId = serviceId
       if (!resolvedServiceId) {
-        resolvedServiceId = (await findFirstServiceId(client)) ?? undefined
+        resolvedServiceId = (await awaitOrAbort(findFirstServiceId(client), signal)) ?? undefined
         if (!resolvedServiceId) return []
       }
 

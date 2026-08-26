@@ -339,7 +339,15 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
     }
 
     const differingFields: CompareField[] = []
-    if (verdict === 'divergent' && presentEntries.length > 1) {
+    // `divergent` implies at least two present entries: a slot exists only
+    // because a cell was inserted into it, so it can never be empty, and the
+    // single-entry case returned `'only'` above.
+    //
+    // The `&& presentEntries.length > 1` that used to guard this line was
+    // therefore dead. It was kept once on the belief that `every` over an
+    // empty array would carry an empty slot into this branch — true of `every`,
+    // but an empty slot cannot be constructed.
+    if (verdict === 'divergent') {
       for (const field of COMPARE_FIELDS) {
         const first = presentEntries[0].fieldSignatures[field]
         if (presentEntries.some((entry) => entry.fieldSignatures[field] !== first)) {
