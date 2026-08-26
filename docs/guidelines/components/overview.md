@@ -1,11 +1,17 @@
 ---
 audience: designers, developers
-summary: Which primitive for what, the drawer/sheet posture contract (this doc is its single owner), badges and segmented controls, and the empty/loading/error visual recipes.
+summary: Which primitive to reach for, badges and segmented controls, and the empty/loading/error visual recipes — the 34 primitives under src/components/ui/.
 sources: src/components/ui/, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobileAgentSheet.tsx, src/components/EditorErrorBoundary.tsx
 last-reviewed: 2026-08-25
 ---
 
 # Components
+
+`src/components/ui/` is the design system: 34 primitives, and the whole of what
+this folder documents. Anything assembled out of them is
+[composition](../composition/overview.md). The need→primitive map for agent-UX
+work, with every primitive named, is
+[`docs/reference/ui-inventory.md`](../../reference/ui-inventory.md).
 
 ## The primitive inventory
 
@@ -28,43 +34,23 @@ of primitives → a new primitive argued in the PR. Highlights:
 house idiom. The Radix migration is finished: `asChild` has zero occurrences in
 `src/` and there is no `@radix-ui` dependency.
 
-## Drawer and sheet postures — owned here
+## Postures live in composition
 
-One component, two postures, keyed remount on the flip. The mechanism lives in
-the shared shell `src/components/blueprint/panelShell.tsx`; the cell detail
-panel is its most-read consumer, not its home. This doc is the single owner of
-the contract (engineering docs link here):
-
-- **Desktop ≥ breakpoint**: a right-pinned floating *card* (not a full sheet)
-  at `--width-cell-panel`, expanding to `--width-cell-panel-expanded`;
-  `modal={false}` so the canvas stays live; swipe direction `right`. Its
-  motion is an inspector's — it expands out of the selection, it does not
-  arrive from off-screen (see the block comment in `animations.css`).
-- **Mobile < breakpoint**: a bottom sheet, full width, swipe `down`,
-  view-only content.
-- The drawer is **keyed on posture** (`key={mobile ? 'mobile' : 'desktop'}`)
-  so a resize across the breakpoint remounts clean instead of reinterpreting
-  an in-flight swipe against the wrong axis.
-- Surface switches inside an open drawer are content swaps at the same tree
-  position — never close-reopen.
-- **Snap points reach base-ui through `...props`, not through the wrapper.**
-  `src/components/ui/drawer.tsx` destructures and forwards `snapPoints` alone
-  (`hasSnapPoints` only drives the swipe-handle context); there is no
-  `defaultSnapPoint` prop anywhere in `src/`. No current surface uses snap
-  points — the mobile reader that did was deleted 2026-08-17 — so treat any
-  snap-point work as new, and read base-ui's own docs rather than this repo's
-  history.
-
-Agent dock docked/floating is the same one-component-two-postures precedent.
+The drawer/sheet **posture** contract — which posture a panel takes at which
+width, how it is keyed, what a surface switch inside an open drawer may do —
+sat here for months, and it is a composition rule wearing a components label.
+It has moved, single-owner claim intact, to
+[composition/dialogs-sheets-and-forms.md](../composition/dialogs-sheets-and-forms.md).
+This doc still owns *which primitive*; that one owns *what shape it takes*.
 
 ## Badges and segmented controls
 
 `ScenarioTitleBadge` names things on the canvas (phase tone vs default tone);
 `badge` covers inline status; `PathLabelBadge` carries the path encoding from
-[data-viz](foundations/data-viz.md). Mode switches (view/design, Stacked/
+[data-viz](../foundations/data-viz.md). Mode switches (view/design, Stacked/
 Merged) are `toggle-group` segmented controls carrying `aria-pressed` — state
 that forced-colors and screen readers key off (see
-[accessibility](accessibility.md)).
+[accessibility](../foundations/accessibility.md)).
 
 ## Empty, loading, and error states
 
@@ -77,7 +63,7 @@ These are designed states, not fallbacks:
   knowable. Never skeleton → blank → skeleton.
 - **Empty**: an empty state says what would be here and how to get it — a
   short designed block (muted icon, one sentence, one action), not a blank
-  region. Copy rules in [content-voice](content-voice.md).
+  region. Copy rules in [content-voice](../foundations/content-voice.md).
 - **Error**: `EditorErrorBoundary` renders a contained card — the failure
   stays the size of the feature that failed, the shell survives. Same recipe
-  at panel scale. Wording again per [content-voice](content-voice.md).
+  at panel scale. Wording again per [content-voice](../foundations/content-voice.md).

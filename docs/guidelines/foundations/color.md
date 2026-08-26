@@ -54,7 +54,7 @@ focus (`Highlight` outline), pressed/selected state
 (`Highlight`/`HighlightText`, keyed off `aria-pressed`/`aria-selected`), and
 gives blueprint cells a `CanvasText` border so the grid survives flattened
 fills. The semantic-zoom blocks tier does the same (`blueprint.css`). Details
-in [accessibility](../accessibility.md).
+in [accessibility](accessibility.md).
 
 ## Lane tints
 

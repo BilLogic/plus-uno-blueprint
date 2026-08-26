@@ -1,5 +1,7 @@
 ---
 status: accepted
+audience: developers
+summary: The vendored ui/ layer keeps its upstream timings and idioms, because the shadcn CLI regenerates it.
 ---
 
 # Vendored primitives stay pristine; product composition lives in `blueprint/`

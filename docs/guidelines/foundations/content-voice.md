@@ -33,7 +33,7 @@ An error names what failed at the user's altitude and offers the recovery
 (retry, go back, reload); an empty state says what would be here and how to get
 the first one.
 Visual recipes for these states live in
-[components](components.md#empty-loading-and-error-states).
+[components](../components/overview.md#empty-loading-and-error-states).
 
 ## The agent's voice: honest, verified, plain
 

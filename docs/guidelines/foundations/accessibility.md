@@ -43,7 +43,7 @@ Everywhere, no exceptions: every animation ships a reduced path, and an
 instant swap is acceptable. CSS goes through the `prefers-reduced-motion`
 block in `animations.css` (or `motion-reduce:` utilities); JS reads
 `prefersReducedMotion()` live, never cached at mount. Policy details in
-[motion](foundations/motion.md#reduced-motion).
+[motion](motion.md#reduced-motion).
 
 ## Focus
 
@@ -67,7 +67,7 @@ rows follow the same rule.
 ## Touch targets
 
 44px minimum on touch surfaces — the `size-11` pattern
-([iconography](foundations/iconography.md#glyph-vs-hit-area)). Glyphs stay
+([iconography](iconography.md#glyph-vs-hit-area)). Glyphs stay
 small; targets do not.
 
 ## Screen-reader naming: plain names

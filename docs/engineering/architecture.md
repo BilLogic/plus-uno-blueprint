@@ -37,7 +37,7 @@ chrome (top bar, nav drawer, agent sheet) — at or above it the desktop
 editor, byte-for-byte the pre-mobile tree. The check is **synchronous**
 (`matchMedia` through `useSyncExternalStore`, `src/hooks/useMobileShell.ts`)
 so a phone never mounts the desktop canvas for even one frame. The
-breakpoint contract itself is owned by `design/responsive.md`.
+breakpoint contract itself is owned by `docs/guidelines/foundations/layout.md`.
 
 ## The module-store idiom
 
@@ -78,7 +78,7 @@ wraps annotation + selection providers) → the transform layer
   and a `--semantic-label-boost` counter-scale variable. All styling for
   the tier lives in `src/styles/blueprint.css` under
   `[data-semantic-tier]`. The visual encoding is owned by
-  `design/foundations/data-viz.md`.
+  `docs/guidelines/foundations/data-viz.md`.
 - **Camera**: fit-to-view measures `fitSelector` bounds; `focusCells`
   registers per-viewport in a module registry (`src/lib/canvasFocusCells.ts`)
   so portalled surfaces (ledger drawer, agent commands) can fly the camera
@@ -88,7 +88,7 @@ wraps annotation + selection providers) → the transform layer
   target before the concurrent focus-state render. A matching post-navigation
   fit joins that flight instead of restarting it; **"matching" is doing real
   work there**, and the layout invariants that keep it matching are in
-  `design/interaction.md` under "What 'exactly one camera animation per
+  `docs/guidelines/foundations/motion.md` under "What 'exactly one camera animation per
   intent' rests on". A fit also waits for its target to measure the same size
   on two consecutive frames before it flies, so it never aims at half-grown
   geometry.
@@ -98,7 +98,7 @@ wraps annotation + selection providers) → the transform layer
   imperative and publish one trailing React snapshot.
 
 What each gesture is *supposed* to do — the click grammar, the touch
-contract — is owned by `design/interaction.md`; this doc owns how it is
+contract — is owned by `docs/guidelines/composition/canvas.md`; this doc owns how it is
 implemented. Debug a gesture with both open.
 
 ## Data flow

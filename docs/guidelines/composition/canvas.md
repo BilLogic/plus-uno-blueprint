@@ -1,11 +1,77 @@
 ---
 audience: designers, developers
-summary: The click grammar, canvas modes, panel-as-selection, camera behavior, and the touch contract — what every input gesture means and why.
-sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+summary: The board and the chrome around it — click grammar, canvas modes, panel-as-selection, camera behaviour, the phase-row height contract and the touch contract.
+sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, src/lib/canvasInputPolicy.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+claims:
+  - src/components/blueprint/BlueprintArrowMarkerDefs.tsx
+  - src/components/blueprint/BlueprintCellButton.tsx
+  - src/components/blueprint/BlueprintColumnHandles.tsx
+  - src/components/blueprint/BlueprintDependencyArrows.tsx
+  - src/components/blueprint/BlueprintDividerTag.tsx
+  - src/components/blueprint/BlueprintEmptyCellSlot.tsx
+  - src/components/blueprint/BlueprintLabelRail.tsx
+  - src/components/blueprint/BlueprintLaneHandles.tsx
+  - src/components/blueprint/BlueprintPathBand.tsx
+  - src/components/blueprint/BlueprintStepVisual.tsx
+  - src/components/blueprint/BlueprintTechPill.tsx
+  - src/components/blueprint/BlueprintVisualPlayButton.tsx
+  - src/components/blueprint/IntegratedDependencyArrows.tsx
+  - src/components/blueprint/LaneCollapseToggle.tsx
+  - src/components/blueprint/PathDescriptionTooltip.tsx
+  - src/components/blueprint/PathLabelBadge.tsx
+  - src/components/blueprint/PathTypeColorKey.tsx
+  - src/components/blueprint/PhaseScenarioOverview.tsx
+  - src/components/blueprint/ScenarioBlueprintPanel.tsx
+  - src/components/blueprint/ScenarioParallelInfoTooltip.tsx
+  - src/components/blueprint/ScenarioTitleBadge.tsx
+  - src/components/blueprint/ServiceBlueprintGrid.tsx
+  - src/components/blueprint/TechPillFace.tsx
+  - src/components/blueprint/VisualStepDetailStack.tsx
+  - src/components/blueprint/VisualWalkthroughModal.tsx
+  - src/components/blueprint/VisualWalkthroughShell.tsx
+  - src/components/editor/AnnotationCaptureMenu.tsx
+  - src/components/editor/CanvasAnnotationLayer.tsx
+  - src/components/editor/CanvasAnnotationToolbar.tsx
+  - src/components/editor/CanvasCellContextMenu.tsx
+  - src/components/editor/CanvasDesignTools.tsx
+  - src/components/editor/CanvasEmptyState.tsx
+  - src/components/editor/CanvasLoadProgress.tsx
+  - src/components/editor/CanvasModeProvider.tsx
+  - src/components/editor/CanvasPenCursor.tsx
+  - src/components/editor/CanvasPhaseSection.tsx
+  - src/components/editor/CanvasSelectionProvider.tsx
+  - src/components/editor/EditorChrome.tsx
+  - src/components/editor/EditorLoadingSkeletons.tsx
+  - src/components/editor/EditorSequenceNav.tsx
+  - src/components/editor/EditorShell.tsx
+  - src/components/editor/EditorZoomIndicator.tsx
+  - src/components/editor/IconTooltip.tsx
+  - src/components/editor/MarqueeSelection.tsx
+  - src/components/editor/OverviewPhaseRowDivider.tsx
+  - src/components/editor/PathSelectorMenu.tsx
+  - src/components/editor/PhaseMenubarHeader.tsx
+  - src/components/editor/PhaseOverviewPhaseLoopArrow.tsx
+  - src/components/editor/PhaseSectionFlowArrow.tsx
+  - src/components/editor/ScenarioMenubarBreadcrumb.tsx
+  - src/components/editor/ScenarioPathSelectionReset.tsx
+  - src/components/editor/SegmentedControl.tsx
+  - src/components/editor/ServiceOverviewHeader.tsx
+  - src/components/editor/ServiceOverviewView.tsx
+  - src/components/editor/TabStrip.tsx
+  - src/components/editor/ThemeToggle.tsx
+  - src/components/editor/ToolFamilyMenu.tsx
+  - src/components/editor/ZoomPanViewport.tsx
+  - src/components/editor/canvasPhaseSectionLayout.ts
+  - src/components/editor/menubarHeaderLayout.ts
 last-reviewed: 2026-08-25
 ---
 
-# Interaction
+# Canvas
+
+The board, the viewport it lives in, and the desktop chrome wrapped around
+both. This doc answers "what does this gesture MEAN and why", for every surface
+that renders a blueprint. What a *phone* does with the same canvas is
+[mobile-shell.md](mobile-shell.md).
 
 ## The click grammar
 
@@ -41,7 +107,7 @@ mode.
 (`available: false`) — and on all mobile — the switch does not render. A
 disabled Edit button would advertise a capability the session doesn't have;
 discoverability is handled in copy instead — see
-[content-voice](content-voice.md).
+[content-voice](../foundations/content-voice.md).
 
 ## Panel as selection
 
@@ -67,7 +133,9 @@ contract in short:
   Wheel/trackpad input follows instantly — no smoothing, no momentum, and no
   snapping of any kind.
 - Exactly one camera animation per intent; reduced motion makes every fit a
-  jump. Automatic travel uses one 420 ms duration and a symmetric sine
+  jump. What holds that up — one writer per navigation, geometric scale
+  interpolation, and a fit that waits for its target to settle — is
+  [motion](../foundations/motion.md#what-exactly-one-camera-animation-per-intent-rests-on). Automatic travel uses one 420 ms duration and a symmetric sine
   ease-in-out across every route, keeping camera movement synchronized with
   its focus fades. Manual wheel, pinch, drag, and keyboard input remains
   immediate and never runs through this animation clock.
@@ -95,64 +163,6 @@ contract in short:
 - Focus mode dims non-selected phase/scenario cards to 30%, then lifts them to
   70% on hover or keyboard focus. They remain navigation targets so a reader
   can switch focus directly; cell-level actions inside them remain inactive.
-
-### What "exactly one camera animation per intent" rests on
-
-The rule above is not self-enforcing. Three invariants hold it up, and each
-has been broken at least once — always with the same symptom, a navigation
-that lurches or appears to overshoot. Check them before touching canvas
-layout, not just canvas camera code.
-
-**1. One writer per navigation.** There is exactly one camera writer for a
-navigation: the fit scheduled when the fit key changes. There used to be a
-second — an ease started imperatively at click time, before React
-reconciled — and the two could never agree on a destination, because the
-pre-flight closed over the *overview's* fit parameters (`maxFitZoom: 1`,
-margin 48, no insets) while the settled fit uses the *focused* view's
-(`MAX_ZOOM`, margin 20, 56px insets), and navigating also mounts the sticky
-header, which changes the container's height. `fitToView` skips a second
-animation only when the targets match, so that skip could never fire: every
-click ran a 420 ms glide superseded partway by another, and a sine ease
-restarted from a moving camera departs at zero velocity — glide, brake,
-glide. `createCameraTransitionClock` already covers the latency the
-pre-flight was for, by starting the ease's clock on the first frame the
-browser can draw.
-
-Keep this property when adding camera entry points: an imperative flight and
-a fit-key flight for the same intent will fight unless they compute the same
-destination from the same parameters.
-
-**1a. Focus should change as little geometry as possible.** Every scenario in
-a phase row takes identical layout props whether or not it is the focused
-one, and no focus styling touches a box-affecting property (the dim rules set
-`opacity`, `background-color`, `border-color`, `box-shadow` only).
-
-This is a discipline, not a guarantee, and the honest statement of the
-remaining hole is: the focused scenario is excluded from the row-height
-**input**, and that height reaches every panel — including the focused one —
-as a `Math.max` floor. So the focused panel's box is unchanged *provided its
-own measured content exceeds the row floor*, which is the ordinary case and
-is exactly the case the exclusion was introduced for. Where a hot estimate
-for the focused scenario is strictly the row maximum, focusing it does shrink
-the row. Fixing that properly means fixing the estimator, not the exclusion.
-
-**2. Scale interpolates geometrically, not linearly.** Zoom is the reciprocal
-of the visible rect's width, so interpolating width linearly makes the
-perceived rate hyperbolic and the ease curve decorative. Measured on a real
-zoom-out before this was fixed: 78% of the perceived travel was done by the
-halfway frame, 98% by 74% of the duration — the camera flew out and then
-hung, which reads exactly as overshoot. `interpolateCameraTransform`
-interpolates the viewport **centre** linearly and the **scale** as a ratio
-(`z0·(z1/z0)^t`), which is what makes the ease symmetric between zooming in
-and zooming out. `cameraTransition.test.ts` pins equal ratios per quarter.
-
-**3. A fit waits for its target's layout to settle.** Compare panels reach
-their real size across more than one commit, so the fit scheduled by a fit-key
-change holds until the target measures the same size on two consecutive frames
-(250 ms backstop). Without it the ease aims at half-grown geometry and the
-resize observer's correction lands as a snap on top of the finished ease. The
-resize observer's own owed-fit branch stands down while that loop is watching,
-since the resizes it sees are the ones being waited out.
 
 ## The phase-row height contract
 
@@ -265,4 +275,5 @@ third mechanism again — WebKit `gesture*` events, with no touch pointers and
 no synthesised ctrl+wheel behind them — so the canvas reads their cumulative
 `scale` and zooms from it, gated on the touch-pointer count being zero so
 that iOS, where the pointer map already pinches, never applies scale twice. Breakpoint questions (what exists on a
-phone at all) belong to [responsive](responsive.md).
+phone at all) belong to
+[foundations/layout.md](../foundations/layout.md).

@@ -17,7 +17,7 @@ import { join, relative } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const DOCS = join(ROOT, 'docs')
-const REFERENCE_DIRS = ['product', 'design', 'engineering']
+const REFERENCE_DIRS = ['product', 'guidelines', 'engineering', 'reference', 'adr', 'connectors']
 
 /** Task-shaped routing — a row per task someone arrives holding, phrased
  * the way they'd ask it. Update alongside any doc move. */
@@ -28,20 +28,21 @@ const ROUTING = [
   ['Someone mentioned an audit finding — what is it, can I trust it, how do I challenge it?', 'product/04-the-assistant-and-audits.md'],
   ['Run a mapping / audit / what-if / slicing session; where is the methodology specified?', 'product/05-service-design-practice.md'],
   ['Ground product or UX decisions on blueprint evidence', 'product/06-product-design-on-blueprints.md'],
-  ['Why does the app look and feel this way?', 'design/README.md'],
-  ['Match an existing surface’s visual style', 'design/README.md (surface anatomy) → design/components.md'],
-  ['Which color / type / motion / icon / elevation / layout token do I use — and how do I add one?', 'design/foundations/'],
-  ['Chart, band, severity or zoom-tier encodings', 'design/foundations/data-viz.md'],
-  ['Which component or primitive do I reach for; empty/error-state anatomy', 'design/components.md'],
-  ['What does a click / ⌘-click / tap / pinch DO, and why?', 'design/interaction.md'],
-  ['What happens on a phone or tablet (as a spec)?', 'design/responsive.md'],
-  ['Write UI copy, error text, or agent-voice wording', 'design/content-voice.md'],
-  ['Accessibility bar: contrast, forced-colors, reduced motion, touch targets', 'design/accessibility.md'],
+  ['Why does the app look and feel this way?', 'guidelines/overview.md'],
+  ['Match an existing surface’s visual style', 'guidelines/overview.md (surface anatomy) → guidelines/composition/'],
+  ['Which token do I use — and how do I add one?', 'guidelines/foundations/tokens.md → the topic’s own foundation file'],
+  ['Chart, band, severity or zoom-tier encodings', 'guidelines/foundations/data-viz.md'],
+  ['Which component or primitive do I reach for; empty/error-state anatomy', 'guidelines/components/overview.md'],
+  ['What does a click / ⌘-click / tap / pinch DO, and why?', 'guidelines/composition/canvas.md'],
+  ['What happens on a phone or tablet (as a spec)?', 'guidelines/foundations/layout.md (the gate) → guidelines/composition/mobile-shell.md'],
+  ['Working on a panel, the sidebar, compare, slices, the agent, a dialog', 'guidelines/composition/overview.md'],
+  ['Write UI copy, error text, or agent-voice wording', 'guidelines/foundations/content-voice.md'],
+  ['Accessibility bar: contrast, forced-colors, reduced motion, touch targets', 'guidelines/foundations/accessibility.md'],
   ['How does the app fit together / where does data flow?', 'engineering/architecture.md'],
   ['Where does X live; which pattern do I copy?', 'engineering/codebase-guide.md'],
-  ['Add a field to cells end-to-end (schema → RPC → panel UI)', 'engineering/access-and-security.md → engineering/codebase-guide.md → design/components.md'],
+  ['Add a field to cells end-to-end (schema → RPC → panel UI)', 'engineering/access-and-security.md → engineering/codebase-guide.md → guidelines/composition/entity-panels.md'],
   ['Which user is my session / my agent; what writes are legitimate; how is access enforced?', 'AGENTS.md invariants → engineering/access-and-security.md'],
-  ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'design/interaction.md + engineering/architecture.md'],
+  ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'guidelines/composition/canvas.md + engineering/architecture.md'],
   ['How do the in-app agent and its rosters work?', 'engineering/agent-system.md'],
   ['Add or change an agent tool; run the eval harness', 'engineering/agent-tools.md'],
   ['Coding standards, the Supabase benchmark, tooling traps, how to run and write tests', 'engineering/standards.md'],
@@ -109,7 +110,7 @@ ${ROUTING.map(([q, d]) => `| ${q} | ${d} |`).join('\n')}
 ## Reading paths by role
 
 - **New team member (non-design/dev):** product/01 → 02 → 03, stop there.
-- **New designer:** product/01 → 03 → 06, then design/README → foundations/.
+- **New designer:** product/01 → 03 → 06, then guidelines/overview → foundations/.
 - **New developer:** README (setup) → engineering/architecture → codebase-guide → access-and-security, with AGENTS.md always in force.
 - **Coding agent:** AGENTS.md (auto-loaded) → this file → the routing rows for your task; any write task reads engineering/access-and-security first.
 

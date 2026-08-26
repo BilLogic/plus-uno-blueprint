@@ -72,7 +72,7 @@ Reviewers keep re-teaching these; copy them instead.
   `BlueprintCellDetailPanel` (`src/components/blueprint/BlueprintCellDetailPanel.tsx`):
   side panel on desktop, `Drawer` sheet on mobile. Which posture a given
   surface *should* use — drawer vs sheet vs panel, snap points, handles —
-  is owned by `design/components.md`; this doc only points at the
+  is owned by `docs/guidelines/components/overview.md`; this doc only points at the
   implementation to copy.
 - **Need→primitive map** for agent-UX work →
   `docs/reference/ui-inventory.md`.

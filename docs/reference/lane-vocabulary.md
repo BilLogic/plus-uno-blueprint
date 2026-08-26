@@ -1,9 +1,24 @@
+---
+audience: agents and authors
+summary: The closed list of teams a lane's owner_team may name, the actor/team split the stakeholders registry enforces, and the reasoning four 2026-08-21 migrations carried out.
+sources: supabase/migrations/20260821280000_the_registry_gains_teams.sql, supabase/migrations/20260821290000_every_lane_that_owns_work_names_its_team.sql, supabase/migrations/20260821300000_a_team_is_not_a_stakeholder_kind.sql, supabase/migrations/20260821320000_perceived_owner_where_it_differs.sql, supabase/migrations/20260821380000_no_outsider_owns_a_lane.sql
+last-reviewed: 2026-08-25
+---
+
 # Lane vocabulary — the team list
 
 `docs/reference/spec-house-style.md` says `lanes.owner_team` must come **"from
-the closed list"**. This is that list. Until now it did not exist, which is why
-`owner_team` is empty on all 306 lanes: the field had a rule and no vocabulary
-to satisfy it.
+the closed list"**. This is that list.
+
+> **This document has been carried out.** It was written as a proposal while
+> `owner_team` was empty on every lane. Four migrations on 2026-08-21 executed
+> it — two of them citing this file by name — so read the reasoning as the
+> record of a decision, not as a plan. What shipped: `20260821280000` gave
+> `stakeholders` its `parent_id`; `20260821290000` filled `owner_team` by the
+> rule below (158 lanes) and installed the trigger that enforces it;
+> `20260821300000` added the `team` kind and moved the ten teams onto it;
+> `20260821320000` wrote `perceived_owner` on the Reporting-an-Issue cells;
+> `20260821380000` then NULLed three outsider-owned lanes, leaving **155**.
 
 Not to be confused with `src/lib/agent/skill/references/lane-vocabulary.md`,
 which tells parallel drafting agents how to converge on lane *roles* and *actor
@@ -15,7 +30,7 @@ labels*. This one names the teams a lane can be owned by.
 > board's content disagree, the disagreement is written down below rather than
 > resolved by guessing.*
 
-**Status: settled. Ready to write.**
+**Status: written.** See the migrations above.
 
 ---
 

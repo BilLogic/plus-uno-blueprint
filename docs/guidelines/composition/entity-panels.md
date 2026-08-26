@@ -1,0 +1,233 @@
+---
+audience: designers, developers
+summary: One shell, six subjects — the drawer chrome every entity panel is made of, what the six panels share, where they legitimately differ, and the invariants a well-meaning edit breaks.
+sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDetailPanel.tsx, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/blueprint/panelLoading.tsx, src/lib/panelEditorBusy.ts
+claims:
+  - src/components/blueprint/BlueprintCellDetailPanel.tsx
+  - src/components/blueprint/CellContentSection.tsx
+  - src/components/blueprint/CellDependencyEditor.tsx
+  - src/components/blueprint/CellDependencySections.tsx
+  - src/components/blueprint/CellEvidenceTab.tsx
+  - src/components/blueprint/CellInSlicesFooter.tsx
+  - src/components/blueprint/CellOverviewSpec.tsx
+  - src/components/blueprint/CellPanelEditor.tsx
+  - src/components/blueprint/CellResourcesTab.tsx
+  - src/components/blueprint/EntityDetailPanel.tsx
+  - src/components/blueprint/EntityPropertiesButton.tsx
+  - src/components/blueprint/EntityTitleAffordance.tsx
+  - src/components/blueprint/LaneHeaderAffordance.tsx
+  - src/components/blueprint/LanePanel.tsx
+  - src/components/blueprint/NotionPropertyRow.tsx
+  - src/components/blueprint/PanelTermLabel.tsx
+  - src/components/blueprint/PanelTextareaField.tsx
+  - src/components/blueprint/PhasePanel.tsx
+  - src/components/blueprint/ScenarioPanel.tsx
+  - src/components/blueprint/ServicePanel.tsx
+  - src/components/blueprint/StepHeaderAffordance.tsx
+  - src/components/blueprint/StepPanel.tsx
+  - src/components/blueprint/panelLoading.tsx
+  - src/components/blueprint/panelShell.tsx
+last-reviewed: 2026-08-25
+---
+
+# Entity panels
+
+Six subjects — service, phase, scenario, lane, step, cell — over **one shell**.
+That is the whole design, and it is worth saying why it is one shell: all of the
+chrome was written for the cell panel and lived inside it, and four levels of
+the blueprint tree own spec fields while only one had a surface. Copying a
+ninety-line drawer four times is how two of them end up with different close
+behaviour. `panelShell.tsx` is that drawer, lifted rather than duplicated.
+
+## What the shell owns
+
+`src/components/blueprint/panelShell.tsx` owns posture, keying, the footer host,
+the field label, the header, the kind badge, the empty state and the Save/Cancel
+row. Two panels sit on it: `EntityDetailPanel` (the five non-cell subjects) and
+`BlueprintCellDetailPanel`.
+
+- **Posture** is the drawer/sheet contract, owned by
+  [dialogs-sheets-and-forms.md](dialogs-sheets-and-forms.md): a right-pinned
+  inspector card on desktop, a bottom sheet below the gate, keyed on posture so
+  a resize across the breakpoint remounts clean.
+- **`data-cell-detail-panel` keeps its name** even though it is now the shell's
+  attribute, not the cell panel's. It is a DOM contract in twenty places —
+  every entry/exit animation in `animations.css`, the pan-exempt selector in
+  `ServiceOverviewView`, `MarqueeSelection`, `SliceView`, `print.css`. Renaming
+  it is a twenty-site change that will present as "the panel stopped animating".
+- **One tree position.** Every render branch — details, draft, placeholder,
+  differences — returns the shell at the same tree position, so React
+  reconciles them as the same drawer. A surface switch is a content swap inside
+  an open drawer, never a close-reopen.
+- **One footer host per panel.** `CELL_PANEL_FOOTER_ID` and its four siblings
+  are global DOM ids a form portals its Save/Cancel row into. Only one panel is
+  open at a time today; separate ids make that a design choice rather than the
+  only thing standing between us and the lane panel's buttons appearing under
+  the cell panel's fields.
+- **Exit timing is a timer, not only a callback.** `PANEL_EXIT_MS` must stay ≥
+  the exit transition in `animations.css`. The drawer's own
+  `onOpenChangeComplete(false)` was measured not to fire; it stays wired, and
+  whichever arrives first wins.
+- **Save is disabled until something differs** from the frozen baseline, and
+  closing is blocked only while a save is in flight (`panelEditorBusy()`, which
+  reads `data-panel-editor[data-busy]` — deliberately not a cell-specific
+  attribute, or it would have guarded exactly one panel).
+
+**Four states, not three.** Loading and error were there; a lane with no owner,
+no KPIs and no tools rendered a full form of blank fields, which reads as a
+loaded form the reader has to inspect to discover is empty. `PanelEmpty` is the
+fourth — **view mode only**. In edit mode a blank form is correct.
+
+## Loading is shaped, not generic
+
+One generic placeholder stood in for four structurally different panels, and no
+panel has two equal full-width boxes, so the swap read as a re-flow rather than
+a fill-in. `panelLoading.tsx` exports one placeholder per panel, with heights
+derived from the real field count, and counts that are **free**: the step
+placeholder reads the frame count off the canvas store, the scenario one counts
+the paths already displayed. A request issued to improve a placeholder would
+invert the whole point.
+
+`panelLoadingContract.test.ts` pins that structurally: the phase and step
+placeholders must carry the same field-row count as their panels, and nothing
+may reintroduce a generic `<PanelLoading />`. Change a panel's field count
+without touching its placeholder and the suite says so.
+
+## What the six share
+
+Every panel is `PanelHeader` → one scroll region → `PanelFooterHost`, and every
+one edits the same way:
+
+- `canEdit` is design mode **and** write capability, never one of them.
+- The form's baseline is **frozen at mount** with a `useState` initializer. The
+  query keeps tracking the database, and a revert landing mid-edit would
+  otherwise let Save write the reverted values straight back.
+- The body is keyed by entity id, so switching subjects inside the open drawer
+  starts a clean form.
+- Save writes only what differs, records one ledger entry **per row that
+  moved**, invalidates, and closes. Cancel is close.
+- The meta line says only what the canvas cannot. Counts and relationships —
+  never a restatement of the title.
+
+**There is no dirty-close confirmation.** Closing a panel with unsaved edits
+discards them silently; the only thing guarded is closing mid-save. If that
+should change, it changes in the shell, once.
+
+## Where they legitimately differ
+
+| Panel | Difference, and why |
+|---|---|
+| Service | No breadcrumbs, and a third branch for "resolved, no service row" — without it the panel falls through to the skeleton and animates forever. Two rows, two mutations, two ledger entries, so the summary and the business model revert separately. |
+| Phase | Hints lifted verbatim from the column comments, so the panel and the schema cannot drift. |
+| Lane | No evidence, resources or dependency tabs: those all key on a **cell**, and a lane has no link to any of them. The only panel with `PanelEmpty` gating and the fan-out alert. |
+| Scenario | A paths accordion opening `multiple`, first path open — comparing two routes is the reason to read this panel, and an accordion that closes one to open the next makes that impossible. |
+| Step | The one panel whose save invalidates the canvas grid, because `summary` is also the storyboard caption. |
+| Cell | Tabs, two surfaces, an expand toggle, agent commands and the in-slices footer. |
+
+### The lane panel's fan-out
+
+A lane row belongs to one path, so the "same" lane exists once per path. Saving
+the lane panel writes **all** of its siblings — the save passes
+`lane.siblingLaneIds`, not `lane.id`. The panel says so inline, as an `Alert`
+above the fields, and that placement is the rule rather than a preference: this
+is a consequence the reader would be surprised by, and something that must be
+read is always visible. A hover can be missed by never hovering; an ⓘ can be
+missed by never clicking.
+
+Scale check from the delete path: a lane delete addressed by (scenario, name)
+removes 93 rows where an older impact function reported 11.
+
+## The cell panel
+
+Two **surfaces** — Details and Differences — are siblings of the whole panel,
+switched by one component rendered from two call sites (two verbatim copies
+drifted apart once already). The Differences tab carries no count: counts live
+in exactly two places app-wide, the menubar Diff pill and each ledger group's
+trailing number.
+
+Inside Details, **Overview is not a tab.** It always renders inline at the top;
+the tab row (Dependencies, Evidence, Resources) sits below it and both share one
+scroll area. A new cell always opens on Dependencies, reset during render — and
+the arrow editor closes with it, because a half-typed arrow carried onto a
+different cell points away from somewhere nobody is looking. The tab body
+reserves `min-h-56`, which is cheaper and steadier than easing a panel that
+otherwise jumped a couple of hundred pixels per switch.
+
+Three rules the overview follows and new fields should too: the title yields to
+the tech pill when they are identical; the description paragraph is suppressed
+when it repeats the title or the content; and the touchpoint is a labelled
+field, not a second chip. Printing the same word twice as two facts is the
+failure each of them prevents.
+
+**Only outgoing arrows are editable here.** An incoming arrow belongs to the
+cell at the other end and is edited from there. Candidates are version-scoped,
+because the RPC refuses a cross-version dependency and offering one would only
+be a way to reach that refusal.
+
+**Creating a cell writes nothing until Save.** The draft branch opens the panel
+on an empty slot's target; ✕, Escape and Cancel discard it entirely. A cancelled
+cell never existed — which is the fix for creation feeling broken, back when the
+row was written first and filled in later.
+
+## Labels are the control
+
+`PanelTermLabel` exists because a dozen section headings named a concept —
+`Dependencies`, `Evidence`, `Resources`, `Applies when` — and said nothing about
+it, on the assumption that a reader with the panel open already knows the
+vocabulary. The people who most need a blueprint are the ones who do not.
+
+**No ⓘ beside the label: the label IS the word whose meaning is in question.**
+The same rule governs the cell panel's tabs, the lane kind chip, and
+`StatusBadge`. Definitions live once, in `src/lib/panelTerms.ts` — the same word
+appears in a tab, a section heading and a field label, and three copies of a
+definition are three chances to drift.
+
+`PanelTextareaField` is a bare `<textarea>` with the cell panel's treatment,
+deliberately not `input-group` (which the inventory reserves for the composer).
+Read-only renders **prose, not a disabled input** — a disabled textarea reads as
+a broken input. Its ring is `ring-inset`, and that is load-bearing: the field
+lives inside an accordion panel whose `overflow-hidden` drives the height
+animation, and an outset ring gets sheared by the clip.
+
+## Getting in
+
+`EntityPropertiesButton` is one ⓘ for every level. On a lane it is revealed on
+hover — a lane label already means two different things depending on where it is
+drawn — but **revealed is not absent**: it is transparent at rest and always in
+the tab order. It stops propagation, because opening a panel is not a selection,
+not a navigation and not a pan.
+
+The header affordances carry a two-flag invariant worth stating plainly:
+interactivity is the provider's flag **and** the board being in scope. With the
+provider flag alone, 176 lane headers and 125 step headers across every mounted
+board wear hover, a focus ring and a pointer. Where a header is not interactive
+it renders as inert prose, not a disabled button.
+
+## Invariants a well-meaning edit breaks
+
+1. Renaming `data-cell-detail-panel` — twenty external selectors.
+2. Giving two panels the same footer id.
+3. Rendering the shell unconditionally instead of returning `null` when closed —
+   breaks `@starting-style` entry and strands an invisible drawer.
+4. Trusting `onOpenChangeComplete(false)` alone.
+5. Keying the canvas top-offset on `open` rather than `open || closing` — the
+   panel teleports up before sliding out.
+6. OR-ing a second boolean into the cell drawer's `open`. `panelState` is the
+   single owner of "is it open", full stop.
+7. Dropping the posture key on the drawer.
+8. Re-deriving a form from the live query instead of the frozen baseline.
+9. Renaming `data-panel-editor` to something cell-specific.
+10. Changing a panel's field count without its placeholder.
+11. An outset focus ring inside the scenario accordion or the lane rail.
+12. Setting the kind chip's colour with a raw value or a utility class. The chip
+    this replaced tried `backgroundColor: style.lane`, and `style.lane` is a
+    role key — the declaration was invalid, the browser dropped it, and the
+    badge rendered as plain text from the day it shipped.
+13. Adding `PanelEmpty` to edit mode.
+14. Saving the lane panel against `lane.id`, or dropping the fan-out alert.
+15. Dropping the canvas invalidation from the step save.
+16. A second ⓘ beside a term label, a tab or a status badge.
+
+> `NotionPropertyRow`'s docstring says it belongs to the cell detail panel. It
+> does not — its only consumer is `ScenarioSlideHeader`. The docstring is stale;
+> the component is a plain label/value row.

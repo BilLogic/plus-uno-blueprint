@@ -1,6 +1,6 @@
 ---
 audience: designers
-summary: The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations.
+summary: The design point of view — restraint, one signature per surface, the Supabase benchmark — plus the foundations/components/composition split and how to propose deviations.
 sources: docs/plans/2026-08-04-001-refactor-supabase-design-system-alignment-plan.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, docs/plans/2026-08-08-002-feat-desktop-ui-refinements-plan.md, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md, src/styles/
 last-reviewed: 2026-08-25
 ---
@@ -20,18 +20,26 @@ near-black", no decoration that carries no information.
 
 ## How this folder is organized
 
-- `foundations/` — the raw material: [color](foundations/color.md),
-  [typography](foundations/typography.md), [motion](foundations/motion.md),
-  [iconography](foundations/iconography.md), [elevation](foundations/elevation.md),
-  [data-viz](foundations/data-viz.md), [layout](foundations/layout.md).
-- [`components.md`](components.md) — which primitive for what, drawer/sheet
-  postures, empty/error-state recipes.
-- [`interaction.md`](interaction.md) — the click grammar, canvas modes, camera,
-  the touch contract.
-- [`responsive.md`](responsive.md) — the breakpoint contract (it is the single
-  owner of breakpoints).
-- [`content-voice.md`](content-voice.md) — UI copy, the agent's voice, naming.
-- [`accessibility.md`](accessibility.md) — the bar every surface must clear.
+Three folders, and **a new doc has exactly one correct slot** because the slot
+is decided by where the file it describes lands in `src/` — not by a per-file
+judgement.
+
+- **`foundations/`** — the raw material, one topic per file:
+  [tokens](foundations/tokens.md), [color](foundations/color.md),
+  [typography](foundations/typography.md), [spacing](foundations/spacing.md),
+  [layout](foundations/layout.md) (which owns breakpoints),
+  [motion](foundations/motion.md), [elevation](foundations/elevation.md),
+  [iconography](foundations/iconography.md),
+  [data-viz](foundations/data-viz.md),
+  [accessibility](foundations/accessibility.md),
+  [content-voice](foundations/content-voice.md).
+- **`components/`** — the 34 primitives under `src/components/ui/`.
+  [Which primitive for what](components/overview.md), and the state recipes.
+- **`composition/`** — everything assembled out of them: the 145 files under
+  `blueprint/`, `editor/`, `cover/` and `mobile/`, cut into
+  [nine nameable surfaces](composition/overview.md). Every one of those files
+  is claimed by exactly one doc there, and `npm run check:harness` fails the
+  build if that stops being true.
 
 Every fact has one owner doc; everything else links. Code owns values — these
 docs point at token files and components, they do not restate numbers.
@@ -43,7 +51,7 @@ docs point at token files and components, they do not restate numbers.
 **blocks tier** — flat blocks, counter-scaled phase labels — so the overview
 reads as a table of contents (journey length, density per phase) instead of a
 shrunken page. Signature: _the board that becomes a map at distance_. See
-[data-viz](foundations/data-viz.md) and [interaction](interaction.md).
+[data-viz](foundations/data-viz.md) and [canvas](composition/canvas.md).
 
 **Scenario detail.** The camera flies into one phase or scenario; phase badges
 carry the time-marker register (`01 · ARRIVAL`), cells open the detail panel on
@@ -68,13 +76,13 @@ desktop, scoped to one scenario at a time — the drawer is the only way to
 move between them, a single-select path pill replaces the PATHS
 checkboxes, and everything is view-only for every tier. Signature: _the
 scenario-scoped canvas_. See
-[responsive](responsive.md), which owns the whole contract.
+[mobile-shell](composition/mobile-shell.md), which owns the whole contract.
 
 **The agent panel.** Docked to the sidebar or floating; a bottom sheet on
 mobile, entered through a floating action button. Its canvas annotations draw in a named, tokenized red ink no human
 swatch offers, so "the agent drew this" is legible at a glance. Signature:
 _the agent's ink_. See [color](foundations/color.md) and
-[content-voice](content-voice.md) for its voice.
+[content-voice](foundations/content-voice.md) for its voice.
 
 ## Deviating
 

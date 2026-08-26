@@ -1,5 +1,7 @@
 ---
 status: accepted
+audience: developers
+summary: Layout values the runtime does math on live in TypeScript, not CSS custom properties, because Math.min has no var().
 ---
 
 # TypeScript owns every layout number; CSS receives them

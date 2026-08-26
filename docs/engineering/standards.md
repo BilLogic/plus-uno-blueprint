@@ -26,7 +26,7 @@ The rules that follow:
   hard-coded durations (use `src/lib/motion.ts`), no magic widths the
   shell does math on (use `src/lib/layoutTokens.ts`). A raw value in a
   diff is a review finding unless the token genuinely doesn't exist —
-  in which case add the token (process: `design/foundations/color.md`).
+  in which case add the token (process: `docs/guidelines/foundations/color.md`).
 - Component tokens follow Supabase's order — property, component, state
   (`--background-blueprint-cell-hover`) — and are deliberately not
   declared at `:root` (a root declaration would make every `var(…,

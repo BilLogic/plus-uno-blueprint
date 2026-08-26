@@ -12,7 +12,7 @@ last-reviewed: 2026-08-25
 Icons come from **lucide-react**, and only lucide-react. No second icon set,
 no bespoke SVGs for concepts lucide already covers — a mixed icon vocabulary
 reads as seams. If lucide genuinely lacks a needed glyph, that is a
-[deviation](../README.md#deviating) to argue in the PR.
+[deviation](../overview.md#deviating) to argue in the PR.
 
 ## Sizing
 
@@ -37,7 +37,7 @@ its touchable area are two different things:
   `size-4`–`size-5` glyphs. Never grow the glyph to grow the target.
 
 The 44px floor is part of the accessibility bar — see
-[accessibility](../accessibility.md).
+[accessibility](accessibility.md).
 
 ## Icons that mean something get names
 
