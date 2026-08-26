@@ -38,11 +38,10 @@ const ROUTING = [
   ['Working on a panel, the sidebar, compare, slices, the agent, a dialog', 'guidelines/composition/overview.md'],
   ['Write UI copy, error text, or agent-voice wording', 'guidelines/foundations/content-voice.md'],
   ['Accessibility bar: contrast, forced-colors, reduced motion, touch targets', 'guidelines/foundations/accessibility.md'],
-  ['How does the app fit together / where does data flow?', 'engineering/architecture.md'],
-  ['Where does X live; which pattern do I copy?', 'engineering/codebase-guide.md'],
+  ['Where does X live, how does it connect, which pattern do I copy?', 'engineering/codebase-guide.md'],
   ['Add a field to cells end-to-end (schema → RPC → panel UI)', 'engineering/access-and-security.md → engineering/codebase-guide.md → guidelines/composition/entity-panels.md'],
   ['Which user is my session / my agent; what writes are legitimate; how is access enforced?', 'AGENTS.md invariants → engineering/access-and-security.md'],
-  ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'guidelines/composition/canvas.md + engineering/architecture.md'],
+  ['Canvas gesture or camera misbehaving — intended vs implemented behavior', 'guidelines/composition/canvas.md + engineering/codebase-guide.md'],
   ['How do the in-app agent and its rosters work?', 'engineering/agent-system.md'],
   ['Add or change an agent tool; run the eval harness', 'engineering/agent-tools.md'],
   ['Coding standards, the Supabase benchmark, tooling traps, how to run and write tests', 'engineering/standards.md'],
@@ -111,7 +110,7 @@ ${ROUTING.map(([q, d]) => `| ${q} | ${d} |`).join('\n')}
 
 - **New team member (non-design/dev):** product/01 → 02 → 03, stop there.
 - **New designer:** product/01 → 03 → 06, then guidelines/overview → foundations/.
-- **New developer:** README (setup) → engineering/architecture → codebase-guide → access-and-security, with AGENTS.md always in force.
+- **New developer:** SETUP → engineering/codebase-guide → access-and-security → docs/adr/, with AGENTS.md always in force.
 - **Coding agent:** AGENTS.md (auto-loaded) → this file → the routing rows for your task; any write task reads engineering/access-and-security first.
 
 ## Every reference doc

@@ -15,6 +15,8 @@ import { useSyncExternalStore } from 'react'
  *
  * Deliberately just the id. The panel can show a tech pill inside a cell, a
  * draft, or the compare ledger; none of those are a stable thing to link to.
+ *
+ * The cross-repo relationship: docs/connectors/plus-uno.md.
  */
 
 let openCellId: string | null = null

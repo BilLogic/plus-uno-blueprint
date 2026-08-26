@@ -27,11 +27,10 @@ before treating it as truth), and the **queue** (`todos/`).
 | Working on a panel, the sidebar, compare, slices, the agent, a dialog | guidelines/composition/overview.md |
 | Write UI copy, error text, or agent-voice wording | guidelines/foundations/content-voice.md |
 | Accessibility bar: contrast, forced-colors, reduced motion, touch targets | guidelines/foundations/accessibility.md |
-| How does the app fit together / where does data flow? | engineering/architecture.md |
-| Where does X live; which pattern do I copy? | engineering/codebase-guide.md |
+| Where does X live, how does it connect, which pattern do I copy? | engineering/codebase-guide.md |
 | Add a field to cells end-to-end (schema → RPC → panel UI) | engineering/access-and-security.md → engineering/codebase-guide.md → guidelines/composition/entity-panels.md |
 | Which user is my session / my agent; what writes are legitimate; how is access enforced? | AGENTS.md invariants → engineering/access-and-security.md |
-| Canvas gesture or camera misbehaving — intended vs implemented behavior | guidelines/composition/canvas.md + engineering/architecture.md |
+| Canvas gesture or camera misbehaving — intended vs implemented behavior | guidelines/composition/canvas.md + engineering/codebase-guide.md |
 | How do the in-app agent and its rosters work? | engineering/agent-system.md |
 | Add or change an agent tool; run the eval harness | engineering/agent-tools.md |
 | Coding standards, the Supabase benchmark, tooling traps, how to run and write tests | engineering/standards.md |
@@ -43,7 +42,7 @@ before treating it as truth), and the **queue** (`todos/`).
 
 - **New team member (non-design/dev):** product/01 → 02 → 03, stop there.
 - **New designer:** product/01 → 03 → 06, then guidelines/overview → foundations/.
-- **New developer:** README (setup) → engineering/architecture → codebase-guide → access-and-security, with AGENTS.md always in force.
+- **New developer:** SETUP → engineering/codebase-guide → access-and-security → docs/adr/, with AGENTS.md always in force.
 - **Coding agent:** AGENTS.md (auto-loaded) → this file → the routing rows for your task; any write task reads engineering/access-and-security first.
 
 ## Every reference doc
@@ -82,8 +81,7 @@ before treating it as truth), and the **queue** (`todos/`).
 | engineering/access-and-security.md | developers | Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments. |
 | engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill vendoring contract. |
 | engineering/agent-tools.md | developers | The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest. |
-| engineering/architecture.md | developers | How the app fits together — provider stack, module stores, the canvas stack, data flow, the mobile fork, and the performance constraints that shape all of it. |
-| engineering/codebase-guide.md | developers | Where things live in src/ and which existing pattern to copy before inventing one. |
+| engineering/codebase-guide.md | developers | Where things live, how the app fits together, and which existing pattern to copy — provider stack, module stores, the canvas stack, data flow, and the performance budget the always-mounted board sets. |
 | engineering/operations.md | developers | Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist. |
 | engineering/standards.md | developers | The quality bar — token discipline against the Supabase benchmark, comment philosophy, what earns a test and how to run them, tooling traps, review workflow. |
 | reference/lane-vocabulary.md | agents and authors | The closed list of teams a lane's owner_team may name, the actor/team split the stakeholders registry enforces, and the reasoning four 2026-08-21 migrations carried out. |
@@ -96,3 +94,11 @@ before treating it as truth), and the **queue** (`todos/`).
 | adr/0001-one-token-model-as-the-single-test-seam.md | developers | Style enforcement rides one token model, so a new rule is a test against tokens rather than a second scanner. |
 | adr/0002-typescript-owns-layout-numbers.md | developers | Layout values the runtime does math on live in TypeScript, not CSS custom properties, because Math.min has no var(). |
 | adr/0003-vendored-primitives-stay-pristine.md | developers | The vendored ui/ layer keeps its upstream timings and idioms, because the shadcn CLI regenerates it. |
+| adr/0004-the-board-is-always-fully-mounted.md | developers | Every phase, scenario, cell and arrow stays mounted and dims rather than unmounting, which buys instant navigation and one layout and spends a decoded-memory budget. |
+| adr/0005-cross-surface-state-is-a-module-store.md | developers | State that must outlive a mount point, or be read by non-React code, lives in a module-level store read through useSyncExternalStore rather than in context. |
+| adr/0006-reads-never-refetch-on-their-own.md | developers | The query cache is staleTime Infinity because nothing outside this app edits the data, which moves the whole burden of freshness onto every mutation. |
+| adr/overview.md | developers | What earns an ADR here, the numbering and template, and the current set. |
+| connectors/netlify.md | developers | The host — push to main is production, there is no netlify.toml, and the deploy environment carries only public values. |
+| connectors/overview.md | developers | The three systems this instance is coupled to, and the rule that keeps that coupling out of the open-source package. |
+| connectors/plus-uno.md | developers | uno-bot reads this app's database and deep-links back into it — where the shared constants live, what has broken silently before, and what the probe does and does not catch. |
+| connectors/supabase.md | developers | The hosted Postgres this app reads and writes — what the app is allowed to do, which parts are generated, and what a schema change obliges you to update. |

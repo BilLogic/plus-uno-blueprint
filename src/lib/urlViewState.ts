@@ -11,6 +11,8 @@
  * reader can open the exact cell it quoted. It belongs to the BASE view — a
  * slice tab is a different reading of the blueprint, so `slice` wins and `cell`
  * is dropped when both appear rather than opening a panel behind a tab.
+ *
+ * The cross-repo relationship: docs/connectors/plus-uno.md.
  */
 
 import { BLUEPRINT_CONTRACT } from '@/lib/blueprintContract'

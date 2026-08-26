@@ -8,7 +8,8 @@ import { findFallbackScenarioForCells } from '@/lib/sliceCells'
 /**
  * `?cell=<id>` — open the blueprint on one cell, panel showing.
  *
- * This is the receiving end of the share link: uno-bot cites a cell in Slack
+ * This is the receiving end of the share link (docs/connectors/plus-uno.md):
+ * uno-bot cites a cell in Slack
  * or the IDE and attaches this URL, so the reader lands on the thing that was
  * quoted instead of on the homepage with a cell id to hunt for.
  *

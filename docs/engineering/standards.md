@@ -92,7 +92,7 @@ it and then bundles.
   rather than this repo's history.
 - After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.
 - The whole-board canvas has a decoded-image memory budget — read
-  [architecture](architecture.md#performance-constraints) before adding
+  [codebase-guide](codebase-guide.md#performance-constraints) before adding
   canvas assets.
 
 ## Review workflow

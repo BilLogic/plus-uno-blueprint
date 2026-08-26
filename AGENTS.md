@@ -13,7 +13,7 @@ the code is newer; say so and follow the code.
    first — which user type this session runs as decides which tools and
    paths are even legitimate. The plain-language capability table is
    `product/01-overview.md`.
-4. Unsure where a task belongs → `docs/engineering/architecture.md`
+4. Unsure where a task belongs → `docs/engineering/codebase-guide.md`
    first.
 5. `docs/plans/` and `docs/ideation/` are HISTORY — decision-era
    snapshots, not current truth. Check frontmatter `status` /

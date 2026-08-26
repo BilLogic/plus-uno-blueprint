@@ -62,7 +62,7 @@ Create a project at [supabase.com](https://supabase.com), run migrations
 Everything deeper lives under `docs/`, mapped by
 [`docs/INDEX.md`](docs/INDEX.md): the data model and access enforcement
 in `engineering/access-and-security.md`, app architecture in
-`engineering/architecture.md`, the design system in `guidelines/`, product
+`engineering/codebase-guide.md`, the design system in `guidelines/`, product
 and practice guides in `product/`, decision records in `decisions/`.
 `docs/plans/` and `docs/ideation/` are history — snapshots, not current
 truth. Deploys ship from `main` via Netlify; environments and rollback
