@@ -56,6 +56,7 @@ const ROUTING = [
   ['Coding standards, the Supabase benchmark, tooling traps, how to run and write tests', 'docs/engineering/standards.md'],
   ['Deploy, rollback, environments, monitoring, troubleshooting', 'docs/engineering/operations.md'],
   ['Anything crossing a repo boundary — the database, uno-bot, the deploy', 'docs/connectors/overview.md'],
+  ['Merge from the template, or find out what is still PLUS-specific here', 'docs/engineering/template-relationship.md'],
   ['Is this plan file still true?', 'its frontmatter `status` + `distilled-into`'],
 ]
 
