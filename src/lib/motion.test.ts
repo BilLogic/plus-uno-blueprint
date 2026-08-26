@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { rulesDeclaring } from '@/lib/tokenModel'
 import {
   CANVAS_REVEAL_ARROWS,
   CANVAS_REVEAL_DONE,
@@ -57,28 +58,41 @@ test('camera ease matches between motion.ts and the @theme key', () => {
   )
 })
 
-test('every keyframe animation is disabled under reduced motion', () => {
-  // The reduced-motion block must cover every selector that declares an
-  // `animation:` — a new animated surface that skips the block is the bug
-  // this guards against.
-  const animated = [...css.matchAll(/^(\[[^\n]+\])\s*\{\n\s*animation:/gm)]
-    .map((m) => m[1])
-    // Attribute-selector chains: the reduced-motion block lists ancestors,
-    // so match on the leading data attribute. The value is part of it —
-    // `[data-slot='skeleton']` is a different surface from `[data-slot]`, and
-    // a pattern that stopped at the name matched nothing and threw here.
-    .map((sel) => sel.match(/\[data-[a-z-]+(?:=[^\]]*)?\]/)![0])
-  // EVERY block, not the first one. The file has two, and a rule that lands
-  // in the second was reported as uncovered by a test reading only the first.
-  const reduced = [
-    ...css.matchAll(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]+?)\n\}/g),
-  ].map((match) => match[1])
-  assert.ok(reduced.length > 0, 'reduced-motion block exists')
-  const covered = reduced.join('\n')
-  for (const sel of new Set(animated)) {
+/**
+ * Every animated surface has a reduced-motion answer — in every stylesheet.
+ *
+ * This assertion used to read `animations.css` only, then `animations.css` and
+ * `blueprint.css`. `utilities.css` declares an `animation:` too, on the
+ * `delayed-appear` utility, and had no reduced-motion branch at all: a guard
+ * that names its own files names the ones where its property holds. It asks
+ * the model now, which reads every stylesheet the entry imports, so the next
+ * animated surface is covered wherever someone puts it.
+ */
+test('every animation is disabled under reduced motion, in every stylesheet', () => {
+  const rules = rulesDeclaring('animation')
+  assert.ok(rules.length > 5, 'the model found the animated rules')
+
+  const reduced = (rule: (typeof rules)[number]) =>
+    rule.context.some((at) => /prefers-reduced-motion:\s*reduce/.test(at))
+
+  // `@utility x` compiles to `.x`, which is what a reduced-motion rule targets.
+  const key = (selector: string) =>
+    selector.startsWith('@utility ')
+      ? `.${selector.slice('@utility '.length).trim()}`
+      : // Attribute-selector chains: the reduced-motion block lists ancestors,
+        // so match on the leading data attribute. The value is part of it —
+        // `[data-slot='skeleton']` is a different surface from `[data-slot]`.
+        (selector.match(/\[data-[a-z-]+(?:=[^\]]*)?\]/)?.[0] ?? selector)
+
+  const covered = rules
+    .filter(reduced)
+    .map((rule) => rule.selector)
+    .join('\n')
+
+  for (const rule of rules.filter((entry) => !reduced(entry))) {
     assert.ok(
-      covered.includes(sel),
-      `${sel} is covered by the reduced-motion block`,
+      covered.includes(key(rule.selector)),
+      `${rule.file}:${rule.line} ${rule.selector} has no reduced-motion branch`,
     )
   }
 })

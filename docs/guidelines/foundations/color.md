@@ -60,10 +60,20 @@ in [accessibility](accessibility.md).
 
 Blueprint lanes identify themselves by fill: the `[data-blueprint-lane='…']`
 rules in `blueprint.css` set the tier-4 cell surface variables per lane, from
-tier-1 family steps. Lane families are deliberately disjoint from the
-path-type and touchpoint-tone families (`src/lib/pathColorTheme.ts`), and
-`src/lib/palette.test.ts` measures the stylesheet to hold contrast and
-disjointness — a new lane or path color must keep that test green.
+tier-1 family steps. Lane families are disjoint from the touchpoint-tone
+families and from the open set a named path draws from
+(`src/lib/pathColorTheme.ts`).
+
+They are **not** disjoint from the path *types*: `happy` is green and the
+`actor` lane is green. The palette is fully allocated — nine families to lanes,
+seven to touchpoint tones, sixteen in all with nothing spare — so `happy`
+cannot move off green without displacing something that is also on screen.
+What separates them is weight: a path is a step-1100 line, a lane a step-400
+fill. `src/lib/palette.test.ts` measures the stylesheet to hold contrast, holds
+the open set disjoint, asserts the allocation, and asserts that the type
+overlap is exactly that one and drawn heavier than the lane it crosses. A new
+lane or path color must keep that test green — and there is no tenth family for
+a new lane to take.
 
 ## The agent's ink
 

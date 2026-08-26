@@ -77,7 +77,7 @@ export function BlueprintDividerTag({
       className={cn(
         'inline-flex shrink-0 items-center px-3 py-1.5 font-semibold uppercase leading-none tracking-[0.06em]',
         compact ? 'text-3xs' : 'text-2xs',
-        connected ? 'rounded-l rounded-r-none' : 'rounded',
+        connected ? 'rounded-l-sm rounded-r-none' : 'rounded-sm',
       )}
       style={getBlueprintFillStyle(BLUEPRINT_THEME.dividerTagBg)}
     >

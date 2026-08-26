@@ -59,12 +59,22 @@ export function getPathColorKey(path: PathColorInput): string {
  * left identifies variants, which are the only type a scenario holds several
  * of at once.
  *
- * Deliberately disjoint from the eight lane families, and `palette.test.ts`
- * holds that. Before this, the open set drew on ten families including green,
- * blue, violet and pink, so a path could render as a 2px line in exactly the
- * hue of the lane it crossed. Four of the five open paths on the live board
- * did: `Check Goals` was violet over the violet frontstage-tech lane,
- * `Update Goals` pink over the pink frontstage-action lane.
+ * Deliberately disjoint from the nine lane families, and `palette.test.ts`
+ * holds that. (Eight until `partner-action` landed on 2026-08-21; the comment
+ * went stale the same day and said "eight" for a year of commits.) Before
+ * this, the open set drew on ten families including green, blue, violet and
+ * pink, so a path could render as a 2px line in exactly the hue of the lane it
+ * crossed. Four of the five open paths on the live board did: `Check Goals`
+ * was violet over the violet frontstage-tech lane, `Update Goals` pink over
+ * the pink frontstage-action lane.
+ *
+ * The disjointness holds for the OPEN set. It does not hold for the path
+ * TYPES: `happy` is green and the `actor` lane is green. That is not fixable
+ * by reallocation — nine lanes plus seven touchpoint tones is all sixteen
+ * families, so `happy` cannot move without displacing something else that is
+ * on screen. What holds it together is the weight: a path is a step-1100 line,
+ * a lane is a step-400 fill. `palette.test.ts` asserts that the overlap is
+ * exactly one, named, and drawn at a heavier step than the lane it crosses.
  *
  * Crimson and tomato went out with red: a variant that reads as trouble is
  * worse than one that reads as nothing in particular.

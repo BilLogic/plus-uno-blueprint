@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { CELL_STEP } from '@/lib/blueprintCellStyle'
 import {
   PATH_TYPE_COLORS,
@@ -8,6 +7,20 @@ import {
   getPathDashArray,
   PATH_IDENTITY_PERIOD,
 } from '@/lib/pathColorTheme'
+import {
+  chromaCeiling,
+  dial,
+  contrast,
+  derivedFillInk,
+  hslToRgb,
+  inSrgbGamut,
+  oklch,
+  oklchHue,
+  oklchToLinearSrgb,
+  palette,
+  resolvePaletteToken,
+  stylesheet,
+} from '@/lib/tokenModel'
 
 /**
  * The app resolves every colour through `var()`, so nothing in the browser can
@@ -20,136 +33,20 @@ import {
  * that was missing rather than the part that was expensive.
  */
 
-const COLORS_CSS = fileURLToPath(
-  new URL('../styles/colors.css', import.meta.url),
-)
-const SEMANTIC_CSS = fileURLToPath(
-  new URL('../styles/semantic.css', import.meta.url),
-)
-const LIGHT_THEME_CSS = fileURLToPath(
-  new URL('../styles/themes/light.css', import.meta.url),
-)
-
-type Rgb = [number, number, number]
-
-function hslToRgb(h: number, s: number, l: number): Rgb {
-  const sat = s / 100
-  const light = l / 100
-  const c = (1 - Math.abs(2 * light - 1)) * sat
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = light - c / 2
-  const [r, g, b] =
-    h < 60
-      ? [c, x, 0]
-      : h < 120
-        ? [x, c, 0]
-        : h < 180
-          ? [0, c, x]
-          : h < 240
-            ? [0, x, c]
-            : h < 300
-              ? [x, 0, c]
-              : [c, 0, x]
-  return [r + m, g + m, b + m]
-}
-
-/**
- * OKLCH → linear sRGB (Björn Ottosson's matrices). The brand tokens are the
- * one part of the system authored in OKLCH rather than picked off the HSL
- * ramps, so they need their own resolver; `resolve()` below only speaks
- * `--color-family-step`.
+/*
+ * The colour maths, the ramps and the cascade all come from `tokenModel` now.
+ *
+ * This file used to carry its own resolver — HSL and OKLCH conversions, a
+ * `colors.css` reader, a contrast solver — and so did nothing else. That is
+ * the shape ADR 0001 retires: five guards, five readers, five samples, each
+ * one measuring the region where its property already held. The maths is
+ * unchanged; the reader is shared, so widening it widens every rule at once.
  */
-function oklchToLinearSrgb(l: number, c: number, hDeg: number): Rgb {
-  const h = (hDeg * Math.PI) / 180
-  const a = c * Math.cos(h)
-  const b = c * Math.sin(h)
-  const lc = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3
-  const mc = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3
-  const sc = (l - 0.0894841775 * a - 1.291485548 * b) ** 3
-  return [
-    4.0767416621 * lc - 3.3077115913 * mc + 0.2309699292 * sc,
-    -1.2684380046 * lc + 2.6097574011 * mc - 0.3413193965 * sc,
-    -0.0041960863 * lc - 0.7034186147 * mc + 1.707614701 * sc,
-  ]
-}
-
-const inSrgbGamut = (rgb: Rgb) => rgb.every((v) => v >= -1e-6 && v <= 1 + 1e-6)
-
-/**
- * The other direction: gamma-encoded sRGB → OKLCH hue in degrees. Needed
- * because the `--brand-*` ramp is authored as HSL literals, so its OKLCH hue
- * — the thing `--primary` has to agree with — is not readable off the page.
- */
-function oklchHue([r, g, b]: Rgb): number {
-  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-  const [R, G, B] = [lin(r), lin(g), lin(b)]
-  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B)
-  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B)
-  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B)
-  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
-  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
-  return ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360
-}
-
-/** Gamma-encoded sRGB, so these values can meet the `Rgb` the solver expects. */
-function oklch(l: number, c: number, hDeg: number): Rgb {
-  return oklchToLinearSrgb(l, c, hDeg).map((v) => {
-    const clamped = Math.min(1, Math.max(0, v))
-    return clamped <= 0.0031308
-      ? 12.92 * clamped
-      : 1.055 * clamped ** (1 / 2.4) - 0.055
-  }) as Rgb
-}
-
-/** Largest in-gamut chroma at this lightness and hue, to 4dp. */
-function chromaCeiling(l: number, hDeg: number): number {
-  let lo = 0
-  let hi = 0.5
-  for (let i = 0; i < 60; i++) {
-    const mid = (lo + hi) / 2
-    if (inSrgbGamut(oklchToLinearSrgb(l, mid, hDeg))) lo = mid
-    else hi = mid
-  }
-  return lo
-}
-
-function relativeLuminance([r, g, b]: Rgb): number {
-  const channel = (v: number) =>
-    v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-}
-
-function contrast(a: Rgb, b: Rgb): number {
-  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort(
-    (x, y) => y - x,
-  )
-  return Number(((hi + 0.05) / (lo + 0.05)).toFixed(2))
-}
-
-/** `--color-{family}-{step}` values for one theme, keyed `family-step`. */
-function readScale(theme: 'light' | 'dark'): Map<string, Rgb> {
-  const css = readFileSync(COLORS_CSS, 'utf8')
-  const start = css.indexOf(theme === 'light' ? ':root {' : '@media screen {')
-  const block = theme === 'light' ? css.slice(start, css.indexOf('@media screen {')) : css.slice(start)
-  const scale = new Map<string, Rgb>()
-  const declaration =
-    /--color-([a-z]+)-(\d+):\s*hsla?\(\s*([\d.]+)(?:deg)?,\s*([\d.]+)%,\s*([\d.]+)%/g
-  for (const [, family, step, h, s, l] of block.matchAll(declaration)) {
-    scale.set(`${family}-${step}`, hslToRgb(Number(h), Number(s), Number(l)))
-  }
-  return scale
-}
-
-const THEMES = { light: readScale('light'), dark: readScale('dark') }
+const THEMES = { light: palette('light'), dark: palette('dark') }
 
 /** Resolve a `var(--color-family-step)` string against one theme. */
-function resolve(token: string, theme: 'light' | 'dark'): Rgb {
-  const match = /--color-([a-z]+-\d+)/.exec(token)
-  if (!match) throw new Error(`not a palette token: ${token}`)
-  const value = THEMES[theme].get(match[1])
-  if (!value) throw new Error(`missing from colors.css: ${match[1]}`)
-  return value
-}
+const resolve = resolvePaletteToken
+
 
 describe('palette', () => {
   it.each(['light', 'dark'] as const)('%s scale parsed', (theme) => {
@@ -165,19 +62,15 @@ describe('brand fill', () => {
   // this block resolves the declarations on disk and measures them directly —
   // the fill is the most-tuned colour in the system and has been retuned three
   // times, twice into a state someone had to walk back.
-  const semantic = readFileSync(SEMANTIC_CSS, 'utf8')
-  const light = readFileSync(LIGHT_THEME_CSS, 'utf8')
+  const semantic = stylesheet('semantic.css').text
+  const light = stylesheet('themes/light.css').text
 
-  const dial = (css: string, name: string) => {
-    const match = new RegExp(`--${name}:\\s*([\\d.]+)`).exec(css)
-    if (!match) throw new Error(`dial not found: --${name}`)
-    return Number(match[1])
-  }
-
-  const HUE = dial(light, 'hue')
-  const SURFACE = dial(light, 'surface')
-  const FOREGROUND_LIGHTNESS = dial(light, 'foreground-lightness')
-  const CHROMA = dial(light, 'chroma')
+  // Through the cascade, not off the page: a dial's value is what wins at the
+  // root under a theme, which is a different question from what one file says.
+  const HUE = dial('--hue', 'light')
+  const SURFACE = dial('--surface', 'light')
+  const FOREGROUND_LIGHTNESS = dial('--foreground-lightness', 'light')
+  const CHROMA = dial('--chroma', 'light')
 
   // --primary: oklch(<l> <c> var(--primary-hue))
   const declared =
@@ -188,7 +81,7 @@ describe('brand fill', () => {
   const L = Number(declared[1])
   const C = Number(declared[2])
 
-  const canvas = oklch(SURFACE, 0, dial(light, 'surface-hue'))
+  const canvas = oklch(SURFACE, 0, dial('--surface-hue', 'light'))
 
   it('states its own lightness and chroma, so a retune has to come here', () => {
     // A drive-by edit that moves either number lands on this assertion first
@@ -323,25 +216,6 @@ describe('blueprint cells', () => {
  * 1.17-2.33:1 in dark mode, and a test that only knew about one value could
  * not have caught it.
  */
-function derivedFillInk(fill: Rgb): Rgb {
-  const [l, c, h] = oklchFromSrgb(fill)
-  const inkL = Math.min(0.99, Math.max(0.12, (0.62 - l) * 100))
-  return oklch(inkL, c * 0.08, h)
-}
-
-/** Gamma-encoded sRGB -> OKLCH triple (the inverse `oklch()` above needs). */
-function oklchFromSrgb([r, g, b]: Rgb): [number, number, number] {
-  const lin = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
-  const [R, G, B] = [lin(r), lin(g), lin(b)]
-  const l_ = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B)
-  const m_ = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B)
-  const s_ = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B)
-  const L = 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_
-  const A = 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_
-  const B2 = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_
-  return [L, Math.hypot(A, B2), ((Math.atan2(B2, A) * 180) / Math.PI + 360) % 360]
-}
-
 describe('path badges', () => {
   const paths = Object.entries(PATH_TYPE_COLORS)
 
@@ -442,11 +316,32 @@ describe('path badges', () => {
   })
 })
 
+/**
+ * Board chrome — the ink-on-ground pairs the frame actually renders.
+ *
+ * These are CROSS-FAMILY pairs: a gray ink on a slate ground. Every assertion
+ * in this file used to measure a pair whose halves came from the same
+ * primitive family, and every colour defect found in this system has been a
+ * pair whose halves did not. The divider caption ran at 2.64:1 for months
+ * inside a file that measured contrast 100 times.
+ *
+ * The floor is 4.5:1 because both of these are text, and small text: the
+ * divider caption is `--text-2xs` (11px), `--text-3xs` (10px) on compact
+ * boards. Neither is near the large-text threshold.
+ */
+describe.each(['light', 'dark'] as const)('board chrome: %s', (theme) => {
+  const pairs: ReadonlyArray<readonly [string, string, string]> = [
+    ['divider caption', BLUEPRINT_THEME.dividerLabel, BLUEPRINT_THEME.dividerBg],
+    ['label rail header', BLUEPRINT_THEME.headerText, BLUEPRINT_THEME.labelRail],
+  ]
+
+  it.each(pairs)('%s clears AA on its own row', (_name, ink, ground) => {
+    expect(contrast(resolve(ink, theme), resolve(ground, theme))).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
 describe('lane roles and touchpoint tones stay disjoint', () => {
-  const css = readFileSync(
-    fileURLToPath(new URL('../styles/blueprint.css', import.meta.url)),
-    'utf8',
-  )
+  const css = stylesheet('blueprint.css').text
   const familiesIn = (attr: string) =>
     new Set(
       [
@@ -466,7 +361,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     expect([...lanes].filter((f) => tones.has(f))).toEqual([])
   })
 
-  it('keeps named paths off the lane families too', () => {
+  it('keeps the open set off the lane families', () => {
     // A named path is drawn as a line across the lanes it touches. Before the
     // open set moved onto the tone families, four of the five named paths on
     // the live board rendered in the hue of a lane they crossed.
@@ -479,16 +374,89 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     expect(pathFamilies.size).toBeGreaterThan(1)
     expect([...pathFamilies].filter((f) => lanes.has(f))).toEqual([])
   })
+
+  /*
+   * The claim this file used to make, and the one it can actually hold.
+   *
+   * The test above titled itself "keeps NAMED paths off the lane families" and
+   * sampled 40 synthetic names all hard-coded to `path_type: 'variant'`.
+   * `getPathColor` short-circuits every other type, so the sample could only
+   * ever produce the four open families — the one set that is disjoint by
+   * construction. `happy` and `exception` were structurally unreachable, and
+   * `happy` is green against the green `actor` lane. The name said one thing,
+   * the sample another, and `guidelines/foundations/color.md` cited this file
+   * as holding the wider claim.
+   *
+   * Extending the sample fails, and that failure is the finding. The honest
+   * fix is to narrow the claim rather than reshuffle the palette: 9 lane
+   * families plus 7 touchpoint tones is all 16, so `happy` cannot move off
+   * green without displacing something that is also on screen. What CAN be
+   * held is that the overlap is exactly one, known, and drawn at a different
+   * weight — a step-1100 line over a step-400 fill.
+   */
+  const KNOWN_LANE_OVERLAP = ['happy']
+
+  it('has exactly one path type sharing a lane family, and names it', () => {
+    const lanes = familiesIn('lane')
+    const overlapping = Object.entries(PATH_TYPE_COLORS)
+      .filter(([, token]) => lanes.has(/--color-([a-z]+)-/.exec(token)![1]))
+      .map(([type]) => type)
+    expect(overlapping).toEqual(KNOWN_LANE_OVERLAP)
+  })
+
+  it('draws that overlap at a different weight from the lane it crosses', () => {
+    // What makes the one collision survivable: the path is a line at the text
+    // step, the lane is a fill four steps lighter. Same family, not the same
+    // colour.
+    const laneFill = Number(CELL_STEP.surface)
+    for (const type of KNOWN_LANE_OVERLAP) {
+      const step = Number(
+        /--color-[a-z]+-(\d+)/.exec(
+          PATH_TYPE_COLORS[type as keyof typeof PATH_TYPE_COLORS],
+        )![1],
+      )
+      expect(step).toBeGreaterThan(laneFill)
+    }
+  })
+
+  /*
+   * The constraint nobody had written down: the palette is FULL.
+   *
+   * Nine families to lanes, seven to touchpoint tones, sixteen in all and
+   * nothing spare. It is invisible until someone tries to add a tenth lane and
+   * finds there is nowhere for it to go — and it is the reason the fix above
+   * is a narrowed claim rather than a reallocation.
+   */
+  it('states its own allocation, so a tenth lane fails before it is drawn', () => {
+    const lanes = familiesIn('lane')
+    const tones = familiesIn('tone')
+    expect(lanes.size).toBe(9)
+    expect(tones.size).toBe(7)
+    expect(new Set([...lanes, ...tones]).size).toBe(16)
+  })
 })
 
-describe('interaction states', () => {
-  const css = readFileSync(
-    fileURLToPath(new URL('../styles/blueprint.css', import.meta.url)),
-    'utf8',
-  )
-  /** Every `[data-blueprint-lane]` rule, as role → { property: family-step }. */
+/*
+ * Lanes AND touchpoint tones. The tones used to get set membership and a
+ * `size > 0` guard while the lanes got a completeness check plus hover,
+ * pressed, ring and text contrast in both themes — and the gap was
+ * structural, not incidental: the regex below matched
+ * `[data-blueprint-lane=…]` only, so all seven tones were excluded from every
+ * contrast assertion in the file. Seven of our sixteen allocated families were
+ * exempt from every check. They set the same seven properties from the same
+ * ramps and render as cell surfaces exactly the way lanes do; there was never
+ * a reason beyond the shape of one regex.
+ */
+describe.each([
+  ['lane', 9],
+  ['tone', 7],
+] as const)('interaction states: %s', (attr, expectedCount) => {
+  const css = stylesheet('blueprint.css').text
+  /** Every `[data-blueprint-*]` rule, as role → { property: family-step }. */
   const laneRules = [
-    ...css.matchAll(/\[data-blueprint-lane='([a-z-]+)'\] \{([^}]*)\}/g),
+    ...css.matchAll(
+      new RegExp(`\\[data-blueprint-${attr}='([a-z-]+)'\\] \\{([^}]*)\\}`, 'g'),
+    ),
   ].map(([, role, body]) => ({
     role,
     props: Object.fromEntries(
@@ -510,11 +478,11 @@ describe('interaction states', () => {
     '--foreground-blueprint-cell',
   ]
 
-  it('defines every state on every lane role', () => {
-    // Nine since `partner-action` landed (2026-08-21). The count is asserted
-    // so a role added to the type without a CSS block fails here rather than
-    // rendering an unstyled row.
-    expect(laneRules).toHaveLength(9)
+  it('defines every state on every role', () => {
+    // Nine lanes since `partner-action` landed (2026-08-21), seven tones. The
+    // count is asserted so a role added to the type without a CSS block fails
+    // here rather than rendering an unstyled row.
+    expect(laneRules).toHaveLength(expectedCount)
     for (const { role, props } of laneRules) {
       for (const key of REQUIRED) {
         expect(`${role}:${key}`).toBe(props[key] ? `${role}:${key}` : 'MISSING')

@@ -241,7 +241,7 @@ export function ServiceBlueprintGrid({
               excludeLabelRail
             />
             <div
-              className="pointer-events-none absolute top-0 bottom-0 z-[1]"
+              className="pointer-events-none absolute top-0 bottom-0 z-1"
               style={{
                 left: LAYER_COLUMN_WIDTH,
                 width: 1,
@@ -752,7 +752,7 @@ function BlueprintCellBlock({
   }
 
   const shellClassName = cn(
-    'relative z-[1] flex shrink-0 items-stretch',
+    'relative z-1 flex shrink-0 items-stretch',
     shellPadding,
     fitVertically && (variant === 'pills' ? 'h-full' : 'h-full min-h-0'),
     variant === 'visual' && 'min-h-0 overflow-hidden',

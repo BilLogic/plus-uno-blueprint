@@ -59,7 +59,7 @@ export function BlueprintStickyLabelBackdrop({
   return (
     <div
       aria-hidden
-      className="pointer-events-none sticky z-[35]"
+      className="pointer-events-none sticky z-35"
       style={{
         gridColumn: 1,
         gridRow: `${rowStart} / ${rowCount + rowStart}`,
@@ -90,7 +90,7 @@ export function BlueprintSwimLaneDivider({
   return (
     <div
       aria-hidden
-      className="pointer-events-none relative z-[5] justify-self-stretch"
+      className="pointer-events-none relative z-5 justify-self-stretch"
       style={{
         gridColumn: '2 / -1',
         gridRow: rowIndex + 1,
@@ -173,7 +173,7 @@ export function BlueprintDividerRow({
       role="separator"
       aria-label={label}
       data-blueprint-divider={dividerKind}
-      className={cn('relative z-[45] min-w-0', className)}
+      className={cn('relative z-45 min-w-0', className)}
       style={{
         ...gridPlacement,
         ...style,

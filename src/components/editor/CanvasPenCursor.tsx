@@ -96,7 +96,7 @@ export function CanvasPenCursor() {
       aria-hidden
       hidden
       data-pen-cursor=""
-      className="pointer-events-none fixed top-0 left-0 z-[9999] will-change-transform"
+      className="pointer-events-none fixed top-0 left-0 z-9999 will-change-transform"
       style={{ transformOrigin: '0 0' }}
     >
       <Icon

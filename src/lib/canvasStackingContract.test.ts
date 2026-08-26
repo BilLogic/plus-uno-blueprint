@@ -2,6 +2,26 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
+/**
+ * The canvas stacking order, as far as a file can hold it.
+ *
+ * This used to pin `"lane === 'forward' ? 'z-0' : 'z-[30]'"` as an exact
+ * substring, which made the test the reason the arbitrary spelling survived:
+ * `z-30` and `z-[30]` are the same value written two ways, and the guard
+ * enforced the minority one. Every z-index in the tree is written as a bare
+ * number now, and `tokenDiscipline.test.ts` holds that for the whole tree
+ * rather than for the two files this one happens to read.
+ *
+ * What is asserted here is the relationship — a forward connector sits under
+ * the cells, a back connector sits over them, and the two renderers agree with
+ * each other — read out of the source rather than matched character for
+ * character, so a reformat cannot break it and a reordered declaration cannot
+ * hide behind it.
+ *
+ * These are still structural, not behavioural. Turning them into tests that
+ * exercise the stacking is issue #57's item on source-grep contract tests, and
+ * belongs with the canvas work rather than with the token model.
+ */
 function source(relativePath: string): string {
   return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf8')
 }
@@ -14,22 +34,49 @@ const phaseSection = source('../components/editor/CanvasPhaseSection.tsx')
 const phaseLoop = source('../components/editor/PhaseOverviewPhaseLoopArrow.tsx')
 const viewport = source('../components/editor/ZoomPanViewport.tsx')
 
+/** The `lane === 'forward' ? <a> : <b>` z pair a connector renderer picks. */
+function connectorBands(file: string): { forward: number; back: number } {
+  const match = /lane === 'forward' \? 'z-(\d+)' : 'z-(\d+)'/.exec(file)
+  if (!match) throw new Error('no forward/back z ternary in this renderer')
+  return { forward: Number(match[1]), back: Number(match[2]) }
+}
+
+/** The z band a component's class string puts a thing in. */
+function band(file: string, marker: string): number {
+  const line = file.split('\n').find((entry) => entry.includes(marker))
+  if (!line) throw new Error(`marker not found: ${marker}`)
+  const match = /\bz-(\d+)\b/.exec(line)
+  if (!match) throw new Error(`no z band on: ${marker}`)
+  return Number(match[1])
+}
+
+/** Cells sit here — `relative z-1` on every cell block and lane row. */
+const CELL_BAND = 1
+
 describe('canvas stacking contract', () => {
-  it('keeps forward connectors below cells in both arrow renderers', () => {
-    expect(legacyArrows).toContain("lane === 'forward' ? 'z-0' : 'z-[30]'")
-    expect(integratedArrows).toContain("lane === 'forward' ? 'z-0' : 'z-[30]'")
+  it('keeps forward connectors below cells and back connectors above', () => {
+    for (const renderer of [legacyArrows, integratedArrows]) {
+      const { forward, back } = connectorBands(renderer)
+      expect(forward).toBeLessThan(CELL_BAND)
+      expect(back).toBeGreaterThan(CELL_BAND)
+    }
+  })
+
+  it('gives both arrow renderers the same bands', () => {
+    // Two renderers for one relationship: the bug this catches is one of them
+    // being retuned and the other left behind.
+    expect(connectorBands(legacyArrows)).toEqual(connectorBands(integratedArrows))
   })
 
   it('keeps phase connectors below badges and annotation tools', () => {
-    expect(phaseSection).toContain(
-      'className="pointer-events-none absolute z-20 -translate-x-1/2"',
-    )
-    expect(phaseLoop).toContain(
-      'className="pointer-events-none absolute left-0 top-0 z-20 overflow-visible"',
-    )
+    const connectorBand = band(phaseSection, 'pointer-events-none absolute z-')
+    expect(connectorBand).toBe(band(phaseLoop, 'overflow-visible'))
+    expect(connectorBand).toBeLessThan(connectorBands(legacyArrows).back)
   })
 
   it('contains canvas-local lanes in one stacking context', () => {
-    expect(viewport).toContain("cn('relative isolate min-h-0 flex-1', className)")
+    // Without `isolate` every band above competes with the app chrome rather
+    // than with the other things on the board.
+    expect(viewport).toMatch(/cn\('relative isolate /)
   })
 })

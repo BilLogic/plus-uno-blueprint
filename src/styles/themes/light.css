@@ -8,8 +8,6 @@
 .light {
   --helpers-os-appearance: Light;
 
-  --radius: 0.625rem;
-
   /* Brand hue, and the one place it is declared. 177.6 is the OKLCH hue of
      #85ECD5 — this product's specified blue-green — and it is also, exactly,
      the hue of every step of the `--brand-*` ramp below (the ramp is OKLCH
