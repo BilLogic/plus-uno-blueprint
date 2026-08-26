@@ -7,7 +7,7 @@ claims:
   - src/components/mobile/MobileTopBar.tsx
   - src/components/mobile/MobileNavSheet.tsx
   - src/components/mobile/MobilePathSelector.tsx
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 ---
 
 # Mobile shell

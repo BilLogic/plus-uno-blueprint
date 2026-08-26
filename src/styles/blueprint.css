@@ -208,7 +208,14 @@
      against its own cell — content still on screen and still meant to be
      legible, well under SC 1.4.3. Measured across the lane fills: 0.45 gives
      ~3.0:1, 0.55 ~4.2:1, 0.6 ~5.0:1. The desaturate does the de-emphasis work
-     that the opacity used to overreach for, so members still dominate. */
+     that the opacity used to overreach for, so members still dominate.
+
+     The `filter` makes each of these cells its own render surface, which
+     re-rasterizes as the camera scale changes — so it was measured before it
+     was kept. It is free to ~112 cells and only bites past ~170; a v1 slice is
+     single-scenario, which caps the dim at one board (~56 cells on the widest
+     one we have). Numbers and method:
+     docs/guidelines/composition/slice-view.md#what-the-filter-costs-measured */
   [data-slice-focus='focused']
     [data-blueprint-cell-anchor]:not([data-slice-member]) {
     opacity: 0.6;
