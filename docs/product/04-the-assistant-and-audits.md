@@ -1,7 +1,7 @@
 ---
 audience: everyone
 summary: What the in-app AI assistant is, what audits and findings are, why results can be trusted, and how to challenge them.
-sources: src/lib/agent/skill/references/audit-playbook.md, src/lib/agent/skill/references/check-gap-sweep.md, src/components/editor/AgentDock.tsx, src/components/editor/SessionChangesSheet.tsx
+sources: agentic-service-blueprinting references/audit-playbook.md, agentic-service-blueprinting skills/audit/references/check-gap-sweep.md, src/components/editor/AgentDock.tsx, src/components/editor/SessionChangesSheet.tsx
 last-reviewed: 2026-08-08
 ---
 

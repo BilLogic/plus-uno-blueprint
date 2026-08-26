@@ -1,8 +1,8 @@
 ---
 audience: developers
-summary: The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill vendoring contract.
+summary: The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the pinned-package contract the rulebook arrives through.
 sources: src/lib/agent/loop.ts, src/lib/agent/skills.ts, src/lib/agent/uiBridge.ts, src/lib/agent/uiCommands.ts, src/lib/agent/sessions.ts, src/lib/agent/persistence.ts, src/lib/agent/role.md
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 ---
 
 # The in-app agent
@@ -105,32 +105,62 @@ Two module-level seams, both deliberately non-React:
   interface. API keys are entered in the ⚙ panel and live in browser
   storage (`settings.ts`) — never in the repo or deploy env.
 
-## Skills and the dual-home sync contract
+## Skills and the pinned-package contract
 
 The slash commands (`/sb:map`, `/sb:slice`, `/sb:audit`, `/sb:whatif`,
 plus bare aliases — `skills.ts`) load the **same SKILL.md files IDE humans
-get** from the `sb` plugin. The contract:
+get** from the `sb` plugin. Not a copy of them — the files themselves.
+The contract:
 
 - **Canonical home**: the `agentic-service-blueprinting` repo. Skills and
   references are authored THERE, never in this repo.
-- **Vendored copy**: `src/lib/agent/skill/{references,skills}/`, bundled
-  via `?raw` imports and served through `get_reference`.
-- **How it updates**: by taking upstream's copy. This repo and
-  `agentic-service-blueprinting` **already share history** (the graft in #105),
-  so upstream changes arrive as an ordinary `git merge template/main`. A
-  handful of paths must never arrive that way — this instance's migrations,
-  its blueprint data, its generated database types, its agent persona — and
-  `npm run check:template-quarantine` (`scripts/template-quarantine.json`,
-  CI: `.github/workflows/template-quarantine.yml`) fails the merge that takes
-  the package's version of one. There is no sync script here. `scripts/sync-agent-skill.mjs` was deleted: its
-  `--check` exited 0 when the sibling checkout was absent, so it gated
-  nothing, and by the time that was noticed the drift had inverted — a
-  vocabulary rename had landed in the vendored copy and a sync would have
-  reverted it.
-- Adding a reference means adding it upstream, taking the file here, and
+- **How the app reads them**: `agentic-service-blueprinting` is a
+  dependency, pinned by git URL at a tagged release
+  (`package.json`; the lockfile pins the resolved commit). `skills.ts`
+  imports `skills/<name>/SKILL.md?raw`; `read.ts` imports the eighteen
+  references from `references/` and `skills/<name>/references/` and serves
+  them through `get_reference`. `scripts/agent-harness/run.mjs` resolves
+  the same files off the same install, so the harness and the app cannot
+  disagree about what the agent read.
+- **How it updates**: bump the pin. Nothing here is editable in a way that
+  sticks, which is the point — there is no second copy to fork.
+- **What guards it**: `npm ci`. An unresolvable or missing dependency
+  fails every job. There is no sync script and no drift check, because
+  there is no longer anything to compare. `scripts/sync-agent-skill.mjs`
+  was deleted: its `--check` exited 0 when the sibling checkout was
+  absent, so it gated nothing, and by the time that was noticed the drift
+  had inverted — a vocabulary rename had landed in the vendored copy and a
+  sync would have reverted it.
+- **Instance code still merges, not installs.** This repo and
+  `agentic-service-blueprinting` **share history** (the graft in #105), so
+  upstream *code* changes arrive as an ordinary `git merge template/main`.
+  A handful of paths must never arrive that way — this instance's
+  migrations, its blueprint data, its generated database types, its agent
+  persona — and `npm run check:template-quarantine`
+  (`scripts/template-quarantine.json`, CI:
+  `.github/workflows/template-quarantine.yml`) fails the merge that takes
+  the package's version of one. The rulebook is no longer among the files
+  that merge; it installs.
+- Adding a reference means adding it upstream, bumping the pin, and
   updating `referenceNames.ts` — `read.ts` asserts the record matches the
   name list at module init, so a miss fails the first test that touches
   the tools.
+
+⚠ **The pinned rulebook and this app's tool surface have diverged.** The
+package's `canvas-adapter.md` is normative for the canvas agent and names
+the package's own registry: `read_reference`, `list_scenarios`,
+`record_finding`, `set_finding_status`, `add_step`, `add_lane`,
+`update_cell_content`, `update_cell_spec`, `set_cell_dependency`. This
+app has `get_reference`, `list_blueprint`, `search_blueprint`,
+`create_finding`, `update_finding`, `create_step`, `create_lane`,
+`update_cell`, `create_cell_dependency`. It also says
+"trigger-vs-needs semantics" where this instance's constraint is
+`check (kind in ('leads_to','enables'))` (migration
+`20260820180000_sets_off_becomes_leads_to.sql`). Each tool's own
+description carries the real binding rules and the adapter says to trust
+them over memory, so the agent is not blind — but the adapter's two
+"FULL surface" rows are wrong here until either the tool names converge or
+the adapter is written instance-neutral. Do not fix it by re-vendoring.
 
 Known follow-ups for the whole agent subsystem are tracked in
 `todos/021-pending-p2-agent-harness-review-followups.md`.

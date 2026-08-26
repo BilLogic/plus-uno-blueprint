@@ -1,7 +1,7 @@
 ---
 audience: service designers, practitioners
 summary: The four blueprint practices (map, audit, what-if, slice), the compare workflow, findings triage, and where each practice is specified.
-sources: src/lib/agent/skill/skills/, src/lib/agent/skill/references/, docs/plans/2026-08-08-003-docs-information-architecture-plan.md
+sources: agentic-service-blueprinting skills/, agentic-service-blueprinting references/, docs/plans/2026-08-08-003-docs-information-architecture-plan.md
 last-reviewed: 2026-08-08
 ---
 
@@ -82,10 +82,11 @@ never "quick-fix" cells from inside an audit.
 
 These practices are textbook-grounded (Shostack-lineage service
 blueprinting) but they are not folklore here: they are **encoded as
-specifications** that both humans and agents execute. In-app, they live at
-`src/lib/agent/skill/references/`; the IDE plugin carries the same set at
-the plugin repo's `references/`. To change how the practice works, edit the
-specification — don't improvise around it. That's also how the practice
+specifications** that both humans and agents execute. There is one copy of
+them: the `agentic-service-blueprinting` package, which the IDE loads as the
+`sb` plugin and this app installs as a pinned dependency. To change how the
+practice works, edit the specification upstream and bump the pin — don't
+improvise around it. That's also how the practice
 grows: a new audit check is a new `check-*.md` written from the playbook's
 template, run alone once, then added to the roster.
 
