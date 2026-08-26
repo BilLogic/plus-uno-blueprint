@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSyncExternalStore } from 'react'
 
 /**
@@ -26,11 +26,20 @@ export type CollapsedNavSummary = {
 
 type CollapsedState = {
   collapsed: boolean
-  expand: () => void
   summary: CollapsedNavSummary | null
 }
 
-let state: CollapsedState = { collapsed: false, expand: () => {}, summary: null }
+let state: CollapsedState = { collapsed: false, summary: null }
+/**
+ * Who published the summary on screen.
+ *
+ * The store is last-writer-wins, which is right — a newly mounted band
+ * speaks for the surface the user just moved to. Unmounting is the case
+ * that is NOT symmetric: a band tearing down after its successor published
+ * would otherwise clear the successor's title and leave the pill blank.
+ * Only the current owner may clear.
+ */
+let owner: object | null = null
 const listeners = new Set<() => void>()
 
 function emit(): void {
@@ -38,15 +47,41 @@ function emit(): void {
 }
 
 export function setSidebarCollapsedState(
-  next: Pick<CollapsedState, 'collapsed' | 'expand'>,
+  next: Pick<CollapsedState, 'collapsed'>,
 ): void {
-  if (state.collapsed === next.collapsed && state.expand === next.expand) return
+  if (state.collapsed === next.collapsed) return
   state = { ...state, ...next }
   emit()
 }
 
-function setCollapsedNavSummary(summary: CollapsedNavSummary | null): void {
-  if (state.summary === summary) return
+function sameSummary(
+  a: CollapsedNavSummary | null,
+  b: CollapsedNavSummary | null,
+): boolean {
+  if (a === b) return true
+  if (a === null || b === null) return false
+  return (
+    a.title === b.title &&
+    a.glyph === b.glyph &&
+    a.action?.label === b.action?.label &&
+    a.action?.onClick === b.action?.onClick
+  )
+}
+
+function setCollapsedNavSummary(
+  by: object,
+  summary: CollapsedNavSummary | null,
+): void {
+  // Field comparison, not identity: every publisher builds a fresh object,
+  // so an identity check only ever caught null-over-null and every real
+  // republish woke every subscriber.
+  if (summary === null) {
+    if (owner !== by) return
+    owner = null
+  } else {
+    owner = by
+  }
+  if (sameSummary(state.summary, summary)) return
   state = { ...state, summary }
   emit()
 }
@@ -58,20 +93,24 @@ function setCollapsedNavSummary(summary: CollapsedNavSummary | null): void {
  * the surface that owned it.
  */
 export function useCollapsedNavSummary(summary: CollapsedNavSummary | null): void {
+  // Identity for this mount, so the store can tell "I am done" from
+  // "someone else's band is done" when the two overlap.
+  const self = useRef<object>({})
   const title = summary?.title ?? null
   const glyph = summary?.glyph ?? null
   const actionLabel = summary?.action?.label ?? null
   const onClick = summary?.action?.onClick
   useEffect(() => {
     if (title === null) return
-    setCollapsedNavSummary({
+    const by = self.current
+    setCollapsedNavSummary(by, {
       title,
       ...(glyph ? { glyph } : {}),
       ...(actionLabel && onClick
         ? { action: { label: actionLabel, onClick } }
         : {}),
     })
-    return () => setCollapsedNavSummary(null)
+    return () => setCollapsedNavSummary(by, null)
   }, [title, glyph, actionLabel, onClick])
 }
 

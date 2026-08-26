@@ -29,9 +29,15 @@ drawer/sheet pair in
 [dialogs-sheets-and-forms.md](dialogs-sheets-and-forms.md) is the other
 instance of the same one-component-two-postures precedent.)
 
-Both postures render their own `AgentDock`: docked inside the sidebar column,
-floating portalled to the body so the window escapes the sidebar's clip and
-stacking context. Shared chrome is a grab bar, a collapse and a close, and the
+Each posture has its own mount point: docked inside the sidebar column (a
+percentage of its height, under a drag divider), floating portalled to the body
+so the window escapes the sidebar's clip and stacking context. Neither can
+serve the other, so the shell renders `AgentDock` at both — but `AgentDock` is
+a hook-free gate, and only the one whose posture is showing mounts
+`AgentDockWindow`, which holds every hook. The hooks are `window`-global (a
+viewport clamp, the pointer drag, the corner resize); running them on the
+hidden mount point meant two clamp listeners and two drag handlers for one
+window on screen. Shared chrome is a grab bar, a collapse and a close, and the
 grab bar *is* the placement gesture. The float adds a border and a shadow; the
 dock's drop target adds a ring — and there is deliberately **one edge treatment
 at a time**, because a ring on top of a border read as a second outline.

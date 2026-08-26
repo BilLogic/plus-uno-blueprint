@@ -37,12 +37,6 @@ type SupabaseContextValue = {
    * not". Getting those the wrong way round is the expensive mistake.
    */
   isEditPreview: boolean
-  /**
-   * Signed in with app_metadata.role === 'service' (set server-side; RLS's
-   * restrictive policies are the authority — this mirrors them for the UI).
-   * Non-service sessions view and use the agent read-only.
-   */
-  isServiceAccount: boolean
   /** Any signed-in session may open the agent (viewers chat read-only). */
   canAgent: boolean
 }
@@ -136,6 +130,16 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
   const isEditPreview =
     hasDevAuthoringUi() && !isDevAuthoring && session === null
 
+  /*
+   * Signed in with app_metadata.role === 'service' (set server-side; RLS's
+   * restrictive policies are the authority — this mirrors them for the UI).
+   * Non-service sessions view and use the agent read-only.
+   *
+   * Local, not published on the context: `canWrite` below is the only
+   * question a surface should be asking, and an exported second flag that
+   * says almost-but-not-quite the same thing is an invitation to gate on
+   * the wrong one.
+   */
   const isServiceAccount =
     (session?.user.app_metadata as { role?: string } | undefined)?.role ===
       'service' || isDevAuthoring
@@ -153,7 +157,6 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
           isEditPreview),
       isDevAuthoring,
       isEditPreview,
-      isServiceAccount,
       canAgent: configured && (session !== null || isDevAuthoring),
     }),
     [

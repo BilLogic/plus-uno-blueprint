@@ -7,8 +7,10 @@ summary: The hosted Postgres this app reads and writes — what the app is allow
 
 One hosted project backs production; local development runs the same schema
 through the Supabase CLI stack. The client singleton, the auth session and the
-capability flags (`canWrite`, `canAgent`, `isServiceAccount`) are owned by
-`src/contexts/SupabaseProvider.tsx`.
+capability flags (`canWrite`, `canAgent`) are owned by
+`src/contexts/SupabaseProvider.tsx`. Those two are the whole published
+vocabulary — the service-account test itself stays inside the provider, so a
+surface cannot gate on the near-synonym by mistake.
 
 **The access model is not here.** RLS, the authoring RPC surface, the write
 wrappers, the `semantic_search` schema and the migration workflow are

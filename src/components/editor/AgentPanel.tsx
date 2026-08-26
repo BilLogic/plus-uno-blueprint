@@ -846,34 +846,32 @@ function AgentChatView({
         )
       : []
   const slashOpen = slashMatches.length > 0
-  // Arrow keys and hover move one highlight through the *pickable* matches
-  // (cmdk drives hover via onValueChange; the arrows below drive the rest).
+  // Arrow keys and hover move one highlight through the matches (cmdk
+  // drives hover via onValueChange; the arrows below drive the rest).
   // Derived-with-a-guard, the house pattern: as typing reshapes the matches,
-  // a highlight that fell out of them snaps back to the first pickable one.
-  const slashPickable = slashMatches.filter((command) => command.content)
+  // a highlight that fell out of them snaps back to the first one.
   const [slashHighlight, setSlashHighlight] = useState('')
-  const nextHighlight = slashPickable.some(
+  const nextHighlight = slashMatches.some(
     (command) => command.id === slashHighlight,
   )
     ? slashHighlight
-    : (slashPickable[0]?.id ?? '')
+    : (slashMatches[0]?.id ?? '')
   if (slashOpen && nextHighlight !== slashHighlight) {
     setSlashHighlight(nextHighlight)
   }
   const moveSlashHighlight = (delta: number) => {
-    if (slashPickable.length === 0) return
-    const index = slashPickable.findIndex(
+    if (slashMatches.length === 0) return
+    const index = slashMatches.findIndex(
       (command) => command.id === nextHighlight,
     )
     const next =
-      slashPickable[
-        (index + delta + slashPickable.length) % slashPickable.length
+      slashMatches[
+        (index + delta + slashMatches.length) % slashMatches.length
       ]
     setSlashHighlight(next.id)
   }
 
   const pickSkill = (command: AgentSkillCommand) => {
-    if (!command.content) return
     setAgentDraft(session.id, { text: '', skillId: command.id })
   }
 
@@ -883,7 +881,7 @@ function AgentChatView({
     // Typed-through form: "/map turn my notes into a scenario" sends in one go.
     if (!skill) {
       const parsed = parseSkillDraft(text)
-      if (parsed?.command.content) {
+      if (parsed) {
         skill = parsed.command
         text = parsed.rest
       }
@@ -1139,7 +1137,6 @@ function AgentChatView({
                   <CommandItem
                     key={command.id}
                     value={command.id}
-                    disabled={!command.content}
                     onSelect={() => pickSkill(command)}
                     className="items-baseline gap-2 text-xs"
                   >
@@ -1218,7 +1215,7 @@ function AgentChatView({
                           entry.aliases.includes(lowered),
                       )
                     : undefined
-                  if (command?.content) {
+                  if (command) {
                     setAgentDraft(session.id, {
                       text: token![2],
                       skillId: command.id,
@@ -1247,7 +1244,7 @@ function AgentChatView({
                   !event.shiftKey
                 ) {
                   event.preventDefault()
-                  const highlighted = slashPickable.find(
+                  const highlighted = slashMatches.find(
                     (command) => command.id === nextHighlight,
                   )
                   if (highlighted) pickSkill(highlighted)

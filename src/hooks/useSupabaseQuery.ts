@@ -26,7 +26,7 @@ export { invalidateQueries, invalidateStructure } from '@/lib/queryClient'
  * stays `loading` (e.g. while a parent query resolves). `fetcher` is read
  * through a ref, so inline closures are fine — it is re-evaluated per key, not
  * per identity. `fallback` must be referentially stable (wrap it in
- * `useCallback`): the no-DB result is memoized on its identity.
+ * `useCallback`): the no-DB and error results are memoized on its identity.
  *
  * No-DB mode (client null) resolves synchronously from `fallback()`:
  * `ready`/`'fallback'` when it returns data, `error` when it returns null.
@@ -83,21 +83,28 @@ export function useSupabaseQuery<T>(
       : { status: 'error', message: NOT_CONFIGURED_MESSAGE, fallback: null }
   }, [noDb, key, fallback])
 
+  // Error wins over a stale `data` so a failed refetch surfaces rather than
+  // silently continuing to show the previous response. Memoized for the same
+  // reason the no-DB branch above is: while a query stays errored this branch
+  // runs on EVERY render of every consumer, and rebuilding the result
+  // re-invoked `fallback()` — which for most callers rebuilds a whole seed
+  // structure — and handed the consumer a fresh object to re-render on.
+  const error = query.error
+  const errorResult = useMemo<SettledQueryResult<T> | null>(
+    () =>
+      error
+        ? {
+            status: 'error',
+            message: error instanceof Error ? error.message : String(error),
+            fallback: fallback(),
+          }
+        : null,
+    [error, fallback],
+  )
+
   if (key === null) return LOADING_RESULT
   if (noDbResult) return noDbResult
-
-  // Error wins over a stale `data` so a failed refetch surfaces rather than
-  // silently continuing to show the previous response.
-  if (query.error) {
-    return {
-      status: 'error',
-      message:
-        query.error instanceof Error
-          ? query.error.message
-          : String(query.error),
-      fallback: fallback(),
-    }
-  }
+  if (errorResult) return errorResult
   if (query.data !== undefined) {
     return { status: 'ready', data: query.data, source: 'database' }
   }

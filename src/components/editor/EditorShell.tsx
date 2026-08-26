@@ -16,7 +16,7 @@ import {
   SidebarCollapseButton,
 } from '@/components/editor/EditorChrome'
 import { AgentDock, AgentDockDivider } from '@/components/editor/AgentDock'
-import { EditorRail, type SidebarSurface } from '@/components/editor/EditorRail'
+import { EditorRail, type SidebarPanel } from '@/components/editor/EditorRail'
 import { AgentSettingsRailButton } from '@/components/editor/AgentPanel'
 import { ThemeToggle } from '@/components/editor/ThemeToggle'
 import { VisualWalkthroughShell } from '@/components/blueprint/VisualWalkthroughShell'
@@ -124,10 +124,12 @@ function DesktopEditorShell() {
 
   const activeTabKind = activeTab?.kind ?? null
 
-  // The rail picks a surface. Slice/present tab activation auto-selects ◇,
+  // The rail picks a panel. Slice/present tab activation auto-selects ◇,
   // exactly as the old horizontal tabs did (initializer covers remounts
   // while a tab is already active, e.g. returning from a presentation).
-  const [surface, setSurface] = useState<SidebarSurface>(
+  // ✦ is NOT in this state — it toggles the chat, which sits under whichever
+  // panel is open, so it never displaces one.
+  const [panel, setPanel] = useState<SidebarPanel>(
     activeTabKind !== null ? 'slices' : 'blueprints',
   )
   const agentPlacement = useAgentPlacement()
@@ -136,7 +138,7 @@ function DesktopEditorShell() {
   const [lastTabKind, setLastTabKind] = useState(activeTabKind)
   if (lastTabKind !== activeTabKind) {
     setLastTabKind(activeTabKind)
-    if (activeTabKind !== null) setSurface('slices')
+    if (activeTabKind !== null) setPanel('slices')
   }
 
   // Leaving presentation runs before the tab actually switches: tabs unmount
@@ -273,13 +275,17 @@ function DesktopEditorShell() {
     suppressCanvasResizeRefit()
   }, [presenting])
 
+  // Picking anything in the rail while collapsed also opens the panel —
+  // choosing a surface you cannot see is not a choice.
+  const revealSidebar = useCallback(() => {
+    if (!sidebarCollapsed) return
+    suppressCanvasResizeRefit()
+    setSidebarCollapsed(false)
+  }, [sidebarCollapsed])
+
   // Publish the collapsed state so canvas navbars can host the expand
   // control themselves — see sidebarCollapsedContext for why the pill is
   // now the fallback rather than the default.
-  const expandSidebar = useCallback(() => {
-    suppressCanvasResizeRefit()
-    setSidebarCollapsed(false)
-  }, [])
   useEffect(() => {
     // NOT `railOnly`: presentation also collapses the sidebar, but it hides
     // the pill too (full-bleed). Telling the bands they are collapsed there
@@ -287,9 +293,8 @@ function DesktopEditorShell() {
     // must keep drawing itself when nothing else can carry it.
     setSidebarCollapsedState({
       collapsed: railOnly && !presenting && !isLanding,
-      expand: expandSidebar,
     })
-  }, [railOnly, presenting, isLanding, expandSidebar])
+  }, [railOnly, presenting, isLanding])
 
   // Hand the agent its navigation hands: open_phase / open_scenario tools
   // land on the same callbacks the sidebar rows use.
@@ -326,7 +331,7 @@ function DesktopEditorShell() {
     activeTab
       ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
       : 'Active tab: base blueprint view (no slice tab)',
-    `Sidebar: ${surface} surface${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
+    `Sidebar: ${panel} panel${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
     `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
   ].join('\n')
   const shellContextRef = useRef(shellContext)
@@ -567,19 +572,19 @@ function DesktopEditorShell() {
   const sidebarBody = (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-row">
       <EditorRail
-        surface={surface}
+        panel={panel}
         agentActive={agentPlacement.open}
         showAgent={canAgent}
-        onSelectSurface={(next) => {
-          // ✦ toggles the chat's presence; the other two still pick the
-          // panel underneath it, so "chat while looking at the nav" is
-          // the default posture rather than a swap away from it.
-          if (next === 'agent') toggleAgentOpen()
-          else setSurface(next)
-          if (sidebarCollapsed) {
-            suppressCanvasResizeRefit()
-            setSidebarCollapsed(false)
-          }
+        onSelectPanel={(next) => {
+          setPanel(next)
+          revealSidebar()
+        }}
+        // ✦ toggles the chat's presence; the panel buttons still pick what
+        // sits underneath it, so "chat while looking at the nav" is the
+        // default posture rather than a swap away from it.
+        onToggleAgent={() => {
+          toggleAgentOpen()
+          revealSidebar()
         }}
         topSlot={
           <SidebarCollapseButton collapsed={false} onToggle={toggleSidebar} />
@@ -603,7 +608,7 @@ function DesktopEditorShell() {
           }
           className="flex min-h-0 min-w-0 flex-1 flex-col"
         >
-          <SlideModeSidebarNav surface={surface === 'agent' ? 'blueprints' : surface} />
+          <SlideModeSidebarNav panel={panel} />
         </SidebarProvider>
         {agentDocked ? <AgentDockDivider columnRef={panelColumnRef} /> : null}
         <AgentDock visible={canAgent && agentDocked} />
