@@ -3,6 +3,13 @@ import { useEditor } from '@/contexts/EditorContext'
 import { MobileShell } from '@/components/mobile/MobileShell'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import {
+  collapseSidebarByUser,
+  initialSidebarCollapse,
+  reconcileSidebarCollapse,
+  useSidebarOverlay,
+  type SidebarCollapse,
+} from '@/hooks/useSidebarOverlay'
+import {
   RAIL_WIDTH,
   SIDEBAR_DEFAULT_WIDTH,
   SIDEBAR_MAX_WIDTH,
@@ -120,7 +127,30 @@ function DesktopEditorShell() {
   // hands back with a cited cell (docs/connectors/plus-uno.md). Mounted here because it needs the editor's
   // navigation and the boot URL state, and both live at this level.
   useCellDeepLink()
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  /*
+    Collapse, and which of the two parties asked for it.
+
+    Below `SIDEBAR_OVERLAY_BREAKPOINT` the sidebar and the canvas cannot both
+    have the width, so the gate collapses the sidebar and reopening it draws
+    OVER the canvas rather than taking the column back. The state carries the
+    reason with it, so widening again gives back only the collapses the gate
+    itself made — `useSidebarOverlay` has the argument for why a bare boolean
+    cannot tell the two apart.
+  */
+  const overlay = useSidebarOverlay()
+  const [sidebar, setSidebar] = useState<SidebarCollapse>(initialSidebarCollapse)
+  // Adjusted during render off the side of the gate the state was last
+  // reconciled against — the same shape `lastTabKind` and `lastLanding` use
+  // below, and the reason `narrow` is carried in the state rather than kept
+  // in a ref: a crossing must land in the same commit the posture flips, or
+  // the aside paints one frame open-and-in-flow at a width it cannot have.
+  if (sidebar.narrow !== overlay) setSidebar(reconcileSidebarCollapse(sidebar, overlay))
+  const sidebarCollapsed = sidebar.collapsed
+  useEffect(() => {
+    // A crossing wipes the aside open or shut, which resizes the canvas
+    // container — chrome moving, not the reader navigating.
+    suppressCanvasResizeRefit()
+  }, [overlay])
   const isLanding = view === 'landing'
 
   const activeTabKind = activeTab?.kind ?? null
@@ -281,7 +311,7 @@ function DesktopEditorShell() {
   const revealSidebar = useCallback(() => {
     if (!sidebarCollapsed) return
     suppressCanvasResizeRefit()
-    setSidebarCollapsed(false)
+    setSidebar((state) => collapseSidebarByUser(state, false))
   }, [sidebarCollapsed])
 
   // Publish the collapsed state so canvas navbars can host the expand
@@ -306,11 +336,11 @@ function DesktopEditorShell() {
         selectScenario,
         openAgentSurface: () => {
           toggleAgentOpen(true)
-          setSidebarCollapsed(false)
+          setSidebar((state) => collapseSidebarByUser(state, false))
         },
         setSidebarCollapsed: (collapsed) => {
           suppressCanvasResizeRefit()
-          setSidebarCollapsed(collapsed)
+          setSidebar((state) => collapseSidebarByUser(state, collapsed))
         },
       }),
     [selectPhase, selectScenario],
@@ -332,7 +362,7 @@ function DesktopEditorShell() {
     activeTab
       ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
       : 'Active tab: base blueprint view (no slice tab)',
-    `Sidebar: ${panel} panel${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
+    `Sidebar: ${panel} panel${railOnly ? ', collapsed' : ''}${overlay ? ', narrow viewport (it overlays the canvas when open)' : ''}${presenting ? ', presenting' : ''}`,
     `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
   ].join('\n')
   const shellContextRef = useRef(shellContext)
@@ -445,7 +475,7 @@ function DesktopEditorShell() {
     // The width ease resizes the canvas container for 320 ms. That is
     // chrome moving, not the user navigating — the camera holds still.
     suppressCanvasResizeRefit()
-    setSidebarCollapsed((collapsed) => !collapsed)
+    setSidebar((state) => collapseSidebarByUser(state, !state.collapsed))
   }
 
   // Shared drag-resize. During a drag the width transition is off —
@@ -643,8 +673,25 @@ function DesktopEditorShell() {
         <div className="relative flex min-h-0 min-w-0 flex-1">
           <aside
             className={cn(
-              'relative z-20 shrink-0 overflow-hidden bg-sidebar',
+              'z-20 shrink-0 overflow-hidden bg-sidebar',
               !railOnly && 'border-r border-border',
+              /*
+                The overlay posture, below the gate. Out of the flow
+                entirely, so reopening draws over the canvas instead of
+                taking back a column the canvas cannot spare — reopening
+                in flow down here only recreates the squeeze the collapse
+                was for. Still `z-20`: this is the same shell column in the
+                same band (foundations/elevation.md), merely floating, and
+                `shadow-floating` is the token that says floating.
+
+                No scrim, for the reason `CreateSliceSheet` gives: dimming
+                the canvas dims the very thing the sidebar is for getting
+                around. Nothing strands either — the rail's own collapse
+                toggle is on screen the whole time the panel is open.
+              */
+              overlay
+                ? cn('absolute inset-y-0 left-0', !railOnly && 'shadow-floating')
+                : 'relative',
             )}
             style={{
               width: railOnly ? 0 : asideWidth,
