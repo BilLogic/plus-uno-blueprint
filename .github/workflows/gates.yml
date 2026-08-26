@@ -55,3 +55,19 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+
+      # The vocabulary guards (#145, #146). Both are static and neither needs a
+      # database, which is the only reason they can be required checks.
+      #
+      # `check:identifiers` runs the STATIC half only. Its live half sweeps
+      # pg_catalog over a direct connection and stays out of CI on purpose —
+      # this repository's standing rule is that a privileged database
+      # credential never belongs in its workflows. `npm run
+      # check:identifiers:live` is the manual counterpart, alongside
+      # `check:contract:live`.
+      #
+      # The copy guard and the rename-map agreement test are vitest suites, so
+      # `npm test` above already runs them; `npm run check:copy` exists for
+      # running one on its own.
+      - run: npm run check:identifiers
+      - run: npm run check:database-names
