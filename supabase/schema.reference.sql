@@ -1,38 +1,41 @@
 -- Reference snapshot: Service Blueprint schema
 --
--- REGENERATED FROM THE LIVE SCHEMA on 2026-08-20. The previous version claimed
--- to be "verified against migrations through 20260716120000_layer_role.sql
--- (2026-07-16)" and had drifted for five weeks and eleven migrations: it was
--- missing the entire derived layer (evidence, findings, slices, slice_items,
--- propositions) which shipped 2026-07-29, and every name in the vocabulary
--- refactor.
+-- REGENERATED FROM THE LIVE SCHEMA on 2026-08-26. The previous version was
+-- generated on 2026-08-20 and was wrong the next morning: the vocabulary
+-- refactor's last three migrations landed on 2026-08-21, so this file spent six
+-- days describing `service_lifecycles` and `propositions` at a database that
+-- had neither. It also never gained `cells.status` or `paths.status` from the
+-- `maturity` rename, and still carried the `services` placeholder table that
+-- 20260821340000 dropped.
+--
+-- A snapshot regenerated one day before a rename is a snapshot that lies with a
+-- generation stamp on it, which is worse than one that admits it is old.
 --
 -- To refresh, re-run docs/reference/schema-snapshot-queries.sql and rewrite this
--- file plus docs/reference/erd.mmd from its output.
+-- file plus docs/reference/erd.mmd from its output. That file's fourth query —
+-- the SECURITY DEFINER grant invariant — is now asserted by migration
+-- 20260826130000 instead of being trusted to whoever remembers to run it.
 --
 -- READ THIS AS A SNAPSHOT, NOT AS DDL TO RUN. supabase/migrations/ is the source
 -- of truth; column ORDER here follows the live table (which reflects the order
 -- columns were added, not any design), and defaults are shown where they exist.
 --
--- Naming note: `service_lifecycles` is the real root. It has NO foreign key to
--- or from `services`, which holds a single unused placeholder row
--- ("Example API", slug "example-api", "Placeholder service entry for local
--- development"). Plan 002 Phase 6 renames the former to `services` and drops
--- the latter; that phase is PINNED with the rest of the service tier, so both
--- tables still exist and both appear below.
+-- `entity_status` is a DOMAIN over text, not a per-table CHECK:
+--   proposed | planned | built | live | at_risk | deprecated
+-- One list, so `cells.status` and `paths.status` cannot drift apart.
 
 -- ── Hierarchy ────────────────────────────────────────────────────────────────
-create table public.service_lifecycles (
+create table public.services (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  description text,
+  summary text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 create table public.phases (
   id uuid primary key default gen_random_uuid(),
-  service_lifecycle_id uuid not null references public.service_lifecycles (id) on delete cascade,
+  service_id uuid not null references public.services (id) on delete cascade,
   name text not null,
   summary text,   -- the stage in one line
   position integer not null default 0,
@@ -62,12 +65,13 @@ create table public.paths (
   id uuid primary key default gen_random_uuid(),
   scenario_id uuid not null references public.scenarios (id) on delete cascade,
   name text not null,
-  path_type text not null,
+  path_type text not null check (path_type in ('happy','variant','exception')),
   summary text,   -- when this route applies
   note text,      -- the author's aside: open questions, provenance, working state
   origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  status entity_status not null default 'live'
 );
 
 -- ── Blueprint grid ───────────────────────────────────────────────────────────
@@ -130,6 +134,7 @@ create table public.cells (
                                              + owner + perceived_owner + value_props */) stored,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  status entity_status not null default 'live',
   unique (lane_id, step_id, position)
 );
 
@@ -149,13 +154,18 @@ create table public.cell_dependencies (
   unique (source_cell_id, target_cell_id, kind)
 );
 
--- ── Derived layer (shipped 2026-07-29 in f65efcf) ────────────────────────────
+-- ── Analysis tier (shipped 2026-07-29 in f65efcf) ───────────────────────────
+-- Records ABOUT the board rather than squares of it. Called the "derived layer"
+-- until 2026-08-26; renamed because four of these five tables are authored by a
+-- person, not derived from anything, and because `layer` was the swimlane word.
+-- The cell references here are SOFT — no foreign key — so the importer's
+-- scenario-scoped delete-and-reinsert cannot cascade into authored rows.
 -- Absent from every previous version of this file, which is the drift that made
 -- regenerating it worth doing rather than patching.
 
 create table public.evidence (
   id uuid primary key default gen_random_uuid(),
-  service_lifecycle_id uuid not null references public.service_lifecycles (id) on delete cascade,
+  service_id uuid not null references public.services (id) on delete cascade,
   cell_id uuid,
   cell_key text,
   -- A row attaches to a CELL or to one of the three validation questions,
@@ -175,7 +185,7 @@ create table public.evidence (
 
 create table public.findings (
   id uuid primary key default gen_random_uuid(),
-  service_lifecycle_id uuid not null references public.service_lifecycles (id) on delete cascade,
+  service_id uuid not null references public.services (id) on delete cascade,
   run_id uuid not null,
   source text not null,
   check_name text not null,
@@ -191,7 +201,7 @@ create table public.findings (
 
 create table public.slices (
   id uuid primary key default gen_random_uuid(),
-  service_lifecycle_id uuid not null references public.service_lifecycles (id) on delete cascade,
+  service_id uuid not null references public.services (id) on delete cascade,
   slice_type text not null,
   title text not null,
   description text,
@@ -224,10 +234,11 @@ create table public.slice_items (
 -- structural one and would have warned six times per scenario.
 create table public.stakeholders (
   id uuid primary key default gen_random_uuid(),
-  -- service_lifecycles until plan 002 Phase 6 renames it to services.
-  service_id uuid not null references public.service_lifecycles (id) on delete cascade,
+  service_id uuid not null references public.services (id) on delete cascade,
+  parent_id uuid references public.stakeholders (id) on delete set null,
   name text not null,
-  kind text not null check (kind in ('recipient','staff','partner','provider')),
+  -- `team` is a container, not a person: a team holds its people via parent_id.
+  kind text not null check (kind in ('recipient','staff','partner','provider','team')),
   note text,
   aliases text[] not null default '{}',   -- other spellings seen in THIS blueprint
   created_at timestamptz not null default now(),
@@ -235,10 +246,13 @@ create table public.stakeholders (
   unique (service_id, name)
 );
 
--- One business-model record per lifecycle. The three validation questions live
--- as `evidence` rows keyed understand | value | usability, not as columns here.
-create table public.propositions (
-  service_lifecycle_id uuid primary key references public.service_lifecycles (id) on delete cascade,
+-- One business-model record per service. The three validation questions live as
+-- `evidence` rows keyed understand | value | usability, not as columns here —
+-- which is why `evidence.proposition_question_key` keeps the word `proposition`
+-- after the table stopped being called that. The rename moved the container,
+-- not the concept.
+create table public.business_model (
+  service_id uuid primary key references public.services (id) on delete cascade,
   pricing text,
   revenue_model text,
   funding text,
@@ -261,7 +275,7 @@ create table public.agent_messages (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references public.agent_sessions (id) on delete cascade,
   seq bigint not null,
-  kind text not null,
+  kind text not null check (kind in ('user','assistant','tool','status')),
   payload jsonb not null,
   created_at timestamptz not null default now()
 );
@@ -277,14 +291,3 @@ create table public.deleted_structure (
   affected_slices jsonb not null default '[]'::jsonb
 );
 
--- ── Legacy, pending plan 002 Phase 6 ─────────────────────────────────────────
--- One placeholder row, no foreign key in either direction, no reader anywhere
--- in the app. Kept in this snapshot because it is still in the database.
-create table public.services (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  description text,
-  slug text not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
