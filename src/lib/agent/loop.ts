@@ -28,6 +28,7 @@ import {
   type AgentSettings,
 } from '@/lib/agent/settings'
 import { autoNameSession } from '@/lib/agent/sessions'
+import { errorMessage } from '@/lib/utils'
 import {
   isAgentPersistenceAttached,
   loadPersistedEvents,
@@ -533,7 +534,7 @@ export async function sendToAgent(input: {
             result: detailText(output),
           })
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error)
+          const message = errorMessage(error)
           results.parts.push({
             type: 'tool_result',
             toolCallId: call.id,
@@ -599,7 +600,7 @@ export async function sendToAgent(input: {
         text: 'Stopped. Whatever already landed is in the change sheet, revertible.',
       })
     } else {
-      const message = error instanceof Error ? error.message : String(error)
+      const message = errorMessage(error)
       push(sessionId, { kind: 'status', text: `Provider error: ${message}` })
     }
   } finally {
