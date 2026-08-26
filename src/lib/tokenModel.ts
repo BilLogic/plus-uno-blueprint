@@ -197,42 +197,66 @@ export function rulesDeclaring(property: string): Declaration[] {
 
 let cachedAll: Declaration[] | null = null
 
+/**
+ * Every declaration in every stylesheet, with the selector it sits under.
+ *
+ * A character scanner rather than a per-line regex, because the per-line
+ * version could only see a declaration that closed its own line. Forty-one did
+ * not — `--background`, `--foreground`, `--card`, `--popover`, `--secondary`,
+ * `--muted-foreground`, `--tertiary-foreground`, the whole contrast ladder and
+ * every chart step are written as multi-line `oklch(…)` calls, so the seam ADR
+ * 0001 makes the single source of truth about the token layer was blind to the
+ * most-read names in it. `compat.css`'s aliases pointed at two of them, and the
+ * rule "an alias points at a name semantic.css declares" failed on names
+ * semantic.css plainly declares.
+ *
+ * Values are whitespace-collapsed so a declaration means the same thing
+ * whichever way it was wrapped.
+ */
 function allDeclarations(): Declaration[] {
   if (cachedAll) return cachedAll
   const out: Declaration[] = []
   for (const sheet of stylesheets()) {
     const layer = layerOf(sheet.file)
     const stack: string[] = []
-    let pending = ''
-    blankComments(sheet.text)
-      .split('\n')
-      .forEach((line, index) => {
-        // `name: value;` inside whatever selector is currently open.
-        const declaration = /^\s*(-{2}[a-zA-Z0-9-]+|[a-z-]+)\s*:\s*([^;]*);/.exec(line)
-        if (declaration) {
-          out.push({
-            name: declaration[1],
-            value: declaration[2].trim(),
-            selector: stack[stack.length - 1] ?? '',
-            context: stack.slice(0, -1),
-            file: sheet.file,
-            line: index + 1,
-            layer,
-          })
-        }
-        for (const char of line) {
-          if (char === '{') {
-            stack.push(pending.trim().replace(/\s+/g, ' '))
-            pending = ''
-          } else if (char === '}') {
-            stack.pop()
-            pending = ''
-          } else {
-            pending += char
-          }
-        }
-        if (declaration) pending = ''
-      })
+    let buffer = ''
+    let line = 1
+    // The line the buffer's first non-blank character sits on, so a wrapped
+    // declaration is reported where its name is, not where its `;` is.
+    let bufferLine = 1
+    const flush = () => {
+      const declaration = /^\s*(-{2}[a-zA-Z0-9-]+|[a-z-]+)\s*:\s*([\s\S]*)$/.exec(
+        buffer,
+      )
+      if (declaration) {
+        out.push({
+          name: declaration[1],
+          value: declaration[2].trim().replace(/\s+/g, ' '),
+          selector: stack[stack.length - 1] ?? '',
+          context: stack.slice(0, -1),
+          file: sheet.file,
+          line: bufferLine,
+          layer,
+        })
+      }
+      buffer = ''
+    }
+    for (const char of blankComments(sheet.text)) {
+      if (char === '\n') line += 1
+      if (char === '{') {
+        stack.push(buffer.trim().replace(/\s+/g, ' '))
+        buffer = ''
+      } else if (char === '}') {
+        // An unterminated final declaration (`color: red }`) is still one.
+        flush()
+        stack.pop()
+      } else if (char === ';') {
+        flush()
+      } else {
+        if (!buffer.trim() && char.trim()) bufferLine = line
+        buffer += char
+      }
+    }
   }
   cachedAll = out
   return out
