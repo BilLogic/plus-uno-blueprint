@@ -123,6 +123,7 @@ frontmatter. History is deliberately absent, and the queue does not live here.
 | docs/adr/0004-the-board-is-always-fully-mounted.md | developers | Every phase, scenario, cell and arrow stays mounted and dims rather than unmounting, which buys instant navigation and one layout and spends a decoded-memory budget. |
 | docs/adr/0005-cross-surface-state-is-a-module-store.md | developers | State that must outlive a mount point, or be read by non-React code, lives in a module-level store read through useSyncExternalStore rather than in context. |
 | docs/adr/0006-reads-never-refetch-on-their-own.md | developers | The query cache is staleTime Infinity because nothing outside this app edits the data, which moves the whole burden of freshness onto every mutation. |
+| docs/adr/0007-three-advisor-warnings-that-must-stay.md | developers | Three standing advisor warnings are deliberate and one of them has since been reversed on purpose — the record exists so a future hardening pass does not "fix" a decision or re-apply a reversal. |
 | docs/adr/overview.md | developers | What earns an ADR here, the numbering and template, and the current set. |
 | docs/connectors/netlify.md | developers | The host — push to main is production, there is no netlify.toml, and the deploy environment carries only public values. |
 | docs/connectors/overview.md | developers | The three systems this instance is coupled to, and the rule that keeps that coupling out of the open-source package. |
