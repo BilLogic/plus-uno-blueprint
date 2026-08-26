@@ -33,6 +33,7 @@ import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useViewState } from '@/contexts/viewStateStore'
 import { useSlices, type SliceListEntry } from '@/hooks/useSlices'
+import { errorMessage } from '@/lib/utils'
 
 /** Sidebar group order — unknown types fall into CUSTOM. */
 const SLICE_TYPE_GROUPS = ['journey', 'step', 'lane', 'cell', 'custom'] as const
@@ -154,6 +155,23 @@ export function SlicesSidebarSection() {
     slices: rows.filter((slice) => sliceTypeGroup(slice.slice_type) === type),
   })).filter((group) => group.slices.length > 0)
 
+  /*
+    The rename dialog saves under an `updated_at` guard, so it has to hold the
+    row as the LIST currently knows it — not the copy captured when the
+    context menu opened. A background refetch between those two moments (a
+    save elsewhere, a tab regaining focus) left the guard matching on a stamp
+    the server had already replaced, and the dialog blamed the user for a
+    change nobody made.
+
+    Falls back to the captured entry when the row has left the list — deleted
+    elsewhere, or the query errored into its fallback. That save fails the
+    guard, which is the right answer.
+  */
+  const renameSlice =
+    renameTarget === null
+      ? null
+      : (rows.find((slice) => slice.id === renameTarget.id) ?? renameTarget)
+
   if (groups.length === 0) {
     return (
       // Teaching tone, matching the agent panel's empty states: say what a
@@ -234,7 +252,7 @@ export function SlicesSidebarSection() {
         }}
       />
       <RenameSliceDialog
-        slice={renameTarget}
+        slice={renameSlice}
         open={renameTarget !== null}
         onOpenChange={(open) => {
           if (!open) setRenameTarget(null)
@@ -252,6 +270,11 @@ export function SlicesSidebarSection() {
  * else has since changed fails rather than silently overwriting them. That is
  * also why the whole meta goes back — type, actor and origin are re-sent
  * unchanged rather than dropped.
+ *
+ * `slice` is resolved from the live list on every render (see `renameSlice`),
+ * so the stamp this guards on is the freshest one the client has seen. The
+ * form itself is seeded ONCE per open — a refetch refreshes the token under
+ * the dialog, never the words being typed into it.
  */
 function RenameSliceDialog({
   slice,

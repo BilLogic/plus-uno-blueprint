@@ -1773,6 +1773,15 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    *
    * Guarded on the event target so it never steals `⌘−` from a text field, and
    * on `⌘` so a bare `-` still types a hyphen.
+   *
+   * WINDOW, deliberately — unlike the arrow-key pan below, which binds to the
+   * container. Zoom is the one camera control with no on-screen affordance in
+   * Design mode, so requiring the board to be focused first would leave a
+   * mouse-only reader with no way in at all. The cost is that a second mounted
+   * viewport would double-fire this; one mounts per screen today (the
+   * comparison view shipped as panes INSIDE the single viewport, not as a
+   * second one), and the day that changes, this moves to the container the way
+   * pan already has.
    */
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
