@@ -185,9 +185,17 @@ wraps annotation + selection providers) → the transform layer
   on two consecutive frames before it flies, so it never aims at half-grown
   geometry.
 - **Input ownership**: pointer streams enter through native capture so a lane
-  or cell cannot hide pointerdown with `stopPropagation`. The pure
-  `canvasInputPolicy.ts` table documents precedence; continuous transforms stay
-  imperative and publish one trailing React snapshot.
+  or cell cannot hide pointerdown with `stopPropagation`. Precedence is
+  decided in one place — `handlePointerDown` in `useZoomPanViewport.ts` —
+  reading the button, the space key, `panIgnoreSelector` and
+  `hasScrollableRegion`; continuous transforms stay imperative and publish one
+  trailing React snapshot.
+
+  There was a pure `canvasInputPolicy.ts` table beside it that no production
+  code ever called. It was deleted rather than wired up (#57): it had drifted
+  from the handler in several specifics, and a policy module with no consumers
+  is worse than none — its test passes forever regardless of what the canvas
+  does, so it reads as a safeguard while guarding nothing.
 
 What each gesture is *supposed* to do — the click grammar, the touch contract —
 is owned by
