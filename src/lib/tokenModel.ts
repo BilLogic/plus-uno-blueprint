@@ -225,9 +225,11 @@ function allDeclarations(): Declaration[] {
     // declaration is reported where its name is, not where its `;` is.
     let bufferLine = 1
     const flush = () => {
-      const declaration = /^\s*(-{2}[a-zA-Z0-9-]+|[a-z-]+)\s*:\s*([\s\S]*)$/.exec(
-        buffer,
-      )
+      // `--color-amber-*` is a Tailwind namespace reset, and a declaration:
+      // `unset-tw-colors.css` is thirteen of them and nothing else, and a name
+      // pattern that stopped at the hyphen made the whole file invisible.
+      const declaration =
+        /^\s*(-{2}[a-zA-Z0-9-]+\*?|[a-z-]+)\s*:\s*([\s\S]*)$/.exec(buffer)
       if (declaration) {
         out.push({
           name: declaration[1],
