@@ -27,6 +27,39 @@
     --destructive-lightness: 0.52;
     --info-lightness: 0.54;
     --success-lightness: 0.55;
+
+    /*
+     * The stepped ramps too, verbatim from `themes/light.css`.
+     *
+     * These are not derived from the dials above — they are per-theme HSL
+     * literals, and `themes/dark.css` sets its own inverted copies under
+     * `.dark` with no `@media screen` around them, unlike the Radix ramps in
+     * `colors.css`. Omitting them here printed a dark-mode page's badges at
+     * dark values on white paper: `bg-warning-200` is a near-black plate in
+     * dark, so a status badge printed as a black block with black text.
+     *
+     * A value written twice, with something saying so: `themeDials.test.ts`
+     * asserts that this block restates every dial `themes/light.css`
+     * declares, so the next ramp step added there fails here.
+     */
+    --brand-link: 171.2deg 100% 26%;
+    --brand-default: 169.5deg 61.3% 49.5%;
+    --brand-600: 171.1deg 100% 24%;
+    --brand-500: 170.3deg 74.8% 41.1%;
+    --brand-400: 166.6deg 73% 72.4%;
+    --brand-300: 164.5deg 69.8% 86.5%;
+    --brand-200: 163.7deg 72.1% 93.1%;
+    --warning-600: 30.3deg 80.3% 47.8%;
+    --warning-500: 36.3deg 85.7% 67.1%;
+    --warning-400: 41.9deg 100% 81.8%;
+    --warning-300: 44.3deg 100% 91.8%;
+    --warning-200: 40deg 81.8% 97.8%;
+    --destructive-default: 10.2deg 77.9% 53.9%;
+    --destructive-600: 9.9deg 82% 43.5%;
+    --destructive-500: 10.4deg 77.1% 79.4%;
+    --destructive-400: 7.1deg 91.3% 91%;
+    --destructive-300: 7.1deg 100% 96.7%;
+    --destructive-200: 0deg 100% 99.4%;
   }
 
   /* Preserve lane fills, badges, and divider colors in the PDF. */

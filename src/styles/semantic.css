@@ -34,6 +34,16 @@
   --surface-hue: var(--hue);
   --primary-hue: var(--hue);
 
+  /*
+   * The radius dial. Mode-invariant by design — a corner does not flip with
+   * the theme — so it is declared here rather than in a theme file. It lived
+   * in `themes/light.css` and reached dark mode only because that file's
+   * selector list starts with bare `:root`; the same accident that ran dark
+   * surfaces at light's `--surface-hue`, benign in this case and load-bearing
+   * in that one. `theme.css` derives every `--radius-*` rung from it.
+   */
+  --radius: 0.625rem;
+
   /* --- Contrast ---------------------------------------------------------
    * Global knob, 0–1. 0.5 is the baseline: foreground lands exactly on
    * `--foreground-lightness`, and borders sit mid-strength. Below 0.5 text

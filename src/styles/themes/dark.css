@@ -15,8 +15,18 @@
   /* Same dial, same value as light — see the note in themes/light.css. The
      brand hue is mode-invariant, so these two must move together. */
   --hue: 177.6;
-  /* `--surface-hue` is left at its `var(--hue)` default: dark surfaces carry a
-     trace of the brand hue, which is what `--chroma: 0.005` is for. */
+  /* Dark surfaces carry a trace of the brand hue, which is what
+     `--chroma: 0.005` is for — so `--surface-hue` follows `--hue` here.
+
+     This used to be a comment instead of a declaration: "left at its
+     `var(--hue)` default". It was not. `themes/light.css` declares
+     `--surface-hue: 34` on a selector list that includes bare `:root`, and
+     `:root` matches `<html class="dark">` — same specificity as `.dark`,
+     later in source order, so light's warm brown won in BOTH themes and
+     every token derived through the surface hue rendered at 34°. The comment
+     is what made it invisible. A dial this file needs is a dial this file
+     declares; `themeDialParity.test.ts` now holds that for every dial. */
+  --surface-hue: var(--hue);
   --chroma: 0.005;
   --surface: 0.19;
   --elevation-step: 0.025;
