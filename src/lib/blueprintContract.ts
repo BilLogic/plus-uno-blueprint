@@ -122,6 +122,35 @@ export const BLUEPRINT_CONTRACT = {
   },
 
   /**
+   * Values `granularity` accepts, which is a different promise from the
+   * parameter NAME above and was unmade until 2026-08-26.
+   *
+   * The layers→lanes rename moved every table, column, doc and surface to
+   * `lane`, and renamed this RPC's `filter_layer_role` to `filter_lane_role`.
+   * It did not reach the guard clause inside the body, so the function went on
+   * rejecting `granularity => 'lane'` — the only word the rest of the model
+   * uses — and accepting `'layer'`, which nothing else does. Nobody noticed
+   * because a name was all this file declared: `check:contract:live` asserts
+   * every declared parameter binds, and had nothing to say about values it was
+   * never told (plus-uno-blueprint#144).
+   *
+   * The rung names double as the row `kind` each one emits — see
+   * `searchBlueprintKinds`.
+   */
+  searchBlueprintGranularity: {
+    accepted: ['phase', 'scenario', 'path', 'step', 'lane', 'cell'],
+    /**
+     * Still accepted on input, never emitted, and on its way out. `'layer'`
+     * stays valid only until uno-bot's vendored copy of this file has synced:
+     * the bot deploys on its own cadence, so a hard flip breaks every bot
+     * search in the window between the migration and the bot's next deploy.
+     * Once that sync has happened, drop this list and the `'layer'` branch of
+     * the RPC's guard clause together — the follow-up on #144.
+     */
+    deprecated: ['layer'],
+  },
+
+  /**
    * `search_blueprint` OUTPUT column names the bot reads by key. Separate from
    * the underlying table columns on purpose: `cells.description` becomes
    * `cells.summary` in plan 002, but the RPC's projection is its own decision
@@ -144,6 +173,17 @@ export const BLUEPRINT_CONTRACT = {
     matchedBy: 'matched_by',
     totalMatched: 'total_matched',
   },
+
+  /**
+   * Row `kind` values `search_blueprint` tags its own results with, one per
+   * granularity rung. Include rows carry their own kinds — `searchBlueprintInclude`.
+   *
+   * `'lane'` was `'layer'` here too, one line below the guard clause, which is
+   * how a row could come back tagged `layer` beside a column called `lane`. A
+   * kind has nowhere to put an alias the way `breadcrumb.aliases` does, so this
+   * one flipped outright rather than accepting both.
+   */
+  searchBlueprintKinds: ['phase', 'scenario', 'path', 'step', 'lane', 'cell'],
 
   /**
    * Values `include` accepts, and the `kind` each one tags its rows with.
