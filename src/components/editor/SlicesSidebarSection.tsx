@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
-import { duplicateSlice, sliceToken, updateSliceMeta } from '@/lib/sliceMutations'
+import { duplicateSlice, updateSliceMetaFromSeed } from '@/lib/sliceMutations'
 import { reportWriteFailure } from '@/lib/writeFailures'
 import { isSliceType } from '@/lib/sliceValidation'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
@@ -155,23 +155,6 @@ export function SlicesSidebarSection() {
     slices: rows.filter((slice) => sliceTypeGroup(slice.slice_type) === type),
   })).filter((group) => group.slices.length > 0)
 
-  /*
-    The rename dialog saves under an `updated_at` guard, so it has to hold the
-    row as the LIST currently knows it — not the copy captured when the
-    context menu opened. A background refetch between those two moments (a
-    save elsewhere, a tab regaining focus) left the guard matching on a stamp
-    the server had already replaced, and the dialog blamed the user for a
-    change nobody made.
-
-    Falls back to the captured entry when the row has left the list — deleted
-    elsewhere, or the query errored into its fallback. That save fails the
-    guard, which is the right answer.
-  */
-  const renameSlice =
-    renameTarget === null
-      ? null
-      : (rows.find((slice) => slice.id === renameTarget.id) ?? renameTarget)
-
   if (groups.length === 0) {
     return (
       // Teaching tone, matching the agent panel's empty states: say what a
@@ -252,7 +235,7 @@ export function SlicesSidebarSection() {
         }}
       />
       <RenameSliceDialog
-        slice={renameSlice}
+        slice={renameTarget}
         open={renameTarget !== null}
         onOpenChange={(open) => {
           if (!open) setRenameTarget(null)
@@ -265,18 +248,23 @@ export function SlicesSidebarSection() {
 /**
  * Rename a slice — title and subtitle, the two fields creating one asks for.
  *
- * `updateSliceMeta` is a guarded update: it carries the `updated_at` the row
- * was loaded with and matches on it, so a rename typed over a slice someone
- * else has since changed fails rather than silently overwriting them. That is
- * also why the whole meta goes back — type, actor and origin are re-sent
- * unchanged rather than dropped.
+ * Exported for `sliceRenameGuard.test.tsx`, which drives the save rather than
+ * reading it: the guard below has now been wrong in both directions, and
+ * neither wrong version looked any different from this one.
  *
- * `slice` is resolved from the live list on every render (see `renameSlice`),
- * so the stamp this guards on is the freshest one the client has seen. The
- * form itself is seeded ONCE per open — a refetch refreshes the token under
- * the dialog, never the words being typed into it.
+ * The whole form — not just the two fields on screen — is frozen at the moment
+ * it opens, and `updateSliceMetaFromSeed` guards on that seed: it reads the
+ * row back at submit and refuses when the meta has moved since. So a rename
+ * typed over a slice someone else has since changed fails rather than silently
+ * overwriting them, and a rename over a row that merely got a newer stamp
+ * still lands. Guarding on the stamp alone could only ever have one of those
+ * two, whichever stamp it picked.
+ *
+ * That seed is also why the whole meta goes back — type, actor and origin are
+ * re-sent as the user last saw them rather than dropped, which is what the
+ * comparison just promised they still are.
  */
-function RenameSliceDialog({
+export function RenameSliceDialog({
   slice,
   open,
   onOpenChange,
@@ -293,27 +281,29 @@ function RenameSliceDialog({
 
   // Re-seed on every open, cleared on close — keying on slice.id kept a
   // cancelled edit's junk alive for the same slice, one Enter from saving.
-  const [seeded, setSeeded] = useState(false)
-  if (open && slice && !seeded) {
-    setSeeded(true)
+  // The row is held rather than a `seeded` flag: it is what the save compares
+  // against, so the two can never disagree about which open it belongs to.
+  const [seed, setSeed] = useState<SliceListEntry | null>(null)
+  if (open && slice && !seed) {
+    setSeed(slice)
     setTitle(slice.title)
     setDescription(slice.description ?? '')
     setError(null)
   }
-  if (!open && seeded) setSeeded(false)
+  if (!open && seed) setSeed(null)
 
   const save = async () => {
-    if (!client || !slice || busy || !title.trim()) return
+    if (!client || !seed || busy || !title.trim()) return
     setBusy(true)
     setError(null)
     let outcome
     try {
-      outcome = await updateSliceMeta(client, slice.id, sliceToken(slice), {
+      outcome = await updateSliceMetaFromSeed(client, seed.id, seed, {
         title,
         description,
-        sliceType: isSliceType(slice.slice_type) ? slice.slice_type : 'custom',
-        actor: slice.actor ?? '',
-        origin: slice.origin ?? 'human',
+        sliceType: isSliceType(seed.slice_type) ? seed.slice_type : 'custom',
+        actor: seed.actor ?? '',
+        origin: seed.origin ?? 'human',
       })
     } catch (renameError) {
       setBusy(false)
@@ -326,8 +316,8 @@ function RenameSliceDialog({
       onOpenChange(false)
       return
     }
-    // `readWriteOutcome` throws on a real error, so the only other outcome
-    // is a lost race on `updated_at`.
+    // `readWriteOutcome` throws on a real error, so the only other outcome is
+    // a row that moved — edited elsewhere, or gone.
     setError('This slice changed somewhere else. Reopen it and try again.')
   }
 
