@@ -125,7 +125,7 @@ export function CompareCellBlock({
       : undefined),
   } as CSSProperties
   const shellClassName = cn(
-    'relative z-[1] flex shrink-0 items-stretch',
+    'relative z-1 flex shrink-0 items-stretch',
     shellPadding,
     isVisual && 'min-h-0 overflow-hidden',
   )

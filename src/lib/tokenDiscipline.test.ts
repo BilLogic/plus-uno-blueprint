@@ -1,28 +1,25 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { classUsesMatching, sourceFiles, sourceMatching } from '@/lib/tokenModel'
 
 /**
- * The token-discipline rule, enforced.
+ * The token-discipline rule, enforced — now against the one model.
  *
- * `docs/guidelines/foundations/color.md` states it plainly — components consume
+ * `docs/guidelines/foundations/color.md` states it plainly: components consume
  * the SEMANTIC lane, never the primitive ramps ("`text-warning`, not
  * `text-amber-1100`"), and no raw colour values where a token exists. Both
- * halves are convention, not types, and both had drifted: four components had
- * picked steps straight off the amber and violet ramps, three more were on
- * Tailwind's *default* `neutral` ramp (a ramp this design system unsets
- * everywhere else, reached for because every semantic surface token inverts
- * and the blueprint canvas must not), and two swatches carried four hex
- * literals inline.
+ * halves are convention, not types, and both had drifted.
  *
- * So: a grep with a reason. It fails on the next one instead of waiting for
- * someone to notice a chip that does not track its role, or a "frozen" surface
- * that quietly flipped with the theme.
+ * What changed here is not the rules, it is the sample. This file used to walk
+ * `src/components/**.tsx` with its own reader, which is why
+ * `src/lib/filterToolbarButton.ts` could carry `border-border/60` and
+ * `border-border/50` — the exact pattern the third rule forbids — and stay
+ * green for months. The sample now comes from `tokenModel`, which reads every
+ * non-test file under `components/`, `contexts/`, `hooks/`, `lib/`, `data/`,
+ * so widening it once widens it for every rule that asks (ADR 0001).
  */
-const COMPONENTS = resolve(__dirname, '../components')
 
-/** Ramps colors.css owns. Semantic tokens derive from these; .tsx may not. */
+/** Ramps colors.css owns. Semantic tokens derive from these; source may not. */
 const PRIMITIVE_RAMPS = [
   'amber',
   'blue',
@@ -64,50 +61,38 @@ const FOREIGN_RAMPS = [
 const UTILITY_PREFIXES =
   'bg|text|border|ring|fill|stroke|from|to|via|shadow|outline|divide|accent|caret|placeholder|decoration'
 
-function tsxFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = resolve(dir, entry)
-    if (statSync(path).isDirectory()) return tsxFiles(path)
-    return entry.endsWith('.tsx') && !entry.includes('.test.') ? [path] : []
-  })
-}
+test('the model reads more than the component tree', () => {
+  // A rule is only as good as its sample, and this file's sample used to be
+  // one directory. If the reader ever narrows again, every assertion below
+  // starts passing for the wrong reason.
+  const roots = new Set(sourceFiles().map((file) => file.file.split('/')[0]))
+  assert.ok(roots.has('components'), 'reads components/')
+  assert.ok(roots.has('lib'), 'reads lib/')
+  assert.ok(roots.has('hooks'), 'reads hooks/')
+  assert.ok(roots.has('contexts'), 'reads contexts/')
+  assert.ok(sourceFiles().length > 200, 'reads the whole tree, not a sample')
+})
 
-/** Strip comments: a comment naming the class it replaced is not a use. */
-function code(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1')
-}
-
-test('components take colour from the semantic lane, not the primitive ramps', () => {
+test('source takes colour from the semantic lane, not the primitive ramps', () => {
   const ramps = [...PRIMITIVE_RAMPS, ...FOREIGN_RAMPS].join('|')
-  const pattern = new RegExp(
-    `\\b(?:${UTILITY_PREFIXES})-(?:${ramps})-[0-9]{2,4}\\b`,
-    'g',
+  const offenders = sourceMatching(
+    new RegExp(`\\b(?:${UTILITY_PREFIXES})-(?:${ramps})-[0-9]{2,4}\\b`, 'g'),
   )
-  const offenders = tsxFiles(COMPONENTS).flatMap((file) => {
-    const hits = code(readFileSync(file, 'utf-8')).match(pattern) ?? []
-    return hits.map((hit) => `${file.replace(COMPONENTS, 'components')}: ${hit}`)
-  })
   assert.deepEqual(
     offenders,
     [],
-    `Primitive/foreign ramp steps in components — use the semantic token for the role instead:\n${offenders.join('\n')}`,
+    `Primitive/foreign ramp steps in source — use the semantic token for the role instead:\n${offenders.join('\n')}`,
   )
 })
 
-test('components carry no raw hex colours', () => {
+test('source carries no raw hex colours', () => {
   // Six- and three-digit hex only: `#{id}` template strings and CSS ids are
   // not colours, and neither is an 8-digit anything this codebase writes.
-  const pattern = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g
-  const offenders = tsxFiles(COMPONENTS).flatMap((file) => {
-    const hits = code(readFileSync(file, 'utf-8')).match(pattern) ?? []
-    return hits.map((hit) => `${file.replace(COMPONENTS, 'components')}: ${hit}`)
-  })
+  const offenders = sourceMatching(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)
   assert.deepEqual(
     offenders,
     [],
-    `Raw hex in components — add or use a token (see guidelines/foundations/color.md):\n${offenders.join('\n')}`,
+    `Raw hex in source — add or use a token (see guidelines/foundations/color.md):\n${offenders.join('\n')}`,
   )
 })
 
@@ -135,17 +120,63 @@ const NEUTRAL_EDGE_TOKENS = ['border', 'input']
 
 test('neutral border and ring strengths come from a named rung', () => {
   const tokens = NEUTRAL_EDGE_TOKENS.join('|')
-  const pattern = new RegExp(
-    `\\b(?:border|ring|divide|outline)-(?:${tokens})/(?:\\[[^\\]]+\\]|[0-9]+)`,
-    'g',
+  const offenders = sourceMatching(
+    new RegExp(
+      `\\b(?:border|ring|divide|outline)-(?:${tokens})/(?:\\[[^\\]]+\\]|[0-9]+)`,
+      'g',
+    ),
   )
-  const offenders = tsxFiles(COMPONENTS).flatMap((file) => {
-    const hits = code(readFileSync(file, 'utf-8')).match(pattern) ?? []
-    return hits.map((hit) => `${file.replace(COMPONENTS, 'components')}: ${hit}`)
-  })
   assert.deepEqual(
     offenders,
     [],
     `Inline alpha on a neutral edge token — use a named rung (border-muted / border-border / border-input / border-overlay / border-control-hover):\n${offenders.join('\n')}`,
+  )
+})
+
+/**
+ * The bare radius utility is a literal that looks tokenised.
+ *
+ * `tailwindcss@4.3.3` declares `--radius: 0.25rem` under `@theme default
+ * inline reference`. `inline` substitutes the literal straight into the
+ * utility and `reference` emits no custom property, so `.rounded` compiles to
+ * `border-radius: 0.25rem` and a `:root { --radius: … }` rule — which is where
+ * ours is declared — cannot reach it. Proven by compilation: at
+ * `--radius: 2rem`, `rounded-lg` moved to 32px and bare `rounded` stayed at
+ * 4px.
+ *
+ * Every sided variant has the same problem (`rounded-l`, `rounded-t`, …), so
+ * the rule is "a radius utility names its rung". `rounded-full` and
+ * `rounded-none` are exempt because neither is a rung — they are the two ends,
+ * and neither reads the dial by design.
+ */
+const SIDES = 'l|r|t|b|tl|tr|bl|br|s|e|ss|se|es|ee'
+
+test('every radius utility names a rung, so the dial reaches all of them', () => {
+  const offenders = classUsesMatching(
+    new RegExp(`^rounded(?:-(?:${SIDES}))?$`),
+  )
+  assert.deepEqual(
+    offenders,
+    [],
+    `Bare radius utility — 4px hardcoded by Tailwind, deaf to --radius. Name the rung (rounded-sm / -md / -lg / -xl), or rounded-full / rounded-none:\n${offenders.join('\n')}`,
+  )
+})
+
+/**
+ * One value, one spelling.
+ *
+ * Three z-index values were each written two ways — `z-30`/`z-[30]`,
+ * `z-60`/`z-[60]`, `z-1`/`z-[1]` — and `canvasStackingContract.test.ts` pinned
+ * the arbitrary spelling of one of them as an exact substring, so the test
+ * enforced the minority form. Tailwind v4 takes a bare integer for z-index, so
+ * the bracket buys nothing at all: every arbitrary spelling has a plain one,
+ * and the plain one is the vocabulary.
+ */
+test('z-index is spelled one way, so a contract cannot pin the other', () => {
+  const offenders = classUsesMatching(/^z-\[\d+\]$/)
+  assert.deepEqual(
+    offenders,
+    [],
+    `Arbitrary z-index — Tailwind v4 takes the bare number, so write z-30 not z-[30]:\n${offenders.join('\n')}`,
   )
 })

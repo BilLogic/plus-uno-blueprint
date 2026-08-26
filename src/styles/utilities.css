@@ -23,6 +23,25 @@
   }
 }
 
+/*
+ * The reduced-motion branch, which this file has been missing since the
+ * utility landed — `motion.test.ts` read `animations.css` and `blueprint.css`
+ * and never opened this one, so the only animated surface outside those two
+ * files was the one surface with no reduced-motion answer.
+ *
+ * `animation: none` alone would be worse than the animation: the utility opens
+ * at `opacity: 0` and relies on the keyframe's `forwards` to reach 1, so
+ * cancelling the animation without restoring opacity hides the loading
+ * indicator entirely. Unlayered on purpose — an unlayered rule beats the
+ * utilities layer the `@utility` compiles into.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .delayed-appear {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 @utility blueprint-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;

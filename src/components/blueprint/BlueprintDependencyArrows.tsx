@@ -380,9 +380,9 @@ export function BlueprintDependencyArrows({
       className={cn(
         'pointer-events-none absolute overflow-visible',
         // Keep the connector hierarchy identical to IntegratedDependencyArrows:
-        // ordinary runs tuck below the z-[1] cells, while wrap runs stay
+        // ordinary runs tuck below the z-1 cells, while wrap runs stay
         // elevated because they travel through the empty outer corridors.
-        lane === 'forward' ? 'z-0' : 'z-[30]',
+        lane === 'forward' ? 'z-0' : 'z-30',
       )}
       style={svgStyle}
       overflow="visible"

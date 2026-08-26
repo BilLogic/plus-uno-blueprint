@@ -177,6 +177,28 @@ let cachedDeclarations: Declaration[] | null = null
  */
 export function declarations(): Declaration[] {
   if (cachedDeclarations) return cachedDeclarations
+  cachedDeclarations = allDeclarations().filter((entry) =>
+    entry.name.startsWith('--'),
+  )
+  return cachedDeclarations
+}
+
+/**
+ * Every rule that declares a given CSS property, anywhere in the tree.
+ *
+ * The motion guard is why this is here rather than in one test: it read two of
+ * the three stylesheets that declare an `animation:`, so a keyframe in
+ * `utilities.css` with no reduced-motion branch was invisible to it. A guard
+ * that picks its own files picks the ones where its property already holds.
+ */
+export function rulesDeclaring(property: string): Declaration[] {
+  return allDeclarations().filter((entry) => entry.name === property)
+}
+
+let cachedAll: Declaration[] | null = null
+
+function allDeclarations(): Declaration[] {
+  if (cachedAll) return cachedAll
   const out: Declaration[] = []
   for (const sheet of stylesheets()) {
     const layer = layerOf(sheet.file)
@@ -185,8 +207,8 @@ export function declarations(): Declaration[] {
     blankComments(sheet.text)
       .split('\n')
       .forEach((line, index) => {
-        // Declarations first: `--name: value;` inside the current selector.
-        const declaration = /^\s*(--[a-zA-Z0-9-]+)\s*:\s*([^;]*);/.exec(line)
+        // `name: value;` inside whatever selector is currently open.
+        const declaration = /^\s*(-{2}[a-zA-Z0-9-]+|[a-z-]+)\s*:\s*([^;]*);/.exec(line)
         if (declaration) {
           out.push({
             name: declaration[1],
@@ -212,7 +234,7 @@ export function declarations(): Declaration[] {
         if (declaration) pending = ''
       })
   }
-  cachedDeclarations = out
+  cachedAll = out
   return out
 }
 

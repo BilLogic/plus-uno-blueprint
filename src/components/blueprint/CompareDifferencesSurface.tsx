@@ -53,7 +53,7 @@ function VerdictChip({ verdict }: { verdict: CompareStatus }) {
     return (
       <span
         className={cn(
-          'inline-flex shrink-0 items-center rounded px-1 py-px text-3xs leading-none',
+          'inline-flex shrink-0 items-center rounded-sm px-1 py-px text-3xs leading-none',
           MONO_NUM_CLASS,
           'bg-info/10 text-info',
         )}
@@ -66,7 +66,7 @@ function VerdictChip({ verdict }: { verdict: CompareStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center rounded px-1 py-px text-3xs leading-none',
+        'inline-flex shrink-0 items-center rounded-sm px-1 py-px text-3xs leading-none',
         MONO_NUM_CLASS,
         'bg-warning/10 text-warning',
       )}
