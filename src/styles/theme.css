@@ -452,8 +452,18 @@
  * replaced — call sites keep their own leading-* / inherited line-height.
  * A plain @theme block (not `inline`) because these are literal values, not
  * indirections into semantic tokens.
+ *
+ * The 9px and 8px rungs are the same argument one step further down, and they
+ * are two rungs rather than one because the two sizes are not
+ * interchangeable: 9px is the digit inside a size-4 sequence badge, where the
+ * glyph has to clear the circle's padding, and 8px is a nowrap caption under a
+ * visual-lane thumbnail, where any growth is a clipped label. Collapsing them
+ * would be a design change nobody asked for, and the ladder stays uniform at
+ * one step per rung: 11, 10, 9, 8.
  */
 @theme {
   --text-2xs: 0.6875rem; /* 11px */
   --text-3xs: 0.625rem; /* 10px */
+  --text-4xs: 0.5625rem; /* 9px */
+  --text-5xs: 0.5rem; /* 8px */
 }
