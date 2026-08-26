@@ -126,3 +126,104 @@ Recorded so the next reader does not re-open them:
 - **The `PLUS` wordmark in `EditorChrome.tsx`** — removed.
 - **The legacy `public.services` table** — dropped in
   `20260821340000_retire_lifecycle.sql`.
+
+## How far apart the trees are
+
+Run it; do not quote it from memory:
+
+```sh
+git fetch template 'refs/remotes/origin/main:refs/remotes/template/upstream-main'
+npm run template:divergence          # add -- --files to list the differing paths
+```
+
+`scripts/measure-template-divergence.mjs` is **reporting, not a guard** —
+divergence is expected to be non-zero and to move, so there is no threshold to
+fail on and it is not wired into CI. It refuses exactly one thing: reporting a
+comfortable number it cannot stand behind. An unresolvable ref exits 1, and so
+does a ref already merged into HEAD, because that is what a stale sibling
+checkout looks like from here.
+
+Scope is `src/`, `docs/`, `scripts/`, `hooks/` and the root files. `supabase/`
+is excluded — it is quarantined wholesale, and comparing this instance's
+migrations against the package's dummy backend measures nothing.
+
+### 2026-08-26, against upstream `695c730`
+
+| Area | Same path, identical | Same path, differ | Instance only | Template only |
+|---|---|---|---|---|
+| `src/components` | 88 | 76 | 26 | 10 |
+| `src/lib` | 46 | 89 | 53 | 23 |
+| `src/hooks` | 4 | 16 | 10 | 4 |
+| `src/styles` | 5 | 12 | 0 | 1 |
+| `src/contexts` | 8 | 7 | 3 | 2 |
+| `src/types` | 0 | 5 | 0 | 0 |
+| `src/data` | 0 | 1 | 47 | 2 |
+| `src` (other) | 5 | 4 | 0 | 1 |
+| `docs` | 0 | 0 | 145 | 28 |
+| `scripts` | 0 | 4 | 25 | 37 |
+| `hooks` | 0 | 0 | 0 | 4 |
+| root files | 5 | 11 | 1 | 4 |
+| **Total** | **161** | **225** | **310** | **116** |
+
+386 shared paths, **41.7% byte-identical**.
+
+This supersedes §1–§3 of the divergence inventory in
+[#74](https://github.com/BilLogic/plus-uno-blueprint/issues/74), which were
+measured against a checkout 134 commits behind `origin/main` and were never
+re-measured when §4 was corrected.
+
+**Shared history — closed.** #74 found distinct root commits and an empty
+`git merge-base`. Both roots are now reachable from `main`, the template's root
+`6fe51a9` is an ancestor of ours, and the merge base with upstream is `0fd6ca0`.
+"Every transfer is a manual file copy" is no longer true. What replaced it is
+the stale-ref trap above: `template/main` is an *ancestor of our HEAD*, so the
+naive measurement now reports almost no divergence rather than none of the
+history.
+
+**File counts — corrected in every row.** 403 shared paths at 71% identical is
+now 386 at 41.7%. The tree moved, not the yardstick: [#109](https://github.com/BilLogic/plus-uno-blueprint/pull/109)
+restructured the documentation tree, and #107, #108 and #110 rewrote the canvas
+input layer, the read/write lifecycle and the write boundary. The `docs` row is
+the sharpest change — **no doc path is shared with upstream at all** now, where
+#74 found four. Two rows are confirmed unchanged: 47 instance-only files under
+`src/data/`, and all four of `hooks/` still template-only and still not taken.
+
+#74's "14 test files the blueprint has no equivalent of" is 16 under `src/` and
+11 under `scripts/tests/` — but read that as a path count, not a coverage gap:
+`findingFingerprint.test.ts` is template-only by path while this repo tests the
+same module in `scripts/tests/findingFingerprint.test.mjs`. Its "+300 harness
+transcripts" are gitignored and are dropped here rather than counted; an
+untracked file cannot be compared by path.
+
+**Instance-specific classification — corrected, and no longer a judgement.**
+#74 estimated "~60 instance-specific" of 116 differing files, by eye. The line
+is drawn mechanically now, by `scripts/template-quarantine.json`: within this
+scope it claims **4 of the 225 differing shared paths** — `src/config.ts`,
+`src/types/database.ts`, `src/data/blueprintFallbacks.ts` and
+`src/lib/agent/role.md` — plus 49 instance-only files. The ~60 was high because
+it conflated file-level with block-level ownership: `semantic.css`,
+`themes/light.css`, `sessions.ts` and the copy in `BlueprintCellDetailPanel.tsx`
+carry instance-specific *blocks* inside otherwise shared files, which a
+path-level guard deliberately does not claim. #74's "these should not be
+reconciled" verdict stands for the quarantined set, and is enforced now rather
+than advised.
+
+**Direction of drift — reversed again, and no longer measurable by ancestry.**
+#74 said the package was ahead on 105 of 116; the #80 correction said the
+opposite. Neither can be settled by git: the graft is `-s ours`, so no content
+lineage crosses between the repos and "ahead" has no ancestry meaning. What is
+measurable: **155 of the 225 differing shared paths were changed upstream since
+the merge base**, so most of the difference is upstream work this instance has
+never taken. The other 70 differ because of what this instance did alone.
+
+The named extremes all still differ, and by more than before —
+`blueprintArrowGeometry.ts` +1511/−463, `blueprintFallbacks.ts` +944/−97,
+`blueprintLayout.ts` +309/−271, `BlueprintCellDetailPanel.tsx` +230/−283,
+`types/database.ts` +187/−448.
+
+**What this costs the code sweep.** #74's verdict — "71% of the shared surface
+is already byte-identical, sweep it as one pass with a hard fence" — rested on
+a number that is now 41.7%. The fence exists and is better than #74 imagined,
+because it is a check rather than a list in a comment. The one pass does not:
+225 differing shared paths, 155 of them carrying upstream changes, is not a
+sweep-sized job. Plan it against this table, not against #74's.
