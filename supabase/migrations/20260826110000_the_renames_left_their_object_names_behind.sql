@@ -23,13 +23,28 @@
 -- same defect and they are corrected here, or the assertion at the foot of
 -- this file could not pass.
 --
--- Two comments are deliberate and are NOT swept: `services` and
--- `business_model` each record the rename that produced them. A historical
+-- Three comments are deliberate and are NOT swept. `services` and
+-- `business_model` each record the rename that produced them: a historical
 -- note that names the old table is the opposite of stale vocabulary — it is
--- what stops the next reader re-deriving the rename from scratch.
+-- what stops the next reader re-deriving the rename from scratch. `evidence`
+-- is the permanent exemption itself, saying "proposition questions" about the
+-- three validation questions, which really are propositions; the rename moved
+-- the container, not the concept. All three are excluded by name in the sweep
+-- rather than dodged by a cleverer pattern, so the exemptions are countable.
 --
 -- Acceptance is the assertion block below, which re-reads pg_constraint,
--- pg_indexes, pg_policies, pg_trigger and pg_description after the fact.
+-- pg_indexes, pg_policies, pg_trigger and pg_description after the fact. It
+-- was proved RED before it was proved green: run its `retired` pattern against
+-- production BEFORE the DDL and it names all twenty-two objects, eight of them
+-- in the index sweep because the two primary-key indexes appear there too.
+--
+--   select conname from pg_constraint c join pg_namespace n
+--     on n.oid = c.connamespace
+--   where n.nspname = 'public'
+--     and conname ~* 'lifecycle|layer|proposition|service_scenario'
+--                    || '|cell_trigger|maturity|sets_off';
+--
+-- A guard first observed green has never been observed at all.
 
 -- ---------------------------------------------------------------------------
 -- Constraints (7). `business_model_service_id_fkey` carried two dead names at
@@ -100,15 +115,27 @@ comment on column public.cells.cell_key is
 
 -- ---------------------------------------------------------------------------
 -- The re-sweep. Every catalogue this migration touched, read back by name.
+--
+-- PLAIN SUBSTRINGS, deliberately. The first draft of this block anchored every
+-- alternative with \m…\M, and `_` is a word constituent in a Postgres regular
+-- expression: there is no word boundary in `phases_service_lifecycle_id_fkey`
+-- except at its two ends. Run against production before the DDL above, that
+-- version matched zero of the twenty-two objects it was written to catch. It
+-- could not have failed, which means going green would have told nobody
+-- anything — the same shape of bug as 20260820140000's `if n <> 7`, and the
+-- exact failure this ticket exists to fix.
+--
+-- `service_scenario` keeps its prefix on purpose. Bare `scenario` is a live
+-- word: it would match `paths_scenario_id_fkey`, which is correct today.
+-- Every other token here is retired outright — no current identifier in this
+-- database contains `lifecycle`, `layer`, `proposition`, `cell_trigger`,
+-- `maturity` or `sets_off` as a substring.
 -- ---------------------------------------------------------------------------
 do $do$
 declare
-  -- The retired identifiers, by word boundary. `lifecycle` and `layer` are
-  -- swept bare as well: they are the words, not only the table names.
   retired constant text :=
-    '\m(service_lifecycles?|service_lifecycle_id|lifecycles?|layers?|layer_id|layer_role'
-    || '|propositions|service_scenarios?|cell_triggers?|maturity|sets_off'
-    || '|row_position|column_position|slot_position|order_position)\M';
+    'lifecycle|layer|proposition|service_scenario|cell_trigger|maturity|sets_off'
+    || '|row_position|column_position|slot_position|order_position';
   offenders text;
 begin
   select string_agg(format('%s on %s', c.conname, c.conrelid::regclass), ', ' order by c.conname)
@@ -120,6 +147,8 @@ begin
     raise exception 'retired vocabulary survives in constraints: %', offenders;
   end if;
 
+  -- Includes the indexes backing the two primary keys above; they follow their
+  -- constraints, so this is eight names before the DDL and none after.
   select string_agg(indexname, ', ' order by indexname) into offenders
   from pg_indexes
   where schemaname = 'public' and indexname ~* retired;
@@ -145,27 +174,35 @@ begin
     raise exception 'retired vocabulary survives in triggers: %', offenders;
   end if;
 
-  -- Comments, minus the two deliberate historical records. `evidence` is left
-  -- to the pattern: its comment says "proposition questions", singular, which
-  -- is the surviving concept and not the retired table.
-  select string_agg(format('%s[%s]', c.relname, d.objsubid), ', ' order by c.relname)
+  -- Comments, minus three tables named here rather than hidden in a pattern.
+  -- `services` and `business_model` each record the rename that produced them;
+  -- a historical note that names the old table is the opposite of stale.
+  -- `evidence` is THE permanent exemption: its comment says "proposition
+  -- questions", which is the surviving concept — the three validation
+  -- questions really are propositions — and not the retired table.
+  select string_agg(
+           format('%s%s', c.relname, coalesce('.' || a.attname, ' (table)')),
+           ', ' order by c.relname)
   into offenders
   from pg_description d
   join pg_class c on c.oid = d.objoid
   join pg_namespace n on n.oid = c.relnamespace
+  left join pg_attribute a on a.attrelid = c.oid and a.attnum = d.objsubid
   where d.classoid = 'pg_class'::regclass
     and n.nspname = 'public'
     and d.description ~* retired
     and not (d.objsubid = 0
-             and d.objoid in ('public.services'::regclass, 'public.business_model'::regclass));
+             and d.objoid in ('public.services'::regclass,
+                              'public.business_model'::regclass,
+                              'public.evidence'::regclass));
   if offenders is not null then
     raise exception 'retired vocabulary survives in comments: %', offenders;
   end if;
 
   -- The rest of pg_description, for OUR schemas only: functions, the status
   -- domain, the schema notes. Restricted by namespace on purpose — the same
-  -- catalogue carries every built-in comment Postgres ships, and sweeping
-  -- those would fail on words somebody else chose.
+  -- catalogue carries every built-in comment Postgres ships, and a substring
+  -- sweep over those would fail on words somebody else chose.
   select string_agg(label, ', ' order by label) into offenders
   from (
     select p.proname as label
