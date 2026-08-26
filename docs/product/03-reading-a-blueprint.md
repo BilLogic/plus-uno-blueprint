@@ -1,94 +1,90 @@
 ---
 audience: everyone
-summary: The vocabulary — phases, scenarios, paths, lanes, the line of visibility, steps, cells, triggers vs needs, slices, and findings.
-sources: src/lib/agent/skill/references/lane-roles.md, src/lib/agent/skill/references/lane-vocabulary.md, src/components/blueprint/ServiceBlueprintGrid.tsx
-last-reviewed: 2026-08-18
+summary: How to read a board — where to look first, what the layout is telling you, and the three questions the shapes answer.
+sources: CONTEXT.md, src/components/blueprint/ServiceBlueprintGrid.tsx
+last-reviewed: 2026-08-25
 ---
 
 # Reading a blueprint
 
-Every word the app uses, taught once. Each entry says what the thing looks
-like on screen and what it means in service terms.
+**Every word this app uses is defined once, in [`CONTEXT.md`](../../CONTEXT.md)
+at the root of the repo.** Keep it open beside this page the first time; that
+file says *what each thing is*, and this one says *how to read the picture they
+make together*.
 
-## Lifecycle, phases, scenarios, paths
+A blueprint looks dense before it looks obvious. It stops looking dense once you
+know that the whole thing is answering three questions at the same time, one per
+axis.
 
-These four nest inside each other, big to small:
+## Left to right is time
 
-- **Lifecycle** — the whole relationship with the service, from first
-  hearing about it to (possibly) coming back. There's one; it's the
-  Overview page.
-- **Phases** — the big chapters of that relationship, numbered and in time
-  order: on screen, the numbered sections of the Overview and the sidebar.
-  In service terms: "the enrollment stage", "the weekly-sessions stage".
-- **Scenarios** — concrete situations inside a phase, worth mapping on
-  their own. On screen, each scenario opens as its own board. In service
-  terms: "a student's first session", "rescheduling".
-- **Paths** — variants of one scenario's journey: the happy path where
-  everything works, plus the detours (tutor cancels, student is late). On
-  screen, paths are labeled bands on the board, and the Compare surface
-  puts them side by side.
+The columns are **steps**, in order. Step 1 happens before step 2, on every
+screen, phones included. If you want to know what happens next, look right.
 
-## Lanes and the line of visibility
+Two boards of the same scenario can order the same step differently, because
+column order belongs to the **path**, not to the step. That is not a mistake in
+the data — it is the point of having paths.
 
-The board's horizontal rows are **lanes**. Each lane belongs to one kind of
-actor or machinery: the customer's own actions, the staff actions the
-customer can see, the visible tools and systems, the staff work backstage,
-the internal systems, the supporting teams. Lane names are whatever the
-service calls them ("Regular Tutor", "Scheduling system") — the row label
-on the left edge tells you which is which.
+## Top to bottom is who, and whether the customer can see them
 
-Between the visible rows and the hidden ones runs the **line of
-visibility** — a horizontal rule across the whole board. Above it: what the
-customer experiences. Below it: the machinery — everything that has to
-happen for the moment above to feel effortless. Most service problems live
-in the mismatch across this line, which is why the app never lets you lose
-sight of it — it runs across the board on every screen, phones included.
+The rows are **lanes**, and they are stacked in a deliberate order: the
+customer's own actions at the top, then the staff and tools they can see, then
+everything backstage.
 
-## Steps
+Running between the visible rows and the hidden ones is the **line of
+visibility** — a rule across the whole board, on every screen. It is the single
+most useful thing on the page. Above it is what the customer experiences; below
+it is the machinery that has to work for the moment above to feel effortless.
 
-**Steps** are the board's columns: time, left to right. Step 1 happens
-before step 2 — on every screen, phones included.
+**Most service problems live in the mismatch across that line.** A cheerful
+customer-facing moment sitting above three backstage cells that all say "manual"
+is a story. So is a busy backstage row under an empty customer row — work nobody
+is receiving.
 
-## Cells
+## The arrows are causation, and the panel is everything else
 
-A **cell** is one box on the board: one moment, in one lane, at one step —
-"the tutor greets the student", third lane, step 2. Click a cell and its
-panel opens with the full description, who's responsible, what it depends
-on, and the research evidence behind it. Cells are the atoms of the whole
-system: slices cite them, findings point at them, share links open them.
+An arrow from one cell to another means the first one **makes the second
+happen** (`leads_to`). Follow the arrows and you are following the causal flow
+of the service. If a cell has no arrow into it, either something is missing, or
+that is where the journey starts.
 
-## Triggers vs needs
+What a cell **needs** — a system, a piece of information, another cell's outcome
+— is *not* drawn. It is listed in the cell's panel, because needs do not cause
+anything; they are the prerequisites that hurt when they are missing. Drawing
+them would double the arrows and halve their meaning.
 
-Cells relate to each other in two different ways, and the board draws them
-differently:
+> A useful test when you cannot decide which one you are looking at: remove the
+> other cell and ask what happens. If this one never starts, that was a
+> `leads_to`. If it starts but goes wrong, that was a need.
 
-- **Triggers** (arrows) — "this sets that in motion." An arrow from cell A
-  to cell B means A causes B to happen. Follow the arrows and you're
-  following the causal flow of the service.
-- **Needs** (listed in the cell's panel) — "this depends on that." A cell
-  can need a system, a piece of information, or another cell's outcome to
-  be in place. Needs don't cause anything; they're the prerequisites that
-  will hurt if they're missing.
+Click any cell to open its panel: the full description, who is responsible, what
+it depends on, and the research evidence behind it. Cells are the atoms of
+everything else — slices cite them, findings point at them, share links open
+them — so the panel is where a question usually ends.
 
-A useful test: remove the other cell and ask what happens. If this one never
-starts, that was a trigger. If it starts but goes wrong, that was a need.
+## What to do first, on a board you have never seen
 
-## Slices
+1. **Find the line of visibility.** It tells you which half of the board is
+   experience and which is operations.
+2. **Read the top row left to right.** That is the customer's story, and it
+   should read like one.
+3. **Then read straight down from the moment that interests you.** Everything in
+   that column is what has to happen for that moment.
+4. **Only then follow arrows.** They are for tracing a specific chain, not for
+   getting oriented.
 
-A **slice** is a saved cut of the board for one audience: one actor's
-journey, one moment across every lane, one lane end to end, or one cell
-examined closely. On screen, slices live in the sidebar's Slices section
-and play as frames, each citing the cells it's built from. In service
-terms: the version of the map you'd show an exec, a new tutor, or a client
-— without handing them the whole dense board. A slice never contains
-anything the board doesn't; it's a view, not a copy.
+Paths come after all of that. Start with the happy path — the one where
+everything works — and read a detour only once the happy path makes sense.
+Comparing two of them side by side is its own surface, and
+[doc 02](02-team-guide.md) covers how to open it.
 
-## Findings
+## Where the reading stops and the analysis starts
 
-A **finding** is a recorded issue: "these two cells expect the same tutor
-in two places at once", "step 4 talks about a fee no customer-visible cell
-mentions". Findings come from audits — systematic checks explained in
-[doc 04](04-the-assistant-and-audits.md) — and each one names the exact
-cells it's about. A finding is an open question for a human, never an
-automatic change: someone on the team resolves it (fixed) or dismisses it
-(judged fine, with the system remembering that judgment).
+A blueprint is a description. What is *wrong* with the thing it describes is a
+**finding**, and findings come from audits — systematic checks explained in
+[doc 04](04-the-assistant-and-audits.md). A finding is always an open question
+for a human, never an automatic change.
+
+If you find yourself arguing with the board rather than reading it, that is the
+signal to open [doc 05](05-service-design-practice.md): you are doing service
+design now, not reading.

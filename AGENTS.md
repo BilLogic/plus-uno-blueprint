@@ -7,17 +7,35 @@ the code is newer; say so and follow the code.
 
 1. This file is your only guaranteed context — everything below stays in
    force for the whole session.
-2. `docs/INDEX.md` is the map: a task-routing table plus every reference
-   doc's one-line summary. Route by TASK row, not by browsing folders.
-3. Any task that writes data reads `engineering/access-and-security.md`
-   first — which user type this session runs as decides which tools and
-   paths are even legitimate. The plain-language capability table is
-   `product/01-overview.md`.
-4. Unsure where a task belongs → `docs/engineering/codebase-guide.md`
-   first.
-5. `docs/plans/` and `docs/ideation/` are HISTORY — decision-era
-   snapshots, not current truth. Check frontmatter `status` /
+2. `CONTEXT.md` fixes the vocabulary: scenario, path, phase, step, cell,
+   lane, line of visibility, dependency, need, slice, finding, plus the
+   rename map and its two do-not-sweep exceptions. Definitions only, so it
+   is cheap. Never invent a synonym for a term it already fixes.
+3. `INDEX.md` (root, GENERATED) is the map: a task-routing table plus every
+   living doc's one-line summary, taken from that doc's own frontmatter.
+   Route by TASK row, not by browsing folders.
+4. Any task that writes data reads
+   `docs/engineering/access-and-security.md` first — which user type this
+   session runs as decides which tools and paths are even legitimate. The
+   plain-language capability table is `docs/product/01-overview.md`.
+5. Unsure where a task belongs → `docs/engineering/codebase-guide.md`
+   first. Anything crossing a repo boundary → `docs/connectors/`.
+6. `docs/plans/`, `docs/ideation/` and `docs/brainstorms/` are HISTORY —
+   decision-era snapshots, not current truth. Check frontmatter `status` /
    `distilled-into` before acting on one.
+
+## Where the skills come from (not this repo)
+
+`/sb:map`, `/sb:audit`, `/sb:whatif` and `/sb:slice` are **domain skills
+from the installed `sb` plugin**, authored in the
+`agentic-service-blueprinting` repo. Do not go looking for them here, and
+do not add one here.
+
+`src/lib/agent/skill/{skills,references}/` is a **vendored copy** of that
+same text, bundled so the in-app assistant executes what an IDE session
+executes. Editing a file there is a mistake the next upstream take
+erases — fix it upstream. Details:
+`docs/engineering/agent-system.md`.
 
 ## Security lines (non-negotiable — never behind a pointer)
 
@@ -78,4 +96,8 @@ vocabulary). Deeper: `docs/engineering/codebase-guide.md`.
   (it resolves to an unrelated npm package), and `tsconfig.json` is a solution
   file with `"files": []`.
 - Quote globs in shell commands (`--include="*.tsx"`) — zsh eats bare ones.
-- After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.
+- `npm run check:harness` — every file under `blueprint/`, `editor/`,
+  `cover/` and `mobile/` is claimed by exactly one composition doc. A new
+  surface nobody documented fails it.
+- After moving, renaming or adding any doc: `npm run docs:index`. A doc
+  with no frontmatter `summary` fails that build, not silently.
