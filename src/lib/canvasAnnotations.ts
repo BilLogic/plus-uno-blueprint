@@ -181,23 +181,15 @@ export function annotationFontSizeLabel(fontSize: number): string {
   return ANNOTATION_FONT_SIZE_LABELS[fontSize] ?? `${fontSize}px`
 }
 
-/**
- * Text on a filled shape. Every fill in `ANNOTATION_FILL_SWATCHES` is step 300
- * or paper except the ink one, so this is a membership test rather than a
- * contrast computation — which is also what lets the fills stay `var()`.
+/*
+ * `isPaleAnnotationSwatch()` used to live here — `color !== ANNOTATION_INK`,
+ * a membership test standing in for a contrast computation. It answered "is
+ * this pale?" for values that invert with the theme, so it was wrong in dark
+ * mode for every swatch it said yes to and wrong in dark mode for the one it
+ * said no to. The swatch button derives its ink from its own fill now, via
+ * `[data-blueprint-fill]`, which is the mechanism path badges and divider tags
+ * already used. Nothing needs the membership test.
  */
-/**
- * True when a swatch needs a visible outline to be seen against the toolbar.
- *
- * Every fill swatch is step 300 or paper except the ink one, so this is a
- * membership test rather than a luminance computation — which is what lets the
- * swatches stay `var()` tokens.
- */
-export function isPaleAnnotationSwatch(
-  color: string | null | undefined,
-): boolean {
-  return Boolean(color) && color !== ANNOTATION_INK
-}
 
 export function annotationTextOnFill(fillColor: string | null): string {
   if (!fillColor) return ANNOTATION_INK
