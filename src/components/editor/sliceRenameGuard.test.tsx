@@ -16,8 +16,11 @@
  * that bump no token could ever go stale and the whole file would be vacuous.
  *
  * The dialog is rendered directly and its `slice` prop is swapped between the
- * seed and the submit — that swap IS the refetch the sidebar performs by
- * resolving the row from the live list on every render.
+ * seed and the submit. That swap used to matter: the sidebar resolved the row
+ * from the live list on every render, so a refetch reached straight into the
+ * open dialog. This change deletes that resolution and freezes the seed at
+ * open, so the swap is now expected to change nothing — which is exactly what
+ * these rerenders assert, and why they stay.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
@@ -208,6 +211,29 @@ it('lands the rename when the client never saw the newer stamp at all', async ()
   render(
     <RenameSliceDialog slice={listEntry({ ...server })} open onOpenChange={() => {}} />,
   )
+  server.updated_at = '2026-08-26T09:30:00.654321+00:00'
+
+  rename('Concierge intake (v2)')
+
+  await waitFor(() => expect(server.title).toBe('Concierge intake (v2)'))
+})
+
+it('lands the rename when only the derived origin moved', async () => {
+  const server = SERVER_ROW()
+  server.origin = 'agent'
+  const { client } = fakeSlicesTable(server)
+  supabase.client = client
+
+  render(
+    <RenameSliceDialog slice={listEntry({ ...server })} open onOpenChange={() => {}} />,
+  )
+
+  // `origin` is not round-tripped: every meta write puts it through
+  // `originAfterEdit`, which turns anything that is not 'human' into
+  // 'customized'. A concurrent frame-editor Save therefore moves this field
+  // with nobody having typed anything, and the rename would have stored the
+  // identical value. Comparing it raw refuses a rename that races nothing.
+  server.origin = 'customized'
   server.updated_at = '2026-08-26T09:30:00.654321+00:00'
 
   rename('Concierge intake (v2)')

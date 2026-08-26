@@ -200,9 +200,17 @@ test('z-index is spelled one way, so a contract cannot pin the other', () => {
  * (`text-[2.5rem]`, `text-[2.25rem]`) are a real gap at the TOP of the scale,
  * and closing it means adding rungs above `text-xl`; that is a separate change
  * and this rule does not yet claim it.
+ *
+ * The leading `(?:[\w-]+:)*` matters. `classUses` records each whitespace-
+ * delimited token whole, variants included, so an anchored pattern without it
+ * reads `sm:text-[9px]` as a different utility and lets it through — a guard
+ * that only holds at the default breakpoint. The radius and z-index rules
+ * above are anchored the same way and have the same hole; that is filed
+ * separately rather than widened here, because each needs its own look at
+ * what its variants legitimately do.
  */
 test('font sizes come from a named rung, not a px literal', () => {
-  const offenders = classUsesMatching(/^text-\[\d+(?:\.\d+)?px\]$/)
+  const offenders = classUsesMatching(/^(?:[\w-]+:)*text-\[\d+(?:\.\d+)?px\]$/)
   assert.deepEqual(
     offenders,
     [],

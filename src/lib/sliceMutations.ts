@@ -316,10 +316,12 @@ export type SliceMetaUpdate = {
  *
  * The token is the caller's problem, and it stops being a safe one wherever a
  * person types between loading the row and saving it: that caller wants
- * `updateSliceMetaFromSeed` below. The frame editor's Save is deliberately not
- * that caller — it re-sends the row's own values and wants *any* concurrent
- * write to stop it before the frames are rewritten, which is precisely what a
- * stamp answers and a field comparison does not.
+ * `updateSliceMetaFromSeed` below. Two callers are deliberately not that one.
+ * The frame editor's Save re-sends the row's own values and wants *any*
+ * concurrent write to stop it before the frames are rewritten, which is
+ * precisely what a stamp answers and a field comparison does not; and the
+ * agent's `update_slice` tool reads and writes in the same breath, with no
+ * person typing in between for a stamp to go stale under.
  */
 export async function updateSliceMeta(
   client: Client,
@@ -410,7 +412,7 @@ export async function updateSliceMetaFromSeed(
     .eq('id', sliceId)
     .maybeSingle()
   if (error) throw new Error(error.message)
-  if (!current || metaMoved(seeded, current)) return { status: 'conflict' }
+  if (!current || seedMoved(seeded, current)) return { status: 'conflict' }
 
   return updateSliceMeta(client, sliceId, sliceToken(current), update)
 }
@@ -428,6 +430,11 @@ type SliceMetaFields = Pick<
  * caller's intent: `origin` is rewritten by `originAfterEdit` rather than
  * passed through, and the trimming happens in the update itself, so comparing
  * `before` to the arguments would call a no-op save a change (and vice versa).
+ *
+ * This is the ledger's question — "did anything actually change?" — and both
+ * sides of it are values the database stored, so a derived `origin` moving is
+ * a real move. `seedMoved` above answers a different question and must not be
+ * folded into this one.
  */
 function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
   return (
@@ -436,6 +443,29 @@ function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
     before.slice_type !== after.slice_type ||
     before.actor !== after.actor ||
     before.origin !== after.origin
+  )
+}
+
+/**
+ * Did the row move out from under the form between opening and submitting?
+ *
+ * Not `metaMoved`. That one compares two rows the database actually stored,
+ * which is the right question for the ledger and the wrong one here: `origin`
+ * is DERIVED on write by `originAfterEdit`, not preserved. A frame-editor Save
+ * on an agent-authored slice flips `agent` to `customized` without a person
+ * touching a word of it, and comparing the raw field would then refuse a
+ * rename that would have stored the very same value.
+ *
+ * So `origin` is compared through the same projection the write applies. The
+ * four fields that ARE round-tripped are compared verbatim.
+ */
+function seedMoved(seeded: SliceMetaFields, current: SliceMetaFields): boolean {
+  return (
+    seeded.title !== current.title ||
+    seeded.description !== current.description ||
+    seeded.slice_type !== current.slice_type ||
+    seeded.actor !== current.actor ||
+    originAfterEdit(seeded.origin) !== originAfterEdit(current.origin)
   )
 }
 

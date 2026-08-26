@@ -14,6 +14,7 @@ import { asEntityStatus, DEFAULT_ENTITY_STATUS } from '@/lib/entityStatus'
 import type { PathListItem } from '@/lib/pathSelection'
 import { pickPreferredPath } from '@/lib/pathSelection'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
+import { errorMessage } from '@/lib/utils'
 import type { BlueprintData } from '@/types/blueprint'
 
 type CanvasRawPath = RawPath & {
@@ -273,9 +274,7 @@ export function useCanvasBlueprints(scenarioIds: string[]) {
 
   const firstError = results.find((result) => result.error)?.error
   const error = anyError
-    ? firstError instanceof Error
-      ? firstError.message
-      : String(firstError)
+    ? errorMessage(firstError)
     : null
 
   return {
