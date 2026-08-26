@@ -2,8 +2,26 @@
  * Core semantic colour system. Mirrors packages/ui/build/css/source/semantic.css.
  *
  * Themes declare a small set of dial inputs; every semantic colour below is
- * derived from them in OKLCH. Dials live in `themes/`, derivations live here —
- * a name should never be declared in both.
+ * derived from them in OKLCH. Dials live in `themes/`, derivations live here.
+ *
+ * THE INVARIANT, STATED PRECISELY. "A name is never declared in both" was the
+ * short form, and it was already false when it was written — `--surface-hue`,
+ * `--primary-hue` and `--radius` all sat here as well. The rule that is
+ * actually true, and that `themeDials.test.ts` holds:
+ *
+ *   - a derivation is declared HERE and nowhere else;
+ *   - a dial both themes turn is declared in BOTH theme files (parity, so the
+ *     `:root` in light's selector list cannot hand dark a value it never
+ *     asked for — that was the warm-brown defect);
+ *   - a dial only one theme turns has its other value HERE (`--field-alpha`);
+ *   - a dial neither theme turns is not a dial, and lives HERE (`--radius`).
+ *
+ * What is forbidden is the fourth combination: a value declared here AND in
+ * every theme file. Light's block matches bare `:root` and imports after this
+ * file, so such a declaration can never win under either theme — it is a
+ * default that reads like a fallback and is not one. `--surface-hue` was
+ * exactly that, and a comment asserting the same untrue fallback in
+ * `themes/dark.css` is what hid the defect for months.
  *
  * The stepped numeric scales (brand / warning / destructive) are NOT derived
  * here. They are per-theme HSL literals in the theme files, mapped to utilities
@@ -30,8 +48,14 @@
    * ramp (backgrounds, text, borders) and `--primary-hue` drives the brand, so
    * a theme can run a warm-grey surface against a cool brand without the two
    * being locked together.
+   *
+   * Only `--primary-hue` is declared here, and it is here because no theme
+   * turns it: both run the brand at `--hue`, and the split exists so that one
+   * of them could stop. `--surface-hue` is the opposite case — both themes
+   * turn it (34 in light, back onto `--hue` in dark), so a third declaration
+   * on this block is unreachable under both, and it sat here unreachable
+   * until 2026-08-26. See the invariant at the top of this file.
    */
-  --surface-hue: var(--hue);
   --primary-hue: var(--hue);
 
   /*
