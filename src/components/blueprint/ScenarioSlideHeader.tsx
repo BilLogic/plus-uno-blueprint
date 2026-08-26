@@ -49,7 +49,7 @@ export function ScenarioSlideHeader({
           {slide ? (
             <ScenarioParallelInfoTooltip slide={slide} iconClassName="size-4" />
           ) : null}
-          <h1 className="text-[2.5rem] font-bold leading-[1.15] tracking-tight text-foreground">
+          <h1 className="text-5xl font-bold leading-[1.15] tracking-tight text-foreground">
             {title}
           </h1>
         </div>
