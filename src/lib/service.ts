@@ -8,6 +8,9 @@ type Client = SupabaseClient<Database>
  * and concurrent callers share one in-flight query, so the `useSlices` /
  * `useServicePhases` / evidence-insert chains do not each hit
  * `services`. Errors are not cached; the next caller retries.
+ *
+ * Deliberately takes no abort signal: the promise is shared, so one caller
+ * leaving its view would cancel the lookup every other caller is awaiting.
  */
 let firstServiceId: Promise<string | null> | null = null
 

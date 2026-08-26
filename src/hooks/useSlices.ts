@@ -33,7 +33,7 @@ const slicesFallback = (): SliceListEntry[] | null =>
 export function useSlices(serviceId?: string): QueryResult<SliceListEntry[]> {
   return useSupabaseQuery<SliceListEntry[]>(
     `slices:${serviceId ?? 'first'}`,
-    async (client) => {
+    async (client, signal) => {
       let resolvedServiceId = serviceId
       if (!resolvedServiceId) {
         resolvedServiceId = (await findFirstServiceId(client)) ?? undefined
@@ -45,6 +45,7 @@ export function useSlices(serviceId?: string): QueryResult<SliceListEntry[]> {
         .select('*, slice_items (id, position, cell_ids)')
         .eq('service_id', resolvedServiceId)
         .order('position', { ascending: true })
+        .abortSignal(signal)
       if (error) throw new Error(error.message)
       return data ?? []
     },
