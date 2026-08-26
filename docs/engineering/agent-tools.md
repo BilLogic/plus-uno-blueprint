@@ -22,11 +22,13 @@ refusal, not an attempt. **Deliberately absent: every delete.**
 - **`src/lib/agent/tools/registry.ts`** — dispatch: `dispatchTool` maps a name
   onto the same wrapper the UI calls (`authoringRpc.ts`,
   `cellContentMutations.ts`, `cellSpecMutations.ts`, `sliceMutations.ts`,
-  `stakeholderMutations.ts`, `evidenceMutations.ts`), so RLS, validation,
-  ledger logging, and revert capture come free. **One exception, and it is not
-  a pattern to copy**: `create_finding` / `update_finding` write the `findings`
-  table directly from the registry, so those two get no ledger entry and no
-  captured inverse. See
+  `stakeholderMutations.ts`, `evidenceMutations.ts`, `findingMutations.ts`), so
+  RLS, validation, ledger logging, and revert capture come free. **There is no
+  longer an exception.** `create_finding` / `update_finding` wrote the
+  `findings` table straight from this file until 2026-08-25 — no ledger entry,
+  no captured inverse, and ⌘Z reaching past them to undo somebody else's edit.
+  They dispatch to `findingMutations.ts` now; the dedupe rule travels with the
+  write, because the branch *is* the write path. See
   [access-and-security](access-and-security.md#authoring-writes).
 - UI navigation dispatch may be asynchronous: `open_phase`, `open_scenario`,
   and `focus_cell` wait for verified selection/camera outcomes. The CLI harness

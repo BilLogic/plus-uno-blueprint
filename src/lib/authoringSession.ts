@@ -84,6 +84,8 @@ export type WriteFn =
   | 'update_slice_meta'
   | 'replace_slice_frames'
   | 'set_slice_illustration'
+  | 'create_finding'
+  | 'update_finding'
 
 export type ChangeEntry = {
   id: string
@@ -235,6 +237,13 @@ function titled(entry: ChangeEntry): string {
   return typeof entry.args.title === 'string' ? entry.args.title.trim() : ''
 }
 
+/** The audit check a finding came from, e.g. `orphan-cell`. */
+function checked(entry: ChangeEntry): string {
+  return typeof entry.args.check_name === 'string'
+    ? entry.args.check_name.trim()
+    : ''
+}
+
 /**
  * One sentence per operation, keyed by operation.
  *
@@ -320,6 +329,27 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
     entry.args.cleared === true
       ? 'Removed a storyboard image'
       : 'Set a storyboard image',
+  // Named by the check, because that is the word a person recognises — the
+  // finding's own id means nothing to anyone reading the sheet.
+  create_finding: (entry) => {
+    const severity =
+      typeof entry.args.severity === 'string' ? `${entry.args.severity} ` : ''
+    return checked(entry)
+      ? `Recorded a ${severity}finding for ${checked(entry)}`
+      : `Recorded a ${severity}finding`
+  },
+  // Two shapes share this row: a triage flip, and the dedupe rewrite an audit
+  // run performs when it re-reports a finding that is already open. Only the
+  // first names a status, and saying which one happened is the whole value of
+  // the row — "Updated a finding" beside a run of them tells nobody anything.
+  update_finding: (entry) => {
+    const status =
+      typeof entry.args.status === 'string' ? entry.args.status : ''
+    if (status) return `Marked a finding ${status}`
+    return checked(entry)
+      ? `Updated the open finding for ${checked(entry)}`
+      : 'Updated an open finding'
+  },
 }
 
 export function describeChange(entry: ChangeEntry): string {

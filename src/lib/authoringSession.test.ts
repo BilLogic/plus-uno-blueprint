@@ -80,6 +80,8 @@ const EVERY_WRITE = Object.keys({
   update_slice_meta: true,
   replace_slice_frames: true,
   set_slice_illustration: true,
+  create_finding: true,
+  update_finding: true,
 } satisfies Record<WriteFn, true>) as WriteFn[]
 
 test('every recordable operation reads as a sentence, not an identifier', () => {

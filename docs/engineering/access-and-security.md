@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
-sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts
+sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql
 last-reviewed: 2026-08-25
 ---
 
@@ -143,27 +143,41 @@ never a raw table write from a component, a context or a hook:
   SECURITY DEFINER RPC. The app holds *operations*, not tables. Treat all
   of them as pessimistic: re-read after a structural write
   (`invalidateStructure()`), because cascades cannot be mirrored client-side.
-- **The `src/lib/*Mutations.ts` family** — ten modules today, one per subject:
-  `cellContentMutations` / `cellSpecMutations` (cell text and spec columns via
-  column-level grants; optimistic, the exception), `sliceMutations` (slices and
-  frames), `evidenceMutations`, `stakeholderMutations`, and the five spec
-  modules `serviceSpecMutations`, `scenarioSpecMutations`, `phaseSpecMutations`,
-  `laneSpecMutations`, `stepSpecMutations`. All share one shape: direct table
+- **The `src/lib/*Mutations.ts` family** — eleven modules today, one per
+  subject: `cellContentMutations` / `cellSpecMutations` (cell text and spec
+  columns via column-level grants; optimistic, the exception), `sliceMutations`
+  (slices and frames), `evidenceMutations`, `findingMutations`,
+  `stakeholderMutations`, and the five spec modules `serviceSpecMutations`,
+  `scenarioSpecMutations`, `phaseSpecMutations`, `laneSpecMutations`,
+  `stepSpecMutations`. All share one shape: direct table
   write under row grants, recorded in the session ledger with a captured
   inverse.
 
-Three modules write tables and are deliberately *not* in that set. Count them
-when you count writers — there are fourteen write surfaces, not eleven:
+Two modules write tables and are deliberately *not* in that set. Count them
+when you count writers — there are fourteen write surfaces, not twelve:
 
 - `src/lib/revertChange.ts` — the ledger's own inverse-applier. It cannot
   record a change; recording one is what it undoes.
 - `src/lib/agent/persistence.ts` — `agent_sessions` / `agent_messages`. Agent
   transcript, not blueprint data; nothing in it is revertable.
-- `src/lib/agent/tools/registry.ts` (`create_finding` / `update_finding`) —
-  writes `findings` directly, with no ledger entry and no captured inverse.
-  Unlike the two above this is **not** clearly intended: `src/lib/writeBoundaryContract.test.ts`
-  scans only `components/`, `contexts/` and `hooks/`, so a write from `src/lib`
-  passes unseen. Treat it as an open question, not a pattern.
+
+`src/lib/agent/tools/registry.ts` used to be a third, and was the one entry
+here marked as an open question rather than a decision: `create_finding` and
+`update_finding` wrote `findings` from the dispatcher, with no ledger entry and
+no captured inverse, because `writeBoundaryContract.test.ts` scanned only
+`components/`, `contexts/` and `hooks/` and a write from `src/lib` passed
+unseen. Both now go through `findingMutations.ts`, and the guard walks all of
+`src/` with its exemptions named one by one.
+
+**A created finding is the one write with no revert, and the reason is a
+grant.** DELETE on `findings` is revoked from `authenticated` and `anon` with
+no policy to reach it — supersede and triage are status flips. `resolved` and
+`dismissed` are the only states that quiet a finding and both are human
+judgements, `dismissed` permanently so (the dedupe rule is "dismissed stays
+dismissed", which is why `findings_insert_auth` refuses an insert that is not
+`open`). So the insert records a ledger entry with no revert control, which is
+the honest shape; every `findings` *update* captures the prior value of exactly
+the columns it wrote.
 
 What the wrappers buy, and why bypassing them is never acceptable:
 

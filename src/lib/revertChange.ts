@@ -34,6 +34,7 @@ import {
   type EvidenceUpdate,
 } from '@/lib/evidenceMutations'
 import { setSliceFrameIllustration } from '@/lib/sliceMutations'
+import { updateFinding, type FindingUpdate } from '@/lib/findingMutations'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { CellLink } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
@@ -318,6 +319,23 @@ export async function executeRevert(
         .eq('perceived_owner', from)
         .in('id', ids as string[])
       if (perceivedUpdate.error) throw toAuthoringError(perceivedUpdate.error)
+      return
+    }
+    case 'update_finding': {
+      // Self-inverse, like update_evidence — the captured payload IS a
+      // FindingUpdate, carrying the prior value of exactly the columns the
+      // forward write touched and no others. Keyed on the finding id, so an
+      // out-of-order revert lands on the finding the edit came from rather
+      // than on whatever now shares its fingerprint.
+      //
+      // There is deliberately no `create_finding` case beside this one: DELETE
+      // on `findings` is revoked from every client role, and the two states
+      // that would silence a finding — resolved, dismissed — are human triage
+      // decisions, not inverses. A created finding records with no revert and
+      // shows no revert control.
+      const findingId = stringArg(revert.args, 'finding_id')
+      const update = revert.args.update as FindingUpdate
+      await updateFinding(client, findingId, update, { record: false })
       return
     }
     case 'update_service_summary': {
