@@ -7,10 +7,8 @@ import {
   SIDEBAR_OVERLAY_BREAKPOINT,
   SIDEBAR_OVERLAY_QUERY,
   collapseSidebarByUser,
-  initialSidebarCollapse,
   reconcileSidebarCollapse,
   useSidebarCollapse,
-  useSidebarOverlay,
   type SidebarCollapse,
 } from '@/hooks/useSidebarOverlay'
 
