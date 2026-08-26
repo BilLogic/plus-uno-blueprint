@@ -75,6 +75,18 @@ contract in short:
   two-finger pinch maps its previous midpoint directly to its current midpoint,
   combining scale and finger drift in one transform instead of applying drift
   twice.
+- A wheel notch means the same thing everywhere: deltas are normalised to
+  pixels at the point of entry from the mode the event reports (Firefox sends
+  lines, Chromium pixels), and a single event's zoom step is capped so a
+  mouse notch cannot jump the scale nearly threefold. The Mac trackpad is the
+  baseline and is unchanged by both.
+- Arrow keys pan the camera while focus is inside the viewport (Shift for a
+  stride), through the same `panBy` primitive the pointer and the agent use.
+  Focusing a cell by keyboard moves the camera until that cell is on screen —
+  the viewport is transform-based and hides its overflow, so the browser's own
+  scroll-into-view cannot help, and the container's scroll offsets are held at
+  zero because the camera's maths assumes them. A focus move never interrupts
+  a fit already in flight.
 - Focused phase and scenario boards are centered in the canvas. Floating
   sequence controls use equal top and bottom clearance so avoiding the controls
   never shifts the selected board off the visual center.
@@ -216,6 +228,12 @@ touch screen — on a phone the canvas is the whole surface:
   gesture state.
 - **A drag's trailing click is swallowed** — the synthetic click browsers
   fire after a pan must not also open a cell.
+- **A finger inside a scrolling region scrolls it, not the board.** The board
+  does contain scrollable regions (an overflowing `ServiceBlueprintGrid`), and
+  the wheel path has always handed them their deltas; touch does the same, off
+  the same determination (`canvasScrollRegions.ts`). Two fingers are still a
+  pinch wherever they land — a region gets `touch-action: pan-x pan-y`, never
+  `auto`.
 
 **The gesture is claimed twice over: declared in CSS, then taken in JS.**
 `touch-action: none` is set on the viewport, on the transformed content
@@ -242,5 +260,9 @@ overrides without changing the selected tool: hold Space and primary-drag, or
 drag with the middle mouse button. Editable fields retain Space and shortcuts.
 
 Desktop wheel/keyboard paths are untouched by all of this, and an
-interaction test pins the pinch path. Breakpoint questions (what exists on a
+interaction test pins the pinch path. macOS Safari's trackpad pinch is a
+third mechanism again — WebKit `gesture*` events, with no touch pointers and
+no synthesised ctrl+wheel behind them — so the canvas reads their cumulative
+`scale` and zooms from it, gated on the touch-pointer count being zero so
+that iOS, where the pointer map already pinches, never applies scale twice. Breakpoint questions (what exists on a
 phone at all) belong to [responsive](responsive.md).
