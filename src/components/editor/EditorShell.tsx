@@ -9,6 +9,7 @@ import {
   SIDEBAR_MIN_WIDTH,
 } from '@/lib/layoutTokens'
 import { CoverPage } from '@/components/cover/CoverPage'
+import { EditorErrorBoundary } from '@/components/EditorErrorBoundary'
 import { coverContent } from '@/content/coverContent'
 import { ServiceOverviewView } from '@/components/editor/ServiceOverviewView'
 import {
@@ -767,13 +768,31 @@ function DesktopEditorShell() {
                 className="absolute inset-0"
                 data-editor-content=""
               >
-                <ActiveTabContent
-                  tab={activeTab}
-                  isLanding={isLanding}
-                  leavingPresent={leavingPresent}
-                  onReturn={exitPresentation}
-                  onRevealStage={setRevealStage}
-                />
+                {/*
+                  A second boundary, inside the one App.tsx puts around the
+                  whole shell. That outer one is the last line before a white
+                  screen, and it takes the tab strip, the sidebar, the rail
+                  and the agent dock down with the board — which is the wrong
+                  trade for a throw that came from one canvas. A crash here
+                  costs the reader the view they were on and nothing else:
+                  the chrome stays, and every other tab is one click away.
+
+                  `resetKey` is the content key, so navigating is enough to
+                  recover — the boundary's own documented contract, and the
+                  reason a single throw does not read as "the app crashes
+                  constantly". This does not soften ADR 0004: the board is
+                  still always fully mounted, and this unmounts it only for a
+                  throw the alternative would have unmounted anyway.
+                */}
+                <EditorErrorBoundary resetKey={contentKey}>
+                  <ActiveTabContent
+                    tab={activeTab}
+                    isLanding={isLanding}
+                    leavingPresent={leavingPresent}
+                    onReturn={exitPresentation}
+                    onRevealStage={setRevealStage}
+                  />
+                </EditorErrorBoundary>
               </div>
             </div>
           </main>

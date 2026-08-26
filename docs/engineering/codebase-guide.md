@@ -61,7 +61,8 @@ ScenarioPathSelectionReset → EditorErrorBoundary → EditorShell → WriteFail
 - `EditorProvider` / `ViewStateProvider` own navigation: which phase,
   scenario, and tab is on screen.
 - `EditorErrorBoundary` (`src/components/EditorErrorBoundary.tsx`) is the
-  last line before a white screen — see Performance below for why it exists.
+  last line before a white screen — see Performance below for why it exists,
+  and for the second, board-scoped one nested inside it.
 - `WriteFailureNotices` is mounted **after** it, outside the boundary, and
   deliberately: a write can fail as the shell falls over, and the notice is
   what says so.
@@ -232,10 +233,22 @@ Writes never touch tables from components — the write path is owned by
 whole editor: any recoverable throw in the always-mounted canvas renders a
 designed reload surface instead of a white screen, and logs to the
 `[editor] uncaught error:` console channel
-(see [operations](operations.md#monitoring)). Don't add per-feature
-boundaries reflexively — one boundary at the shell is the pattern; add a
-narrower one only when a surface can meaningfully continue without the
-failed subtree.
+(see [operations](operations.md#monitoring)).
+
+There are **two** of it on each surface, and the second one is the shape to
+copy rather than to multiply. The outer one, in `App.tsx`, is the last line
+before a white screen. The inner one wraps only the active tab's content —
+`EditorShell`'s `[data-editor-content]` on desktop, the scenario canvas in
+`MobileShell` — keyed on the same value that identifies what the reader is
+looking at. A throw from one canvas then costs that view and nothing else:
+the tab strip, sidebar, rail and agent dock stay, and navigating to another
+tab clears the error through the boundary's `resetKey`. Without it, one bad
+board takes every route back to a working one down with it.
+
+That is the whole test for a narrower boundary, and it is a high bar: add one
+only where the surrounding surface can meaningfully continue without the
+failed subtree, and where something on screen still offers a way out. Don't
+add per-feature boundaries reflexively.
 
 One thing sits deliberately **outside** it: `WriteFailureNotices`. A write can
 fail as the shell falls over, and the notice is what says so.
