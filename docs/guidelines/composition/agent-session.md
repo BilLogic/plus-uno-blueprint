@@ -6,11 +6,13 @@ claims:
   - src/components/editor/AgentDock.tsx
   - src/components/editor/AgentMarkdown.tsx
   - src/components/editor/AgentPanel.tsx
+  - src/components/editor/AdminSessionFields.tsx
+  - src/components/editor/AgentProviderFields.tsx
   - src/components/editor/AgentSettingsFields.tsx
   - src/components/mobile/MobileAgentFab.tsx
   - src/components/mobile/MobileAgentSheet.tsx
   - src/components/mobile/mobileAgentBridge.ts
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 ---
 
 # Agent session
@@ -139,11 +141,18 @@ turns get markdown; user turns are plain pre-wrapped text.
 
 ## Settings
 
-Provider, model and key, plus admin sign-in, in one component with no opinion
-about what frames it — the desktop rail's ⚙ popover and the phone drawer's
-settings surface both use it. It lives apart from both because the phone had no
-way to sign in at all before, and a second copy of an auth form is how two
-sign-in flows drift apart.
+Provider, model and key, plus admin sign-in, behind one component with no
+opinion about what frames it — the desktop rail's ⚙ popover and the phone
+drawer's settings surface both use it. It lives apart from both because the
+phone had no way to sign in at all before, and a second copy of an auth form is
+how two sign-in flows drift apart.
+
+Behind that one entry point are **two components, because the two jobs share
+nothing**: `AdminSessionFields` is the sign-in/sign-out form and every piece of
+state it needs, `AgentProviderFields` is provider, model and key — one job, not
+three, since the key is stored per provider and the model list is fetched with
+it. `AgentSettingsFields` keeps only what genuinely spans both: the column, the
+two headings, the rule between them, and the `canAgent` gate.
 
 **Keys live in localStorage and nowhere else** — not the repo, not the bundle,
 not a server env. A browser-held key is readable by anyone with devtools on the
