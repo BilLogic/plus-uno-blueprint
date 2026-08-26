@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
-summary: The icon rail's two groups, the one disclosure vocabulary every twisty in the sidebar obeys, the paths and slices sections, and the single persisted width shared by all three surfaces.
-sources: src/components/editor/EditorRail.tsx, src/components/editor/SidebarNav.tsx, src/components/editor/PathsSidebarSection.tsx, src/components/editor/SlicesSidebarSection.tsx, src/lib/layoutTokens.ts, src/lib/canvasChromeResize.ts
+summary: The icon rail's two groups, the one disclosure vocabulary every twisty in the sidebar obeys, the paths and slices sections, the single persisted width shared by all three surfaces, and the narrow-viewport posture where the panel floats over the canvas.
+sources: src/components/editor/EditorRail.tsx, src/components/editor/SidebarNav.tsx, src/components/editor/PathsSidebarSection.tsx, src/components/editor/SlicesSidebarSection.tsx, src/lib/layoutTokens.ts, src/lib/canvasChromeResize.ts, src/hooks/useSidebarOverlay.ts
 claims:
   - src/components/editor/EditorRail.tsx
   - src/components/editor/EditorSidebarRail.tsx
@@ -189,6 +189,34 @@ resize — the sidebar wipe, the tab strip mounting — announces itself through
 module-level suppression window first. The window is comfortably longer than the
 ease (measured overshoot past a 380 ms window on expand) and is re-entrant, the
 longer deadline winning.
+
+**Below 900px the column floats instead of pushing.** Between the phone gate
+and a comfortable desktop the sidebar and the canvas compete for width that is
+not there, and the desktop shell used to keep the panel open through the whole
+band — a canvas too narrow to read beside a sidebar nobody asked to keep open.
+Crossing that gate collapses the sidebar, and reopening it takes the aside out
+of the flow so it draws *over* the canvas at the same persisted width. Reopening
+in flow was the alternative and is specifically rejected: it recreates the exact
+squeeze the collapse was for. The gate is `SIDEBAR_OVERLAY_BREAKPOINT`
+(`src/hooks/useSidebarOverlay.ts`); [foundations/layout.md](../foundations/layout.md#breakpoints--two-gates-owned-here)
+owns the gate list and the argument for where it lives.
+
+**No scrim behind the floating panel**, for the reason
+[`CreateSliceSheet`](dialogs-sheets-and-forms.md) gives about sheets: dimming
+the canvas dims the one thing the sidebar exists to get around. Nothing strands
+either — the rail's own collapse toggle is on screen the entire time the panel
+is open.
+
+**A collapse the gate imposed is not the same state as a collapse the reader
+asked for**, and the sidebar state says which. Widening the window gives back
+only what narrowing took: a panel the reader shut deliberately — before
+narrowing, or on the overlay itself — stays shut when there is room again, and
+one the reader opened as an overlay stays open. A bare boolean cannot express
+that, and either half of it goes wrong on its own (restore nothing and the
+reader is stranded in a sidebar they never closed; restore everything and a
+deliberate collapse is overridden by a window drag). The reasoning is in
+`useSidebarOverlay.ts`; both directions and both intents are pinned in
+`useSidebarOverlay.test.tsx`.
 
 One ownership note: `CanvasModeProvider` wraps the sidebar, not just the canvas.
 It used to wrap only the canvas, which left the sidebar unable to answer "are we

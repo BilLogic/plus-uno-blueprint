@@ -15,7 +15,10 @@ last-reviewed: 2026-08-26
 The one surface that forks. Everything else in `composition/` describes a tree
 the phone and the desktop share; below the 768px gate
 ([foundations/layout.md](../foundations/layout.md) owns the gate) this shell
-renders instead of the desktop one.
+renders instead of the desktop one. Directly above it, [768, 900) is the
+desktop shell with its [sidebar](sidebar.md#width-collapse-and-the-camera)
+collapsed and overlaying rather than in flow — a posture, not a second fork, and
+its floor is this gate, so the two meet with nothing between them.
 
 The phone shows the **same canvas as desktop** — there is no mobile-specific
 reading view. An earlier vertical "reader" existed and was deleted in the
