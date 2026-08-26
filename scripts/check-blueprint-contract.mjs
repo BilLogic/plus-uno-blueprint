@@ -71,11 +71,13 @@ const TIMEOUT_MS = 30_000
  * disagrees with them.
  *
  * `breadcrumb.aliases` is keyed by the CANONICAL field name, not by the label
- * in use: `{ lane: ['layer'] }` says the lane field may be labelled either way,
- * and the label in `labels` is still `Layer` because all 808 stored chunk
- * titles carry it inside their embedded text. So a segment is matched against
- * its declared label plus every alias group that label belongs to, and the
- * ORDER of the segments is what is really being asserted.
+ * in use: `{ lane: ['layer'] }` said the lane field could be labelled either
+ * way, for the window in which stored chunk titles still carried the old label
+ * inside their embedded text. It is empty now that #144's re-embed has landed,
+ * and the matching stays because the next rename of an embedded label needs it
+ * again. So a segment is matched against its declared label plus every alias
+ * group that label belongs to, and the ORDER of the segments is what is really
+ * being asserted.
  */
 export function breadcrumbFailure(title, breadcrumb) {
   if (typeof title !== 'string' || title.trim() === '') {

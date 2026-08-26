@@ -172,12 +172,13 @@ than a domain one. "Lifecycle" was not a level above the service — it *was* th
 service, wearing a longer name. And `enables` was left alone, because it was
 already the plain word for what it means.
 
-## One permanent exemption, and one with a date on it
+## One permanent exemption
 
-A rename sweep that catches every occurrence of a retired word breaks both of
-these. They are here because this is where the person running that sweep looks.
-The difference between them is the whole point of the section: one is a fact
-about the language, and the other is a queue.
+A rename sweep that catches every occurrence of a retired word breaks this one.
+It is here because this is where the person running that sweep looks. There was
+a second entry until 2026-08-26, and the difference between the two is the
+lesson worth keeping: one is a fact about the language, the other was a queue
+that had stopped moving.
 
 **Permanent — `evidence.proposition_question_key`.** `propositions` became
 `business_model` on 2026-08-21, because that word already meant a *cell's*
@@ -189,22 +190,25 @@ This is the only entry here that does not expire, and #146's copy guard ships
 with **zero** exemptions because the rest of them were removed rather than
 documented.
 
-**Dated, and owned by [#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)
-— the breadcrumb label `'Layer: '`.** `src/lib/blueprintContract.ts` emits
-breadcrumb segments labelled `Phase · Scenario · Path · Step · Layer`. All
-**808 corpus chunks** carry `"Layer: …"` inside their *stored title*, and the
-title is part of the **embedded** text, so flipping the label strands every
-embedding until a full re-embed. The parser accepts both spellings through the
-contract's `breadcrumb.aliases`. It flips to `Lane` in the same change that
-re-embeds the corpus, and not before. See
-[`docs/connectors/plus-uno.md`](docs/connectors/plus-uno.md).
+Two entries have left this list, and how each left is the point.
 
-That is an **ordering constraint with a ticket and an owner**, not standing
-permission. It was written here as an "exception" once and read as one for six
-months, which is how a two-week sequencing note turned into a protected name.
-When #144 closes, this entry goes with it.
+**"Derived layer" was renamed, not exempted.** The tier is the **analysis
+tier** now, because a rename removes the collision and an exemption only
+records it. See [The analysis tier](#the-analysis-tier).
 
-The list used to have a second permanent entry, "derived layer". It does not
-any more: the tier was renamed to the **analysis tier** rather than exempted,
-because a rename removes the collision and an exemption only records it. See
-[The analysis tier](#the-analysis-tier).
+**The breadcrumb label `'Layer: '` was sequenced, and then the sequence ran.**
+It was a real ordering constraint: the label sits inside every *stored* chunk
+title, the stored title is part of the **embedded** text, and flipping it
+without a full re-embed strands the whole index. But it was written here as an
+"exception" and read as one for six months — a two-week sequencing note aged
+into a protected name, which is why this section now insists a dated entry
+carry an issue number and an owner. `20260826140000` flips the label in the
+view and the RPC, the corpus was re-embedded in the same change, and the
+contract's `breadcrumb.aliases` — the mechanism that let both spellings parse
+across the window — went back to empty
+([#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)). What
+`search_blueprint` still accepts is the `'layer'` **granularity value**, which
+is a different gate — uno-bot's vendored copy of the contract syncing — and it
+is carried as a dated exemption in
+[`scripts/check-retired-identifiers.mjs`](scripts/check-retired-identifiers.mjs),
+not here. See [`docs/connectors/plus-uno.md`](docs/connectors/plus-uno.md).

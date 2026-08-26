@@ -33,19 +33,32 @@ was made. See below.
 Keep that module **dependency-free** — the bot compiles it in a Worker context
 with no access to app imports.
 
-### The breadcrumb label that stays `'Layer'`
+### The breadcrumb label, and why flipping one is a two-part change
 
-The breadcrumb's lane segment is still labelled `Layer`, deliberately, after the
-`layer`→`lane` rename. All **808** corpus chunks carry `"Layer: …"` inside their
-*stored title*, and the title is part of the **embedded** text — renaming the
-label strands every embedding until a full re-embed. The parser accepts both
-labels through the contract's `breadcrumb.aliases`, so this flips to `Lane` in
-the same change that re-embeds the corpus, and not before. Root
-[`CONTEXT.md`](../../CONTEXT.md) records it as a standing exception to the
-rename.
+The breadcrumb's lane segment is labelled `Lane`. It was `Layer` for six days
+after the `layer`→`lane` rename, deliberately, and the shape of that delay is
+the thing to remember rather than the label.
 
-> The comment beside that literal cites the parser as `breadcrumbAliases`; no
-> such identifier exists in `src/`. The field is `breadcrumb.aliases`.
+A breadcrumb label is not only rendered — it is **embedded**. The title
+`semantic_search.blueprint_chunks_src` builds is part of the text that becomes
+the vector, so every stored chunk carries the label it was embedded with.
+Flipping the view alone leaves the index answering to a title no query will
+match. Worse, the nightly backfill will not repair it: the nightly is
+incremental and keys on `cells.updated_at`, and changing the TEXT of a chunk
+does not touch a cell's timestamp, so it skips every row and reports success.
+
+So a label rename is two parts:
+
+1. the migration — `20260826140000` moved both places that build one, the view
+   and `search_blueprint`'s cell branch
+2. a **full** re-embed — Actions → *uno-bot — embed blueprint
+   (semantic_search)* → Run workflow with `full: true`
+
+and between them the contract's `breadcrumb.aliases` carries the old spelling
+so both parse. That entry is empty again now
+([#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)); the next
+rename of an embedded label puts one back for exactly as long as its own
+re-embed takes.
 
 ### The granularity value that stays `'layer'`
 

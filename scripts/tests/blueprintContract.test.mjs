@@ -562,13 +562,13 @@ test('the probe check fails on a breadcrumb echo that disagrees with the contrac
 test('the live breadcrumb parser accepts what the database emits today', () => {
   const live =
     'Phase: Application · Scenario: Discovery · Path: Standard (happy) · ' +
-    'Step: Discovers PLUS · Layer: Storyboard'
+    'Step: Discovers PLUS · Lane: Storyboard'
   assert.equal(breadcrumbFailure(live, BLUEPRINT_CONTRACT.breadcrumb), null)
 })
 
 test('the live breadcrumb parser catches the 2026-08-17 drift in both directions', () => {
   const fourSegment =
-    'Scenario: Discovery · Path: Standard (happy) · Step: Discovers PLUS · Layer: Storyboard'
+    'Scenario: Discovery · Path: Standard (happy) · Step: Discovers PLUS · Lane: Storyboard'
   assert.match(
     breadcrumbFailure(fourSegment, BLUEPRINT_CONTRACT.breadcrumb),
     /4 breadcrumb segments/,
@@ -577,7 +577,7 @@ test('the live breadcrumb parser catches the 2026-08-17 drift in both directions
 
   const renamed =
     'Phase: Application · Stage: Discovery · Path: Standard (happy) · ' +
-    'Step: Discovers PLUS · Layer: Storyboard'
+    'Step: Discovers PLUS · Lane: Storyboard'
   assert.match(
     breadcrumbFailure(renamed, BLUEPRINT_CONTRACT.breadcrumb),
     /segment 2 is labelled "Stage"/,
@@ -585,12 +585,32 @@ test('the live breadcrumb parser catches the 2026-08-17 drift in both directions
   )
 })
 
-test('the live breadcrumb parser accepts the Layer alias and nothing else', () => {
+/**
+ * The alias list is empty, and both halves of that matter.
+ *
+ * It held `{ lane: ['layer'] }` across #144's crossing, because for the window
+ * between the view emitting `Lane: ` and the corpus being re-embedded with it,
+ * stored titles and fresh ones disagreed and both had to parse. The re-embed
+ * closed the window and the entry went — so `Layer` is now a failure, which is
+ * the only way a stale label ever gets reported.
+ *
+ * The mechanism stays, exercised here against a synthetic contract rather than
+ * the live one. An unused code path is how the next rename discovers that its
+ * bridge rotted while nobody was crossing it.
+ */
+test('the retired breadcrumb label is a failure now, and the alias mechanism still works', () => {
   const { breadcrumb } = BLUEPRINT_CONTRACT
   const base = 'Phase: A · Scenario: B · Path: C · Step: D · '
-  assert.equal(breadcrumbFailure(`${base}Layer: E`, breadcrumb), null)
+
+  assert.deepEqual(breadcrumb.aliases, {}, 'no crossing is open, so no alias is owed one')
   assert.equal(breadcrumbFailure(`${base}Lane: E`, breadcrumb), null)
+  assert.match(breadcrumbFailure(`${base}Layer: E`, breadcrumb), /segment 5/)
   assert.match(breadcrumbFailure(`${base}Row: E`, breadcrumb), /segment 5/)
+
+  const crossing = { ...breadcrumb, aliases: { lane: ['layer'] } }
+  assert.equal(breadcrumbFailure(`${base}Layer: E`, crossing), null)
+  assert.equal(breadcrumbFailure(`${base}Lane: E`, crossing), null)
+  assert.match(breadcrumbFailure(`${base}Row: E`, crossing), /segment 5/)
 })
 
 test('an empty breadcrumb is a failure, not an absence of evidence', () => {

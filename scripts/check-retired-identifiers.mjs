@@ -109,8 +109,8 @@ export const RETIRED_IDENTIFIER_EXEMPTIONS = [
   {
     identifier: 'function public.search_blueprint argument layer',
     because:
-      "the RPC's own retired vocabulary is one surface with one owner — the breadcrumb label, the `layer` granularity value and this output column all flip with the corpus re-embed, and 808 stored chunk titles carry the old spelling until then",
-    until: '#144',
+      'the OUT column is `lane` on production and has been since 20260820120100 — that migration renamed it with a textual replace on the live definition, which this replay cannot apply, so the last full CREATE in the series (20260820060000) is the only place the word survives. A finding about a file, not about the database: `check:identifiers:live` sweeps pg_catalog and does not raise it. It goes when the function is next retyped, alongside dropping `layer` as a granularity value',
+    until: '#150',
   },
 ]
 

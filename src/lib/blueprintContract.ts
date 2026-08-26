@@ -42,17 +42,20 @@ export const BLUEPRINT_CONTRACT = {
    */
   breadcrumb: {
     separator: ' · ',
-    /** Labels a parser must accept for a segment, beyond the canonical one
-     *  above. `layer` is the pre-rename spelling still present in every stored
-     *  chunk title; `lane` is what the view will emit after a re-embed. Both
-     *  map to the same breadcrumb field. */
-    aliases: { lane: ['layer'] },
-    // ⚠️ STILL 'Layer', deliberately. All 808 corpus chunks have "Layer: …"
-    // baked into their stored title, and the title is part of the EMBEDDED
-    // text — renaming this label strands every embedding until a full
-    // re-embed. The bot's parser accepts BOTH labels (see `breadcrumbAliases`),
-    // so this flips to 'Lane' in the same change that re-embeds the corpus.
-    labels: ['Phase', 'Scenario', 'Path', 'Step', 'Layer'],
+    /** Extra labels a parser must accept for a segment, keyed by the canonical
+     *  field name — `{ lane: ['layer'] }` would say the lane segment may be
+     *  labelled either way.
+     *
+     *  EMPTY, and worth keeping empty. This is the mechanism that made the
+     *  `Layer`→`Lane` crossing survivable: for the window between the view
+     *  emitting the new label and the corpus being re-embedded with it, stored
+     *  titles and fresh ones disagreed, and both had to parse. 20260826140000
+     *  and the full re-embed closed that window (#144), so the entry went with
+     *  it — an alias left behind after its crossing is indistinguishable from a
+     *  label still in use. The next rename of an embedded label puts one back
+     *  for exactly as long as its own re-embed takes. */
+    aliases: {},
+    labels: ['Phase', 'Scenario', 'Path', 'Step', 'Lane'],
   },
 
   /**
