@@ -16,7 +16,7 @@ enforcement view.
 | User type | Read | Agent chat | Blueprint writes | Deletes | Enforced where |
 |---|---|---|---|---|---|
 | Anonymous visitor (deployed site, anon key) | yes | no | no | no | RLS public-SELECT-only; RPC `EXECUTE` revoked from `anon`/`public`; UI hides everything (`canWrite`/`canAgent` false) |
-| Signed-in viewer (`app_metadata.role` ≠ `service`) | yes (+ evidence/propositions) | yes, read-only tools | no | no | RESTRICTIVE RLS policies (`*_service_only`); tier guard inside every authoring RPC; agent roster filters write tools out |
+| Signed-in viewer (`app_metadata.role` ≠ `service`) | yes (+ evidence/business model) | yes, read-only tools | no | no | RESTRICTIVE RLS policies (`*_service_only`); tier guard inside every authoring RPC; agent roster filters write tools out |
 | Service account (`app_metadata.role` = `service`) | yes | yes, full roster | yes, through wrappers only | human-only, via confirm dialogs | RLS + RPC guards pass; UI shows authoring surfaces |
 | In-app agent (under any of the above) | as its session | — | as its session, minus deletes | **never** — no delete tool exists | tool roster (`specs.ts`), loop refusals, then the same server walls as its session |
 | IDE agents / local dev | yes | — | as the dev auth user | discouraged; confirm with the human | dev sign-in is a real `authenticated` session — same RLS, same RPC guards |
@@ -63,20 +63,21 @@ with per-path column order via `path_steps`. `lanes` are a path's rows;
 `cells` sit at lane × step per path, with a trigger
 (`cells_validate_path_match`) enforcing path integrity.
 **Naming trap:** DB `steps` are blueprint *columns* (journey moments), not
-lifecycle phases — phases live in `phases`.
+service phases — phases live in `phases`.
 
 **Cells** carry the grid label (`content` — never empty), `summary`,
-`picture`, `links` (JSONB), and the spec columns from the derived-layer
-migration: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
+`picture`, `links` (JSONB), and the spec columns that shipped with the
+analysis tier: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
 
 **Edges** — `cell_dependencies`, `kind` = `leads_to` (this cell makes the
 other happen; drawn as an arrow) or `enables` (the other must already be
 true; panel-only), unique per (source, target, kind).
 
-**Derived layer** (`20260729120000_derived_layer.sql`) — `slices` +
-`slice_items` (stakeholder views), `evidence`, `propositions`, `findings`.
-Design invariants worth knowing before touching them: derived tables
+**Analysis tier** (`20260729120000_derived_layer.sql` — the migration
+filename is where the former name "derived layer" survives) — `slices` +
+`slice_items` (stakeholder views), `evidence`, `business_model`, `findings`.
+Design invariants worth knowing before touching them: analysis-tier tables
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert
 never cascades into user-authored content — `cell_keys` carry IR key-paths
 for recovery; `evidence` has a hard `service_id` FK as its retention story;
