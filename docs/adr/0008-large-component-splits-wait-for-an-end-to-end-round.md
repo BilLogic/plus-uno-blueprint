@@ -9,11 +9,18 @@ summary: Three components are long enough to be worth splitting and are delibera
 Three components have been flagged as too large since the 2026-08-08 harness
 review, and re-measured today:
 
-| file | then | now |
+| file | 2026-08-08 | at the time of writing |
 |---|---|---|
-| `src/components/editor/CanvasAnnotationLayer.tsx` | 2157 lines | 2174 |
+| `src/components/editor/CanvasAnnotationLayer.tsx` | 2157 lines | 2260 |
 | `src/components/blueprint/BlueprintCellDetailPanel.tsx` | 1479 lines | 1444 |
 | `src/components/editor/AgentPanel.tsx` | 19 `useState` | 13 |
+
+These numbers are a snapshot, not a guarantee, and the first row proves it: the
+figure recorded when this ADR was written was already 86 lines out of date by
+the time it merged, because the canvas-robustness work landed in between. Do not
+trust the column; run `wc -l` on the three files. The decision below does not
+depend on the exact figures — only on the fact that these files are long and
+their flows are thinly covered.
 
 They are deliberately not split. This records why, and what would change it,
 because a hold with no stated exit is indistinguishable from neglect — and

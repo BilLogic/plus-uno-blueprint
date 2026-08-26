@@ -49,12 +49,22 @@ necessarily a lost decision.
 Reopening a resolved finding whose twin is already open collides on the partial
 unique index. `23505` is the designed outcome, not a crash.
 
-What the original note asked for — "the frontend should toast, not treat this as
-a crash" — now exists. `src/lib/authoringErrors.ts` translates `duplicate key
-value` into a sentence a person can act on, and `reportWriteFailure` puts it on
-screen through the notice surface added for #99. The console still receives the
-whole error; that surface replaced the console as the *user's* channel, not as
-the developer's.
+The original note asked for two things, and only one of them is true. **Not a
+crash: yes.** `src/lib/findingMutations.ts` raises through `toAuthoringError`,
+`src/lib/authoringErrors.ts` translates `duplicate key value` into a sentence a
+person can act on, and the agent tool returns it as a failed outcome in the
+transcript. **A toast: no.** `reportWriteFailure` — the notice surface added for
+#99 — has four call sites (cell delete, session undo, slice rename, step add)
+and none of them is in the findings path, because nothing in the UI writes a
+finding. Findings are written by the agent, and the agent's channel is its
+transcript.
+
+That is arguably the right place for it: the user is watching the run that
+raised the collision. But an earlier version of this ADR claimed the notice
+surface carried it, which was simply false, and the claim survived review twice.
+**If a non-agent path ever writes a finding, it must report through
+`reportWriteFailure`** — that is the condition under which this paragraph
+becomes wrong again.
 
 ## What this record already caught
 

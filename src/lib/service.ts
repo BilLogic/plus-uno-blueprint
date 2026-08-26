@@ -39,3 +39,34 @@ export async function resolveFirstServiceId(client: Client): Promise<string> {
   if (!id) throw new Error('No service exists in the database')
   return id
 }
+
+/**
+ * Await a shared lookup without inheriting its uncancellability.
+ *
+ * `findFirstServiceId` deliberately takes no signal — the promise is shared,
+ * so one caller leaving its view would cancel the lookup every other caller is
+ * awaiting. That is right for the *lookup* and wrong for the *wait*: inside
+ * `withSupabaseTimeout` the deadline aborts a controller the shared request
+ * never sees, so the read that was supposed to be bounded sat in `loading`
+ * until the network answered.
+ *
+ * This settles the caller's wait when the signal fires and leaves the shared
+ * request running for whoever else is waiting on it.
+ */
+export function awaitOrAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  if (signal.aborted) return Promise.reject(signal.reason ?? new Error('aborted'))
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason ?? new Error('aborted'))
+    signal.addEventListener('abort', onAbort, { once: true })
+    promise.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort)
+        resolve(value)
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', onAbort)
+        reject(error as Error)
+      },
+    )
+  })
+}

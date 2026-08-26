@@ -9,6 +9,7 @@ import {
   CanvasModeContext,
   getSharedCanvasMode,
   setSharedCanvasMode,
+  setSharedCanvasModeAvailable,
   subscribeSharedCanvasMode,
   type CanvasMode,
 } from '@/contexts/canvasModeContext'
@@ -43,19 +44,20 @@ export function CanvasModeProvider({ children }: { children: ReactNode }) {
     later regained access snapped every mounted surface back into Edit,
     without anyone asking for it. The store is module-level and outlives
     every surface; it has to be told.
+
+    Telling it the PERMISSION rather than clearing the value is what closes
+    the second half: the agent tool `set_canvas_mode` calls the store setter
+    directly, so a guard that lived only here left that path open.
   */
   useEffect(() => {
-    if (!canWrite) setSharedCanvasMode('view')
+    setSharedCanvasModeAvailable(canWrite)
   }, [canWrite])
 
-  const setMode = useCallback(
-    (next: CanvasMode) => {
-      // And the setter refuses `design` for the same reason, rather than
-      // trusting every caller to have checked `available` first.
-      setSharedCanvasMode(canWrite ? next : 'view')
-    },
-    [canWrite],
-  )
+  const setMode = useCallback((next: CanvasMode) => {
+    // The store refuses `design` without write access on every path now, so
+    // this no longer has to re-check what it just told the store.
+    setSharedCanvasMode(next)
+  }, [])
 
   const value = useMemo(
     () => ({

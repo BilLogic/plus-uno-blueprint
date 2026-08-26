@@ -91,17 +91,27 @@ test('every declared search_blueprint parameter was introduced by a migration', 
 })
 
 test('no migration renames a declared parameter out from under the contract', () => {
-  // A programmatic rename looks like regexp_replace(d, '\\mold\\M', 'new').
-  // If `new` is declared but `old` still is too, the contract kept a name the
-  // database has moved off.
-  const renames = [...ALL_SQL.matchAll(/regexp_replace\([^,]+,\s*'\\\\m(\w+)\\\\M',\s*'(\w+)'/g)]
+  // A programmatic rename looks like: regexp_replace(d, '\mold\M', 'new').
+  //
+  // Two bugs lived here and both made this test assert nothing. It spelled the
+  // word boundary with TWO literal backslashes against SQL that writes one, so
+  // it matched 0 of the 17 renames the migrations contain. And it skipped any
+  // rename whose new name the contract does not declare — which is precisely
+  // the drift it exists to catch: a contract still naming `old` after the
+  // database moved to `new` does not declare `new`, so the check walked past
+  // the one case that matters.
+  //
+  // The rule is simpler than the old shape: once a migration renames `from` to
+  // `to`, the contract must not name `from`, whatever else it names.
+  const renames = [...ALL_SQL.matchAll(/regexp_replace\([^,]+,\s*'\\m(\w+)\\M',\s*'(\w+)'/g)]
     .map((m) => ({ from: m[1], to: m[2] }))
+  assert.ok(renames.length > 0, 'no renames parsed — the detector has stopped matching the SQL again')
+
   const declared = new Set(contractValues('searchBlueprintParams'))
   for (const { from, to } of renames) {
-    if (!declared.has(to)) continue
     assert.ok(
       !declared.has(from),
-      `the contract declares both "${from}" and "${to}", but a migration renamed one to the other`,
+      `the contract declares "${from}", but a migration renamed it to "${to}"`,
     )
   }
 })
