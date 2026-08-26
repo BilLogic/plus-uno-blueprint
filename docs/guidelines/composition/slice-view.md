@@ -17,7 +17,7 @@ claims:
   - src/components/editor/SlideModeView.tsx
   - src/components/editor/SlideNav.tsx
   - src/components/editor/SlideStickyHeader.tsx
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-26
 ---
 
 # Slice view
@@ -56,6 +56,46 @@ tempted to push the dim further, push the saturation, not the alpha.
 There is no scrim plane — per-cell dim, desaturate and grey — because the slice
 tab wraps the normal blueprint view and the grid keeps its own stacking
 contexts.
+
+### What the filter costs, measured
+
+A per-cell `filter` makes every non-member cell its own render surface, which
+re-rasterizes when the camera scale changes. Measured 2026-08-26 rather than
+guessed: a 240-frame scripted zoom-and-pan sweep across the 0.08–0.26 band —
+the band that puts the most cells on screen at once — run against the In-session
+phase canvas (338 cells) with the shipped declaration applied to the first N of
+them and to none. Chromium, 880×700 viewport, dev build, three interleaved
+repetitions:
+
+| cells carrying the filter | mean frame | p95 | frames over 16.7 ms (of 238) |
+| --- | --- | --- | --- |
+| 0 | 11.3 ms | 17.6 ms | 22 |
+| 37 | 11.1 ms | 18.0 ms | 19 |
+| 56 | 11.1 ms | 17.9 ms | 24 |
+| 112 | 11.2 ms | 17.2 ms | 20 |
+| 169 | 12.0 ms | 25.0 ms | 29 |
+| 225 | 11.8 ms | 24.8 ms | 30 |
+| 281 | 13.6 ms | 26.3 ms | 53 |
+| 338 | 14.4 ms | 33.4 ms | 61 |
+
+Flat to ~112, first moves at ~170, and by ~280 it has roughly doubled the
+dropped-frame count. The production build reproduces both ends (0 → 12.4 ms
+mean / 18.1 ms p95; 338 → 15.9 ms / 33.4 ms), so this is raster, not dev-server
+overhead. The `opacity` costs nothing at any count measured — the whole bill is
+the filter.
+
+**Slice focus never gets near the knee.** A v1 slice is single-scenario
+(`useSliceScenarioId`), so the dim only ever covers one board: 31 of 37 cells on
+the dev fallback slice, ~56 on the Ecoeled board this was filed against. Both
+sit in the flat stretch, where the sweep cannot tell the filter from no filter.
+Coverage bounds it a second way — non-member cells never painted more than ~16%
+of the viewport at any zoom, because cards have gaps and zooming in takes cells
+off screen as fast as it grows them.
+
+So the look stays and there is nothing to trade. The number to keep is the
+headroom: about 3× in cell count, spent only if slices ever go multi-scenario.
+Re-measure then, and re-measure for a phone — this was a desktop Chromium, and
+the knee moves with the device.
 
 A separate draft state, `data-slice-picked`, uses the **primary** accent rather
 than the member ring, deliberately: while picking, "in this draft" and "in some
