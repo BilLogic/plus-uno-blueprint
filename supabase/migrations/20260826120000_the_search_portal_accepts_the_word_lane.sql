@@ -93,19 +93,24 @@ begin
   --    only the CTE would return rows against a `total_matched` that denies
   --    them. One predicate with an OR, not a second union branch: two branches
   --    would emit the rung twice for a caller that asks for both spellings.
+  --    Matched on the predicate alone rather than on `where <predicate>`, so it
+  --    does not depend on what precedes it. `replace` makes one left-to-right
+  --    pass and does not rescan what it wrote, so the old text appearing inside
+  --    the new text is not a problem.
   before_len := length(d);
   d := replace(d,
-    $$where 'layer' = any(gran)$$,
-    $$where ('layer' = any(gran) or 'lane' = any(gran))$$);
+    $$'layer' = any(gran)$$,
+    $$('layer' = any(gran) or 'lane' = any(gran))$$);
   if length(d) = before_len then
     raise exception 'search_blueprint: no lane-rung predicate matched';
   end if;
   if (
-    select count(*) from regexp_matches(
-      d, $$where \('layer' = any\(gran\) or 'lane' = any\(gran\)\)$$, 'g')
+    select count(*) from regexp_matches(d, $$or 'lane' = any\(gran\)\)$$, 'g')
   ) <> 2 then
+    -- The corpus-wide count and the structural CTE. A different number means
+    -- the body has changed shape or a third branch has appeared; look first.
     raise exception
-      'search_blueprint: expected 2 lane-rung predicates (the count and the CTE)';
+      'search_blueprint: expected exactly 2 lane-rung predicates';
   end if;
 
   -- 4. The emitted kind.
