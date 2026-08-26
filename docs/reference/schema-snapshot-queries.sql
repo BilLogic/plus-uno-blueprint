@@ -51,11 +51,28 @@ join pg_namespace n on n.oid = rel.relnamespace
 where n.nspname = 'public' and c.contype = 'c'
 order by 1, 2;
 
--- ── 4. The invariant worth checking on every refresh ─────────────────────────
+-- ── 4. The invariant — NOW ASSERTED BY MIGRATION, kept here as a diagnostic ──
 -- Zero rows means no SECURITY DEFINER function is reachable by anon or PUBLIC
 -- except search_blueprint, which is the read RPC uno-bot calls with the anon
 -- key. A drop-and-recreate silently restores Postgres's default EXECUTE to
 -- PUBLIC, which is exactly how this invariant was broken once already.
+--
+-- It was broken a SECOND time on 2026-08-21 and nobody saw it until 2026-08-26,
+-- because this query was correct and sitting in a file a human was trusted to
+-- run. The query was never the gap. Running it was. It now lives in
+-- 20260826130000_the_invariant_that_only_ran_by_hand.sql, where every migration
+-- application re-asserts it and a violation fails the push.
+--
+-- Kept here because a diagnostic you can paste into psql is worth having, and
+-- because this is where someone regenerating the snapshots will look.
+--
+-- There is also an anon-reachable witness, useful when you have only the
+-- publishable key: POST to /rest/v1/rpc/<write_fn>. A correctly-revoked
+-- function answers "permission denied for function <name>"; one that kept the
+-- PUBLIC grant answers with its own guard's message instead. Both are HTTP 401
+-- and SQLSTATE 42501, so only the sentence tells them apart. Do NOT automate
+-- that probe: when the invariant IS violated the call reaches the function
+-- body, and a future write RPC without an internal guard would execute.
 select p.proname, array_to_string(p.proacl::text[], ' | ') as acl
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
