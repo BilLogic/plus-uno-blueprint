@@ -763,7 +763,12 @@ begin
       end if;
     end loop;
 
-    -- An alias a CTE or a subquery also introduces is not trustworthy.
+    -- An alias that anything else in the body also introduces is not
+    -- trustworthy, and a wrong accusation costs more here than a miss. Three
+    -- ways a letter stops meaning one table: a subquery alias, a CTE name, and
+    -- — the one search_blueprint actually does — the same letter used for a
+    -- CTE in one branch and for a real table in another (`from fused f` beside
+    -- `from public.findings f`).
     for m in
       select regexp_matches(body, '\)\s+(?:as\s+)?([a-z_][a-z0-9_$]*)', 'g')
     loop
@@ -773,6 +778,14 @@ begin
       select regexp_matches(body, '\m(?:with|,)\s+([a-z_][a-z0-9_$]*)\s+as\s*\(', 'g')
     loop
       poisoned := poisoned || m[1];
+    end loop;
+    for m in
+      select regexp_matches(
+        body,
+        '\m(?:from|join)\s+([a-z_][a-z0-9_$]*)\s+(?:as\s+)?([a-z_][a-z0-9_$]*)',
+        'g')
+    loop
+      poisoned := poisoned || m[2];
     end loop;
 
     -- Rule 1 — alias-qualified column references.
