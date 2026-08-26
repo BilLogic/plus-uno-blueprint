@@ -127,5 +127,5 @@ frontmatter. History is deliberately absent, and the queue does not live here.
 | docs/adr/overview.md | developers | What earns an ADR here, the numbering and template, and the current set. |
 | docs/connectors/netlify.md | developers | The host — push to main is production, there is no netlify.toml, and the deploy environment carries only public values. |
 | docs/connectors/overview.md | developers | The three systems this instance is coupled to, and the rule that keeps that coupling out of the open-source package. |
-| docs/connectors/plus-uno.md | developers | uno-bot reads this app's database and deep-links back into it — where the shared constants live, what has broken silently before, and what the probe does and does not catch. |
+| docs/connectors/plus-uno.md | developers | uno-bot reads this app's database and deep-links back into it — where the shared constants live, what has broken silently before, and the three checks that now hold the contract to the migrations, to the bot and to the database. |
 | docs/connectors/supabase.md | developers | The hosted Postgres this app reads and writes — what the app is allowed to do, which parts are generated, and what a schema change obliges you to update. |
