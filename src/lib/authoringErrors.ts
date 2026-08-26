@@ -49,10 +49,6 @@ const TRANSLATIONS: Array<{ match: string; message: string }> = [
     message: 'Two columns ended up in the same position. Reload and try the move again.',
   },
   {
-    match: 'layers_path_row_unique',
-    message: 'Two lanes ended up in the same position. Reload and try the move again.',
-  },
-  {
     match: 'duplicate key value',
     message: 'Something with that name or position already exists here.',
   },
