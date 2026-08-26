@@ -33,13 +33,40 @@
  * Postgres's `\m`/`\M` agree that `_` is a word character, so the bug survives
  * the translation.
  *
- * WHAT IT CANNOT SEE, and this is the hole, not a rough edge
+ * WHAT IT MODELS IS THE FILES, NOT THE DATABASE
  *
- * Anything changed in the database WITHOUT a migration. `Phase` was added to
- * `semantic_search.blueprint_chunks_src` on 2026-08-17 by hand and no static
- * check could ever have known. That is what `check:contract:live` and Check A's
- * own `--service-role` half exist for. A green replay says the statements in
- * this repo produce a clean schema; it does not say the database is clean.
+ * Say this part plainly, because the whole batch of work these checks belong to
+ * exists to end documents that assert an interface the code does not have.
+ * This replay reports what the REPOSITORY CLAIMS the schema is.
+ *
+ * #148: not one of the 816 migration versions in `supabase/migrations/` appears
+ * in `supabase_migrations.schema_migrations` on production. The ledger holds 685
+ * rows whose names match the files exactly and whose versions never do — real
+ * wall-clock apply times against the repository's round, hand-picked ones. The
+ * schema was applied over MCP `apply_migration`; the files were written
+ * afterwards. So the series has never been parsed by Postgres, and at least one
+ * file does not parse at all (`20260820060000_search_blueprint_include_fidelity.sql`
+ * opens a CTE with no comma before it).
+ *
+ * Two things follow, and both matter more than they look:
+ *
+ *   - Anything applied over MCP, or by hand, is INVISIBLE here. That is how the
+ *     nine broken function bodies in #143 got in and how the ACL regression in
+ *     #147 got in. `Phase` was added to `semantic_search.blueprint_chunks_src`
+ *     on 2026-08-17 the same way. A green replay says the statements in this
+ *     repo describe a clean schema. It does not say the database is clean, and
+ *     it does not say the two are the same object.
+ *   - This replay is not a parser. It matches statement heads and treats a
+ *     `$$ … $$` body as opaque text, which is why #148's syntax error does not
+ *     stop it — and equally why it cannot FIND a syntax error. Do not read a
+ *     clean run as evidence that the series would replay in Postgres.
+ *
+ * What can be said for it: replaying these files reproduces #142's twenty-two
+ * residual identifiers, #143's nine function bodies and #147's `create_phase`
+ * ACL exactly as production carries them. That is evidence the files and the
+ * applied text agree on those points. It is evidence, not proof, and only the
+ * live halves — `check:contract:live` and this check's own `--service-role`
+ * half — can turn it into either.
  *
  * Also unmodelled, deliberately: `do` blocks that are pure assertions (they
  * change nothing), dynamic DDL built with `format()` other than the function
@@ -196,12 +223,23 @@ function emptySchema() {
     types: new Map(),
     sequences: new Map(),
     comments: new Map(),
+    // Every bare identifier the series has ever minted. Subtract the live ones
+    // and what is left is the graveyard — the names a plpgsql body can still
+    // say while naming nothing. `layer_map` is a local variable and was never
+    // in here; `service_scenario_id` was a column and is.
+    everExisted: new Set(),
     unhandled: [],
   }
 }
 
-const addConstraint = (schema, table, name) =>
+const remember = (schema, ...names) => {
+  for (const name of names) if (name) schema.everExisted.add(String(name).toLowerCase())
+}
+
+const addConstraint = (schema, table, name) => {
+  remember(schema, name)
   schema.constraints.set(`${table}.${name}`, { table, name })
+}
 
 function dropTable(schema, table) {
   schema.tables.delete(table)
@@ -213,6 +251,7 @@ function dropTable(schema, table) {
 }
 
 function renameTable(schema, from, to) {
+  remember(schema, from, to)
   const table = schema.tables.get(from)
   if (table) {
     schema.tables.delete(from)
@@ -280,6 +319,7 @@ function applyTableBody(schema, table, body) {
     const column = /^("?[A-Za-z_][\w]*"?)\s+(.*)$/s.exec(item)
     if (!column) continue
     const name = bare(column[1])
+    remember(schema, name)
     columns.set(name, { name })
     applyColumnConstraints(schema, table, name, column[2])
   }
@@ -311,6 +351,7 @@ function applyAlterTable(schema, statement) {
     if (entry) {
       const from = bare(match[1])
       const to = bare(match[2])
+      remember(schema, from, to)
       entry.columns.delete(from)
       entry.columns.set(to, { name: to })
       const commentKey = `column:${table}.${from}`
@@ -339,6 +380,7 @@ function applyAlterTable(schema, statement) {
       const entry = schema.tables.get(table)
       if (entry) {
         const name = bare(match[1])
+        remember(schema, name)
         entry.columns.set(name, { name })
         applyColumnConstraints(schema, table, name, match[2])
       }
@@ -402,6 +444,7 @@ function applyStatement(schema, statement, source) {
   if ((match = /^create\s+(?:or\s+replace\s+)?(?:temp\s+|temporary\s+)?table\s+(?:if\s+not\s+exists\s+)?("?[\w."]+"?)/i.exec(sql))) {
     const table = bare(match[1])
     const body = balanced(sql, match.index + match[0].length - 1)
+    remember(schema, table)
     schema.tables.set(table, { name: table, columns: new Map(), source })
     if (body) applyTableBody(schema, table, body.body)
     return true
@@ -420,6 +463,7 @@ function applyStatement(schema, statement, source) {
       const first = cols ? bare(splitTopLevel(cols.body)[0].split(/\s+/)[0]) : 'expr'
       name = `${table}_${first}_idx`
     }
+    remember(schema, name)
     schema.indexes.set(name, { name, table, source })
     return true
   }
@@ -441,6 +485,7 @@ function applyStatement(schema, statement, source) {
   if ((match = /^create\s+policy\s+("?[\w ]+"?)\s+on\s+("?[\w."]+"?)/i.exec(sql))) {
     const table = bare(match[2])
     const name = bare(match[1])
+    remember(schema, name)
     schema.policies.set(`${table}.${name}`, { name, table, source })
     return true
   }
@@ -464,6 +509,7 @@ function applyStatement(schema, statement, source) {
   if ((match = /^create\s+(?:or\s+replace\s+)?(?:constraint\s+)?trigger\s+("?[\w]+"?)[\s\S]*?\son\s+("?[\w."]+"?)/i.exec(sql))) {
     const table = bare(match[2])
     const name = bare(match[1])
+    remember(schema, name)
     schema.triggers.set(`${table}.${name}`, { name, table, source })
     return true
   }
@@ -485,13 +531,26 @@ function applyStatement(schema, statement, source) {
 
   if ((match = /^create\s+(?:or\s+replace\s+)?function\s+("?[\w."]+"?)\s*\(/i.exec(sql))) {
     const name = qualified(match[1])
-    schema.functions.set(name, { name, definition: sql, source })
+    // `create or replace` PRESERVES the existing privileges; a plain `create`
+    // after a `drop` starts again from Postgres's default, which is EXECUTE TO
+    // PUBLIC. Modelling that difference is the entire point of tracking ACLs.
+    const previous = schema.functions.get(name)
+    schema.functions.set(name, {
+      name,
+      definition: sql,
+      source,
+      securityDefiner: /\bsecurity\s+definer\b/i.test(sql),
+      acl: previous ? previous.acl : null,
+    })
     return true
   }
   if ((match = /^drop\s+function\s+(?:if\s+exists\s+)?("?[\w."]+"?)/i.exec(sql))) {
+    // The drop takes the grants with it. Whatever comes back is a new object
+    // wearing the same name, and it comes back open.
     schema.functions.delete(qualified(match[1]))
     return true
   }
+  if (/^(grant|revoke)\b/i.test(sql) && applyFunctionPrivilege(schema, sql)) return true
 
   if ((match = /^create\s+(?:or\s+replace\s+)?(?:materialized\s+)?view\s+(?:if\s+not\s+exists\s+)?("?[\w."]+"?)/i.exec(sql))) {
     const name = qualified(match[1])
@@ -524,6 +583,79 @@ function applyStatement(schema, statement, source) {
     return true
   }
   return false
+}
+
+/* ------------------------------------------------------------ privileges */
+
+/**
+ * `grant`/`revoke … on function …`, as an EXECUTE grantee set per function.
+ *
+ * `null` means the ACL was never touched, which in Postgres means the default
+ * still stands: EXECUTE TO PUBLIC. That is not a missing value to be treated
+ * as empty — a null `proacl` and an explicit `=X/owner` entry are the same
+ * permission, and #147 is what happens when only the second is looked for.
+ *
+ * The first explicit grant or revoke MATERIALISES the default rather than
+ * replacing it, so granting `authenticated` on a freshly created function
+ * leaves PUBLIC exactly where the default put it. That is the mechanism, and
+ * `materialise()` is the one line that models it.
+ *
+ * Keyed by qualified name, ignoring the argument list. This schema has no
+ * overloaded functions; a future one would need the signature here.
+ */
+function applyFunctionPrivilege(schema, sql) {
+  const match =
+    /^(grant|revoke)\s+(?:execute|all(?:\s+privileges)?)\s+on\s+function\s+([\s\S]*?)\s+(?:to|from)\s+([\s\S]*?)(?:\s+(?:with|cascade|restrict)\b[\s\S]*)?$/i.exec(
+      sql,
+    )
+  if (!match) return false
+  const [, verb, target, grantees] = match
+  const name = qualified(target.replace(/\([\s\S]*$/, ''))
+  const fn = schema.functions.get(name)
+  if (!fn) return true
+  const acl = materialise(fn.acl)
+  for (const raw of splitTopLevel(grantees)) {
+    const role = raw.trim().toLowerCase().replace(/^group\s+/, '')
+    if (verb.toLowerCase() === 'grant') acl.add(role)
+    else acl.delete(role)
+  }
+  schema.functions.set(name, { ...fn, acl })
+  return true
+}
+
+/** An untouched ACL, written out. PUBLIC is in it. */
+const materialise = (acl) => new Set(acl ?? ['public'])
+
+/**
+ * SECURITY DEFINER functions in `public` that PUBLIC or `anon` can execute.
+ *
+ * The invariant, stated once: a SECURITY DEFINER function runs as its owner,
+ * so anything that can call it acts with the owner's rights. `search_blueprint`
+ * is the single deliberate exception — it is the read RPC uno-bot calls with
+ * the publishable anon key.
+ *
+ * The static counterpart of the `do $assert$` block in
+ * `20260826130000_the_invariant_that_only_ran_by_hand.sql`, and the two must
+ * agree. This one runs with no database, which is the property CI needs; that
+ * one runs against the object that actually exists, which is the property a
+ * static replay can never have.
+ */
+export function definerFunctionsReachableByAnon(schema, { exception = 'search_blueprint' } = {}) {
+  const out = []
+  for (const fn of schema.functions.values()) {
+    if (!fn.name.startsWith('public.')) continue
+    if (!fn.securityDefiner) continue
+    if (fn.name.split('.').pop() === exception) continue
+    if (fn.acl === null) {
+      out.push({ name: fn.name, acl: 'DEFAULT (PUBLIC)', source: fn.source })
+      continue
+    }
+    const open = ['public', 'anon'].filter((role) => fn.acl.has(role))
+    if (open.length > 0) {
+      out.push({ name: fn.name, acl: [...fn.acl].sort().join(' | '), open, source: fn.source })
+    }
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /* ------------------------------------------------------- the do-block sweeps */
@@ -574,19 +706,56 @@ function literals(text) {
  * series is an assertion — so it is skipped rather than guessed at.
  */
 function applyDoBlock(schema, statement, source) {
-  if (applyForeachDdl(schema, statement, source)) return true
-  if (!/\bexecute\s+d\s*;/i.test(statement)) return true
+  // Grants and revokes written out longhand inside a block. `20260821410000`
+  // puts its grant inside the assertion block that follows the recreate, which
+  // is exactly why it is easy to read the recreate and the grant as unrelated.
+  const privileges = () => {
+    for (const inner of statements(doBody(statement))) {
+      if (/^(grant|revoke)\b/i.test(inner)) applyFunctionPrivilege(schema, inner)
+    }
+  }
+  if (applyForeachDdl(schema, statement, source)) {
+    privileges()
+    return true
+  }
+  if (!/\bexecute\s+d\s*;/i.test(statement)) {
+    privileges()
+    return true
+  }
 
   for (const segment of statement.split(/\bexecute\s+d\s*;/i).slice(0, -1)) {
     const targets = sweepTargets(schema, segment)
     const edits = sweepEdits(segment)
     if (targets.length === 0 || edits.length === 0) continue
+    // A LITERAL `drop function` in the same segment makes what follows a fresh
+    // object: the grants go with the drop and the recreate lands on Postgres's
+    // default, EXECUTE TO PUBLIC. `20260821410000` does exactly this, then
+    // restores the `authenticated` grant and not the paired revoke — #147.
+    //
+    // A DYNAMIC drop (`execute format('drop function …')`) is NOT modelled as a
+    // drop, and is treated as a replace instead. The one block in this series
+    // that does one — `20260820120100` — reads the ACL first and restores it
+    // afterwards, so a replace is the right answer there. A future block that
+    // drops dynamically and does not restore would slip past this, which is
+    // the hole the live half exists to cover.
+    const dropped = new Set(
+      [...segment.matchAll(/\bdrop\s+function\s+(?:if\s+exists\s+)?([\w."]+)/gi)].map((one) =>
+        qualified(one[1]),
+      ),
+    )
     for (const fn of targets) {
       let definition = fn.definition
       for (const edit of edits) definition = edit(definition)
-      schema.functions.set(fn.name, { ...fn, definition, rewritten: true })
+      schema.functions.set(fn.name, {
+        ...fn,
+        definition,
+        rewritten: true,
+        securityDefiner: /\bsecurity\s+definer\b/i.test(definition),
+        acl: dropped.has(fn.name) ? null : fn.acl,
+      })
     }
   }
+  privileges()
   return true
 }
 
@@ -676,6 +845,15 @@ function balancedBracket(text, from) {
   return null
 }
 
+/** The plpgsql inside `do $tag$ … $tag$`, without the wrapper. */
+function doBody(statement) {
+  const open = /\$([A-Za-z_][\w]*)?\$/.exec(statement)
+  if (!open) return ''
+  const start = open.index + open[0].length
+  const end = statement.indexOf(open[0], start)
+  return end === -1 ? statement.slice(start) : statement.slice(start, end)
+}
+
 /** The functions one sweep segment selects. */
 function sweepTargets(schema, segment) {
   const all = [...schema.functions.values()]
@@ -723,6 +901,35 @@ function sweepEdits(segment) {
     }
   }
   return edits
+}
+
+/** Every bare identifier the schema currently carries. */
+export function liveIdentifiers(schema) {
+  const live = new Set()
+  for (const table of schema.tables.values()) {
+    live.add(table.name)
+    for (const column of table.columns.keys()) live.add(column)
+  }
+  for (const collection of ['constraints', 'indexes', 'policies', 'triggers']) {
+    for (const entry of schema[collection].values()) live.add(entry.name)
+  }
+  for (const name of schema.functions.keys()) live.add(name.split('.').pop())
+  for (const name of schema.views.keys()) live.add(name.split('.').pop())
+  for (const name of schema.types.keys()) live.add(name.split('.').pop())
+  return live
+}
+
+/**
+ * Identifiers this series minted and then renamed or dropped.
+ *
+ * This is what makes a body sweep answerable. A plpgsql body full of the word
+ * "layer" is not evidence of anything — `layer_map` is a local variable in
+ * `duplicate_path` and always was. A body that says `service_scenario_id` is
+ * naming a column that USED to exist, which is a defect with a definition.
+ */
+export function retiredIdentifiers(schema) {
+  const live = liveIdentifiers(schema)
+  return new Set([...schema.everExisted].filter((name) => !live.has(name)))
 }
 
 /* --------------------------------------------------------------- driver */
