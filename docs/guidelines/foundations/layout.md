@@ -1,8 +1,8 @@
 ---
 audience: designers, developers
-summary: Width tokens and their one-home split, the shell's three columns, the single 768px breakpoint the shell forks on (this doc owns it), and the three semantic-zoom thresholds.
-sources: src/styles/theme.css, src/lib/layoutTokens.ts, src/hooks/useMobileShell.ts, src/lib/canvasCameraPolicy.ts
-last-reviewed: 2026-08-25
+summary: Width tokens and their one-home split, the shell's three columns, the two width gates (this doc owns them) — 768px where the shell forks and 900px where the sidebar starts overlaying — and the three semantic-zoom thresholds.
+sources: src/styles/theme.css, src/lib/layoutTokens.ts, src/hooks/useMobileShell.ts, src/hooks/useSidebarOverlay.ts, src/lib/canvasCameraPolicy.ts
+last-reviewed: 2026-08-26
 ---
 
 # Layout
@@ -33,24 +33,41 @@ and the right-pinned detail panel; the mobile shell replaces all of it below the
 breakpoint. Z-ordering of shell parts is owned by
 [elevation](elevation.md#z-index-conventions).
 
-## Breakpoints — one gate, owned here
+## Breakpoints — two gates, owned here
 
 **This doc owns breakpoints.** Components, composition docs and engineering docs
-link here; none of them may declare their own thresholds.
+link here; none of them may declare their own thresholds. There are two, and
+they do different jobs:
 
-One breakpoint, one source of truth: `MOBILE_SHELL_QUERY` in
-`src/hooks/useMobileShell.ts` (`max-width: 767px`, i.e. a 768px gate), read
-through `useMobileShell()`. The check is synchronous (`matchMedia` via
-`useSyncExternalStore`) so a phone never paints the desktop tree for even one
-frame.
+| Gate | Declared in | What crosses it |
+|---|---|---|
+| **768px** | `MOBILE_SHELL_QUERY` (`max-width: 767px`), `src/hooks/useMobileShell.ts` | **the shell itself** — mobile below, desktop at or above |
+| **900px** | `SIDEBAR_OVERLAY_BREAKPOINT` (`max-width: 899px`), `src/hooks/useSidebarOverlay.ts` | **the desktop sidebar's posture** — a column in flow above, collapsed-and-overlaying below |
 
-**The shell forks exactly once on it** — below the gate the mobile shell
-renders; at or above it, the desktop shell, byte-for-byte the same tree as
-before the mobile work. That is the whole of the contract: there is no second
-*shell fork*, and a surface that wants a different shell by width goes through
-this gate or argues a change here. (The shadcn `useIsMobile` in
+Both are read synchronously (`matchMedia` through `useSyncExternalStore`), so
+neither paints a frame of the wrong answer before correcting itself.
+
+**The shell forks exactly once, and it forks on 768** — below the gate the
+mobile shell renders; at or above it, the desktop shell, byte-for-byte the same
+tree as before the mobile work. That is the whole of the contract: there is no
+second *shell fork*, and a surface that wants a different shell by width goes
+through this gate or argues a change here. (The shadcn `useIsMobile` in
 `src/hooks/use-mobile.ts` survives only inside the ui sidebar primitive; app
 code uses `useMobileShell`.)
+
+**900 is a posture, not a fork.** The same desktop tree renders on both sides of
+it; one aside changes from in-flow to floating. Below it the sidebar and the
+canvas cannot both have the width, so the sidebar collapses and reopening it
+draws over the canvas — reopening in flow down there would only recreate the
+squeeze the collapse was for. The behaviour is
+[composition/sidebar.md](../composition/sidebar.md#width-collapse-and-the-camera).
+
+**The two gates meet, and cannot drift apart.** The overlay query is one-sided
+because its floor is not a number of its own: below 768 the desktop shell does
+not render at all, so the band it governs is [768, 900) by construction rather
+than by agreement, with no `min-width` half to keep in step.
+`useSidebarOverlay.test.tsx` pins the ordering so narrowing the band from either
+end stays a deliberate edit.
 
 Tailwind's width variants (`sm:`, `md:`, `max-xl:`, and the
 `--breakpoint-xs: 480px` step in `theme.css`) remain available for in-component
@@ -59,10 +76,11 @@ narrow is not a shell fork and needs no argument here.
 
 **At and above 768 — desktop, tablets included.** Tablets get the full desktop
 shell, **editing included**: the view-only rule binds to the mobile shell, not
-to touch. Portrait tablet is tight and that is accepted; the sidebar collapses
-to its rail and the resizable widths absorb the rest. No intermediate tablet
-layout exists, deliberately — a third shell would triple every layout decision
-for one middling viewport.
+to touch. Portrait tablet lands inside the overlay band, which is what the band
+is for — the sidebar starts collapsed and opens over the canvas rather than
+beside it, so the board keeps the full width. No intermediate tablet *shell*
+exists, deliberately — a third shell would triple every layout decision for one
+middling viewport, and a posture change is the cheaper answer.
 
 What the phone does below the gate is [composition/mobile-shell.md](../composition/mobile-shell.md).
 

@@ -3,6 +3,10 @@ import { useEditor } from '@/contexts/EditorContext'
 import { MobileShell } from '@/components/mobile/MobileShell'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import {
+
+  useSidebarCollapse,
+} from '@/hooks/useSidebarOverlay'
+import {
   RAIL_WIDTH,
   SIDEBAR_DEFAULT_WIDTH,
   SIDEBAR_MAX_WIDTH,
@@ -120,7 +124,29 @@ function DesktopEditorShell() {
   // hands back with a cited cell (docs/connectors/plus-uno.md). Mounted here because it needs the editor's
   // navigation and the boot URL state, and both live at this level.
   useCellDeepLink()
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  /*
+    Collapse, and which of the two parties asked for it.
+
+    Below `SIDEBAR_OVERLAY_BREAKPOINT` the sidebar and the canvas cannot both
+    have the width, so the gate collapses the sidebar and reopening it draws
+    OVER the canvas rather than taking the column back. The state carries the
+    reason with it, so widening again gives back only the collapses the gate
+    itself made — `useSidebarOverlay` has the argument for why a bare boolean
+    cannot tell the two apart.
+  */
+  const {
+    overlay,
+    collapsed: sidebarCollapsed,
+    setCollapsedByUser,
+  } = useSidebarCollapse()
+  useEffect(() => {
+    // A crossing wipes the aside open or shut, which resizes the canvas
+    // container — chrome moving, not the reader navigating. This also runs
+    // once on mount, where nothing crossed; suppressing a refit the reader
+    // never triggered is the same answer, so it is left unguarded rather
+    // than carrying a ref to tell the first run apart.
+    suppressCanvasResizeRefit()
+  }, [overlay])
   const isLanding = view === 'landing'
 
   const activeTabKind = activeTab?.kind ?? null
@@ -280,9 +306,8 @@ function DesktopEditorShell() {
   // choosing a surface you cannot see is not a choice.
   const revealSidebar = useCallback(() => {
     if (!sidebarCollapsed) return
-    suppressCanvasResizeRefit()
-    setSidebarCollapsed(false)
-  }, [sidebarCollapsed])
+    setCollapsedByUser(false)
+  }, [sidebarCollapsed, setCollapsedByUser])
 
   // Publish the collapsed state so canvas navbars can host the expand
   // control themselves — see sidebarCollapsedContext for why the pill is
@@ -306,14 +331,11 @@ function DesktopEditorShell() {
         selectScenario,
         openAgentSurface: () => {
           toggleAgentOpen(true)
-          setSidebarCollapsed(false)
+          setCollapsedByUser(false)
         },
-        setSidebarCollapsed: (collapsed) => {
-          suppressCanvasResizeRefit()
-          setSidebarCollapsed(collapsed)
-        },
+        setSidebarCollapsed: setCollapsedByUser,
       }),
-    [selectPhase, selectScenario],
+    [selectPhase, selectScenario, setCollapsedByUser],
   )
 
   // The read side: what the shell itself knows about what's on screen.
@@ -332,7 +354,7 @@ function DesktopEditorShell() {
     activeTab
       ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
       : 'Active tab: base blueprint view (no slice tab)',
-    `Sidebar: ${panel} panel${railOnly ? ', collapsed' : ''}${presenting ? ', presenting' : ''}`,
+    `Sidebar: ${panel} panel${railOnly ? ', collapsed' : ''}${overlay ? ', narrow viewport (it overlays the canvas when open)' : ''}${presenting ? ', presenting' : ''}`,
     `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
   ].join('\n')
   const shellContextRef = useRef(shellContext)
@@ -442,10 +464,7 @@ function DesktopEditorShell() {
   }, [])
 
   const toggleSidebar = () => {
-    // The width ease resizes the canvas container for 320 ms. That is
-    // chrome moving, not the user navigating — the camera holds still.
-    suppressCanvasResizeRefit()
-    setSidebarCollapsed((collapsed) => !collapsed)
+    setCollapsedByUser(!sidebarCollapsed)
   }
 
   // Shared drag-resize. During a drag the width transition is off —
@@ -643,8 +662,37 @@ function DesktopEditorShell() {
         <div className="relative flex min-h-0 min-w-0 flex-1">
           <aside
             className={cn(
-              'relative z-20 shrink-0 overflow-hidden bg-sidebar',
+              'z-20 shrink-0 overflow-hidden bg-sidebar',
               !railOnly && 'border-r border-border',
+              /*
+                The overlay posture, below the gate. Out of the flow
+                entirely, so reopening draws over the canvas instead of
+                taking back a column the canvas cannot spare — reopening
+                in flow down here only recreates the squeeze the collapse
+                was for. Still `z-20`: this is the same shell column in the
+                same band (foundations/elevation.md), merely floating, and
+                `shadow-floating` is the token that says floating.
+
+                No scrim — but NOT on `CreateSliceSheet`'s reasoning, which
+                is conditioned on a sheet that "sits beside" a canvas left
+                lit. This panel is `absolute inset-y-0 left-0`; it occludes
+                the strip it covers, so the thing that doctrine protects is
+                already hidden and citing it here would be borrowing an
+                argument that does not reach.
+
+                The reason that does reach is narrower: a scrim announces a
+                mode the reader must leave, and this is a column that came
+                back, not a dialog. What a scrim usually buys — somewhere to
+                click to get out — is bought here instead by the rail's own
+                collapse toggle, which stays on screen the whole time, and by
+                Escape below. Outside-click is deliberately NOT wired: the
+                surface it would swallow clicks from is the canvas, where a
+                click selects a cell, and losing that first click to a
+                dismissal is worse than one extra keystroke.
+              */
+              overlay
+                ? cn('absolute inset-y-0 left-0', !railOnly && 'shadow-floating')
+                : 'relative',
             )}
             style={{
               width: railOnly ? 0 : asideWidth,
