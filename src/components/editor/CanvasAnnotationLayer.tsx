@@ -18,7 +18,10 @@ import {
   Strikethrough,
   Trash2,
 } from 'lucide-react'
-import { useCanvasAnnotations } from '@/contexts/canvasAnnotationContext'
+import {
+  useCanvasAnnotations,
+  useCanvasAnnotationTool,
+} from '@/contexts/canvasAnnotationContext'
 import {
   ANNOTATION_DEFAULT_FONT_SIZE,
   ANNOTATION_DEFAULT_STROKE,
@@ -1352,16 +1355,52 @@ function TextAnnotationNode({
 }
 
 /**
+ * What a drag or a resize can change: geometry, and the font size a sticky's
+ * corner scales with. Narrower than `Partial<CanvasAnnotation>` on purpose —
+ * merging two members of that union widens `type` into something assignable
+ * to none of them, and these two gestures never touch `type` anyway.
+ */
+type AnnotationBoxPatch = {
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+  fontSize?: number
+}
+
+/**
+ * Give the capture back, and never let the giving-back be the thing that fails.
+ *
+ * `releasePointerCapture` throws `NotFoundError` for an id the element does
+ * not currently hold — and mid-drag that is an ordinary state, not a bug: a
+ * `pointercancel` from an OS edge swipe releases capture on the way out, so
+ * the `pointerup` that follows is releasing something already gone. Called
+ * bare, the throw skipped the four lines after it and left `dragRef` set and
+ * `draggingId` on, which is a mark welded to the cursor for the rest of the
+ * session. `ResizableComparePanel` was bitten by exactly this and carries the
+ * same guard; the stroke path below already did too. This is the third site.
+ *
+ * The drag state is cleared BEFORE the release at every call site as well, so
+ * the guard is belt and the ordering is braces.
+ */
+function releaseCapture(element: Element | null, pointerId: number): void {
+  try {
+    element?.releasePointerCapture(pointerId)
+  } catch {
+    // Already released, or never captured. The teardown around this call is
+    // the part that matters and must not be skipped for it.
+  }
+}
+
+/**
  * FigJam-style annotation surface over the canvas: pen strokes, shapes, text and
  * stickies, plus their selection and resize chrome. Coordinates are board space,
  * so `zoom` is only needed where a hit radius must stay constant on screen.
  */
 export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
+  const { tool, setTool, penColor, penStrokeWidth, isAnnotating } =
+    useCanvasAnnotationTool()
   const {
-    tool,
-    setTool,
-    penColor,
-    penStrokeWidth,
     annotations,
     addAnnotation,
     updateAnnotation,
@@ -1369,7 +1408,6 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
     replaceAnnotations,
     selectedId,
     setSelectedId,
-    isAnnotating,
   } = useCanvasAnnotations()
   const layerRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -1384,6 +1422,11 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
     radius: number
   } | null>(null)
   const eraserRafRef = useRef(0)
+  const pendingPatchRef = useRef<{
+    id: string
+    patch: AnnotationBoxPatch
+  } | null>(null)
+  const patchRafRef = useRef(0)
   const [draft, setDraftState] = useState<Draft>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -1413,6 +1456,47 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
         return
       }
       setDraftState({ ...current })
+    })
+  }
+
+  /**
+   * A drag publishes ONCE A FRAME, not once a pointer sample.
+   *
+   * Dragging or resizing a mark used to call `updateAnnotation` straight off
+   * every raw `pointermove` — a hundred and twenty times a second on a
+   * trackpad, each one replacing the annotation collection and re-rendering
+   * every surface that reads it. The pen path in this same file keeps its
+   * stroke in a ref and publishes on a frame, and the eraser below batches
+   * the same way; this is that pattern applied to the third path, which was
+   * the one left behind.
+   *
+   * Patches for the same mark coalesce, so the frame publishes the LATEST
+   * position rather than replaying every sample. A patch for a different
+   * mark flushes the pending one first — the two never merge.
+   */
+  const flushAnnotationPatch = () => {
+    if (patchRafRef.current) {
+      cancelAnimationFrame(patchRafRef.current)
+      patchRafRef.current = 0
+    }
+    const pending = pendingPatchRef.current
+    pendingPatchRef.current = null
+    if (!pending) return
+    updateAnnotation(pending.id, pending.patch)
+  }
+
+  const scheduleAnnotationPatch = (id: string, patch: AnnotationBoxPatch) => {
+    const pending = pendingPatchRef.current
+    if (pending && pending.id !== id) flushAnnotationPatch()
+    const merged = pendingPatchRef.current
+    pendingPatchRef.current = {
+      id,
+      patch: merged ? { ...merged.patch, ...patch } : patch,
+    }
+    if (patchRafRef.current) return
+    patchRafRef.current = requestAnimationFrame(() => {
+      patchRafRef.current = 0
+      flushAnnotationPatch()
     })
   }
 
@@ -1457,6 +1541,8 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
     () => () => {
       endStrokeListeners()
       eraserPendingRef.current = null
+      if (patchRafRef.current) cancelAnimationFrame(patchRafRef.current)
+      pendingPatchRef.current = null
     },
     // Mount/unmount only — refs keep listeners current.
     [],
@@ -1755,11 +1841,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
         )
       }
 
-      try {
-        lane?.releasePointerCapture(pointerId)
-      } catch {
-        // Already released.
-      }
+      releaseCapture(lane, pointerId)
 
       if (current?.type === 'pen') {
         finishPenStroke()
@@ -1932,9 +2014,9 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
           72,
           Math.max(10, Math.round(resize.originFontSize * scale)),
         )
-        updateAnnotation(resize.id, { fontSize })
+        scheduleAnnotationPatch(resize.id, { fontSize })
       } else {
-        updateAnnotation(resize.id, next)
+        scheduleAnnotationPatch(resize.id, next)
       }
       return
     }
@@ -1954,7 +2036,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
         setEditingId(null)
       }
       if (drag.moved) {
-        updateAnnotation(drag.id, {
+        scheduleAnnotationPatch(drag.id, {
           x: drag.originX + dx,
           y: drag.originY + dy,
         })
@@ -1969,22 +2051,26 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
     const resize = resizeRef.current
     if (resize && resize.pointerId === event.pointerId) {
       event.stopPropagation()
-      layerRef.current?.releasePointerCapture(event.pointerId)
+      // The frame the release interrupts still owes a patch — publish it
+      // before the state that identifies it is cleared.
+      flushAnnotationPatch()
       resizeRef.current = null
       setDraggingId(null)
       setSelectedId(resize.id)
+      releaseCapture(layerRef.current, event.pointerId)
       return
     }
 
     const drag = dragRef.current
     if (drag && drag.pointerId === event.pointerId) {
       event.stopPropagation()
-      layerRef.current?.releasePointerCapture(event.pointerId)
+      flushAnnotationPatch()
       dragRef.current = null
       setDraggingId(null)
       if (!drag.moved) {
         setSelectedId(drag.id)
       }
+      releaseCapture(layerRef.current, event.pointerId)
     }
   }
 
