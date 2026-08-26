@@ -236,46 +236,81 @@ test('every declared RPC name was introduced by a migration', () => {
 })
 
 /**
- * The breadcrumb, in the one place a migration can be held to it.
+ * The breadcrumb, in both places a migration builds one.
  *
- * `search_blueprint` builds the cell breadcrumb itself, in SQL, in this repo —
- * so the label sequence a migration produces is checkable offline. The VIEW
- * that feeds the embeddings (`semantic_search.blueprint_chunks_src`) is not:
- * its live definition has diverged from the migration that last wrote it, the
- * `Phase` segment among the differences, because the 2026-08-17 change never
- * became a migration. That is the whole reason
- * `scripts/check-blueprint-contract.mjs` asks the database instead of the SQL.
+ * There are two, and until 20260826000000 only one of them was checkable here.
+ * `search_blueprint` has always built the cell breadcrumb in SQL in this repo.
+ * The VIEW that feeds the embeddings, `semantic_search.blueprint_chunks_src`,
+ * had not: the 2026-08-17 change that added the `Phase` segment went straight
+ * to the database and never became a migration, so the SQL in this repo and
+ * the SQL the database ran were different documents and only the database
+ * could be asked (plus-uno-blueprint#130). That migration puts the live shape
+ * into the series, which is what makes the second test below possible.
+ *
+ * Both are still text-parsed rather than run: the point is to fail in CI at the
+ * moment the rename is written, not on the first Slack question after deploy.
+ * `scripts/check-blueprint-contract.mjs` remains the check that asks the live
+ * database, because a migration file cannot prove what is actually deployed.
  */
-test('the breadcrumb a migration builds carries the declared labels, in order', () => {
-  const withPhase = MIGRATIONS.filter((m) =>
-    m.sql.includes(`'${BLUEPRINT_CONTRACT.breadcrumb.labels[0]}: '`),
-  )
-  assert.ok(
-    withPhase.length > 0,
-    `no migration builds a breadcrumb starting "${BLUEPRINT_CONTRACT.breadcrumb.labels[0]}: ". ` +
-      `Either the label moved or this test stopped finding its subject; both need a look.`,
-  )
 
-  const { sql, file } = withPhase.at(-1)
-  const start = sql.indexOf(
-    `concat_ws('${BLUEPRINT_CONTRACT.breadcrumb.separator}',`,
-    sql.indexOf("'cell'::text as knd"),
-  )
+/**
+ * Pull the label sequence out of one `concat_ws(sep, 'Label: ' || ..., ...)`
+ * expression, given where it starts and the text that closes it.
+ *
+ * Scoping to a single expression is the whole point. The view repeats the
+ * breadcrumb inside its chunk body and then appends seven more labelled fields
+ * (Function, Form, Value, Owner, ...), none of which are breadcrumb segments —
+ * a scan of the whole file reads all seventeen and reports drift that is not
+ * there.
+ */
+function breadcrumbLabels(sql, file, from, closer, subject) {
+  const start = sql.indexOf(`concat_ws('${BLUEPRINT_CONTRACT.breadcrumb.separator}',`, from)
   assert.ok(
-    start !== -1,
-    `${file} does not join the cell breadcrumb on ` +
+    start !== -1 && start < sql.indexOf(closer, from),
+    `${file} does not join the ${subject} breadcrumb on ` +
       `${JSON.stringify(BLUEPRINT_CONTRACT.breadcrumb.separator)} — the separator the ` +
       `bot splits on. A different separator makes every citation parse as one segment.`,
   )
+  const stop = sql.indexOf(closer, start)
+  assert.ok(stop !== -1, `${file} has no ${JSON.stringify(closer)} closing the ${subject} breadcrumb`)
+  return [...sql.slice(start, stop).matchAll(/'([A-Za-z][A-Za-z ]*): '/g)].map((m) => m[1])
+}
 
-  const block = sql.slice(start, sql.indexOf(') as ttl', start))
-  const labels = [...block.matchAll(/'([A-Za-z][A-Za-z ]*): '/g)].map((m) => m[1])
+function lastMigrationContaining(needle, what) {
+  const matches = MIGRATIONS.filter((m) => m.sql.includes(needle))
+  assert.ok(
+    matches.length > 0,
+    `no migration contains ${JSON.stringify(needle)}, so ${what} has no subject to check. ` +
+      `Either it moved or this test stopped finding it; both need a look.`,
+  )
+  return matches.at(-1)
+}
+
+test('the breadcrumb search_blueprint builds carries the declared labels, in order', () => {
+  // `'cell'::text as knd` opens the cell branch of the function, which is the
+  // only breadcrumb in it that the bot parses.
+  const { sql, file } = lastMigrationContaining("'cell'::text as knd", 'the search_blueprint breadcrumb')
+  const labels = breadcrumbLabels(sql, file, sql.indexOf("'cell'::text as knd"), ') as ttl', 'cell')
   assert.deepEqual(
     labels,
     BLUEPRINT_CONTRACT.breadcrumb.labels,
     `${file} builds breadcrumb labels ${JSON.stringify(labels)}, the contract declares ` +
       `${JSON.stringify(BLUEPRINT_CONTRACT.breadcrumb.labels)}. uno-bot's parseChunkTitle ` +
       `reads segments by label; a renamed one silently drops that field from every citation.`,
+  )
+})
+
+test('the breadcrumb the embedding view builds carries the declared labels, in order', () => {
+  const needle = 'view semantic_search.blueprint_chunks_src'
+  const { sql, file } = lastMigrationContaining(needle, 'the embedding view breadcrumb')
+  const labels = breadcrumbLabels(sql, file, sql.lastIndexOf(needle), ') as title', 'embedding view')
+  assert.deepEqual(
+    labels,
+    BLUEPRINT_CONTRACT.breadcrumb.labels,
+    `${file} builds the embedding view's title as ${JSON.stringify(labels)}, the contract ` +
+      `declares ${JSON.stringify(BLUEPRINT_CONTRACT.breadcrumb.labels)}. This title is what ` +
+      `gets embedded and what comes back as a citation, so a changed label is wrong in the ` +
+      `index until the next full re-embed.`,
   )
 })
 
