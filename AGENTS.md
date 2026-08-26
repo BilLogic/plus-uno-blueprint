@@ -46,15 +46,16 @@ erases — fix it upstream. Details:
   `.env.local`); **never the service-role key**.
 - Every blueprint-content write goes through `authoringRpc.ts` or a
   `src/lib/*Mutations.ts` module, so it lands in the session ledger with a
-  captured revert. Components, contexts and hooks read; they never write to a
-  table. That boundary is enforced by `writeBoundaryContract.test.ts`, not by
-  convention — it was prose for months and was false for some of them. The test
-  scans `components/`, `contexts/` and `hooks/` only; three modules under
-  `src/lib` write outside the wrappers, and
-  `engineering/access-and-security.md` names all three and says which are
-  deliberate. In a mutation module: capture the
-  previous value as the inverse **before** the write, write with `.select()` so
-  a zero-row update fails loudly, then `recordChange`. Deletes are human-only.
+  captured revert. Nothing else writes to a table — not a component, not a
+  context, not a hook, not the agent's tool dispatcher. That boundary is
+  enforced by `writeBoundaryContract.test.ts`, not by convention — it was prose
+  for months and was false for some of them, and then the guard itself scanned
+  three named roots and missed `src/lib` for months more. It walks all of
+  `src/` now and names its two exemptions inline;
+  `engineering/access-and-security.md` says why each is deliberate. In a
+  mutation module: capture the previous value as the inverse **before** the
+  write, write with `.select()` so a zero-row update fails loudly, then
+  `recordChange`. Deletes are human-only.
 - Watch for literal NUL bytes in generated source (breaks git diffing);
   write the six-character backslash-u0000 escape, never the raw byte.
 

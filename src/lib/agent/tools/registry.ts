@@ -41,6 +41,7 @@ import {
 import { updateCellSpec } from '@/lib/cellSpecMutations'
 import { getCellContentLengthGuidance } from '@/lib/cellContentLimits'
 import { findingFingerprint } from '@/lib/findingFingerprint'
+import { recordFinding, updateFinding } from '@/lib/findingMutations'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import {
   agentAnnotateCells,
@@ -730,54 +731,32 @@ export async function dispatchTool(
           throw new Error('A zero-cell finding needs a scope (e.g. "scenario:Warm-Up").')
         const runId = s(args, 'run_id') ?? crypto.randomUUID()
         const fingerprint = await findingFingerprint(checkName, cellIds, scope)
-        const resolvedServiceId = await serviceId(client)
-        const { data: existing, error: readError } = await client
-          .from('findings')
-          .select('id, status')
-          .eq('service_id', resolvedServiceId)
-          .eq('fingerprint', fingerprint)
-          .order('updated_at', { ascending: false })
-        if (readError) throw new Error(readError.message)
-        const open = existing?.find((row) => row.status === 'open')
-        const dismissed = existing?.find((row) => row.status === 'dismissed')
-        if (open) {
-          const { error } = await client
-            .from('findings')
-            .update({ severity: severityArg, note, run_id: runId, cell_ids: cellIds, cell_keys: cellIds, source })
-            .eq('id', open.id)
-          if (error) throw new Error(error.message)
-          return `An open finding already had this fingerprint — updated it in place (dedupe). run_id ${runId}; reuse it for the rest of this run.`
-        }
-        if (dismissed)
-          return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. run_id ${runId}; reuse it for the rest of this run.`
-        const { error: insertError } = await client.from('findings').insert({
-          service_id: resolvedServiceId,
-          run_id: runId,
+        // `cell_keys` are the ids themselves in the canvas dialect — see
+        // findingFingerprint, which hashes them the same way.
+        const outcome = await recordFinding(client, {
+          serviceId: await serviceId(client),
+          runId,
           source,
-          check_name: checkName,
+          checkName,
           severity: severityArg,
+          cellIds,
+          cellKeys: cellIds,
           note,
-          cell_ids: cellIds,
-          cell_keys: cellIds,
           fingerprint,
         })
-        if (insertError) throw new Error(insertError.message)
-        const reopened = existing && existing.length > 0
-        return `Recorded ${severityArg} finding for ${checkName}${reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. run_id ${runId}; reuse it for the rest of this run.`
+        const reuse = `run_id ${runId}; reuse it for the rest of this run.`
+        if (outcome.kind === 'deduped')
+          return `An open finding already had this fingerprint — updated it in place (dedupe). ${reuse}`
+        if (outcome.kind === 'suppressed')
+          return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. ${reuse}`
+        return `Recorded ${severityArg} finding for ${checkName}${outcome.reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. ${reuse}`
       }
       case 'update_finding': {
         const status = s(args, 'status')
         if (status !== 'open' && status !== 'resolved' && status !== 'dismissed')
           throw new Error('status must be open, resolved, or dismissed.')
         const findingId = need(args, 'finding_id')
-        const { data, error } = await client
-          .from('findings')
-          .update({ status })
-          .eq('id', findingId)
-          .select('id')
-        if (error) throw new Error(error.message)
-        if (!data || data.length === 0)
-          throw new Error(`No finding with id ${findingId}.`)
+        await updateFinding(client, findingId, { status })
         return `Finding is now ${status}.`
       }
       default:

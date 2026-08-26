@@ -269,9 +269,9 @@ decoded RGBA — fine on desktop, an OOM tab-kill on mobile Chrome. Hence:
 
 ## Writes, and the schema
 
-No component, context or hook writes to a table. Every DB write goes through the
+Nothing writes to a table except the wrappers. Every DB write goes through the
 wrapper layer so it lands in the session ledger with a captured revert — the
-write path, its invariants, the wrapper files and the three modules that sit
+write path, its invariants, the wrapper files and the two modules that sit
 outside them are owned by
 [access-and-security](access-and-security.md#authoring-writes).
 
