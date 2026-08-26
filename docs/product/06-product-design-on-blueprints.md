@@ -1,7 +1,7 @@
 ---
 audience: designers, product
 summary: Grounding product and design decisions on the blueprint — cells as evidence, slices to specs, touchpoint reasoning, audits as design-debt radar.
-sources: docs/plans/2026-08-06-001-plan-access-model-three-personas.md, src/lib/urlViewState.ts, src/lib/agent/skill/references/slice-playbook.md
+sources: docs/plans/2026-08-06-001-plan-access-model-three-personas.md, src/lib/urlViewState.ts, agentic-service-blueprinting skills/slice/references/slice-playbook.md
 last-reviewed: 2026-08-08
 ---
 

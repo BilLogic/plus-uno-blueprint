@@ -171,5 +171,5 @@ corpus, and not before. See
 built on top of the blueprint grid* — `evidence`, `findings`, `slices`,
 `slice_items`, `business_model` — and has nothing to do with a swimlane. The
 term appears in `supabase/schema.reference.sql`, in the migration filename
-`20260729120000_derived_layer.sql`, and in the vendored skill references. It
-does not rename.
+`20260729120000_derived_layer.sql`, and in the installed package's skill
+references. It does not rename.

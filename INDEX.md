@@ -104,7 +104,7 @@ frontmatter. History is deliberately absent, and the queue does not live here.
 | docs/guidelines/foundations/typography.md | designers | Type roles and scale (including the sub-xs steps), and the time-marker register that names phases and steps the same way on every surface. |
 | docs/guidelines/overview.md | designers | The design point of view — restraint, one signature per surface, the Supabase benchmark — plus the foundations/components/composition split and how to propose deviations. |
 | docs/engineering/access-and-security.md | developers | Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments. |
-| docs/engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the dual-home skill vendoring contract. |
+| docs/engineering/agent-system.md | developers | The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the pinned-package contract the rulebook arrives through. |
 | docs/engineering/agent-tools.md | developers | The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest. |
 | docs/engineering/codebase-guide.md | developers | Where things live, how the app fits together, and which existing pattern to copy — provider stack, module stores, the canvas stack, data flow, and the performance budget the always-mounted board sets. |
 | docs/engineering/operations.md | developers | Deploy, rollback, dashboards, monitoring, inviting people, and the local-stack troubleshooting checklist. |

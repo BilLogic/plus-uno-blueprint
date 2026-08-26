@@ -20,8 +20,9 @@ the closed list"**. This is that list.
 > `20260821320000` wrote `perceived_owner` on the Reporting-an-Issue cells;
 > `20260821380000` then NULLed three outsider-owned lanes, leaving **155**.
 
-Not to be confused with `src/lib/agent/skill/references/lane-vocabulary.md`,
-which tells parallel drafting agents how to converge on lane *roles* and *actor
+Not to be confused with the installed package's
+`references/lane-vocabulary.md`, which tells parallel drafting agents how to
+converge on lane *roles* and *actor
 labels*. This one names the teams a lane can be owned by.
 
 > *Revised 2026-08-21 with the team list as given by Bill. The previous draft

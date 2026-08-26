@@ -31,10 +31,10 @@ from the installed `sb` plugin**, authored in the
 `agentic-service-blueprinting` repo. Do not go looking for them here, and
 do not add one here.
 
-`src/lib/agent/skill/{skills,references}/` is a **vendored copy** of that
-same text, bundled so the in-app assistant executes what an IDE session
-executes. Editing a file there is a mistake the next upstream take
-erases — fix it upstream. Details:
+The in-app assistant executes the same text, read straight out of the
+installed `agentic-service-blueprinting` package — a git-URL dependency
+pinned to a tagged release. There is no copy of it in this repo to edit,
+so a fix goes upstream and arrives here as a version bump. Details:
 `docs/engineering/agent-system.md`.
 
 ## Security lines (non-negotiable — never behind a pointer)

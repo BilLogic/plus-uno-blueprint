@@ -2,7 +2,8 @@
 
 One case = prompt (+ optional setup / scripted follow-up turns) + rubric.
 Every rubric line traces to a written rule — the four-skill plugin's
-references vendored under `src/lib/agent/skill/` — so a failing line names
+references in the installed `agentic-service-blueprinting` package — so a
+failing line names
 the practice it broke, not a vibe. Source keys:
 
 - **EP-Qn** — `references/elicitation-protocol.md` question n (Q0
@@ -307,7 +308,7 @@ line). A case fails if any line fails.
 
 | Surface | What runs | How it's evaled |
 |---|---|---|
-| **App** (canvas agent) | ROLE + vendored canvas-adapter + the four /sb:* SKILL.mds via the composer; writes through the app's RPC wrappers (findings included) | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
+| **App** (canvas agent) | ROLE + the installed package's canvas-adapter + its four /sb:* SKILL.mds via the composer; writes through the app's RPC wrappers (findings included) | Live in the panel (verified with a real key), plus this suite via the CLI runner simulating the app's tool surface |
 | **CLI** | `run.mjs` — headless: real Gemini, real reads, dry-run writes | This suite, A1–E2 |
 | **IDE** | The plugin's own `skills/*/SKILL.md` followed by an IDE agent with file tools — IR JSON + `validate_ir.py` + workspace state | Subagent runs: IDE-1 (map: notes → validated IR workspace with elicitation log), IDE-2 (slice: cut from that IR via `slice_tools.py`); graded on validator exit 0, step count 5–15, spine role, no-filler cells, and the self-reported skill ambiguities |
 

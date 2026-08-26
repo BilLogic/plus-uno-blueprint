@@ -19,24 +19,24 @@ import type { BlueprintData } from '@/types/blueprint'
 import { agentSessionsSnapshot } from '@/lib/agent/sessions'
 import { loadPersistedEvents } from '@/lib/agent/persistence'
 import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
-import canvasAdapter from '@/lib/agent/skill/references/canvas-adapter.md?raw'
-import dataModel from '@/lib/agent/skill/references/data-model.md?raw'
-import elicitationProtocol from '@/lib/agent/skill/references/elicitation-protocol.md?raw'
-import cocreatePlaybook from '@/lib/agent/skill/references/cocreate-playbook.md?raw'
-import laneVocabulary from '@/lib/agent/skill/references/lane-vocabulary.md?raw'
-import laneRoles from '@/lib/agent/skill/references/lane-roles.md?raw'
-import auditPlaybook from '@/lib/agent/skill/references/audit-playbook.md?raw'
-import whatifPlaybook from '@/lib/agent/skill/references/whatif-playbook.md?raw'
-import checkGapSweep from '@/lib/agent/skill/references/check-gap-sweep.md?raw'
-import checkJargonLint from '@/lib/agent/skill/references/check-jargon-lint.md?raw'
-import checkChannelConflict from '@/lib/agent/skill/references/check-channel-conflict.md?raw'
-import checkKpiAlignment from '@/lib/agent/skill/references/check-kpi-alignment.md?raw'
-import checkPerceivedOwner from '@/lib/agent/skill/references/check-perceived-owner.md?raw'
-import checkValueLedger from '@/lib/agent/skill/references/check-value-ledger.md?raw'
-import checkFeeVisibility from '@/lib/agent/skill/references/check-fee-visibility.md?raw'
-import checkObsoleteSource from '@/lib/agent/skill/references/check-obsolete-source.md?raw'
-import slicePlaybook from '@/lib/agent/skill/references/slice-playbook.md?raw'
-import sliceTemplates from '@/lib/agent/skill/references/slice-templates.md?raw'
+import canvasAdapter from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'
+import dataModel from 'agentic-service-blueprinting/references/data-model.md?raw'
+import elicitationProtocol from 'agentic-service-blueprinting/skills/map/references/elicitation-protocol.md?raw'
+import cocreatePlaybook from 'agentic-service-blueprinting/skills/map/references/cocreate-playbook.md?raw'
+import laneVocabulary from 'agentic-service-blueprinting/references/lane-vocabulary.md?raw'
+import laneRoles from 'agentic-service-blueprinting/references/lane-roles.md?raw'
+import auditPlaybook from 'agentic-service-blueprinting/references/audit-playbook.md?raw'
+import whatifPlaybook from 'agentic-service-blueprinting/skills/whatif/references/whatif-playbook.md?raw'
+import checkGapSweep from 'agentic-service-blueprinting/skills/audit/references/check-gap-sweep.md?raw'
+import checkJargonLint from 'agentic-service-blueprinting/skills/audit/references/check-jargon-lint.md?raw'
+import checkChannelConflict from 'agentic-service-blueprinting/skills/audit/references/check-channel-conflict.md?raw'
+import checkKpiAlignment from 'agentic-service-blueprinting/skills/audit/references/check-kpi-alignment.md?raw'
+import checkPerceivedOwner from 'agentic-service-blueprinting/skills/audit/references/check-perceived-owner.md?raw'
+import checkValueLedger from 'agentic-service-blueprinting/skills/audit/references/check-value-ledger.md?raw'
+import checkFeeVisibility from 'agentic-service-blueprinting/skills/audit/references/check-fee-visibility.md?raw'
+import checkObsoleteSource from 'agentic-service-blueprinting/skills/audit/references/check-obsolete-source.md?raw'
+import slicePlaybook from 'agentic-service-blueprinting/skills/slice/references/slice-playbook.md?raw'
+import sliceTemplates from 'agentic-service-blueprinting/skills/slice/references/slice-templates.md?raw'
 
 type Client = SupabaseClient<Database>
 
@@ -57,8 +57,10 @@ const UUID =
 
 /**
  * The same reference files the IDE skills read from disk, served as a tool.
- * One progressive-disclosure mechanism, two consumers: editing a file in
- * the plugin repo upgrades both (vendored here, taken from upstream).
+ * One progressive-disclosure mechanism, two consumers, and now literally
+ * one copy: these resolve into the installed `agentic-service-blueprinting`
+ * package, pinned by the lockfile. Editing a file in the plugin repo and
+ * bumping the pin upgrades both; nothing here can be edited instead.
  */
 const REFERENCES: Record<string, string> = {
   'canvas-adapter': canvasAdapter,
@@ -84,6 +86,9 @@ const REFERENCES: Record<string, string> = {
 // The names live in `referenceNames.ts` (a leaf module, so specs.ts can
 // quote them without this file's ?raw import graph). This record is the
 // documents themselves; the init-time check keeps the two in lockstep.
+// It is the fastest failure for a reference added upstream and taken here
+// without being published — the throw happens at module init, before any
+// test that touches the tools can get further.
 {
   const here = Object.keys(REFERENCES).sort().join(',')
   const published = [...REFERENCE_NAMES].sort().join(',')

@@ -20,7 +20,7 @@ import { collectAgentUiContext } from '@/lib/agent/uiBridge'
 import { agentUiCommandMutates } from '@/lib/agent/uiCommands'
 import type { AgentAttachment } from '@/lib/agent/attachments'
 import type { AgentSkillCommand } from '@/lib/agent/skills'
-import canvasAdapterDoc from '@/lib/agent/skill/references/canvas-adapter.md?raw'
+import canvasAdapterDoc from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'
 import roleDoc from '@/lib/agent/role.md?raw'
 import {
   hasKey,
@@ -52,9 +52,9 @@ const ADAPTERS: Record<string, AgentProviderAdapter> = {
  * The service-designer posture + the canvas
  * adapter (the plugin rulebook's app translation), with the deeper
  * references behind the get_reference tool — the runtime version of the
- * skills' progressive disclosure. Full four-skill routing (loading
- * skills/map or skills/slice SKILL.md per task) lanes on here once the
- * sync script vendors them; the adapter is written to make that a drop-in.
+ * skills' progressive disclosure. The four SKILL.mds route through the
+ * composer (`skills.ts`), read out of the same installed package as the
+ * references — one copy, so the adapter's translation stays a drop-in.
  */
 const ROLE = roleDoc.trimEnd()
 

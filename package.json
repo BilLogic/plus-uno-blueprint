@@ -32,6 +32,7 @@
     "@tailwindcss/forms": "0.5.11",
     "@tailwindcss/typography": "0.5.20",
     "@tanstack/react-query": "5.101.4",
+    "agentic-service-blueprinting": "git+https://github.com/BilLogic/agentic-service-blueprinting.git#v0.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

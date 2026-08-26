@@ -34,9 +34,10 @@ refusal, not an attempt. **Deliberately absent: every delete.**
   and `focus_cell` wait for verified selection/camera outcomes. The CLI harness
   mocks those visual effects, so production camera movement is validated in a
   real browser in addition to tool-parity and model-sequencing tests.
-- **`src/lib/agent/tools/read.ts`** — the read tools and the vendored
-  reference documents; asserts at module init that its keys match
-  `REFERENCE_NAMES` exactly.
+- **`src/lib/agent/tools/read.ts`** — the read tools and the reference
+  documents, imported from the pinned `agentic-service-blueprinting`
+  package; asserts at module init that its keys match `REFERENCE_NAMES`
+  exactly.
 
 ## The rosters
 
@@ -90,8 +91,9 @@ rulebook, run before shipping prompt/tool changes.
 - **Reality contract** (header of `run.mjs`): reads are REAL (Supabase
   anon over PostgREST — the same rows the app sees); writes are DRY-RUN
   (recorded in the trace, never sent); UI-state tools are per-case mocks.
-  The system prompt is the same `role.md` + vendored canvas-adapter the
-  app loads — no copy, no drift.
+  The system prompt is the same `role.md` + the same `canvas-adapter.md`
+  the app loads, resolved out of the same installed package — no copy, no
+  drift.
 - **Cases**: `cases.md` is the human-readable suite; `cases.mjs` the
   machine form. Every rubric line traces to a written rule (skill
   references, adapter invariants), scored by deterministic trace checks
