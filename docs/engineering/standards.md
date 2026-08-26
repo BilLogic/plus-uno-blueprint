@@ -2,7 +2,7 @@
 audience: developers
 summary: The quality bar — token discipline against the Supabase benchmark, comment philosophy, what earns a test and how to run them, tooling traps, review workflow.
 sources: AGENTS.md, src/styles/blueprint.css, scripts/tests/, todos/020-pending-p3-mobile-v1-followups.md, docs/plans/
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Standards
@@ -66,22 +66,30 @@ Don't write render-the-component snapshot tests; do write a test whenever
 two files must stay in sync or a rule is enforced by convention rather
 than types.
 
-**The other gates**: `npm run lint` — the baseline is ZERO problems and
-stays zero; any problem you introduce is yours. `npm run build` is the
-real type-check.
+**The other gates**: `npm run lint` — the baseline is ZERO problems and stays
+zero; any problem you introduce is yours. (`todos/004` still records an
+78-problem baseline; that premise is gone — `eslint .` over the tree returns
+clean.) `npm run typecheck` is the type-check on its own; `npm run build` runs
+it and then bundles.
 
 ## Tooling traps
 
-- Bare `npx tsc --noEmit` is a **no-op trap** — it aborts on a deprecated
-  tsconfig option before checking anything. Use
-  `npx tsc -p tsconfig.app.json --noEmit` or `npm run build`.
+- Bare `npx tsc --noEmit` still checks **nothing**, but not for the reason this
+  doc used to give. The TS5101 deprecation trap is gone (`tsconfig.json` says
+  so, and carries neither `baseUrl` nor `ignoreDeprecations`); the residual
+  no-op is that `tsconfig.json` is a solution file — `"files": []` plus
+  `references`, so bare `--noEmit` has zero inputs. Worse, `npx tsc` resolves to
+  the unrelated `tsc` npm package, not this repo's compiler. Use
+  **`npm run typecheck`**, which runs `@typescript/native`'s `tsc -b`.
 - Quote globs in shell commands (`--include="*.tsx"`) — zsh eats bare ones.
 - Literal NUL bytes in generated source break git diffing — write the
   six-character backslash-u0000 escape (`\` `u` `0` `0` `0` `0`), never the raw byte.
 - base-ui triggers take a `render={...}` prop, **not** `asChild`.
-- base-ui `Drawer` snap points: `snapPoints` alone does nothing you can
-  feel — `defaultSnapPoint` is the missing piece; pass both or neither
-  (`src/components/ui/drawer.tsx` forwards them).
+- base-ui `Drawer` snap points: `src/components/ui/drawer.tsx` destructures and
+  forwards `snapPoints` and nothing else, and no `defaultSnapPoint` exists
+  anywhere in `src/`. Anything beyond `snapPoints` reaches base-ui only through
+  `...props`. No surface uses snap points today — read base-ui's own docs
+  rather than this repo's history.
 - After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.
 - The whole-board canvas has a decoded-image memory budget — read
   [architecture](architecture.md#performance-constraints) before adding

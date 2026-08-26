@@ -2,7 +2,7 @@
 audience: developers
 summary: The agent's tool surface — specs vs dispatch, the rosters, how to add a tool, and the eval harness + parity tests that keep it honest.
 sources: src/lib/agent/tools/specs.ts, src/lib/agent/tools/registry.ts, src/lib/agent/tools/referenceNames.ts, src/lib/agent/tools/mobileRoster.test.ts, scripts/agent-harness/run.mjs, scripts/agent-harness/cases.mjs, scripts/tests/toolParity.test.mjs, todos/021-pending-p2-agent-harness-review-followups.md
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Agent tools
@@ -19,10 +19,15 @@ refusal, not an attempt. **Deliberately absent: every delete.**
   imports, precisely so specs stay loadable under plain Node (the harness
   and `.mjs` tests) without dragging in supabase-js or Vite `?raw`
   markdown.
-- **`src/lib/agent/tools/registry.ts`** — dispatch only: `dispatchTool`
-  maps a name onto the same wrapper the UI calls (`authoringRpc.ts`,
-  `cellContentMutations.ts`, `cellSpecMutations.ts`, `sliceMutations.ts`),
-  so RLS, validation, ledger logging, and revert capture come free.
+- **`src/lib/agent/tools/registry.ts`** — dispatch: `dispatchTool` maps a name
+  onto the same wrapper the UI calls (`authoringRpc.ts`,
+  `cellContentMutations.ts`, `cellSpecMutations.ts`, `sliceMutations.ts`,
+  `stakeholderMutations.ts`, `evidenceMutations.ts`), so RLS, validation,
+  ledger logging, and revert capture come free. **One exception, and it is not
+  a pattern to copy**: `create_finding` / `update_finding` write the `findings`
+  table directly from the registry, so those two get no ledger entry and no
+  captured inverse. See
+  [access-and-security](access-and-security.md#authoring-writes).
 - UI navigation dispatch may be asynchronous: `open_phase`, `open_scenario`,
   and `focus_cell` wait for verified selection/camera outcomes. The CLI harness
   mocks those visual effects, so production camera movement is validated in a
@@ -53,21 +58,27 @@ refusal, not an attempt. **Deliberately absent: every delete.**
 2. **Dispatch** in `registry.ts`, calling an existing wrapper. If the
    wrapper doesn't exist, that's a write-path change first — see
    [access-and-security](access-and-security.md#authoring-writes).
-3. **Harness mirror** in `scripts/agent-harness/run.mjs` (the CLI tool
-   table) and, for writes, its WRITES list in `cases.mjs`. Add or extend a
-   case exercising the tool.
+3. **Harness mirror** — dispatch only. `run.mjs` bundles `specs.ts` and
+   destructures `TOOL_SPECS` / `WRITE_TOOL_NAMES` / `MOBILE_READ_TOOL_NAMES`
+   from it, so re-declaring a spec there is now a *test failure*, not a chore.
+   What still needs a hand: the harness's mock dispatch table, and — for
+   writes — the `WRITES` set in `cases.mjs`. Add or extend a case exercising
+   the tool.
 4. **Run the parity tests** (`npm test`) — they fail until all the lists
    agree.
 
 ## Parity tests — why they exist
 
-`scripts/tests/toolParity.test.mjs` text-parses `specs.ts`,
-`registry.ts`, `run.mjs`, and `cases.mjs` (text-parsed because the
-registry cannot load under Node) and asserts the harness mirrors the app's
-tool surface. The dangerous drift is the third list: a write tool missing
-from the harness's WRITES makes a "no writes happened" trace check PASS —
-drift that hides itself. `mobileRoster.test.ts` pins the mobile whitelist
-the same way. Treat a parity failure as the system working.
+`scripts/tests/toolParity.test.mjs` used to ask "did the hand-copied fork
+drift". It cannot any more — the fork is gone — so it asserts the replacement:
+that the import wiring is intact, that no fork has crept back in, and that
+`cases.mjs`'s `WRITES` set still covers every write tool. Only `registry.ts` is
+still text-parsed, deliberately, because it cannot load under Node.
+
+The dangerous drift is that last list: a write tool missing from the harness's
+`WRITES` makes a "no writes happened" trace check PASS — drift that hides
+itself. `mobileRoster.test.ts` pins the mobile whitelist the same way. Treat a
+parity failure as the system working.
 
 ## The eval harness
 
@@ -90,9 +101,8 @@ rulebook, run before shipping prompt/tool changes.
 
 ## Known gaps
 
-`todos/021-pending-p2-agent-harness-review-followups.md` is the live
-list. Headlines: the harness's hand-copied tool specs have drifted and
-should import `TOOL_SPECS` now that specs.ts is node-loadable; coverage
-gaps (mobile roster, view-only refusals, compare diff, finding dedupe);
-round-limit exhaustion UX in the app lags the harness. Check it before
-assuming a harness number covers your change.
+`todos/021-pending-p2-agent-harness-review-followups.md` is the live list. The
+one-sourcing headline is **done** (`run.mjs` imports `TOOL_SPECS`; commit
+`1d33428`). What is still open there: template slice rendering, the
+god-component splits, and round-limit exhaustion UX in the app lagging the
+harness. Check it before assuming a harness number covers your change.

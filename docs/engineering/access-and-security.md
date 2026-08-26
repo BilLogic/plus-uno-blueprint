@@ -52,11 +52,13 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `supabase/schema.reference.sql`; generated types are
 `src/types/database.ts`.
 
-**Core hierarchy** — `service_lifecycles` → `phases` (ordered, optional
+**Core hierarchy** — `services` → `phases` (ordered, optional
 `loops_to_phase_id`) → `scenarios` (`view_type`: single /
 side-by-side / integrated — integrated is merged at runtime, each path
-stored separately) → `paths` (`path_type`: happy / unhappy / exception /
-alternative / named). Steps are scenario-scoped (`steps`), joined to paths
+stored separately) → `paths` (`path_type`: happy / variant / exception — the
+CHECK allows exactly those three; `unhappy` became `exception` and
+`alternative`/`custom` became `variant` in
+`20260821220000_three_kinds_of_route.sql`). Steps are scenario-scoped (`steps`), joined to paths
 with per-path column order via `path_steps`. `lanes` are a path's rows;
 `cells` sit at lane × step per path, with a trigger
 (`cells_validate_path_match`) enforcing path integrity.
@@ -77,7 +79,7 @@ true; panel-only), unique per (source, target, kind).
 Design invariants worth knowing before touching them: derived tables
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert
 never cascades into user-authored content — `cell_keys` carry IR key-paths
-for recovery; `evidence` has a hard lifecycle FK as its retention story;
+for recovery; `evidence` has a hard `service_id` FK as its retention story;
 "assumption" is a derived state (zero evidence rows), deliberately not
 stored; findings may only be INSERTed as `open` (dedupe is "dismissed
 stays dismissed", so a direct-status insert could silently suppress real
@@ -104,7 +106,7 @@ unchanged.
 
 **The pattern to keep: narrow doors, not wide grants.** The table is sealed and
 every capability is a `security definer` function that permits exactly one
-operation. Reads go through `match_corpus_chunks` / `blueprint_hybrid_search`;
+operation. Reads go through `match_corpus_chunks` / `public.search_blueprint()`;
 the one write that is not an upsert goes through `prune_orphans()`, whose
 `WHERE` lives inside the definer so the caller chooses no rows. `service_role`
 holds `INSERT, SELECT, UPDATE` on the table and **not** `DELETE` — it briefly
@@ -134,19 +136,34 @@ workflow with `full: true`.
 
 Single owner of the write path — other docs link here.
 
-Every DB write goes through one of the wrapper modules, never a raw table
-write from a component:
+Every **blueprint-content** write goes through one of the wrapper modules,
+never a raw table write from a component, a context or a hook:
 
 - `src/lib/authoringRpc.ts` — the structural surface; every function is a
   SECURITY DEFINER RPC. The app holds *operations*, not tables. Treat all
   of them as pessimistic: re-read after a structural write
   (`invalidateStructure()`), because cascades cannot be mirrored client-side.
-- `src/lib/cellContentMutations.ts` / `cellSpecMutations.ts` — cell text
-  and spec columns via column-level grants; optimistic, the exception.
-- `src/lib/sliceMutations.ts` — slices and frames.
-- `src/lib/evidenceMutations.ts` — evidence rows; same shape as
-  `cellContentMutations` (direct table write under row grants, recorded in
-  the session ledger with a captured inverse).
+- **The `src/lib/*Mutations.ts` family** — ten modules today, one per subject:
+  `cellContentMutations` / `cellSpecMutations` (cell text and spec columns via
+  column-level grants; optimistic, the exception), `sliceMutations` (slices and
+  frames), `evidenceMutations`, `stakeholderMutations`, and the five spec
+  modules `serviceSpecMutations`, `scenarioSpecMutations`, `phaseSpecMutations`,
+  `laneSpecMutations`, `stepSpecMutations`. All share one shape: direct table
+  write under row grants, recorded in the session ledger with a captured
+  inverse.
+
+Three modules write tables and are deliberately *not* in that set. Count them
+when you count writers — there are fourteen write surfaces, not eleven:
+
+- `src/lib/revertChange.ts` — the ledger's own inverse-applier. It cannot
+  record a change; recording one is what it undoes.
+- `src/lib/agent/persistence.ts` — `agent_sessions` / `agent_messages`. Agent
+  transcript, not blueprint data; nothing in it is revertable.
+- `src/lib/agent/tools/registry.ts` (`create_finding` / `update_finding`) —
+  writes `findings` directly, with no ledger entry and no captured inverse.
+  Unlike the two above this is **not** clearly intended: `src/lib/writeBoundaryContract.test.ts`
+  scans only `components/`, `contexts/` and `hooks/`, so a write from `src/lib`
+  passes unseen. Treat it as an open question, not a pattern.
 
 What the wrappers buy, and why bypassing them is never acceptable:
 
@@ -169,8 +186,9 @@ What the wrappers buy, and why bypassing them is never acceptable:
   reporting there (`CreatePhaseDialog` is the pattern). Neither channel is
   the console: a write that only logs reads to the user as a success.
 - **Deletes are human-only.** The agent tool surface contains no delete;
-  the UI routes deletes through impact preview (`get_deletion_impact`)
-  and a confirm dialog. Never automate one.
+  the UI routes deletes through impact preview (`deletionImpact()` in
+  `authoringRpc.ts`, via `deletionSafety.ts`) and a confirm dialog. The agent's
+  read-only counterpart is `measure_deletion_impact`. Never automate one.
 
 The non-negotiable invariants are inline in `AGENTS.md` — they hold even
 if this doc is never read.

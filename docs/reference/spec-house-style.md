@@ -1,7 +1,7 @@
 ---
 audience: agents and authors
 summary: How a spec field is written in this blueprint — extracted from the eleven pilot cells, not invented.
-last-reviewed: 2026-08-20
+last-reviewed: 2026-08-25
 ---
 
 # Spec house style
@@ -86,9 +86,11 @@ and filling an invisible field is the mistake this campaign exists to correct.
 
 ## A pill's summary belongs to its STEP, not to its name
 
-The same touchpoint appears all over the board. `PLUS App` is on 59 cells,
-`Zoom` on 56. It is tempting — and it is wrong — to write one summary per
-touchpoint and copy it wherever that name appears.
+The same touchpoint appears all over the board — `PLUS App` and `Zoom` on
+scores of cells each; [touchpoint-vocabulary.md](./touchpoint-vocabulary.md)
+carries the current counts, taken after the 2026-08-20 sweep that split
+multi-name pills into one cell per touchpoint. It is tempting — and it is wrong
+— to write one summary per touchpoint and copy it wherever that name appears.
 
 `PLUS App` in Fill-in Request is the Fill-In tab. In Goal Setting it is the
 student list and its Action column. In Tech Setup it is a first sign-in.

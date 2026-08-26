@@ -2,7 +2,7 @@
 audience: designers
 summary: The encodings — compare bands, ledger, merged membership outlines, severity, the semantic-zoom blocks tier, path-type colors — and the rule that every encoding is tokenized and survives dark + forced-colors.
 sources: src/components/blueprint/StackedCompareGrid.tsx, src/components/blueprint/MergedCompareGrid.tsx, src/components/blueprint/CompareDifferencesSurface.tsx, src/lib/pathColorTheme.ts, src/styles/blueprint.css, src/lib/palette.test.ts
-last-reviewed: 2026-08-19
+last-reviewed: 2026-08-25
 ---
 
 # Data visualization
@@ -55,9 +55,10 @@ the content the reader asked for with the density encoding.
 
 ## Path-type colors
 
-`PATH_TYPE_COLORS` (`src/lib/pathColorTheme.ts`): happy = green, unhappy =
-orange, exception = red, alternative = blue, named paths draw stable per-name
-colors from a registry. Everything about it is deliberate and tested:
+`PATH_TYPE_COLORS` (`src/lib/pathColorTheme.ts`) covers the three path types the
+schema allows (`path_type` is `happy | variant | exception`): happy = green,
+variant = indigo, exception = red. Named paths draw stable per-name colors from
+a registry. Everything about it is deliberate and tested:
 
 - Badges use step **1100** (Radix's text weight) so white text passes; arrows
   use step **1000**, one notch lighter, so a stroke reads as related to its
@@ -71,10 +72,17 @@ colors from a registry. Everything about it is deliberate and tested:
 
 ## The rule
 
-**Every encoding uses tokens, and survives dark mode and forced-colors.** No
-hex or rgb literals in a visualization; a color that means something must be a
-`var(--color-*)` or semantic token so themes follow, must pair with a
-non-color channel (dash, position, label, chip), and must have a forced-colors
-restatement when its fill would flatten away. `src/lib/palette.test.ts`
-measures the stylesheet — contrast floors and family disjointness are held by
-test, and a new encoding extends that test, not just the palette.
+**Every encoding uses tokens, and survives dark mode and forced-colors.** A
+color that *means* something must be a `var(--color-*)` or semantic token so
+themes follow, must pair with a non-color channel (dash, position, label,
+chip), and must have a forced-colors restatement when its fill would flatten
+away. `src/lib/palette.test.ts` measures the stylesheet — contrast floors and
+family disjointness are held by test, and a new encoding extends that test, not
+just the palette.
+
+The no-literals half of the rule is narrower than it used to read: it binds to
+values that carry meaning. Shadow alphas do not, and
+`src/styles/blueprint.css:583-590` states the annotation shadow's four `rgb()`
+alphas directly. `src/lib/tokenDiscipline.test.ts` scans `.tsx` under
+`src/components/` — it never sees a stylesheet — so nothing checks the
+stylesheet half either way.

@@ -1,3 +1,10 @@
+---
+audience: designers, developers
+summary: Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — and the badge-or-text rule that turns on whether a value's set is governed.
+sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx
+last-reviewed: 2026-08-25
+---
+
 # Explaining things in a panel
 
 Three mechanisms had drifted into being picked by habit: `IconTooltip` in 34
@@ -91,7 +98,7 @@ tooltip dropped on a `<span>` almost never does.
 | What | Mechanism |
 | --- | --- |
 | Icon-only button | `IconTooltip` — the tooltip **is** its label |
-| Lane role, path type, cell maturity, entity kind | `PanelKindBadge description=` on the badge |
+| Lane role, path type, cell status, entity kind | `PanelKindBadge description=` on the badge |
 | Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Applies when` | tooltip on the label; the label must be focusable |
 | Form field guidance | `hint` prop, always visible |
 | A consequence of saving | `Alert variant="warning"`, inline |
@@ -126,7 +133,12 @@ The right test is about the reader:
 | **Does it carry a colour?** | yes, part of the vocabulary | no |
 
 **Badges:** entity kind (Scenario, Lane, Step) · lane role · path type · cell
-maturity · touchpoint tone · **`owner_team`**.
+`status` (renamed from `maturity` in `20260821240000`, and grown from two
+values to the six of the `entity_status` domain — see `src/lib/entityStatus.ts`)
+· touchpoint tone · **`owner_team`**.
+⚠️ `owner_team` is the one entry the code does not honor: `LanePanel.tsx`
+renders it as an input or as prose, never as a badge, and nothing checks the
+rule. See [lane-vocabulary.md](./lane-vocabulary.md).
 
 **Text:** KPIs · tools · summaries · notes · `owner` and `perceived_owner`
 free-text overrides.

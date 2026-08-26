@@ -1,8 +1,8 @@
 ---
 audience: designers
 summary: The motion vocabulary, the drift test that pins it, the reduced-motion policy, and the list of moments that deliberately do not animate.
-sources: src/styles/animations.css, src/lib/motion.ts, scripts/tests/, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
-last-reviewed: 2026-08-08
+sources: src/styles/animations.css, src/lib/motion.ts, src/lib/motion.test.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
+last-reviewed: 2026-08-25
 ---
 
 # Motion
@@ -45,11 +45,15 @@ exit swaps to `ease-in`).
 
 ## The test that pins it
 
-`scripts/tests/motion-tokens` holds the two homes to the same numbers — change
-one without the other and the suite fails. This is what makes the vocabulary a
+`src/lib/motion.test.ts` holds the two homes to the same numbers — change one
+without the other and the suite fails. This is what makes the vocabulary a
 _vocabulary_: a new duration or easing is a system change made in both files
-with the test updated, never a literal at a call site. Timing literals in
-components are review-blockers.
+with the test updated, never a literal at a call site.
+
+Timing literals at call sites are a review rule, **not a checked one**: no lint
+rule and no test scans for them, and one violation ships today
+(`CoverFigure.tsx:99,103` use `duration-200`). Read this as "a reviewer will
+ask you to justify it", not as "the build stops you".
 
 ## Reduced motion
 
@@ -77,6 +81,10 @@ non-animations (rationale in the 2026-07-30 motion plan):
 - **Never transition `filter`** — it repaints every affected cell per frame
   (the slice dim applies its desaturation un-transitioned on frame 1 under an
   opacity ease; see the comment in `src/styles/blueprint.css`).
+  ⚠️ **Violated in app code today**: `BlueprintCellDetailPanel.tsx:1139` sets
+  `transition-[filter,opacity]`. The rule stands and the call site is wrong;
+  whether the panel's single filtered surface is cheap enough to be a named
+  exception is a perf question this doc cannot settle. Filed, not swept.
 - Exactly **one camera animation per user intent** — a boot, a phase click, a
   flight; never a restarted or doubled ease. All automatic fits use the same
   420 ms clock and sine ease so the camera and focus fades settle together.

@@ -2,7 +2,7 @@
 audience: designers
 summary: The design point of view — restraint, one signature per surface, the Supabase benchmark — plus a map of every surface and how to propose deviations.
 sources: docs/plans/2026-08-04-001-refactor-supabase-design-system-alignment-plan.md, docs/plans/2026-08-08-001-feat-mobile-responsive-blueprint-plan.md, docs/plans/2026-08-08-002-feat-desktop-ui-refinements-plan.md, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md, src/styles/
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Design — the point of view
@@ -85,7 +85,7 @@ breaks the premise, propose the deviation in the PR that needs it, stating the
 why. A deviation without a stated reason gets reverted on review.
 
 One vocabulary is pinned harder than the rest: motion. The drift test
-(`scripts/tests/motion-tokens`) holds `src/styles/animations.css` and
+(`src/lib/motion.test.ts`) holds `src/styles/animations.css` and
 `src/lib/motion.ts` to the same five numbers — a new duration or easing is a
 _change to the vocabulary_, made in both homes with the test updated, never a
 one-off literal at a call site.

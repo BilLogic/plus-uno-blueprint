@@ -2,7 +2,7 @@
 audience: designers, developers
 summary: Which primitive for what, the drawer/sheet posture contract (this doc is its single owner), badges and segmented controls, and the empty/loading/error visual recipes.
 sources: src/components/ui/, src/components/blueprint/BlueprintCellDetailPanel.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobileAgentSheet.tsx, src/components/EditorErrorBoundary.tsx
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Components
@@ -20,19 +20,20 @@ of primitives → a new primitive argued in the PR. Highlights:
 | Choice among few | `toggle-group` (segmented), `tabs` |
 | Overlay, blocking | `dialog` |
 | Overlay, anchored | `popover`, `dropdown-menu`, `context-menu`, `tooltip` |
-| Edge panel | `sheet` (mobile nav, mobile agent), `drawer` (cell detail) |
+| Edge panel | `sheet` (mobile nav, mobile agent), `drawer` (cell detail, entity detail) |
 | Loading | `deferred-skeleton`, `skeleton`, `spinner` (`DelayedSpinner`) |
 | Structure | `sidebar`, `separator`, `card`, `badge` |
 
-**Composition uses `render={}`, not `asChild`** — Base UI's render-prop is
-the house idiom; the few remaining `asChild` occurrences are legacy Radix
-shims, not the pattern to copy.
+**Composition uses `render={}`, not `asChild`** — Base UI's render-prop is the
+house idiom. The Radix migration is finished: `asChild` has zero occurrences in
+`src/` and there is no `@radix-ui` dependency.
 
 ## Drawer and sheet postures — owned here
 
-One component, two postures, keyed remount on the flip. The cell detail panel
-(`BlueprintCellDetailPanel`) is the canonical case and this doc is the single
-owner of the contract (engineering docs link here):
+One component, two postures, keyed remount on the flip. The mechanism lives in
+the shared shell `src/components/blueprint/panelShell.tsx`; the cell detail
+panel is its most-read consumer, not its home. This doc is the single owner of
+the contract (engineering docs link here):
 
 - **Desktop ≥ breakpoint**: a right-pinned floating *card* (not a full sheet)
   at `--width-cell-panel`, expanding to `--width-cell-panel-expanded`;
@@ -46,18 +47,20 @@ owner of the contract (engineering docs link here):
   an in-flight swipe against the wrong axis.
 - Surface switches inside an open drawer are content swaps at the same tree
   position — never close-reopen.
-- **Snap points require a `defaultSnapPoint`.** A drawer given `snapPoints`
-  without a default opens at an arbitrary state — pass both or neither
-  through the `drawer` primitive (`src/components/ui/drawer.tsx`). No current
-  surface uses snap points; the mobile reader that did was deleted
-  2026-08-17.
+- **Snap points reach base-ui through `...props`, not through the wrapper.**
+  `src/components/ui/drawer.tsx` destructures and forwards `snapPoints` alone
+  (`hasSnapPoints` only drives the swipe-handle context); there is no
+  `defaultSnapPoint` prop anywhere in `src/`. No current surface uses snap
+  points — the mobile reader that did was deleted 2026-08-17 — so treat any
+  snap-point work as new, and read base-ui's own docs rather than this repo's
+  history.
 
 Agent dock docked/floating is the same one-component-two-postures precedent.
 
 ## Badges and segmented controls
 
 `ScenarioTitleBadge` names things on the canvas (phase tone vs default tone);
-`badge` covers inline status; `PathTypeBadge` carries the path encoding from
+`badge` covers inline status; `PathLabelBadge` carries the path encoding from
 [data-viz](foundations/data-viz.md). Mode switches (view/design, Stacked/
 Merged) are `toggle-group` segmented controls carrying `aria-pressed` — state
 that forced-colors and screen readers key off (see

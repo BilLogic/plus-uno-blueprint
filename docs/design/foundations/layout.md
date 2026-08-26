@@ -2,7 +2,7 @@
 audience: designers
 summary: Spacing, radius and width tokens, and the one-home split between theme.css (class-only widths) and layoutTokens.ts (widths the runtime does math on).
 sources: src/styles/theme.css, src/lib/layoutTokens.ts
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Layout
@@ -19,8 +19,10 @@ also registers — recurring app measures, not a parallel scale. All live in
 - `--spacing-content` (the content column unit) and `--spacing-card`
   (indirecting to the card's own padding token).
 
-Use the scale; a `p-[13px]`-style arbitrary value is a review-blocker unless
-the PR argues why no step fits.
+Use the scale. A `p-[13px]`-style arbitrary value needs the PR to argue why no
+step fits — a review rule, not a checked one, and the canvas carries two that
+never made that argument (`CellDependencySections.tsx:36,108`, `pl-[19px]` and
+`gap-[7px]`). Those are debt, not precedent.
 
 ## Width tokens, and the one-home rule
 

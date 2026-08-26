@@ -115,10 +115,14 @@ get** from the `sb` plugin. The contract:
   references are authored THERE, never in this repo.
 - **Vendored copy**: `src/lib/agent/skill/{references,skills}/`, bundled
   via `?raw` imports and served through `get_reference`.
-- **How it updates**: by taking upstream's copy. The package vendors the
-  same tree internally and guards it there, so once this repo shares
-  history with the template the files arrive on an ordinary merge. There
-  is no sync script here. `scripts/sync-agent-skill.mjs` was deleted: its
+- **How it updates**: by taking upstream's copy. This repo and
+  `agentic-service-blueprinting` **already share history** (the graft in #105),
+  so upstream changes arrive as an ordinary `git merge template/main`. A
+  handful of paths must never arrive that way — this instance's migrations,
+  its blueprint data, its generated database types, its agent persona — and
+  `npm run check:template-quarantine` (`scripts/template-quarantine.json`,
+  CI: `.github/workflows/template-quarantine.yml`) fails the merge that takes
+  the package's version of one. There is no sync script here. `scripts/sync-agent-skill.mjs` was deleted: its
   `--check` exited 0 when the sibling checkout was absent, so it gated
   nothing, and by the time that was noticed the drift had inverted — a
   vocabulary rename had landed in the vendored copy and a sync would have

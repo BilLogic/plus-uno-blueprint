@@ -2,7 +2,7 @@
 audience: designers
 summary: Lucide only, small glyphs on generous hit areas, and the rule that an icon carrying meaning always has a text name.
 sources: src/components/ui/, src/components/mobile/MobileTopBar.tsx, src/lib/canvasAnnotations.ts
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Iconography
@@ -16,10 +16,14 @@ reads as seams. If lucide genuinely lacks a needed glyph, that is a
 
 ## Sizing
 
-Glyphs in chrome sit at `size-3.5` or `size-4` (the two dominant sizes across
-the app — check neighboring components and match). Icons scale with their
-container's text where inline; standalone icons take an explicit size class.
-Do not invent in-between sizes per surface.
+Glyphs in chrome sit at `size-3.5`, `size-3` or `size-4` — the three dominant
+sizes across the app, in that order of frequency. Check neighboring components
+and match. Icons scale with their container's text where inline; standalone
+icons take an explicit size class.
+
+Don't invent a size per surface. Nothing enforces that, and the app has drifted
+past the three: `size-2.5` (micro-chrome, ~13 sites) and `size-5` (~10) also
+ship. Reach for a fourth value only with a reason in the PR.
 
 ## Glyph vs hit area
 

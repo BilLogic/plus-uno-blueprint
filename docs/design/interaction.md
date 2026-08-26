@@ -2,7 +2,7 @@
 audience: designers, developers
 summary: The click grammar, canvas modes, panel-as-selection, camera behavior, and the touch contract — what every input gesture means and why.
 sources: src/components/blueprint/BlueprintCellButton.tsx, src/contexts/canvasModeContext.ts, src/hooks/useZoomPanViewport.ts, docs/plans/2026-07-30-001-fix-loading-and-motion-system-plan.md
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-25
 ---
 
 # Interaction
@@ -40,8 +40,8 @@ mode.
 **The Edit switch is absent, never disabled.** When a session cannot write
 (`available: false`) — and on all mobile — the switch does not render. A
 disabled Edit button would advertise a capability the session doesn't have;
-discoverability is handled in copy instead ("Editing is available on
-desktop" — see [content-voice](content-voice.md)).
+discoverability is handled in copy instead — see
+[content-voice](content-voice.md).
 
 ## Panel as selection
 

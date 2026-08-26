@@ -26,11 +26,15 @@ the code is newer; say so and follow the code.
 - Never widen RLS or write policies; the deployed site stays read-only.
 - Local writes authenticate as the dev auth user (auto sign-in from
   `.env.local`); **never the service-role key**.
-- Every DB write goes through `authoringRpc.ts` or a `src/lib/*Mutations.ts`
-  module, so it lands in the session ledger with a captured revert. Components,
-  contexts and hooks read; they never write to a table. That boundary is
-  enforced by `writeBoundaryContract.test.ts`, not by convention — it was prose
-  for months and was false for some of them. In a mutation module: capture the
+- Every blueprint-content write goes through `authoringRpc.ts` or a
+  `src/lib/*Mutations.ts` module, so it lands in the session ledger with a
+  captured revert. Components, contexts and hooks read; they never write to a
+  table. That boundary is enforced by `writeBoundaryContract.test.ts`, not by
+  convention — it was prose for months and was false for some of them. The test
+  scans `components/`, `contexts/` and `hooks/` only; three modules under
+  `src/lib` write outside the wrappers, and
+  `engineering/access-and-security.md` names all three and says which are
+  deliberate. In a mutation module: capture the
   previous value as the inverse **before** the write, write with `.select()` so
   a zero-row update fails loudly, then `recordChange`. Deletes are human-only.
 - Watch for literal NUL bytes in generated source (breaks git diffing);
@@ -65,12 +69,13 @@ vocabulary). Deeper: `docs/engineering/codebase-guide.md`.
 
 ## Commands & tooling traps
 
-- `npm test` — vitest; collects `src/**/*.test.ts` and
+- `npm test` — vitest; collects `src/**/*.test.ts`, `src/**/*.test.tsx` and
   `scripts/tests/**/*.test.mjs` automatically (no registration list).
 - `npm run lint` — baseline is ZERO problems and must stay zero; any
   problem you introduce is yours to fix before merging.
-- `npm run build` — the real type-check. Bare `npx tsc --noEmit` is a
-  NO-OP trap (aborts on a deprecated tsconfig option before checking);
-  use `npx tsc -p tsconfig.app.json --noEmit` or the build.
+- `npm run typecheck` — the type-check. `npm run build` runs it and bundles.
+  Bare `npx tsc --noEmit` checks NOTHING: `npx tsc` is not this repo's compiler
+  (it resolves to an unrelated npm package), and `tsconfig.json` is a solution
+  file with `"files": []`.
 - Quote globs in shell commands (`--include="*.tsx"`) — zsh eats bare ones.
 - After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.

@@ -6,8 +6,8 @@ import assert from 'node:assert/strict'
 /**
  * The token-discipline rule, enforced.
  *
- * `docs/engineering/standards.md` states it plainly — components consume the
- * SEMANTIC lane, never the primitive ramps ("`text-warning`, not
+ * `docs/guidelines/foundations/color.md` states it plainly — components consume
+ * the SEMANTIC lane, never the primitive ramps ("`text-warning`, not
  * `text-amber-1100`"), and no raw colour values where a token exists. Both
  * halves are convention, not types, and both had drifted: four components had
  * picked steps straight off the amber and violet ramps, three more were on
@@ -107,7 +107,7 @@ test('components carry no raw hex colours', () => {
   assert.deepEqual(
     offenders,
     [],
-    `Raw hex in components — add or use a token (see standards.md):\n${offenders.join('\n')}`,
+    `Raw hex in components — add or use a token (see guidelines/foundations/color.md):\n${offenders.join('\n')}`,
   )
 })
 

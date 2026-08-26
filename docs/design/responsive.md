@@ -2,7 +2,7 @@
 audience: designers, developers
 summary: The breakpoint contract (this doc is its single owner) — the 768px gate, the view-only desktop-parity mobile shell, tablet stance, semantic zoom, and the deliberate non-goals.
 sources: src/hooks/useMobileShell.ts, src/components/mobile/MobileShell.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobilePathSelector.tsx, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md
-last-reviewed: 2026-08-18
+last-reviewed: 2026-08-25
 ---
 
 # Responsive
@@ -16,11 +16,16 @@ One breakpoint, one source of truth: `MOBILE_SHELL_QUERY` in
 `src/hooks/useMobileShell.ts` (`max-width: 767px`, i.e. a 768px gate), read
 through `useMobileShell()`. The check is synchronous (`matchMedia` via
 `useSyncExternalStore`) so a phone never paints the desktop tree for even one
-frame. The shell forks exactly once on it — below the gate the mobile shell
+frame. **The shell forks exactly once on it** — below the gate the mobile shell
 renders; at or above it, the desktop shell, byte-for-byte the same tree as
-before the mobile work. There is no second breakpoint and no per-component
-media-query improvisation; a surface that wants to behave differently by
-width goes through this gate or argues a contract change here. (The shadcn
+before the mobile work. That is the whole of the contract: there is no second
+*shell fork*, and a surface that wants a different shell by width goes through
+this gate or argues a change here.
+
+Tailwind's width variants (`sm:`, `md:`, `max-xl:`, and the `--breakpoint-xs:
+480px` step in `theme.css`) remain available for in-component sizing and are
+used in about fifteen files — a type step or a hidden-at-narrow column is not a
+shell fork and needs no argument here. (The shadcn
 `useIsMobile` in `src/hooks/use-mobile.ts` survives only inside the ui
 sidebar primitive; app code uses `useMobileShell`.)
 
@@ -97,12 +102,23 @@ would triple every layout decision for one middling viewport.
 ## Semantic zoom
 
 Width is not the only axis that changes rendering — zoom is the other.
-Below `SEMANTIC_ZOOM_THRESHOLD` (0.25, owned by `useZoomPanViewport.ts`) the
-board drops to the **blocks tier**: flat blocks + counter-scaled phase badges
-(counter-scale capped at 10× so a deep zoom-out cannot detach a badge from
-its frame), the overview as density map
-([data-viz](foundations/data-viz.md)). One implementation serves phone and
-desktop alike.
+Below the threshold the board drops to the **blocks tier**: flat blocks +
+counter-scaled phase badges (counter-scale capped at 10× so a deep zoom-out
+cannot detach a badge from its frame), the overview as density map
+([data-viz](foundations/data-viz.md)).
+
+One implementation, **three thresholds**, resolved by `canvasCameraPolicy.ts`
+— which is their owner, not the viewport hook:
+
+| Threshold | Value | Where |
+|---|---|---|
+| `SEMANTIC_ZOOM_THRESHOLD` | 0.25 | desktop board (`useZoomPanViewport.ts`) |
+| `MOBILE_SEMANTIC_ZOOM_THRESHOLD` | 0.15 | the phone, which fits a whole board smaller |
+| `COMPARE_SEMANTIC_ZOOM_THRESHOLD` | 0.12 | a focused comparison, whose fitted frame is larger than one blueprint |
+
+The phone and the comparison drop later on purpose: opening either must not
+immediately replace the content the reader asked for with the density
+encoding.
 
 ## Non-goals — deliberate, not deferred
 
