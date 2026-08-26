@@ -25,6 +25,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   cleanup,
+  configure,
   fireEvent,
   render,
   screen,
@@ -35,6 +36,37 @@ import { RenameSliceDialog } from '@/components/editor/SlicesSidebarSection'
 import { clearSession } from '@/lib/authoringSession'
 import type { SliceListEntry } from '@/hooks/useSlices'
 import type { Database } from '@/types/database'
+
+/**
+ * Timeouts sized for a loaded machine, not an idle one.
+ *
+ * This file's first test failed once in CI-like conditions — four agents each
+ * running the suite — with `getByText` unable to find the conflict notice, on
+ * a run where the rename had in fact been refused correctly. It has never
+ * reproduced since: five consecutive full-suite runs on an idle machine, and
+ * 5/5 in isolation.
+ *
+ * What the measurements do and do not say. Whichever test runs FIRST here
+ * takes ~940 ms while the other three take 30-60 ms, and moving a different
+ * test to the front moves the ~940 ms with it — so that cost is the first
+ * render in the file paying for jsdom, React, and an import graph that reaches
+ * the whole of `SlicesSidebarSection` plus the supabase and session mocks.
+ * That cost is NOT inside the `waitFor` budget, though: cutting
+ * `asyncUtilTimeout` to 200 ms leaves all four tests passing, so the awaited
+ * work itself settles well inside a fifth of the old default.
+ *
+ * Which means the observed failure needed the machine to be roughly five times
+ * slower than idle for that stretch. Four concurrent suite runs, each forking
+ * its own workers, will do that. Nothing about the assertion is wrong; the
+ * default budget simply had no headroom for a saturated host, and a test that
+ * only passes on an unloaded machine is a test that will fail in CI eventually.
+ *
+ * `testTimeout` is raised alongside it so that if a wait ever does hang for a
+ * real reason, the failure that surfaces is `waitFor`'s — which names the text
+ * it could not find — rather than a bare test timeout that names nothing.
+ */
+configure({ asyncUtilTimeout: 4000 })
+vi.setConfig({ testTimeout: 20_000 })
 
 const supabase = vi.hoisted(() => ({ client: null as unknown }))
 
