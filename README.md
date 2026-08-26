@@ -39,8 +39,11 @@ Three lanes, never mixed.
   reverse), `connectors/` (everything crossing a repo boundary).
 - **History** — `plans/`, `ideation/`, `brainstorms/`. Decision-era snapshots,
   never edited after the fact. Check a plan's frontmatter `status` before
-  treating it as current.
-- **The queue** — `todos/`.
+  treating it as current. Plans written before 2026-08-26 link to `todos/NNN`;
+  that folder is gone and those links are left as written, because editing a
+  snapshot's content is the one thing a snapshot must not do.
+- **The queue** — [GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues),
+  not a folder in the tree.
 
 `overview.md` is authored; `index.md` is generated. Every doc carries a
 frontmatter `summary`, and a doc without one fails the index build.

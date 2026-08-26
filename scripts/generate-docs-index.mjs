@@ -126,7 +126,9 @@ Under \`docs/\`, three lanes, never mixed: **reference** (below — living,
 always true), **history** (\`docs/plans/\`, \`docs/ideation/\`,
 \`docs/brainstorms/\` — decision-era snapshots, content never edited; check a
 plan's frontmatter \`status\`/\`distilled-into\` before treating it as truth),
-and the **queue** (\`todos/\`).
+and the **queue** ([GitHub Issues](https://github.com/BilLogic/plus-uno-blueprint/issues) —
+assignment, closing and cross-repo links are things a folder of markdown
+cannot do).
 
 ## Route by task
 
@@ -155,7 +157,7 @@ Read in order and stop where it says to; each path is short on purpose.
 ## Every reference doc
 
 Every living doc under \`docs/\`, with the one-line summary from its own
-frontmatter. History and the queue are deliberately absent.
+frontmatter. History is deliberately absent, and the queue does not live here.
 
 | Doc | Audience | What it answers |
 |---|---|---|
