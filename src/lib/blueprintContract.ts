@@ -139,14 +139,11 @@ export const BLUEPRINT_CONTRACT = {
    *
    * The rung names double as the row `kind` each one emits — see
    * `searchBlueprintKinds`.
-   */
-  /**
-   * Every value `search_blueprint` accepts for `granularity`, and the whole of
-   * it — there is no longer a `deprecated` list beside this one.
    *
-   * `'layer'` was accepted on input from 20260826120000 until 20260827100000,
-   * to give uno-bot's vendored copy of this file a window to sync in. It has
-   * (plus-uno#257, r74), and the RPC's guard no longer takes the word, so a
+   * `accepted` is the whole list; there is no `deprecated` beside it. `'layer'`
+   * was taken on input from 20260826120000 until 20260827100000, to give
+   * uno-bot's vendored copy of this file a window to sync in. It has
+   * (plus-uno#257, r74), and the RPC's guard no longer accepts the word, so a
    * list of spellings-on-their-way-out would have nothing in it. When the next
    * rename needs one, add it back with an issue number attached — the value of
    * that list was always its emptiness being a decision rather than a default.
