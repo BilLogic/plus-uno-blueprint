@@ -18,10 +18,22 @@
  * see its source. A guard that passes when blind is not a guard.
  *
  * What it inspects: every merge commit in the range whose second (or
- * later) parent descends from the template's root commit. Those are the
- * merges that carry upstream content. Ordinary merges within this repo
- * are ignored, and no network or remote is required — ancestry alone
- * identifies a template merge, so this runs the same in CI as locally.
+ * later) parent carries template content — descended from the template's
+ * root commit AND NOT from this instance's own. No network or remote is
+ * required; ancestry alone identifies a template merge, so this runs the
+ * same in CI as locally.
+ *
+ * BOTH roots are load-bearing, and the first version of this guard used
+ * only one. Since the graft, every commit in this repo descends from the
+ * template root, so "descends from templateRoot" is true of our own
+ * branches too. CI checks a pull request out as a synthetic merge commit
+ * (parent 1 = base, parent 2 = the branch), so that test classified every
+ * PR as an incoming template merge and reported the PR's own work as
+ * upstream overwriting us. It failed each of the two runs on #149 while
+ * `npm run check:template-quarantine` passed locally, where HEAD is not a
+ * merge commit — falsifying the "runs the same in CI as locally" claim
+ * this docstring makes two paragraphs up. The instance root is what makes
+ * that claim true: our branches descend from it, upstream commits do not.
  *
  *   node scripts/check-template-quarantine.mjs              # origin/main..HEAD
  *   node scripts/check-template-quarantine.mjs <range>      # any rev range
@@ -58,6 +70,39 @@ export function violations(files, quarantine) {
 }
 
 /**
+ * True when `commit` descends from `root`. False also when either is unknown.
+ *
+ * stderr is captured rather than inherited: "not a valid commit name" is an
+ * ANSWER here, not a fault, and letting git print it turns a passing run into
+ * one that reads like a broken one.
+ */
+function descendsFrom(root, commit) {
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', root, commit], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * True when a merged-in parent carries content from the template rather than
+ * from this instance.
+ *
+ * Exported because this is the half that broke, and the half no unit test
+ * covered — the file's own test said "the git walk itself is exercised in CI,
+ * where there are merges", and CI is exactly where the walk misclassified
+ * every pull request.
+ */
+export function carriesTemplateContent(parent, { templateRoot, instanceRoot }) {
+  return descendsFrom(templateRoot, parent) && !descendsFrom(instanceRoot, parent)
+}
+
+/**
  * Merge commits in `range` that carry template content, oldest first.
  *
  * `--first-parent` is load-bearing. Once the graft exists, every commit in
@@ -66,7 +111,7 @@ export function violations(files, quarantine) {
  * that describes OUR instance. Only merges on our own mainline are ours to
  * answer for.
  */
-function templateMerges(range, templateRoot) {
+function templateMerges(range, roots) {
   const lines = git('rev-list', '--merges', '--first-parent', '--reverse', range)
     .split('\n')
     .filter(Boolean)
@@ -74,14 +119,7 @@ function templateMerges(range, templateRoot) {
     const parents = git('rev-list', '--parents', '-n', '1', sha).split(' ').slice(1)
     // The first parent is this repo's own line of history; only the merged-in
     // side can carry upstream content.
-    return parents.slice(1).some((p) => {
-      try {
-        git('merge-base', '--is-ancestor', templateRoot, p)
-        return true
-      } catch {
-        return false
-      }
-    })
+    return parents.slice(1).some((p) => carriesTemplateContent(p, roots))
   })
 }
 
@@ -89,9 +127,22 @@ function main() {
   const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'))
   const range = process.argv[2] ?? 'origin/main..HEAD'
 
+  const roots = {
+    templateRoot: manifest.templateRootCommit,
+    instanceRoot: manifest.instanceRootCommit,
+  }
+  if (!roots.templateRoot || !roots.instanceRoot) {
+    // Missing either root turns the classifier into a coin toss in one
+    // direction or the other, and the wrong direction is silent.
+    console.error(
+      'scripts/template-quarantine.json must pin both templateRootCommit and instanceRootCommit',
+    )
+    process.exit(1)
+  }
+
   let merges
   try {
-    merges = templateMerges(range, manifest.templateRootCommit)
+    merges = templateMerges(range, roots)
   } catch (error) {
     // An unresolvable range (a shallow CI clone, a missing origin/main) must
     // not read as "nothing to check" — that is the blind-guard failure this

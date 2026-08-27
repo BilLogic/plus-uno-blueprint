@@ -37,6 +37,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # The quarantine classifier is an ancestry question, and its unit
+          # test asks it about three commits pinned by sha. A shallow clone
+          # cannot answer, and that test refuses to pass when it cannot see —
+          # so the history has to be here.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
