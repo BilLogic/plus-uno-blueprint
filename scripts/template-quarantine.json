@@ -1,6 +1,8 @@
 {
   "$comment": "Paths the template must never change here. See docs/engineering/template-relationship.md and plus-uno-blueprint#105. Enforced by scripts/check-template-quarantine.mjs.",
   "templateRootCommit": "6fe51a98340d07997b3ecf30f8702e667c946985",
+  "instanceRootCommit": "3d7c429fb8a070a54359ab7dbd8a73efb167a653",
+  "$commentRoots": "Two grafted histories, so two root commits, and BOTH are needed to tell them apart. A merged-in parent carries TEMPLATE content when it descends from templateRootCommit and NOT from instanceRootCommit. The template test alone is not enough: since the graft (#105) every commit in this repo descends from the template root, so that test alone also matches our own branches — including the synthetic merge commit GitHub builds for a pull request, which made this guard fail every PR that touched a quarantined path.",
   "quarantine": [
     {
       "path": "supabase/migrations/**",

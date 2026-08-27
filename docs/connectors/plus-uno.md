@@ -24,25 +24,66 @@ weeks** while both sides looked healthy.
 What it carries: the query-param names the URL layer accepts, the production app
 origin, the breadcrumb format the semantic view emits and the bot parses, the
 public-read and bot-read table lists, the FK constraint names used as PostgREST
-embed hints, the RPC names, and the search RPC's parameter and returned-column
-names.
+embed hints, the RPC names, and the search RPC's parameter names, returned-column
+names, accepted `granularity` values and emitted row kinds.
+
+Names and values are two different promises, and until 2026-08-26 only the first
+was made. See below.
 
 Keep that module **dependency-free** — the bot compiles it in a Worker context
 with no access to app imports.
 
-### The breadcrumb label that stays `'Layer'`
+### The breadcrumb label, and why flipping one is a two-part change
 
-The breadcrumb's lane segment is still labelled `Layer`, deliberately, after the
-`layer`→`lane` rename. All **808** corpus chunks carry `"Layer: …"` inside their
-*stored title*, and the title is part of the **embedded** text — renaming the
-label strands every embedding until a full re-embed. The parser accepts both
-labels through the contract's `breadcrumb.aliases`, so this flips to `Lane` in
-the same change that re-embeds the corpus, and not before. Root
-[`CONTEXT.md`](../../CONTEXT.md) records it as a standing exception to the
-rename.
+The breadcrumb's lane segment is labelled `Lane`. It was `Layer` for six days
+after the `layer`→`lane` rename, deliberately, and the shape of that delay is
+the thing to remember rather than the label.
 
-> The comment beside that literal cites the parser as `breadcrumbAliases`; no
-> such identifier exists in `src/`. The field is `breadcrumb.aliases`.
+A breadcrumb label is not only rendered — it is **embedded**. The title
+`semantic_search.blueprint_chunks_src` builds is part of the text that becomes
+the vector, so every stored chunk carries the label it was embedded with.
+Flipping the view alone leaves the index answering to a title no query will
+match. Worse, the nightly backfill will not repair it: the nightly is
+incremental and keys on `cells.updated_at`, and changing the TEXT of a chunk
+does not touch a cell's timestamp, so it skips every row and reports success.
+
+So a label rename is two parts:
+
+1. the migration — `20260826140000` moved both places that build one, the view
+   and `search_blueprint`'s cell branch
+2. a **full** re-embed — Actions → *uno-bot — embed blueprint
+   (semantic_search)* → Run workflow with `full: true`
+
+and between them the contract's `breadcrumb.aliases` carries the old spelling
+so both parse. That entry is empty again now
+([#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)); the next
+rename of an embedded label puts one back for exactly as long as its own
+re-embed takes.
+
+### The granularity value that stays `'layer'`
+
+`search_blueprint` accepts `granularity => 'lane'` **and** `granularity =>
+'layer'`, and emits the rung as `'lane'`. Both spellings are valid on input on
+purpose: the bot vendors this contract and deploys on its own cadence, so a hard
+flip breaks every bot search in the window between the migration landing here
+and the bot's next deploy. Dropping `'layer'` is a follow-up, gated on that
+vendored copy having synced — it is not a tidy-up to do on sight.
+
+This is the second half of a rename that stopped halfway. `20260820120100`
+renamed the parameter `filter_layer_role` to `filter_lane_role` and went no
+further, so the guard clause inside the function body went on **rejecting the
+only word the rest of the model uses** — `public.lanes`, `c.lane_id`,
+`l.lane_role`, the output column `lane` — and accepting the one nothing else
+does. It stayed that way on production for six days with all three jobs below
+green, because the contract declared the parameter's NAME and nothing had ever
+declared its VALUES. `check:contract:live` asserts every declared name binds; it
+has nothing to say about a value it was never told
+([#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)).
+
+`searchBlueprintGranularity` and `searchBlueprintKinds` are the declaration that
+was missing. The emitted kind got no grace period — a row kind is one value with
+nowhere to put an alias, unlike `breadcrumb.aliases` — so it flipped to `'lane'`
+outright in `20260826120000`.
 
 ## What checks the contract
 
@@ -83,8 +124,15 @@ the database emitted five, and it was found two days later by a human running
 static check by construction. So this one asks the database: an anon select per
 public-read table, each FK constraint sent as a real PostgREST embed hint, every
 declared RPC parameter sent by name (a rejected call is bisected so the message
-names the offending parameter), the returned columns read off a row that came
-back, and the breadcrumb parsed out of the title the database actually emits.
+names the offending parameter), every declared `granularity` value sent as a
+value and bisected the same way, the returned columns read off a row that came
+back, the row kinds read off the rows the structural rungs produce, and the
+breadcrumb parsed out of the title the database actually emits.
+
+The granularity call deliberately leaves `cell` out. With no query text and no
+embedding, cell rows sort ahead of structural ones and there are eight hundred of
+them, so asking for both returns `match_count` cells and no rung at all — the
+cell kind is covered by the call above it.
 
 It never passes without seeing its subject. Missing credentials, an unreachable
 host, a wrong key and an empty result set are each a non-zero exit — a guard

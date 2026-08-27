@@ -10,13 +10,16 @@
  * `mint_cell_key` produces. Until this runs, recovery is decorative: undo
  * cannot put back what it cannot match.
  *
- * The canonical key is what the migration's `mint_cell_key` builds:
+ * The canonical key is what the migration's `mint_cell_key` builds. The
+ * statement of record for its shape is the comment on `public.cells.cell_key`
+ * (set by `20260826110000`): five slugified segments,
+ * service/scenario/path/lane/step, with no phase segment. This file used to
+ * call the third segment a "version", which is not a level the model has —
+ * it is the path, and always was.
  *
- *     <lifecycle>/<scenario>/<version>/<lane>/<step>        (slugified)
- *
- * The version segment is the version's **name**. `path_type` looked right —
- * the seeded keys read `warm-up/happy/...` — but several versions of one
- * journey routinely share a type: Goal Setting has five all typed `named`.
+ * The path segment is the path's **name**. `path_type` looked right — the
+ * seeded keys read `warm-up/happy/...` — but several paths through one
+ * scenario routinely share a type: Goal Setting has five all typed `named`.
  * Measured against this database, keying on type collides on 167 of 737 cells
  * and keying on name collides on 17. Those 17 are a real data defect
  * (Discovery holds five distinct steps all named "Discovers PLUS"), not a
@@ -77,7 +80,7 @@ function slug(value) {
 
 function canonicalKey(row) {
   const parts = [
-    slug(row.lifecycle),
+    slug(row.service),
     slug(row.scenario),
     slug(row.pathName) ?? slug(row.pathType),
     slug(row.lane),
@@ -91,15 +94,15 @@ async function loadCells() {
   const rows = await rest(
     'cells?select=id,lane:lanes(name),step:steps(name),' +
       'path:paths(name,path_type,scenario:scenarios(name,' +
-      'phase:phases(lifecycle:service_lifecycles(name))))',
+      'phase:phases(service:services(name))))',
   )
   return rows.map((row) => {
     const path = row.path ?? {}
     const scenario = path.scenario ?? {}
-    const lifecycle = scenario.phase?.lifecycle ?? {}
+    const service = scenario.phase?.service ?? {}
     return {
       id: row.id,
-      lifecycle: lifecycle.name,
+      service: service.name,
       scenario: scenario.name,
       pathType: path.path_type,
       pathName: path.name,
@@ -137,7 +140,7 @@ async function run(mode) {
     const groups = [...new Set(colliding.map((cell) => cell.key))]
     report('Keys naming more than one cell', groups)
     console.log(
-      '\n  These are duplicate names inside one version. Rename them apart in\n' +
+      '\n  These are duplicate names inside one path. Rename them apart in\n' +
         '  the blueprint and re-run — nothing else can tell them apart.',
     )
   }

@@ -93,7 +93,18 @@ vocabulary: `proposed`, `planned`, `built`, `live`, `at_risk`, `deprecated`.
 Default `live`. Paths share it deliberately; a second vocabulary for the same
 question drifts from the first within a month.
 
-## Derived from the blueprint
+## The analysis tier
+
+**analysis tier** — the five tables that hold records *about* the board rather
+than squares of it: `evidence`, `findings`, `slices`, `slice_items`,
+`business_model`. What unites them is how they point at the board — softly, by
+uuid with no foreign key — so that re-importing a scenario deletes and recreates
+its cells without taking them along.
+Formerly the *derived layer*, a name that was wrong twice: only `findings` is
+actually derived (a human may author a slice — `20260803001000_slices_origin_allows_human.sql`
+exists for exactly that), and "layer" is the word the board retired when
+`layers` became `lanes`. The migration that built the tier keeps the old name
+in its filename, `20260729120000_derived_layer.sql`, and always will.
 
 **slice** — a saved cut of the board for one audience: one actor's journey, one
 moment across every lane, one lane end to end, or one cell examined closely.
@@ -134,7 +145,16 @@ is the artefact it produces.
 
 A domain rename landed across twelve commits during an audit, and nobody could
 point at where the terms were defined. Here is where. **These are the current
-names; the old ones survive nowhere in the schema.**
+names.**
+
+This file used to add "and the old ones survive nowhere in the schema", which
+was never true and is the sentence that let the residue hide. `alter table …
+rename` moves the table and the column and nothing else: the index, the
+constraint, the policy, the trigger and the comment all keep the name they were
+created with. Twenty-two such objects still carried retired words when
+production was swept on 2026-08-26 (#142); `20260826110000` renames them and
+asserts against the catalogue that none is left. Making the next rename
+remember is #145's job, not this paragraph's.
 
 | Was | Is | Migration |
 |---|---|---|
@@ -152,24 +172,43 @@ than a domain one. "Lifecycle" was not a level above the service — it *was* th
 service, wearing a longer name. And `enables` was left alone, because it was
 already the plain word for what it means.
 
-## Two exceptions — do not sweep these
+## One permanent exemption
 
-A rename sweep that catches every occurrence of the old words breaks both of
-these. They are here because this is where a person doing that sweep will look.
+A rename sweep that catches every occurrence of a retired word breaks this one.
+It is here because this is where the person running that sweep looks. There was
+a second entry until 2026-08-26, and the difference between the two is the
+lesson worth keeping: one is a fact about the language, the other was a queue
+that had stopped moving.
 
-**1. The breadcrumb label is still the string `'Layer'`, deliberately.**
-`src/lib/blueprintContract.ts` emits breadcrumb segments labelled
-`Phase · Scenario · Path · Step · Layer`. All **808 corpus chunks** carry
-`"Layer: …"` inside their *stored title*, and the title is part of the
-**embedded** text — so flipping this label strands every embedding until a full
-re-embed. The parser accepts both spellings through the contract's
-`breadcrumb.aliases`. It flips to `Lane` in the same change that re-embeds the
-corpus, and not before. See
-[`docs/connectors/plus-uno.md`](docs/connectors/plus-uno.md).
+**Permanent — `evidence.proposition_question_key`.** `propositions` became
+`business_model` on 2026-08-21, because that word already meant a *cell's*
+value proposition. This column is not that table. It records which of the three
+validation questions an evidence row answers — `understand`, `value`,
+`usability` — and those three are propositions in the ordinary sense: claims
+the service is betting on. The rename moved the container, not the concept.
+This is the only entry here that does not expire, and #146's copy guard ships
+with **zero** exemptions because the rest of them were removed rather than
+documented.
 
-**2. "Derived layer" is a different word.** It means a *tier of the data model
-built on top of the blueprint grid* — `evidence`, `findings`, `slices`,
-`slice_items`, `business_model` — and has nothing to do with a swimlane. The
-term appears in `supabase/schema.reference.sql`, in the migration filename
-`20260729120000_derived_layer.sql`, and in the installed package's skill
-references. It does not rename.
+Two entries have left this list, and how each left is the point.
+
+**"Derived layer" was renamed, not exempted.** The tier is the **analysis
+tier** now, because a rename removes the collision and an exemption only
+records it. See [The analysis tier](#the-analysis-tier).
+
+**The breadcrumb label `'Layer: '` was sequenced, and then the sequence ran.**
+It was a real ordering constraint: the label sits inside every *stored* chunk
+title, the stored title is part of the **embedded** text, and flipping it
+without a full re-embed strands the whole index. But it was written here as an
+"exception" and read as one for six months — a two-week sequencing note aged
+into a protected name, which is why this section now insists a dated entry
+carry an issue number and an owner. `20260826140000` flips the label in the
+view and the RPC, the corpus was re-embedded in the same change, and the
+contract's `breadcrumb.aliases` — the mechanism that let both spellings parse
+across the window — went back to empty
+([#144](https://github.com/BilLogic/plus-uno-blueprint/issues/144)). What
+`search_blueprint` still accepts is the `'layer'` **granularity value**, which
+is a different gate — uno-bot's vendored copy of the contract syncing — and it
+is carried as a dated exemption in
+[`scripts/check-retired-identifiers.mjs`](scripts/check-retired-identifiers.mjs),
+not here. See [`docs/connectors/plus-uno.md`](docs/connectors/plus-uno.md).

@@ -142,6 +142,101 @@ test('every declared include value is accepted by the function', () => {
 })
 
 /**
+ * The granularity VALUES, which are a different promise from the parameter
+ * NAME and were unmade until 2026-08-26.
+ *
+ * `searchBlueprintParams` has declared `granularity` since the day the
+ * parameter shipped, and `check:contract:live` asserted that the name binds.
+ * Neither says anything about the words the guard clause inside the body will
+ * accept — so the layers→lanes rename could move every table, column, doc and
+ * surface to `lane` while the RPC went on raising on `granularity => 'lane'`
+ * and accepting `'layer'`, for six days, with three guards green
+ * (plus-uno-blueprint#144).
+ */
+test('every declared granularity value is accepted by the function', () => {
+  // The guard clause that rejects unknown values is the authoritative list, and
+  // the NEWEST migration to write one is the one the database ends up running.
+  //
+  // Matched on the rung list rather than on `where g not in`, because a guard
+  // is edited by `replace(d, old, new)` against the live definition and only
+  // the list itself appears on both sides of that call. Within a migration the
+  // replacement always follows its target, so the LAST occurrence is the one
+  // the database is left running.
+  const needle = "'phase','scenario','path','step'"
+  const { sql, file } = lastMigrationContaining(needle, 'the granularity guard')
+  const at = sql.lastIndexOf(needle)
+  const clause = sql.slice(at, sql.indexOf('\n', at))
+
+  const { accepted, deprecated } = BLUEPRINT_CONTRACT.searchBlueprintGranularity
+  for (const value of [...accepted, ...deprecated]) {
+    assert.ok(
+      clause.includes(`'${value}'`),
+      `${file} builds a granularity guard that would raise on "${value}", which the ` +
+        `contract declares as accepted. A caller naming a declared rung gets an ` +
+        `exception rather than rows — and a deprecated spelling dropped early is one ` +
+        `uno-bot may still be sending from its vendored copy.`,
+    )
+  }
+})
+
+test('a deprecated granularity spelling is accepted on input and emitted nowhere', () => {
+  const { accepted, deprecated } = BLUEPRINT_CONTRACT.searchBlueprintGranularity
+  const kinds = BLUEPRINT_CONTRACT.searchBlueprintKinds
+
+  for (const value of deprecated) {
+    assert.ok(
+      !accepted.includes(value),
+      `"${value}" is declared both accepted and deprecated. Deprecated means "still ` +
+        `taken on input, on its way out"; listing it twice loses the second half.`,
+    )
+    assert.ok(
+      !kinds.includes(value),
+      `"${value}" is a deprecated INPUT spelling but is also declared as an emitted ` +
+        `kind. A kind has nowhere to put an alias — accepting an old word and emitting ` +
+        `it are different decisions, and only the first one is reversible cheaply.`,
+    )
+  }
+})
+
+test('every rung the function accepts comes back tagged with its own name', () => {
+  // The rung names and the row kinds are the same list by construction: ask for
+  // `path` and the row says `kind: 'path'`. Declaring them separately is what
+  // makes a drift between the two visible, so the two declarations are held to
+  // each other here rather than one being derived from the other.
+  assert.deepEqual(
+    [...BLUEPRINT_CONTRACT.searchBlueprintKinds].sort(),
+    [...BLUEPRINT_CONTRACT.searchBlueprintGranularity.accepted].sort(),
+    `the granularities the RPC accepts and the kinds it emits have diverged. uno-bot ` +
+      `asks for a rung by one name and reads the answer by the other; a rung that is ` +
+      `requestable but comes back under a different tag is invisible to it.`,
+  )
+})
+
+test('the newest migration to touch the lane rung leaves it emitting a declared kind', () => {
+  // Body-only changes to search_blueprint are written as `replace(d, old, new)`
+  // against the live definition, so within one migration the replacement always
+  // FOLLOWS the fragment it replaces. The last kind literal in the newest
+  // migration that names this fragment is therefore the one the database runs.
+  const needle = 'l.name, l.lane_role, l.updated_at'
+  const { sql, file } = lastMigrationContaining(needle, 'the lane rung kind')
+  const emitted = [...sql.matchAll(/select '(\w+)', l\.id, l\.name, l\.lane_role/g)].map((m) => m[1])
+  assert.ok(emitted.length > 0, `${file} names the lane rung but tags it with nothing`)
+
+  const last = emitted.at(-1)
+  assert.ok(
+    BLUEPRINT_CONTRACT.searchBlueprintKinds.includes(last),
+    `${file} leaves the lane rung emitting kind "${last}", which the contract does not ` +
+      `declare. This is the inversion #144 exists for: rows tagged "layer" beside an ` +
+      `output column called "lane".`,
+  )
+  assert.ok(
+    !BLUEPRINT_CONTRACT.searchBlueprintGranularity.deprecated.includes(last),
+    `${file} leaves the lane rung emitting "${last}", a spelling the contract accepts ` +
+      `on input only. Deprecated words are taken, not spoken.`,
+  )
+})
+
+/**
  * The embed-hint constraints started life as Postgres DEFAULT names —
  * `<table>_<column>_fkey`, generated implicitly by `references
  * public.cells(id)` and written down in no migration at all. That is precisely
@@ -355,9 +450,17 @@ const COVERAGE = {
     by: 'scripts/check-blueprint-contract.mjs',
     how: 'every name is sent to the live RPC, and a rejected call is bisected to name the offender',
   },
+  searchBlueprintGranularity: {
+    by: 'scripts/check-blueprint-contract.mjs',
+    how: 'every accepted value, deprecated spellings included, is sent to the live RPC and a rejected one is bisected by name',
+  },
   searchBlueprintColumns: {
     by: 'scripts/check-blueprint-contract.mjs',
     how: 'compared against the keys of a row the live RPC actually returned',
+  },
+  searchBlueprintKinds: {
+    by: 'scripts/check-blueprint-contract.mjs',
+    how: 'compared against the kinds the live RPC emits when asked for every structural rung',
   },
   searchBlueprintInclude: {
     by: 'scripts/check-blueprint-contract.mjs',
@@ -459,13 +562,13 @@ test('the probe check fails on a breadcrumb echo that disagrees with the contrac
 test('the live breadcrumb parser accepts what the database emits today', () => {
   const live =
     'Phase: Application · Scenario: Discovery · Path: Standard (happy) · ' +
-    'Step: Discovers PLUS · Layer: Storyboard'
+    'Step: Discovers PLUS · Lane: Storyboard'
   assert.equal(breadcrumbFailure(live, BLUEPRINT_CONTRACT.breadcrumb), null)
 })
 
 test('the live breadcrumb parser catches the 2026-08-17 drift in both directions', () => {
   const fourSegment =
-    'Scenario: Discovery · Path: Standard (happy) · Step: Discovers PLUS · Layer: Storyboard'
+    'Scenario: Discovery · Path: Standard (happy) · Step: Discovers PLUS · Lane: Storyboard'
   assert.match(
     breadcrumbFailure(fourSegment, BLUEPRINT_CONTRACT.breadcrumb),
     /4 breadcrumb segments/,
@@ -474,7 +577,7 @@ test('the live breadcrumb parser catches the 2026-08-17 drift in both directions
 
   const renamed =
     'Phase: Application · Stage: Discovery · Path: Standard (happy) · ' +
-    'Step: Discovers PLUS · Layer: Storyboard'
+    'Step: Discovers PLUS · Lane: Storyboard'
   assert.match(
     breadcrumbFailure(renamed, BLUEPRINT_CONTRACT.breadcrumb),
     /segment 2 is labelled "Stage"/,
@@ -482,12 +585,32 @@ test('the live breadcrumb parser catches the 2026-08-17 drift in both directions
   )
 })
 
-test('the live breadcrumb parser accepts the Layer alias and nothing else', () => {
+/**
+ * The alias list is empty, and both halves of that matter.
+ *
+ * It held `{ lane: ['layer'] }` across #144's crossing, because for the window
+ * between the view emitting `Lane: ` and the corpus being re-embedded with it,
+ * stored titles and fresh ones disagreed and both had to parse. The re-embed
+ * closed the window and the entry went — so `Layer` is now a failure, which is
+ * the only way a stale label ever gets reported.
+ *
+ * The mechanism stays, exercised here against a synthetic contract rather than
+ * the live one. An unused code path is how the next rename discovers that its
+ * bridge rotted while nobody was crossing it.
+ */
+test('the retired breadcrumb label is a failure now, and the alias mechanism still works', () => {
   const { breadcrumb } = BLUEPRINT_CONTRACT
   const base = 'Phase: A · Scenario: B · Path: C · Step: D · '
-  assert.equal(breadcrumbFailure(`${base}Layer: E`, breadcrumb), null)
+
+  assert.deepEqual(breadcrumb.aliases, {}, 'no crossing is open, so no alias is owed one')
   assert.equal(breadcrumbFailure(`${base}Lane: E`, breadcrumb), null)
+  assert.match(breadcrumbFailure(`${base}Layer: E`, breadcrumb), /segment 5/)
   assert.match(breadcrumbFailure(`${base}Row: E`, breadcrumb), /segment 5/)
+
+  const crossing = { ...breadcrumb, aliases: { lane: ['layer'] } }
+  assert.equal(breadcrumbFailure(`${base}Layer: E`, crossing), null)
+  assert.equal(breadcrumbFailure(`${base}Lane: E`, crossing), null)
+  assert.match(breadcrumbFailure(`${base}Row: E`, crossing), /segment 5/)
 })
 
 test('an empty breadcrumb is a failure, not an absence of evidence', () => {
@@ -506,8 +629,22 @@ test('the live column check names the columns a row does not carry', () => {
 })
 
 test('the live kind check accepts declared kinds and fails on a new one', () => {
-  const { searchBlueprintInclude: include } = BLUEPRINT_CONTRACT
-  const declared = [{ kind: 'cell' }, ...Object.values(include).map((kind) => ({ kind }))]
-  assert.deepEqual(undeclaredKinds(declared, include), [])
-  assert.deepEqual(undeclaredKinds([...declared, { kind: 'annotation' }], include), ['annotation'])
+  const { searchBlueprintInclude: include, searchBlueprintKinds: kinds } = BLUEPRINT_CONTRACT
+  const declared = [...kinds, ...Object.values(include)].map((kind) => ({ kind }))
+  assert.deepEqual(undeclaredKinds(declared, kinds, include), [])
+  assert.deepEqual(
+    undeclaredKinds([...declared, { kind: 'annotation' }], kinds, include),
+    ['annotation'],
+  )
+})
+
+test('the live kind check treats a deprecated input spelling as a stray', () => {
+  // The one it could not catch before: the accounted set was written out inside
+  // the checker and already said `lane`, while the RPC emitted `layer` — and the
+  // two never met, because the only granularity the checker requested was
+  // `cell`, which produces no structural rows at all.
+  const { searchBlueprintInclude: include, searchBlueprintKinds: kinds } = BLUEPRINT_CONTRACT
+  for (const stale of BLUEPRINT_CONTRACT.searchBlueprintGranularity.deprecated) {
+    assert.deepEqual(undeclaredKinds([{ kind: stale }], kinds, include), [stale])
+  }
 })

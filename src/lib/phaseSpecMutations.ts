@@ -15,7 +15,7 @@ export type PhaseSpecUpdate = {
  * Write a phase's spec columns.
  *
  * `business_impact` and `operational_requirements` have carried a column grant
- * since the derived layer shipped; `summary` got one in
+ * since the analysis tier shipped; `summary` got one in
  * `20260820160000_phases_scenarios_description_to_summary.sql`, which is the
  * migration that made this panel possible at all — before it, the column the
  * panel labels Summary was not writable by anyone but the service key.

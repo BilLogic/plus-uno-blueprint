@@ -25,8 +25,14 @@
  *   - `search_blueprint` accepts every declared parameter BY NAME, and a
  *     rejected call is re-probed one parameter at a time so the message names
  *     the offender rather than the call
+ *   - `search_blueprint` accepts every declared granularity VALUE, deprecated
+ *     spellings included, bisected the same way. A name binding is not the same
+ *     promise as a value being accepted, and only the name was ever checked —
+ *     which is how the RPC came to reject `'lane'`, the word every table,
+ *     column and doc uses, for six days (plus-uno-blueprint#144)
  *   - the returned columns of `search_blueprint` cover every declared column
- *   - every row `kind` the RPC emits is one the contract accounts for
+ *   - every row `kind` the RPC emits is one the contract accounts for, at the
+ *     cell granularity and at every structural rung
  *   - the breadcrumb the database actually emits parses into the declared
  *     labels, in order, on the declared separator
  *
@@ -65,11 +71,13 @@ const TIMEOUT_MS = 30_000
  * disagrees with them.
  *
  * `breadcrumb.aliases` is keyed by the CANONICAL field name, not by the label
- * in use: `{ lane: ['layer'] }` says the lane field may be labelled either way,
- * and the label in `labels` is still `Layer` because all 808 stored chunk
- * titles carry it inside their embedded text. So a segment is matched against
- * its declared label plus every alias group that label belongs to, and the
- * ORDER of the segments is what is really being asserted.
+ * in use: `{ lane: ['layer'] }` said the lane field could be labelled either
+ * way, for the window in which stored chunk titles still carried the old label
+ * inside their embedded text. It is empty now that #144's re-embed has landed,
+ * and the matching stays because the next rename of an embedded label needs it
+ * again. So a segment is matched against its declared label plus every alias
+ * group that label belongs to, and the ORDER of the segments is what is really
+ * being asserted.
  */
 export function breadcrumbFailure(title, breadcrumb) {
   if (typeof title !== 'string' || title.trim() === '') {
@@ -114,9 +122,19 @@ export function missingColumns(row, declared) {
   return Object.values(declared).filter((column) => !present.has(column))
 }
 
-/** Row kinds the contract does not account for. `cell` is the RPC's base row. */
-export function undeclaredKinds(rows, include) {
-  const accounted = new Set(['cell', 'phase', 'scenario', 'path', 'step', 'lane', ...Object.values(include)])
+/**
+ * Row kinds the contract does not account for.
+ *
+ * The accounted set used to be written out here, one rung at a time, beside a
+ * contract that declared none of them. It said `lane` while the RPC emitted
+ * `layer`, and neither side was wrong about the other because nothing ever put
+ * them in the same room: the only granularity this file requested was `cell`,
+ * so no structural row ever reached the comparison. Both halves are declared
+ * now — `searchBlueprintKinds` for the rungs, `searchBlueprintInclude` for the
+ * context rows — and both are passed in.
+ */
+export function undeclaredKinds(rows, kinds, include) {
+  const accounted = new Set([...kinds, ...Object.values(include)])
   return [...new Set(rows.map((row) => row.kind))].filter((kind) => !accounted.has(kind))
 }
 
@@ -304,11 +322,11 @@ async function run({ serviceRole }) {
           : null,
       ])
 
-      const strays = undeclaredKinds(rows, contract.searchBlueprintInclude)
+      const strays = undeclaredKinds(rows, contract.searchBlueprintKinds, contract.searchBlueprintInclude)
       check(`rpc ${rpc} row kinds`, [
         strays.length > 0
-          ? `the RPC emits kind ${strays.map((k) => `"${k}"`).join(', ')}, which the ` +
-            `contract's searchBlueprintInclude does not account for`
+          ? `the RPC emits kind ${strays.map((k) => `"${k}"`).join(', ')}, which neither ` +
+            `searchBlueprintKinds nor searchBlueprintInclude accounts for`
           : null,
       ])
 
@@ -321,7 +339,65 @@ async function run({ serviceRole }) {
     }
   }
 
-  // 8. The view itself — service-role only, so this is where the CI-reachable
+  // 8-9. Granularity VALUES, and the kinds the structural rungs emit.
+  //
+  //    The call above sends `granularity: ['cell']`, which is what uno-bot
+  //    sends and therefore all this file ever exercised. Every other rung —
+  //    and the guard clause that decides which words name one — went unchecked
+  //    for as long as the contract declared no values to check.
+  //
+  //    `cell` is deliberately left out of this call. With no query text and no
+  //    embedding, cell rows sort ahead of structural ones and there are eight
+  //    hundred of them, so asking for both returns `match_count` cells and no
+  //    rung at all. The kinds observed here are the structural ones; the cell
+  //    kind is covered by the call above.
+  const gran = [
+    ...contract.searchBlueprintGranularity.accepted,
+    ...contract.searchBlueprintGranularity.deprecated,
+  ].filter((value) => value !== 'cell')
+
+  const rungs = await rest(url, key, `rpc/${rpc}`, {
+    method: 'POST',
+    body: JSON.stringify({ match_count: 200, granularity: gran }),
+  })
+
+  if (!rungs.ok) {
+    // Same bisect as the parameters: the RPC raises on the whole array and
+    // names only the first offending value, so ask one at a time.
+    const offenders = []
+    for (const value of gran) {
+      const probe = await rest(url, key, `rpc/${rpc}`, {
+        method: 'POST',
+        body: JSON.stringify({ match_count: 1, granularity: [value] }),
+      })
+      if (!probe.ok) offenders.push(value)
+    }
+    check(`rpc ${rpc} granularity values`, [
+      offenders.length > 0
+        ? `the function rejects granularity ${offenders.map((g) => `"${g}"`).join(', ')}. ` +
+          `A caller that names a rung the contract declares gets an exception, not rows — ` +
+          `and a deprecated spelling still on this list is one uno-bot may still be sending.`
+        : `the call failed for a reason other than a granularity value — ${postgrest(rungs.body)}`,
+    ])
+    check(`rpc ${rpc} structural row kinds`, ['not observed: the call above failed'])
+  } else {
+    check(`rpc ${rpc} granularity values`, [])
+
+    const rungRows = Array.isArray(rungs.body) ? rungs.body : []
+    const strays = undeclaredKinds(rungRows, contract.searchBlueprintKinds, contract.searchBlueprintInclude)
+    check(`rpc ${rpc} structural row kinds`, [
+      rungRows.length === 0
+        ? 'no structural rows came back, so their kinds could not be observed. ' +
+          'Not a pass — point this at a populated database.'
+        : null,
+      strays.length > 0
+        ? `the RPC tags a rung ${strays.map((k) => `"${k}"`).join(', ')}, which ` +
+          `searchBlueprintKinds does not declare. uno-bot reads kind off the row.`
+        : null,
+    ])
+  }
+
+  // 10. The view itself — service-role only, so this is where the CI-reachable
   //    surface ends and a local or staging run begins.
   if (serviceRole) {
     const view = await rest(url, key, 'blueprint_chunks_src?select=title&limit=1', {
