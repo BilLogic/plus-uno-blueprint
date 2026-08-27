@@ -25,8 +25,8 @@
  *   - `search_blueprint` accepts every declared parameter BY NAME, and a
  *     rejected call is re-probed one parameter at a time so the message names
  *     the offender rather than the call
- *   - `search_blueprint` accepts every declared granularity VALUE, deprecated
- *     spellings included, bisected the same way. A name binding is not the same
+ *   - `search_blueprint` accepts every declared granularity VALUE, bisected the
+ *     same way when one is rejected. A name binding is not the same
  *     promise as a value being accepted, and only the name was ever checked —
  *     which is how the RPC came to reject `'lane'`, the word every table,
  *     column and doc uses, for six days (plus-uno-blueprint#144)
@@ -351,10 +351,9 @@ async function run({ serviceRole }) {
   //    hundred of them, so asking for both returns `match_count` cells and no
   //    rung at all. The kinds observed here are the structural ones; the cell
   //    kind is covered by the call above.
-  const gran = [
-    ...contract.searchBlueprintGranularity.accepted,
-    ...contract.searchBlueprintGranularity.deprecated,
-  ].filter((value) => value !== 'cell')
+  const gran = contract.searchBlueprintGranularity.accepted.filter(
+    (value) => value !== 'cell',
+  )
 
   const rungs = await rest(url, key, `rpc/${rpc}`, {
     method: 'POST',

@@ -60,16 +60,24 @@ so both parse. That entry is empty again now
 rename of an embedded label puts one back for exactly as long as its own
 re-embed takes.
 
-### The granularity value that stays `'layer'`
+### The granularity value that no longer stays `'layer'`
 
-`search_blueprint` accepts `granularity => 'lane'` **and** `granularity =>
-'layer'`, and emits the rung as `'lane'`. Both spellings are valid on input on
-purpose: the bot vendors this contract and deploys on its own cadence, so a hard
-flip breaks every bot search in the window between the migration landing here
-and the bot's next deploy. Dropping `'layer'` is a follow-up, gated on that
-vendored copy having synced — it is not a tidy-up to do on sight.
+`search_blueprint` accepts `granularity => 'lane'` and nothing else for that
+rung. It briefly accepted `'layer'` too — from `20260826120000` to
+`20260827100000` — and the shape of that window is the part worth keeping.
 
-This is the second half of a rename that stopped halfway. `20260820120100`
+The bot vendors this contract and deploys on its own cadence, so a hard flip
+risks breaking bot searches between the migration landing here and the bot's
+next deploy. `'layer'` was kept valid on input to cover that window. When the
+window closed the gate turned out to be smaller than it had been written: the
+reasoning was inherited from `20260820120100`, which renamed a PARAMETER, and
+PostgREST binds RPC arguments by name — a parameter rename really can break a
+caller mid-deploy. An accepted VALUE cannot, unless a caller sends it, and
+neither did: uno-bot never sends `granularity` at all, and this app's agent only
+knows `lane` and rejects anything else client-side. Worth writing down, because
+the next deprecation will want to know which kind of change it is.
+
+This was the second half of a rename that stopped halfway. `20260820120100`
 renamed the parameter `filter_layer_role` to `filter_lane_role` and went no
 further, so the guard clause inside the function body went on **rejecting the
 only word the rest of the model uses** — `public.lanes`, `c.lane_id`,
@@ -84,6 +92,12 @@ has nothing to say about a value it was never told
 was missing. The emitted kind got no grace period — a row kind is one value with
 nowhere to put an alias, unlike `breadcrumb.aliases` — so it flipped to `'lane'`
 outright in `20260826120000`.
+
+`searchBlueprintGranularity` no longer has a `deprecated` list beside its
+`accepted` one; it was emptied and then removed with the guard
+([#150](https://github.com/BilLogic/plus-uno-blueprint/issues/150)). The next
+rename that needs one adds it back with an issue number attached, because the
+value of that list was always its emptiness being a decision.
 
 ## What checks the contract
 

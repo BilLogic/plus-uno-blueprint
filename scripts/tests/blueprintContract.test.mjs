@@ -167,33 +167,51 @@ test('every declared granularity value is accepted by the function', () => {
   const at = sql.lastIndexOf(needle)
   const clause = sql.slice(at, sql.indexOf('\n', at))
 
-  const { accepted, deprecated } = BLUEPRINT_CONTRACT.searchBlueprintGranularity
-  for (const value of [...accepted, ...deprecated]) {
+  const { accepted } = BLUEPRINT_CONTRACT.searchBlueprintGranularity
+  for (const value of accepted) {
     assert.ok(
       clause.includes(`'${value}'`),
       `${file} builds a granularity guard that would raise on "${value}", which the ` +
         `contract declares as accepted. A caller naming a declared rung gets an ` +
-        `exception rather than rows — and a deprecated spelling dropped early is one ` +
-        `uno-bot may still be sending from its vendored copy.`,
+        `exception rather than rows.`,
+    )
+  }
+
+  // The other direction, which only became checkable once the deprecated list
+  // was empty: the guard accepts NOTHING the contract does not declare. While
+  // `'layer'` was accepted-but-undeclared-as-current this could not be written,
+  // and that asymmetry is what let the retired spelling sit in the guard.
+  for (const value of clause.match(/'([a-z_]+)'/g).map((one) => one.slice(1, -1))) {
+    assert.ok(
+      accepted.includes(value),
+      `${file} builds a granularity guard that accepts "${value}", which the contract ` +
+        `does not declare. Either the contract is behind the database, or a retired ` +
+        `spelling is still being taken.`,
     )
   }
 })
 
-test('a deprecated granularity spelling is accepted on input and emitted nowhere', () => {
-  const { accepted, deprecated } = BLUEPRINT_CONTRACT.searchBlueprintGranularity
-  const kinds = BLUEPRINT_CONTRACT.searchBlueprintKinds
+/**
+ * This test used to hold the two halves of a deprecation apart: a spelling
+ * could be accepted-on-input OR an emitted kind, never both, and never both
+ * accepted and deprecated at once. 20260827100000 removed the deprecated list,
+ * so it has no subject — and a loop over an empty list would keep reporting
+ * green while checking nothing.
+ *
+ * What survives is the rule it was protecting, stated directly: an accepted
+ * INPUT value and an emitted KIND are separate vocabularies that happen to
+ * overlap. Nothing may be declared as a kind that the guard would refuse on
+ * input, because a caller cannot ask for rows it can be handed.
+ */
+test('every emitted kind is a granularity the RPC would accept, or an include', () => {
+  const { accepted } = BLUEPRINT_CONTRACT.searchBlueprintGranularity
+  const includes = BLUEPRINT_CONTRACT.searchBlueprintInclude
 
-  for (const value of deprecated) {
+  for (const kind of BLUEPRINT_CONTRACT.searchBlueprintKinds) {
     assert.ok(
-      !accepted.includes(value),
-      `"${value}" is declared both accepted and deprecated. Deprecated means "still ` +
-        `taken on input, on its way out"; listing it twice loses the second half.`,
-    )
-    assert.ok(
-      !kinds.includes(value),
-      `"${value}" is a deprecated INPUT spelling but is also declared as an emitted ` +
-        `kind. A kind has nowhere to put an alias — accepting an old word and emitting ` +
-        `it are different decisions, and only the first one is reversible cheaply.`,
+      accepted.includes(kind) || includes.some((one) => one.startsWith(kind)),
+      `the contract declares "${kind}" as an emitted kind, but it is neither an ` +
+        `accepted granularity nor an include. A caller has no way to ask for it.`,
     )
   }
 })
@@ -229,11 +247,10 @@ test('the newest migration to touch the lane rung leaves it emitting a declared 
       `declare. This is the inversion #144 exists for: rows tagged "layer" beside an ` +
       `output column called "lane".`,
   )
-  assert.ok(
-    !BLUEPRINT_CONTRACT.searchBlueprintGranularity.deprecated.includes(last),
-    `${file} leaves the lane rung emitting "${last}", a spelling the contract accepts ` +
-      `on input only. Deprecated words are taken, not spoken.`,
-  )
+  // There was a second assertion here, that `last` is not a DEPRECATED
+  // spelling. It went with the deprecated list in 20260827100000: `'layer'` is
+  // no longer accepted on input either, so "not a declared kind" — the
+  // assertion above — now covers it exactly.
 })
 
 /**
@@ -452,7 +469,7 @@ const COVERAGE = {
   },
   searchBlueprintGranularity: {
     by: 'scripts/check-blueprint-contract.mjs',
-    how: 'every accepted value, deprecated spellings included, is sent to the live RPC and a rejected one is bisected by name',
+    how: 'every accepted value is sent to the live RPC and a rejected one is bisected by name',
   },
   searchBlueprintColumns: {
     by: 'scripts/check-blueprint-contract.mjs',
@@ -638,13 +655,16 @@ test('the live kind check accepts declared kinds and fails on a new one', () => 
   )
 })
 
-test('the live kind check treats a deprecated input spelling as a stray', () => {
+test('the live kind check treats a retired input spelling as a stray', () => {
   // The one it could not catch before: the accounted set was written out inside
   // the checker and already said `lane`, while the RPC emitted `layer` — and the
   // two never met, because the only granularity the checker requested was
   // `cell`, which produces no structural rows at all.
   const { searchBlueprintInclude: include, searchBlueprintKinds: kinds } = BLUEPRINT_CONTRACT
-  for (const stale of BLUEPRINT_CONTRACT.searchBlueprintGranularity.deprecated) {
-    assert.deepEqual(undeclaredKinds([{ kind: stale }], kinds, include), [stale])
-  }
+  // `'layer'` as a literal, not read from the contract. It used to be read from
+  // `searchBlueprintGranularity.deprecated`, which 20260827100000 emptied and
+  // then removed — and a loop over an empty list asserts nothing while still
+  // reporting green, which is the failure this whole file exists to refuse.
+  // The word is the historical case; writing it down keeps the test about it.
+  assert.deepEqual(undeclaredKinds([{ kind: 'layer' }], kinds, include), ['layer'])
 })
