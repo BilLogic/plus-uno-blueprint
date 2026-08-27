@@ -89,6 +89,20 @@ function descendsFrom(root, commit) {
   }
 }
 
+/** True when `commit` names an object this clone actually has. */
+function resolves(commit) {
+  try {
+    execFileSync('git', ['rev-parse', '--verify', `${commit}^{commit}`], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * True when a merged-in parent carries content from the template rather than
  * from this instance.
@@ -138,6 +152,30 @@ function main() {
       'scripts/template-quarantine.json must pin both templateRootCommit and instanceRootCommit',
     )
     process.exit(1)
+  }
+
+  // PINNED IS NOT THE SAME AS PRESENT, and this guard FAILS OPEN on the
+  // difference: `descendsFrom` answers false for an unknown commit, so an
+  // unresolvable templateRoot makes every parent look like instance content and
+  // the whole check passes without comparing anything. Treating "not a valid
+  // commit name" as an answer is right INSIDE the classifier — an old clone
+  // legitimately predates a root — and wrong for the roots themselves, which
+  // this repository pins and therefore has.
+  //
+  // Found by a sibling: a test pinned a commit that lived only on a branch, the
+  // branch was deleted, and in CI the assertion silently inverted rather than
+  // failing.
+  for (const [name, commit] of Object.entries(roots)) {
+    if (!resolves(commit)) {
+      console.error(
+        `${name} ${commit} does not resolve in this clone. This check compares ` +
+          'ancestry against it, and an unknown root would make every parent look ' +
+          'like instance content — a pass that compared nothing. Fetch full ' +
+          'history (fetch-depth: 0) or fix the pin in ' +
+          'scripts/template-quarantine.json.',
+      )
+      process.exit(1)
+    }
   }
 
   let merges

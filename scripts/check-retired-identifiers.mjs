@@ -106,12 +106,6 @@ export const RETIRED_IDENTIFIER_EXEMPTIONS = [
     because:
       'the same deliberate record, for the propositions → business_model rename, and it explains the collision with a cell value proposition',
   },
-  {
-    identifier: 'function public.search_blueprint argument layer',
-    because:
-      'the OUT column is `lane` on production and has been since 20260820120100 — that migration renamed it with a textual replace on the live definition, which this replay cannot apply, so the last full CREATE in the series (20260820060000) is the only place the word survives. A finding about a file, not about the database: `check:identifiers:live` sweeps pg_catalog and does not raise it. It goes when the function is next retyped, alongside dropping `layer` as a granularity value',
-    until: '#150',
-  },
 ]
 
 const exempt = (identifier) =>
