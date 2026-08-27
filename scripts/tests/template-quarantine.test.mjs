@@ -99,18 +99,26 @@ test('every quarantined path carries a reason', () => {
  *
  *   the template's line — the second parent of the graft merge (fbb4b24)
  *   ours, from before the graft
- *   ours, from after it (#144 part 3) — the shape a PR's second parent has
+ *   ours, from after it (the #149 merge) — the shape a PR's second parent has
  */
 const TEMPLATE_SIDE = '0fd6ca05d00ea7df5d78657d1f0a8cc72af59923'
 const OURS_BEFORE_GRAFT = '6b4646cf808a3e8238adfafc3848127779b7b5cc'
-const OURS_AFTER_GRAFT = 'f8273ba9e714e7e5260608e0b2ba367a90f3abb8'
+const OURS_AFTER_GRAFT = '4312ecf12789c2ba08e34bf2613ba96c4f89db6a'
 
 /**
  * Full history or nothing. A shallow clone cannot answer an ancestry question,
  * and a test that skips when it cannot see is the failure mode this whole file
  * argues against — `.github/workflows/gates.yml` sets `fetch-depth: 0` for it.
+ *
+ * EVERY PINNED COMMIT IS ALSO CHECKED FOR PRESENCE, because `carriesTemplateContent`
+ * answers false for a commit it cannot resolve — so an absent pin does not fail,
+ * it INVERTS. `OURS_AFTER_GRAFT` was originally a commit on
+ * `integrate/vocabulary-and-guards`; the branch was merged and deleted, CI's
+ * clone no longer had the object, and this file went red with `false !== true`
+ * and no hint as to why. The pins are now commits on `main`, which is never
+ * rewritten, and their presence is asserted rather than assumed.
  */
-function requireFullHistory() {
+function requireFullHistory(...pins) {
   const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
     encoding: 'utf8',
   }).trim()
@@ -119,15 +127,33 @@ function requireFullHistory() {
     'false',
     'this test needs full history — set fetch-depth: 0 on the job that runs it',
   )
+  for (const commit of pins) {
+    let resolved = false
+    try {
+      execFileSync('git', ['rev-parse', '--verify', `${commit}^{commit}`], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+      resolved = true
+    } catch {
+      resolved = false
+    }
+    assert.ok(
+      resolved,
+      `${commit} is not in this clone, so every assertion about it would answer ` +
+        `false rather than fail. Pin a commit on main — a branch tip stops ` +
+        `existing the moment the branch is deleted.`,
+    )
+  }
 }
 
 test('a commit from the template line carries template content', () => {
-  requireFullHistory()
+  requireFullHistory(TEMPLATE_SIDE)
   assert.equal(carriesTemplateContent(TEMPLATE_SIDE, ROOTS), true)
 })
 
 test('our own commits do not, on either side of the graft', () => {
-  requireFullHistory()
+  requireFullHistory(OURS_AFTER_GRAFT, OURS_BEFORE_GRAFT)
   // The regression: after the graft our commits descend from the template root
   // too, so a template-root test alone calls this one upstream content — and
   // the second parent of a PR's synthetic merge commit is exactly this shape.
@@ -136,7 +162,7 @@ test('our own commits do not, on either side of the graft', () => {
 })
 
 test('the template root alone would have misclassified our branch', () => {
-  requireFullHistory()
+  requireFullHistory(OURS_AFTER_GRAFT)
   // Stated as its own case so the reason for the instance root cannot be
   // deleted as redundant by someone simplifying the manifest.
   const templateRootOnly = { ...ROOTS, instanceRoot: '0000000000000000000000000000000000000000' }
