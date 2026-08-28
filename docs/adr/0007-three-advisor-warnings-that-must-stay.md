@@ -72,14 +72,20 @@ Writing it down surfaced two identifiers that name nothing:
 
 - `authoringErrors.ts` matched on `layers_path_row_unique` to produce "Two lanes
   ended up in the same position." No constraint has ever had that name — the
-  object is `layers_path_row_idx`, renamed to `lanes_path_row_idx` in
-  `20260820120000`, and it is a **plain index, not a unique one**. The branch
-  could never fire. It is removed rather than renamed, because renaming it would
-  imply a uniqueness rule the schema does not have.
+  object on those two columns was `lanes_path_row_idx`, a **plain index, not a
+  unique one**, so the branch could never fire. It was removed rather than
+  renamed, because renaming it would have implied a uniqueness rule the schema
+  did not have.
 - `20260821270000`'s comment justifies its statement ordering with "`unique
-  (path_id, position)` is not deferred". No such constraint exists on
-  `public.lanes`. The ordering is harmless either way; the reasoning is wrong.
+  (path_id, position)` is not deferred". No such constraint existed on
+  `public.lanes` when that was written. The ordering is harmless either way;
+  the reasoning was wrong.
 
-Whether lane position *should* be unique per path is a real question and is
-filed separately. It is not settled here, because adding a uniqueness rule to
-live data is a schema decision with its own migration and its own risk.
+Both are settled by `20260828130000`, which added
+`lanes_path_position_unique` — `unique (path_id, position) deferrable initially
+deferred` — over live data carrying no collision, and dropped the now-duplicate
+`lanes_path_row_idx`. The deferral is load-bearing rather than decorative:
+`reorder_lanes` renumbers with one UPDATE per lane inside a single transaction,
+so any swap collides transiently, and `add_lane` opens a slot with one
+self-colliding UPDATE. The lane message is back in `authoringErrors.ts`, on the
+name the schema now carries.

@@ -49,6 +49,17 @@ const TRANSLATIONS: Array<{ match: string; message: string }> = [
     message: 'Two columns ended up in the same position. Reload and try the move again.',
   },
   {
+    // Restored with #118, which made the rule real. The predecessor of this
+    // entry matched `layers_path_row_unique`, a name nothing has ever carried
+    // — the object on those columns was a plain index — so it could never
+    // fire, and #117 deleted it rather than rename it onto a rule the schema
+    // did not have. `lanes_path_position_unique` is that rule: deferred, so
+    // this text can only appear when a reorder SETTLED on two lanes in one
+    // slot, never mid-move.
+    match: 'lanes_path_position_unique',
+    message: 'Two lanes ended up in the same position. Reload and try the move again.',
+  },
+  {
     // A findings fingerprint collision is neither a name nor a position: it is
     // a reopen racing a twin that is already open, which the partial unique
     // index refuses by design (see docs/adr/0007). Match it before the generic

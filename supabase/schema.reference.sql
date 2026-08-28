@@ -91,7 +91,13 @@ create table public.lanes (
   tools jsonb not null default '[]'::jsonb,
   origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- One lane per slot. Deferred because reorder_lanes renumbers one statement
+  -- per lane and add_lane opens a slot with a single self-colliding UPDATE
+  -- (20260828130000); path_steps_path_column_unique is deferred for the same
+  -- reason.
+  constraint lanes_path_position_unique
+    unique (path_id, position) deferrable initially deferred
 );
 
 create table public.steps (
