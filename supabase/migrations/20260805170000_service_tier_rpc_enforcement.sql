@@ -25,10 +25,14 @@ revoke execute on function public.rename_owner_tag(text, text) from public, anon
 do $outer$
 declare
   target record;
+  -- Explicit `||`, not adjacency. Postgres concatenates two string constants
+  -- separated by whitespace containing a newline, but the continuation may not
+  -- carry its own `E` prefix — `E'a\n' E'b\n'` is a syntax error, which is what
+  -- this was until #148 fed the file to a parser.
   guard constant text :=
-    E'  if not public.is_service_account() then\n'
-    E'    raise exception ''This account cannot edit the blueprint''\n'
-    E'      using errcode = ''42501'';\n'
+    E'  if not public.is_service_account() then\n' ||
+    E'    raise exception ''This account cannot edit the blueprint''\n' ||
+    E'      using errcode = ''42501'';\n' ||
     E'  end if;\n';
   body text;
   new_def text;

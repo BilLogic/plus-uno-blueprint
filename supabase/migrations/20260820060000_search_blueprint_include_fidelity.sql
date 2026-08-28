@@ -382,7 +382,7 @@ begin
     select * from cell_rows
     union all
     select * from structural_rows
-  )
+  ),
   -- The result the caller asked for, ranked and capped. Everything below
   -- describes THIS set, so it has to be materialised before the includes.
   picked_rows as (

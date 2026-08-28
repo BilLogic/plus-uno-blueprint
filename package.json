@@ -28,6 +28,7 @@
     "check:identifiers": "node scripts/check-retired-identifiers.mjs",
     "check:identifiers:live": "node scripts/check-retired-identifiers.mjs --service-role",
     "check:database-names": "node scripts/check-database-names.mjs",
+    "check:migration-syntax": "node scripts/check-migration-syntax.mjs",
     "check:copy": "vitest run scripts/tests/retired-copy.test.mjs"
   },
   "dependencies": {
@@ -70,6 +71,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
+    "libpg-query": "^18.1.4",
     "supabase": "^2.106.0",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.3",
