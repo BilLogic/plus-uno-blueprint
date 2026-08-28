@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: The in-app canvas agent — loop, rounds and batch etiquette, tier and mobile rosters, system-prompt assembly, UI bridge, sessions, and the pinned-package contract the rulebook arrives through.
-sources: src/lib/agent/loop.ts, src/lib/agent/skills.ts, src/lib/agent/uiBridge.ts, src/lib/agent/uiCommands.ts, src/lib/agent/sessions.ts, src/lib/agent/persistence.ts, src/lib/agent/role.md
+sources: src/lib/agent/loop.ts, src/lib/agent/skills.ts, src/lib/agent/uiBridge.ts, src/lib/agent/uiCommands.ts, src/lib/agent/sessions.ts, src/lib/agent/persistence.ts, src/lib/agent/role.md, src/lib/agent/canvas-adapter.md
 last-reviewed: 2026-08-26
 ---
 
@@ -57,8 +57,10 @@ Built fresh every round by `buildSystem` (`loop.ts`):
 1. `src/lib/agent/role.md` — the service-designer posture. One file, two
    loaders: `?raw` in the app, `readFileSync` in the eval harness, so
    there is no copy to drift.
-2. `canvas-adapter.md` embedded in full — the plugin rulebook's
-   translation to this app's tools. The deeper references sit behind the
+2. `src/lib/agent/canvas-adapter.md` embedded in full — the plugin
+   rulebook's translation to this app's tools, and the one reference this
+   instance overrides rather than installs (see "Skills and the
+   pinned-package contract" below). The deeper references sit behind the
    `get_reference` tool instead (runtime progressive disclosure).
 3. The active skill's SKILL.md, when the message invoked one, plus a
    framing note: canvas agent, not IDE agent — skip file/script mechanics,
@@ -117,10 +119,12 @@ The contract:
 - **How the app reads them**: `agentic-service-blueprinting` is a
   dependency, pinned by git URL at a tagged release
   (`package.json`; the lockfile pins the resolved commit). `skills.ts`
-  imports `skills/<name>/SKILL.md?raw`; `read.ts` imports the eighteen
-  references from `references/` and `skills/<name>/references/` and serves
-  them through `get_reference`. `scripts/agent-harness/run.mjs` resolves
-  the same files off the same install, so the harness and the app cannot
+  imports `skills/<name>/SKILL.md?raw`; `read.ts` imports seventeen of the
+  eighteen references from `references/` and `skills/<name>/references/`
+  and serves them through `get_reference`. The eighteenth,
+  `canvas-adapter`, is the instance override below.
+  `scripts/agent-harness/run.mjs` resolves the same files off the same
+  install (and the same override), so the harness and the app cannot
   disagree about what the agent read.
 - **How it updates**: bump the pin. Nothing here is editable in a way that
   sticks, which is the point — there is no second copy to fork.
@@ -140,27 +144,42 @@ The contract:
   (`scripts/template-quarantine.json`, CI:
   `.github/workflows/template-quarantine.yml`) fails the merge that takes
   the package's version of one. The rulebook is no longer among the files
-  that merge; it installs.
+  that merge; it installs — except `src/lib/agent/canvas-adapter.md`, which
+  is instance-owned and quarantined alongside `role.md`.
 - Adding a reference means adding it upstream, bumping the pin, and
   updating `referenceNames.ts` — `read.ts` asserts the record matches the
   name list at module init, so a miss fails the first test that touches
   the tools.
 
-⚠ **The pinned rulebook and this app's tool surface have diverged.** The
-package's `canvas-adapter.md` is normative for the canvas agent and names
-the package's own registry: `read_reference`, `list_scenarios`,
-`record_finding`, `set_finding_status`, `add_step`, `add_lane`,
-`update_cell_content`, `update_cell_spec`, `set_cell_dependency`. This
-app has `get_reference`, `list_blueprint`, `search_blueprint`,
-`create_finding`, `update_finding`, `create_step`, `create_lane`,
-`update_cell`, `create_cell_dependency`. It also says
-"trigger-vs-needs semantics" where this instance's constraint is
+**The adapter is the one reference this instance overrides** (#115).
+`src/lib/agent/canvas-adapter.md` replaces the package's
+`references/canvas-adapter.md`; `loop.ts`, `read.ts` and the eval harness
+all resolve the override, and the package's copy reaches nothing. It is
+not a vendored fork — everything but the surface rows and the dependency
+vocabulary is upstream's text, kept structurally identical so the next pin
+bump diffs cleanly.
+
+Why an override rather than a convergence: the adapter's two rows
+ENUMERATE TOOL NAMES and call each "the FULL surface", so a rulebook
+shared by two installations with different registries is wrong for at
+least one of them. The pinned copy named twelve tools this app lacks
+(`read_reference`, `list_scenarios`, `get_compare_diff`,
+`get_deletion_impact`, `record_finding`, `set_finding_status`, `add_step`,
+`add_lane`, `rename_path`, `set_cell_dependency`, `update_cell_content`,
+`update_cell_spec`) and omitted thirty-three it has, and said
+"trigger-vs-needs semantics" where this constraint is
 `check (kind in ('leads_to','enables'))` (migration
-`20260820180000_sets_off_becomes_leads_to.sql`). Each tool's own
-description carries the real binding rules and the adapter says to trust
-them over memory, so the agent is not blind — but the adapter's two
-"FULL surface" rows are wrong here until either the tool names converge or
-the adapter is written instance-neutral. Do not fix it by re-vendoring.
+`20260820180000_sets_off_becomes_leads_to.sql`).
+
+`npm run check:write-surface` (`scripts/check-write-surface.mjs`, in
+`gates`) is what keeps that true: the two rows against `WRITE_TOOL_NAMES`
+and `READ_TOOL_NAMES` in both directions, the enum against the live
+constraint, and — the assertion the rest depend on — that `loop.ts` still
+serves the override. Five INSTALLED references still teach the retired
+`trigger`/`needs` pair and cannot be edited from here, so the override
+names them in a "Superseded package references" block and the check holds
+that list to what the package actually says, both ways. Do not fix any of
+this by re-vendoring the package.
 
 Known follow-ups for the whole agent subsystem are tracked in
 `todos/021-pending-p2-agent-harness-review-followups.md`.

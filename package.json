@@ -29,6 +29,7 @@
     "check:identifiers:live": "node scripts/check-retired-identifiers.mjs --service-role",
     "check:database-names": "node scripts/check-database-names.mjs",
     "check:migration-syntax": "node scripts/check-migration-syntax.mjs",
+    "check:write-surface": "node scripts/check-write-surface.mjs",
     "check:copy": "vitest run scripts/tests/retired-copy.test.mjs"
   },
   "dependencies": {
