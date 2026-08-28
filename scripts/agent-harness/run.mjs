@@ -105,6 +105,9 @@ async function rest(pathAndQuery) {
 // ---------------------------------------------------------------------------
 const ROLE = readFileSync(resolve(ROOT, 'src/lib/agent/role.md'), 'utf8').trimEnd()
 
+/** The instance's canvas adapter — see `referencePath` below and #115. */
+const ADAPTER_OVERRIDE = 'src/lib/agent/canvas-adapter.md'
+
 
 // The rulebook is the INSTALLED package, not a copy in this repo — the
 // same files the app pulls in with `?raw`, read here with readFileSync.
@@ -127,6 +130,10 @@ for (const dir of [
 // Resolving through REFERENCE_NAMES keeps the harness offering exactly the
 // list the app offers, and throws here if the package stopped shipping one.
 function referencePath(name) {
+  // The adapter is the one reference this instance overrides — the package's
+  // copy names the package's registry (#115). Same override the app serves
+  // via `?raw`, so the harness and the app read one text, not two.
+  if (name === 'canvas-adapter') return resolve(ROOT, ADAPTER_OVERRIDE)
   const path = REFERENCE_PATHS.get(name)
   if (!path) throw new Error(`reference "${name}" is not in the installed package`)
   return path

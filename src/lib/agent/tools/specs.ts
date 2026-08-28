@@ -90,6 +90,79 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
   'list_findings',
 ])
 
+/**
+ * The reading surface — the row `canvas-adapter.md` calls "the FULL read
+ * surface; nothing else reads".
+ *
+ * CLASSIFIED BY THE ADAPTER'S OWN TEST, not by subtraction: a read tool
+ * NEITHER MOVES THE USER'S CANVAS NOR CHANGES A ROW. The complement of
+ * `WRITE_TOOL_NAMES` is NOT this set — it sweeps in `focus_cell`,
+ * `set_sidebar` and the rest of `INTERFACE_TOOL_NAMES`, which write nothing
+ * and are still not reads: they change what the human is looking at, and the
+ * adapter's read row promises the opposite in the same sentence.
+ *
+ * Two calls worth naming, because both go the way a subtraction would not:
+ *
+ *   `list_ui_commands` IS a read — it reports which controls exist right
+ *   now and touches neither the canvas nor a row. `ui_command`, which fires
+ *   them, is not.
+ *
+ *   `measure_deletion_impact` IS a read — `measure_` is derived-not-stored
+ *   per the naming rule above, and the deletion it measures is one it
+ *   cannot perform.
+ *
+ * `MOBILE_READ_TOOL_NAMES` is a different question and cannot stand in for
+ * this: it is a UX roster that deliberately CONTAINS canvas movers (a phone
+ * still navigates) and deliberately OMITS reads (`search_blueprint`,
+ * `list_ui_commands`).
+ */
+export const READ_TOOL_NAMES = new Set([
+  'get_reference',
+  'list_references',
+  'list_blueprint',
+  'search_blueprint',
+  'get_blueprint',
+  'compare_blueprint',
+  'get_cell',
+  'list_lanes',
+  'list_cell_dependencies',
+  'list_slices',
+  'get_slice',
+  'list_owner_tags',
+  'list_stakeholders',
+  'list_evidence',
+  'get_evidence',
+  'get_proposition',
+  'list_sessions',
+  'get_session',
+  'get_ui_state',
+  'get_change_history',
+  'list_ui_commands',
+  'measure_deletion_impact',
+  'list_findings',
+])
+
+/**
+ * The tools that drive the interface — the adapter's "same gestures the human
+ * has" row. They change what the human SEES, never what the database HOLDS.
+ *
+ * `ui_command` is here rather than in either surface because it is genuinely
+ * neither: most of its commands are interface, and the ones its own listing
+ * marks "[changes data]" count against the write batch. Putting it in
+ * `WRITE_TOOL_NAMES` would make the loop bill every zoom as a write; putting
+ * it in `READ_TOOL_NAMES` would tell the agent `undo_last_change` is a read.
+ */
+export const INTERFACE_TOOL_NAMES = new Set([
+  'open_phase',
+  'open_scenario',
+  'focus_cell',
+  'open_cell_panel',
+  'set_canvas_mode',
+  'set_sidebar',
+  'annotate_cells',
+  'ui_command',
+])
+
 /** The tools that mutate data — the loop enforces batch etiquette on these. */
 export const WRITE_TOOL_NAMES = new Set([
   'create_step',
@@ -821,3 +894,39 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
 ]
+
+/**
+ * Every declared tool belongs to exactly one surface.
+ *
+ * Init-time, following `read.ts`'s REFERENCES/REFERENCE_NAMES check: the
+ * fastest failure for a tool added to `TOOL_SPECS` and classified nowhere.
+ * Without it a new tool DEFAULTS TO UNCLASSIFIED, and unclassified reads as
+ * "not in the read row and not in the write row" — which is exactly the
+ * shape of plus-uno-blueprint#115, where the rulebook's two "FULL surface"
+ * rows omitted thirty-three tools the app had.
+ *
+ * `scripts/check-write-surface.mjs` then holds the two rosters to the
+ * adapter's prose; this holds them to the declarations.
+ */
+{
+  const declared = TOOL_SPECS.map((spec) => spec.name)
+  const surfaces = { read: READ_TOOL_NAMES, interface: INTERFACE_TOOL_NAMES, write: WRITE_TOOL_NAMES }
+  const homes = (name: string) =>
+    Object.entries(surfaces).filter(([, set]) => set.has(name)).map(([surface]) => surface)
+
+  const orphans = declared.filter((name) => homes(name).length === 0)
+  const shared = declared.filter((name) => homes(name).length > 1)
+  const ghosts = Object.entries(surfaces).flatMap(([surface, set]) =>
+    [...set].filter((name) => !declared.includes(name)).map((name) => `${surface}:${name}`),
+  )
+
+  if (orphans.length || shared.length || ghosts.length)
+    throw new Error(
+      'TOOL_SPECS and the surface rosters disagree — every tool belongs to exactly one of ' +
+        `READ_TOOL_NAMES / INTERFACE_TOOL_NAMES / WRITE_TOOL_NAMES.${
+          orphans.length ? ` Classified nowhere: ${orphans.join(', ')}.` : ''
+        }${shared.length ? ` In more than one: ${shared.join(', ')}.` : ''}${
+          ghosts.length ? ` Rostered but not declared: ${ghosts.join(', ')}.` : ''
+        }`,
+    )
+}
