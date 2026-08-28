@@ -37,12 +37,13 @@
  * statements DESCRIBE. It needs no credentials, so it runs on every pull
  * request. IT IS A CHECK ON THE REPOSITORY, NOT ON THE DATABASE.
  *
- * #148 is the reason to state that in capitals: none of the 816 migration
- * versions in this repository appears in production's
- * `supabase_migrations.schema_migrations`. The schema was applied over MCP
- * `apply_migration` and the files were written separately afterwards, so the
- * series has never been parsed by Postgres and at least one file is a syntax
- * error. Anything applied that way — which is everything — is invisible to this
+ * #148 is the reason to state that in capitals: 818 of this repository's 822
+ * migration versions do not appear in production's
+ * `supabase_migrations.schema_migrations` (four do — see migration-replay.mjs,
+ * and note this line previously claimed none did, out of 816). The schema was
+ * applied over MCP `apply_migration` and the files were written separately
+ * afterwards, so until `check:migration-syntax` landed no Postgres had read
+ * them, and three did not parse. Anything applied that way — which is everything — is invisible to this
  * half. That is how #143's nine broken bodies and #147's ACL regression got in,
  * and it is the hole `check:contract:live` was built for.
  *
