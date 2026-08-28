@@ -27,6 +27,7 @@
     "check:bot-probe": "node scripts/check-bot-contract-probe.mjs",
     "check:identifiers": "node scripts/check-retired-identifiers.mjs",
     "check:identifiers:live": "node scripts/check-retired-identifiers.mjs --service-role",
+    "check:rls-posture:live": "node scripts/check-rls-posture.mjs",
     "check:database-names": "node scripts/check-database-names.mjs",
     "check:migration-syntax": "node scripts/check-migration-syntax.mjs",
     "check:write-surface": "node scripts/check-write-surface.mjs",

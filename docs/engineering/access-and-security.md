@@ -32,15 +32,38 @@ are server-side:
    (`20260805150000_service_account_tier.sql`). `is_service_account()`
    reads `app_metadata.role` from the **JWT** — set server-side in
    `auth.users.raw_app_meta_data`; users cannot self-assign
-   (`user_metadata` is ignored on purpose).
+   (`user_metadata` is ignored on purpose). `stakeholders` uses the other
+   valid shape — no companion, the call inside the permissive policy — and
+   the two agent tables use neither, gating per user instead (see the
+   schema tour). Those are the only three exceptions and all three are
+   asserted.
 2. **RPC tier guards.** The 21 authoring RPCs are SECURITY DEFINER and
    bypass RLS, so each body asserts `is_service_account()` itself
    (`20260805170000_service_tier_rpc_enforcement.sql` — injected by a DO
    block over `pg_proc` so no function is missed and none drifts).
 3. **Grants.** Explicit, narrow: `EXECUTE` revoked from `public`/`anon` on
    every write RPC; column-scoped UPDATE grants on `findings` and cell
-   text/spec columns; `TRUNCATE` revoked everywhere; storage tiered for
-   `slice-illustrations` (`20260730090000`, `20260805170000`).
+   text/spec columns; storage tiered for `slice-illustrations`
+   (`20260730090000`, `20260805170000`). `anon` holds no
+   INSERT/UPDATE/DELETE/TRUNCATE anywhere in `public` since
+   `20260828121000` — it had them on twelve tables, unreachable only
+   because no permissive write policy named `anon`, which is the shape a
+   one-word policy edit turns into an open write.
+
+   **`TRUNCATE` is NOT revoked everywhere**, whatever this section used to
+   say: `authenticated` still holds it on nine tables, both agent tables
+   included. TRUNCATE bypasses RLS, so there the grant is the only gate.
+   PostgREST cannot issue it, which is why it has been survivable; it is
+   named in `scripts/check-rls-posture.mjs` under what that check
+   deliberately does not assert, and closing it is its own change.
+4. **A check that fails.** `npm run check:rls-posture:live` asks the
+   database, not the files: RLS on for every base table, no permissive
+   write policy to `anon`/`public`, no anon write grant, and every
+   reachable authenticated write either service-gated or holding a
+   documented exemption that must prove its substitute gate. It needs
+   `SUPABASE_DB_URL`, so like `check:contract:live` and
+   `check:identifiers:live` it is manual — a privileged database
+   credential does not belong in this repository's CI.
 
 Roles live in the JWT minted at sign-in — a role change is invisible to a
 live session until refresh (the provider refreshes once per boot).
@@ -86,8 +109,18 @@ stored; findings may only be INSERTed as `open` (dedupe is "dismissed
 stays dismissed", so a direct-status insert could silently suppress real
 findings forever).
 
-**Agent tables** — `agent_sessions` / `agent_messages`, open to all
-`authenticated` (chatting is what viewers are for), no anon policies.
+**Agent tables** — `agent_sessions` / `agent_messages`, gated PER USER, not
+per tier. Chatting is what a viewer account is for, so a service gate here
+would close a confidentiality hole by deleting the feature; the gate is
+`agent_sessions.user_id` instead, reached through `session_id` for messages,
+via `public.owns_agent_session(uuid)`. No anon policies. A NULL `user_id` means
+the row predates ownership (2026-08-28) and is readable by service accounts
+only — 33 sessions and 340 messages are in that state, deliberately not
+backfilled because nothing in either table records who wrote it. New rows
+cannot join them: the insert policy is the strict `user_id = auth.uid()`.
+Before `20260828120000` there was one blanket `for all to authenticated using
+(true)` policy per table and any signed-in account could read, edit or delete
+everybody's transcript (#60, #136).
 
 **`semantic_search` schema** — the retrieval index over the blueprint, and
 this repo's to own: the DDL used to be vendored in the uno-bot repo, which

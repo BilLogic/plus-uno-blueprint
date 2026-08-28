@@ -268,7 +268,11 @@ create table public.agent_sessions (
   id uuid primary key,
   title text not null default '',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  -- 20260828120000. NULL = written before ownership was recorded; service
+  -- accounts only. New rows cannot be NULL — the insert policy is the strict
+  -- `user_id = auth.uid()` and the default supplies it.
+  user_id uuid references auth.users (id) on delete cascade default auth.uid()
 );
 
 create table public.agent_messages (
