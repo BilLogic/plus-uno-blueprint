@@ -103,11 +103,13 @@ Two things worth carrying:
   context, not chrome. Rows rehydrated from a previous browser session carry no
   payload and render flat.
 - **The agent's `list_sessions` reads the session store, not the table**, and
-  that is a scoping decision rather than a convenience: `agent_sessions` carries
-  no owner column and its policy is a blanket "authenticated manage agent
-  sessions", so a direct query would hand the agent every user's chat history.
-  Reading the store the session switcher reads means the agent sees exactly what
-  the user sees.
+  that is a scoping decision rather than a convenience. Until 2026-08-28 it was
+  the only gate there was: `agent_sessions` carried no owner column and a
+  blanket "authenticated manage agent sessions" policy, so a direct query would
+  have handed the agent every user's chat history. `user_id` plus per-user RLS
+  now closes that at the database, and this stays regardless — reading the store
+  the session switcher reads means the agent sees exactly what the USER sees,
+  which is narrower than what RLS permits.
 
 Both loading flags are two-part on purpose — "the merge is on the wire" **and**
 "the merge has not started yet, because auth is still resolving" are different
