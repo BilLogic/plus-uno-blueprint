@@ -20,7 +20,11 @@ import { collectAgentUiContext } from '@/lib/agent/uiBridge'
 import { agentUiCommandMutates } from '@/lib/agent/uiCommands'
 import type { AgentAttachment } from '@/lib/agent/attachments'
 import type { AgentSkillCommand } from '@/lib/agent/skills'
-import canvasAdapterDoc from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'
+// The INSTANCE override, not the package's `references/canvas-adapter.md`.
+// The pinned one names a registry this app does not have and an edge
+// vocabulary this database refuses (#115); it reaches no prompt.
+// `scripts/check-write-surface.mjs` fails if this import ever points back.
+import canvasAdapterDoc from '@/lib/agent/canvas-adapter.md?raw'
 import roleDoc from '@/lib/agent/role.md?raw'
 import {
   hasKey,
@@ -56,6 +60,11 @@ const ADAPTERS: Record<string, AgentProviderAdapter> = {
  * skills' progressive disclosure. The four SKILL.mds route through the
  * composer (`skills.ts`), read out of the same installed package as the
  * references — one copy, so the adapter's translation stays a drop-in.
+ *
+ * The adapter is the ONE reference this app overrides (`#115`): its two
+ * "FULL surface" rows are a list of THIS registry's names, so they cannot
+ * come from a package that ships a different one. Everything else still
+ * installs. `src/lib/agent/canvas-adapter.md` carries the whole story.
  */
 const ROLE = roleDoc.trimEnd()
 

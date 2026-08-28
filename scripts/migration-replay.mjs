@@ -39,14 +39,24 @@
  * exists to end documents that assert an interface the code does not have.
  * This replay reports what the REPOSITORY CLAIMS the schema is.
  *
- * #148: not one of the 816 migration versions in `supabase/migrations/` appears
- * in `supabase_migrations.schema_migrations` on production. The ledger holds 685
- * rows whose names match the files exactly and whose versions never do — real
- * wall-clock apply times against the repository's round, hand-picked ones. The
+ * #148: 818 of the 822 migration versions in `supabase/migrations/` do not
+ * appear in `supabase_migrations.schema_migrations` on production. The ledger
+ * holds 693 rows whose names match the files and whose versions are real
+ * wall-clock apply times, against the repository's round, hand-picked ones. The
  * schema was applied over MCP `apply_migration`; the files were written
- * afterwards. So the series has never been parsed by Postgres, and at least one
- * file does not parse at all (`20260820060000_search_blueprint_include_fidelity.sql`
- * opens a CTE with no comma before it).
+ * afterwards.
+ *
+ * This paragraph used to say NOT ONE version appears, and 816/685. All three
+ * numbers were wrong, which is worth leaving on the record given what this
+ * batch of work is for. Four versions do appear —  20260820014414, 20260820014455,
+ * 20260820014607, 20260820015123 — the only four files whose filename is itself
+ * a wall-clock stamp, so somebody copied the applied version back that day. The
+ * counts were simply stale. A docstring asserting an interface the code does not
+ * have is the exact failure these checks exist to catch, and this one was doing
+ * it about the failure itself.
+ *
+ * Three files did not parse; all three are fixed and `check:migration-syntax`
+ * now runs the real Postgres parser over all 822 on every pull request.
  *
  * Two things follow, and both matter more than they look:
  *

@@ -19,7 +19,9 @@ import type { BlueprintData } from '@/types/blueprint'
 import { agentSessionsSnapshot } from '@/lib/agent/sessions'
 import { loadPersistedEvents } from '@/lib/agent/persistence'
 import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
-import canvasAdapter from 'agentic-service-blueprinting/references/canvas-adapter.md?raw'
+// The instance override, not the package's copy — see the REFERENCES note
+// below and `src/lib/agent/canvas-adapter.md`'s own header (#115).
+import canvasAdapter from '@/lib/agent/canvas-adapter.md?raw'
 import dataModel from 'agentic-service-blueprinting/references/data-model.md?raw'
 import elicitationProtocol from 'agentic-service-blueprinting/skills/map/references/elicitation-protocol.md?raw'
 import cocreatePlaybook from 'agentic-service-blueprinting/skills/map/references/cocreate-playbook.md?raw'
@@ -61,6 +63,14 @@ const UUID =
  * one copy: these resolve into the installed `agentic-service-blueprinting`
  * package, pinned by the lockfile. Editing a file in the plugin repo and
  * bumping the pin upgrades both; nothing here can be edited instead.
+ *
+ * ONE EXCEPTION, and it is deliberate. `canvas-adapter` is served from
+ * `src/lib/agent/canvas-adapter.md` in this repo, because the package's
+ * copy names the package's registry — twelve tools this app does not have,
+ * thirty-three of ours missing — and calls those rows "the FULL surface"
+ * (#115). A rulebook that enumerates tool names cannot be shared by two
+ * installations with different tools. `scripts/check-write-surface.mjs`
+ * fails if this key ever points back at the package.
  */
 const REFERENCES: Record<string, string> = {
   'canvas-adapter': canvasAdapter,

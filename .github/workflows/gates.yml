@@ -83,3 +83,15 @@ jobs:
       # not parse. It needs no database either: `libpg-query` is the real parser
       # compiled to WebAssembly, so it is a required check like the two above.
       - run: npm run check:migration-syntax
+
+      # The served-rulebook guard (#115). The canvas adapter is spliced into
+      # every system prompt, and the pinned package's copy names a registry
+      # this app does not have. This holds the instance override to
+      # `WRITE_TOOL_NAMES` / `READ_TOOL_NAMES` and to the dependency-kind
+      # constraint, and — the part that needs CI rather than a reviewer —
+      # asserts loop.ts still serves the override, so a pin bump or a reverted
+      # import line cannot silently reinstate the wrong rulebook.
+      #
+      # It reads `node_modules/agentic-service-blueprinting`, so it must run
+      # after `npm ci`; it needs no database and no credential.
+      - run: npm run check:write-surface

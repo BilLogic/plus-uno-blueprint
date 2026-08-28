@@ -14,7 +14,7 @@ refusal, not an attempt. **Deliberately absent: every delete.**
 ## The specs / dispatch split
 
 - **`src/lib/agent/tools/specs.ts`** — pure data: `TOOL_SPECS` (name,
-  description, JSON-schema parameters) plus the two rosters. No imports
+  description, JSON-schema parameters) plus the rosters. No imports
   beyond `referenceNames.ts`, which is a leaf module with **zero**
   imports, precisely so specs stay loadable under plain Node (the harness
   and `.mjs` tests) without dragging in supabase-js or Vite `?raw`
@@ -41,10 +41,27 @@ refusal, not an attempt. **Deliberately absent: every delete.**
 
 ## The rosters
 
+Four sets, and they answer two different questions. `READ_TOOL_NAMES` /
+`INTERFACE_TOOL_NAMES` / `WRITE_TOOL_NAMES` **partition** `TOOL_SPECS` —
+every declared tool is on exactly one, asserted at module init — and that
+partition is what the served rulebook's "FULL surface" rows are graded
+against. `MOBILE_READ_TOOL_NAMES` cuts across all three and is a UX
+whitelist, not a surface.
+
 - **`WRITE_TOOL_NAMES`** — the tools that mutate data. Membership drives
   the batch limiter, viewer-tier refusal, and agent attribution in the
   ledger. Forgetting to list a new write tool here silently exempts it
   from all three — the parity tests exist to catch exactly this.
+- **`READ_TOOL_NAMES`** — the tools that neither move the user's canvas
+  nor change a row. NOT the complement of the write set: the complement
+  sweeps in `focus_cell` and `set_sidebar`, which the read row's own
+  sentence excludes. `list_ui_commands` is a read; `ui_command` is not.
+  Held to `src/lib/agent/canvas-adapter.md`'s read row by
+  `npm run check:write-surface`.
+- **`INTERFACE_TOOL_NAMES`** — the gestures the human also has. Includes
+  `ui_command`, which belongs to neither surface: most of its commands are
+  interface, and the ones marked "[changes data]" count against the write
+  batch.
 - **`MOBILE_READ_TOOL_NAMES`** — the ONLY tools offered while the mobile
   shell is up, for every tier. A **whitelist**, not a write-filter, so a
   new tool defaults to *absent* on mobile until someone deliberately adds
@@ -57,7 +74,12 @@ refusal, not an attempt. **Deliberately absent: every delete.**
 
 1. **Spec** in `specs.ts` — name, a description written for the model
    (say when to call it, not just what it does), parameters. Decide
-   roster membership: is it a write? Should mobile have it (default no)?
+   roster membership: read, interface or write — the module-init partition
+   check refuses a tool classified nowhere — and should mobile have it
+   (default no)? Then add it to the matching row in
+   `src/lib/agent/canvas-adapter.md`, or `npm run check:write-surface`
+   fails: the rows say "that is the FULL surface", and the agent reads
+   that as permission.
 2. **Dispatch** in `registry.ts`, calling an existing wrapper. If the
    wrapper doesn't exist, that's a write-path change first — see
    [access-and-security](access-and-security.md#authoring-writes).
@@ -91,8 +113,9 @@ rulebook, run before shipping prompt/tool changes.
 - **Reality contract** (header of `run.mjs`): reads are REAL (Supabase
   anon over PostgREST — the same rows the app sees); writes are DRY-RUN
   (recorded in the trace, never sent); UI-state tools are per-case mocks.
-  The system prompt is the same `role.md` + the same `canvas-adapter.md`
-  the app loads, resolved out of the same installed package — no copy, no
+  The system prompt is the same `role.md` + the same
+  `src/lib/agent/canvas-adapter.md` the app loads, with every other
+  reference resolved out of the same installed package — no copy, no
   drift.
 - **Cases**: `cases.md` is the human-readable suite; `cases.mjs` the
   machine form. Every rubric line traces to a written rule (skill
