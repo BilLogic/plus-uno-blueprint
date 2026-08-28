@@ -418,21 +418,39 @@ function ServiceOverviewViewImpl({
     setScenarioDisplayViewType,
   })
 
-  /*
-    What the canvas is actually drawing — one happy path per scenario.
+  /**
+   * What the canvas actually draws, per scenario.
+   *
+   * A phase row is a survey — one happy path each (decided 2026-08-21: the
+   * cross-scenario path filter is gone, paths belong to a scenario). The
+   * FOCUSED scenario is the exception: it draws what the reader picked in the
+   * path selector, which is the only reason that control exists.
+   *
+   * ONE resolver, used by the panels below AND by `overviewSelectedPathIds`.
+   * They used to be two. The panels were handed `resolveHappyPathIds` while
+   * this memo called `resolveSelectedPathIds`, so nothing the reader selected
+   * ever reached a panel: a focused scenario with two paths chosen drew one
+   * band, `focusedScenarioExpanded` could never become true, and Merged had a
+   * single blueprint to merge and fell through to Stacked without a word. The
+   * header meanwhile read the selection and reported two. Whatever these two
+   * are, they have to be the same thing, or the canvas and the control that
+   * drives it disagree in a way nothing raises.
+   */
+  const resolveDrawnPathIds = useCallback(
+    (scenarioId: string, paths: PathListItem[]) =>
+      scenarioId === focusedScenarioId
+        ? resolveSelectedPathIds(scenarioId, paths)
+        : resolveHappyPathIds(scenarioId, paths),
+    [focusedScenarioId, resolveSelectedPathIds, resolveHappyPathIds],
+  )
 
-    This used to be a user selection made from a phase-level filter. That
-    filter is gone (decided 2026-08-21: paths belong to a scenario), so the
-    set is derived rather than chosen, and the camera keys and gates below
-    read it exactly as they read the selection before.
-  */
   const overviewSelectedPathIds = useMemo(() => {
     const ids: string[] = []
     for (const [scenarioId, paths] of pathsByScenario) {
-      ids.push(...resolveSelectedPathIds(scenarioId, paths))
+      ids.push(...resolveDrawnPathIds(scenarioId, paths))
     }
     return ids
-  }, [pathsByScenario, resolveSelectedPathIds])
+  }, [pathsByScenario, resolveDrawnPathIds])
 
   const overviewReady = !slidesLoading && !blueprintsLoading
   // Content holds until the bar has visibly REACHED 100%: readiness flips
@@ -1123,10 +1141,12 @@ function ServiceOverviewViewImpl({
                             slides={slides}
                             pathsByScenario={pathsByScenario}
                             blueprintsByPathId={blueprintsByPathId}
-                            /* A phase row is a survey — the happy path only.
-                               A focused scenario uses the reader's own
-                               selection, below. */
-                            getSelectedPathIds={resolveHappyPathIds}
+                            /* A phase row is a survey — the happy path only —
+                               except for the focused scenario, which draws the
+                               reader's selection. `resolveDrawnPathIds` is that
+                               rule; see its doc comment for what happened when
+                               this prop and the camera keys used two. */
+                            getSelectedPathIds={resolveDrawnPathIds}
                             displayViewType={overviewViewType}
                             onOpenPhase={canvasNavigate}
                             openScenario={canvasNavigate}
