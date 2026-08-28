@@ -76,3 +76,10 @@ jobs:
       # running one on its own.
       - run: npm run check:identifiers
       - run: npm run check:database-names
+
+      # The parse gate (#148). `supabase/migrations/` is not the apply path —
+      # the schema went in over MCP `apply_migration` and the files were written
+      # afterwards — so until this ran, no Postgres had ever read them. Three did
+      # not parse. It needs no database either: `libpg-query` is the real parser
+      # compiled to WebAssembly, so it is a required check like the two above.
+      - run: npm run check:migration-syntax
