@@ -14,7 +14,7 @@ import {
   hasDevAuthoringUi,
   isSupabaseConfigured,
 } from '../lib/supabase'
-import { setSessionReconciler } from '../lib/sessionReconcile'
+import { sessionRefresher, setSessionReconciler } from '../lib/sessionReconcile'
 import type { Database } from '../types/database'
 
 type SupabaseContextValue = {
@@ -136,9 +136,9 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
   */
   useEffect(() => {
     if (!client) return
-    setSessionReconciler(async () => {
-      await client.auth.refreshSession()
-    })
+    // `sessionRefresher`, not an inline `await refreshSession()`: that call
+    // resolves on failure, and the reason is written where the function is.
+    setSessionReconciler(sessionRefresher(client))
     return () => setSessionReconciler(null)
   }, [client])
 

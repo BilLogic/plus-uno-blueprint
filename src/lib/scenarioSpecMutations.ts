@@ -1,6 +1,7 @@
 import type { EntityStatus } from '@/lib/entityStatus'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { Database } from '@/types/database'
 
@@ -26,7 +27,7 @@ export async function updateScenarioSummary(
     .update({ summary: summary.trim() || null })
     .eq('id', scenarioId)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(data, 'scenario')
 
   if (options.record !== false) {
@@ -73,7 +74,7 @@ export async function updatePathSpec(
     })
     .eq('id', pathId)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(data, 'path')
 
   if (options.record !== false) {

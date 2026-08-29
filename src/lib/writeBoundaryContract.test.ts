@@ -127,3 +127,73 @@ test('nothing outside the mutation layer writes to a table directly', () => {
         `failure, then recordChange(). See setSliceFrameIllustration.`,
   ).toEqual([])
 })
+
+/**
+ * …and every write that fails translates the failure before raising it.
+ *
+ * The companion rule to the one above, and it was false for longer. The
+ * boundary test made the `*Mutations` family the only place a table may be
+ * written; it said nothing about what those modules do when the write is
+ * refused, and eight of them did the worst available thing:
+ * `throw new Error(error.message)`. Two consequences, neither visible at the
+ * call site.
+ *
+ * The reader saw Postgres. `new row violates row-level security policy for
+ * table "phases"` went to the panel as the error text, which is precisely what
+ * `AuthoringError` exists to stop — `raw` is for the console, `message` is for
+ * a person.
+ *
+ * And `toAuthoringError` is where a denial re-derives the tier (#136). A
+ * module that raises around it is a module where a demoted session keeps being
+ * offered the button, because the one signal that the local tier is stale
+ * never reaches the reconciler. That made the reconcile look installed while
+ * covering only five of the thirteen modules that write.
+ *
+ * So: the same modules the boundary test permits to write are the modules
+ * required to translate. Nothing here inspects the reads — a hook raising
+ * `error.message` from a `.select()` is a different problem with a different
+ * answer.
+ */
+const RAW_THROW = /throw new Error\(\s*[A-Za-z_$][\w$]*\.message\s*\)/g
+
+/** Written by hand for a person, not forwarded from the database. */
+const HUMAN_SENTENCE_OWNERS: ReadonlySet<string> = new Set([
+  // `agent/persistence.ts` writes the transcript, not the board: its failures
+  // are not authoring failures and have no tier to reconcile.
+  'lib/agent/persistence.ts',
+])
+
+test('a write that is refused is translated, never forwarded raw', () => {
+  const offenders: string[] = []
+
+  for (const file of walk(SRC)) {
+    const relative = file.slice(SRC.length + 1)
+    if (!isExempt(relative)) continue
+    if (HUMAN_SENTENCE_OWNERS.has(relative)) continue
+    const source = readFileSync(file, 'utf-8')
+    for (const match of source.matchAll(RAW_THROW)) {
+      const line = source.slice(0, match.index).split('\n').length
+      offenders.push(`${relative}:${line} — ${match[0]}`)
+    }
+  }
+
+  expect(
+    offenders,
+    offenders.length === 0
+      ? ''
+      : `Raw database text raised at the reader:\n  ${offenders.join('\n  ')}\n\n` +
+        `Use \`throw toAuthoringError(error)\`. It phrases the failure for a ` +
+        `person, keeps the database's own text on \`.raw\` for the console, ` +
+        `and is where an authorization denial re-derives the session tier.`,
+  ).toEqual([])
+})
+
+test('the translation rule can fail', () => {
+  // The guard above is a regex over source text, which is the kind of check
+  // that passes because it matched nothing. Prove it matches the shape it
+  // claims to, and does not match the shape it permits.
+  expect('if (error) throw new Error(error.message)'.match(RAW_THROW)).not.toBeNull()
+  expect('throw new Error(readError.message)'.match(RAW_THROW)).not.toBeNull()
+  expect('throw toAuthoringError(error)'.match(RAW_THROW)).toBeNull()
+  expect('throw new Error(`That ${subject} no longer exists.`)'.match(RAW_THROW)).toBeNull()
+})

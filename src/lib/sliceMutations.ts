@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { toAuthoringError } from '@/lib/authoringErrors'
 import {
   asUpdatedAtToken,
   readWriteOutcome,
@@ -47,13 +48,13 @@ export async function sliceDeletionImpact(
     .select('title')
     .eq('id', sliceId)
     .single()
-  if (sliceError) throw new Error(sliceError.message)
+  if (sliceError) throw toAuthoringError(sliceError)
 
   const { data: items, error: itemsError } = await client
     .from('slice_items')
     .select('cell_ids')
     .eq('slice_id', sliceId)
-  if (itemsError) throw new Error(itemsError.message)
+  if (itemsError) throw toAuthoringError(itemsError)
 
   const cells = new Set<string>()
   for (const item of items ?? []) {
@@ -85,7 +86,7 @@ export async function deleteSlice(
   title?: string,
 ): Promise<void> {
   const { error } = await client.from('slices').delete().eq('id', sliceId)
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   recordChange('delete_slice', { slice_id: sliceId, title: title ?? null })
 }
 
@@ -130,7 +131,7 @@ export async function createSlice(
     })
     .select()
     .single()
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
 
   const frames: DraftFrame[] =
     input.frames?.map((frame) => ({ ...frame })) ??
@@ -191,7 +192,7 @@ export async function replaceSliceFrames(
       .select()
       .eq('slice_id', sliceId)
       .order('position', { ascending: true })
-    if (error) throw new Error(error.message)
+    if (error) throw toAuthoringError(error)
     previous = data ?? []
   }
 
@@ -199,7 +200,7 @@ export async function replaceSliceFrames(
     .from('slice_items')
     .delete()
     .eq('slice_id', sliceId)
-  if (deleteError) throw new Error(deleteError.message)
+  if (deleteError) throw toAuthoringError(deleteError)
 
   if (frames.length > 0) {
     const rows = frames.map((frame, position) => ({
@@ -212,7 +213,7 @@ export async function replaceSliceFrames(
     }))
 
     const { error } = await client.from('slice_items').insert(rows)
-    if (error) throw new Error(error.message)
+    if (error) throw toAuthoringError(error)
   }
 
   // After the write, like every other entry: the ledger records what landed.
@@ -241,14 +242,14 @@ export async function duplicateSlice(
     .select()
     .eq('id', sliceId)
     .single()
-  if (sourceError) throw new Error(sourceError.message)
+  if (sourceError) throw toAuthoringError(sourceError)
 
   const { data: items, error: itemsError } = await client
     .from('slice_items')
     .select()
     .eq('slice_id', sliceId)
     .order('position', { ascending: true })
-  if (itemsError) throw new Error(itemsError.message)
+  if (itemsError) throw toAuthoringError(itemsError)
 
   const { data: copy, error: insertError } = await client
     .from('slices')
@@ -262,7 +263,7 @@ export async function duplicateSlice(
     })
     .select()
     .single()
-  if (insertError) throw new Error(insertError.message)
+  if (insertError) throw toAuthoringError(insertError)
 
   if ((items ?? []).length > 0) {
     const rows = (items ?? []).map((item) => ({
@@ -275,7 +276,7 @@ export async function duplicateSlice(
       illustration: item.illustration,
     }))
     const { error } = await client.from('slice_items').insert(rows)
-    if (error) throw new Error(error.message)
+    if (error) throw toAuthoringError(error)
   }
 
   // One entry for the whole copy, inverted by deleting the copy — the frames
@@ -334,7 +335,7 @@ export async function updateSliceMeta(
     .select('title, description, slice_type, actor, origin')
     .eq('id', sliceId)
     .maybeSingle()
-  if (beforeError) throw new Error(beforeError.message)
+  if (beforeError) throw toAuthoringError(beforeError)
 
   const { data, error } = await client
     .from('slices')
@@ -411,7 +412,7 @@ export async function updateSliceMetaFromSeed(
     .select('title, description, slice_type, actor, origin, updated_at')
     .eq('id', sliceId)
     .maybeSingle()
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   if (!current || seedMoved(seeded, current)) return { status: 'conflict' }
 
   return updateSliceMeta(client, sliceId, sliceToken(current), update)
@@ -519,7 +520,7 @@ export async function setSliceFrameIllustration(
       .select('illustration')
       .eq('id', itemId)
       .maybeSingle()
-    if (error) throw new Error(error.message)
+    if (error) throw toAuthoringError(error)
     if (!data) {
       throw new Error('That frame no longer exists — nothing was written.')
     }
@@ -531,7 +532,7 @@ export async function setSliceFrameIllustration(
     .update({ illustration })
     .eq('id', itemId)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(written, 'frame')
 
   if (record) {

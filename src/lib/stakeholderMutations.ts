@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { Database } from '@/types/database'
 
@@ -35,7 +36,7 @@ export async function createStakeholder(
     })
     .select('id')
     .single()
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   recordChange(
     'create_stakeholder',
     { stakeholder_id: data.id, name: input.name.trim() },
@@ -66,7 +67,7 @@ export async function updateStakeholder(
     })
     .eq('id', stakeholderId)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(data, 'stakeholder')
   if (options.record !== false) {
     recordChange(
@@ -91,5 +92,5 @@ export async function deleteStakeholder(
     .from('stakeholders')
     .delete()
     .eq('id', stakeholderId)
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
 }

@@ -4,6 +4,7 @@ import { isAuthorizationDenial, toAuthoringError } from '@/lib/authoringErrors'
 import {
   reconcileSessionAfterDenial,
   resetSessionReconcileState,
+  sessionRefresher,
   setSessionReconciler,
 } from '@/lib/sessionReconcile'
 
@@ -114,7 +115,25 @@ describe('a refused write re-derives the tier', () => {
     settle?.()
   })
 
-  it('survives a refresh that rejects', async () => {
+  it('treats a refresh that RETURNS an error as a failure', async () => {
+    // The trap this whole seam exists for. auth-js catches `AuthError` and
+    // returns it in `{ data, error }` — `refreshSession()` does not reject —
+    // so a reconciler that ignores the field reports success on every failed
+    // refresh, and the logging below it is dead code. The first version of
+    // this feature shipped exactly that, and the test that "covered" it was
+    // handing `reconcileSessionAfterDenial` its own rejecting function.
+    const failing = sessionRefresher({
+      auth: { refreshSession: async () => ({ error: new Error('refresh_token_not_found') }) },
+    })
+    await expect(failing()).rejects.toThrow('refresh_token_not_found')
+  })
+
+  it('resolves when the refresh succeeds', async () => {
+    const ok = sessionRefresher({ auth: { refreshSession: async () => ({ error: null }) } })
+    await expect(ok()).resolves.toBeUndefined()
+  })
+
+  it('logs, rather than rethrows, a reconcile that fails', async () => {
     // A failed refresh must not become a second error on top of the write's
     // own. The reader is already being shown why the save failed; signing them
     // out here would turn one refused save into a lost session.

@@ -122,12 +122,19 @@ export function toAuthoringError(error: PostgrestError | Error): AuthoringError 
 
   /*
     THE ONE SIDE EFFECT IN THIS FILE, and it is here because this is the only
-    funnel. Every write in the app routes its failure through this function —
-    ten call sites across the RPC seam and the direct-table mutations — and
-    there is no single place they are CAUGHT. Putting the reconcile at each
-    call site instead would be ten edits that drift; putting it behind a
-    react-query `MutationCache` would cover nothing, because the app has no
-    `useMutation` anywhere.
+    funnel every failed write passes through. There is no single place those
+    failures are CAUGHT — each call site raises and the surface above it
+    renders — so a translation function is the one seam they share. Putting
+    the reconcile at each call site would be dozens of edits that drift, and
+    putting it behind a react-query `MutationCache` would cover nothing,
+    because the app has no `useMutation` anywhere.
+
+    "Every failed write" is a claim, so it is checked rather than asserted:
+    `writeBoundaryContract.test.ts` walks the write-owning modules and fails on
+    any `throw new Error(error.message)`. Closing that gap is what made the
+    claim true — the whole `*SpecMutations` family used to raise the database's
+    own text straight at the reader, which is the thing `AuthoringError.raw`
+    exists to prevent, and no reconcile fired for any of them.
 
     It is safe to sit on a translation path: fire-and-forget, guarded against
     bursts, and a no-op until `SupabaseProvider` registers a reconciler. See

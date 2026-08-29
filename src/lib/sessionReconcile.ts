@@ -21,6 +21,33 @@
  * `SupabaseProvider` and `src/lib/` must not reach up into `src/contexts/`.
  */
 
+/**
+ * The reconcile `SupabaseProvider` registers: refresh, and fail loudly if the
+ * refresh failed.
+ *
+ * It lives here rather than inline in the provider for one reason, and the
+ * reason is a trap. **`refreshSession()` RESOLVES on failure.** auth-js catches
+ * `AuthError` and hands it back in `{ data, error }` instead of rejecting
+ * (`GoTrueClient.refreshSession`, which returns through `_returnResult`). A
+ * reconciler written as `await client.auth.refreshSession()` therefore always
+ * succeeds, `reconcileSessionAfterDenial`'s `.catch` is unreachable, and the
+ * only test that appeared to cover it was passing a hand-written rejecting
+ * function — exercising the guard, never the thing registered.
+ *
+ * Typed against the shape it uses rather than `SupabaseClient` so a test can
+ * supply one without a client.
+ */
+export type Refreshable = {
+  auth: { refreshSession: () => Promise<{ error: Error | null }> }
+}
+
+export function sessionRefresher(client: Refreshable): () => Promise<void> {
+  return async () => {
+    const { error } = await client.auth.refreshSession()
+    if (error) throw error
+  }
+}
+
 /** Set by `SupabaseProvider` while a client exists. */
 let reconciler: (() => Promise<void>) | null = null
 
@@ -68,9 +95,17 @@ export function reconcileSessionAfterDenial(now: number = Date.now()): void {
   lastRunAt = now
   void reconciler()
     .catch((error: unknown) => {
-      // A refresh that fails is not worth surfacing: the write already failed
-      // and the reader is being shown that. Signing them out here would turn
-      // one refused save into a lost session.
+      // A refresh that fails is not worth surfacing a SECOND time: the write
+      // already failed and the reader is being shown why. This path adds no
+      // error of its own.
+      //
+      // It does not decide whether the session survives, and must not be read
+      // as claiming it does. auth-js owns that: a retryable failure (network,
+      // 5xx) leaves the session alone, and a non-retryable one — a revoked or
+      // reused refresh token — clears it and emits `SIGNED_OUT`. That is the
+      // correct outcome, because a revoked refresh token means the session is
+      // already dead server-side; the app's job here is only to not compound
+      // it with a second message.
       console.error('[session] reconcile after denial failed:', error)
     })
     .finally(() => {
