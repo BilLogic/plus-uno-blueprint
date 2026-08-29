@@ -98,6 +98,37 @@ export const SCENARIO_PANEL_FOOTER_ID = 'scenario-panel-editor-footer'
 export const STEP_PANEL_FOOTER_ID = 'step-panel-editor-footer'
 
 /**
+ * Where the phone's cell sheet comes to rest. Three points, because the sheet
+ * has three jobs and one height served none of them: it opened at one height
+ * and was dragged from there, so reading a long cell was always a drag and
+ * glancing at a short one always wasted the screen (#133).
+ *
+ * - **peek** — the identity block and the first field. Enough to answer "which
+ *   cell did I hit?" without giving up the board behind it, which is the whole
+ *   reason a reader taps a cell on a canvas rather than opening a page.
+ * - **half** — the reading posture, and the default.
+ * - **full** — a long cell, read without fighting the drag.
+ *
+ * Peek is a LENGTH, not a fraction: it has to clear the identity block, whose
+ * height is set by type and padding rather than by the phone. The other two are
+ * fractions of the viewport, because "half the screen" is what they mean.
+ *
+ * A number in (0,1] is a fraction of viewport height and a string is a CSS
+ * length — Base UI's `Drawer` contract, not ours.
+ */
+export const CELL_SHEET_SNAP_POINTS = ['12rem', 0.55, 1] as const
+
+/**
+ * HALF, not peek and not full.
+ *
+ * Peek would make every read start with a drag, which is the complaint. Full
+ * would bury the board on every tap and make the sheet feel like navigation
+ * rather than inspection. The middle point is the only one that costs at most
+ * one drag in either direction.
+ */
+export const CELL_SHEET_DEFAULT_SNAP = CELL_SHEET_SNAP_POINTS[1]
+
+/**
  * A render error in the drawer must cost the drawer, not the app.
  *
  * The panel is the one surface that renders arbitrary authored content —
@@ -161,6 +192,10 @@ export function PanelDrawerShell({
       // otherwise reinterpret an in-flight swipe's x-offset against the
       // other posture's axis. A flip remounts the drawer clean instead.
       key={mobile ? 'mobile' : 'desktop'}
+      // Sheet only. A desktop inspector is a pinned card with room for its
+      // whole content; there is nothing to snap between.
+      snapPoints={mobile ? CELL_SHEET_SNAP_POINTS : undefined}
+      defaultSnapPoint={mobile ? CELL_SHEET_DEFAULT_SNAP : undefined}
       open={open}
       onOpenChange={(next) => {
         // Only close *requests* (✕, Escape, swipe) arrive here, and with
@@ -187,7 +222,13 @@ export function PanelDrawerShell({
         data-cell-detail-posture={mobile ? 'sheet' : 'inspector'}
         className={cn(
           mobile
-            ? '!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[70svh] w-auto border-t border-border bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
+            ? // NO `!h-auto`, NO `max-h`. Under snap points the primitive sets
+              // `--drawer-content-height: 100dvh` and moves the sheet with
+              // `--drawer-snap-point-offset`; the visible height IS the offset.
+              // A height cap here would clamp the tallest snap to 70svh and the
+              // full point would stop short of full, with the drag still
+              // travelling the whole way.
+              '!inset-x-0 !bottom-0 !top-auto !m-0 w-auto border-t border-border bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
             : cn(
                 CELL_DETAIL_PANEL_TOP_CLASS,
                 CELL_DETAIL_PANEL_BOTTOM_CLASS,
