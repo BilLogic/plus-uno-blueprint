@@ -14,6 +14,7 @@ import {
   hasDevAuthoringUi,
   isSupabaseConfigured,
 } from '../lib/supabase'
+import { setSessionReconciler } from '../lib/sessionReconcile'
 import type { Database } from '../types/database'
 
 type SupabaseContextValue = {
@@ -121,6 +122,25 @@ export function SupabaseProvider({ children }: SupabaseProviderProps) {
       cancelled = true
     }
   }, [client, isLoading, session])
+
+  /*
+    Reconcile the tier when the database says the tier is wrong.
+
+    `canWrite` below reads the LOCAL session's app_metadata. That is refreshed
+    on every token refresh, so a server-side demotion reaches the UI within one
+    token lifetime by itself — but until then the reader is offered editing
+    affordances the database will refuse. A refused write is the one reliable
+    signal that the local copy is stale, so `toAuthoringError` reports it here
+    and this refreshes, which lands a newly-minted JWT through
+    `onAuthStateChange` above and re-derives everything below (#136).
+  */
+  useEffect(() => {
+    if (!client) return
+    setSessionReconciler(async () => {
+      await client.auth.refreshSession()
+    })
+    return () => setSessionReconciler(null)
+  }, [client])
 
   const isDevAuthoring = hasDevAuthoringKey()
   // Only ever true on a dev server, and never while anything can actually
