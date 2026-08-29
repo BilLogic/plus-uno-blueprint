@@ -93,13 +93,52 @@ vocabulary: `proposed`, `planned`, `built`, `live`, `at_risk`, `deprecated`.
 Default `live`. Paths share it deliberately; a second vocabulary for the same
 question drifts from the first within a month.
 
+**spec** — the descriptive detail hanging off a board object: not where the
+thing sits, but what it *is*. A cell's position is structure; its `function`,
+`form` and `value_props` are its spec. The word names the same family of fields
+at four levels, and it is the answer to "what is this phase, in fields?".
+
+| Level | Where the spec lives | Fields |
+|---|---|---|
+| service | table `business_model`, one row | `funding`, `pricing`, `delivery_cost`, `revenue_model`, `partners` |
+| phase | columns on `phases` | `business_impact`, `operational_requirements` |
+| lane | columns on `lanes` | `kpis`, `owner_team`, `tools` |
+| cell | columns on `cells` | `function`, `form`, `value_props`, `owner`, `perceived_owner` |
+
+**Scenario, step and path own no spec.** Scenario and step each open a detail
+panel and fill it entirely from structure and from their cells; path has
+`summary`, `note`, `path_type` and `status` and no panel of its own. Whether
+that is the design or the backlog is **not yet decided** — this table records
+the state, not a judgment, and the next person who wants a scenario-level field
+is the one who should settle it.
+
+**The word is schema-and-code only.** `docs/plans/2026-07-30-003` D3b bans it
+from the interface — *"'Spec' is internal jargon that never appears anywhere
+else in the product"* — and that rule stands. It is defined here because a term
+banned from the UI still has to be defined *somewhere*, and this is the file
+that defines the board's words. How a spec field is written is
+[`docs/reference/spec-house-style.md`](docs/reference/spec-house-style.md).
+
+The columns arrived in `20260729120000_derived_layer.sql`, which did two
+unrelated things under one name: it added these ten columns *and* created the
+analysis tier below. When the tier was renamed off "derived layer", only the
+tier took the new name; the columns kept a word that was in no vocabulary file
+until now.
+
 ## The analysis tier
 
-**analysis tier** — the five tables that hold records *about* the board rather
-than squares of it: `evidence`, `findings`, `slices`, `slice_items`,
-`business_model`. What unites them is how they point at the board — softly, by
-uuid with no foreign key — so that re-importing a scenario deletes and recreates
-its cells without taking them along.
+**analysis tier** — the four tables that hold records *about* the board rather
+than squares of it: `evidence`, `findings`, `slices`, `slice_items`. What unites
+them is how they point at **cells** — softly, by bare uuid or uuid array with no
+foreign key — so that re-importing a scenario deletes and recreates its cells
+without taking them along. Each holds a hard `service_id` foreign key; the
+softness is about the cell reference specifically, not about the row's root.
+
+It was five tables until 2026-08-28. `business_model` is not one of them: it is
+keyed by `service_id`, holds `funding`, `pricing`, `delivery_cost`,
+`revenue_model` and `partners`, and references no cell at all. It cannot point
+at the board softly because it does not point at the board. It is the
+**service's spec row** — see *spec* above (#151).
 Formerly the *derived layer*, a name that was wrong twice: only `findings` is
 actually derived (a human may author a slice — `20260803001000_slices_origin_allows_human.sql`
 exists for exactly that), and "layer" is the word the board retired when
