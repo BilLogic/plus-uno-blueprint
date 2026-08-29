@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { Database, Json } from '@/types/database'
 
@@ -59,7 +60,7 @@ export async function updateLaneSpec(
     })
     .in('id', laneIds)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   // See `requireRowsWritten`: a zero-row update is a 200, and reverting one
   // would drop the entry from the ledger having written nothing.
   requireRowsWritten(data, 'lane')

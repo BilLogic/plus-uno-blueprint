@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { Database } from '@/types/database'
 
@@ -41,7 +42,7 @@ export async function updatePhaseSpec(
     })
     .eq('id', phaseId)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(data, 'phase')
 
   if (options.record !== false) {

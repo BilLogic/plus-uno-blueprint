@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { recordChange } from '@/lib/authoringSession'
+import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { Database } from '@/types/database'
 
@@ -33,7 +34,7 @@ export async function updateServiceSummary(
     .update({ summary: summary.trim() || null })
     .eq('id', serviceId)
     .select('id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(data, 'service')
 
   if (options.record !== false) {
@@ -76,7 +77,7 @@ export async function updateBusinessModel(
     })
     .eq('service_id', serviceId)
     .select('service_id')
-  if (error) throw new Error(error.message)
+  if (error) throw toAuthoringError(error)
   requireRowsWritten(data, 'business model')
 
   if (options.record !== false) {
