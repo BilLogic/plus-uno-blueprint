@@ -31,6 +31,7 @@
     "check:database-names": "node scripts/check-database-names.mjs",
     "check:migration-syntax": "node scripts/check-migration-syntax.mjs",
     "check:migration-ledger:live": "node scripts/check-migration-ledger.mjs",
+    "replay:migrations": "node scripts/replay-migrations.mjs",
     "check:write-surface": "node scripts/check-write-surface.mjs",
     "check:copy": "vitest run scripts/tests/retired-copy.test.mjs"
   },
