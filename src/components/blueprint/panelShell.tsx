@@ -1,4 +1,4 @@
-import { Component, Fragment, type ReactNode } from 'react'
+import { Component, Fragment, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import {
@@ -28,6 +28,11 @@ import {
 } from '@/components/editor/menubarHeaderLayout'
 import { Badge } from '@/components/ui/badge'
 import { useMobileShell } from '@/hooks/useMobileShell'
+import {
+  PANEL_SHEET_SNAP_POINTS,
+  rememberedSheetSnap,
+  rememberSheetSnap,
+} from '@/lib/panelSheetSnap'
 import { PANEL_TEXT } from '@/lib/panelText'
 import {
   blueprintLaneAttrs,
@@ -155,12 +160,35 @@ export function PanelDrawerShell({
   // the AgentDock docked/floating precedent; the reconciliation guarantee
   // above (same tree position) holds in both postures.
   const mobile = useMobileShell()
+  /*
+    PER SESSION, NOT PER CELL. A reader who dragged one cell tall is usually
+    reading the next one the same way, so the stop persists across opens. Per
+    CELL memory was the alternative and it is worse: two cells side by side
+    would open at different heights for reasons the reader cannot see.
+
+    Module state, not storage: "session" here means this visit. A reload is a
+    fresh read of the board, and `MobilePathSelector`'s localStorage idiom is
+    for a CHOICE the reader made about content (which path), not for a posture
+    they nudged.
+  */
+  const [snapPoint, setSnapPoint] = useState<number | string>(
+    () => rememberedSheetSnap(),
+  )
   return (
     <Drawer
       // Keyed on posture: a resize across the breakpoint while open would
       // otherwise reinterpret an in-flight swipe's x-offset against the
       // other posture's axis. A flip remounts the drawer clean instead.
       key={mobile ? 'mobile' : 'desktop'}
+      // Sheet only. A desktop inspector is a pinned card with room for its
+      // whole content; there is nothing to snap between.
+      snapPoints={mobile ? PANEL_SHEET_SNAP_POINTS : undefined}
+      snapPoint={mobile ? snapPoint : undefined}
+      onSnapPointChange={(next) => {
+        if (next == null) return
+        setSnapPoint(next)
+        rememberSheetSnap(next)
+      }}
       open={open}
       onOpenChange={(next) => {
         // Only close *requests* (✕, Escape, swipe) arrive here, and with
@@ -187,7 +215,13 @@ export function PanelDrawerShell({
         data-cell-detail-posture={mobile ? 'sheet' : 'inspector'}
         className={cn(
           mobile
-            ? '!inset-x-0 !bottom-0 !top-auto !m-0 !h-auto max-h-[70svh] w-auto border-t border-border bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
+            ? // NO `!h-auto`, NO `max-h`. Under snap points the primitive sets
+              // `--drawer-content-height: 100dvh` and moves the sheet with
+              // `--drawer-snap-point-offset`; the visible height IS the offset.
+              // A height cap here would clamp the tallest snap to 70svh and the
+              // full point would stop short of full, with the drag still
+              // travelling the whole way.
+              '!inset-x-0 !bottom-0 !top-auto !m-0 w-auto border-t border-border bg-popover shadow-sm after:hidden [--drawer-inset:0px]'
             : cn(
                 CELL_DETAIL_PANEL_TOP_CLASS,
                 CELL_DETAIL_PANEL_BOTTOM_CLASS,

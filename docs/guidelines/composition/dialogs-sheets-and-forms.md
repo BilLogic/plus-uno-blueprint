@@ -35,9 +35,12 @@ label):
   `modal={false}` so the canvas stays live; swipe direction `right`. Its motion
   is an inspector's — it expands out of the selection, it does not arrive from
   off-screen (see the block comment in `animations.css`).
-- **Mobile < breakpoint**: a bottom sheet, full width, `max-h-[70svh]`, swipe
-  `down`, view-only content, with a grab handle — a bottom sheet says how to
-  dismiss itself; the desktop inspector has its ✕.
+- **Mobile < breakpoint**: a bottom sheet, full width, swipe `down`, view-only
+  content, with a grab handle — a bottom sheet says how to dismiss itself; the
+  desktop inspector has its ✕. It rests on **two snap points, `40svh` and
+  `70svh`**, opens on the lower one, and remembers which for the session. It
+  sets no height of its own: `!h-auto` is `height: auto !important` and beats
+  the `--drawer-content-height: 100dvh` that snap points need.
 - The drawer is **keyed on posture** (`key={mobile ? 'mobile' : 'desktop'}`) so
   a resize across the breakpoint remounts clean instead of reinterpreting an
   in-flight swipe against the wrong axis.
@@ -46,11 +49,21 @@ label):
 - Surface switches inside an open drawer are content swaps at the same tree
   position — never close-reopen.
 - **Snap points reach base-ui through `...props`, not through the wrapper.**
-  `src/components/ui/drawer.tsx` destructures and forwards `snapPoints` alone;
-  there is no `defaultSnapPoint` prop anywhere in `src/`. No current surface
-  uses snap points — the mobile reader that did was deleted 2026-08-17 — so
-  treat snap-point work as new, and read base-ui's docs rather than this repo's
-  history.
+  `src/components/ui/drawer.tsx` destructures `snapPoints` alone; `snapPoint`
+  and `onSnapPointChange` arrive via `...props`, which is how `PanelDrawerShell`
+  passes them.
+- **THE PRIMITIVE CAPS THE SHEET AND OUR CLASSES CANNOT LIFT IT.** On the y axis
+  the vendored popup carries
+  `--drawer-content-max-height: calc(100dvh - 6rem)`, so the element is 96px
+  shorter than the viewport no matter what the consumer sets. A snap point of
+  `1` therefore asks for a height that cannot render: the drag travels the whole
+  way and the sheet stops 96px short. Measured at 812px: 716. Stops must sit
+  under that ceiling — `src/lib/panelSheetSnap.ts` holds them and
+  `panelSheetSnap.test.ts` asserts the headroom.
+- **No full stop, for a second and independent reason.** `MobileAgentSheet`
+  records "92svh read as a full-screen takeover", and the mobile shell's model
+  is a live canvas under non-modal sheets. A sheet that covers the board stops
+  being an inspector.
 
 The agent dock's docked/floating pair is the same one-component-two-postures
 precedent — see [agent-session.md](agent-session.md).

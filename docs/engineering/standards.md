@@ -85,11 +85,12 @@ it and then bundles.
 - Literal NUL bytes in generated source break git diffing — write the
   six-character backslash-u0000 escape (`\` `u` `0` `0` `0` `0`), never the raw byte.
 - base-ui triggers take a `render={...}` prop, **not** `asChild`.
-- base-ui `Drawer` snap points: `src/components/ui/drawer.tsx` destructures and
-  forwards `snapPoints` and nothing else, and no `defaultSnapPoint` exists
-  anywhere in `src/`. Anything beyond `snapPoints` reaches base-ui only through
-  `...props`. No surface uses snap points today — read base-ui's own docs
-  rather than this repo's history.
+- base-ui `Drawer` snap points: `src/components/ui/drawer.tsx` destructures
+  `snapPoints` and nothing else, so `snapPoint` / `onSnapPointChange` reach
+  base-ui only through `...props`. The panel sheet uses them
+  (`src/lib/panelSheetSnap.ts`). Its stops must stay under the primitive's own
+  `--drawer-content-max-height: calc(100dvh-6rem)` — a stop of `1` renders 96px
+  short and nothing throws.
 - After moving/renaming any doc: `node scripts/generate-docs-index.mjs`.
 - The whole-board canvas has a decoded-image memory budget — read
   [codebase-guide](codebase-guide.md#performance-constraints) before adding
