@@ -18,7 +18,11 @@ update public.cells
 set
   step_id = 'a0000000-0000-4000-8000-000000000954',
   content = 'review student list for session'
-where id = 'a0000000-0000-4000-8000-000000000180503'
+-- Was `…-000000000180503`, three zeros too many, which Postgres refuses as a
+-- uuid literal — so this file has never run anywhere, production included.
+-- `…-000000180503` is the cell the rest of this migration wires as the
+-- source and target of two triggers below.
+where id = 'a0000000-0000-4000-8000-000000180503'
   and path_id = 'a0000000-0000-4000-8000-000000000809';
 
 insert into public.cells (id, path_id, layer_id, step_id, content)

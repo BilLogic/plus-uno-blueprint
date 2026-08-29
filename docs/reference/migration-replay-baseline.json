@@ -2,11 +2,11 @@
   "why": "Files that cannot replay against an empty database (#148). The set may shrink and never grow: a NEW entry is a migration written against an apply path that does not work, which is the gap #148 describes happening again. Delete entries as they are repaired — the check reports any that are no longer true.",
   "recorded": {
     "total": 826,
-    "applied": 638,
-    "failed": 188,
+    "applied": 639,
+    "failed": 187,
     "byClass": {
-      "syntax": 2,
-      "assertion": 29,
+      "syntax": 0,
+      "assertion": 30,
       "data": 140,
       "structure": 17
     },
@@ -61,7 +61,6 @@
     "20250629190000_goal_setting_updated_goals_edge_case.sql",
     "20250630140000_goal_setting_happy_path_add_rt_steps.sql",
     "20250630150000_goal_setting_happy_path_rt_fst_triggers.sql",
-    "20250630245000_goal_setting_happy_path_plus_app_figma_links.sql",
     "20250707200000_warm_up_alternate_and_sad_paths.sql",
     "20250707230000_fix_warm_up_alternate_path_alignment.sql",
     "20250707280000_warm_up_regular_tutor_front_stage_tech_triggers.sql",

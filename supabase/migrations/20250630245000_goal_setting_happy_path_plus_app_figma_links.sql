@@ -1,6 +1,9 @@
 -- Goal Setting happy path — Figma reference on PLUS App tech pills (steps 2–5, 7)
 
-update public.cells
+-- The target table needs an alias: the subquery reads `c.links`, and without
+-- `as c` here there is no `c` in scope. Postgres refuses it, so this file has
+-- never run anywhere either.
+update public.cells as c
 set links = (
   select coalesce(
     jsonb_agg(
