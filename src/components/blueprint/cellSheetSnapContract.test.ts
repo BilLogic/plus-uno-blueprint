@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import {
   CELL_SHEET_DEFAULT_SNAP,
   CELL_SHEET_SNAP_POINTS,
-} from '@/components/blueprint/panelShell'
+} from '@/lib/cellSheetSnap'
 
 const shellSrc = readFileSync(
   resolve(__dirname, 'panelShell.tsx'),
