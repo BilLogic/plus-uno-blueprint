@@ -1,11 +1,10 @@
 ---
 audience: designers, developers
-summary: The icon rail's two groups, the one disclosure vocabulary every twisty in the sidebar obeys, the paths and slices sections, the single persisted width shared by all three surfaces, and the narrow-viewport posture where the panel floats over the canvas.
-sources: src/components/editor/EditorRail.tsx, src/components/editor/SidebarNav.tsx, src/components/editor/PathsSidebarSection.tsx, src/components/editor/SlicesSidebarSection.tsx, src/lib/layoutTokens.ts, src/lib/canvasChromeResize.ts, src/hooks/useSidebarOverlay.ts
+summary: The icon rail's two groups, the one disclosure vocabulary every twisty in the sidebar obeys, the slices section, where path selection went and what it kept, the single persisted width shared by all three surfaces, and the narrow-viewport posture where the panel floats over the canvas.
+sources: src/components/editor/EditorRail.tsx, src/components/editor/SidebarNav.tsx, src/components/editor/PathSelectorMenu.tsx, src/components/editor/SlicesSidebarSection.tsx, src/lib/layoutTokens.ts, src/lib/canvasChromeResize.ts, src/hooks/useSidebarOverlay.ts
 claims:
   - src/components/editor/EditorRail.tsx
   - src/components/editor/EditorSidebarRail.tsx
-  - src/components/editor/PathsSidebarSection.tsx
   - src/components/editor/SidebarNav.tsx
   - src/components/editor/SlicesSidebarSection.tsx
   - src/components/editor/StructureRowMenu.tsx
@@ -48,8 +47,8 @@ under a spacer so keys are reachable from any surface.
 
 ## One disclosure vocabulary
 
-`SidebarNav` is the sidebar's single twisty vocabulary, used by the PHASES and
-PATHS section headers, the phase rows inside them, and the slice type groups —
+`SidebarNav` is the sidebar's single twisty vocabulary, used by the PHASES
+section header, the phase rows inside it, and the slice type groups —
 so every disclosure in the sidebar looks and behaves the same. Three rules,
 taken from Figma's lane tree:
 
@@ -86,35 +85,34 @@ highlighted scenario one line below already says it, and two markers for one fac
 read as two facts. It is kept so call sites keep stating it, which is what guards
 against `selected` and `ancestor` ever both being true.
 
-## PATHS
+## PATHS ARE NOT IN THE SIDEBAR
 
-The section owns its own divider, so the divider can never outlive it and leave
-a line floating under the phase list. Slices deliberately have **no** path
-control: a slice is a fixed selection of cells, so there is nothing for a path
-filter to narrow.
+They were, and the section is gone. Path selection lives in the **top bar**, in
+`PathSelectorMenu` — a compact popover trigger showing overlapping path-colour
+dots and a count, mounted beside the compare controls. Paths belong to a
+scenario, so the control belongs where the scenario title is, not in a tree of
+phases (decided 2026-08-17).
 
-Rows are checkmark multi-select, with the check occupying the same slot the nav
-rows give their chevron so path names line up with phase names. Selected rows
-also take weight and full ink — the check alone was easy to miss, and this is
-the row that says what the canvas is currently showing. They drive the shared
-`PathSelectionContext`, whose keys are path *identities* (`type:name`) rather
-than row ids, so toggling one updates every scenario that has that path.
+`PathsSidebarSection.tsx` outlived the decision by some months: it was never
+deleted and never mounted, so it compiled, typechecked and rendered nowhere.
+Removed 2026-08-28 — this paragraph is here so the next reader does not go
+looking for a `NavSection title="Paths"` that the doc once promised.
 
-Two rules the section will not give up:
+Two rules moved with the control and still hold:
 
-- **The safety valve.** Progressive disclosure normally hides the section, but
-  never while nothing is selected: deselecting every path empties the canvas, and
-  hiding the section there would leave no path control anywhere in the app. An
-  *empty* catalog is the boot state and stays hidden rather than greeting every
-  visitor with an empty PATHS header.
-- **A filter key is not a row id.** A row carries a context menu only when its
-  option names exactly one path. The option's id is `happy:Happy Path`, which
-  every authoring RPC would reject as a uuid, and there is no honest answer to
-  "rename which one".
+- **A filter key is not a row id.** A path option's id is its *identity*
+  (`${type}:${name}`), which every authoring RPC would reject as a uuid. The
+  option carries the row uuids it was folded from in `pathIds`; anything that
+  needs to intersect a selection with what the canvas drew has to go through
+  that field. `ServiceOverviewView`'s header does exactly this, and the comment
+  there records what matching the two id spaces directly looked like.
+- **Selection drives the canvas, and only the FOCUSED scenario obeys it.** A
+  phase row is a survey and draws one happy path each; the focused scenario
+  draws what the reader picked. One resolver, `resolveDrawnPathIds`, answers
+  both — see its doc comment for what happened while there were two.
 
-The header `+` creates a path in the selected scenario — which is the only
-reason the section is on screen at all, so there is nothing to disambiguate and
-no picker to offer.
+Slices deliberately have **no** path control: a slice is a fixed selection of
+cells, so there is nothing for a path filter to narrow.
 
 ## SLICES
 
