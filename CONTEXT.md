@@ -107,10 +107,8 @@ at four levels, and it is the answer to "what is this phase, in fields?".
 
 **Scenario, step and path own no spec.** Scenario and step each open a detail
 panel and fill it entirely from structure and from their cells; path has
-`summary`, `note`, `path_type` and `status` and no panel of its own. Whether
-that is the design or the backlog is **not yet decided** — this table records
-the state, not a judgment, and the next person who wants a scenario-level field
-is the one who should settle it.
+`summary`, `note`, `path_type` and `status`. Whether that is the design or the
+backlog is undecided; the table above states what exists.
 
 **The word is schema-and-code only.** `docs/plans/2026-07-30-003` D3b bans it
 from the interface — *"'Spec' is internal jargon that never appears anywhere
@@ -119,26 +117,26 @@ banned from the UI still has to be defined *somewhere*, and this is the file
 that defines the board's words. How a spec field is written is
 [`docs/reference/spec-house-style.md`](docs/reference/spec-house-style.md).
 
-The columns arrived in `20260729120000_derived_layer.sql`, which did two
-unrelated things under one name: it added these ten columns *and* created the
-analysis tier below. When the tier was renamed off "derived layer", only the
-tier took the new name; the columns kept a word that was in no vocabulary file
-until now.
+The columns and the analysis tier below both arrived in
+`20260729120000_derived_layer.sql`, under one name for two unrelated things.
+Only the tier took a new name when that one was retired.
 
 ## The analysis tier
 
 **analysis tier** — the four tables that hold records *about* the board rather
 than squares of it: `evidence`, `findings`, `slices`, `slice_items`. What unites
-them is how they point at **cells** — softly, by bare uuid or uuid array with no
-foreign key — so that re-importing a scenario deletes and recreates its cells
-without taking them along. Each holds a hard `service_id` foreign key; the
-softness is about the cell reference specifically, not about the row's root.
+them is aboutness: each one exists to say something concerning the board, and
+none of them is part of it.
 
-It was five tables until 2026-08-28. `business_model` is not one of them: it is
-keyed by `service_id`, holds `funding`, `pricing`, `delivery_cost`,
-`revenue_model` and `partners`, and references no cell at all. It cannot point
-at the board softly because it does not point at the board. It is the
-**service's spec row** — see *spec* above (#151).
+Where they name a cell they do it **softly** — `evidence.cell_id`,
+`findings.cell_ids`, `slice_items.cell_ids`, all bare uuid with no foreign key —
+so that re-importing a scenario deletes and recreates its cells without taking
+them along. `slices` names no cell itself; it reaches them through its items.
+
+`business_model` is **not** in the tier, though it was listed in it. It is
+`service_id` plus `funding`, `pricing`, `delivery_cost`, `revenue_model` and
+`partners`: five fields describing the service, not a record about the board.
+It is the **service's spec row** — see *spec* above.
 Formerly the *derived layer*, a name that was wrong twice: only `findings` is
 actually derived (a human may author a slice — `20260803001000_slices_origin_allows_human.sql`
 exists for exactly that), and "layer" is the word the board retired when
