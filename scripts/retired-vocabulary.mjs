@@ -258,6 +258,38 @@ export const RENAME_MAP = Object.freeze(
       retired: ['slice_item'],
       copy: ['slice item', 'slice items'],
     },
+    /*
+      THE LAST ROW, AND IT ENFORCES NOTHING FROM HERE EITHER — the empty
+      lists ARE the entry, for the third distinct reason in this map.
+
+      `cells.links` held three unrelated things at once: 475 resources, 117
+      touchpoint details and 64 provenance citations. 20260830260000 moved the
+      unplaceable details out to their own queue; 20260830280000 moved the
+      resources to `resources` and the citations to `evidence`, then dropped
+      the column.
+
+      The retired word would be `links`, and it is the wrong instrument three
+      ways. It is an ordinary English word the identifier sweep would hit
+      across the tree ("deep links", "Figma links", `mergeUrlLinks`). The
+      hand-written fallback blueprints in src/data are not migrating and still
+      express a cell's resources as a `links` array, which `cellResources.ts`
+      reads and `cellTouchpoints.ts` reads beside it. And `search_blueprint`
+      still RETURNS a column called `links`, built from the new table, because
+      uno-bot reads it by key and the contract has no alias mechanism for an
+      output column.
+
+      What retired is the ARRANGEMENT: one column holding three things under a
+      name describing one of them. The check that holds it is
+      `scripts/tests/cell-resources.test.mjs`, which replays the series and
+      asserts the end state — and proves every finding goes red.
+    */
+    {
+      was: ['cells.links'],
+      is: ['resources', 'evidence'],
+      migrations: ['20260830280000'],
+      retired: [],
+      copy: [],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),

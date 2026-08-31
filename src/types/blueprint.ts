@@ -83,6 +83,25 @@ export type CellTouchpoint = {
   prominence: TouchpointProminenceValue
 }
 
+/**
+ * One thing a cell — or one touchpoint placement — points at.
+ *
+ * A link is one kind of resource, which is why `kind` carries the subtype and
+ * the type is named for the parent. `name` is what the thing on the other end
+ * is called; this vocabulary reserves `title` for authored content a reader
+ * reads and gives a name to a thing a reader navigates to.
+ *
+ * Built by `cellResources.ts` from either source: `resources` rows in the
+ * database, or the `url`-typed entries of a fallback blueprint's `links`.
+ */
+export type CellResource = {
+  name: string
+  /** `link` for everything the migration carried; the column allows `other`. */
+  kind: string
+  /** Null only for a kind that is not a link — the table refuses a link without one. */
+  url: string | null
+}
+
 export type BlueprintCell = {
   id: string
   lane_id: string
@@ -103,6 +122,12 @@ export type BlueprintCell = {
    * empty array. Read it as `?? []`.
    */
   touchpoints?: CellTouchpoint[]
+  /**
+   * What this cell points at, from `resources` or from fallback links.
+   * Optional for the same reason `touchpoints` is: the hand-written fixtures
+   * do not carry it and the normalizer always sets it. Read it as `?? []`.
+   */
+  resources?: CellResource[]
   /*
     The spec block and the owner pair.
   

@@ -5,10 +5,12 @@
  * Two things here can lose data silently, which is why they get tests rather
  * than a click-through:
  *
- * 1. `updateCellResources` rewrites the `links` array. That array also holds
- *    tech descriptions, pictures and Figma embeds keyed by `type` — writing it
- *    from what the resources editor knows about would delete the tech pills
- *    off the cell, and nothing on screen would say so.
+ * 1. `updateCellResources` REPLACES a cell's resources. It used to rewrite a
+ *    jsonb array that also held touchpoint detail and provenance citations,
+ *    and had to filter itself to avoid deleting them on every save.
+ *    20260830280000 moved the three contents apart, so the filter is gone,
+ *    and what is asserted here is that the whole list — and only this cell's
+ *    list — goes to the database in one call.
  * 2. A resource URL that is not `https:` must be refused rather than coerced.
  *
  * Run: npm test
@@ -66,8 +68,10 @@ function fakeClient(rows = [{ id: 'cell-1' }]) {
   const captured = {}
   return {
     captured,
+    rpcError: null,
     rpc(name, args) {
       captured.rpc = { name, args }
+      if (this.rpcError) return Promise.resolve({ data: null, error: this.rpcError })
       return Promise.resolve({ data: { skipped: true, removed: [] }, error: null })
     },
     from(table) {
@@ -93,33 +97,34 @@ function fakeClient(rows = [{ id: 'cell-1' }]) {
   }
 }
 
-test('rewriting resources preserves every non-resource link', async () => {
-  const existing = [
-    { type: 'tech_description', label: 'Zoom', description: 'Video calls' },
-    { type: 'url', label: 'Old', url: 'https://old.example.com' },
-    { type: 'picture', label: 'Screenshot', picture: 'https://img.example.com/a.png' },
-  ]
+test('a resources save sends the whole list, for this cell, in one call', async () => {
   const client = fakeClient()
 
-  await updateCellResources(client, 'cell-1', existing, [
-    { label: 'Spec', url: 'https://spec.example.com' },
-  ])
-
-  const written = client.captured.values.links
-  const kinds = written.map((link) => link.type)
-
-  assert.ok(kinds.includes('tech_description'), 'tech pill must survive')
-  assert.ok(kinds.includes('picture'), 'picture must survive')
-  assert.equal(
-    written.filter((link) => link.type === 'url').length,
-    1,
-    'exactly the one new resource',
+  await updateCellResources(
+    client,
+    'cell-1',
+    [{ kind: 'link', name: 'Old', url: 'https://old.example.com/' }],
+    [
+      { label: 'Spec', url: 'https://spec.example.com' },
+      { label: 'Figma', url: 'https://figma.com/file/abc' },
+    ],
   )
-  assert.equal(
-    written.find((link) => link.type === 'url').url,
-    'https://spec.example.com/',
+
+  // One RPC, not a statement per row: `resources_cell_position_unique` is
+  // deferrable, and PostgREST gives every statement its own transaction, so a
+  // reorder issued row by row collides on the first one.
+  assert.equal(client.captured.rpc.name, 'sync_cell_resources')
+  assert.equal(client.captured.rpc.args.p_cell_id, 'cell-1')
+  assert.deepEqual(
+    client.captured.rpc.args.p_rows.map((row) => row.name),
+    ['Spec', 'Figma'],
   )
-  assert.deepEqual(client.captured.eq, ['id', 'cell-1'])
+  assert.equal(client.captured.rpc.args.p_rows[0].url, 'https://spec.example.com/')
+  assert.ok(
+    client.captured.rpc.args.p_rows.every((row) => row.kind === 'link'),
+  )
+  // No table write at all — the whole rewrite is the function's.
+  assert.equal(client.captured.values, undefined)
 })
 
 test('a resource with no label falls back to its host', async () => {
@@ -127,8 +132,7 @@ test('a resource with no label falls back to its host', async () => {
   await updateCellResources(client, 'cell-1', [], [
     { label: '  ', url: 'https://www.notion.so/page' },
   ])
-  const link = client.captured.values.links.find((entry) => entry.type === 'url')
-  assert.equal(link.label, 'notion.so')
+  assert.equal(client.captured.rpc.args.p_rows[0].name, 'notion.so')
 })
 
 test('one bad URL aborts the whole write', async () => {
@@ -187,11 +191,19 @@ test('a spec write that matches no row throws instead of succeeding', async () =
   )
 })
 
-test('a resources write that matches no row throws instead of succeeding', async () => {
-  const client = fakeClient([])
+test('a resources write onto a cell that is gone surfaces the refusal', async () => {
+  // The zero-rows check moved into the database with the write. The function
+  // raises on a cell that does not exist, and what this side must not do is
+  // swallow that into a silent success — which is the same failure the two
+  // tests above are about, one layer along.
+  const client = fakeClient()
+  client.rpcError = { message: 'cell cell-gone does not exist' }
   await assert.rejects(
     () => updateCellResources(client, 'cell-gone', [], []),
-    /no longer exists/,
+    // Through `toAuthoringError`, like every other write in this module:
+    // the reader gets the house sentence and the raw refusal is kept on the
+    // error for the console.
+    (error) => /does not exist/.test(error.raw),
   )
 })
 

@@ -23,7 +23,7 @@ import type { BlueprintData } from '@/types/blueprint'
  * whose names token-overlap strongly (2-path compare only).
  */
 
-export const COMPARE_FIELDS = ['content', 'description', 'links'] as const
+export const COMPARE_FIELDS = ['content', 'description', 'resources'] as const
 export type CompareField = (typeof COMPARE_FIELDS)[number]
 
 /** Moves here from types/integratedBlueprint (which re-exports during migration). */
@@ -87,7 +87,7 @@ export type CompareBlueprints = [BlueprintData, BlueprintData, ...BlueprintData[
 
 /**
  * Taxonomy V7 — a divergence with no canvas zone: every path present,
- * content identical, only description/links differ. Slot verdict stays
+ * content identical, only description/resources differ. Slot verdict stays
  * `divergent` (the ledger's "Detail-only differences" group and the `[≠ N]`
  * count include it), but the CANVAS must not mark it: the fork condition is
  * "content differs OR presence differs", so column verdicts and runs treat
@@ -225,9 +225,20 @@ function multisetSignature(values: readonly string[]): string {
   return [...values].sort().join(KEY_SEPARATOR)
 }
 
-function linkSignature(cell: BlueprintData['cells'][number]): string {
-  return cell.links
-    .map((link) => `${link.type}${KEY_SEPARATOR}${link.label}${KEY_SEPARATOR}${link.url ?? ''}`)
+/**
+ * A cell's resources, as one comparable string.
+ *
+ * Read from `resources` rather than from the retired `links` array, which
+ * also carried touchpoint detail and provenance — so this used to report two
+ * cells as differing over a screenshot path or a card number, neither of
+ * which is a resource and neither of which a reader could see.
+ */
+function resourceSignature(cell: BlueprintData['cells'][number]): string {
+  return (cell.resources ?? [])
+    .map(
+      (resource) =>
+        `${resource.kind}${KEY_SEPARATOR}${resource.name}${KEY_SEPARATOR}${resource.url ?? ''}`,
+    )
     .sort()
     .join(KEY_SEPARATOR)
 }
@@ -310,7 +321,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
         description: multisetSignature(
           cells.map((cell) => (cell.summary ?? '').trim()),
         ),
-        links: multisetSignature(cells.map(linkSignature)),
+        resources: multisetSignature(cells.map(resourceSignature)),
       }
       perPath[pathId] = {
         present: true,

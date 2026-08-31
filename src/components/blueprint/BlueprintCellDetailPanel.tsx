@@ -103,6 +103,7 @@ import {
   getBlueprintLayerZone,
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
+import { cellResourcesFromLinks } from '@/lib/cellResources'
 import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
@@ -112,7 +113,7 @@ import { cn } from '@/lib/utils'
 import type { ExistingDependency } from '@/components/blueprint/CellDependencyEditor'
 import type { DraftCellTarget } from '@/components/blueprint/CellPanelEditor'
 import type { DependencyEndpoint } from '@/lib/dependencyValidation'
-import type { BlueprintCell, CellLink } from '@/types/blueprint'
+import type { BlueprintCell, CellLink, CellResource } from '@/types/blueprint'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 
 /**
@@ -450,7 +451,7 @@ function BlueprintCellDetailPanelBody() {
 
   const selectedCell = useMemo((): Pick<
     BlueprintCell,
-    'content' | 'summary' | 'links' | 'frame' | 'touchpoints'
+    'content' | 'summary' | 'links' | 'frame' | 'touchpoints' | 'resources'
   > | null => {
     // The two branches below build a cell out of a compare-path entry rather
     // than the board, and such an entry carries content and links but no
@@ -462,12 +463,17 @@ function BlueprintCellDetailPanelBody() {
       description?: string | null
       frame?: string | null
       links?: CellLink[] | null
+      resources?: CellResource[] | null
     }) => ({
       content: entry.content,
       summary: entry.description ?? null,
       frame: entry.frame ?? null,
       links: entry.links ?? [],
       touchpoints: cellTouchpointsFromLinks(entry.content, entry.links),
+      // The entry's own resources when it has them, and otherwise the same
+      // derivation the normalizer does — a fallback cell keeps them in
+      // `links` and there is nowhere else for them to come from.
+      resources: entry.resources ?? cellResourcesFromLinks(entry.links),
     })
 
     const pathId = pathEntry?.pathId
@@ -486,12 +492,13 @@ function BlueprintCellDetailPanelBody() {
       description: pathEntry?.description ?? null,
       frame: pathEntry?.frame ?? null,
       links: pathEntry?.links ?? [],
+      resources: pathEntry?.resources ?? null,
     })
   }, [blueprints, pathEntry, resolvedCellId])
 
-  const cellLinks = useMemo(
-    (): CellLink[] => selectedCell?.links ?? pathEntry?.links ?? [],
-    [pathEntry?.links, selectedCell?.links],
+  const cellResources = useMemo(
+    (): CellResource[] => selectedCell?.resources ?? pathEntry?.resources ?? [],
+    [pathEntry?.resources, selectedCell?.resources],
   )
 
   const linkedTechItems = useMemo(
@@ -654,8 +661,8 @@ function BlueprintCellDetailPanelBody() {
 
   const designUrl = useMemo(() => {
     if (!selection) return null
-    return resolveDesignUrl(touchpointDetail?.url, cellLinks)
-  }, [cellLinks, selection, touchpointDetail])
+    return resolveDesignUrl(touchpointDetail?.url, cellResources)
+  }, [cellResources, selection, touchpointDetail])
   const designLinkLabel = describeDesignLink(designUrl)
 
   // Lane row position of the selected cell — orients up/down direction
@@ -1511,7 +1518,7 @@ function BlueprintCellDetailPanelBody() {
                   {activeTab === 'resources' ? (
                     <CellResourcesTab
                       cellId={resolvedCellId}
-                      links={cellLinks}
+                      resources={cellResources}
                       designUrl={designUrl}
                     />
                   ) : null}

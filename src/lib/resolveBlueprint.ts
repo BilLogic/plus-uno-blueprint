@@ -21,8 +21,9 @@ import {
   sortBlueprintLayers,
   type RawPath,
 } from '@/lib/normalizeBlueprint'
+import { cellResourcesFromLinks } from '@/lib/cellResources'
 import type { BlueprintData } from '@/types/blueprint'
-import type { CellLink } from '@/types/blueprint'
+import type { CellLink, CellResource } from '@/types/blueprint'
 
 export type BlueprintSource = 'database' | 'fallback' | null
 
@@ -108,6 +109,30 @@ function fillMissingCellLinks(
 }
 
 /**
+ * DB-wins resource merge: fallback resources the database does not already
+ * have, appended in order. Matched on name AND url, because a cell may
+ * legitimately point at the same url twice under different names.
+ *
+ * The link merge above no longer reaches these. A database cell's resources
+ * arrive as `resources` rows and its `links` is empty, so without this a dev
+ * board with a stale database would show none of the fallback's resources —
+ * which is exactly the gap `mergeMissingBlueprintContent` exists to fill.
+ */
+function fillMissingCellResources(
+  resources: CellResource[],
+  fallbackResources: CellResource[],
+): CellResource[] {
+  const merged = [...resources]
+  for (const fallback of fallbackResources) {
+    const present = merged.some(
+      (entry) => entry.name === fallback.name && entry.url === fallback.url,
+    )
+    if (!present) merged.push({ ...fallback })
+  }
+  return merged
+}
+
+/**
  * Fill DB gaps from the fallback blueprint — DB wins.
  *
  * Merge policy (applies only when the blueprint source is 'database'):
@@ -184,6 +209,15 @@ function mergeMissingBlueprintContent(
     const mergedLinks = fillMissingCellLinks(cell.links, fallbackCell.links)
     if (JSON.stringify(mergedLinks) !== JSON.stringify(cell.links)) {
       next = { ...next, links: mergedLinks }
+      changed = true
+    }
+
+    const mergedResources = fillMissingCellResources(
+      cell.resources ?? [],
+      fallbackCell.resources ?? cellResourcesFromLinks(fallbackCell.links),
+    )
+    if (JSON.stringify(mergedResources) !== JSON.stringify(cell.resources ?? [])) {
+      next = { ...next, resources: mergedResources }
       changed = true
     }
 

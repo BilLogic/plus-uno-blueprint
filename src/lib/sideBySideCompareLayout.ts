@@ -66,7 +66,6 @@ export function getComparePathArrowData(
       content: cell.content,
       frame: cell.frame,
       description: cell.summary,
-      links: cell.links,
       opacity: 1,
     })),
     dependencies: dependencies.map((dependency) => ({

@@ -159,9 +159,9 @@ export function CellPanelEditor({
   placement?: CellTouchpoint | null
   /**
    * What the panel displays as this cell's description when the column is
-   * empty (tech cells keep prose in `links`). Seeded into the field so the
-   * editor shows the same text the reader saw — saving moves it into the
-   * column, which takes precedence from then on.
+   * empty (a touchpoint cell's prose is its placement's summary). Seeded into
+   * the field so the editor shows the same text the reader saw — saving moves
+   * it into the column, which takes precedence from then on.
    */
   fallbackDescription?: string
   onDone: () => void
@@ -181,7 +181,7 @@ export function CellPanelEditor({
 
     const baseline: FormState = {
       text: content.content,
-      // The DB truth. The *field* may be seeded with the links-derived
+      // The DB truth. The *field* may be seeded with the placement-derived
       // fallback below, but diffs and reverts compare against this — an
       // owner-only edit must not smuggle the fallback prose into the
       // description column, and undo must restore what the DB actually held.

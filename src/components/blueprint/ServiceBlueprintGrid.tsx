@@ -620,6 +620,7 @@ function BlueprintSwimLane({
                         cellFrame: cell?.frame ?? null,
                         cellDescription: cell?.summary ?? null,
                         cellLinks: cell?.links,
+                        cellResources: cell?.resources,
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
                         pathDescription: blueprint.path.summary,
@@ -727,7 +728,7 @@ function BlueprintCellBlock({
       ? (slotCells && slotCells.length > 0
           ? slotCells
           : content !== undefined
-            ? [{ id: cellId, content, frame: null, summary: null, status, links: [] }]
+            ? [{ id: cellId, content, frame: null, summary: null, status, links: [], resources: [] }]
             : []
         ).flatMap((slotCell) =>
           getTouchpointNames(slotCell).map((item) => ({
@@ -799,6 +800,7 @@ function BlueprintCellBlock({
                 cellFrame: slotCell.frame ?? null,
                 cellDescription: slotCell.summary ?? null,
                 cellLinks: slotCell.links,
+                cellResources: slotCell.resources,
               }}
               stepIndex={stepIndex}
               compact={compact}

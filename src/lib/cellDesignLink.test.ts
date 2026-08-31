@@ -4,18 +4,10 @@ import {
   designLinkLabel,
   resolveDesignUrl,
 } from '@/lib/cellDesignLink'
-import {
-  TECH_DESCRIPTION_LINK_TYPE,
-  URL_LINK_TYPE,
-} from '@/lib/blueprintTechDescriptions'
-import type { CellLink } from '@/types/blueprint'
+import type { CellResource } from '@/types/blueprint'
 
-const figmaOnCell: CellLink[] = [
-  {
-    type: URL_LINK_TYPE,
-    label: 'Figma',
-    url: 'https://www.figma.com/file/cell-wide',
-  },
+const figmaOnCell: CellResource[] = [
+  { kind: 'link', name: 'Figma', url: 'https://www.figma.com/file/cell-wide' },
 ]
 
 describe('resolveDesignUrl', () => {
@@ -45,7 +37,7 @@ describe('resolveDesignUrl', () => {
   it('recognises a cell link labelled Figma whatever it points at', () => {
     expect(
       resolveDesignUrl(null, [
-        { type: URL_LINK_TYPE, label: 'Figma prototype', url: 'https://p.dev/x' },
+        { kind: 'link', name: 'Figma prototype', url: 'https://p.dev/x' },
       ]),
     ).toBe('https://p.dev/x')
   })
@@ -56,21 +48,20 @@ describe('resolveDesignUrl', () => {
     // nothing to do with the picture.
     expect(
       resolveDesignUrl(null, [
-        { type: URL_LINK_TYPE, label: 'Ticket', url: 'https://tracker.dev/1' },
+        { kind: 'link', name: 'Ticket', url: 'https://tracker.dev/1' },
       ]),
     ).toBeNull()
   })
 
-  it('ignores links of other kinds in the same array', () => {
-    // `cells.links` holds resources, tech descriptions and pictures together;
-    // reading past the `type` is how the old resolver found the wrong thing.
+  it('ignores a resource with nothing on the other end', () => {
+    // The `type` test this replaces guarded against a jsonb array that held
+    // touchpoint detail and provenance beside the resources. `resources`
+    // holds one thing, so what is left to refuse is a row with no url — the
+    // shape a `ref` citation had, and the reason all 64 of them rendered
+    // nowhere before #181 moved them to `evidence`.
     expect(
       resolveDesignUrl(null, [
-        {
-          type: TECH_DESCRIPTION_LINK_TYPE,
-          label: 'PLUS App',
-          url: 'https://www.figma.com/file/detail',
-        },
+        { kind: 'other', name: 'Figma sweep 05', url: null },
       ]),
     ).toBeNull()
   })

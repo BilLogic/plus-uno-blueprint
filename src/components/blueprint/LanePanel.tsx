@@ -56,7 +56,7 @@ function isLaneEmpty(lane: LaneSpec): boolean {
  *
  * Three columns that have been writable since July and have never had a
  * surface. The panel is deliberately lean — no evidence, resources or
- * dependency tabs, because `evidence.cell_id`, `cells.links` and
+ * dependency tabs, because `evidence.cell_id`, `resources.cell_id` and
  * `cell_dependencies` all key on a CELL and a lane has no link to any of them.
  */
 export function LanePanel({

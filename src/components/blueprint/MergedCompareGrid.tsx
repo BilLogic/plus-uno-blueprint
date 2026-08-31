@@ -666,6 +666,7 @@ function MergedSubCellBlock({
               cellFrame: cell?.frame ?? null,
               cellDescription: cell?.summary ?? null,
               cellLinks: cell?.links,
+              cellResources: cell?.resources,
               pathId: blueprint.path.id,
               pathName: blueprint.path.name,
               pathDescription: blueprint.path.summary,

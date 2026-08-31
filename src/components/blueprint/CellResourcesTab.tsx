@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
-import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 import {
   updateCellResources,
   type ResourceDraft,
@@ -14,7 +13,7 @@ import {
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { safeExternalHref } from '@/lib/sliceCells'
 import { errorMessage } from '@/lib/utils'
-import type { CellLink } from '@/types/blueprint'
+import type { CellResource } from '@/types/blueprint'
 
 type ResourceRow = {
   id: string
@@ -25,30 +24,39 @@ type ResourceRow = {
 type CellResourcesTabProps = {
   /** Canonical cell id; null for fallback-only cells (read-only then). */
   cellId: string | null
-  links: CellLink[]
+  resources: CellResource[]
   /**
    * The design reference the panel resolved — the selected placement's own
-   * url first, then a Figma link on the cell. Added to the list when it is
-   * not already in it, because a placement's url is not one of `links` and
-   * would otherwise be reachable only through the screenshot overlay.
+   * url first, then a Figma link among the cell's resources. Added to the
+   * list when it is not already in it, because a placement's url is a row of
+   * `cell_touchpoints`, not of `resources`, and would otherwise be reachable
+   * only through the screenshot overlay.
    */
   designUrl: string | null
 }
 
-function linkDrafts(links: CellLink[]): ResourceDraft[] {
-  return links
-    .filter((link) => link.type === URL_LINK_TYPE && link.url?.trim())
-    .map((link) => ({ label: link.label, url: link.url ?? '' }))
+function resourceDrafts(resources: CellResource[]): ResourceDraft[] {
+  return resources
+    .filter((resource) => resource.url?.trim())
+    .map((resource) => ({ label: resource.name, url: resource.url ?? '' }))
 }
 
 /**
- * Resources tab: the cell's `links` (UI copy says "Resources").
+ * Resources tab: the cell's `resources` rows.
+ *
+ * It read `cells.links` until 20260830280000, filtering that array down to
+ * its `url` entries because the same column also held touchpoint detail and
+ * provenance citations. The table holds one thing, so the filter is gone.
  *
  * In Edit mode the tab *is* the editor — the rows render as inputs and new
  * resources are added right here. This is where resources live, so this is
  * where they are edited; the text editor above no longer carries them.
  */
-export function CellResourcesTab({ cellId, links, designUrl }: CellResourcesTabProps) {
+export function CellResourcesTab({
+  cellId,
+  resources,
+  designUrl,
+}: CellResourcesTabProps) {
   const { client, canWrite } = useSupabase()
   const mode = useCanvasModeValue()
   const canEdit = mode === 'design' && canWrite && cellId !== null && client !== null
@@ -58,17 +66,17 @@ export function CellResourcesTab({ cellId, links, designUrl }: CellResourcesTabP
       <CellResourcesEditor
         key={cellId}
         cellId={cellId!}
-        links={links}
+        resources={resources}
       />
     )
   }
 
-  const rows: ResourceRow[] = links.flatMap((link, index) => {
-    if (link.type !== URL_LINK_TYPE || !link.url?.trim()) return []
-    const url = link.url.trim()
+  const rows: ResourceRow[] = resources.flatMap((resource, index) => {
+    const url = resource.url?.trim()
+    if (!url) return []
     const label =
-      link.label.trim() || (/figma\.com/i.test(url) ? 'Figma' : 'Link')
-    return [{ id: `link-${index}`, label, url }]
+      resource.name.trim() || (/figma\.com/i.test(url) ? 'Figma' : 'Link')
+    return [{ id: `resource-${index}`, label, url }]
   })
 
   if (designUrl && !rows.some((row) => row.url === designUrl)) {
@@ -76,7 +84,7 @@ export function CellResourcesTab({ cellId, links, designUrl }: CellResourcesTabP
     // anywhere, and calling every one of them "Figma" is a row that lies
     // about where the click lands.
     rows.push({
-      id: 'link-design',
+      id: 'resource-design',
       label: /figma\.com/i.test(designUrl) ? 'Figma' : 'Design',
       url: designUrl,
     })
@@ -114,14 +122,14 @@ export function CellResourcesTab({ cellId, links, designUrl }: CellResourcesTabP
 
 function CellResourcesEditor({
   cellId,
-  links,
+  resources: stored,
 }: {
   cellId: string
-  links: CellLink[]
+  resources: CellResource[]
 }) {
   const { client } = useSupabase()
   const [resources, setResources] = useState<ResourceDraft[]>(() =>
-    linkDrafts(links),
+    resourceDrafts(stored),
   )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -135,7 +143,7 @@ function CellResourcesEditor({
   const blocked = urlProblems.some(Boolean)
   const dirty =
     JSON.stringify(resources.filter((resource) => resource.url.trim())) !==
-    JSON.stringify(linkDrafts(links))
+    JSON.stringify(resourceDrafts(stored))
 
   const setResource = (index: number, patch: Partial<ResourceDraft>) => {
     setSaved(false)
@@ -152,7 +160,7 @@ function CellResourcesEditor({
       await updateCellResources(
         client,
         cellId,
-        links,
+        stored,
         resources.filter((resource) => resource.url.trim()),
       )
       invalidateQueries('service-phases')

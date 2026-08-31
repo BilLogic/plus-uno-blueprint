@@ -66,7 +66,7 @@ the **line of interaction**, is drawn after the customer-actions lane.
 of the whole system — slices cite cells, findings point at cells, share links
 open cells.
 Table `cells`: `path_id`, `lane_id`, `step_id`, `content`, `summary`, `frame`,
-`function`, `form`, `value_props`, `owner`, `perceived_owner`, `links`,
+`function`, `form`, `value_props`, `owner`, `perceived_owner`,
 `status`, `position`. A single (lane, step) slot can hold several stacked cells,
 distinguished by `position`.
 
@@ -108,6 +108,14 @@ storyboard holds at most one.
 cells, which is why a strip and the frames it is made of cannot disagree. A
 *slide* shows one too, and it is the same word for the same thing — see
 *slide*.
+
+**resource** — something a cell points at: a spec, a Figma node, a Notion
+module, a file in the repository. A **link** is one kind of resource, which is
+why the table is named for the parent and `kind` carries the subtype.
+Table `resources`: `cell_id` **or** `cell_touchpoint_id` — never both, and
+never neither — plus `kind`, `name`, `url`, `position`, `origin`. Attaching one
+to a placement rather than to the cell is how a design link belongs to the tool
+it documents rather than to the moment at large.
 
 **dependency** — a relationship between two cells. One table, two kinds, both
 read **source-first**:
@@ -273,6 +281,7 @@ remember is #145's job, not this paragraph's.
 | `visual` | `storyboard` | `20260830270000` |
 | `cells.picture` | `cells.frame` | `20260830270000` |
 | `slice_items`, `slice_items.caption` | `slides`, `slides.title` | `20260830270000` |
+| `cells.links` | `resources`, `evidence` | `20260830280000` |
 
 The reasoning, where it is worth knowing: a "tech" lane never held only
 technology — a printed guide, a poster, a phone line and a Zoom recording were
@@ -295,7 +304,7 @@ identifier, and the retired word here is `note` — which `paths.note`,
 `cell_dependencies.note` and `findings.note` all still carry correctly, because
 all three genuinely are asides. Enforcing `note` would fail the series on those
 three; enforcing `stakeholders.note` would match nothing, since the identifier
-sweep reads a bare column name and never a qualified one. So this row's
+sweep reads a bare column name and never a qualified one. So that row's
 `retired` and `copy` lists are empty on purpose and the rename is enforced by
 [`scripts/tests/stakeholder-summary.test.mjs`](scripts/tests/stakeholder-summary.test.mjs),
 against the one table it concerns.
@@ -339,6 +348,18 @@ are held by
 [`scripts/tests/a-frame-a-strip-and-a-slide.test.mjs`](scripts/tests/a-frame-a-strip-and-a-slide.test.mjs),
 which also holds the one thing no schema check can see — that no word on
 screen calls a slide a frame.
+
+**`cells.links` is the last row, and it is not in the word lists either.**
+`links` is an ordinary English word the sweep would hit across the tree; the
+hand-written fallback blueprints in `src/data` still carry a `links` array and
+must, because `cellResources.ts` and `cellTouchpoints.ts` both read it; and
+`search_blueprint` still emits an output column of that name, because uno-bot
+reads it by key. What retired is the ARRANGEMENT — one column holding
+resources, touchpoint detail and provenance citations under a name describing
+one of them — and that is held by
+[`scripts/tests/cell-resources.test.mjs`](scripts/tests/cell-resources.test.mjs),
+which replays the series, asserts the column is gone and the table that
+replaced it carries its one-owner constraint, and proves each finding goes red.
 
 **One column is a deliberate exception.** `cells.content` keeps a word of its
 own: a cell's text is a sentence somebody wrote about a moment, not a name for

@@ -416,7 +416,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_evidence',
     description:
-      'Named evidence rows in full, excerpt and note included. Use after list_evidence to read the sources you intend to cite.',
+      'Named evidence rows in full, excerpt included. Use after list_evidence to read the sources you intend to cite.',
     parameters: {
       type: 'object',
       properties: {
@@ -857,7 +857,6 @@ export const TOOL_SPECS: ToolSpec[] = [
         title: str('What the source IS, e.g. "Tutor onboarding interview #4" — required'),
         ref: str('Link or locator, e.g. a URL or doc name; omit if none'),
         excerpt: str('The quoted passage that carries the claim; omit if none'),
-        note: str('Why this source supports the cell; omit if none'),
       },
       required: ['cell_id', 'kind', 'title'],
     },
@@ -865,7 +864,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'update_evidence',
     description:
-      'Edit an evidence row: kind, title, ref, excerpt, note. Pass only the fields you mean to change — the rest are kept. To move a source to a DIFFERENT cell, add it there and remove it here; this tool does not re-point it.',
+      'Edit an evidence row: kind, title, ref, excerpt. Pass only the fields you mean to change — the rest are kept. To move a source to a DIFFERENT cell, add it there and remove it here; this tool does not re-point it.',
     parameters: {
       type: 'object',
       properties: {
@@ -874,7 +873,6 @@ export const TOOL_SPECS: ToolSpec[] = [
         title: str('New title; omit to keep'),
         ref: str('New link or locator; omit to keep'),
         excerpt: str('New quoted passage; omit to keep'),
-        note: str('New why-line; omit to keep'),
       },
       required: ['evidence_id'],
     },

@@ -95,9 +95,18 @@ with per-path column order via `path_steps`. `lanes` are a path's rows;
 service phases — phases live in `phases`.
 
 **Cells** carry the grid label (`content` — never empty), `summary`,
-`frame` (one image on one cell), `links` (JSONB), and the spec columns that shipped with the
+`frame` (one image on one cell), and the spec columns that shipped with the
 analysis tier: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
+
+**Resources** — `resources`, one row per thing a cell points at. It replaced
+`cells.links` (a JSONB array) in `20260830280000`, which held three unrelated
+things at once: resources, touchpoint detail and provenance citations. Each
+row attaches to a cell **or** to one `cell_touchpoints` placement and never
+both, enforced by `num_nonnulls(cell_id, cell_touchpoint_id) = 1`. Writes go
+through `sync_cell_resources`, which replaces a cell's list in one
+transaction — the position constraint is deferrable and a statement per row
+would trip it on a reorder.
 
 **Edges** — `cell_dependencies`, `kind` = `leads_to` (this cell makes the
 other happen; drawn as an arrow) or `enables` (the other must already be

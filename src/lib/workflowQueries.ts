@@ -25,6 +25,12 @@ export const PATH_LIST_SELECT =
   that already ships ~374 KB, so on-demand cost three requests to save 2%.
   See docs/plans/2026-08-21-001-refactor-skeleton-loading-fidelity-plan.md.
 
+  `resources` is embedded through a NAMED foreign key. Two paths reach it
+  from `cells` — directly, and through `cell_touchpoints` — and PostgREST
+  answers an ambiguous embed with a 300 listing the candidates rather than
+  with rows. The hint is the constraint name, the same disambiguation
+  `cell_dependencies` already needs below.
+
   Nothing in here may carry a comment: PostgREST parses this string.
 */
 export const PATH_BLUEPRINT_SELECT = `
@@ -58,7 +64,6 @@ export const PATH_BLUEPRINT_SELECT = `
     frame,
     summary,
     status,
-    links,
     "function",
     form,
     value_props,
@@ -76,6 +81,12 @@ export const PATH_BLUEPRINT_SELECT = `
         kind,
         url
       )
+    ),
+    resources!resources_cell_id_fkey (
+      position,
+      kind,
+      name,
+      url
     ),
     outgoing:cell_dependencies!cell_dependencies_source_cell_id_fkey (
       id,

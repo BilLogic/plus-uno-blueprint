@@ -1,4 +1,4 @@
-import type { BlueprintStep, CellLink } from '@/types/blueprint'
+import type { BlueprintStep } from '@/types/blueprint'
 import type { PathType } from '@/types/database'
 
 /*
@@ -23,7 +23,6 @@ export type IntegratedBlueprintCell = {
   content: string
   frame: string | null
   description: string | null
-  links: CellLink[]
   opacity: number
 }
 

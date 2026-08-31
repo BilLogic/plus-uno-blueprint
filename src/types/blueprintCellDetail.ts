@@ -1,5 +1,5 @@
 import type { PathType } from '@/types/database'
-import type { CellLink } from '@/types/blueprint'
+import type { CellLink, CellResource } from '@/types/blueprint'
 
 export type BlueprintCellPathEntry = {
   cellId: string
@@ -10,7 +10,11 @@ export type BlueprintCellPathEntry = {
   content: string
   frame?: string | null
   description?: string | null
+  /** Fallback-only now: a database cell's resources arrive in `resources`,
+   *  and `links` survives so a fallback cell's touchpoint detail still
+   *  resolves through `cellTouchpointsFromLinks`. */
   links?: CellLink[]
+  resources?: CellResource[]
 }
 
 /**
