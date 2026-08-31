@@ -112,6 +112,30 @@ are server-side:
    shape it exists for, including a table granting a column outside its
    panel's set and a table granting a foreign key.
 
+5. **A check on the front door.** `npm run check:auth-posture` asks
+   GoTrue whether a stranger can mint an `authenticated` token: public
+   sign-up off, anonymous sign-in off, no external provider enabled.
+   Everything in point 4 is about what that role may write; this is
+   about who may become it, and until #60 is closed **the answer is
+   anyone** — `disable_signup` is `false` on the production project.
+
+   It is the one live posture check that needs no privileged
+   credential. GoTrue publishes its configuration to the anon key, and
+   the anon key already ships in the deployed bundle, so this check is
+   not condemned to be manual the way `check:rls-posture:live` is. It
+   runs in `gates.yml` from repository variables.
+
+   It is **advisory there** (`continue-on-error`) only because it is
+   currently red and a hard failure would block every pull request on a
+   dashboard toggle no contributor can reach. That line comes out when
+   #60 closes; the workflow says so where it sits.
+
+   `mailer_autoconfirm` is deliberately not asserted. Requiring email
+   confirmation raises the cost of self-provisioning to owning a
+   mailbox, which an attacker does — a speed bump, not a gate, and
+   asserting it would let someone satisfy the check by tightening the
+   wrong thing.
+
 Roles live in the JWT minted at sign-in — a role change is invisible to a
 live session until refresh (the provider refreshes once per boot).
 
