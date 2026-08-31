@@ -587,9 +587,14 @@ export function deletionImpact(
 }
 
 /**
- * Each of these archives everything it destroys into `deleted_structure` in
- * the same transaction as the cascade, and returns the archive row's id — pass
- * it to the undo toast.
+ * Each of these archives everything it destroys into `public.authoring_changes`
+ * in the same transaction as the cascade, and returns that row's id — pass it
+ * to the undo toast.
+ *
+ * They are the six operations the client does NOT append to the log itself
+ * (`ARCHIVED_BY_THE_DATABASE` in `authoringLog.ts`): the payload can only be
+ * captured inside the transaction that destroys it, so the row is written from
+ * the side that is holding the rows.
  */
 export function deleteScenario(client: Client, scenarioId: string): Promise<string> {
   return call<string>(client, 'delete_scenario', { scenario_id: scenarioId })

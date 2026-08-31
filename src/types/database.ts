@@ -17,6 +17,12 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * the next successful run should be a no-op — if it is not, the generator is
  * right and these are wrong.
  *
+ * HAND-EDITED, 2026-08-30 (#176). `authoring_changes`, the `trash` view and
+ * `record_authoring_change` were added by hand for the same reason and under
+ * the same rules. `deleted_structure` needed no removal here: it was never in
+ * this file, which is part of why nothing in the app could see that half the
+ * record was durable and half was not.
+ *
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine, so a hand edit weakens that premise until a real regeneration
  * confirms it. It is the reason the edit is recorded here rather than left to
@@ -92,6 +98,51 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      authoring_changes: {
+        Row: {
+          affected_slices: Json
+          agent_session_id: string | null
+          args: Json
+          at: string
+          author: string
+          author_id: string | null
+          deleted_kind: string | null
+          fn: string
+          id: string
+          label: string | null
+          payload: Json | null
+          revert: Json | null
+        }
+        Insert: {
+          affected_slices?: Json
+          agent_session_id?: string | null
+          args?: Json
+          at?: string
+          author?: string
+          author_id?: string | null
+          deleted_kind?: string | null
+          fn: string
+          id?: string
+          label?: string | null
+          payload?: Json | null
+          revert?: Json | null
+        }
+        Update: {
+          affected_slices?: Json
+          agent_session_id?: string | null
+          args?: Json
+          at?: string
+          author?: string
+          author_id?: string | null
+          deleted_kind?: string | null
+          fn?: string
+          id?: string
+          label?: string | null
+          payload?: Json | null
+          revert?: Json | null
         }
         Relationships: []
       }
@@ -944,8 +995,30 @@ export type Database = {
         }
         Relationships: []
       }
+      trash: {
+        Row: {
+          affected_slices: Json | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string | null
+          kind: string | null
+          label: string | null
+          payload: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      record_authoring_change: {
+        Args: {
+          agent_session_id?: string | null
+          args?: Json
+          author?: string
+          fn: string
+          revert?: Json | null
+        }
+        Returns: string
+      }
       restore_cell_touchpoints: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
@@ -1012,3 +1085,6 @@ export type Finding = Database['public']['Tables']['findings']['Row']
 export type Evidence = Database['public']['Tables']['evidence']['Row']
 export type Proposition = Database['public']['Tables']['business_model']['Row']
 export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row']
+export type AuthoringChange =
+  Database['public']['Tables']['authoring_changes']['Row']
+export type TrashEntry = Database['public']['Views']['trash']['Row']

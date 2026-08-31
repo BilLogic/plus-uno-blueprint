@@ -1,7 +1,7 @@
 ---
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
-sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql
+sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql
 last-reviewed: 2026-08-25
 ---
 
@@ -226,6 +226,17 @@ What the wrappers buy, and why bypassing them is never acceptable:
   addressable per-row revert, not a positional undo stack. `WriteFn` is a
   closed union so adding an operation without teaching `describeChange`
   is a compile error, not a mislabeled row.
+- **The durable change log** (`public.authoring_changes`, appended through
+  `src/lib/authoringLog.ts`): the same entry, written to the database, so
+  closing the tab stops erasing the record of what changed. It carries the
+  operation, its arguments, its inverse, the author, and the agent session
+  when an agent made the write. **Audit-only** — nothing replays the stored
+  inverse; the ledger above is still what undo reads. The log has two writers
+  and they must not overlap: the five delete RPCs and `remove_lanes` archive
+  their own row, payload included, inside the transaction that destroys the
+  rows, and the client skips its append for exactly those six
+  (`ARCHIVED_BY_THE_DATABASE`). `scripts/tests/authoring-log.test.mjs` holds
+  that set to the functions the migrations actually define.
 - **Zero-row writes are failures.** A write that matches no rows resolves
   successfully at the client level while changing nothing —
   `requireRowsWritten` (`src/lib/optimisticConcurrency.ts`) turns that
