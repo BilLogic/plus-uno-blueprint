@@ -22,6 +22,41 @@ const src = (path: string) =>
  *
  * These assertions are the price of having moved it.
  */
+/**
+ * One PostgREST select, minus every embedded relation and the name it hangs
+ * off, however that embed is spelled: aliased or plain, nested or flat.
+ */
+function stripEmbeds(select: string): string[] {
+  const out: string[] = []
+  let field = ''
+  let depth = 0
+  for (const ch of select) {
+    if (ch === '(') {
+      depth += 1
+      // The identifier collected so far names the embed, not a column.
+      if (depth === 1) field = ''
+      continue
+    }
+    if (ch === ')') {
+      depth -= 1
+      continue
+    }
+    if (depth > 0) continue
+    if (ch === ',') {
+      out.push(field.trim())
+      field = ''
+      continue
+    }
+    field += ch
+  }
+  out.push(field.trim())
+  return out
+    // PostgREST needs a reserved word quoted — `"function"` — and the mapper
+    // writes the bare key. Compare identifiers, not spellings.
+    .map((entry) => entry.replace(/^"(.*)"$/, '$1'))
+    .filter(Boolean)
+}
+
 describe('cell status survives the move off the label', () => {
   it('is read by the query the canvas draws from', () => {
     expect(PATH_BLUEPRINT_SELECT).toContain('status')
@@ -72,14 +107,17 @@ describe('cell status survives the move off the label', () => {
       end,
     )
     // Drop the embedded relations — those are mapped separately.
-    const selected = inner
-      .replace(/[a-z_]+:[^(]*\([\s\S]*?\)/g, '')
-      .split(',')
-      .map((field) => field.trim())
-      // PostgREST needs a reserved word quoted — `"function"` — and the
-      // mapper writes the bare key. Compare identifiers, not spellings.
-      .map((field) => field.replace(/^"(.*)"$/, '$1'))
-      .filter(Boolean)
+    //
+    // This was a regexp, and it was wrong twice. It required an ALIAS before
+    // the parenthesis (`outgoing:cell_dependencies!fk(...)`), so an embed
+    // written plainly — `cell_touchpoints (...)` — was left in and its first
+    // inner field was read as a column name that no mapper could satisfy.
+    // And its `\)` was non-greedy, so a nested embed (a placement joined to
+    // its catalog row) closed at the wrong parenthesis.
+    //
+    // Balanced-bracket walking is what the outer slice above already does,
+    // so it does it here too rather than reaching for a third regexp.
+    const selected = stripEmbeds(inner)
 
     const source = src('lib/normalizeBlueprint.ts')
     const mapStart = source.indexOf('rawCells.map((cell) => ({')
@@ -111,7 +149,7 @@ describe('cell status survives the move off the label', () => {
     for (const path of [
       'components/blueprint/CompareCellBlock.tsx',
       'components/blueprint/ServiceBlueprintGrid.tsx',
-      'components/blueprint/BlueprintTechPill.tsx',
+      'components/blueprint/BlueprintTouchpointCell.tsx',
     ]) {
       expect(src(path), path).toContain('status={')
     }

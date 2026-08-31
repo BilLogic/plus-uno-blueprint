@@ -19,8 +19,8 @@ const scenarioPanel = source(
 const resizablePanel = source(
   '../components/blueprint/ResizableComparePanel.tsx',
 )
-const techPill = source('../components/blueprint/BlueprintTechPill.tsx')
-const techPillFace = source('../components/blueprint/TechPillFace.tsx')
+const techPill = source('../components/blueprint/BlueprintTouchpointCell.tsx')
+const techPillFace = source('../components/blueprint/TouchpointCellFace.tsx')
 const blueprintCss = source('../styles/blueprint.css')
 const dependencySections = source(
   '../components/blueprint/CellDependencySections.tsx',

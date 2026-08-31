@@ -47,6 +47,25 @@ export type CellLink = {
   pictures?: string[]
 }
 
+/**
+ * One touchpoint, used at one cell.
+ *
+ * `name` and `kind` come from the catalog and are shared by every placement
+ * of that touchpoint; `summary`, `screenshot`, `url` and `prominence` are
+ * this moment's own. The same tool describes a different screen at a
+ * different step, which is the distinction the old label-keyed links could
+ * not hold. Built by `cellTouchpoints.ts` from either source.
+ */
+export type CellTouchpoint = {
+  name: string
+  /** Null from fallback data, which has nowhere to record one. */
+  kind: string | null
+  summary: string | null
+  screenshot: string | null
+  url: string | null
+  prominence: 'core' | 'peripheral' | null
+}
+
 export type BlueprintCell = {
   id: string
   lane_id: string
@@ -59,6 +78,14 @@ export type BlueprintCell = {
    *  relabelled it on the way out, so this closes a documented workaround. */
   summary: string | null
   links: CellLink[]
+  /**
+   * Resolved touchpoint placements, from `cell_touchpoints` or from fallback
+   * links. Optional for the same reason the spec block below is: the twenty
+   * hand-written fixture files do not carry it, the normalizer always sets
+   * it, and requiring it here would mean editing all of them to write an
+   * empty array. Read it as `?? []`.
+   */
+  touchpoints?: CellTouchpoint[]
   /*
     The spec block and the owner pair.
   

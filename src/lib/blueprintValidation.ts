@@ -54,7 +54,7 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  *   whose dividers were drawn by name lookup rather than by role. Actor lanes
  *   BEYOND the spine — Teacher, Lead Tutor, Student, Supervisor — genuinely
  *   carry no role and are not in this set.
- * - **Tech sits above actions**, which reverses the usual textbook order. That
+ * - **Touchpoints sit above actions**, which reverses the usual textbook order. That
  *   was a deliberate change — see the `stage_tech_before_actions_layer_order`
  *   migration — and a new blueprint that ordered them the other way would not
  *   line up against any existing one in the side-by-side view.
@@ -62,9 +62,9 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
 export const DEFAULT_LANE_SET: LaneSetEntry[] = [
   { name: 'Storyboard', lane_role: 'visual', position: 0 },
   { name: 'Regular Tutor', lane_role: 'customer_actions', position: 1 },
-  { name: 'Front Stage Tech', lane_role: 'frontstage_tech', position: 2 },
+  { name: 'Front Stage Touchpoints', lane_role: 'frontstage_touchpoints', position: 2 },
   { name: 'Front Stage Actions', lane_role: 'frontstage_actions', position: 3 },
-  { name: 'Back Stage Tech', lane_role: 'backstage_tech', position: 4 },
+  { name: 'Back Stage Touchpoints', lane_role: 'backstage_touchpoints', position: 4 },
   { name: 'Back Stage Actions', lane_role: 'backstage_actions', position: 5 },
   { name: 'Support Actions', lane_role: 'support_actions', position: 6 },
 ]

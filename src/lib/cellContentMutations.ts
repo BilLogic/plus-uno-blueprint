@@ -7,6 +7,7 @@ import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import { parseCellContentItems } from '@/lib/parseCellContent'
 
 type Client = SupabaseClient<Database>
 
@@ -72,6 +73,15 @@ export async function updateCellContent(
   // path was since deleted "succeeds", and its revert reports "taken back"
   // having written nothing.
   requireRowsWritten(data, 'cell')
+  // The text the author typed IS the list of touchpoints, so the placements
+  // the board reads have to follow it. Without this the two diverge from the
+  // first save onward, which is the defect this ticket exists to end,
+  // arrived at from the other direction.
+  //
+  // After the content write, not before: a save that fails should leave both
+  // the text and the placements as they were, and the row check above is
+  // what proves the write landed.
+  const removedPlacements = await syncCellTouchpoints(client, cellId, content)
   // Direct table write, so `call()` never sees it — logged here for the same
   // reason and with the same after-success placement.
   if (options.record !== false) {
@@ -81,11 +91,76 @@ export async function updateCellContent(
       previous?.content.trim()
         ? {
             fn: 'update_cell_content',
-            args: { cell_id: cellId, update: previous },
+            args: {
+              cell_id: cellId,
+              update: previous,
+              // The writing on any placement this save removed. Restoring the
+              // text alone brings the names back and leaves them blank.
+              removed_placements: removedPlacements,
+            },
           }
         : undefined,
     )
   }
+}
+
+/** A placement's per-moment writing, as the sync hands it back. */
+export type RemovedPlacement = {
+  name: string
+  summary: string | null
+  screenshot: string | null
+  url: string | null
+  prominence: string | null
+}
+
+/**
+ * Bring a cell's placements into line with the text just saved.
+ *
+ * One RPC, because this has to be one transaction. The first version did the
+ * diff here and issued a statement per row, and PostgREST gives each of those
+ * its own transaction — which broke reordering outright. The position
+ * constraint is DEFERRABLE INITIALLY DEFERRED, so it forgives a collision
+ * only until COMMIT, and with a statement per request commit is the end of
+ * that statement. Swapping two pills raised 23505 every time. The unit test
+ * covering reordering asserted the PLAN and never its application, so it
+ * passed the whole way through.
+ *
+ * The gate on touchpoint-bearing cells lives in the function too: content on
+ * an actor lane is a sentence about what somebody did, and syncing it would
+ * file that sentence in the catalog as a tool.
+ *
+ * Returns the placements it removed, with their writing, so the caller can
+ * put them in the inverse it records. Deleting a placement destroys the
+ * per-moment summary and screenshot, and an inverse that restored only the
+ * text would leave that gone for good.
+ */
+export async function syncCellTouchpoints(
+  client: Client,
+  cellId: string,
+  content: string,
+): Promise<RemovedPlacement[]> {
+  const { data, error } = await client.rpc('sync_cell_touchpoints', {
+    p_cell_id: cellId,
+    p_names: parseCellContentItems(content),
+  })
+  if (error) throw toAuthoringError(error)
+
+  const removed = (data as { removed?: unknown } | null)?.removed
+  return Array.isArray(removed) ? (removed as RemovedPlacement[]) : []
+}
+
+/** Put back the writing a removed placement was carrying. */
+export async function restoreCellTouchpoints(
+  client: Client,
+  cellId: string,
+  rows: RemovedPlacement[],
+): Promise<void> {
+  if (rows.length === 0) return
+  const { error } = await client.rpc('restore_cell_touchpoints', {
+    p_cell_id: cellId,
+    p_rows: rows as unknown as Json,
+  })
+  if (error) throw toAuthoringError(error)
 }
 
 export type ResourceDraft = { label: string; url: string }

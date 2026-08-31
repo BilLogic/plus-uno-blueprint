@@ -13,6 +13,11 @@ import type {
 } from '@/types/blueprint'
 import type { PathType, Json } from '@/types/database'
 import { normalizeCellLinks } from '@/lib/cellMetadata'
+import {
+  cellTouchpointsFromLinks,
+  cellTouchpointsFromRows,
+  type RawCellTouchpoint,
+} from '@/lib/cellTouchpoints'
 
 type RawOutgoingDependency = {
   id: string
@@ -44,6 +49,8 @@ export type RawCell = {
   owner?: string | null
   perceived_owner?: string | null
   outgoing?: RawOutgoingDependency[] | null
+  /** Placements, when the board came from the database. Fallback data has none. */
+  cell_touchpoints?: RawCellTouchpoint[] | null
 }
 
 type RawPathStep = {
@@ -256,6 +263,13 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       ? (cell.status as EntityStatus)
       : null,
     links: normalizeCellLinks(cell.links),
+    // One shape from two sources. A database cell has placements; a fallback
+    // cell has a delimited string and label-keyed links, and resolving that
+    // here is what keeps the label lookup out of every component downstream.
+    // `cellTouchpoints.test.ts` holds the two outputs to each other.
+    touchpoints: cell.cell_touchpoints
+      ? cellTouchpointsFromRows(cell.cell_touchpoints)
+      : cellTouchpointsFromLinks(cell.content, normalizeCellLinks(cell.links)),
     // The spec block and the owner pair, carried with the board rather than
     // fetched on panel open. `cellSpecContract.test.ts` fails if a column is
     // selected above and dropped here.

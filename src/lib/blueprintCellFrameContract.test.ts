@@ -30,7 +30,7 @@ const compareDecorations = source(
 const pathFrame = source(
   '../components/blueprint/ComparePathSectionFrame.tsx',
 )
-const techPill = source('../components/blueprint/BlueprintTechPill.tsx')
+const techPill = source('../components/blueprint/BlueprintTouchpointCell.tsx')
 const laneHeader = source(
   '../components/blueprint/LaneHeaderAffordance.tsx',
 )

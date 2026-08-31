@@ -54,12 +54,23 @@ test('empty and malformed are refused', () => {
  * test group below. PostgREST answers a matched-nothing update with
  * `{ data: [], error: null }`, so an empty array here is a *successful*
  * response that wrote nothing.
+ *
+ * A content write also brings the cell's touchpoint placements into line with
+ * the text, through one `sync_cell_touchpoints` RPC. It is stubbed here as a
+ * no-op returning nothing removed: these tests are about the content write
+ * and its matched-nothing detection. Which cells the sync acts on, and what
+ * it does to them, is decided inside the function and proved in its own
+ * migration, because a client-side assertion can no longer see it.
  */
 function fakeClient(rows = [{ id: 'cell-1' }]) {
   const captured = {}
   return {
     captured,
-    from() {
+    rpc(name, args) {
+      captured.rpc = { name, args }
+      return Promise.resolve({ data: { skipped: true, removed: [] }, error: null })
+    },
+    from(table) {
       return {
         update(values) {
           captured.values = values
@@ -68,7 +79,9 @@ function fakeClient(rows = [{ id: 'cell-1' }]) {
               captured.eq = [column, value]
               return {
                 select(columns) {
-                  captured.select = columns
+                  // Only the cells table's write is the subject; the sync's
+                  // own updates must not overwrite what was captured.
+                  if (table === 'cells') captured.select = columns
                   return Promise.resolve({ data: rows, error: null })
                 },
               }
@@ -192,4 +205,26 @@ test('a content write that matches its row still resolves', async () => {
     { record: false },
   )
   assert.equal(client.captured.values.content, 'New text')
+})
+
+test('a content save asks the database to sync the placements it named', () => {
+  // The client no longer decides which cells are touchpoint-bearing or what
+  // to do with them; it hands over the names and the function decides. What
+  // is still this side's job, and so is asserted here, is that the names it
+  // sends are the ones the author typed, split the same way the board reads
+  // them.
+  const client = fakeClient()
+  return updateCellContent(
+    client,
+    'cell-1',
+    { content: 'Zoom, PLUS App', summary: '', owner: '', perceivedOwner: '', status: 'live' },
+    undefined,
+    { record: false },
+  ).then(() => {
+    assert.equal(client.captured.rpc.name, 'sync_cell_touchpoints')
+    assert.deepEqual(client.captured.rpc.args, {
+      p_cell_id: 'cell-1',
+      p_names: ['Zoom', 'PLUS App'],
+    })
+  })
 })

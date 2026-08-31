@@ -1,7 +1,7 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
-import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
-import { TechPillFace } from '@/components/blueprint/TechPillFace'
+import { BlueprintTouchpointCell } from '@/components/blueprint/BlueprintTouchpointCell'
+import { TouchpointCellFace } from '@/components/blueprint/TouchpointCellFace'
 import {
   Tooltip,
   TooltipContent,
@@ -16,7 +16,7 @@ import {
 } from '@/lib/blueprintLayout'
 import {
   buildBlueprintCellSelection,
-  getTechPillItems,
+  getTouchpointNames,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import {
@@ -160,18 +160,18 @@ export function CompareCellBlock({
       >
         {(slotCells && slotCells.length > 0
           ? slotCells.flatMap((slotCell) =>
-              getTechPillItems(slotCell.content ?? '').map((item) => ({
+              getTouchpointNames(slotCell).map((item) => ({
                 item,
                 slotCell,
               })),
             )
-          : getTechPillItems(content).map((item) => ({
+          : getTouchpointNames({ content }).map((item) => ({
               item,
               slotCell: undefined,
             }))
         ).map(({ item, slotCell }, index, all) =>
           selectionContext ? (
-            <BlueprintTechPill
+            <BlueprintTouchpointCell
               key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
               // Identity is the split's point: each pill carries its own
@@ -200,7 +200,7 @@ export function CompareCellBlock({
               aria-describedby={ariaDescribedBy}
             />
           ) : (
-            <TechPillFace
+            <TouchpointCellFace
               key={`${item}-${index}`}
               item={item}
               compact={compact}

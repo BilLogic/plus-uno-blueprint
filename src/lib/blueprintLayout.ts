@@ -1,10 +1,10 @@
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import {
   BACKSTAGE_ACTIONS_ROLE,
-  BACKSTAGE_TECH_ROLE,
+  BACKSTAGE_TOUCHPOINTS_ROLE,
   CUSTOMER_ACTIONS_ROLE,
   FRONTSTAGE_ACTIONS_ROLE,
-  FRONTSTAGE_TECH_ROLE,
+  FRONTSTAGE_TOUCHPOINTS_ROLE,
   getLayerRole,
   SUPPORT_ACTIONS_ROLE,
   VISUAL_ROLE,
@@ -20,8 +20,8 @@ type LayerRoleSource = { name: string; role?: string | null }
 
 /** Roles whose cells list multiple items as inline pills (newline-separated content). */
 export const PILL_CELL_LAYER_ROLES = [
-  FRONTSTAGE_TECH_ROLE,
-  BACKSTAGE_TECH_ROLE,
+  FRONTSTAGE_TOUCHPOINTS_ROLE,
+  BACKSTAGE_TOUCHPOINTS_ROLE,
 ] as const
 
 /** Roles rendered as picture rows instead of text cells. */
@@ -83,13 +83,13 @@ export function shouldShowVisibilityLineAfter(
   lanes?: BlueprintLane[],
 ): boolean {
   const role = getLayerRole(lane)
-  if (role !== FRONTSTAGE_ACTIONS_ROLE && role !== FRONTSTAGE_TECH_ROLE) {
+  if (role !== FRONTSTAGE_ACTIONS_ROLE && role !== FRONTSTAGE_TOUCHPOINTS_ROLE) {
     return false
   }
 
   // Frontstage tech can sit above frontstage actions — the visibility line
   // follows the actions lane, not the tech lane.
-  if (role === FRONTSTAGE_TECH_ROLE && lanes) {
+  if (role === FRONTSTAGE_TOUCHPOINTS_ROLE && lanes) {
     const index = lanes.findIndex((entry) => entry.id === lane.id)
     const next = lanes[index + 1]
     if (next && getLayerRole(next) === FRONTSTAGE_ACTIONS_ROLE) {

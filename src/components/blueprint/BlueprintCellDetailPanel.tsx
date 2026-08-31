@@ -79,9 +79,13 @@ import {
   scrollBlueprintCellIntoView,
 } from '@/lib/blueprintCellConnections'
 import {
-  buildTechPillSelectionForItem,
+  cellTouchpointsFromLinks,
+  resolveTouchpointDetail,
+} from '@/lib/cellTouchpoints'
+import {
+  buildTouchpointSelectionForItem,
   getBlueprintStepTechItems,
-  scrollBlueprintTechPillIntoView,
+  scrollBlueprintTouchpointCellIntoView,
 } from '@/lib/blueprintStepTech'
 import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
 import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
@@ -91,13 +95,10 @@ import {
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
-  resolveTechCellDetailLabel,
-  resolveTechCellDetailText,
-  resolveTechCellDetailUrl,
   URL_LINK_TYPE,
 } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
-import { getTouchpointTone } from '@/lib/techPillColors'
+import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
@@ -166,15 +167,21 @@ function isFigmaUrl(url: string): boolean {
   return /figma\.com/i.test(url)
 }
 
+/**
+ * The design reference for a cell: the placement's own url first, then any
+ * Figma link on the cell.
+ *
+ * The placement's url is per-moment — two PLUS App placements point at
+ * different Figma nodes — so it has to win over a cell-wide link. This used
+ * to call a resolver that searched `cells.links` by label and had a
+ * `content === 'PLUS App'` branch bolted on; that path is gone, and with it
+ * the second way of answering the same question.
+ */
 function resolveFigmaUrl(
-  techItem: string | undefined,
-  cell: Pick<BlueprintCell, 'content' | 'links'> | null,
+  placementUrl: string | null | undefined,
   links: CellLink[],
 ): string | null {
-  if (cell) {
-    const fromTech = resolveTechCellDetailUrl(techItem, cell)
-    if (fromTech && isFigmaUrl(fromTech)) return fromTech
-  }
+  if (placementUrl?.trim() && isFigmaUrl(placementUrl)) return placementUrl.trim()
 
   for (const link of links) {
     if (link.type !== URL_LINK_TYPE || !link.url?.trim()) continue
@@ -467,17 +474,30 @@ function BlueprintCellDetailPanelBody() {
 
   const selectedCell = useMemo((): Pick<
     BlueprintCell,
-    'content' | 'summary' | 'links' | 'picture'
+    'content' | 'summary' | 'links' | 'picture' | 'touchpoints'
   > | null => {
+    // The two branches below build a cell out of a compare-path entry rather
+    // than the board, and such an entry carries content and links but no
+    // placements. Deriving them here with the same resolver the normalizer
+    // uses is what keeps the panel reading one shape: without it these
+    // fallbacks would be the last place in the app still joining by label.
+    const fromEntry = (entry: {
+      content: string
+      description?: string | null
+      picture?: string | null
+      links?: CellLink[] | null
+    }) => ({
+      content: entry.content,
+      summary: entry.description ?? null,
+      picture: entry.picture ?? null,
+      links: entry.links ?? [],
+      touchpoints: cellTouchpointsFromLinks(entry.content, entry.links),
+    })
+
     const pathId = pathEntry?.pathId
     if (!resolvedCellId || !pathId) {
       if (!pathEntry) return null
-      return {
-        content: pathEntry.content,
-        summary: pathEntry.description ?? null,
-        picture: pathEntry.picture ?? null,
-        links: pathEntry.links ?? [],
-      }
+      return fromEntry(pathEntry)
     }
 
     const blueprint = getBlueprintForPath(blueprints, pathId)
@@ -485,12 +505,12 @@ function BlueprintCellDetailPanelBody() {
       blueprint?.cells.find((entry) => entry.id === resolvedCellId) ?? null
     if (cell) return cell
 
-    return {
+    return fromEntry({
       content: pathEntry?.content ?? '',
-      summary: pathEntry?.description ?? null,
+      description: pathEntry?.description ?? null,
       picture: pathEntry?.picture ?? null,
       links: pathEntry?.links ?? [],
-    }
+    })
   }, [blueprints, pathEntry, resolvedCellId])
 
   const cellLinks = useMemo(
@@ -618,10 +638,29 @@ function BlueprintCellDetailPanelBody() {
     return entries
   }, [connections.incoming, connections.outgoing, linkedTechItems, stepTechItems])
 
+  // The placement, not a lookup by label. Its summary, screenshot and url
+  // belong to this touchpoint at this cell, which is the distinction the old
+  // label join could not hold and the reason 57 authored details were
+  // unreachable. Resolved once here because both the design reference below
+  // and the detail body further down are answers it already carries.
+  const touchpointDetail = useMemo(
+    () =>
+      selectedCell
+        ? resolveTouchpointDetail(
+            {
+              summary: selectedCell.summary,
+              touchpoints: selectedCell.touchpoints ?? [],
+            },
+            selection?.techItem,
+          )
+        : null,
+    [selectedCell, selection?.techItem],
+  )
+
   const figmaUrl = useMemo(() => {
     if (!selection) return null
-    return resolveFigmaUrl(selection.techItem, selectedCell, cellLinks)
-  }, [cellLinks, selectedCell, selection])
+    return resolveFigmaUrl(touchpointDetail?.url, cellLinks)
+  }, [cellLinks, selection, touchpointDetail])
 
   // Lane row position of the selected cell — orients up/down direction
   // glyphs on same-step dependency rows.
@@ -947,25 +986,19 @@ function BlueprintCellDetailPanelBody() {
     selection.paths[0]?.content.trim() ||
     selection.techItem ||
     ''
-  const detailBodyText = selectedCell
-    ? resolveTechCellDetailText(selection.techItem, selectedCell)
-    : cellContent
+  const detailBodyText = touchpointDetail?.text ?? cellContent
   const isTechLayer = Boolean(
     selectedLayer && shouldUsePillCellContent(selectedLayer),
   )
-  const techDetailLabel =
-    isTechLayer && selectedCell
-      ? resolveTechCellDetailLabel(selection.techItem, selectedCell)
-      : null
+  const techDetailLabel = isTechLayer ? (touchpointDetail?.name ?? null) : null
   const detailDescriptionText =
     techDetailLabel && detailBodyText.trim() === techDetailLabel
       ? ''
       : detailBodyText
   const detailPictures = resolveCellDetailPictures({
-    techItem: selection.techItem,
-    cellContent: selection.paths[0]?.content,
+    screenshot: touchpointDetail?.screenshot,
+    techItem: touchpointDetail?.name ?? selection.techItem,
     cellPicture: selection.paths[0]?.picture,
-    cellLinks,
   })
   const showPicture = Boolean(detailPictures?.length && !isVisualLane)
   const showTechPill = Boolean(isTechLayer && techDetailLabel)
@@ -998,7 +1031,7 @@ function BlueprintCellDetailPanelBody() {
     const blueprint = getBlueprintForPath(blueprints, pathId)
     if (!blueprint) return
 
-    const nextSelection = buildTechPillSelectionForItem(
+    const nextSelection = buildTouchpointSelectionForItem(
       blueprint,
       resolveBlueprintCellId(cellId),
       techItem,
@@ -1009,7 +1042,7 @@ function BlueprintCellDetailPanelBody() {
 
     selectCell(nextSelection)
     requestAnimationFrame(() => {
-      scrollBlueprintTechPillIntoView(cellId, techItem)
+      scrollBlueprintTouchpointCellIntoView(cellId, techItem)
     })
   }
 
