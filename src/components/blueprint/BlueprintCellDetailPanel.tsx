@@ -103,10 +103,6 @@ import {
   getBlueprintLayerZone,
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
-import {
-  URL_LINK_TYPE,
-} from '@/lib/blueprintTechDescriptions'
 import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
@@ -1021,10 +1017,11 @@ function BlueprintCellDetailPanelBody() {
     techItem: touchpointDetail?.name ?? selection.techItem,
     cellFrame: selection.paths[0]?.frame,
   })
-  const showPicture = Boolean(detailPictures?.length && !isVisualLane)
-  const showTechPill = Boolean(techDetailLabel)
   const showImages = Boolean(detailImages?.length && !isStoryboardLane)
-  const showTechPill = Boolean(isTechLayer && techDetailLabel)
+  // #188 widened this from "is a pill lane" to "has a real placement row", so
+  // the four placements on Support Actions cells show their touchpoint name.
+  // The rename in #179 does not narrow it back.
+  const showTechPill = Boolean(techDetailLabel)
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
