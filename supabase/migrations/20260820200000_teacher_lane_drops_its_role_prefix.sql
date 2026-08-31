@@ -43,8 +43,27 @@ begin
   if slices_left <> 0 then
     raise exception 'lane rename: % slices still say the old actor', slices_left;
   end if;
-  if renamed <> 16 then
-    raise exception 'lane rename: expected 16 Teacher lanes, found %', renamed;
+  -- AMENDED. This asserted `renamed = 16` — production's count on the day.
+  -- On an empty database it is 0, the exception fires, and because a
+  -- migration is one transaction the two UPDATES above roll back with it. So
+  -- the file could never replay, and neither could anything downstream of the
+  -- rename. Same shape, and the same repair, as `20260821340000`.
+  --
+  -- The invariant it was reaching for is that the rename left nothing behind,
+  -- and the two assertions above already say exactly that: no lane still
+  -- carries a role prefix, no slice still names the old actor. What a count
+  -- adds is a claim about how many rows this database happens to hold, which
+  -- is not a property of the rename.
+  --
+  -- What is worth asserting instead is the half neither of those covers: the
+  -- stakeholder rename and the lane rename must agree. A lane called `Teacher`
+  -- with no stakeholder of that name means the first UPDATE matched and the
+  -- second did not — the drift this file exists to end, surviving it.
+  if renamed > 0 and not exists (
+    select 1 from public.stakeholders where name = 'Teacher'
+  ) then
+    raise exception
+      'lane rename: % lanes say Teacher but no stakeholder does', renamed;
   end if;
 end $$;
 
