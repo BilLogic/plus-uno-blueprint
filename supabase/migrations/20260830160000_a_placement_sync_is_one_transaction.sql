@@ -189,14 +189,45 @@ grant execute on function public.restore_cell_touchpoints(uuid, jsonb) to authen
 --
 -- The bug was invisible to a unit test because the plan it produced was
 -- right; only applying it failed. So it is exercised here, against the real
--- constraint, on rows this block creates and removes. Vacuous on an empty
--- database in the sense that matters — it builds everything it needs — and
--- it fails loudly if the deferred constraint stops covering the swap.
+-- constraint, and it fails loudly if the deferred constraint stops covering
+-- the swap.
+--
+-- ── Amended, because the first version of this block destroyed data ───────
+--
+-- This file has already run against production, and the block below is not
+-- what ran. What ran claimed it worked "on rows this block creates and
+-- removes", and that was false: `sync_cell_touchpoints` is a SYNC, so calling
+-- it with two probe names on a real cell deletes every placement that cell
+-- already had — they are not in the wanted list. The cleanup then removed the
+-- probes, and the cell was left holding nothing.
+--
+-- It cost exactly one row in production: the cell displaying `Reflection
+-- form` (413697b0-70b8-4ef1-872b-669dc7177180), which `limit 1` happened to
+-- pick. That placement carried no summary, screenshot or url, so nothing
+-- authored was lost, and `20260830230000` puts the row back. The next
+-- migration in the series says more about why the loss was noticed by a
+-- placement COUNT and not by anything in this file.
+--
+-- An applied migration is normally immutable, and this repository means it —
+-- the template's rule is that an applied or dated record keeps the spelling
+-- it was written with. That rule is about prose. This is a statement that
+-- deletes rows, and leaving it would mean every future replay against a
+-- populated database silently empties whichever cell sorts first, on a
+-- database where that cell's placements may well carry authored writing that
+-- `20260830230000` could not reconstruct. The immutability of a comment is
+-- worth more than tidiness; the immutability of a destructive statement is
+-- not worth a second occurrence.
+--
+-- The block now snapshots the cell's placements, proves the swap on probes,
+-- and puts the snapshot back — so it is genuinely true, this time, that it
+-- leaves behind only what it found.
 
 do $do$
 declare
-  v_cell uuid;
-  v_first text;
+  v_cell   uuid;
+  v_first  text;
+  v_before jsonb;
+  v_after  int;
 begin
   select c.id into v_cell
     from public.cells c
@@ -209,6 +240,22 @@ begin
     raise notice 'no touchpoint cell exists, so the reorder proof has nothing to run against';
     return;
   end if;
+
+  -- Everything this cell holds before the probe, kept by touchpoint id rather
+  -- than by name: a name is what the catalog owns and the restore below must
+  -- put back the same rows, not rows that merely spell the same.
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'touchpoint_id', ct.touchpoint_id,
+           'position',      ct.position,
+           'summary',       ct.summary,
+           'screenshot',    ct.screenshot,
+           'url',           ct.url,
+           'prominence',    ct.prominence,
+           'origin',        ct.origin
+         )), '[]'::jsonb)
+    into v_before
+    from public.cell_touchpoints ct
+   where ct.cell_id = v_cell;
 
   perform public.sync_cell_touchpoints(v_cell, array['ZZ Probe A', 'ZZ Probe B']);
   -- The swap. Before this function existed, this raised 23505.
@@ -223,12 +270,28 @@ begin
     raise exception 'reorder did not take: position 1 holds %', v_first;
   end if;
 
-  delete from public.cell_touchpoints ct
-   using public.touchpoints tp
-   where ct.touchpoint_id = tp.id
-     and ct.cell_id = v_cell
-     and tp.name like 'ZZ Probe %';
+  -- Put the cell back exactly as it was found. The probes go first so the
+  -- restore cannot collide with them on (cell_id, position).
+  delete from public.cell_touchpoints where cell_id = v_cell;
   delete from public.touchpoints where name like 'ZZ Probe %';
+
+  insert into public.cell_touchpoints
+    (cell_id, touchpoint_id, position, summary, screenshot, url, prominence, origin)
+  select v_cell, b.touchpoint_id, b.position, b.summary, b.screenshot, b.url,
+         b.prominence, b.origin
+    from jsonb_to_recordset(v_before) as b(
+           touchpoint_id uuid, position int, summary text, screenshot text,
+           url text, prominence text, origin text);
+
+  -- The assertion the first version of this block needed and did not have.
+  -- It is about the proof's own footprint, not about production's contents,
+  -- so it holds on an empty database too: zero restored from zero snapshotted.
+  select count(*) into v_after from public.cell_touchpoints where cell_id = v_cell;
+  if v_after <> jsonb_array_length(v_before) then
+    raise exception
+      'the reorder proof left % placements on a cell that had %',
+      v_after, jsonb_array_length(v_before);
+  end if;
 end
 $do$;
 

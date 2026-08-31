@@ -83,6 +83,7 @@ jobs:
       # not parse. It needs no database either: `libpg-query` is the real parser
       # compiled to WebAssembly, so it is a required check like the two above.
       - run: npm run check:migration-syntax
+      - run: npm run check:proof-footprint
 
       # The served-rulebook guard (#115). The canvas adapter is spliced into
       # every system prompt, and the pinned package's copy names a registry
