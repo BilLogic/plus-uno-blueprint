@@ -200,12 +200,27 @@ grant execute on function public.rename_touchpoint(uuid, text) to authenticated;
 -- `sync_cell_touchpoints` and `restore_cell_touchpoints` both stamp
 -- `updated_at = now()`, and 20260830140000 granted `authenticated` only the
 -- columns a panel edits. Column privileges are checked against the SET LIST,
--- not against what the statement changes, so a signed-in author's content
--- save is refused — "permission denied for column updated_at" — before it
--- reaches a single placement. The dev path that holds a service key bypasses
--- grants entirely, which is why nothing has met it yet, and the acceptance
--- this ticket is written against ("editing an affected cell after a rename
--- keeps its summaries") cannot be observed until it is gone.
+-- not against what the statement changes, so on the grant surface that file
+-- intended, a signed-in author's content save is refused — "permission denied
+-- for column updated_at" — before it reaches a single placement.
+--
+-- IT IS NOT REFUSED TODAY, and the reason is worth writing down rather than
+-- leaving as a happy accident. Production says:
+--
+--   select has_column_privilege('authenticated','public.cell_touchpoints',
+--                               'updated_at','UPDATE');
+--   t
+--
+-- because the platform grants the API roles table-level UPDATE on relations
+-- created in `public` — the same mechanism `20260830240000` caught handing
+-- `anon` four write privileges nobody wrote. A table-level grant covers every
+-- column, so 20260830140000's careful column list has never been the
+-- operative permission on these two tables. Its intent is not in effect.
+--
+-- So this grant is dormant and correct rather than urgent: it is what keeps
+-- the sync path working on the day #183 narrows the table grants to the
+-- column lists that were always meant to hold. Shipping it now means that
+-- ticket does not silently break content saves.
 --
 -- An explicit stamp is the mechanism these two tables chose — they carry no
 -- `set_updated_at` trigger, unlike `cells` — so it gets the grant it needs.

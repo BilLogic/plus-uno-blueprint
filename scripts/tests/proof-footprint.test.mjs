@@ -11,7 +11,12 @@
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { blockFootprint, findings, proofBlocks } from '../check-proof-footprint.mjs'
+import {
+  blockFootprint,
+  findings,
+  proofBlocks,
+  returnsWhatItBorrowed,
+} from '../check-proof-footprint.mjs'
 
 /** The block as it was applied to production, trimmed to what the rule reads. */
 const AS_SHIPPED = `
@@ -121,4 +126,64 @@ end
 $do$;
 `
   assert.deepEqual(findings([{ name: 'x.sql', sql: refusal }]), [])
+})
+
+/**
+ * The second way to give a borrowed row back, found by #187's proof.
+ *
+ * Rather than snapshotting what the sync would displace, it builds the wanted
+ * list out of the cell's OWN content and appends the probes to it. Nothing is
+ * displaced at all — the real names are in the list, so the sync keeps them —
+ * and the borrowed text goes back at the end. It is the safer of the two
+ * designs, and the first version of this rule flagged it, which is the kind
+ * of false positive that gets a check switched off.
+ */
+const APPENDS_TO_CONTENT = `
+do $do$
+declare v_cell uuid; v_content text; v_names text[];
+begin
+  select c.id, c.content into v_cell, v_content from public.cells c limit 1;
+  update public.cells set content = v_content || ', ZZ Rename A' where id = v_cell;
+  select array_agg(item order by ord) into v_names from public.cells c,
+    unnest(regexp_split_to_array(c.content, E'[\n,]')) with ordinality as t(item, ord)
+   where c.id = v_cell;
+  perform public.sync_cell_touchpoints(v_cell, v_names);
+  delete from public.touchpoints where name like 'ZZ Rename %';
+  update public.cells set content = v_content where id = v_cell;
+end
+$do$;
+`
+
+test('appending probes to the cell own content is the other safe shape', () => {
+  assert.deepEqual(findings([{ name: '20260830220000_x.sql', sql: APPENDS_TO_CONTENT }]), [])
+  const footprint = blockFootprint(APPENDS_TO_CONTENT)
+  assert.equal(footprint.snapshots, false, 'it takes no snapshot, and needs none')
+  assert.equal(returnsWhatItBorrowed(footprint), true)
+})
+
+test('appending to the content and never putting it back is caught', () => {
+  // The half-fix of this shape: the placements are safe, and the cell is left
+  // permanently displaying a probe.
+  const kept = APPENDS_TO_CONTENT.replace(
+    /update public\.cells set content = v_content where id = v_cell;\n/,
+    '',
+  )
+  const found = findings([{ name: 'x.sql', sql: kept }])
+  assert.equal(found.length, 1)
+  assert.match(found[0].reason, /never puts the content back/)
+})
+
+test('the rename proof in the series takes the content route', () => {
+  // Against the real file, so this fails if someone rewrites that proof into
+  // the destructive shape.
+  const path =
+    'supabase/migrations/20260830220000_a_rename_moves_the_word_in_every_cell.sql'
+  const sql = readFileSync(path, 'utf8')
+  assert.deepEqual(findings([{ name: path, sql }]), [])
+
+  const proof = proofBlocks(sql).find((block) => blockFootprint(block).syncs)
+  assert.ok(proof, 'the rename proof is still in that file')
+  const footprint = blockFootprint(proof)
+  assert.equal(footprint.derivesFromContent, true)
+  assert.equal(footprint.restoresContent, true)
 })
