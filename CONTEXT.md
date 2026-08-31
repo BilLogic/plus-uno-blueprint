@@ -167,7 +167,7 @@ that defines the board's words. How a spec field is written is
 The spec columns and the four tables below both arrived in
 `20260729120000_derived_layer.sql`, under one name for two unrelated things.
 
-## The four tables that are about the board
+## The three records, and the one that is nobody's
 
 `evidence`, `audit_findings`, `slices` and `slides` are not squares of the
 board; each exists to say something *about* it. Where they name a cell they do
@@ -176,9 +176,8 @@ it **softly** — `evidence.cell_id`, `audit_findings.cell_ids`,
 scenario deletes and recreates its cells without taking them along. `slices`
 names no cell itself; it reaches them through its slides.
 
-**There is deliberately no collective noun for the four.** Two names were
-tried and both were wrong in the same way, by claiming something untrue of half
-the set:
+**There is deliberately no collective noun for the four.** Two were tried and
+both were wrong the same way, by claiming something untrue of half the set:
 
 - *derived layer* — only `audit_findings` is derived; a human may author a
   slice, which `20260803001000_slices_origin_allows_human.sql` exists for. And
@@ -188,18 +187,34 @@ the set:
   was never wrong in a way anyone could point at, and never stuck either, which
   is the more useful signal.
 
-They are two pairs with two different natures, and the sentence that needs them
-almost always means one pair:
+What they have instead is an OWNER, and the write surface says who — because a
+table's owner is whoever may change it, not whoever reads it most:
 
-- **evidence and findings** say what is true or wrong about a cell. Both attach
-  to cells directly, both are the audit's business.
-- **slices and slides** are a cut of the board taken for an audience. A slide
-  is bound only to its slice; the schema splits them from the pair above for
-  the same reason this file now does.
+| record | written by | belongs to |
+| --- | --- | --- |
+| `slices`, `slides` | `create_slice`, `update_slice`, `replace_slides` | the slice |
+| `audit_findings` | `create_finding`, `update_finding` | the audit |
+| `evidence` | `create_evidence`, `update_evidence` | **nobody** |
 
-So write the pair you mean. Where a statement genuinely covers all four — a
-grant, a migration's scope — enumerate them, which is four words against a
-category name that has twice had to be replaced.
+**Evidence is the one with no owner**, and that is a property of the thing
+rather than an omission. It is research provenance: written when a blueprint is
+imported, cited by a slice, weighed by an audit, read by a what-if. A tool
+writes it, but no ONE reader's work is what it is for. Naming it after the
+audit would be wrong in the direction a slice would notice first.
+
+**And nothing at all belongs to what-if**, which is worth saying rather than
+leaving as an absence: it walks the dependency graph and returns a trace, on a
+copy. A category covering all four was always going to strain, because one of
+the four readers has nothing in it.
+
+So write the owner you mean — *the slice's record*, *the audit's findings*,
+*evidence*. Where a statement genuinely covers all four — a grant, a
+migration's scope — enumerate them, which is four words against a category name
+that has twice had to be replaced.
+
+`scripts/tests/who-writes-what.test.mjs` holds the table above against
+`WRITE_TOOL_NAMES`: a tool that is renamed, removed, or added without an owner
+fails there rather than leaving this file quietly wrong.
 
 `business_model` is **not** among them, though it was once listed as though it
 were. It is `service_id` plus `funding`, `pricing`, `delivery_cost`,
@@ -586,7 +601,7 @@ Two entries have left this list, and how each left is the point.
 **"Derived layer" was renamed, not exempted.** A rename removes the collision
 where an exemption only records it. The replacement was then dropped as well,
 for a reason worth keeping: no one word was true of all four tables. See
-[The four tables that are about the board](#the-four-tables-that-are-about-the-board).
+[The three records, and the one that is nobody’s](#the-three-records-and-the-one-that-is-nobodys).
 
 **The breadcrumb label `'Layer: '` was sequenced, and then the sequence ran.**
 It was a real ordering constraint: the label sits inside every *stored* chunk
