@@ -95,7 +95,6 @@ import {
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
-  resolveTechCellDetailUrl,
   URL_LINK_TYPE,
 } from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
@@ -168,15 +167,21 @@ function isFigmaUrl(url: string): boolean {
   return /figma\.com/i.test(url)
 }
 
+/**
+ * The design reference for a cell: the placement's own url first, then any
+ * Figma link on the cell.
+ *
+ * The placement's url is per-moment — two PLUS App placements point at
+ * different Figma nodes — so it has to win over a cell-wide link. This used
+ * to call a resolver that searched `cells.links` by label and had a
+ * `content === 'PLUS App'` branch bolted on; that path is gone, and with it
+ * the second way of answering the same question.
+ */
 function resolveFigmaUrl(
-  techItem: string | undefined,
-  cell: Pick<BlueprintCell, 'content' | 'links'> | null,
+  placementUrl: string | null | undefined,
   links: CellLink[],
 ): string | null {
-  if (cell) {
-    const fromTech = resolveTechCellDetailUrl(techItem, cell)
-    if (fromTech && isFigmaUrl(fromTech)) return fromTech
-  }
+  if (placementUrl?.trim() && isFigmaUrl(placementUrl)) return placementUrl.trim()
 
   for (const link of links) {
     if (link.type !== URL_LINK_TYPE || !link.url?.trim()) continue
@@ -633,10 +638,29 @@ function BlueprintCellDetailPanelBody() {
     return entries
   }, [connections.incoming, connections.outgoing, linkedTechItems, stepTechItems])
 
+  // The placement, not a lookup by label. Its summary, screenshot and url
+  // belong to this touchpoint at this cell, which is the distinction the old
+  // label join could not hold and the reason 57 authored details were
+  // unreachable. Resolved once here because both the design reference below
+  // and the detail body further down are answers it already carries.
+  const touchpointDetail = useMemo(
+    () =>
+      selectedCell
+        ? resolveTouchpointDetail(
+            {
+              summary: selectedCell.summary,
+              touchpoints: selectedCell.touchpoints ?? [],
+            },
+            selection?.techItem,
+          )
+        : null,
+    [selectedCell, selection?.techItem],
+  )
+
   const figmaUrl = useMemo(() => {
     if (!selection) return null
-    return resolveFigmaUrl(selection.techItem, selectedCell, cellLinks)
-  }, [cellLinks, selectedCell, selection])
+    return resolveFigmaUrl(touchpointDetail?.url, cellLinks)
+  }, [cellLinks, selection, touchpointDetail])
 
   // Lane row position of the selected cell — orients up/down direction
   // glyphs on same-step dependency rows.
@@ -962,19 +986,6 @@ function BlueprintCellDetailPanelBody() {
     selection.paths[0]?.content.trim() ||
     selection.techItem ||
     ''
-  // The placement, not a lookup by label. Its summary, screenshot and url
-  // belong to this touchpoint at this cell, which is the distinction the old
-  // label join could not hold and the reason 57 authored details were
-  // unreachable.
-  const touchpointDetail = selectedCell
-    ? resolveTouchpointDetail(
-        {
-          summary: selectedCell.summary,
-          touchpoints: selectedCell.touchpoints ?? [],
-        },
-        selection.techItem,
-      )
-    : null
   const detailBodyText = touchpointDetail?.text ?? cellContent
   const isTechLayer = Boolean(
     selectedLayer && shouldUsePillCellContent(selectedLayer),
