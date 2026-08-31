@@ -74,7 +74,9 @@ create table public.touchpoints (
                    check (kind in ('app','document','physical','channel','service','other')),
   summary        text,
   url            text,
-  stakeholder_id uuid references public.stakeholders (id),
+  -- The owning party. NOT declared inline, and the reason is at the bottom
+  -- of this file under "the stakeholder reference".
+  stakeholder_id uuid,
   origin         text not null check (origin in ('import','app')),
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
@@ -163,6 +165,10 @@ grant insert, delete on public.cell_touchpoints to authenticated;
 -- of every table rather than only the ones that remembered.
 grant update (name, kind, summary, url, stakeholder_id)
   on public.touchpoints to authenticated;
+-- `stakeholder_id` is granted unconditionally even where the reference below
+-- is skipped: a grant on a column that exists is valid whether or not the
+-- column points anywhere, and withholding it on a replay would make the
+-- grant surface differ between schemas for no reason a reader could use.
 grant update (position, summary, screenshot, url, prominence)
   on public.cell_touchpoints to authenticated;
 
@@ -302,3 +308,45 @@ begin
   end if;
 end
 $do$;
+
+-- ── The stakeholder reference, added only where there is one to point at ───
+--
+-- `touchpoints.stakeholder_id` was declared inline as
+-- `references public.stakeholders (id)`, and that one clause made this whole
+-- file unable to replay against an empty database — along with the four
+-- migrations that build on it, because a failed CREATE TABLE rolls back and
+-- everything downstream then says `relation "public.touchpoints" does not
+-- exist`. Six files, one clause.
+--
+-- `public.stakeholders` does not survive an empty replay. It is in
+-- `docs/reference/migration-replay-baseline.json` already: the migration that
+-- creates it asserts against rows that are not there, and a migration runs in
+-- one transaction, so the assertion takes the table down with it.
+--
+-- Nobody saw this because everyone believed `npm run replay:migrations` could
+-- not be run on this machine. A local Postgres 17 is installed and running,
+-- and the ratchet those six files broke says in its own words that the set
+-- "may shrink and never grow".
+--
+-- So the constraint is added when the table it points at is there, and
+-- skipped with a notice when it is not. The column exists either way, so the
+-- schema shape does not fork — only the referential guarantee does, and it is
+-- absent on a replay because its target is absent, which is the honest
+-- outcome rather than a weakened one.
+--
+-- Written here rather than inline because a guarded `alter table` is the only
+-- form that can be conditional; Postgres has no `references … if exists`.
+
+do $stakeholder_ref$
+begin
+  if to_regclass('public.stakeholders') is null then
+    raise notice
+      'public.stakeholders is absent, so touchpoints.stakeholder_id points at nothing here';
+    return;
+  end if;
+
+  alter table public.touchpoints
+    add constraint touchpoints_stakeholder_id_fkey
+    foreign key (stakeholder_id) references public.stakeholders (id);
+end
+$stakeholder_ref$;

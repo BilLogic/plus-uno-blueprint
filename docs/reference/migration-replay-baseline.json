@@ -1,14 +1,14 @@
 {
   "why": "Files that cannot replay against an empty database (#148). The set may shrink and never grow: a NEW entry is a migration written against an apply path that does not work, which is the gap #148 describes happening again. Delete entries as they are repaired — the check reports any that are no longer true.",
   "recorded": {
-    "total": 826,
-    "applied": 639,
-    "failed": 187,
+    "total": 836,
+    "applied": 654,
+    "failed": 182,
     "byClass": {
       "syntax": 0,
       "assertion": 30,
-      "data": 140,
-      "structure": 17
+      "data": 139,
+      "structure": 13
     },
     "first": {
       "file": "20250603170000_warm_up_step2_cells.sql",
@@ -190,18 +190,13 @@
     "20260821300000_a_team_is_not_a_stakeholder_kind.sql",
     "20260821310000_ambient_behaviour_is_not_every_column.sql",
     "20260821320000_perceived_owner_where_it_differs.sql",
-    "20260821340000_retire_lifecycle.sql",
     "20260821350000_the_service_has_a_summary_and_a_business_model.sql",
     "20260821360000_the_service_says_what_it_is.sql",
-    "20260821370000_the_rename_reaches_the_functions.sql",
     "20260821380000_no_outsider_owns_a_lane.sql",
     "20260821390000_three_things_the_sweeps_missed.sql",
     "20260821400000_the_new_columns_were_never_writable.sql",
-    "20260821410000_the_last_lifecycle_is_a_parameter_name.sql",
-    "20260826100000_the_rename_never_reached_nine_function_bodies.sql",
     "20260826110000_the_renames_left_their_object_names_behind.sql",
     "20260828120000_agent_history_gets_an_owner.sql",
-    "20260828121000_anon_keeps_the_read_and_loses_the_write.sql",
-    "20260828130000_a_lane_position_is_unique_within_its_path.sql"
+    "20260828121000_anon_keeps_the_read_and_loses_the_write.sql"
   ]
 }

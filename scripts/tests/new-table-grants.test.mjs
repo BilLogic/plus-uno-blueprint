@@ -108,3 +108,21 @@ test('the real series is green, and every table it creates since the cutoff is n
   // rather than an exemption.
   assert.deepEqual(created.sort(), ['authoring_changes', 'cell_touchpoints', 'touchpoints'])
 })
+
+test('prose about creating tables does not create a table', () => {
+  // This is not hypothetical. `20260830140000`'s header explains that "a
+  // failed CREATE TABLE rolls back", and the first version of this check
+  // reported a table called `rolls`. A rule that reads comments fires on how
+  // carefully someone explained themselves.
+  const prose = `-- A failed CREATE TABLE rolls back, so create table public.decoys
+-- would be undone with it.
+/* revoke insert, update, delete, truncate on public.decoys from anon; */
+create table public.real_one (id uuid primary key);
+revoke insert, update, delete, truncate on public.real_one from anon;`
+
+  assert.deepEqual(tablesCreated(prose), ['real_one'])
+  // And the commented-out revoke does not count as one either, which is the
+  // same rule pointed the other way.
+  assert.deepEqual([...tablesRevoked(prose)], ['real_one'])
+  assert.deepEqual(findings([{ name: '20260830140000_x.sql', sql: prose }]), [])
+})
