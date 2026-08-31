@@ -82,6 +82,63 @@ export type Database = {
         }
         Relationships: []
       }
+      cell_touchpoints: {
+        Row: {
+          cell_id: string
+          created_at: string
+          id: string
+          origin: string
+          position: number
+          prominence: string | null
+          screenshot: string | null
+          summary: string | null
+          touchpoint_id: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          cell_id: string
+          created_at?: string
+          id?: string
+          origin: string
+          position: number
+          prominence?: string | null
+          screenshot?: string | null
+          summary?: string | null
+          touchpoint_id: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          cell_id?: string
+          created_at?: string
+          id?: string
+          origin?: string
+          position?: number
+          prominence?: string | null
+          screenshot?: string | null
+          summary?: string | null
+          touchpoint_id?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cell_touchpoints_cell_id_fkey'
+            columns: ['cell_id']
+            isOneToOne: false
+            referencedRelation: 'cells'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'cell_touchpoints_touchpoint_id_fkey'
+            columns: ['touchpoint_id']
+            isOneToOne: false
+            referencedRelation: 'touchpoints'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       cell_dependencies: {
         Row: {
           created_at: string
@@ -772,6 +829,60 @@ export type Database = {
             columns: ['service_id']
             isOneToOne: false
             referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      touchpoints: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          origin: string
+          service_id: string
+          stakeholder_id: string | null
+          summary: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          origin: string
+          service_id: string
+          stakeholder_id?: string | null
+          summary?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          origin?: string
+          service_id?: string
+          stakeholder_id?: string | null
+          summary?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'touchpoints_service_id_fkey'
+            columns: ['service_id']
+            isOneToOne: false
+            referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'touchpoints_stakeholder_id_fkey'
+            columns: ['stakeholder_id']
+            isOneToOne: false
+            referencedRelation: 'stakeholders'
             referencedColumns: ['id']
           },
         ]
