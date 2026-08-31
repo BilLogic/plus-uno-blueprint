@@ -47,6 +47,25 @@ export type CellLink = {
   pictures?: string[]
 }
 
+/**
+ * One touchpoint, used at one cell.
+ *
+ * `name` and `kind` come from the catalog and are shared by every placement
+ * of that touchpoint; `summary`, `screenshot`, `url` and `prominence` are
+ * this moment's own. The same tool describes a different screen at a
+ * different step, which is the distinction the old label-keyed links could
+ * not hold. Built by `cellTouchpoints.ts` from either source.
+ */
+export type CellTouchpoint = {
+  name: string
+  /** Null from fallback data, which has nowhere to record one. */
+  kind: string | null
+  summary: string | null
+  screenshot: string | null
+  url: string | null
+  prominence: 'core' | 'peripheral' | null
+}
+
 export type BlueprintCell = {
   id: string
   lane_id: string

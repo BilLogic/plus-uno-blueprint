@@ -52,6 +52,18 @@ export const PATH_BLUEPRINT_SELECT = `
     value_props,
     owner,
     perceived_owner,
+    cell_touchpoints (
+      position,
+      summary,
+      screenshot,
+      url,
+      prominence,
+      touchpoints (
+        name,
+        kind,
+        url
+      )
+    ),
     outgoing:cell_dependencies!cell_dependencies_source_cell_id_fkey (
       id,
       target_cell_id,

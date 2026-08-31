@@ -36,7 +36,7 @@ export const MIGRATIONS_DIR = 'supabase/migrations'
 
 /** The CHECK constraint that owns the vocabulary, by filename. */
 export const CONSTRAINT_MIGRATION =
-  '20260830120000_a_lane_role_is_a_role_not_a_name.sql'
+  '20260830150000_the_tech_lanes_were_never_only_tech.sql'
 
 /**
  * The roles `CANONICAL_LAYER_ROLES` lists, resolved through the `*_ROLE`

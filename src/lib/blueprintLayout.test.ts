@@ -21,10 +21,10 @@ import {
 } from '@/lib/blueprintLayout'
 import {
   BACKSTAGE_ACTIONS_ROLE,
-  BACKSTAGE_TECH_ROLE,
+  BACKSTAGE_TOUCHPOINTS_ROLE,
   CUSTOMER_ACTIONS_ROLE,
   FRONTSTAGE_ACTIONS_ROLE,
-  FRONTSTAGE_TECH_ROLE,
+  FRONTSTAGE_TOUCHPOINTS_ROLE,
   SUPPORT_ACTIONS_ROLE,
 } from '@/lib/laneRoles'
 import type { BlueprintLane } from '@/types/blueprint'
@@ -42,7 +42,7 @@ function lane(
 function board(supportName = 'Support Actions'): BlueprintLane[] {
   return [
     lane(CUSTOMER_ACTIONS_ROLE, 'Regular Tutor', 0),
-    lane(FRONTSTAGE_TECH_ROLE, 'Front Stage Tech', 1),
+    lane(FRONTSTAGE_TOUCHPOINTS_ROLE, 'Front Stage Tech', 1),
     lane(FRONTSTAGE_ACTIONS_ROLE, 'Front Stage Actions', 2),
     lane(BACKSTAGE_ACTIONS_ROLE, 'Back Stage Actions', 3),
     lane(SUPPORT_ACTIONS_ROLE, supportName, 4),
@@ -90,7 +90,7 @@ test('an explicit role beats the name it happens to carry', () => {
   // whose label said another drew a divider its role gave it no claim to.
   const lanes = [
     lane(BACKSTAGE_ACTIONS_ROLE, 'Back Stage Actions', 0),
-    lane(BACKSTAGE_TECH_ROLE, 'Support Actions', 1),
+    lane(BACKSTAGE_TOUCHPOINTS_ROLE, 'Support Actions', 1),
   ]
   assert.equal(shouldShowInternalInteractionLineAfter(lanes[0]!, lanes), false)
 })

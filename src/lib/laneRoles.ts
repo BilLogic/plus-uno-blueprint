@@ -10,8 +10,8 @@ export const CUSTOMER_ACTIONS_ROLE = 'customer_actions'
 export const FRONTSTAGE_ACTIONS_ROLE = 'frontstage_actions'
 export const BACKSTAGE_ACTIONS_ROLE = 'backstage_actions'
 export const PARTNER_ACTIONS_ROLE = 'partner_actions'
-export const FRONTSTAGE_TECH_ROLE = 'frontstage_tech'
-export const BACKSTAGE_TECH_ROLE = 'backstage_tech'
+export const FRONTSTAGE_TOUCHPOINTS_ROLE = 'frontstage_touchpoints'
+export const BACKSTAGE_TOUCHPOINTS_ROLE = 'backstage_touchpoints'
 export const SUPPORT_ACTIONS_ROLE = 'support_actions'
 export const VISUAL_ROLE = 'visual'
 
@@ -30,8 +30,8 @@ export const CANONICAL_LAYER_ROLES = [
   FRONTSTAGE_ACTIONS_ROLE,
   BACKSTAGE_ACTIONS_ROLE,
   PARTNER_ACTIONS_ROLE,
-  FRONTSTAGE_TECH_ROLE,
-  BACKSTAGE_TECH_ROLE,
+  FRONTSTAGE_TOUCHPOINTS_ROLE,
+  BACKSTAGE_TOUCHPOINTS_ROLE,
   SUPPORT_ACTIONS_ROLE,
   VISUAL_ROLE,
 ] as const
@@ -52,8 +52,10 @@ export const LEGACY_NAME_TO_ROLE: Readonly<Record<string, CanonicalLayerRole>> =
     'Frontstage Actions': FRONTSTAGE_ACTIONS_ROLE,
     'Back Stage Actions': BACKSTAGE_ACTIONS_ROLE,
     'Backstage Actions': BACKSTAGE_ACTIONS_ROLE,
-    'Front Stage Tech': FRONTSTAGE_TECH_ROLE,
-    'Back Stage Tech': BACKSTAGE_TECH_ROLE,
+    'Front Stage Tech': FRONTSTAGE_TOUCHPOINTS_ROLE,
+    'Back Stage Tech': BACKSTAGE_TOUCHPOINTS_ROLE,
+    'Front Stage Touchpoints': FRONTSTAGE_TOUCHPOINTS_ROLE,
+    'Back Stage Touchpoints': BACKSTAGE_TOUCHPOINTS_ROLE,
     'Support Actions': SUPPORT_ACTIONS_ROLE,
     'Tech Support Actions': SUPPORT_ACTIONS_ROLE,
     Visual: VISUAL_ROLE,
@@ -84,9 +86,11 @@ const LANE_ROLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   [FRONTSTAGE_ACTIONS_ROLE]:
     'Frontstage — staff actions the customer can see.',
   [BACKSTAGE_ACTIONS_ROLE]: 'Backstage — staff actions out of sight.',
-  [FRONTSTAGE_TECH_ROLE]:
-    'Frontstage technology — customer-facing systems, shown as pills.',
-  [BACKSTAGE_TECH_ROLE]: 'Backstage technology — internal systems, shown as pills.',
+  [FRONTSTAGE_TOUCHPOINTS_ROLE]:
+    'Frontstage touchpoints — what the customer meets: apps, documents, '
+    + 'places and channels.',
+  [BACKSTAGE_TOUCHPOINTS_ROLE]:
+    'Backstage touchpoints — the tools and artifacts staff use out of sight.',
   [SUPPORT_ACTIONS_ROLE]:
     'Support — teams, vendors and infrastructure behind the work.',
   [PARTNER_ACTIONS_ROLE]:
