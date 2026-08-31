@@ -1,13 +1,13 @@
 ---
 audience: agents and authors
-summary: Every name a tech pill may carry, with cell counts taken after the 2026-08-20 touchpoint sweep, and the rule that a pill is a name rather than a description.
+summary: Every name a touchpoint may carry, with cell counts taken after the 2026-08-20 touchpoint sweep, and the rule that a touchpoint is a name rather than a description.
 sources: supabase/migrations/20260820190000_touchpoint_cells_are_names.sql, supabase/migrations/20260821120000_one_word_for_unbuilt.sql, supabase/migrations/20260821130000_maturity_is_not_a_name.sql
 last-reviewed: 2026-08-25
 ---
 
 # Touchpoint vocabulary
 
-Every name a tech pill is allowed to carry, and what it means. A pill is a
+Every name a touchpoint is allowed to carry, and what it means. A touchpoint is a
 **name** — what happens at that touchpoint belongs in the cell's `summary`,
 and why it matters in `function`. Reuse a name from this list before minting
 a new one; a second name for one system is how a blueprint stops being
@@ -19,7 +19,7 @@ Counted 2026-08-20, after the touchpoint sweep (`20260820190000`).
 
 | Name | Cells | What it is |
 |---|---:|---|
-| `PLUS App` | 83 | The tutor-facing app. WHICH surface — Fill-In tab, My Sessions, Call-Offs — goes in the cell's summary, not the pill. |
+| `PLUS App` | 83 | The tutor-facing app. WHICH surface — Fill-In tab, My Sessions, Call-Offs — goes in the cell's summary, not the touchpoint. |
 | `Zoom` | 83 | The session's videoconference, in a session and out of one. It was `Zoom/Pencil` until Aug 2026; PLUS no longer runs sessions on Pencil, so the pair collapsed to the tool that is left. `zoom/pencil` survives as an alias so an older slice still resolves. |
 | `Email` | 11 | Any transactional email the person receives. |
 | `Slack` | 6 | A Slack channel the person posts in or reads — the school channel, the support channel, the tutor workspace. |

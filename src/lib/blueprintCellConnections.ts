@@ -1,6 +1,6 @@
 import { buildBlueprintCellSelection, getTouchpointNames } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import { shouldUsePillCellContent } from '@/lib/blueprintLayout'
+import { shouldUseTouchpointCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import type { BlueprintCell, BlueprintCellDependency, BlueprintData } from '@/types/blueprint'
 
@@ -17,7 +17,7 @@ export type BlueprintCellConnection = {
   /** From the dependency row: `leads_to` (makes the next thing happen) vs
    *  `enables` (must already be true, causes nothing). */
   linkKind: 'leads_to' | 'enables'
-  /** The word on the arrow, as a chip (e.g. a channel tag like "Email"). */
+  /** The word on the arrow, as a badge (e.g. a channel name like "Email"). */
   linkName: string | null
   isTech: boolean
   techItems: string[]
@@ -67,7 +67,7 @@ function toConnection(
   const lane = resolveLayer(blueprint, cell.lane_id)
   const laneName = lane?.name ?? 'Unknown lane'
   const layerRowPosition = lane?.position ?? -1
-  const isTech = lane ? shouldUsePillCellContent(lane) : false
+  const isTech = lane ? shouldUseTouchpointCellContent(lane) : false
   const techItems = isTech ? getTouchpointNames(cell) : []
 
   return {

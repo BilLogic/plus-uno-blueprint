@@ -77,7 +77,7 @@ type PathMultiSelectProps = {
   hideLabel?: boolean
 }
 
-function PathNotionPill({
+function PathNotionToggle({
   path,
   checked,
   onToggle,
@@ -220,7 +220,7 @@ export function PathMultiSelect({
   const isBar = layout === 'bar'
   const isNotion = layout === 'notion'
   const isToolbar = layout === 'toolbar'
-  // Vertical (filter popover) and chip layouts stay one column; only the
+  // Vertical (filter popover) and badge layouts stay one column; only the
   // horizontal picker groups happy/unhappy into side-by-side columns.
   const columns =
     isVertical || isBar || isNotion || isToolbar
@@ -276,7 +276,7 @@ export function PathMultiSelect({
                   onToggle={onToggle}
                 />
               ) : isNotion ? (
-                <PathNotionPill
+                <PathNotionToggle
                   key={path.id}
                   path={path}
                   checked={selectedPathIds.includes(path.id)}

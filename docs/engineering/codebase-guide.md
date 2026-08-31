@@ -27,7 +27,7 @@ reasoning lives in [`docs/adr/`](../adr/) and is linked from here.
 | `src/components/blueprint/` | The board itself: cells, arrows, the entity panels, compare surfaces, walkthroughs. |
 | `src/components/editor/` | The shell around the board: sidebar, tabs, canvas chrome, dialogs, the agent dock, slice editing. |
 | `src/components/cover/` | The shell's landing view, skinned entirely by a content module. |
-| `src/components/mobile/` | The phone shell: `MobileShell` + its chrome (top bar, nav sheet, agent sheet, path pill). View-only by design; the canvas itself is shared with desktop. |
+| `src/components/mobile/` | The phone shell: `MobileShell` + its chrome (top bar, nav sheet, agent sheet, path control). View-only by design; the canvas itself is shared with desktop. |
 | `src/lib/` | Plain logic, no React: layout math, mutations, the authoring session ledger, `agent/` (the in-app agent). |
 | `src/hooks/` | Data hooks (thin wrappers over `useSupabaseQuery`) and viewport/interaction hooks. |
 | `src/contexts/` | Providers and module stores. Files ending in lowercase (`canvasModeContext.ts`) are stores non-React code can read; `*Provider.tsx` files are React-only. |
@@ -94,7 +94,7 @@ examples, each with its reason in its header comment:
   lives outside the provider file so the agent's UI-context collector
   (plain functions) can read it.
 - `src/contexts/sidebarCollapsedContext.ts` — navbars deep in canvas
-  content publish their identity to the collapsed pill; not worth
+  content publish their identity to the collapsed navbar; not worth
   threading context through every surface.
 - `src/hooks/useMobileShell.ts` — the media query as an external store.
 

@@ -19,8 +19,9 @@ const scenarioPanel = source(
 const resizablePanel = source(
   '../components/blueprint/ResizableComparePanel.tsx',
 )
-const techPill = source('../components/blueprint/BlueprintTouchpointCell.tsx')
-const techPillFace = source('../components/blueprint/TouchpointCellFace.tsx')
+const touchpointCell = source(
+  '../components/blueprint/BlueprintTouchpointCell.tsx',
+)
 const blueprintCss = source('../styles/blueprint.css')
 const dependencySections = source(
   '../components/blueprint/CellDependencySections.tsx',
@@ -60,19 +61,17 @@ describe('merged path-membership outline contract', () => {
     )
   })
 
-  it('keeps every tech pill rounded and carries the outline on its face', () => {
+  it('keeps every touchpoint rounded and carries the outline on its face', () => {
     expect(compareCell).toContain(
       "hasMembershipOutline && 'compare-membership-outline'",
     )
-    expect(techPill).not.toContain('borderTopLeftRadius: 0')
-    expect(techPill).not.toContain('squareTop')
-    expect(techPillFace).not.toContain('borderTopLeftRadius: 0')
-    expect(techPillFace).not.toContain('squareTop')
+    expect(touchpointCell).not.toContain('borderTopLeftRadius: 0')
+    expect(touchpointCell).not.toContain('squareTop')
   })
 
-  it('keeps panel-detail pills inline instead of using canvas dimensions', () => {
-    expect(techPillFace).toContain('inline = false')
-    expect(techPillFace).toContain('...(!inline')
+  it('keeps panel-detail touchpoints inline instead of using canvas dimensions', () => {
+    expect(touchpointCell).toContain('inline = false')
+    expect(touchpointCell).toContain('...(inline')
     expect(dependencySections).toContain('asSpan\n                  inline')
   })
 

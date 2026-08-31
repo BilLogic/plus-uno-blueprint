@@ -30,8 +30,8 @@ type BlueprintCellButtonProps = {
   /** What this lane is; blueprint.css turns the role into its steps. */
   fill: BlueprintLaneRole
   /**
-   * A touchpoint pill's chosen tone. Takes the place of the lane role when set —
-   * the two sets share no family, so a pill never reads as its lane.
+   * A touchpoint's chosen tone. Takes the place of the lane role when set —
+   * the two sets share no family, so a touchpoint never reads as its lane.
    */
   tone?: TouchpointTone
   compact?: boolean
@@ -43,9 +43,9 @@ type BlueprintCellButtonProps = {
   variant?: 'cell' | 'touchpoint' | 'storyboard'
   opacity?: number
   /**
-   * Whether this button may carry the slice sequence badge. Tech pills share
-   * their cell's id, so pill call sites pass `index === 0` to badge the
-   * first pill only; plain cell faces leave the default (true).
+   * Whether this button may carry the slice sequence badge. Touchpoints share
+   * their cell's id, so touchpoint call sites pass `index === 0` to badge the
+   * first one only; plain cell faces leave the default (true).
    */
   sliceSequenceBadge?: boolean
   /**
@@ -61,7 +61,7 @@ type BlueprintCellButtonProps = {
    * Unbuilt cells have to LOOK unbuilt.
    *
    * When the status lived in the label, the canvas said it for free — every
-   * such pill began "Planned — ". Moving it to its own column would have made
+   * such touchpoint began "Planned — ". Moving it to its own column would have made
    * fifty design explorations read as shipped surfaces, which is the single
    * most expensive thing this blueprint can get wrong. A dashed edge and a
    * drained fill carry it instead.
@@ -96,7 +96,7 @@ export function BlueprintCellButton({
   children,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
-  'data-blueprint-touchpoint': techPillLabel,
+  'data-blueprint-touchpoint': touchpointLabel,
   status,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
@@ -165,8 +165,8 @@ export function BlueprintCellButton({
   )
   const isPreviewHover = Boolean(
     matchesPreviewCell &&
-      (techPillLabel
-        ? preview?.techItem === techPillLabel
+      (touchpointLabel
+        ? preview?.techItem === touchpointLabel
         : !preview?.techItem),
   )
   /*
@@ -271,17 +271,15 @@ export function BlueprintCellButton({
     ...style,
   } as CSSProperties
 
-  const buttonVariant = variant === 'touchpoint' ? 'blueprintPill' : 'blueprint'
-
   return (
     <Button
       type="button"
-      variant={buttonVariant}
+      variant="blueprint"
       data-blueprint-cell-anchor=""
       {...(tone ? blueprintToneAttrs(tone) : blueprintLaneAttrs(fill))}
       {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
       data-step-index={stepIndex}
-      {...(techPillLabel ? { 'data-blueprint-touchpoint': techPillLabel } : {})}
+      {...(touchpointLabel ? { 'data-blueprint-touchpoint': touchpointLabel } : {})}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-pressed={isInteractive ? isActive : undefined}

@@ -1,4 +1,4 @@
-/** Interview & Offer — Happy Path tech pill descriptions. */
+/** Interview & Offer — Happy Path touchpoint descriptions. */
 
 /** Interview & Offer — Regular Tutor step 1 (applies). */
 export const INTERVIEW_REGULAR_TUTOR_STEP_1_FRAME =

@@ -50,8 +50,13 @@ export function StatusBadge({
         render={
           <Badge
             variant="outline"
+            // Reachable without a pointer, and saying so with the cursor: the
+            // word IS the control, so the definition has to be gettable by
+            // keyboard too (docs/reference/panel-affordances.md § Hover is
+            // never the only way in). No hover colour — see `ui/badge.tsx`.
+            tabIndex={0}
             className={cn(
-              'shrink-0 gap-0 px-1.5 py-0 text-2xs font-normal',
+              'shrink-0 cursor-help gap-0 px-1.5 py-0 text-2xs font-normal',
               status === 'live' && 'text-foreground/80',
               isUnbuilt(status) && 'border-dashed text-muted-foreground',
               (status === 'at_risk' || status === 'deprecated') &&

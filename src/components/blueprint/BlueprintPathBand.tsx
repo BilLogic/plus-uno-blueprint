@@ -20,7 +20,7 @@ import {
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
-  shouldUsePillCellContent,
+  shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
@@ -322,7 +322,7 @@ function CompareLayerRow({
     () => new Map(blueprint.steps.map((step, index) => [step.id, index])),
     [blueprint.steps],
   )
-  const isPillLane = shouldUsePillCellContent(lane)
+  const isTouchpointLane = shouldUseTouchpointCellContent(lane)
   const laneStyle = getBlueprintLayerStyle(
     lane.name,
     getBlueprintLayerZone(lane, lanes),
@@ -336,16 +336,16 @@ function CompareLayerRow({
   const renderStepCell = (step: BlueprintStep, stepIndex: number) => {
     const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
     // Tech slots hold one cell per touchpoint since the split.
-    const slotCells = isPillLane
+    const slotCells = isTouchpointLane
       ? getCellsAt(cellLookup, blueprintLayer.id, step.id)
       : undefined
-    const variant = isStoryboardLane ? 'storyboard' : isPillLane ? 'pills' : 'default'
+    const variant = isStoryboardLane ? 'storyboard' : isTouchpointLane ? 'touchpoints' : 'default'
     const visualPictures = isStoryboardLane
       ? resolveStoryboardStripEntries(blueprint, step.id)
       : undefined
     const showCell = isStoryboardLane
       ? (visualPictures?.length ?? 0) > 0
-      : isPillLane
+      : isTouchpointLane
         ? (slotCells ?? []).some((entry) =>
             hasBlueprintCellContent(entry.content, variant),
           )

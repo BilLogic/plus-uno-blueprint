@@ -95,7 +95,23 @@ export const RENAME_MAP = Object.freeze(
       is: ['business_model'],
       migrations: ['20260821350000'],
       retired: ['proposition'],
-      copy: ['proposition', 'propositions'],
+      // The PLURAL only, and the singular's absence is the entry rather than
+      // an omission — it is the same distinction CONTEXT.md's one permanent
+      // exemption already makes, applied to the words on screen.
+      //
+      // `propositions` was a TABLE, and it was renamed because that word
+      // already meant a cell's value proposition. So the rename moved the
+      // container and left the concept exactly where it was: `value_props`
+      // still holds value propositions, `evidence.proposition_question_key`
+      // still records which proposition an evidence row answers, and #182
+      // puts the concept on a label, where it names `cells.value_props`
+      // precisely. Forbidding the singular on screen would forbid the word
+      // this rename was performed in order to protect.
+      //
+      // The identifier fragment above is untouched, because a DATABASE object
+      // spelled `proposition` really is the retired one — there is exactly
+      // one, and CONTEXT.md documents it as permanent.
+      copy: ['propositions'],
     },
     /*
       THE ONE ROW THAT ENFORCES NOTHING FROM HERE, and the empty lists are the
@@ -289,6 +305,97 @@ export const RENAME_MAP = Object.freeze(
       migrations: ['20260830280000'],
       retired: [],
       copy: [],
+    },
+    /*
+      #182'S FIVE ROWS, AND THEY ARE A DIFFERENT KIND OF ROW — the first in
+      this map whose left column is a WORD ON SCREEN rather than an identifier,
+      and the first with no migration.
+
+      Every row above renames something in the database and the interface
+      follows. These four rename nothing in the database, because by the time
+      they land the column already says the right thing: `cells.content`,
+      `cells.value_props`, `path_steps.position` and `paths.summary` were all
+      correct while the labels above them said Text, Value, Columns and Applies
+      when. So the `migrations` list is empty, and the `is` column carries two
+      things — the word a reader now sees, and the column it names.
+
+      Two of the four are enforceable here and two are not, which is the same
+      split every batch in this map has had. `column` and `applies when` are
+      said nowhere else on screen, so the copy guard can forbid them outright.
+      `text` and `value` cannot be forbidden: "Text size", "Add text…" and
+      "Delete text" on the annotation toolbar are correct uses of the first,
+      and the second is an ordinary English word the copy guard's deliberately
+      naive JSX extraction meets inside expressions. Adding either would flag
+      code that is right.
+
+      Those two are held by `scripts/tests/labels-name-their-columns.test.mjs`,
+      which narrows the SUBJECT to panel labels — the `label`, `term` and
+      `title` props of the four components that put a field's name in front of
+      a reader — and is therefore narrow enough to say `Text` without saying it
+      about "Text size". The same file asserts the other half no schema check
+      can see: that the column each label now names is a column the schema
+      actually has.
+    */
+    {
+      was: ['text'],
+      is: ['Content', 'cells.content'],
+      migrations: [],
+      retired: [],
+      copy: [],
+    },
+    {
+      was: ['value'],
+      is: ['Value proposition', 'cells.value_props'],
+      migrations: [],
+      retired: [],
+      copy: [],
+    },
+    {
+      was: ['columns'],
+      is: ['Position', 'path_steps.position'],
+      migrations: [],
+      // Nothing in the schema was ever called `column` — `column_position`
+      // retired five rows up, and this is the label that outlived it. So the
+      // identifier list is empty and the copy list is the whole entry: a row
+      // and a column are how a lane and a step happen to be DRAWN, and the
+      // axis is a rendering fact rather than a domain one.
+      retired: [],
+      copy: ['column', 'columns'],
+    },
+    {
+      was: ['applies when'],
+      is: ['Summary', 'paths.summary'],
+      migrations: [],
+      retired: [],
+      copy: ['applies when'],
+    },
+    /*
+      THE DESIGN SYSTEM'S OWN VOCABULARY, which had four words for two ideas.
+
+      A **badge** describes the thing it sits on: one per thing, not drawn from
+      a set, never interactive. A **tag** is one value out of a set, selectable
+      or removable. By that split the owner control is the only real tag in the
+      codebase, the divider label is a badge, and a touchpoint is a cell whose
+      corner radius is a variant rather than a component of its own.
+
+      `retired` is empty and that is the entry: no database object has ever
+      been called either word, so the identifier sweep has nothing to forbid,
+      and a guard that cannot fire is a comment wearing a check's clothes. What
+      enforces this row is `scripts/tests/badge-and-tag.test.mjs`, whose
+      subject is every NAME under `src` — a component, a prop, a constant, a
+      variant string, a data attribute or a file name — plus the rule that no
+      badge may grow a hover state, since a surface that repaints under the
+      pointer promises a click a badge never delivers.
+
+      `copy` is not empty, though, and it costs nothing: neither word reaches a
+      reader today, and this is what keeps it that way.
+    */
+    {
+      was: ['pill', 'chip'],
+      is: ['badge', 'tag'],
+      migrations: [],
+      retired: [],
+      copy: ['pill', 'pills', 'chip', 'chips'],
     },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),

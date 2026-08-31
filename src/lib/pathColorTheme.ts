@@ -80,7 +80,7 @@ export function getPathColorKey(path: PathColorInput): string {
  * worse than one that reads as nothing in particular.
  *
  * Sharing the touchpoint tone set rather than inventing a third is safe because
- * the two never render at the same weight — a tone is a step-400 pill fill, a
+ * the two never render at the same weight — a tone is a step-400 touchpoint fill, a
  * path is a step-1100 line.
  */
 const PATH_OPEN_FAMILIES = ['indigo', 'purple', 'gold', 'yellow'] as const

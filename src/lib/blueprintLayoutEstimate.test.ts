@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   NARRATIVE_CELL_HEIGHT,
-  PILL_ITEM_HEIGHT,
+  TOUCHPOINT_ITEM_HEIGHT,
   getCellContentMinHeight,
   getLayerRowMinHeight,
-  getPillStackMinHeight,
+  getTouchpointStackMinHeight,
 } from '@/lib/blueprintLayout'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
-// A plain act lane: text content, no visual/pill treatment.
+// A plain act lane: text content, no storyboard/touchpoint treatment.
 const ACT_LANE = { id: 'l1', name: 'Regular Tutor', role: null } as BlueprintLane
 
 // Pins the stable-preview contract. Complete prose remains in the DOM/detail
@@ -39,10 +39,10 @@ describe('cell height estimation (todo 026)', () => {
     )
   })
 
-  it('sizes a technology row from fixed pill faces and fixed gaps', () => {
-    expect(getPillStackMinHeight(1)).toBeGreaterThanOrEqual(PILL_ITEM_HEIGHT)
-    expect(getPillStackMinHeight(4) - getPillStackMinHeight(3)).toBe(
-      PILL_ITEM_HEIGHT + 10,
+  it('sizes a technology row from fixed touchpoint faces and fixed gaps', () => {
+    expect(getTouchpointStackMinHeight(1)).toBeGreaterThanOrEqual(TOUCHPOINT_ITEM_HEIGHT)
+    expect(getTouchpointStackMinHeight(4) - getTouchpointStackMinHeight(3)).toBe(
+      TOUCHPOINT_ITEM_HEIGHT + 10,
     )
   })
 })

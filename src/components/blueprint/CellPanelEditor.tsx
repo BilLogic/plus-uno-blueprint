@@ -20,8 +20,8 @@ import { upsertCell } from '@/lib/authoringRpc'
 import {
   CELL_CONTENT_TARGET,
   CELL_CONTENT_WARNING,
-  TECH_PILL_LABEL_TARGET,
-  TECH_PILL_LABEL_WARNING,
+  TOUCHPOINT_LABEL_TARGET,
+  TOUCHPOINT_LABEL_WARNING,
 } from '@/lib/cellContentLimits'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { PANEL_TEXT } from '@/lib/panelText'
@@ -56,7 +56,7 @@ export type DraftCellTarget = {
 }
 
 type FormState = {
-  text: string
+  content: string
   description: string
   owner: string
   perceivedOwner: string
@@ -65,7 +65,7 @@ type FormState = {
   valueProps: ValueProp[]
   status: EntityStatus
   /**
-   * The selected touchpoint's own detail, when a pill was clicked to open
+   * The selected touchpoint's own detail, when a touchpoint was clicked to open
    * this panel. Part of the SAME form state as the cell's fields, and
    * deliberately so: the panel is showing one cell and one of its
    * placements, and two Save buttons for what a reader experiences as one
@@ -74,7 +74,7 @@ type FormState = {
   placement: PlacementDetailDraft
 }
 
-/** An unmarked, unwritten placement — the state a cell with no pill selected sits in. */
+/** An unmarked, unwritten placement — the state a cell with no touchpoint selected sits in. */
 const EMPTY_PLACEMENT: PlacementDetailDraft = {
   summary: '',
   screenshot: '',
@@ -149,7 +149,7 @@ export function CellPanelEditor({
   /** Selects narrative-copy versus technology-label guidance. */
   laneName?: string
   /**
-   * The touchpoint placement the panel was opened on, when a pill was
+   * The touchpoint placement the panel was opened on, when a touchpoint was
    * clicked. Its four detail fields join this form.
    *
    * A placement with no `id` is not editable and is passed through as absent:
@@ -180,7 +180,7 @@ export function CellPanelEditor({
     if (!content) return null
 
     const baseline: FormState = {
-      text: content.content,
+      content: content.content,
       // The DB truth. The *field* may be seeded with the placement-derived
       // fallback below, but diffs and reverts compare against this — an
       // owner-only edit must not smuggle the fallback prose into the
@@ -197,9 +197,9 @@ export function CellPanelEditor({
 
     return (
       <CellPanelEditorForm
-        // Keyed on the placement as well as the cell: clicking a second pill
+        // Keyed on the placement as well as the cell: clicking a second touchpoint
         // on the same cell keeps the same cell id, and without the placement
-        // in the key the frozen baseline below would still describe the pill
+        // in the key the frozen baseline below would still describe the touchpoint
         // the author had finished with.
         key={editable ? `${cellId}:${editable.id}` : cellId}
         cellId={cellId}
@@ -221,7 +221,7 @@ export function CellPanelEditor({
       draft={draft}
       laneName={laneName ?? draft.laneName}
       baseline={{
-        text: '',
+        content: '',
         description: '',
         status: DEFAULT_ENTITY_STATUS,
         owner: '',
@@ -229,7 +229,7 @@ export function CellPanelEditor({
         functionText: '',
         formText: '',
         valueProps: [],
-        // A cell that does not exist yet holds no placements: its pills come
+        // A cell that does not exist yet holds no placements: its touchpoints come
         // into being when its text is first saved and synced.
         placement: EMPTY_PLACEMENT,
       }}
@@ -313,28 +313,28 @@ function CellPanelEditorForm({
       placement: { ...current.placement, [key]: value },
     }))
 
-  const blocked = !form.text.trim()
+  const blocked = !form.content.trim()
   const isTechCell =
     laneName === 'Front Stage Tech' || laneName === 'Back Stage Tech'
-  const techItems = isTechCell ? parseCellContentItems(form.text) : []
+  const techItems = isTechCell ? parseCellContentItems(form.content) : []
   const longestTechItem = techItems.reduce(
     (longest, item) => Math.max(longest, item.length),
     0,
   )
   const contentTarget = isTechCell
-    ? TECH_PILL_LABEL_TARGET
+    ? TOUCHPOINT_LABEL_TARGET
     : CELL_CONTENT_TARGET
   const contentWarning = isTechCell
-    ? TECH_PILL_LABEL_WARNING
+    ? TOUCHPOINT_LABEL_WARNING
     : CELL_CONTENT_WARNING
-  const measuredLength = isTechCell ? longestTechItem : form.text.length
+  const measuredLength = isTechCell ? longestTechItem : form.content.length
   const overContentWarning = measuredLength > contentWarning
 
   const effectiveDescription = descriptionTouched
     ? form.description
     : baseline.description
   const contentChanged =
-    form.text !== baseline.text ||
+    form.content !== baseline.content ||
     effectiveDescription !== baseline.description ||
     form.owner !== baseline.owner ||
     form.perceivedOwner !== baseline.perceivedOwner ||
@@ -363,7 +363,7 @@ function CellPanelEditorForm({
           pathId: draft!.pathId,
           laneId: draft!.laneId,
           stepId: draft!.stepId,
-          content: form.text.trim(),
+          content: form.content.trim(),
         })
         setCreatedId(targetId)
       }
@@ -380,7 +380,7 @@ function CellPanelEditorForm({
           client,
           targetId,
           {
-            content: form.text,
+            content: form.content,
             summary: cellId ? effectiveDescription : form.description,
             owner: form.owner,
             perceivedOwner: form.perceivedOwner,
@@ -388,7 +388,7 @@ function CellPanelEditorForm({
           },
           cellId
             ? {
-                content: baseline.text,
+                content: baseline.content,
                 summary: baseline.description,
                 owner: baseline.owner,
                 perceivedOwner: baseline.perceivedOwner,
@@ -434,7 +434,7 @@ function CellPanelEditorForm({
       if (
         placement?.id &&
         placementChanged &&
-        placementSurvivesContent(form.text, placement.name)
+        placementSurvivesContent(form.content, placement.name)
       ) {
         await updateTouchpointPlacement(
           client,
@@ -484,11 +484,11 @@ function CellPanelEditorForm({
       // would otherwise materialize the cell into a panel-less silence.
       data-busy={busy || undefined}
     >
-      <Field label="Text" hint="What this cell says on the grid." required>
+      <Field label="Content" hint="What this cell says on the grid." required>
         <Input
-          value={form.text}
+          value={form.content}
           autoFocus={cellId === null}
-          onChange={(event) => set('text', event.target.value)}
+          onChange={(event) => set('content', event.target.value)}
         />
         <p
           className={cn(
@@ -498,7 +498,7 @@ function CellPanelEditorForm({
           data-cell-content-guidance=""
         >
           {isTechCell
-            ? `${measuredLength} characters in the longest pill · ${contentTarget} recommended per label${overContentWarning ? ` · review above ${contentWarning}` : ''}`
+            ? `${measuredLength} characters in the longest touchpoint · ${contentTarget} recommended per label${overContentWarning ? ` · review above ${contentWarning}` : ''}`
             : `${measuredLength} characters · ${contentTarget} recommended${overContentWarning ? ` · review above ${contentWarning}` : ''}`}
         </p>
       </Field>
@@ -512,8 +512,8 @@ function CellPanelEditorForm({
         step keeps its own words. Two fields called Summary on one screen is
         exactly why the group draws a border and says whose it is.
 
-        Directly under Text and not at the bottom because the author reached
-        this panel by clicking that pill. Making them scroll past six of the
+        Directly under Content and not at the bottom because the author reached
+        this panel by clicking that touchpoint. Making them scroll past six of the
         cell's fields to reach the thing they clicked is how an editor teaches
         people it is not for them.
       */}
@@ -638,7 +638,7 @@ function CellPanelEditorForm({
         />
       </Field>
 
-      <Field label="Value" hint="Who gets what from it.">
+      <Field label="Value proposition" hint="Who gets what from it.">
         <div className="flex flex-col gap-1.5">
           {form.valueProps.map((entry, index) => (
             <div key={index} className="flex items-center gap-1.5">
@@ -675,12 +675,12 @@ function CellPanelEditorForm({
                   )
                 }
               />
-              <IconTooltip label="Remove this value">
+              <IconTooltip label="Remove this value proposition">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-xs"
-                  aria-label="Remove value"
+                  aria-label="Remove value proposition"
                   className="shrink-0 text-muted-foreground hover:text-foreground"
                   onClick={() =>
                     set(
@@ -706,7 +706,7 @@ function CellPanelEditorForm({
             }
           >
             <Plus className="size-3" />
-            Add value
+            Add value proposition
           </Button>
           <datalist id="cell-value-audiences">
             {audiences.map((audience) => (
@@ -718,7 +718,7 @@ function CellPanelEditorForm({
 
       {blocked ? (
         <p className="text-xs text-muted-foreground">
-          A cell needs text.
+          A cell needs content.
         </p>
       ) : null}
       {error ? <p className="text-xs text-destructive">{error}</p> : null}

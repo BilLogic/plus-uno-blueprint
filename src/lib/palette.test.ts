@@ -126,7 +126,7 @@ describe('brand fill', () => {
     // fill has been walked down (0.874 → 0.78) and back up, and the floor is
     // what stops the next "tone it down" pass from landing under 0.78 again.
     // The ceiling keeps it below --brand-400's L 0.874, which read as a
-    // pastel chip rather than a control.
+    // pastel badge rather than a control.
     expect(L).toBeGreaterThan(0.8)
     expect(L).toBeLessThan(0.87)
   })
@@ -353,7 +353,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
       ),
     )
 
-  it('shares no family, so a pill can never read as its lane', () => {
+  it('shares no family, so a touchpoint can never read as its lane', () => {
     const lanes = familiesIn('lane')
     const tones = familiesIn('tone')
     expect(lanes.size).toBeGreaterThan(0)

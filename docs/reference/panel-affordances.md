@@ -1,8 +1,8 @@
 ---
 audience: designers, developers
-summary: Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
-sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
-last-reviewed: 2026-08-30
+summary: Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
+sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
+last-reviewed: 2026-08-31
 ---
 
 # Explaining things in a panel
@@ -44,11 +44,29 @@ A mechanism with one good use is not a mechanism; it is a special case wearing
 a costume. If a future case genuinely needs *"click to reveal an aside"*, that
 is the moment to reconsider — not before.
 
-### No question cursor
+### The question cursor came back, and why
 
-`cursor-help` is removed everywhere. Swapping the pointer is a second signal
-for something the tooltip already announces, and it reads as *broken* more
-readily than *explained*.
+*Removed 2026-08-21, restored 2026-08-31 with #182. The reversal is the
+interesting part, so it is recorded rather than quietly re-applied.*
+
+It was removed on the argument that swapping the pointer is a second signal for
+something the tooltip already announces. That argument depended on a fact that
+is no longer true: at the time, an explained badge also lightened under the
+pointer, so the reader already had a hover signal and the cursor was the
+second one.
+
+**#182 took the hover state away** — a badge that repaints under the pointer
+reads as clickable, and a badge never is. That leaves nothing at all to say
+"there is something here" before the tooltip opens. So the cursor is the
+signal now rather than a duplicate of one, and an explained label or badge
+wears three things and only three: **`cursor-help`, a focus ring, and the
+tooltip itself.**
+
+The scope is exact. `cursor-help` belongs on an element that has a definition
+to give — `PanelTermLabel`, `StatusBadge`, `PanelKindBadge` when it was passed
+a `description`, a path badge where its description tooltip is shown. A badge
+with nothing behind it keeps `cursor-default`: a help cursor over a word that
+explains nothing is a promise it cannot keep.
 
 ---
 
@@ -100,14 +118,41 @@ tooltip dropped on a `<span>` almost never does.
 | Icon-only button | `IconTooltip` — the tooltip **is** its label |
 | Lane role, path type, cell status, entity kind | `PanelKindBadge description=` on the badge |
 | Who a lane's owner IS — the definition on `stakeholders.summary` | `StakeholderBadge`, which is `PanelKindBadge description=` with the registry's own one-liner. Where the field is editable there is no badge to hover, so the same sentence is printed under the picker; the two never appear together. |
-| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Applies when` | tooltip on the label; the label must be focusable |
+| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Summary` | tooltip on the label; the label must be focusable |
 | Form field guidance | `hint` prop, always visible |
 | A consequence of saving | `Alert variant="warning"`, inline |
 | A load or write failure | `Alert variant="destructive"`, inline |
 | Why a control is elsewhere | **nothing** — if it matters, the control is in the wrong place |
 
 Standing prohibition: **nothing carries two mechanisms for one fact.** Removed
-from the lane chip in Aug 2026; do not bring it back.
+from the lane badge in Aug 2026; do not bring it back.
+
+---
+
+## Badge and tag, and there is no third word
+
+*Decided 2026-08-31 with #182. The vocabulary had four words for two ideas.*
+
+> **A badge describes the thing it sits on.** One per thing, not drawn from a
+> set the reader picks from, **never interactive**.
+>
+> **A tag is one value out of a set**, selectable or removable.
+
+By that split the divider label is a badge, a cell's `status` is a badge, a
+lane's stakeholder is a badge, a path's name is a badge — and `OwnerTagSelect`
+is the only tag in the app. A touchpoint on the canvas is neither: it is a
+**cell** whose corner radius is a variant, which is why it takes
+`BlueprintCellButton`'s `touchpoint` variant rather than a component of its
+own. "Chip" and "pill" were a third and fourth name for these two, and
+[`scripts/tests/badge-and-tag.test.mjs`](../../scripts/tests/badge-and-tag.test.mjs)
+now fails a build that reintroduces either as a name.
+
+**A badge never changes colour or border on hover**, and the same test enforces
+it over every `<Badge>` in the app. This is the rule the question cursor above
+depends on: a surface that repaints under the pointer promises a click, so a
+badge that did it was promising one it never delivered. What a badge offers
+instead is the help cursor, the focus ring and the tooltip. **Something that
+needs a hover state is a button** — use one, and give it something to do.
 
 ---
 
@@ -159,7 +204,7 @@ poster is core at recruitment and incidental three phases later, so the same
 artifact is both depending on where the reader is standing.
 
 **It renders in the cell detail panel, beside the touchpoint's own name, and
-nowhere else. It is not on the grid pill.**
+nowhere else. It is not on the grid.**
 
 ### Why not the grid
 
@@ -168,12 +213,12 @@ distinction visible only after a click is one most readers never meet. Three
 things answer it.
 
 **It is not a scanning fact.** "Is this core here?" cannot be asked without
-already looking at *here*. The reader who clicked the pill is exactly the
+already looking at *here*. The reader who clicked the touchpoint is exactly the
 reader the answer is for — and everything else the placement carries, its
 summary, its screenshot, its design link, is behind the same click. Promoting
 one of the four to the board would say prominence is the important one.
 
-**The pill has no visual variable left.** A touchpoint pill already encodes
+**The touchpoint has no visual variable left.** A touchpoint cell already encodes
 three vocabularies — tone by touchpoint name, a dashed edge and drained fill
 for an unbuilt `status`, the slice-sequence badge — over three interaction
 rings (active, connected, picked). A fourth mark either collides with `status`,
@@ -181,14 +226,14 @@ which owns fill and opacity, or arrives as a legend nobody was taught.
 
 **It would be learned by nobody.** By the rule above, a badge promises a
 vocabulary the reader learns by seeing it repeat. Zero placements are marked
-today and most never will be; a mark appearing on a handful of pills out of
+today and most never will be; a mark appearing on a handful of touchpoints out of
 three hundred reads as an anomaly, not as a scale.
 
 ### What was rejected
 
 | Considered | Why not |
 |---|---|
-| A mark on **every** pill, all three states rendered on the board | The failure #189 names outright. Three hundred pills each wearing an importance mark averages into "this tool matters", which is a claim about the catalog — and the unmarked majority would have to wear *unmarked* as a visible state, putting a judgement nobody made on screen. |
+| A mark on **every** touchpoint, all three states rendered on the board | The failure #189 names outright. Three hundred touchpoints each wearing an importance mark averages into "this tool matters", which is a claim about the catalog — and the unmarked majority would have to wear *unmarked* as a visible state, putting a judgement nobody made on screen. |
 | **`core` only** on the board, nothing for the other two | Tempting, and worse than nothing. It makes a considered `peripheral` and an untouched placement identical on the grid, so the board silently answers "no" to two different questions. Half a vocabulary teaches a reader a distinction that is not there. |
 | A **count or a filter** — "show me the core touchpoints" | A query, not a rendering, and it belongs with "where else is this used" (#172 story 6) rather than in the panel that has one placement in front of it. |
 

@@ -3,7 +3,7 @@ import {
   getTouchpointNames,
 } from '@/lib/blueprintCellSelection'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import { shouldUsePillCellContent } from '@/lib/blueprintLayout'
+import { shouldUseTouchpointCellContent } from '@/lib/blueprintLayout'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import type { BlueprintData } from '@/types/blueprint'
 
@@ -28,13 +28,13 @@ export function getBlueprintStepTechItems(
   const stepIndex = blueprint.steps.findIndex((step) => step.id === stepId)
   if (stepIndex < 0) return []
 
-  const pillLayers = blueprint.lanes
-    .filter((lane) => shouldUsePillCellContent(lane))
+  const touchpointLanes = blueprint.lanes
+    .filter((lane) => shouldUseTouchpointCellContent(lane))
     .sort((a, b) => a.position - b.position)
 
   const entries: BlueprintStepTechEntry[] = []
 
-  for (const lane of pillLayers) {
+  for (const lane of touchpointLanes) {
     const cell = blueprint.cells.find(
       (entry) => entry.lane_id === lane.id && entry.step_id === stepId,
     )
@@ -111,7 +111,7 @@ export function scrollBlueprintTouchpointCellIntoView(
   const cellRoot = document.querySelector<HTMLElement>(
     `[data-blueprint-cell="${cellId}"]`,
   )
-  const pill =
+  const touchpoint =
     cellRoot?.querySelector<HTMLElement>(
       `[data-blueprint-touchpoint="${techItem}"]`,
     ) ??
@@ -119,7 +119,7 @@ export function scrollBlueprintTouchpointCellIntoView(
       `[data-blueprint-touchpoint="${techItem}"]`,
     )
 
-  pill?.scrollIntoView({
+  touchpoint?.scrollIntoView({
     behavior: 'smooth',
     block: 'nearest',
     inline: 'nearest',

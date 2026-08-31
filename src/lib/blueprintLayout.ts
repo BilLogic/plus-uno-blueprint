@@ -18,8 +18,8 @@ import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 /** Minimal lane shape for role-driven layout checks. */
 type LayerRoleSource = { name: string; role?: string | null }
 
-/** Roles whose cells list multiple items as inline pills (newline-separated content). */
-export const PILL_CELL_LAYER_ROLES = [
+/** Roles whose cells list multiple items as inline touchpoints (newline-separated content). */
+export const TOUCHPOINT_CELL_LANE_ROLES = [
   FRONTSTAGE_TOUCHPOINTS_ROLE,
   BACKSTAGE_TOUCHPOINTS_ROLE,
 ] as const
@@ -38,19 +38,19 @@ export function getStoryboardCellButtonMaxHeight(compact = false): number {
   return rowHeight - shellVerticalPad
 }
 
-export function shouldUsePillCellContent(lane: LayerRoleSource): boolean {
+export function shouldUseTouchpointCellContent(lane: LayerRoleSource): boolean {
   const role = getLayerRole(lane)
   return (
-    role !== null && (PILL_CELL_LAYER_ROLES as readonly string[]).includes(role)
+    role !== null && (TOUCHPOINT_CELL_LANE_ROLES as readonly string[]).includes(role)
   )
 }
 
-/** Which face a lane's cells wear — pill stack, step visual, or plain cell. */
-export type BlueprintCellVariant = 'default' | 'pills' | 'storyboard'
+/** Which face a lane's cells wear — touchpoint stack, step visual, or plain cell. */
+export type BlueprintCellVariant = 'default' | 'touchpoints' | 'storyboard'
 
 /**
  * Whether a cell has anything to draw for its lane's variant. A visual cell
- * is decided by its pictures upstream, a pill cell by having at least one
+ * is decided by its pictures upstream, a touchpoint cell by having at least one
  * parsable item, a plain cell by non-blank content.
  */
 export function hasBlueprintCellContent(
@@ -59,7 +59,7 @@ export function hasBlueprintCellContent(
 ): boolean {
   if (variant === 'storyboard') return true
   if (!content?.trim()) return false
-  if (variant === 'pills') {
+  if (variant === 'touchpoints') {
     return parseCellContentItems(content).length > 0
   }
   return true
@@ -509,18 +509,18 @@ export const BLUEPRINT_CELL_GUTTER = 12
 export const NARRATIVE_CELL_HEIGHT = 128
 export const NARRATIVE_CELL_HEIGHT_COMPACT = 96
 /** Stable technology face; two label lines fit without changing row geometry. */
-export const PILL_ITEM_HEIGHT = 52
-export const PILL_ITEM_HEIGHT_COMPACT = 42
-const PILL_STACK_GAP = 10
-const PILL_CELL_PADDING = BLUEPRINT_CELL_GUTTER * 2
+export const TOUCHPOINT_ITEM_HEIGHT = 52
+export const TOUCHPOINT_ITEM_HEIGHT_COMPACT = 42
+const TOUCHPOINT_STACK_GAP = 10
+const TOUCHPOINT_CELL_PADDING = BLUEPRINT_CELL_GUTTER * 2
 
-export function getMaxPillCountInLayer(
+export function getMaxTouchpointCountInLane(
   data: BlueprintData,
   laneId: string,
 ): number {
   // Summed per *slot*, not maxed per cell: since the split a slot holds one
   // cell per touchpoint, and a row sized to the tallest single cell would be
-  // one pill tall over a stack of three.
+  // one touchpoint tall over a stack of three.
   const perStep = new Map<string, number>()
   for (const cell of data.cells) {
     if (cell.lane_id === laneId && cell.content?.trim()) {
@@ -533,16 +533,16 @@ export function getMaxPillCountInLayer(
   return max
 }
 
-export function getPillStackMinHeight(
-  pillCount: number,
+export function getTouchpointStackMinHeight(
+  touchpointCount: number,
   compact = false,
 ): number {
-  if (pillCount <= 0) return 0
-  const itemHeight = compact ? PILL_ITEM_HEIGHT_COMPACT : PILL_ITEM_HEIGHT
+  if (touchpointCount <= 0) return 0
+  const itemHeight = compact ? TOUCHPOINT_ITEM_HEIGHT_COMPACT : TOUCHPOINT_ITEM_HEIGHT
   return (
-    PILL_CELL_PADDING +
-    pillCount * itemHeight +
-    Math.max(0, pillCount - 1) * PILL_STACK_GAP
+    TOUCHPOINT_CELL_PADDING +
+    touchpointCount * itemHeight +
+    Math.max(0, touchpointCount - 1) * TOUCHPOINT_STACK_GAP
   )
 }
 
@@ -560,8 +560,8 @@ export function getCellContentMinHeight(
 
   if (!content?.trim()) return 0
 
-  if (shouldUsePillCellContent(lane)) {
-    return getPillStackMinHeight(
+  if (shouldUseTouchpointCellContent(lane)) {
+    return getTouchpointStackMinHeight(
       parseCellContentItems(content).length,
       compact,
     )
@@ -599,10 +599,10 @@ export function getLayerRowMinHeight(
       : STORYBOARD_ROW_MIN_HEIGHT
   }
 
-  if (!shouldUsePillCellContent(lane)) return base
+  if (!shouldUseTouchpointCellContent(lane)) return base
 
-  const pillCount = getMaxPillCountInLayer(data, lane.id)
-  return Math.max(base, getPillStackMinHeight(pillCount, compact))
+  const touchpointCount = getMaxTouchpointCountInLane(data, lane.id)
+  return Math.max(base, getTouchpointStackMinHeight(touchpointCount, compact))
 }
 
 export function getBlueprintGridMinHeight(

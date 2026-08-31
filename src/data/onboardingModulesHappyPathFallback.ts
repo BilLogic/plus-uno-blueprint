@@ -205,7 +205,7 @@ const ONBOARDING_MODULES_TRIGGERS: BlueprintCellDependency[] = [
   // Step 3 — instructional design → Notion
   dependency('031', '03', '07', '03', '06'),
 
-  // Step 4 — instructional design → Google Docs/ Slides (nearest pill)
+  // Step 4 — instructional design → Google Docs/ Slides (nearest touchpoint)
   dependency('041', '04', '07', '04', '06'),
   dependency('051', '05', '06', '05', '07'),
   dependency('052', '05', '07', '05', '06'),

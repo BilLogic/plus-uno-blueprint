@@ -49,7 +49,7 @@ export function cellTouchpointsFromRows(
     .filter((row) => row.touchpoints?.name)
     .slice()
     // Sorted here rather than trusted: PostgREST does not promise an order
-    // for an embedded resource, and the pills would otherwise come back in
+    // for an embedded resource, and the touchpoints would otherwise come back in
     // whatever order the planner chose.
     .sort((a, b) => a.position - b.position)
     .map((row) => ({

@@ -280,7 +280,7 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   rename_path: (entry) => `Renamed a path${renameTo(entry)}`,
   rename_touchpoint: (entry) => {
     // Named by how far it reached, because that is the whole point of the
-    // catalog: one edit moves every pill that says the word, and the row is
+    // catalog: one edit moves every touchpoint that says the word, and the row is
     // where a person finds out how many that was.
     const cells = Array.isArray(entry.args.cell_ids) ? entry.args.cell_ids.length : 0
     const to = renameTo(entry)

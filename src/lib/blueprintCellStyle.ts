@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
  * a colour choice — "Zoom is blue" is the blueprint owner's decision — so
  * naming it after the hue is honest here where it was not for lanes.
  *
- * The two sets share no family, so a pill can never be mistaken for the lane it
+ * The two sets share no family, so a touchpoint can never be mistaken for the lane it
  * sits in, whichever tone is picked.
  *
  * Which family each maps to lives in blueprint.css, keyed on
@@ -52,7 +52,7 @@ export const BLUEPRINT_LANE_ROLES = [
 
 /**
  * Tones a touchpoint colour can be set to. Disjoint from the families the lane
- * roles use, so a pill never reads as a lane.
+ * roles use, so a touchpoint never reads as a lane.
  */
 export type TouchpointTone =
   | 'crimson'
@@ -93,7 +93,7 @@ export const CELL_STEP = {
   text: 1200,
 } as const
 
-/** Same, for a touchpoint pill and its chosen tone. */
+/** Same, for a touchpoint and its chosen tone. */
 export function blueprintToneAttrs(
   tone: TouchpointTone,
 ): { 'data-blueprint-tone': TouchpointTone } {

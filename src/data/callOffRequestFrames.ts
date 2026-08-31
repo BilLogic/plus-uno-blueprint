@@ -1,4 +1,4 @@
-/** Call-off Request Happy Path — tech pill descriptions. */
+/** Call-off Request Happy Path — touchpoint descriptions. */
 
 /** Call-off Request — Regular Tutor step 1. */
 export const CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_01_FRAME =

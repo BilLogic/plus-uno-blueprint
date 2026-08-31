@@ -284,8 +284,8 @@ export function getSameRowObstructingCells(
  * center, but enter horizontally at the target's left edge, vertically
  * centered on the target's own card. The detour's final segment approaches
  * from the gutter side, so a top/bottom-center (vertical-entry) anchor would
- * leave the chevron riding along the target's top edge — for stacked pill
- * targets that puts the head in the gap between neighbouring pills.
+ * leave the chevron riding along the target's top edge — for stacked touchpoint
+ * targets that puts the head in the gap between neighbouring touchpoints.
  */
 export function getVerticalGutterDetourAnchors(
   sourceEl: HTMLElement,

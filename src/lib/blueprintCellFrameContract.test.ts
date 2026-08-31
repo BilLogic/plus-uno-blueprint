@@ -30,7 +30,9 @@ const compareDecorations = source(
 const pathFrame = source(
   '../components/blueprint/ComparePathSectionFrame.tsx',
 )
-const techPill = source('../components/blueprint/BlueprintTouchpointCell.tsx')
+const touchpointCell = source(
+  '../components/blueprint/BlueprintTouchpointCell.tsx',
+)
 const laneHeader = source(
   '../components/blueprint/LaneHeaderAffordance.tsx',
 )
@@ -118,9 +120,9 @@ describe('stable blueprint cell frame contract', () => {
     )
   })
 
-  it('clamps pill labels to two lines and keeps the full accessible label', () => {
-    expect(techPill).toContain('aria-label={item}')
-    expect(techPill).toContain('className="line-clamp-2 break-words"')
+  it('clamps touchpoint labels to two lines and keeps the full accessible label', () => {
+    expect(touchpointCell).toContain('aria-label={item}')
+    expect(touchpointCell).toContain('className="line-clamp-2 break-words"')
   })
 
   it('semantic zoom paints actual faces, not variable group wrappers', () => {

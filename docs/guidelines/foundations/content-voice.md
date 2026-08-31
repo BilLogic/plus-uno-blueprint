@@ -124,14 +124,14 @@ Sentence case, one sentence, terminal period, present tense. Name the object
 rather than a pronoun: `Marks the student present.`, not `Mark them as present.`
 — "them" resolves only from the step column, which a citation may not carry.
 
-**Pill lanes** (Front Stage Tech, Back Stage Tech, Support Actions) — a
+**Touchpoint lanes** (Front Stage Tech, Back Stage Tech, Support Actions) — a
 canonical proper noun. No verb, no period, one system or team per line.
 
 > `Zoom` · `PLUS App` · `Dev Team`
 
 Because content is a bare noun here, `description` is **not optional garnish —
 it is the only thing that makes the cell citable**, and it must say what this
-system does *at this step*, distinct from the neighbouring step. A pill with
+system does *at this step*, distinct from the neighbouring step. A touchpoint with
 boilerplate pasted down the row is one cell repeated, not several cells.
 
 **Storyboard lane** — `content` stays empty; the cell is drawn from its neighbours' `frame` values, which are that step's strip.
@@ -159,13 +159,13 @@ that documents the service and one that misreports it.
 | | Target | Review threshold |
 | --- | --- | --- |
 | Act-lane `content` | ≤ 80 chars, one sentence | 100 |
-| Pill-lane label | ≤ 32 chars per pill | 48 |
+| Touchpoint-lane label | ≤ 32 chars per touchpoint | 48 |
 | `description` | 120–400 chars | 600 |
 
 Thresholds are editorial warnings, not storage caps. Over the threshold, keep
 the lead clause in `content` and move supporting detail to `description` when
 that improves the writing. The canvas preserves stable geometry by clamping
-the preview (four lines for narrative cells, two for pills); the detail panel,
+the preview (four lines for narrative cells, two for touchpoints); the detail panel,
 accessibility tree, database, and agent tools retain the complete content.
 
 ### Identifiers
@@ -186,6 +186,6 @@ second entity.
 ### Three failure modes to check
 
 1. **Pronoun with no antecedent in the cell** → name the object.
-2. **Bare noun where a predicate belongs** (pill lanes excepted) → add the verb.
+2. **Bare noun where a predicate belongs** (touchpoint lanes excepted) → add the verb.
 3. **The same string in two cells** → at least one is wrong. Differentiate it,
    or leave the cell empty. Empty cells are normal; filler is not.

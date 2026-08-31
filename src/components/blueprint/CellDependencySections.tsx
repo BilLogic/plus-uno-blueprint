@@ -7,7 +7,7 @@ import {
   ArrowUp,
   Plus,
 } from 'lucide-react'
-import { TouchpointCellFace } from '@/components/blueprint/TouchpointCellFace'
+import { BlueprintTouchpointCell } from '@/components/blueprint/BlueprintTouchpointCell'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import type {
   BlueprintCellConnection,
@@ -142,7 +142,7 @@ function DependencyRow({
                   onTechSelect(connection.cellId, item)
                 }}
               >
-                <TouchpointCellFace
+                <BlueprintTouchpointCell
                   item={item}
                   compact
                   asSpan
@@ -307,7 +307,7 @@ export function CellDependencySections({
                   className="focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
                   onClick={() => onTechSelect(entry.cellId, entry.item)}
                 >
-                  <TouchpointCellFace
+                  <BlueprintTouchpointCell
                     item={entry.item}
                     compact
                     asSpan

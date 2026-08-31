@@ -1,7 +1,6 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTouchpointCell } from '@/components/blueprint/BlueprintTouchpointCell'
-import { TouchpointCellFace } from '@/components/blueprint/TouchpointCellFace'
 import {
   Tooltip,
   TooltipContent,
@@ -149,7 +148,7 @@ export function CompareCellBlock({
           aria-describedby={ariaDescribedBy}
         />
       </div>
-    ) : variant === 'pills' ? (
+    ) : variant === 'touchpoints' ? (
       <div
         {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
         data-step-index={stepIndex}
@@ -174,7 +173,7 @@ export function CompareCellBlock({
             <BlueprintTouchpointCell
               key={`${slotCell?.id ?? 'anon'}-${item}-${index}`}
               item={item}
-              // Identity is the split's point: each pill carries its own
+              // Identity is the split's point: each touchpoint carries its own
               // cell in the selection it hands to the panel and the picker.
               selectionContext={
                 slotCell
@@ -201,7 +200,7 @@ export function CompareCellBlock({
               aria-describedby={ariaDescribedBy}
             />
           ) : (
-            <TouchpointCellFace
+            <BlueprintTouchpointCell
               key={`${item}-${index}`}
               item={item}
               compact={compact}

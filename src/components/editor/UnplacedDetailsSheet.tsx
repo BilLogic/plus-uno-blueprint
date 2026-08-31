@@ -62,7 +62,7 @@ export function UnplacedDetailsSheet() {
     an answer on, and silence is not.
 
     The write half is deliberately absent. Placing a detail is a judgement
-    about which pill somebody meant, and an agent making that judgement is the
+    about which touchpoint somebody meant, and an agent making that judgement is the
     guess this whole ticket exists to refuse.
 
     Ref-snapshotted, registered once: the contributor must stay stable across

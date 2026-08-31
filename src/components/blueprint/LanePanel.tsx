@@ -167,7 +167,7 @@ function LanePanelBody({
     `getBlueprintLayerStyle`, whose `.lane` is the key blueprint.css paints
     from. The zone argument only decides the fallback for a lane with neither
     a role nor a known name, and the panel has no lane stack to read a zone
-    from, so it asks for the frontstage fallback: a grey-ish chip on an
+    from, so it asks for the frontstage fallback: a grey-ish badge on an
     unclassified lane, rather than a wrong-family colour.
   */
   const laneRole = getBlueprintLayerStyle(lane.name, 'frontstage', lane.role)
@@ -182,11 +182,11 @@ function LanePanelBody({
       data-busy={busy || undefined}
     >
       <PanelIdentity
-        /* The chip says WHICH KIND of lane, in words, and carries that
-           lane's own colour — the cell panel's chip is the lane name for the
-           same reason. A generic "Lane" chip above a sentence describing the
+        /* The badge says WHICH KIND of lane, in words, and carries that
+           lane's own colour — the cell panel's badge is the lane name for the
+           same reason. A generic "Lane" badge above a sentence describing the
            role was one fact wearing two sizes. */
-        /* No ⓘ beside it: the chip IS the word whose meaning is in question,
+        /* No ⓘ beside it: the badge IS the word whose meaning is in question,
            so its own hover is where a reader would look for the definition.
            A second control for one fact was one control too many. */
         badge={

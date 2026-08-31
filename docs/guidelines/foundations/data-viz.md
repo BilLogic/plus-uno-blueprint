@@ -75,7 +75,7 @@ a registry. Everything about it is deliberate and tested:
 **Every encoding uses tokens, and survives dark mode and forced-colors.** A
 color that *means* something must be a `var(--color-*)` or semantic token so
 themes follow, must pair with a non-color channel (dash, position, label,
-chip), and must have a forced-colors restatement when its fill would flatten
+badge), and must have a forced-colors restatement when its fill would flatten
 away. `src/lib/palette.test.ts` measures the stylesheet — contrast floors and
 family disjointness are held by test, and a new encoding extends that test, not
 just the palette.

@@ -1,7 +1,7 @@
 /**
  * The diff that keeps placements honest when a cell's text changes.
  *
- * The case worth reading is the last one. Reordering two pills must not lose
+ * The case worth reading is the last one. Reordering two touchpoints must not lose
  * the writing attached to them, and a delete-all/insert-all sync would do
  * exactly that — silently, and only for authors who reorder.
  */

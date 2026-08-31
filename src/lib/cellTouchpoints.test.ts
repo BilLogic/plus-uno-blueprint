@@ -97,7 +97,7 @@ test('a fallback link naming nothing in the content is dropped, not guessed', ()
 
 test('non-touchpoint links are ignored', () => {
   // `links` also holds resources and provenance citations. Reading a `url`
-  // entry as a touchpoint would put a filename on the board as a pill.
+  // entry as a touchpoint would put a filename on the board as a touchpoint.
   const touchpoints = cellTouchpointsFromLinks('Zoom', [
     { type: 'url', label: 'Zoom', url: 'https://example.com/doc' },
     { type: 'ref', label: 'Zoom' },

@@ -141,24 +141,24 @@ describe('detailClickCloses', () => {
     ).toBe(false)
   })
 
-  it('treats a tech pill as its own cell', () => {
-    // The panel can be open on one pill inside a tech cell; clicking a
-    // different pill in the same cell has to open it, not close the panel.
-    const pill = (item: string) => ({ ...cellAt(1, 'cell-tech'), techItem: item })
+  it('treats a touchpoint as its own cell', () => {
+    // The panel can be open on one touchpoint inside a cell; clicking a
+    // different touchpoint in the same cell has to open it, not close the panel.
+    const touchpoint = (item: string) => ({ ...cellAt(1, 'cell-tech'), techItem: item })
     expect(
       detailClickCloses({
         event: HUMAN_CLICK,
         openSurface: 'details',
-        current: pill('Zoom'),
-        next: pill('Calendly'),
+        current: touchpoint('Zoom'),
+        next: touchpoint('Calendly'),
       }),
     ).toBe(false)
     expect(
       detailClickCloses({
         event: HUMAN_CLICK,
         openSurface: 'details',
-        current: pill('Zoom'),
-        next: pill('Zoom'),
+        current: touchpoint('Zoom'),
+        next: touchpoint('Zoom'),
       }),
     ).toBe(true)
   })

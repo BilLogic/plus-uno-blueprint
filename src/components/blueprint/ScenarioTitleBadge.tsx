@@ -51,8 +51,12 @@ export function ScenarioTitleBadge({
       data-blueprint-fill={pathAccent ? '' : undefined}
       data-scenario-panel-title-badge={panelTone ? '' : undefined}
       data-phase-title-badge={phaseTone ? '' : undefined}
+      // The name carries its description on hover and on focus, so it wears
+      // the help cursor and is reachable by keyboard. No hover colour: a
+      // badge that repaints under the pointer reads as clickable.
+      tabIndex={0}
       className={cn(
-        'h-auto max-w-full cursor-default gap-1 overflow-visible border-transparent',
+        'h-auto max-w-full cursor-help gap-1 overflow-visible border-transparent',
         pathType && 'font-semibold',
         (panelTone || phaseTone) && 'font-semibold',
         className,

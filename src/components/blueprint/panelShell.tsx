@@ -106,10 +106,10 @@ export const STEP_PANEL_FOOTER_ID = 'step-panel-editor-footer'
  * A render error in the drawer must cost the drawer, not the app.
  *
  * The panel is the one surface that renders arbitrary authored content —
- * pictures, links, tech pills, prose — outside the canvas's providers, which
+ * pictures, links, touchpoints, prose — outside the canvas's providers, which
  * makes it the most likely place for a render throw. Without a boundary that
  * throw unmounted the entire editor to a white page, which is how a broken
- * pill icon read as "loading is broken". React error boundaries are still
+ * touchpoint icon read as "loading is broken". React error boundaries are still
  * class-only.
  */
 export class DetailPanelErrorBoundary extends Component<
@@ -386,7 +386,7 @@ export function PanelIdentity({
   /**
    * What kind of thing this is — ABOVE the title, because it is the context
    * the title is read in, and a reader who just clicked a green cell needs
-   * the green chip to confirm they opened what they aimed at. Below the
+   * the green badge to confirm they opened what they aimed at. Below the
    * title it read as an afterthought and indented away from its own heading.
    */
   badge?: ReactNode
@@ -407,18 +407,18 @@ export function PanelIdentity({
 }
 
 /**
- * The kind chip. Tinted with the LANE's own cell colour when there is one —
+ * The kind badge. Tinted with the LANE's own cell colour when there is one —
  * or with a TOUCHPOINT's tone, which is the same mechanism one row down — so
  * the panel and the cell you clicked are visibly the same object; neutral
  * `secondary` for the levels that have no colour on the canvas.
  *
- * One geometry for all three. A tech cell used to stack a pill-shaped tool
- * chip above a differently-sized lane chip; two chips naming two things about
- * one cell belong side by side, at one size.
+ * One geometry for all three. A touchpoint cell used to stack a round tool
+ * badge above a differently-sized lane badge; two badges naming two things
+ * about one cell belong side by side, at one size.
  *
  * The tint comes from `data-blueprint-lane` — the attribute blueprint.css
  * turns into a lane's surface and ink steps — not from an inline colour. The
- * chip this replaced tried `backgroundColor: style.lane`, and `style.lane` is
+ * badge this replaced tried `backgroundColor: style.lane`, and `style.lane` is
  * a ROLE KEY ("actor"), not a colour: the declaration was invalid, the browser
  * dropped it, and the badge had rendered as plain text since the day it
  * shipped.
@@ -432,36 +432,51 @@ export function PanelKindBadge({
 }: {
   label: string
   laneRole?: BlueprintLaneRole | null
-  /** A touchpoint's tone — the tech pill's colour, on the badge's geometry. */
+  /** A touchpoint's tone — the cell face's colour, on the badge's geometry. */
   tone?: TouchpointTone | null
   title?: string
   /**
    * What this kind of row IS, shown on hover.
    *
-   * It used to hang off an ⓘ beside the chip — a second control for one fact,
-   * when the chip is already the thing whose meaning is in question. Hovering
+   * It used to hang off an ⓘ beside the badge — a second control for one fact,
+   * when the badge is already the thing whose meaning is in question. Hovering
    * the word you do not recognise is where you would look for its definition.
    */
   description?: string | null
 }) {
-  const explain = (chip: ReactNode) =>
+  /*
+    The three things an explained badge wears, and the one it must not.
+
+    `cursor-help` says a pointer will get something and it will not be a
+    click; `tabIndex` makes the definition reachable without a pointer at all
+    (docs/reference/panel-affordances.md § Hover is never the only way in);
+    the focus ring comes from `badgeVariants`. What is deliberately absent is
+    a hover colour: this badge is not clickable, and a surface that repaints
+    under the pointer says it is.
+  */
+  const explained = description
+    ? { tabIndex: 0, className: 'cursor-help' }
+    : { className: undefined }
+
+  const explain = (badge: ReactNode) =>
     description ? (
       <Tooltip>
-        <TooltipTrigger render={chip as never} />
+        <TooltipTrigger render={badge as never} />
         <TooltipContent side="bottom" className="max-w-xs text-xs">
           {description}
         </TooltipContent>
       </Tooltip>
     ) : (
-      chip
+      badge
     )
 
   if (tone) {
     return explain(
       <Badge
         {...blueprintToneAttrs(tone)}
+        {...(description ? { tabIndex: 0 } : {})}
         title={title}
-        className="max-w-full truncate border-transparent"
+        className={cn('max-w-full truncate border-transparent', explained.className)}
         style={{
           backgroundColor: 'var(--background-blueprint-cell)',
           color: 'var(--foreground-blueprint-cell)',
@@ -474,11 +489,15 @@ export function PanelKindBadge({
   if (!laneRole) {
     // `secondary` alone is white-on-white here — the slice header band hit the
     // same thing and answered it the same way: a faint foreground wash and a
-    // named edge rung, so the chip reads as a chip on the popover surface.
+    // named edge rung, so the badge reads as a badge on the popover surface.
     return explain(
       <Badge
         variant="secondary"
-        className="max-w-full truncate border-muted bg-foreground/5 text-muted-foreground"
+        {...(description ? { tabIndex: 0 } : {})}
+        className={cn(
+          'max-w-full truncate border-muted bg-foreground/5 text-muted-foreground',
+          explained.className,
+        )}
         title={title}
       >
         {label}
@@ -488,12 +507,13 @@ export function PanelKindBadge({
   return explain(
     <Badge
       {...blueprintLaneAttrs(laneRole)}
+      {...(description ? { tabIndex: 0 } : {})}
       title={title}
-      className="max-w-full truncate border-transparent"
+      className={cn('max-w-full truncate border-transparent', explained.className)}
       /*
         Inline, not a utility: the badge's own `variant` paints
         `bg-primary`, and a same-specificity arbitrary-property class lost to
-        it — measured, the chip came out brand teal on every lane. The values
+        it — measured, the badge came out brand teal on every lane. The values
         are the tokens `[data-blueprint-lane]` publishes, so nothing here is a
         colour; this is the same idiom BlueprintStepVisual uses for the
         presentation frame.

@@ -173,7 +173,7 @@ describe('placementSurvivesContent', () => {
   })
 
   it('is false once the name is gone, so the detail write is skipped', () => {
-    // Removing the pill is what makes `sync_cell_touchpoints` delete the
+    // Removing the touchpoint is what makes `sync_cell_touchpoints` delete the
     // placement. Writing its detail afterwards would fail on zero rows — on a
     // save that did exactly what the author asked.
     expect(placementSurvivesContent('PLUS App', 'Zoom')).toBe(false)

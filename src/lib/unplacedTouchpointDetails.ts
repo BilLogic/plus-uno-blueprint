@@ -12,7 +12,7 @@
  * THE ONE RULE. Nothing here matches a name against anything. A row's `name`
  * is the label that already failed to identify a touchpoint, and treating it
  * as an instruction — assigning the detail to the catalog entry it resembles —
- * would put a screenshot of one screen under a pill meaning another, on a cell
+ * would put a screenshot of one screen under a touchpoint meaning another, on a cell
  * whose text does not name it and which the next content save would delete
  * again. That is the guess that made these 57. So the places a detail may go
  * are read from the placements its cell HAS, and the person chooses.
@@ -126,7 +126,7 @@ function targetsOf(cells: RawUnplacedDetail['cells']): PlacementTarget[] {
  * The queue, grouped by where the work is and then by name.
  *
  * Grouped rather than newest-first because triage is done a cell at a time:
- * the question "which of these pills did this describe" is answered once per
+ * the question "which of these touchpoints did this describe" is answered once per
  * cell, and rows for the same cell asked in sequence are one decision instead
  * of several.
  */

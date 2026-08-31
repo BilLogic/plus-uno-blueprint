@@ -1,6 +1,6 @@
 ---
 audience: designers, developers
-summary: The one forked surface — the phone's view-only, scenario-scoped canvas, its chrome, the single-select path pill, and the non-goals that are decided rather than deferred.
+summary: The one forked surface — the phone's view-only, scenario-scoped canvas, its chrome, the single-select path control, and the non-goals that are decided rather than deferred.
 sources: src/components/mobile/MobileShell.tsx, src/components/mobile/MobileNavSheet.tsx, src/components/mobile/MobilePathSelector.tsx, src/hooks/useMobileShell.ts, docs/plans/2026-08-16-002-feat-mobile-shell-implementation-plan.md
 claims:
   - src/components/mobile/MobileShell.tsx
@@ -67,10 +67,10 @@ toggle at the rail's foot — as the index. It opens on first load when nothing 
 selected. Phase rows are pure accordion headers; only scenarios (and slices)
 navigate.
 
-- **Paths are single-select.** The top-bar pill (`MobilePathSelector`) picks
+- **Paths are single-select.** The top-bar control (`MobilePathSelector`) picks
   exactly one path through the same PathSelection context the desktop PATHS
   checkboxes drive, defaulting to the last-viewed path per scenario
-  (localStorage) or the happy path. A one-path scenario shows a read-only chip
+  (localStorage) or the happy path. A one-path scenario shows a read-only badge
   instead of a menu.
 - **The touch canvas is the real `ZoomPanViewport`** under the
   [touch contract](canvas.md#the-touch-contract): slop-gated pending pan,

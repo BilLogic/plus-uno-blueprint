@@ -67,9 +67,9 @@ export function useCanvasAnnotationTool() {
  * The tool, or null outside the canvas.
  *
  * For components that render both inside the canvas and in portalled chrome —
- * the detail drawer draws tech pills with the same `BlueprintCellButton` the
+ * the detail drawer draws touchpoints with the same `BlueprintCellButton` the
  * grid uses, and the drawer lives outside `CanvasAnnotationProvider`. The
- * throwing variant above turned that into an app-wide white screen: one pill
+ * throwing variant above turned that into an app-wide white screen: one touchpoint
  * inside the drawer, one throw during render, no boundary in between. A
  * component that can legitimately live on either side of the provider must
  * read the context as a question, not an assertion.

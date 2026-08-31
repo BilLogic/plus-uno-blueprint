@@ -129,7 +129,7 @@ Opening a group flies the camera to that step's cells: **accordion plus fly is
 one gesture**, through the same active-step cursor compare navigation reads.
 
 Counts: exactly one per group, at the **end** of its header row, post-filter.
-There is no total anywhere on this surface — the menubar Diff pill owns that
+There is no total anywhere on this surface — the menubar Diff count owns that
 number, and app-wide the two of them are the only difference counts.
 
 **Two grains, and they are not the same thing.** *Zones* are divergence runs,
@@ -139,14 +139,14 @@ ledger's grain and what `jump_divergence` walks. "Steps 3–8" as one accordion
 group was a wall; six per-step groups are readable.
 
 Rows carry a lane cell, one quote per path, and a ghost ⇱ that hands off to the
-cell panel's Details surface. Verdict chips are `+` ("present in only one path")
+cell panel's Details surface. Verdict badges are `+` ("present in only one path")
 and `≠` ("paths diverge here"). Filters cover lanes, verdicts and steps, empty
-meaning all, and the header carries no zone chip — it already says "Step N".
+meaning all, and the header carries no zone badge — it already says "Step N".
 
 ## Cross-surface state
 
 `compareReviewStore` is a module store because the model's consumers are
-scattered across React trees that share no provider: the menubar Diff pill, the
+scattered across React trees that share no provider: the menubar Diff count, the
 portalled ledger drawer, the divergence strip on the canvas, and the agent's
 `get_ui_state` contributor. Module store plus `useSyncExternalStore` is the
 house pattern for exactly this shape.

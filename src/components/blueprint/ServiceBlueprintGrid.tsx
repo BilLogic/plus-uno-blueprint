@@ -3,7 +3,6 @@ import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
 import { BlueprintTouchpointCell } from '@/components/blueprint/BlueprintTouchpointCell'
-import { TouchpointCellFace } from '@/components/blueprint/TouchpointCellFace'
 import {
   BlueprintDividerRow,
   SERVICE_DIVIDER_RULE_OVERHANG,
@@ -51,7 +50,7 @@ import {
   shouldShowInternalInteractionLineAfter,
   shouldShowLaneDividerAfter,
   shouldShowVisibilityLineAfter,
-  shouldUsePillCellContent,
+  shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
@@ -259,7 +258,7 @@ export function ServiceBlueprintGrid({
             />
             {lanes.map((lane, layerIndex) => {
               const collapsed = isLayerCollapsed(lane.id)
-              const isPillLane = shouldUsePillCellContent(lane)
+              const isTouchpointLane = shouldUseTouchpointCellContent(lane)
               const rowMinHeight = collapsed
                 ? BLUEPRINT_LAYER_COLLAPSED_HEIGHT
                 : getLayerRowMinHeight(lane, data, compact, {
@@ -300,7 +299,7 @@ export function ServiceBlueprintGrid({
                       lane={lane}
                       laneStyle={laneStyle}
                       rowMinHeight={rowMinHeight}
-                      isPillLane={isPillLane}
+                      isTouchpointLane={isTouchpointLane}
                       compact={compact}
                       steps={steps}
                       cellLookup={cellLookup}
@@ -415,7 +414,7 @@ function BlueprintSwimLane({
   lane,
   laneStyle,
   rowMinHeight,
-  isPillLane,
+  isTouchpointLane,
   compact,
   steps,
   cellLookup,
@@ -435,7 +434,7 @@ function BlueprintSwimLane({
   lane: BlueprintData['lanes'][number]
   laneStyle: BlueprintLayerStyle
   rowMinHeight: number
-  isPillLane: boolean
+  isTouchpointLane: boolean
   compact?: boolean
   steps: BlueprintData['steps']
   cellLookup: ReturnType<typeof buildCellLookup>
@@ -561,18 +560,18 @@ function BlueprintSwimLane({
       {steps.map((step, stepIndex) => {
         const cell = getCellAt(cellLookup, laneId, step.id)
         // A tech slot can hold several cells — one per touchpoint — and each
-        // renders as its own pill with its own identity. Everything else
+        // renders as its own touchpoint with its own identity. Everything else
         // keeps asking for "the" cell.
-        const slotCells = isPillLane
+        const slotCells = isTouchpointLane
           ? getCellsAt(cellLookup, laneId, step.id)
           : undefined
-        const variant = isStoryboardLane ? 'storyboard' : isPillLane ? 'pills' : 'default'
+        const variant = isStoryboardLane ? 'storyboard' : isTouchpointLane ? 'touchpoints' : 'default'
         const storyboardStrip = isStoryboardLane
           ? resolveStoryboardStripEntries(blueprint, step.id)
           : undefined
         const showCell = isStoryboardLane
           ? (storyboardStrip?.length ?? 0) > 0 || showEmptyCells
-          : isPillLane
+          : isTouchpointLane
             ? (slotCells ?? []).some((entry) =>
                 hasCellContent(entry.content, variant),
               ) || showEmptyCells
@@ -668,11 +667,11 @@ function BlueprintSwimLane({
 
 function hasCellContent(
   content: string | undefined,
-  variant: 'default' | 'pills' | 'storyboard',
+  variant: 'default' | 'touchpoints' | 'storyboard',
 ): boolean {
   if (variant === 'storyboard') return true
   if (!content?.trim()) return false
-  if (variant === 'pills') {
+  if (variant === 'touchpoints') {
     return parseCellContentItems(content).length > 0
   }
   return true
@@ -698,7 +697,7 @@ function BlueprintCellBlock({
   cellId?: string
   content?: string
   laneStyle: BlueprintLayerStyle
-  variant?: 'default' | 'pills' | 'storyboard'
+  variant?: 'default' | 'touchpoints' | 'storyboard'
   width: number
   compact?: boolean
   fitVertically?: boolean
@@ -718,13 +717,13 @@ function BlueprintCellBlock({
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
   /*
-    One pill per (cell, item). Since the split a tech slot holds one cell
-    per touchpoint, so this is one pill per cell — but a cell whose content
+    One touchpoint per (cell, item). Since the split a tech slot holds one cell
+    per touchpoint, so this is one touchpoint per cell — but a cell whose content
     still parses to several items (pre-split data, or hand-typed lists)
     renders them all, attributed to that cell. Nothing is dropped either way.
   */
-  const pillEntries =
-    variant === 'pills'
+  const touchpointEntries =
+    variant === 'touchpoints'
       ? (slotCells && slotCells.length > 0
           ? slotCells
           : content !== undefined
@@ -743,7 +742,7 @@ function BlueprintCellBlock({
     minWidth: width,
     maxWidth: width,
     minHeight: fitVertically
-      ? variant === 'pills'
+      ? variant === 'touchpoints'
         ? rowMinHeight
         : 0
       : BLUEPRINT_ROW_MIN_HEIGHT,
@@ -755,7 +754,7 @@ function BlueprintCellBlock({
   const shellClassName = cn(
     'relative z-1 flex shrink-0 items-stretch',
     shellPadding,
-    fitVertically && (variant === 'pills' ? 'h-full' : 'h-full min-h-0'),
+    fitVertically && (variant === 'touchpoints' ? 'h-full' : 'h-full min-h-0'),
     variant === 'storyboard' && 'min-h-0 overflow-hidden',
   )
 
@@ -775,7 +774,7 @@ function BlueprintCellBlock({
           stepIndex={stepIndex}
         />
       </div>
-    ) : variant === 'pills' ? (
+    ) : variant === 'touchpoints' ? (
       <div
         {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
         data-step-index={stepIndex}
@@ -785,12 +784,12 @@ function BlueprintCellBlock({
           !fitVertically && 'min-h-[80px] justify-center',
         )}
       >
-        {pillEntries.map(({ item, cell: slotCell }, index) =>
+        {touchpointEntries.map(({ item, cell: slotCell }, index) =>
           selectionContext ? (
             <BlueprintTouchpointCell
               key={`${slotCell.id ?? 'anon'}-${item}-${index}`}
               item={item}
-              // Each pill speaks for its own cell: identity is the whole
+              // Each touchpoint speaks for its own cell: identity is the whole
               // point of the split, and the selection context must carry the
               // touchpoint's id, not the slot's first.
               selectionContext={{
@@ -806,12 +805,16 @@ function BlueprintCellBlock({
               compact={compact}
               sliceSequenceBadge={
                 index === 0 ||
-                slotCell.id !== pillEntries[index - 1]?.cell.id
+                slotCell.id !== touchpointEntries[index - 1]?.cell.id
               }
               status={slotCell.status ?? status}
             />
           ) : (
-            <TouchpointCellFace key={`${item}-${index}`} item={item} compact={compact} />
+            <BlueprintTouchpointCell
+              key={`${item}-${index}`}
+              item={item}
+              compact={compact}
+            />
           ),
         )}
       </div>

@@ -24,8 +24,9 @@ last-reviewed: 2026-08-25
 
 A path name captures the **condition** that puts someone on this route rather
 than a sibling — not the activity, which the scenario already supplied. Every
-name below is taken from that path's own `summary` (the "Applies when" field),
-never invented.
+name below is taken from that path's own `summary`, which the panel labels
+**Summary** — it said "Applies when" until #182 renamed the label onto the
+column. Never invented.
 
 Where a scenario has exactly one route there is no condition to name, and the
 name falls back to **`Standard`**. That is 9 of 39. Making something up for
@@ -35,7 +36,7 @@ those would be worse than admitting there is one way through.
 
 ## The rename
 
-| Scenario | Type | Now | Proposed | From its own "Applies when" |
+| Scenario | Type | Now | Proposed | From its own `summary` |
 | --- | --- | --- | --- | --- |
 | **Before Students Join** | happy | Room setup before students arrive | **Setup goes to plan** | *"setup goes to plan and the session opens before students arrive"* |
 | **Call-off Request** | happy | Call-off 12h+ (auto-approved) | **12+ hours ahead** | auto-approval threshold |

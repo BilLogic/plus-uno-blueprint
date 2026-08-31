@@ -1,4 +1,4 @@
-/** Standard Scheduling Happy Path — tech pill descriptions. */
+/** Standard Scheduling Happy Path — touchpoint descriptions. */
 
 /** Standard Scheduling — Regular Tutor step 2. */
 export const STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_FRAME =
