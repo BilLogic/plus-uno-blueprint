@@ -45,9 +45,29 @@ export const RULE_BEGINS_AT = '20260828121000'
 /** The privileges a table hands `anon` on creation, none of which it may keep. */
 export const ANON_WRITE_PRIVILEGES = ['insert', 'update', 'delete', 'truncate']
 
+/**
+ * The SQL with its prose removed.
+ *
+ * Not decoration. The header of `20260830140000` explains that "a failed
+ * CREATE TABLE rolls back", and the sentence made this check report a table
+ * called `rolls` that no migration has ever created. A rule that reads
+ * comments is a rule that fires on how carefully someone explained
+ * themselves, and the answer is to stop reading comments rather than to
+ * write worse ones.
+ *
+ * Line comments and block comments only. A `--` inside a string literal would
+ * be mistaken for a comment, which is a known and accepted imprecision here:
+ * the statements this file looks for — `create table`, `revoke` — do not
+ * carry string literals, and the alternative is a tokeniser.
+ */
+export function withoutComments(sql) {
+  return sql.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/--[^\n]*/g, ' ')
+}
+
 /** `create table [if not exists] public.foo` — the name, however it was spelled. */
 export function tablesCreated(sql) {
   const created = []
+  sql = withoutComments(sql)
   const pattern =
     /\bcreate\s+table\s+(?:if\s+not\s+exists\s+)?(?:"?public"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?/gi
   let match
@@ -66,6 +86,7 @@ export function tablesCreated(sql) {
  */
 export function tablesRevoked(sql) {
   const revoked = new Set()
+  sql = withoutComments(sql)
   const pattern =
     /\brevoke\s+([^;]*?)\s+on\s+(?:table\s+)?(?:"?public"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?\s+from\s+([^;]*);/gi
   let match

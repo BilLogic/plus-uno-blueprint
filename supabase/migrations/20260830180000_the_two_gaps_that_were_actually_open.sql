@@ -270,6 +270,40 @@ $status$;
 -- builds the two paths, the lane and the cell it needs, and is exactly as
 -- strong on an empty database as on production.
 
+-- ── A service row that satisfies whichever `services` this schema has ─────
+--
+-- Both fixtures below need a service to hang a path off, and neither cares
+-- what it is called. What they cannot do is name a fixed column list: an
+-- empty replay's `services` has a NOT NULL `slug` that production's does not,
+-- because the migration dropping it is in the replay baseline and rolls back.
+-- So the insert is built from the catalogue.
+--
+-- Dropped at the end of this file. It is scaffolding for two proofs, not
+-- schema, and leaving it behind would put a function in `public` that nothing
+-- calls and that the posture check would rightly ask about.
+
+create or replace function public.issue_174_fixture_service(p_name text)
+returns uuid
+language plpgsql
+as $fixture$
+declare
+  v_id uuid;
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'services'
+       and column_name = 'slug'
+  ) then
+    execute 'insert into public.services (name, slug) values ($1, $2) returning id'
+      into v_id using p_name, replace(lower(p_name), ' ', '-');
+  else
+    execute 'insert into public.services (name) values ($1) returning id'
+      into v_id using p_name;
+  end if;
+  return v_id;
+end
+$fixture$;
+
 do $lane$
 declare
   cols     text;
@@ -324,16 +358,27 @@ begin
 
   -- 3. THE BEHAVIOUR, PERFORMED.
   begin
-    insert into public.services (name)
-      values ('issue-174 fixture') returning id into svc;
+    -- Built by a helper, and the reason is worth a sentence rather than a
+    -- shrug: on an EMPTY replay `services` still carries a NOT NULL `slug`
+    -- that production's does not, because the migration dropping it is in
+    -- `migration-replay-baseline.json` and rolls back. A fixture naming only
+    -- the columns production has cannot run against the schema the series
+    -- actually produces — which is exactly what an empty replay exists to
+    -- notice, and did.
+    svc := public.issue_174_fixture_service('issue-174 fixture');
     insert into public.phases (service_id, name, position)
       values (svc, 'fixture phase', 0) returning id into phase;
     insert into public.scenarios (phase_id, name, position)
       values (phase, 'fixture scenario', 0) returning id into scen;
+    -- `happy` and `exception`, which are the two route kinds legal in BOTH
+    -- schemas. An empty replay's `paths_path_type_check` is the older set,
+    -- because the migration that narrows it asserts production's counts and
+    -- rolls back; `variant` is legal on production and rejected there. The
+    -- fixture needs two distinct paths and does not care which kinds.
     insert into public.paths (scenario_id, name, path_type)
       values (scen, 'fixture path A', 'happy') returning id into path_a;
     insert into public.paths (scenario_id, name, path_type)
-      values (scen, 'fixture path B', 'variant') returning id into path_b;
+      values (scen, 'fixture path B', 'exception') returning id into path_b;
     insert into public.steps (scenario_id, name)
       values (scen, 'fixture step') returning id into stp;
     insert into public.path_steps (path_id, step_id, position)
@@ -455,8 +500,7 @@ begin
 
   -- 2. THE PROPERTY, PERFORMED.
   begin
-    insert into public.services (name)
-      values ('issue-174 policy fixture') returning id into svc;
+    svc := public.issue_174_fixture_service('issue-174 policy fixture');
     insert into public.stakeholders (service_id, name, kind)
       values (svc, 'fixture party', 'staff') returning id into holder;
 
@@ -507,3 +551,5 @@ begin
   end if;
 end
 $policy_assert$;
+
+drop function public.issue_174_fixture_service(text);
