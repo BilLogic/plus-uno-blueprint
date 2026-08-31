@@ -378,10 +378,13 @@ LABEL above it was saying a word no query could find. So there is no migration �
 `cells.content`, `cells.value_props`, `path_steps.position` and `paths.summary`
 were all correct while the panel said Text, Value, Columns and Applies when —
 and the `Is` column carries two things: the word a reader now sees, and the
-column it names. This is the interface→schema map [#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171)
-asked for, kept in the same table as the schema→schema one rather than beside
-it, because a reader looking up a word should not first have to know which kind
-of rename it was.
+column it names. They are kept in the same table as the schema→schema rows
+rather than beside them, because a reader looking up a word should not first
+have to know which kind of rename it was. These five are the label renames
+[#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171) asked for;
+the MAP it asked for — every current label and the name behind it, not only the
+ones that moved — is [The interface→schema map](#the-interfaceschema-map)
+below.
 
 `column` and `applies when` are enforced as retired copy: neither is said
 anywhere else on screen, so a reintroduction fails
@@ -424,6 +427,92 @@ carries it, over every NAME under `src` and over one rule about behaviour —
 **no badge changes colour or border on hover**, because a surface that repaints
 under the pointer promises a click a badge never delivers. What a badge keeps is
 the help cursor, the focus ring and the tooltip.
+
+## The interface→schema map
+
+Every word a panel puts in front of a reader, and the name behind it. The
+rename map above records the words that **changed**; this records what every
+current word is **bound to**, the agreements included. A table of divergences
+alone cannot say that the rest are fine — "not listed" would mean both
+"aligned" and "nobody looked", and that ambiguity is the state
+[#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171) was raised
+about: *"how come we have inconsistent naming from front and backend again
+(i.e., resources vs. links)?"* The complaint was never that the words differ.
+It was that no document said which of the differences were on purpose.
+
+The interface word is a **panel label** — the `label`, `term` and `title` props
+of the five components that put a field's name in front of a reader. The schema
+word is a `table.column`, or a bare table where the label heads a whole
+relation rather than one field of it. The two **agree** when they are the same
+word once case, spaces and a foreign key's `_id` are set aside; singular and
+plural agree too, because the label over a relation names the thing and the
+table names the collection. Anything further apart than that owes the third
+column a reason.
+
+| The interface says | The schema says | Why they differ |
+|---|---|---|
+| **Content** | `cells.content` | — |
+| **Summary** | `cells.summary`, `cell_touchpoints.summary`, `paths.summary`, `phases.summary`, `scenarios.summary`, `services.summary`, `steps.summary` | — |
+| **Status** | `cells.status`, `paths.status` | — |
+| **Owner** | `cells.owner` | — |
+| **Perceived owner** | `cells.perceived_owner` | — |
+| **Function** | `cells.function` | — |
+| **Form** | `cells.form` | — |
+| **Value proposition** | `cells.value_props` | `props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. |
+| **Touchpoint** | `touchpoints` | — |
+| **Screenshot** | `cell_touchpoints.screenshot` | — |
+| **Design link** | `cell_touchpoints.url` | A placement carries two URLs — this one and `screenshot` — so `url` alone cannot say which field a reader is standing in, and it is not a word a panel says out loud. The label names what this one is for. |
+| **Prominence** | `cell_touchpoints.prominence` | — |
+| **Stakeholder** | `lanes.stakeholder_id` | — |
+| **Owner team** | `lanes.owner_team` | — |
+| **KPIs** | `lanes.kpis` | — |
+| **Tools** | `lanes.tools` | — |
+| **Business impact** | `phases.business_impact` | — |
+| **Operational requirements** | `phases.operational_requirements` | — |
+| **Paths** | `paths` | — |
+| **Author note** | `paths.note` | `note` is this vocabulary's word for an author's aside, and the label says whose aside it is because it sits directly under Summary, which is the path's own sentence. That distinction is worth a word on screen and not worth a second column. |
+| **Funding** | `business_models.funding` | — |
+| **Pricing** | `business_models.pricing` | — |
+| **Delivery cost** | `business_models.delivery_cost` | — |
+| **Revenue model** | `business_models.revenue_model` | — |
+| **Partners** | `business_models.partners` | — |
+| **Position** | `path_steps.position` | — |
+| **Storyboard** | `lanes.lane_role` | The one row whose right-hand side is a VALUE rather than the name of a place to put one: `storyboard` is one of the eight `lane_role` admits, and this label heads the frames of the lane carrying it. The word is in the schema; it is simply not a column name. |
+
+Four rows out of twenty-seven, and each one a decision rather than an accident.
+That is the claim the table exists to make checkable, and
+[`scripts/tests/labels-name-their-columns.test.mjs`](scripts/tests/labels-name-their-columns.test.mjs)
+checks it four ways: every panel label has a row, every row is a label some
+panel still says, every row names something the replayed schema has, and a
+divergent row carries a reason while an aligned row does not. The last pair is
+the one worth stating out loud. A reason recorded about a label that never
+diverged reads as a decision and settles nothing, and a reason column with
+decoration in it is a column readers learn to skip — taking the four real ones
+with it.
+
+Two of the four are the same shape, and it is the shape worth recognising when
+the fifth arrives. `url` and `note` are ordinary words several tables carry,
+naming what a value IS; **Design link** and **Author note** name what this
+particular one is FOR. A column shared across tables cannot say which of them a
+reader is standing in, and renaming it to the label would make it wrong on the
+next table that needs it. The other two are one-offs: `value_props` abbreviates
+its label, and `lane_role` holds its label as a value.
+
+**The subject is panel labels, and that is narrower than "words on screen" on
+purpose.** *Spec* never reaches the interface at all — the entry above says so
+and why. *Line of visibility* and *strip* reach it as drawings rather than as
+the name of a field, and are derived at render time from `lane_role` and from
+the frames of a step, so there is nothing to bind them to. A word that heads no
+field has no name to be bound to, and a rule pretending otherwise would be a
+rule nobody could satisfy.
+
+**The enforced half is a second list, deliberately, exactly as the rename map's
+is.** `LABEL_COLUMNS` in that test file is what CI reads; this table is what a
+person reads; neither derives from the other, and a parity test fails when they
+disagree. The argument is the one the rename map already makes: a prose
+document should not be load-bearing for a build, and a documented map that has
+drifted from the enforced one is a lie in the file people trust to learn the
+vocabulary.
 
 ## One permanent exemption
 
