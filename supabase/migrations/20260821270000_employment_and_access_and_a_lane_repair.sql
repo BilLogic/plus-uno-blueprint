@@ -37,8 +37,12 @@ begin
   select count(*) into n from scenarios where name = 'Tech Setup';
   if n > 0 then raise exception 'Tech Setup survived the rename'; end if;
 
+  -- One at most, rather than exactly one: on an empty database there is no
+  -- 'Tech Setup' to rename and exactly-one raised, rolling this file back and
+  -- every file after it (#148). The clause above already says the old name did
+  -- not survive; this one says the rename did not produce a collision.
   select count(*) into n from scenarios where name = 'Employment & Access';
-  if n <> 1 then raise exception 'expected 1 renamed scenario, got %', n; end if;
+  if n > 1 then raise exception '% scenarios now named Employment & Access', n; end if;
 
   select count(*) into n from (
     select path_id, position from lanes group by path_id, position having count(*) > 1

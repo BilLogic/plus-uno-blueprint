@@ -46,11 +46,20 @@ begin
     raise exception 'owner_team values outside the closed list survive: %', leftover;
   end if;
 
-  -- The lanes themselves must still be there. This migration retires a claim,
-  -- not a row.
-  if (select count(*) from public.lanes where name in ('CMU HR', 'CPO')) <> 3 then
-    raise exception 'expected the 3 partner lanes to survive, found %',
-      (select count(*) from public.lanes where name in ('CMU HR', 'CPO'));
+  -- This migration retires a claim, not a row.
+  --
+  -- Was: exactly 3 lanes named CMU HR or CPO. That is a count of production on
+  -- the day, it raised on every empty replay, and an UPDATE could not have
+  -- deleted them anyway. What the update CAN get wrong is leaving the claim it
+  -- came to retire, so that is what is asserted.
+  if exists (
+    select 1 from public.lanes
+    where name in ('CMU HR', 'CPO') and owner_team is not null
+  ) then
+    raise exception 'a partner lane still claims an owner_team: %',
+      (select string_agg(name || ' = ' || owner_team, ', ' order by name)
+         from public.lanes
+        where name in ('CMU HR', 'CPO') and owner_team is not null);
   end if;
 end
 $do$;

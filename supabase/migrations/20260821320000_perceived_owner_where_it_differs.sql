@@ -17,8 +17,17 @@ where content = 'Runs the Act 153 checks and confirms the result to PLUS.';
 do $$
 declare n int; same int;
 begin
-  select count(*) into n from cells where perceived_owner is not null;
-  if n < 3 then raise exception 'expected at least 3 perceived_owner rows, got %', n; end if;
+  -- The three sentences the updates above name, rather than a floor on the
+  -- whole table: "at least 3" is a fact about production and it raised on every
+  -- empty replay, rolling both updates back with it (#148). Where a sentence is
+  -- absent there is nothing to have failed to set.
+  select count(*) into n from cells
+  where content in (
+    'Reaches out to PLUS staff with any concerns.',
+    'PLUS staff request assistance if needed.',
+    'Runs the Act 153 checks and confirms the result to PLUS.'
+  ) and perceived_owner is null;
+  if n > 0 then raise exception '% cell(s) the update named have no perceived_owner', n; end if;
 
   select count(*) into same from cells
   where perceived_owner is not null and perceived_owner = owner;
