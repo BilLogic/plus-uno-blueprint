@@ -86,6 +86,28 @@ jobs:
       - run: npm run check:proof-footprint
       - run: npm run check:new-table-grants
 
+      # The front door (#60). Unlike the other posture checks this one needs
+      # NO privileged credential: GoTrue publishes its own configuration to
+      # the anon key, and that key already ships inside the bundle this
+      # repository deploys. So it reads repository VARIABLES rather than
+      # secrets, which is the right home for a value that is public by design.
+      #
+      # `continue-on-error` CONTRADICTS this check's own argument, and it is
+      # here on purpose with a date on it. The check is RED against production
+      # right now — public sign-up is on — so a hard failure would block every
+      # pull request in this repository on a dashboard toggle no contributor
+      # can reach. Advisory today, so the finding is visible on every PR
+      # instead of in an issue nobody opens.
+      #
+      # REMOVE THIS LINE the moment #60 is closed. A check that can never fail
+      # the build is a comment, and this file already argues that at length
+      # two steps above. If it is still here after #60 closes, that is the bug.
+      - run: npm run check:auth-posture
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        continue-on-error: true
+
       # The served-rulebook guard (#115). The canvas adapter is spliced into
       # every system prompt, and the pinned package's copy names a registry
       # this app does not have. This holds the instance override to
