@@ -92,21 +92,22 @@ jobs:
       # repository deploys. So it reads repository VARIABLES rather than
       # secrets, which is the right home for a value that is public by design.
       #
-      # `continue-on-error` CONTRADICTS this check's own argument, and it is
-      # here on purpose with a date on it. The check is RED against production
-      # right now — public sign-up is on — so a hard failure would block every
-      # pull request in this repository on a dashboard toggle no contributor
-      # can reach. Advisory today, so the finding is visible on every PR
-      # instead of in an issue nobody opens.
+      # The variables are named WITHOUT the `VITE_` prefix, and the script reads
+      # them WITH it. That is not cosmetic: from the day this step was added
+      # until #60 closed, every run printed "looked at nothing" and
+      # `continue-on-error` swallowed it, so a gate that had never once
+      # examined production read as a gate that was passing. The mapping is
+      # explicit here rather than fixed by renaming the variables, because the
+      # prefix means "the browser bundle inlines this" and nothing in Actions
+      # is a browser bundle.
       #
-      # REMOVE THIS LINE the moment #60 is closed. A check that can never fail
-      # the build is a comment, and this file already argues that at length
-      # two steps above. If it is still here after #60 closes, that is the bug.
+      # `continue-on-error` is gone with #60, which is what its own note said
+      # to do: sign-up is off, the check is green against production, and a
+      # check that cannot fail the build is a comment.
       - run: npm run check:auth-posture
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-        continue-on-error: true
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
 
       # The served-rulebook guard (#115). The canvas adapter is spliced into
       # every system prompt, and the pinned package's copy names a registry
