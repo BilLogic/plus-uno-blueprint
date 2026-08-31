@@ -180,9 +180,10 @@ true; panel-only), unique per (source, target, kind).
 
 **About the board, not part of it** (`20260729120000_derived_layer.sql` — the
 filename is where the retired name "derived layer" survives) — `slices` +
-`slides` (stakeholder views), `evidence`, `audit_findings`. There is
-deliberately no collective noun for them: see CONTEXT.md, which records why two
-attempts at one were both wrong of half the set. `business_models` is not among
+`slides` (stakeholder views), `evidence`, `audit_findings`. Each has an owner
+named by the write surface — the slice, the audit, and evidence which is
+nobody's; see CONTEXT.md, which records why two attempts at a collective noun
+were both wrong of half the set. `business_models` is not among
 them — it is the service's spec row.
 Design invariants worth knowing before touching them: all four
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert

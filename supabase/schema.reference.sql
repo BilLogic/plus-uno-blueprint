@@ -187,8 +187,12 @@ create table public.cell_dependencies (
 
 -- ── About the board: evidence, findings, slices, slides (2026-07-29) ────────
 -- Records ABOUT the board rather than squares of it. Called the "derived layer"
--- until 2026-08-26; renamed because four of these five tables are authored by a
--- person, not derived from anything, and because `layer` was the swimlane word.
+-- until 2026-08-26, and nothing since: four of these five tables are authored
+-- by a person rather than derived from anything, `layer` was the swimlane word,
+-- and a replacement ("analysis tier") was wrong of half the set the same way.
+-- Each has an OWNER instead, named by whichever tools may write it — see the
+-- table in CONTEXT.md, held against the write surface by
+-- scripts/tests/who-writes-what.test.mjs.
 -- The cell references here are SOFT — no foreign key — so the importer's
 -- scenario-scoped delete-and-reinsert cannot cascade into authored rows.
 -- Absent from every previous version of this file, which is the drift that made
