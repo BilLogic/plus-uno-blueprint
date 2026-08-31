@@ -1,8 +1,8 @@
 ---
 audience: developers
 summary: Who can do what and where it is actually enforced, the schema tour, the single write path (wrappers + ledger), migrations workflow, and environments.
-sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql
-last-reviewed: 2026-08-25
+sources: supabase/DATABASE.md (superseded), supabase/migrations/20260805150000_service_account_tier.sql, supabase/migrations/20260805170000_service_tier_rpc_enforcement.sql, supabase/migrations/20260729120000_derived_layer.sql, supabase/migrations/20260730090000_derived_layer_grants_hardening.sql, src/contexts/SupabaseProvider.tsx, src/lib/authoringRpc.ts, src/lib/authoringSession.ts, src/lib/authoringLog.ts, supabase/migrations/20260830200000_every_authoring_write_leaves_a_record.sql, src/lib/findingMutations.ts, src/lib/writeBoundaryContract.test.ts, supabase/migrations/20260805120000_findings_canvas_writes.sql, supabase/migrations/20260830290000_a_panel_writes_its_own_columns.sql, scripts/check-rls-posture.mjs
+last-reviewed: 2026-08-31
 ---
 
 # Access and security
@@ -47,14 +47,48 @@ are server-side:
    bypass RLS, so each body asserts `is_service_account()` itself
    (`20260805170000_service_tier_rpc_enforcement.sql` — injected by a DO
    block over `pg_proc` so no function is missed and none drifts).
-3. **Grants.** Explicit, narrow: `EXECUTE` revoked from `public`/`anon` on
-   every write RPC; column-scoped UPDATE grants on `audit_findings` and cell
-   text/spec columns; storage tiered for `slice-illustrations`
-   (`20260730090000`, `20260805170000`). `anon` holds no
-   INSERT/UPDATE/DELETE/TRUNCATE anywhere in `public` since
-   `20260828121000` — it had them on twelve tables, unreachable only
-   because no permissive write policy named `anon`, which is the shape a
-   one-word policy edit turns into an open write.
+3. **Grants — the only thing in Postgres that speaks about columns.**
+   RLS decides *who* may write and is silent on *which columns*, and the
+   app runs as exactly the role the restrictive policy admits. So the
+   grant is the whole of the write boundary between a panel and an RPC.
+   `EXECUTE` is revoked from `public`/`anon` on every write RPC; storage
+   is tiered for `slice-illustrations` (`20260730090000`,
+   `20260805170000`). `anon` holds no INSERT/UPDATE/DELETE/TRUNCATE
+   anywhere in `public` since `20260828121000` — it had them on twelve
+   tables, unreachable only because no permissive write policy named
+   `anon`, which is the shape a one-word policy edit turns into an open
+   write.
+
+   **Every `authenticated` UPDATE is column-scoped since
+   `20260830290000`.** Before it, thirteen tables held a TABLE-level
+   UPDATE — which covers every column, foreign keys included — so a
+   service account could reparent a path with a plain update and
+   `authoring_changes` recorded nothing. A column grant does not narrow a
+   table grant, it widens an empty one, so the careful lists beside those
+   thirteen were decoration; the fix is a REVOKE first and the grant
+   second. Not a public exposure, an integrity boundary between the app's
+   own two write paths. **UPDATE only, deliberately**: a row names its
+   parent when it is created, so INSERT has to reach the foreign keys.
+   Identity is chosen once and never changed, which is what makes UPDATE
+   the privilege that reparents.
+
+   Three key columns stay UPDATE-able and each is asserted rather than
+   allowed (`IDENTITY_GRANTS` in `scripts/check-rls-posture.mjs`):
+   `lanes.stakeholder_id`, an association that moves no lane; and
+   `agent_sessions.id` / `agent_messages.session_id`, which PostgREST
+   names in the `ON CONFLICT DO UPDATE` set list of the upsert the chat
+   saves through.
+
+   Two grants are load-bearing in a way that is easy to mistake for
+   dead weight. `update (updated_at)` on `touchpoints` and
+   `cell_touchpoints` exists because `sync_cell_touchpoints`,
+   `restore_cell_touchpoints`, `place_touchpoint_detail`,
+   `restore_touchpoint_detail` and `sync_cell_resources` are **SECURITY
+   INVOKER** — they write under the caller's grants, and a column
+   privilege is checked against the statement's SET LIST rather than
+   against what it changes. The `updated_at = now()` stamps in those
+   bodies are why. Anything SECURITY DEFINER bypasses grants entirely
+   and needs no column here at all.
 
    **`TRUNCATE` is NOT revoked everywhere**, whatever this section used to
    say: `authenticated` still holds it on nine tables, both agent tables
@@ -63,13 +97,20 @@ are server-side:
    named in `scripts/check-rls-posture.mjs` under what that check
    deliberately does not assert, and closing it is its own change.
 4. **A check that fails.** `npm run check:rls-posture:live` asks the
-   database, not the files: RLS on for every base table, no permissive
-   write policy to `anon`/`public`, no anon write grant, and every
-   reachable authenticated write either service-gated or holding a
-   documented exemption that must prove its substitute gate. It needs
-   `SUPABASE_DB_URL`, so like `check:contract:live` and
-   `check:identifiers:live` it is manual — a privileged database
-   credential does not belong in this repository's CI.
+   database, not the files. Seven assertions: RLS on for every base
+   table, no permissive write policy to `anon`/`public`, no anon write
+   grant, every reachable authenticated write either service-gated or
+   holding a documented exemption that must prove its substitute gate,
+   no table-level UPDATE for `authenticated` anywhere, every UPDATE-able
+   column named in `PANEL_COLUMNS`, and no primary or foreign key
+   UPDATE-able outside `IDENTITY_GRANTS`. It needs `SUPABASE_DB_URL`, so
+   like `check:contract:live` and `check:identifiers:live` it is
+   manual — a privileged database credential does not belong in this
+   repository's CI. `scripts/tests/rls-posture.test.mjs` is what runs on
+   every PR, and it exists because green against production and green
+   against nothing look the same: it shows the check going RED on each
+   shape it exists for, including a table granting a column outside its
+   panel's set and a table granting a foreign key.
 
 Roles live in the JWT minted at sign-in — a role change is invisible to a
 live session until refresh (the provider refreshes once per boot).

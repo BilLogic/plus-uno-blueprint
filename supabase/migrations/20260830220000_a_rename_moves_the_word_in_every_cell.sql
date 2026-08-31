@@ -204,23 +204,35 @@ grant execute on function public.rename_touchpoint(uuid, text) to authenticated;
 -- intended, a signed-in author's content save is refused — "permission denied
 -- for column updated_at" — before it reaches a single placement.
 --
--- IT IS NOT REFUSED TODAY, and the reason is worth writing down rather than
--- leaving as a happy accident. Production says:
+-- IT IS NOT REFUSED TODAY, because this file grants the column. The grant
+-- below is the reason, and it is load-bearing rather than defensive.
+--
+-- CORRECTION, made by #183 and left here rather than quietly edited away.
+-- This paragraph used to say something else: that the platform's table-level
+-- UPDATE covers every column, so `20260830140000`'s careful column list "has
+-- never been the operative permission on these two tables". That was wrong,
+-- and the evidence for it was confounded by this very grant. Production says:
 --
 --   select has_column_privilege('authenticated','public.cell_touchpoints',
---                               'updated_at','UPDATE');
---   t
+--                               'updated_at','UPDATE');   -- t, from HERE
+--   select has_column_privilege('authenticated','public.cell_touchpoints',
+--                               'cell_id','UPDATE');      -- f
+--   select count(*) from information_schema.role_table_grants
+--    where table_name = 'cell_touchpoints' and grantee = 'authenticated'
+--      and privilege_type = 'UPDATE';                     -- 0
 --
--- because the platform grants the API roles table-level UPDATE on relations
--- created in `public` — the same mechanism `20260830240000` caught handing
--- `anon` four write privileges nobody wrote. A table-level grant covers every
--- column, so 20260830140000's careful column list has never been the
--- operative permission on these two tables. Its intent is not in effect.
+-- `cell_id` is refused and there is no table-level UPDATE, so the column list
+-- IS operative on these two tables. Reading a `t` on the one column this file
+-- had just granted, and concluding the whole list was inert, was a conclusion
+-- drawn from its own effect.
 --
--- So this grant is dormant and correct rather than urgent: it is what keeps
--- the sync path working on the day #183 narrows the table grants to the
--- column lists that were always meant to hold. Shipping it now means that
--- ticket does not silently break content saves.
+-- The mechanism is real — `20260830240000` caught it handing `anon` four
+-- write privileges nobody wrote — but its victims are the THIRTEEN older
+-- tables that still hold a table-level UPDATE, not these two. #183 is where
+-- those are narrowed, and it counted them rather than trusting this note.
+--
+-- So this grant is not dormant. Remove it and the sync path stops the moment
+-- a signed-in author saves a cell.
 --
 -- An explicit stamp is the mechanism these two tables chose — they carry no
 -- `set_updated_at` trigger, unlike `cells` — so it gets the grant it needs.
