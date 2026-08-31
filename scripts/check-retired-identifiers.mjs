@@ -272,21 +272,68 @@ function liveFindings() {
     select 'table ' || table_name from information_schema.tables
       where table_schema = 'public' and table_name ~ '${pattern}'
     union all
-    select 'comment on ' || obj_description(c.oid) from pg_class c
+    select 'comment on ' ||
+             case c.relkind when 'v' then 'view'
+                            when 'm' then 'materialized view'
+                            else 'table' end ||
+             ' ' || c.relname
+      from pg_class c
       join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and obj_description(c.oid) ~ '${pattern}'
-    union all
-    select 'function ' || p.proname || ' body' from pg_proc p
-      join pg_namespace n on n.oid = p.pronamespace
-      where n.nspname in ('public','semantic_search') and p.prosrc ~ '${pattern}'
     order by 1
   `
-  const out = execFileSync('psql', [url, '-At', '-c', sql], { encoding: 'utf8' })
-  return out
+  const named = execFileSync('psql', [url, '-At', '-c', sql], { encoding: 'utf8' })
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
-    .filter((identifier) => !exempt(identifier))
+
+  // Selected here, decided in JavaScript. `prosrc` can only be matched as raw
+  // text from the catalog, which is why the body half is not part of the query
+  // above.
+  const bodies = `
+    select coalesce(
+             json_agg(json_build_object('name', p.proname, 'body', pg_get_functiondef(p.oid))),
+             '[]'
+           )
+      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname in ('public','semantic_search') and p.prosrc ~ '${pattern}'
+        -- pg_get_functiondef raises on an aggregate, so the shape of the
+        -- routine is part of the selection and not an afterthought.
+        and p.prokind in ('f', 'p')
+  `
+  const rows = JSON.parse(execFileSync('psql', [url, '-At', '-c', bodies], { encoding: 'utf8' }))
+
+  return [...named, ...liveFunctionFindings(rows)].filter((identifier) => !exempt(identifier))
+}
+
+/**
+ * Which live function bodies still NAME a retired identifier.
+ *
+ * The catalog can only match `prosrc` as raw text, so the query above selects
+ * candidates and this decides, by the same `identifierText` the static half
+ * uses: a comment is not an identifier, in a file or in a database. Without
+ * it `sync_cell_resources` reported for the sentence `-- for one layer down.`,
+ * which is ordinary English, and `deletion_impact` for a stale one — the same
+ * shape as `check:new-table-grants` reading a comment and inventing a table.
+ * A rule that reads prose fires on how carefully someone explained themselves.
+ *
+ * The address is the static half's — `function f body names layer_map`, not
+ * `function f body` — so a live finding can be exempted, and so the two halves
+ * of this check spell the same finding the same way.
+ */
+export function liveFunctionFindings(rows) {
+  const findings = []
+  for (const { name, body } of rows) {
+    const named = [
+      ...new Set(
+        (identifierText(body).match(/[a-z_][a-z0-9_]*/gi) ?? [])
+          .map((token) => token.toLowerCase())
+          .filter((token) => retiredFragmentsIn(token).length),
+      ),
+    ]
+    for (const token of named) findings.push(`function ${name} body names ${token}`)
+  }
+  return findings.sort()
 }
 
 /* ------------------------------------------------------------------- main */
