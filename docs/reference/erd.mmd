@@ -45,8 +45,9 @@
 %% Roles: lanes.lane_role is a semantic key kept separate from the display name,
 %%        because inferring one from the other broke every non-English blueprint.
 %%        Canonical: customer_actions, frontstage_actions, backstage_actions,
-%%        frontstage_tech, backstage_tech, support_systems, visual, step_visual.
-%%        Extensible; null = generic swimlane.
+%%        partner_actions, frontstage_tech, backstage_tech, support_actions,
+%%        visual. Constrained by lanes_lane_role_check, NOT extensible; null =
+%%        generic swimlane, and permitted on purpose.
 %%
 %% Soft references: evidence.cell_id, findings.cell_ids and slice_items.cell_ids
 %%        carry NO foreign key, deliberately. The importer's scenario-scoped
