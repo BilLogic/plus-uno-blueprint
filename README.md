@@ -58,8 +58,8 @@ frontmatter `summary`, and a doc without one fails the index build.
 | `npm run typecheck` | the type-check; `npm run build` runs it and bundles |
 | `npm run check:harness` | every assembled component is claimed by one composition doc |
 | `npm run docs:index` | regenerate `INDEX.md` after a doc move |
-| `npm run supabase:start` / `:stop` / `:reset` | local Supabase lifecycle |
-| `npm run supabase:types` / `:types:local` | regenerate `src/types/database.ts` |
+| `npm run supabase:start` / `:stop` | local Supabase lifecycle (`:reset` cannot rebuild this schema — [ADR 0009](docs/adr/0009-the-migration-series-is-a-narrative.md)) |
+| `npm run apply:pending -- --from=<version>` | what is written and not applied (add `--apply` to write) |
 
 Deploys ship from `main` via Netlify — push to main is production. Environments,
 rollback and troubleshooting:

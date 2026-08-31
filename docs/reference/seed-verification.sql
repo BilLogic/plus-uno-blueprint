@@ -1,4 +1,5 @@
--- Verify Service Blueprint seed (run after npm run supabase:reset)
+-- Verify Service Blueprint seed (run against the database itself; `supabase
+-- db reset` cannot rebuild this schema — see docs/adr/0009)
 
 -- Service phases
 select

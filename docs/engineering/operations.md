@@ -110,10 +110,17 @@ detail).
   from another checkout: `npm run supabase:stop` (or
   `supabase stop --project-id <other>`), then start again.
 - **Types don't match the schema** (TS errors on columns you can see in
-  the dashboard) — regenerate: `npm run supabase:types` (hosted) or
-  `npm run supabase:types:local`. Do this after every migration.
+  the dashboard) — **edit `src/types/database.ts` by hand.** Both
+  generator scripts redirect with `>`, which truncates the file before
+  the CLI runs; if the CLI then fails — no link, no Docker, no network —
+  the types are gone and the diff is the whole file. The hand edit is a
+  few lines and the type is reviewed like any other code.
 - **Local data looks wrong / half-migrated** — `npm run supabase:reset`
-  replays all migrations + seed from scratch. Local data is disposable.
+  cannot rebuild this schema. 157 of the 844 migrations replay against
+  an empty database and fail, because the board is imported data and no
+  migration creates a path, lane, step or cell; see
+  [ADR 0009](../adr/0009-the-migration-series-is-a-narrative.md). Point
+  local dev at the hosted project instead.
 - **Writes fail with "permission denied for function …"** — you're not a
   service-tier session. Check the dev sign-in variables in `.env.local`
   and the matrix in
