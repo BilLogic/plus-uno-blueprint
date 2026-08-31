@@ -44,10 +44,19 @@ comment on column cells.maturity is
 do $$
 declare n int;
 begin
-  select count(*) into n from cells where maturity = 'in_progress';
-  if n <> 14 then raise exception 'expected 14 in_progress, found %', n; end if;
-  select count(*) into n from cells where maturity = 'explored';
-  if n <> 42 then raise exception 'expected 42 explored, found %', n; end if;
+  -- AMENDED 2026-08-31. Two censuses stood here — `expected 14 in_progress`,
+  -- `expected 42 explored` — counting production's cells on the day. On an
+  -- empty database `cells` holds nothing, the first raises, and because a
+  -- migration is one transaction the CONSTRAINT SWAP ABOVE ROLLS BACK, leaving
+  -- `cells_maturity_check` on the vocabulary this file exists to retire.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case.
+  --
+  -- Nothing replaces them, because the assertion below IS the invariant they
+  -- were reaching for: no cell is left on a retired value. `14` and `42` were
+  -- the two halves of that same move, counted on one particular Thursday.
   select count(*) into n from cells where maturity in ('planned','prototype');
   if n > 0 then raise exception '% cells still carry a retired value', n; end if;
 end $$;

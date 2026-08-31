@@ -57,8 +57,21 @@ begin
     raise exception 'still % paths on the old value', leftover;
   end if;
 
-  select count(*) into leftover from public.paths where path_type = 'custom';
-  if leftover <> 11 then
-    raise exception 'expected 11 custom paths, found %', leftover;
-  end if;
+  -- AMENDED 2026-08-31. A census — `expected 11 custom paths` — stood here,
+  -- counting production's rows on the day. On an empty database `paths` holds
+  -- nothing, it raises, and because a migration is one transaction the
+  -- CONSTRAINT SWAP ABOVE ROLLS BACK: the narrowed `paths_path_type_check`
+  -- never lands, and `20260821220000`, which widens the same constraint and
+  -- then narrows it again, is working from a vocabulary this file was supposed
+  -- to have set.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case.
+  --
+  -- Nothing replaces it, because the assertion above IS the invariant it was
+  -- reaching for. `expected 11` said "the update converted the rows I counted
+  -- yesterday"; `still % paths on the old value` says "the update left nothing
+  -- behind", which is the same claim without the date on it — vacuously true
+  -- on an empty database, and on production the two could not have differed.
 end $$;

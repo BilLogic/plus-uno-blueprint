@@ -50,10 +50,26 @@ declare n int;
 begin
   -- No retired tool named anywhere, in any text column, including the two the
   -- 2026-08-21 spec pass filled after the original sweep ran.
+  --
+  -- AMENDED 2026-08-31. `coalesce(value_props,'')` was here. `value_props` is
+  -- `jsonb`, so `''` is resolved as a json literal and Postgres refuses it with
+  -- `invalid input syntax for type json` before it looks at a single row. THIS
+  -- STATEMENT HAS NEVER RUN ANYWHERE — the ledger holds
+  -- `20260821235940 three_things_the_sweeps_missed`, so whatever was applied to
+  -- production over MCP was not this text, which is #148's defect exactly.
+  -- Nothing found it until today because `20260821240000`'s census rolled back
+  -- `paths.status`, and this file failed three lines earlier on the missing
+  -- column and never reached the json.
+  --
+  -- Precedent is #157, "The three migration files Postgres would have refused":
+  -- a file that cannot parse or cannot coerce its own literals is repaired at
+  -- source, because leaving it means the series can never be replayed and the
+  -- error is not a fact about production. `::text` is what the search meant —
+  -- the other four arms are text columns and this one is the JSON spelled out.
   select count(*) into n from public.cells
   where content ilike '%pencil%' or coalesce(summary,'') ilike '%pencil%'
      or coalesce("function",'') ilike '%pencil%' or coalesce(form,'') ilike '%pencil%'
-     or coalesce(value_props,'') ilike '%pencil%';
+     or coalesce(value_props::text,'') ilike '%pencil%';
   if n <> 0 then raise exception 'Pencil still named on % cells', n; end if;
 
   -- Every unshipped path says so in its status, not only in its prose.

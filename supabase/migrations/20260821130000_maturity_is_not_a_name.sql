@@ -41,8 +41,30 @@ declare n int;
 begin
   select count(*) into n from cells where content like 'Planned — %';
   if n > 0 then raise exception '% cells still carry the maturity in their label', n; end if;
-  select count(*) into n from cells where maturity is not null;
-  if n <> 54 then raise exception 'expected 54 unbuilt cells, found %', n; end if;
+  -- AMENDED 2026-08-31. This was a census — `expected 54 unbuilt cells` —
+  -- measured against production on the day. On an empty database `cells` holds
+  -- nothing, the count is 0, and this raises; because a migration is one
+  -- transaction, `alter table cells add column maturity` ABOVE ROLLS BACK WITH
+  -- IT. That is why `20260821170000`, `20260821190000` and `20260821240000`
+  -- report `column "maturity" does not exist` on a replay, and why the `status`
+  -- column `20260821240000` renames it to is missing from three files after
+  -- that. One census, six files.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case. The column has long
+  -- since been added in production; this changes only whether anything can
+  -- check.
+  --
+  -- What replaces it is the invariant it was reaching for: the backfill missed
+  -- nothing it was written to catch. Vacuously true on an empty database, and
+  -- exactly as strong on production, where all 54 such cells had to be marked.
+  select count(*) into n from cells
+   where maturity is null
+     and (summary like 'PROTOTYPE (exploratory%'
+          or summary like '%PLANNED (Card%'
+          or content like 'Planned — %');
+  if n > 0 then raise exception '% unbuilt cells were never marked', n; end if;
   select count(*) into n from cells where maturity is not null and coalesce(summary,'') = '';
   if n > 0 then raise exception '% unbuilt cells say nothing about why', n; end if;
   -- The off-by-one above left labels like 'Ompletes', 'Econfirmation',

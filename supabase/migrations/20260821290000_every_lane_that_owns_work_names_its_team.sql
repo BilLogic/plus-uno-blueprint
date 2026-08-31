@@ -63,10 +63,24 @@ create trigger lanes_owner_team_is_a_party
   for each row execute function public.lanes_owner_team_is_a_party();
 
 do $$
-declare filled int; unknown int; blank int;
+declare unknown int; blank int;
 begin
-  select count(*) into filled from lanes where owner_team is not null;
-  if filled <> 158 then raise exception 'expected 158 filled, got %', filled; end if;
+  -- AMENDED 2026-08-31. A census — `expected 158 filled` — stood here,
+  -- counting production's lanes on the day. On an empty database `lanes` holds
+  -- nothing, it raises, and because a migration is one transaction the
+  -- `lanes_owner_team_is_a_party` FUNCTION AND TRIGGER ABOVE ROLL BACK with
+  -- it, so the rule this file exists to enforce is absent from every later
+  -- replay.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case.
+  --
+  -- Nothing replaces it, because the two assertions below ARE the invariant it
+  -- was reaching for: every team named is in the registry, and no work lane is
+  -- left without one. `158` was the count those two produce on production —
+  -- they say the same thing without the date on it, and they are vacuously
+  -- true on an empty database.
 
   select count(*) into unknown from lanes l
   where l.owner_team is not null
