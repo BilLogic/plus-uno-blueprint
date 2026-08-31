@@ -127,7 +127,7 @@ export function blueprintCellButtonClassName({
   className,
 }: {
   compact?: boolean
-  variant?: 'cell' | 'pill' | 'visual'
+  variant?: 'cell' | 'touchpoint' | 'visual'
   className?: string
 } = {}) {
   const shared = cn(
@@ -135,7 +135,7 @@ export function blueprintCellButtonClassName({
     compact ? 'text-xs' : 'text-sm',
   )
 
-  if (variant === 'pill') {
+  if (variant === 'touchpoint') {
     return cn(
       shared,
       'rounded-full text-center leading-snug',

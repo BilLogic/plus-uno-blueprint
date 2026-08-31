@@ -78,6 +78,14 @@ export type BlueprintCell = {
    *  relabelled it on the way out, so this closes a documented workaround. */
   summary: string | null
   links: CellLink[]
+  /**
+   * Resolved touchpoint placements, from `cell_touchpoints` or from fallback
+   * links. Optional for the same reason the spec block below is: the twenty
+   * hand-written fixture files do not carry it, the normalizer always sets
+   * it, and requiring it here would mean editing all of them to write an
+   * empty array. Read it as `?? []`.
+   */
+  touchpoints?: CellTouchpoint[]
   /*
     The spec block and the owner pair.
   

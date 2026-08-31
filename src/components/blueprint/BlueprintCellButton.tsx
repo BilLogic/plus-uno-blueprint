@@ -40,7 +40,7 @@ type BlueprintCellButtonProps = {
   selection?: BlueprintCellSelection
   cellId?: string
   stepIndex?: number
-  variant?: 'cell' | 'pill' | 'visual'
+  variant?: 'cell' | 'touchpoint' | 'visual'
   opacity?: number
   /**
    * Whether this button may carry the slice sequence badge. Tech pills share
@@ -70,7 +70,7 @@ type BlueprintCellButtonProps = {
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
-  'data-blueprint-tech-pill'?: string
+  'data-blueprint-touchpoint'?: string
 }
 
 /**
@@ -96,7 +96,7 @@ export function BlueprintCellButton({
   children,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
-  'data-blueprint-tech-pill': techPillLabel,
+  'data-blueprint-touchpoint': techPillLabel,
   status,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
@@ -271,7 +271,7 @@ export function BlueprintCellButton({
     ...style,
   } as CSSProperties
 
-  const buttonVariant = variant === 'pill' ? 'blueprintPill' : 'blueprint'
+  const buttonVariant = variant === 'touchpoint' ? 'blueprintPill' : 'blueprint'
 
   return (
     <Button
@@ -281,7 +281,7 @@ export function BlueprintCellButton({
       {...(tone ? blueprintToneAttrs(tone) : blueprintLaneAttrs(fill))}
       {...(cellId ? { 'data-blueprint-cell': cellId } : {})}
       data-step-index={stepIndex}
-      {...(techPillLabel ? { 'data-blueprint-tech-pill': techPillLabel } : {})}
+      {...(techPillLabel ? { 'data-blueprint-touchpoint': techPillLabel } : {})}
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       aria-pressed={isInteractive ? isActive : undefined}

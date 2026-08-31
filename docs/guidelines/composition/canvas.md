@@ -13,7 +13,7 @@ claims:
   - src/components/blueprint/BlueprintLaneHandles.tsx
   - src/components/blueprint/BlueprintPathBand.tsx
   - src/components/blueprint/BlueprintStepVisual.tsx
-  - src/components/blueprint/BlueprintTechPill.tsx
+  - src/components/blueprint/BlueprintTouchpointCell.tsx
   - src/components/blueprint/BlueprintVisualPlayButton.tsx
   - src/components/blueprint/IntegratedDependencyArrows.tsx
   - src/components/blueprint/LaneCollapseToggle.tsx
@@ -25,7 +25,7 @@ claims:
   - src/components/blueprint/ScenarioParallelInfoTooltip.tsx
   - src/components/blueprint/ScenarioTitleBadge.tsx
   - src/components/blueprint/ServiceBlueprintGrid.tsx
-  - src/components/blueprint/TechPillFace.tsx
+  - src/components/blueprint/TouchpointCellFace.tsx
   - src/components/blueprint/VisualStepDetailStack.tsx
   - src/components/blueprint/VisualWalkthroughModal.tsx
   - src/components/blueprint/VisualWalkthroughShell.tsx
