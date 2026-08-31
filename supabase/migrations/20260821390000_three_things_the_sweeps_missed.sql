@@ -77,9 +77,19 @@ begin
   where status = 'live' and summary ilike '%unshipped%';
   if n <> 0 then raise exception '% paths read live but describe unshipped work', n; end if;
 
+  -- AMENDED. This asserted the row EXISTS and is proposed, which is a census
+  -- of one: on an empty database the count is 0, the exception fires, and the
+  -- whole file rolls back — including the two sweeps above it, which is why
+  -- this file could never replay. Same repair as `20260821340000`.
+  --
+  -- Turned around, it says what it meant: that path must not be left in any
+  -- status but `proposed`. Vacuously true where the row is absent, and exactly
+  -- as strong where it is present, since the only way to satisfy it is the
+  -- update this file performs.
   select count(*) into n from public.paths
-  where id = 'f0000000-0000-4000-8000-000000000806' and status = 'proposed';
-  if n <> 1 then raise exception 'the Standard Scheduling roadmap path did not move to proposed'; end if;
+  where id = 'f0000000-0000-4000-8000-000000000806'
+    and status is distinct from 'proposed';
+  if n <> 0 then raise exception 'the Standard Scheduling roadmap path did not move to proposed'; end if;
 
   -- The retired level is not named as a level anywhere in the spec text.
   select count(*) into n from public.phases where summary ilike '%lifecycle%';
