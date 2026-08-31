@@ -16,7 +16,15 @@
  *
  * Module-level rather than React state because `call()` is a plain function
  * with no component around it. Subscribers read through `useSyncExternalStore`.
+ *
+ * It is no longer the ONLY record. `recordChange` also appends to
+ * `public.authoring_changes` through `authoringLog.ts` (#176), which is what
+ * survives the refresh this list does not. The two are deliberately different
+ * things: this one is positional, small and fast, and is what undo reads; that
+ * one is append-only, permanent, and is read by nobody in this app.
  */
+
+import { appendToAuthoringLog } from '@/lib/authoringLog'
 
 /**
  * How to take one change back: the operation that undoes it, captured at
@@ -164,20 +172,24 @@ export function recordChange(
   revert?: RevertSpec,
 ): void {
   counter += 1
-  entries = [
-    ...entries,
-    {
-      id: `c${counter}`,
-      fn,
-      args,
-      at: Date.now(),
-      revert,
-      ...(agentAttribution
-        ? { author: 'agent' as const, agentSessionId: agentAttribution.sessionId }
-        : {}),
-    },
-  ]
+  const entry: ChangeEntry = {
+    id: `c${counter}`,
+    fn,
+    args,
+    at: Date.now(),
+    revert,
+    ...(agentAttribution
+      ? { author: 'agent' as const, agentSessionId: agentAttribution.sessionId }
+      : {}),
+  }
+  entries = [...entries, entry]
   emit()
+  // The durable half (#176). Here and not at the call sites for the same
+  // reason the array is filled here: one funnel, so the record and the list
+  // cannot disagree about what happened. It never throws — the write it
+  // describes has already landed, and failing an author's save because an
+  // audit append did not is a worse lie than the missing row.
+  appendToAuthoringLog(entry)
 }
 
 /** Save: the changes are wanted, so stop tracking them. Writes nothing. */

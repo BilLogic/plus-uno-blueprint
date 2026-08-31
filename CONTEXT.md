@@ -170,6 +170,20 @@ each other.
 **view mode**. On the phone it does not exist at all — absent, never disabled.
 **cover** — the shell's landing view, before any blueprint is open.
 
+**change log** — the append-only record of every authoring write: what was
+done, with which arguments, what would undo it, and who did it — a person, or
+an agent and which of its sessions. It is **audit-only**. Nothing replays the
+inverse it stores; the fast undo is the in-memory list the changes sheet reads,
+and that list is emptied by a refresh while this is not.
+Table `authoring_changes`.
+
+**trash** — the deletions in the change log, which are the rows that carry a
+`deleted_kind` and, with it, the payload of everything the delete destroyed.
+**A view, not a table** (`trash`), so the recovery list cannot drift from the
+record of what happened. It replaced `deleted_structure`, which recorded
+deletions durably while every other write was remembered only until the tab
+closed.
+
 **`/sb:map`, `/sb:audit`, `/sb:whatif`, `/sb:slice`** — the four domain skills.
 They are *skills*, not app surfaces, and they come from the installed `sb`
 plugin (the `agentic-service-blueprinting` repo), not from this repo. Note that
