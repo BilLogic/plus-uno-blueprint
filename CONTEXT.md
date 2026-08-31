@@ -164,31 +164,50 @@ banned from the UI still has to be defined *somewhere*, and this is the file
 that defines the board's words. How a spec field is written is
 [`docs/reference/spec-house-style.md`](docs/reference/spec-house-style.md).
 
-The columns and the analysis tier below both arrived in
+The spec columns and the four tables below both arrived in
 `20260729120000_derived_layer.sql`, under one name for two unrelated things.
-Only the tier took a new name when that one was retired.
 
-## The analysis tier
+## The four tables that are about the board
 
-**analysis tier** — the four tables that hold records *about* the board rather
-than squares of it: `evidence`, `findings`, `slices`, `slides`. What unites
-them is aboutness: each one exists to say something concerning the board, and
-none of them is part of it.
+`evidence`, `audit_findings`, `slices` and `slides` are not squares of the
+board; each exists to say something *about* it. Where they name a cell they do
+it **softly** — `evidence.cell_id`, `audit_findings.cell_ids`,
+`slides.cell_ids`, all bare uuid with no foreign key — so that re-importing a
+scenario deletes and recreates its cells without taking them along. `slices`
+names no cell itself; it reaches them through its slides.
 
-Where they name a cell they do it **softly** — `evidence.cell_id`,
-`findings.cell_ids`, `slides.cell_ids`, all bare uuid with no foreign key —
-so that re-importing a scenario deletes and recreates its cells without taking
-them along. `slices` names no cell itself; it reaches them through its slides.
+**There is deliberately no collective noun for the four.** Two names were
+tried and both were wrong in the same way, by claiming something untrue of half
+the set:
 
-`business_model` is **not** in the tier, though it was listed in it. It is
-`service_id` plus `funding`, `pricing`, `delivery_cost`, `revenue_model` and
-`partners`: five fields describing the service, not a record about the board.
-It is the **service's spec row** — see *spec* above.
-Formerly the *derived layer*, a name that was wrong twice: only `findings` is
-actually derived (a human may author a slice — `20260803001000_slices_origin_allows_human.sql`
-exists for exactly that), and "layer" is the word the board retired when
-`layers` became `lanes`. The migration that built the tier keeps the old name
-in its filename, `20260729120000_derived_layer.sql`, and always will.
+- *derived layer* — only `audit_findings` is derived; a human may author a
+  slice, which `20260803001000_slices_origin_allows_human.sql` exists for. And
+  `layer` is the word the board retired when `layers` became `lanes`.
+- *analysis tier* — evidence is source material and a slice is a presentation
+  for an audience. Neither is analysis. It replaced *derived layer* in #149,
+  was never wrong in a way anyone could point at, and never stuck either, which
+  is the more useful signal.
+
+They are two pairs with two different natures, and the sentence that needs them
+almost always means one pair:
+
+- **evidence and findings** say what is true or wrong about a cell. Both attach
+  to cells directly, both are the audit's business.
+- **slices and slides** are a cut of the board taken for an audience. A slide
+  is bound only to its slice; the schema splits them from the pair above for
+  the same reason this file now does.
+
+So write the pair you mean. Where a statement genuinely covers all four — a
+grant, a migration's scope — enumerate them, which is four words against a
+category name that has twice had to be replaced.
+
+`business_model` is **not** among them, though it was once listed as though it
+were. It is `service_id` plus `funding`, `pricing`, `delivery_cost`,
+`revenue_model` and `partners`: five fields describing the service, not a
+record about the board. It is the **service's spec row** — see *spec* above.
+
+The migration that built the four keeps the retired name in its filename,
+`20260729120000_derived_layer.sql`, and always will.
 
 **slice** — a saved cut of the board for one audience: one actor's journey, one
 moment across every lane, one lane end to end, or one cell examined closely.
@@ -210,8 +229,9 @@ same tutor in two places at once". Each names the exact cells it is about.
 **A finding is an open question for a human, never an automatic change**:
 someone resolves it (fixed) or dismisses it (judged fine, with the system
 remembering that judgment).
-Table `findings`: `run_id`, `source`, `check_name`, `severity`, `cell_ids`,
-`note`, `fingerprint` (dedupe across runs), `status`.
+Table `audit_findings`: `service_id`, `run_id`, `source`, `check_key`,
+`severity`, `cell_ids`, `cell_keys`, `summary`, `fingerprint` (dedupe across
+runs), `status`.
 
 **evidence** — a research artefact attached to a cell. A cell with zero evidence
 rows is an *assumption*; that state is derived, never stored.
@@ -563,9 +583,10 @@ documented.
 
 Two entries have left this list, and how each left is the point.
 
-**"Derived layer" was renamed, not exempted.** The tier is the **analysis
-tier** now, because a rename removes the collision and an exemption only
-records it. See [The analysis tier](#the-analysis-tier).
+**"Derived layer" was renamed, not exempted.** A rename removes the collision
+where an exemption only records it. The replacement was then dropped as well,
+for a reason worth keeping: no one word was true of all four tables. See
+[The four tables that are about the board](#the-four-tables-that-are-about-the-board).
 
 **The breadcrumb label `'Layer: '` was sequenced, and then the sequence ran.**
 It was a real ordering constraint: the label sits inside every *stored* chunk

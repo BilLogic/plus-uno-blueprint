@@ -25,7 +25,7 @@
  * IT SHIPS WITH ZERO EXEMPTIONS, and that is an outcome to protect rather than
  * an accident. `derived layer` was the one term that would have forced a
  * permanent one — a legitimate concept containing a retired word, sitting in
- * prose that could reach a panel heading. Renaming it to `analysis tier` on
+ * prose that could reach a panel heading. Renaming the concept out of it on
  * #142 removes the collision instead of documenting it. An exemption in a copy
  * guard is indistinguishable from a mistake three months later.
  *

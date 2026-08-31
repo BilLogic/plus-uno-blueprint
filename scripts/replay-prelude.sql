@@ -91,7 +91,8 @@ create or replace function auth.role() returns text
 
 -- The real column list, not a guess: a thin `buckets` made
 -- `20260729120000_derived_layer.sql` fail on `file_size_limit`, and that one
--- failure cascaded into every later migration that touches the analysis tier.
+-- failure cascaded into every later migration that touches evidence, findings,
+-- slices or slides.
 create table if not exists storage.buckets (
   id text primary key,
   name text not null,
