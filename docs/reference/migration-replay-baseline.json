@@ -2,13 +2,13 @@
   "why": "Files that cannot replay against an empty database (#148). The set may shrink and never grow: a NEW entry is a migration written against an apply path that does not work, which is the gap #148 describes happening again. Delete entries as they are repaired — the check reports any that are no longer true.",
   "recorded": {
     "total": 843,
-    "applied": 678,
-    "failed": 165,
+    "applied": 679,
+    "failed": 164,
     "byClass": {
       "syntax": 0,
       "assertion": 25,
       "data": 139,
-      "structure": 1
+      "structure": 0
     },
     "first": {
       "file": "20250603170000_warm_up_step2_cells.sql",
@@ -179,7 +179,6 @@
     "20260821270000_employment_and_access_and_a_lane_repair.sql",
     "20260821310000_ambient_behaviour_is_not_every_column.sql",
     "20260821320000_perceived_owner_where_it_differs.sql",
-    "20260821380000_no_outsider_owns_a_lane.sql",
-    "20260828120000_agent_history_gets_an_owner.sql"
+    "20260821380000_no_outsider_owns_a_lane.sql"
   ]
 }
