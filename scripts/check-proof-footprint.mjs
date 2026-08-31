@@ -21,6 +21,18 @@
  * function against a row it did not create must snapshot what it found and
  * put it back.
  *
+ * ── Two ways to give it back ──────────────────────────────────────────────
+ *
+ * The first is to snapshot the rows and reinsert them, which is what the
+ * amended proof in `20260830160000` does.
+ *
+ * The second was found by #187's proof and is better where it applies: build
+ * the wanted list out of the cell's OWN content and append the probes to it.
+ * Then nothing is displaced in the first place — the real names are in the
+ * list, so the sync keeps them — and the block puts the text back at the end.
+ * A rule that only knew the snapshot shape flagged that block, which is a
+ * false positive on the safer of the two designs.
+ *
  * Deliberately not a general-purpose SQL analyser. It knows one function by
  * name, because that is the one that syncs, and a second such function should
  * arrive here as a second entry rather than as a regex that guesses.
@@ -71,7 +83,25 @@ export function blockFootprint(block) {
     provesRefusal: /'skipped'/.test(body),
     snapshots: body.includes('jsonb_agg'),
     restores: /\binsert\s+into\s+public\.cell_touchpoints\b/.test(body),
+    // The other safe shape: the wanted list is built from the cell's own
+    // content, so the sync has nothing to displace, and the text it borrowed
+    // to build that list is put back.
+    derivesFromContent: /regexp_split_to_array\s*\(\s*[a-z_]*\.?content/.test(body),
+    // A restore assigns the SAVED value and nothing else. The append that
+    // sets up this shape is also an `update public.cells set content`, so a
+    // looser test would let the block satisfy itself with the statement that
+    // did the borrowing.
+    restoresContent:
+      /\bupdate\s+public\.cells\s+set\s+content\s*=\s*[a-z_][a-z0-9_]*\s+where\b/.test(
+        body,
+      ),
   }
+}
+
+/** Whether a block that borrowed rows returns them, by either route. */
+export function returnsWhatItBorrowed(footprint) {
+  const { snapshots, restores, derivesFromContent, restoresContent } = footprint
+  return (snapshots && restores) || (derivesFromContent && restoresContent)
 }
 
 /** One finding per block that syncs against borrowed rows without returning them. */
@@ -79,16 +109,19 @@ export function findings(files) {
   const found = []
   for (const { name, sql } of files) {
     proofBlocks(sql).forEach((block, index) => {
-      const { syncs, borrows, snapshots, restores, provesRefusal } = blockFootprint(block)
+      const footprint = blockFootprint(block)
+      const { syncs, borrows, snapshots, derivesFromContent, provesRefusal } = footprint
       if (provesRefusal) return
       if (!syncs || !borrows) return
-      if (snapshots && restores) return
+      if (returnsWhatItBorrowed(footprint)) return
       found.push({
         file: name,
         block: index + 1,
         reason: snapshots
           ? 'snapshots the rows it displaces but never puts them back'
-          : 'runs a syncing function against rows it did not create, and keeps no copy',
+          : derivesFromContent
+            ? 'builds its wanted list from the cell\'s content but never puts the content back'
+            : 'runs a syncing function against rows it did not create, and keeps no copy',
       })
     })
   }

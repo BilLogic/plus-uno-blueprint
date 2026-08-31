@@ -58,6 +58,7 @@ export type WriteFn =
   | 'rename_scenario'
   | 'rename_path'
   | 'rename_owner_tag'
+  | 'rename_touchpoint'
   | 'add_step'
   | 'add_lane'
   | 'upsert_cell'
@@ -275,6 +276,15 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   rename_phase: (entry) => `Renamed a phase${renameTo(entry)}`,
   rename_scenario: (entry) => `Renamed a scenario${renameTo(entry)}`,
   rename_path: (entry) => `Renamed a path${renameTo(entry)}`,
+  rename_touchpoint: (entry) => {
+    // Named by how far it reached, because that is the whole point of the
+    // catalog: one edit moves every pill that says the word, and the row is
+    // where a person finds out how many that was.
+    const cells = Array.isArray(entry.args.cell_ids) ? entry.args.cell_ids.length : 0
+    const to = renameTo(entry)
+    if (cells === 0) return `Renamed a touchpoint${to}`
+    return `Renamed a touchpoint${to} (${cells} ${cells === 1 ? 'cell' : 'cells'})`
+  },
   rename_owner_tag: (entry) => {
     const from = typeof entry.args.from === 'string' ? entry.args.from : ''
     const to = typeof entry.args.to === 'string' ? entry.args.to : ''
