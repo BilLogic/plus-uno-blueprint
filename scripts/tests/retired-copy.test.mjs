@@ -36,6 +36,8 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { sourceFiles } from '../../src/lib/tokenModel.ts'
 import { RETIRED_COPY_WORDS } from '../retired-vocabulary.mjs'
 
@@ -139,4 +141,99 @@ test('the guard does not read what it excludes', () => {
     { file: 'lib/not-a-component.ts', code: '<span>the layer</span>' },
   ]
   assert.deepEqual(offenders(readerFacingStrings(quiet)), [])
+})
+
+/* ------------------------------------------------------------- the figures */
+
+/**
+ * SECOND SUBJECT: the text inside the shipped diagrams.
+ *
+ * Added because the first subject missed four of them at once. `public/cover/`
+ * is not documentation — `EditorShell` renders those files as a deck inside
+ * the app, so their words reach a reader the same way a heading does, and
+ * `data-model-hierarchy.svg` was still labelling the top of the hierarchy
+ * **Service lifecycle** four months after `service_lifecycles` became
+ * `services`. `cell-anatomy.svg` was drawing a Dependencies tab headed
+ * "Set off by" / "Sets off", which is the wording `dependencyValidation.ts`
+ * replaced with "Follows" / "Leads to" — and that file's own comment names
+ * those two headings as the clearest place the old words showed.
+ *
+ * This is a widened SUBJECT, not a widened word list. The same
+ * `RETIRED_COPY_WORDS` and the same `offenders()` decide; all that changed is
+ * where a reader-facing string is looked for. A figure is read by more people
+ * than most of the JSX above it and was the one reader-facing surface with no
+ * guard on it at all.
+ *
+ * `<text>` only. Not `id`, not `class`, not a comment, not the filename — a
+ * figure named `four-ways-in.svg` is nobody's copy.
+ */
+const FIGURES = join(process.cwd(), 'public', 'cover')
+
+/** `<text>` content, with any `<tspan>` markup inside it flattened away. */
+const SVG_TEXT = /<text\b[^>]*>([\s\S]*?)<\/text>/g
+
+export function figureStrings(files = figureFiles()) {
+  const out = []
+  for (const { file, code } of files) {
+    for (const match of code.matchAll(SVG_TEXT)) {
+      const value = match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (value && /[A-Za-z]/.test(value)) out.push({ file, where: 'text', value })
+    }
+  }
+  return out
+}
+
+function figureFiles() {
+  return readdirSync(FIGURES)
+    .filter((name) => name.endsWith('.svg'))
+    .sort()
+    .map((name) => ({ file: `public/cover/${name}`, code: readFileSync(join(FIGURES, name), 'utf8') }))
+}
+
+test('no retired spelling reaches a reader through a figure', () => {
+  const found = offenders(figureStrings())
+  assert.deepEqual(
+    found,
+    [],
+    'A retired word is on screen in a diagram. These render in the app, not ' +
+      `only in a README:\n${found.join('\n')}`,
+  )
+})
+
+test('the figure guard reads the text nodes it claims to', () => {
+  // The extraction, exercised on the shapes the real files use: a plain node,
+  // one broken across lines, one built from tspans, and the attributes that
+  // are deliberately NOT read.
+  const planted = [
+    {
+      file: 'public/cover/planted.svg',
+      code: [
+        '<text x="10" y="20" class="uiLabel">Service lifecycle</text>',
+        '<text x="10" y="40">what sets',
+        '  off next</text>',
+        '<text x="10" y="60"><tspan>row</tspan> <tspan>position</tspan></text>',
+        '<text x="10" y="80">Enables</text>',
+        '<rect id="layer-1" class="layer" data-note="the layer"/>',
+        '<!-- a lifecycle in a comment is not copy -->',
+      ].join('\n'),
+    },
+  ]
+  const strings = figureStrings(planted)
+  assert.deepEqual(
+    strings.map((one) => one.value),
+    ['Service lifecycle', 'what sets off next', 'row position', 'Enables'],
+  )
+  assert.deepEqual(offenders(strings).map((one) => one.split(' — ')[1]).sort(), [
+    '"lifecycle"',
+    '"row position"',
+    '"sets off"',
+  ])
+})
+
+test('every figure the deck ships is covered, and there are some', () => {
+  // A reader that found no files would pass the assertion above in silence,
+  // which is the failure this whole file is written against.
+  const files = figureFiles()
+  assert.ok(files.length >= 10, `only ${files.length} figure(s) found under public/cover`)
+  assert.ok(figureStrings(files).length > 100, 'the figures parsed to almost no text')
 })
