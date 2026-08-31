@@ -101,8 +101,10 @@ test('the real series is green, and every table it creates since the cutoff is n
 
   const since = files.filter((f) => f.name.slice(0, RULE_BEGINS_AT.length) >= RULE_BEGINS_AT)
   const created = since.flatMap((f) => tablesCreated(f.sql))
-  // Not a census of production — a statement about this series: the only
-  // tables added since the sweep are the two touchpoint ones, and if a third
-  // arrives this assertion is where its author is told about the rule.
-  assert.deepEqual(created.sort(), ['cell_touchpoints', 'touchpoints'])
+  // Not a census of production — a statement about this series, and the place
+  // a new table's author meets the rule. `authoring_changes` (#176) is the
+  // first one to arrive after it and revokes on its own line, which is the
+  // whole intent: the check failed on its way in, and the fix was a revoke
+  // rather than an exemption.
+  assert.deepEqual(created.sort(), ['authoring_changes', 'cell_touchpoints', 'touchpoints'])
 })
