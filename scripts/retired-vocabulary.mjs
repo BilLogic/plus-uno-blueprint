@@ -122,7 +122,7 @@ export const RENAME_MAP = Object.freeze(
     {
       was: ['stakeholders.note'],
       is: ['stakeholders.summary'],
-      migrations: ['20260830160000'],
+      migrations: ['20260830170000'],
       retired: [],
       copy: [],
     },

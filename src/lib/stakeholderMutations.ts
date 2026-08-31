@@ -11,7 +11,7 @@ export type StakeholderInput = {
   kind: string
   /**
    * What this party IS, in one line. A DEFINITION, not an aside — the
-   * column was called `note` until 20260830160000 and every row in it was
+   * column was called `note` until 20260830170000 and every row in it was
    * already a definition, which is how eighteen of them ended up written
    * into a column no reader had any reason to look in.
    */

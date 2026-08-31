@@ -1,4 +1,4 @@
--- 20260830160000 — a stakeholder's definition is a summary, not a note.
+-- 20260830170000 — a stakeholder's definition is a summary, not a note.
 --
 -- EIGHTEEN DEFINITIONS HAVE BEEN WRITTEN INTO A COLUMN NAMED FOR ASIDES.
 --

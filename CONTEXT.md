@@ -202,7 +202,7 @@ remember is #145's job, not this paragraph's.
 | `row_position`, `column_position`, `slot_position`, `order_position` | `position` | `20260820130000` |
 | `cells.maturity` | `cells.status`, on the `entity_status` domain | `20260821240000` |
 | `propositions` | `business_model` | `20260821350000` |
-| `stakeholders.note` | `stakeholders.summary` | `20260830160000` |
+| `stakeholders.note` | `stakeholders.summary` | `20260830170000` |
 
 The reasoning, where it is worth knowing: `row` and `column` named how a lane
 and a step happen to be *drawn* today, and the axis is a rendering fact rather
