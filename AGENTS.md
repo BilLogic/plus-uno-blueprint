@@ -108,3 +108,24 @@ vocabulary). Deeper: `docs/engineering/codebase-guide.md`.
   surface nobody documented fails it.
 - After moving, renaming or adding any doc: `npm run docs:index`. A doc
   with no frontmatter `summary` fails that build, not silently.
+
+## Agent skills
+
+Config for the `mattpocock-skills` engineering skills. Read the pointed-at
+file when a skill asks for it; don't preload.
+
+### Issue tracker
+
+GitHub Issues on `BilLogic/plus-uno-blueprint`, via the `gh` CLI.
+See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical roles, label strings unchanged (`needs-triage`,
+`needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
+See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `CONTEXT.md` plus `docs/adr/`, both created lazily
+by `/domain-modeling`. See `docs/agents/domain.md`.
