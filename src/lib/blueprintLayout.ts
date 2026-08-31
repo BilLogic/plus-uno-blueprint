@@ -6,8 +6,7 @@ import {
   FRONTSTAGE_ACTIONS_ROLE,
   FRONTSTAGE_TECH_ROLE,
   getLayerRole,
-  STEP_VISUAL_ROLE,
-  SUPPORT_SYSTEMS_ROLE,
+  SUPPORT_ACTIONS_ROLE,
   VISUAL_ROLE,
 } from '@/lib/laneRoles'
 import {
@@ -23,11 +22,10 @@ type LayerRoleSource = { name: string; role?: string | null }
 export const PILL_CELL_LAYER_ROLES = [
   FRONTSTAGE_TECH_ROLE,
   BACKSTAGE_TECH_ROLE,
-  SUPPORT_SYSTEMS_ROLE,
 ] as const
 
 /** Roles rendered as picture rows instead of text cells. */
-export const VISUAL_LAYER_ROLES = [VISUAL_ROLE, STEP_VISUAL_ROLE] as const
+export const VISUAL_LAYER_ROLES = [VISUAL_ROLE] as const
 
 /** 192px inner face at 4:3 plus the service/compare shell's vertical padding. */
 export const VISUAL_ROW_MIN_HEIGHT = 176
@@ -103,16 +101,22 @@ export function shouldShowVisibilityLineAfter(
 }
 
 /**
- * Support handoff lanes that sit below backstage actions. `support_systems`
- * (e.g. Computer Systems) is the canonical role; PLUS also uses a null-role
- * "Support Actions" swimlane that must still anchor the divider without
- * picking up support_systems pill-cell rendering.
+ * Support handoff lanes, which sit below backstage actions.
+ *
+ * This used to compare `lane.name` against two English strings, because the
+ * 36 support lanes in the database carried no role and nothing else
+ * identified them. `lanes.name` is free-form in any language, so renaming or
+ * translating one deleted a divider from the board with nothing reporting it.
+ *
+ * Those rows now carry `support_actions`, and the only name lookup left is
+ * the one in `LEGACY_NAME_TO_ROLE`, which every lane in the hand-written
+ * fallback blueprints already goes through because that data predates
+ * `lane_role` entirely. So a name can still stand in for a missing role, in
+ * exactly one declared place, rather than in a comparison local to this file
+ * that no other divider had.
  */
 function isSupportHandoffLayer(lane: LayerRoleSource): boolean {
-  if (getLayerRole(lane) === SUPPORT_SYSTEMS_ROLE) return true
-  return (
-    lane.name === 'Support Actions' || lane.name === 'Tech Support Actions'
-  )
+  return getLayerRole(lane) === SUPPORT_ACTIONS_ROLE
 }
 
 /**

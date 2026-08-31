@@ -46,10 +46,14 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  * contains, not from the generic service-blueprint diagram. Two things there
  * are easy to get wrong and are load-bearing:
  *
- * - The roles are `frontstage_tech`, not `front_stage_tech`. Only `visual` and
- *   the four stage roles carry one; actor lanes and Support Actions have none,
- *   and inventing a role for them would put a stage separator where there is
- *   no stage boundary.
+ * - The roles are `frontstage_tech`, not `front_stage_tech`. Every lane here
+ *   carries one. That was not always true: this set gave Regular Tutor and
+ *   Support Actions a null role while production gave them
+ *   `customer_actions` and (since the divider migration) `support_actions`,
+ *   so a scenario created from this template started life with two lanes
+ *   whose dividers were drawn by name lookup rather than by role. Actor lanes
+ *   BEYOND the spine — Teacher, Lead Tutor, Student, Supervisor — genuinely
+ *   carry no role and are not in this set.
  * - **Tech sits above actions**, which reverses the usual textbook order. That
  *   was a deliberate change — see the `stage_tech_before_actions_layer_order`
  *   migration — and a new blueprint that ordered them the other way would not
@@ -57,12 +61,12 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  */
 export const DEFAULT_LANE_SET: LaneSetEntry[] = [
   { name: 'Storyboard', lane_role: 'visual', position: 0 },
-  { name: 'Regular Tutor', lane_role: null, position: 1 },
+  { name: 'Regular Tutor', lane_role: 'customer_actions', position: 1 },
   { name: 'Front Stage Tech', lane_role: 'frontstage_tech', position: 2 },
   { name: 'Front Stage Actions', lane_role: 'frontstage_actions', position: 3 },
   { name: 'Back Stage Tech', lane_role: 'backstage_tech', position: 4 },
   { name: 'Back Stage Actions', lane_role: 'backstage_actions', position: 5 },
-  { name: 'Support Actions', lane_role: null, position: 6 },
+  { name: 'Support Actions', lane_role: 'support_actions', position: 6 },
 ]
 
 /** Columns beyond this read as a process map, not a blueprint. */

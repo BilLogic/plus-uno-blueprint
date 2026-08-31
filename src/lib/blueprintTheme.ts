@@ -223,7 +223,6 @@ function cellStyleFromFill(
 
 const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   Visual: cellStyleFromFill('visual'),
-  'Step Visual': cellStyleFromFill('visual'),
   'Teacher': cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
@@ -263,13 +262,7 @@ const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   'Backstage Actions': cellStyleFromFill('backstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Tech Support Actions': cellStyleFromFill('backstage-action',
-    BLUEPRINT_LABEL_TEXT.backstage,
-  ),
   'Management Actions': cellStyleFromFill('backstage-action',
-    BLUEPRINT_LABEL_TEXT.backstage,
-  ),
-  'Computer Systems': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
 }
@@ -289,9 +282,6 @@ const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill('support',
  */
 const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
   visual: cellStyleFromFill('visual'),
-  step_visual: cellStyleFromFill('visual'),
-  journey_stage: cellStyleFromFill('visual'),
-  physical_evidence: cellStyleFromFill('evidence'),
   customer_actions: cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
@@ -307,7 +297,7 @@ const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
   backstage_tech: cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  support_systems: cellStyleFromFill('support',
+  support_actions: cellStyleFromFill('support',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
   /*

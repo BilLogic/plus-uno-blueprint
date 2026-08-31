@@ -9,22 +9,31 @@
 export const CUSTOMER_ACTIONS_ROLE = 'customer_actions'
 export const FRONTSTAGE_ACTIONS_ROLE = 'frontstage_actions'
 export const BACKSTAGE_ACTIONS_ROLE = 'backstage_actions'
+export const PARTNER_ACTIONS_ROLE = 'partner_actions'
 export const FRONTSTAGE_TECH_ROLE = 'frontstage_tech'
 export const BACKSTAGE_TECH_ROLE = 'backstage_tech'
-export const SUPPORT_SYSTEMS_ROLE = 'support_systems'
-export const PARTNER_ACTIONS_ROLE = 'partner_actions'
+export const SUPPORT_ACTIONS_ROLE = 'support_actions'
 export const VISUAL_ROLE = 'visual'
-export const STEP_VISUAL_ROLE = 'step_visual'
 
+/**
+ * The vocabulary, and the whole of it.
+ *
+ * Held identical to the `lane_role` CHECK constraint by
+ * `scripts/tests/lane-roles.test.mjs`. Three lists used to disagree with each
+ * other and none agreed with the data: this one omitted `partner_actions`,
+ * which three lanes use, and named `support_systems` and `step_visual`, which
+ * no lane has ever used. Both are gone — retired unused, not renamed, since
+ * nothing has to migrate off a value nothing holds.
+ */
 export const CANONICAL_LAYER_ROLES = [
   CUSTOMER_ACTIONS_ROLE,
   FRONTSTAGE_ACTIONS_ROLE,
   BACKSTAGE_ACTIONS_ROLE,
+  PARTNER_ACTIONS_ROLE,
   FRONTSTAGE_TECH_ROLE,
   BACKSTAGE_TECH_ROLE,
-  SUPPORT_SYSTEMS_ROLE,
+  SUPPORT_ACTIONS_ROLE,
   VISUAL_ROLE,
-  STEP_VISUAL_ROLE,
 ] as const
 
 export type CanonicalLayerRole = (typeof CANONICAL_LAYER_ROLES)[number]
@@ -45,9 +54,9 @@ export const LEGACY_NAME_TO_ROLE: Readonly<Record<string, CanonicalLayerRole>> =
     'Backstage Actions': BACKSTAGE_ACTIONS_ROLE,
     'Front Stage Tech': FRONTSTAGE_TECH_ROLE,
     'Back Stage Tech': BACKSTAGE_TECH_ROLE,
-    'Computer Systems': SUPPORT_SYSTEMS_ROLE,
+    'Support Actions': SUPPORT_ACTIONS_ROLE,
+    'Tech Support Actions': SUPPORT_ACTIONS_ROLE,
     Visual: VISUAL_ROLE,
-    'Step Visual': STEP_VISUAL_ROLE,
   }
 
 /** Resolve a lane's semantic role: explicit role, else legacy name, else none. */
@@ -78,12 +87,11 @@ const LANE_ROLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
   [FRONTSTAGE_TECH_ROLE]:
     'Frontstage technology — customer-facing systems, shown as pills.',
   [BACKSTAGE_TECH_ROLE]: 'Backstage technology — internal systems, shown as pills.',
-  [SUPPORT_SYSTEMS_ROLE]:
+  [SUPPORT_ACTIONS_ROLE]:
     'Support — teams, vendors and infrastructure behind the work.',
   [PARTNER_ACTIONS_ROLE]:
     'Partner — a body outside PLUS, acting where the tutor can see them.',
   [VISUAL_ROLE]: 'Storyboard — the pictures for each step, not text.',
-  [STEP_VISUAL_ROLE]: 'Storyboard — per-step imagery.',
 }
 
 export function describeLaneRole(role: string | null | undefined): string {
