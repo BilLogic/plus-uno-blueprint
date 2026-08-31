@@ -204,7 +204,7 @@ export const coverContent: CoverContent = {
           ],
           figure: {
             src: '/cover/slice-concept.svg',
-            alt: 'One path becoming a presentation — the cells a slice quotes, ordered into frames',
+            alt: 'One path becoming a presentation — the cells a slice quotes, ordered into slides',
             width: 880,
             height: 364,
           },

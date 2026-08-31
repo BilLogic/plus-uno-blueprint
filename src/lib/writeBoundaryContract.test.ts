@@ -13,7 +13,7 @@ import { expect, test } from 'vitest'
  * The write never reached the session ledger, which is the app's only undo, so
  * replacing a storyboard destroyed the previous picture with no record that it
  * had existed and no revert control. And `.update().eq()` without `.select()`
- * returns `error: null` when zero rows match, so clearing the image on a frame
+ * returns `error: null` when zero rows match, so clearing the image on a slide
  * that had been merged away reported success and cleared nothing.
  *
  * The rule was prose, so nothing caught it for as long as it was wrong. This

@@ -19,7 +19,7 @@ import {
 } from '@/contexts/viewStateStore'
 
 /** Safari throttles history.replaceState — debounce per-slide writes. */
-const FRAME_URL_DEBOUNCE_MS = 250
+const SLIDE_URL_DEBOUNCE_MS = 250
 
 function urlStateForTab(
   tab: TabDescriptor | null,
@@ -120,7 +120,7 @@ function useUrlViewState(
       debounceRef.current = window.setTimeout(() => {
         debounceRef.current = null
         writeUrl(tab, slide)
-      }, FRAME_URL_DEBOUNCE_MS)
+      }, SLIDE_URL_DEBOUNCE_MS)
     },
     [writeUrl],
   )
