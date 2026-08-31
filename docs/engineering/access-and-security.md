@@ -32,11 +32,17 @@ are server-side:
    (`20260805150000_service_account_tier.sql`). `is_service_account()`
    reads `app_metadata.role` from the **JWT** — set server-side in
    `auth.users.raw_app_meta_data`; users cannot self-assign
-   (`user_metadata` is ignored on purpose). `stakeholders` uses the other
-   valid shape — no companion, the call inside the permissive policy — and
-   the two agent tables use neither, gating per user instead (see the
-   schema tour). Those are the only three exceptions and all three are
-   asserted.
+   (`user_metadata` is ignored on purpose). The two agent tables use
+   neither, gating per user instead (see the schema tour); that exception
+   is asserted rather than granted. `stakeholders` was a third shape until
+   #174 — no companion, the call inside the permissive policy — which was
+   equally closed and stopped being closed the moment anyone added a
+   second permissive policy beside it, because permissive policies OR and
+   restrictive ones AND. `20260830180000` gave it the pair every other
+   table has; the effect is identical and the algebra is not.
+   `scripts/check-rls-posture.mjs` still recognises the companion-less
+   shape, because recognising it is what stops the check reporting three
+   false findings against a table that is correctly locked.
 2. **RPC tier guards.** The 21 authoring RPCs are SECURITY DEFINER and
    bypass RLS, so each body asserts `is_service_account()` itself
    (`20260805170000_service_tier_rpc_enforcement.sql` — injected by a DO
