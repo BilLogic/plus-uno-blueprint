@@ -35,6 +35,10 @@ import {
   updateEvidence,
   type EvidenceUpdate,
 } from '@/lib/evidenceMutations'
+import {
+  restoreTouchpointDetail,
+  type RestoredPlacement,
+} from '@/lib/unplacedTouchpointMutations'
 import { setSliceFrameIllustration } from '@/lib/sliceMutations'
 import {
   restoreTouchpointPlacement,
@@ -47,6 +51,8 @@ import type { Database, Json } from '@/types/database'
 
 type Client = SupabaseClient<Database>
 type EvidenceRowType = Database['public']['Tables']['evidence']['Row']
+type UnplacedTouchpointDetailRow =
+  Database['public']['Tables']['unplaced_touchpoint_details']['Row']
 type SliceItemRow = Database['public']['Tables']['slice_items']['Row']
 /** The subset of `slices` that `updateSliceMeta` writes, and so restores. */
 type SliceMetaFields = Pick<
@@ -249,6 +255,25 @@ export async function executeRevert(
         throw new Error('This change’s captured evidence row is malformed.')
       }
       await restoreEvidenceRow(client, row)
+      return
+    }
+    case 'restore_touchpoint_detail': {
+      // Undo of both queue operations. The captured row goes back under its
+      // OWN id — a detail that came back as a new row would look like a
+      // second piece of work — and, for a place, the placement gets the words
+      // it was carrying before the detail was written over them.
+      const detail = revert.args.detail as UnplacedTouchpointDetailRow
+      if (
+        !detail ||
+        typeof detail !== 'object' ||
+        typeof detail.id !== 'string' ||
+        typeof detail.cell_id !== 'string'
+      ) {
+        throw new Error('This change’s captured touchpoint detail is malformed.')
+      }
+      const placement =
+        (revert.args.placement as RestoredPlacement | null | undefined) ?? null
+      await restoreTouchpointDetail(client, detail, placement)
       return
     }
     case 'set_slice_illustration': {

@@ -18,6 +18,10 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * the next successful run should be a no-op — if it is not, the generator is
  * right and these are wrong.
  *
+ * HAND-EDITED, 2026-08-31 (#180). `unplaced_touchpoint_details` and the three
+ * queue RPCs (`place_touchpoint_detail`, `discard_touchpoint_detail`,
+ * `restore_touchpoint_detail`) were added by hand under the same rules.
+ *
  * HAND-EDITED, 2026-08-30 (#176). `authoring_changes`, the `trash` view and
  * `record_authoring_change` were added by hand for the same reason and under
  * the same rules. `deleted_structure` needed no removal here: it was never in
@@ -965,6 +969,53 @@ export type Database = {
           },
         ]
       }
+      unplaced_touchpoint_details: {
+        Row: {
+          cell_id: string
+          created_at: string
+          id: string
+          name: string
+          origin: string
+          prominence: string | null
+          screenshot: string | null
+          summary: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          cell_id: string
+          created_at?: string
+          id?: string
+          name: string
+          origin: string
+          prominence?: string | null
+          screenshot?: string | null
+          summary?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          cell_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          origin?: string
+          prominence?: string | null
+          screenshot?: string | null
+          summary?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'unplaced_touchpoint_details_cell_id_fkey'
+            columns: ['cell_id']
+            isOneToOne: false
+            referencedRelation: 'cells'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       steps: {
         Row: {
           created_at: string
@@ -1033,6 +1084,14 @@ export type Database = {
         }
         Returns: string
       }
+      discard_touchpoint_detail: {
+        Args: { p_detail_id: string }
+        Returns: Json
+      }
+      place_touchpoint_detail: {
+        Args: { p_detail_id: string; p_touchpoint_id: string }
+        Returns: Json
+      }
       rename_content_item: {
         Args: { p_content: string; p_from: string; p_to: string }
         Returns: string
@@ -1044,6 +1103,10 @@ export type Database = {
       restore_cell_touchpoints: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
+      }
+      restore_touchpoint_detail: {
+        Args: { p_detail: Json; p_placement?: Json | null }
+        Returns: Json
       }
       search_blueprint: {
         Args: {
@@ -1110,3 +1173,5 @@ export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row'
 export type AuthoringChange =
   Database['public']['Tables']['authoring_changes']['Row']
 export type TrashEntry = Database['public']['Views']['trash']['Row']
+export type UnplacedTouchpointDetail =
+  Database['public']['Tables']['unplaced_touchpoint_details']['Row']
