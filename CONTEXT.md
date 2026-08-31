@@ -202,9 +202,17 @@ remember is #145's job, not this paragraph's.
 | `row_position`, `column_position`, `slot_position`, `order_position` | `position` | `20260820130000` |
 | `cells.maturity` | `cells.status`, on the `entity_status` domain | `20260821240000` |
 | `propositions` | `business_model` | `20260821350000` |
+| `frontstage_tech`, `backstage_tech` | `frontstage_touchpoints`, `backstage_touchpoints` | `20260830150000` |
+| `tech_description` | `cell_touchpoints` | `20260830140000` |
 
-The reasoning, where it is worth knowing: `row` and `column` named how a lane
-and a step happen to be *drawn* today, and the axis is a rendering fact rather
+The reasoning, where it is worth knowing: a "tech" lane never held only
+technology — a printed guide, a poster, a phone line and a Zoom recording were
+all filed there, and four authored details had escaped onto Support Actions
+cells because the name said they did not belong. A touchpoint also stopped
+being a string: it was a name in `cells.content` whose detail lived in
+`cells.links` under a matching label, and when the two stopped agreeing the
+detail was simply not found — 57 of 117 were in that state. `row` and `column`
+named how a lane and a step happen to be *drawn* today, and the axis is a rendering fact rather
 than a domain one. "Lifecycle" was not a level above the service — it *was* the
 service, wearing a longer name. And `enables` was left alone, because it was
 already the plain word for what it means.

@@ -96,3 +96,51 @@ export function cellTouchpointsFromLinks(
     }
   })
 }
+
+/** What the detail panel shows for one touchpoint at one cell. */
+export type TouchpointDetail = {
+  name: string
+  /** The placement's own words, else the cell's, else the name. */
+  text: string
+  url: string | null
+  screenshot: string | null
+  kind: string | null
+  prominence: 'core' | 'peripheral' | null
+}
+
+/**
+ * The detail for one touchpoint at one cell, or null when there isn't one.
+ *
+ * Replaces a set of resolvers that read `cells.links` by label and had grown
+ * two hardcoded tool names as fallbacks, because the lookup kept coming back
+ * empty and the two most visible cases got patched. A placement carries its
+ * own summary, so the rule is now the same for every touchpoint: its words,
+ * else the cell's, else its name.
+ *
+ * With no name given, a cell holding exactly one touchpoint resolves it —
+ * that is the single-tool cell the panel opens directly. A cell holding
+ * several resolves nothing rather than guessing at the first, because
+ * showing one touchpoint's screenshot under another's heading is the
+ * confusion this whole change is unwinding.
+ */
+export function resolveTouchpointDetail(
+  cell: { summary?: string | null; touchpoints: readonly CellTouchpoint[] },
+  name?: string | null,
+): TouchpointDetail | null {
+  const wanted = name?.trim()
+  const placement = wanted
+    ? cell.touchpoints.find((entry) => entry.name === wanted)
+    : cell.touchpoints.length === 1
+      ? cell.touchpoints[0]
+      : undefined
+  if (!placement) return null
+
+  return {
+    name: placement.name,
+    text: placement.summary?.trim() || cell.summary?.trim() || placement.name,
+    url: placement.url,
+    screenshot: placement.screenshot,
+    kind: placement.kind,
+    prominence: placement.prominence,
+  }
+}

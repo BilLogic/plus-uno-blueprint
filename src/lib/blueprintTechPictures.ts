@@ -1,5 +1,3 @@
-import type { CellLink } from '@/types/blueprint'
-import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 
 export const ZOOM_TECH_LOGO =
@@ -35,28 +33,6 @@ const TECH_ITEM_DETAIL_PICTURES: Record<string, readonly string[]> = {
   Figma: [FIGMA_TECH_LOGO],
 }
 
-function getTechPicturesFromLinks(
-  links: CellLink[],
-  techItem: string,
-): string[] | null {
-  for (const link of links) {
-    if (
-      link.type === TECH_DESCRIPTION_LINK_TYPE &&
-      link.label === techItem
-    ) {
-      if (link.pictures?.length) {
-        const pictures = link.pictures
-          .map((entry) => entry.trim())
-          .filter(Boolean)
-        if (pictures.length > 0) return pictures
-      }
-      if (link.picture?.trim()) {
-        return [link.picture.trim()]
-      }
-    }
-  }
-  return null
-}
 
 export function getTechItemDetailPictures(
   techItem: string,
@@ -64,67 +40,32 @@ export function getTechItemDetailPictures(
   return TECH_ITEM_DETAIL_PICTURES[techItem] ?? null
 }
 
+/**
+ * The images for a detail panel: the placement's own screenshot first, then
+ * the tool's stock logo, then the cell's picture.
+ *
+ * This used to take the cell's raw content and links and pick through them,
+ * with nine `content === '<tool>'` branches written out by hand — Zoom, PLUS
+ * App, Slack, Email, Workday, Google Form, Notion, Google Quiz, Figma —
+ * because the label lookup returned nothing for everything else and someone
+ * patched the tools they noticed. A single-touchpoint cell now resolves to
+ * its placement, so `techItem` carries the name in every one of those cases
+ * and the branches said nothing the logo lookup does not.
+ *
+ * `TECH_ITEM_DETAIL_PICTURES` stays: a stock logo for a well-known tool is a
+ * static asset, not authored content, and no placement should have to carry
+ * one in order to show it.
+ */
 export function resolveCellDetailPictures(input: {
+  screenshot?: string | null
   techItem?: string | null
-  cellContent?: string | null
   cellPicture?: string | null
-  cellLinks?: CellLink[]
 }): readonly string[] | null {
-  const links = input.cellLinks ?? []
+  if (input.screenshot?.trim()) return [input.screenshot.trim()]
 
   if (input.techItem) {
-    const fromLinks = getTechPicturesFromLinks(links, input.techItem)
-    if (fromLinks) return fromLinks
-
     const techPictures = getTechItemDetailPictures(input.techItem)
     if (techPictures) return techPictures
-  }
-
-  const content = input.cellContent?.trim() ?? ''
-  if (
-    content === 'Zoom' ||
-    content.startsWith('Zoom\n') ||
-    content.startsWith('Zoom,')
-  ) {
-    return getTechItemDetailPictures('Zoom')
-  }
-
-  if (content === 'PLUS App') {
-    const fromLinks = getTechPicturesFromLinks(links, 'PLUS App')
-    if (fromLinks) return fromLinks
-  }
-
-  if (content === 'Slack') {
-    return getTechItemDetailPictures('Slack')
-  }
-
-  if (content === 'Email') {
-    return getTechItemDetailPictures('Email')
-  }
-
-  if (content === 'Workday' || content.startsWith('Workday (')) {
-    return getTechItemDetailPictures('Workday')
-  }
-
-  if (content === 'Google Form Application') {
-    return getTechItemDetailPictures('Google Form Application')
-  }
-
-  if (content === 'Notion') {
-    const fromLinks = getTechPicturesFromLinks(links, 'Notion')
-    if (fromLinks) return fromLinks
-    return getTechItemDetailPictures('Notion')
-  }
-
-  if (content === 'Google Quiz' || content === 'Google Quiz embedded in Notion') {
-    const fromLinks =
-      getTechPicturesFromLinks(links, 'Google Quiz') ??
-      getTechPicturesFromLinks(links, 'Google Quiz embedded in Notion')
-    if (fromLinks) return fromLinks
-  }
-
-  if (content === 'Figma') {
-    return getTechItemDetailPictures('Figma')
   }
 
   const picture = input.cellPicture?.trim()

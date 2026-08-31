@@ -8,11 +8,11 @@ import {
   PILL_ITEM_HEIGHT,
   PILL_ITEM_HEIGHT_COMPACT,
 } from '@/lib/blueprintLayout'
-import { getTouchpointTone } from '@/lib/techPillColors'
+import { getTouchpointTone } from '@/lib/touchpointColors'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
-type TechPillFaceProps = {
+type TouchpointCellFaceProps = {
   item: string
   compact?: boolean
   className?: string
@@ -28,7 +28,7 @@ type TechPillFaceProps = {
  * Presentational half of a tech pill — the same face without the button
  * behaviour, for read-only surfaces (`asSpan`) and for print.
  */
-export function TechPillFace({
+export function TouchpointCellFace({
   item,
   compact = false,
   className,
@@ -37,7 +37,7 @@ export function TechPillFace({
   asSpan = false,
   inline = false,
   'aria-describedby': ariaDescribedBy,
-}: TechPillFaceProps) {
+}: TouchpointCellFaceProps) {
   const tone = getTouchpointTone(item)
   const fixedHeight = compact ? PILL_ITEM_HEIGHT_COMPACT : PILL_ITEM_HEIGHT
   const resolvedStyle = {
@@ -61,7 +61,7 @@ export function TechPillFace({
       <span
         className={cn(
           buttonVariants({ variant: 'blueprintPill' }),
-          blueprintCellButtonClassName({ compact, variant: 'pill' }),
+          blueprintCellButtonClassName({ compact, variant: 'touchpoint' }),
           'pointer-events-none min-w-0 shrink-0 cursor-default break-words',
           className,
         )}
@@ -80,7 +80,7 @@ export function TechPillFace({
     <BlueprintCellButton
       fill="frontstage-tech"
       tone={tone}
-      variant="pill"
+      variant="touchpoint"
       compact={compact}
       opacity={opacity}
       className={cn('min-w-0 shrink-0 break-words', className)}

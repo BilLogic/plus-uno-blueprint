@@ -47,7 +47,7 @@ export function buildBlueprintCellSelection(
   }
 }
 
-export function buildTechPillSelection(
+export function buildTouchpointSelection(
   context: BlueprintCellSelectionContext,
   techItem: string,
 ): BlueprintCellSelection {
@@ -75,8 +75,22 @@ export function buildTechPillSelection(
   }
 }
 
-export function getTechPillItems(content: string | undefined): string[] {
-  return parseCellContentItems(content ?? '')
+/**
+ * The touchpoint names a cell shows, in order.
+ *
+ * Reads placements when the cell has them and falls back to splitting the
+ * text when it does not. The fallback is not dead code: compare slots and
+ * the hand-written fixtures hand this function a cell that never went
+ * through the normalizer, and splitting the text is what those sources
+ * mean. Where placements exist they win, because they are what the board is
+ * drawn from and what an author's edit writes.
+ */
+export function getTouchpointNames(cell: {
+  content?: string | null
+  touchpoints?: readonly { name: string }[]
+}): string[] {
+  if (cell.touchpoints?.length) return cell.touchpoints.map((entry) => entry.name)
+  return parseCellContentItems(cell.content ?? '')
 }
 
 export function isSameBlueprintCellSelection(

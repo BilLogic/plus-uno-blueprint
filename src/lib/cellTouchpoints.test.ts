@@ -23,7 +23,11 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { cellTouchpointsFromLinks, cellTouchpointsFromRows } from '@/lib/cellTouchpoints'
+import {
+  cellTouchpointsFromLinks,
+  cellTouchpointsFromRows,
+  resolveTouchpointDetail,
+} from '@/lib/cellTouchpoints'
 
 test('a placement row keeps its name, order and per-moment detail', () => {
   const touchpoints = cellTouchpointsFromRows([
@@ -155,4 +159,74 @@ test('both sources agree on everything but the one field fallback cannot know', 
   // the fallback cannot, and no reader may depend on fallback supplying it.
   assert.deepEqual(fromRows.map((entry) => entry.kind), ['other', 'other'])
   assert.deepEqual(fromLinks.map((entry) => entry.kind), [null, null])
+})
+
+/**
+ * Resolving one placement's detail for the panel.
+ *
+ * The functions this replaces read `cells.links` by label and had grown two
+ * hardcoded tool names as fallbacks — `techItem === 'Zoom'` and
+ * `content === 'PLUS App'` — because the label lookup kept coming back empty
+ * and someone patched the two cases they noticed. A placement carries its own
+ * summary, so the general rule below covers what those special cases were
+ * reaching for, and covers the other 90 touchpoints too.
+ */
+test('a named placement supplies its own detail', () => {
+  const cell = {
+    summary: 'The cell as a whole.',
+    touchpoints: cellTouchpointsFromLinks('Zoom, PLUS App', [
+      {
+        type: 'tech_description',
+        label: 'PLUS App',
+        description: 'Opens the session detail page.',
+        picture: '/a.png',
+        url: 'https://figma.example/a',
+      },
+    ]),
+  }
+
+  const detail = resolveTouchpointDetail(cell, 'PLUS App')
+  assert.equal(detail!.name, 'PLUS App')
+  assert.equal(detail!.text, 'Opens the session detail page.')
+  assert.equal(detail!.url, 'https://figma.example/a')
+  assert.equal(detail!.screenshot, '/a.png')
+})
+
+test('a placement with no summary of its own falls back to the cell', () => {
+  // What the two hardcoded tool names were doing, generalised. A touchpoint
+  // nobody has described yet still shows the cell's sentence rather than
+  // echoing its own name back at the reader.
+  const cell = {
+    summary: 'The tutor joins the session.',
+    touchpoints: cellTouchpointsFromLinks('Zoom', []),
+  }
+
+  assert.equal(resolveTouchpointDetail(cell, 'Zoom')!.text, 'The tutor joins the session.')
+})
+
+test('with nothing to say it says the name, not an empty panel', () => {
+  const cell = { summary: null, touchpoints: cellTouchpointsFromLinks('Zoom', []) }
+  assert.equal(resolveTouchpointDetail(cell, 'Zoom')!.text, 'Zoom')
+})
+
+test('a single-touchpoint cell needs no name to resolve', () => {
+  const cell = {
+    summary: null,
+    touchpoints: cellTouchpointsFromLinks('Zoom', [
+      { type: 'tech_description', label: 'Zoom', description: 'Joins the room.' },
+    ]),
+  }
+  assert.equal(resolveTouchpointDetail(cell)!.text, 'Joins the room.')
+})
+
+test('a multi-touchpoint cell with no name resolves nothing', () => {
+  // Picking the first would put one touchpoint's screenshot under another
+  // touchpoint's heading, which is the confusion this ticket is unwinding.
+  const cell = { summary: null, touchpoints: cellTouchpointsFromLinks('Zoom, Email', []) }
+  assert.equal(resolveTouchpointDetail(cell), null)
+})
+
+test('a name the cell does not place resolves nothing', () => {
+  const cell = { summary: 'x', touchpoints: cellTouchpointsFromLinks('Zoom', []) }
+  assert.equal(resolveTouchpointDetail(cell, 'PLUS App'), null)
 })

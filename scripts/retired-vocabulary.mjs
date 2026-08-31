@@ -97,6 +97,44 @@ export const RENAME_MAP = Object.freeze(
       retired: ['proposition'],
       copy: ['proposition', 'propositions'],
     },
+    {
+      was: ['frontstage_tech', 'backstage_tech'],
+      is: ['frontstage_touchpoints', 'backstage_touchpoints'],
+      migrations: ['20260830150000'],
+      // Not `tech`: it is a substring of nothing here but is an ordinary
+      // English word the identifier sweep would hit across the tree, and
+      // `TECH_ITEM_DETAIL_PICTURES` is a legitimate surviving use — a stock
+      // logo for a well-known tool is a static asset, not a lane role. The
+      // full role spellings are what actually retired.
+      retired: ['frontstage_tech', 'backstage_tech'],
+      // The prose spellings the guard can derive from the identifiers above.
+      // The lane LABELS were "Front Stage Tech" and "Back Stage Tech", and
+      // those are not listed: the copy guard's list must read the identifier
+      // aloud, and a label is free-form text the migration renames directly.
+      // Adding them here would make this list a second vocabulary that can
+      // drift from the map, which is the thing the parity test forbids.
+      copy: ['frontstage tech', 'backstage tech'],
+    },
+    {
+      was: ['tech_description'],
+      is: ['cell_touchpoints'],
+      migrations: ['20260830140000'],
+      // Both lists are empty, and that IS the entry rather than an omission.
+      //
+      // `tech_description` still appears in the tree and must: the fallback
+      // blueprints in src/data are not migrating, and `cellTouchpoints.ts`
+      // reads that link type to resolve them. So there is nothing for the
+      // identifier sweep to forbid. And nothing ever put the phrase on
+      // screen — it was a jsonb `type` value, never a label — so there is no
+      // prose spelling to retire either, and a `copy` entry with no matching
+      // `retired` one is exactly what the guard below refuses.
+      //
+      // What retired is the ARRANGEMENT: detail keyed to a cell by matching
+      // a label. The check that holds it is the import migration's own
+      // assertion that every resolving link carried its detail across.
+      retired: [],
+      copy: [],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),

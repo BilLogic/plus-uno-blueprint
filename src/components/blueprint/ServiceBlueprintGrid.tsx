@@ -2,8 +2,8 @@ import { Fragment, useMemo, useRef } from 'react'
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
 import { BlueprintEmptyCellSlot } from '@/components/blueprint/BlueprintEmptyCellSlot'
 import { BlueprintStepVisual } from '@/components/blueprint/BlueprintStepVisual'
-import { BlueprintTechPill } from '@/components/blueprint/BlueprintTechPill'
-import { TechPillFace } from '@/components/blueprint/TechPillFace'
+import { BlueprintTouchpointCell } from '@/components/blueprint/BlueprintTouchpointCell'
+import { TouchpointCellFace } from '@/components/blueprint/TouchpointCellFace'
 import {
   BlueprintDividerRow,
   SERVICE_DIVIDER_RULE_OVERHANG,
@@ -77,7 +77,7 @@ import {
 import { cn } from '@/lib/utils'
 import {
   buildBlueprintCellSelection,
-  getTechPillItems,
+  getTouchpointNames,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
@@ -730,7 +730,7 @@ function BlueprintCellBlock({
             ? [{ id: cellId, content, picture: null, summary: null, status, links: [] }]
             : []
         ).flatMap((slotCell) =>
-          getTechPillItems(slotCell.content ?? '').map((item) => ({
+          getTouchpointNames(slotCell).map((item) => ({
             item,
             cell: slotCell,
           })),
@@ -786,7 +786,7 @@ function BlueprintCellBlock({
       >
         {pillEntries.map(({ item, cell: slotCell }, index) =>
           selectionContext ? (
-            <BlueprintTechPill
+            <BlueprintTouchpointCell
               key={`${slotCell.id ?? 'anon'}-${item}-${index}`}
               item={item}
               // Each pill speaks for its own cell: identity is the whole
@@ -809,7 +809,7 @@ function BlueprintCellBlock({
               status={slotCell.status ?? status}
             />
           ) : (
-            <TechPillFace key={`${item}-${index}`} item={item} compact={compact} />
+            <TouchpointCellFace key={`${item}-${index}`} item={item} compact={compact} />
           ),
         )}
       </div>
