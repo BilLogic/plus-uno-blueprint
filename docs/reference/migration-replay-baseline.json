@@ -1,12 +1,12 @@
 {
   "why": "Files that cannot replay against an empty database (#148). The set may shrink and never grow: a NEW entry is a migration written against an apply path that does not work, which is the gap #148 describes happening again. Delete entries as they are repaired — the check reports any that are no longer true.",
   "recorded": {
-    "total": 843,
-    "applied": 679,
-    "failed": 164,
+    "total": 844,
+    "applied": 687,
+    "failed": 157,
     "byClass": {
       "syntax": 0,
-      "assertion": 25,
+      "assertion": 18,
       "data": 139,
       "structure": 0
     },
@@ -172,13 +172,6 @@
     "20250710154700_onboarding_modules_add_step_7_module_completion.sql",
     "20260723215654_reporting_an_issue_restore_fsa_step1_to_request.sql",
     "20260821140000_the_post_session_two_features.sql",
-    "20260821150000_session_reflection_is_a_scenario.sql",
-    "20260821210000_a_path_is_not_its_type.sql",
-    "20260821250000_a_path_names_its_condition.sql",
-    "20260821260000_partners_get_their_own_lane.sql",
-    "20260821270000_employment_and_access_and_a_lane_repair.sql",
-    "20260821310000_ambient_behaviour_is_not_every_column.sql",
-    "20260821320000_perceived_owner_where_it_differs.sql",
-    "20260821380000_no_outsider_owns_a_lane.sql"
+    "20260821150000_session_reflection_is_a_scenario.sql"
   ]
 }

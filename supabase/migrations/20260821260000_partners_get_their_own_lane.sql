@@ -72,12 +72,45 @@ where l.name = 'CPO' and l.lane_role = 'partner_actions'
 do $$
 declare n int;
 begin
-  select count(*) into n from lanes where lane_role = 'partner_actions';
-  if n <> 3 then raise exception 'expected 3 partner lanes, got %', n; end if;
+  -- Each clause is scoped to the rows the inserts above were given to work
+  -- with, so an empty database satisfies all of them vacuously and a seeded one
+  -- gets the same answer the counts used to give. The counts themselves — 3
+  -- lanes, 4 cells — were measurements of production on the day, and asserting
+  -- them here raised on every replay and rolled back this file's inserts along
+  -- with the assertion (#148).
+  select count(*) into n
+  from public.paths p
+  join public.scenarios sc on sc.id = p.scenario_id
+  cross join lateral (
+    select unnest(case sc.name
+                    when 'Tech Setup' then array['CMU HR', 'CPO']
+                    else array['CPO']
+                  end) as lane_name
+  ) want
+  where sc.name in ('Tech Setup', 'Interview & Offer')
+    and p.path_type = 'happy'
+    and not exists (
+      select 1 from public.lanes l
+      where l.path_id = p.id and l.name = want.lane_name
+        and l.lane_role = 'partner_actions'
+    );
+  if n > 0 then raise exception '% partner lane(s) the inserts should have made are missing', n; end if;
 
-  select count(*) into n from cells c
-  join lanes l on l.id = c.lane_id where l.lane_role = 'partner_actions';
-  if n <> 4 then raise exception 'expected 4 partner cells, got %', n; end if;
+  -- A partner lane with nothing in it is a row nobody acts in, which is the
+  -- state this migration exists to end.
+  select count(*) into n from public.lanes l
+  where l.lane_role = 'partner_actions'
+    and not exists (select 1 from public.cells c where c.lane_id = l.id);
+  if n > 0 then raise exception '% partner lane(s) hold no cell', n; end if;
+
+  -- The two moved sentences, wherever they are, are in a CMU HR partner lane.
+  select count(*) into n from public.cells c
+  join public.lanes l on l.id = c.lane_id
+  where c.content in (
+    'CMU HR department sends clearance materials.',
+    'CMU HR department reviews employment forms at an I-9 meeting.'
+  ) and (l.name, l.lane_role) is distinct from ('CMU HR', 'partner_actions');
+  if n > 0 then raise exception '% CMU HR sentence(s) sit outside the CMU HR lane', n; end if;
 
   -- Scoped to the two scenarios this touches. Warm-Up's "No screen share"
   -- path already holds two lanes at position 4 — a pre-existing fault that

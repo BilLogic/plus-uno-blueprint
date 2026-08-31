@@ -29,15 +29,27 @@ delete from cells where id in (select id from ranked where rank > 1);
 do $$
 declare n int;
 begin
-  select count(*) into n from cells c
-  join lanes l on l.id = c.lane_id
-  join paths p on p.id = l.path_id
-  join scenarios sc on sc.id = p.scenario_id
-  where sc.name = 'Goal Setting'
-    and c.content in (
-      'Informs the classroom teacher about absent students.',
-      'Responds to the classroom teacher''s "ask for help" request.',
-      'Alerts the lead tutor about unassigned or mis-assigned students using the "ask for help" alert.'
-    );
-  if n <> 3 then raise exception 'expected 3 kept, got %', n; end if;
+  -- ONE PER BEHAVIOUR PER LANE, which is what the delete above is for, rather
+  -- than "3", which was how many that came to on production the day this ran.
+  -- The count raised on an empty database and rolled the delete back with it
+  -- (#148); this says the same thing where there is data and nothing where
+  -- there is none.
+  select count(*) into n from (
+    select c.content, l.name
+    from cells c
+    join lanes l on l.id = c.lane_id
+    join paths p on p.id = l.path_id
+    join scenarios sc on sc.id = p.scenario_id
+    where sc.name = 'Goal Setting'
+      and c.content in (
+        'Informs the classroom teacher about absent students.',
+        'Responds to the classroom teacher''s "ask for help" request.',
+        'Alerts the lead tutor about unassigned or mis-assigned students using the "ask for help" alert.'
+      )
+    group by c.content, l.name
+    having count(*) > 1
+  ) repeated;
+  if n > 0 then
+    raise exception '% behaviour(s) still stamped on more than one column', n;
+  end if;
 end $$;

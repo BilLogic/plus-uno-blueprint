@@ -56,8 +56,12 @@ insert into path_rename values
 do $$
 declare unmatched int;
 begin
+  -- Only where there are paths to rename. This map is keyed on the path name
+  -- alone, so there is no finer scope than "the board exists"; unscoped it
+  -- raised on every empty replay and rolled the file back (#148).
   select count(*) into unmatched from path_rename m
-  where not exists (select 1 from paths p where p.name = m.old_name);
+  where exists (select 1 from paths)
+    and not exists (select 1 from paths p where p.name = m.old_name);
   if unmatched > 0 then raise exception '% mapped names match no path', unmatched; end if;
 end $$;
 
@@ -73,6 +77,11 @@ begin
   ) dupes;
   if n > 0 then raise exception '% non-Standard names appear more than once', n; end if;
 
-  select count(*) into n from paths where name = 'Standard';
-  if n <> 9 then raise exception 'expected 9 Standard paths, got %', n; end if;
+  -- "9 Standard paths" was a measurement of the day, and a count is not what
+  -- the rename is for. What it is for is that no path is left wearing a name
+  -- the map retired — true of an empty database and of a renamed one, false
+  -- only if the update matched nothing it should have.
+  select count(*) into n from paths p
+  join path_rename m on m.old_name = p.name;
+  if n > 0 then raise exception '% paths still bear a retired name', n; end if;
 end $$;

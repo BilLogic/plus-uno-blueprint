@@ -40,9 +40,15 @@ do $$
 declare
   unmatched int;
 begin
+  -- Scoped to scenarios that EXIST. A map row whose scenario is absent is not
+  -- a typo in the map, it is a database that has not been seeded — and asserted
+  -- unscoped this raised on every empty replay, taking the whole transaction and
+  -- every file downstream of it with it (#148). Where the scenario is present
+  -- the check is exactly as strict as it was.
   select count(*) into unmatched
   from rename_map m
-  where not exists (
+  where exists (select 1 from scenarios sc where sc.name = m.scenario)
+    and not exists (
     select 1 from paths p join scenarios sc on sc.id = p.scenario_id
     where sc.name = m.scenario and p.name = m.old_name
   );
