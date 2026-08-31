@@ -92,8 +92,7 @@ export type WriteFn =
   | 'create_slice'
   | 'duplicate_slice'
   | 'update_slice_meta'
-  | 'replace_slice_frames'
-  | 'set_slice_illustration'
+  | 'replace_slides'
   | 'create_finding'
   | 'update_finding'
   | 'place_touchpoint_detail'
@@ -348,20 +347,16 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
       : 'Duplicated a slice',
   update_slice_meta: (entry) =>
     titled(entry) ? `Edited slice “${titled(entry)}”` : 'Edited a slice',
-  // Named by the count, because "replaced the frames" is the one description
-  // here that hides its own size: this write deletes every frame the slice
+  // Named by the count, because "replaced the slides" is the one description
+  // here that hides its own size: this write deletes every slide the slice
   // had, and going from twelve to one is the case the row exists to surface.
-  replace_slice_frames: (entry) => {
+  replace_slides: (entry) => {
     const count =
-      typeof entry.args.frame_count === 'number' ? entry.args.frame_count : null
+      typeof entry.args.slide_count === 'number' ? entry.args.slide_count : null
     return count === null
-      ? 'Rebuilt a slice’s frames'
-      : `Rebuilt a slice’s frames (${count} now)`
+      ? 'Rebuilt a slice’s slides'
+      : `Rebuilt a slice’s slides (${count} now)`
   },
-  set_slice_illustration: (entry) =>
-    entry.args.cleared === true
-      ? 'Removed a storyboard image'
-      : 'Set a storyboard image',
   // Named by the check, because that is the word a person recognises — the
   // finding's own id means nothing to anyone reading the sheet.
   create_finding: (entry) => {

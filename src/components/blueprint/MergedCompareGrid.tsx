@@ -21,7 +21,7 @@ import {
   hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
   shouldUsePillCellContent,
-  shouldUseVisualContent,
+  shouldUseStoryboardContent,
   type BlueprintCellVariant,
 } from '@/lib/blueprintLayout'
 import {
@@ -57,7 +57,7 @@ import {
   resolveBlueprintLayer,
 } from '@/lib/sideBySideCompareLayout'
 import { getPathColor } from '@/lib/pathColorTheme'
-import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type {
   BlueprintCell,
@@ -180,20 +180,20 @@ export function MergedCompareGrid({
           if (!runtime || stepId === undefined) continue
           const entry = slot?.perPath[pathId]
           const cellIds = entry?.present ? entry.cellIds : undefined
-          if (variant === 'visual') {
-            // A visual lane's face comes from the walkthrough lanes' pictures,
-            // not from its own cell text, so it merges on the picture set.
-            const pictures = resolveVisualStepPictureEntries(
+          if (variant === 'storyboard') {
+            // A visual lane's face comes from the walkthrough lanes' frames,
+            // not from its own cell text, so it merges on the frame set.
+            const frames = resolveStoryboardStripEntries(
               runtime.blueprint,
               stepId,
             )
-            if (pictures.length === 0) continue
+            if (frames.length === 0) continue
             candidates.push({
               pathId,
               stepId,
               cellIds: cellIds ?? [`visual-${stepId}`],
-              signature: pictures
-                .map((picture) => `${picture.label}=${picture.picture}`)
+              signature: frames
+                .map((frame) => `${frame.label}=${frame.frame}`)
                 .join('\u0000'),
             })
             continue
@@ -397,8 +397,8 @@ function mergedSlotKey(laneId: string, trackKey: string): string {
 }
 
 function resolveMergedCellVariant(lane: BlueprintLane): BlueprintCellVariant {
-  return shouldUseVisualContent(lane)
-    ? 'visual'
+  return shouldUseStoryboardContent(lane)
+    ? 'storyboard'
     : shouldUsePillCellContent(lane)
       ? 'pills'
       : 'default'
@@ -630,11 +630,11 @@ function MergedSubCellBlock({
   const cells = subCell.cellIds
     .map((cellId) => runtime.cellById.get(cellId))
     .filter((cell): cell is BlueprintCell => cell !== undefined)
-  const isVisual = variant === 'visual'
+  const isStoryboard = variant === 'storyboard'
   const cell = cells[0]
-  const cellId = cell?.id ?? (isVisual ? `visual-${subCell.stepId}` : undefined)
-  const visualPictures = isVisual
-    ? resolveVisualStepPictureEntries(blueprint, subCell.stepId)
+  const cellId = cell?.id ?? (isStoryboard ? `visual-${subCell.stepId}` : undefined)
+  const visualPictures = isStoryboard
+    ? resolveStoryboardStripEntries(blueprint, subCell.stepId)
     : undefined
 
   return (
@@ -663,7 +663,7 @@ function MergedSubCellBlock({
               stepIndex: pathStepIndex,
               cellId,
               cellContent: cell?.content ?? '',
-              cellPicture: cell?.picture ?? null,
+              cellFrame: cell?.frame ?? null,
               cellDescription: cell?.summary ?? null,
               cellLinks: cell?.links,
               pathId: blueprint.path.id,

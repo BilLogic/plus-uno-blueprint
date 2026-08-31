@@ -19,8 +19,8 @@ import { cn } from '@/lib/utils'
  * `data-blueprint-lane` / `data-blueprint-tone`. Nothing here assigns a colour.
  */
 export type BlueprintLaneRole =
-  /** Screenshots and journey stage — the pictorial band. */
-  | 'visual'
+  /** The storyboard band — frames rather than words. */
+  | 'storyboard'
   /** Physical evidence: what the customer can see or hold. */
   | 'evidence'
   /** Customer and tutor actions — the people the service is for. */
@@ -39,7 +39,7 @@ export type BlueprintLaneRole =
   | 'partner-action'
 
 export const BLUEPRINT_LANE_ROLES = [
-  'visual',
+  'storyboard',
   'evidence',
   'actor',
   'frontstage-tech',
@@ -127,7 +127,7 @@ export function blueprintCellButtonClassName({
   className,
 }: {
   compact?: boolean
-  variant?: 'cell' | 'touchpoint' | 'visual'
+  variant?: 'cell' | 'touchpoint' | 'storyboard'
   className?: string
 } = {}) {
   const shared = cn(
@@ -144,7 +144,7 @@ export function blueprintCellButtonClassName({
     )
   }
 
-  if (variant === 'visual') {
+  if (variant === 'storyboard') {
     return cn(
       shared,
       'rounded-lg flex items-center justify-center',

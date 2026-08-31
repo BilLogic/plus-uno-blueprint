@@ -2,27 +2,27 @@ import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import { HELP_REQUEST_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleLinks'
 import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
-  GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
-} from '@/data/goalSettingParallelSessionPictures'
+  GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
+} from '@/data/goalSettingParallelSessionFrames'
 import { GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION } from '@/data/goalSettingHappyPathFallback'
 import {
   HELP_REQUEST_LEAVE_BREAKOUT_STEP_ID,
   HELP_REQUEST_PLUS_APP_STEP_06_DESCRIPTION,
   HELP_REQUEST_PLUS_APP_STEP_06_FIGMA_URL,
-  HELP_REQUEST_PLUS_APP_STEP_06_PICTURE,
-  HELP_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
-  HELP_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE,
-  HELP_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
-  HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
-  HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
-  HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE,
+  HELP_REQUEST_PLUS_APP_STEP_06_FRAME,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_01_FRAME,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_02_FRAME,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_03_FRAME,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_04_FRAME,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_05_FRAME,
+  HELP_REQUEST_REGULAR_TUTOR_STEP_06_FRAME,
   HELP_REQUEST_ZOOM_STEP_01_DESCRIPTION,
   HELP_REQUEST_ZOOM_STEP_02_DESCRIPTION,
   HELP_REQUEST_ZOOM_STEP_03_DESCRIPTION,
   HELP_REQUEST_ZOOM_STEP_04_DESCRIPTION,
   HELP_REQUEST_ZOOM_STEP_05_DESCRIPTION,
-} from '@/data/helpRequestPictures'
+} from '@/data/helpRequestFrames'
 import { getScenarioParallelNote } from '@/lib/scenarioParallelInfo'
 import {
   buildParallelSessionPartnerLeadCells,
@@ -143,7 +143,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular
@@ -234,8 +234,8 @@ const partnerLeadOptions = {
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
-  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
+  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
 }
 
 const HELP_REQUEST_PARTNER_LEAD_TRIGGERS =
@@ -255,30 +255,30 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
   ...buildParallelSessionPartnerLeadCells(partnerLeadOptions),
 
   cell(hrCell('01', '03'), L.regular, STEPS[0].id, 'Tutor receives help request.', {
-    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
+    frame: HELP_REQUEST_REGULAR_TUTOR_STEP_01_FRAME,
   }),
   cell(
     hrCell('02', '03'),
     L.regular,
     STEPS[1].id,
     'Finish current conversation in 1-2 minutes.',
-    { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE },
+    { frame: HELP_REQUEST_REGULAR_TUTOR_STEP_02_FRAME },
   ),
   cell(hrCell('03', '03'), L.regular, STEPS[2].id, 'Visit student requesting help.', {
-    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
+    frame: HELP_REQUEST_REGULAR_TUTOR_STEP_03_FRAME,
   }),
   cell(hrCell('04', '03'), L.regular, STEPS[3].id, 'Resolve issue.', {
-    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
+    frame: HELP_REQUEST_REGULAR_TUTOR_STEP_04_FRAME,
   }),
   cell(hrCell('05', '03'), L.regular, STEPS[4].id, 'Leave breakout room.', {
-    picture: HELP_REQUEST_REGULAR_TUTOR_STEP_05_PICTURE,
+    frame: HELP_REQUEST_REGULAR_TUTOR_STEP_05_FRAME,
   }),
   cell(
     hrCell('06', '03'),
     L.regular,
     STEPS[5].id,
     'Return to the next student in sorted order set by researchers.',
-    { picture: HELP_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE },
+    { frame: HELP_REQUEST_REGULAR_TUTOR_STEP_06_FRAME },
   ),
 
   cell(hrCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
@@ -301,7 +301,7 @@ const HELP_REQUEST_CELLS: BlueprintCell[] = [
       techDescriptionLink(
         'PLUS App',
         HELP_REQUEST_PLUS_APP_STEP_06_DESCRIPTION,
-        HELP_REQUEST_PLUS_APP_STEP_06_PICTURE,
+        HELP_REQUEST_PLUS_APP_STEP_06_FRAME,
         HELP_REQUEST_PLUS_APP_STEP_06_FIGMA_URL,
       ),
     ],

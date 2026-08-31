@@ -1,13 +1,13 @@
 /** Standard Scheduling Happy Path — tech pill descriptions. */
 
 /** Standard Scheduling — Regular Tutor step 2. */
-export const STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_PICTURE =
+export const STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_FRAME =
   '/blueprint-images/standard-scheduling/happy-path/regular-tutor/step-02-receives-schedule.png'
 
 export const STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION =
   "The tutor's session scheduling information is stored in a Google Spreadsheet."
 
-export const STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_PICTURE =
+export const STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_FRAME =
   '/blueprint-images/shared/back-stage-tech/google-sheets-logo.png'
 
 export const STANDARD_SCHEDULING_PLUS_APP_STEP_02_DESCRIPTION =

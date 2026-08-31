@@ -1,5 +1,5 @@
 import { BlueprintCellButton } from '@/components/blueprint/BlueprintCellButton'
-import { getVisualCellButtonMaxHeight } from '@/lib/blueprintLayout'
+import { getStoryboardCellButtonMaxHeight } from '@/lib/blueprintLayout'
 import type { BlueprintLaneRole } from '@/lib/blueprintCellStyle'
 import { hasEmbeddedVisualFrame } from '@/lib/visualWalkthrough'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
 
 export type BlueprintStepVisualPicture = {
-  picture: string
+  frame: string
   label?: string
 }
 
@@ -19,29 +19,29 @@ type BlueprintStepVisualProps = {
   cellId?: string
   stepIndex?: number
   opacity?: number
-  pictures?: readonly string[] | readonly BlueprintStepVisualPicture[]
+  frames?: readonly string[] | readonly BlueprintStepVisualPicture[]
   /** Larger walkthrough/presentation layout — images scale to fit without clipping. */
   presentation?: boolean
   'aria-describedby'?: string
 }
 
 function normalizePictures(
-  pictures: readonly string[] | readonly BlueprintStepVisualPicture[],
+  frames: readonly string[] | readonly BlueprintStepVisualPicture[],
 ): BlueprintStepVisualPicture[] {
-  return pictures.map((entry) =>
-    typeof entry === 'string' ? { picture: entry } : entry,
+  return frames.map((entry) =>
+    typeof entry === 'string' ? { frame: entry } : entry,
   )
 }
 
 function VisualPictureStrip({
-  pictures,
+  frames,
   className,
 }: {
-  pictures: readonly BlueprintStepVisualPicture[]
+  frames: readonly BlueprintStepVisualPicture[]
   className?: string
 }) {
   const showLabels =
-    pictures.some((entry) => Boolean(entry.label?.trim()))
+    frames.some((entry) => Boolean(entry.label?.trim()))
 
   return (
     <div
@@ -50,14 +50,14 @@ function VisualPictureStrip({
         className,
       )}
     >
-      {pictures.map((entry, index) => (
+      {frames.map((entry, index) => (
         <div
-          key={`${entry.picture}-${entry.label ?? index}`}
+          key={`${entry.frame}-${entry.label ?? index}`}
           className="flex h-full min-h-0 max-h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 self-stretch overflow-hidden"
         >
           <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
             <img
-              src={entry.picture}
+              src={entry.frame}
               alt=""
               loading="lazy"
               decoding="async"
@@ -66,7 +66,7 @@ function VisualPictureStrip({
                 corners.
 
                 `border-radius` clips the IMG BOX. Stretched to the full cell
-                the box is wider than the picture — measured on a 300x272
+                the box is wider than the frame — measured on a 300x272
                 screenshot in a 546x372 box, `object-contain` paints it 410
                 wide and letterboxes 68px each side — so the radius rounds
                 empty space and the artwork keeps square corners inside a
@@ -74,8 +74,8 @@ function VisualPictureStrip({
                 ring draws a crisp rounded outline right around a square
                 block.
 
-                Sized to its own aspect the box IS the picture, so the radius
-                lands on the artwork's corners. `max-w-full` keeps a picture
+                Sized to its own aspect the box IS the frame, so the radius
+                lands on the artwork's corners. `max-w-full` keeps a frame
                 wider than the cell from overflowing; that one letterboxes
                 top and bottom instead, which is the same problem in the
                 other axis and is why this is a `min`, not a fix for every
@@ -86,7 +86,7 @@ function VisualPictureStrip({
                 radius is the outer radius MINUS THE INSET. `rounded-sm` is
                 `--radius - 4px`, one pixel proud of that here — invisible
                 while the cell face is near-transparent, and obvious the moment
-                selection paints an opaque fill behind the picture, because the
+                selection paints an opaque fill behind the frame, because the
                 gap pinches at the corners. That is why hover looked right and
                 selection did not.
 
@@ -95,11 +95,11 @@ function VisualPictureStrip({
                 resolves to, `--spacing` is what its `p-1` resolves to, and the
                 `1px` is its border, which is a literal in the button's own
                 class with no token behind it. Change the cell's rounding or
-                padding and the picture follows.
+                padding and the frame follows.
               */
               className={cn(
                 'h-full w-auto max-w-full rounded-[calc(var(--radius-lg)-var(--spacing)-1px)] object-contain object-center',
-                hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',
+                hasEmbeddedVisualFrame(entry.frame) && 'scale-[1.08]',
               )}
             />
           </div>
@@ -118,16 +118,16 @@ function VisualPictureStrip({
 export function BlueprintStepVisual({
   compact = false,
   className,
-  fill = 'visual',
+  fill = 'storyboard',
   selection,
   cellId,
   stepIndex,
   opacity,
-  pictures,
+  frames,
   presentation = false,
   'aria-describedby': ariaDescribedBy,
 }: BlueprintStepVisualProps) {
-  const displayPictures = normalizePictures(pictures ?? [])
+  const displayPictures = normalizePictures(frames ?? [])
   const hasRealPictures = displayPictures.length > 0
   // Counts what is actually here — images for one step, not people. The old
   // wording ("Step visuals for 1 users") got both halves wrong, and a screen
@@ -137,11 +137,11 @@ export function BlueprintStepVisual({
       ? 'Step visual'
       : `Step visuals, ${displayPictures.length} images`
     : 'Empty step visual'
-  const inlineMaxHeight = getVisualCellButtonMaxHeight(compact)
+  const inlineMaxHeight = getStoryboardCellButtonMaxHeight(compact)
 
   // A caption without a frame renders NOTHING here, deliberately. The visual
-  // row's face is its pictures; giving it a text mode would make `showCell`
-  // learn a second reason to draw and would put prose in a picture row. A step
+  // row's face is its frames; giving it a text mode would make `showCell`
+  // learn a second reason to draw and would put prose in a frame row. A step
   // with a summary and no frame is read in the column header's hover card.
   if (!hasRealPictures) {
     return null
@@ -175,7 +175,7 @@ export function BlueprintStepVisual({
         role="img"
         aria-label={ariaLabel}
       >
-        <VisualPictureStrip pictures={displayPictures} />
+        <VisualPictureStrip frames={displayPictures} />
       </div>
     )
   }
@@ -184,7 +184,7 @@ export function BlueprintStepVisual({
     <BlueprintCellButton
       fill={fill}
       compact={compact}
-      variant="visual"
+      variant="storyboard"
       className={cn(
         'aspect-[4/3] h-auto min-h-0 max-h-full w-full max-w-full flex-none overflow-hidden',
         'items-stretch justify-stretch p-1',
@@ -201,7 +201,7 @@ export function BlueprintStepVisual({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
     >
-      <VisualPictureStrip pictures={displayPictures} className="min-h-0 flex-1" />
+      <VisualPictureStrip frames={displayPictures} className="min-h-0 flex-1" />
     </BlueprintCellButton>
   )
 }

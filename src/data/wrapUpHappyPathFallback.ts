@@ -3,25 +3,25 @@ import { WRAP_UP_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleL
 import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import { SUPPORT_ACTIONS_DESCRIPTION } from '@/data/supportActionsCopy'
 import {
-  WRAP_UP_PARTNER_STEP_01_PICTURE,
-  WRAP_UP_PARTNER_STEP_02_PICTURE,
-  WRAP_UP_PARTNER_STEP_03_PICTURE,
-  WRAP_UP_PARTNER_STEP_04_PICTURE,
-  WRAP_UP_LEAD_TUTOR_STEP_01_PICTURE,
-  WRAP_UP_LEAD_TUTOR_STEP_02_PICTURE,
-  WRAP_UP_LEAD_TUTOR_STEP_03_PICTURE,
-  WRAP_UP_LEAD_TUTOR_STEP_04_PICTURE,
-  WRAP_UP_REGULAR_TUTOR_STEP_01_PICTURE,
-  WRAP_UP_REGULAR_TUTOR_STEP_02_PICTURE,
-  WRAP_UP_REGULAR_TUTOR_STEP_03_PICTURE,
-  WRAP_UP_REGULAR_TUTOR_STEP_04_PICTURE,
+  WRAP_UP_PARTNER_STEP_01_FRAME,
+  WRAP_UP_PARTNER_STEP_02_FRAME,
+  WRAP_UP_PARTNER_STEP_03_FRAME,
+  WRAP_UP_PARTNER_STEP_04_FRAME,
+  WRAP_UP_LEAD_TUTOR_STEP_01_FRAME,
+  WRAP_UP_LEAD_TUTOR_STEP_02_FRAME,
+  WRAP_UP_LEAD_TUTOR_STEP_03_FRAME,
+  WRAP_UP_LEAD_TUTOR_STEP_04_FRAME,
+  WRAP_UP_REGULAR_TUTOR_STEP_01_FRAME,
+  WRAP_UP_REGULAR_TUTOR_STEP_02_FRAME,
+  WRAP_UP_REGULAR_TUTOR_STEP_03_FRAME,
+  WRAP_UP_REGULAR_TUTOR_STEP_04_FRAME,
   WRAP_UP_PLUS_APP_STEP_04_DESCRIPTION,
   WRAP_UP_PLUS_APP_STEP_04_FIGMA_URL,
-  WRAP_UP_PLUS_APP_STEP_04_PICTURE,
+  WRAP_UP_PLUS_APP_STEP_04_FRAME,
   WRAP_UP_ZOOM_STEP_01_DESCRIPTION,
   WRAP_UP_ZOOM_STEP_02_DESCRIPTION,
   WRAP_UP_ZOOM_STEP_03_DESCRIPTION,
-} from '@/data/wrapUpPictures'
+} from '@/data/wrapUpFrames'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
@@ -121,7 +121,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular
@@ -220,74 +220,74 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
   ),
 
   cell(wuCell('01', '01'), L.partner, STEPS[0].id, 'Help students log out of Zoom.', {
-    picture: WRAP_UP_PARTNER_STEP_01_PICTURE,
+    frame: WRAP_UP_PARTNER_STEP_01_FRAME,
   }),
   cell(
     wuCell('02', '01'),
     L.partner,
     STEPS[1].id,
     'Remind students to save their work or note what they accomplished.',
-    { picture: WRAP_UP_PARTNER_STEP_02_PICTURE },
+    { frame: WRAP_UP_PARTNER_STEP_02_FRAME },
   ),
   cell(
     wuCell('03', '01'),
     L.partner,
     STEPS[2].id,
     'Encourage them to reflect on what they learned or practiced.',
-    { picture: WRAP_UP_PARTNER_STEP_03_PICTURE },
+    { frame: WRAP_UP_PARTNER_STEP_03_FRAME },
   ),
   cell(
     wuCell('04', '01'),
     L.partner,
     STEPS[3].id,
     'Share quick reminders to students about what to bring or prepare for next time.',
-    { picture: WRAP_UP_PARTNER_STEP_04_PICTURE },
+    { frame: WRAP_UP_PARTNER_STEP_04_FRAME },
   ),
 
   cell(wuCell('01', '02'), L.lead, STEPS[0].id, 'Close breakout rooms.', {
-    picture: WRAP_UP_LEAD_TUTOR_STEP_01_PICTURE,
+    frame: WRAP_UP_LEAD_TUTOR_STEP_01_FRAME,
   }),
   cell(wuCell('02', '02'), L.lead, STEPS[1].id, 'Thank students.', {
-    picture: WRAP_UP_LEAD_TUTOR_STEP_02_PICTURE,
+    frame: WRAP_UP_LEAD_TUTOR_STEP_02_FRAME,
   }),
   cell(wuCell('03', '02'), L.lead, STEPS[2].id, 'Debrief with tutors.', {
-    picture: WRAP_UP_LEAD_TUTOR_STEP_03_PICTURE,
+    frame: WRAP_UP_LEAD_TUTOR_STEP_03_FRAME,
   }),
   cell(
     wuCell('04', '02'),
     L.lead,
     STEPS[3].id,
     'Remind tutors to upload Zoom recording and complete reflection form.',
-    { picture: WRAP_UP_LEAD_TUTOR_STEP_04_PICTURE },
+    { frame: WRAP_UP_LEAD_TUTOR_STEP_04_FRAME },
   ),
 
   cell(wuCell('01', '03'), L.regular, STEPS[0].id, 'Return to main room.', {
-    picture: WRAP_UP_REGULAR_TUTOR_STEP_01_PICTURE,
+    frame: WRAP_UP_REGULAR_TUTOR_STEP_01_FRAME,
   }),
   cell(wuCell('02', '03'), L.regular, STEPS[1].id, 'Thank students.', {
-    picture: WRAP_UP_REGULAR_TUTOR_STEP_02_PICTURE,
+    frame: WRAP_UP_REGULAR_TUTOR_STEP_02_FRAME,
   }),
   cell(wuCell('03', '03'), L.regular, STEPS[2].id, 'Debrief with lead tutor.', {
-    picture: WRAP_UP_REGULAR_TUTOR_STEP_03_PICTURE,
+    frame: WRAP_UP_REGULAR_TUTOR_STEP_03_FRAME,
   }),
   cell(
     wuCell('04', '03'),
     L.regular,
     STEPS[3].id,
     'Fill out reflection form and upload Zoom recording.',
-    { picture: WRAP_UP_REGULAR_TUTOR_STEP_04_PICTURE },
+    { frame: WRAP_UP_REGULAR_TUTOR_STEP_04_FRAME },
   ),
 
   cell(wuCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: WRAP_UP_ZOOM_STEP_01_DESCRIPTION,
   }),
   cell(wuCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: WRAP_UP_ZOOM_STEP_02_DESCRIPTION,
   }),
   cell(wuCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: WRAP_UP_ZOOM_STEP_03_DESCRIPTION,
   }),
   cell(wuCell('04', '06'), L.frontStageTech, STEPS[3].id, 'PLUS App', {
@@ -295,7 +295,7 @@ const WRAP_UP_CELLS: BlueprintCell[] = [
       techDescriptionLink(
         'PLUS App',
         WRAP_UP_PLUS_APP_STEP_04_DESCRIPTION,
-        WRAP_UP_PLUS_APP_STEP_04_PICTURE,
+        WRAP_UP_PLUS_APP_STEP_04_FRAME,
         WRAP_UP_PLUS_APP_STEP_04_FIGMA_URL,
       ),
     ],

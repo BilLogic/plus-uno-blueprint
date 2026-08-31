@@ -34,9 +34,16 @@ assumption lens breaks first. That is the coupling worth remembering.
 
 `slice_illustrations_select` grants `authenticated` SELECT on the
 `slice-illustrations` bucket. It reads like an over-grant on a bucket that is
-already public. It is required for **upsert overwrites**: re-uploading a frame
-needs to read the existing object, and without the policy the write fails rather
-than the read.
+already public. It was required for **upsert overwrites**: re-uploading an image needed to
+read the existing object, and without the policy the write failed rather than
+the read.
+
+**Nothing writes to that bucket as of 2026-08-30 (#179).** A slide's picture is
+now the strip of the cells it references, so the per-slide image column and the
+field that wrote it are gone. The bucket and its policies stay because objects
+uploaded under the older `frame-<n>.png` naming may still be in it and
+deleting storage is a destructive act that rename did not need. If the bucket is
+ever emptied deliberately, these policies go with it.
 
 Note the surrounding `do $$ ... $$` block and its comment — these policies fail
 on hosted Supabase when the migration role does not own `storage.objects`, so

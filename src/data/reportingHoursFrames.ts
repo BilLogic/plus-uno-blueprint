@@ -6,19 +6,19 @@ export const REPORTING_HOURS_ACTION_LAYER_PLACEHOLDER =
   BLUEPRINT_STEP_VISUAL_PLACEHOLDER
 
 /** Reporting Hours — Lead Tutor step 1 (Report hours). */
-export const REPORTING_HOURS_LEAD_TUTOR_STEP_01_PICTURE =
+export const REPORTING_HOURS_LEAD_TUTOR_STEP_01_FRAME =
   '/blueprint-images/reporting-hours/happy-path/lead-tutor/step-01-report-hours.png'
 
 /** Reporting Hours — Lead Tutor step 3 (Receive paycheck). */
-export const REPORTING_HOURS_LEAD_TUTOR_STEP_03_PICTURE =
+export const REPORTING_HOURS_LEAD_TUTOR_STEP_03_FRAME =
   '/blueprint-images/reporting-hours/happy-path/lead-tutor/step-03-receive-paycheck.png'
 
 /** Reporting Hours — Regular Tutor step 1 (Report hours). */
-export const REPORTING_HOURS_REGULAR_TUTOR_STEP_01_PICTURE =
+export const REPORTING_HOURS_REGULAR_TUTOR_STEP_01_FRAME =
   '/blueprint-images/reporting-hours/happy-path/regular-tutor/step-01-report-hours.png'
 
 /** Reporting Hours — Regular Tutor step 3 (Receive paycheck). */
-export const REPORTING_HOURS_REGULAR_TUTOR_STEP_03_PICTURE =
+export const REPORTING_HOURS_REGULAR_TUTOR_STEP_03_FRAME =
   '/blueprint-images/reporting-hours/happy-path/regular-tutor/step-03-receive-paycheck.png'
 
 /** Workday logo for Reporting Hours Front Stage Tech and Back Stage Tech cells. */

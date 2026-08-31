@@ -3,7 +3,7 @@ import type { CellLink } from '@/types/blueprint'
 
 /** Default metadata for cells without optional fields populated. */
 export const EMPTY_CELL_METADATA = {
-  picture: null,
+  frame: null,
   summary: null,
   links: [] as CellLink[],
 } as const

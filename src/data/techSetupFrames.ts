@@ -4,35 +4,35 @@ import { WORKDAY_TECH_LOGO } from '@/lib/blueprintTechPictures'
 export const TECH_SETUP_WORKDAY_LOGO = WORKDAY_TECH_LOGO
 
 /** Tech Setup — Regular Tutor step 1 (Clearance email). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_01_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_01_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-01-receives-clearance-email.png'
 
 /** Tech Setup — Regular Tutor step 2 (Obtain clearances). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_02_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_02_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-02-obtains-clearances.png'
 
 /** Tech Setup — Regular Tutor step 3 (Send clearances). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_03_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_03_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-03-sends-clearances.png'
 
 /** Tech Setup — Regular Tutor step 4 (I-9 meeting). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_04_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_04_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-04-sets-up-i9-meeting.png'
 
 /** Tech Setup — Regular Tutor step 5 (Attend I-9 meeting). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_05_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_05_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-05-attends-i9-meeting.png'
 
 /** Tech Setup — Regular Tutor step 6 (Payroll setup). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_06_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_06_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-06-sets-up-payroll.png'
 
 /** Tech Setup — Regular Tutor step 7 (Join Slack). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_07_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_07_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-07-joins-slack.png'
 
 /** Tech Setup — Regular Tutor step 8 (PLUS app login). */
-export const TECH_SETUP_REGULAR_TUTOR_STEP_08_PICTURE =
+export const TECH_SETUP_REGULAR_TUTOR_STEP_08_FRAME =
   '/blueprint-images/tech-setup/happy-path/regular-tutor/step-08-obtains-plus-app-login.png'
 
 /** Tech Setup — Front Stage Tech step 1 (Clearance email). */
@@ -73,7 +73,7 @@ export const TECH_SETUP_EMAIL_STEP_08_DESCRIPTION =
 export const TECH_SETUP_PLUS_APP_STEP_08_DESCRIPTION =
   'The tutor uses the provided credentials to log in to the PLUS app for the first time.'
 
-export const TECH_SETUP_PLUS_APP_STEP_08_PICTURE =
+export const TECH_SETUP_PLUS_APP_STEP_08_FRAME =
   '/blueprint-images/tech-setup/happy-path/plus-app/step-08-login.png'
 
 /** Tech Setup — Support Actions steps 1–3 (clearance steps). */

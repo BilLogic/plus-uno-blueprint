@@ -40,7 +40,7 @@ type BlueprintCellButtonProps = {
   selection?: BlueprintCellSelection
   cellId?: string
   stepIndex?: number
-  variant?: 'cell' | 'touchpoint' | 'visual'
+  variant?: 'cell' | 'touchpoint' | 'storyboard'
   opacity?: number
   /**
    * Whether this button may carry the slice sequence badge. Tech pills share
@@ -296,7 +296,7 @@ export function BlueprintCellButton({
       className={cn(
         blueprintCellButtonClassName({ compact, variant, className }),
         variant === 'cell' && 'min-h-[80px]',
-        variant === 'visual' &&
+        variant === 'storyboard' &&
           'min-h-0 h-full max-h-full overflow-hidden',
         !isInteractive && 'pointer-events-none cursor-default',
         (sliceSequence !== undefined || isPicked) && 'relative overflow-visible',

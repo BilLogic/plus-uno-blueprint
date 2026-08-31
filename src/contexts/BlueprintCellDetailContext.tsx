@@ -21,7 +21,7 @@ import {
 } from '@/lib/blueprintCellConnections'
 import {
   shouldUsePillCellContent,
-  shouldUseVisualContent,
+  shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
@@ -291,7 +291,7 @@ export function BlueprintCellDetailProvider({
       return { selectedCellIds, directlyConnectedCellIds }
     }
 
-    const skipHighlightZone = shouldUseVisualContent({
+    const skipHighlightZone = shouldUseStoryboardContent({
       name: selection.laneName,
     })
 

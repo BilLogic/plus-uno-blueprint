@@ -1,22 +1,22 @@
 import {
-  WARM_UP_REGULAR_TUTOR_STEP_01_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_02_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_03_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_04_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_05_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_06_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_07_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_08_PICTURE,
-  WARM_UP_REGULAR_TUTOR_STEP_09_PICTURE,
-  WARM_UP_PLUS_APP_STEP_05_PICTURE,
+  WARM_UP_REGULAR_TUTOR_STEP_01_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_02_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_03_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_04_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_05_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_06_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_07_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_08_FRAME,
+  WARM_UP_REGULAR_TUTOR_STEP_09_FRAME,
+  WARM_UP_PLUS_APP_STEP_05_FRAME,
   WARM_UP_PLUS_APP_STEP_05_DESCRIPTION,
   WARM_UP_PLUS_APP_STEP_05_FIGMA_URL,
-  WARM_UP_PLUS_APP_STEPS_6_7_9_PICTURE,
+  WARM_UP_PLUS_APP_STEPS_6_7_9_FRAME,
   WARM_UP_PLUS_APP_STEP_06_DESCRIPTION,
   WARM_UP_PLUS_APP_STEP_07_DESCRIPTION,
   WARM_UP_PLUS_APP_STEP_09_DESCRIPTION,
   WARM_UP_PLUS_APP_STEPS_6_7_9_FIGMA_URL,
-} from '@/data/warmUpPictures'
+} from '@/data/warmUpFrames'
 import { WARM_UP_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/warmUpRegularTutorLinks'
 import { applyBlueprintDisplayFilters } from '@/lib/applyBlueprintDisplayFilters'
 import { mergeUrlLinks, techDescriptionLink } from '@/lib/blueprintTechDescriptions'
@@ -134,9 +134,9 @@ import {
   buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
-  GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
-} from '@/data/goalSettingParallelSessionPictures'
+  GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
+} from '@/data/goalSettingParallelSessionFrames'
 import type {
   BlueprintCell,
   BlueprintCellDependency,
@@ -236,8 +236,8 @@ const warmUpPartnerLeadOptions = {
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
-  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
+  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
 }
 
 function cell(
@@ -246,7 +246,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
+    Pick<BlueprintCell, 'frame' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
@@ -282,7 +282,7 @@ function warmUpFrontStageTechCell(
     stepId,
     content,
     {
-      ...(content.includes('Zoom') ? { picture: ZOOM_TECH_LOGO } : {}),
+      ...(content.includes('Zoom') ? { frame: ZOOM_TECH_LOGO } : {}),
       ...metadata,
     },
   )
@@ -349,7 +349,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
   ),
   ...buildParallelSessionPartnerLeadCells(warmUpPartnerLeadOptions),
   cell('a0000000-0000-4000-8000-000000040103', L.regular, STEPS[0].id, 'Enter breakout room.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_01_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_01_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040106',
@@ -358,7 +358,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040203', L.regular, STEPS[1].id, 'Greet student.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_02_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_02_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040206',
@@ -367,7 +367,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040303', L.regular, STEPS[2].id, 'Ask them to share screen.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_03_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_03_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040306',
@@ -380,7 +380,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[3].id,
     'Remind them that they can ask for help on content and support.',
-    { picture: WARM_UP_REGULAR_TUTOR_STEP_04_PICTURE },
+    { frame: WARM_UP_REGULAR_TUTOR_STEP_04_FRAME },
   ),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040406',
@@ -389,7 +389,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     { summary: WARM_UP_ZOOM_DESCRIPTION },
   ),
   cell('a0000000-0000-4000-8000-000000040503', L.regular, STEPS[4].id, 'Mark them as present.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_05_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_05_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040506',
@@ -401,7 +401,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'PLUS App',
           WARM_UP_PLUS_APP_STEP_05_DESCRIPTION,
-          WARM_UP_PLUS_APP_STEP_05_PICTURE,
+          WARM_UP_PLUS_APP_STEP_05_FRAME,
           WARM_UP_PLUS_APP_STEP_05_FIGMA_URL,
         ),
       ],
@@ -411,7 +411,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell('a0000000-0000-4000-8000-000000040603', L.regular, STEPS[5].id, 'Select engagement level.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_06_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_06_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040606',
@@ -423,7 +423,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'PLUS App',
           WARM_UP_PLUS_APP_STEP_06_DESCRIPTION,
-          WARM_UP_PLUS_APP_STEPS_6_7_9_PICTURE,
+          WARM_UP_PLUS_APP_STEPS_6_7_9_FRAME,
           WARM_UP_PLUS_APP_STEPS_6_7_9_FIGMA_URL,
         ),
       ],
@@ -433,7 +433,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell('a0000000-0000-4000-8000-000000040703', L.regular, STEPS[6].id, 'Mark them as helped.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_07_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_07_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040706',
@@ -445,7 +445,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'PLUS App',
           WARM_UP_PLUS_APP_STEP_07_DESCRIPTION,
-          WARM_UP_PLUS_APP_STEPS_6_7_9_PICTURE,
+          WARM_UP_PLUS_APP_STEPS_6_7_9_FRAME,
           WARM_UP_PLUS_APP_STEPS_6_7_9_FIGMA_URL,
         ),
       ],
@@ -455,7 +455,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     summary: GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
   }),
   cell('a0000000-0000-4000-8000-000000040803', L.regular, STEPS[7].id, 'Leave breakout room.', {
-    picture: WARM_UP_REGULAR_TUTOR_STEP_08_PICTURE,
+    frame: WARM_UP_REGULAR_TUTOR_STEP_08_FRAME,
   }),
   warmUpFrontStageTechCell(
     'a0000000-0000-4000-8000-000000040806',
@@ -468,7 +468,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[8].id,
     'Move on to the next student in sorted order set by researchers.',
-    { picture: WARM_UP_REGULAR_TUTOR_STEP_09_PICTURE },
+    { frame: WARM_UP_REGULAR_TUTOR_STEP_09_FRAME },
   ),
   cell(
     'a0000000-0000-4000-8000-000000040906',
@@ -480,7 +480,7 @@ const WARM_UP_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'PLUS App',
           WARM_UP_PLUS_APP_STEP_09_DESCRIPTION,
-          WARM_UP_PLUS_APP_STEPS_6_7_9_PICTURE,
+          WARM_UP_PLUS_APP_STEPS_6_7_9_FRAME,
           WARM_UP_PLUS_APP_STEPS_6_7_9_FIGMA_URL,
         ),
       ],
@@ -584,8 +584,8 @@ const warmUpAlternatePartnerLeadOptions = {
   partnerLayerId: mapAlternatePathLayerId(L.partner),
   leadLayerId: mapAlternatePathLayerId(L.lead),
   stepIdForColumn: (column: number) => WARM_UP_ALTERNATE_STEPS[column - 1]!.id,
-  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
+  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
 }
 
 function buildWarmUpAlternatePathCells(): BlueprintCell[] {

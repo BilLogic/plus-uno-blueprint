@@ -376,8 +376,8 @@
    * the element, and giving them colours would let a dimmed cell drift away
    * from the one it is dimming.
    */
-  /* visual */
-[data-blueprint-lane='visual'] {
+  /* storyboard */
+[data-blueprint-lane='storyboard'] {
     --background-blueprint-cell: var(--color-slate-500);
     --background-blueprint-cell-hover: var(--color-slate-600);
     --background-blueprint-cell-pressed: var(--color-slate-700);

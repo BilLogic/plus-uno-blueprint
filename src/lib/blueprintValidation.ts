@@ -60,7 +60,7 @@ export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
  *   line up against any existing one in the side-by-side view.
  */
 export const DEFAULT_LANE_SET: LaneSetEntry[] = [
-  { name: 'Storyboard', lane_role: 'visual', position: 0 },
+  { name: 'Storyboard', lane_role: 'storyboard', position: 0 },
   { name: 'Regular Tutor', lane_role: 'customer_actions', position: 1 },
   { name: 'Front Stage Touchpoints', lane_role: 'frontstage_touchpoints', position: 2 },
   { name: 'Front Stage Actions', lane_role: 'frontstage_actions', position: 3 },

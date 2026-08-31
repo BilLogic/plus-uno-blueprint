@@ -1,40 +1,40 @@
 import { BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleLinks'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
-  BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_PICTURE,
-  BEFORE_STUDENTS_JOIN_PARTNER_STEP_02_PICTURE,
-  BEFORE_STUDENTS_JOIN_PARTNER_STEP_03_PICTURE,
-  BEFORE_STUDENTS_JOIN_PARTNER_STEP_04_PICTURE,
-  BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_PICTURE,
-  BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_PICTURE,
-  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_PICTURE,
-  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_02_PICTURE,
-  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_03_PICTURE,
-  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_04_PICTURE,
-  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_PICTURE,
-  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_PICTURE,
-  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_PICTURE,
-  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_02_PICTURE,
-  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_03_PICTURE,
-  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_PICTURE,
-  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_PICTURE,
+  BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_FRAME,
+  BEFORE_STUDENTS_JOIN_PARTNER_STEP_02_FRAME,
+  BEFORE_STUDENTS_JOIN_PARTNER_STEP_03_FRAME,
+  BEFORE_STUDENTS_JOIN_PARTNER_STEP_04_FRAME,
+  BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_FRAME,
+  BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_FRAME,
+  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_FRAME,
+  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_02_FRAME,
+  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_03_FRAME,
+  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_04_FRAME,
+  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_FRAME,
+  BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_FRAME,
+  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_FRAME,
+  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_02_FRAME,
+  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_03_FRAME,
+  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_FRAME,
+  BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_FRAME,
   BEFORE_STUDENTS_JOIN_PLUS_APP_FIGMA_URL,
   BEFORE_STUDENTS_JOIN_PLUS_APP_PLACEHOLDER,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_FIGMA_URL,
-  BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_PICTURE,
+  BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_FRAME,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FIGMA_URL,
-  BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_PICTURE,
+  BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FRAME,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FIGMA_URL,
-  BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_PICTURE,
+  BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FRAME,
   BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION,
   BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION,
-} from '@/data/beforeStudentsJoinPictures'
+} from '@/data/beforeStudentsJoinFrames'
 import { SUPPORT_ACTIONS_DESCRIPTION } from '@/data/supportActionsCopy'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
@@ -146,7 +146,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular
@@ -230,13 +230,13 @@ const BEFORE_STUDENTS_JOIN_TRIGGERS: BlueprintCellDependency[] = [
 
 function beforeStudentsJoinPlusAppLink(
   description: string,
-  picture: string = BEFORE_STUDENTS_JOIN_PLUS_APP_PLACEHOLDER,
+  frame: string = BEFORE_STUDENTS_JOIN_PLUS_APP_PLACEHOLDER,
   figmaUrl: string = BEFORE_STUDENTS_JOIN_PLUS_APP_FIGMA_URL,
 ) {
   return techDescriptionLink(
     'PLUS App',
     description,
-    picture,
+    frame,
     figmaUrl,
   )
 }
@@ -251,65 +251,65 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
     L.partner,
     STEPS[0].id,
     'Turn on the projector or interactive whiteboard.',
-    { picture: BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_FRAME },
   ),
   cell(
     bsjCell('02', '01'),
     L.partner,
     STEPS[1].id,
     'Open slide deck shared by the tutor team.',
-    { picture: BEFORE_STUDENTS_JOIN_PARTNER_STEP_02_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_PARTNER_STEP_02_FRAME },
   ),
   cell(
     bsjCell('03', '01'),
     L.partner,
     STEPS[2].id,
     'Post Zoom link in LMS or share the QR code depending on session needs.',
-    { picture: BEFORE_STUDENTS_JOIN_PARTNER_STEP_03_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_PARTNER_STEP_03_FRAME },
   ),
   cell(bsjCell('04', '01'), L.partner, STEPS[3].id, 'Test the wifi.', {
-    picture: BEFORE_STUDENTS_JOIN_PARTNER_STEP_04_PICTURE,
+    frame: BEFORE_STUDENTS_JOIN_PARTNER_STEP_04_FRAME,
   }),
   cell(
     bsjCell('05', '01'),
     L.partner,
     STEPS[4].id,
     'Make sure all student devices are ready.',
-    { picture: BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_FRAME },
   ),
   cell(
     bsjCell('06', '01'),
     L.partner,
     STEPS[5].id,
     'Remind students to plug in their headphones and use their real names on Zoom.',
-    { picture: BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_FRAME },
   ),
 
   cell(bsjCell('01', '02'), L.lead, STEPS[0].id, 'Open session detail page.', {
-    picture: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_PICTURE,
+    frame: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_FRAME,
   }),
   cell(bsjCell('02', '02'), L.lead, STEPS[1].id, 'Joins Zoom/ Pencil session.', {
-    picture: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_02_PICTURE,
+    frame: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_02_FRAME,
   }),
   cell(bsjCell('03', '02'), L.lead, STEPS[2].id, 'Take tutor attendance.', {
-    picture: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_03_PICTURE,
+    frame: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_03_FRAME,
   }),
   cell(bsjCell('04', '02'), L.lead, STEPS[3].id, 'Create breakout rooms.', {
-    picture: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_04_PICTURE,
+    frame: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_04_FRAME,
   }),
   cell(
     bsjCell('05', '02'),
     L.lead,
     STEPS[4].id,
     'Remind tutors to go through rooms in order of dashboard list.',
-    { picture: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_FRAME },
   ),
   cell(
     bsjCell('06', '02'),
     L.lead,
     STEPS[5].id,
     'Give breakout room list to the tutors.',
-    { picture: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_FRAME },
   ),
 
   cell(
@@ -317,74 +317,74 @@ const BEFORE_STUDENTS_JOIN_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[0].id,
     'Tutor open session detail page.',
-    { picture: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(bsjCell('02', '03'), L.regular, STEPS[1].id, 'Joins Zoom session.', {
-    picture: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_02_PICTURE,
+    frame: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_02_FRAME,
   }),
   cell(
     bsjCell('03', '03'),
     L.regular,
     STEPS[2].id,
     'Sign in with lead tutor and confirms they have co-host permissions.',
-    { picture: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(
     bsjCell('05', '03'),
     L.regular,
     STEPS[4].id,
     'Review student list for session.',
-    { picture: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_FRAME },
   ),
   cell(
     bsjCell('06', '03'),
     L.regular,
     STEPS[5].id,
     'Receive breakout rooms from lead tutor.',
-    { picture: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_PICTURE },
+    { frame: BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_FRAME },
   ),
 
   cell(bsjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS App', {
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_DESCRIPTION,
-        BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_PICTURE,
+        BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_FRAME,
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_FIGMA_URL,
       ),
     ],
   }),
   cell(bsjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App, Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_02_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION,
-        BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_PICTURE,
+        BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FRAME,
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FIGMA_URL,
       ),
     ],
   }),
   cell(bsjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_03_DESCRIPTION,
   }),
   cell(bsjCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_04_DESCRIPTION,
   }),
   cell(bsjCell('05', '06'), L.frontStageTech, STEPS[4].id, 'PLUS App, Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_05_DESCRIPTION,
     links: [
       beforeStudentsJoinPlusAppLink(
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION,
-        BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_PICTURE,
+        BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FRAME,
         BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FIGMA_URL,
       ),
     ],
   }),
   cell(bsjCell('06', '06'), L.frontStageTech, STEPS[5].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION,
   }),
 

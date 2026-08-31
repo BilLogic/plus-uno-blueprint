@@ -6,16 +6,16 @@ import {
   LESSON_MODULES_NOTION_STEP_02_DESCRIPTION,
   LESSON_MODULES_NOTION_STEP_03_DESCRIPTION,
   LESSON_MODULES_PLUS_APP_STEP_01_DESCRIPTION,
-  LESSON_MODULES_PLUS_APP_STEP_01_PICTURE,
+  LESSON_MODULES_PLUS_APP_STEP_01_FRAME,
   LESSON_MODULES_PLUS_APP_STEP_02_DESCRIPTION,
-  LESSON_MODULES_PLUS_APP_STEP_02_PICTURE,
+  LESSON_MODULES_PLUS_APP_STEP_02_FRAME,
   LESSON_MODULES_PLUS_APP_STEP_03_DESCRIPTION,
-  LESSON_MODULES_PLUS_APP_STEP_03_PICTURE,
-  LESSON_MODULES_REGULAR_TUTOR_STEP_01_PICTURE,
-  LESSON_MODULES_REGULAR_TUTOR_STEP_02_PICTURE,
-  LESSON_MODULES_REGULAR_TUTOR_STEP_03_PICTURE,
+  LESSON_MODULES_PLUS_APP_STEP_03_FRAME,
+  LESSON_MODULES_REGULAR_TUTOR_STEP_01_FRAME,
+  LESSON_MODULES_REGULAR_TUTOR_STEP_02_FRAME,
+  LESSON_MODULES_REGULAR_TUTOR_STEP_03_FRAME,
   LESSON_MODULES_STEPS_01_02_SUPPORT_DESCRIPTION,
-} from '@/data/lessonModulesPictures'
+} from '@/data/lessonModulesFrames'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import type {
@@ -101,7 +101,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular
@@ -179,14 +179,14 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[0].id,
     'Opens next uncompleted assigned lesson.',
-    { picture: LESSON_MODULES_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: LESSON_MODULES_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(lmCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS App', {
     links: [
       techDescriptionLink(
         'PLUS App',
         LESSON_MODULES_PLUS_APP_STEP_01_DESCRIPTION,
-        LESSON_MODULES_PLUS_APP_STEP_01_PICTURE,
+        LESSON_MODULES_PLUS_APP_STEP_01_FRAME,
         'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-256703&t=Fyqmb2RX2B0cj9sv-1',
       ),
     ],
@@ -207,14 +207,14 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[1].id,
     'Works through the questions.',
-    { picture: LESSON_MODULES_REGULAR_TUTOR_STEP_02_PICTURE },
+    { frame: LESSON_MODULES_REGULAR_TUTOR_STEP_02_FRAME },
   ),
   cell(lmCell('02', '06'), L.frontStageTech, STEPS[1].id, 'PLUS App', {
     links: [
       techDescriptionLink(
         'PLUS App',
         LESSON_MODULES_PLUS_APP_STEP_02_DESCRIPTION,
-        LESSON_MODULES_PLUS_APP_STEP_02_PICTURE,
+        LESSON_MODULES_PLUS_APP_STEP_02_FRAME,
         'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-256698&t=3WtQ7pKHkR28zhEn-1',
       ),
     ],
@@ -244,14 +244,14 @@ const LESSON_MODULES_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[2].id,
     'Finishes lesson and receives score.',
-    { picture: LESSON_MODULES_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: LESSON_MODULES_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(lmCell('03', '06'), L.frontStageTech, STEPS[2].id, 'PLUS App', {
     links: [
       techDescriptionLink(
         'PLUS App',
         LESSON_MODULES_PLUS_APP_STEP_03_DESCRIPTION,
-        LESSON_MODULES_PLUS_APP_STEP_03_PICTURE,
+        LESSON_MODULES_PLUS_APP_STEP_03_FRAME,
         'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-256699&t=Fyqmb2RX2B0cj9sv-1',
       ),
     ],

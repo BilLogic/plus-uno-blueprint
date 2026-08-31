@@ -39,7 +39,6 @@ import {
   restoreTouchpointDetail,
   type RestoredPlacement,
 } from '@/lib/unplacedTouchpointMutations'
-import { setSliceFrameIllustration } from '@/lib/sliceMutations'
 import {
   restoreTouchpointPlacement,
   type PlacementDetailColumns,
@@ -53,7 +52,7 @@ type Client = SupabaseClient<Database>
 type EvidenceRowType = Database['public']['Tables']['evidence']['Row']
 type UnplacedTouchpointDetailRow =
   Database['public']['Tables']['unplaced_touchpoint_details']['Row']
-type SliceItemRow = Database['public']['Tables']['slice_items']['Row']
+type SlideRow = Database['public']['Tables']['slides']['Row']
 /** The subset of `slices` that `updateSliceMeta` writes, and so restores. */
 type SliceMetaFields = Pick<
   Database['public']['Tables']['slices']['Row'],
@@ -276,48 +275,34 @@ export async function executeRevert(
       await restoreTouchpointDetail(client, detail, placement)
       return
     }
-    case 'set_slice_illustration': {
-      // Self-inverting: the undo of "set a storyboard image" is setting the
-      // previous value back, which may be null (the frame had none). Keyed on
-      // item_id, not position, so a revert after a reorder still lands on the
-      // frame the picture came from. `record: false` — a revert must not log
-      // its own undo.
-      const sliceId = stringArg(revert.args, 'slice_id')
-      const itemId = stringArg(revert.args, 'item_id')
-      const illustration = (revert.args.illustration ?? null) as Json | null
-      await setSliceFrameIllustration(client, sliceId, itemId, illustration, {
-        record: false,
-      })
-      return
-    }
-    case 'restore_slice_frames': {
-      // Undo of "rebuilt a slice's frames": clear whatever is there now and
+    case 'restore_slides': {
+      // Undo of "rebuilt a slice's slides": clear whatever is there now and
       // put the captured rows back verbatim, original ids included, so a
-      // frame's identity survives the round trip. Same shape check and same
+      // slide's identity survives the round trip. Same shape check and same
       // reasoning as `restore_evidence_row` above.
       const sliceId = stringArg(revert.args, 'slice_id')
       const rows = revert.args.rows
       if (!Array.isArray(rows)) {
-        throw new Error('This change’s captured frames are malformed.')
+        throw new Error('This change’s captured slides are malformed.')
       }
       const cleared = await client
-        .from('slice_items')
+        .from('slides')
         .delete()
         .eq('slice_id', sliceId)
       if (cleared.error) throw toAuthoringError(cleared.error)
       // An empty capture is a real answer, not a failure: the slice genuinely
-      // had no frames before the write, so putting none back IS the inverse.
+      // had no slides before the write, so putting none back IS the inverse.
       if (rows.length === 0) return
       const restored = await client
-        .from('slice_items')
-        .insert(rows as SliceItemRow[])
+        .from('slides')
+        .insert(rows as SlideRow[])
       if (restored.error) throw toAuthoringError(restored.error)
       return
     }
     case 'delete_slice_row': {
       // Undo of "added a slice" / "duplicated a slice": remove the row it
-      // created. `slice_items` cascade, so the frames go with it — which is
-      // why neither of those operations needs a frame capture of its own.
+      // created. `slides` cascade, so the slides go with it — which is
+      // why neither of those operations needs a slide capture of its own.
       //
       // A direct delete rather than `deleteSlice`: that wrapper records a
       // `delete_slice` entry, and undoing "Added a slice" must not append

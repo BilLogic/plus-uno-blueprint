@@ -22,6 +22,6 @@ export const PANEL_TERMS = {
   paths: 'The routes through this scenario. Every scenario has one main route and may have variants and exceptions.',
   columns:
     'Where this step sits in each route. A step can be third in one path and fifth in another.',
-  storyboard: 'The frames drawn for this moment, one per actor lane.',
+  storyboard: 'This moment’s strip — the frames drawn for it, one per actor lane.',
   summary: 'The tl;dr — what the detailed fields below add up to.',
 } as const

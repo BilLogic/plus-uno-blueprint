@@ -5,19 +5,19 @@ export const REPORTING_AN_ISSUE_ACTION_LAYER_PLACEHOLDER =
   BLUEPRINT_STEP_VISUAL_PLACEHOLDER
 
 /** Reporting an Issue — Regular Tutor step 1 (Reach out). */
-export const REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_PICTURE =
+export const REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_FRAME =
   '/blueprint-images/reporting-an-issue/happy-path/regular-tutor/step-01-reach-out.png'
 
 /** Reporting an Issue — Regular Tutor step 3 (Follow up). */
-export const REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_PICTURE =
+export const REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_FRAME =
   '/blueprint-images/reporting-an-issue/happy-path/regular-tutor/step-03-follow-up.png'
 
 /** Reporting an Issue — Lead Tutor step 1 (Reach out). */
-export const REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_PICTURE =
+export const REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_FRAME =
   '/blueprint-images/reporting-an-issue/happy-path/lead-tutor/step-01-reach-out.png'
 
 /** Reporting an Issue — Lead Tutor step 3 (Follow up). */
-export const REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_PICTURE =
+export const REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_FRAME =
   '/blueprint-images/reporting-an-issue/happy-path/lead-tutor/step-03-follow-up.png'
 
 /** Reporting an Issue — Front Stage Tech step 1 (Reach out). */

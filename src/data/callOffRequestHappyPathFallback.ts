@@ -4,16 +4,16 @@ import {
   CALL_OFF_REQUEST_EMAIL_STEP_03_DESCRIPTION,
   CALL_OFF_REQUEST_EMAIL_STEP_06_DESCRIPTION,
   CALL_OFF_REQUEST_GOOGLE_SPREADSHEET_STEP_05_DESCRIPTION,
-  CALL_OFF_REQUEST_GOOGLE_SPREADSHEET_STEP_05_PICTURE,
-  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
-  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE,
-  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
-  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
-  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE,
+  CALL_OFF_REQUEST_GOOGLE_SPREADSHEET_STEP_05_FRAME,
+  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_01_FRAME,
+  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_02_FRAME,
+  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_03_FRAME,
+  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_04_FRAME,
+  CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_06_FRAME,
   CALL_OFF_REQUEST_SHIFT_SWAP_FORM_STEP_02_DESCRIPTION,
   CALL_OFF_REQUEST_SLACK_STEP_04_DESCRIPTION,
   CALL_OFF_REQUEST_SUPPORT_STEP_05_DESCRIPTION,
-} from '@/data/callOffRequestPictures'
+} from '@/data/callOffRequestFrames'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import {
   EMAIL_TECH_LOGO,
@@ -116,7 +116,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  extras: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  extras: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular
@@ -177,7 +177,7 @@ const CALL_OFF_REQUEST_TRIGGERS: BlueprintCellDependency[] = [
 const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
   cell(callOffCell('01', '10'), L.visual, STEPS[0].id, ''),
   cell(callOffCell('01', '03'), L.regular, STEPS[0].id, 'Tutor needs to call off.', {
-    picture: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_01_PICTURE,
+    frame: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_01_FRAME,
   }),
 
   cell(callOffCell('02', '10'), L.visual, STEPS[1].id, ''),
@@ -186,7 +186,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[1].id,
     "If it's 12 or more hours before session, tutor complete shift swap form.",
-    { picture: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE },
+    { frame: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_02_FRAME },
   ),
   cell(callOffCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Shift Swap Google Form', {
     links: [
@@ -210,7 +210,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[2].id,
     'If it is less than 12 hours before session, tutor emails supervisor.',
-    { picture: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(
     callOffCell('03', '04'),
@@ -234,7 +234,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[3].id,
     'Tutor send message in #shift-swap to see if anyone can cover.',
-    { picture: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE },
+    { frame: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_04_FRAME },
   ),
   cell(
     callOffCell('04', '04'),
@@ -269,7 +269,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'Google Spreadsheet',
           CALL_OFF_REQUEST_GOOGLE_SPREADSHEET_STEP_05_DESCRIPTION,
-          CALL_OFF_REQUEST_GOOGLE_SPREADSHEET_STEP_05_PICTURE,
+          CALL_OFF_REQUEST_GOOGLE_SPREADSHEET_STEP_05_FRAME,
         ),
       ],
     },
@@ -284,7 +284,7 @@ const CALL_OFF_REQUEST_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[5].id,
     'Tutor receives excused or unexcused decision.',
-    { picture: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_06_PICTURE },
+    { frame: CALL_OFF_REQUEST_REGULAR_TUTOR_STEP_06_FRAME },
   ),
   cell(
     callOffCell('06', '04'),

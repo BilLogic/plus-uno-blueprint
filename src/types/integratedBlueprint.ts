@@ -21,7 +21,7 @@ export type IntegratedBlueprintCell = {
   path_id: string
   path_type: PathType
   content: string
-  picture: string | null
+  frame: string | null
   description: string | null
   links: CellLink[]
   opacity: number

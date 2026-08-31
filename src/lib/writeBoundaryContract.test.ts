@@ -7,7 +7,7 @@ import { expect, test } from 'vitest'
  *
  * `AGENTS.md` has stated this since the ledger was built, and on 2026-08-23 a
  * docs audit found it was false: `SliceStoryboardField.tsx` set and cleared
- * `slice_items.illustration` with a bare `.from('slice_items').update()`. Two
+ * `slides.illustration` with a bare `.from('slides').update()`. Two
  * things followed, and neither was visible at the call site.
  *
  * The write never reached the session ledger, which is the app's only undo, so

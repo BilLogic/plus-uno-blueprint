@@ -7,26 +7,26 @@ import {
   buildParallelSessionPartnerLeadDependencies,
 } from '@/data/parallelSessionPartnerLead'
 import {
-  GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_01_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_02_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_03_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_04_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_05_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_06_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_07_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_08_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_03_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_05_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_PICTURE,
-  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_PICTURE,
+  GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_01_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_02_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_03_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_04_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_05_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_06_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_07_FRAME,
+  GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_08_FRAME,
+  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_FRAME,
+  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_03_FRAME,
+  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_05_FRAME,
+  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_FRAME,
+  GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_FRAME,
   GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_FIGMA_URL,
   GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEPS_3_5_FIGMA_URL,
   GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_FIGMA_URL,
   GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_FIGMA_URL,
-} from '@/data/goalSettingParallelSessionPictures'
+} from '@/data/goalSettingParallelSessionFrames'
 import {
   GOAL_SETTING_SCENARIO_ID,
   GOAL_SETTING_SUPPORT_ACTIONS_DESCRIPTION,
@@ -181,10 +181,10 @@ const GOAL_SETTING_CHECK_GOALS_ZOOM_STEP_07_DESCRIPTION =
 
 function checkGoalsPlusAppLink(
   description: string,
-  picture: string,
+  frame: string,
   figmaUrl: string,
 ): ReturnType<typeof techDescriptionLink> {
-  return techDescriptionLink('PLUS App', description, picture, figmaUrl)
+  return techDescriptionLink('PLUS App', description, frame, figmaUrl)
 }
 
 function cell(
@@ -193,7 +193,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
+    Pick<BlueprintCell, 'frame' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   const links =
@@ -288,8 +288,8 @@ const partnerLeadOptions = {
   partnerLayerId: L.partner,
   leadLayerId: L.lead,
   stepIdForColumn: (column: number) => STEPS[column - 1]!.id,
-  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_PICTURES,
-  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_PICTURES,
+  leadStepPictures: GOAL_SETTING_PARALLEL_LEAD_STEP_FRAMES,
+  partnerStepPictures: GOAL_SETTING_PARALLEL_PARTNER_STEP_FRAMES,
 }
 
 const GOAL_SETTING_CHECK_GOALS_TRIGGERS: BlueprintCellDependency[] = [
@@ -315,48 +315,48 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[0].id,
     'Join breakout session.',
-    { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(
     gcCell('02', '03'),
     L.regular,
     STEPS[1].id,
     "Click on 'Check Goals' CTA in the Action column.",
-    { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_02_PICTURE },
+    { frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_02_FRAME },
   ),
   cell(gcCell('03', '03'), L.regular, STEPS[2].id, 'Share screen.', {
-    picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_03_PICTURE,
+    frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_03_FRAME,
   }),
   cell(
     gcCell('04', '03'),
     L.regular,
     STEPS[3].id,
     'Review goals that were set with student.',
-    { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_04_PICTURE },
+    { frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_04_FRAME },
   ),
   cell(
     gcCell('05', '03'),
     L.regular,
     STEPS[4].id,
     "Once goal review is done, clicks on 'Check Goals' button.",
-    { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_05_PICTURE },
+    { frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_05_FRAME },
   ),
   cell(
     gcCell('06', '03'),
     L.regular,
     STEPS[5].id,
     'Finalize checking goal with the student.',
-    { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_06_PICTURE },
+    { frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_06_FRAME },
   ),
   cell(gcCell('07', '03'), L.regular, STEPS[6].id, 'Leave breakout room.', {
-    picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_07_PICTURE,
+    frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_07_FRAME,
   }),
   cell(
     gcCell('08', '03'),
     L.regular,
     STEPS[7].id,
     'Move on to the next student in sorted order set by researchers.',
-    { picture: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_08_PICTURE },
+    { frame: GOAL_SETTING_CHECK_GOALS_REGULAR_TUTOR_STEP_08_FRAME },
   ),
 
   cell(gcCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
@@ -366,7 +366,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     links: [
       checkGoalsPlusAppLink(
         GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_DESCRIPTION,
-        GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_PICTURE,
+        GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_FRAME,
         GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_02_FIGMA_URL,
       ),
     ],
@@ -381,7 +381,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
       links: [
         checkGoalsPlusAppLink(
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_03_DESCRIPTION,
-          GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_03_PICTURE,
+          GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_03_FRAME,
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEPS_3_5_FIGMA_URL,
         ),
       ],
@@ -400,7 +400,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
       links: [
         checkGoalsPlusAppLink(
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_05_DESCRIPTION,
-          GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_05_PICTURE,
+          GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_05_FRAME,
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEPS_3_5_FIGMA_URL,
         ),
       ],
@@ -416,7 +416,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
       links: [
         checkGoalsPlusAppLink(
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_DESCRIPTION,
-          GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_PICTURE,
+          GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_FRAME,
           GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_06_FIGMA_URL,
         ),
       ],
@@ -429,7 +429,7 @@ const GOAL_SETTING_CHECK_GOALS_CELLS: BlueprintCell[] = [
     links: [
       checkGoalsPlusAppLink(
         GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_DESCRIPTION,
-        GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_PICTURE,
+        GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_FRAME,
         GOAL_SETTING_CHECK_GOALS_PLUS_APP_STEP_08_FIGMA_URL,
       ),
     ],

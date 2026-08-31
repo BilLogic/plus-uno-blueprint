@@ -3,18 +3,18 @@ import {
   FILL_IN_REQUEST_EMAIL_STEP_02_DESCRIPTION,
   FILL_IN_REQUEST_EMAIL_STEP_03_DESCRIPTION,
   FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
-  FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+  FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_FRAME,
   FILL_IN_REQUEST_PLUS_APP_STEP_04_DESCRIPTION,
-  FILL_IN_REQUEST_PLUS_APP_STEP_04_PICTURE,
-  FILL_IN_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE,
-  FILL_IN_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE,
-  FILL_IN_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE,
+  FILL_IN_REQUEST_PLUS_APP_STEP_04_FRAME,
+  FILL_IN_REQUEST_REGULAR_TUTOR_STEP_02_FRAME,
+  FILL_IN_REQUEST_REGULAR_TUTOR_STEP_03_FRAME,
+  FILL_IN_REQUEST_REGULAR_TUTOR_STEP_04_FRAME,
   FILL_IN_REQUEST_SHIFT_SWAP_FORM_STEP_01_DESCRIPTION,
   FILL_IN_REQUEST_SLACK_STEP_02_DESCRIPTION,
   FILL_IN_REQUEST_SLACK_STEP_03_DESCRIPTION,
   FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION,
   FILL_IN_REQUEST_SUPPORT_STEP_04_DESCRIPTION,
-} from '@/data/fillInRequestPictures'
+} from '@/data/fillInRequestFrames'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
   EMAIL_TECH_LOGO,
@@ -107,7 +107,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'picture'>>,
+  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'frame'>>,
 ): BlueprintCell {
   return {
     id,
@@ -175,7 +175,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'Google Spreadsheet',
           FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
-          FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+          FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_FRAME,
         ),
       ],
     },
@@ -201,7 +201,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     'Tutor supervisor team requests fill in and fellow tutor sends message in #shift-swap Slack channel.',
   ),
   cell(fillCell('02', '03'), L.regular, STEPS[1].id, 'Tutor receives request.', {
-    picture: FILL_IN_REQUEST_REGULAR_TUTOR_STEP_02_PICTURE,
+    frame: FILL_IN_REQUEST_REGULAR_TUTOR_STEP_02_FRAME,
   }),
   cell(fillCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Slack, Email', {
     links: [
@@ -224,7 +224,7 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[2].id,
     'Tutor confirms or denies fill in request.',
-    { picture: FILL_IN_REQUEST_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: FILL_IN_REQUEST_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(
     fillCell('03', '04'),
@@ -253,14 +253,14 @@ const FILL_IN_REQUEST_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[3].id,
     'Tutor accesses session if able to fill in.',
-    { picture: FILL_IN_REQUEST_REGULAR_TUTOR_STEP_04_PICTURE },
+    { frame: FILL_IN_REQUEST_REGULAR_TUTOR_STEP_04_FRAME },
   ),
   cell(fillCell('04', '06'), L.frontStageTech, STEPS[3].id, 'PLUS App', {
     links: [
       techDescriptionLink(
         'PLUS App',
         FILL_IN_REQUEST_PLUS_APP_STEP_04_DESCRIPTION,
-        FILL_IN_REQUEST_PLUS_APP_STEP_04_PICTURE,
+        FILL_IN_REQUEST_PLUS_APP_STEP_04_FRAME,
         'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=2942-401328&t=NRQGuswXJmExM6wI-1',
       ),
     ],

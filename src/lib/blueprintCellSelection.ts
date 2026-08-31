@@ -12,7 +12,7 @@ export type BlueprintCellSelectionContext = {
   stepIndex: number
   cellId: string
   cellContent: string
-  cellPicture?: string | null
+  cellFrame?: string | null
   cellDescription?: string | null
   cellLinks?: CellLink[]
   pathId: string
@@ -39,7 +39,7 @@ export function buildBlueprintCellSelection(
         pathDescription: context.pathDescription ?? null,
         pathType: context.pathType,
         content: context.cellContent,
-        picture: context.cellPicture ?? null,
+        frame: context.cellFrame ?? null,
         description: context.cellDescription ?? null,
         links: context.cellLinks ?? [],
       },
@@ -67,7 +67,7 @@ export function buildTouchpointSelection(
         pathDescription: context.pathDescription ?? null,
         pathType: context.pathType,
         content: techItem,
-        picture: context.cellPicture ?? null,
+        frame: context.cellFrame ?? null,
         description: context.cellDescription ?? null,
         links: context.cellLinks ?? [],
       },

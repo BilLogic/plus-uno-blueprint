@@ -7,9 +7,9 @@ import {
   getCellContentLengthGuidance,
 } from '@/lib/cellContentLimits'
 import {
-  VISUAL_ROW_MIN_HEIGHT,
-  VISUAL_ROW_MIN_HEIGHT_COMPACT,
-  getVisualCellButtonMaxHeight,
+  STORYBOARD_ROW_MIN_HEIGHT,
+  STORYBOARD_ROW_MIN_HEIGHT_COMPACT,
+  getStoryboardCellButtonMaxHeight,
 } from '@/lib/blueprintLayout'
 
 function source(relativePath: string): string {
@@ -56,10 +56,10 @@ describe('stable blueprint cell frame contract', () => {
     expect(visual).toContain(
       "'h-full w-auto max-w-full rounded-[calc(var(--radius-lg)-var(--spacing)-1px)] object-contain",
     )
-    expect(VISUAL_ROW_MIN_HEIGHT).toBe(176)
-    expect(VISUAL_ROW_MIN_HEIGHT_COMPACT).toBe(168)
-    expect(getVisualCellButtonMaxHeight()).toBe(144)
-    expect(getVisualCellButtonMaxHeight(true)).toBe(144)
+    expect(STORYBOARD_ROW_MIN_HEIGHT).toBe(176)
+    expect(STORYBOARD_ROW_MIN_HEIGHT_COMPACT).toBe(168)
+    expect(getStoryboardCellButtonMaxHeight()).toBe(144)
+    expect(getStoryboardCellButtonMaxHeight(true)).toBe(144)
   })
 
   it('keeps one grid arrangement and geometry across overview and focus', () => {

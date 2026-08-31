@@ -1,12 +1,12 @@
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
   STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
-  STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+  STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_FRAME,
   STANDARD_SCHEDULING_PLUS_APP_STEP_02_DESCRIPTION,
-  STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_PICTURE,
+  STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_FRAME,
   STANDARD_SCHEDULING_SUPPORT_STEP_01_DESCRIPTION,
   STANDARD_SCHEDULING_SUPPORT_STEP_02_DESCRIPTION,
-} from '@/data/standardSchedulingPictures'
+} from '@/data/standardSchedulingFrames'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
@@ -84,7 +84,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'picture'>>,
+  extras?: Partial<Pick<BlueprintCell, 'summary' | 'links' | 'frame'>>,
 ): BlueprintCell {
   return {
     id,
@@ -144,7 +144,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
       techDescriptionLink(
         'Google Spreadsheet',
         STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
-        STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+        STANDARD_SCHEDULING_GOOGLE_SPREADSHEET_STEP_01_FRAME,
       ),
     ],
   }),
@@ -158,7 +158,7 @@ const STANDARD_SCHEDULING_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[1].id,
     'Receive schedule for the semester.',
-    { picture: STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_PICTURE },
+    { frame: STANDARD_SCHEDULING_REGULAR_TUTOR_STEP_02_FRAME },
   ),
   cell(
     schedCell('02', '04'),

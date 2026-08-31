@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
-import { VISUAL_LAYER_ROLES } from '@/lib/blueprintLayout'
+import { STORYBOARD_LANE_ROLES } from '@/lib/blueprintLayout'
 import { getLayerRole } from '@/lib/laneRoles'
 
 export type StepSpec = {
@@ -22,7 +22,7 @@ export type StepSpec = {
    * provenance, not as the frame's meaning: the meaning is the summary below
    * it, which is what the caption on the canvas says too.
    */
-  frames: { laneName: string; picture: string }[]
+  frames: { laneName: string; src: string }[]
 }
 
 /**
@@ -73,18 +73,18 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         .abortSignal(signal)
       if (countError) throw new Error(countError.message)
 
-      const { data: pictured, error: pictureError } = await client
+      const { data: framed, error: frameError } = await client
         .from('cells')
-        .select('picture, lanes!inner(name, position, lane_role)')
+        .select('frame, lanes!inner(name, position, lane_role)')
         .eq('step_id', stepId)
-        .not('picture', 'is', null)
+        .not('frame', 'is', null)
         .abortSignal(signal)
-      if (pictureError) throw new Error(pictureError.message)
+      if (frameError) throw new Error(frameError.message)
 
       /*
         STORYBOARD lanes only, deduplicated.
 
-        Every pictured cell used to qualify, so a tech cell's product logo
+        Every framed cell used to qualify, so a tech cell's product logo
         turned up in the panel as if it were a frame of the story — a Zoom
         mark stacked under two drawings of people. A frame is what the
         storyboard row draws; a logo is a pill's decoration.
@@ -93,22 +93,22 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         paths share their imagery.
       */
       const seen = new Set<string>()
-      const frames: { laneName: string; picture: string }[] = []
-      for (const row of (pictured ?? []) as unknown as Array<{
-        picture: string | null
+      const frames: { laneName: string; src: string }[] = []
+      for (const row of (framed ?? []) as unknown as Array<{
+        frame: string | null
         lanes: { name: string; position: number; lane_role: string | null }
       }>) {
-        const picture = row.picture?.trim()
-        if (!picture || seen.has(picture)) continue
+        const frame = row.frame?.trim()
+        if (!frame || seen.has(frame)) continue
         const role = getLayerRole({
           name: row.lanes.name,
           role: row.lanes.lane_role,
         })
-        if (!role || !(VISUAL_LAYER_ROLES as readonly string[]).includes(role)) {
+        if (!role || !(STORYBOARD_LANE_ROLES as readonly string[]).includes(role)) {
           continue
         }
-        seen.add(picture)
-        frames.push({ laneName: row.lanes.name, picture })
+        seen.add(frame)
+        frames.push({ laneName: row.lanes.name, src: frame })
       }
 
       const scenario = step.scenarios as unknown as {

@@ -1,6 +1,6 @@
 import {
   hasEmbeddedVisualFrame,
-  type VisualStepPictureEntry,
+  type StoryboardFrameEntry,
 } from '@/lib/visualWalkthrough'
 import { cn } from '@/lib/utils'
 import type { CSSProperties } from 'react'
@@ -11,7 +11,7 @@ const PICTURE_CLASS =
   'absolute inset-0 h-full w-full object-contain object-center'
 
 type VisualStepDetailStackProps = {
-  entries: VisualStepPictureEntry[]
+  entries: StoryboardFrameEntry[]
   /** Side panel stacks vertically; presentation view lays cards out in a row. */
   orientation?: 'vertical' | 'horizontal'
   className?: string
@@ -41,18 +41,18 @@ export function VisualStepDetailStack({
       >
         {entries.map((entry, index) => (
           <div
-            key={`picture-${entry.laneName}`}
+            key={`frame-${entry.laneName}`}
             className="relative min-h-0 w-full overflow-hidden rounded-lg bg-muted/20"
             style={{ gridColumn: index + 1, gridRow: 1 }}
           >
             <img
-              src={entry.picture}
+              src={entry.frame}
               alt=""
               loading="lazy"
               decoding="async"
               className={cn(
                 PICTURE_CLASS,
-                hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',
+                hasEmbeddedVisualFrame(entry.frame) && 'scale-[1.08]',
               )}
             />
           </div>
@@ -89,13 +89,13 @@ export function VisualStepDetailStack({
         <div key={entry.laneName} className="flex flex-col gap-2.5">
           <div className={PICTURE_FRAME_CLASS}>
             <img
-              src={entry.picture}
+              src={entry.frame}
               alt=""
               loading="lazy"
               decoding="async"
               className={cn(
                 PICTURE_CLASS,
-                hasEmbeddedVisualFrame(entry.picture) && 'scale-[1.08]',
+                hasEmbeddedVisualFrame(entry.frame) && 'scale-[1.08]',
               )}
             />
           </div>

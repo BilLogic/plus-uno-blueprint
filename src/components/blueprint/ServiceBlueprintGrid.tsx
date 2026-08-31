@@ -36,13 +36,13 @@ import {
   LAYER_COLUMN_WIDTH,
   STEP_COLUMN_GAP,
   STEP_COLUMN_WIDTH,
-  VISUAL_PLAY_GUTTER,
+  STORYBOARD_PLAY_GUTTER,
   getStepColumnsWidth,
   VISIBILITY_LINE_LABEL,
   getBlueprintGridMinHeight,
   getBlueprintGridMinWidth,
   getLayerRowMinHeight,
-  getVisualCellButtonMaxHeight,
+  getStoryboardCellButtonMaxHeight,
   layerHasDiscoveryRailCorridor,
   layerHasRegularTutorInLaneLoopCorridor,
   layerHasWrapCorridorBelow,
@@ -52,7 +52,7 @@ import {
   shouldShowLaneDividerAfter,
   shouldShowVisibilityLineAfter,
   shouldUsePillCellContent,
-  shouldUseVisualContent,
+  shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { ARROW_VIEWPORT_PAD } from '@/lib/blueprintArrowGeometry'
 import {
@@ -80,7 +80,7 @@ import {
   getTouchpointNames,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
-import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisualPlayButton'
@@ -132,9 +132,9 @@ export function ServiceBlueprintGrid({
   const showPlay =
     isBlueprintVisualWalkthroughEnabled() &&
     buildVisualWalkthroughSession(data).steps.some(
-      (step) => step.pictures.length > 0,
+      (step) => step.frames.length > 0,
     )
-  const playGutter = showPlay ? VISUAL_PLAY_GUTTER : 0
+  const playGutter = showPlay ? STORYBOARD_PLAY_GUTTER : 0
 
   // Hooks must run unconditionally — these sit above the empty-grid early
   // return, and both are pure computations so hoisting changes nothing.
@@ -454,8 +454,8 @@ function BlueprintSwimLane({
 }) {
   const laneId = lane.id
   const laneName = lane.name
-  const isVisualLane = shouldUseVisualContent(lane)
-  const renderPlay = showPlay && isVisualLane && playGutter > 0
+  const isStoryboardLane = shouldUseStoryboardContent(lane)
+  const renderPlay = showPlay && isStoryboardLane && playGutter > 0
   const loopCorridorHeight = showInLaneLoopCorridorAbove
     ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
     : 0
@@ -566,12 +566,12 @@ function BlueprintSwimLane({
         const slotCells = isPillLane
           ? getCellsAt(cellLookup, laneId, step.id)
           : undefined
-        const variant = isVisualLane ? 'visual' : isPillLane ? 'pills' : 'default'
-        const visualPictures = isVisualLane
-          ? resolveVisualStepPictureEntries(blueprint, step.id)
+        const variant = isStoryboardLane ? 'storyboard' : isPillLane ? 'pills' : 'default'
+        const storyboardStrip = isStoryboardLane
+          ? resolveStoryboardStripEntries(blueprint, step.id)
           : undefined
-        const showCell = isVisualLane
-          ? (visualPictures?.length ?? 0) > 0 || showEmptyCells
+        const showCell = isStoryboardLane
+          ? (storyboardStrip?.length ?? 0) > 0 || showEmptyCells
           : isPillLane
             ? (slotCells ?? []).some((entry) =>
                 hasCellContent(entry.content, variant),
@@ -587,7 +587,7 @@ function BlueprintSwimLane({
                   cell?.id ??
                   (showEmptyCells
                     ? `empty-${laneId}-${step.id}`
-                    : isVisualLane
+                    : isStoryboardLane
                       ? `visual-${step.id}`
                       : undefined)
                 }
@@ -600,10 +600,10 @@ function BlueprintSwimLane({
                 fitVertically={fitVertically}
                 rowMinHeight={rowMinHeight}
                 flushBottom={flushBottom}
-                visualPictures={visualPictures}
+                storyboardStrip={storyboardStrip}
                 slotCells={slotCells}
                 selectionContext={
-                  scenarioName && (cell?.id || isVisualLane || showEmptyCells)
+                  scenarioName && (cell?.id || isStoryboardLane || showEmptyCells)
                     ? {
                         scenarioName,
                         phaseName,
@@ -613,11 +613,11 @@ function BlueprintSwimLane({
                         stepIndex,
                         cellId:
                           cell?.id ??
-                          (isVisualLane
+                          (isStoryboardLane
                             ? `visual-${step.id}`
                             : `empty-${laneId}-${step.id}`),
                         cellContent: cell?.content ?? '',
-                        cellPicture: cell?.picture ?? null,
+                        cellFrame: cell?.frame ?? null,
                         cellDescription: cell?.summary ?? null,
                         cellLinks: cell?.links,
                         pathId: blueprint.path.id,
@@ -667,9 +667,9 @@ function BlueprintSwimLane({
 
 function hasCellContent(
   content: string | undefined,
-  variant: 'default' | 'pills' | 'visual',
+  variant: 'default' | 'pills' | 'storyboard',
 ): boolean {
-  if (variant === 'visual') return true
+  if (variant === 'storyboard') return true
   if (!content?.trim()) return false
   if (variant === 'pills') {
     return parseCellContentItems(content).length > 0
@@ -689,7 +689,7 @@ function BlueprintCellBlock({
   rowMinHeight,
   flushBottom,
   selectionContext,
-  visualPictures,
+  storyboardStrip,
   slotCells,
   status,
 }: {
@@ -697,14 +697,14 @@ function BlueprintCellBlock({
   cellId?: string
   content?: string
   laneStyle: BlueprintLayerStyle
-  variant?: 'default' | 'pills' | 'visual'
+  variant?: 'default' | 'pills' | 'storyboard'
   width: number
   compact?: boolean
   fitVertically?: boolean
   rowMinHeight?: number
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
-  visualPictures?: Array<{ picture: string; label: string }>
+  storyboardStrip?: Array<{ frame: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
   /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
@@ -727,7 +727,7 @@ function BlueprintCellBlock({
       ? (slotCells && slotCells.length > 0
           ? slotCells
           : content !== undefined
-            ? [{ id: cellId, content, picture: null, summary: null, status, links: [] }]
+            ? [{ id: cellId, content, frame: null, summary: null, status, links: [] }]
             : []
         ).flatMap((slotCell) =>
           getTouchpointNames(slotCell).map((item) => ({
@@ -746,8 +746,8 @@ function BlueprintCellBlock({
         ? rowMinHeight
         : 0
       : BLUEPRINT_ROW_MIN_HEIGHT,
-    ...(variant === 'visual'
-      ? { maxHeight: rowMinHeight ?? getVisualCellButtonMaxHeight(compact) + (compact ? 24 : 32) }
+    ...(variant === 'storyboard'
+      ? { maxHeight: rowMinHeight ?? getStoryboardCellButtonMaxHeight(compact) + (compact ? 24 : 32) }
       : undefined),
   }
 
@@ -755,16 +755,16 @@ function BlueprintCellBlock({
     'relative z-1 flex shrink-0 items-stretch',
     shellPadding,
     fitVertically && (variant === 'pills' ? 'h-full' : 'h-full min-h-0'),
-    variant === 'visual' && 'min-h-0 overflow-hidden',
+    variant === 'storyboard' && 'min-h-0 overflow-hidden',
   )
 
   const innerContent =
-    variant === 'visual' ? (
+    variant === 'storyboard' ? (
       <div className="relative flex h-full min-h-0 max-h-full w-full flex-1 items-center justify-center overflow-hidden">
         <BlueprintStepVisual
           compact={compact}
           fill={laneStyle.lane}
-          pictures={visualPictures}
+          frames={storyboardStrip}
           selection={
             selectionContext
               ? buildBlueprintCellSelection(selectionContext)
@@ -796,7 +796,7 @@ function BlueprintCellBlock({
                 ...selectionContext,
                 cellId: slotCell.id ?? selectionContext.cellId,
                 cellContent: slotCell.content ?? '',
-                cellPicture: slotCell.picture ?? null,
+                cellFrame: slotCell.frame ?? null,
                 cellDescription: slotCell.summary ?? null,
                 cellLinks: slotCell.links,
               }}

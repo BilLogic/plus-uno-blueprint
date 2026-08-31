@@ -1,23 +1,23 @@
 import {
   DEV_FALLBACK_SLICES,
-  DEV_FALLBACK_SLICE_ITEMS,
+  DEV_FALLBACK_SLIDES,
 } from '@/data/devSlices'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
 import { awaitOrAbort, findFirstServiceId } from '@/lib/service'
-import type { Slice, SliceItem } from '@/types/database'
+import type { Slice, Slide } from '@/types/database'
 
 /** Slim frame projection carried on the list — powers client-side
  * membership checks (panel "In slices" footer) without per-cell queries. */
-export type SliceListItem = Pick<SliceItem, 'id' | 'position' | 'cell_ids'>
+export type SlideListItem = Pick<Slide, 'id' | 'position' | 'cell_ids'>
 
-export type SliceListEntry = Slice & { slice_items: SliceListItem[] }
+export type SliceListEntry = Slice & { slides: SlideListItem[] }
 
 // TODO(dev-only): remove after DB slices exist — no-DB dev mode only.
 const slicesFallback = (): SliceListEntry[] | null =>
   import.meta.env.DEV
     ? DEV_FALLBACK_SLICES.map((slice) => ({
         ...slice,
-        slice_items: (DEV_FALLBACK_SLICE_ITEMS[slice.id] ?? []).map((item) => ({
+        slides: (DEV_FALLBACK_SLIDES[slice.id] ?? []).map((item) => ({
           id: item.id,
           position: item.position,
           cell_ids: item.cell_ids,
@@ -42,7 +42,7 @@ export function useSlices(serviceId?: string): QueryResult<SliceListEntry[]> {
 
       const { data, error } = await client
         .from('slices')
-        .select('*, slice_items (id, position, cell_ids)')
+        .select('*, slides (id, position, cell_ids)')
         .eq('service_id', resolvedServiceId)
         .order('position', { ascending: true })
         .abortSignal(signal)

@@ -7,7 +7,7 @@ import {
   FRONTSTAGE_TOUCHPOINTS_ROLE,
   getLayerRole,
   SUPPORT_ACTIONS_ROLE,
-  VISUAL_ROLE,
+  STORYBOARD_ROLE,
 } from '@/lib/laneRoles'
 import {
   isParallelSessionLeadBottomWrapDependency,
@@ -25,15 +25,15 @@ export const PILL_CELL_LAYER_ROLES = [
 ] as const
 
 /** Roles rendered as picture rows instead of text cells. */
-export const VISUAL_LAYER_ROLES = [VISUAL_ROLE] as const
+export const STORYBOARD_LANE_ROLES = [STORYBOARD_ROLE] as const
 
 /** 192px inner face at 4:3 plus the service/compare shell's vertical padding. */
-export const VISUAL_ROW_MIN_HEIGHT = 176
-export const VISUAL_ROW_MIN_HEIGHT_COMPACT = 168
+export const STORYBOARD_ROW_MIN_HEIGHT = 176
+export const STORYBOARD_ROW_MIN_HEIGHT_COMPACT = 168
 
 /** Max height for the visual cell button inside a swimlane row (excludes shell padding). */
-export function getVisualCellButtonMaxHeight(compact = false): number {
-  const rowHeight = compact ? VISUAL_ROW_MIN_HEIGHT_COMPACT : VISUAL_ROW_MIN_HEIGHT
+export function getStoryboardCellButtonMaxHeight(compact = false): number {
+  const rowHeight = compact ? STORYBOARD_ROW_MIN_HEIGHT_COMPACT : STORYBOARD_ROW_MIN_HEIGHT
   const shellVerticalPad = compact ? 24 : 32
   return rowHeight - shellVerticalPad
 }
@@ -46,7 +46,7 @@ export function shouldUsePillCellContent(lane: LayerRoleSource): boolean {
 }
 
 /** Which face a lane's cells wear — pill stack, step visual, or plain cell. */
-export type BlueprintCellVariant = 'default' | 'pills' | 'visual'
+export type BlueprintCellVariant = 'default' | 'pills' | 'storyboard'
 
 /**
  * Whether a cell has anything to draw for its lane's variant. A visual cell
@@ -57,7 +57,7 @@ export function hasBlueprintCellContent(
   content: string | undefined,
   variant: BlueprintCellVariant,
 ): boolean {
-  if (variant === 'visual') return true
+  if (variant === 'storyboard') return true
   if (!content?.trim()) return false
   if (variant === 'pills') {
     return parseCellContentItems(content).length > 0
@@ -65,10 +65,10 @@ export function hasBlueprintCellContent(
   return true
 }
 
-export function shouldUseVisualContent(lane: LayerRoleSource): boolean {
+export function shouldUseStoryboardContent(lane: LayerRoleSource): boolean {
   const role = getLayerRole(lane)
   return (
-    role !== null && (VISUAL_LAYER_ROLES as readonly string[]).includes(role)
+    role !== null && (STORYBOARD_LANE_ROLES as readonly string[]).includes(role)
   )
 }
 
@@ -456,7 +456,7 @@ export const STEP_COLUMN_WIDTH = 220
 /** Visible space between step columns where dependency arrows are drawn. */
 export const STEP_COLUMN_GAP = 24
 /** Left gutter on the white board so the play control clears Visual cells. */
-export const VISUAL_PLAY_GUTTER = 28
+export const STORYBOARD_PLAY_GUTTER = 28
 
 export function getStepColumnLeft(stepIndex: number): number {
   return LAYER_COLUMN_WIDTH + stepIndex * (STEP_COLUMN_WIDTH + STEP_COLUMN_GAP)
@@ -552,10 +552,10 @@ export function getCellContentMinHeight(
   content: string | undefined,
   compact = false,
 ): number {
-  if (shouldUseVisualContent(lane)) {
+  if (shouldUseStoryboardContent(lane)) {
     return compact
-      ? VISUAL_ROW_MIN_HEIGHT_COMPACT
-      : VISUAL_ROW_MIN_HEIGHT
+      ? STORYBOARD_ROW_MIN_HEIGHT_COMPACT
+      : STORYBOARD_ROW_MIN_HEIGHT
   }
 
   if (!content?.trim()) return 0
@@ -593,10 +593,10 @@ export function getLayerRowMinHeight(
     ? BLUEPRINT_ROW_MIN_HEIGHT_COMPACT
     : getDefaultCellMinHeight(lane, data, compact)
 
-  if (shouldUseVisualContent(lane)) {
+  if (shouldUseStoryboardContent(lane)) {
     return compact
-      ? VISUAL_ROW_MIN_HEIGHT_COMPACT
-      : VISUAL_ROW_MIN_HEIGHT
+      ? STORYBOARD_ROW_MIN_HEIGHT_COMPACT
+      : STORYBOARD_ROW_MIN_HEIGHT
   }
 
   if (!shouldUsePillCellContent(lane)) return base

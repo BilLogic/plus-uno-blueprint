@@ -65,7 +65,7 @@ the **line of interaction**, is drawn after the customer-actions lane.
 **cell** — one box on the board: one moment, in one lane, at one step. The atom
 of the whole system — slices cite cells, findings point at cells, share links
 open cells.
-Table `cells`: `path_id`, `lane_id`, `step_id`, `content`, `summary`,
+Table `cells`: `path_id`, `lane_id`, `step_id`, `content`, `summary`, `frame`,
 `function`, `form`, `value_props`, `owner`, `perceived_owner`, `links`,
 `status`, `position`. A single (lane, step) slot can hold several stacked cells,
 distinguished by `position`.
@@ -95,6 +95,19 @@ name resembles is what made 57 of them unreachable.
 Table `unplaced_touchpoint_details`: `cell_id`, `name` (the name the detail
 claims, and the one thing that must never decide anything), `summary`,
 `screenshot`, `url`, `prominence`, `origin`.
+**storyboard** — the lane that draws the service rather than describing it.
+`lane_role = 'storyboard'`, one of the eight the `lanes_lane_role_check`
+constraint admits. Its own cells are empty: a storyboard cell's face is the
+*strip* below, drawn from the cells beside it.
+
+**frame** — one image on one cell. Column `cells.frame`. A cell outside the
+storyboard holds at most one.
+
+**strip** — a step's frames, read across the lanes: the script for that moment.
+**Not a column.** It is derived at render time from the frames of the step's
+cells, which is why a strip and the frames it is made of cannot disagree. A
+*slide* shows one too, and it is the same word for the same thing — see
+*slide*.
 
 **dependency** — a relationship between two cells. One table, two kinds, both
 read **source-first**:
@@ -150,14 +163,14 @@ Only the tier took a new name when that one was retired.
 ## The analysis tier
 
 **analysis tier** — the four tables that hold records *about* the board rather
-than squares of it: `evidence`, `findings`, `slices`, `slice_items`. What unites
+than squares of it: `evidence`, `findings`, `slices`, `slides`. What unites
 them is aboutness: each one exists to say something concerning the board, and
 none of them is part of it.
 
 Where they name a cell they do it **softly** — `evidence.cell_id`,
-`findings.cell_ids`, `slice_items.cell_ids`, all bare uuid with no foreign key —
+`findings.cell_ids`, `slides.cell_ids`, all bare uuid with no foreign key —
 so that re-importing a scenario deletes and recreates its cells without taking
-them along. `slices` names no cell itself; it reaches them through its items.
+them along. `slices` names no cell itself; it reaches them through its slides.
 
 `business_model` is **not** in the tier, though it was listed in it. It is
 `service_id` plus `funding`, `pricing`, `delivery_cost`, `revenue_model` and
@@ -173,8 +186,16 @@ in its filename, `20260729120000_derived_layer.sql`, and always will.
 moment across every lane, one lane end to end, or one cell examined closely.
 **A view, not a copy** — a slice references cells and never contains anything the
 board does not.
-Tables `slices` and `slice_items` (the frames, each carrying a `cell_ids` array
-— that array is what makes it a citation rather than a duplicate).
+Tables `slices` and `slides` (each slide carrying a `cell_ids` array — that
+array is what makes it a citation rather than a duplicate).
+
+**slide** — one screen of a slice. Table `slides`: `slice_id`, `position`,
+`cell_ids`, `cell_keys`, `title`, `narrative`. What it shows is the *strip* of
+the cells it cites, which is why it has no image column of its own: one held a
+picture that REPLACED the strip instead of joining it, no row ever used it, and
+`20260830270000` dropped it so a slide and its cells cannot disagree.
+A slide's title is a `title` and not a `name` because a slide is authored
+content a reader reads — the rule the last four rows of the rename map settle.
 
 **finding** — a recorded issue produced by an audit: "these two cells expect the
 same tutor in two places at once". Each names the exact cells it is about.
@@ -249,6 +270,9 @@ remember is #145's job, not this paragraph's.
 | `paths.path_type`, `slices.slice_type`, `scenarios.view_type` | `paths.kind`, `slices.kind`, `scenarios.layout` | `20260830190000` |
 | `findings`, `findings.check_name` | `audit_findings`, `audit_findings.check_key` | `20260830190000` |
 | `slices.origin`, `business_model` | `slices.authorship`, `business_models` | `20260830190000` |
+| `visual` | `storyboard` | `20260830270000` |
+| `cells.picture` | `cells.frame` | `20260830270000` |
+| `slice_items`, `slice_items.caption` | `slides`, `slides.title` | `20260830270000` |
 
 The reasoning, where it is worth knowing: a "tech" lane never held only
 technology — a printed guide, a poster, a phone line and a Zoom recording were
@@ -265,7 +289,7 @@ definition on all eighteen rows — "Who the tutoring is for", "The tutor runnin
 a session" — and `summary` is this vocabulary's word for an entity's own
 one-liner, while `note` is an author's aside about one.
 
-**The last row is the only one enforced somewhere else, and it has to be.** The
+**The `stakeholders.note` row is enforced somewhere else, and it has to be.** The
 three checks these entries feed match a retired word as a SUBSTRING of an
 identifier, and the retired word here is `note` — which `paths.note`,
 `cell_dependencies.note` and `findings.note` all still carry correctly, because
@@ -276,7 +300,7 @@ sweep reads a bare column name and never a qualified one. So this row's
 [`scripts/tests/stakeholder-summary.test.mjs`](scripts/tests/stakeholder-summary.test.mjs),
 against the one table it concerns.
 
-The last four rows are one pass, and two rules decide all of it. **`name` is
+The four `20260830190000` rows are one pass, and two rules decide all of it. **`name` is
 for structure a reader navigates; `title` is for authored content a reader
 reads** — which is why `slices.title` and `evidence.title` are not in the
 table. **`summary` is the entity's own one-liner** — not an aside about it, so
@@ -293,6 +317,28 @@ reason is structural. `audit_findings` contains `findings` and
 old name from the new one; `label`, `note` and `origin` all remain live,
 correct names on other tables. Those four are held by
 `scripts/tests/one-spelling-each.test.mjs`, which names them table-qualified.
+
+The three `20260830270000` rows are one pass too, and one rule decides all of
+it: **a name says what the thing is for, not what it is made of.** `visual`
+said the lane holds pictures, which is the least interesting thing about a row
+sitting beside `customer_actions` and `support_actions`; `picture` said the
+same thing one level down, about a column. So the lane is a **storyboard**, one
+image on one cell is a **frame**, and a step's frames read across the lanes are
+a **strip** — see the definitions above, which is where the vocabulary lives.
+`slice_items` named a slide by its relationship to its parent, the shape
+`layers` had before it was `lanes`, and a slide's `caption` becomes a `title`
+under the rule the paragraph above settles.
+
+**Two of that pass are not in the enforced word lists either, for the two
+usual reasons.** `slice_items.caption` cannot be a fragment because `caption`
+is a live, correct English word — `steps.summary` is *displayed* as one, and
+that comment says so. And `slice_items.illustration` is not in the table at
+all, because it was dropped rather than renamed: it held an image that
+REPLACED a slide's strip instead of joining it, and no row ever set it. Both
+are held by
+[`scripts/tests/a-frame-a-strip-and-a-slide.test.mjs`](scripts/tests/a-frame-a-strip-and-a-slide.test.mjs),
+which also holds the one thing no schema check can see — that no word on
+screen calls a slide a frame.
 
 **One column is a deliberate exception.** `cells.content` keeps a word of its
 own: a cell's text is a sentence somebody wrote about a moment, not a name for

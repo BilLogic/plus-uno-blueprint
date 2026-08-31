@@ -78,8 +78,8 @@ Agent parity for these surfaces: write tools `duplicate_path` and
 `duplicate_scenario` (the second writes hundreds of rows from two
 arguments, and its description says so plus the `"X (copy)"` naming
 convention, so both surfaces agree); write tools `create_slice`,
-`update_slice`, `replace_slice_frames` — all four slice writes now land
-in the ledger with a captured inverse, so an agent frame rewrite shows a
+`update_slice`, `replace_slides` — all four slice writes now land
+in the ledger with a captured inverse, so an agent slide rewrite shows a
 revertible row like a human's; read tool `measure_deletion_impact`
 `<scenario|path|slice> <id>` dispatching the SAME `readDeletionImpact`
 branch the dialog uses and relaying `ImpactSummary`'s facts, warnings

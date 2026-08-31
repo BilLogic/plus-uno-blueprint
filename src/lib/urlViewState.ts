@@ -2,7 +2,7 @@
  * URL view state — the one module that owns the view query-param names.
  *
  * Params: `slice` (slice id), `mode` (`present` only; absence of `mode` with a
- * `slice` param means slice focus view), `frame` (presentation frame index),
+ * `slice` param means slice focus view), `slide` (presentation slide index),
  * `cell` (cell id — opens the base blueprint with that cell's panel showing).
  * Unknown params are ignored on parse and dropped on serialize.
  *
@@ -24,10 +24,21 @@ const PARAMS = BLUEPRINT_CONTRACT.urlParams
 export type UrlViewState =
   | { kind: 'blueprint'; cellId?: string }
   | { kind: 'slice'; sliceId: string }
-  | { kind: 'present'; sliceId: string; frame: number }
+  | { kind: 'present'; sliceId: string; slide: number }
 
-/** Malformed or missing frames parse to 0; negative integers clamp to 0. */
-function parseFrameParam(raw: string | null): number {
+/**
+ * The spelling this param had until 2026-08-30, still READ and never written.
+ *
+ * A present link is a thing people paste into Slack, so the old spelling has
+ * to keep resolving — the same argument `breadcrumb.aliases` made for the
+ * embedded label, and the same shape: one alias, read-only, so nothing new
+ * can be produced wearing it. It costs one `??` and it is what stops a rename
+ * from quietly sending an old link to slide 1.
+ */
+const RETIRED_SLIDE_PARAM = 'frame'
+
+/** Malformed or missing indexes parse to 0; negative integers clamp to 0. */
+function parseSlideParam(raw: string | null): number {
   if (raw === null) return 0
   const value = Number(raw)
   if (!Number.isInteger(value)) return 0
@@ -41,7 +52,13 @@ export function parseUrlViewState(search: string): UrlViewState | null {
 
   if (sliceId) {
     if (params.get(PARAMS.mode) === 'present') {
-      return { kind: 'present', sliceId, frame: parseFrameParam(params.get(PARAMS.frame)) }
+      return {
+        kind: 'present',
+        sliceId,
+        slide: parseSlideParam(
+          params.get(PARAMS.slide) ?? params.get(RETIRED_SLIDE_PARAM),
+        ),
+      }
     }
     return { kind: 'slice', sliceId }
   }
@@ -66,7 +83,7 @@ export function serializeUrlViewState(state: UrlViewState): string {
     case 'present':
       params.set(PARAMS.slice, state.sliceId)
       params.set(PARAMS.mode, 'present')
-      params.set(PARAMS.frame, String(Math.max(0, Math.trunc(state.frame))))
+      params.set(PARAMS.slide, String(Math.max(0, Math.trunc(state.slide))))
       break
   }
 

@@ -42,7 +42,7 @@ export function getTechItemDetailPictures(
 
 /**
  * The images for a detail panel: the placement's own screenshot first, then
- * the tool's stock logo, then the cell's picture.
+ * the tool's stock logo, then the cell's frame.
  *
  * This used to take the cell's raw content and links and pick through them,
  * with nine `content === '<tool>'` branches written out by hand — Zoom, PLUS
@@ -56,10 +56,10 @@ export function getTechItemDetailPictures(
  * static asset, not authored content, and no placement should have to carry
  * one in order to show it.
  */
-export function resolveCellDetailPictures(input: {
+export function resolveCellDetailImages(input: {
   screenshot?: string | null
   techItem?: string | null
-  cellPicture?: string | null
+  cellFrame?: string | null
 }): readonly string[] | null {
   if (input.screenshot?.trim()) return [input.screenshot.trim()]
 
@@ -68,7 +68,7 @@ export function resolveCellDetailPictures(input: {
     if (techPictures) return techPictures
   }
 
-  const picture = input.cellPicture?.trim()
-  if (!picture || isBlueprintStepVisualPlaceholder(picture)) return null
-  return [picture]
+  const frame = input.cellFrame?.trim()
+  if (!frame || isBlueprintStepVisualPlaceholder(frame)) return null
+  return [frame]
 }
