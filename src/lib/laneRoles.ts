@@ -1,7 +1,7 @@
 /**
  * Semantic lane roles — the stable contract between blueprint content and
  * rendering. A lane's display name (`lanes.name`) is free-form in any
- * language; its `lane_role` carries the rendering semantics (pill cells,
+ * language; its `lane_role` carries the rendering semantics (touchpoint cells,
  * storyboard rows, divider-line anchoring). The vocabulary is extensible:
  * org-defined custom roles render as generic swimlanes, as does a null role
  * (e.g. actor lanes such as Student or Regular Tutor).
@@ -107,11 +107,11 @@ export function describeLaneRole(role: string | null | undefined): string {
 }
 
 /**
- * The role as a CHIP — the name only, no explanation.
+ * The role as a BADGE — the name only, no explanation.
  *
  * The sentences above are one shape: "Name — what it means." A panel that
- * shows a generic "Lane" chip AND that whole sentence underneath says the
- * same thing twice at two sizes. So the chip takes the half before the dash
+ * shows a generic "Lane" badge AND that whole sentence underneath says the
+ * same thing twice at two sizes. So the badge takes the half before the dash
  * and the sentence moves behind a hint, which is where an explanation belongs
  * once the reader can see the answer.
  */

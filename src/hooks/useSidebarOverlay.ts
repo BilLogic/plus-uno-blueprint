@@ -98,7 +98,7 @@ export function reconcileSidebarCollapse(
   return { collapsed: state.auto ? false : state.collapsed, auto: false, narrow }
 }
 
-/** Every collapse the user asked for — rail toggle, pill, agent bridge —
+/** Every collapse the user asked for — rail toggle, navbar, agent bridge —
  *  goes through here, which is what clears the gate's claim. */
 export function collapseSidebarByUser(
   state: SidebarCollapse,

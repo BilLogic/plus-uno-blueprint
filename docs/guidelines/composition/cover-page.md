@@ -3,7 +3,7 @@ audience: designers, developers
 summary: The shell's landing view — a content model supplied by the deployment, one navigating action, click-to-expand figures that never write or fetch, and one measure down the whole page.
 sources: src/components/cover/CoverPage.tsx, src/components/cover/coverModel.ts, src/components/cover/coverMeasure.ts, src/components/cover/CoverFigure.tsx, src/content/coverContent.ts
 claims:
-  - src/components/cover/CoverCommandChip.tsx
+  - src/components/cover/CoverCommandCopy.tsx
   - src/components/cover/CoverFigure.tsx
   - src/components/cover/CoverPage.tsx
   - src/components/cover/CoverSections.tsx
@@ -128,13 +128,13 @@ rather than a continuation of the page's.
   user input, and anything richer belongs in the section grammar rather than
   inside a string. Bold is matched before italic so a bold run is never read as
   two italics.
-- **`CoverCommandChip`** — a skill invocation, click-to-copy. The skills run in
+- **`CoverCommandCopy`** — a skill invocation, click-to-copy. The skills run in
   Claude Code, not in this app, so the useful affordance is getting the exact
   command onto the clipboard; **a button that pretended to run something here
   would be worse than no button.** The clipboard call is guarded (the API is
   absent over plain http), and a denied clipboard is swallowed — not an error
-  worth surfacing on an orientation page, so the chip simply stays put. The live
-  region announces only on success, because the resting chip already reads its
+  worth surfacing on an orientation page, so the control simply stays put. The live
+  region announces only on success, because the resting control already reads its
   command.
 - **`CoverTabStrip`** — the line-variant tab list with an animated shared
   indicator, with two additions for a four-label strip: the list scrolls

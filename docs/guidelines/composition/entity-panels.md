@@ -142,7 +142,7 @@ removes 93 rows where an older impact function reported 11.
 Two **surfaces** — Details and Differences — are siblings of the whole panel,
 switched by one component rendered from two call sites (two verbatim copies
 drifted apart once already). The Differences tab carries no count: counts live
-in exactly two places app-wide, the menubar Diff pill and each ledger group's
+in exactly two places app-wide, the menubar Diff count and each ledger group's
 trailing number.
 
 Inside Details, **Overview is not a tab.** It always renders inline at the top;
@@ -154,9 +154,9 @@ reserves `min-h-56`, which is cheaper and steadier than easing a panel that
 otherwise jumped a couple of hundred pixels per switch.
 
 Three rules the overview follows and new fields should too: the title yields to
-the tech pill when they are identical; the description paragraph is suppressed
+the touchpoint when they are identical; the description paragraph is suppressed
 when it repeats the title or the content; and the touchpoint is a labelled
-field, not a second chip. Printing the same word twice as two facts is the
+field, not a second badge. Printing the same word twice as two facts is the
 failure each of them prevents.
 
 **Only outgoing arrows are editable here.** An incoming arrow belongs to the
@@ -175,7 +175,7 @@ takes the placement as a prop and its summary, screenshot, design link and
 prominence join the form — enclosed and headed with the touchpoint's name,
 because two fields called Summary on one screen need a border to say whose is
 whose. They sit directly under Text, which is the list that names them, rather
-than at the bottom: an author reached this panel by clicking that pill, and
+than at the bottom: an author reached this panel by clicking that touchpoint, and
 making them scroll past six of the cell's fields to reach it is how an editor
 teaches people it is not for them. One Save, for the same reason there is one
 Save at all — the editor this replaced had four buttons for one cell and a Save
@@ -200,12 +200,12 @@ so the fields do not appear there at all: there would be nothing to save into.
 ## Labels are the control
 
 `PanelTermLabel` exists because a dozen section headings named a concept —
-`Dependencies`, `Evidence`, `Resources`, `Applies when` — and said nothing about
+`Dependencies`, `Evidence`, `Resources`, `Summary` — and said nothing about
 it, on the assumption that a reader with the panel open already knows the
 vocabulary. The people who most need a blueprint are the ones who do not.
 
 **No ⓘ beside the label: the label IS the word whose meaning is in question.**
-The same rule governs the cell panel's tabs, the lane kind chip, and
+The same rule governs the cell panel's tabs, the lane kind badge, and
 `StatusBadge`. Definitions live once, in `src/lib/panelTerms.ts` — the same word
 appears in a tab, a section heading and a field label, and three copies of a
 definition are three chances to drift.
@@ -247,7 +247,7 @@ it renders as inert prose, not a disabled button.
 9. Renaming `data-panel-editor` to something cell-specific.
 10. Changing a panel's field count without its placeholder.
 11. An outset focus ring inside the scenario accordion or the lane rail.
-12. Setting the kind chip's colour with a raw value or a utility class. The chip
+12. Setting the kind badge's colour with a raw value or a utility class. The badge
     this replaced tried `backgroundColor: style.lane`, and `style.lane` is a
     role key — the declaration was invalid, the browser dropped it, and the
     badge rendered as plain text from the day it shipped.

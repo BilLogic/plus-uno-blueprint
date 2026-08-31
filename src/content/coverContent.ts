@@ -19,7 +19,7 @@ export const coverContent: CoverContent = {
   title: 'Uno Blueprint',
   lede: 'A repository of the service experiences PLUS supports for tutors, from Discovery to Post-Session — every phase, every scenario, every path variant, down to what one actor does at one moment. It is data, not a diagram: agents query it, slices come out of it, and a change is traced through it before anyone commits.',
   primaryCtaLabel: 'View PLUS Blueprints',
-  chip: { copyLabel: 'Copy', copiedLabel: 'Copied' },
+  commandCopy: { copyLabel: 'Copy', copiedLabel: 'Copied' },
   states: {
     noSlices: 'No slices in this workspace yet — `/sb:slice` cuts the first one.',
   },

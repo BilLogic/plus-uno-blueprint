@@ -31,7 +31,7 @@ function FieldSkeleton({ rows = 3 }: { rows?: number }) {
   )
 }
 
-/** Badge chip, title, meta — every panel opens with these three. */
+/** Badge, title, meta — every panel opens with these three. */
 function IdentitySkeleton() {
   return (
     <div className="flex flex-col gap-1.5">

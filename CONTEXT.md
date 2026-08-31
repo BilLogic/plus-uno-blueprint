@@ -282,6 +282,11 @@ remember is #145's job, not this paragraph's.
 | `cells.picture` | `cells.frame` | `20260830270000` |
 | `slice_items`, `slice_items.caption` | `slides`, `slides.title` | `20260830270000` |
 | `cells.links` | `resources`, `evidence` | `20260830280000` |
+| `text` (label) | `Content` — `cells.content` | — |
+| `value` (label) | `Value proposition` — `cells.value_props` | — |
+| `columns` (label) | `Position` — `path_steps.position` | — |
+| `applies when` (label) | `Summary` — `paths.summary` | — |
+| `pill`, `chip` (design system) | `badge`, `tag` | — |
 
 The reasoning, where it is worth knowing: a "tech" lane never held only
 technology — a printed guide, a poster, a phone line and a Zoom recording were
@@ -365,6 +370,60 @@ replaced it carries its one-owner constraint, and proves each finding goes red.
 own: a cell's text is a sentence somebody wrote about a moment, not a name for
 the cell and not a one-line summary of something longer. The column's own
 comment says so, and the same test asserts the comment is still there.
+
+**The last five rows are a different kind of row, and the table says so in the
+left column.** Every row above renames something in the database and the
+interface follows. These do the opposite: the column was already right, and the
+LABEL above it was saying a word no query could find. So there is no migration —
+`cells.content`, `cells.value_props`, `path_steps.position` and `paths.summary`
+were all correct while the panel said Text, Value, Columns and Applies when —
+and the `Is` column carries two things: the word a reader now sees, and the
+column it names. This is the interface→schema map [#171](https://github.com/BilLogic/plus-uno-blueprint/issues/171)
+asked for, kept in the same table as the schema→schema one rather than beside
+it, because a reader looking up a word should not first have to know which kind
+of rename it was.
+
+`column` and `applies when` are enforced as retired copy: neither is said
+anywhere else on screen, so a reintroduction fails
+[`scripts/tests/retired-copy.test.mjs`](scripts/tests/retired-copy.test.mjs).
+`text` and `value` cannot be, for the reason four other rows here cannot —
+"Text size", "Add text…" and "Delete text" on the annotation toolbar are correct
+uses of the first, and the second is an ordinary English word the copy guard's
+deliberately naive JSX extraction meets inside expressions. Those two are held
+by [`scripts/tests/labels-name-their-columns.test.mjs`](scripts/tests/labels-name-their-columns.test.mjs),
+which narrows the SUBJECT to panel labels — the `label`, `term` and `title`
+props of the four components that put a field's name in front of a reader — and
+is therefore narrow enough to say `Text` without saying it about "Text size".
+The same test asserts the half no schema check can see: that the column each
+label now names is a column the schema actually has, so a label cannot be
+"fixed" by pointing it at a second word that is also not there.
+
+**"Proposition" is now retired in the plural only, and that is a narrowing of
+the spelling rather than of the rule.** `propositions` was a TABLE, and it was
+renamed *because* the word already meant a cell's value proposition — the
+rename moved the container and left the concept where it was. `cells.value_props`
+still holds value propositions, `evidence.proposition_question_key` still
+records which proposition an evidence row answers (see [One permanent
+exemption](#one-permanent-exemption) below, which makes exactly this
+distinction), and the panel now says **Value proposition** where it used to say
+Value. Forbidding the singular on screen would forbid the word the rename was
+performed in order to protect. The identifier fragment is untouched, because a
+database object spelled `proposition` really is the retired one.
+
+**The design system's own vocabulary is the last row, and it enforces from a
+test rather than from here.** Four words had grown for two ideas. A **badge**
+describes the thing it sits on: one per thing, not drawn from a set, never
+interactive — the divider label, a cell's status, a lane's stakeholder. A
+**tag** is one value out of a set, selectable or removable, and the owner
+control is the only one in the app. "Chip" and "pill" were a third and fourth
+name for those two, so a touchpoint is now a cell whose corner radius is a
+variant rather than a component with a duplicate `Button` variant of its own.
+No database object was ever called either word, so the identifier list is empty;
+[`scripts/tests/badge-and-tag.test.mjs`](scripts/tests/badge-and-tag.test.mjs)
+carries it, over every NAME under `src` and over one rule about behaviour —
+**no badge changes colour or border on hover**, because a surface that repaints
+under the pointer promises a click a badge never delivers. What a badge keeps is
+the help cursor, the focus ring and the tooltip.
 
 ## One permanent exemption
 

@@ -164,7 +164,7 @@
    * rounded silhouette. The path encoding is a thin perimeter laid over that
    * face. A conic gradient divides the perimeter into one equal arc per path;
    * a single-path cell naturally resolves to one solid outline. Unlike the
-   * retired top rail, this reads on pills without flattening their corners,
+   * retired top rail, this reads on touchpoints without flattening their corners,
    * and unlike a whole-cell wash it never competes with lane semantics.
    */
   .compare-membership-outline {
@@ -366,7 +366,7 @@
    * the chroma correction each hue needs, exactly as Supabase steps
    * `brand-400` → `brand-600` for a button's hover border.
    *
-   * Steps by role: 500/600/700 for lanes, 400/500/600 for tones — a pill sits a
+   * Steps by role: 500/600/700 for lanes, 400/500/600 for tones — a touchpoint sits a
    * step paler than the lane it lives in. Ring is 1100 in both: step 8, Radix's
    * "border" step, is specified against the app background (steps 1–2) and
    * measures 1.38:1 on a step-5 surface, failing SC 1.4.11. A per-family cell
@@ -463,7 +463,7 @@
 
   /*
    * TOUCHPOINT TONES — the same five properties, a step paler, and sharing no
-   * family with the roles above so a pill never reads as its lane.
+   * family with the roles above so a touchpoint never reads as its lane.
    *
    * Named after the hue on purpose: a touchpoint's colour is chosen by whoever
    * owns the blueprint, so the hue is the meaning here.
@@ -579,7 +579,7 @@
 
   /*
    * A SOLID blueprint fill and the ink that pairs with it — path badges,
-   * divider tags, scenario title badges, the walkthrough pill.
+   * divider badges, scenario title badges, the walkthrough control.
    *
    * The ink is DERIVED from the fill, using Supabase's `--warning-foreground`
    * formula verbatim: past L 0.62 it flips to near-black, below it to
@@ -844,7 +844,7 @@
    * `[data-blueprint-cell]` as well as `[data-blueprint-cell-anchor]`.
    *
    * The two are not the same set and neither contains the other. The
-   * anchor is on `BlueprintCellButton`, but the tech lane's `pills` variant
+   * anchor is on `BlueprintCellButton`, but the touchpoint lane's `touchpoints` variant
    * (`ServiceBlueprintGrid`) is a cell CONTAINER — `data-blueprint-cell`,
    * no anchor — and 135 of this board's 663 cells are those. Keyed on the
    * anchor alone they were never staged, so they surfaced at stage 2 with
@@ -853,7 +853,7 @@
    * gap exists too — a cell button with no id carries the anchor and no
    * `data-blueprint-cell` — so it takes both, not a swap.
    *
-   * Deliberately NOT solved by adding the anchor to the pills container:
+   * Deliberately NOT solved by adding the anchor to the touchpoints container:
    * `data-blueprint-cell-anchor` is also the marquee's hit-test selector
    * and the column handles' geometry probe, and widening it there would
    * change selection behaviour to fix an animation.

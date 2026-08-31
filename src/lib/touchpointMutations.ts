@@ -72,7 +72,7 @@ export type TouchpointRename = {
  *
  * One RPC, because a rename has two halves and they have to move together.
  * The catalog row is what the board draws, so changing it alone moves every
- * pill on screen at once — and `cells.content` still holds the OLD string,
+ * touchpoint on screen at once — and `cells.content` still holds the OLD string,
  * which a content save re-derives placements from. Leave the text behind and
  * the next edit to any affected cell hands `sync_cell_touchpoints` the stale
  * name, the renamed placement is deleted with its summary and screenshot,
@@ -104,7 +104,7 @@ export async function renameTouchpoint(
 ): Promise<TouchpointRename> {
   const wanted = name.trim()
   if (!wanted) {
-    throw new Error('A touchpoint needs a name — an empty one is a blank pill.')
+    throw new Error('A touchpoint needs a name — an empty one is a blank cell face.')
   }
 
   const { data, error } = await client.rpc('rename_touchpoint', {
@@ -317,7 +317,7 @@ export function placementSurvivesContent(
  *
  * `.select('id')` and `requireRowsWritten`, not `error === null`: a matched-
  * nothing update is a 200 with an empty array, so without the row check
- * editing a placement whose pill was removed elsewhere would report success
+ * editing a placement whose touchpoint was removed elsewhere would report success
  * having written nothing.
  */
 export async function updateTouchpointPlacement(

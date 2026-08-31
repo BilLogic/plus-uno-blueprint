@@ -31,7 +31,7 @@ import { cn } from '@/lib/utils'
  * The box IS the block the grid gives the lane — full width of the rail's
  * content column, full height of the row. A label sitting in a 192px row with
  * a target the height of one line of text is a target nobody finds, and the
- * selected state has to mark the row, not a chip inside it.
+ * selected state has to mark the row, not a badge inside it.
  *
  * What was actually wrong was never the size: it was that the ring drew
  * OUTSIDE the box, inside a rail that clips, so the wash and the ring came

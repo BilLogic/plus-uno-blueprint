@@ -290,7 +290,7 @@ export function CreateBlueprintDialog({
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground">Columns</span>
+            <span className="text-xs font-medium text-foreground">Steps</span>
             <Input
               type="number"
               min={MIN_STEP_COUNT}

@@ -96,7 +96,7 @@ import {
   getBlueprintStepTechItems,
   scrollBlueprintTouchpointCellIntoView,
 } from '@/lib/blueprintStepTech'
-import { shouldUsePillCellContent, shouldUseStoryboardContent } from '@/lib/blueprintLayout'
+import { shouldUseTouchpointCellContent, shouldUseStoryboardContent } from '@/lib/blueprintLayout'
 import { resolveCellDetailImages } from '@/lib/blueprintTechPictures'
 import {
   getBlueprintLayerStyle,
@@ -177,7 +177,7 @@ const PANEL_TABS: Array<{
  * component, because two verbatim copies drifted apart once already.
  *
  * No count on the Differences tab: counts live in exactly two places
- * app-wide now — the menubar Diff pill and each ledger group's trailing
+ * app-wide now — the menubar Diff count and each ledger group's trailing
  * number.
  */
 function PanelSurfaceSwitcher({
@@ -264,7 +264,7 @@ function BlueprintCellDetailPanelBody() {
   */
   const mobile = useMobileShell()
   /**
-   * One-shot "← Back to Differences" chip: set when the ledger's ⇱ opens a
+   * One-shot "← Back to Differences" control: set when the ledger's ⇱ opens a
    * cell in Details, cleared when used — and whenever the panel leaves
    * Details, so it can never go stale.
    */
@@ -364,7 +364,7 @@ function BlueprintCellDetailPanelBody() {
     })
   }
 
-  // One-shot hygiene for the return chip (guarded render-phase set).
+  // One-shot hygiene for the return control (guarded render-phase set).
   if (
     returnToDifferences &&
     (activeSurface !== 'details' || !comparing)
@@ -510,13 +510,13 @@ function BlueprintCellDetailPanelBody() {
     ONE lane resolution for the whole panel.
 
     The lane a cell sits in answers three questions — which row record it is
-    (visual/pill content rules), what colour the chip wears, and what the row
+    (storyboard/touchpoint content rules), what colour the badge wears, and what the row
     MEANS on hover — and each used to walk `blueprint.lanes` for itself. Three
     lookups of one fact is three chances to disagree, and the draft branch had
     already drifted into a fourth.
 
     Reads the DRAFT's lane when there is no selection: a cell being created
-    sits in a real row, and the chip above the new-cell form is the same chip
+    sits in a real row, and the badge above the new-cell form is the same badge
     the panel shows once it is saved.
   */
   const laneResolution = useMemo(() => {
@@ -537,7 +537,7 @@ function BlueprintCellDetailPanelBody() {
       layer: layerRecord ?? { name: laneName },
       // Keyed by lane_role — the name argument is only the legacy fallback.
       style: getBlueprintLayerStyle(laneName, zone, layerRecord?.role),
-      /* What the chip MEANS, for its hover. Resolved the way the canvas
+      /* What the badge MEANS, for its hover. Resolved the way the canvas
          resolves it: the explicit role if the row carries one, else the
          legacy name map. */
       description: describeLaneRole(
@@ -549,19 +549,19 @@ function BlueprintCellDetailPanelBody() {
   const selectedLayer = selection ? (laneResolution?.layer ?? null) : null
 
   /*
-    The lane chip, tinted with that lane's own cell colour. Defined here
+    The lane badge, tinted with that lane's own cell colour. Defined here
     rather than in the details branch because the DRAFT branch renders it
     too — the row a new cell is being written into is the first thing that
     branch says, and it used to say it through a hand-rolled span whose
     `backgroundColor: style.lane` was a role key ("actor"), not a colour.
-    The browser dropped the declaration and the chip had rendered untinted
+    The browser dropped the declaration and the badge had rendered untinted
     since the day it shipped, which is the same fault PanelKindBadge exists
     to have fixed once.
 
     Rendered on its own in the two cases where the title would repeat what is
-    already on screen (the editor's TEXT field, a tech pill's own label).
+    already on screen (the editor's CONTENT field, a touchpoint's own label).
   */
-  const laneChip = laneResolution ? (
+  const laneBadge = laneResolution ? (
     <PanelKindBadge
       label={laneResolution.laneName}
       laneRole={laneResolution.style.lane}
@@ -923,7 +923,7 @@ function BlueprintCellDetailPanelBody() {
           </IconTooltip>
         </DrawerHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4 blueprint-scroll">
-          {laneChip}
+          {laneBadge}
           <CellPanelEditor
             cellId={null}
             draft={draft}
@@ -991,7 +991,7 @@ function BlueprintCellDetailPanelBody() {
     ''
   const detailBodyText = touchpointDetail?.text ?? cellContent
   const isTechLayer = Boolean(
-    selectedLayer && shouldUsePillCellContent(selectedLayer),
+    selectedLayer && shouldUseTouchpointCellContent(selectedLayer),
   )
   /*
     The touchpoint's name, where there IS one to name.
@@ -1000,7 +1000,7 @@ function BlueprintCellDetailPanelBody() {
     an actor lane a cell's content is a sentence, and `resolveTouchpointDetail`
     naming it "the touchpoint" would be the label join this whole change
     unwound. But it is wrong for a cell that carries a real placement on a
-    lane that does not draw pills — four exist in production, the documents
+    lane that does not draw touchpoints — four exist in production, the documents
     and the recording the import migration deliberately kept (`Branding
     Guidelines`, `Design System`, `Zoom Recording`), and they had their
     summary, screenshot and design link rendered while the name they belong
@@ -1025,10 +1025,10 @@ function BlueprintCellDetailPanelBody() {
     cellFrame: selection.paths[0]?.frame,
   })
   const showImages = Boolean(detailImages?.length && !isStoryboardLane)
-  // #188 widened this from "is a pill lane" to "has a real placement row", so
+  // #188 widened this from "is a touchpoint lane" to "has a real placement row", so
   // the four placements on Support Actions cells show their touchpoint name.
   // The rename in #179 does not narrow it back.
-  const showTechPill = Boolean(techDetailLabel)
+  const showTouchpoint = Boolean(techDetailLabel)
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
@@ -1124,7 +1124,7 @@ function BlueprintCellDetailPanelBody() {
   )
 
   // Panel v2 header: title is the cell content snippet; the lane appears as
-  // one role-colored chip (colored by lane_role, never by name).
+  // one role-colored badge (colored by lane_role, never by name).
   const cellTitleText =
     cellContent.split('\n')[0]?.trim() || selection.laneName
 
@@ -1223,14 +1223,14 @@ function BlueprintCellDetailPanelBody() {
     </div>
   ) : null
 
-  // A pill that says exactly what the title says is the title twice — one of
-  // them yields. The pill keeps the tech identity; the plain-text title only
-  // renders when it adds words the pill does not have. Same rule for the
+  // A touchpoint that says exactly what the title says is the title twice — one of
+  // them yields. The touchpoint keeps the tool identity; the plain-text title only
+  // renders when it adds words the touchpoint does not have. Same rule for the
   // description paragraph: a cell with no authored description falls back to
   // its own content, and printing the title again as "description" is the
   // same word twice pretending to be two facts.
-  const titleRepeatsPill =
-    showTechPill && techDetailLabel?.trim() === cellTitleText.trim()
+  const titleRepeatsTouchpoint =
+    showTouchpoint && techDetailLabel?.trim() === cellTitleText.trim()
   const descriptionRepeatsTitle =
     detailDescriptionText.trim() === cellTitleText.trim() ||
     detailDescriptionText.trim() === cellContent.trim()
@@ -1239,23 +1239,23 @@ function BlueprintCellDetailPanelBody() {
   /*
     Identity, then prose — one group, tight spacing.
 
-    A tech cell used to STACK a pill-shaped tool chip above a differently
-    sized lane chip, and the description then floated away from both behind a
-    `-mt-3` correction. Two chips naming two things about one cell belong side
+    A touchpoint cell used to STACK a round tool badge above a differently
+    sized lane badge, and the description then floated away from both behind a
+    `-mt-3` correction. Two badges naming two things about one cell belong side
     by side at one size, and the sentence about the cell belongs directly
     under the name of it.
   */
-  /* The LANE chip leads, on a tech cell as on every other kind.
-     It is the row the reader clicked in, and the tool chip beside it is one
+  /* The LANE badge leads, on a touchpoint cell as on every other kind.
+     It is the row the reader clicked in, and the tool badge beside it is one
      of possibly several things that row holds — so the tool reading first
      made a tech cell the only cell whose identity block started somewhere
      other than its lane. */
   const identityBadges = (
-    <div className="flex min-w-0 flex-wrap items-center gap-1.5">{laneChip}</div>
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">{laneBadge}</div>
   )
 
   /*
-    The touchpoint, as a LABELLED field rather than a second chip beside the
+    The touchpoint, as a LABELLED field rather than a second badge beside the
     lane.
     
     Two badges in a row read as two facts of the same kind — "this row, and
@@ -1263,7 +1263,7 @@ function BlueprintCellDetailPanelBody() {
     field says which is which, and it matches how Status and Owner already
     present a governed value: label above, badge below.
   */
-  const touchpointField = showTechPill ? (
+  const touchpointField = showTouchpoint ? (
     <div className="flex flex-col gap-0.5">
       <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -1277,7 +1277,7 @@ function BlueprintCellDetailPanelBody() {
           set it.
 
           Nothing renders for the unmarked case — no badge, no dash, no
-          "Unmarked". Most placements will never be marked, and a grey chip on
+          "Unmarked". Most placements will never be marked, and a grey badge on
           all of them would put a judgement on screen that nobody made, which
           is the specific misreading the column has to avoid. Absence is the
           honest rendering of "not judged", and it is what tells the unmarked
@@ -1287,7 +1287,7 @@ function BlueprintCellDetailPanelBody() {
           control, and a badge beside a select for one value is two mechanisms
           for one fact.
 
-          NOT on the grid pill either. docs/reference/panel-affordances.md
+          NOT on the grid either. docs/reference/panel-affordances.md
           § Where prominence is shown carries the reasoning, the standing
           two-mechanism prohibition, and what was rejected.
         */}
@@ -1308,7 +1308,7 @@ function BlueprintCellDetailPanelBody() {
     <>
       {imageBlock}
       <div className="flex min-w-0 flex-col gap-1.5">
-        {/* In edit mode the form's TEXT field *is* the title; repeating it
+        {/* In edit mode the form's CONTENT field *is* the title; repeating it
             above the field would be the same word twice on one screen. */}
         {editingCell ? (
           identityBadges
@@ -1316,7 +1316,7 @@ function BlueprintCellDetailPanelBody() {
           <PanelIdentity
             badge={identityBadges}
             // Empty when the touchpoint field below already carries it.
-            title={titleRepeatsPill ? '' : cellTitleText}
+            title={titleRepeatsTouchpoint ? '' : cellTitleText}
             meta={
               selection.paths.length > 1
                 ? `${selection.paths.length} paths`
@@ -1423,7 +1423,7 @@ function BlueprintCellDetailPanelBody() {
               not to the row they were drawn on.
             */}
             <PanelIdentity
-              badge={laneChip}
+              badge={laneBadge}
               title={selection.stepName}
               meta=""
             />

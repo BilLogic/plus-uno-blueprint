@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
  * group takes the hover, the focus ring and the click. A separate icon button
  * makes the title look inert and hides the affordance in 24 pixels.
  *
- * A TITLE, not a badge. The filled pill made the name of the thing you are
+ * A TITLE, not a badge. The filled badge made the name of the thing you are
  * looking at read as a tag on something else, and the slice header band —
  * which is the same job on the same chrome lane — sets its title as plain
  * semibold text with the summary beneath it. One shape for one job.

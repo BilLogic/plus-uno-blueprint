@@ -17,7 +17,7 @@
  * - ADDED names are inserted at their position.
  * - KEPT names may have MOVED. Their detail must survive the move, so they
  *   are repositioned rather than deleted and re-added — which would silently
- *   discard an author's writing every time they reordered two pills.
+ *   discard an author's writing every time they reordered two touchpoints.
  *
  * That last one is the whole reason this is a diff and not a delete-all
  * followed by an insert-all.

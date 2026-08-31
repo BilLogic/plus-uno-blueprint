@@ -73,7 +73,7 @@ the semantic layer re-derives per scope). Signature: _the slice dim_. See
 
 **Mobile shell.** Below the breakpoint the phone shows the same canvas as
 desktop, scoped to one scenario at a time — the drawer is the only way to
-move between them, a single-select path pill replaces the PATHS
+move between them, a single-select path control replaces the PATHS
 checkboxes, and everything is view-only for every tier. Signature: _the
 scenario-scoped canvas_. See
 [mobile-shell](composition/mobile-shell.md), which owns the whole contract.

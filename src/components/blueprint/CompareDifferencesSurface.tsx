@@ -48,7 +48,7 @@ type CompareDifferencesSurfaceProps = {
   onOpenCell: (selection: BlueprintCellSelection) => void
 }
 
-function VerdictChip({ verdict }: { verdict: CompareStatus }) {
+function VerdictBadge({ verdict }: { verdict: CompareStatus }) {
   if (verdict === 'only') {
     return (
       <span
@@ -119,7 +119,7 @@ const CompareDiffRow = memo(function CompareDiffRow({
         >
           {slot.laneLabel}
         </span>
-        <VerdictChip verdict={slot.verdict} />
+        <VerdictBadge verdict={slot.verdict} />
       </div>
       {pathIds.map((pathId) => {
         const entry = slot.perPath[pathId]
@@ -219,7 +219,7 @@ function DiffTable({
   )
 }
 
-function FilterChip({
+function FilterToggle({
   label,
   pressed,
   onToggle,
@@ -258,7 +258,7 @@ function FilterChip({
  * compare navigation reads too.
  *
  * Counts: exactly one per group, at the END of its header row, post-filter.
- * There is no total anywhere on this surface — the menubar Diff pill owns
+ * There is no total anywhere on this surface — the menubar Diff count owns
  * that number.
  */
 export function CompareDifferencesSurface({
@@ -274,7 +274,7 @@ export function CompareDifferencesSurface({
   const totalCount = useMemo(() => countCompareDifferences(model), [model])
 
   // Lane facets (order of first appearance) + swatch colors resolved the
-  // way the cell panel resolves its lane chip: lane_role first, name second.
+  // way the cell panel resolves its lane badge: lane_role first, name second.
   const { laneFacets, laneSwatchByKey } = useMemo(() => {
     const facets: Array<{ key: string; label: string }> = []
     const seen = new Set<string>()
@@ -366,9 +366,9 @@ export function CompareDifferencesSurface({
 
   /*
     Group header row: label first, the group's single post-filter count last
-    and right-aligned. No zone chip — the header already says "Step N", and a
+    and right-aligned. No zone badge — the header already says "Step N", and a
     second number beside it was the repetition the user called out. The strip
-    keeps its chips: there, ①②③ is the run topology, not a step.
+    keeps its badges: there, ①②③ is the run topology, not a step.
   */
   const groupHeader = (label: string, count: number, title?: string) => (
     <span className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -445,11 +445,11 @@ export function CompareDifferencesSurface({
             </PopoverTrigger>
             <PopoverContent align="end" className="w-64 gap-2 p-3">
               {/* The panel's one section-label role — these three group the
-                  filter chips exactly as a field label groups a field. */}
+                  filter toggles exactly as a field label groups a field. */}
               <p className={PANEL_TEXT.sectionLabel}>Lanes</p>
               <div className="flex flex-wrap gap-1">
                 {laneFacets.map((facet) => (
-                  <FilterChip
+                  <FilterToggle
                     key={facet.key}
                     label={facet.label}
                     pressed={filters.lanes.includes(facet.key)}
@@ -459,12 +459,12 @@ export function CompareDifferencesSurface({
               </div>
               <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Verdict</p>
               <div className="flex flex-wrap gap-1">
-                <FilterChip
+                <FilterToggle
                   label="≠ divergent"
                   pressed={filters.verdicts.includes('divergent')}
                   onToggle={() => toggleVerdict('divergent')}
                 />
-                <FilterChip
+                <FilterToggle
                   label="+ only in one path"
                   pressed={filters.verdicts.includes('only')}
                   onToggle={() => toggleVerdict('only')}
@@ -477,7 +477,7 @@ export function CompareDifferencesSurface({
                   <p className={cn('pt-1', PANEL_TEXT.sectionLabel)}>Steps</p>
                   <div className="flex flex-wrap gap-1">
                     {stepGroups.map((group) => (
-                      <FilterChip
+                      <FilterToggle
                         key={group.columnKey}
                         label={`${group.step} · ${group.label}`}
                         pressed={filters.steps.includes(group.columnKey)}

@@ -116,7 +116,7 @@ export async function executeRevert(
       // validator would refuse, and undo has to be able to reach data that
       // was already there. Same rule, same reason, as update_cell_resources.
       //
-      // Keyed on the placement id, so a revert after the pill was reordered
+      // Keyed on the placement id, so a revert after the touchpoint was reordered
       // or the catalog entry renamed still lands on the row the edit came
       // from rather than on whatever now spells the same.
       const placementId = stringArg(revert.args, 'placement_id')

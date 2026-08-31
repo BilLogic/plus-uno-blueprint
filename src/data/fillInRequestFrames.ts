@@ -1,4 +1,4 @@
-/** Fill-in Request Happy Path — tech pill descriptions. */
+/** Fill-in Request Happy Path — touchpoint descriptions. */
 
 /** Fill-in Request — Regular Tutor step 2. */
 export const FILL_IN_REQUEST_REGULAR_TUTOR_STEP_02_FRAME =

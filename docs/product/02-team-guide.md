@@ -43,7 +43,7 @@ moment, who does it, what it depends on, and the research behind it.
 
 The phone shows the same board as desktop, one stage at a time — picking a
 scenario from the menu frames its stretch of the map. Pinch to zoom and
-drag to pan; tap a cell and its details slide up from the bottom. The pill
+drag to pan; tap a cell and its details slide up from the bottom. The control
 in the top bar switches which path you're reading (one at a time on a
 phone), and **Reset View** at the bottom reframes the board if you lose it.
 Everything on a phone is **view-only** for everyone — editing is a desktop

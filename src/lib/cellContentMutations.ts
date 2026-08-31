@@ -49,7 +49,7 @@ export async function updateCellContent(
 ): Promise<void> {
   const content = update.content.trim()
   if (!content) {
-    throw new Error('A cell needs text — an empty one reads as a gap in the grid.')
+    throw new Error('A cell needs content — an empty one reads as a gap in the grid.')
   }
 
   const { data, error } = await client
@@ -121,7 +121,7 @@ export type RemovedPlacement = {
  * its own transaction — which broke reordering outright. The position
  * constraint is DEFERRABLE INITIALLY DEFERRED, so it forgives a collision
  * only until COMMIT, and with a statement per request commit is the end of
- * that statement. Swapping two pills raised 23505 every time. The unit test
+ * that statement. Swapping two touchpoints raised 23505 every time. The unit test
  * covering reordering asserted the PLAN and never its application, so it
  * passed the whole way through.
  *

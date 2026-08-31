@@ -40,11 +40,11 @@ export type CellLink = {
   type: string
   label: string
   url?: string
-  /** Long-form copy for `tech_description` links keyed by tech pill label. */
+  /** Long-form copy for `tech_description` links keyed by touchpoint label. */
   description?: string
-  /** Screenshot or illustration for `tech_description` links keyed by tech pill label. */
+  /** Screenshot or illustration for `tech_description` links keyed by touchpoint label. */
   picture?: string
-  /** Multiple images for a tech pill (e.g. logo + screenshot). Takes precedence over `picture`. */
+  /** Multiple images for a touchpoint (e.g. logo + screenshot). Takes precedence over `picture`. */
   pictures?: string[]
 }
 
@@ -150,7 +150,7 @@ export type BlueprintCell = {
    * Whether this cell describes something built. Absent means shipped.
    *
    * The state used to be a `Planned — ` prefix on `content`, which put a
-   * status inside a touchpoint NAME: a pill read "Planned — swap flow UI"
+   * status inside a touchpoint NAME: a touchpoint read "Planned — swap flow UI"
    * and the vocabulary gained a product called that. Fifty cells carried it.
    */
   status?: EntityStatus | null

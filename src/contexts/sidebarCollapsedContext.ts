@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react'
 import { useSyncExternalStore } from 'react'
 
 /**
- * What the collapsed sidebar's floating pill says, and who told it.
+ * What the collapsed sidebar's floating navbar says, and who told it.
  *
- * Collapsing used to leave TWO chrome lanes stacked: the pill floated
+ * Collapsing used to leave TWO chrome lanes stacked: the navbar floated
  * over the canvas's own navbar (the phase menubar, the slice header
- * band). The fix is not to dock the pill — it is to let the pill BE the
+ * band). The fix is not to dock the navbar — it is to let it BE the
  * navbar while collapsed. The navbars hand it their identity (and their
  * primary action) and render nothing themselves, so there is exactly one
  * header on screen at any width.
@@ -16,7 +16,7 @@ import { useSyncExternalStore } from 'react'
  * this is a small signal — not worth threading through every surface.
  */
 export type CollapsedNavSummary = {
-  /** The one line the pill shows — phase name, slice title. */
+  /** The one line the navbar shows — phase name, slice title. */
   title: string
   /** Optional glyph the band prefixes its title with (◇ for slices). */
   glyph?: string
@@ -36,7 +36,7 @@ let state: CollapsedState = { collapsed: false, summary: null }
  * The store is last-writer-wins, which is right — a newly mounted band
  * speaks for the surface the user just moved to. Unmounting is the case
  * that is NOT symmetric: a band tearing down after its successor published
- * would otherwise clear the successor's title and leave the pill blank.
+ * would otherwise clear the successor's title and leave the navbar blank.
  * Only the current owner may clear.
  */
 let owner: object | null = null
@@ -87,7 +87,7 @@ function setCollapsedNavSummary(
 }
 
 /**
- * Publish this navbar's identity to the pill while the sidebar is
+ * Publish this navbar's identity to the floating one while the sidebar is
  * collapsed. Pass null when the band is visible (it speaks for itself) or
  * has nothing to say. Clears on unmount so a stale title never outlives
  * the surface that owned it.

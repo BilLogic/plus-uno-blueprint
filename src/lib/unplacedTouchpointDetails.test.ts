@@ -64,7 +64,7 @@ describe('unplacedQueue', () => {
     // The whole ticket in one assertion. `Workday (Employee View)` is a real
     // string somebody wrote and it resembles `Workday` closely enough that a
     // matcher would pair them — which would put a screenshot of the employee
-    // view under a pill that means the employer one. No target may carry the
+    // view under a touchpoint that means the employer one. No target may carry the
     // detail's own name unless the cell genuinely places it.
     const [entry] = unplacedQueue([row()])
     expect(entry.targets.map((target) => target.name)).not.toContain(

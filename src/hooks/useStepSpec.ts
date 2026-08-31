@@ -87,7 +87,7 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
         Every framed cell used to qualify, so a tech cell's product logo
         turned up in the panel as if it were a frame of the story — a Zoom
         mark stacked under two drawings of people. A frame is what the
-        storyboard row draws; a logo is a pill's decoration.
+        storyboard row draws; a logo is a touchpoint's decoration.
 
         The dedupe is because the same step is drawn once per path and the
         paths share their imagery.

@@ -20,7 +20,7 @@ import {
   getBlueprintForPath,
 } from '@/lib/blueprintCellConnections'
 import {
-  shouldUsePillCellContent,
+  shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { registerAgentUiContext } from '@/lib/agent/uiBridge'
@@ -323,7 +323,7 @@ export function BlueprintCellDetailProvider({
       // even when no explicit dependency connects it to the active cell.
       const techLayerIds = new Set(
         blueprint.lanes
-          .filter((lane) => shouldUsePillCellContent(lane))
+          .filter((lane) => shouldUseTouchpointCellContent(lane))
           .map((lane) => lane.id),
       )
       for (const cell of blueprint.cells) {

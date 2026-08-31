@@ -183,7 +183,7 @@ function StepPanelBody({
 
       {distinct.size > 1 ? (
         <div className="flex flex-col gap-1">
-          <PanelTermLabel term="Columns" definition={PANEL_TERMS.columns} />
+          <PanelTermLabel term="Position" definition={PANEL_TERMS.position} />
           <ul className="flex flex-col gap-0.5">
             {step.positions.map((entry) => (
               <li
@@ -193,7 +193,7 @@ function StepPanelBody({
                 <span className="font-medium text-foreground">
                   {entry.pathName}
                 </span>{' '}
-                · column {entry.position + 1}
+                · position {entry.position + 1}
               </li>
             ))}
           </ul>

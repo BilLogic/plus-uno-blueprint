@@ -7,7 +7,7 @@ claims:
   - src/components/blueprint/BlueprintCellButton.tsx
   - src/components/blueprint/BlueprintColumnHandles.tsx
   - src/components/blueprint/BlueprintDependencyArrows.tsx
-  - src/components/blueprint/BlueprintDividerTag.tsx
+  - src/components/blueprint/BlueprintDividerBadge.tsx
   - src/components/blueprint/BlueprintEmptyCellSlot.tsx
   - src/components/blueprint/BlueprintLabelRail.tsx
   - src/components/blueprint/BlueprintLaneHandles.tsx
@@ -25,7 +25,6 @@ claims:
   - src/components/blueprint/ScenarioParallelInfoTooltip.tsx
   - src/components/blueprint/ScenarioTitleBadge.tsx
   - src/components/blueprint/ServiceBlueprintGrid.tsx
-  - src/components/blueprint/TouchpointCellFace.tsx
   - src/components/blueprint/VisualStepDetailStack.tsx
   - src/components/blueprint/VisualWalkthroughModal.tsx
   - src/components/blueprint/VisualWalkthroughShell.tsx

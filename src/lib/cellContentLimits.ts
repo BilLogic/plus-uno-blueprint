@@ -1,8 +1,8 @@
 /** Canvas-copy guidance. These are editorial signals, never storage limits. */
 export const CELL_CONTENT_TARGET = 80
 export const CELL_CONTENT_WARNING = 100
-export const TECH_PILL_LABEL_TARGET = 32
-export const TECH_PILL_LABEL_WARNING = 48
+export const TOUCHPOINT_LABEL_TARGET = 32
+export const TOUCHPOINT_LABEL_WARNING = 48
 
 export type CellContentLengthGuidance = {
   target: number

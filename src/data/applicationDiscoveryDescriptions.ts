@@ -38,11 +38,11 @@ export const DISCOVERY_HANDSHAKE_EMPLOYER_PROFILE_STEP_5_DESCRIPTION =
 export const DISCOVERY_BRANDING_GUIDELINES_STEP_2_DESCRIPTION =
   'Branding Guidelines are followed by the marketing team to keep PLUS social content visually and tonally consistent.'
 
-/** Discovery — Support Actions step 3 (Branding Guidelines pill). */
+/** Discovery — Support Actions step 3 (Branding Guidelines touchpoint). */
 export const DISCOVERY_BRANDING_GUIDELINES_STEP_3_DESCRIPTION =
   'Branding Guidelines are followed by the marketing team to keep PLUS social content visually and tonally consistent.'
 
-/** Discovery — Support Actions step 3 (Design System pill). */
+/** Discovery — Support Actions step 3 (Design System touchpoint). */
 export const DISCOVERY_DESIGN_SYSTEM_STEP_3_DESCRIPTION =
   'The design system is used by the marketing team to keep the marketing website visually consistent.'
 

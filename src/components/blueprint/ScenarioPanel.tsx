@@ -241,7 +241,7 @@ function ScenarioPanelBody({
               <AccordionContent>
                 <div className="flex flex-col gap-3 pb-3">
                   {/* A property of the route, listed with its other
-                      properties — not a chip on the header. The header is a
+                      properties — not a badge on the header. The header is a
                       dot and a name; everything you can say ABOUT the route
                       lives inside it. */}
                   <div className="flex flex-col gap-0.5">
@@ -261,8 +261,8 @@ function ScenarioPanelBody({
                     </div>
                   </div>
                   <PanelTextareaField
-                    label="Applies when"
-                    hint={PANEL_TERMS.appliesWhen}
+                    label="Summary"
+                    hint={PANEL_TERMS.pathSummary}
                     placeholder="e.g. the student joins on time"
                     value={form.paths[path.id].summary}
                     rows={2}

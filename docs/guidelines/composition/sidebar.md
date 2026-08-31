@@ -36,7 +36,7 @@ up: `onSelectPanel` carries a `SidebarPanel`, which is Blueprints or Slices and
 nothing else, while ✦ has its own `onToggleAgent`. The chat was briefly a third
 member of that union, which meant every consumer stripped a value the state
 could never hold. The one collapse toggle sits in the top
-slot, the same corner the floating pill occupies when collapsed; ⚙ is pinned
+slot, the same corner the floating navbar occupies when collapsed; ⚙ is pinned
 under a spacer so keys are reachable from any surface.
 
 > `EditorSidebarRail.tsx` contains no rail despite its name, and neither it nor
@@ -174,7 +174,7 @@ there is no edge. The numbers live in `src/lib/layoutTokens.ts`; the home rule i
 Collapse is one state covering presenting, explicit collapse and the landing
 page. The aside animates its width to zero over the structural duration while
 the body keeps its fixed width and is clipped, so open/close reads as a **wipe**
-rather than a mount/unmount. The remnant is a floating pill over the canvas
+rather than a mount/unmount. The remnant is a floating navbar over the canvas
 carrying the same single toggle. Selecting a surface while collapsed re-expands
 — except ✦, which toggles the chat, so "chat while looking at the nav" is the
 default posture rather than a swap away from it.

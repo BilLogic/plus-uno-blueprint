@@ -22,13 +22,24 @@ of primitives → a new primitive argued in the PR. Highlights:
 
 | Need | Primitive |
 |---|---|
-| Action | `button` (incl. the `blueprint`/`blueprintPill` cell variants) |
+| Action | `button` (incl. the `blueprint` cell variant, whose shape — square face or round touchpoint — is a variant of `blueprintCellButtonClassName`) |
 | Choice among few | `toggle-group` (segmented), `tabs` |
 | Overlay, blocking | `dialog` |
 | Overlay, anchored | `popover`, `dropdown-menu`, `context-menu`, `tooltip` |
 | Edge panel | `sheet` (mobile nav, mobile agent), `drawer` (cell detail, entity detail) |
 | Loading | `deferred-skeleton`, `skeleton`, `spinner` (`DelayedSpinner`) |
 | Structure | `sidebar`, `separator`, `card`, `badge` |
+
+**There are two words for small labelled things, and only two.** A **badge**
+describes the thing it sits on — one per thing, not drawn from a set the reader
+picks from, and **never interactive**, which is why `badge.tsx` has no hover
+state in any variant. A **tag** is one value out of a set, selectable or
+removable; `OwnerTagSelect` is the only one in the app. "Chip" and "pill" are
+not names here, and
+[`scripts/tests/badge-and-tag.test.mjs`](../../../scripts/tests/badge-and-tag.test.mjs)
+fails a build that reintroduces either. The full rule, and what an explained
+badge wears instead of a hover state, is in
+[reference/panel-affordances.md](../../reference/panel-affordances.md).
 
 **Composition uses `render={}`, not `asChild`** — Base UI's render-prop is the
 house idiom. The Radix migration is finished: `asChild` has zero occurrences in

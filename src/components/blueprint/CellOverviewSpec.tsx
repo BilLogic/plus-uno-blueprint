@@ -1,16 +1,36 @@
+import type { ReactNode } from 'react'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { parseValueProps } from '@/lib/valueProps'
 
-function SpecSection({ title, text }: { title: string; text: string }) {
+/**
+ * One spec block: its label, and what is under it.
+ *
+ * `children` rather than only `text` because the value propositions are a
+ * list and the other two are prose, and the LABEL is the part that has to be
+ * identical — it is the word a reader takes to an engineer, so all three go
+ * through one component rather than one of them hand-rolling its own heading.
+ */
+function SpecSection({
+  title,
+  text,
+  children,
+}: {
+  title: string
+  text?: string
+  children?: ReactNode
+}) {
   return (
     <section className="flex flex-col gap-1">
       <h3 className={PANEL_TEXT.sectionLabel}>
         {title}
       </h3>
-      <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>{text}</p>
+      {text !== undefined ? (
+        <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>{text}</p>
+      ) : null}
+      {children}
     </section>
   )
 }
@@ -21,7 +41,7 @@ type CellOverviewSpecProps = {
 }
 
 /**
- * FUNCTION / FORM / VALUE spec block in the panel's inline overview,
+ * FUNCTION / FORM / VALUE PROPOSITION spec block in the panel's inline overview,
  * read-only. Sections render only when authored; without a database (or for
  * fallback-only cells) the block stays hidden entirely.
  *
@@ -55,10 +75,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
       {functionText ? <SpecSection title="Function" text={functionText} /> : null}
       {formText ? <SpecSection title="Form" text={formText} /> : null}
       {valueProps.length > 0 ? (
-        <section className="flex flex-col gap-1">
-          <h3 className={PANEL_TEXT.sectionLabel}>
-            Value
-          </h3>
+        <SpecSection title="Value proposition">
           <ul className="flex flex-col gap-1">
             {valueProps.map((entry, index) => (
               <li key={index} className="text-sm leading-snug text-foreground/80">
@@ -68,7 +85,7 @@ export function CellOverviewSpec({ cellId }: CellOverviewSpecProps) {
               </li>
             ))}
           </ul>
-        </section>
+        </SpecSection>
       ) : null}
     </div>
   )

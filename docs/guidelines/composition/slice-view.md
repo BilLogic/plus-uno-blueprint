@@ -104,7 +104,7 @@ saved slice" are different states that can both be true on the same cell.
 Clicking a member re-focuses, clicking elsewhere lifts the dim, and chrome (the
 cell panel, the navbar, canvas nav, the zoom indicator, the annotation toolbar,
 the walkthrough modal) is neutral. A drag past 5px is a pan, not a click. While
-de-focused a floating "Showing all · Back to slice" pill appears, and it counts
+de-focused a floating "Showing all · Back to slice" button appears, and it counts
 as chrome so clicking it does not re-trigger the rule.
 
 ## Presentation, and why the semantic layer re-derives per scope
@@ -129,7 +129,7 @@ subtree force light inside a dark ancestor. See
 as a mode change on one object rather than two unrelated screens. Every colour
 is a token, so it picks up dark tokens for free inside the stage. When the
 sidebar is collapsed the band renders nothing and hands its identity and primary
-action to the floating pill.
+action to the floating button.
 
 ## Two editing surfaces, split by what they are good at
 
@@ -142,14 +142,14 @@ cells.**
 surface, and a drag that starts on a cell is already the camera's gesture. So
 the canvas adds and removes by clicking, and the strip decides grouping and
 order. Inside the strip there are two deliberately distinct drag targets: a cell
-chip moves between slides, a slide header reorders slides. Drop position is read
-from the pointer's Y against the chip's midpoint — top half inserts before,
-bottom half after — and shown as a 2px primary rule above or below the chip.
+badge moves between slides, a slide header reorders slides. Drop position is read
+from the pointer's Y against the badge's midpoint — top half inserts before,
+bottom half after — and shown as a 2px primary rule above or below the badge.
 (Those two indicators are the file's arbitrary `shadow-[…]` literals; they are
 hairline rules, not shadows, and there is no token for a directional insertion
 bar. See [foundations/elevation.md](../foundations/elevation.md).)
 
-Chip labels use the cell's described label, not its id: `070110` is an address,
+Badge labels use the cell's described label, not its id: `070110` is an address,
 and nobody recognises their content by address.
 
 `SliceSlideComposer` does ordering **and** grouping in one list. Presets were

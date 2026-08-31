@@ -68,7 +68,7 @@ export const BLUEPRINT_THEME = {
    */
   dividerLabel: 'var(--color-gray-1200)',
   /** Figma-style interaction / visibility line tag. */
-  dividerTagBg: 'var(--color-slate-1200)',
+  dividerBadgeBg: 'var(--color-slate-1200)',
   dividerBg: 'var(--color-slate-500)',
   cellText: 'var(--color-slate-1200)',
   headerText: 'var(--color-gray-1200)',

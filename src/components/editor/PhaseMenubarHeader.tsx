@@ -107,11 +107,11 @@ function CompareViewToggle({ slide }: { slide: NavItem }) {
  * selected paths (the compare cluster gate), disabled at zero because "open
  * the empty ledger" is a dead end.
  *
- * The count is a pill, not prose — it is one of exactly two counts in the
+ * The count is a badge, not prose — it is one of exactly two counts in the
  * app (this and each ledger group's trailing number), so it has to read as a
  * value rather than a label.
  */
-function CompareDifferencesChip({ slide }: { slide: NavItem }) {
+function CompareDifferencesCount({ slide }: { slide: NavItem }) {
   const { registration } = useCompareReviewState()
   const cellDetail = useBlueprintCellDetailOptional()
   if (!registration || registration.slideId !== slide.id || !cellDetail) {
@@ -119,7 +119,7 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
   }
   const count = countCompareDifferences(registration.model)
   const open = cellDetail.panelState?.surface === 'differences'
-  const chip = (
+  const control = (
     <Button
       type="button"
       variant="ghost"
@@ -143,7 +143,7 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
         className={cn(
           'ml-0.5 rounded-full px-1.5 py-px font-mono text-3xs leading-none tabular-nums',
           // Resting: neutral. Pressed: brand tint one step stronger than the
-          // button's own selected fill, so the pill stays legible on it.
+          // button's own selected fill, so the count stays legible on it.
           open
             ? 'bg-sidebar-selected-rail/20 text-foreground'
             : 'bg-muted text-foreground',
@@ -156,7 +156,7 @@ function CompareDifferencesChip({ slide }: { slide: NavItem }) {
   return (
     <Tooltip>
       <TooltipTrigger render={<span className="inline-flex" />}>
-        {chip}
+        {control}
       </TooltipTrigger>
       <TooltipContent>
         {count === 0
@@ -189,7 +189,7 @@ export function CompareControlsCluster({
       onClick={(event) => event.stopPropagation()}
     >
       <CompareViewToggle slide={slide} />
-      <CompareDifferencesChip slide={slide} />
+      <CompareDifferencesCount slide={slide} />
     </div>
   )
 }

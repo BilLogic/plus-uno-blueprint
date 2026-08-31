@@ -20,7 +20,7 @@ import {
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
-  shouldUsePillCellContent,
+  shouldUseTouchpointCellContent,
   shouldUseStoryboardContent,
   type BlueprintCellVariant,
 } from '@/lib/blueprintLayout'
@@ -399,8 +399,8 @@ function mergedSlotKey(laneId: string, trackKey: string): string {
 function resolveMergedCellVariant(lane: BlueprintLane): BlueprintCellVariant {
   return shouldUseStoryboardContent(lane)
     ? 'storyboard'
-    : shouldUsePillCellContent(lane)
-      ? 'pills'
+    : shouldUseTouchpointCellContent(lane)
+      ? 'touchpoints'
       : 'default'
 }
 
@@ -647,7 +647,7 @@ function MergedSubCellBlock({
       compact={compact}
       flushBottom={flushBottom}
       visualPictures={visualPictures}
-      slotCells={variant === 'pills' ? cells : undefined}
+      slotCells={variant === 'touchpoints' ? cells : undefined}
       pathMembership={pathMembership}
       selectionContext={
         scenarioName && cellId

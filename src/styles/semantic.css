@@ -196,7 +196,7 @@
    * measures ~1.4:1, dark ink 12.90.
    */
   /* Retune history, compressed — each pass and the one fact it established:
-   *   2026-08-05  L 0.874 (= --brand-400). Read as a pastel chip, not a
+   *   2026-08-05  L 0.874 (= --brand-400). Read as a pastel badge, not a
    *               control, against the near-white canvas. Established that
    *               the ramp's own 400 step is too pale to be the fill.
    *   2026-08-06  "matcha ceramic": L 0.78 / C 0.09, and the hue dial pushed
@@ -223,7 +223,7 @@
    *
    * 2. LIGHTNESS. L 0.78 was chosen as a correction to 0.874 and overshot.
    *    Now L 0.83 — brighter, but still 0.044 below the brand-400 step that
-   *    read as a chip, and the 1px `--primary-border` edge that did not exist
+   *    read as a badge, and the 1px `--primary-border` edge that did not exist
    *    in the 0.874 pass is what lets the fill be lighter without going soft.
    *
    * Chroma follows the established target: at L 0.83 / H 177.6 the sRGB
