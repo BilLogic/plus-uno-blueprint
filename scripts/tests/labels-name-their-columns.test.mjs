@@ -205,6 +205,90 @@ test('the label check goes red on each of the four, and leaves their neighbours 
   ])
 })
 
+/* ------------------------------------------ 1b. and the figures that draw them */
+
+/**
+ * A figure that draws the panel is a LABEL SITE, and until now nobody checked it.
+ *
+ * `public/cover/*.svg` is not documentation: `EditorShell` renders those files
+ * as a deck inside the app. `cell-anatomy.svg` draws the cell panel field by
+ * field, and it was still labelling one of them **Value** — the first entry in
+ * `RETIRED_LABELS`, retired because `cells` has no `value` column and a reader
+ * asking an engineer about that word asks about a word the engineer has never
+ * seen. The label was fixed in the panel and missed in the picture of the
+ * panel, which is the same defect with a longer half-life: a figure is what a
+ * new reader looks at first.
+ *
+ * SUBJECT: `<text class="uiLabel">` — the figures' own marker for "this node is
+ * a UI label". Not every string in the file. The captions beside them are prose
+ * and are `check:copy`'s subject, with a different rule and a different list.
+ */
+const FIGURES = resolve(ROOT, 'public', 'cover')
+
+const UI_LABEL = /<text\b[^>]*class="uiLabel"[^>]*>([\s\S]*?)<\/text>/g
+
+/** Every label a figure draws, in `panelLabels` shape so one rule judges both. */
+export function figureLabels(files = figureFiles()) {
+  const out = []
+  for (const { file, code } of files) {
+    for (const match of code.matchAll(UI_LABEL)) {
+      const label = match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      // No quote in the component name: the failure line is `…="Label"`, and a
+      // caller reading the label back out of it splits on the quote.
+      if (label) out.push({ file, component: 'text.uiLabel', label })
+    }
+  }
+  return out
+}
+
+function figureFiles() {
+  return readdirSync(FIGURES)
+    .filter((name) => name.endsWith('.svg'))
+    .sort()
+    .map((name) => ({
+      file: `public/cover/${name}`,
+      code: readFileSync(join(FIGURES, name), 'utf8'),
+    }))
+}
+
+test('no figure draws a label the schema has never heard', () => {
+  const found = labelsThatNameNothing(figureLabels())
+  assert.deepEqual(
+    found,
+    [],
+    'A diagram labels a field with a word no column answers to. It renders in ' +
+      `the app, and it is the first thing a new reader reads:\n${found.join('\n')}`,
+  )
+})
+
+test('the figure reader takes the labels and leaves the prose', () => {
+  const planted = [
+    {
+      file: 'public/cover/planted.svg',
+      code: [
+        '<text x="10" y="20" class="uiLabel">Value</text>',
+        '<text x="10" y="40" class="uiLabel"><tspan>Perceived</tspan> owner</text>',
+        // Prose beside the labels, and a heading above them. Neither is a label
+        // site, and "VALUE" as a section heading must not be read as one.
+        '<text x="10" y="60" class="calloutBody">who gets what from it</text>',
+        '<text x="10" y="80" class="calloutTitle">VALUE</text>',
+      ].join('\n'),
+    },
+  ]
+  const labels = figureLabels(planted)
+  assert.deepEqual(labels.map((one) => one.label), ['Value', 'Perceived owner'])
+  assert.deepEqual(
+    labelsThatNameNothing(labels).map((one) => one.split('"')[1]),
+    ['Value'],
+  )
+})
+
+test('the figures are actually there to be read', () => {
+  // A reader that found nothing passes the assertion above in silence.
+  assert.ok(figureFiles().length >= 10, 'no figures found under public/cover')
+  assert.ok(figureLabels().length >= 5, 'the figures parsed to almost no labels')
+})
+
 /* ------------------------------------------------------ 2. and the column */
 
 const SCHEMA = replayMigrations(resolve(ROOT, 'supabase/migrations'))
