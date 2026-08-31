@@ -1,12 +1,7 @@
-import type { CSSProperties, MouseEvent } from 'react'
-import { Info } from 'lucide-react'
-import { PathDescriptionTooltip } from '@/components/blueprint/PathDescriptionTooltip'
+import type { CSSProperties } from 'react'
+import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
+import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { PATH_TYPE_COLORS } from '@/lib/pathTypeTheme'
 import { getBlueprintFillStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
@@ -22,11 +17,29 @@ type ScenarioTitleBadgeProps = {
   pathType?: PathType
   /** Panel chrome badge — darker gray from label rail, not primary/black. */
   tone?: 'default' | 'panel' | 'phase'
-  /** Optional parallel-scenario (or similar) note shown via an info icon in the badge. */
-  infoTooltip?: string | null
+  /**
+   * A further note about this instance — the parallel-scenario aside.
+   *
+   * It used to be its own ⓘ inside the badge, and that ⓘ was the one place in
+   * the app where the glyph meant "an aside" rather than "opens the panel"
+   * (#140 Q11). One glyph cannot mean two things, and this note is a fact
+   * about the same label, so it rides in the same popover.
+   */
+  note?: string | null
 }
 
-/** Default scenario badge with name + description tooltip (phase overview). */
+/**
+ * The scenario's — or the phase's — name, and what that kind of thing IS.
+ *
+ * One badge for two kinds because they are the same object on the board: the
+ * label of a container, printed on the container's own edge. `tone="phase"`
+ * puts it on a phase frame and `kind` follows from that, so the popover says
+ * PHASE over a phase and SCENARIO over a scenario, and neither has to be
+ * passed twice.
+ *
+ * The explanation is a POPOVER rather than a tooltip since #140: a tooltip
+ * never opens on touch, so on a phone this badge explained nothing at all.
+ */
 export function ScenarioTitleBadge({
   name,
   description,
@@ -35,71 +48,46 @@ export function ScenarioTitleBadge({
   side = 'top',
   pathType,
   tone = 'default',
-  infoTooltip,
+  note,
 }: ScenarioTitleBadgeProps) {
   const pathAccent = pathType ? PATH_TYPE_COLORS[pathType] : undefined
   const panelTone = tone === 'panel' && !pathType
   const phaseTone = tone === 'phase' && !pathType
-  const infoText = infoTooltip?.trim() || null
-
-  const stopInfoEvent = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-  }
 
   return (
-    <Badge
-      data-blueprint-fill={pathAccent ? '' : undefined}
-      data-scenario-panel-title-badge={panelTone ? '' : undefined}
-      data-phase-title-badge={phaseTone ? '' : undefined}
-      // The name carries its description on hover and on focus, so it wears
-      // the help cursor and is reachable by keyboard. No hover colour: a
-      // badge that repaints under the pointer reads as clickable.
-      tabIndex={0}
-      className={cn(
-        'h-auto max-w-full cursor-help gap-1 overflow-visible border-transparent',
-        pathType && 'font-semibold',
-        (panelTone || phaseTone) && 'font-semibold',
-        className,
-      )}
-      style={{
-        ...style,
-        ...(pathAccent
-          ? {
-              ...getBlueprintFillStyle(pathAccent),
-              borderColor: pathAccent,
-            }
-          : undefined),
-      }}
+    <EntityDefinitionPopover
+      kind={tone === 'phase' ? 'phase' : 'scenario'}
+      description={description}
+      name={name}
+      showName
+      showDescription
+      note={note}
+      side={side}
     >
-      {infoText ? (
-        <Tooltip>
-          <TooltipTrigger
-            className={cn(
-              'inline-flex size-3.5 shrink-0 items-center justify-center rounded-full',
-              'text-current opacity-80 transition-opacity hover:opacity-100',
-              'border-0 bg-transparent p-0 shadow-none outline-none',
-              'focus-visible:ring-1 focus-visible:ring-current/50',
-            )}
-            aria-label="Parallel scenario information"
-            onPointerDown={stopInfoEvent}
-            onClick={stopInfoEvent}
-          >
-            <Info className="size-3" aria-hidden />
-          </TooltipTrigger>
-          <TooltipContent
-            side={side}
-            sideOffset={6}
-            className="max-w-xs text-center"
-          >
-            {infoText}
-          </TooltipContent>
-        </Tooltip>
-      ) : null}
-      <PathDescriptionTooltip
-        description={description}
-        pathName={name}
-        showNameInTooltip
-        side={side}
+      <Badge
+        data-blueprint-fill={pathAccent ? '' : undefined}
+        data-scenario-panel-title-badge={panelTone ? '' : undefined}
+        data-phase-title-badge={phaseTone ? '' : undefined}
+        // The name carries its definition and its description on hover, on
+        // focus and on tap, so it wears the help cursor and the dotted cue and
+        // is reachable by keyboard. No hover colour: a badge that repaints
+        // under the pointer reads as clickable. The popover trigger supplies
+        // `tabIndex`.
+        className={cn(
+          'h-auto max-w-full cursor-help gap-1 overflow-visible border-transparent',
+          pathType && 'font-semibold',
+          (panelTone || phaseTone) && 'font-semibold',
+          className,
+        )}
+        style={{
+          ...style,
+          ...(pathAccent
+            ? {
+                ...getBlueprintFillStyle(pathAccent),
+                borderColor: pathAccent,
+              }
+            : undefined),
+        }}
       >
         <span
           className={cn(
@@ -108,11 +96,12 @@ export function ScenarioTitleBadge({
             // LETTERSPACED. The span's own tracking would silently beat the
             // wrapper's `tracking-wider`, shipping the register tight.
             phaseTone ? 'tracking-wider' : 'tracking-tight',
+            DEFINED_LABEL_CUE,
           )}
         >
           {name}
         </span>
-      </PathDescriptionTooltip>
-    </Badge>
+      </Badge>
+    </EntityDefinitionPopover>
   )
 }

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
-import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
+import { ScenarioTitleDefinition } from '@/components/blueprint/ScenarioTitleDefinition'
+import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
 import {
   CompareControlsCluster,
@@ -79,12 +80,20 @@ function SlideHeaderContent({
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-1.5">
-            {isScenario ? (
-              <ScenarioParallelInfoTooltip slide={slide} />
-            ) : null}
-            <h1 className="text-base font-semibold tracking-tight text-foreground">
-              {label}
-            </h1>
+            <ScenarioTitleDefinition
+              kind={isScenario ? 'scenario' : 'phase'}
+              slide={isScenario ? slide : null}
+            >
+              <h1
+                className={cn(
+                  'w-fit cursor-help rounded-sm text-base font-semibold tracking-tight text-foreground outline-none',
+                  'focus-visible:ring-2 focus-visible:ring-ring/50',
+                  DEFINED_LABEL_CUE,
+                )}
+              >
+                {label}
+              </h1>
+            </ScenarioTitleDefinition>
           </div>
           {description ? (
             <p className="mt-1 text-sm leading-relaxed text-muted-foreground">

@@ -19,34 +19,31 @@ const KIND_LABELS: Record<EntityDetailKind, string> = {
  * The ⓘ that opens an entity's properties. One component for every level,
  * so the affordance reads as one family and nobody has to learn it twice.
  *
- * On a LANE it is `revealOnHover`, and that is the interesting case: a lane
- * label already means two different things depending on where it is rendered —
- * inert prose in the grid, and "select every cell in this lane" in the label
- * rail's Design mode. Neither is "show me its properties", and teaching either
- * a third reading would make the rail's selection handle ambiguous. So the
- * button is separate, sized and inked like `SidebarNav`'s row actions (24px
- * target, 14px glyph, no fill of its own, because the row it sits in already
- * has one).
+ * On a LANE it is a button of its own, and that is the interesting case: a
+ * lane label already means two different things depending on where it is
+ * rendered — inert prose in the grid, and "select every cell in this lane" in
+ * the label rail's Design mode. Neither is "show me its properties", and
+ * teaching either a third reading would make the rail's selection handle
+ * ambiguous. So the button is separate, sized and inked like `SidebarNav`'s
+ * row actions (24px target, 14px glyph, no fill of its own, because the row it
+ * sits in already has one).
  *
- * Revealed is not the same as absent: it is transparent at rest and ALWAYS in
- * the tab order. A control keyboard users cannot reach is not an affordance.
- *
- * In chrome — the phase and scenario title bars — it is simply visible. There
- * is no second meaning to protect there, and a hidden control in a menubar is
- * a control nobody finds.
+ * ALWAYS VISIBLE, and that is #140 Q11 rather than a style choice. It carried
+ * a `revealOnHover` mode — transparent at rest, drawn on hover — which no
+ * caller ever used and which no touch reader could ever have seen. ⓘ means
+ * "opens the panel" everywhere in this app now, and a signifier a reader
+ * cannot see is not a signifier.
  */
 export function EntityPropertiesButton({
   kind,
   id,
   name,
-  revealOnHover = false,
   className,
 }: {
   kind: EntityDetailKind
   id: string
   /** Named in the accessible label — several of these can share one screen. */
   name: string
-  revealOnHover?: boolean
   className?: string
 }) {
   const { toggleEntity } = useEntityDetail()
@@ -61,9 +58,7 @@ export function EntityPropertiesButton({
         // properties" five times over tells a screen-reader user nothing.
         aria-label={`${label}: ${name}`}
         className={cn(
-          'size-6 shrink-0 text-muted-foreground/50 hover:text-foreground',
-          revealOnHover &&
-            'opacity-0 transition-opacity duration-(--motion-micro) group-hover/lane-header:opacity-100 group-focus-within/lane-header:opacity-100 focus-visible:opacity-100',
+          'size-6 shrink-0 text-muted-foreground/60 hover:text-foreground',
           className,
         )}
         onClick={(event) => {
