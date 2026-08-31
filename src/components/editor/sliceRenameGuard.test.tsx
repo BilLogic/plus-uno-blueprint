@@ -151,10 +151,10 @@ const SERVER_ROW = (): Row => ({
   id: 'slice-1',
   service_id: 'svc-1',
   title: 'Concierge intake',
-  description: null,
-  slice_type: 'journey',
+  summary: null,
+  kind: 'journey',
   actor: null,
-  origin: 'human',
+  authorship: 'human',
   locale: 'en',
   position: 0,
   stakeholder_id: null,
@@ -248,9 +248,9 @@ it('lands the rename when the client never saw the newer stamp at all', async ()
   await waitFor(() => expect(server.title).toBe('Concierge intake (v2)'))
 })
 
-it('lands the rename when only the derived origin moved', async () => {
+it('lands the rename when only the derived authorship moved', async () => {
   const server = SERVER_ROW()
-  server.origin = 'agent'
+  server.authorship = 'agent'
   const { client } = fakeSlicesTable(server)
   supabase.client = client
 
@@ -258,12 +258,12 @@ it('lands the rename when only the derived origin moved', async () => {
     <RenameSliceDialog slice={listEntry({ ...server })} open onOpenChange={() => {}} />,
   )
 
-  // `origin` is not round-tripped: every meta write puts it through
-  // `originAfterEdit`, which turns anything that is not 'human' into
+  // `authorship` is not round-tripped: every meta write puts it through
+  // `authorshipAfterEdit`, which turns anything that is not 'human' into
   // 'customized'. A concurrent frame-editor Save therefore moves this field
   // with nobody having typed anything, and the rename would have stored the
   // identical value. Comparing it raw refuses a rename that races nothing.
-  server.origin = 'customized'
+  server.authorship = 'customized'
   server.updated_at = '2026-08-26T09:30:00.654321+00:00'
 
   rename('Concierge intake (v2)')

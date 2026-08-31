@@ -17,7 +17,7 @@ seed and this file disagree, the seed wins.
 | Field | Value |
 | --- | --- |
 | UUID | `a0000000-0000-4000-8000-000000000300` |
-| path_type | `happy` |
+| kind | `happy` |
 
 ## Lanes (`lane_id` → UUID, `position`)
 

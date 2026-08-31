@@ -17,7 +17,7 @@
  * call the third segment a "version", which is not a level the model has —
  * it is the path, and always was.
  *
- * The path segment is the path's **name**. `path_type` looked right — the
+ * The path segment is the path's **name**. `paths.kind` looked right — the
  * seeded keys read `warm-up/happy/...` — but several paths through one
  * scenario routinely share a type: Goal Setting has five all typed `named`.
  * Measured against this database, keying on type collides on 167 of 737 cells
@@ -93,7 +93,7 @@ function canonicalKey(row) {
 async function loadCells() {
   const rows = await rest(
     'cells?select=id,lane:lanes(name),step:steps(name),' +
-      'path:paths(name,path_type,scenario:scenarios(name,' +
+      'path:paths(name,kind,scenario:scenarios(name,' +
       'phase:phases(service:services(name))))',
   )
   return rows.map((row) => {
@@ -104,7 +104,7 @@ async function loadCells() {
       id: row.id,
       service: service.name,
       scenario: scenario.name,
-      pathType: path.path_type,
+      pathType: path.kind,
       pathName: path.name,
       lane: row.lane?.name,
       step: row.step?.name,

@@ -738,7 +738,7 @@ function BlueprintCellDetailPanelBody() {
           connection.laneName,
         ),
         kind: connection.linkKind,
-        label: connection.linkLabel,
+        name: connection.linkName,
       })),
     [connections.outgoing],
   )

@@ -80,11 +80,6 @@ function EvidenceRow({ row }: { row: Evidence }) {
             {row.excerpt}
           </p>
         ) : null}
-        {row.note ? (
-          <p className="text-2xs leading-snug text-muted-foreground">
-            {row.note}
-          </p>
-        ) : null}
       </div>
     </li>
   )
@@ -104,7 +99,6 @@ function AddSourceForm({
   const [title, setTitle] = useState('')
   const [ref, setRef] = useState('')
   const [excerpt, setExcerpt] = useState('')
-  const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -142,13 +136,11 @@ function AddSourceForm({
         title: title.trim(),
         ref: ref.trim() || null,
         excerpt: excerpt.trim() || null,
-        note: note.trim() || null,
       })
       setOpen(false)
       setTitle('')
       setRef('')
       setExcerpt('')
-      setNote('')
       onAdded()
     } catch (submitError) {
       setError(
@@ -200,14 +192,6 @@ function AddSourceForm({
         className="w-full resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
         value={excerpt}
         onChange={(event) => setExcerpt(event.target.value)}
-      />
-      <textarea
-        rows={2}
-        placeholder="Note"
-        aria-label="Source note"
-        className="w-full resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-ring"
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
       />
       {error ? (
         /* The source was not saved — an error, not a caution. */

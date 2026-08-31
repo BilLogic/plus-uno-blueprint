@@ -47,7 +47,7 @@ type SliceItemRow = Database['public']['Tables']['slice_items']['Row']
 /** The subset of `slices` that `updateSliceMeta` writes, and so restores. */
 type SliceMetaFields = Pick<
   Database['public']['Tables']['slices']['Row'],
-  'title' | 'description' | 'slice_type' | 'actor' | 'origin'
+  'title' | 'summary' | 'kind' | 'actor' | 'authorship'
 >
 
 function stringArg(args: Record<string, unknown>, key: string): string {
@@ -285,7 +285,7 @@ export async function executeRevert(
       return
     }
     case 'restore_slice_meta': {
-      // Undo of a slice field edit. Writes `origin` back too: the forward
+      // Undo of a slice field edit. Writes `authorship` back too: the forward
       // write promotes `generated` to `customized` as a side effect, and an
       // inverse that left the promotion standing would mark a slice as
       // hand-edited when the edit has been taken back.
@@ -298,10 +298,10 @@ export async function executeRevert(
         .from('slices')
         .update({
           title: row.title,
-          description: row.description,
-          slice_type: row.slice_type,
+          summary: row.summary,
+          kind: row.kind,
           actor: row.actor,
-          origin: row.origin,
+          authorship: row.authorship,
         })
         .eq('id', sliceId)
         .select('id')

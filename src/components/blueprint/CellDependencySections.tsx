@@ -114,20 +114,15 @@ function DependencyRow({
                 · Step {connection.stepIndex + 1}
               </span>
             </span>
-            {connection.linkLabel ? (
+            {connection.linkName ? (
               <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-3xs leading-tight text-muted-foreground">
-                {connection.linkLabel}
+                {connection.linkName}
               </span>
             ) : null}
           </span>
           {connection.contentPreview && !connection.isTech ? (
             <span className={cn('truncate text-2xs text-muted-foreground', detailIndentClass)}>
               {connection.contentPreview}
-            </span>
-          ) : null}
-          {connection.linkNote ? (
-            <span className={cn('text-2xs leading-snug text-muted-foreground italic', detailIndentClass)}>
-              {connection.linkNote}
             </span>
           ) : null}
         </button>

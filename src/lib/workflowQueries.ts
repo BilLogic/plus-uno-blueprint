@@ -1,7 +1,19 @@
-/** Supabase nested selects for the Service Blueprint schema */
+/**
+ * Supabase nested selects for the Service Blueprint schema.
+ *
+ * `path_type:kind` is a PostgREST column ALIAS, not a column. The column is
+ * `paths.kind` as of 20260830190000; the app's own path shapes still call the
+ * field `path_type`, and the alias is where the two meet. It is deliberate and
+ * temporary: the app-side rename collides on `ColoredBlueprintDependency`,
+ * which is a cell dependency (already carrying its own `kind`) decorated with
+ * the path's, so finishing it means choosing a third word for that decorator.
+ * That is interface work and belongs with the rest of #172's, not with the
+ * migration. Until then the alias keeps the schema's word in one place instead
+ * of scattering a mapping through every consumer.
+ */
 
 export const PATH_LIST_SELECT =
-  'id, name, summary, note, path_type, scenario_id, created_at, updated_at'
+  'id, name, summary, note, path_type:kind, scenario_id, created_at, updated_at'
 
 /** Blueprint grid: path with lanes, path_steps, and cells */
 /*
@@ -20,7 +32,7 @@ export const PATH_BLUEPRINT_SELECT = `
   name,
   summary,
   note,
-  path_type,
+  path_type:kind,
   status,
   scenario_id,
   lanes (
@@ -68,8 +80,7 @@ export const PATH_BLUEPRINT_SELECT = `
       id,
       target_cell_id,
       kind,
-      label,
-      note
+      name
     )
   )
 `

@@ -50,7 +50,7 @@ export function useScenarioSpec(
       const { data: scenario, error } = await client
         .from('scenarios')
         .select(
-          'id, name, summary, phases!inner(name), paths(id, name, path_type, status, summary, note, created_at)',
+          'id, name, summary, phases!inner(name), paths(id, name, path_type:kind, status, summary, note, created_at)',
         )
         .eq('id', scenarioId)
         .abortSignal(signal)

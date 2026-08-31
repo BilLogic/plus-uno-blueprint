@@ -25,7 +25,7 @@ refusal, not an attempt. **Deliberately absent: every delete.**
   `stakeholderMutations.ts`, `evidenceMutations.ts`, `findingMutations.ts`), so
   RLS, validation, ledger logging, and revert capture come free. **There is no
   longer an exception.** `create_finding` / `update_finding` wrote the
-  `findings` table straight from this file until 2026-08-25 — no ledger entry,
+  `audit_findings` table straight from this file until 2026-08-25 — no ledger entry,
   no captured inverse, and ⌘Z reaching past them to undo somebody else's edit.
   They dispatch to `findingMutations.ts` now; the dedupe rule travels with the
   write, because the branch *is* the write path. See

@@ -99,6 +99,46 @@ outright in `20260826120000`.
 rename that needs one adds it back with an issue number attached, because the
 value of that list was always its emptiness being a decision.
 
+### The vocabulary pass that moves four things the bot reads
+
+`20260830190000` is the widest change this relationship has had to absorb, and
+it is worth reading before the bot's next deploy rather than after. Four names
+the bot depends on move at once:
+
+| Was | Is | How the bot sees it |
+|---|---|---|
+| table `findings` | `audit_findings` | a direct PostgREST read, and the `/health/blueprint` probe key |
+| `findings.check_name` | `audit_findings.check_key` | read off the row by key |
+| `findings.note` | `audit_findings.summary` | read off the row by key |
+| `cell_dependencies.label`, `.note` | `cell_dependencies.name`, dropped | read off the edge row |
+| `search_blueprint(filter_path_type)` | `filter_path_kind` | sent by name |
+
+`publicReadTables`, `botReadTables` and `searchBlueprintParams` all moved with
+them, so **the bot's `--check` sync fails until its vendored copy is
+refreshed** — which is the mechanism working, not a surprise. Refresh the
+vendored contract and deploy the bot before this migration is applied.
+
+Two things deliberately did NOT move, and both are the same distinction. The
+include VALUE `'findings'` is a word on the wire naming a category of result,
+not a relation, so `searchBlueprintInclude` still says `findings` while the
+table is `audit_findings`. And the output column `description` is the row's
+prose column whatever the underlying table calls it —
+`searchBlueprintColumns` has said so since it was written.
+
+The `search_blueprint` `links` payload keys move with their columns (`label` →
+`name`, `check_name` → `check_key`, `slice_type` → `kind`). Those are not in
+the contract, so nothing fails when they drift: the bot reads them by key in
+`integrations/blueprint-include.ts` and would simply start getting
+`undefined`. That is the shape this document exists to prevent, and it is
+recorded here rather than fixed because adding them to the contract is a
+change to what the contract is FOR, not a rename.
+
+The skills package is the third side of this. `agentic-service-blueprinting`
+writes `slice_type`, `check_name` and `slices.origin` from `slice_tools.py`
+and documents them in `skills/audit/SKILL.md` and the playbooks. It is a
+git-URL dependency pinned to a tag, so the fix goes upstream and arrives here
+as a version bump — which has to happen in the same window.
+
 ## What checks the contract
 
 `.github/workflows/bot-contract-probe.yml` runs three jobs, against three

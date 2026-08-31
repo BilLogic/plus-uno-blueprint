@@ -98,11 +98,11 @@ const DRAFT = {
   serviceId: 'svc-1',
   runId: 'run-1',
   source: 'audit' as const,
-  checkName: 'orphan-cell',
+  checkKey: 'orphan-cell',
   severity: 'warn' as const,
   cellIds: ['cell-1'],
   cellKeys: ['cell-1'],
-  note: 'This cell is cited by nothing.',
+  summary: 'This cell is cited by nothing.',
   fingerprint: 'orphan-cell:abc',
 }
 
@@ -117,7 +117,7 @@ describe('recordFinding', () => {
     const [entry, ...rest] = sessionSnapshot()
     expect(rest).toEqual([])
     expect(entry.fn).toBe('create_finding')
-    // DELETE on findings is revoked from every client role, and the two states
+    // DELETE on audit_findings is revoked from every client role, and the two states
     // that would silence a finding are human triage decisions. There is no
     // inverse to capture, and offering a control that dismissed the check
     // instead would be worse than offering none.
@@ -152,9 +152,9 @@ describe('recordFinding', () => {
         service_id: 'svc-1',
         fingerprint: 'orphan-cell:abc',
         status: 'open',
-        check_name: 'orphan-cell',
+        check_key: 'orphan-cell',
         severity: 'info',
-        note: 'An earlier run said this.',
+        summary: 'An earlier run said this.',
         run_id: 'run-0',
         cell_ids: ['cell-9'],
         cell_keys: ['cell-9'],
@@ -174,7 +174,7 @@ describe('recordFinding', () => {
         finding_id: 'f-open',
         update: {
           severity: 'info',
-          note: 'An earlier run said this.',
+          summary: 'An earlier run said this.',
           runId: 'run-0',
           cellIds: ['cell-9'],
           cellKeys: ['cell-9'],
@@ -189,9 +189,9 @@ describe('updateFinding', () => {
   const open = () => [
     {
       id: 'f-1',
-      check_name: 'orphan-cell',
+      check_key: 'orphan-cell',
       severity: 'warn',
-      note: 'n',
+      summary: 'n',
       run_id: 'run-1',
       cell_ids: [],
       cell_keys: [],

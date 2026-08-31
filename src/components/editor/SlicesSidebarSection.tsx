@@ -118,7 +118,7 @@ function SliceRow({
 }
 
 /**
- * Slices sidebar mode — the service's slices grouped by `slice_type` into
+ * Slices sidebar mode — the service's slices grouped by `kind` into
  * accordion sections (JOURNEY / STEP / LANE / CELL / CUSTOM; only non-empty
  * groups render, all open by default). Click (or the context menu) opens the
  * slice tab; writers can delete from the context menu.
@@ -152,7 +152,7 @@ export function SlicesSidebarSection() {
 
   const groups = SLICE_TYPE_GROUPS.map((type) => ({
     type,
-    slices: rows.filter((slice) => sliceTypeGroup(slice.slice_type) === type),
+    slices: rows.filter((slice) => sliceTypeGroup(slice.kind) === type),
   })).filter((group) => group.slices.length > 0)
 
   if (groups.length === 0) {
@@ -287,7 +287,7 @@ export function RenameSliceDialog({
   if (open && slice && !seed) {
     setSeed(slice)
     setTitle(slice.title)
-    setDescription(slice.description ?? '')
+    setDescription(slice.summary ?? '')
     setError(null)
   }
   if (!open && seed) setSeed(null)
@@ -300,10 +300,10 @@ export function RenameSliceDialog({
     try {
       outcome = await updateSliceMetaFromSeed(client, seed.id, seed, {
         title,
-        description,
-        sliceType: isSliceType(seed.slice_type) ? seed.slice_type : 'custom',
+        summary: description,
+        sliceType: isSliceType(seed.kind) ? seed.kind : 'custom',
         actor: seed.actor ?? '',
-        origin: seed.origin ?? 'human',
+        authorship: seed.authorship ?? 'human',
       })
     } catch (renameError) {
       setBusy(false)

@@ -5,7 +5,7 @@
 %% vocabulary refactor's last three migrations landed on 2026-08-21, so this
 %% file spent six days asserting `service_lifecycles` and `propositions` at a
 %% database that had neither. It was also missing `deleted_structure`
-%% altogether, carried a `paths.path_type` enum with five values where the
+%% altogether, carried a `paths.kind` enum with five values where the
 %% database has three, and filed `slices.origin` under the wrong enum.
 %%
 %% A snapshot regenerated one day before a rename is a snapshot that lies with
@@ -19,17 +19,19 @@
 %% supabase/schema.reference.sql from their output.
 %%
 %% Enums (CHECK constraints, live 2026-08-26):
-%%   scenarios.view_type      ∈ (single | stacked)  merged is session-only,
+%%   scenarios.layout         ∈ (single | stacked)  merged is session-only,
 %%                                                  never stored
-%%   paths.path_type          ∈ (happy | variant | exception)
+%%   paths.kind               ∈ (happy | variant | exception)
 %%   cell_dependencies.kind   ∈ (leads_to | enables)
 %%   stakeholders.kind        ∈ (recipient | staff | partner | provider | team)
 %%   evidence.kind            ∈ (interview | survey | analytics | doc | meeting |
 %%                               decision | observation | other)
-%%   findings.severity        ∈ (info | warn | critical)
-%%   findings.source          ∈ (audit | whatif | import-sweep)
-%%   findings.status          ∈ (open | resolved | dismissed)
-%%   slices.slice_type        ∈ (journey | step | lane | cell | custom)
+%%   audit_findings.severity  ∈ (info | warn | critical)
+%%   audit_findings.source    ∈ (audit | whatif | import-sweep)
+%%   audit_findings.status    ∈ (open | resolved | dismissed)
+%%   slices.kind              ∈ (journey | step | lane | cell | custom)
+%%   slices.authorship        ∈ (generated | customized | human)
+%%   services.origin          ∈ (import | app)
 %%   slices.origin            ∈ (generated | customized | human)   NOT import|app
 %%   deleted_structure.kind   ∈ (scenario | path | lane | step | cell)
 %%   agent_messages.kind      ∈ (user | assistant | tool | status)
@@ -54,7 +56,7 @@
 %%        visual. Constrained by lanes_lane_role_check, NOT extensible; null =
 %%        generic swimlane, and permitted on purpose.
 %%
-%% Soft references: evidence.cell_id, findings.cell_ids and slice_items.cell_ids
+%% Soft references: evidence.cell_id, audit_findings.cell_ids and slice_items.cell_ids
 %%        carry NO foreign key, deliberately. The importer's scenario-scoped
 %%        delete-and-reinsert must never cascade into analysis-tier rows that a
 %%        person authored. The paired *_cell_keys columns are how those rows are
@@ -84,9 +86,9 @@ erDiagram
   stakeholders       |o--o{ slices : "slices.stakeholder_id"
 
   services           ||--o{ evidence : "has many"
-  services           ||--o{ findings : "has many"
+  services           ||--o{ audit_findings : "has many"
   services           ||--o{ slices : "has many"
-  services           ||--|| business_model : "one per service"
+  services           ||--|| business_models : "one per service"
   slices             ||--o{ slice_items : "has many"
 
   %% Agent session ledger — unrelated to the blueprint tree.
@@ -96,6 +98,7 @@ erDiagram
     uuid id PK
     text name
     text summary
+    text origin "import | app"
   }
   phases {
     uuid id PK
@@ -114,14 +117,14 @@ erDiagram
     text name
     text summary "the situation this blueprint covers"
     int position
-    text view_type "single | stacked"
+    text layout "single | stacked"
     text origin
   }
   paths {
     uuid id PK
     uuid scenario_id FK
     text name
-    text path_type
+    text kind
     text summary "when this route applies"
     text note "the author's aside, not fact"
     entity_status status
@@ -176,8 +179,7 @@ erDiagram
     uuid source_cell_id FK
     uuid target_cell_id FK
     text kind "leads_to = makes it happen, drawn | enables = makes it possible, never drawn"
-    text label
-    text note
+    text name "the word on the arrow"
   }
   evidence {
     uuid id PK
@@ -189,21 +191,20 @@ erDiagram
     text title
     text ref
     text excerpt
-    text note
     date observed_at
     text added_by "agent name or participant code — never the interviewee"
     uuid created_by
   }
-  findings {
+  audit_findings {
     uuid id PK
     uuid service_id FK
     uuid run_id
     text source
-    text check_name
+    text check_key
     text severity
     uuid_array cell_ids "soft, no FK"
     text_array cell_keys "same cardinality as cell_ids, enforced"
-    text note
+    text summary "the finding itself, in one line"
     text fingerprint "dedupe across runs"
     text status "open | resolved | dismissed"
   }
@@ -211,13 +212,13 @@ erDiagram
     uuid id PK
     uuid service_id FK
     uuid stakeholder_id FK "trigger keeps actor equal to their name"
-    text slice_type
+    text kind
     text title
-    text description
+    text summary
     text actor
     text locale
     int position
-    text origin
+    text authorship "generated | customized | human"
     uuid created_by
   }
   slice_items {
@@ -240,7 +241,7 @@ erDiagram
     text note
     text_array aliases "other spellings seen in this blueprint"
   }
-  business_model {
+  business_models {
     uuid service_id PK
     text funding
     text pricing

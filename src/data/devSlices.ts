@@ -18,14 +18,14 @@ export const DEV_FALLBACK_SLICES: Slice[] = [
     id: DEV_SLICE_ID,
     service_id: DEV_SERVICE_ID,
     title: 'Warm-up walkthrough',
-    description:
+    summary:
       'How a regular tutor warms a student up, from entering the breakout room to tracking engagement.',
     actor: 'Regular Tutor',
     // Fallback data has no registry to point at — the link is what a real
     // row gets from the backfill, and null is the honest value here.
     stakeholder_id: null,
-    slice_type: 'journey',
-    origin: 'manual',
+    kind: 'journey',
+    authorship: 'manual',
     locale: 'en',
     position: 1,
     created_by: null,

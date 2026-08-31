@@ -13,15 +13,19 @@
 export const SLICE_TYPES = ['journey', 'step', 'lane', 'cell', 'custom'] as const
 export type SliceType = (typeof SLICE_TYPES)[number]
 
-export const SLICE_ORIGINS = ['generated', 'customized', 'human'] as const
-export type SliceOrigin = (typeof SLICE_ORIGINS)[number]
+/** `slices.authorship` — who wrote it, and whether a regeneration may
+ *  overwrite it. Renamed from `origin` in 20260830190000; every other origin
+ *  column in the schema takes `import` or `app`, which is a different
+ *  question. */
+export const SLICE_AUTHORSHIPS = ['generated', 'customized', 'human'] as const
+export type SliceAuthorship = (typeof SLICE_AUTHORSHIPS)[number]
 
 export function isSliceType(value: string): value is SliceType {
   return (SLICE_TYPES as readonly string[]).includes(value)
 }
 
-export function isSliceOrigin(value: string): value is SliceOrigin {
-  return (SLICE_ORIGINS as readonly string[]).includes(value)
+export function isSliceAuthorship(value: string): value is SliceAuthorship {
+  return (SLICE_AUTHORSHIPS as readonly string[]).includes(value)
 }
 
 /** A frame as the editor holds it, before it becomes a `slice_items` row. */
@@ -35,7 +39,7 @@ export type DraftFrame = {
 
 export type DraftSlice = {
   title: string
-  description: string
+  summary: string
   sliceType: SliceType
   actor: string
   frames: DraftFrame[]
@@ -106,7 +110,7 @@ export function isDraftSaveable(draft: DraftSlice): boolean {
  * slice skill from regenerating over hand-written prose. `human` slices —
  * authored here in the first place — stay `human`.
  */
-export function originAfterEdit(current: string): SliceOrigin {
+export function authorshipAfterEdit(current: string): SliceAuthorship {
   if (current === 'human') return 'human'
   return 'customized'
 }

@@ -3,7 +3,7 @@ import { asSlideViewType, type NavItem } from '@/types/nav'
 
 export type ScenarioRow = Pick<
   Scenario,
-  'id' | 'name' | 'summary' | 'position' | 'phase_id' | 'view_type'
+  'id' | 'name' | 'summary' | 'position' | 'phase_id' | 'layout'
 >
 
 export type PhaseRow = Pick<
@@ -50,7 +50,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         // One vocabulary. The column now holds client tokens
         // (`single | stacked`), so there is no seam to cross — but a row
         // outside the CHECK still falls back rather than rendering nothing.
-        viewType: asSlideViewType(scenario.view_type),
+        viewType: asSlideViewType(scenario.layout),
       })
     })
   })

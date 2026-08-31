@@ -165,7 +165,7 @@ export async function listBlueprint(
     match_count: limit,
     filter_phase: options.phase,
     filter_scenario: options.scenario,
-    filter_path_type: options.pathType,
+    filter_path_kind: options.pathType,
     filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
@@ -260,7 +260,7 @@ export async function searchBlueprint(
     match_count: Math.min(options.limit ?? 15, 100),
     filter_phase: options.phase,
     filter_scenario: options.scenario,
-    filter_path_type: options.pathType,
+    filter_path_kind: options.pathType,
     filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
@@ -345,7 +345,7 @@ export async function listCellDependencies(
 ): Promise<string> {
   let query = client
     .from('cell_dependencies')
-    .select('id, source_cell_id, target_cell_id, kind, label, note')
+    .select('id, source_cell_id, target_cell_id, kind, name')
     .limit(200)
   if (cellId) {
     // Validated before it reaches the filter string. PostgREST parses `.or()`
@@ -364,9 +364,8 @@ export async function listCellDependencies(
     return cellId ? `No links on cell ${cellId}.` : 'No links recorded yet.'
   }
   const lines = data.map((edge) => {
-    const label = edge.label ? ` "${edge.label}"` : ''
-    const note = edge.note ? ` — ${edge.note}` : ''
-    return `${edge.source_cell_id} --${edge.kind ?? 'leads_to'}--> ${edge.target_cell_id}${label}${note} (${edge.id})`
+    const name = edge.name ? ` "${edge.name}"` : ''
+    return `${edge.source_cell_id} --${edge.kind ?? 'leads_to'}--> ${edge.target_cell_id}${name} (${edge.id})`
   })
   const header = cellId
     ? `${data.length} link(s) touching ${cellId}:`
@@ -375,7 +374,7 @@ export async function listCellDependencies(
 }
 
 const EVIDENCE_SELECT =
-  'id, cell_id, kind, title, ref, excerpt, note, observed_at, created_at'
+  'id, cell_id, kind, title, ref, excerpt, observed_at, created_at'
 
 /** One evidence row as a line — the shape both evidence readers render. */
 function evidenceLine(row: {
@@ -420,7 +419,7 @@ export async function listEvidence(
   ].join('\n')
 }
 
-/** Named evidence rows in full — excerpt and note included. */
+/** Named evidence rows in full — excerpt included. */
 export async function getEvidence(
   client: Client,
   ids: string[],
@@ -435,7 +434,6 @@ export async function getEvidence(
   const sections = data.map((row) => {
     const lines = [evidenceLine(row)]
     if (row.excerpt) lines.push(`  excerpt: ${row.excerpt}`)
-    if (row.note) lines.push(`  note: ${row.note}`)
     return lines.join('\n')
   })
   const missing = ids.filter((id) => !data.some((row) => row.id === id))
@@ -494,7 +492,7 @@ export async function getSession(sessionId: string): Promise<string> {
  */
 export async function getProposition(client: Client): Promise<string> {
   const { data, error } = await client
-    .from('business_model')
+    .from('business_models')
     .select('pricing, funding, partners, revenue_model, delivery_cost')
     .limit(1)
     .maybeSingle()
@@ -530,7 +528,7 @@ export async function getBlueprint(
     const blueprint = normalizeBlueprint(raw)
     const { path, steps, lanes, cells, dependencies } = blueprint
     const lines: string[] = [
-      `Path "${path.name}" (${path.id}, type ${path.path_type})`,
+      `Path "${path.name}" (${path.id}, kind ${path.path_type})`,
       `Steps: ${steps
         .map((step) => `${step.position}. "${step.name}" (${step.id})`)
         .join(' | ')}`,
@@ -562,9 +560,9 @@ export async function getBlueprint(
     if (dependencies.length > 0) {
       lines.push(`Edges (${dependencies.length}):`)
       for (const edge of dependencies) {
-        const label = edge.label ? ` "${edge.label}"` : ''
+        const name = edge.name ? ` "${edge.name}"` : ''
         lines.push(
-          `  ${edge.source_cell_id} --${edge.kind ?? 'leads_to'}--> ${edge.target_cell_id}${label}`,
+          `  ${edge.source_cell_id} --${edge.kind ?? 'leads_to'}--> ${edge.target_cell_id}${name}`,
         )
       }
     }
@@ -701,12 +699,12 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
 export async function listSlices(client: Client): Promise<string> {
   const { data, error } = await client
     .from('slices')
-    .select('id, title, slice_type')
-    .order('slice_type')
+    .select('id, title, kind')
+    .order('kind')
   if (error) throw new Error(error.message)
   if (!data || data.length === 0) return 'No slices yet.'
   return data
-    .map((slice) => `"${slice.title}" (${slice.id}, type ${slice.slice_type})`)
+    .map((slice) => `"${slice.title}" (${slice.id}, kind ${slice.kind})`)
     .join('\n')
 }
 

@@ -68,8 +68,8 @@ export type DraftDependency = {
   sourceCellId: string
   targetCellId: string | null
   kind: DependencyKind
-  label: string
-  note: string
+  /** The word on the arrow — `cell_dependencies.name`. */
+  name: string
 }
 
 /** Enough about the other end to check a draft without another read. */

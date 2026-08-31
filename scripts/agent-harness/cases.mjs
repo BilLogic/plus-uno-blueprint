@@ -255,7 +255,7 @@ Canvas mode: view`,
     prepare: async ({ rest }) => {
       const [scenario] = await rest('scenarios?select=id&name=eq.Warm-Up')
       const [path] = await rest(
-        `paths?select=id&scenario_id=eq.${scenario.id}&path_type=eq.happy`,
+        `paths?select=id&scenario_id=eq.${scenario.id}&kind=eq.happy`,
       )
       const cells = (
         await rest(`cells?select=id,content&path_id=eq.${path.id}&content=neq.&limit=2`)

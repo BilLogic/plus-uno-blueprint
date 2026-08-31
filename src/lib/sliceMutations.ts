@@ -8,7 +8,7 @@ import {
   type UpdatedAtToken,
   type WriteOutcome,
 } from '@/lib/optimisticConcurrency'
-import { originAfterEdit, type DraftFrame, type SliceType } from '@/lib/sliceValidation'
+import { authorshipAfterEdit, type DraftFrame, type SliceType } from '@/lib/sliceValidation'
 import type { Database, Json, Slice } from '@/types/database'
 
 type Client = SupabaseClient<Database>
@@ -93,7 +93,7 @@ export async function deleteSlice(
 export type NewSlice = {
   serviceId: string
   title: string
-  description: string
+  summary: string
   sliceType: SliceType
   actor: string
   /** Ordered cell ids; one frame per cell unless `frames` is given. */
@@ -104,7 +104,7 @@ export type NewSlice = {
 /**
  * Create a slice and its frames.
  *
- * `origin` is `human` — this slice was authored here, so the slice skill will
+ * `authorship` is `human` — this slice was authored here, so the skill will
  * never regenerate over it. Frames default to one cell each: that is the
  * honest reading of a selection made by clicking cells one at a time, and
  * merging them afterwards is one click in the editor.
@@ -124,10 +124,10 @@ export async function createSlice(
     .insert({
       service_id: input.serviceId,
       title: input.title.trim(),
-      description: input.description.trim() || null,
-      slice_type: input.sliceType,
+      summary: input.summary.trim() || null,
+      kind: input.sliceType,
       actor: input.actor.trim() || null,
-      origin: 'human',
+      authorship: 'human',
     })
     .select()
     .single()
@@ -229,7 +229,7 @@ export async function replaceSliceFrames(
 /**
  * Copy a slice — row and frames — as "<title> copy".
  *
- * The copy is `origin: 'human'` regardless of the source's origin: the act
+ * The copy is `authorship: 'human'` regardless of the source's: the act
  * of duplicating is authorship, and a copy the slice skill could regenerate
  * over would not be the safe scratchpad duplication exists to provide.
  */
@@ -256,10 +256,10 @@ export async function duplicateSlice(
     .insert({
       service_id: source.service_id,
       title: `${source.title} copy`,
-      description: source.description,
-      slice_type: source.slice_type,
+      summary: source.summary,
+      kind: source.kind,
       actor: source.actor,
-      origin: 'human',
+      authorship: 'human',
     })
     .select()
     .single()
@@ -292,11 +292,11 @@ export async function duplicateSlice(
 
 export type SliceMetaUpdate = {
   title: string
-  description: string
+  summary: string
   sliceType: SliceType
   actor: string
-  /** Current origin; an edit promotes `generated` to `customized`. */
-  origin: string
+  /** Current authorship; an edit promotes `generated` to `customized`. */
+  authorship: string
 }
 
 /**
@@ -309,7 +309,7 @@ export type SliceMetaUpdate = {
  * site already holds the row (it had to, for the token), but a captured
  * inverse that depends on each caller remembering to pass one is an inverse
  * that will be missing somewhere — and the one field a caller would most
- * likely forget is `origin`, which this write *changes* as a side effect
+ * likely forget is `authorship`, which this write *changes* as a side effect
  * (`generated` → `customized`) without being asked to.
  *
  * Recorded only on `ok`. A conflict wrote nothing, and the ledger's whole
@@ -332,7 +332,7 @@ export async function updateSliceMeta(
 ) {
   const { data: before, error: beforeError } = await client
     .from('slices')
-    .select('title, description, slice_type, actor, origin')
+    .select('title, summary, kind, actor, authorship')
     .eq('id', sliceId)
     .maybeSingle()
   if (beforeError) throw toAuthoringError(beforeError)
@@ -341,10 +341,10 @@ export async function updateSliceMeta(
     .from('slices')
     .update({
       title: update.title.trim(),
-      description: update.description.trim() || null,
-      slice_type: update.sliceType,
+      summary: update.summary.trim() || null,
+      kind: update.sliceType,
       actor: update.actor.trim() || null,
-      origin: originAfterEdit(update.origin),
+      authorship: authorshipAfterEdit(update.authorship),
       // updated_at is trigger-maintained — never set it here.
     })
     .eq('id', sliceId)
@@ -409,7 +409,7 @@ export async function updateSliceMetaFromSeed(
 ): Promise<WriteOutcome<Slice>> {
   const { data: current, error } = await client
     .from('slices')
-    .select('title, description, slice_type, actor, origin, updated_at')
+    .select('title, summary, kind, actor, authorship, updated_at')
     .eq('id', sliceId)
     .maybeSingle()
   if (error) throw toAuthoringError(error)
@@ -421,29 +421,29 @@ export async function updateSliceMetaFromSeed(
 /** The subset of `slices` a meta update writes — what is compared and restored. */
 type SliceMetaFields = Pick<
   Slice,
-  'title' | 'description' | 'slice_type' | 'actor' | 'origin'
+  'title' | 'summary' | 'kind' | 'actor' | 'authorship'
 >
 
 /**
  * Did the update change anything?
  *
  * Compared field by field against the row the update RETURNED, not against the
- * caller's intent: `origin` is rewritten by `originAfterEdit` rather than
+ * caller's intent: `authorship` is rewritten by `authorshipAfterEdit` rather than
  * passed through, and the trimming happens in the update itself, so comparing
  * `before` to the arguments would call a no-op save a change (and vice versa).
  *
  * This is the ledger's question — "did anything actually change?" — and both
- * sides of it are values the database stored, so a derived `origin` moving is
+ * sides of it are values the database stored, so a derived `authorship` moving is
  * a real move. `seedMoved` above answers a different question and must not be
  * folded into this one.
  */
 function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
   return (
     before.title !== after.title ||
-    before.description !== after.description ||
-    before.slice_type !== after.slice_type ||
+    before.summary !== after.summary ||
+    before.kind !== after.kind ||
     before.actor !== after.actor ||
-    before.origin !== after.origin
+    before.authorship !== after.authorship
   )
 }
 
@@ -451,22 +451,22 @@ function metaMoved(before: SliceMetaFields, after: SliceMetaFields): boolean {
  * Did the row move out from under the form between opening and submitting?
  *
  * Not `metaMoved`. That one compares two rows the database actually stored,
- * which is the right question for the ledger and the wrong one here: `origin`
- * is DERIVED on write by `originAfterEdit`, not preserved. A frame-editor Save
+ * which is the right question for the ledger and the wrong one here:
+ * `authorship` is DERIVED on write by `authorshipAfterEdit`, not preserved. A Save
  * on an agent-authored slice flips `agent` to `customized` without a person
  * touching a word of it, and comparing the raw field would then refuse a
  * rename that would have stored the very same value.
  *
- * So `origin` is compared through the same projection the write applies. The
+ * So `authorship` is compared through the same projection the write applies. The
  * four fields that ARE round-tripped are compared verbatim.
  */
 function seedMoved(seeded: SliceMetaFields, current: SliceMetaFields): boolean {
   return (
     seeded.title !== current.title ||
-    seeded.description !== current.description ||
-    seeded.slice_type !== current.slice_type ||
+    seeded.summary !== current.summary ||
+    seeded.kind !== current.kind ||
     seeded.actor !== current.actor ||
-    originAfterEdit(seeded.origin) !== originAfterEdit(current.origin)
+    authorshipAfterEdit(seeded.authorship) !== authorshipAfterEdit(current.authorship)
   )
 }
 

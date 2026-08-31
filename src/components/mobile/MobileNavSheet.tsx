@@ -70,7 +70,7 @@ function SliceGroups({
   const groups = SLICE_TYPE_GROUPS.map((type) => ({
     type,
     slices: slices.filter(
-      (slice) => sliceTypeGroup(slice.slice_type) === type,
+      (slice) => sliceTypeGroup(slice.kind) === type,
     ),
   })).filter((group) => group.slices.length > 0)
 
