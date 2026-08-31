@@ -517,7 +517,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
         return record.result
       case 'list_owner_tags': record.result = await realListOwnerTags(); return record.result
       case 'list_stakeholders': {
-        const rows = await rest('stakeholders?select=id,name,kind,note,aliases&order=kind,name')
+        const rows = await rest('stakeholders?select=id,name,kind,summary,aliases&order=kind,name')
         record.result = (rows ?? []).length
           ? rows
               .map((r) => `${r.name} (${r.kind}) [${r.id}]${(r.aliases ?? []).length ? ` — also written ${r.aliases.join(', ')}` : ''}${r.note ? ` — ${r.note}` : ''}`)

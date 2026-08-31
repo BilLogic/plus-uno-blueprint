@@ -99,6 +99,7 @@ tooltip dropped on a `<span>` almost never does.
 | --- | --- |
 | Icon-only button | `IconTooltip` — the tooltip **is** its label |
 | Lane role, path type, cell status, entity kind | `PanelKindBadge description=` on the badge |
+| Who a lane's owner IS — the definition on `stakeholders.summary` | `StakeholderBadge`, which is `PanelKindBadge description=` with the registry's own one-liner. Where the field is editable there is no badge to hover, so the same sentence is printed under the picker; the two never appear together. |
 | Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Applies when` | tooltip on the label; the label must be focusable |
 | Form field guidance | `hint` prop, always visible |
 | A consequence of saving | `Alert variant="warning"`, inline |
@@ -135,7 +136,9 @@ The right test is about the reader:
 **Badges:** entity kind (Scenario, Lane, Step) · lane role · path type · cell
 `status` (renamed from `maturity` in `20260821240000`, and grown from two
 values to the six of the `entity_status` domain — see `src/lib/entityStatus.ts`)
-· touchpoint tone · **`owner_team`**.
+· touchpoint tone · a lane's **stakeholder** (`StakeholderBadge`; eighteen
+names, every one of them recurring, and the registry is the governed list the
+test below asks for) · **`owner_team`**.
 ⚠️ `owner_team` is the one entry the code does not honor: `LanePanel.tsx`
 renders it as an input or as prose, never as a badge, and nothing checks the
 rule. See [lane-vocabulary.md](./lane-vocabulary.md).

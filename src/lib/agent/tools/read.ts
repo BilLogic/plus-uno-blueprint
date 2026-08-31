@@ -319,7 +319,7 @@ export async function listLanes(client: Client): Promise<string> {
 export async function listStakeholders(client: Client): Promise<string> {
   const { data, error } = await client
     .from('stakeholders')
-    .select('id, name, kind, note, aliases')
+    .select('id, name, kind, summary, aliases')
     .order('kind')
     .order('name')
   if (error) throw new Error(error.message)
@@ -329,7 +329,7 @@ export async function listStakeholders(client: Client): Promise<string> {
       const aliases = (row.aliases ?? []).length
         ? ` — also written ${(row.aliases ?? []).join(', ')}`
         : ''
-      return `${row.name} (${row.kind}) [${row.id}]${aliases}${row.note ? ` — ${row.note}` : ''}`
+      return `${row.name} (${row.kind}) [${row.id}]${aliases}${row.summary ? ` — ${row.summary}` : ''}`
     })
     .join('\n')
 }

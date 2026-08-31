@@ -742,8 +742,8 @@ export type Database = {
           id: string
           kind: string
           name: string
-          note: string | null
           service_id: string
+          summary: string | null
           updated_at: string
         }
         Insert: {
@@ -752,8 +752,8 @@ export type Database = {
           id?: string
           kind: string
           name: string
-          note?: string | null
           service_id: string
+          summary?: string | null
           updated_at?: string
         }
         Update: {
@@ -762,8 +762,8 @@ export type Database = {
           id?: string
           kind?: string
           name?: string
-          note?: string | null
           service_id?: string
+          summary?: string | null
           updated_at?: string
         }
         Relationships: [

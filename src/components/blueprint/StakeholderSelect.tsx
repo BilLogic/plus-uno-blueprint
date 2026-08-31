@@ -6,6 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { StakeholderBadge } from '@/components/blueprint/StakeholderBadge'
 import {
   STAKEHOLDER_KIND_LABELS,
   useStakeholders,
@@ -37,20 +38,36 @@ export function StakeholderSelect({
   const [open, setOpen] = useState(false)
   const selected = stakeholders.find((entry) => entry.id === value) ?? null
 
+  /*
+    Read-only is the OWNER BADGE, not the prose it used to be.
+
+    The name was already here; what was missing was any way to find out who
+    that party is. The registry has held a one-line definition of all 18 of
+    them since August and no screen selected it — `stakeholders.summary`, and
+    it was called `note` until 20260830160000, which is how it stayed
+    unreadable long enough to be worth a ticket. Hanging it on the badge is
+    the mechanism `docs/reference/panel-affordances.md` names for exactly this
+    — a value from a governed vocabulary the reader learns by seeing it repeat,
+    whose meaning belongs on its own hover.
+
+    The kind stays beside the badge as text rather than joining it: a badge
+    says one thing, and "Regular Tutor" and "Staff" are two.
+  */
   if (disabled) {
-    return (
-      <p className={PANEL_TEXT.value}>
-        {selected ? (
-          <>
-            {selected.name}{' '}
-            <span className="text-muted-foreground">
-              · {STAKEHOLDER_KIND_LABELS[selected.kind as StakeholderKind]}
-            </span>
-          </>
-        ) : (
+    if (!selected) {
+      return (
+        <p className={PANEL_TEXT.value}>
           <span className="text-muted-foreground">Nobody — a structural row.</span>
-        )}
-      </p>
+        </p>
+      )
+    }
+    return (
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <StakeholderBadge name={selected.name} summary={selected.summary} />
+        <span className={PANEL_TEXT.meta}>
+          {STAKEHOLDER_KIND_LABELS[selected.kind as StakeholderKind]}
+        </span>
+      </div>
     )
   }
 
@@ -60,52 +77,68 @@ export function StakeholderSelect({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 w-full justify-between px-2 text-xs font-normal"
-          >
-            <span className={cn('truncate', !selected && 'text-muted-foreground')}>
-              {selected ? selected.name : 'Nobody'}
-            </span>
-            <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-          </Button>
-        }
-      />
-      <PopoverContent align="start" className="w-56 gap-0.5 p-1">
-        {/* "None", not the sentence that used to sit here — the hint slot is
-            `shrink-0` and holds one word ("Staff", "Partner"), so a sentence
-            pushed the popover wider than its own `w-56` and bled out of it.
-            What a structural row is belongs on the field's own hint, which
-            already says it. */}
-        <StakeholderRow
-          label="Nobody"
-          hint="None"
-          selected={value === null}
-          onSelect={() => pick(null)}
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 w-full justify-between px-2 text-xs font-normal"
+            >
+              <span className={cn('truncate', !selected && 'text-muted-foreground')}>
+                {selected ? selected.name : 'Nobody'}
+              </span>
+              <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+            </Button>
+          }
         />
-        {stakeholders
-          /*
-            Teams are in the same registry — one table for every party — but a
-            stakeholder is who appears in the blueprint as an ACTOR, and Design
-            does not stand in a room. Teams reach a lane through `owner_team`.
-          */
-          .filter((entry) => entry.kind !== 'team')
-          .map((entry) => (
+        <PopoverContent align="start" className="w-56 gap-0.5 p-1">
+          {/* "None", not the sentence that used to sit here — the hint slot is
+              `shrink-0` and holds one word ("Staff", "Partner"), so a sentence
+              pushed the popover wider than its own `w-56` and bled out of it.
+              What a structural row is belongs on the field's own hint, which
+              already says it. */}
           <StakeholderRow
-            key={entry.id}
-            label={entry.name}
-            hint={STAKEHOLDER_KIND_LABELS[entry.kind as StakeholderKind]}
-            selected={entry.id === value}
-            onSelect={() => pick(entry.id)}
+            label="Nobody"
+            hint="None"
+            selected={value === null}
+            onSelect={() => pick(null)}
           />
-        ))}
-      </PopoverContent>
-    </Popover>
+          {stakeholders
+            /*
+              Teams are in the same registry — one table for every party — but a
+              stakeholder is who appears in the blueprint as an ACTOR, and Design
+              does not stand in a room. Teams reach a lane through `owner_team`.
+            */
+            .filter((entry) => entry.kind !== 'team')
+            .map((entry) => (
+            <StakeholderRow
+              key={entry.id}
+              label={entry.name}
+              hint={STAKEHOLDER_KIND_LABELS[entry.kind as StakeholderKind]}
+              selected={entry.id === value}
+              onSelect={() => pick(entry.id)}
+            />
+          ))}
+        </PopoverContent>
+      </Popover>
+      {/*
+        The same definition the badge carries, spelled out rather than hovered.
+
+        Design mode has no badge to hover — the value is a picker, and its
+        label is the name — so the definition would otherwise be the one thing
+        an author cannot see at the moment they are choosing who owns the row.
+        The two never appear together, which is what keeps this from being a
+        second mechanism for one fact.
+      */}
+      {selected?.summary ? (
+        <p className="text-2xs leading-snug text-muted-foreground">
+          {selected.summary}
+        </p>
+      ) : null}
+    </>
   )
 }
 
