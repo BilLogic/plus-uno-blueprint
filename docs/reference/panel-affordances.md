@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
-summary: Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
-sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
+summary: Which mechanism explains what — popover, kind badge, hint, alert — why a definition is never a tooltip, where an entity kind's definition hangs, what ⓘ means, the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
+sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/PanelTermLabel.tsx, src/lib/panelTerms.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
 last-reviewed: 2026-08-31
 ---
 
@@ -26,23 +26,45 @@ up hoverable in one panel, behind an ⓘ in another, and unexplained in a third.
 | | Mechanism | Because |
 | --- | --- | --- |
 | **No — they must read it** | inline **`Alert`**, always visible | A consequence they would be surprised by. Missable is the same as absent. |
-| **Yes, it's a definition** | **hover / focus / tap the word itself** | Someone who already knows what "backstage actions" means should not have to step over an explanation of it. |
+| **Yes, it's a definition** | **`Popover openOnHover` on the word itself** | Someone who already knows what "backstage actions" means should not have to step over an explanation of it. Hover for the pointer, press for everyone else. |
 | **It's guidance while typing** | inline **`hint`** under the field label | A field being filled in deserves its guidance without a gesture. |
 
 That is the whole protocol. Everything below is consequence.
 
-### There is no ⓘ
+### ⓘ means "opens the panel", and only that
 
-`PanelHint` is deleted. It had exactly two uses in the app:
+*Was "There is no ⓘ", 2026-08-21. Settled again 2026-08-31 with #140 Q11 —
+the glyph came back on the canvas in the meantime and had picked up a second
+meaning, which is the failure the original section was written against.*
+
+`PanelHint` — a clickable ⓘ that revealed an aside — is still deleted, and for
+the reason it always was:
 
 | Where | Verdict |
 | --- | --- |
 | Lane panel — *"saving writes all 6 lanes"* | **Real, and behind the wrong mechanism.** The entire point was that the reader must not be surprised by it. A click-to-open marker is missed by not clicking. Now an inline `Alert variant="warning"`. |
 | Scenario panel — *"the layout control is on the canvas"* | **Answered a question nobody arrives with.** Deleted. |
 
-A mechanism with one good use is not a mechanism; it is a special case wearing
-a costume. If a future case genuinely needs *"click to reveal an aside"*, that
-is the moment to reconsider — not before.
+What changed is that the glyph itself is now in use — on the canvas, marking
+the controls that open an entity's properties panel — and it had drifted into
+meaning two things. Six components drew it: four for *opens the panel*
+(`EntityTitleAffordance`, `LaneHeaderAffordance`, `StepHeaderAffordance`,
+`EntityPropertiesButton`) and two for *an aside* (`ScenarioTitleBadge`'s
+parallel-scenario note, and `ScenarioParallelInfoTooltip` parked before a slide
+title).
+
+> **ⓘ means "opens the panel". Nothing else may wear it, and it is always
+> visible.**
+
+Both asides moved onto the word they were about, into the same popover that
+carries what a scenario is — one mechanism, two facts, which is allowed. And
+three of the six were drawn only on hover, so on touch the one signal that a
+header opened anything was never drawn at all. **A signifier a reader cannot
+see is not a signifier.** `CANVAS_HEADER_HINT` no longer starts at `opacity-0`
+and `EntityPropertiesButton` no longer takes `revealOnHover`.
+
+An `Alert`'s leading icon is not this ⓘ: it is the alert's own severity mark,
+it is never a target, and it is covered by the variant table above.
 
 ### The question cursor came back, and why
 
@@ -67,6 +89,99 @@ to give — `PanelTermLabel`, `StatusBadge`, `PanelKindBadge` when it was passed
 a `description`, a path badge where its description tooltip is shown. A badge
 with nothing behind it keeps `cursor-default`: a help cursor over a word that
 explains nothing is a promise it cannot keep.
+
+### A definition is never a tooltip
+
+*Decided 2026-08-31 with #140, and it is a bug report rather than a
+preference.*
+
+Base UI's `Tooltip` opens on hover and on focus and on nothing else — its hover
+interaction is `mouseOnly` and there is no press behind it. This app has a real
+phone posture (`useMobileShell`, a full-width bottom sheet). So every
+definition it owned was **invisible on a phone**: all six `PanelTermLabel`
+sites, every `PanelKindBadge description=` (a lane's role, a stakeholder's
+one-liner), the owner hint, and every path, phase and scenario description on
+the board. Nothing said so, and nothing failed.
+
+> **A definition uses `Popover` with `openOnHover` on the trigger.** Hover for
+> the pointer, the popover's own press for everyone else. No new component:
+> `openOnHover` is a real prop on `PopoverTrigger`, default false.
+
+`IconTooltip`'s tooltips stay tooltips. They label icon-only buttons, which is
+the one case the table above keeps a tooltip for — the tooltip **is** the
+label, the button's `aria-label` says the same words, and a button whose press
+is already spoken for cannot have that press mean "explain" as well. The same
+exemption covers a tab. It is narrow on purpose: a bare `<span>` has no such
+excuse, and that is where every dead definition was hiding.
+
+[`scripts/tests/entity-definitions.test.mjs`](../../scripts/tests/entity-definitions.test.mjs)
+fails a build that puts a definition back behind a tooltip. The subject is
+every `<Tooltip>` element in `src`, not a list of files, so it finds the next
+one wherever it is written.
+
+### What a phase, a scenario, a path, a step, a lane and a service ARE
+
+*Decided 2026-08-31 with #140.*
+
+The entity kinds were the one vocabulary the app never defined. `PanelTermLabel`
+explains the words *inside* a panel on the assumption that a reader who opened
+it knows what kind of thing they opened it on; #140 is that assumption failing.
+
+> **A definition hangs off the entity's own label ON THE BOARD, in that label's
+> hover slot, alongside the label's existing description where it has one. Six
+> placements, no exemptions.**
+
+Not the panel badge. A reader who does not know what a lane is has the question
+*while looking at the board*, before anything is opened, and an explanation
+that arrives only after the click is an explanation for somebody who no longer
+needs it. `PanelKindBadge label="Phase"` is unchanged: the panel already
+answers "what is in this one".
+
+| Kind | Label on the board | Carried by |
+| --- | --- | --- |
+| service | the navbar title | `EntityTitleAffordance` |
+| phase | the phase frame's label, and the menubar title | `ScenarioTitleBadge` (`tone="phase"`), `EntityTitleAffordance` |
+| scenario | the compare panel's label, the menubar title, a slide header's title | `ScenarioTitleBadge`, `EntityTitleAffordance`, `ScenarioTitleDefinition` |
+| path | the band, column and cell label | `PathLabelBadge` |
+| step | the column header | `StepHeaderAffordance` |
+| lane | the row header | `LaneHeaderAffordance` |
+
+All six route through **`EntityDefinitionPopover`**, and the words live in
+`ENTITY_KIND_DEFINITIONS` (`src/lib/panelTerms.ts`) — static constants, one per
+kind, next to the panel terms they are the missing half of. The component was
+`PathDescriptionTooltip`; the name was already wrong, since two badges funnelled
+through it, and it is wrong twice over now that it is not a tooltip.
+
+**One shape, always the same.** The kind in small caps, its definition, a rule,
+and then this instance's own description below it. The kind line goes on all
+six including the three that already had a description — a reader learns the
+shape once and it never varies, and "the ones with a description are different"
+is a rule nobody can see.
+
+One mechanism carrying two facts is fine. The standing prohibition is two
+mechanisms for **one** fact, which is why the instance half is drawn only where
+the description is not already on screen: a menubar title and a slide header
+print it as prose beside the name, so their popovers carry the kind alone.
+
+### The cue is a dotted underline
+
+`cursor-help` is a pointer cue and touch has no pointer, so the help cursor
+cannot be the only mark on an explained word. The mark is the `<abbr>` idiom —
+a dotted underline in the label's own ink at 40%, `DEFINED_LABEL_CUE` in
+`src/lib/panelText.ts`. Not an ⓘ: that glyph means "opens the panel".
+
+**This does not undo `### The question cursor came back, and why` above, and it
+is the revisit that section invited.** Its argument was that with #182 taking
+the hover state away, nothing at all announced an explained badge before the
+tooltip opened, so the cursor stopped being a duplicate signal. The dotted
+underline is now the always-drawn signal that argument was missing — but it is
+a *different* signal from the cursor rather than the same one twice: the
+underline says "this word is defined" to everyone, and the cursor says "and a
+pointer will get it without a click" to the reader who has one. An explained
+label wears four things and only four: **the dotted underline, `cursor-help`, a
+focus ring, and the popover.** A label with nothing behind it wears none of
+them — a help cursor and a dotted rule over a word that explains nothing are
+promises neither can keep.
 
 ---
 
@@ -98,6 +213,10 @@ This is half the rule, not an accessibility footnote.
 `useMobileShell`, a bottom sheet the full width of the screen. Any definition
 reachable only by pointer is invisible there. Every hover explanation must open
 on tap; a tap that opens a definition must not also activate what it sits on.
+This is why definitions are popovers rather than tooltips (above), and why a
+canvas header that both explains a word and opens a panel gives them **two
+targets**: the name carries the definition, and an opener filling the rest of
+the block carries the panel.
 
 **Keyboard.** A tooltip on a bare `<span>` cannot be reached at all. A section
 label carrying a definition must be focusable and must announce itself.
@@ -106,8 +225,10 @@ label carrying a definition must be focusable and must announce itself.
 same words from one source. Two strings for one label is how they drift.
 
 Practical consequence: **prefer a component over a raw `<Tooltip>`.**
-`IconTooltip` and `PanelKindBadge` already handle focus and labelling. A raw
-tooltip dropped on a `<span>` almost never does.
+`IconTooltip`, `PanelTermLabel`, `PanelKindBadge` and `EntityDefinitionPopover`
+already handle focus and labelling. A raw tooltip dropped on a `<span>` almost
+never does — and if what it carries is a definition, it is also unreachable on
+touch.
 
 ---
 
@@ -115,14 +236,16 @@ tooltip dropped on a `<span>` almost never does.
 
 | What | Mechanism |
 | --- | --- |
-| Icon-only button | `IconTooltip` — the tooltip **is** its label |
-| Lane role, path type, cell status, entity kind | `PanelKindBadge description=` on the badge |
+| Icon-only button | `IconTooltip` — the tooltip **is** its label, and the one place a tooltip is still right |
+| **What a phase, scenario, path, step, lane or service IS** | `EntityDefinitionPopover` on that entity's own label **on the board** — six placements, no exemptions |
+| Lane role, path type, cell status | `PanelKindBadge description=` on the badge, which is a popover |
 | Who a lane's owner IS — the definition on `stakeholders.summary` | `StakeholderBadge`, which is `PanelKindBadge description=` with the registry's own one-liner. Where the field is editable there is no badge to hover, so the same sentence is printed under the picker; the two never appear together. |
-| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Summary` | tooltip on the label; the label must be focusable |
+| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Summary` | `PanelTermLabel` — a popover on the label; the label must be focusable |
 | Form field guidance | `hint` prop, always visible |
 | A consequence of saving | `Alert variant="warning"`, inline |
 | A load or write failure | `Alert variant="destructive"`, inline |
 | Why a control is elsewhere | **nothing** — if it matters, the control is in the wrong place |
+| Opening an entity's properties | the ⓘ, always visible, and it means nothing else |
 
 Standing prohibition: **nothing carries two mechanisms for one fact.** Removed
 from the lane badge in Aug 2026; do not bring it back.

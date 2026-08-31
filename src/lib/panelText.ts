@@ -34,3 +34,19 @@ export const PANEL_TEXT = {
   /** Authored prose — what the panel exists to show. */
   value: 'text-sm text-foreground/80',
 } as const
+
+/**
+ * The cue an explained label wears, and the reason it is not an ⓘ.
+ *
+ * A dotted underline is the `<abbr>` idiom: it marks the WORD, it is drawn
+ * without a pointer, and it survives on touch — where `cursor-help` says
+ * nothing at all, because there is no cursor. An ⓘ would have said the other
+ * thing this app's ⓘ means, and only ever means: opens the panel
+ * (docs/reference/panel-affordances.md).
+ *
+ * `decoration-current/40` so the rule takes the label's own ink at 40% — a
+ * lane label carries its role's colour and a path badge its path type's, and a
+ * fixed underline colour would have been a second hue on both.
+ */
+export const DEFINED_LABEL_CUE =
+  'underline decoration-dotted decoration-from-font underline-offset-4 decoration-current/40'

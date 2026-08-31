@@ -15,14 +15,14 @@ claims:
   - src/components/blueprint/BlueprintStepVisual.tsx
   - src/components/blueprint/BlueprintTouchpointCell.tsx
   - src/components/blueprint/BlueprintVisualPlayButton.tsx
+  - src/components/blueprint/EntityDefinitionPopover.tsx
   - src/components/blueprint/IntegratedDependencyArrows.tsx
   - src/components/blueprint/LaneCollapseToggle.tsx
-  - src/components/blueprint/PathDescriptionTooltip.tsx
   - src/components/blueprint/PathLabelBadge.tsx
   - src/components/blueprint/PathTypeColorKey.tsx
   - src/components/blueprint/PhaseScenarioOverview.tsx
   - src/components/blueprint/ScenarioBlueprintPanel.tsx
-  - src/components/blueprint/ScenarioParallelInfoTooltip.tsx
+  - src/components/blueprint/ScenarioTitleDefinition.tsx
   - src/components/blueprint/ScenarioTitleBadge.tsx
   - src/components/blueprint/ServiceBlueprintGrid.tsx
   - src/components/blueprint/VisualStepDetailStack.tsx

@@ -1,13 +1,14 @@
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
-import { PANEL_TEXT } from '@/lib/panelText'
+import { DEFINED_LABEL_CUE, PANEL_TEXT } from '@/lib/panelText'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { useSupabase } from '@/contexts/SupabaseProvider'
+import { cn } from '@/lib/utils'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 
 /**
@@ -71,12 +72,33 @@ function OwnerCell({
         {label}
       </span>
       {hint ? (
-        <Tooltip>
-          <TooltipTrigger render={<span className={PANEL_TEXT.value}>{value}</span>} />
-          <TooltipContent side="bottom" className="max-w-xs text-xs">
+        /* A popover, not a tooltip: this hint is a definition, and a tooltip
+           never opens on touch — see PanelTermLabel. */
+        <Popover>
+          <PopoverTrigger
+            nativeButton={false}
+            openOnHover
+            delay={200}
+            closeDelay={80}
+            render={
+              <span
+                className={cn(
+                  PANEL_TEXT.value,
+                  'w-fit cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                  DEFINED_LABEL_CUE,
+                )}
+              >
+                {value}
+              </span>
+            }
+          />
+          <PopoverContent
+            side="bottom"
+            className="w-auto max-w-xs p-3 text-xs leading-relaxed"
+          >
             {hint}
-          </TooltipContent>
-        </Tooltip>
+          </PopoverContent>
+        </Popover>
       ) : (
         body
       )}

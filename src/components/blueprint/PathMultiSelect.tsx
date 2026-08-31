@@ -1,4 +1,3 @@
-import { PathDescriptionTooltip } from '@/components/blueprint/PathDescriptionTooltip'
 import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
 import { filterToolbarButtonClass } from '@/lib/filterToolbarButton'
 import { cn } from '@/lib/utils'
@@ -102,13 +101,7 @@ function PathNotionToggle({
       aria-label={pathLabel}
     >
       <PathTypeColorKey type={path.path_type} name={path.name} />
-      <PathDescriptionTooltip
-        description={path.summary}
-        pathName={path.name}
-        side="top"
-      >
-        <span>{pathLabel}</span>
-      </PathDescriptionTooltip>
+      <span>{pathLabel}</span>
       <StatusBadge status={path.status} />
     </button>
   )
@@ -135,13 +128,7 @@ export function PathToolbarButton({
       aria-label={pathLabel}
     >
       <PathTypeColorKey type={path.path_type} name={path.name} />
-      <PathDescriptionTooltip
-        description={path.summary}
-        pathName={path.name}
-        side="top"
-      >
-        <span>{pathLabel}</span>
-      </PathDescriptionTooltip>
+      <span>{pathLabel}</span>
       <StatusBadge status={path.status} />
     </button>
   )
@@ -194,13 +181,7 @@ function PathCheckbox({
         aria-label={pathLabel}
       />
       <PathTypeColorKey type={path.path_type} name={path.name} />
-      <PathDescriptionTooltip
-        description={path.summary}
-        pathName={path.name}
-        side="top"
-      >
-        <span className="min-w-0 cursor-default text-left">{pathLabel}</span>
-      </PathDescriptionTooltip>
+      <span className="min-w-0 cursor-default text-left">{pathLabel}</span>
       <StatusBadge status={path.status} />
     </label>
   )

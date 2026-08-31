@@ -18,10 +18,10 @@ import {
 } from '@/components/ui/drawer'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   CELL_DETAIL_PANEL_BOTTOM_CLASS,
   CELL_DETAIL_PANEL_TOP_CLASS,
@@ -33,7 +33,7 @@ import {
   rememberedSheetSnap,
   rememberSheetSnap,
 } from '@/lib/panelSheetSnap'
-import { PANEL_TEXT } from '@/lib/panelText'
+import { DEFINED_LABEL_CUE, PANEL_TEXT } from '@/lib/panelText'
 import {
   blueprintLaneAttrs,
   blueprintToneAttrs,
@@ -271,7 +271,16 @@ export function Field({
   children: ReactNode
 }) {
   const labelText = (
-    <span className={cn('w-fit', PANEL_TEXT.sectionLabel)}>
+    <span
+      className={cn(
+        'w-fit',
+        PANEL_TEXT.sectionLabel,
+        // Only where there is something behind it. A help cursor and a dotted
+        // rule over a word that explains nothing is a promise it cannot keep.
+        hint &&
+          `cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${DEFINED_LABEL_CUE}`,
+      )}
+    >
       {label}
       {required ? <span className="ml-0.5 text-destructive">*</span> : null}
     </span>
@@ -279,10 +288,24 @@ export function Field({
   return (
     <div className="flex flex-col gap-1">
       {hint ? (
-        <Tooltip>
-          <TooltipTrigger render={labelText} />
-          <TooltipContent side="left">{hint}</TooltipContent>
-        </Tooltip>
+        /* A popover, not a tooltip: a tooltip never opens on touch, and this
+           hint carries `PANEL_TERMS` entries — definitions — on a shell that
+           has a phone posture. See PanelTermLabel. */
+        <Popover>
+          <PopoverTrigger
+            nativeButton={false}
+            openOnHover
+            delay={200}
+            closeDelay={80}
+            render={labelText}
+          />
+          <PopoverContent
+            side="left"
+            className="w-auto max-w-64 p-3 text-xs leading-relaxed"
+          >
+            {hint}
+          </PopoverContent>
+        </Popover>
       ) : (
         labelText
       )}
@@ -445,27 +468,42 @@ export function PanelKindBadge({
   description?: string | null
 }) {
   /*
-    The three things an explained badge wears, and the one it must not.
+    What an explained badge wears, and the one thing it must not.
 
     `cursor-help` says a pointer will get something and it will not be a
-    click; `tabIndex` makes the definition reachable without a pointer at all
-    (docs/reference/panel-affordances.md § Hover is never the only way in);
-    the focus ring comes from `badgeVariants`. What is deliberately absent is
-    a hover colour: this badge is not clickable, and a surface that repaints
-    under the pointer says it is.
+    click; the dotted underline says the same thing to a reader who has no
+    pointer at all, which is the half that was missing; the focus ring comes
+    from `badgeVariants` and the popover trigger supplies `tabIndex`, so the
+    definition is reachable without a pointer (docs/reference/panel-affordances.md
+    § Hover is never the only way in). What is deliberately absent is a hover
+    colour: this badge is not clickable, and a surface that repaints under the
+    pointer says it is.
   */
   const explained = description
-    ? { tabIndex: 0, className: 'cursor-help' }
+    ? { className: `cursor-help ${DEFINED_LABEL_CUE}` }
     : { className: undefined }
 
   const explain = (badge: ReactNode) =>
     description ? (
-      <Tooltip>
-        <TooltipTrigger render={badge as never} />
-        <TooltipContent side="bottom" className="max-w-xs text-xs">
+      /* A POPOVER since #140, and the change is a bug fix rather than a
+         preference: Base UI's tooltip never opens on touch, so every
+         description this badge has ever carried — a lane's role, a
+         stakeholder's one-liner — was invisible on a phone. */
+      <Popover>
+        <PopoverTrigger
+          nativeButton={false}
+          openOnHover
+          delay={200}
+          closeDelay={80}
+          render={badge as never}
+        />
+        <PopoverContent
+          side="bottom"
+          className="w-auto max-w-xs p-3 text-xs leading-relaxed"
+        >
           {description}
-        </TooltipContent>
-      </Tooltip>
+        </PopoverContent>
+      </Popover>
     ) : (
       badge
     )
@@ -474,7 +512,6 @@ export function PanelKindBadge({
     return explain(
       <Badge
         {...blueprintToneAttrs(tone)}
-        {...(description ? { tabIndex: 0 } : {})}
         title={title}
         className={cn('max-w-full truncate border-transparent', explained.className)}
         style={{
@@ -493,7 +530,6 @@ export function PanelKindBadge({
     return explain(
       <Badge
         variant="secondary"
-        {...(description ? { tabIndex: 0 } : {})}
         className={cn(
           'max-w-full truncate border-muted bg-foreground/5 text-muted-foreground',
           explained.className,
@@ -507,7 +543,6 @@ export function PanelKindBadge({
   return explain(
     <Badge
       {...blueprintLaneAttrs(laneRole)}
-      {...(description ? { tabIndex: 0 } : {})}
       title={title}
       className={cn('max-w-full truncate border-transparent', explained.className)}
       /*

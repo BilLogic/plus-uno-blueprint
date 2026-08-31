@@ -32,25 +32,56 @@ export const CANVAS_HEADER_BOX = 'rounded-md px-2 py-1.5 gap-1.5'
  * and the column header row is a fixed-height track. A ring drawn outside a
  * box that fills its container has nowhere to go, so it came back sheared off
  * along whichever edge it met. Drawn inside, it is always whole.
+ *
+ * Worn by the BOX since #140, not by the button inside it. The header now
+ * holds two targets — the name, which explains what kind of row or column
+ * this is, and everything else, which opens the panel — so the wash and the
+ * selected ring belong to the block they share rather than to one of them.
+ * `data-open` replaces `aria-pressed` for the same reason: the state is the
+ * header's, and `aria-pressed` stays on the button that actually toggles.
  */
 export const CANVAS_HEADER_STATE = [
-  'transition-colors duration-(--motion-micro)',
+  'relative transition-colors duration-(--motion-micro)',
   'hover:bg-foreground/5',
   // Neutral, not the brand colour. A header is chrome — it names an axis; it
   // is not one of the coloured objects on the board. Borrowing the CELL's
   // teal selection ring put the loudest hue in the app on the quietest thing
   // in it, and two selected headers read as more important than the cells
   // they label. Ink at 30% says "this one" without competing.
-  'aria-pressed:bg-foreground/[0.07] aria-pressed:ring-2 aria-pressed:ring-inset',
-  'aria-pressed:ring-foreground/30',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50',
+  'data-open:bg-foreground/[0.07] data-open:ring-2 data-open:ring-inset',
+  'data-open:ring-foreground/30',
+  'has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-inset',
+  'has-[button:focus-visible]:ring-ring/50',
 ].join(' ')
 
-/** The ⓘ: transparent at rest, full ink once the header is live or open. */
+/**
+ * The ⓘ: always visible, because it is the mark of a control.
+ *
+ * It was transparent until the header was hovered, which meant that on touch —
+ * where nothing is ever hovered — the one signal that a header opens anything
+ * was never drawn. #140 Q11: ⓘ means "opens the panel" everywhere, and an
+ * affordance a touch reader cannot see is not an affordance.
+ */
 export const CANVAS_HEADER_HINT = [
-  'size-3.5 shrink-0 text-muted-foreground/50 opacity-0',
-  'transition-opacity duration-(--motion-micro)',
+  'size-3.5 shrink-0 text-muted-foreground/60',
+  'transition-colors duration-(--motion-micro)',
 ].join(' ')
+
+/**
+ * The header's name: the word, and what that kind of thing IS.
+ *
+ * Focusable and cued on its own, separately from the box around it — the
+ * definition is a fact about the word, so the word is where it hangs
+ * (docs/reference/panel-affordances.md).
+ */
+export const CANVAS_HEADER_NAME = [
+  'relative z-10 w-fit cursor-help rounded-sm outline-none',
+  'focus-visible:ring-2 focus-visible:ring-ring/50',
+].join(' ')
+
+/** The invisible full-block target that opens the panel. */
+export const CANVAS_HEADER_OPENER =
+  'absolute inset-0 rounded-md outline-none'
 
 /**
  * The horizontal inset of one column of the board — the lane label and the

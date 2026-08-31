@@ -1,5 +1,6 @@
 import { NotionPropertyRow } from '@/components/blueprint/NotionPropertyRow'
-import { ScenarioParallelInfoTooltip } from '@/components/blueprint/ScenarioParallelInfoTooltip'
+import { ScenarioTitleDefinition } from '@/components/blueprint/ScenarioTitleDefinition'
+import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { ScenarioSlideFilters } from '@/components/blueprint/ScenarioSlideFilters'
 import { PathMultiSelect, type PathOption } from '@/components/blueprint/PathMultiSelect'
 import { cn } from '@/lib/utils'
@@ -46,12 +47,17 @@ export function ScenarioSlideHeader({
           <p className="mb-1 text-sm text-muted-foreground">{phaseLabel}</p>
         )}
         <div className="flex items-center gap-2">
-          {slide ? (
-            <ScenarioParallelInfoTooltip slide={slide} iconClassName="size-4" />
-          ) : null}
-          <h1 className="text-5xl font-bold leading-[1.15] tracking-tight text-foreground">
-            {title}
-          </h1>
+          <ScenarioTitleDefinition slide={slide}>
+            <h1
+              className={cn(
+                'w-fit cursor-help rounded-sm text-5xl font-bold leading-[1.15] tracking-tight text-foreground outline-none',
+                'focus-visible:ring-2 focus-visible:ring-ring/50',
+                DEFINED_LABEL_CUE,
+              )}
+            >
+              {title}
+            </h1>
+          </ScenarioTitleDefinition>
         </div>
         {description && (
           <p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground">
@@ -103,20 +109,18 @@ export function ScenarioSlideHeader({
             phaseLabel && 'mt-1',
           )}
         >
-          {slide ? (
-            <ScenarioParallelInfoTooltip
-              slide={slide}
-              iconClassName={compact ? 'size-3.5' : 'size-4'}
-            />
-          ) : null}
-          <h1
-            className={cn(
-              'font-semibold tracking-tight text-foreground',
-              compact ? 'text-xl' : 'text-3xl md:text-4xl',
-            )}
-          >
-            {title}
-          </h1>
+          <ScenarioTitleDefinition slide={slide}>
+            <h1
+              className={cn(
+                'w-fit cursor-help rounded-sm font-semibold tracking-tight text-foreground outline-none',
+                'focus-visible:ring-2 focus-visible:ring-ring/50',
+                compact ? 'text-xl' : 'text-3xl md:text-4xl',
+                DEFINED_LABEL_CUE,
+              )}
+            >
+              {title}
+            </h1>
+          </ScenarioTitleDefinition>
         </div>
         {description && (
           <p
