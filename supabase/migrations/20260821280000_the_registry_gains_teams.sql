@@ -45,10 +45,49 @@ where d.name = 'Design'
 do $$
 declare n int;
 begin
-  select count(*) into n from stakeholders where kind = 'staff';
-  if n < 12 then raise exception 'expected at least 12 staff parties, got %', n; end if;
-  select count(*) into n from stakeholders where parent_id is not null;
-  if n <> 4 then raise exception 'expected 4 sub-teams under Design, got %', n; end if;
+  -- AMENDED 2026-08-31. Two censuses stood here — `expected at least 12 staff
+  -- parties`, `expected 4 sub-teams under Design` — counting the whole table
+  -- against production's numbers on the day. On an empty database there is no
+  -- `service_lifecycles` row for the two inserts above to hang off, nothing is
+  -- seeded, the first raises, and because a migration is one transaction
+  -- `add column parent_id` ROLLS BACK WITH IT.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case.
+  --
+  -- What replaces them is what they were reaching for, per-name rather than
+  -- per-count: every party this file seeds is present wherever its service is,
+  -- and every sub-team hangs off Design. Vacuously true on an empty database,
+  -- and on production exactly as strong — the 8 + 4 names are what made 12.
+  select count(*) into n
+  from public.service_lifecycles sl
+  cross join (values
+    ('Design'), ('Dev'), ('Product'), ('Research'),
+    ('Tutor Supervisors'), ('Partnership'), ('CMU HR'), ('CPO')
+  ) as want(name)
+  where not exists (
+    select 1 from public.stakeholders s
+    where s.service_id = sl.id and s.name = want.name
+  );
+  if n > 0 then raise exception '% seeded parties are missing from the registry', n; end if;
+
+  select count(*) into n
+  from public.stakeholders d
+  cross join (values
+    ('Product Design'), ('Design Ops'), ('Instructional Design'), ('Marketing')
+  ) as want(name)
+  where d.name = 'Design'
+    and not exists (
+      select 1 from public.stakeholders s
+      where s.parent_id = d.id and s.name = want.name
+    );
+  if n > 0 then raise exception '% Design sub-teams are missing or unparented', n; end if;
+
+  select count(*) into n from stakeholders c
+  join stakeholders p on p.id = c.parent_id where p.name <> 'Design';
+  if n > 0 then raise exception '% sub-teams hang off something other than Design', n; end if;
+
   select count(*) into n from stakeholders c
   join stakeholders p on p.id = c.parent_id where p.parent_id is not null;
   if n > 0 then raise exception 'the party hierarchy is more than one level deep'; end if;

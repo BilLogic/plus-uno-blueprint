@@ -165,11 +165,41 @@ create trigger stakeholders_rename_slices_au
   for each row execute function public.stakeholders_rename_slices();
 
 do $assert$
-declare structural_linked int; actors_unlinked int; seeded int;
+declare structural_linked int; actors_unlinked int; unseeded int;
 begin
-  select count(*) into seeded from public.stakeholders;
-  if seeded <> 6 then
-    raise exception 'expected 6 stakeholders, seeded %', seeded;
+  -- AMENDED 2026-08-31. This was a census — `expected 6 stakeholders, seeded
+  -- %` — counting the whole table against production's number on the day. On
+  -- an empty database the seed above finds no `service_lifecycles` row named
+  -- 'PLUS Application', inserts nothing, and this raises. Because a migration
+  -- is one transaction, `create table public.stakeholders` and the two
+  -- `stakeholder_id` columns ROLL BACK WITH IT, which is why `20260820200000`,
+  -- `20260821280000`, `20260821300000` and `20260828121000` all report
+  -- `relation "public.stakeholders" does not exist` on a replay. One census,
+  -- four files.
+  --
+  -- Same rule as `20260821340000`: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case. The table has long
+  -- since been created in production, so nothing here changes what production
+  -- is — it changes whether anything can ever check.
+  --
+  -- What replaces it is what it was reaching for, as an invariant: a service
+  -- this seed names must end up holding every name the seed lists. Vacuously
+  -- true where that service does not exist, and exactly as strong on
+  -- production, where the one 'PLUS Application' row had to receive all six.
+  select count(*) into unseeded
+  from public.service_lifecycles sl
+  cross join (values
+    ('Student'), ('Regular Tutor'), ('Lead Tutor'),
+    ('Supervisor'), ('Partner Action: Teacher'), ('PLUS')
+  ) as want(name)
+  where sl.name = 'PLUS Application'
+    and not exists (
+      select 1 from public.stakeholders s
+      where s.service_id = sl.id and s.name = want.name
+    );
+  if unseeded > 0 then
+    raise exception '% seeded stakeholder(s) missing from the registry', unseeded;
   end if;
 
   -- A structural row with a stakeholder means the backfill matched something

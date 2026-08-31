@@ -27,6 +27,36 @@ create schema if not exists supabase_migrations;
 
 grant usage on schema public, auth, storage, extensions to anon, authenticated, service_role;
 
+-- NOT MODELLED, DELIBERATELY, AND MEASURED BEFORE DECIDING (2026-08-31, #148).
+--
+-- A Supabase project sets default privileges on `public` for the role that
+-- applies migrations, so every relation a migration creates arrives already
+-- granted to the API roles. This repository knows it —
+-- `20260830240000_anon_picked_up_two_more_tables.sql` ("they arrive with the
+-- table: the platform grants the API roles on relations created in `public`")
+-- and `20260830290000` say so in their headers. The prelude does not do it, and
+-- that is why `20260828120000_agent_history_gets_an_owner.sql`, which
+-- exercises its own policies under `set role authenticated`, fails a replay
+-- with `permission denied for table agent_sessions`: no migration grants those
+-- two tables, so on a replay nothing ever does.
+--
+--   alter default privileges in schema public
+--     grant all on tables, sequences to anon, authenticated, service_role;
+--
+-- was tried. It fixes that one file and turns THREE green ones red —
+-- `20260830240000`, `20260830250000` and `20260830290000`, all of which audit
+-- the grant catalog. Two of those three are in production's ledger and passed
+-- there, so the divergence is not in this line: it is that
+-- `20260830210000 the_grants_that_arrived_with_the_object` is applied in
+-- production and HAS NO FILE IN THIS REPOSITORY — one of 38 such rows. The
+-- revoke that makes the audits pass is in the ledger's `statements` column and
+-- nowhere else.
+--
+-- So the honest prelude is the one that models the platform grant, and it
+-- cannot be turned on until that file is recovered. Recovering it is a
+-- `select statements from supabase_migrations.schema_migrations where version
+-- = '20260830210000'` for whoever holds a connection.
+
 create extension if not exists pgcrypto with schema extensions;
 create extension if not exists "uuid-ossp" with schema extensions;
 create extension if not exists vector with schema extensions;

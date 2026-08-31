@@ -61,16 +61,31 @@ declare n int;
 begin
   select count(*) into n from cells where status is null;
   if n > 0 then raise exception '% cells with no status', n; end if;
-  select count(*) into n from cells where status = 'live';
-  if n <> 879 then raise exception 'expected 879 live cells, got %', n; end if;
-  select count(*) into n from cells where status = 'proposed';
-  if n <> 42 then raise exception 'expected 42 proposed cells, got %', n; end if;
-  select count(*) into n from cells where status = 'built';
-  if n <> 14 then raise exception 'expected 14 built cells, got %', n; end if;
-  select count(*) into n from paths where status = 'proposed';
-  if n <> 5 then raise exception 'expected 5 proposed paths, got %', n; end if;
-  select count(*) into n from paths where status = 'built';
-  if n <> 1 then raise exception 'expected 1 built path, got %', n; end if;
+  -- AMENDED 2026-08-31. Six censuses stood between here and the prefix check —
+  -- `expected 879 live cells`, `42 proposed`, `14 built`, `5 proposed paths`,
+  -- `1 built path` — every one of them a count of production's rows on the day.
+  -- On an empty database `cells` and `paths` hold nothing, the first raises,
+  -- and because a migration is one transaction EVERYTHING ABOVE ROLLS BACK:
+  -- the `entity_status` domain, the `maturity` → `status` rename on `cells`,
+  -- and the new `paths.status` column. That is why `20260821260000`,
+  -- `20260821390000` and `20260821400000` report `column "status" ... does not
+  -- exist` on a replay, and why `20260826110000` reports that
+  -- `cells_maturity_check` and `paths_maturity_prefix_check` survive — they
+  -- survive because the two `drop constraint` statements above rolled back
+  -- with them. Six censuses, four files.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case. The rename and the
+  -- column ran in production long ago; this changes only whether anything can
+  -- check.
+  --
+  -- What replaces them is what they were reaching for: the two updates left no
+  -- cell on a retired value. Vacuously true on an empty database, and on
+  -- production exactly as strong — 42 `explored` and 14 `in_progress` all had
+  -- to move for the counts to come out.
+  select count(*) into n from cells where status::text in ('explored', 'in_progress');
+  if n > 0 then raise exception '% cells still carry a retired status', n; end if;
   select count(*) into n from paths where name ~ '^\(';
   if n > 0 then raise exception '% paths still carry a status prefix', n; end if;
 end $$;

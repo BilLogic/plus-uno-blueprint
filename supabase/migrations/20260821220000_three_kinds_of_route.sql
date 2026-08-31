@@ -37,14 +37,28 @@ comment on column public.paths.path_type is
   'How this route relates to the scenario''s main one: happy (it IS the main route), variant (equally normal, chosen by condition), exception (a rule or a failure diverts it).';
 
 do $$
-declare n_happy int; n_variant int; n_exception int; n_multi int;
+declare n_retired int; n_multi int;
 begin
-  select count(*) into n_happy     from paths where path_type = 'happy';
-  select count(*) into n_variant   from paths where path_type = 'variant';
-  select count(*) into n_exception from paths where path_type = 'exception';
-  if n_happy <> 23 then raise exception 'expected 23 happy, got %', n_happy; end if;
-  if n_variant <> 10 then raise exception 'expected 10 variant, got %', n_variant; end if;
-  if n_exception <> 6 then raise exception 'expected 6 exception, got %', n_exception; end if;
+  -- AMENDED 2026-08-31. Three censuses stood here — `expected 23 happy`, `10
+  -- variant`, `6 exception` — counting production's rows on the day. On an
+  -- empty database `paths` holds nothing, the first raises, and because a
+  -- migration is one transaction the CONSTRAINT SWAP ABOVE ROLLS BACK with it,
+  -- leaving `paths_path_type_check` on the wrong vocabulary for everything
+  -- after.
+  --
+  -- The rule is `20260821340000`'s: amend an applied migration only where
+  -- leaving it is actively harmful, and an assertion that disables the only
+  -- instrument this repository has for #148 is that case. The collapse ran in
+  -- production long ago; this changes only whether anything can check.
+  --
+  -- What replaces them is what they were reaching for: the collapse left
+  -- nothing on a retired value. Vacuously true on an empty database, and on
+  -- production exactly as strong — 39 paths, three values, and no fourth.
+  select count(*) into n_retired from paths
+   where path_type in ('unhappy', 'alternative', 'custom', 'named');
+  if n_retired > 0 then
+    raise exception '% paths still carry a retired path_type', n_retired;
+  end if;
 
   -- Exactly one happy path per scenario: pickPreferredPath returns the first
   -- `happy` it finds, so a second would make the default arbitrary.
