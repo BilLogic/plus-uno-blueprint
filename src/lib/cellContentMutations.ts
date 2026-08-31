@@ -7,17 +7,7 @@ import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
-import { planTouchpointSync } from '@/lib/touchpointSync'
-import {
-  BACKSTAGE_TOUCHPOINTS_ROLE,
-  FRONTSTAGE_TOUCHPOINTS_ROLE,
-} from '@/lib/laneRoles'
-
-/** Lanes whose cell text is a list of touchpoint names rather than prose. */
-const TOUCHPOINT_LANE_ROLES: string[] = [
-  FRONTSTAGE_TOUCHPOINTS_ROLE,
-  BACKSTAGE_TOUCHPOINTS_ROLE,
-]
+import { parseCellContentItems } from '@/lib/parseCellContent'
 
 type Client = SupabaseClient<Database>
 
@@ -91,7 +81,7 @@ export async function updateCellContent(
   // After the content write, not before: a save that fails should leave both
   // the text and the placements as they were, and the row check above is
   // what proves the write landed.
-  await syncCellTouchpoints(client, cellId, content)
+  const removedPlacements = await syncCellTouchpoints(client, cellId, content)
   // Direct table write, so `call()` never sees it — logged here for the same
   // reason and with the same after-success placement.
   if (options.record !== false) {
@@ -101,129 +91,76 @@ export async function updateCellContent(
       previous?.content.trim()
         ? {
             fn: 'update_cell_content',
-            args: { cell_id: cellId, update: previous },
+            args: {
+              cell_id: cellId,
+              update: previous,
+              // The writing on any placement this save removed. Restoring the
+              // text alone brings the names back and leaves them blank.
+              removed_placements: removedPlacements,
+            },
           }
         : undefined,
     )
   }
 }
 
+/** A placement's per-moment writing, as the sync hands it back. */
+export type RemovedPlacement = {
+  name: string
+  summary: string | null
+  screenshot: string | null
+  url: string | null
+  prominence: string | null
+}
+
 /**
  * Bring a cell's placements into line with the text just saved.
  *
- * Only touchpoint-bearing cells. This is the load-bearing condition, not a
- * shortcut: `cells.content` on an actor lane is a sentence describing what
- * somebody did, and syncing it would file that sentence in the catalog as a
- * touchpoint. A cell qualifies if it already HAS placements, or if its lane
- * is a touchpoint lane and so its text is a list of names by definition. The
- * second half is what lets an empty touchpoint cell gain its first pill.
+ * One RPC, because this has to be one transaction. The first version did the
+ * diff here and issued a statement per row, and PostgREST gives each of those
+ * its own transaction — which broke reordering outright. The position
+ * constraint is DEFERRABLE INITIALLY DEFERRED, so it forgives a collision
+ * only until COMMIT, and with a statement per request commit is the end of
+ * that statement. Swapping two pills raised 23505 every time. The unit test
+ * covering reordering asserted the PLAN and never its application, so it
+ * passed the whole way through.
  *
- * A name the catalog has never seen gets a catalog row. `origin` is 'app'
- * rather than 'import' — the distinction is which side authored it, and a
- * touchpoint typed into a cell today did not come from the sweep.
+ * The gate on touchpoint-bearing cells lives in the function too: content on
+ * an actor lane is a sentence about what somebody did, and syncing it would
+ * file that sentence in the catalog as a tool.
  *
- * Not recorded separately in the session log. The author performed one act,
- * "edited this cell", and `update_cell_content` already logs it with an
- * inverse that restores the previous text; replaying that inverse runs this
- * function again and restores the placements with it. A second entry would
- * make one edit read as two, and an inverse that only put the placements
- * back would leave the text saying something else.
+ * Returns the placements it removed, with their writing, so the caller can
+ * put them in the inverse it records. Deleting a placement destroys the
+ * per-moment summary and screenshot, and an inverse that restored only the
+ * text would leave that gone for good.
  */
 export async function syncCellTouchpoints(
   client: Client,
   cellId: string,
   content: string,
+): Promise<RemovedPlacement[]> {
+  const { data, error } = await client.rpc('sync_cell_touchpoints', {
+    p_cell_id: cellId,
+    p_names: parseCellContentItems(content),
+  })
+  if (error) throw toAuthoringError(error)
+
+  const removed = (data as { removed?: unknown } | null)?.removed
+  return Array.isArray(removed) ? (removed as RemovedPlacement[]) : []
+}
+
+/** Put back the writing a removed placement was carrying. */
+export async function restoreCellTouchpoints(
+  client: Client,
+  cellId: string,
+  rows: RemovedPlacement[],
 ): Promise<void> {
-  const { data: rows, error: readError } = await client
-    .from('cell_touchpoints')
-    .select('id, position, touchpoints (name)')
-    .eq('cell_id', cellId)
-  if (readError) throw toAuthoringError(readError)
-
-  const existing = (rows ?? []).flatMap((row) =>
-    row.touchpoints?.name
-      ? [{ id: row.id, name: row.touchpoints.name, position: row.position }]
-      : [],
-  )
-
-  // The cell's lane and service, in one read. The lane role answers "is this
-  // text a list of touchpoints or a sentence", and the service scopes the
-  // catalog a new name would join.
-  const { data: owner, error: ownerError } = await client
-    .from('cells')
-    .select('lanes (lane_role), paths (scenarios (phases (service_id)))')
-    .eq('id', cellId)
-    .single()
-  if (ownerError) throw toAuthoringError(ownerError)
-
-  const bearing =
-    existing.length > 0 ||
-    TOUCHPOINT_LANE_ROLES.includes(owner?.lanes?.lane_role ?? '')
-  if (!bearing) return
-
-  const plan = planTouchpointSync(content, existing)
-  if (!plan.added.length && !plan.removed.length && !plan.moved.length) return
-
-  const serviceId = owner?.paths?.scenarios?.phases?.service_id
-  if (!serviceId) {
-    throw new Error(
-      'This cell is not attached to a service, so its touchpoints have no catalog to live in.',
-    )
-  }
-
-  const byName = new Map(existing.map((entry) => [entry.name, entry]))
-
-  for (const name of plan.removed) {
-    const row = byName.get(name)
-    if (!row) continue
-    const { error } = await client
-      .from('cell_touchpoints')
-      .delete()
-      .eq('id', row.id)
-    if (error) throw toAuthoringError(error)
-  }
-
-  for (const { name, position } of plan.moved) {
-    const row = byName.get(name)
-    if (!row) continue
-    const { data: updated, error } = await client
-      .from('cell_touchpoints')
-      .update({ position })
-      .eq('id', row.id)
-      .select('id')
-    if (error) throw toAuthoringError(error)
-    requireRowsWritten(updated, 'cell touchpoint')
-  }
-
-  for (const { name, position } of plan.added) {
-    const { error: catalogError } = await client
-      .from('touchpoints')
-      .upsert({ service_id: serviceId, name, origin: 'app' }, {
-        onConflict: 'service_id,name',
-        ignoreDuplicates: true,
-      })
-    if (catalogError) throw toAuthoringError(catalogError)
-
-    const { data: entry, error: lookupError } = await client
-      .from('touchpoints')
-      .select('id')
-      .eq('service_id', serviceId)
-      .eq('name', name)
-      .single()
-    if (lookupError) throw toAuthoringError(lookupError)
-
-    const { data: placed, error } = await client
-      .from('cell_touchpoints')
-      .insert({
-        cell_id: cellId,
-        touchpoint_id: entry.id,
-        position,
-        origin: 'app',
-      })
-      .select('id')
-    if (error) throw toAuthoringError(error)
-    requireRowsWritten(placed, 'cell touchpoint')
-  }
+  if (rows.length === 0) return
+  const { error } = await client.rpc('restore_cell_touchpoints', {
+    p_cell_id: cellId,
+    p_rows: rows as unknown as Json,
+  })
+  if (error) throw toAuthoringError(error)
 }
 
 export type ResourceDraft = { label: string; url: string }

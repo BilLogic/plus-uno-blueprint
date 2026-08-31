@@ -25,7 +25,7 @@
 -- placements point at different Figma nodes and describe different screens —
 -- and that is exactly the per-moment detail the string join kept losing.
 --
--- ── Three deviations from the ticket's DDL, each forced by the data ────────
+-- ── Four deviations from the ticket's DDL, each forced by the data ─────────
 --
 -- 1. The placement carries `url`. The ticket's sketch had summary and
 --    screenshot only, but 28 resolving links carry a Figma node URL that is

@@ -8,6 +8,19 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * Regenerate after schema changes:
  *   npm run supabase:types
  *   npm run supabase:types:local
+ *
+ * HAND-EDITED, 2026-08-30 (#178). `touchpoints`, `cell_touchpoints` and the
+ * two placement RPCs were written by hand because neither generator runs on
+ * the machine this landed from: `--linked` reports the project is not linked,
+ * and the `--db-url` form needs Docker, which is not installed. The blocks
+ * match the live schema exactly and are in the order the generator emits, so
+ * the next successful run should be a no-op — if it is not, the generator is
+ * right and these are wrong.
+ *
+ * `scripts/check-database-names.mjs` rests its argument on this file arriving
+ * by machine, so a hand edit weakens that premise until a real regeneration
+ * confirms it. It is the reason the edit is recorded here rather than left to
+ * be discovered.
  */
 
 export type Json =
@@ -82,6 +95,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cell_dependencies: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          label: string | null
+          note: string | null
+          source_cell_id: string
+          target_cell_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          note?: string | null
+          source_cell_id: string
+          target_cell_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          note?: string | null
+          source_cell_id?: string
+          target_cell_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'cell_dependencies_source_cell_id_fkey'
+            columns: ['source_cell_id']
+            isOneToOne: false
+            referencedRelation: 'cells'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'cell_dependencies_target_cell_id_fkey'
+            columns: ['target_cell_id']
+            isOneToOne: false
+            referencedRelation: 'cells'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       cell_touchpoints: {
         Row: {
           cell_id: string
@@ -135,54 +196,6 @@ export type Database = {
             columns: ['touchpoint_id']
             isOneToOne: false
             referencedRelation: 'touchpoints'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      cell_dependencies: {
-        Row: {
-          created_at: string
-          id: string
-          kind: string
-          label: string | null
-          note: string | null
-          source_cell_id: string
-          target_cell_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          kind?: string
-          label?: string | null
-          note?: string | null
-          source_cell_id: string
-          target_cell_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          kind?: string
-          label?: string | null
-          note?: string | null
-          source_cell_id?: string
-          target_cell_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'cell_dependencies_source_cell_id_fkey'
-            columns: ['source_cell_id']
-            isOneToOne: false
-            referencedRelation: 'cells'
-            referencedColumns: ['id']
-          },
-          {
-            foreignKeyName: 'cell_dependencies_target_cell_id_fkey'
-            columns: ['target_cell_id']
-            isOneToOne: false
-            referencedRelation: 'cells'
             referencedColumns: ['id']
           },
         ]
@@ -933,6 +946,10 @@ export type Database = {
       }
     }
     Functions: {
+      restore_cell_touchpoints: {
+        Args: { p_cell_id: string; p_rows: Json }
+        Returns: undefined
+      }
       search_blueprint: {
         Args: {
           embed_model?: string
@@ -965,6 +982,10 @@ export type Database = {
           total_matched: number
           updated_at: string
         }[]
+      }
+      sync_cell_touchpoints: {
+        Args: { p_cell_id: string; p_names: string[] }
+        Returns: Json
       }
     }
     Enums: Record<string, never>

@@ -56,30 +56,22 @@ test('empty and malformed are refused', () => {
  * response that wrote nothing.
  *
  * A content write also brings the cell's touchpoint placements into line with
- * the text, which means reading them first. That read is stubbed as empty:
- * these tests are about the content write and its matched-nothing detection,
- * and a cell with no placements and text naming none plans no work, so the
- * sync neither writes nor interferes. `touchpointSync.test.ts` is where the
- * planning itself is exercised.
+ * the text, through one `sync_cell_touchpoints` RPC. It is stubbed here as a
+ * no-op returning nothing removed: these tests are about the content write
+ * and its matched-nothing detection. Which cells the sync acts on, and what
+ * it does to them, is decided inside the function and proved in its own
+ * migration, because a client-side assertion can no longer see it.
  */
 function fakeClient(rows = [{ id: 'cell-1' }]) {
   const captured = {}
   return {
     captured,
+    rpc(name, args) {
+      captured.rpc = { name, args }
+      return Promise.resolve({ data: { skipped: true, removed: [] }, error: null })
+    },
     from(table) {
       return {
-        // The placement read, and the service lookup the sync makes only
-        // when it has work to do. Both resolve empty here.
-        select() {
-          return {
-            eq() {
-              return Object.assign(
-                Promise.resolve({ data: [], error: null }),
-                { single: () => Promise.resolve({ data: null, error: null }) },
-              )
-            },
-          }
-        },
         update(values) {
           captured.values = values
           return {
@@ -215,106 +207,24 @@ test('a content write that matches its row still resolves', async () => {
   assert.equal(client.captured.values.content, 'New text')
 })
 
-/**
- * A client that records every table it writes to, and answers the sync's
- * reads with a lane role the caller chooses.
- */
-function syncSpyClient({ laneRole, placements = [] }) {
-  const writes = []
-  return {
-    writes,
-    from(table) {
-      return {
-        select() {
-          return {
-            eq() {
-              const rows =
-                table === 'cell_touchpoints'
-                  ? placements
-                  : [{ lanes: { lane_role: laneRole }, paths: { scenarios: { phases: { service_id: 'svc-1' } } } }]
-              return Object.assign(Promise.resolve({ data: rows, error: null }), {
-                eq: () => ({ single: () => Promise.resolve({ data: { id: 'tp-1' }, error: null }) }),
-                single: () => Promise.resolve({ data: rows[0], error: null }),
-              })
-            },
-          }
-        },
-        insert() {
-          writes.push(`insert:${table}`)
-          return { select: () => Promise.resolve({ data: [{ id: 'x' }], error: null }) }
-        },
-        upsert() {
-          writes.push(`upsert:${table}`)
-          return Promise.resolve({ data: null, error: null })
-        },
-        delete() {
-          writes.push(`delete:${table}`)
-          return { eq: () => Promise.resolve({ data: null, error: null }) }
-        },
-        update(values) {
-          if (table !== 'cells') writes.push(`update:${table}`)
-          return {
-            eq: () => ({
-              select: () => Promise.resolve({ data: [{ id: 'cell-1' }], error: null }),
-            }),
-          }
-        },
-      }
-    },
-  }
-}
-
-test('a cell on an ordinary lane never files its prose as a touchpoint', async () => {
-  // The bug this guards against was written and caught here: `cells.content`
-  // on an actor lane is a sentence about what somebody did, and syncing it
-  // would have put that sentence in the catalog as a tool.
-  const client = syncSpyClient({ laneRole: 'customer_actions' })
-  await updateCellContent(
+test('a content save asks the database to sync the placements it named', () => {
+  // The client no longer decides which cells are touchpoint-bearing or what
+  // to do with them; it hands over the names and the function decides. What
+  // is still this side's job, and so is asserted here, is that the names it
+  // sends are the ones the author typed, split the same way the board reads
+  // them.
+  const client = fakeClient()
+  return updateCellContent(
     client,
     'cell-1',
-    {
-      content: 'The tutor greets the student and checks the goal list',
-      summary: '',
-      owner: '',
-      perceivedOwner: '',
-      status: 'live',
-    },
+    { content: 'Zoom, PLUS App', summary: '', owner: '', perceivedOwner: '', status: 'live' },
     undefined,
     { record: false },
-  )
-  assert.deepEqual(client.writes, [], 'no placement or catalog write may happen')
-})
-
-test('a cell on a touchpoint lane gains its first placement', async () => {
-  const client = syncSpyClient({ laneRole: 'frontstage_touchpoints' })
-  await updateCellContent(
-    client,
-    'cell-1',
-    { content: 'Zoom', summary: '', owner: '', perceivedOwner: '', status: 'live' },
-    undefined,
-    { record: false },
-  )
-  assert.deepEqual(client.writes, ['upsert:touchpoints', 'insert:cell_touchpoints'])
-})
-
-test('a cell that already has placements is synced whatever its lane', async () => {
-  // The four Support Actions cells the import migration found: they carry
-  // touchpoints without sitting on a touchpoint lane, and an edit there must
-  // still keep their placements true.
-  const client = syncSpyClient({
-    laneRole: 'support_actions',
-    placements: [{ id: 'p1', position: 1, touchpoints: { name: 'Design System' } }],
+  ).then(() => {
+    assert.equal(client.captured.rpc.name, 'sync_cell_touchpoints')
+    assert.deepEqual(client.captured.rpc.args, {
+      p_cell_id: 'cell-1',
+      p_names: ['Zoom', 'PLUS App'],
+    })
   })
-  await updateCellContent(
-    client,
-    'cell-1',
-    { content: 'Branding Guidelines', summary: '', owner: '', perceivedOwner: '', status: 'live' },
-    undefined,
-    { record: false },
-  )
-  assert.deepEqual(client.writes, [
-    'delete:cell_touchpoints',
-    'upsert:touchpoints',
-    'insert:cell_touchpoints',
-  ])
 })

@@ -1,5 +1,17 @@
-import type { BlueprintCell, CellLink } from '@/types/blueprint'
-import { parseCellContentItems } from '@/lib/parseCellContent'
+/**
+ * What survives of the link-keyed touchpoint arrangement.
+ *
+ * The resolvers that read `cells.links` by label are gone — a placement
+ * carries its own summary, screenshot and url, so `cellTouchpoints.ts`
+ * answers those questions now, and it does so for all 92 touchpoints rather
+ * than for the handful whose names had been written out by hand here.
+ *
+ * `TECH_DESCRIPTION_LINK_TYPE` and `techDescriptionLink` stay because the
+ * hand-written fallback blueprints in `src/data` are not migrating: they
+ * still express a touchpoint's detail this way, and the normalizer reads
+ * that link type to resolve them into placements.
+ */
+import type { CellLink } from '@/types/blueprint'
 
 export const TECH_DESCRIPTION_LINK_TYPE = 'tech_description'
 export const URL_LINK_TYPE = 'url'
@@ -29,130 +41,11 @@ export function techDescriptionLink(
   }
 }
 
-function getTechUrlFromLinks(
-  links: CellLink[],
-  techItem: string,
-): string | null {
-  for (const link of links) {
-    if (
-      link.type === TECH_DESCRIPTION_LINK_TYPE &&
-      link.label === techItem &&
-      link.url?.trim()
-    ) {
-      return link.url.trim()
-    }
-  }
-  return null
-}
 
-function getTechDescriptionFromLinks(
-  links: CellLink[],
-  techItem: string,
-): string | null {
-  for (const link of links) {
-    if (
-      link.type === TECH_DESCRIPTION_LINK_TYPE &&
-      link.label === techItem &&
-      link.description?.trim()
-    ) {
-      return link.description.trim()
-    }
-  }
-  return null
-}
 
-function getLinkedDescriptionsForContentItems(
-  links: CellLink[],
-  items: string[],
-): string | null {
-  const parts: string[] = []
-  for (const item of items) {
-    const description = getTechDescriptionFromLinks(links, item)
-    if (description) parts.push(description)
-  }
-  return parts.length > 0 ? parts.join('\n\n') : null
-}
 
-/** Tech pill label for the detail panel heading (Front Stage Tech, Back Stage Tech). */
-export function resolveTechCellDetailLabel(
-  techItem: string | undefined,
-  cell: Pick<BlueprintCell, 'content'>,
-): string | null {
-  if (techItem?.trim()) return techItem.trim()
 
-  const items = parseCellContentItems(cell.content)
-  return items.length === 1 ? items[0]! : null
-}
 
-/** Detail panel body copy for a tech pill or single-tech cell. */
-export function resolveTechCellDetailText(
-  techItem: string | undefined,
-  cell: Pick<BlueprintCell, 'content' | 'summary' | 'links'>,
-): string {
-  const content = cell.content.trim()
-
-  if (techItem) {
-    const fromLinks = getTechDescriptionFromLinks(cell.links, techItem)
-    if (fromLinks) return fromLinks
-
-    if (techItem === 'Zoom' && cell.summary?.trim()) {
-      return cell.summary.trim()
-    }
-
-    if (cell.summary?.trim()) {
-      const items = parseCellContentItems(cell.content)
-      if (items.includes(techItem)) {
-        return cell.summary.trim()
-      }
-    }
-
-    return techItem
-  }
-
-  const contentItems = parseCellContentItems(content)
-  if (contentItems.length === 1) {
-    const fromLinks = getTechDescriptionFromLinks(cell.links, contentItems[0]!)
-    if (fromLinks) return fromLinks
-  }
-
-  if (contentItems.length > 1) {
-    const fromLinks = getLinkedDescriptionsForContentItems(cell.links, contentItems)
-    if (fromLinks) return fromLinks
-  }
-
-  if (content === 'Zoom' && cell.summary?.trim()) {
-    return cell.summary.trim()
-  }
-
-  if (content === 'PLUS App') {
-    const fromLinks = getTechDescriptionFromLinks(cell.links, 'PLUS App')
-    if (fromLinks) return fromLinks
-  }
-
-  if (cell.summary?.trim()) {
-    return cell.summary.trim()
-  }
-
-  return content
-}
-
-/** External design reference (e.g. Figma) for a tech pill detail panel. */
-export function resolveTechCellDetailUrl(
-  techItem: string | undefined,
-  cell: Pick<BlueprintCell, 'content' | 'links'>,
-): string | null {
-  const content = cell.content.trim()
-
-  if (techItem) {
-    return getTechUrlFromLinks(cell.links, techItem)
-  }
-
-  if (content === 'PLUS App') {
-    return getTechUrlFromLinks(cell.links, 'PLUS App')
-  }
-
-  return null
-}
 
 export function mergeUrlLinks(
   links: CellLink[],
