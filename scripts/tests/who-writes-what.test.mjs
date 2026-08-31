@@ -16,8 +16,9 @@
  *      deleted tool fails here rather than leaving CONTEXT.md quietly wrong
  *   2. every write tool that NAMES one of these records is assigned an owner —
  *      a `delete_slice` nobody added to the table fails here
- *   3. CONTEXT.md states the same tools and records, so the documented copy
- *      and the enforced copy cannot drift apart
+ *   3. CONTEXT.md's own table PARSES to the rows below — not "the file
+ *      mentions these words somewhere", which `slices` and `evidence` would
+ *      satisfy from a dozen other paragraphs, but the three rows themselves
  *
  * The SUBJECT of rule 2 is the tool NAME, and that limit is deliberate: a tool
  * called `refresh_board` that happened to write `slices` would pass. The name
@@ -86,6 +87,34 @@ export function writesWithNoOwner(rows, roster) {
     .sort()
 }
 
+/**
+ * The ownership table as CONTEXT.md draws it, parsed back into rows.
+ *
+ * Parsed rather than searched for. `slices`, `evidence` and the tool names
+ * appear in many other paragraphs of that file, so "the document mentions the
+ * word" is satisfied by a table that has been mangled — which is exactly the
+ * drift this rule is for. The rows are the claim, so the rows are what is read.
+ */
+export function ownershipTable(markdown) {
+  const lines = markdown.split('\n')
+  const head = lines.findIndex((line) => line.startsWith('| record | written by | belongs to |'))
+  if (head < 0) throw new Error('no ownership table found in CONTEXT.md')
+
+  const rows = []
+  for (const line of lines.slice(head + 2)) {
+    if (!line.startsWith('|')) break
+    const cells = line.split('|').slice(1, -1)
+    if (cells.length !== 3) throw new Error(`ownership row is not three columns: ${line}`)
+    const [records, tools, owner] = cells
+    rows.push({
+      records: [...records.matchAll(/`([a-z_]+)`/g)].map(([, name]) => name),
+      tools: [...tools.matchAll(/`([a-z_]+)`/g)].map(([, name]) => name),
+      owner: owner.replaceAll('*', '').trim(),
+    })
+  }
+  return rows
+}
+
 // ---------------------------------------------------------------------------
 // The matchers
 // ---------------------------------------------------------------------------
@@ -105,6 +134,24 @@ test('writesWithNoOwner names a write nobody claimed', () => {
   const roster = ['create_slice', 'delete_slice', 'update_finding']
   const rows = [{ records: ['slices'], tools: ['create_slice'], owner: 'the slice' }]
   assert.deepEqual(writesWithNoOwner(rows, roster), ['delete_slice', 'update_finding'])
+})
+
+test('ownershipTable reads the rows, not the words around them', () => {
+  // The bug it catches: these are common words in that file, so a rule that
+  // only asked "does CONTEXT.md mention them" stayed green while the table
+  // itself said something else.
+  const table = [
+    '| record | written by | belongs to |',
+    '| --- | --- | --- |',
+    '| `slices`, `slides` | `create_slice` | the slice |',
+    '| `evidence` | `create_evidence` | **nobody** |',
+    '',
+    'Prose after it mentioning `audit_findings`, which is not a row.',
+  ].join('\n')
+  assert.deepEqual(ownershipTable(table), [
+    { records: ['slices', 'slides'], tools: ['create_slice'], owner: 'the slice' },
+    { records: ['evidence'], tools: ['create_evidence'], owner: 'nobody' },
+  ])
 })
 
 test('a write tool that names no record is not this file’s business', () => {
@@ -140,18 +187,6 @@ test('every write tool that names one of these records has an owner', () => {
   )
 })
 
-test('CONTEXT.md states the same table this file enforces', () => {
-  const context = read('CONTEXT.md')
-  for (const row of RECORD_OWNERS) {
-    for (const name of [...row.tools, ...row.records]) {
-      assert.ok(
-        context.includes(`\`${name}\``),
-        `CONTEXT.md's ownership table does not name ${name}`,
-      )
-    }
-    assert.ok(
-      context.includes(row.owner),
-      `CONTEXT.md does not say the owner "${row.owner}"`,
-    )
-  }
+test('CONTEXT.md’s table parses to exactly the rows this file enforces', () => {
+  assert.deepEqual(ownershipTable(read('CONTEXT.md')), RECORD_OWNERS)
 })
