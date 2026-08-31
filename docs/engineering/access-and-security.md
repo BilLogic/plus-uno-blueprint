@@ -337,11 +337,13 @@ if this doc is never read.
 ## Migrations workflow
 
 Append-only timestamped SQL in `supabase/migrations/` — never edit an
-applied migration. Locally: `npm run supabase:reset` replays migrations +
-seed. Hosted: `supabase link` once, then `supabase db push`. After any
-schema change regenerate types (`npm run supabase:types` hosted /
-`supabase:types:local`) and refresh `supabase/schema.reference.sql` if the
-DDL shape moved. New RPCs must follow the house pattern: SECURITY DEFINER,
+applied migration, applied with
+`npm run apply:pending -- --from=<version> --apply`, which writes the ledger
+row inside the same transaction. Neither `supabase db reset` nor `db push`
+works here — see
+[ADR 0009](../adr/0009-the-migration-series-is-a-narrative.md). After any
+schema change edit `src/types/database.ts` to match and refresh
+`supabase/schema.reference.sql` if the DDL shape moved. New RPCs must follow the house pattern: SECURITY DEFINER,
 pinned `search_path`, `EXECUTE` revoked from `public`/`anon`, and the
 `is_service_account()` guard first in the body.
 

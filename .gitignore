@@ -29,3 +29,7 @@ dist-ssr
 *.sw?
 .claude/
 .playwright-mcp/
+
+# The types generators write here first, so a failed run cannot truncate the
+# committed file.
+.database.ts.tmp

@@ -36,3 +36,6 @@ deleted ADR is a decision nobody can find the reasoning for.
 | [0004](0004-the-board-is-always-fully-mounted.md) | The board is always fully mounted |
 | [0005](0005-cross-surface-state-is-a-module-store.md) | Cross-surface state is a module store, not context |
 | [0006](0006-reads-never-refetch-on-their-own.md) | Reads never refetch on their own |
+| [0007](0007-three-advisor-warnings-that-must-stay.md) | Three advisor warnings are deliberate and must stay |
+| [0008](0008-large-component-splits-wait-for-an-end-to-end-round.md) | Large component splits wait for an end-to-end round |
+| [0009](0009-the-migration-series-is-a-narrative.md) | The migration series is a narrative; the board is imported data |
