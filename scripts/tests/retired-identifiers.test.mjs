@@ -23,6 +23,7 @@ import {
   statements,
 } from '../migration-replay.mjs'
 import { databaseNames, namedObjects, withoutComments } from '../check-database-names.mjs'
+import { liveFunctionFindings } from '../check-retired-identifiers.mjs'
 
 /** A throwaway migration directory, applied in filename order. */
 function replay(files) {
@@ -184,4 +185,63 @@ test('a relation named in a comment is not a use of it', () => {
     ['services'],
   )
   assert.ok(withoutComments(code).includes('services'))
+})
+
+/**
+ * The live half's body sweep, which the catalog cannot do for itself.
+ *
+ * `prosrc ~ 'layer'` is the only thing a `pg_proc` query can ask, and it
+ * reported two functions for sentences of English — `sync_cell_resources` for
+ * `-- for one layer down.` and `deletion_impact` for a stale comment. Both are
+ * prose. The decision moved into JavaScript so that the same `identifierText`
+ * governs both halves of the check.
+ */
+test('a retired word in a function COMMENT is not residue', () => {
+  const rows = [
+    {
+      name: 'sync_cell_resources',
+      body: [
+        'CREATE OR REPLACE FUNCTION public.sync_cell_resources() RETURNS void AS $function$',
+        'begin',
+        '  -- for one layer down.',
+        '  update public.cells set content = content;',
+        'end',
+        '$function$',
+      ].join('\n'),
+    },
+  ]
+  assert.deepEqual(liveFunctionFindings(rows), [])
+})
+
+test('a retired word in a function VARIABLE is residue, addressed like the static half', () => {
+  const rows = [
+    {
+      name: 'duplicate_path',
+      body: [
+        'CREATE OR REPLACE FUNCTION public.duplicate_path() RETURNS void AS $function$',
+        'declare layer_map jsonb;',
+        'begin',
+        "  layer_map := '{}'::jsonb;",
+        'end',
+        '$function$',
+      ].join('\n'),
+    },
+  ]
+  // The static half's spelling, so an exemption can name it and so the two
+  // halves cannot disagree about what one finding is called.
+  assert.deepEqual(liveFunctionFindings(rows), ['function duplicate_path body names layer_map'])
+})
+
+test('a retired word in a string LITERAL is #144, not this check', () => {
+  const rows = [
+    {
+      name: 'search_blueprint',
+      body: [
+        'CREATE OR REPLACE FUNCTION public.search_blueprint() RETURNS void AS $function$',
+        "begin raise notice 'layer'; end",
+        '$function$',
+      ].join('\n'),
+    },
+  ]
+  assert.deepEqual(liveFunctionFindings(rows), [])
 })
