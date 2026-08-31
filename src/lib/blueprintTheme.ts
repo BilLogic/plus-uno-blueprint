@@ -233,7 +233,7 @@ const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   'Regular Tutor': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Front Stage Touchpoints': cellStyleFromFill('frontstage-tech',
+  'Front Stage Touchpoints': cellStyleFromFill('frontstage-touchpoint',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
   'Front Stage Actions': cellStyleFromFill('frontstage-action',
@@ -245,7 +245,7 @@ const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   'Back Stage Actions': cellStyleFromFill('frontstage-action',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
-  'Back Stage Touchpoints': cellStyleFromFill('frontstage-tech',
+  'Back Stage Touchpoints': cellStyleFromFill('frontstage-touchpoint',
     BLUEPRINT_LABEL_TEXT.backstage,
   ),
   'Support Actions': cellStyleFromFill('support',
@@ -257,7 +257,13 @@ const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
   'Customer Actions': cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  'Frontstage Actions': cellStyleFromFill('frontstage-tech',
+  // Borrows the touchpoint fill, and that is not a mistake to tidy. This map
+  // is the legacy NAME-keyed fallback for content written before roles
+  // existed, and its job is to reproduce what those boards already looked
+  // like. A fill is a palette slot, not a role: several names point at one
+  // slot here, and repointing this one would recolour old boards to fix a
+  // word. `ROLE_STYLES` below is where a role's colour is decided.
+  'Frontstage Actions': cellStyleFromFill('frontstage-touchpoint',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
   'Backstage Actions': cellStyleFromFill('backstage-action',
@@ -286,7 +292,7 @@ const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
   customer_actions: cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
-  frontstage_touchpoints: cellStyleFromFill('frontstage-tech',
+  frontstage_touchpoints: cellStyleFromFill('frontstage-touchpoint',
     BLUEPRINT_LABEL_TEXT.customerFacing,
   ),
   frontstage_actions: cellStyleFromFill('frontstage-action',

@@ -25,12 +25,12 @@ export type BlueprintLaneRole =
   | 'evidence'
   /** Customer and tutor actions — the people the service is for. */
   | 'actor'
-  /** Systems the customer touches directly. */
-  | 'frontstage-tech'
+  /** Touchpoints the customer meets directly. */
+  | 'frontstage-touchpoint'
   /** Staff actions the customer can see. */
   | 'frontstage-action'
-  /** Systems only staff touch. */
-  | 'backstage-tech'
+  /** Touchpoints only staff meet. */
+  | 'backstage-touchpoint'
   /** Staff actions the customer cannot see. */
   | 'backstage-action'
   /** Support processes and resources behind the internal line. */
@@ -42,9 +42,9 @@ export const BLUEPRINT_LANE_ROLES = [
   'storyboard',
   'evidence',
   'actor',
-  'frontstage-tech',
+  'frontstage-touchpoint',
   'frontstage-action',
-  'backstage-tech',
+  'backstage-touchpoint',
   'backstage-action',
   'support',
   'partner-action',

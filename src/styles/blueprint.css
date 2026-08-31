@@ -403,8 +403,8 @@
     --foreground-blueprint-cell: var(--color-green-1200);
   }
 
-  /* frontstage-tech */
-[data-blueprint-lane='frontstage-tech'] {
+  /* frontstage-touchpoint */
+[data-blueprint-lane='frontstage-touchpoint'] {
     --background-blueprint-cell: var(--color-violet-500);
     --background-blueprint-cell-hover: var(--color-violet-600);
     --background-blueprint-cell-pressed: var(--color-violet-700);
@@ -421,8 +421,8 @@
     --foreground-blueprint-cell: var(--color-pink-1200);
   }
 
-  /* backstage-tech */
-[data-blueprint-lane='backstage-tech'] {
+  /* backstage-touchpoint */
+[data-blueprint-lane='backstage-touchpoint'] {
     --background-blueprint-cell: var(--color-lime-500);
     --background-blueprint-cell-hover: var(--color-lime-600);
     --background-blueprint-cell-pressed: var(--color-lime-700);

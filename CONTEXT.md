@@ -428,6 +428,35 @@ carries it, over every NAME under `src` and over one rule about behaviour —
 under the pointer promises a click a badge never delivers. What a badge keeps is
 the help cursor, the focus ring and the tooltip.
 
+### A third spelling, for the fills
+
+`retired` is how a name is written as a database identifier and `copy` is how
+it is written for a reader. There is a third, and a word escaped through the
+gap before anyone named it: `frontstage_tech` became `frontstage_touchpoints`
+in the schema, and the fill kept saying `frontstage-tech` in
+`blueprintCellStyle.ts` and `blueprint.css` for a fortnight.
+
+Three guards looked straight at it and each declined for a reason correct on
+its own. `check:identifiers` sweeps database identifiers, and a CSS attribute
+value is not one. The identifier sweep matches substrings, and the fragment has
+an underscore where the fill has a hyphen. `check:copy` reads what a person
+reads, and nobody reads an attribute selector. Nothing was broken — the seam
+was uncovered.
+
+`RETIRED_PRESENTATION_SPELLINGS` derives the hyphenated form from `retired`,
+mechanically, for the same reason `copy` is derived: a hand-kept third list
+could disagree with the first two, and a vocabulary with two spellings of one
+word is what this whole file exists to prevent.
+[`scripts/tests/presentation-keys.test.mjs`](scripts/tests/presentation-keys.test.mjs)
+holds the fill vocabulary to it, and holds the stylesheet and the module to
+each other.
+
+**A fill is a palette slot, not a role.** Several lane names point at one fill —
+`Frontstage Actions` borrows `frontstage-touchpoint` in the legacy name-keyed
+map, and `backstage_touchpoints` takes the `evidence` fill in the role-keyed
+one. So the check asks that a fill name contains no retired word; it does not
+ask that a fill be named after whichever role happens to use it.
+
 ## The interface→schema map
 
 Every word a panel puts in front of a reader, and the name behind it. The

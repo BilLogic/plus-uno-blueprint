@@ -109,7 +109,7 @@ export function BlueprintTouchpointCell({
   return (
     <BlueprintCellButton
       status={status}
-      fill="frontstage-tech"
+      fill="frontstage-touchpoint"
       tone={tone}
       selection={
         selectionContext

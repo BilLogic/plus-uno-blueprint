@@ -409,6 +409,36 @@ export const RETIRED_IDENTIFIER_FRAGMENTS = Object.freeze(
   ),
 )
 
+/**
+ * Every retired identifier fragment in its PRESENTATION spelling.
+ *
+ * A third derivation, beside `retired` and `copy`, and it exists because a
+ * word slipped through the gap between the first two. `20260830150000`
+ * renamed the lane roles `frontstage_tech` / `backstage_tech`, and the fills
+ * in `blueprintCellStyle.ts` and `blueprint.css` went on saying
+ * `frontstage-tech` for a fortnight. Three guards looked straight at it:
+ *
+ *   - `check:identifiers` sweeps DATABASE identifiers. A CSS attribute value
+ *     is not one.
+ *   - `retiredFragmentsIn` matches substrings, and `frontstage_tech` has an
+ *     underscore where the presentation spelling has a hyphen. No match.
+ *   - `check:copy` reads what a person reads. An attribute selector is not
+ *     read by anyone.
+ *
+ * So nothing was broken; the seam was simply uncovered. The derivation is
+ * mechanical for the same reason `copy` is — a hand-maintained third list
+ * could disagree with the first two, and a vocabulary with two spellings of
+ * one word is what all of this exists to prevent.
+ *
+ * A fragment with no underscore derives to itself, which is correct and not a
+ * duplicate: `visual` is `visual` in every spelling.
+ */
+export const RETIRED_PRESENTATION_SPELLINGS = Object.freeze(
+  [...new Set(RETIRED_IDENTIFIER_FRAGMENTS.map((f) => f.replaceAll('_', '-')))].sort(
+    (a, b) => b.length - a.length || a.localeCompare(b),
+  ),
+)
+
 /** Every retired prose spelling, deduplicated, longest first. */
 export const RETIRED_COPY_WORDS = Object.freeze(
   [...new Set(RENAME_MAP.flatMap((row) => row.copy))].sort(
