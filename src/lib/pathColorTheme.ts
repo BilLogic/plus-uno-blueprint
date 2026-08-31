@@ -65,7 +65,7 @@ export function getPathColorKey(path: PathColorInput): string {
  * this, the open set drew on ten families including green, blue, violet and
  * pink, so a path could render as a 2px line in exactly the hue of the lane it
  * crossed. Four of the five open paths on the live board did: `Check Goals`
- * was violet over the violet frontstage-tech lane, `Update Goals` pink over
+ * was violet over the violet frontstage-touchpoint lane, `Update Goals` pink over
  * the pink frontstage-action lane.
  *
  * The disjointness holds for the OPEN set. It does not hold for the path
