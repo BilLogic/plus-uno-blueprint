@@ -1,6 +1,7 @@
 import type { Json } from '@/types/database'
 import type { PathType } from '@/types/database'
 import type { EntityStatus } from '@/lib/entityStatus'
+import type { TouchpointProminenceValue } from '@/lib/touchpointProminence'
 
 export type BlueprintPath = {
   id: string
@@ -57,13 +58,29 @@ export type CellLink = {
  * not hold. Built by `cellTouchpoints.ts` from either source.
  */
 export type CellTouchpoint = {
+  /**
+   * The `cell_touchpoints` row this came from, and the only handle an editor
+   * may write through — a placement is identified by its id, never by the
+   * name it currently shows, because the catalog owns that name and a rename
+   * moves it under every placement at once.
+   *
+   * Null from fallback data, which has no rows at all. That null is also what
+   * makes the placement editor unavailable on a hand-written fixture board,
+   * which is correct: there is nothing there to save into.
+   */
+  id: string | null
   name: string
   /** Null from fallback data, which has nowhere to record one. */
   kind: string | null
   summary: string | null
   screenshot: string | null
   url: string | null
-  prominence: 'core' | 'peripheral' | null
+  /**
+   * Core or peripheral AT THIS MOMENT, or null for the unmarked majority.
+   * Null is a state of its own, not a quiet `peripheral` — see
+   * `src/lib/touchpointProminence.ts`.
+   */
+  prominence: TouchpointProminenceValue
 }
 
 export type BlueprintCell = {

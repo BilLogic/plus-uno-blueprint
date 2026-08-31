@@ -80,8 +80,17 @@ import {
 } from '@/lib/blueprintCellConnections'
 import {
   cellTouchpointsFromLinks,
+  findCellPlacement,
   resolveTouchpointDetail,
 } from '@/lib/cellTouchpoints'
+import {
+  TOUCHPOINT_PROMINENCE_DEFINITION,
+  TOUCHPOINT_PROMINENCE_LABEL,
+} from '@/lib/touchpointProminence'
+import {
+  designLinkLabel as describeDesignLink,
+  resolveDesignUrl,
+} from '@/lib/cellDesignLink'
 import {
   buildTouchpointSelectionForItem,
   getBlueprintStepTechItems,
@@ -94,9 +103,6 @@ import {
   getBlueprintLayerZone,
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
-import {
-  URL_LINK_TYPE,
-} from '@/lib/blueprintTechDescriptions'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
@@ -162,36 +168,6 @@ const PANEL_TABS: Array<{
     icon: Link2,
   },
 ]
-
-function isFigmaUrl(url: string): boolean {
-  return /figma\.com/i.test(url)
-}
-
-/**
- * The design reference for a cell: the placement's own url first, then any
- * Figma link on the cell.
- *
- * The placement's url is per-moment — two PLUS App placements point at
- * different Figma nodes — so it has to win over a cell-wide link. This used
- * to call a resolver that searched `cells.links` by label and had a
- * `content === 'PLUS App'` branch bolted on; that path is gone, and with it
- * the second way of answering the same question.
- */
-function resolveFigmaUrl(
-  placementUrl: string | null | undefined,
-  links: CellLink[],
-): string | null {
-  if (placementUrl?.trim() && isFigmaUrl(placementUrl)) return placementUrl.trim()
-
-  for (const link of links) {
-    if (link.type !== URL_LINK_TYPE || !link.url?.trim()) continue
-    if (isFigmaUrl(link.url) || /figma/i.test(link.label ?? '')) {
-      return link.url.trim()
-    }
-  }
-
-  return null
-}
 
 /**
  * The Details │ Differences switch — TOP-LEVEL panel chrome (the two
@@ -657,10 +633,30 @@ function BlueprintCellDetailPanelBody() {
     [selectedCell, selection?.techItem],
   )
 
-  const figmaUrl = useMemo(() => {
+  /*
+    The placement row itself, for the editor.
+
+    Separate from `touchpointDetail` above, which is the READING of it: that
+    one falls back to the cell's summary when the placement has none, and
+    seeding a form with a fallback is how a cell's sentence ends up written
+    onto a placement that never said it.
+  */
+  const selectedPlacement = useMemo(
+    () =>
+      selectedCell
+        ? findCellPlacement(
+            { touchpoints: selectedCell.touchpoints ?? [] },
+            selection?.techItem,
+          )
+        : null,
+    [selectedCell, selection?.techItem],
+  )
+
+  const designUrl = useMemo(() => {
     if (!selection) return null
-    return resolveFigmaUrl(touchpointDetail?.url, cellLinks)
+    return resolveDesignUrl(touchpointDetail?.url, cellLinks)
   }, [cellLinks, selection, touchpointDetail])
+  const designLinkLabel = describeDesignLink(designUrl)
 
   // Lane row position of the selected cell — orients up/down direction
   // glyphs on same-step dependency rows.
@@ -990,7 +986,28 @@ function BlueprintCellDetailPanelBody() {
   const isTechLayer = Boolean(
     selectedLayer && shouldUsePillCellContent(selectedLayer),
   )
-  const techDetailLabel = isTechLayer ? (touchpointDetail?.name ?? null) : null
+  /*
+    The touchpoint's name, where there IS one to name.
+
+    `isTechLayer` alone was the test, and it is right for the general case: on
+    an actor lane a cell's content is a sentence, and `resolveTouchpointDetail`
+    naming it "the touchpoint" would be the label join this whole change
+    unwound. But it is wrong for a cell that carries a real placement on a
+    lane that does not draw pills — four exist in production, the documents
+    and the recording the import migration deliberately kept (`Branding
+    Guidelines`, `Design System`, `Zoom Recording`), and they had their
+    summary, screenshot and design link rendered while the name they belong
+    to was suppressed.
+
+    A row id is what tells the two apart: only a real `cell_touchpoints` row
+    has one. So the field appears wherever the placement is real, which is
+    also what gives the prominence badge below a reader on those cells — a
+    control an author can set and no one can see is the shape #172 exists to
+    stop, and it would have been reintroduced here.
+  */
+  const hasRealPlacement = Boolean(selectedPlacement?.id)
+  const techDetailLabel =
+    isTechLayer || hasRealPlacement ? (touchpointDetail?.name ?? null) : null
   const detailDescriptionText =
     techDetailLabel && detailBodyText.trim() === techDetailLabel
       ? ''
@@ -1001,7 +1018,7 @@ function BlueprintCellDetailPanelBody() {
     cellPicture: selection.paths[0]?.picture,
   })
   const showPicture = Boolean(detailPictures?.length && !isVisualLane)
-  const showTechPill = Boolean(isTechLayer && techDetailLabel)
+  const showTechPill = Boolean(techDetailLabel)
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
@@ -1140,17 +1157,17 @@ function BlueprintCellDetailPanelBody() {
               </div>
             ) : null}
             {screenshots.map((src) =>
-              figmaUrl ? (
+              designUrl ? (
                 <a
                   key={src}
-                  href={figmaUrl}
+                  href={designUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={cn(
                     CELL_DETAIL_PICTURE_FRAME_CLASS,
                     'group block cursor-pointer',
                   )}
-                  aria-label="View in Figma"
+                  aria-label={designLinkLabel}
                 >
                   <img
                     src={src}
@@ -1175,7 +1192,7 @@ function BlueprintCellDetailPanelBody() {
                         'transition-opacity duration-(--motion-fade)',
                       )}
                     >
-                      View in Figma
+                      {designLinkLabel}
                       <ExternalLink className="size-2.5 text-white" />
                     </span>
                   </span>
@@ -1239,12 +1256,40 @@ function BlueprintCellDetailPanelBody() {
   const touchpointField = showTechPill ? (
     <div className="flex flex-col gap-0.5">
       <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />
-      <div className="flex min-w-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <PanelKindBadge
           label={techDetailLabel!}
           tone={getTouchpointTone(techDetailLabel!)}
           title={techDetailLabel!}
         />
+        {/*
+          PROMINENCE, beside the name it qualifies, and ONLY when somebody
+          set it.
+
+          Nothing renders for the unmarked case — no badge, no dash, no
+          "Unmarked". Most placements will never be marked, and a grey chip on
+          all of them would put a judgement on screen that nobody made, which
+          is the specific misreading the column has to avoid. Absence is the
+          honest rendering of "not judged", and it is what tells the unmarked
+          case apart from a placement someone deliberately called peripheral.
+
+          Nor while EDITING: the form below carries the same fact as a
+          control, and a badge beside a select for one value is two mechanisms
+          for one fact.
+
+          NOT on the grid pill either. docs/reference/panel-affordances.md
+          § Where prominence is shown carries the reasoning, the standing
+          two-mechanism prohibition, and what was rejected.
+        */}
+        {!editingCell && touchpointDetail?.prominence ? (
+          <PanelKindBadge
+            label={TOUCHPOINT_PROMINENCE_LABEL[touchpointDetail.prominence]}
+            title={TOUCHPOINT_PROMINENCE_LABEL[touchpointDetail.prominence]}
+            description={
+              TOUCHPOINT_PROMINENCE_DEFINITION[touchpointDetail.prominence]
+            }
+          />
+        ) : null}
       </div>
     </div>
   ) : null
@@ -1289,6 +1334,10 @@ function BlueprintCellDetailPanelBody() {
         <CellPanelEditor
           cellId={resolvedCellId}
           laneName={selection.laneName}
+          // The placement the reader clicked, so its four detail fields join
+          // the cell's form under one Save rather than arriving as a second
+          // editor with a second Save button.
+          placement={selectedPlacement}
           // Never seed the field with the title wearing a description's
           // clothes — only prose that actually says more than the cell text.
           fallbackDescription={
@@ -1460,7 +1509,7 @@ function BlueprintCellDetailPanelBody() {
                     <CellResourcesTab
                       cellId={resolvedCellId}
                       links={cellLinks}
-                      figmaUrl={figmaUrl}
+                      designUrl={designUrl}
                     />
                   ) : null}
                 </div>

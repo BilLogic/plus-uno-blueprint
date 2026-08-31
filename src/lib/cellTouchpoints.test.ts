@@ -26,6 +26,7 @@ import assert from 'node:assert/strict'
 import {
   cellTouchpointsFromLinks,
   cellTouchpointsFromRows,
+  findCellPlacement,
   resolveTouchpointDetail,
 } from '@/lib/cellTouchpoints'
 
@@ -229,4 +230,75 @@ test('a multi-touchpoint cell with no name resolves nothing', () => {
 test('a name the cell does not place resolves nothing', () => {
   const cell = { summary: 'x', touchpoints: cellTouchpointsFromLinks('Zoom', []) }
   assert.equal(resolveTouchpointDetail(cell, 'PLUS App'), null)
+})
+
+test('a placement carries the row id an editor writes through', () => {
+  // The handle the placement editor uses. Identity-keyed, so a rename in the
+  // catalog or a reorder inside the cell cannot move the write onto a
+  // different row that happens to spell the same.
+  const [placement] = cellTouchpointsFromRows([
+    {
+      id: 'ct-1',
+      position: 1,
+      summary: null,
+      screenshot: null,
+      url: null,
+      prominence: null,
+      touchpoints: { name: 'Zoom' },
+    },
+  ])
+  assert.equal(placement!.id, 'ct-1')
+  assert.equal(resolveTouchpointDetail({ summary: null, touchpoints: [placement!] })!.id, 'ct-1')
+})
+
+test('a fallback placement has no id, so it has no editor', () => {
+  // There is no row on a hand-written fixture board, so there is nowhere to
+  // save into. Offering the form there would be offering a Save that writes
+  // nothing — the failure `requireRowsWritten` exists to make loud.
+  const [placement] = cellTouchpointsFromLinks('Zoom', [])
+  assert.equal(placement!.id, null)
+})
+
+test('findCellPlacement returns the placement itself, unresolved', () => {
+  // The editor needs the row's OWN summary, empty included. Seeding a form
+  // from resolveTouchpointDetail would seed it with the CELL's sentence,
+  // which the first Save would then write onto the placement — two things
+  // saying the same words without anyone having decided they should.
+  const cell = {
+    summary: 'The tutor joins the session.',
+    touchpoints: cellTouchpointsFromLinks('Zoom', []),
+  }
+  assert.equal(findCellPlacement(cell, 'Zoom')!.summary, null)
+  assert.equal(resolveTouchpointDetail(cell, 'Zoom')!.text, 'The tutor joins the session.')
+})
+
+test('findCellPlacement and resolveTouchpointDetail agree on WHICH placement', () => {
+  // One selection rule, two readings of the row it picks. If these ever
+  // disagreed the panel would edit one placement while displaying another.
+  const single = { summary: null, touchpoints: cellTouchpointsFromLinks('Zoom', []) }
+  const several = { summary: null, touchpoints: cellTouchpointsFromLinks('Zoom, Email', []) }
+
+  assert.equal(findCellPlacement(single)!.name, resolveTouchpointDetail(single)!.name)
+  assert.equal(findCellPlacement(several), null)
+  assert.equal(resolveTouchpointDetail(several), null)
+  assert.equal(findCellPlacement(several, 'Email')!.name, 'Email')
+  assert.equal(findCellPlacement(several, 'PLUS App'), null)
+})
+
+test('a prominence outside the vocabulary reads as unmarked', () => {
+  // The state that asserts the least. A value the CHECK constraint does not
+  // admit can still arrive through a seed, and rendering it as a badge would
+  // put a word on screen that nothing defines.
+  const [placement] = cellTouchpointsFromRows([
+    {
+      id: 'ct-9',
+      position: 1,
+      summary: null,
+      screenshot: null,
+      url: null,
+      prominence: 'important',
+      touchpoints: { name: 'Zoom' },
+    },
+  ])
+  assert.equal(placement!.prominence, null)
 })

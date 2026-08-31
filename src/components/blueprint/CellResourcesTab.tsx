@@ -26,8 +26,13 @@ type CellResourcesTabProps = {
   /** Canonical cell id; null for fallback-only cells (read-only then). */
   cellId: string | null
   links: CellLink[]
-  /** Figma link resolved by the panel (added when not already listed). */
-  figmaUrl: string | null
+  /**
+   * The design reference the panel resolved — the selected placement's own
+   * url first, then a Figma link on the cell. Added to the list when it is
+   * not already in it, because a placement's url is not one of `links` and
+   * would otherwise be reachable only through the screenshot overlay.
+   */
+  designUrl: string | null
 }
 
 function linkDrafts(links: CellLink[]): ResourceDraft[] {
@@ -43,7 +48,7 @@ function linkDrafts(links: CellLink[]): ResourceDraft[] {
  * resources are added right here. This is where resources live, so this is
  * where they are edited; the text editor above no longer carries them.
  */
-export function CellResourcesTab({ cellId, links, figmaUrl }: CellResourcesTabProps) {
+export function CellResourcesTab({ cellId, links, designUrl }: CellResourcesTabProps) {
   const { client, canWrite } = useSupabase()
   const mode = useCanvasModeValue()
   const canEdit = mode === 'design' && canWrite && cellId !== null && client !== null
@@ -66,8 +71,15 @@ export function CellResourcesTab({ cellId, links, figmaUrl }: CellResourcesTabPr
     return [{ id: `link-${index}`, label, url }]
   })
 
-  if (figmaUrl && !rows.some((row) => row.url === figmaUrl)) {
-    rows.push({ id: 'link-figma', label: 'Figma', url: figmaUrl })
+  if (designUrl && !rows.some((row) => row.url === designUrl)) {
+    // Labelled by what it actually is. A placement's design link may point
+    // anywhere, and calling every one of them "Figma" is a row that lies
+    // about where the click lands.
+    rows.push({
+      id: 'link-design',
+      label: /figma\.com/i.test(designUrl) ? 'Figma' : 'Design',
+      url: designUrl,
+    })
   }
 
   if (rows.length === 0) {

@@ -36,6 +36,10 @@ import {
   type EvidenceUpdate,
 } from '@/lib/evidenceMutations'
 import { setSliceFrameIllustration } from '@/lib/sliceMutations'
+import {
+  restoreTouchpointPlacement,
+  type PlacementDetailColumns,
+} from '@/lib/touchpointMutations'
 import { updateFinding, type FindingUpdate } from '@/lib/findingMutations'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import type { CellLink } from '@/types/blueprint'
@@ -96,6 +100,25 @@ export async function executeRevert(
       if (Array.isArray(removed) && removed.length > 0) {
         await restoreCellTouchpoints(client, cellId, removed as RemovedPlacement[])
       }
+      return
+    }
+    case 'restore_touchpoint_placement': {
+      // Undo of "edited a touchpoint at this cell". The captured payload is
+      // the four detail COLUMNS as the database held them, written back
+      // verbatim rather than rebuilt through the input validator — an
+      // imported placement can carry a screenshot path or an http url the
+      // validator would refuse, and undo has to be able to reach data that
+      // was already there. Same rule, same reason, as update_cell_resources.
+      //
+      // Keyed on the placement id, so a revert after the pill was reordered
+      // or the catalog entry renamed still lands on the row the edit came
+      // from rather than on whatever now spells the same.
+      const placementId = stringArg(revert.args, 'placement_id')
+      const columns = revert.args.columns as PlacementDetailColumns | undefined
+      if (!columns || typeof columns !== 'object') {
+        throw new Error('This change’s captured placement detail is malformed.')
+      }
+      await restoreTouchpointPlacement(client, placementId, columns)
       return
     }
     case 'update_cell_spec': {

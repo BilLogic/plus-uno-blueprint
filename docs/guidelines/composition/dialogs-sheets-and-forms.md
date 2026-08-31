@@ -1,10 +1,11 @@
 ---
 audience: designers, developers
 summary: The drawer/sheet posture contract (single owner), the create and delete dialogs, the slice sheet, the session-changes sheet, and the field primitives that keep a vocabulary from becoming free text.
-sources: src/components/blueprint/panelShell.tsx, src/components/editor/DeleteStructureDialog.tsx, src/components/editor/SessionChangesSheet.tsx, src/lib/deletionSafety.ts, src/lib/writeFailures.ts, src/lib/entityStatus.ts
+sources: src/components/blueprint/panelShell.tsx, src/components/editor/DeleteStructureDialog.tsx, src/components/editor/SessionChangesSheet.tsx, src/lib/deletionSafety.ts, src/lib/writeFailures.ts, src/lib/entityStatus.ts, src/lib/touchpointProminence.ts
 claims:
   - src/components/blueprint/OwnerTagSelect.tsx
   - src/components/blueprint/PathMultiSelect.tsx
+  - src/components/blueprint/ProminenceSelect.tsx
   - src/components/blueprint/StakeholderBadge.tsx
   - src/components/blueprint/StakeholderSelect.tsx
   - src/components/blueprint/StatusBadge.tsx
@@ -253,6 +254,7 @@ The relatives differ on purpose:
 | `StakeholderSelect` | same geometry, **read-only over the registry** | creating or renaming a stakeholder is an agent tool with a ledger entry, not something to do by typing into a lane. "Nobody" is a first-class choice, not an empty state. |
 | `StakeholderBadge` | not a picker — the **owner badge**, one line of `PanelKindBadge` | it is the value, not the control. `StakeholderSelect` renders it wherever the field is read-only, and it carries `stakeholders.summary` on its hover so the registry's definition of that party has somewhere to arrive. Where the field IS editable there is no badge to hover, so the same sentence is printed under the picker instead — the two never appear together, which is what keeps it from being two mechanisms for one fact. |
 | `StatusSelect` | a native `<select>` | six fixed options, no search, no multi-select — and it gets keyboard and touch for free. Options carry the full label, because a dropdown is where a reader learns what the six words mean. |
+| `ProminenceSelect` | a native `<select>`, three options for a two-value column | the column is nullable and the null is the common case, so the control has one more option than the constraint has values. Unmarked is FIRST and is a real choice, not an unselectable prompt: a placement that nobody has judged is not a placement missing a value, and an author who marks one by mistake has to be able to get back. Its label says "nobody has judged this" so choosing it is not choosing a third degree of importance. |
 | `PathMultiSelect` | a multi-select **filter**, five layouts | not a picker at all. Its `id` is a filter key (`type:name`), never a uuid — anything that writes to a path row wants `pathIds`. |
 | `WalkthroughPathSelect` | a radio menu | degenerates to a static badge when there is one path. Shares its label formatter with `PathMultiSelect`. |
 

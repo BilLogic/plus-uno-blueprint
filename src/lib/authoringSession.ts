@@ -65,6 +65,7 @@ export type WriteFn =
   | 'update_cell_content'
   | 'update_cell_resources'
   | 'update_cell_spec'
+  | 'update_touchpoint_placement'
   | 'update_lane_spec'
   | 'update_phase_spec'
   | 'update_scenario_spec'
@@ -298,6 +299,14 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   update_cell_content: () => 'Edited a cell’s text',
   update_cell_resources: () => 'Edited a cell’s resources',
   update_cell_spec: () => 'Specified function & form',
+  // Named by the touchpoint, because a cell can hold several and "edited a
+  // touchpoint" beside a run of them tells nobody which. The words belong to
+  // this touchpoint AT THIS CELL — the same tool at the next step keeps its
+  // own — so the row says where as well as what.
+  update_touchpoint_placement: (entry) =>
+    named(entry)
+      ? `Edited${named(entry)} at this cell`
+      : 'Edited a touchpoint at this cell',
   update_lane_spec: () => 'Edited a lane’s owner, KPIs & tools',
   update_phase_spec: () => 'Edited a phase’s summary, impact & requirements',
   update_scenario_spec: () => 'Edited a scenario’s summary',
