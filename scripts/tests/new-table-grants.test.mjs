@@ -106,7 +106,12 @@ test('the real series is green, and every table it creates since the cutoff is n
   // first one to arrive after it and revokes on its own line, which is the
   // whole intent: the check failed on its way in, and the fix was a revoke
   // rather than an exemption.
-  assert.deepEqual(created.sort(), ['authoring_changes', 'cell_touchpoints', 'touchpoints'])
+  assert.deepEqual(created.sort(), [
+    'authoring_changes',
+    'cell_touchpoints',
+    'touchpoints',
+    'unplaced_touchpoint_details',
+  ])
 })
 
 test('prose about creating tables does not create a table', () => {

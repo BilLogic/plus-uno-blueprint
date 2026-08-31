@@ -15,6 +15,7 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { invalidateUnplacedQueue } from '@/hooks/useUnplacedTouchpointDetails'
 import { upsertCell } from '@/lib/authoringRpc'
 import {
   CELL_CONTENT_TARGET,
@@ -458,6 +459,12 @@ function CellPanelEditorForm({
       // A save can introduce a new value audience; the autocomplete list
       // caches under its own key and never refetches on its own.
       invalidateQueries('value-audiences')
+      // Taking a touchpoint out of the text deletes its placement, and if that
+      // placement carried a summary or a screenshot the database parks the
+      // writing in the unplaced queue rather than destroying it. The queue is
+      // cached under its own key, so without this the new row is invisible
+      // until a reload — which is the disappearance this ticket is about.
+      invalidateUnplacedQueue()
       if (aliveRef.current) onDone()
     } catch (saveError) {
       if (aliveRef.current) {

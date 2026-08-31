@@ -84,6 +84,8 @@ const EVERY_WRITE = Object.keys({
   create_finding: true,
   update_finding: true,
   update_touchpoint_placement: true,
+  place_touchpoint_detail: true,
+  discard_touchpoint_detail: true,
 } satisfies Record<WriteFn, true>) as WriteFn[]
 
 test('every recordable operation reads as a sentence, not an identifier', () => {

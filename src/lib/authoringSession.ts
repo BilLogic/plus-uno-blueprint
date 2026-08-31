@@ -96,6 +96,8 @@ export type WriteFn =
   | 'set_slice_illustration'
   | 'create_finding'
   | 'update_finding'
+  | 'place_touchpoint_detail'
+  | 'discard_touchpoint_detail'
 
 export type ChangeEntry = {
   id: string
@@ -381,6 +383,25 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
       ? `Updated the open finding for ${checked(entry)}`
       : 'Updated an open finding'
   },
+  // Both rows name BOTH names, because that pair is the decision. "Placed a
+  // detail" says nothing a person could check afterwards; "Workday (Employee
+  // View) → Workday" is the judgement itself, and it is the thing somebody
+  // might want back.
+  place_touchpoint_detail: (entry) => {
+    const onto =
+      typeof entry.args.touchpoint_name === 'string'
+        ? entry.args.touchpoint_name.trim()
+        : ''
+    const detail = named(entry)
+    if (!detail) return 'Placed a touchpoint detail'
+    return onto
+      ? `Placed detail${detail} on “${onto}”`
+      : `Placed detail${detail}`
+  },
+  discard_touchpoint_detail: (entry) =>
+    named(entry)
+      ? `Discarded detail${named(entry)}`
+      : 'Discarded a touchpoint detail',
 }
 
 export function describeChange(entry: ChangeEntry): string {

@@ -183,18 +183,20 @@ never a raw table write from a component, a context or a hook:
   SECURITY DEFINER RPC. The app holds *operations*, not tables. Treat all
   of them as pessimistic: re-read after a structural write
   (`invalidateStructure()`), because cascades cannot be mirrored client-side.
-- **The `src/lib/*Mutations.ts` family** — eleven modules today, one per
+- **The `src/lib/*Mutations.ts` family** — thirteen modules today, one per
   subject: `cellContentMutations` / `cellSpecMutations` (cell text and spec
   columns via column-level grants; optimistic, the exception), `sliceMutations`
   (slices and frames), `evidenceMutations`, `findingMutations`,
-  `stakeholderMutations`, and the five spec modules `serviceSpecMutations`,
+  `stakeholderMutations`, `touchpointMutations` (a catalog rename, which is one
+  RPC because both halves have to move together), `unplacedTouchpointMutations`
+  (placing or discarding a detail that names nothing its cell shows, both RPCs
+  for the same reason), and the five spec modules `serviceSpecMutations`,
   `scenarioSpecMutations`, `phaseSpecMutations`, `laneSpecMutations`,
-  `stepSpecMutations`. All share one shape: direct table
-  write under row grants, recorded in the session ledger with a captured
-  inverse.
+  `stepSpecMutations`. All share one shape: a write under row grants — direct
+  or through one RPC — recorded in the session ledger with a captured inverse.
 
 Two modules write tables and are deliberately *not* in that set. Count them
-when you count writers — there are fourteen write surfaces, not twelve:
+when you count writers — there are sixteen write surfaces, not fourteen:
 
 - `src/lib/revertChange.ts` — the ledger's own inverse-applier. It cannot
   record a change; recording one is what it undoes.

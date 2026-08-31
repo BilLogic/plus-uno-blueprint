@@ -70,6 +70,32 @@ Table `cells`: `path_id`, `lane_id`, `step_id`, `content`, `summary`,
 `status`, `position`. A single (lane, step) slot can hold several stacked cells,
 distinguished by `position`.
 
+**touchpoint** — a thing the service uses that a customer or a member of staff
+meets at a moment: an app, a document, a physical artifact, a channel, another
+service. It belongs to the **service**, not to a cell, so renaming it once
+moves every place it appears.
+Table `touchpoints`: `service_id`, `name`, `kind`, `summary`, `url`,
+`stakeholder_id`, `origin`.
+
+**placement** — one touchpoint, used at one cell, this way. The catalog owns
+the name; the placement owns the per-moment `summary`, `screenshot` and `url`,
+because the same tool describes a different screen at a different step. It also
+carries `prominence` (`core` or `peripheral`), which sits here rather than on
+the catalog because the same artifact is central at one moment and incidental
+at another.
+Table `cell_touchpoints`: `cell_id`, `touchpoint_id`, `position`, plus those.
+
+**unplaced touchpoint detail** — a piece of writing about a touchpoint that
+names nothing its cell shows. It is **not a placement**: nothing draws it, and
+it has no touchpoint to point at, which is the whole reason it is waiting. A
+work queue, resolved one row at a time by a person deciding which of the cell's
+touchpoints the writing was about, or that it is not worth keeping. **Nothing
+here is ever placed automatically** — assigning a detail to the touchpoint its
+name resembles is what made 57 of them unreachable.
+Table `unplaced_touchpoint_details`: `cell_id`, `name` (the name the detail
+claims, and the one thing that must never decide anything), `summary`,
+`screenshot`, `url`, `prominence`, `origin`.
+
 **dependency** — a relationship between two cells. One table, two kinds, both
 read **source-first**:
 
