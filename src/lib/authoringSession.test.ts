@@ -46,6 +46,7 @@ const EVERY_WRITE = Object.keys({
   rename_scenario: true,
   rename_path: true,
   rename_owner_tag: true,
+  rename_touchpoint: true,
   add_step: true,
   add_lane: true,
   upsert_cell: true,

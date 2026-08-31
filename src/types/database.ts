@@ -9,8 +9,9 @@ import type { EntityStatus } from '@/lib/entityStatus'
  *   npm run supabase:types
  *   npm run supabase:types:local
  *
- * HAND-EDITED, 2026-08-30 (#178). `touchpoints`, `cell_touchpoints` and the
- * two placement RPCs were written by hand because neither generator runs on
+ * HAND-EDITED, 2026-08-30 (#178, then #187). `touchpoints`,
+ * `cell_touchpoints`, the two placement RPCs and the two rename RPCs were
+ * written by hand because neither generator runs on
  * the machine this landed from: `--linked` reports the project is not linked,
  * and the `--db-url` form needs Docker, which is not installed. The blocks
  * match the live schema exactly and are in the order the generator emits, so
@@ -1018,6 +1019,14 @@ export type Database = {
           revert?: Json | null
         }
         Returns: string
+      }
+      rename_content_item: {
+        Args: { p_content: string; p_from: string; p_to: string }
+        Returns: string
+      }
+      rename_touchpoint: {
+        Args: { p_touchpoint_id: string; p_name: string }
+        Returns: Json
       }
       restore_cell_touchpoints: {
         Args: { p_cell_id: string; p_rows: Json }

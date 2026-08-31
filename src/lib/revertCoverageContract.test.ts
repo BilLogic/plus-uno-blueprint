@@ -43,6 +43,7 @@ const MUTATION_MODULES = [
   'sliceMutations.ts',
   'stakeholderMutations.ts',
   'stepSpecMutations.ts',
+  'touchpointMutations.ts',
 ] as const
 
 /**
@@ -69,6 +70,10 @@ const RPC_BACKED = new Set([
   'rename_path',
   'rename_phase',
   'rename_scenario',
+  // #187. Shipped with 20260830220000: the rename has to move the catalog row
+  // and every bearing cell's text in one transaction, so it is a function and
+  // the inverse is that same function pointed the other way.
+  'rename_touchpoint',
 ])
 
 /** `fn: 'name'` inside a recorded RevertSpec. */
