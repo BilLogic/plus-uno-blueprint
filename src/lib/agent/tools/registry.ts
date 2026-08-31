@@ -260,7 +260,7 @@ export async function dispatchTool(
       const sliceId = need(args, 'slice_id')
       const { data, error } = await client
         .from('slices')
-        .select('id, title, description, slice_type, actor, origin, slice_items(id, position, caption, narrative, cell_ids)')
+        .select('id, title, summary, kind, actor, authorship, slice_items(id, position, caption, narrative, cell_ids)')
         .eq('id', sliceId)
         .maybeSingle()
       if (error) throw new Error(error.message)
@@ -271,14 +271,14 @@ export async function dispatchTool(
           (frame, index) =>
             `frame ${index + 1}: cells [${(frame.cell_ids ?? []).join(', ')}]${frame.caption ? ` caption "${frame.caption}"` : ''}${frame.narrative ? ` narrative "${frame.narrative}"` : ''}`,
         )
-      return `slice "${data.title}" (${data.id}) type=${data.slice_type}${data.actor ? ` actor=${data.actor}` : ''}\n${frames.join('\n') || '(no frames)'}`
+      return `slice "${data.title}" (${data.id}) kind=${data.kind}${data.actor ? ` actor=${data.actor}` : ''}\n${frames.join('\n') || '(no frames)'}`
     }
     case 'list_findings': {
       const filter = s(args, 'status') ?? 'open'
       const forCell = s(args, 'cell_id')
       let query = client
-        .from('findings')
-        .select('id, source, check_name, severity, note, status, cell_ids, created_at')
+        .from('audit_findings')
+        .select('id, source, check_key, severity, summary, status, cell_ids, created_at')
         .order('created_at', { ascending: false })
         .limit(100)
       if (filter !== 'all')
@@ -298,7 +298,7 @@ export async function dispatchTool(
       return data
         .map(
           (row) =>
-            `${row.id} [${row.severity}] ${row.check_name} (${row.source}, ${row.status}, ${row.created_at.slice(0, 10)}) cells:${(row.cell_ids ?? []).length}${row.note ? ` — ${row.note}` : ''}`,
+            `${row.id} [${row.severity}] ${row.check_key} (${row.source}, ${row.status}, ${row.created_at.slice(0, 10)}) cells:${(row.cell_ids ?? []).length}${row.summary ? ` — ${row.summary}` : ''}`,
         )
         .join('\n')
     }
@@ -508,7 +508,7 @@ export async function dispatchTool(
           sourceCellId: need(args, 'source_cell_id'),
           targetCellId: need(args, 'target_cell_id'),
           kind,
-          label: s(args, 'label') ?? null,
+          name: s(args, 'label') ?? null,
         })
         return `Dependency set (${id}).`
       }
@@ -627,7 +627,7 @@ export async function dispatchTool(
         const slice = await createSlice(client, {
           serviceId: await serviceId(client),
           title: need(args, 'title'),
-          description: s(args, 'description') ?? '',
+          summary: s(args, 'description') ?? '',
           sliceType: need(args, 'slice_type') as SliceType,
           actor: s(args, 'actor') ?? '',
           cellIds,
@@ -638,17 +638,17 @@ export async function dispatchTool(
         const sliceId = need(args, 'slice_id')
         const { data, error } = await client
           .from('slices')
-          .select('title, description, slice_type, actor, origin, updated_at')
+          .select('title, summary, kind, actor, authorship, updated_at')
           .eq('id', sliceId)
           .maybeSingle()
         if (error) throw new Error(error.message)
         if (!data) throw new Error(`No slice with id ${sliceId}.`)
         const outcome = await updateSliceMeta(client, sliceId, asUpdatedAtToken(data.updated_at), {
           title: s(args, 'title') ?? data.title,
-          description: s(args, 'description') ?? data.description ?? '',
-          sliceType: (s(args, 'slice_type') ?? data.slice_type) as SliceType,
+          summary: s(args, 'description') ?? data.summary ?? '',
+          sliceType: (s(args, 'slice_type') ?? data.kind) as SliceType,
           actor: s(args, 'actor') ?? data.actor ?? '',
-          origin: data.origin,
+          authorship: data.authorship,
         })
         if (outcome.status === 'conflict')
           throw new Error('The slice changed since you read it — re-read and retry.')
@@ -694,7 +694,6 @@ export async function dispatchTool(
           title: need(args, 'title'),
           ref: s(args, 'ref') ?? null,
           excerpt: s(args, 'excerpt') ?? null,
-          note: s(args, 'note') ?? null,
         })
         return `Evidence added (${id}).`
       }
@@ -710,17 +709,16 @@ export async function dispatchTool(
           title: s(args, 'title'),
           ref: s(args, 'ref'),
           excerpt: s(args, 'excerpt'),
-          note: s(args, 'note'),
         })
         return 'Evidence updated.'
       }
       case 'create_finding': {
         const source = args.source === 'whatif' ? 'whatif' : 'audit'
-        const checkName = need(args, 'check_name')
+        const checkKey = need(args, 'check_name')
         const severityArg = s(args, 'severity')
         if (severityArg !== 'info' && severityArg !== 'warn' && severityArg !== 'critical')
           throw new Error('severity must be info, warn, or critical.')
-        const note = need(args, 'note')
+        const summary = need(args, 'note')
         const cellIds = Array.isArray(args.cell_ids)
           ? args.cell_ids.filter(
               (value): value is string => typeof value === 'string',
@@ -730,18 +728,18 @@ export async function dispatchTool(
         if (cellIds.length === 0 && !scope)
           throw new Error('A zero-cell finding needs a scope (e.g. "scenario:Warm-Up").')
         const runId = s(args, 'run_id') ?? crypto.randomUUID()
-        const fingerprint = await findingFingerprint(checkName, cellIds, scope)
+        const fingerprint = await findingFingerprint(checkKey, cellIds, scope)
         // `cell_keys` are the ids themselves in the canvas dialect — see
         // findingFingerprint, which hashes them the same way.
         const outcome = await recordFinding(client, {
           serviceId: await serviceId(client),
           runId,
           source,
-          checkName,
+          checkKey,
           severity: severityArg,
           cellIds,
           cellKeys: cellIds,
-          note,
+          summary,
           fingerprint,
         })
         const reuse = `run_id ${runId}; reuse it for the rest of this run.`
@@ -749,7 +747,7 @@ export async function dispatchTool(
           return `An open finding already had this fingerprint — updated it in place (dedupe). ${reuse}`
         if (outcome.kind === 'suppressed')
           return `A finding with this fingerprint was dismissed by a human — dismissed stays dismissed. Nothing recorded. ${reuse}`
-        return `Recorded ${severityArg} finding for ${checkName}${outcome.reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. ${reuse}`
+        return `Recorded ${severityArg} finding for ${checkKey}${outcome.reopened ? ' (a resolved twin existed — this reopens the issue)' : ''}. ${reuse}`
       }
       case 'update_finding': {
         const status = s(args, 'status')

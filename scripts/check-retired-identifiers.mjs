@@ -103,7 +103,11 @@ export const RETIRED_IDENTIFIER_EXEMPTIONS = [
       'a deliberate historical record — it says the table was renamed FROM service_lifecycles, which is the sentence that stops the next person re-asking',
   },
   {
-    identifier: 'comment on table business_model',
+    // The table was pluralised on 2026-08-30 (#177) and the comment went with
+    // it, so the exemption follows the address rather than the text. That is
+    // the whole point of the staleness rule below it: this entry failed the
+    // moment the rename landed, which is how the move got noticed.
+    identifier: 'comment on table business_models',
     because:
       'the same deliberate record, for the propositions → business_model rename, and it explains the collision with a cell value proposition',
   },

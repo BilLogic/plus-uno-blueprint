@@ -71,14 +71,14 @@ export const BLUEPRINT_CONTRACT = {
     'lanes',
     'cells',
     'cell_dependencies',
-    'findings',
+    'audit_findings',
     'slices',
     'slice_items',
     'evidence_counts',
   ],
 
   /** Tables the bot actively reads (probe list for /health/blueprint). */
-  botReadTables: ['cells', 'cell_dependencies', 'findings', 'slices'],
+  botReadTables: ['cells', 'cell_dependencies', 'audit_findings', 'slices'],
 
   /**
    * PostgREST embed-hint constraint names. These are the sharpest edge in the
@@ -109,6 +109,9 @@ export const BLUEPRINT_CONTRACT = {
    * Only the ones the bot may send are listed. `filter_lane_role` was
    * `filter_layer_role` until the layers→lanes rename; listing it means a
    * rename shows up as contract drift rather than as a silent no-op filter.
+   * `filter_path_kind` was `filter_path_type` until 20260830190000 renamed the
+   * column it filters on, which is the same mechanism doing its job a second
+   * time.
    */
   searchBlueprintParams: {
     q: 'q',
@@ -118,7 +121,7 @@ export const BLUEPRINT_CONTRACT = {
     rrfK: 'rrf_k',
     filterPhase: 'filter_phase',
     filterScenario: 'filter_scenario',
-    filterPathType: 'filter_path_type',
+    filterPathKind: 'filter_path_kind',
     filterLaneRole: 'filter_lane_role',
     granularity: 'granularity',
     include: 'include',
@@ -156,7 +159,9 @@ export const BLUEPRINT_CONTRACT = {
    * `search_blueprint` OUTPUT column names the bot reads by key. Separate from
    * the underlying table columns on purpose: `cells.description` becomes
    * `cells.summary` in plan 002, but the RPC's projection is its own decision
-   * and this is the name on the wire.
+   * and this is the name on the wire. `description` is still the right name
+   * here after 20260830190000 for the same reason — it is the row's prose
+   * column whatever the underlying table calls it.
    */
   searchBlueprintColumns: {
     kind: 'kind',
@@ -193,6 +198,12 @@ export const BLUEPRINT_CONTRACT = {
    * NOT use it and keeps its own fetchSlices, which answers a different
    * question (title/actor ILIKE on the query text, plus an unfiltered
    * head-count). See the v5 migration header.
+   *
+   * `findings` stayed `findings` when the TABLE became `audit_findings`
+   * (20260830190000). This is a word on the wire naming a category of result,
+   * not a relation name, and the RPC's own guard clause is where that
+   * vocabulary is defined. Moving it would have been a rename of something
+   * that was never the table's name.
    */
   searchBlueprintInclude: {
     edges: 'edge',

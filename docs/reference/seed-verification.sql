@@ -27,7 +27,7 @@ select
   ss.name as scenario,
   pa.name as path,
   pa.summary,
-  pa.path_type,
+  pa.kind,
   (select count(*) from public.lanes l where l.path_id = pa.id) as lanes,
   (select count(*) from public.path_steps ps where ps.path_id = pa.id) as steps,
   (select count(*) from public.cells c where c.path_id = pa.id) as cells,

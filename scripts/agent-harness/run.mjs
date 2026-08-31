@@ -241,7 +241,7 @@ async function realListBlueprint(args) {
     match_count: Math.min(Number(args.limit) || 200, 500),
     filter_phase: args.phase ?? null,
     filter_scenario: args.scenario ?? null,
-    filter_path_type: args.path_type ?? null,
+    filter_path_kind: args.path_type ?? null,
     filter_lane_role: args.lane_role ?? null,
   })
   return renderPortalRows(rows, 'Nothing at that granularity within those filters.', false)
@@ -254,7 +254,7 @@ async function realSearchBlueprint(args) {
     match_count: Math.min(Number(args.limit) || 15, 100),
     filter_phase: args.phase ?? null,
     filter_scenario: args.scenario ?? null,
-    filter_path_type: args.path_type ?? null,
+    filter_path_kind: args.path_type ?? null,
     filter_lane_role: args.lane_role ?? null,
   })
   return renderPortalRows(
@@ -281,7 +281,7 @@ async function realListScenarios() {
 
 async function realGetBlueprint(scenarioId) {
   const paths = await rest(
-    `paths?select=id,name,path_type,lanes(id,name,lane_role,position),path_steps(position,steps(id,name))&scenario_id=eq.${encodeURIComponent(scenarioId)}`,
+    `paths?select=id,name,kind,lanes(id,name,lane_role,position),path_steps(position,steps(id,name))&scenario_id=eq.${encodeURIComponent(scenarioId)}`,
   )
   if (!paths?.length) return 'No paths for that scenario id.'
   const out = []
@@ -294,7 +294,7 @@ async function realGetBlueprint(scenarioId) {
       `cells?select=id,content,lane_id,step_id,owner&path_id=eq.${path.id}`,
     )
     out.push(
-      `path "${path.name}" (${path.id}) type=${path.path_type}`,
+      `path "${path.name}" (${path.id}) kind=${path.kind}`,
       `  steps: ${steps.map((s) => `"${s.name}" (${s.id})`).join(', ')}`,
       ...(path.lanes ?? [])
         .sort((a, b) => a.position - b.position)
@@ -331,8 +331,8 @@ async function realListOwnerTags() {
 }
 
 async function realListSlices() {
-  const data = await rest('slices?select=id,title,slice_type')
-  return (data ?? []).map((s) => `"${s.title}" (${s.id}) type=${s.slice_type}`).join('\n')
+  const data = await rest('slices?select=id,title,kind')
+  return (data ?? []).map((s) => `"${s.title}" (${s.id}) kind=${s.kind}`).join('\n')
 }
 
 // A frozen desktop base-view snapshot of listAgentUiCommands() output —
@@ -528,23 +528,23 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'list_slices': record.result = await realListSlices(); return record.result
       case 'get_slice': {
         const rows = await rest(
-          `slices?select=id,title,description,slice_type,actor,origin,slice_items(id,position,caption,narrative,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
+          `slices?select=id,title,summary,kind,actor,authorship,slice_items(id,position,caption,narrative,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
         )
         if (!rows?.[0]) throw new Error('No slice with that id.')
         const slice = rows[0]
         const frames = [...(slice.slice_items ?? [])]
           .sort((a, b) => a.position - b.position)
           .map((f, i) => `frame ${i + 1}: cells [${(f.cell_ids ?? []).join(', ')}]${f.caption ? ` caption "${f.caption}"` : ''}`)
-        record.result = `slice "${slice.title}" (${slice.id}) type=${slice.slice_type}\n${frames.join('\n') || '(no frames)'}`
+        record.result = `slice "${slice.title}" (${slice.id}) kind=${slice.kind}\n${frames.join('\n') || '(no frames)'}`
         return record.result
       }
       case 'list_findings': {
         const filter = typeof args.status === 'string' ? args.status : 'open'
         const rows = await rest(
-          `findings?select=id,source,check_name,severity,note,status,cell_ids,created_at&order=created_at.desc&limit=100${filter === 'all' ? '' : `&status=eq.${encodeURIComponent(filter)}`}`,
+          `audit_findings?select=id,source,check_key,severity,summary,status,cell_ids,created_at&order=created_at.desc&limit=100${filter === 'all' ? '' : `&status=eq.${encodeURIComponent(filter)}`}`,
         )
         record.result = rows?.length
-          ? rows.map((r) => `${r.id} [${r.severity}] ${r.check_name} (${r.source}, ${r.status}, ${String(r.created_at).slice(0, 10)}) cells:${(r.cell_ids ?? []).length}${r.note ? ` — ${r.note}` : ''}`).join('\n')
+          ? rows.map((r) => `${r.id} [${r.severity}] ${r.check_key} (${r.source}, ${r.status}, ${String(r.created_at).slice(0, 10)}) cells:${(r.cell_ids ?? []).length}${r.summary ? ` — ${r.summary}` : ''}`).join('\n')
           : filter === 'all' ? 'No findings recorded yet.' : `No ${filter} findings.`
         return record.result
       }

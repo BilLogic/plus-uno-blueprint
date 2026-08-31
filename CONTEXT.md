@@ -219,6 +219,10 @@ remember is #145's job, not this paragraph's.
 | `stakeholders.note` | `stakeholders.summary` | `20260830170000` |
 | `frontstage_tech`, `backstage_tech` | `frontstage_touchpoints`, `backstage_touchpoints` | `20260830150000` |
 | `tech_description` | `cell_touchpoints` | `20260830140000` |
+| `slices.description`, `findings.note`, `cell_dependencies.label` | `slices.summary`, `audit_findings.summary`, `cell_dependencies.name` | `20260830190000` |
+| `paths.path_type`, `slices.slice_type`, `scenarios.view_type` | `paths.kind`, `slices.kind`, `scenarios.layout` | `20260830190000` |
+| `findings`, `findings.check_name` | `audit_findings`, `audit_findings.check_key` | `20260830190000` |
+| `slices.origin`, `business_model` | `slices.authorship`, `business_models` | `20260830190000` |
 
 The reasoning, where it is worth knowing: a "tech" lane never held only
 technology — a printed guide, a poster, a phone line and a Zoom recording were
@@ -245,6 +249,29 @@ sweep reads a bare column name and never a qualified one. So this row's
 `retired` and `copy` lists are empty on purpose and the rename is enforced by
 [`scripts/tests/stakeholder-summary.test.mjs`](scripts/tests/stakeholder-summary.test.mjs),
 against the one table it concerns.
+
+The last four rows are one pass, and two rules decide all of it. **`name` is
+for structure a reader navigates; `title` is for authored content a reader
+reads** — which is why `slices.title` and `evidence.title` are not in the
+table. **`summary` is the entity's own one-liner** — not an aside about it, so
+`findings.note` was misnamed and `paths.note`, which genuinely is an aside, was
+not. Classifiers settle on `kind`; `scenarios.view_type` is not a kind but a
+display setting, so it is `layout`. `slices.origin` is renamed rather than
+aligned because its vocabulary (`generated`, `customized`, `human`) answers a
+different question from every other `origin` (`import`, `app`) — that word is
+now free for `services`, which gained it in the same migration.
+
+**Four of these renames are not in the enforced map's word lists**, and the
+reason is structural. `audit_findings` contains `findings` and
+`business_models` contains `business_model`, so no substring distinguishes the
+old name from the new one; `label`, `note` and `origin` all remain live,
+correct names on other tables. Those four are held by
+`scripts/tests/one-spelling-each.test.mjs`, which names them table-qualified.
+
+**One column is a deliberate exception.** `cells.content` keeps a word of its
+own: a cell's text is a sentence somebody wrote about a moment, not a name for
+the cell and not a one-line summary of something longer. The column's own
+comment says so, and the same test asserts the comment is still there.
 
 ## One permanent exemption
 

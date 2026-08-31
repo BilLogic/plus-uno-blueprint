@@ -38,7 +38,7 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
     async (client, signal) => {
       const { data: service, error } = await client
         .from('services')
-        .select('id, name, summary, business_model(funding, pricing, delivery_cost, revenue_model, partners)')
+        .select('id, name, summary, business_models(funding, pricing, delivery_cost, revenue_model, partners)')
         .order('created_at')
         .limit(1)
         .abortSignal(signal)
@@ -46,9 +46,9 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
       if (error) throw new Error(error.message)
       if (!service) return null
 
-      const model = (Array.isArray(service.business_model)
-        ? service.business_model[0]
-        : service.business_model) as
+      const model = (Array.isArray(service.business_models)
+        ? service.business_models[0]
+        : service.business_models) as
         | {
             funding: string | null
             pricing: string | null

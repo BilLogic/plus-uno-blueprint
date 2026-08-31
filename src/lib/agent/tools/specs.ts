@@ -14,6 +14,27 @@ export { REFERENCE_NAMES }
  */
 
 /**
+ * ARGUMENT NAMES ARE NOT COLUMN NAMES, and after 20260830190000 four of them
+ * visibly are not.
+ *
+ * `create_cell_dependency(label)` writes `cell_dependencies.name`;
+ * `create_finding(check_name, note)` writes `audit_findings.check_key` and
+ * `.summary`; `create_slice(slice_type, description)` writes `slices.kind` and
+ * `.summary`. The mapping happens in `registry.ts` and the columns are the
+ * ones #177 renamed.
+ *
+ * They stay because this surface is a PINNED CROSS-REPO CONTRACT, not app
+ * internals. `agentic-service-blueprinting` is a git-URL dependency fixed to a
+ * tag, and its skills name these arguments in prose the model reads —
+ * `skills/audit/SKILL.md` and `references/audit-playbook.md` both say
+ * `check_name`. Renaming here without a matching release upstream means a
+ * skill telling the model to send an argument this app rejects, which is a
+ * worse failure than a name that reads a little behind the schema. AGENTS.md
+ * states the direction: a fix goes upstream and arrives here as a version
+ * bump.
+ */
+
+/**
  * NAMING — the rule every tool here follows.
  *
  * A tool name is `<verb>_<noun>`. The verb states the CONTRACT (what the

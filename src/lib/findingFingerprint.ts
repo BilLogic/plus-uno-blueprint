@@ -8,18 +8,18 @@
  * the test runner — so the one function whose silent breakage corrupts
  * data had no test. This module exists to give it one.
  *
- * Canvas dialect of audit-playbook §2: `check_name + ':' + sha256` of the
+ * Canvas dialect of audit-playbook §2: `check_key + ':' + sha256` of the
  * sorted cited cell ids joined with newlines (cell_keys are written as the
- * ids themselves here), or `check_name + ':' + scope` for a finding that
+ * ids themselves here), or `check_key + ':' + scope` for a finding that
  * cites no cells. The IDE hashes IR key-paths instead, which is why the
  * two are deliberately separate dedupe spaces.
  */
 export async function findingFingerprint(
-  checkName: string,
+  checkKey: string,
   cellIds: string[],
   scope: string | undefined,
 ): Promise<string> {
-  if (cellIds.length === 0) return `${checkName}:${scope ?? ''}`
+  if (cellIds.length === 0) return `${checkKey}:${scope ?? ''}`
   // Sorted, so the order cells happen to be cited in never changes identity.
   const sorted = [...cellIds].sort().join('\n')
   const digest = await crypto.subtle.digest(
@@ -29,5 +29,5 @@ export async function findingFingerprint(
   const hex = Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('')
-  return `${checkName}:${hex}`
+  return `${checkKey}:${hex}`
 }

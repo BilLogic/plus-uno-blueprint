@@ -111,7 +111,7 @@ export function CreateSliceSheet({
 
   const problems = validateDraftSlice({
     title,
-    description,
+    summary: description,
     sliceType,
     // Always blank: the field is gone, and the column stays nullable
     // until a migration drops it.
@@ -131,7 +131,7 @@ export function CreateSliceSheet({
       const slice = await createSlice(client, {
         serviceId,
         title,
-        description,
+        summary: description,
         sliceType,
         actor: '',
         cellIds,

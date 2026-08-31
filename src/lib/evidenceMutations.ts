@@ -28,7 +28,6 @@ export type EvidenceDraft = {
   title: string
   ref: string | null
   excerpt: string | null
-  note: string | null
 }
 
 /**
@@ -61,7 +60,6 @@ export async function addEvidence(
       title,
       ref: draft.ref?.trim() || null,
       excerpt: draft.excerpt?.trim() || null,
-      note: draft.note?.trim() || null,
     })
     .select('id')
     .single()
@@ -117,7 +115,6 @@ export type EvidenceUpdate = {
   title?: string
   ref?: string | null
   excerpt?: string | null
-  note?: string | null
 }
 
 /**
@@ -136,7 +133,7 @@ export async function updateEvidence(
 ): Promise<void> {
   const { data: before, error: readError } = await client
     .from('evidence')
-    .select('id, kind, title, ref, excerpt, note')
+    .select('id, kind, title, ref, excerpt')
     .eq('id', evidenceId)
     .maybeSingle()
   if (readError) throw toAuthoringError(readError)
@@ -150,7 +147,6 @@ export async function updateEvidence(
       update.excerpt === undefined
         ? before.excerpt
         : update.excerpt?.trim() || null,
-    note: update.note === undefined ? before.note : update.note?.trim() || null,
   }
 
   const { error } = await client
@@ -172,7 +168,6 @@ export async function updateEvidence(
             title: before.title,
             ref: before.ref,
             excerpt: before.excerpt,
-            note: before.note,
           },
         },
       },

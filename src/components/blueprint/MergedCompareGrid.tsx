@@ -257,7 +257,7 @@ export function MergedCompareGrid({
           dependency.source_cell_id,
           dependency.target_cell_id,
           raw?.kind ?? 'leads_to',
-          raw?.label ?? '',
+          raw?.name ?? '',
         ].join(' | ')
         if (drawnEdges.has(key)) return false
         drawnEdges.add(key)

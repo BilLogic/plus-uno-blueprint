@@ -37,7 +37,7 @@ const slices = [
   {
     id: 'sl-1',
     title: 'Regular Tutor lane: warm-up',
-    slice_type: 'lane',
+    kind: 'lane',
   } as Slice,
 ]
 const allExpanded = new Set(['ph-1', 'ph-2'])
@@ -153,7 +153,7 @@ describe('MobileNavSheet accordion and rail', () => {
     expect(screen.queryByText('Regular Tutor lane: warm-up')).toBeNull()
   })
 
-  it('slices surface groups rows under the slice_type section', () => {
+  it('slices surface groups rows under the kind section', () => {
     renderSheet({ surface: 'slices' })
     expect(screen.getByText('lane')).toBeDefined()
     expect(screen.getByText('Regular Tutor lane: warm-up')).toBeDefined()

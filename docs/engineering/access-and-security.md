@@ -48,7 +48,7 @@ are server-side:
    (`20260805170000_service_tier_rpc_enforcement.sql` — injected by a DO
    block over `pg_proc` so no function is missed and none drifts).
 3. **Grants.** Explicit, narrow: `EXECUTE` revoked from `public`/`anon` on
-   every write RPC; column-scoped UPDATE grants on `findings` and cell
+   every write RPC; column-scoped UPDATE grants on `audit_findings` and cell
    text/spec columns; storage tiered for `slice-illustrations`
    (`20260730090000`, `20260805170000`). `anon` holds no
    INSERT/UPDATE/DELETE/TRUNCATE anywhere in `public` since
@@ -82,9 +82,9 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `src/types/database.ts`.
 
 **Core hierarchy** — `services` → `phases` (ordered, optional
-`loops_to_phase_id`) → `scenarios` (`view_type`: single /
+`loops_to_phase_id`) → `scenarios` (`layout`: single /
 side-by-side / integrated — integrated is merged at runtime, each path
-stored separately) → `paths` (`path_type`: happy / variant / exception — the
+stored separately) → `paths` (`kind`: happy / variant / exception — the
 CHECK allows exactly those three; `unhappy` became `exception` and
 `alternative`/`custom` became `variant` in
 `20260821220000_three_kinds_of_route.sql`). Steps are scenario-scoped (`steps`), joined to paths
@@ -105,7 +105,7 @@ true; panel-only), unique per (source, target, kind).
 
 **Analysis tier** (`20260729120000_derived_layer.sql` — the migration
 filename is where the former name "derived layer" survives) — `slices` +
-`slice_items` (stakeholder views), `evidence`, `business_model`, `findings`.
+`slice_items` (stakeholder views), `evidence`, `business_models`, `audit_findings`.
 Design invariants worth knowing before touching them: analysis-tier tables
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert
 never cascades into user-authored content — `cell_keys` carry IR key-paths
@@ -142,7 +142,7 @@ unchanged.
 | `match_corpus_chunks()` | Vector-only lookup. Legacy; the portal superseded it for the bot. |
 | `prune_orphans()` | Deletes exactly the chunks whose cell no longer qualifies. Returns the count. |
 | `index_health()` | Counts only — total, eligible, orphaned, stale, last embed. |
-| `public.search_blueprint()` | **The portal — every consumer's one search entry point.** Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_type` / `filter_lane_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
+| `public.search_blueprint()` | **The portal — every consumer's one search entry point.** Three modes in one function: ranked search (vector + prose + structural-name, fused by reciprocal rank), scoped search (`filter_phase` / `filter_scenario` / `filter_path_kind` / `filter_lane_role` apply to all retrievers), and filter-only predicate select (no `q`, no embedding → the COMPLETE matching set in structural order). Every row carries `matched_by` (which retrievers agreed) and `total_matched` (the corpus-wide count behind the top-k, so "113 cells mention Zoom, here are 15" is sayable). The legacy ilike function of this name and the transitional `blueprint_hybrid_search` are both gone. |
 
 **The pattern to keep: narrow doors, not wide grants.** The table is sealed and
 every capability is a `security definer` function that permits exactly one
@@ -203,20 +203,20 @@ when you count writers — there are fourteen write surfaces, not twelve:
 
 `src/lib/agent/tools/registry.ts` used to be a third, and was the one entry
 here marked as an open question rather than a decision: `create_finding` and
-`update_finding` wrote `findings` from the dispatcher, with no ledger entry and
+`update_finding` wrote `audit_findings` from the dispatcher, with no ledger entry and
 no captured inverse, because `writeBoundaryContract.test.ts` scanned only
 `components/`, `contexts/` and `hooks/` and a write from `src/lib` passed
 unseen. Both now go through `findingMutations.ts`, and the guard walks all of
 `src/` with its exemptions named one by one.
 
 **A created finding is the one write with no revert, and the reason is a
-grant.** DELETE on `findings` is revoked from `authenticated` and `anon` with
+grant.** DELETE on `audit_findings` is revoked from `authenticated` and `anon` with
 no policy to reach it — supersede and triage are status flips. `resolved` and
 `dismissed` are the only states that quiet a finding and both are human
 judgements, `dismissed` permanently so (the dedupe rule is "dismissed stays
-dismissed", which is why `findings_insert_auth` refuses an insert that is not
+dismissed", which is why `audit_findings_insert_auth` refuses an insert that is not
 `open`). So the insert records a ledger entry with no revert control, which is
-the honest shape; every `findings` *update* captures the prior value of exactly
+the honest shape; every `audit_findings` *update* captures the prior value of exactly
 the columns it wrote.
 
 What the wrappers buy, and why bypassing them is never acceptable:

@@ -68,9 +68,9 @@ export function SliceEditSession({
     () =>
       validateDraftSlice({
         title: detail.slice.title,
-        description: detail.slice.description ?? '',
-        sliceType: isSliceType(detail.slice.slice_type)
-          ? detail.slice.slice_type
+        summary: detail.slice.summary ?? '',
+        sliceType: isSliceType(detail.slice.kind)
+          ? detail.slice.kind
           : 'custom',
         actor: detail.slice.actor ?? '',
         frames,
@@ -137,12 +137,12 @@ export function SliceEditSession({
         sliceToken(detail.slice),
         {
           title: detail.slice.title,
-          description: detail.slice.description ?? '',
-          sliceType: isSliceType(detail.slice.slice_type)
-            ? detail.slice.slice_type
+          summary: detail.slice.summary ?? '',
+          sliceType: isSliceType(detail.slice.kind)
+            ? detail.slice.kind
             : 'custom',
           actor: detail.slice.actor ?? '',
-          origin: detail.slice.origin,
+          authorship: detail.slice.authorship,
         },
       )
       if (outcome.status === 'conflict') {

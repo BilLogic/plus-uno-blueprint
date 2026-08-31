@@ -71,7 +71,7 @@ export type LaneSetEntry = {
 
 export type DependencyKind = 'leads_to' | 'enables'
 
-/** What `scenarios.view_type` may hold. `merged` is a display state and
+/** What `scenarios.layout` may hold. `merged` is a display state and
  *  the CHECK constraint rejects it — see StoredSlideViewType in types/nav.ts. */
 export type ViewType = 'single' | 'stacked'
 
@@ -272,7 +272,7 @@ export function createScenario(
   return call<CreatedScenario>(client, 'create_scenario', {
     phase_id: input.phaseId,
     name: input.name,
-    view_type: input.viewType ?? 'single',
+    layout: input.viewType ?? 'single',
     lane_source_path_id: input.laneSourcePathId ?? null,
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
@@ -486,16 +486,15 @@ export function setCellDependency(
     sourceCellId: string
     targetCellId: string
     kind?: DependencyKind
-    label?: string | null
-    note?: string | null
+    /** The word on the arrow. `cell_dependencies.name` since 20260830190000. */
+    name?: string | null
   },
 ): Promise<string> {
   return call<string>(client, 'set_cell_dependency', {
     source_cell_id: input.sourceCellId,
     target_cell_id: input.targetCellId,
     kind: input.kind ?? 'leads_to',
-    label: input.label ?? null,
-    note: input.note ?? null,
+    name: input.name ?? null,
   })
 }
 
@@ -525,7 +524,7 @@ export function createPath(
   return call<string>(client, 'create_path', {
     scenario_id: input.scenarioId,
     name: input.name,
-    path_type: input.pathType ?? 'variant',
+    kind: input.pathType ?? 'variant',
     lane_source_path_id: input.laneSourcePathId ?? null,
   })
 }
@@ -550,7 +549,7 @@ export function duplicatePath(
   return call<string>(client, 'duplicate_path', {
     source_path_id: input.sourcePathId,
     name: input.name,
-    path_type: input.pathType ?? 'variant',
+    kind: input.pathType ?? 'variant',
     copy_cells: input.copyCells ?? true,
     copy_dependencies: input.copyDependencies ?? true,
   })

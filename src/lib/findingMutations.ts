@@ -8,9 +8,9 @@ type Client = SupabaseClient<Database>
 
 /** Mirrors the DB CHECK constraint — a bad severity fails at compile time. */
 export type FindingSeverity = 'info' | 'warn' | 'critical'
-/** Mirrors `findings_status_check`. */
+/** Mirrors `audit_findings_status_check`. */
 export type FindingStatus = 'open' | 'resolved' | 'dismissed'
-/** Mirrors `findings_source_check`. */
+/** Mirrors `audit_findings_source_check`. */
 export type FindingSource = 'audit' | 'whatif' | 'import-sweep'
 
 /**
@@ -37,7 +37,7 @@ export type FindingSource = 'audit' | 'whatif' | 'import-sweep'
  * ## Why a created finding has no revert
  *
  * Every update here carries a captured inverse. The insert deliberately does
- * not, and that is a schema fact rather than an omission: DELETE on `findings`
+ * not, and that is a schema fact rather than an omission: DELETE on `audit_findings`
  * is revoked from `authenticated` and from `anon`, in both directions and with
  * no policy to reach it (`20260805120000_findings_canvas_writes.sql` — "Delete
  * stays revoked everywhere: supersede/triage are status flips").
@@ -47,7 +47,7 @@ export type FindingSource = 'audit' | 'whatif' | 'import-sweep'
  * the finding is supposed to produce. `dismissed` is the worse of the two: the
  * dedupe rule below is "dismissed stays dismissed", so an undo that wrote it
  * would permanently suppress that check on every future run, invisibly, which
- * is precisely the harm `findings_insert_auth`'s `status = 'open'` check
+ * is precisely the harm `audit_findings_insert_auth`'s `status = 'open'` check
  * exists to prevent. An entry with no revert control is honest about what can
  * be taken back; one whose control quietly dismisses a check is not.
  */
@@ -55,12 +55,12 @@ export type FindingDraft = {
   serviceId: string
   runId: string
   source: FindingSource
-  checkName: string
+  checkKey: string
   severity: FindingSeverity
   cellIds: readonly string[]
   /** IR key-paths paired with `cellIds`; the DB checks the cardinalities match. */
   cellKeys: readonly string[]
-  note: string
+  summary: string
   fingerprint: string
 }
 
@@ -77,7 +77,7 @@ export type FindingOutcome =
 /** The columns `authenticated` may update — the grant, mirrored in a type. */
 export type FindingUpdate = {
   severity?: FindingSeverity
-  note?: string | null
+  summary?: string | null
   runId?: string
   cellIds?: readonly string[]
   cellKeys?: readonly string[]
@@ -85,14 +85,14 @@ export type FindingUpdate = {
   status?: FindingStatus
 }
 
-type FindingPatch = Database['public']['Tables']['findings']['Update']
+type FindingPatch = Database['public']['Tables']['audit_findings']['Update']
 
 /** `FindingUpdate` in the column names the table uses. Named keys only — an
  *  absent key must stay absent so the inverse writes back only what moved. */
 function toPatch(update: FindingUpdate): FindingPatch {
   const patch: FindingPatch = {}
   if (update.severity !== undefined) patch.severity = update.severity
-  if (update.note !== undefined) patch.note = update.note
+  if (update.summary !== undefined) patch.summary = update.summary
   if (update.runId !== undefined) patch.run_id = update.runId
   if (update.cellIds !== undefined) patch.cell_ids = [...update.cellIds]
   if (update.cellKeys !== undefined) patch.cell_keys = [...update.cellKeys]
@@ -119,7 +119,7 @@ export async function recordFinding(
   draft: FindingDraft,
 ): Promise<FindingOutcome> {
   const { data: existing, error: readError } = await client
-    .from('findings')
+    .from('audit_findings')
     .select('id, status')
     .eq('service_id', draft.serviceId)
     .eq('fingerprint', draft.fingerprint)
@@ -130,7 +130,7 @@ export async function recordFinding(
   if (open) {
     await updateFinding(client, open.id, {
       severity: draft.severity,
-      note: draft.note,
+      summary: draft.summary,
       runId: draft.runId,
       cellIds: draft.cellIds,
       cellKeys: draft.cellKeys,
@@ -144,14 +144,14 @@ export async function recordFinding(
   }
 
   const { data, error } = await client
-    .from('findings')
+    .from('audit_findings')
     .insert({
       service_id: draft.serviceId,
       run_id: draft.runId,
       source: draft.source,
-      check_name: draft.checkName,
+      check_key: draft.checkKey,
       severity: draft.severity,
-      note: draft.note,
+      summary: draft.summary,
       cell_ids: [...draft.cellIds],
       cell_keys: [...draft.cellKeys],
       fingerprint: draft.fingerprint,
@@ -164,7 +164,7 @@ export async function recordFinding(
   // with no revert control is recoverable from, a missing one is not.
   recordChange('create_finding', {
     finding_id: data.id,
-    check_name: draft.checkName,
+    check_key: draft.checkKey,
     severity: draft.severity,
     run_id: draft.runId,
   })
@@ -204,8 +204,8 @@ export async function updateFinding(
 
   // Before the write, while the previous values are still knowable.
   const { data: before, error: readError } = await client
-    .from('findings')
-    .select('id, check_name, severity, note, run_id, cell_ids, cell_keys, source, status')
+    .from('audit_findings')
+    .select('id, check_key, severity, summary, run_id, cell_ids, cell_keys, source, status')
     .eq('id', findingId)
     .maybeSingle()
   if (readError) throw toAuthoringError(readError)
@@ -214,7 +214,7 @@ export async function updateFinding(
   const previous: FindingUpdate = {}
   if (update.severity !== undefined)
     previous.severity = before.severity as FindingSeverity
-  if (update.note !== undefined) previous.note = before.note
+  if (update.summary !== undefined) previous.summary = before.summary
   if (update.runId !== undefined) previous.runId = before.run_id
   if (update.cellIds !== undefined) previous.cellIds = before.cell_ids
   if (update.cellKeys !== undefined) previous.cellKeys = before.cell_keys
@@ -222,7 +222,7 @@ export async function updateFinding(
   if (update.status !== undefined) previous.status = before.status as FindingStatus
 
   const { data, error } = await client
-    .from('findings')
+    .from('audit_findings')
     .update(patch)
     .eq('id', findingId)
     .select('id')
@@ -236,7 +236,7 @@ export async function updateFinding(
       'update_finding',
       {
         finding_id: findingId,
-        check_name: before.check_name,
+        check_key: before.check_key,
         ...(update.status !== undefined ? { status: update.status } : {}),
       },
       { fn: 'update_finding', args: { finding_id: findingId, update: previous } },

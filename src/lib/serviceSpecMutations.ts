@@ -67,7 +67,7 @@ export async function updateBusinessModel(
   options: { record?: boolean } = {},
 ): Promise<void> {
   const { data, error } = await client
-    .from('business_model')
+    .from('business_models')
     .update({
       funding: update.funding.trim() || null,
       pricing: update.pricing.trim() || null,

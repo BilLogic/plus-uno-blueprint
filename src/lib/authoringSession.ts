@@ -252,8 +252,8 @@ function titled(entry: ChangeEntry): string {
 
 /** The audit check a finding came from, e.g. `orphan-cell`. */
 function checked(entry: ChangeEntry): string {
-  return typeof entry.args.check_name === 'string'
-    ? entry.args.check_name.trim()
+  return typeof entry.args.check_key === 'string'
+    ? entry.args.check_key.trim()
     : ''
 }
 

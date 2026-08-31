@@ -22,10 +22,9 @@ import {
 type RawOutgoingDependency = {
   id: string
   target_cell_id: string
-  /** Fallback data omits these — default kind 'leads_to', label/note null. */
+  /** Fallback data omits these — default kind 'leads_to', name null. */
   kind?: string | null
-  label?: string | null
-  note?: string | null
+  name?: string | null
 }
 
 /** Normalize a raw kind column value; anything unknown is a plain dependency. */
@@ -118,8 +117,7 @@ function flattenDependenciesFromCells(cells: RawCell[]): BlueprintCellDependency
         source_cell_id: cell.id,
         target_cell_id: outgoing.target_cell_id,
         kind: normalizeDependencyKind(outgoing.kind),
-        label: outgoing.label ?? null,
-        note: outgoing.note ?? null,
+        name: outgoing.name ?? null,
       })
     }
   }
@@ -284,8 +282,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       ? raw.cell_dependencies.map((dependency) => ({
           ...dependency,
           kind: normalizeDependencyKind(dependency.kind),
-          label: dependency.label ?? null,
-          note: dependency.note ?? null,
+          name: dependency.name ?? null,
         }))
       : flattenDependenciesFromCells(rawCells)
 

@@ -23,6 +23,22 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * the same rules. `deleted_structure` needed no removal here: it was never in
  * this file, which is part of why nothing in the app could see that half the
  * record was durable and half was not.
+ * HAND-EDITED, 2026-08-30 (#177). Neither generator runs on the machine this
+ * landed from: `--linked` reports the project is not linked, and the
+ * `--db-url` form needs Docker, which is not installed. So `20260830190000`'s
+ * renames were applied here by hand — `findings` → `audit_findings`,
+ * `business_model` → `business_models`, and the columns under them — against
+ * the schema that migration produces, verified by replaying it into an empty
+ * Postgres and reading the catalogue back. The next successful generator run
+ * should be a no-op; if it is not, the generator is right and these are wrong.
+ *
+ * The two renamed tables were moved to their alphabetical positions, which is
+ * where the generator emits them. The file is NOT alphabetical throughout, and
+ * that is inherited rather than introduced: `services` and `scenarios` still
+ * sit where `service_lifecycles` and `service_scenarios` sorted, because the
+ * hand edits that renamed them did not re-sort. Sorting only what this change
+ * touches keeps the diff readable; the rest goes right on the next real
+ * generation.
  *
  * `scripts/check-database-names.mjs` rests its argument on this file arriving
  * by machine, so a hand edit weakens that premise until a real regeneration
@@ -147,13 +163,112 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_findings: {
+        Row: {
+          cell_ids: string[]
+          cell_keys: string[]
+          check_key: string
+          created_at: string
+          fingerprint: string
+          id: string
+          summary: string | null
+          run_id: string
+          service_id: string
+          severity: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cell_ids?: string[]
+          cell_keys?: string[]
+          check_key: string
+          created_at?: string
+          fingerprint: string
+          id?: string
+          summary?: string | null
+          run_id: string
+          service_id: string
+          severity: string
+          source: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cell_ids?: string[]
+          cell_keys?: string[]
+          check_key?: string
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          summary?: string | null
+          run_id?: string
+          service_id?: string
+          severity?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'audit_findings_service_id_fkey'
+            columns: ['service_id']
+            isOneToOne: false
+            referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      business_models: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          delivery_cost: string | null
+          funding: string | null
+          partners: string | null
+          pricing: string | null
+          revenue_model: string | null
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          delivery_cost?: string | null
+          funding?: string | null
+          partners?: string | null
+          pricing?: string | null
+          revenue_model?: string | null
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          delivery_cost?: string | null
+          funding?: string | null
+          partners?: string | null
+          pricing?: string | null
+          revenue_model?: string | null
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'business_models_service_id_fkey'
+            columns: ['service_id']
+            isOneToOne: true
+            referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       cell_dependencies: {
         Row: {
           created_at: string
           id: string
           kind: string
-          label: string | null
-          note: string | null
+          name: string | null
           source_cell_id: string
           target_cell_id: string
           updated_at: string
@@ -162,8 +277,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
-          label?: string | null
-          note?: string | null
+          name?: string | null
           source_cell_id: string
           target_cell_id: string
           updated_at?: string
@@ -172,8 +286,7 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
-          label?: string | null
-          note?: string | null
+          name?: string | null
           source_cell_id?: string
           target_cell_id?: string
           updated_at?: string
@@ -347,7 +460,6 @@ export type Database = {
           excerpt: string | null
           id: string
           kind: string
-          note: string | null
           observed_at: string | null
           proposition_question_key: string | null
           ref: string | null
@@ -364,7 +476,6 @@ export type Database = {
           excerpt?: string | null
           id?: string
           kind: string
-          note?: string | null
           observed_at?: string | null
           proposition_question_key?: string | null
           ref?: string | null
@@ -381,7 +492,6 @@ export type Database = {
           excerpt?: string | null
           id?: string
           kind?: string
-          note?: string | null
           observed_at?: string | null
           proposition_question_key?: string | null
           ref?: string | null
@@ -392,62 +502,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'evidence_service_id_fkey'
-            columns: ['service_id']
-            isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
-          },
-        ]
-      }
-      findings: {
-        Row: {
-          cell_ids: string[]
-          cell_keys: string[]
-          check_name: string
-          created_at: string
-          fingerprint: string
-          id: string
-          note: string | null
-          run_id: string
-          service_id: string
-          severity: string
-          source: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          cell_ids?: string[]
-          cell_keys?: string[]
-          check_name: string
-          created_at?: string
-          fingerprint: string
-          id?: string
-          note?: string | null
-          run_id: string
-          service_id: string
-          severity: string
-          source: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          cell_ids?: string[]
-          cell_keys?: string[]
-          check_name?: string
-          created_at?: string
-          fingerprint?: string
-          id?: string
-          note?: string | null
-          run_id?: string
-          service_id?: string
-          severity?: string
-          source?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'findings_service_id_fkey'
             columns: ['service_id']
             isOneToOne: false
             referencedRelation: 'services'
@@ -551,7 +605,7 @@ export type Database = {
           id: string
           name: string
           note: string | null
-          path_type: PathType
+          kind: PathType
           status: EntityStatus
           scenario_id: string
           updated_at: string
@@ -562,7 +616,7 @@ export type Database = {
           id?: string
           name: string
           note?: string | null
-          path_type: PathType
+          kind: PathType
           status?: EntityStatus
           scenario_id: string
           updated_at?: string
@@ -573,7 +627,7 @@ export type Database = {
           id?: string
           name?: string
           note?: string | null
-          path_type?: PathType
+          kind?: PathType
           status?: EntityStatus
           scenario_id?: string
           updated_at?: string
@@ -642,56 +696,13 @@ export type Database = {
           },
         ]
       }
-      business_model: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          delivery_cost: string | null
-          funding: string | null
-          partners: string | null
-          pricing: string | null
-          revenue_model: string | null
-          service_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          delivery_cost?: string | null
-          funding?: string | null
-          partners?: string | null
-          pricing?: string | null
-          revenue_model?: string | null
-          service_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          delivery_cost?: string | null
-          funding?: string | null
-          partners?: string | null
-          pricing?: string | null
-          revenue_model?: string | null
-          service_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'business_model_service_id_fkey'
-            columns: ['service_id']
-            isOneToOne: true
-            referencedRelation: 'services'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       services: {
         Row: {
           created_at: string
           summary: string | null
           id: string
           name: string
+          origin: string
           updated_at: string
         }
         Insert: {
@@ -699,6 +710,7 @@ export type Database = {
           summary?: string | null
           id?: string
           name: string
+          origin?: string
           updated_at?: string
         }
         Update: {
@@ -706,6 +718,7 @@ export type Database = {
           summary?: string | null
           id?: string
           name?: string
+          origin?: string
           updated_at?: string
         }
         Relationships: []
@@ -719,7 +732,7 @@ export type Database = {
           phase_id: string
           summary: string | null
           updated_at: string
-          view_type: string
+          layout: string
         }
         Insert: {
           created_at?: string
@@ -729,7 +742,7 @@ export type Database = {
           phase_id: string
           summary?: string | null
           updated_at?: string
-          view_type?: string
+          layout?: string
         }
         Update: {
           created_at?: string
@@ -739,7 +752,7 @@ export type Database = {
           phase_id?: string
           summary?: string | null
           updated_at?: string
-          view_type?: string
+          layout?: string
         }
         Relationships: [
           {
@@ -806,13 +819,13 @@ export type Database = {
           actor: string | null
           created_at: string
           created_by: string | null
-          description: string | null
+          summary: string | null
           id: string
           locale: string
-          origin: string
+          authorship: string
           position: number
           service_id: string
-          slice_type: string
+          kind: string
           title: string
           stakeholder_id: string | null
           updated_at: string
@@ -821,13 +834,13 @@ export type Database = {
           actor?: string | null
           created_at?: string
           created_by?: string | null
-          description?: string | null
+          summary?: string | null
           id?: string
           locale?: string
-          origin?: string
+          authorship?: string
           position?: number
           service_id: string
-          slice_type: string
+          kind: string
           title: string
           stakeholder_id?: string | null
           updated_at?: string
@@ -836,13 +849,13 @@ export type Database = {
           actor?: string | null
           created_at?: string
           created_by?: string | null
-          description?: string | null
+          summary?: string | null
           id?: string
           locale?: string
-          origin?: string
+          authorship?: string
           position?: number
           service_id?: string
-          slice_type?: string
+          kind?: string
           title?: string
           stakeholder_id?: string | null
           updated_at?: string
@@ -1036,7 +1049,7 @@ export type Database = {
         Args: {
           embed_model?: string
           filter_lane_role?: string
-          filter_path_type?: string
+          filter_path_kind?: string
           filter_phase?: string
           filter_scenario?: string
           granularity?: string[]
@@ -1090,9 +1103,9 @@ export type Step = Database['public']['Tables']['steps']['Row']
 
 export type Slice = Database['public']['Tables']['slices']['Row']
 export type SliceItem = Database['public']['Tables']['slice_items']['Row']
-export type Finding = Database['public']['Tables']['findings']['Row']
+export type Finding = Database['public']['Tables']['audit_findings']['Row']
 export type Evidence = Database['public']['Tables']['evidence']['Row']
-export type Proposition = Database['public']['Tables']['business_model']['Row']
+export type BusinessModel = Database['public']['Tables']['business_models']['Row']
 export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row']
 export type AuthoringChange =
   Database['public']['Tables']['authoring_changes']['Row']

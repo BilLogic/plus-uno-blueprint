@@ -128,10 +128,8 @@ export type BlueprintCellDependency = {
    *  arrow. `enables` — the other cell must already be true; recorded, never
    *  drawn. Not inverses: a loaded roster does not set off a greeting. */
   kind?: 'leads_to' | 'enables'
-  /** Short edge label, e.g. a channel tag like "Email". */
-  label?: string | null
-  /** Why-line shown in the cell panel dependencies tab. */
-  note?: string | null
+  /** The word on the arrow, e.g. a channel tag like "Email". */
+  name?: string | null
 }
 
 export type BlueprintData = {

@@ -164,6 +164,52 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: [],
     },
+    // #177's four rows. Three of them carry EMPTY lists, and the reason is the
+    // same in each case: a substring cannot express the retirement.
+    //
+    // `audit_findings` contains `findings`; `business_models` contains
+    // `business_model`. Any fragment that catches the old name catches the new
+    // one, so there is no word to enforce. And `label`, `note`, `origin` and
+    // `description` are all still LIVE, correct names elsewhere —
+    // `deleted_structure.label`, `paths.note`, six `origin` columns, and a
+    // `create_phase` argument the file series carries that production does
+    // not. Adding any of them would flag code that is right, which is the one
+    // thing this list must never do.
+    //
+    // The rule that a false positive is fixed by narrowing the SUBJECT and
+    // never the word list still holds; it just has nothing to narrow here,
+    // because the subject is a bare identifier with no table beside it.
+    // `scripts/tests/one-spelling-each.test.mjs` carries these four
+    // retirements instead, as table-qualified names, which is a subject narrow
+    // enough to say `description` without saying it about `create_phase`.
+    {
+      was: ['slices.description', 'findings.note', 'cell_dependencies.label'],
+      is: ['slices.summary', 'audit_findings.summary', 'cell_dependencies.name'],
+      migrations: ['20260830190000'],
+      retired: [],
+      copy: [],
+    },
+    {
+      was: ['paths.path_type', 'slices.slice_type', 'scenarios.view_type'],
+      is: ['paths.kind', 'slices.kind', 'scenarios.layout'],
+      migrations: ['20260830190000'],
+      retired: ['path_type', 'slice_type', 'view_type'],
+      copy: ['path type', 'slice type', 'view type'],
+    },
+    {
+      was: ['findings', 'findings.check_name'],
+      is: ['audit_findings', 'audit_findings.check_key'],
+      migrations: ['20260830190000'],
+      retired: ['check_name'],
+      copy: ['check name'],
+    },
+    {
+      was: ['slices.origin', 'business_model'],
+      is: ['slices.authorship', 'business_models'],
+      migrations: ['20260830190000'],
+      retired: [],
+      copy: [],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),
