@@ -42,6 +42,12 @@ so a fix goes upstream and arrives here as a version bump. Details:
 - Keys/secrets: only in gitignored `.env`/`.env.local` or browser
   localStorage. Never in committable files, chat, or Netlify env.
 - Never widen RLS or write policies; the deployed site stays read-only.
+- Never widen a column grant. RLS decides *who* writes and is silent on
+  *which columns*, so the grant is the whole of the boundary between what a
+  panel writes and what an RPC records. `authenticated` holds no table-level
+  UPDATE anywhere and no key column outside three named ones
+  (`20260830290000`); a new panel column means a line in `PANEL_COLUMNS`
+  (`scripts/check-rls-posture.mjs`) and a migration, never a table grant.
 - Local writes authenticate as the dev auth user (auto sign-in from
   `.env.local`); **never the service-role key**.
 - Every blueprint-content write goes through `authoringRpc.ts` or a
