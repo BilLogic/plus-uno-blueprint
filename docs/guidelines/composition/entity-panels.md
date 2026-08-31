@@ -27,7 +27,7 @@ claims:
   - src/components/blueprint/StepPanel.tsx
   - src/components/blueprint/panelLoading.tsx
   - src/components/blueprint/panelShell.tsx
-last-reviewed: 2026-08-25
+last-reviewed: 2026-08-30
 ---
 
 # Entity panels
@@ -168,6 +168,34 @@ be a way to reach that refusal.
 on an empty slot's target; ✕, Escape and Cancel discard it entirely. A cancelled
 cell never existed — which is the fix for creation feeling broken, back when the
 row was written first and filled in later.
+
+**A clicked touchpoint brings its own four fields, under the same Save.** The
+panel is showing one cell *and* one of its placements, so `CellPanelEditor`
+takes the placement as a prop and its summary, screenshot, design link and
+prominence join the form — enclosed and headed with the touchpoint's name,
+because two fields called Summary on one screen need a border to say whose is
+whose. They sit directly under Text, which is the list that names them, rather
+than at the bottom: an author reached this panel by clicking that pill, and
+making them scroll past six of the cell's fields to reach it is how an editor
+teaches people it is not for them. One Save, for the same reason there is one
+Save at all — the editor this replaced had four buttons for one cell and a Save
+that only saved half of what was on screen.
+
+Two orderings inside that Save are load-bearing. The placement is written
+**after** the cell, because saving the cell's text runs
+`sync_cell_touchpoints`, and a save that removed this touchpoint's name from
+the text deletes its placement along with everything written about it. And the
+write is **skipped** when the name is gone, rather than left to fail on zero
+rows: the author asked for exactly that, and reporting it as an error about a
+missing placement would be the editor blaming them for it.
+
+The placement editor only ever **updates**, and never inserts. Which cells may
+hold a placement is decided in one place — `sync_cell_touchpoints`, which
+admits only touchpoint-bearing cells — and an editor that could create one
+would be a second answer to that question. `placementGateContract.test.ts`
+holds it; the grants hold the other half, since `cell_id` and `touchpoint_id`
+are not updatable by a client. A fallback board's placements carry no row id,
+so the fields do not appear there at all: there would be nothing to save into.
 
 ## Labels are the control
 

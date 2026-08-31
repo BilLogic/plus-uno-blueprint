@@ -1,8 +1,8 @@
 ---
 audience: designers, developers
-summary: Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — and the badge-or-text rule that turns on whether a value's set is governed.
-sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx
-last-reviewed: 2026-08-25
+summary: Which mechanism explains what in a panel — tooltip, kind badge, hint, alert — the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
+sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
+last-reviewed: 2026-08-30
 ---
 
 # Explaining things in a panel
@@ -145,6 +145,73 @@ rule. See [lane-vocabulary.md](./lane-vocabulary.md).
 
 **Text:** KPIs · tools · summaries · notes · `owner` and `perceived_owner`
 free-text overrides.
+
+---
+
+## Where prominence is shown
+
+*Decided 2026-08-30 with #189, which asked for the answer rather than the
+implementation.*
+
+`cell_touchpoints.prominence` marks a touchpoint as **core** or **peripheral at
+one moment**. It sits on the placement and not on the catalog on purpose: a
+poster is core at recruitment and incidental three phases later, so the same
+artifact is both depending on where the reader is standing.
+
+**It renders in the cell detail panel, beside the touchpoint's own name, and
+nowhere else. It is not on the grid pill.**
+
+### Why not the grid
+
+The objection to a panel-only answer is real and worth stating first: a
+distinction visible only after a click is one most readers never meet. Three
+things answer it.
+
+**It is not a scanning fact.** "Is this core here?" cannot be asked without
+already looking at *here*. The reader who clicked the pill is exactly the
+reader the answer is for — and everything else the placement carries, its
+summary, its screenshot, its design link, is behind the same click. Promoting
+one of the four to the board would say prominence is the important one.
+
+**The pill has no visual variable left.** A touchpoint pill already encodes
+three vocabularies — tone by touchpoint name, a dashed edge and drained fill
+for an unbuilt `status`, the slice-sequence badge — over three interaction
+rings (active, connected, picked). A fourth mark either collides with `status`,
+which owns fill and opacity, or arrives as a legend nobody was taught.
+
+**It would be learned by nobody.** By the rule above, a badge promises a
+vocabulary the reader learns by seeing it repeat. Zero placements are marked
+today and most never will be; a mark appearing on a handful of pills out of
+three hundred reads as an anomaly, not as a scale.
+
+### What was rejected
+
+| Considered | Why not |
+|---|---|
+| A mark on **every** pill, all three states rendered on the board | The failure #189 names outright. Three hundred pills each wearing an importance mark averages into "this tool matters", which is a claim about the catalog — and the unmarked majority would have to wear *unmarked* as a visible state, putting a judgement nobody made on screen. |
+| **`core` only** on the board, nothing for the other two | Tempting, and worse than nothing. It makes a considered `peripheral` and an untouched placement identical on the grid, so the board silently answers "no" to two different questions. Half a vocabulary teaches a reader a distinction that is not there. |
+| A **count or a filter** — "show me the core touchpoints" | A query, not a rendering, and it belongs with "where else is this used" (#172 story 6) rather than in the panel that has one placement in front of it. |
+
+### The unmarked case renders nothing
+
+Three states, two of them values: `core`, `peripheral`, and null. **Null gets no
+badge, no dash and no "Unmarked" label.** Most placements will never be judged,
+and any rendering of the unmarked state is a judgement nobody made, shown as
+though somebody had. Absence is what tells it apart from a deliberate
+`peripheral` — a reader who sees no badge learns nothing about the placement,
+which is exactly correct.
+
+Only the **editor** names the state, because a control has to offer it: the
+`ProminenceSelect` option reads *"Unmarked — nobody has judged this"* and is
+first in the list, so an author who marked a placement by mistake can get back.
+While the editor is open the badge is not rendered — a badge beside a select
+for one value is two mechanisms for one fact, which the standing prohibition
+above forbids.
+
+The vocabulary and its labels live in `src/lib/touchpointProminence.ts`. The
+badge says "Core at this step" rather than "Core": the bare word is the
+misreading this column exists to avoid.
+
 
 **The trap, restated properly.** A value that happens to be one of three things
 *today* is not a vocabulary. The question is whether the set is **governed** —

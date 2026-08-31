@@ -20,10 +20,16 @@
  */
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import {
+  normalizeProminence,
+  type TouchpointProminenceValue,
+} from '@/lib/touchpointProminence'
 import type { CellLink, CellTouchpoint } from '@/types/blueprint'
 
 /** A `cell_touchpoints` row as the board query selects it. */
 export type RawCellTouchpoint = {
+  /** The row's own id — the handle the placement editor writes through. */
+  id?: string | null
   position: number
   summary?: string | null
   screenshot?: string | null
@@ -31,11 +37,6 @@ export type RawCellTouchpoint = {
   prominence?: string | null
   /** The joined catalog row. PostgREST names the embed after the table. */
   touchpoints: { name: string; kind?: string | null; url?: string | null } | null
-}
-
-/** Only the two values the placement's check constraint admits. */
-function normalizeProminence(value: string | null | undefined) {
-  return value === 'core' || value === 'peripheral' ? value : null
 }
 
 /** Placements from database rows, ordered by the position the author chose. */
@@ -52,6 +53,7 @@ export function cellTouchpointsFromRows(
     // whatever order the planner chose.
     .sort((a, b) => a.position - b.position)
     .map((row) => ({
+      id: row.id ?? null,
       name: row.touchpoints!.name,
       kind: row.touchpoints!.kind ?? null,
       summary: row.summary ?? null,
@@ -84,6 +86,10 @@ export function cellTouchpointsFromLinks(
   return items.map((name) => {
     const link = detail.get(name)
     return {
+      // No row, so no id, so no editor. A hand-written fixture board has
+      // nowhere to save a placement's words into, and offering the form
+      // there would be offering a Save that writes nothing.
+      id: null,
       name,
       // The fallback shape has nowhere to record a kind or a prominence, and
       // inventing either would make this source disagree with the database
@@ -99,13 +105,47 @@ export function cellTouchpointsFromLinks(
 
 /** What the detail panel shows for one touchpoint at one cell. */
 export type TouchpointDetail = {
+  /**
+   * The placement row behind this, when there is one. Null on a fallback
+   * board — and the panel keys the placement editor's availability on it, so
+   * "there is nothing to save into" is answered by the same value that says
+   * "there is no row".
+   */
+  id: string | null
   name: string
   /** The placement's own words, else the cell's, else the name. */
   text: string
   url: string | null
   screenshot: string | null
   kind: string | null
-  prominence: 'core' | 'peripheral' | null
+  prominence: TouchpointProminenceValue
+}
+
+/**
+ * WHICH placement a selection means, before anything is derived from it.
+ *
+ * Split out of `resolveTouchpointDetail` because the editor and the reader
+ * need different things from the same choice. The reader wants the resolved
+ * detail, where an empty summary falls back to the cell's; the editor wants
+ * the placement's OWN summary, empty and all, because seeding a form with the
+ * cell's sentence would save that sentence onto the placement the first time
+ * anybody pressed Save. One selection rule, two readings of the row it picks.
+ *
+ * With no name given, a cell holding exactly one touchpoint resolves it —
+ * that is the single-tool cell the panel opens directly. A cell holding
+ * several resolves nothing rather than guessing at the first, because showing
+ * one touchpoint's screenshot under another's heading is the confusion this
+ * whole change is unwinding.
+ */
+export function findCellPlacement(
+  cell: { touchpoints: readonly CellTouchpoint[] },
+  name?: string | null,
+): CellTouchpoint | null {
+  const wanted = name?.trim()
+  if (wanted) {
+    return cell.touchpoints.find((entry) => entry.name === wanted) ?? null
+  }
+  return cell.touchpoints.length === 1 ? cell.touchpoints[0] : null
 }
 
 /**
@@ -117,25 +157,18 @@ export type TouchpointDetail = {
  * own summary, so the rule is now the same for every touchpoint: its words,
  * else the cell's, else its name.
  *
- * With no name given, a cell holding exactly one touchpoint resolves it —
- * that is the single-tool cell the panel opens directly. A cell holding
- * several resolves nothing rather than guessing at the first, because
- * showing one touchpoint's screenshot under another's heading is the
- * confusion this whole change is unwinding.
+ * Which placement it is about is `findCellPlacement`'s answer, not a second
+ * copy of the same rule.
  */
 export function resolveTouchpointDetail(
   cell: { summary?: string | null; touchpoints: readonly CellTouchpoint[] },
   name?: string | null,
 ): TouchpointDetail | null {
-  const wanted = name?.trim()
-  const placement = wanted
-    ? cell.touchpoints.find((entry) => entry.name === wanted)
-    : cell.touchpoints.length === 1
-      ? cell.touchpoints[0]
-      : undefined
+  const placement = findCellPlacement(cell, name)
   if (!placement) return null
 
   return {
+    id: placement.id,
     name: placement.name,
     text: placement.summary?.trim() || cell.summary?.trim() || placement.name,
     url: placement.url,
