@@ -18,6 +18,12 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * the next successful run should be a no-op — if it is not, the generator is
  * right and these are wrong.
  *
+ * HAND-EDITED, 2026-08-31 (#181). `resources` and `sync_cell_resources` were
+ * added and `cells.links` removed, under the same rules — `20260830280000`
+ * drops the column. `search_blueprint` KEEPS its `links` output column: the
+ * RPC now builds that jsonb from `resources`, and the name on the wire is
+ * uno-bot's to change rather than a schema rename's to make.
+ *
  * HAND-EDITED, 2026-08-31 (#180). `unplaced_touchpoint_details` and the three
  * queue RPCs (`place_touchpoint_detail`, `discard_touchpoint_detail`,
  * `restore_touchpoint_detail`) were added by hand under the same rules.
@@ -384,7 +390,6 @@ export type Database = {
           function: string | null
           id: string
           lane_id: string
-          links: Json
           status: EntityStatus
           owner: string | null
           path_id: string
@@ -404,7 +409,6 @@ export type Database = {
           function?: string | null
           id?: string
           lane_id: string
-          links?: Json
           status?: EntityStatus
           owner?: string | null
           path_id: string
@@ -424,7 +428,6 @@ export type Database = {
           function?: string | null
           id?: string
           lane_id?: string
-          links?: Json
           status?: EntityStatus
           owner?: string | null
           path_id?: string
@@ -702,6 +705,60 @@ export type Database = {
             columns: ['service_id']
             isOneToOne: false
             referencedRelation: 'services'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          cell_id: string | null
+          cell_touchpoint_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          origin: string
+          position: number
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          cell_id?: string | null
+          cell_touchpoint_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          origin: string
+          position: number
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          cell_id?: string | null
+          cell_touchpoint_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          origin?: string
+          position?: number
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'resources_cell_id_fkey'
+            columns: ['cell_id']
+            isOneToOne: false
+            referencedRelation: 'cells'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'resources_cell_touchpoint_id_fkey'
+            columns: ['cell_touchpoint_id']
+            isOneToOne: false
+            referencedRelation: 'cell_touchpoints'
             referencedColumns: ['id']
           },
         ]
@@ -1143,6 +1200,10 @@ export type Database = {
           total_matched: number
           updated_at: string
         }[]
+      }
+      sync_cell_resources: {
+        Args: { p_cell_id: string; p_rows: Json }
+        Returns: undefined
       }
       sync_cell_touchpoints: {
         Args: { p_cell_id: string; p_names: string[] }

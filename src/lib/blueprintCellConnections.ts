@@ -302,6 +302,7 @@ export function buildBlueprintCellSelectionForId(
     cellFrame: cell.frame,
     cellDescription: cell.summary,
     cellLinks: cell.links,
+    cellResources: cell.resources,
     pathId: blueprint.path.id,
     pathName: blueprint.path.name,
     pathDescription: blueprint.path.summary,

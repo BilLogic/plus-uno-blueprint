@@ -1,12 +1,12 @@
 import type { EntityStatus } from '@/lib/entityStatus'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CellLink } from '@/types/blueprint'
+import type { CellResource } from '@/types/blueprint'
 import type { Database, Json } from '@/types/database'
 import { recordChange } from '@/lib/authoringSession'
 import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import { validateResourceUrl } from '@/lib/resourceUrl'
-import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
+import { hostOf } from '@/lib/cellResources'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 
 type Client = SupabaseClient<Database>
@@ -165,55 +165,75 @@ export async function restoreCellTouchpoints(
 
 export type ResourceDraft = { label: string; url: string }
 
+/** The rows `sync_cell_resources` takes, and the shape a revert carries. */
+export type ResourceRowInput = { kind: string; name: string; url: string | null }
+
 /**
- * Replace the cell's resource links.
+ * Replace the cell's resources.
  *
- * `links` carries more than resources — tech descriptions, pictures, Figma
- * embeds all live in the same array keyed by `type`. So this rewrites *only*
- * the `URL_LINK_TYPE` entries and leaves every other kind untouched. Writing
- * the whole array from what the resources editor knows about would silently
- * delete the tech pills.
+ * One RPC, because this has to be one transaction — the same reason
+ * `syncCellTouchpoints` is one. The editor replaces a whole list, PostgREST
+ * gives every statement its own transaction, and the position constraint is
+ * DEFERRABLE INITIALLY DEFERRED, so a reorder issued row by row collides on
+ * the first statement.
+ *
+ * This used to rewrite a jsonb array on `cells`, and had to filter itself to
+ * survive: the same column held touchpoint detail and provenance citations,
+ * and writing the whole array from what this editor could see would have
+ * deleted both. The filter worked and the citations were kept — and stayed
+ * invisible, because nothing rendered them either. `20260830280000` moved the
+ * three contents apart, and a table this editor owns end to end is why the
+ * filter is gone rather than tightened.
  */
 export async function updateCellResources(
   client: Client,
   cellId: string,
-  existing: CellLink[],
+  /** The rows being replaced — captured so the change can be reverted. */
+  existing: readonly CellResource[],
   drafts: ResourceDraft[],
 ): Promise<void> {
-  const rebuilt: CellLink[] = []
+  const rows: ResourceRowInput[] = []
 
   for (const draft of drafts) {
     const checked = validateResourceUrl(draft.url)
     if (!checked.ok) throw new Error(checked.problem)
-    rebuilt.push({
-      type: URL_LINK_TYPE,
-      label: draft.label.trim() || hostOf(checked.url),
+    rows.push({
+      kind: 'link',
+      name: draft.label.trim() || hostOf(checked.url),
       url: checked.url,
     })
   }
 
-  const preserved = existing.filter((link) => link.type !== URL_LINK_TYPE)
-  const { data, error } = await client
-    .from('cells')
-    .update({ links: [...preserved, ...rebuilt] as unknown as Json })
-    .eq('id', cellId)
-    .select('id')
-  if (error) throw toAuthoringError(error)
-  requireRowsWritten(data, 'cell')
+  await writeCellResources(client, cellId, rows)
   recordChange(
     'update_cell_resources',
     { cell_id: cellId },
-    // Reverting means writing back the full pre-write array — URL entries as
-    // they were, plus the non-URL entries this write preserved anyway.
-    { fn: 'update_cell_resources', args: { cell_id: cellId, links: existing } },
+    // The captured list, written back as it stood. A resource carries nothing
+    // that is not in this list, so restoring the list restores the state —
+    // unlike a placement, whose per-moment writing a delete destroys.
+    {
+      fn: 'update_cell_resources',
+      args: {
+        cell_id: cellId,
+        resources: existing.map((resource) => ({
+          kind: resource.kind,
+          name: resource.name,
+          url: resource.url,
+        })),
+      },
+    },
   )
 }
 
-/** A link with no label still needs to say something — its host will do. */
-function hostOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return 'Link'
-  }
+/** The write itself, shared by the save and by its revert. */
+export async function writeCellResources(
+  client: Client,
+  cellId: string,
+  rows: readonly ResourceRowInput[],
+): Promise<void> {
+  const { error } = await client.rpc('sync_cell_resources', {
+    p_cell_id: cellId,
+    p_rows: rows as unknown as Json,
+  })
+  if (error) throw toAuthoringError(error)
 }

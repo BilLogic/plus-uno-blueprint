@@ -109,6 +109,7 @@ test('the real series is green, and every table it creates since the cutoff is n
   assert.deepEqual(created.sort(), [
     'authoring_changes',
     'cell_touchpoints',
+    'resources',
     'touchpoints',
     'unplaced_touchpoint_details',
   ])

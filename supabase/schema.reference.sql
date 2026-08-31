@@ -132,7 +132,6 @@ create table public.cells (
   owner text,            -- OVERRIDE of the lane's owner_team; empty = same as the lane
   perceived_owner text,  -- who the customer believes owns it; frontstage only
   picture text,
-  links jsonb not null default '[]'::jsonb,  -- authored URLs (resources), NOT dependencies
   position integer not null default 0,       -- order within one (lane, step) slot
   cell_key text,
   origin text not null default 'import' check (origin in ('import','app')),
@@ -142,6 +141,32 @@ create table public.cells (
   updated_at timestamptz not null default now(),
   status entity_status not null default 'live',
   unique (lane_id, step_id, position)
+);
+
+-- Added by hand on 2026-08-31 with 20260830280000, which dropped `cells.links`
+-- above. `evidence.note` went with it in the same edit, though 20260830190000
+-- is what dropped the column — this file had simply not caught up.
+--
+-- NOT a regeneration, and it is still behind in ways this edit does not fix:
+-- `touchpoints`, `cell_touchpoints` and `unplaced_touchpoint_details` are
+-- absent, and `cells.picture` is `cells.frame` since 20260830270000. The
+-- header at the top of this file says to read it as a snapshot; these are
+-- what that sentence is currently about.
+create table public.resources (
+  id uuid primary key default gen_random_uuid(),
+  -- Exactly one of these two: check (num_nonnulls(cell_id, cell_touchpoint_id) = 1)
+  cell_id uuid references public.cells (id) on delete cascade,
+  cell_touchpoint_id uuid references public.cell_touchpoints (id) on delete cascade,
+  kind text not null default 'link' check (kind in ('link','other')),
+  name text not null,     -- what the thing on the other end is called
+  url text,               -- required when kind = 'link'
+  position integer not null,
+  origin text not null check (origin in ('import','app')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Both deferrable: a reorder swaps two positions inside one transaction.
+  unique (cell_id, position),
+  unique (cell_touchpoint_id, position)
 );
 
 create table public.cell_dependencies (
@@ -181,7 +206,6 @@ create table public.evidence (
   title text not null,
   ref text,
   excerpt text,
-  note text,
   observed_at date,
   added_by text,   -- agent name or participant code. Never the interviewee.
   created_by uuid,

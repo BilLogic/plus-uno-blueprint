@@ -52,6 +52,11 @@ const OUTPUT = resolve(REPO_ROOT, 'docs/authored-fields.json')
   after a session wrote ~900 summaries and it turned out nothing in the repo
   would have survived a `supabase:reset`.
 
+  `links` has since left the list, because the column has: `20260830280000`
+  dissolved it into `resources` and `evidence`. This script's model is cell
+  COLUMNS, so a resource is now out of its reach entirely — exporting one
+  means exporting a table, which is a change this file has not had.
+
   The original list covered only the fields typed into the app's authoring UI,
   on the reasoning that everything else came from `seed.sql`. That stopped
   being true: seed.sql carries no cells at all any more (9KB, no INSERT into
@@ -61,7 +66,6 @@ const OUTPUT = resolve(REPO_ROOT, 'docs/authored-fields.json')
 const CELL_FIELDS = [
   'content',
   'summary',
-  'links',
   'maturity',
   'function',
   'form',

@@ -3,10 +3,11 @@
  * then any Figma link on the cell.
  *
  * A placement's url is per-moment — two PLUS App placements point at
- * different screens — so it has to win over a cell-wide link. It replaced a
+ * different screens — so it has to win over a cell-wide one. It replaced a
  * resolver that searched `cells.links` by label and had a
  * `content === 'PLUS App'` branch bolted on, which is the arrangement #178
- * unwound.
+ * unwound; #181 finished it, and the cell's side of the question is now a
+ * list of `resources` rows rather than the `url` entries of a jsonb array.
  *
  * **The placement's link now wins whatever it points AT.** The first version
  * only preferred it when the host was figma.com, so an author who attached a
@@ -20,8 +21,7 @@
  * cell-wide link" — and a rule that can only be exercised by mounting a
  * drawer is a rule nothing exercises.
  */
-import { URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
-import type { CellLink } from '@/types/blueprint'
+import type { CellResource } from '@/types/blueprint'
 
 export function isFigmaUrl(url: string): boolean {
   return /figma\.com/i.test(url)
@@ -29,19 +29,23 @@ export function isFigmaUrl(url: string): boolean {
 
 export function resolveDesignUrl(
   placementUrl: string | null | undefined,
-  links: readonly CellLink[],
+  resources: readonly CellResource[],
 ): string | null {
   if (placementUrl?.trim()) return placementUrl.trim()
 
-  for (const link of links) {
-    if (link.type !== URL_LINK_TYPE || !link.url?.trim()) continue
-    // A cell-wide link qualifies as the design reference only when it looks
-    // like one. The cell's resources are a mixed bag — a ticket, a doc, a
-    // recording — and promoting the first of them to "the design" would put
-    // a link behind a screenshot that has nothing to do with it.
-    if (isFigmaUrl(link.url) || /figma/i.test(link.label ?? '')) {
-      return link.url.trim()
-    }
+  for (const resource of resources) {
+    const url = resource.url?.trim()
+    if (!url) continue
+    // A cell-wide resource qualifies as the design reference only when it
+    // looks like one. A cell's resources are a mixed bag — a ticket, a doc, a
+    // recording — and promoting the first of them to "the design" would put a
+    // link behind a screenshot that has nothing to do with it.
+    //
+    // No `type` test any more: the array this used to read held touchpoint
+    // detail and provenance beside the resources, and `resources` holds one
+    // thing. Reading past that `type` is how the old resolver found a
+    // screenshot's own url and called it the design.
+    if (isFigmaUrl(url) || /figma/i.test(resource.name)) return url
   }
 
   return null

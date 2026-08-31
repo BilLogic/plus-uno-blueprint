@@ -4,8 +4,10 @@ import type { ChangeEntry } from '@/lib/authoringSession'
 import {
   restoreCellTouchpoints,
   updateCellContent,
+  writeCellResources,
   type RemovedPlacement,
   type CellContentUpdate,
+  type ResourceRowInput,
 } from '@/lib/cellContentMutations'
 import { updateCellSpec, type CellSpecUpdate } from '@/lib/cellSpecMutations'
 import { updateLaneSpec, type LaneSpecUpdate } from '@/lib/laneSpecMutations'
@@ -45,8 +47,7 @@ import {
 } from '@/lib/touchpointMutations'
 import { updateFinding, type FindingUpdate } from '@/lib/findingMutations'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
-import type { CellLink } from '@/types/blueprint'
-import type { Database, Json } from '@/types/database'
+import type { Database } from '@/types/database'
 
 type Client = SupabaseClient<Database>
 type EvidenceRowType = Database['public']['Tables']['evidence']['Row']
@@ -207,21 +208,15 @@ export async function executeRevert(
       return
     }
     case 'update_cell_resources': {
-      // The captured value is the full pre-write links array — write it
-      // back verbatim rather than rebuilding through the draft validator,
-      // which could refuse to restore a link it considers malformed.
+      // The captured value is the full pre-write list — written back
+      // verbatim rather than rebuilt through the draft validator, which
+      // could refuse to restore a resource it considers malformed.
+      //
+      // The RPC raises when the cell is gone, which is the "zero rows is a
+      // real answer" check this arm used to make by hand.
       const cellId = stringArg(revert.args, 'cell_id')
-      const links = revert.args.links as CellLink[]
-      const { data, error } = await client
-        .from('cells')
-        .update({ links: links as unknown as Json })
-        .eq('id', cellId)
-        .select('id')
-      if (error) throw toAuthoringError(error)
-      // Zero rows is a real answer: the cell was deleted after this edit.
-      if (!data || data.length === 0) {
-        throw new Error('That cell no longer exists — nothing to revert onto.')
-      }
+      const resources = revert.args.resources as ResourceRowInput[]
+      await writeCellResources(client, cellId, resources ?? [])
       return
     }
     case 'delete_evidence': {

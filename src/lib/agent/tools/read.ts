@@ -9,6 +9,7 @@ import {
 } from '@/lib/compareLedger'
 import { buildCompareModel, type CompareBlueprints, type CompareSlot } from '@/lib/compareSlots'
 import { normalizeBlueprint, type RawPath } from '@/lib/normalizeBlueprint'
+import { cellResourcesFromRows } from '@/lib/cellResources'
 import { PATH_BLUEPRINT_SELECT } from '@/lib/workflowQueries'
 import {
   DELETION_NOUNS,
@@ -669,7 +670,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
   const { data, error } = await client
     .from('cells')
     .select(
-      'id, content, summary, owner, perceived_owner, function, form, value_props, links, lane_id, step_id, position',
+      'id, content, summary, owner, perceived_owner, function, form, value_props, lane_id, step_id, position, resources!resources_cell_id_fkey (position, kind, name, url)',
     )
     .eq('id', cellId)
     .maybeSingle()
@@ -683,9 +684,17 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
     ['function', data.function],
     ['form', data.form],
     ['value_props', data.value_props ? JSON.stringify(data.value_props) : null],
-    // search_blueprint returns `links`; this did not, so the two tools
-    // disagreed about what a cell is.
-    ['links', data.links ? JSON.stringify(data.links) : null],
+    // search_blueprint reports a cell's resources under its own `links`
+    // output column; this reports them under the table's name. Both read the
+    // same rows — before 20260830280000 they read the same jsonb column and
+    // this one did not report it at all, so the two tools disagreed about
+    // what a cell is.
+    [
+      'resources',
+      cellResourcesFromRows(data.resources).map(
+        (resource) => `${resource.name} ${resource.url ?? ''}`.trim(),
+      ).join('; ') || null,
+    ],
     ['lane_id', data.lane_id],
     ['step_id', data.step_id],
     ['position', data.position],

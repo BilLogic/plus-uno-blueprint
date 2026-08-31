@@ -18,6 +18,11 @@ import {
   cellTouchpointsFromRows,
   type RawCellTouchpoint,
 } from '@/lib/cellTouchpoints'
+import {
+  cellResourcesFromLinks,
+  cellResourcesFromRows,
+  type RawCellResource,
+} from '@/lib/cellResources'
 
 type RawOutgoingDependency = {
   id: string
@@ -50,6 +55,8 @@ export type RawCell = {
   outgoing?: RawOutgoingDependency[] | null
   /** Placements, when the board came from the database. Fallback data has none. */
   cell_touchpoints?: RawCellTouchpoint[] | null
+  /** Resources, likewise. A fallback cell keeps them in `links`. */
+  resources?: RawCellResource[] | null
 }
 
 type RawPathStep = {
@@ -268,6 +275,11 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     touchpoints: cell.cell_touchpoints
       ? cellTouchpointsFromRows(cell.cell_touchpoints)
       : cellTouchpointsFromLinks(cell.content, normalizeCellLinks(cell.links)),
+    // The same two sources, the same seam. A database cell has `resources`
+    // rows; a fallback cell has the `url` entries of the retired array.
+    resources: cell.resources
+      ? cellResourcesFromRows(cell.resources)
+      : cellResourcesFromLinks(normalizeCellLinks(cell.links)),
     // The spec block and the owner pair, carried with the board rather than
     // fetched on panel open. `cellSpecContract.test.ts` fails if a column is
     // selected above and dropped here.

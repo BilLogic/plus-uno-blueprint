@@ -185,6 +185,7 @@ export function CompareCellBlock({
                       cellFrame: slotCell.frame ?? null,
                       cellDescription: slotCell.summary ?? null,
                       cellLinks: slotCell.links,
+                      cellResources: slotCell.resources,
                     }
                   : selectionContext
               }
