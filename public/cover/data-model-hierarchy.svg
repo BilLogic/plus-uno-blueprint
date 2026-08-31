@@ -21,7 +21,7 @@
 
   <text x="16" y="-18" font-size="15" font-weight="700" fill="#273036">How a blueprint is organized</text>
 
-  <!-- ===== Panel A: lifecycle holds phases ===== -->
+  <!-- ===== Panel A: the service holds phases ===== -->
   <rect x="16" y="8" width="132" height="22" rx="6" fill="#eef0f4" stroke="#b6bac2" stroke-width="1.2"/>
   <text x="26" y="23" class="title">Service</text>
   <rect x="16" y="40" width="176" height="200" rx="10" fill="#fafbfc" stroke="#c9ccd4" stroke-width="1.3"/>

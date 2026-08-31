@@ -160,8 +160,9 @@ with per-path column order via `path_steps`. `lanes` are a path's rows;
 service phases — phases live in `phases`.
 
 **Cells** carry the grid label (`content` — never empty), `summary`,
-`frame` (one image on one cell), and the spec columns that shipped with the
-analysis tier: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
+`frame` (one image on one cell), and the spec columns that shipped in
+`20260729120000`: `function`, `form`, `value_props`, `owner`,
+`perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
 
 **Resources** — `resources`, one row per thing a cell points at. It replaced
@@ -177,10 +178,13 @@ would trip it on a reorder.
 other happen; drawn as an arrow) or `enables` (the other must already be
 true; panel-only), unique per (source, target, kind).
 
-**Analysis tier** (`20260729120000_derived_layer.sql` — the migration
-filename is where the former name "derived layer" survives) — `slices` +
-`slides` (stakeholder views), `evidence`, `business_models`, `audit_findings`.
-Design invariants worth knowing before touching them: analysis-tier tables
+**About the board, not part of it** (`20260729120000_derived_layer.sql` — the
+filename is where the retired name "derived layer" survives) — `slices` +
+`slides` (stakeholder views), `evidence`, `audit_findings`. There is
+deliberately no collective noun for them: see CONTEXT.md, which records why two
+attempts at one were both wrong of half the set. `business_models` is not among
+them — it is the service's spec row.
+Design invariants worth knowing before touching them: all four
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert
 never cascades into user-authored content — `cell_keys` carry IR key-paths
 for recovery; `evidence` has a hard `service_id` FK as its retention story;

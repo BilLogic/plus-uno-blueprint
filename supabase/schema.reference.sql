@@ -185,7 +185,7 @@ create table public.cell_dependencies (
   unique (source_cell_id, target_cell_id, kind)
 );
 
--- ── Analysis tier (shipped 2026-07-29 in f65efcf) ───────────────────────────
+-- ── About the board: evidence, findings, slices, slides (2026-07-29) ────────
 -- Records ABOUT the board rather than squares of it. Called the "derived layer"
 -- until 2026-08-26; renamed because four of these five tables are authored by a
 -- person, not derived from anything, and because `layer` was the swimlane word.
