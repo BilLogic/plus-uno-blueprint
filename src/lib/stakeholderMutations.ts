@@ -9,7 +9,13 @@ type Client = SupabaseClient<Database>
 export type StakeholderInput = {
   name: string
   kind: string
-  note: string | null
+  /**
+   * What this party IS, in one line. A DEFINITION, not an aside — the
+   * column was called `note` until 20260830160000 and every row in it was
+   * already a definition, which is how eighteen of them ended up written
+   * into a column no reader had any reason to look in.
+   */
+  summary: string | null
   aliases: string[]
 }
 
@@ -31,7 +37,7 @@ export async function createStakeholder(
       service_id: serviceId,
       name: input.name.trim(),
       kind: input.kind,
-      note: input.note?.trim() || null,
+      summary: input.summary?.trim() || null,
       aliases: input.aliases.map((entry) => entry.trim()).filter(Boolean),
     })
     .select('id')
@@ -62,7 +68,7 @@ export async function updateStakeholder(
     .update({
       name: input.name.trim(),
       kind: input.kind,
-      note: input.note?.trim() || null,
+      summary: input.summary?.trim() || null,
       aliases: input.aliases.map((entry) => entry.trim()).filter(Boolean),
     })
     .eq('id', stakeholderId)

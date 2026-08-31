@@ -328,7 +328,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       properties: {
         name: str('How this actor is written on the canvas, e.g. "Lead Tutor"'),
         kind: str('recipient | staff | partner | provider'),
-        note: str('Who they are, in one line; omit for none'),
+        summary: str('Who they are, in one line; omit for none'),
         aliases: {
           type: 'array',
           items: { type: 'string' },
@@ -348,7 +348,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         stakeholder_id: str('Stakeholder id'),
         name: str('New name; omit to keep'),
         kind: str('recipient | staff | partner | provider; omit to keep'),
-        note: str('One line; omit to keep'),
+        summary: str('One line; omit to keep'),
         aliases: {
           type: 'array',
           items: { type: 'string' },

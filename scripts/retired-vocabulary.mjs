@@ -97,6 +97,35 @@ export const RENAME_MAP = Object.freeze(
       retired: ['proposition'],
       copy: ['proposition', 'propositions'],
     },
+    /*
+      THE ONE ROW THAT ENFORCES NOTHING FROM HERE, and the empty lists are the
+      entry rather than an omission.
+
+      `stakeholders.note` held a definition on all eighteen of its rows — "Who
+      the tutoring is for", "The tutor running a session" — so it was a
+      `summary` wearing the word this vocabulary reserves for an aside. The
+      retired word is therefore `note`, and `note` is a LIVE column on three
+      other tables where it means exactly what it says: `paths.note`,
+      `cell_dependencies.note` and `findings.note` are all genuine asides.
+
+      Enforcing `note` as a fragment would fail the series on those three. The
+      obvious narrowing, `stakeholders.note`, would match nothing at all: the
+      identifier sweep hands `retiredFragmentsIn` a BARE column name and never
+      a qualified one, so a qualified fragment is a guard that cannot fire, and
+      a guard that cannot fire is a comment wearing a check's clothes.
+
+      So this rename is recorded here for the person reading the map and
+      enforced by `scripts/tests/stakeholder-summary.test.mjs`, which replays
+      the series and asserts the shape against the one table it concerns — and
+      asserts, on a fixture series that never renames, that it goes red.
+    */
+    {
+      was: ['stakeholders.note'],
+      is: ['stakeholders.summary'],
+      migrations: ['20260830160000'],
+      retired: [],
+      copy: [],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),

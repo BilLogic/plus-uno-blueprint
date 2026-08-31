@@ -28,9 +28,23 @@ import { updateLaneSpec } from '@/lib/laneSpecMutations'
 import { describeLaneRole, getLayerRole, labelLaneRole } from '@/lib/laneRoles'
 import { getBlueprintLayerStyle } from '@/lib/blueprintTheme'
 
-/** Nothing an author has said about this lane — the stakeholder is structural. */
+/**
+ * Nothing an author has said about this lane, so a reader gets `PanelEmpty`
+ * instead of four fields saying "none".
+ *
+ * THE STAKEHOLDER COUNTS, and it did not until the registry's definitions got
+ * a reader. The comment here used to read "the stakeholder is structural",
+ * which was true of the value and false of the panel: 74 of the 75 lanes that
+ * name a stakeholder carry no owner team, KPI or tool — every `Regular Tutor`,
+ * `Lead Tutor`, `Teacher` and `Student` lane, because
+ * `docs/reference/lane-vocabulary.md` says an actor lane names a person and so
+ * takes no owning team. Leaving the stakeholder out of this test meant the one
+ * surface that shows who a lane belongs to, and what the registry says that
+ * party IS, was replaced by an empty state on almost every lane that had one.
+ */
 function isLaneEmpty(lane: LaneSpec): boolean {
   return (
+    lane.stakeholderId === null &&
     !lane.ownerTeam.trim() &&
     lane.kpis.length === 0 &&
     lane.tools.length === 0
@@ -216,7 +230,7 @@ function LanePanelBody({
 
       <Field
         label="Stakeholder"
-        hint="Which member of the service's cast this lane is. Structural rows — tech, support, storyboard — have nobody."
+        hint="Which member of the service's cast this lane is, and what the registry says that party is. Structural rows — tech, support, storyboard — have nobody."
       >
         <StakeholderSelect
           value={form.stakeholderId}

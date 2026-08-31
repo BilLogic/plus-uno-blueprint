@@ -202,12 +202,27 @@ remember is #145's job, not this paragraph's.
 | `row_position`, `column_position`, `slot_position`, `order_position` | `position` | `20260820130000` |
 | `cells.maturity` | `cells.status`, on the `entity_status` domain | `20260821240000` |
 | `propositions` | `business_model` | `20260821350000` |
+| `stakeholders.note` | `stakeholders.summary` | `20260830160000` |
 
 The reasoning, where it is worth knowing: `row` and `column` named how a lane
 and a step happen to be *drawn* today, and the axis is a rendering fact rather
 than a domain one. "Lifecycle" was not a level above the service — it *was* the
 service, wearing a longer name. And `enables` was left alone, because it was
-already the plain word for what it means.
+already the plain word for what it means. A stakeholder's `note` held a
+definition on all eighteen rows — "Who the tutoring is for", "The tutor running
+a session" — and `summary` is this vocabulary's word for an entity's own
+one-liner, while `note` is an author's aside about one.
+
+**The last row is the only one enforced somewhere else, and it has to be.** The
+three checks these entries feed match a retired word as a SUBSTRING of an
+identifier, and the retired word here is `note` — which `paths.note`,
+`cell_dependencies.note` and `findings.note` all still carry correctly, because
+all three genuinely are asides. Enforcing `note` would fail the series on those
+three; enforcing `stakeholders.note` would match nothing, since the identifier
+sweep reads a bare column name and never a qualified one. So this row's
+`retired` and `copy` lists are empty on purpose and the rename is enforced by
+[`scripts/tests/stakeholder-summary.test.mjs`](scripts/tests/stakeholder-summary.test.mjs),
+against the one table it concerns.
 
 ## One permanent exemption
 

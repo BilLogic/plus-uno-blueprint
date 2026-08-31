@@ -526,7 +526,7 @@ export async function dispatchTool(
         const id = await createStakeholder(client, await serviceId(client), {
           name: need(args, 'name'),
           kind,
-          note: s(args, 'note') ?? null,
+          summary: s(args, 'summary') ?? null,
           aliases: Array.isArray(args.aliases)
             ? args.aliases.filter(
                 (value): value is string => typeof value === 'string',
@@ -541,7 +541,7 @@ export async function dispatchTool(
         // reverted, so the captured `previous` has to be the whole of it.
         const { data: current, error } = await client
           .from('stakeholders')
-          .select('name, kind, note, aliases')
+          .select('name, kind, summary, aliases')
           .eq('id', stakeholderId)
           .maybeSingle()
         if (error) throw new Error(error.message)
@@ -549,7 +549,7 @@ export async function dispatchTool(
         const previous = {
           name: current.name,
           kind: current.kind,
-          note: current.note,
+          summary: current.summary,
           aliases: current.aliases ?? [],
         }
         const kind = s(args, 'kind') ?? previous.kind
@@ -561,7 +561,7 @@ export async function dispatchTool(
           {
             name: s(args, 'name') ?? previous.name,
             kind,
-            note: s(args, 'note') ?? previous.note,
+            summary: s(args, 'summary') ?? previous.summary,
             aliases: Array.isArray(args.aliases)
               ? args.aliases.filter(
                   (value): value is string => typeof value === 'string',
