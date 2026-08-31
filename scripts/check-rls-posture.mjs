@@ -27,8 +27,8 @@
  *      — permissive policy AND the matching grant, both — is gated on
  *      `is_service_account()`, either by a RESTRICTIVE companion or by every
  *      permissive policy for that command carrying the call itself
- *      (`stakeholders` is the second shape and is not a finding), OR is named
- *      in `RLS_POSTURE_EXEMPTIONS` below
+ *      (the companion-less shape is not a finding), OR is named in
+ *      `RLS_POSTURE_EXEMPTIONS` below
  *
  * THE EXEMPTIONS ARE ASSERTED, NOT GRANTED. The two agent tables are gated per
  * user rather than per tier, because a viewer's own chat is the viewer tier's
@@ -220,12 +220,19 @@ export function authenticatedCanReach(table, command, policies, grants) {
 /**
  * Whether `is_service_account()` gates `command` on `table`.
  *
- * Two shapes count, because the schema uses two. The common one is a
- * RESTRICTIVE companion, which ANDs. The other is `stakeholders`, whose write
- * policies are PERMISSIVE with the call inside them and no companion at all —
- * equally closed, since permissive policies OR and every one of them carries
- * the gate. A check that only knew the first shape would report three findings
- * on a table that is correctly locked.
+ * Two shapes count, because the schema has used two. The common one is a
+ * RESTRICTIVE companion, which ANDs. The other has no companion at all: every
+ * PERMISSIVE policy for the command carries the call itself — equally closed,
+ * since permissive policies OR and every one of them is gated. A check that
+ * only knew the first shape would report three findings on a table that is
+ * correctly locked.
+ *
+ * `stakeholders` was the example of the second shape until #174 moved it onto
+ * the pair; `20260830180000` says why, which is that "closed until somebody
+ * adds one more permissive policy" is not a posture a schema should rely on.
+ * The branch stays because the shape is still valid and still reachable — a
+ * table created with three inline-gated policies is a normal thing to write —
+ * and deleting it would turn the next one into three false findings.
  */
 export function serviceGated(table, command, policies) {
   const forCommand = policies.filter(

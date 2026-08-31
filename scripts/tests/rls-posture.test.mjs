@@ -188,9 +188,11 @@ test('both gate shapes count, and neither is invented', () => {
   ]
   assert.equal(serviceGated('cells', 'UPDATE', restrictive), true)
 
-  // Shape two, which only `stakeholders` uses: no companion, the call lives
-  // inside the permissive policy. Equally closed — and three false findings if
-  // the check only knew shape one.
+  // Shape two: no companion, the call lives inside the permissive policy.
+  // Equally closed — and three false findings if the check only knew shape
+  // one. `stakeholders` was the table that used it until #174 moved it onto
+  // the pair, and the fixture keeps its name because that is the schema this
+  // branch was written against.
   const permissiveOnly = [
     policy('stakeholders', 'stakeholders_update_service_only', {
       cmd: 'UPDATE',

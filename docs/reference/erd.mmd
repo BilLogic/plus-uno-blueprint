@@ -41,6 +41,11 @@
 %% Integrity: cells.path_id must match lanes.path_id AND (path_id, step_id) must
 %%            exist in path_steps — DB trigger cells_validate_path_match. Import
 %%            order: paths → steps → path_steps → lanes → cells → cell_dependencies.
+%%            The trigger only ever sees writes to cells, so moving the LANE
+%%            used to leave its cells on a path it had left, silently. Since
+%%            20260830180000 the pair is also a composite foreign key —
+%%            cells (lane_id, path_id) → lanes (id, path_id), referencing
+%%            lanes_id_path_unique — which refuses the lane-side move too.
 %%
 %% Roles: lanes.lane_role is a semantic key kept separate from the display name,
 %%        because inferring one from the other broke every non-English blueprint.
