@@ -4,38 +4,38 @@ import { NOTION_TECH_LOGO } from '@/lib/blueprintTechPictures'
 export const ONBOARDING_MODULES_NOTION_LOGO = NOTION_TECH_LOGO
 
 /** Onboarding Modules — Regular Tutor step 1 (Module opening). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_01_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_01_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-01-opens-module.png'
 
 /** Onboarding Modules — Regular Tutor step 2 (Accessing content). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_02_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_02_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-02-follows-notion-link.png'
 
 /** Onboarding Modules — Regular Tutor step 3 (Reading lesson). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_03_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_03_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-03-reads-lesson.png'
 
 /** Onboarding Modules — Regular Tutor step 4 (Supplementary materials). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_04_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_04_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-04-supplementary-materials.png'
 
 /** Onboarding Modules — Regular Tutor step 5 (Quiz completion). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_05_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_05_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-05-completes-quiz.png'
 
 /** Onboarding Modules — Regular Tutor step 6 (Reflection). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_06_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_06_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-06-reflection.png'
 
 /** Onboarding Modules — Regular Tutor step 7 (Module completion). */
-export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_07_PICTURE =
+export const ONBOARDING_MODULES_REGULAR_TUTOR_STEP_07_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-07-module-completion.png'
 
 /** Onboarding Modules — Front Stage Tech step 1 (Module opening). */
 export const ONBOARDING_MODULES_PLUS_APP_STEP_01_DESCRIPTION =
   'The tutor opens the PLUS app and starts the next uncompleted onboarding module.'
 
-export const ONBOARDING_MODULES_PLUS_APP_STEP_01_PICTURE =
+export const ONBOARDING_MODULES_PLUS_APP_STEP_01_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/plus-app/step-01-module-opening.png'
 
 export const ONBOARDING_MODULES_PLUS_APP_STEP_01_FIGMA_URL =
@@ -45,7 +45,7 @@ export const ONBOARDING_MODULES_PLUS_APP_STEP_01_FIGMA_URL =
 export const ONBOARDING_MODULES_PLUS_APP_STEP_02_DESCRIPTION =
   'The tutor finds the link to the onboarding module content that exists on Notion on the individual module page in the PLUS app.'
 
-export const ONBOARDING_MODULES_PLUS_APP_STEP_02_PICTURE =
+export const ONBOARDING_MODULES_PLUS_APP_STEP_02_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/plus-app/step-02-accessing-content.png'
 
 export const ONBOARDING_MODULES_PLUS_APP_STEP_02_FIGMA_URL =
@@ -54,14 +54,14 @@ export const ONBOARDING_MODULES_PLUS_APP_STEP_02_FIGMA_URL =
 export const ONBOARDING_MODULES_NOTION_STEP_02_DESCRIPTION =
   'The tutor follows the Notion link from the PLUS app to begin reading the onboarding module content.'
 
-export const ONBOARDING_MODULES_NOTION_STEP_02_PICTURE =
+export const ONBOARDING_MODULES_NOTION_STEP_02_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/notion/step-02-open-module-button.png'
 
 /** Onboarding Modules — Front Stage Tech step 3 (Reading lesson). */
 export const ONBOARDING_MODULES_NOTION_STEP_03_DESCRIPTION =
   'The tutor reads through the onboarding module content in Notion.'
 
-export const ONBOARDING_MODULES_NOTION_STEP_03_PICTURE =
+export const ONBOARDING_MODULES_NOTION_STEP_03_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/notion/step-03-reading-lesson.png'
 
 /** Onboarding Modules — Front Stage Tech step 4 (Supplementary materials). */
@@ -71,21 +71,21 @@ export const ONBOARDING_MODULES_NOTION_STEP_04_DESCRIPTION =
 export const ONBOARDING_MODULES_GOOGLE_DOCS_SLIDES_STEP_04_DESCRIPTION =
   'The tutor opens any Google Docs or Slides linked as supplementary materials for the module content.'
 
-export const ONBOARDING_MODULES_GOOGLE_DOCS_SLIDES_STEP_04_PICTURE =
+export const ONBOARDING_MODULES_GOOGLE_DOCS_SLIDES_STEP_04_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/google-docs/step-04-supplementary-materials.png'
 
 /** Onboarding Modules — Front Stage Tech step 5 (Quiz completion). */
 export const ONBOARDING_MODULES_GOOGLE_QUIZ_STEP_05_DESCRIPTION =
   'The tutor completes the Google Quiz embedded in the Notion module to check their understanding.'
 
-export const ONBOARDING_MODULES_GOOGLE_QUIZ_STEP_05_PICTURE =
+export const ONBOARDING_MODULES_GOOGLE_QUIZ_STEP_05_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/google-quiz/step-05-module-quiz.png'
 
 /** Onboarding Modules — Front Stage Tech step 6 (Reflection). */
 export const ONBOARDING_MODULES_PLUS_APP_STEP_06_DESCRIPTION =
   'The tutor fills out the module reflection questions in the PLUS app.'
 
-export const ONBOARDING_MODULES_PLUS_APP_STEP_06_PICTURE =
+export const ONBOARDING_MODULES_PLUS_APP_STEP_06_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/plus-app/step-06-reflection.png'
 
 export const ONBOARDING_MODULES_PLUS_APP_STEP_06_FIGMA_URL =
@@ -95,7 +95,7 @@ export const ONBOARDING_MODULES_PLUS_APP_STEP_06_FIGMA_URL =
 export const ONBOARDING_MODULES_PLUS_APP_STEP_07_DESCRIPTION =
   'The tutor submits the reflection questions and completes the onboarding module in the PLUS app.'
 
-export const ONBOARDING_MODULES_PLUS_APP_STEP_07_PICTURE =
+export const ONBOARDING_MODULES_PLUS_APP_STEP_07_FRAME =
   '/blueprint-images/onboarding-modules/happy-path/plus-app/step-07-module-completion.png'
 
 export const ONBOARDING_MODULES_PLUS_APP_STEP_07_FIGMA_URL =

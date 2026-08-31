@@ -16,12 +16,12 @@ import { BlueprintVisualPlayButton } from '@/components/blueprint/BlueprintVisua
 import {
   BLUEPRINT_LAYER_ROW_GAP,
   STEP_COLUMN_GAP,
-  VISUAL_PLAY_GUTTER,
+  STORYBOARD_PLAY_GUTTER,
   STEP_COLUMN_WIDTH,
   hasBlueprintCellContent,
   layerPrecedesBlueprintDivider,
   shouldUsePillCellContent,
-  shouldUseVisualContent,
+  shouldUseStoryboardContent,
 } from '@/lib/blueprintLayout'
 import { buildCellLookup, getCellAt, getCellsAt } from '@/lib/normalizeBlueprint'
 import {
@@ -35,7 +35,7 @@ import {
   resolveBlueprintLayer,
 } from '@/lib/sideBySideCompareLayout'
 import { cn } from '@/lib/utils'
-import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { isBlueprintVisualWalkthroughEnabled } from '@/lib/blueprintDisplayFlags'
 import { buildVisualWalkthroughSession } from '@/lib/visualWalkthrough'
 import type { BlueprintData, BlueprintStep } from '@/types/blueprint'
@@ -109,7 +109,7 @@ export function BlueprintPathBand({
   // cells must stay on the canonical column tracks — so the control hangs in
   // the rail gap instead (see CompareLayerRow).
   const playGutter =
-    showPlay && arrangement.kind === 'column' ? VISUAL_PLAY_GUTTER : 0
+    showPlay && arrangement.kind === 'column' ? STORYBOARD_PLAY_GUTTER : 0
 
   const placementStyle =
     arrangement.kind === 'column'
@@ -329,9 +329,9 @@ function CompareLayerRow({
     lane.role,
   )
   const flushBottom = layerPrecedesBlueprintDivider(lane, lanes)
-  const isVisualLane = shouldUseVisualContent(lane)
+  const isStoryboardLane = shouldUseStoryboardContent(lane)
   const renderPlay =
-    showPlay && isVisualLane && (playGutter > 0 || stackedTracks !== undefined)
+    showPlay && isStoryboardLane && (playGutter > 0 || stackedTracks !== undefined)
 
   const renderStepCell = (step: BlueprintStep, stepIndex: number) => {
     const cell = getCellAt(cellLookup, blueprintLayer.id, step.id)
@@ -339,11 +339,11 @@ function CompareLayerRow({
     const slotCells = isPillLane
       ? getCellsAt(cellLookup, blueprintLayer.id, step.id)
       : undefined
-    const variant = isVisualLane ? 'visual' : isPillLane ? 'pills' : 'default'
-    const visualPictures = isVisualLane
-      ? resolveVisualStepPictureEntries(blueprint, step.id)
+    const variant = isStoryboardLane ? 'storyboard' : isPillLane ? 'pills' : 'default'
+    const visualPictures = isStoryboardLane
+      ? resolveStoryboardStripEntries(blueprint, step.id)
       : undefined
-    const showCell = isVisualLane
+    const showCell = isStoryboardLane
       ? (visualPictures?.length ?? 0) > 0
       : isPillLane
         ? (slotCells ?? []).some((entry) =>
@@ -372,7 +372,7 @@ function CompareLayerRow({
 
     return (
       <CompareCellBlock
-        cellId={cell?.id ?? (isVisualLane ? `visual-${step.id}` : undefined)}
+        cellId={cell?.id ?? (isStoryboardLane ? `visual-${step.id}` : undefined)}
         stepIndex={stepIndex}
         content={cell?.content}
         status={cell?.status}
@@ -383,7 +383,7 @@ function CompareLayerRow({
         visualPictures={visualPictures}
         slotCells={slotCells}
         selectionContext={
-          scenarioName && (cell?.id || isVisualLane)
+          scenarioName && (cell?.id || isStoryboardLane)
             ? {
                 scenarioName,
                 phaseName,
@@ -393,7 +393,7 @@ function CompareLayerRow({
                 stepIndex,
                 cellId: cell?.id ?? `visual-${step.id}`,
                 cellContent: cell?.content ?? '',
-                cellPicture: cell?.picture ?? null,
+                cellFrame: cell?.frame ?? null,
                 cellDescription: cell?.summary ?? null,
                 cellLinks: cell?.links,
                 pathId: blueprint.path.id,

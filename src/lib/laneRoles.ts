@@ -2,7 +2,7 @@
  * Semantic lane roles — the stable contract between blueprint content and
  * rendering. A lane's display name (`lanes.name`) is free-form in any
  * language; its `lane_role` carries the rendering semantics (pill cells,
- * visual rows, divider-line anchoring). The vocabulary is extensible:
+ * storyboard rows, divider-line anchoring). The vocabulary is extensible:
  * org-defined custom roles render as generic swimlanes, as does a null role
  * (e.g. actor lanes such as Student or Regular Tutor).
  */
@@ -13,7 +13,7 @@ export const PARTNER_ACTIONS_ROLE = 'partner_actions'
 export const FRONTSTAGE_TOUCHPOINTS_ROLE = 'frontstage_touchpoints'
 export const BACKSTAGE_TOUCHPOINTS_ROLE = 'backstage_touchpoints'
 export const SUPPORT_ACTIONS_ROLE = 'support_actions'
-export const VISUAL_ROLE = 'visual'
+export const STORYBOARD_ROLE = 'storyboard'
 
 /**
  * The vocabulary, and the whole of it.
@@ -33,7 +33,7 @@ export const CANONICAL_LAYER_ROLES = [
   FRONTSTAGE_TOUCHPOINTS_ROLE,
   BACKSTAGE_TOUCHPOINTS_ROLE,
   SUPPORT_ACTIONS_ROLE,
-  VISUAL_ROLE,
+  STORYBOARD_ROLE,
 ] as const
 
 export type CanonicalLayerRole = (typeof CANONICAL_LAYER_ROLES)[number]
@@ -58,7 +58,8 @@ export const LEGACY_NAME_TO_ROLE: Readonly<Record<string, CanonicalLayerRole>> =
     'Back Stage Touchpoints': BACKSTAGE_TOUCHPOINTS_ROLE,
     'Support Actions': SUPPORT_ACTIONS_ROLE,
     'Tech Support Actions': SUPPORT_ACTIONS_ROLE,
-    Visual: VISUAL_ROLE,
+    Visual: STORYBOARD_ROLE,
+    Storyboard: STORYBOARD_ROLE,
   }
 
 /** Resolve a lane's semantic role: explicit role, else legacy name, else none. */
@@ -95,7 +96,9 @@ const LANE_ROLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     'Support — teams, vendors and infrastructure behind the work.',
   [PARTNER_ACTIONS_ROLE]:
     'Partner — a body outside PLUS, acting where the tutor can see them.',
-  [VISUAL_ROLE]: 'Storyboard — the pictures for each step, not text.',
+  [STORYBOARD_ROLE]:
+    'Storyboard — the frames for each step, not text. A step’s frames across '
+    + 'the lanes are its strip.',
 }
 
 export function describeLaneRole(role: string | null | undefined): string {

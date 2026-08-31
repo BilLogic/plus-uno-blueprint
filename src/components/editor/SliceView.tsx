@@ -74,7 +74,7 @@ type SliceViewProps = {
 export function SliceView({ sliceId, onPresent }: SliceViewProps) {
   // The provider sits above the surface, not inside the viewport, because the
   // slice tab itself has to know the mode: in Design mode the tab *is* the
-  // editor, so the frame strip and the picker mount here rather than behind a
+  // editor, so the slide strip and the picker mount here rather than behind a
   // separate Edit button.
   return (
     <CanvasModeProvider>

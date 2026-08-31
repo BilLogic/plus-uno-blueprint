@@ -91,7 +91,7 @@ export function buildTouchpointSelectionForItem(
       stepIndex,
       cellId: cell.id,
       cellContent: cell.content,
-      cellPicture: cell.picture,
+      cellFrame: cell.frame,
       cellDescription: cell.summary,
       cellLinks: cell.links,
       pathId: blueprint.path.id,

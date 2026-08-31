@@ -8,21 +8,21 @@ import {
   TECH_SETUP_EMAIL_STEP_08_DESCRIPTION,
   TECH_SETUP_EMPLOYMENT_LAWS_DESCRIPTION,
   TECH_SETUP_PLUS_APP_STEP_08_DESCRIPTION,
-  TECH_SETUP_PLUS_APP_STEP_08_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_01_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_02_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_03_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_04_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_05_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_06_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_07_PICTURE,
-  TECH_SETUP_REGULAR_TUTOR_STEP_08_PICTURE,
+  TECH_SETUP_PLUS_APP_STEP_08_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_01_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_02_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_03_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_04_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_05_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_06_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_07_FRAME,
+  TECH_SETUP_REGULAR_TUTOR_STEP_08_FRAME,
   TECH_SETUP_SLACK_STEP_07_DESCRIPTION,
   TECH_SETUP_WORKDAY_EMPLOYEE_STEP_06_DESCRIPTION,
   TECH_SETUP_WORKDAY_EMPLOYER_STEP_06_DESCRIPTION,
   TECH_SETUP_WORKDAY_LOGO,
   TECH_SETUP_WORKDAY_STEP_04_DESCRIPTION,
-} from '@/data/techSetupPictures'
+} from '@/data/techSetupFrames'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
   EMAIL_TECH_LOGO,
@@ -139,7 +139,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   return {
     id,
@@ -232,7 +232,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[0].id,
     'Receives email with steps for tutor clearances.',
-    { picture: TECH_SETUP_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: TECH_SETUP_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(
     tsCell('01', '04'),
@@ -255,7 +255,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
 
   // Step 2 — obtain clearances
   cell(tsCell('02', '03'), L.regular, STEPS[1].id, 'Obtains clearances.', {
-    picture: TECH_SETUP_REGULAR_TUTOR_STEP_02_PICTURE,
+    frame: TECH_SETUP_REGULAR_TUTOR_STEP_02_FRAME,
   }),
   cell(
     tsCell('02', '04'),
@@ -287,7 +287,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[2].id,
     'Sends clearances to CMU.',
-    { picture: TECH_SETUP_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: TECH_SETUP_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(
     tsCell('03', '04'),
@@ -314,7 +314,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[3].id,
     'Sets up I-9 meeting with CMU HR department.',
-    { picture: TECH_SETUP_REGULAR_TUTOR_STEP_04_PICTURE },
+    { frame: TECH_SETUP_REGULAR_TUTOR_STEP_04_FRAME },
   ),
   cell(tsCell('04', '06'), L.frontStageTech, STEPS[3].id, 'Workday', {
     links: [
@@ -335,7 +335,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[4].id,
     'Meets with CMU HR department for I-9 meeting.',
-    { picture: TECH_SETUP_REGULAR_TUTOR_STEP_05_PICTURE },
+    { frame: TECH_SETUP_REGULAR_TUTOR_STEP_05_FRAME },
   ),
   cell(
     tsCell('05', '04'),
@@ -349,7 +349,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
 
   // Step 6 — payroll setup
   cell(tsCell('06', '03'), L.regular, STEPS[5].id, 'Sets up payroll.', {
-    picture: TECH_SETUP_REGULAR_TUTOR_STEP_06_PICTURE,
+    frame: TECH_SETUP_REGULAR_TUTOR_STEP_06_FRAME,
   }),
   cell(
     tsCell('06', '06'),
@@ -394,7 +394,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[6].id,
     'Join PLUS tutor Slack channel.',
-    { picture: TECH_SETUP_REGULAR_TUTOR_STEP_07_PICTURE },
+    { frame: TECH_SETUP_REGULAR_TUTOR_STEP_07_FRAME },
   ),
   cell(
     tsCell('07', '04'),
@@ -423,7 +423,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[7].id,
     'Obtains login credentials for PLUS app.',
-    { picture: TECH_SETUP_REGULAR_TUTOR_STEP_08_PICTURE },
+    { frame: TECH_SETUP_REGULAR_TUTOR_STEP_08_FRAME },
   ),
   cell(
     tsCell('08', '04'),
@@ -441,7 +441,7 @@ const TECH_SETUP_CELLS: BlueprintCell[] = [
       techDescriptionLink(
         'PLUS App',
         TECH_SETUP_PLUS_APP_STEP_08_DESCRIPTION,
-        TECH_SETUP_PLUS_APP_STEP_08_PICTURE,
+        TECH_SETUP_PLUS_APP_STEP_08_FRAME,
         'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=115-5206&t=Fyqmb2RX2B0cj9sv-1',
       ),
     ],

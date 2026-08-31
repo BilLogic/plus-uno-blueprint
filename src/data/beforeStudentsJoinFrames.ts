@@ -6,59 +6,59 @@ export const BEFORE_STUDENTS_JOIN_ACTION_LAYER_PLACEHOLDER =
 
 /** Before Students Join Happy Path — Partner Action visuals. */
 
-export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_01_FRAME =
   '/blueprint-images/before-students-join/happy-path/partner/step-01-projector-whiteboard.png'
 
-export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_02_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_02_FRAME =
   '/blueprint-images/before-students-join/happy-path/partner/step-02-slide-deck.png'
 
-export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_03_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_03_FRAME =
   '/blueprint-images/before-students-join/happy-path/partner/step-03-zoom-link-qr.png'
 
-export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_04_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_04_FRAME =
   '/blueprint-images/before-students-join/happy-path/partner/step-04-test-wifi.png'
 
-export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_05_FRAME =
   '/blueprint-images/before-students-join/happy-path/partner/step-05-student-devices-ready.png'
 
-export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PARTNER_STEP_06_FRAME =
   '/blueprint-images/before-students-join/happy-path/partner/step-06-headphones-zoom.png'
 
 /** Before Students Join Happy Path — Lead Tutor visuals. */
 
-export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_PICTURE =
+export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_01_FRAME =
   '/blueprint-images/before-students-join/happy-path/lead-tutor/step-01-session-detail-page.png'
 
-export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_02_PICTURE =
+export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_02_FRAME =
   '/blueprint-images/before-students-join/happy-path/lead-tutor/step-02-join-zoom.png'
 
-export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_03_PICTURE =
+export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_03_FRAME =
   '/blueprint-images/before-students-join/happy-path/lead-tutor/step-03-tutor-attendance.png'
 
-export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_04_PICTURE =
+export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_04_FRAME =
   '/blueprint-images/before-students-join/happy-path/lead-tutor/step-04-breakout-rooms.png'
 
-export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_PICTURE =
+export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_05_FRAME =
   '/blueprint-images/before-students-join/happy-path/lead-tutor/step-05-room-order-list.png'
 
-export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_PICTURE =
+export const BEFORE_STUDENTS_JOIN_LEAD_TUTOR_STEP_06_FRAME =
   '/blueprint-images/before-students-join/happy-path/lead-tutor/step-06-breakout-room-list.png'
 
 /** Before Students Join Happy Path — Regular Tutor visuals. */
 
-export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_PICTURE =
+export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_01_FRAME =
   '/blueprint-images/before-students-join/happy-path/regular-tutor/step-01-session-detail-page-headset.png'
 
-export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_02_PICTURE =
+export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_02_FRAME =
   '/blueprint-images/before-students-join/happy-path/regular-tutor/step-02-join-zoom-headset.png'
 
-export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_03_PICTURE =
+export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_03_FRAME =
   '/blueprint-images/before-students-join/happy-path/regular-tutor/step-03-sign-in-co-host.png'
 
-export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_PICTURE =
+export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_05_FRAME =
   '/blueprint-images/before-students-join/happy-path/regular-tutor/step-05-student-list.png'
 
-export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_PICTURE =
+export const BEFORE_STUDENTS_JOIN_REGULAR_TUTOR_STEP_06_FRAME =
   '/blueprint-images/before-students-join/happy-path/regular-tutor/step-06-receive-breakout-rooms.png'
 
 /** Before Students Join Happy Path — Zoom Front Stage Tech descriptions. */
@@ -83,7 +83,7 @@ export const BEFORE_STUDENTS_JOIN_ZOOM_STEP_06_DESCRIPTION =
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_PLACEHOLDER =
   BLUEPRINT_STEP_VISUAL_PLACEHOLDER
 
-export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_FRAME =
   '/blueprint-images/before-students-join/happy-path/plus-app/step-01-your-sessions.png'
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_FIGMA_URL =
@@ -98,7 +98,7 @@ export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_01_DESCRIPTION =
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_DESCRIPTION =
   'The tutors join the Zoom page via the join session modal in the session dashboard.'
 
-export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FRAME =
   '/blueprint-images/before-students-join/happy-path/plus-app/step-02-session-detail.png'
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FIGMA_URL =
@@ -107,7 +107,7 @@ export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_02_FIGMA_URL =
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_DESCRIPTION =
   'The tutors review the student list for the session in the PLUS app.'
 
-export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_PICTURE =
+export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FRAME =
   '/blueprint-images/before-students-join/happy-path/plus-app/step-05-your-students.png'
 
 export const BEFORE_STUDENTS_JOIN_PLUS_APP_STEP_05_FIGMA_URL =

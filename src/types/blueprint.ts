@@ -89,7 +89,7 @@ export type BlueprintCell = {
   step_id: string
   /** Cell Label — primary text shown in the blueprint grid. */
   content: string
-  picture: string | null
+  frame: string | null
   /** The tl;dr the detail fields add up to. Renamed from `description` with the
    *  column — CellPanelEditor already labelled it "Summary" and getCell already
    *  relabelled it on the way out, so this closes a documented workaround. */

@@ -1,5 +1,5 @@
 import { isBlueprintVisualLayerEnabled } from '@/lib/blueprintDisplayFlags'
-import { shouldUseVisualContent } from '@/lib/blueprintLayout'
+import { shouldUseStoryboardContent } from '@/lib/blueprintLayout'
 import type { BlueprintData } from '@/types/blueprint'
 
 function filterHiddenVisualLayers(
@@ -12,7 +12,7 @@ function filterHiddenVisualLayers(
 
   const hiddenLayerIds = new Set(
     data.lanes
-      .filter((lane) => shouldUseVisualContent(lane))
+      .filter((lane) => shouldUseStoryboardContent(lane))
       .map((lane) => lane.id),
   )
 

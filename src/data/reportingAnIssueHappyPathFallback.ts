@@ -3,14 +3,14 @@ import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
   REPORTING_AN_ISSUE_EMAIL_STEP_01_DESCRIPTION,
   REPORTING_AN_ISSUE_EMAIL_STEP_04_DESCRIPTION,
-  REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_PICTURE,
-  REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_PICTURE,
-  REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_PICTURE,
-  REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_PICTURE,
+  REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_FRAME,
+  REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_FRAME,
+  REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_FRAME,
+  REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_FRAME,
   REPORTING_AN_ISSUE_SLACK_STEP_01_DESCRIPTION,
   REPORTING_AN_ISSUE_SLACK_STEP_04_DESCRIPTION,
   REPORTING_AN_ISSUE_ZOOM_STEP_04_DESCRIPTION,
-} from '@/data/reportingAnIssuePictures'
+} from '@/data/reportingAnIssueFrames'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import {
   EMAIL_TECH_LOGO,
@@ -118,7 +118,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular || laneId === L.lead
@@ -178,14 +178,14 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
     L.lead,
     STEP_REACH_OUT.id,
     'Reach out to PLUS staff with any concerns.',
-    { picture: REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_PICTURE },
+    { frame: REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_01_FRAME },
   ),
   cell(
     issueCell('01', '03'),
     L.regular,
     STEP_REACH_OUT.id,
     'Reach out to PLUS staff with any concerns.',
-    { picture: REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(
     issueCell('01', '04'),
@@ -237,14 +237,14 @@ const REPORTING_AN_ISSUE_CELLS: BlueprintCell[] = [
     L.lead,
     STEP_FOLLOW_UP.id,
     'Processes request and follows up on request.',
-    { picture: REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_PICTURE },
+    { frame: REPORTING_AN_ISSUE_LEAD_TUTOR_STEP_03_FRAME },
   ),
   cell(
     issueCell('04', '03'),
     L.regular,
     STEP_FOLLOW_UP.id,
     'Processes request and follows up on request.',
-    { picture: REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: REPORTING_AN_ISSUE_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(
     issueCell('04', '06'),

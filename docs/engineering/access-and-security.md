@@ -95,7 +95,7 @@ with per-path column order via `path_steps`. `lanes` are a path's rows;
 service phases — phases live in `phases`.
 
 **Cells** carry the grid label (`content` — never empty), `summary`,
-`picture`, `links` (JSONB), and the spec columns that shipped with the
+`frame` (one image on one cell), `links` (JSONB), and the spec columns that shipped with the
 analysis tier: `function`, `form`, `value_props`, `owner`, `perceived_owner`.
 Lanes carry `owner_team`/`kpis`/`tools`; phases carry impact/requirements.
 
@@ -105,7 +105,7 @@ true; panel-only), unique per (source, target, kind).
 
 **Analysis tier** (`20260729120000_derived_layer.sql` — the migration
 filename is where the former name "derived layer" survives) — `slices` +
-`slice_items` (stakeholder views), `evidence`, `business_models`, `audit_findings`.
+`slides` (stakeholder views), `evidence`, `business_models`, `audit_findings`.
 Design invariants worth knowing before touching them: analysis-tier tables
 reference cells **softly** (uuid, no FK) so importer delete-and-reinsert
 never cascades into user-authored content — `cell_keys` carry IR key-paths

@@ -2,17 +2,17 @@ import { mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import { STUDENTS_JUST_JOINED_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardingModuleLinks'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
-  STUDENTS_JUST_JOINED_PARTNER_STEP_01_PICTURE,
-  STUDENTS_JUST_JOINED_PARTNER_STEP_02_PICTURE,
-  STUDENTS_JUST_JOINED_PARTNER_STEP_03_PICTURE,
-  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_PICTURE,
-  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_PICTURE,
-  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_PICTURE,
-  STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE,
+  STUDENTS_JUST_JOINED_PARTNER_STEP_01_FRAME,
+  STUDENTS_JUST_JOINED_PARTNER_STEP_02_FRAME,
+  STUDENTS_JUST_JOINED_PARTNER_STEP_03_FRAME,
+  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_FRAME,
+  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_FRAME,
+  STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_FRAME,
+  STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_FRAME,
   STUDENTS_JUST_JOINED_ZOOM_STEP_01_DESCRIPTION,
   STUDENTS_JUST_JOINED_ZOOM_STEP_02_DESCRIPTION,
   STUDENTS_JUST_JOINED_ZOOM_STEP_03_DESCRIPTION,
-} from '@/data/studentsJustJoinedPictures'
+} from '@/data/studentsJustJoinedFrames'
 import { ZOOM_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
   BlueprintCell,
@@ -107,7 +107,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular
@@ -188,35 +188,35 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
     L.partner,
     STEPS[0].id,
     'Remind students that tutors support multiple students and wait time is normal.',
-    { picture: STUDENTS_JUST_JOINED_PARTNER_STEP_01_PICTURE },
+    { frame: STUDENTS_JUST_JOINED_PARTNER_STEP_01_FRAME },
   ),
   cell(
     sjjCell('02', '01'),
     L.partner,
     STEPS[1].id,
     'Ask students to share screen and log into math software.',
-    { picture: STUDENTS_JUST_JOINED_PARTNER_STEP_02_PICTURE },
+    { frame: STUDENTS_JUST_JOINED_PARTNER_STEP_02_FRAME },
   ),
   cell(
     sjjCell('03', '01'),
     L.partner,
     STEPS[2].id,
     "Show students how to use the 'raise hand' emoji to let tutors know when they need help.",
-    { picture: STUDENTS_JUST_JOINED_PARTNER_STEP_03_PICTURE },
+    { frame: STUDENTS_JUST_JOINED_PARTNER_STEP_03_FRAME },
   ),
 
   cell(sjjCell('01', '02'), L.lead, STEPS[0].id, 'Greet students as they join.', {
-    picture: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_PICTURE,
+    frame: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_FRAME,
   }),
   cell(sjjCell('02', '02'), L.lead, STEPS[1].id, 'Mute students if necessary.', {
-    picture: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_PICTURE,
+    frame: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_FRAME,
   }),
   cell(
     sjjCell('03', '02'),
     L.lead,
     STEPS[2].id,
     'Ping tutor if they missed moving student to breakout room for late joiners.',
-    { picture: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_PICTURE },
+    { frame: STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_FRAME },
   ),
 
   cell(
@@ -224,19 +224,19 @@ const STUDENTS_JUST_JOINED_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[2].id,
     'Move student to breakout room.',
-    { picture: STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_FRAME },
   ),
 
   cell(sjjCell('01', '06'), L.frontStageTech, STEPS[0].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: STUDENTS_JUST_JOINED_ZOOM_STEP_01_DESCRIPTION,
   }),
   cell(sjjCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: STUDENTS_JUST_JOINED_ZOOM_STEP_02_DESCRIPTION,
   }),
   cell(sjjCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     summary: STUDENTS_JUST_JOINED_ZOOM_STEP_03_DESCRIPTION,
   }),
 ]

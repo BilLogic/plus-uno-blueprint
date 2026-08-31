@@ -134,7 +134,7 @@ it is the only thing that makes the cell citable**, and it must say what this
 system does *at this step*, distinct from the neighbouring step. A pill with
 boilerplate pasted down the row is one cell repeated, not several cells.
 
-**Visual lane** — `content` stays empty; `picture` carries the cell.
+**Storyboard lane** — `content` stays empty; the cell is drawn from its neighbours' `frame` values, which are that step's strip.
 
 **System rules are not actor moments.** A policy like "12+ hours out,
 call-offs are auto-approved" belongs to the system that enforces it or to the

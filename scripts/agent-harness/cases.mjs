@@ -12,7 +12,7 @@ const WRITES = new Set([
   'create_cell_dependency', 'update_path',
   'create_phase', 'create_scenario', 'create_path', 'duplicate_path',
   'duplicate_scenario',
-  'create_slice', 'update_slice', 'replace_slice_frames',
+  'create_slice', 'update_slice', 'replace_slides',
   'create_evidence',
   'update_evidence',
   'create_finding', 'update_finding',

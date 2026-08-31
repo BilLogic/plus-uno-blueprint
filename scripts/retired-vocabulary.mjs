@@ -210,6 +210,54 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: [],
     },
+    // #179's three rows. The word "frame" meant two things and "storyboard"
+    // meant two more, and all three rows below are the same repair: a name
+    // that said what the MEDIUM is, where every sibling says what the thing
+    // is for.
+    //
+    // `visual` was a lane role beside `customer_actions` and
+    // `support_actions` — the one that answered "what is in this row" while
+    // the others answered "what is this row for". It is `storyboard` now,
+    // which is the word the interface, the panel term and the lane's own
+    // display name were already using.
+    {
+      was: ['visual'],
+      is: ['storyboard'],
+      migrations: ['20260830270000'],
+      retired: ['visual'],
+      // A common enough English word to be worth saying why it is listed:
+      // the only reader-facing use of it was "Visual walkthrough", which is
+      // the storyboard played step by step and now says so. If a legitimate
+      // "visual" ever needs to reach a reader, the rule is the one every
+      // check in this batch follows — narrow the SUBJECT, never the word.
+      copy: ['visual'],
+    },
+    {
+      was: ['cells.picture'],
+      is: ['cells.frame'],
+      migrations: ['20260830270000'],
+      retired: ['picture'],
+      copy: ['picture', 'pictures'],
+    },
+    // The table rename is enforceable and the column rename is not, which is
+    // the usual split and not an omission. `slice_item` is a substring of
+    // nothing that survives. `caption` is a live, correct English word for
+    // text under an image — `steps.summary` is displayed as one — so a bare
+    // fragment would flag a comment that is right. That half is held
+    // table-qualified by `scripts/tests/a-frame-a-strip-and-a-slide.test.mjs`,
+    // exactly as #177's four unenforceable renames are.
+    //
+    // `slice_items.illustration` is dropped rather than renamed, so it is not
+    // in this table at all: this map is renames. The same test carries the
+    // drop, in the shape `one-spelling-each.test.mjs` uses for the two note
+    // columns #177 dropped.
+    {
+      was: ['slice_items', 'slice_items.caption'],
+      is: ['slides', 'slides.title'],
+      migrations: ['20260830270000'],
+      retired: ['slice_item'],
+      copy: ['slice item', 'slice items'],
+    },
   ].map((row) => Object.freeze({ ...row, ...Object.fromEntries(
     ['was', 'is', 'migrations', 'retired', 'copy'].map((k) => [k, Object.freeze(row[k])]),
   ) })),

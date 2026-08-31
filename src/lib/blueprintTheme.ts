@@ -222,7 +222,8 @@ function cellStyleFromFill(
 }
 
 const LAYER_STYLES: Record<string, BlueprintLayerStyle> = {
-  Visual: cellStyleFromFill('visual'),
+  Visual: cellStyleFromFill('storyboard'),
+  Storyboard: cellStyleFromFill('storyboard'),
   'Teacher': cellStyleFromFill('evidence',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),
@@ -281,7 +282,7 @@ const BACKSTAGE_FALLBACK: BlueprintLayerStyle = cellStyleFromFill('support',
  * (name-keyed `LAYER_STYLES` above is the legacy fallback for pre-role content).
  */
 const ROLE_STYLES: Record<string, BlueprintLayerStyle> = {
-  visual: cellStyleFromFill('visual'),
+  storyboard: cellStyleFromFill('storyboard'),
   customer_actions: cellStyleFromFill('actor',
     BLUEPRINT_LABEL_TEXT.frontstage,
   ),

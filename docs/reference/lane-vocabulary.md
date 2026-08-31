@@ -124,7 +124,7 @@ registry is for.
 | `Lead Tutor` | 19 | Same population, a rota role. The app distinguishes lead from regular only for eligibility. |
 | `Teacher` | 16 | School staff, outside PLUS entirely. |
 | `Student` | 2 | The person the service is for. |
-| `Storyboard` | 22 | A picture row. No work happens in it. |
+| `Storyboard` | 22 | A row of frames. No work happens in it, and its own cells are empty: each draws the strip its neighbours carry. |
 
 Rule: **an actor lane names a person, so it has no owning team; a tech or
 actions lane names work, so it does.** Where an actor lane's own work is

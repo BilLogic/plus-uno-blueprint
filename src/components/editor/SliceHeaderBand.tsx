@@ -18,7 +18,7 @@ export type SliceHeaderPrimaryAction = {
  * Slice identity band — one component, two modes. It docks full-width under
  * the tab strip in the slice focus tab and at the top of the presentation
  * stage, so switching between the two reads as a mode change on one object
- * rather than as two unrelated screens.
+ * rather than as two unrelated slides.
  *
  * Two rows, non-collapsible: slice identity (◇ title + type badge) with the
  * primary action on the far right, then the slice description as an
@@ -74,7 +74,7 @@ export function SliceHeaderBand({
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           {/* No ◇ glyph: the header already says what this is; a decorative
-              icon just indents the title away from its own caption. */}
+              icon just indents the title away from its own title. */}
           <h2 className="min-w-0 truncate text-sm font-semibold">
             {detail.slice.title}
           </h2>

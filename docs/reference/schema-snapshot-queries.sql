@@ -4,7 +4,7 @@
 -- Both of those files are SNAPSHOTS of the live schema, and both had drifted
 -- for five weeks before 2026-08-20 — each claimed to be "verified through
 -- 20260716120000_layer_role.sql" while missing the entire analysis tier
--- (evidence, audit_findings, slices, slice_items, business_models) that shipped on
+-- (evidence, audit_findings, slices, slides, business_models) that shipped on
 -- 2026-07-29, plus every name in the vocabulary refactor.
 --
 -- A July plan already flagged both as stale and asked for them to be generated

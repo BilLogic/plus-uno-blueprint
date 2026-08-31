@@ -158,12 +158,12 @@ function StepPanelBody({
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 blueprint-scroll">
             {step.frames.map((frame) => (
               <figure
-                key={frame.picture}
+                key={frame.src}
                 className="flex w-32 shrink-0 flex-col gap-1"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted/20">
                   <img
-                    src={frame.picture}
+                    src={frame.src}
                     alt=""
                     loading="lazy"
                     decoding="async"

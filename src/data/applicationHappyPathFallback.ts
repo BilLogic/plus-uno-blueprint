@@ -20,19 +20,19 @@ import {
 } from '@/data/applicationDiscoveryDescriptions'
 import {
   APPLICATION_DISCOVERY_REGULAR_TUTOR_PLACEHOLDER,
-  DISCOVERY_REGULAR_TUTOR_STEP_1_PICTURE,
-  DISCOVERY_REGULAR_TUTOR_STEP_2_PICTURE,
-  DISCOVERY_REGULAR_TUTOR_STEP_3_PICTURE,
-  DISCOVERY_REGULAR_TUTOR_STEP_4_PICTURE,
-  DISCOVERY_REGULAR_TUTOR_STEP_5_PICTURE,
-  DISCOVERY_REGULAR_TUTOR_STEP_6_PICTURE,
-  DISCOVERY_HANDSHAKE_EMPLOYER_PROFILE_STEP_5_PICTURE,
-  DISCOVERY_HANDSHAKE_STEP_5_PICTURE,
-  DISCOVERY_MARKETING_WEBSITE_PICTURE,
+  DISCOVERY_REGULAR_TUTOR_STEP_1_FRAME,
+  DISCOVERY_REGULAR_TUTOR_STEP_2_FRAME,
+  DISCOVERY_REGULAR_TUTOR_STEP_3_FRAME,
+  DISCOVERY_REGULAR_TUTOR_STEP_4_FRAME,
+  DISCOVERY_REGULAR_TUTOR_STEP_5_FRAME,
+  DISCOVERY_REGULAR_TUTOR_STEP_6_FRAME,
+  DISCOVERY_HANDSHAKE_EMPLOYER_PROFILE_STEP_5_FRAME,
+  DISCOVERY_HANDSHAKE_STEP_5_FRAME,
+  DISCOVERY_MARKETING_WEBSITE_FRAME,
   DISCOVERY_MARKETING_WEBSITE_URL,
-  DISCOVERY_ON_CAMPUS_BOOTH_STEP_4_PICTURE,
-  DISCOVERY_SOCIAL_MEDIA_STEP_2_PICTURE,
-} from '@/data/applicationDiscoveryPictures'
+  DISCOVERY_ON_CAMPUS_BOOTH_STEP_4_FRAME,
+  DISCOVERY_SOCIAL_MEDIA_STEP_2_FRAME,
+} from '@/data/applicationDiscoveryFrames'
 import { techDescriptionLink, URL_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 import { FIGMA_TECH_LOGO } from '@/lib/blueprintTechPictures'
 import type {
@@ -165,7 +165,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   return {
     id,
@@ -178,7 +178,7 @@ function cell(
 }
 
 const REGULAR_TUTOR_PLACEHOLDER = {
-  picture: APPLICATION_DISCOVERY_REGULAR_TUTOR_PLACEHOLDER,
+  frame: APPLICATION_DISCOVERY_REGULAR_TUTOR_PLACEHOLDER,
 } as const
 
 function appCell(
@@ -322,7 +322,7 @@ function buildApplicationDiscoveryFallback(
       steps[0]!.id,
       DISCOVERY_REGULAR_TUTOR_STEP_1_CONTENT,
       config.cellSlotPrefix === '07'
-        ? { picture: DISCOVERY_REGULAR_TUTOR_STEP_1_PICTURE }
+        ? { frame: DISCOVERY_REGULAR_TUTOR_STEP_1_FRAME }
         : REGULAR_TUTOR_PLACEHOLDER,
     ),
     cell(
@@ -338,7 +338,7 @@ function buildApplicationDiscoveryFallback(
       steps[1]!.id,
       DISCOVERY_REGULAR_TUTOR_STEP_2_CONTENT,
       config.cellSlotPrefix === '07'
-        ? { picture: DISCOVERY_REGULAR_TUTOR_STEP_2_PICTURE }
+        ? { frame: DISCOVERY_REGULAR_TUTOR_STEP_2_FRAME }
         : REGULAR_TUTOR_PLACEHOLDER,
     ),
     cell(appCell(config, '02', '06'), L.frontStageTech, steps[1]!.id, 'Social Media', {
@@ -346,7 +346,7 @@ function buildApplicationDiscoveryFallback(
         techDescriptionLink(
           'Social Media',
           DISCOVERY_SOCIAL_MEDIA_STEP_2_DESCRIPTION,
-          DISCOVERY_SOCIAL_MEDIA_STEP_2_PICTURE,
+          DISCOVERY_SOCIAL_MEDIA_STEP_2_FRAME,
         ),
       ],
     }),
@@ -380,7 +380,7 @@ function buildApplicationDiscoveryFallback(
       steps[2]!.id,
       DISCOVERY_REGULAR_TUTOR_STEP_3_CONTENT,
       config.cellSlotPrefix === '07'
-        ? { picture: DISCOVERY_REGULAR_TUTOR_STEP_3_PICTURE }
+        ? { frame: DISCOVERY_REGULAR_TUTOR_STEP_3_FRAME }
         : REGULAR_TUTOR_PLACEHOLDER,
     ),
     cell(
@@ -393,7 +393,7 @@ function buildApplicationDiscoveryFallback(
           techDescriptionLink(
             'Marketing Website',
             DISCOVERY_MARKETING_WEBSITE_DESCRIPTION,
-            DISCOVERY_MARKETING_WEBSITE_PICTURE,
+            DISCOVERY_MARKETING_WEBSITE_FRAME,
           ),
           {
             type: URL_LINK_TYPE,
@@ -453,7 +453,7 @@ function buildApplicationDiscoveryFallback(
       steps[3]!.id,
       DISCOVERY_REGULAR_TUTOR_STEP_4_CONTENT,
       config.cellSlotPrefix === '07'
-        ? { picture: DISCOVERY_REGULAR_TUTOR_STEP_4_PICTURE }
+        ? { frame: DISCOVERY_REGULAR_TUTOR_STEP_4_FRAME }
         : REGULAR_TUTOR_PLACEHOLDER,
     ),
     cell(
@@ -473,7 +473,7 @@ function buildApplicationDiscoveryFallback(
           techDescriptionLink(
             'On-campus booth',
             DISCOVERY_ON_CAMPUS_BOOTH_STEP_4_DESCRIPTION,
-            DISCOVERY_ON_CAMPUS_BOOTH_STEP_4_PICTURE,
+            DISCOVERY_ON_CAMPUS_BOOTH_STEP_4_FRAME,
           ),
         ],
       },
@@ -485,7 +485,7 @@ function buildApplicationDiscoveryFallback(
       steps[4]!.id,
       DISCOVERY_REGULAR_TUTOR_STEP_5_CONTENT,
       config.cellSlotPrefix === '07'
-        ? { picture: DISCOVERY_REGULAR_TUTOR_STEP_5_PICTURE }
+        ? { frame: DISCOVERY_REGULAR_TUTOR_STEP_5_FRAME }
         : REGULAR_TUTOR_PLACEHOLDER,
     ),
     cell(appCell(config, '05', '06'), L.frontStageTech, steps[4]!.id, 'Handshake', {
@@ -493,7 +493,7 @@ function buildApplicationDiscoveryFallback(
         techDescriptionLink(
           'Handshake',
           DISCOVERY_HANDSHAKE_STEP_5_DESCRIPTION,
-          DISCOVERY_HANDSHAKE_STEP_5_PICTURE,
+          DISCOVERY_HANDSHAKE_STEP_5_FRAME,
         ),
       ],
     }),
@@ -513,7 +513,7 @@ function buildApplicationDiscoveryFallback(
           techDescriptionLink(
             'Handshake Employer Profile',
             DISCOVERY_HANDSHAKE_EMPLOYER_PROFILE_STEP_5_DESCRIPTION,
-            DISCOVERY_HANDSHAKE_EMPLOYER_PROFILE_STEP_5_PICTURE,
+            DISCOVERY_HANDSHAKE_EMPLOYER_PROFILE_STEP_5_FRAME,
           ),
         ],
       },
@@ -525,7 +525,7 @@ function buildApplicationDiscoveryFallback(
       finalStep.id,
       config.finalRegularTutorContent,
       config.cellSlotPrefix === '07'
-        ? { picture: DISCOVERY_REGULAR_TUTOR_STEP_6_PICTURE }
+        ? { frame: DISCOVERY_REGULAR_TUTOR_STEP_6_FRAME }
         : REGULAR_TUTOR_PLACEHOLDER,
     ),
   ]

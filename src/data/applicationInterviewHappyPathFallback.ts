@@ -2,17 +2,17 @@ import {
   INTERVIEW_EMAIL_STEP_02_DESCRIPTION,
   INTERVIEW_EMAIL_STEP_05_DESCRIPTION,
   INTERVIEW_GOOGLE_FORM_STEP_01_DESCRIPTION,
-  INTERVIEW_REGULAR_TUTOR_STEP_1_PICTURE,
-  INTERVIEW_REGULAR_TUTOR_STEP_2_PICTURE,
-  INTERVIEW_REGULAR_TUTOR_STEP_3_PICTURE,
-  INTERVIEW_REGULAR_TUTOR_STEP_4_PICTURE,
-  INTERVIEW_REGULAR_TUTOR_STEP_5_PICTURE,
+  INTERVIEW_REGULAR_TUTOR_STEP_1_FRAME,
+  INTERVIEW_REGULAR_TUTOR_STEP_2_FRAME,
+  INTERVIEW_REGULAR_TUTOR_STEP_3_FRAME,
+  INTERVIEW_REGULAR_TUTOR_STEP_4_FRAME,
+  INTERVIEW_REGULAR_TUTOR_STEP_5_FRAME,
   INTERVIEW_NOTION_STEP_03_DESCRIPTION,
   INTERVIEW_NOTION_STEP_04_DESCRIPTION,
   INTERVIEW_ZOOM_RECORDING_STEP_03_DESCRIPTION,
   INTERVIEW_ZOOM_STEP_03_DESCRIPTION,
   INTERVIEW_ZOOM_STEP_04_DESCRIPTION,
-} from '@/data/applicationInterviewPictures'
+} from '@/data/applicationInterviewFrames'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import {
@@ -109,7 +109,7 @@ function cell(
   stepId: string,
   content: string,
   metadata: Partial<
-    Pick<BlueprintCell, 'picture' | 'summary' | 'links'>
+    Pick<BlueprintCell, 'frame' | 'summary' | 'links'>
   > = {},
 ): BlueprintCell {
   return {
@@ -187,7 +187,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
 
   // Step 1 — Applies
   cell(iCell('01', '03'), L.regular, STEPS[0].id, 'Applies.', {
-    picture: INTERVIEW_REGULAR_TUTOR_STEP_1_PICTURE,
+    frame: INTERVIEW_REGULAR_TUTOR_STEP_1_FRAME,
   }),
   cell(
     iCell('01', '06'),
@@ -195,7 +195,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     STEPS[0].id,
     'Google Form Application',
     {
-      picture: GOOGLE_FORM_TECH_LOGO,
+      frame: GOOGLE_FORM_TECH_LOGO,
       links: [
         techDescriptionLink(
           'Google Form Application',
@@ -219,7 +219,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     STEPS[1].id,
     'Receives email invitation for group interview.',
     {
-      picture: INTERVIEW_REGULAR_TUTOR_STEP_2_PICTURE,
+      frame: INTERVIEW_REGULAR_TUTOR_STEP_2_FRAME,
     },
   ),
   cell(
@@ -229,7 +229,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     'Tutor supervisor team invites applicant for group interview.',
   ),
   cell(iCell('02', '06'), L.frontStageTech, STEPS[1].id, 'Email', {
-    picture: EMAIL_TECH_LOGO,
+    frame: EMAIL_TECH_LOGO,
     links: [
       techDescriptionLink(
         'Email',
@@ -247,7 +247,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
 
   // Step 3 — Group interview
   cell(iCell('03', '03'), L.regular, STEPS[2].id, 'Group interviews.', {
-    picture: INTERVIEW_REGULAR_TUTOR_STEP_3_PICTURE,
+    frame: INTERVIEW_REGULAR_TUTOR_STEP_3_FRAME,
   }),
   cell(
     iCell('03', '04'),
@@ -256,7 +256,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     'Tutor supervisor team facilitates group interview.',
   ),
   cell(iCell('03', '06'), L.frontStageTech, STEPS[2].id, 'Zoom', {
-    picture: ZOOM_TECH_LOGO,
+    frame: ZOOM_TECH_LOGO,
     links: [
       techDescriptionLink(
         'Zoom',
@@ -272,7 +272,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     'Tutor supervisor team takes notes for group interview.',
   ),
   cell(iCell('03', '08'), L.backStageTech, STEPS[2].id, 'Notion', {
-    picture: NOTION_TECH_LOGO,
+    frame: NOTION_TECH_LOGO,
     links: [
       techDescriptionLink(
         'Notion',
@@ -297,7 +297,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     STEPS[3].id,
     'Waits for offer decision.',
     {
-      picture: INTERVIEW_REGULAR_TUTOR_STEP_4_PICTURE,
+      frame: INTERVIEW_REGULAR_TUTOR_STEP_4_FRAME,
     },
   ),
   cell(
@@ -334,7 +334,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     STEPS[4].id,
     'Receives offer decision.',
     {
-      picture: INTERVIEW_REGULAR_TUTOR_STEP_5_PICTURE,
+      frame: INTERVIEW_REGULAR_TUTOR_STEP_5_FRAME,
     },
   ),
   cell(
@@ -344,7 +344,7 @@ const INTERVIEW_CELLS: BlueprintCell[] = [
     'Sends offer decision and next steps (if applicable).',
   ),
   cell(iCell('05', '06'), L.frontStageTech, STEPS[4].id, 'Email', {
-    picture: EMAIL_TECH_LOGO,
+    frame: EMAIL_TECH_LOGO,
     links: [
       techDescriptionLink(
         'Email',

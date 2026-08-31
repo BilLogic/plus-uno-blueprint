@@ -2,14 +2,14 @@ import { REPORTING_HOURS_REGULAR_TUTOR_ONBOARDING_LINKS } from '@/data/onboardin
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import {
   REPORTING_HOURS_BANK_STEP_03_DESCRIPTION,
-  REPORTING_HOURS_LEAD_TUTOR_STEP_01_PICTURE,
-  REPORTING_HOURS_LEAD_TUTOR_STEP_03_PICTURE,
-  REPORTING_HOURS_REGULAR_TUTOR_STEP_01_PICTURE,
-  REPORTING_HOURS_REGULAR_TUTOR_STEP_03_PICTURE,
+  REPORTING_HOURS_LEAD_TUTOR_STEP_01_FRAME,
+  REPORTING_HOURS_LEAD_TUTOR_STEP_03_FRAME,
+  REPORTING_HOURS_REGULAR_TUTOR_STEP_01_FRAME,
+  REPORTING_HOURS_REGULAR_TUTOR_STEP_03_FRAME,
   REPORTING_HOURS_WORKDAY_LOGO,
   REPORTING_HOURS_WORKDAY_STEP_01_DESCRIPTION,
   REPORTING_HOURS_WORKDAY_STEP_02_DESCRIPTION,
-} from '@/data/reportingHoursPictures'
+} from '@/data/reportingHoursFrames'
 import { techDescriptionLink, mergeUrlLinks } from '@/lib/blueprintTechDescriptions'
 import type {
   BlueprintCell,
@@ -98,7 +98,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  metadata: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>> = {},
+  metadata: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>> = {},
 ): BlueprintCell {
   const links =
     laneId === L.regular || laneId === L.lead
@@ -160,14 +160,14 @@ const REPORTING_HOURS_CELLS: BlueprintCell[] = [
     L.lead,
     REPORT_HOURS_STEP_ID,
     'Report hours by week deadline.',
-    { picture: REPORTING_HOURS_LEAD_TUTOR_STEP_01_PICTURE },
+    { frame: REPORTING_HOURS_LEAD_TUTOR_STEP_01_FRAME },
   ),
   cell(
     hoursCell('01', '03'),
     L.regular,
     REPORT_HOURS_STEP_ID,
     'Report hours by week deadline.',
-    { picture: REPORTING_HOURS_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: REPORTING_HOURS_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(
     hoursCell('01', '06'),
@@ -191,14 +191,14 @@ const REPORTING_HOURS_CELLS: BlueprintCell[] = [
     L.lead,
     RECEIVE_PAYCHECK_STEP_ID,
     'Receives biweekly paycheck.',
-    { picture: REPORTING_HOURS_LEAD_TUTOR_STEP_03_PICTURE },
+    { frame: REPORTING_HOURS_LEAD_TUTOR_STEP_03_FRAME },
   ),
   cell(
     hoursCell('02', '03'),
     L.regular,
     RECEIVE_PAYCHECK_STEP_ID,
     'Receives biweekly paycheck.',
-    { picture: REPORTING_HOURS_REGULAR_TUTOR_STEP_03_PICTURE },
+    { frame: REPORTING_HOURS_REGULAR_TUTOR_STEP_03_FRAME },
   ),
   cell(
     hoursCell('02', '06'),

@@ -528,14 +528,14 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'list_slices': record.result = await realListSlices(); return record.result
       case 'get_slice': {
         const rows = await rest(
-          `slices?select=id,title,summary,kind,actor,authorship,slice_items(id,position,caption,narrative,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
+          `slices?select=id,title,summary,kind,actor,authorship,slides(id,position,title,narrative,cell_ids)&id=eq.${encodeURIComponent(String(args.slice_id))}`,
         )
         if (!rows?.[0]) throw new Error('No slice with that id.')
         const slice = rows[0]
-        const frames = [...(slice.slice_items ?? [])]
+        const slides = [...(slice.slides ?? [])]
           .sort((a, b) => a.position - b.position)
-          .map((f, i) => `frame ${i + 1}: cells [${(f.cell_ids ?? []).join(', ')}]${f.caption ? ` caption "${f.caption}"` : ''}`)
-        record.result = `slice "${slice.title}" (${slice.id}) kind=${slice.kind}\n${frames.join('\n') || '(no frames)'}`
+          .map((f, i) => `slide ${i + 1}: cells [${(f.cell_ids ?? []).join(', ')}]${f.title ? ` title "${f.title}"` : ''}`)
+        record.result = `slice "${slice.title}" (${slice.id}) kind=${slice.kind}\n${slides.join('\n') || '(no slides)'}`
         return record.result
       }
       case 'list_findings': {
@@ -557,7 +557,7 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
       case 'get_ui_state': record.result = 'No UI state is being reported right now.'; return record.result
       case 'get_change_history': record.result = 'No changes recorded in this browser session yet.'; return record.result
       case 'measure_deletion_impact':
-        record.result = `Deleting this ${args.kind} would destroy:\n  4 cells\n  2 arrows\nWarnings:\n  1 slice will lose frames: \u201cTutor journey\u201d.\nWhat survives:\n  Archived to the recovery table first \u2014 nothing is destroyed without a copy behind it.\nRelay these sentences as they are. You cannot perform this delete \u2014 only the human can, through the confirm dialog, by typing the name.`
+        record.result = `Deleting this ${args.kind} would destroy:\n  4 cells\n  2 arrows\nWarnings:\n  1 slice will lose slides: \u201cTutor journey\u201d.\nWhat survives:\n  Archived to the recovery table first \u2014 nothing is destroyed without a copy behind it.\nRelay these sentences as they are. You cannot perform this delete \u2014 only the human can, through the confirm dialog, by typing the name.`
         return record.result
       case 'open_phase': record.result = 'Opened the phase on the canvas.'; return record.result
       case 'open_scenario': record.result = 'Opened the scenario on the canvas.'; return record.result

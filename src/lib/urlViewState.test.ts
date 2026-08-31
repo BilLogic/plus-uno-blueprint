@@ -6,12 +6,29 @@ describe('parseUrlViewState', () => {
     expect(parseUrlViewState('?slice=s-1')).toEqual({ kind: 'slice', sliceId: 's-1' })
   })
 
-  it('reads a presentation link with its frame', () => {
+  it('reads a presentation link with its slide', () => {
+    expect(parseUrlViewState('?slice=s-1&mode=present&slide=3')).toEqual({
+      kind: 'present',
+      sliceId: 's-1',
+      slide: 3,
+    })
+  })
+
+  it('still reads a link written before the param was renamed', () => {
+    // `frame` was this param's name until 2026-08-30, and a present link is a
+    // thing people paste into Slack. Without the alias every one of those
+    // already sent lands on slide 1 with nothing reporting it.
     expect(parseUrlViewState('?slice=s-1&mode=present&frame=3')).toEqual({
       kind: 'present',
       sliceId: 's-1',
-      frame: 3,
+      slide: 3,
     })
+  })
+
+  it('never writes the retired param back', () => {
+    const search = serializeUrlViewState({ kind: 'present', sliceId: 's-1', slide: 3 })
+    expect(search).toContain('slide=3')
+    expect(search).not.toContain('frame=')
   })
 
   it('reads a cell share link', () => {
@@ -48,7 +65,7 @@ describe('serializeUrlViewState', () => {
   it('keeps slice and present links unchanged', () => {
     expect(serializeUrlViewState({ kind: 'slice', sliceId: 's-1' })).toBe('?slice=s-1')
     expect(
-      serializeUrlViewState({ kind: 'present', sliceId: 's-1', frame: 2 }),
-    ).toBe('?slice=s-1&mode=present&frame=2')
+      serializeUrlViewState({ kind: 'present', sliceId: 's-1', slide: 2 }),
+    ).toBe('?slice=s-1&mode=present&slide=2')
   })
 })

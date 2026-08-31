@@ -67,7 +67,7 @@ test('the impact counts cells and arrows, and names affected slices', () => {
     { count: 6, noun: 'cell' },
     { count: 4, noun: 'arrow' },
   ])
-  assert.match(summary.warnings[0], /1 slice will lose frames: “Warm-up journey”/)
+  assert.match(summary.warnings[0], /1 slice will lose slides: “Warm-up journey”/)
 })
 
 test('unrecoverable slices are called out separately', () => {
@@ -77,7 +77,7 @@ test('unrecoverable slices are called out separately', () => {
     dependency_count: 0,
     affected_slices: [{ slice_id: '1', title: 'Old', cell_keys: [null] }],
   })
-  assert.ok(!warnings.some((line) => /will lose frames/.test(line)))
+  assert.ok(!warnings.some((line) => /will lose slides/.test(line)))
   assert.ok(warnings.some((line) => /cannot be restored by undo/.test(line)))
 })
 
@@ -105,7 +105,7 @@ test('the archive reassurance is qualified when some slices cannot come back', (
   assert.ok(qualified.warnings.some((line) => /cannot be restored by undo/.test(line)))
   assert.ok(!qualified.reassurances.some((line) => /nothing is destroyed/i.test(line)))
   assert.ok(
-    qualified.reassurances.some((line) => /not the slice frames named above/.test(line)),
+    qualified.reassurances.some((line) => /not the slice slides named above/.test(line)),
   )
 })
 
@@ -125,13 +125,13 @@ test('no arrows means no arrow count', () => {
  * does NOT destroy, and putting their number in the destruction column is the
  * scariest possible way to say "nothing happens to these".
  */
-test('a slice delete counts frames, and says the cells survive', () => {
+test('a slice delete counts slides, and says the cells survive', () => {
   const summary = summarizeSliceImpact({
     label: 'Tutor journey',
-    frame_count: 5,
+    slide_count: 5,
     referenced_cell_count: 12,
   })
-  assert.deepEqual(summary.facts, [{ count: 5, noun: 'frame' }])
+  assert.deepEqual(summary.facts, [{ count: 5, noun: 'slide' }])
   assert.ok(summary.reassurances.some((line) => /12 blueprint cells/.test(line)))
   assert.ok(summary.reassurances.some((line) => /stay exactly as they are/.test(line)))
 })
@@ -139,7 +139,7 @@ test('a slice delete counts frames, and says the cells survive', () => {
 test('a slice delete admits it has no archive behind it', () => {
   const { warnings } = summarizeSliceImpact({
     label: 'Empty',
-    frame_count: 0,
+    slide_count: 0,
     referenced_cell_count: 0,
   })
   assert.ok(warnings.some((line) => /no archive for slices/.test(line)))

@@ -144,7 +144,7 @@ function fakeSlicesTable(row: Row) {
 
 /** The row as the client holds it — a list entry, not the server's copy. */
 function listEntry(row: Row): SliceListEntry {
-  return { ...(row as unknown as SliceListEntry), slice_items: [] }
+  return { ...(row as unknown as SliceListEntry), slides: [] }
 }
 
 const SERVER_ROW = (): Row => ({
@@ -216,7 +216,7 @@ it('lands the rename when the stamp moved but nothing the form was seeded from d
     <RenameSliceDialog slice={seeded} open onOpenChange={() => {}} />,
   )
 
-  // The frame editor's Save re-sends the slice's own values purely to exercise
+  // The slide editor's Save re-sends the slice's own values purely to exercise
   // this guard, and the trigger bumps `updated_at` anyway. Nothing the rename
   // form is looking at has changed, so the rename must still land — this is
   // the false positive #114 removed and that #128 must not bring back.
@@ -260,7 +260,7 @@ it('lands the rename when only the derived authorship moved', async () => {
 
   // `authorship` is not round-tripped: every meta write puts it through
   // `authorshipAfterEdit`, which turns anything that is not 'human' into
-  // 'customized'. A concurrent frame-editor Save therefore moves this field
+  // 'customized'. A concurrent slide-editor Save therefore moves this field
   // with nobody having typed anything, and the rename would have stored the
   // identical value. Comparing it raw refuses a rename that races nothing.
   server.authorship = 'customized'

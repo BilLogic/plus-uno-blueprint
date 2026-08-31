@@ -55,7 +55,7 @@ export const PATH_BLUEPRINT_SELECT = `
     step_id,
     position,
     content,
-    picture,
+    frame,
     summary,
     status,
     links,

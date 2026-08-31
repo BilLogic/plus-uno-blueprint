@@ -21,7 +21,7 @@ export const BLUEPRINT_CONTRACT = {
     cell: 'cell',
     slice: 'slice',
     mode: 'mode',
-    frame: 'frame',
+    slide: 'slide',
   },
 
   /** Production app origin. The bot's env var overrides; this is the shared default. */
@@ -73,7 +73,7 @@ export const BLUEPRINT_CONTRACT = {
     'cell_dependencies',
     'audit_findings',
     'slices',
-    'slice_items',
+    'slides',
     'evidence_counts',
   ],
 

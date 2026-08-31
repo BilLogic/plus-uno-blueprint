@@ -11,7 +11,7 @@ import {
   STEP_COLUMN_WIDTH,
   NARRATIVE_CELL_HEIGHT,
   NARRATIVE_CELL_HEIGHT_COMPACT,
-  getVisualCellButtonMaxHeight,
+  getStoryboardCellButtonMaxHeight,
   type BlueprintCellVariant,
 } from '@/lib/blueprintLayout'
 import {
@@ -82,7 +82,7 @@ export function CompareCellBlock({
   compact?: boolean
   flushBottom?: boolean
   selectionContext?: BlueprintCellSelectionContext
-  visualPictures?: Array<{ picture: string; label: string }>
+  visualPictures?: Array<{ frame: string; label: string }>
   /** `steps.summary` — captions the storyboard frame. */
   /** Every cell in a tech slot — one per touchpoint since the split. */
   /** Unbuilt cells wear a dashed, drained face — see BlueprintCellButton. */
@@ -105,7 +105,7 @@ export function CompareCellBlock({
     flushBottom ? 'pb-0' : compact ? 'pb-3' : 'pb-4',
   )
   const width = STEP_COLUMN_WIDTH
-  const isVisual = variant === 'visual'
+  const isStoryboard = variant === 'storyboard'
   const narrativeHeight = compact
     ? NARRATIVE_CELL_HEIGHT_COMPACT
     : NARRATIVE_CELL_HEIGHT
@@ -120,17 +120,17 @@ export function CompareCellBlock({
             membershipOutlineBackground(pathMembership!),
         }
       : undefined),
-    ...(isVisual
-      ? { maxHeight: getVisualCellButtonMaxHeight(compact) + shellVerticalPad }
+    ...(isStoryboard
+      ? { maxHeight: getStoryboardCellButtonMaxHeight(compact) + shellVerticalPad }
       : undefined),
   } as CSSProperties
   const shellClassName = cn(
     'relative z-1 flex shrink-0 items-stretch',
     shellPadding,
-    isVisual && 'min-h-0 overflow-hidden',
+    isStoryboard && 'min-h-0 overflow-hidden',
   )
   const innerContent =
-    variant === 'visual' ? (
+    variant === 'storyboard' ? (
       <div className="relative flex h-full min-h-0 max-h-full w-full flex-1 items-center justify-center overflow-hidden">
         <BlueprintStepVisual
           compact={compact}
@@ -138,7 +138,7 @@ export function CompareCellBlock({
             hasMembershipOutline ? 'compare-membership-outline' : undefined
           }
           fill={laneStyle.lane}
-          pictures={visualPictures}
+          frames={visualPictures}
           selection={
             selectionContext
               ? buildBlueprintCellSelection(selectionContext)
@@ -182,7 +182,7 @@ export function CompareCellBlock({
                       ...selectionContext,
                       cellId: slotCell.id,
                       cellContent: slotCell.content ?? '',
-                      cellPicture: slotCell.picture ?? null,
+                      cellFrame: slotCell.frame ?? null,
                       cellDescription: slotCell.summary ?? null,
                       cellLinks: slotCell.links,
                     }

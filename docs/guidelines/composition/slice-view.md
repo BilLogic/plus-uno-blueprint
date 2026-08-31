@@ -1,17 +1,16 @@
 ---
 audience: designers, developers
-summary: The slice focus tab and its dim, presentation's dark subtree, the two editing surfaces that split by what they are good at, the storyboard field, and slide mode.
-sources: src/components/editor/SliceView.tsx, src/components/editor/SlicePresentation.tsx, src/components/editor/SliceFrameEditor.tsx, src/components/editor/SliceScreenComposer.tsx, src/lib/storyboardUpload.ts, src/styles/blueprint.css, src/styles/semantic.css
+summary: The slice focus tab and its dim, presentation's dark subtree, the two editing surfaces that split by what they are good at, and slide mode.
+sources: src/components/editor/SliceView.tsx, src/components/editor/SlicePresentation.tsx, src/components/editor/SliceSlideEditor.tsx, src/components/editor/SliceSlideComposer.tsx, src/styles/blueprint.css, src/styles/semantic.css
 claims:
   - src/components/blueprint/ScenarioSlideFilters.tsx
   - src/components/blueprint/ScenarioSlideHeader.tsx
   - src/components/editor/CanvasSlideConnectors.tsx
   - src/components/editor/SliceEditSession.tsx
-  - src/components/editor/SliceFrameEditor.tsx
+  - src/components/editor/SliceSlideEditor.tsx
   - src/components/editor/SliceHeaderBand.tsx
   - src/components/editor/SlicePresentation.tsx
-  - src/components/editor/SliceScreenComposer.tsx
-  - src/components/editor/SliceStoryboardField.tsx
+  - src/components/editor/SliceSlideComposer.tsx
   - src/components/editor/SliceView.tsx
   - src/components/editor/SlideArtboard.tsx
   - src/components/editor/SlideModeView.tsx
@@ -32,7 +31,7 @@ Three postures: the **focus tab** (the live canvas with the membership overlay),
 and **slide mode**, which is a sidebar surface rather than a slice concept at
 all.
 
-Design mode **is** edit mode here — the tab *is* the editor, so the frame strip
+Design mode **is** edit mode here — the tab *is* the editor, so the slide strip
 and the picker mount at the surface rather than behind a separate Edit button.
 Two overlapping "clicks mean something else" states was one too many.
 
@@ -113,7 +112,7 @@ as chrome so clicking it does not re-trigger the rule.
 The presentation stage carries `.dark` **regardless of the app theme**, and the
 slice header band rides at the top of it in dark tokens with Return where the
 focus tab shows Present — presentation is a mode of the slice, not a separate
-screen. Frames render synchronously from the cached slice data; navigation never
+screen. Slides render synchronously from the cached slice data; navigation never
 refetches. Keyboard is scoped to the container, not to `window`.
 
 That subtree `.dark` is the reason for one of the design system's more surprising
@@ -134,7 +133,7 @@ action to the floating pill.
 
 ## Two editing surfaces, split by what they are good at
 
-Clicking a cell on the canvas adds it to the **active frame**, or removes it from
+Clicking a cell on the canvas adds it to the **active slide**, or removes it from
 wherever it is. That single rule is what makes the two surfaces one editor
 rather than two: **the strip says where new cells land, the canvas says which
 cells.**
@@ -143,7 +142,7 @@ cells.**
 surface, and a drag that starts on a cell is already the camera's gesture. So
 the canvas adds and removes by clicking, and the strip decides grouping and
 order. Inside the strip there are two deliberately distinct drag targets: a cell
-chip moves between frames, a frame header reorders frames. Drop position is read
+chip moves between slides, a slide header reorders slides. Drop position is read
 from the pointer's Y against the chip's midpoint — top half inserts before,
 bottom half after — and shown as a 2px primary rule above or below the chip.
 (Those two indicators are the file's arbitrary `shadow-[…]` literals; they are
@@ -153,10 +152,10 @@ bar. See [foundations/elevation.md](../foundations/elevation.md).)
 Chip labels use the cell's described label, not its id: `070110` is an address,
 and nobody recognises their content by address.
 
-`SliceScreenComposer` does ordering **and** grouping in one list. Presets were
+`SliceSlideComposer` does ordering **and** grouping in one list. Presets were
 the wrong idea — grouping is something people shape cell by cell, and since they
 are already dragging to reorder, both belong in one gesture space. Cells between
-two dividers are one screen, so reordering and re-bucketing are the same drag.
+two dividers are one slide, so reordering and re-bucketing are the same drag.
 
 Its drag is **pointer events, not HTML5 drag-and-drop**, and the reason is worth
 carrying to the next drag surface: that API failed here twice — first silently
@@ -165,24 +164,27 @@ the pointer — and its failures all present the same way, the row snapping back
 and the user being told, in effect, that they imagined the gesture. Pointer
 capture has one owner and no such moods.
 
-> Note the live divergence: `SliceFrameEditor` still uses HTML5 drag-and-drop
-> while `SliceScreenComposer` documents why it abandoned it. If a third drag
+> Note the live divergence: `SliceSlideEditor` still uses HTML5 drag-and-drop
+> while `SliceSlideComposer` documents why it abandoned it. If a third drag
 > surface appears, copy the composer.
 
-"Screen" is the word in the composer on purpose: a **frame** is the row in
-`slice_items`, a **screen** is what the reader sees in presentation. The code
-keeps `frame`.
+**One word, everywhere: slide.** The row in `slides`, the card in the
+composer and the thing the reader sees in presentation are one concept, so they
+are one word. This surface used to carry three — a *frame* was the row, a
+*screen* was what the reader saw, and the code kept `frame` — while "frame"
+also meant one image on one cell, two lanes away. #179 settled it: a **frame**
+is one image on one cell, a step's frames across the lanes are its **strip**,
+and a **slide** is one screen of a slice.
 
-## The storyboard field
+## A slide's picture is its strip
 
-Offered only on a **saved** frame, because the image is stored at a path derived
-from the frame's row id — an unsaved frame has no id, and inventing one leaves a
-file nothing ever points at.
-
-The file is checked before it is sent, size before mime, against a 5 MiB cap
-that matches the bucket's own limit. Upload is an upsert onto the derived path,
-so replacing an image overwrites it, and the `updated_at` stamp written
-alongside is what busts the CDN cache.
+A slide shows the frames of the cells it references, in their order. There is no
+second source for it to disagree with: a slide had its own image column until
+2026-08-30, it REPLACED the strip rather than joining it, and no row ever used
+it — so the column and the upload field that wrote it are gone
+(`20260830270000`). If a slide should later carry a picture that is no cell's
+frame, it appends to the strip rather than suppressing it, which is a different
+change and starts from a column that never lied.
 
 ## Slide mode and the rest
 

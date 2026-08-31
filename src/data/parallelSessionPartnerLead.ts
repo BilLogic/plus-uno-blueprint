@@ -96,7 +96,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  picture?: string,
+  frame?: string,
 ): BlueprintCell {
   return {
     id,
@@ -104,7 +104,7 @@ function cell(
     step_id: stepId,
     content,
     ...EMPTY_CELL_METADATA,
-    ...(picture ? { picture } : {}),
+    ...(frame ? { frame } : {}),
   }
 }
 

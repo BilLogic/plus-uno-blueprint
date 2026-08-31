@@ -17,24 +17,24 @@ export const VISUAL_LAYER_SHORT_LABELS: Record<string, string> = {
 }
 
 /** In-session artwork batches whose gray rounded frame is baked into the PNG. */
-export function hasEmbeddedVisualFrame(picture: string): boolean {
+export function hasEmbeddedVisualFrame(frame: string): boolean {
   return (
-    picture.includes('/warm-up/') ||
-    picture.includes('/goal-setting/') ||
-    picture.includes('/help-request/')
+    frame.includes('/warm-up/') ||
+    frame.includes('/goal-setting/') ||
+    frame.includes('/help-request/')
   )
 }
 
 export type VisualWalkthroughLayerEntry = {
   laneName: string
   content: string
-  picture: string
+  frame: string
 }
 
-export type VisualStepPictureEntry = {
+export type StoryboardFrameEntry = {
   laneName: string
   label: string
-  picture: string
+  frame: string
   description: string
 }
 
@@ -42,7 +42,7 @@ export type VisualWalkthroughStep = {
   stepIndex: number
   stepName: string
   layerEntries: VisualWalkthroughLayerEntry[]
-  pictures: string[]
+  frames: string[]
 }
 
 export type VisualWalkthroughSession = {
@@ -81,16 +81,16 @@ export function pickWalkthroughBlueprint(
   )
 }
 
-type VisualPictureBlueprint = Pick<BlueprintData, 'lanes' | 'cells'>
+type StoryboardBlueprint = Pick<BlueprintData, 'lanes' | 'cells'>
 
 function resolveCellDescription(cell: BlueprintData['cells'][number] | undefined): string {
   return cell?.summary?.trim() || cell?.content.trim() || ''
 }
 
-export function resolveVisualStepPictureEntries(
-  blueprint: VisualPictureBlueprint,
+export function resolveStoryboardStripEntries(
+  blueprint: StoryboardBlueprint,
   stepId: string,
-): VisualStepPictureEntry[] {
+): StoryboardFrameEntry[] {
   const cellLookup = buildCellLookup(blueprint.cells)
   const layerByName = new Map(blueprint.lanes.map((lane) => [lane.name, lane]))
 
@@ -99,13 +99,13 @@ export function resolveVisualStepPictureEntries(
     if (!lane) return []
     const cell = getCellAt(cellLookup, lane.id, stepId)
     if (!cell?.content.trim()) return []
-    const picture = cell.picture?.trim()
-    if (!picture || isBlueprintStepVisualPlaceholder(picture)) return []
+    const frame = cell.frame?.trim()
+    if (!frame || isBlueprintStepVisualPlaceholder(frame)) return []
     return [
       {
         laneName: name,
         label: VISUAL_LAYER_SHORT_LABELS[name] ?? name,
-        picture,
+        frame,
         description: resolveCellDescription(cell),
       },
     ]
@@ -114,7 +114,7 @@ export function resolveVisualStepPictureEntries(
 
 /** True when Partner, Lead Tutor, or Regular Tutor has a cell in this step. */
 export function stepHasVisualWalkthroughLayerCells(
-  blueprint: VisualPictureBlueprint,
+  blueprint: StoryboardBlueprint,
   stepId: string,
 ): boolean {
   const cellLookup = buildCellLookup(blueprint.cells)
@@ -128,12 +128,12 @@ export function stepHasVisualWalkthroughLayerCells(
   })
 }
 
-export function resolveVisualStepPictures(
-  blueprint: VisualPictureBlueprint,
+export function resolveStoryboardStrip(
+  blueprint: StoryboardBlueprint,
   stepId: string,
 ): string[] {
-  return resolveVisualStepPictureEntries(blueprint, stepId).map(
-    (entry) => entry.picture,
+  return resolveStoryboardStripEntries(blueprint, stepId).map(
+    (entry) => entry.frame,
   )
 }
 
@@ -144,16 +144,16 @@ export function buildVisualWalkthroughSession(
   const steps = [...blueprint.steps]
     .sort((a, b) => a.position - b.position)
     .map((step, stepIndex) => {
-      const pictureEntries = resolveVisualStepPictureEntries(blueprint, step.id)
+      const frameEntries = resolveStoryboardStripEntries(blueprint, step.id)
       return {
         stepIndex,
         stepName: step.name,
-        layerEntries: pictureEntries.map((entry) => ({
+        layerEntries: frameEntries.map((entry) => ({
           laneName: entry.laneName,
           content: entry.description,
-          picture: entry.picture,
+          frame: entry.frame,
         })),
-        pictures: pictureEntries.map((entry) => entry.picture),
+        frames: frameEntries.map((entry) => entry.frame),
       }
     })
   return {

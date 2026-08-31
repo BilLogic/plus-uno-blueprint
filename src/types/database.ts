@@ -21,6 +21,12 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * HAND-EDITED, 2026-08-31 (#180). `unplaced_touchpoint_details` and the three
  * queue RPCs (`place_touchpoint_detail`, `discard_touchpoint_detail`,
  * `restore_touchpoint_detail`) were added by hand under the same rules.
+ * HAND-EDITED, 2026-08-30 (#179). `cells.picture` became `cells.frame`, and
+ * the slide table took its own name, with `caption` → `title` and `illustration`
+ * dropped. Renamed IN PLACE rather than resorted, which is this file's
+ * standing convention for a rename — the generator's own ordering is not
+ * alphabetical anyway, and moving a block makes a rename read as a deletion
+ * and an addition in review.
  *
  * HAND-EDITED, 2026-08-30 (#176). `authoring_changes`, the `trash` view and
  * `record_authoring_change` were added by hand for the same reason and under
@@ -383,7 +389,7 @@ export type Database = {
           owner: string | null
           path_id: string
           perceived_owner: string | null
-          picture: string | null
+          frame: string | null
           search_tsv: unknown
           position: number
           step_id: string
@@ -403,7 +409,7 @@ export type Database = {
           owner?: string | null
           path_id: string
           perceived_owner?: string | null
-          picture?: string | null
+          frame?: string | null
           search_tsv?: unknown
           position?: number
           step_id: string
@@ -423,7 +429,7 @@ export type Database = {
           owner?: string | null
           path_id?: string
           perceived_owner?: string | null
-          picture?: string | null
+          frame?: string | null
           search_tsv?: unknown
           position?: number
           step_id?: string
@@ -768,41 +774,38 @@ export type Database = {
           },
         ]
       }
-      slice_items: {
+      slides: {
         Row: {
-          caption: string | null
+          title: string | null
           cell_ids: string[]
           cell_keys: string[]
           created_at: string
           created_by: string | null
           id: string
-          illustration: Json | null
           narrative: string | null
           position: number
           slice_id: string
           updated_at: string
         }
         Insert: {
-          caption?: string | null
+          title?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
           created_by?: string | null
           id?: string
-          illustration?: Json | null
           narrative?: string | null
           position: number
           slice_id: string
           updated_at?: string
         }
         Update: {
-          caption?: string | null
+          title?: string | null
           cell_ids?: string[]
           cell_keys?: string[]
           created_at?: string
           created_by?: string | null
           id?: string
-          illustration?: Json | null
           narrative?: string | null
           position?: number
           slice_id?: string
@@ -810,7 +813,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'slice_items_slice_id_fkey'
+            foreignKeyName: 'slides_slice_id_fkey'
             columns: ['slice_id']
             isOneToOne: false
             referencedRelation: 'slices'
@@ -1165,7 +1168,7 @@ export type Stakeholder = Database['public']['Tables']['stakeholders']['Row']
 export type Step = Database['public']['Tables']['steps']['Row']
 
 export type Slice = Database['public']['Tables']['slices']['Row']
-export type SliceItem = Database['public']['Tables']['slice_items']['Row']
+export type Slide = Database['public']['Tables']['slides']['Row']
 export type Finding = Database['public']['Tables']['audit_findings']['Row']
 export type Evidence = Database['public']['Tables']['evidence']['Row']
 export type BusinessModel = Database['public']['Tables']['business_models']['Row']

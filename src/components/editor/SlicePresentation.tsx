@@ -18,13 +18,11 @@ import { useSliceBlueprint } from '@/hooks/useSliceBlueprint'
 import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import {
-  parseSliceIllustration,
-  resolveSliceFramePictures,
-  sliceIllustrationUrl,
+  resolveSlideStrip,
 } from '@/lib/sliceCells'
 import { cn } from '@/lib/utils'
 import type { BlueprintCell, BlueprintData } from '@/types/blueprint'
-import type { SliceItem } from '@/types/database'
+import type { Slide } from '@/types/database'
 
 const CELL_SNIPPET_MAX_LENGTH = 60
 
@@ -52,12 +50,12 @@ type SlicePresentationProps = {
 
 /**
  * Presentation tab: a dark full-bleed stage (the root carries the `.dark`
- * token class regardless of app theme) with the illustration as the star
- * when present, caption as headline, cell chips as a subtle bottom row, a
+ * token class regardless of app theme) with the slide's strip as the star
+ * when it has one, title as headline, cell chips as a subtle bottom row, a
  * dim mini-map locator bottom-right, and a filmstrip of cells bracketed per
- * frame. Frames render synchronously from the cached useSlice data —
+ * slide. Slides render synchronously from the cached useSlice data —
  * navigation never refetches. Keyboard is scoped to the container (tabIndex
- * + onKeyDown, no window listeners); the frame mirrors to the URL via the
+ * + onKeyDown, no window listeners); the slide mirrors to the URL via the
  * debounced ViewStateContext mechanism.
  *
  * The slice header band rides at the top of the stage in dark tokens, with
@@ -69,7 +67,7 @@ export function SlicePresentation({
   onReturn,
   leaving = false,
 }: SlicePresentationProps) {
-  const { openTab, reportPresentFrame, restoredFrame, consumeRestoredFrame } =
+  const { openTab, reportPresentSlide, restoredSlide, consumeRestoredSlide } =
     useViewState()
 
   const {
@@ -91,25 +89,25 @@ export function SlicePresentation({
     [cellIds],
   )
 
-  const [frame, setFrame] = useState(() =>
-    restoredFrame && restoredFrame.sliceId === sliceId
-      ? restoredFrame.frame
+  const [slide, setSlide] = useState(() =>
+    restoredSlide && restoredSlide.sliceId === sliceId
+      ? restoredSlide.slide
       : 0,
   )
 
-  // The deep-link frame is one-shot: consume it after the initial read so
-  // reopening this present tab later starts at frame 0.
+  // The deep-link slide is one-shot: consume it after the initial read so
+  // reopening this present tab later starts at slide 0.
   useEffect(() => {
-    if (restoredFrame) consumeRestoredFrame()
-  }, [restoredFrame, consumeRestoredFrame])
-  const frameCount = items.length
-  const clampedFrame =
-    frameCount === 0 ? 0 : Math.min(Math.max(0, frame), frameCount - 1)
-  const item = items[clampedFrame]
+    if (restoredSlide) consumeRestoredSlide()
+  }, [restoredSlide, consumeRestoredSlide])
+  const slideCount = items.length
+  const clampedSlide =
+    slideCount === 0 ? 0 : Math.min(Math.max(0, slide), slideCount - 1)
+  const item = items[clampedSlide]
 
   useEffect(() => {
-    reportPresentFrame(clampedFrame)
-  }, [clampedFrame, reportPresentFrame])
+    reportPresentSlide(clampedSlide)
+  }, [clampedSlide, reportPresentSlide])
 
   const containerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -117,31 +115,31 @@ export function SlicePresentation({
     containerRef.current?.focus()
   }, [])
 
-  const goToFrame = useCallback(
+  const goToSlide = useCallback(
     (next: number) => {
-      if (frameCount === 0) return
-      setFrame(Math.min(Math.max(0, next), frameCount - 1))
+      if (slideCount === 0) return
+      setSlide(Math.min(Math.max(0, next), slideCount - 1))
     },
-    [frameCount],
+    [slideCount],
   )
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     switch (event.key) {
       case 'ArrowLeft':
         event.preventDefault()
-        goToFrame(clampedFrame - 1)
+        goToSlide(clampedSlide - 1)
         break
       case 'ArrowRight':
         event.preventDefault()
-        goToFrame(clampedFrame + 1)
+        goToSlide(clampedSlide + 1)
         break
       case 'Home':
         event.preventDefault()
-        goToFrame(0)
+        goToSlide(0)
         break
       case 'End':
         event.preventDefault()
-        goToFrame(frameCount - 1)
+        goToSlide(slideCount - 1)
         break
     }
   }
@@ -201,7 +199,7 @@ export function SlicePresentation({
     )
   }
 
-  if (frameCount === 0 || !item) {
+  if (slideCount === 0 || !item) {
     return (
       <div
         className="dark flex h-full min-h-0 flex-col bg-background text-foreground"
@@ -219,7 +217,7 @@ export function SlicePresentation({
               {detail.slice.title}
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
-              This slice has no frames yet.
+              This slice has no slides yet.
             </p>
           </div>
         </div>
@@ -227,18 +225,14 @@ export function SlicePresentation({
     )
   }
 
-  // Stage media resolution: an authored illustration wins; otherwise fall
-  // back to the frame's own cell pictures (member cells first, then the
-  // Visual-lane cell of the same step); no media → title-slide layout.
-  const illustration = parseSliceIllustration(item.illustration)
-  const framePictures = illustration
-    ? []
-    : resolveSliceFramePictures(blueprint, item).slice(0, 3)
-  const stageMedia: string[] = illustration
-    ? [sliceIllustrationUrl(illustration)]
-    : framePictures
-  const frameCellIds = new Set(item.cell_ids.map(resolveBlueprintCellId))
-  const caption = item.caption ?? detail.slice.title
+  // What a slide shows IS its strip — the slides of the cells it references
+  // (member cells first, then the storyboard-lane cell of the same step).
+  // There is no second source to disagree with it: the slide's own image
+  // column overrode the strip rather than joining it, no row ever used it,
+  // and 20260830270000 dropped it. No slides → title-slide layout.
+  const stageMedia: string[] = resolveSlideStrip(blueprint, item).slice(0, 3)
+  const slideCellIds = new Set(item.cell_ids.map(resolveBlueprintCellId))
+  const title = item.title ?? detail.slice.title
 
   return (
     <div
@@ -260,27 +254,27 @@ export function SlicePresentation({
         data-presentation-stage=""
       >
         <div className="flex min-h-0 flex-1 items-stretch gap-2 px-4 pt-5">
-          <FrameNavButton
+          <SlideNavButton
             direction="prev"
-            disabled={clampedFrame === 0}
-            onClick={() => goToFrame(clampedFrame - 1)}
+            disabled={clampedSlide === 0}
+            onClick={() => goToSlide(clampedSlide - 1)}
           />
 
           <div className="min-w-0 flex-1 overflow-y-auto px-2">
             <div className="flex min-h-full flex-col items-center justify-center gap-4 py-4 text-center">
               <p className="font-mono text-2xs font-medium tracking-[0.2em] text-muted-foreground/70 tabular-nums uppercase">
-                Frame {clampedFrame + 1} of {frameCount}
+                Slide {clampedSlide + 1} of {slideCount}
               </p>
               {stageMedia.length > 0 ? (
                 <>
-                  {/* Media is the star — large centered area; multiple cell
-                      pictures in one frame sit side by side. */}
+                  {/* The strip is the star — large centered area; several
+                      frames on one slide sit side by side. */}
                   <div className="flex max-w-full items-center justify-center gap-4">
                     {stageMedia.map((src) => (
                       <img
                         key={src}
                         src={src}
-                        alt={caption}
+                        alt={title}
                         className={cn(
                           'max-h-[60vh] w-auto rounded-lg object-contain',
                           stageMedia.length > 1
@@ -298,7 +292,7 @@ export function SlicePresentation({
                     ))}
                   </div>
                   <h2 className="max-w-3xl text-2xl font-semibold text-balance">
-                    {caption}
+                    {title}
                   </h2>
                   {item.narrative && (
                     <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
@@ -308,9 +302,9 @@ export function SlicePresentation({
                 </>
               ) : (
                 <>
-                  {/* No illustration: title-slide layout, no card frame. */}
+                  {/* No frames: title-slide layout, no card frame. */}
                   <h2 className="mt-6 max-w-3xl text-3xl font-semibold text-balance">
-                    {caption}
+                    {title}
                   </h2>
                   {item.narrative && (
                     <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
@@ -322,10 +316,10 @@ export function SlicePresentation({
             </div>
           </div>
 
-          <FrameNavButton
+          <SlideNavButton
             direction="next"
-            disabled={clampedFrame === frameCount - 1}
-            onClick={() => goToFrame(clampedFrame + 1)}
+            disabled={clampedSlide === slideCount - 1}
+            onClick={() => goToSlide(clampedSlide + 1)}
           />
         </div>
 
@@ -348,24 +342,24 @@ export function SlicePresentation({
           <PresentationMiniMap
             blueprint={blueprint}
             memberCellIds={memberCellIds}
-            frameCellIds={frameCellIds}
+            slideCellIds={slideCellIds}
           />
         )}
       </div>
 
-      {frameCount > 1 && (
+      {slideCount > 1 && (
         <PresentationFilmstrip
           items={items}
-          activeFrame={clampedFrame}
+          activeSlide={clampedSlide}
           cellById={cellById}
-          onSelect={goToFrame}
+          onSelect={goToSlide}
         />
       )}
     </div>
   )
 }
 
-function FrameNavButton({
+function SlideNavButton({
   direction,
   disabled,
   onClick,
@@ -375,7 +369,7 @@ function FrameNavButton({
   onClick: () => void
 }) {
   const Icon = direction === 'prev' ? ChevronLeft : ChevronRight
-  const label = direction === 'prev' ? 'Previous frame' : 'Next frame'
+  const label = direction === 'prev' ? 'Previous slide' : 'Next slide'
   return (
     <IconTooltip label={label} side={direction === 'prev' ? 'right' : 'left'}>
       {/* Ghost Button with the bespoke rail geometry kept verbatim (w-10 +
@@ -396,16 +390,16 @@ function FrameNavButton({
 
 function PresentationFilmstrip({
   items,
-  activeFrame,
+  activeSlide,
   cellById,
   onSelect,
 }: {
-  items: readonly SliceItem[]
-  activeFrame: number
+  items: readonly Slide[]
+  activeSlide: number
   cellById: ReadonlyMap<string, BlueprintCell>
-  onSelect: (frame: number) => void
+  onSelect: (slide: number) => void
 }) {
-  // Cumulative cell-order offsets so squares number continuously across frames.
+  // Cumulative cell-order offsets so squares number continuously across slides.
   const orderOffsets: number[] = []
   let runningTotal = 0
   for (const item of items) {
@@ -419,10 +413,10 @@ function PresentationFilmstrip({
       data-presentation-filmstrip=""
     >
       {/* Centered to match the stage; `w-max mx-auto` keeps centering while the
-          strip stays scrollable when frames overflow the viewport. */}
+          strip stays scrollable when slides overflow the viewport. */}
       <div className="mx-auto flex w-max items-start gap-6">
         {items.map((item, index) => {
-          const active = index === activeFrame
+          const active = index === activeSlide
           return (
             <div
               key={item.id}
@@ -444,7 +438,7 @@ function PresentationFilmstrip({
                 )}
               >
                 <span className="min-w-0 truncate">
-                  {item.caption ?? `Frame ${index + 1}`}
+                  {item.title ?? `Slide ${index + 1}`}
                 </span>
               </Button>
               <div className="flex gap-1.5">
@@ -488,11 +482,11 @@ function PresentationFilmstrip({
 function PresentationMiniMap({
   blueprint,
   memberCellIds,
-  frameCellIds,
+  slideCellIds,
 }: {
   blueprint: BlueprintData
   memberCellIds: ReadonlySet<string>
-  frameCellIds: ReadonlySet<string>
+  slideCellIds: ReadonlySet<string>
 }) {
   const lanes = useMemo(
     () => [...blueprint.lanes].sort((a, b) => a.position - b.position),
@@ -514,7 +508,7 @@ function PresentationMiniMap({
             {blueprint.steps.map((step) => {
               const cell = getCellAt(cellLookup, lane.id, step.id)
               const isMember = cell !== undefined && memberCellIds.has(cell.id)
-              const isCurrent = cell !== undefined && frameCellIds.has(cell.id)
+              const isCurrent = cell !== undefined && slideCellIds.has(cell.id)
               return (
                 <div
                   key={step.id}

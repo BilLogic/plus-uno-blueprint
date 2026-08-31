@@ -2,12 +2,12 @@ import {
   getBlueprintFallback,
   getFallbackPathsForScenario,
 } from '@/data/blueprintFallbacks'
-import { shouldUseVisualContent } from '@/lib/blueprintLayout'
+import { shouldUseStoryboardContent } from '@/lib/blueprintLayout'
 import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { FALLBACK_NAV, getBlueprintScenarioId } from '@/types/nav'
 import type { BlueprintData } from '@/types/blueprint'
-import type { Json, SliceItem } from '@/types/database'
+import type { Slide } from '@/types/database'
 
 /** Scan the local fallback registry for the scenario owning these cells. */
 export function findFallbackScenarioForCells(
@@ -59,7 +59,7 @@ export type SliceCellPlacement = {
   order: number
   laneId: string
   stepIndex: number
-  /** Index of the owning frame in position-sorted slice items. */
+  /** Index of the owning slide in position-sorted slides. */
   itemIndex: number
 }
 
@@ -79,7 +79,7 @@ export type SliceCellResolution = {
 /** Place a slice's cells on one blueprint; unresolvable ids become tombstones. */
 export function resolveSliceCells(
   blueprint: BlueprintData | null,
-  items: readonly SliceItem[],
+  items: readonly Slide[],
 ): SliceCellResolution {
   const sorted = [...items].sort((a, b) => a.position - b.position)
   const cellById = new Map(
@@ -114,7 +114,7 @@ export function resolveSliceCells(
       })
       memberCellIds.add(cellId)
       memberCellIds.add(rawCellId)
-      // A cell repeated across frames keeps its first sequence number.
+      // A cell repeated across slides keeps its first sequence number.
       if (!sequenceByCellId.has(cellId)) sequenceByCellId.set(cellId, order)
       if (!sequenceByCellId.has(rawCellId)) {
         sequenceByCellId.set(rawCellId, order)
@@ -126,75 +126,48 @@ export function resolveSliceCells(
 }
 
 /**
- * Pictures for one presentation frame, from the frame's member cells:
- * each member cell's own `picture` first, then the Visual-lane cell of the
- * same step (many storyboard illustrations live on the Visual lane rather
- * than the acting cell). Placeholder tokens are skipped; order follows the
- * frame's cell order; duplicates collapse.
+ * The STRIP for one slide: the frames of the cells it references, in their
+ * order. Each member cell's own `frame` first, then the storyboard-lane cell
+ * of the same step — a step's frame usually sits on the storyboard lane
+ * rather than on the acting cell. Placeholder tokens are skipped and
+ * duplicates collapse, so what the slide shows is exactly what its cells
+ * carry and the two cannot disagree.
  */
-export function resolveSliceFramePictures(
+export function resolveSlideStrip(
   blueprint: BlueprintData | null,
-  item: SliceItem,
+  item: Slide,
 ): string[] {
   if (!blueprint) return []
 
   const cellById = new Map(blueprint.cells.map((cell) => [cell.id, cell]))
-  const visualLayerIds = new Set(
+  const storyboardLaneIds = new Set(
     blueprint.lanes
-      .filter((lane) => shouldUseVisualContent(lane))
+      .filter((lane) => shouldUseStoryboardContent(lane))
       .map((lane) => lane.id),
   )
-  const visualCellByStepId = new Map(
+  const storyboardCellByStepId = new Map(
     blueprint.cells
-      .filter((cell) => visualLayerIds.has(cell.lane_id))
+      .filter((cell) => storyboardLaneIds.has(cell.lane_id))
       .map((cell) => [cell.step_id, cell]),
   )
 
-  const pictures: string[] = []
+  const strip: string[] = []
   const seen = new Set<string>()
-  const add = (picture: string | null | undefined) => {
-    const src = picture?.trim()
+  const add = (frame: string | null | undefined) => {
+    const src = frame?.trim()
     if (!src || isBlueprintStepVisualPlaceholder(src) || seen.has(src)) return
     seen.add(src)
-    pictures.push(src)
+    strip.push(src)
   }
 
   for (const rawCellId of item.cell_ids) {
     const cell = cellById.get(resolveBlueprintCellId(rawCellId))
     if (!cell) continue
-    add(cell.picture)
-    add(visualCellByStepId.get(cell.step_id)?.picture)
+    add(cell.frame)
+    add(storyboardCellByStepId.get(cell.step_id)?.frame)
   }
 
-  return pictures
-}
-
-export type SliceIllustration = {
-  src: string
-  updatedAt: string | null
-}
-
-/** Validated illustration JSON — `https://` or `/storyboards/` sources only. */
-export function parseSliceIllustration(
-  value: Json | null,
-): SliceIllustration | null {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return null
-  }
-  const src = value.src
-  if (typeof src !== 'string') return null
-  if (!src.startsWith('https://') && !src.startsWith('/storyboards/')) {
-    return null
-  }
-  const updatedAt = value.updated_at
-  return { src, updatedAt: typeof updatedAt === 'string' ? updatedAt : null }
-}
-
-/** Illustration URL with a `?v=` cache-buster when `updated_at` is present. */
-export function sliceIllustrationUrl(illustration: SliceIllustration): string {
-  return illustration.updatedAt
-    ? `${illustration.src}?v=${encodeURIComponent(illustration.updatedAt)}`
-    : illustration.src
+  return strip
 }
 
 /** Only http(s) URLs may render as anchors — DB-sourced refs are untrusted. */

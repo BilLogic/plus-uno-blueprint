@@ -8,7 +8,7 @@ export type BlueprintCellPathEntry = {
   pathDescription?: string | null
   pathType: PathType
   content: string
-  picture?: string | null
+  frame?: string | null
   description?: string | null
   links?: CellLink[]
 }

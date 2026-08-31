@@ -38,7 +38,7 @@ export type RawCell = {
   step_id: string
   position?: number | null
   content: string
-  picture?: string | null
+  frame?: string | null
   summary?: string | null
   status?: string | null
   links?: Json | null
@@ -252,7 +252,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
     // August, typed on BlueprintCell, sorted on — and never mapped.
     position: cell.position ?? 0,
     content: cell.content,
-    picture: cell.picture ?? null,
+    frame: cell.frame ?? null,
     summary: cell.summary ?? null,
     // Narrowed rather than passed through: the column is a plain text with a
     // check constraint, so a value the renderer has no treatment for should

@@ -1,4 +1,4 @@
-import type { Slice, SliceItem } from '@/types/database'
+import type { Slice, Slide } from '@/types/database'
 
 // TODO(dev-only): remove after DB slices exist — sample slice so the slice
 // focus and presentation views render in no-DB dev mode. Cell ids reference
@@ -34,16 +34,15 @@ export const DEV_FALLBACK_SLICES: Slice[] = [
   },
 ]
 
-export const DEV_FALLBACK_SLICE_ITEMS: Record<string, SliceItem[]> = {
+export const DEV_FALLBACK_SLIDES: Record<string, Slide[]> = {
   [DEV_SLICE_ID]: [
     {
       id: 'd0000000-0000-4000-8000-000000000011',
       slice_id: DEV_SLICE_ID,
       position: 1,
-      caption: 'Meet the student',
+      title: 'Meet the student',
       narrative:
         'The tutor enters the individual breakout room and greets the student to open the session.',
-      illustration: null,
       cell_ids: [
         'a0000000-0000-4000-8000-000000040103',
         'a0000000-0000-4000-8000-000000040203',
@@ -57,10 +56,9 @@ export const DEV_FALLBACK_SLICE_ITEMS: Record<string, SliceItem[]> = {
       id: 'd0000000-0000-4000-8000-000000000012',
       slice_id: DEV_SLICE_ID,
       position: 2,
-      caption: 'Get set up',
+      title: 'Get set up',
       narrative:
         'The student shares their screen and the tutor reminds them help is always available.',
-      illustration: null,
       cell_ids: [
         'a0000000-0000-4000-8000-000000040303',
         'a0000000-0000-4000-8000-000000040403',
@@ -74,10 +72,9 @@ export const DEV_FALLBACK_SLICE_ITEMS: Record<string, SliceItem[]> = {
       id: 'd0000000-0000-4000-8000-000000000013',
       slice_id: DEV_SLICE_ID,
       position: 3,
-      caption: 'Track the student',
+      title: 'Track the student',
       narrative:
         'The tutor marks the student present and records their engagement level in the PLUS App.',
-      illustration: null,
       cell_ids: [
         'a0000000-0000-4000-8000-000000040503',
         'a0000000-0000-4000-8000-000000040603',

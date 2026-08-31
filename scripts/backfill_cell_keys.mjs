@@ -2,7 +2,7 @@
 /**
  * Give every cell its key, and repoint the slices that reference it.
  *
- * Why: `slice_items.cell_keys` is how a slice survives a scenario re-import —
+ * Why: `slides.cell_keys` is how a slice survives a scenario re-import —
  * the import deletes and recreates every `cells` row, so ids change and keys
  * do not. That only works if the stored keys match what a cell can say about
  * itself, and today they do not. Three conventions are in the table at once
@@ -146,7 +146,7 @@ async function run(mode) {
   }
 
   // Slices: map each stored key onto a canonical one where possible.
-  const items = await rest('slice_items?select=id,slice_id,cell_ids,cell_keys')
+  const items = await rest('slides?select=id,slice_id,cell_ids,cell_keys')
   const canonicalById = new Map(unique.map((cell) => [cell.id, cell.key]))
 
   let resolved = 0
@@ -194,9 +194,9 @@ async function run(mode) {
     )
   }
 
-  console.log('Rewriting slice_items.cell_keys…')
+  console.log('Rewriting slides.cell_keys…')
   for (const rewrite of rewrites) {
-    await rest(`slice_items?id=eq.${rewrite.id}`, {
+    await rest(`slides?id=eq.${rewrite.id}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ cell_keys: rewrite.cell_keys }),

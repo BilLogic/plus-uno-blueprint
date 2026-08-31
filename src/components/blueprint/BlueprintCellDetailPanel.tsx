@@ -96,14 +96,18 @@ import {
   getBlueprintStepTechItems,
   scrollBlueprintTouchpointCellIntoView,
 } from '@/lib/blueprintStepTech'
-import { shouldUsePillCellContent, shouldUseVisualContent } from '@/lib/blueprintLayout'
-import { resolveCellDetailPictures } from '@/lib/blueprintTechPictures'
+import { shouldUsePillCellContent, shouldUseStoryboardContent } from '@/lib/blueprintLayout'
+import { resolveCellDetailImages } from '@/lib/blueprintTechPictures'
 import {
   getBlueprintLayerStyle,
   getBlueprintLayerZone,
 } from '@/lib/blueprintTheme'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { resolveVisualStepPictureEntries } from '@/lib/visualWalkthrough'
+import {
+  URL_LINK_TYPE,
+} from '@/lib/blueprintTechDescriptions'
+import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
@@ -450,7 +454,7 @@ function BlueprintCellDetailPanelBody() {
 
   const selectedCell = useMemo((): Pick<
     BlueprintCell,
-    'content' | 'summary' | 'links' | 'picture' | 'touchpoints'
+    'content' | 'summary' | 'links' | 'frame' | 'touchpoints'
   > | null => {
     // The two branches below build a cell out of a compare-path entry rather
     // than the board, and such an entry carries content and links but no
@@ -460,12 +464,12 @@ function BlueprintCellDetailPanelBody() {
     const fromEntry = (entry: {
       content: string
       description?: string | null
-      picture?: string | null
+      frame?: string | null
       links?: CellLink[] | null
     }) => ({
       content: entry.content,
       summary: entry.description ?? null,
-      picture: entry.picture ?? null,
+      frame: entry.frame ?? null,
       links: entry.links ?? [],
       touchpoints: cellTouchpointsFromLinks(entry.content, entry.links),
     })
@@ -484,7 +488,7 @@ function BlueprintCellDetailPanelBody() {
     return fromEntry({
       content: pathEntry?.content ?? '',
       description: pathEntry?.description ?? null,
-      picture: pathEntry?.picture ?? null,
+      frame: pathEntry?.frame ?? null,
       links: pathEntry?.links ?? [],
     })
   }, [blueprints, pathEntry, resolvedCellId])
@@ -761,7 +765,7 @@ function BlueprintCellDetailPanelBody() {
     const blueprint = getBlueprintForPath(blueprints, pathId)
     if (!blueprint) return []
 
-    return resolveVisualStepPictureEntries(blueprint, stepId)
+    return resolveStoryboardStripEntries(blueprint, stepId)
   }, [blueprints, pathEntry?.pathId, selection?.stepId])
 
   // Fully closed and the exit animation has completed — nothing to render.
@@ -975,8 +979,8 @@ function BlueprintCellDetailPanelBody() {
     )
   }
 
-  const isVisualLane = Boolean(
-    selectedLayer && shouldUseVisualContent(selectedLayer),
+  const isStoryboardLane = Boolean(
+    selectedLayer && shouldUseStoryboardContent(selectedLayer),
   )
   const cellContent =
     selection.paths[0]?.content.trim() ||
@@ -1012,13 +1016,15 @@ function BlueprintCellDetailPanelBody() {
     techDetailLabel && detailBodyText.trim() === techDetailLabel
       ? ''
       : detailBodyText
-  const detailPictures = resolveCellDetailPictures({
+  const detailImages = resolveCellDetailImages({
     screenshot: touchpointDetail?.screenshot,
     techItem: touchpointDetail?.name ?? selection.techItem,
-    cellPicture: selection.paths[0]?.picture,
+    cellFrame: selection.paths[0]?.frame,
   })
   const showPicture = Boolean(detailPictures?.length && !isVisualLane)
   const showTechPill = Boolean(techDetailLabel)
+  const showImages = Boolean(detailImages?.length && !isStoryboardLane)
+  const showTechPill = Boolean(isTechLayer && techDetailLabel)
 
   const handleConnectionSelect = (cellId: string) => {
     const pathId = pathEntry?.pathId
@@ -1120,10 +1126,10 @@ function BlueprintCellDetailPanelBody() {
 
 
 
-  const pictureBlock = showPicture ? (
+  const imageBlock = showImages ? (
     <div className="flex w-full flex-col items-center gap-3">
       {(() => {
-        const pictures = detailPictures!
+        const images = detailImages!
         const useSmallerTechLogo = [
           'social media',
           'on-campus booth',
@@ -1134,8 +1140,8 @@ function BlueprintCellDetailPanelBody() {
           useSmallerTechLogo ||
           src.includes('-logo.') ||
           src.includes('/logo/')
-        const logos = pictures.filter(isTechLogo)
-        const screenshots = pictures.filter((src) => !isTechLogo(src))
+        const logos = images.filter(isTechLogo)
+        const screenshots = images.filter((src) => !isTechLogo(src))
 
         return (
           <>
@@ -1296,7 +1302,7 @@ function BlueprintCellDetailPanelBody() {
 
   const overviewContent = (
     <>
-      {pictureBlock}
+      {imageBlock}
       <div className="flex min-w-0 flex-col gap-1.5">
         {/* In edit mode the form's TEXT field *is* the title; repeating it
             above the field would be the same word twice on one screen. */}
@@ -1404,7 +1410,7 @@ function BlueprintCellDetailPanelBody() {
           </div>
         </DrawerHeader>
 
-        {isVisualLane ? (
+        {isStoryboardLane ? (
           <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 blueprint-scroll">
             {/*
               A storyboard cell opens the STEP panel now, so this branch is

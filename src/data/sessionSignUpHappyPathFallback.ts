@@ -1,12 +1,12 @@
 import { SESSION_SIGN_UP_SCENARIO_ID } from '@/data/techSetupHappyPathFallback'
 import {
   SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
-  SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+  SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_FRAME,
   SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
-  SESSION_SIGN_UP_PLUS_APP_STEP_01_PICTURE,
-  SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_PICTURE,
+  SESSION_SIGN_UP_PLUS_APP_STEP_01_FRAME,
+  SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_FRAME,
   SESSION_SIGN_UP_SUPPORT_ACTIONS_STEP_01_DESCRIPTION,
-} from '@/data/sessionSignUpPictures'
+} from '@/data/sessionSignUpFrames'
 import { EMPTY_CELL_METADATA } from '@/lib/cellMetadata'
 import { techDescriptionLink } from '@/lib/blueprintTechDescriptions'
 import type {
@@ -84,7 +84,7 @@ function cell(
   laneId: string,
   stepId: string,
   content: string,
-  extras?: Partial<Pick<BlueprintCell, 'picture' | 'summary' | 'links'>>,
+  extras?: Partial<Pick<BlueprintCell, 'frame' | 'summary' | 'links'>>,
 ): BlueprintCell {
   return {
     id,
@@ -140,7 +140,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
     L.regular,
     STEPS[0].id,
     'Signs up for recurring sessions for rest of semester.',
-    { picture: SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_PICTURE },
+    { frame: SESSION_SIGN_UP_REGULAR_TUTOR_STEP_01_FRAME },
   ),
   cell(ssCell('01', '06'), L.frontStageTech, STEPS[0].id, 'PLUS app', {
     summary: SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
@@ -148,7 +148,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
       techDescriptionLink(
         'PLUS app',
         SESSION_SIGN_UP_PLUS_APP_STEP_01_DESCRIPTION,
-        SESSION_SIGN_UP_PLUS_APP_STEP_01_PICTURE,
+        SESSION_SIGN_UP_PLUS_APP_STEP_01_FRAME,
         'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=1751-119990&t=rLMzaNhqBUszclus-1',
       ),
     ],
@@ -170,7 +170,7 @@ const SESSION_SIGN_UP_CELLS: BlueprintCell[] = [
         techDescriptionLink(
           'Google Spreadsheet',
           SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION,
-          SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_PICTURE,
+          SESSION_SIGN_UP_GOOGLE_SPREADSHEET_STEP_01_FRAME,
         ),
       ],
     },
