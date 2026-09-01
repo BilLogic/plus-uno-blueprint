@@ -1,8 +1,8 @@
 ---
 audience: designers, developers
-summary: Which mechanism explains what — popover, kind badge, hint, alert — why a definition is never a tooltip, where an entity kind's definition hangs, what ⓘ means, the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
-sources: src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/PanelTermLabel.tsx, src/lib/panelTerms.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
-last-reviewed: 2026-08-31
+summary: Which mechanism explains what — definition card, kind badge, hint, alert — why a definition is never a tooltip, why nothing announces one, the one card shape and its identically-set sections, where an entity kind's definition hangs, what ⓘ means, the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
+sources: src/components/blueprint/DefinitionCard.tsx, src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/PanelTermLabel.tsx, src/components/blueprint/StatusBadge.tsx, src/lib/panelTerms.ts, src/hooks/useStakeholders.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
+last-reviewed: 2026-09-01
 ---
 
 # Explaining things in a panel
@@ -63,32 +63,42 @@ header opened anything was never drawn at all. **A signifier a reader cannot
 see is not a signifier.** `CANVAS_HEADER_HINT` no longer starts at `opacity-0`
 and `EntityPropertiesButton` no longer takes `revealOnHover`.
 
+*#243 took one of the four away.* `EntityTitleAffordance` draws no glyph: its
+opener is the whole title block, which is a full-size target on any input, so
+the mark was decoration on a target nobody could miss. `LaneHeaderAffordance`,
+`StepHeaderAffordance` and `EntityPropertiesButton` keep theirs — their opener
+sits beside a word that carries a definition of its own, and without the glyph
+nothing distinguishes the two targets.
+
 An `Alert`'s leading icon is not this ⓘ: it is the alert's own severity mark,
 it is never a target, and it is covered by the variant table above.
 
-### The question cursor came back, and why
+### Nothing announces a definition
 
-*Removed 2026-08-21, restored 2026-08-31 with #182. The reversal is the
-interesting part, so it is recorded rather than quietly re-applied.*
+*Removed 2026-08-21, restored 2026-08-31 with #182, removed again 2026-09-01
+with #243. The reversals are the interesting part, so they are recorded rather
+than quietly re-applied.*
 
-It was removed on the argument that swapping the pointer is a second signal for
-something the tooltip already announces. That argument depended on a fact that
-is no longer true: at the time, an explained badge also lightened under the
-pointer, so the reader already had a hover signal and the cursor was the
-second one.
+The question cursor went, came back, and has now gone for good along with the
+dotted underline that had joined it. The middle position was reasoned: #182
+took the hover state off badges, so nothing announced an explained word before
+its popover opened, and the cursor stopped being a duplicate signal. What that
+reasoning never asked is whether the word should be announced at all. It should
+not — a dotted underline makes text look like a link that is not one, and a
+help cursor changes what the pointer means, and both were explicitly not
+wanted.
 
-**#182 took the hover state away** — a badge that repaints under the pointer
-reads as clickable, and a badge never is. That leaves nothing at all to say
-"there is something here" before the tooltip opens. So the cursor is the
-signal now rather than a duplicate of one, and an explained label or badge
-wears three things and only three: **`cursor-help`, a focus ring, and the
-tooltip itself.**
+> **No dotted underline, no `cursor-help`, no ⓘ. An explained label or badge
+> wears a focus ring and a popover, and nothing else.**
 
-The scope is exact. `cursor-help` belongs on an element that has a definition
-to give — `PanelTermLabel`, `StatusBadge`, `PanelKindBadge` when it was passed
-a `description`, a path badge where its description tooltip is shown. A badge
-with nothing behind it keeps `cursor-default`: a help cursor over a word that
-explains nothing is a promise it cannot keep.
+The focus ring is not an announcement: it is how a keyboard reader gets to the
+definition at all. Everything in the list above was a mark saying *there is
+something here*; the ring is a mark saying *you are here now*.
+
+**Discovery gets quieter, deliberately.** With no underline and no icon,
+hovering is the only way to find that a definition exists. That is the trade
+for a tool used daily. If it ever needs addressing, the answer is a one-time
+hint, not the return of the underline.
 
 ### A definition is never a tooltip
 
@@ -152,36 +162,58 @@ kind, next to the panel terms they are the missing half of. The component was
 `PathDescriptionTooltip`; the name was already wrong, since two badges funnelled
 through it, and it is wrong twice over now that it is not a tooltip.
 
-**One shape, always the same.** The kind in small caps, its definition, a rule,
-and then this instance's own description below it. The kind line goes on all
-six including the three that already had a description — a reader learns the
-shape once and it never varies, and "the ones with a description are different"
-is a rule nobody can see.
+**One shape, always the same.** The kind's own section — its name as an
+eyebrow, its definition under it — and then this instance's section below the
+hairline, set identically. The kind section goes on all six including the three
+that already had a description: a reader learns the shape once and it never
+varies, and "the ones with a description are different" is a rule nobody can
+see. See *One definition card, and every section the same* below for why the
+two sections are set the same way.
 
 One mechanism carrying two facts is fine. The standing prohibition is two
 mechanisms for **one** fact, which is why the instance half is drawn only where
 the description is not already on screen: a menubar title and a slide header
 print it as prose beside the name, so their popovers carry the kind alone.
 
-### The cue is a dotted underline
+### One definition card, and every section the same
 
-`cursor-help` is a pointer cue and touch has no pointer, so the help cursor
-cannot be the only mark on an explained word. The mark is the `<abbr>` idiom —
-a dotted underline in the label's own ink at 40%, `DEFINED_LABEL_CUE` in
-`src/lib/panelText.ts`. Not an ⓘ: that glyph means "opens the panel".
+*Decided 2026-09-01 with #243.*
 
-**This does not undo `### The question cursor came back, and why` above, and it
-is the revisit that section invited.** Its argument was that with #182 taking
-the hover state away, nothing at all announced an explained badge before the
-tooltip opened, so the cursor stopped being a duplicate signal. The dotted
-underline is now the always-drawn signal that argument was missing — but it is
-a *different* signal from the cursor rather than the same one twice: the
-underline says "this word is defined" to everyone, and the cursor says "and a
-pointer will get it without a click" to the reader who has one. An explained
-label wears four things and only four: **the dotted underline, `cursor-help`, a
-focus ring, and the popover.** A label with nothing behind it wears none of
-them — a help cursor and a dotted rule over a word that explains nothing are
-promises neither can keep.
+> **A definition is a list of SECTIONS, each an eyebrow above a body,
+> identically typeset and hairline-separated. One section is a term and its
+> meaning; two is a category then an instance.**
+
+`DefinitionCard` and `DefinitionPopover` in
+`src/components/blueprint/DefinitionCard.tsx` are the only shape. Three
+shipped before this and all three are gone:
+
+| Was | Now |
+| --- | --- |
+| The two-section card, whose category wore a small-caps eyebrow and whose instance wore a plain medium-weight name | Both are eyebrows. Two heading treatments inside one card is why it read as a one-off rather than a pattern — and three surfaces render it: `PathLabelBadge`, `ScenarioTitleBadge`, `StakeholderBadge`. |
+| The bare sentence with no heading — `PanelTermLabel`, `Field`'s `hint`, `PanelKindBadge description=`, the divider rail label | One section, with the term as its eyebrow. |
+| `StatusBadge`'s `Tooltip` | One section: the status, and its line from `ENTITY_STATUS_MEANING`. A tooltip never opens on touch, which this file said in writing while that badge used one. |
+
+An eyebrow is what let the words get shorter. `PANEL_TERMS` entries used to
+open by restating the label they hung off — *"Storyboard — the frames for each
+step"* — because there was nothing above them saying "Storyboard". Now there
+is, so the definition starts with the definition.
+
+**Every section needs a body and a heading.** A heading over blank space is a
+promise of content that never arrives, and a body with no heading is the shape
+this replaced. Where an instance has no description the placeholder fills the
+body (`INSTANCE_DESCRIPTION_PLACEHOLDER`) rather than the section going
+headless; where there is nothing at all to say, the section is not drawn.
+
+**The five stakeholder kinds have meanings** — `STAKEHOLDER_KIND_MEANING` in
+`src/hooks/useStakeholders.ts` — because the category half of the stakeholder
+card would otherwise be empty. The `team` sentence is the one carrying weight:
+a team owns a lane and is never one, which is `owner_team` versus
+`stakeholder_id` stated in words. If it is ever wrong, the schema is wrong with
+it.
+
+`src/components/blueprint/definitionCard.test.tsx` fails a build where one
+section is set differently from another, and where a `cursor-help` or the
+deleted `DEFINED_LABEL_CUE` comes back.
 
 ---
 
@@ -225,10 +257,10 @@ label carrying a definition must be focusable and must announce itself.
 same words from one source. Two strings for one label is how they drift.
 
 Practical consequence: **prefer a component over a raw `<Tooltip>`.**
-`IconTooltip`, `PanelTermLabel`, `PanelKindBadge` and `EntityDefinitionPopover`
-already handle focus and labelling. A raw tooltip dropped on a `<span>` almost
-never does — and if what it carries is a definition, it is also unreachable on
-touch.
+`IconTooltip`, `DefinitionPopover`, `PanelTermLabel`, `PanelKindBadge`,
+`StatusBadge` and `EntityDefinitionPopover` already handle focus and labelling.
+A raw tooltip dropped on a `<span>` almost never does — and if what it carries
+is a definition, it is also unreachable on touch.
 
 ---
 
@@ -238,14 +270,15 @@ touch.
 | --- | --- |
 | Icon-only button | `IconTooltip` — the tooltip **is** its label, and the one place a tooltip is still right |
 | **What a phase, scenario, path, step, lane or service IS** | `EntityDefinitionPopover` on that entity's own label **on the board** — six placements, no exemptions |
-| Lane role, path type, cell status | `PanelKindBadge description=` on the badge, which is a popover |
-| Who a lane's owner IS — the definition on `stakeholders.summary` | `StakeholderBadge`, which is `PanelKindBadge description=` with the registry's own one-liner. Where the field is editable there is no badge to hover, so the same sentence is printed under the picker; the two never appear together. |
-| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Summary` | `PanelTermLabel` — a popover on the label; the label must be focusable |
+| Lane role, path type | `PanelKindBadge description=` on the badge, which is a one-section definition card |
+| Cell or path `status` | `StatusBadge`, which is a one-section card over `ENTITY_STATUS_MEANING` |
+| Who a lane's owner IS — the kind, and the definition on `stakeholders.summary` | `StakeholderBadge`, which is `PanelKindBadge` with a `category` and a `description`: two sections, the kind above the party. Where the field is editable there is no badge to hover, so the same sentence is printed under the picker; the two never appear together. |
+| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Summary` | `PanelTermLabel` — a one-section card on the label; the label must be focusable |
 | Form field guidance | `hint` prop, always visible |
 | A consequence of saving | `Alert variant="warning"`, inline |
 | A load or write failure | `Alert variant="destructive"`, inline |
 | Why a control is elsewhere | **nothing** — if it matters, the control is in the wrong place |
-| Opening an entity's properties | the ⓘ, always visible, and it means nothing else |
+| Opening an entity's properties | the block, with the ⓘ marking it where a definition sits beside it; the canvas title needs no mark |
 
 Standing prohibition: **nothing carries two mechanisms for one fact.** Removed
 from the lane badge in Aug 2026; do not bring it back.
@@ -274,7 +307,7 @@ now fails a build that reintroduces either as a name.
 it over every `<Badge>` in the app. This is the rule the question cursor above
 depends on: a surface that repaints under the pointer promises a click, so a
 badge that did it was promising one it never delivered. What a badge offers
-instead is the help cursor, the focus ring and the tooltip. **Something that
+instead is the focus ring and the definition card. **Something that
 needs a hover state is a button** — use one, and give it something to do.
 
 ---

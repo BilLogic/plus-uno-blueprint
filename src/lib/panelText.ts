@@ -35,18 +35,19 @@ export const PANEL_TEXT = {
   value: 'text-sm text-foreground/80',
 } as const
 
-/**
- * The cue an explained label wears, and the reason it is not an ⓘ.
- *
- * A dotted underline is the `<abbr>` idiom: it marks the WORD, it is drawn
- * without a pointer, and it survives on touch — where `cursor-help` says
- * nothing at all, because there is no cursor. An ⓘ would have said the other
- * thing this app's ⓘ means, and only ever means: opens the panel
- * (docs/reference/panel-affordances.md).
- *
- * `decoration-current/40` so the rule takes the label's own ink at 40% — a
- * lane label carries its role's colour and a path badge its path type's, and a
- * fixed underline colour would have been a second hue on both.
- */
-export const DEFINED_LABEL_CUE =
-  'underline decoration-dotted decoration-from-font underline-offset-4 decoration-current/40'
+/*
+  `DEFINED_LABEL_CUE` was here, and it is deleted (#243).
+
+  It was a dotted underline in the label's own ink — the `<abbr>` idiom, worn
+  at thirteen sites — and beside it a `cursor-help`. Both announced that a word
+  carries a definition, and both were asked for and then explicitly not wanted:
+  the underline makes text look like a link that is not one, and the help
+  cursor changes what the pointer means. Nothing replaces them. Discovery gets
+  quieter, deliberately, for a tool used daily; if that ever needs addressing
+  the answer is a one-time hint, not the return of the underline.
+
+  What did NOT go with them is reach. Every definition is a `DefinitionPopover`
+  whose trigger supplies `tabIndex` and which opens on touch, so it is gettable
+  without a pointer — which the underline never was and the cursor never could
+  be.
+*/

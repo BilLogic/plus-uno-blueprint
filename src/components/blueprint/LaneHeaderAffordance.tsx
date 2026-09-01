@@ -1,6 +1,5 @@
 import { Info } from 'lucide-react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
@@ -98,7 +97,6 @@ export function LaneHeaderAffordance({
           'min-w-0 flex-1 whitespace-normal break-words',
           CANVAS_HEADER_TEXT,
           CANVAS_HEADER_NAME,
-          DEFINED_LABEL_CUE,
         )}
         style={color ? { color } : undefined}
       >

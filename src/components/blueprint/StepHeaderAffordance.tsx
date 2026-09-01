@@ -1,6 +1,5 @@
 import { Info } from 'lucide-react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
@@ -61,7 +60,6 @@ export function StepHeaderAffordance({
           'min-w-0 truncate text-center text-muted-foreground',
           CANVAS_HEADER_TEXT,
           CANVAS_HEADER_NAME,
-          DEFINED_LABEL_CUE,
         )}
       >
         {name}

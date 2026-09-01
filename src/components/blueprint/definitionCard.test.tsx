@@ -1,0 +1,420 @@
+// @vitest-environment jsdom
+/**
+ * Every definition in the app opens the same way and looks the same, and
+ * nothing on the resting page announces one (#243).
+ *
+ * The card's own seam is the CARD. "One section and two sections are typeset
+ * identically" is the assertion that stops the pattern drifting back into two
+ * shapes — it is exactly what had drifted: the category half wore a small-caps
+ * eyebrow and the instance half a plain medium-weight name, inside one card,
+ * on the three surfaces that render both.
+ *
+ * What is rendered and what is read as text, and why:
+ *
+ *   - the card, the three two-section surfaces, `StatusBadge` and
+ *     `PanelTermLabel` are RENDERED, because the claims are about what a
+ *     reader sees and in what order;
+ *   - "no cue and no ⓘ survive" is read as TEXT, because it is a claim about
+ *     the whole tree and no single render can observe an absence everywhere.
+ *     Prior art for the source-reading half: `stakeholderDefinitionReader.test.ts`.
+ */
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
+import {
+  DefinitionCard,
+  DefinitionPopover,
+} from '@/components/blueprint/DefinitionCard'
+import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
+import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
+import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
+import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
+import { StakeholderBadge } from '@/components/blueprint/StakeholderBadge'
+import { StatusBadge } from '@/components/blueprint/StatusBadge'
+import { ENTITY_STATUS_MEANING } from '@/lib/entityStatus'
+import {
+  STAKEHOLDER_KIND_LABELS,
+  STAKEHOLDER_KIND_MEANING,
+  type StakeholderKind,
+} from '@/hooks/useStakeholders'
+import { ENTITY_KIND_DEFINITIONS, PANEL_TERMS } from '@/lib/panelTerms'
+
+afterEach(cleanup)
+
+/* --------------------------------------------------------- opening one */
+
+/**
+ * Hover, as Base UI actually learns it.
+ *
+ * Base UI's hover interaction is `mouseOnly`: it decides from a pointer type
+ * it records on React's `onPointerEnter`, and React synthesises that handler
+ * from `pointerover` rather than `pointerenter`. A `mouseOver` alone leaves
+ * the pointer type unset, `isMouseLikePointerType` rejects it under `strict`,
+ * and the popover never opens — which reads in a test exactly like a broken
+ * component. The working sequence is pointerover → mouseenter → mousemove.
+ *
+ * jsdom has no `PointerEvent`, so the first one is a `MouseEvent` with the
+ * property attached; Base UI reads `event.pointerType` and nothing else.
+ */
+function hover(element: Element) {
+  // The TRIGGER, not whatever text node was queried. A badge sets its name in
+  // an inner `<span>`, and `mouseenter` does not bubble — so hovering the
+  // inner span delivers two of the three events and the popover never opens.
+  const trigger =
+    element.closest('[tabindex], [role="button"], button') ?? element
+  const pointerOver = new MouseEvent('pointerover', {
+    bubbles: true,
+    cancelable: true,
+  })
+  Object.defineProperty(pointerOver, 'pointerType', { value: 'mouse' })
+  trigger.dispatchEvent(pointerOver)
+  fireEvent.mouseEnter(trigger)
+  fireEvent.mouseMove(trigger)
+}
+
+/*
+  The card is marked with `data-definition-card` rather than a test id, so the
+  attribute a stylesheet or a future guard would read is the one this file
+  reads. Testing Library has no query for an attribute, hence the selectors.
+*/
+const sections = (card: HTMLElement) =>
+  Array.from(card.querySelectorAll('[data-definition-section]'))
+
+const eyebrow = (section: Element) =>
+  section.querySelector('[data-definition-eyebrow]') as HTMLElement
+
+const body = (section: Element) =>
+  section.querySelector('[data-definition-body]') as HTMLElement
+
+/* -------------------------------------------------- the card is one shape */
+
+describe('the definition card', () => {
+  const one = [{ eyebrow: 'Path', body: ENTITY_KIND_DEFINITIONS.path.definition }]
+  const two = [
+    ...one,
+    { eyebrow: 'Happy Path', body: 'The student joins on time.' },
+  ]
+
+  it('sets a category and an instance identically — one shape, not two', () => {
+    render(<DefinitionCard sections={two} />)
+    const card = document.querySelector('[data-definition-card]') as HTMLElement
+    const [category, instance] = sections(card)
+
+    // The assertion this file exists for. The instance used to head itself
+    // with a plain medium-weight name while the category wore a small-caps
+    // eyebrow: two heading treatments inside one card.
+    expect(eyebrow(instance).className).toBe(eyebrow(category).className)
+    expect(body(instance).className).toBe(body(category).className)
+  })
+
+  it('sets a one-section card exactly as it sets a two-section one', () => {
+    render(<DefinitionCard sections={one} />)
+    const alone = sections(
+      document.querySelector('[data-definition-card]') as HTMLElement,
+    )[0]
+    const aloneClasses = [eyebrow(alone).className, body(alone).className]
+    cleanup()
+
+    render(<DefinitionCard sections={two} />)
+    const paired = sections(
+      document.querySelector('[data-definition-card]') as HTMLElement,
+    )
+    for (const section of paired) {
+      expect([eyebrow(section).className, body(section).className]).toEqual(
+        aloneClasses,
+      )
+    }
+  })
+
+  it('separates sections with a hairline and never heads one with it', () => {
+    render(<DefinitionCard sections={two} />)
+    const [first, second] = sections(
+      document.querySelector('[data-definition-card]') as HTMLElement,
+    )
+    expect(first.className).not.toContain('border-t')
+    expect(second.className).toContain('border-t')
+  })
+})
+
+/* ------------------------------------------------ every definition opens */
+
+describe('a definition opens on hover, and is reachable without a pointer', () => {
+  it('opens the card on hover', async () => {
+    render(
+      <DefinitionPopover sections={[{ eyebrow: 'Lane', body: 'One row.' }]}>
+        <span>Front stage</span>
+      </DefinitionPopover>,
+    )
+    hover(screen.getByText('Front stage'))
+    expect(await screen.findByText('One row.')).toBeDefined()
+  })
+
+  it('gives the trigger a tab stop, so focus reaches it', () => {
+    render(
+      <DefinitionPopover sections={[{ eyebrow: 'Lane', body: 'One row.' }]}>
+        <span>Front stage</span>
+      </DefinitionPopover>,
+    )
+    const trigger = screen.getByText('Front stage')
+    expect(trigger.getAttribute('tabindex')).toBe('0')
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+  })
+})
+
+/* ----------------------------------------- the three two-section surfaces */
+
+describe('the surfaces that show a category and an instance', () => {
+  const rendered: Array<[string, () => void, string]> = [
+    [
+      'a path badge',
+      () =>
+        render(
+          <PathLabelBadge
+            name="Happy Path"
+            description="The student joins on time."
+            pathKind="happy"
+          />,
+        ),
+      'Happy Path',
+    ],
+    [
+      'a scenario title badge',
+      () =>
+        render(
+          <ScenarioTitleBadge name="Warm-Up" description="The first minutes." />,
+        ),
+      'Warm-Up',
+    ],
+    [
+      'a stakeholder badge',
+      () =>
+        render(
+          <StakeholderBadge
+            name="Regular Tutor"
+            kind="staff"
+            summary="The tutor a student sees every week."
+          />,
+        ),
+      'Regular Tutor',
+    ],
+  ]
+
+  it.each(rendered)('%s renders two identically set sections', async (_name, mount, label) => {
+    mount()
+    hover(screen.getByText(label))
+    const card = await screen.findByText(label, {
+      selector: '[data-definition-eyebrow]',
+    })
+    const parts = sections(
+      card.closest('[data-definition-card]') as HTMLElement,
+    )
+    expect(parts).toHaveLength(2)
+    expect(eyebrow(parts[1]).className).toBe(eyebrow(parts[0]).className)
+    expect(body(parts[1]).className).toBe(body(parts[0]).className)
+  })
+})
+
+/* ------------------------------------------------- the stakeholder card */
+
+describe('the stakeholder card', () => {
+  it('shows the kind, that kind meaning, then the name and its summary', async () => {
+    render(
+      <StakeholderBadge
+        name="Regular Tutor"
+        kind="staff"
+        summary="The tutor a student sees every week."
+      />,
+    )
+    hover(screen.getByText('Regular Tutor'))
+    const first = await screen.findByText(STAKEHOLDER_KIND_LABELS.staff, {
+      selector: '[data-definition-eyebrow]',
+    })
+    const card = first.closest('[data-definition-card]') as HTMLElement
+    const [kind, instance] = sections(card)
+
+    expect(eyebrow(kind).textContent).toBe('Staff')
+    expect(body(kind).textContent).toBe(STAKEHOLDER_KIND_MEANING.staff)
+    expect(eyebrow(instance).textContent).toBe('Regular Tutor')
+    expect(body(instance).textContent).toBe(
+      'The tutor a student sees every week.',
+    )
+  })
+
+  it('has a meaning for all five kinds, and says a team owns a lane and is never one', () => {
+    const kinds: StakeholderKind[] = [
+      'recipient',
+      'staff',
+      'partner',
+      'provider',
+      'team',
+    ]
+    for (const kind of kinds) {
+      // Long enough to be a definition rather than a restated label — the
+      // floor `scripts/tests/entity-definitions.test.mjs` applies to the
+      // entity kinds, for the same reason.
+      expect(STAKEHOLDER_KIND_MEANING[kind].length, kind).toBeGreaterThan(40)
+    }
+    // The one sentence carrying the schema: a team reaches a lane through
+    // `owner_team` and is never its `stakeholder_id`, because Design does not
+    // stand in a room. If this is ever wrong, the schema is wrong with it.
+    expect(STAKEHOLDER_KIND_MEANING.team).toMatch(/owns a lane and is never one/)
+  })
+})
+
+/* ------------------------------------------------------- the status badge */
+
+describe('StatusBadge', () => {
+  it('discloses what the status means, in a card and not a tooltip', async () => {
+    render(<StatusBadge status="built" />)
+    hover(screen.getByText('Built'))
+    expect(await screen.findByText(ENTITY_STATUS_MEANING.built)).toBeDefined()
+    expect(document.querySelector('[data-definition-card]')).not.toBeNull()
+  })
+
+  it('is reachable by keyboard focus', () => {
+    render(<StatusBadge status="live" />)
+    const badge = screen.getByText('Live')
+    expect(badge.getAttribute('tabindex')).toBe('0')
+    badge.focus()
+    expect(document.activeElement).toBe(badge)
+  })
+})
+
+/* -------------------------------------- the bare sentence is retired */
+
+describe('the bare-sentence popover shape', () => {
+  it('is gone from a panel term label — the term heads its own definition', async () => {
+    render(<PanelTermLabel term="Storyboard" definition={PANEL_TERMS.storyboard} />)
+    hover(screen.getByText('Storyboard'))
+    const shown = await screen.findByText(PANEL_TERMS.storyboard)
+    const card = shown.closest('[data-definition-card]')
+    expect(card).not.toBeNull()
+    expect(
+      within(card as HTMLElement).getAllByText('Storyboard', {
+        selector: '[data-definition-eyebrow]',
+      }),
+    ).toHaveLength(1)
+  })
+
+  it('no longer needs the definition to open by naming the term', () => {
+    for (const [term, definition] of Object.entries(PANEL_TERMS)) {
+      // "Storyboard — the frames for each step" spent its first clause saying
+      // what the eyebrow above it already says.
+      expect(definition.toLowerCase().startsWith(term.toLowerCase()), term).toBe(
+        false,
+      )
+    }
+  })
+})
+
+/* ------------------------------------------- nothing announces a definition */
+
+// `process.cwd()`, not `import.meta.url`: Vite rewrites a module's own URL to
+// its `/@fs/…` serving path, which is not a path on disk. Same idiom as
+// `stakeholderDefinitionReader.test.ts`.
+const ROOT = process.cwd()
+const SRC = resolve(ROOT, 'src')
+
+function sourceFiles(dir = SRC): string[] {
+  return readdirSync(dir).flatMap((entry) => {
+    const path = join(dir, entry)
+    let directory: boolean
+    try {
+      directory = statSync(path).isDirectory()
+    } catch {
+      return []
+    }
+    if (directory) return sourceFiles(path)
+    if (!/\.tsx?$/.test(entry)) return []
+    if (/\.test\.tsx?$/.test(entry)) return []
+    return [path]
+  })
+}
+
+/**
+ * Class strings only — a comment recording why the cue went is not the cue.
+ *
+ * A vanished file is skipped rather than thrown on: `harness-claims.test.mjs`
+ * writes a probe component under `src` and deletes it again, and vitest runs
+ * files in parallel, so a walk of the tree can list a path that is gone by the
+ * time it is read. The subject is every file that IS there.
+ */
+function liveClassMatches(pattern: RegExp): string[] {
+  return sourceFiles().flatMap((path) => {
+    let source: string
+    try {
+      source = readFileSync(path, 'utf8')
+    } catch {
+      return []
+    }
+    const code = source
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1')
+    return pattern.test(code) ? [relative(ROOT, path)] : []
+  })
+}
+
+describe('nothing on the page announces that a word is defined', () => {
+  it('the shared underline cue is deleted, with every use site', () => {
+    expect(liveClassMatches(/DEFINED_LABEL_CUE/)).toEqual([])
+    // And the underline it drew, in case somebody inlines it back.
+    expect(liveClassMatches(/decoration-dotted/)).toEqual([])
+  })
+
+  it('no help cursor survives it', () => {
+    expect(liveClassMatches(/cursor-help/)).toEqual([])
+  })
+
+  it('the canvas title draws no icon beside the name', () => {
+    render(<EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />)
+    const block = document.querySelector('[data-entity-title]') as HTMLElement
+    // The ⓘ existed because a hover-only control is invisible on touch. The
+    // opener is the whole block and the definition is a popover, so neither
+    // ever needed it (#243).
+    expect(block.querySelectorAll('svg')).toHaveLength(0)
+  })
+
+  it('and the entity title imports no icon at all', () => {
+    const source = readFileSync(
+      join(SRC, 'components/blueprint/EntityTitleAffordance.tsx'),
+      'utf8',
+    )
+    expect(source).not.toMatch(/from 'lucide-react'/)
+  })
+})
+
+/* -------------------------------------------------- the definition popover */
+
+describe('an entity definition', () => {
+  it('is one section when there is only a kind to give', async () => {
+    render(
+      <EntityDefinitionPopover kind="lane">
+        <span>Front stage</span>
+      </EntityDefinitionPopover>,
+    )
+    hover(screen.getByText('Front stage'))
+    await screen.findByText(ENTITY_KIND_DEFINITIONS.lane.definition)
+    const card = document.querySelector('[data-definition-card]') as HTMLElement
+    expect(sections(card)).toHaveLength(1)
+    expect(eyebrow(sections(card)[0]).textContent).toBe('Lane')
+  })
+
+  it('says so when nobody has written the instance description yet', async () => {
+    render(
+      <EntityDefinitionPopover kind="path" name="Happy Path" description={null} showDescription>
+        <span>Happy Path</span>
+      </EntityDefinitionPopover>,
+    )
+    hover(screen.getByText('Happy Path'))
+    const card = (
+      await screen.findByText(ENTITY_KIND_DEFINITIONS.path.definition)
+    ).closest('[data-definition-card]') as HTMLElement
+    const [, instance] = sections(card)
+    // The placeholder changes the BODY only. The heading is the heading.
+    expect(body(instance).className).toContain('italic')
+    expect(eyebrow(instance).className).toBe(eyebrow(sections(card)[0]).className)
+  })
+})
