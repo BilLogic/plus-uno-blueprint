@@ -276,6 +276,42 @@ async function run({ serviceRole }) {
   }
   check('embed hints', hints)
 
+  // 3b. Direct-read columns, one select per table, every declared column at
+  //     once. PostgREST 400s the whole select when ANY column is unknown and
+  //     names the offender, so a table's columns are re-probed one at a time
+  //     when the batch fails — the same bisect the RPC parameters get, for the
+  //     same reason: "cells is broken" is not an actionable message and
+  //     "cells has no column `links`" is.
+  //
+  //     This is the guard that did not exist on 2026-09-01, when six of the
+  //     bot's direct reads were found naming columns renamed between
+  //     2026-08-20 and 2026-08-30. Every one of them failed silently: 400 in,
+  //     empty array out, "the blueprint has nothing on that" in Slack.
+  const columns = []
+  for (const [table, declaredColumns] of Object.entries(contract.botDirectReadColumns ?? {})) {
+    const batch = await rest(url, key, `${table}?select=${declaredColumns.join(',')}&limit=0`)
+    if (batch.ok) continue
+    let named = 0
+    for (const column of declaredColumns) {
+      const one = await rest(url, key, `${table}?select=${column}&limit=0`)
+      if (one.ok) continue
+      named++
+      columns.push(
+        `botDirectReadColumns.${table} names "${column}", which the database ` +
+          `refuses — ${postgrest(one.body)}. uno-bot puts this string in a ` +
+          `select=; a rename reads in Slack as an empty result, never as an error.`,
+      )
+    }
+    if (named === 0) {
+      columns.push(
+        `botDirectReadColumns.${table}: the full select failed (HTTP ${batch.status} — ` +
+          `${postgrest(batch.body)}) but every column passed alone. Something about ` +
+          `the combination is refused; read the message rather than trusting the bisect.`,
+      )
+    }
+  }
+  check('direct read columns', columns)
+
   // 4-7. The search RPC: parameters, columns, kinds, breadcrumb.
   const params = Object.fromEntries(
     Object.values(contract.searchBlueprintParams).map((name) => [name, null]),
