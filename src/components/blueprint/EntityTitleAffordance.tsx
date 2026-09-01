@@ -1,4 +1,3 @@
-import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS } from '@/components/editor/menubarHeaderLayout'
 import {
   useEntityDetail,
@@ -7,15 +6,15 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
- * The canvas title, what that kind of thing IS, and the way into what is
- * behind it.
+ * The canvas title, and the way into what is behind it.
  *
  * The title and an ⓘ were ONE control until #140, with "View details" in
- * their shared hover slot. That slot is the only place a definition can hang
- * off the name of the thing the reader is looking at, and it was spending it
- * on a sentence the glyph already said. So the block now holds two targets:
- * the NAME explains what a service, a phase or a scenario is, and everything
- * else — an invisible opener filling the block — opens the panel.
+ * their shared hover slot, spending it on a sentence the glyph already said.
+ * The block became two targets: the name, and an invisible opener filling
+ * everything around it. Since #240 the name is only a name — what a service,
+ * a phase or a scenario IS hangs off the kind badge beside it, which is where
+ * #235 puts a definition — so the block is back to one job, opening the
+ * panel.
  *
  * The block is the target for opening, and since #243 there is no glyph
  * marking it. A separate 24px icon button would make the title look inert and
@@ -66,20 +65,13 @@ export function EntityTitleAffordance({
           toggleEntity({ kind, id })
         }}
       />
-      {/* No dotted rule and no help cursor. The focus ring stays, because it
-          is the one of the three that a keyboard reader needs rather than a
-          mark announcing to everyone that this word is defined (#243). */}
-      <EntityDefinitionPopover kind={kind} side="bottom">
-        <h2
-          className={cn(
-            BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS,
-            'relative z-10 w-fit rounded-sm outline-none',
-            'focus-visible:ring-2 focus-visible:ring-ring/50',
-          )}
-        >
-          {label}
-        </h2>
-      </EntityDefinitionPopover>
+      {/* The NAME, and nothing hanging off it. What a service, a phase or a
+          scenario IS belongs to the kind badge beside it (#240), because a
+          definition hangs off a badge and never off a label (#235). Both
+          carried it for one commit and the row said the same thing twice. */}
+      <h2 className={cn(BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS, 'relative z-10 w-fit')}>
+        {label}
+      </h2>
       {/* The ⓘ that marked the opener is GONE (#243).
 
           It was introduced because a hover-only control is invisible to a

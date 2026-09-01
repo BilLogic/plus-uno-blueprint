@@ -384,6 +384,46 @@ describe('nothing on the page announces that a word is defined', () => {
     )
     expect(source).not.toMatch(/from 'lucide-react'/)
   })
+
+  it('nor do the grid headers, which had the same glyph for the same reason', () => {
+    // #140 Q11 drew it always-on so a touch reader could see that a header
+    // opens something. The opener is the whole block on any input and the
+    // definition is a popover, so the mark was never what made either
+    // reachable — and one per named thing is the clutter #243 removes.
+    for (const file of ['StepHeaderAffordance', 'LaneHeaderAffordance']) {
+      const source = readFileSync(
+        join(SRC, `components/blueprint/${file}.tsx`),
+        'utf8',
+      )
+      expect(source).not.toMatch(/from 'lucide-react'/)
+    }
+  })
+
+  it('and the class the glyph wore is gone, not just unused', () => {
+    // Left in place it is an invitation: the next header draws an ⓘ because
+    // the constant is sitting there already named for the job.
+    expect(liveClassMatches(/CANVAS_HEADER_HINT/)).toEqual([])
+  })
+})
+
+describe('a definition hangs off a badge, never off a label', () => {
+  it('the canvas title is a name and nothing more', () => {
+    // Both the title and the kind badge beside it carried the same
+    // definition for one commit, because #240 landed after this branch
+    // started. The badge is the one #235 keeps.
+    render(<EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />)
+    const title = screen.getByRole('heading', { name: 'Warm-Up' })
+    expect(title.hasAttribute('tabindex')).toBe(false)
+    expect(title.hasAttribute('aria-haspopup')).toBe(false)
+  })
+
+  it('and its source no longer reaches for the definition popover', () => {
+    const source = readFileSync(
+      join(SRC, 'components/blueprint/EntityTitleAffordance.tsx'),
+      'utf8',
+    )
+    expect(source).not.toMatch(/EntityDefinitionPopover/)
+  })
 })
 
 /* -------------------------------------------------- the definition popover */
