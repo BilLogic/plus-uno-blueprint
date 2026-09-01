@@ -295,7 +295,7 @@ export function MergedCompareGrid({
             marginTop: COMPARE_STACKED_HEADER_GAP,
           }}
         >
-          <MergedSectionFrame blueprints={blueprints} compact={compact} />
+          <MergedSectionFrame blueprints={blueprints} />
           {tracks.map(() => null)}
           {/* One lane rail for the whole comparison — the point of merging. */}
           <BlueprintStickyLabelBackdrop
@@ -411,10 +411,8 @@ function resolveMergedCellVariant(lane: BlueprintLane): BlueprintCellVariant {
  */
 function MergedSectionFrame({
   blueprints,
-  compact,
 }: {
   blueprints: BlueprintData[]
-  compact?: boolean
 }) {
   return (
     <>
@@ -451,7 +449,6 @@ function MergedSectionFrame({
             name={path.name}
             description={path.summary}
             pathKind={path.kind}
-            compact={compact}
           />
         ))}
       </div>

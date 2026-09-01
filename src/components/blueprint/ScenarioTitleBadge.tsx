@@ -74,7 +74,7 @@ export function ScenarioTitleBadge({
         // under the pointer reads as clickable. The popover trigger supplies
         // `tabIndex`.
         className={cn(
-          'h-auto max-w-full cursor-help gap-1 overflow-visible border-transparent',
+          'max-w-full cursor-help gap-1 overflow-visible border-transparent',
           pathKind && 'font-semibold',
           (panelTone || phaseTone) && 'font-semibold',
           className,

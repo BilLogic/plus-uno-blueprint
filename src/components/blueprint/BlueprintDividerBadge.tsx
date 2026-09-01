@@ -11,7 +11,6 @@ import type { CSSProperties } from 'react'
 
 type BlueprintDividerBadgeProps = {
   label: string
-  compact?: boolean
   /** Flat right edge so the rule can meet the badge flush (Figma-style). */
   connected?: boolean
 }
@@ -91,15 +90,13 @@ export function BlueprintDividerRailLabel({
  */
 export function BlueprintDividerBadge({
   label,
-  compact,
   connected,
 }: BlueprintDividerBadgeProps) {
   return (
     <Badge
       data-blueprint-fill
       className={cn(
-        'h-auto border-transparent px-3 py-1.5 font-semibold uppercase leading-none tracking-[0.06em]',
-        compact ? 'text-3xs' : 'text-2xs',
+        'border-transparent font-semibold uppercase leading-none tracking-[0.06em]',
         connected ? 'rounded-l-sm rounded-r-none' : 'rounded-sm',
       )}
       style={getBlueprintFillStyle(BLUEPRINT_THEME.dividerBadgeBg)}

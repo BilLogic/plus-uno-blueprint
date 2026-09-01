@@ -37,7 +37,6 @@ export function WalkthroughPathSelect({
         name={selected.path.name}
         description={selected.path.summary}
         pathKind={selected.path.kind}
-        compact
         className={className}
       />
     )

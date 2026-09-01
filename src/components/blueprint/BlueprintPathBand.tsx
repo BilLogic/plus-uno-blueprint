@@ -152,7 +152,6 @@ export function BlueprintPathBand({
       )}
       <ComparePathSectionFrame
         blueprint={blueprint}
-        compact={compact}
         excludeLabelRail={arrangement.kind === 'row'}
       />
       {arrangement.kind === 'row' ? (

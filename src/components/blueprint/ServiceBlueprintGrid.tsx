@@ -185,7 +185,6 @@ export function ServiceBlueprintGrid({
             name={path.name}
             description={path.summary}
             pathKind={path.kind}
-            className="text-base"
           />
         </div>
       )}
@@ -196,7 +195,6 @@ export function ServiceBlueprintGrid({
             name={path.name}
             description={path.summary}
             pathKind={path.kind}
-            compact
           />
         </div>
       )}
@@ -234,7 +232,6 @@ export function ServiceBlueprintGrid({
           >
             <ComparePathSectionFrame
               blueprint={data}
-              compact={compact}
               showTitle
               variant="service"
               excludeLabelRail
