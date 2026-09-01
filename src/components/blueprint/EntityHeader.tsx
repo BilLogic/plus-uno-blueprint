@@ -1,12 +1,15 @@
+import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
 import {
   BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
   BLUEPRINT_MENUBAR_IDENTITY_HEIGHT,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
+import { Badge } from '@/components/ui/badge'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { EntityDetailKind } from '@/contexts/EntityDetailContext'
+import { ENTITY_KIND_DEFINITIONS } from '@/lib/panelTerms'
 import { cn } from '@/lib/utils'
 
 /**
@@ -66,6 +69,61 @@ function EntityHeaderSkeleton() {
 }
 
 /**
+ * What KIND of thing this bar names, said in a word rather than in a hue.
+ *
+ * A reader who has never seen a service blueprint cannot tell a scenario bar
+ * from a phase bar: both are a bold name over a sentence. The badge says which
+ * without being hovered, and carries that kind's definition for the reader who
+ * then wants one (#240).
+ *
+ * NEUTRAL by decision, not by omission. The grid already spends colour on lane
+ * role and path kind. The diagram assets do carry a per-entity tint, but those
+ * are hardcoded hexes in `docs/assets` with no token behind them, so adopting
+ * them would invent a THIRD colour axis rather than reuse either existing one.
+ * `outline` is the badge's own neutral variant; the ink drops to
+ * `text-muted-foreground` so the word does not compete with the semibold name
+ * beside it. Nothing here touches the badge's size — one size for every badge
+ * is settled in one place, not per call site.
+ *
+ * A DEFINITION TRIGGER AND NOTHING ELSE. `EntityTitleAffordance` keeps the
+ * panel: it is one target with an `absolute inset-0` opener filling it, so a
+ * badge placed inside it would either open the panel on click or have to climb
+ * back out on a z-index. Rendering it as the affordance's SIBLING is what makes
+ * "the badge does not open the panel" true by construction rather than by a
+ * `stopPropagation` somebody can delete.
+ *
+ * No `cursor-help`: it is on its way out everywhere (#243) along with the
+ * dotted cue and the ⓘ, and adding one here only to delete it next is churn.
+ *
+ * The accessible name is the kind THEN the entity's own name, so a screen
+ * reader gets the pairing a sighted reader gets from the two sitting side by
+ * side. Kind first, because the visible word has to start the name it is read
+ * by for the two to be one label rather than two.
+ */
+function EntityKindBadge({
+  kind,
+  label,
+}: {
+  kind: EntityDetailKind
+  label: string
+}) {
+  const term = ENTITY_KIND_DEFINITIONS[kind]
+
+  return (
+    <EntityDefinitionPopover kind={kind} side="bottom">
+      <Badge
+        data-entity-kind-badge=""
+        variant="outline"
+        aria-label={`${term.label}: ${label}`}
+        className="text-muted-foreground"
+      >
+        {term.label}
+      </Badge>
+    </EntityDefinitionPopover>
+  )
+}
+
+/**
  * The identity block above the canvas: what this thing is called, and what
  * it is.
  *
@@ -79,6 +137,10 @@ function EntityHeaderSkeleton() {
  * It reserves its height rather than sizing to it — see
  * `BLUEPRINT_MENUBAR_IDENTITY_HEIGHT`, which is where the number and the
  * argument live, because all three bars draw their geometry from that module.
+ *
+ * The name is followed by a neutral badge naming its KIND — see
+ * `EntityKindBadge`. It rides here rather than inside the title affordance
+ * because it must not open the panel the affordance opens.
  *
  * FOUR STATES, THREE PICTURES:
  *
@@ -125,7 +187,21 @@ export function EntityHeader({
         className="flex w-full min-w-0 flex-col items-start gap-0.5"
       >
         {id && label ? (
-          <EntityTitleAffordance kind={kind} id={id} label={label} />
+          /*
+            One ROW: the name, then the kind to its right. The row exists so
+            the badge is a SIBLING of the opener rather than a child of it.
+
+            `items-center` against a title row the badge cannot grow — a 20px
+            `h-5` badge inside a 24px row — so the two-line height this bar
+            pins stays exactly what `BLUEPRINT_MENUBAR_IDENTITY_HEIGHT` says.
+          */
+          <div
+            data-entity-header-identity=""
+            className="flex min-w-0 max-w-full items-center gap-1.5"
+          >
+            <EntityTitleAffordance kind={kind} id={id} label={label} />
+            <EntityKindBadge kind={kind} label={label} />
+          </div>
         ) : null}
         {caption ? (
           <p
