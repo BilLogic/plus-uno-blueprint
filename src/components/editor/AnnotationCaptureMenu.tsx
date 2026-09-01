@@ -50,7 +50,7 @@ export function AnnotationCaptureMenu() {
   // the DOM in screen space. Undo the camera by measuring the lane itself:
   // its on-screen rect vs its layout size gives the zoom, its origin the pan.
   const layerElement = document.querySelector<HTMLElement>(
-    '[data-canvas-annotation-lane]',
+    '[data-canvas-annotation-layer]',
   )
   const layerRect = layerElement?.getBoundingClientRect()
   const scale =
