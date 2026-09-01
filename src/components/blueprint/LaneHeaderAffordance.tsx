@@ -1,11 +1,9 @@
-import { Info } from 'lucide-react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
-  CANVAS_HEADER_HINT,
   CANVAS_HEADER_NAME,
   CANVAS_HEADER_OPENER,
   CANVAS_HEADER_STATE,
@@ -154,17 +152,6 @@ export function LaneHeaderAffordance({
         className={CANVAS_HEADER_OPENER}
       />
       {name}
-      {/* Optically on the label's first line: the glyph's own box is taller
-          than the cap height it has to sit beside. Not a target of its own —
-          it marks the block behind it, which is. */}
-      <Info
-        className={cn(
-          CANVAS_HEADER_HINT,
-          'pointer-events-none relative z-10 mt-px',
-          'group-hover/lane-header:text-foreground',
-        )}
-        aria-hidden
-      />
     </div>
   )
 }

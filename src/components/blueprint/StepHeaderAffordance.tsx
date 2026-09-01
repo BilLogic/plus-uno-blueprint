@@ -1,11 +1,9 @@
-import { Info } from 'lucide-react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
-  CANVAS_HEADER_HINT,
   CANVAS_HEADER_NAME,
   CANVAS_HEADER_OPENER,
   CANVAS_HEADER_STATE,
@@ -108,14 +106,6 @@ export function StepHeaderAffordance({
         className={CANVAS_HEADER_OPENER}
       />
       {label}
-      <Info
-        className={cn(
-          CANVAS_HEADER_HINT,
-          'pointer-events-none absolute right-1.5 top-1/2 z-10 -translate-y-1/2',
-          'group-hover/step-header:text-foreground',
-        )}
-        aria-hidden
-      />
     </div>
   )
 }

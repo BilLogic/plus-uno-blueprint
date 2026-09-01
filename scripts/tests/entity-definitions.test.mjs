@@ -135,9 +135,16 @@ export function kindsWithoutDefinition(kinds, definitions) {
   })
 }
 
-/** The six labels on the board, and the component that carries each one's definition. */
+/**
+ * The labels on the board, and the component that carries each one's definition.
+ *
+ * The canvas title is NOT one of them. It was until #240 put a kind badge
+ * beside it, and #235's rule is that a definition hangs off a badge and never
+ * off a label — so the anchor for service, phase and scenario is the badge in
+ * the identity bar, and the title is a name and nothing else.
+ */
 const ANCHORS = {
-  'src/components/blueprint/EntityTitleAffordance.tsx': 'service, phase and scenario — the canvas title',
+  'src/components/blueprint/EntityHeader.tsx': "service, phase and scenario — the identity bar's kind badge",
   'src/components/blueprint/ScenarioTitleBadge.tsx': 'phase and scenario — the frame and panel labels',
   'src/components/blueprint/PathLabelBadge.tsx': 'path — the band, column and cell label',
   'src/components/blueprint/LaneHeaderAffordance.tsx': 'lane — the row header',
@@ -221,8 +228,8 @@ test('the definition check goes red on a kind that only names itself', () => {
 test('the anchor check goes red on a label that stops explaining itself', () => {
   const planted = [
     {
-      file: 'src/components/blueprint/EntityTitleAffordance.tsx',
-      code: '<h2>{label}</h2>',
+      file: 'src/components/blueprint/EntityHeader.tsx',
+      code: '<Badge>{term.label}</Badge>',
     },
     {
       file: 'src/components/blueprint/PathLabelBadge.tsx',
@@ -230,7 +237,7 @@ test('the anchor check goes red on a label that stops explaining itself', () => 
     },
   ]
   assert.deepEqual(anchorsWithoutPopover(planted), [
-    'src/components/blueprint/EntityTitleAffordance.tsx renders no <EntityDefinitionPopover> — service, phase and scenario — the canvas title',
+    'src/components/blueprint/EntityHeader.tsx renders no <EntityDefinitionPopover> — service, phase and scenario — the identity bar\'s kind badge',
     'src/components/blueprint/ScenarioTitleBadge.tsx is gone — phase and scenario — the frame and panel labels has nowhere to hang its definition',
     'src/components/blueprint/LaneHeaderAffordance.tsx is gone — lane — the row header has nowhere to hang its definition',
     'src/components/blueprint/StepHeaderAffordance.tsx is gone — step — the column header has nowhere to hang its definition',

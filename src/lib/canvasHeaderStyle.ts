@@ -54,18 +54,18 @@ export const CANVAS_HEADER_STATE = [
   'has-[button:focus-visible]:ring-ring/50',
 ].join(' ')
 
-/**
- * The ⓘ: always visible, because it is the mark of a control.
- *
- * It was transparent until the header was hovered, which meant that on touch —
- * where nothing is ever hovered — the one signal that a header opens anything
- * was never drawn. #140 Q11: ⓘ means "opens the panel" everywhere, and an
- * affordance a touch reader cannot see is not an affordance.
- */
-export const CANVAS_HEADER_HINT = [
-  'size-3.5 shrink-0 text-muted-foreground/60',
-  'transition-colors duration-(--motion-micro)',
-].join(' ')
+/*
+  THE ⓘ IS GONE, and the argument for it is worth keeping because it was a
+  good one that stopped applying.
+
+  #140 Q11 made the glyph always visible rather than hover-only: on touch,
+  where nothing is ever hovered, it was the single drawn signal that a header
+  opens anything, and an affordance a touch reader cannot see is not one. What
+  #243 changed is the rest of the header. The opener is the whole block — a
+  full-size target on any input — and the definition beside it is a popover
+  that opens on touch. Neither needed a mark, and a board drawing one beside
+  every named thing is the resting-state clutter the ticket set out to remove.
+*/
 
 /**
  * The header's name: the word, and what that kind of thing IS.
