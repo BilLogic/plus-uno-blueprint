@@ -37,8 +37,16 @@
  * would break.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { setShellBooting } from '@/contexts/shellBootStore'
 import type { ReactNode } from 'react'
 import { EntityHeader } from '@/components/blueprint/EntityHeader'
 import { ServiceOverviewHeader } from '@/components/editor/ServiceOverviewHeader'
@@ -63,6 +71,9 @@ vi.mock('@/contexts/SupabaseProvider', () => ({
 }))
 
 afterEach(cleanup)
+// The shell's boot latch is a module store, so a test that raises it would
+// leave every later render skeletoning. Lowered after each.
+afterEach(() => setShellBooting(false))
 
 const block = () =>
   document.querySelector('[data-entity-header]') as HTMLElement | null
@@ -248,6 +259,67 @@ const OPEN_DELAY_BUDGET = { timeout: 3000 }
 /** The definition card for one kind, wherever the portal put it. */
 const definitionFor = (kind: 'phase' | 'scenario') =>
   screen.queryByText(ENTITY_KIND_DEFINITIONS[kind].definition)
+
+describe('the bar arrives with the shell around it', () => {
+  /*
+    The bug (#253): the service query is the fastest thing on the screen, so
+    the bar painted its name, its kind and its whole summary over a sidebar
+    still showing boot skeletons and a canvas still saying "Loading
+    blueprints…". Three surfaces, three beats, and the one that finished first
+    was the one nobody was waiting on.
+
+    What is asserted is the beat, not the mechanism: given an answered query,
+    whether a name is on screen depends on the shell's lane.
+  */
+  const ready = (
+    <EntityHeader
+      kind="service"
+      id="svc-1"
+      label="PLUS Tutoring"
+      summary="A hybrid human-AI tutoring service."
+      status="ready"
+    />
+  )
+
+  it('holds an answered query behind the shell’s boot lane', () => {
+    setShellBooting(true)
+    render(ready)
+    expect(skeleton()).not.toBeNull()
+    expect(screen.queryByText('PLUS Tutoring')).toBeNull()
+  })
+
+  it('and shows it the moment that lane lifts', () => {
+    setShellBooting(true)
+    render(ready)
+    act(() => setShellBooting(false))
+    expect(skeleton()).toBeNull()
+    expect(screen.getByText('PLUS Tutoring')).not.toBeNull()
+  })
+
+  it('keeps skeletoning when the lane lifts first and the query has not answered', () => {
+    // The other order. Whichever wait is longer is the one the reader sees.
+    setShellBooting(true)
+    render(<EntityHeader kind="service" status="loading" />)
+    act(() => setShellBooting(false))
+    expect(skeleton()).not.toBeNull()
+  })
+
+  it('waits on the query alone where no shell publishes a lane', () => {
+    // The mobile shell, and this file's every other render. A bar with
+    // nothing to wait for must not wait forever.
+    render(ready)
+    expect(skeleton()).toBeNull()
+    expect(screen.getByText('PLUS Tutoring')).not.toBeNull()
+  })
+
+  it('holds the phase bar on the same beat as the service bar', () => {
+    setShellBooting(true)
+    render(
+      <EntityHeader kind="phase" id="p-1" label="Warm-Up" status="ready" />,
+    )
+    expect(skeleton()).not.toBeNull()
+  })
+})
 
 describe('the kind badge', () => {
   const navbarKinds = ['service', 'phase', 'scenario'] as const

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { DeferredSkeleton } from '@/components/ui/deferred-skeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { EntityDetailKind } from '@/contexts/EntityDetailContext'
+import { useShellBooting } from '@/contexts/shellBootStore'
 import { ENTITY_KIND_DEFINITIONS } from '@/lib/panelTerms'
 import { cn } from '@/lib/utils'
 
@@ -36,10 +37,15 @@ export type EntityHeaderProps = {
 /**
  * The identity block's own skeleton session.
  *
- * Deliberately NOT `EDITOR_BOOT_HOLD_KEY`. That key is the shell's boot lane —
- * the sidebar and everything that lands with it — and sharing it would hold a
- * service query that has already answered behind a sidebar that has not. This
- * bar waits on one query and on nothing else.
+ * Deliberately NOT `EDITOR_BOOT_HOLD_KEY`. That key is the shell's boot lane,
+ * and a shared hold key is ONE session with one fade — the right tool for
+ * stages of a waterfall that hand off to each other, which this bar is not a
+ * stage of. It draws its own skeleton in its own session (ADR 0010).
+ *
+ * That is a different question from WHEN the session may end, and the two were
+ * answered as one until #253. This bar waits on its query AND on the shell's
+ * boot lane, so the bar, the sidebar and the board arrive on one beat instead
+ * of the bar finishing first over a screen that is still loading.
  */
 const ENTITY_HEADER_HOLD_KEY = 'entity-header'
 
@@ -173,6 +179,14 @@ export function EntityHeader({
   // A failed query has no summary to print, and printing a stale one under a
   // bar that cannot say what it is showing is worse than printing nothing.
   const caption = status === 'error' ? (message ?? null) : (summary ?? null)
+  /*
+    Two waits, one skeleton. The bar cannot resolve before its own query
+    answers, and it does not resolve before the shell lifts its lane either —
+    whichever is later is when the reader sees a name. The lane fires once per
+    entry, so a return from a slice tab is held by neither: the latch is off
+    and the query is warm (`staleTime: Infinity`).
+  */
+  const shellBooting = useShellBooting()
 
   return (
     <div
@@ -181,7 +195,7 @@ export function EntityHeader({
       style={{ height: BLUEPRINT_MENUBAR_IDENTITY_HEIGHT }}
     >
       <DeferredSkeleton
-        loading={status === 'loading'}
+        loading={status === 'loading' || shellBooting}
         holdKey={ENTITY_HEADER_HOLD_KEY}
         skeleton={<EntityHeaderSkeleton />}
         className="flex w-full min-w-0 flex-col items-start gap-0.5"
