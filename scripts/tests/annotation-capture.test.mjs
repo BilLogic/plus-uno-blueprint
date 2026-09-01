@@ -10,6 +10,8 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   captureMarks,
   describeMarks,
@@ -151,4 +153,64 @@ test('the description names what is being handed over', () => {
     [cell('a', 5, 5, 25, 25)],
   )
   assert.equal(describeMarks(marks)[0], 'A sticky reading “late?”, over 1 cell')
+})
+
+/* ------------------------------------------------ the selector, both ends */
+
+/**
+ * The agent's marker pen finds the canvas by a DOM ATTRIBUTE, and nothing
+ * type-checks a querySelector string against the element that carries it.
+ *
+ * `56c25f5` ("layers becomes lanes, the last rename in the block") swept the
+ * word into `data-canvas-annotation-lane` on the element while four readers
+ * kept asking for `[data-canvas-annotation-layer]`. The annotation layer is a
+ * RENDERING layer — the same false positive `retired-copy.test.mjs` already
+ * excludes data attributes for — so the element was renamed and the swimlane
+ * was never involved.
+ *
+ * What it cost: `registerAgentAnnotator` returns "No annotatable canvas is
+ * open right now." when its query misses, so `annotate_cells` failed on every
+ * call, on every board, with a sentence that reads like a normal empty state.
+ * A silent tool, not a crash.
+ *
+ * So the attribute is asserted from BOTH ends: the element that emits it and
+ * every selector that looks for it, as text, because that is the join the
+ * compiler cannot make.
+ */
+const ATTRIBUTE = 'data-canvas-annotation-layer'
+
+/** Files that emit the attribute, and files that query for it. */
+const EMITTERS = ['src/components/editor/CanvasAnnotationLayer.tsx']
+const READERS = [
+  'src/contexts/CanvasAnnotationProvider.tsx',
+  'src/components/editor/AnnotationCaptureMenu.tsx',
+  'src/components/editor/ServiceOverviewView.tsx',
+  'src/styles/utilities.css',
+]
+
+test('every reader of the annotation canvas asks for the attribute it emits', () => {
+  const source = (path) =>
+    readFileSync(resolve(process.cwd(), path), 'utf8')
+
+  for (const path of EMITTERS) {
+    assert.match(
+      source(path),
+      new RegExp(`${ATTRIBUTE}=`),
+      `${path} no longer emits ${ATTRIBUTE}; every selector below is now dead`,
+    )
+  }
+  for (const path of READERS) {
+    assert.ok(
+      source(path).includes(`[${ATTRIBUTE}]`),
+      `${path} queries an attribute nothing emits`,
+    )
+  }
+
+  // The failure that shipped: no reader may hold the swept spelling.
+  for (const path of [...EMITTERS, ...READERS]) {
+    assert.ok(
+      !source(path).includes('data-canvas-annotation-lane'),
+      `${path} calls the rendering layer a lane`,
+    )
+  }
 })

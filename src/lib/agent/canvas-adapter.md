@@ -115,14 +115,16 @@ Per-tool write rules (content required, dependency-kind semantics,
 step-name alignment, tag vocabularies, create-vs-edit split) live in the
 tool descriptions — trust them at call time. Adapter-only additions:
 
-- `cell_dependencies.kind`: `leads_to` | `enables`. `leads_to` is
-  temporal — the source makes the target happen, and the canvas draws it
-  as an arrow. `enables` is functional — the target must already be true
-  for the source to work, recorded but never drawn. They are NOT
-  inverses: a precondition causes nothing, so never record one as
-  `leads_to`. The database CHECK constraint accepts these two values and
-  refuses every other, including the spellings the package references
-  above still teach.
+- `cell_dependencies.kind`: `leads_to` | `enables`. **Both read
+  source-first**, which is the whole reason these are the two words:
+  `leads_to` — the source makes the target happen, drawn as an arrow;
+  `enables` — the source makes the target possible without causing it,
+  recorded but never drawn. "B only makes sense once A is true" is A
+  enables B, so the precondition is the SOURCE. They are NOT inverses: a
+  precondition causes nothing, so never record one as `leads_to`. The
+  database CHECK constraint accepts these two values and refuses every
+  other, including the spellings the package references above still
+  teach.
 - **`position`** (canvas dialect: tech lanes hold several cells per
   (lane, step), ordered by `position`; other deployments may not
   have the column — see data-model.md). The tools manage slots for you;

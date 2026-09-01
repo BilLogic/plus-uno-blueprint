@@ -806,7 +806,7 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'create_cell_dependency',
     description:
-      'Connect two cells on the SAME path. kind "leads_to" = the source makes the target happen (drawn as an arrow); "enables" = the target must already be true for the source to work (panel-only, never drawn) — "only makes sense after X" / "cannot happen without X" reads as enables. They are NOT inverses: a precondition causes nothing, so do not record one as leads_to. State which kind you chose and why in your reply. Arrows only where they add information.',
+      'Connect two cells on the SAME path. BOTH kinds read source-first. kind "leads_to" = the source makes the target happen (drawn as an arrow); "enables" = the source makes the target possible without causing it (panel-only, never drawn) — "B only makes sense once A is true" is A enables B, so the PRECONDITION is the source. They are NOT inverses: a precondition causes nothing, so do not record one as leads_to. State which kind you chose and why in your reply. Arrows only where they add information.',
     parameters: {
       type: 'object',
       properties: {

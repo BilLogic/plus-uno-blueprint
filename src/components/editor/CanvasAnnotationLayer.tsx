@@ -2126,7 +2126,7 @@ export function CanvasAnnotationLayer({ zoom = 1 }: { zoom?: number }) {
   return (
     <div
       ref={layerRef}
-      data-canvas-annotation-lane=""
+      data-canvas-annotation-layer=""
       className={cn(
         'absolute inset-0 z-60 touch-none',
         layerInteractive ? 'pointer-events-auto' : 'pointer-events-none',
