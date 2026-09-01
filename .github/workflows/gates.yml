@@ -109,6 +109,30 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
 
+      # The contract against the live database, on the ANON path.
+      #
+      # The note above says the live checks stay out of CI, and the reason it
+      # gives is credentials — which is true of `check:identifiers:live`, whose
+      # pg_catalog sweep needs a direct privileged connection. It is not true
+      # of this one: as anon it reads exactly what the app's own browser bundle
+      # reads, over the same repository VARIABLE the auth-posture step above
+      # already uses. Lumping the two together left the contract's only live
+      # guard running when somebody remembered.
+      #
+      # What it now also covers is the PROSE. On 2026-09-01 the docs that tell
+      # an agent which columns to read were found naming seven that had not
+      # existed since August. Prose does not 400, so a reviewer is the only
+      # other thing that could have caught it, and a reviewer did not.
+      #
+      # This does reach production on every PR: ~30 anon reads, none of them
+      # writes. A Supabase outage reddens the branch, which is the correct
+      # trade — the alternative is a guard that reports agreement it never
+      # checked. The service_role half stays manual, as the note above says.
+      - run: npm run check:contract:live
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+
       # The served-rulebook guard (#115). The canvas adapter is spliced into
       # every system prompt, and the pinned package's copy names a registry
       # this app does not have. This holds the instance override to
