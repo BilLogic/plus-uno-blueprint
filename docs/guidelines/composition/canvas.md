@@ -16,6 +16,7 @@ claims:
   - src/components/blueprint/BlueprintTouchpointCell.tsx
   - src/components/blueprint/BlueprintVisualPlayButton.tsx
   - src/components/blueprint/EntityDefinitionPopover.tsx
+  - src/components/blueprint/EntityHeader.tsx
   - src/components/blueprint/IntegratedDependencyArrows.tsx
   - src/components/blueprint/LaneCollapseToggle.tsx
   - src/components/blueprint/PathLabelBadge.tsx
