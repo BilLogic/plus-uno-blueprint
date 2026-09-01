@@ -9,6 +9,7 @@ import {
 } from '@/components/blueprint/panelShell'
 import { StepPanelLoading } from '@/components/blueprint/panelLoading'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
+import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
@@ -183,7 +184,7 @@ function StepPanelBody({
 
       {distinct.size > 1 ? (
         <div className="flex flex-col gap-1">
-          <PanelTermLabel term="Position" definition={PANEL_TERMS.position} />
+          <PanelSectionLabel>Position</PanelSectionLabel>
           <ul className="flex flex-col gap-0.5">
             {step.positions.map((entry) => (
               <li

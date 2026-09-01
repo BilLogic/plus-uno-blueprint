@@ -32,38 +32,43 @@ const DIVIDER_MEANINGS: Record<string, string> = {
 /** Light label-rail divider caption — reference blueprint interaction/visibility rows. */
 export function BlueprintDividerRailLabel({
   label,
-  compact,
 }: {
   label: string
-  compact?: boolean
 }) {
   const meaning = DIVIDER_MEANINGS[label.trim().toLowerCase()]
+  /*
+    An OUTLINED BLOCK, not a bare caption (#244).
+
+    These three lines are the whole grammar of a service blueprint, and the
+    rail stated them as unexplained words in the same register as every other
+    row label — so the one reader who needed them could not tell they were
+    terms at all. A badge is the shape this app gives a word drawn from a
+    vocabulary, and the outline is what separates a caption naming a rule from
+    a caption naming a row.
+
+    The colour stays the divider's own, from the blueprint theme, so the block
+    still reads as belonging to the line under it rather than to the panel
+    vocabulary above it.
+  */
   const caption = (
-    <span
+    <Badge
       data-blueprint-row-header=""
-      // With a meaning behind it this is an explained label, and since #243 it
-      // wears exactly one thing that says so to a reader: nothing. What it
-      // keeps is REACH — a focus ring and keyboard focus, because a definition
-      // on a bare `<span>` cannot be got at otherwise (the same gap
-      // `PanelTermLabel` closes; docs/reference/panel-affordances.md § Hover is
-      // never the only way in). The help cursor went with the dotted rule
-      // everywhere else in the app and had no reason to survive here. No hover
-      // colour either, because that would read as clickable and it is not.
+      variant="outline"
+      // Since #243 nothing announces that a word is defined. What this keeps
+      // is REACH — keyboard focus, so the definition is gettable without a
+      // pointer (docs/reference/panel-affordances.md § Hover is never the only
+      // way in). No hover colour: that would read as clickable and it is not.
       {...(meaning ? { tabIndex: 0 } : {})}
       className={cn(
-        'relative shrink-0 font-medium uppercase leading-none tracking-[0.08em]',
-        compact ? 'text-3xs' : 'text-2xs',
-        meaning &&
-          'rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+        'shrink-0 border-current/30 font-medium uppercase leading-none tracking-[0.08em]',
       )}
       style={{ color: BLUEPRINT_THEME.dividerLabel }}
     >
       {label}
-    </span>
+    </Badge>
   )
   if (!meaning) return caption
-  /* A definition card, not the tooltip this shipped with (#243). The three
-     divider lines are the whole grammar of a service blueprint, and a Base UI
+  /* A definition card, not the tooltip this shipped with (#243). A Base UI
      tooltip is `mouseOnly` — so on the phone posture this app has, the reader
      least likely to know the convention was the one who could not read it. */
   return (

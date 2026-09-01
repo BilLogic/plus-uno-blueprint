@@ -28,8 +28,7 @@ import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import { StatusSelect } from '@/components/blueprint/StatusSelect'
 import type { EntityStatus } from '@/lib/entityStatus'
-import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
-import { PANEL_TERMS } from '@/lib/panelTerms'
+import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
 
 /**
  * The scenario's properties — and the only surface its PATHS have.
@@ -213,7 +212,7 @@ function ScenarioPanelBody({
         {/* No ⓘ. It explained where the layout control ISN'T, which is a
             question nobody arrives with — and the label itself is the thing
             worth defining, so the definition hangs off the label. */}
-        <PanelTermLabel term="Paths" definition={PANEL_TERMS.paths} />
+        <PanelSectionLabel>Paths</PanelSectionLabel>
         {/* Several open at once: comparing two routes is the reason to read
             this panel, and an accordion that closes one to open the next
             makes that impossible. */}
@@ -245,10 +244,7 @@ function ScenarioPanelBody({
                       dot and a name; everything you can say ABOUT the route
                       lives inside it. */}
                   <div className="flex flex-col gap-0.5">
-                    <PanelTermLabel
-                      term="Status"
-                      definition={PANEL_TERMS.status}
-                    />
+                    <PanelSectionLabel>Status</PanelSectionLabel>
                     <div className="flex min-w-0">
                       {canEdit ? (
                         <StatusSelect
@@ -262,7 +258,7 @@ function ScenarioPanelBody({
                   </div>
                   <PanelTextareaField
                     label="Summary"
-                    hint={PANEL_TERMS.pathSummary}
+                    hint="The condition that puts someone on this route rather than one of its siblings."
                     placeholder="e.g. the student joins on time"
                     value={form.paths[path.id].summary}
                     rows={2}
@@ -276,7 +272,7 @@ function ScenarioPanelBody({
                   */}
                   <PanelTextareaField
                     label="Author note"
-                    hint={PANEL_TERMS.authorNote}
+                    hint="An open question, provenance, working state. Not a fact about the service."
                     placeholder="e.g. confirm the 10-minute hold with ops"
                     value={form.paths[path.id].note}
                     rows={2}

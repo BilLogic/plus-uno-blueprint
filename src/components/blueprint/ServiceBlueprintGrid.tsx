@@ -327,7 +327,6 @@ export function ServiceBlueprintGrid({
                     <BlueprintDividerRow
                       label={INTERACTION_LINE_LABEL}
                       lineStyle="dashed"
-                      compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
                       ruleOverhang={SERVICE_DIVIDER_RULE_OVERHANG}
                       labelRailBg={blueprintPanelLabelRailColor(
@@ -346,7 +345,6 @@ export function ServiceBlueprintGrid({
                     <BlueprintDividerRow
                       label={VISIBILITY_LINE_LABEL}
                       lineStyle="solid"
-                      compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
                       ruleOverhang={SERVICE_DIVIDER_RULE_OVERHANG}
                       labelRailBg={blueprintPanelLabelRailColor(
@@ -366,7 +364,6 @@ export function ServiceBlueprintGrid({
                     <BlueprintDividerRow
                       label={INTERNAL_INTERACTION_LINE_LABEL}
                       lineStyle="dotted"
-                      compact={compact}
                       labelWidth={LAYER_COLUMN_WIDTH}
                       ruleOverhang={SERVICE_DIVIDER_RULE_OVERHANG}
                       labelRailBg={blueprintPanelLabelRailColor(

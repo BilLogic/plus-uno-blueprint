@@ -126,7 +126,6 @@ export function BlueprintDividerRow({
   rowIndex,
   label,
   lineStyle,
-  compact,
   labelWidth = COMPARE_LABEL_WIDTH,
   ruleOverhang = COMPARE_DIVIDER_RULE_OVERHANG,
   labelRailBg,
@@ -136,7 +135,6 @@ export function BlueprintDividerRow({
   rowIndex?: number
   label: string
   lineStyle: 'dashed' | 'dotted' | 'solid'
-  compact?: boolean
   /** Painted width of the rail — the grey the caption sits on. */
   labelWidth?: number
   /** How far past the row's right edge the rule runs, clearing the outline. */
@@ -204,7 +202,7 @@ export function BlueprintDividerRow({
         className="absolute inset-y-0 left-0 z-10 flex items-center"
         style={{ right: -ruleOverhang }}
       >
-        <BlueprintDividerRailLabel label={label} compact={compact} />
+        <BlueprintDividerRailLabel label={label} />
         <BlueprintDividerRule
           lineStyle={lineStyle}
           className="ml-2 min-w-0 flex-1"

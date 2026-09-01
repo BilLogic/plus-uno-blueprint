@@ -94,11 +94,21 @@ const LABEL_COMPONENTS = [
   'Field',
   'PanelTextareaField',
   'PanelTermLabel',
+  'PanelSectionLabel',
   'SpecSection',
   'StringListField',
 ]
 
-const LABEL_ELEMENT = new RegExp(`<(${LABEL_COMPONENTS.join('|')})\\b([^>]*)>`, 'g')
+const LABEL_ELEMENT = new RegExp(
+  `<(${LABEL_COMPONENTS.join('|')})\\b([^>]*)>([^<{]*)`,
+  'g',
+)
+/*
+  A label arrives as a prop or as children. `PanelSectionLabel` is the second
+  shape — #244 gave it the nine labels that stopped carrying definitions, and a
+  prop-only reader saw a panel that had gone silent rather than one that had
+  simply stopped explaining itself.
+*/
 const LABEL_PROP = /\b(label|term|title)\s*=\s*"([^"]*)"/
 
 function walk(dir) {
@@ -125,7 +135,9 @@ export function panelLabels(sources) {
   for (const { file, code } of sources) {
     for (const element of code.matchAll(LABEL_ELEMENT)) {
       const prop = LABEL_PROP.exec(element[2])
-      if (prop) out.push({ file, component: element[1], label: prop[2] })
+      const children = element[3]?.trim()
+      const label = prop ? prop[2] : children
+      if (label) out.push({ file, component: element[1], label })
     }
   }
   return out
