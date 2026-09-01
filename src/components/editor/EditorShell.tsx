@@ -64,6 +64,7 @@ import {
   SHELL_ENTRANCE_STEP_MS,
   prefersReducedMotion,
 } from '@/lib/motion'
+import { describeSidebar } from '@/lib/shellContext'
 import { cn } from '@/lib/utils'
 
 /**
@@ -194,6 +195,23 @@ function DesktopEditorShell() {
   // is what the name below tracks: not "just the rail" (there is no rail
   // left to be only), but the aside gone entirely.
   const asideHidden = presenting || sidebarCollapsed || isLanding
+  /*
+    Collapsed BY THE READER, which is not the same as an aside that is off
+    screen.
+
+    NOT `asideHidden`: presentation hides the sidebar too, and hides the navbar
+    with it (full-bleed). Telling the bands they are collapsed there would
+    strand a presentation with no header and no Return — the band must keep
+    drawing itself when nothing else can carry it. The landing view is the same
+    argument again.
+
+    ONE binding because it was three copies of one sentence, and one of the
+    three was wrong: the agent's shell context asked plain `asideHidden`, so a
+    reader mid-presentation was told the sidebar was collapsed and to expand a
+    control that was not on screen. Three readers of a fact is fine; three
+    spellings of it is how they disagree.
+  */
+  const collapsedByReader = sidebarCollapsed && !presenting && !isLanding
 
   /*
     Entering the workspace from the cover, in two separated concerns.
@@ -315,14 +333,10 @@ function DesktopEditorShell() {
   // control themselves — see sidebarCollapsedContext for why the navbar is
   // now the fallback rather than the default.
   useEffect(() => {
-    // NOT `asideHidden`: presentation also collapses the sidebar, but it hides
-    // the navbar too (full-bleed). Telling the bands they are collapsed there
-    // would strand a presentation with no header and no Return — the band
-    // must keep drawing itself when nothing else can carry it.
     setSidebarCollapsedState({
-      collapsed: asideHidden && !presenting && !isLanding,
+      collapsed: collapsedByReader,
     })
-  }, [asideHidden, presenting, isLanding])
+  }, [collapsedByReader])
 
   // Hand the agent its navigation hands: open_phase / open_scenario tools
   // land on the same callbacks the sidebar rows use.
@@ -356,7 +370,7 @@ function DesktopEditorShell() {
     activeTab
       ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
       : 'Active tab: base blueprint view (no slice tab)',
-    `Sidebar: ${panel} panel${asideHidden ? ', collapsed' : ''}${overlay ? ', narrow viewport (it overlays the canvas when open)' : ''}${presenting ? ', presenting' : ''}`,
+    describeSidebar({ panel, collapsed: collapsedByReader, overlay, presenting }),
     `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
   ].join('\n')
   const shellContextRef = useRef(shellContext)
@@ -799,7 +813,7 @@ function DesktopEditorShell() {
             while presenting (full-bleed; Return is the way back). Its
             toggle is the same single control the rail carries expanded.
           */}
-          {asideHidden && !presenting && !isLanding ? (
+          {collapsedByReader ? (
             <div className="pointer-events-none absolute left-3 top-3 z-30">
               <FloatingSidebarNavbar onExpand={toggleSidebar} />
             </div>
