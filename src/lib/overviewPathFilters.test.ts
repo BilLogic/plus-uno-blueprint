@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { collectOverviewPathOptions } from '@/lib/overviewPathFilters'
 import type { PathListItem } from '@/lib/pathSelection'
 
-function path(id: string, name: string, path_type: PathListItem['path_type']) {
-  return { id, name, summary: null, note: null, path_type }
+function path(id: string, name: string, kind: PathListItem['kind']) {
+  return { id, name, summary: null, note: null, kind }
 }
 
 describe('collectOverviewPathOptions', () => {

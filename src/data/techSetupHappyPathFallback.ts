@@ -455,7 +455,7 @@ export const TECH_SETUP_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Tutor sets up technology and obtains clearances.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

@@ -453,7 +453,7 @@ export const ONBOARDING_MODULES_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Tutor completes onboarding modules.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

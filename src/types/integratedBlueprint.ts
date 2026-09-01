@@ -1,5 +1,5 @@
 import type { BlueprintStep } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 /*
  * What survives of the integrated-grid vocabulary: the path-tagged shapes the
@@ -19,7 +19,7 @@ export type IntegratedBlueprintCell = {
   lane_id: string
   step_id: string
   path_id: string
-  path_type: PathType
+  kind: PathKind
   content: string
   frame: string | null
   description: string | null
@@ -31,6 +31,6 @@ export type IntegratedBlueprintDependency = {
   source_cell_id: string
   target_cell_id: string
   path_id: string
-  path_type: PathType
+  kind: PathKind
   opacity: number
 }

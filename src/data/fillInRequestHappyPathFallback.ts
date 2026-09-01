@@ -282,7 +282,7 @@ export const FILL_IN_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Slot gets covered',
     summary: 'Tutor is requested to fill in for a session.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

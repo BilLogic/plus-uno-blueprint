@@ -326,7 +326,7 @@ export const HELP_REQUEST_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Tutors receive and resolve student help requests during the session.',
     note: getScenarioParallelNote(HELP_REQUEST_SCENARIO_ID),
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

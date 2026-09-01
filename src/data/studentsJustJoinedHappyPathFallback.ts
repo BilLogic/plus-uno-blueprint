@@ -248,7 +248,7 @@ export const STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Teachers and tutors welcome students as they join the session.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

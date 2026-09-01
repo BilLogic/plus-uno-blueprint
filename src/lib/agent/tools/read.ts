@@ -147,7 +147,7 @@ export async function listBlueprint(
     granularity: string[]
     phase?: string
     scenario?: string
-    pathType?: string
+    pathKind?: string
     laneRole?: string
     limit?: number
   },
@@ -166,7 +166,7 @@ export async function listBlueprint(
     match_count: limit,
     filter_phase: options.phase,
     filter_scenario: options.scenario,
-    filter_path_kind: options.pathType,
+    filter_path_kind: options.pathKind,
     filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
@@ -250,7 +250,7 @@ export async function searchBlueprint(
     granularity?: string[]
     phase?: string
     scenario?: string
-    pathType?: string
+    pathKind?: string
     laneRole?: string
     limit?: number
   },
@@ -261,7 +261,7 @@ export async function searchBlueprint(
     match_count: Math.min(options.limit ?? 15, 100),
     filter_phase: options.phase,
     filter_scenario: options.scenario,
-    filter_path_kind: options.pathType,
+    filter_path_kind: options.pathKind,
     filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
@@ -529,7 +529,7 @@ export async function getBlueprint(
     const blueprint = normalizeBlueprint(raw)
     const { path, steps, lanes, cells, dependencies } = blueprint
     const lines: string[] = [
-      `Path "${path.name}" (${path.id}, kind ${path.path_type})`,
+      `Path "${path.name}" (${path.id}, kind ${path.kind})`,
       `Steps: ${steps
         .map((step) => `${step.position}. "${step.name}" (${step.id})`)
         .join(' | ')}`,

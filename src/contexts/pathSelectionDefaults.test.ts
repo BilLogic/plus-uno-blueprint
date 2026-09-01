@@ -19,8 +19,8 @@ import type { PathListItem } from '@/lib/pathSelection'
  * would have hit.
  */
 
-const path = (id: string, name: string, path_type: string): PathListItem =>
-  ({ id, name, path_type }) as PathListItem
+const path = (id: string, name: string, kind: string): PathListItem =>
+  ({ id, name, kind }) as PathListItem
 
 const catalog = {
   s1: [path('p1', 'Happy Path', 'happy'), path('p2', 'Rejected', 'exception')],

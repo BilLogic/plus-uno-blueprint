@@ -20,7 +20,7 @@ import {
   describeVersionOutcome,
   validateDraftVersion,
   type DraftVersion,
-  type PathType,
+  type PathKind,
 } from '@/lib/versionValidation'
 import { errorMessage } from '@/lib/utils'
 
@@ -29,7 +29,7 @@ export type ExistingVersion = { pathId: string; name: string }
 const EMPTY: DraftVersion = {
   mode: 'blank',
   name: '',
-  pathType: 'variant',
+  pathKind: 'variant',
   sourcePathId: null,
   copyCells: true,
   copyDependencies: true,
@@ -84,14 +84,14 @@ export function CreateVersionDialog({
           ? await duplicatePath(client, {
               sourcePathId: draft.sourcePathId,
               name: draft.name,
-              pathType: draft.pathType,
+              pathKind: draft.pathKind,
               copyCells: draft.copyCells,
               copyDependencies: draft.copyDependencies,
             })
           : await createPath(client, {
               scenarioId,
               name: draft.name,
-              pathType: draft.pathType,
+              pathKind: draft.pathKind,
               laneSourcePathId: draft.sourcePathId,
             })
       invalidateStructure()
@@ -143,9 +143,9 @@ export function CreateVersionDialog({
                   key={type}
                   type="button"
                   size="sm"
-                  variant={draft.pathType === type ? 'default' : 'outline'}
+                  variant={draft.pathKind === type ? 'default' : 'outline'}
                   className="h-7 text-xs"
-                  onClick={() => set('pathType', type as PathType)}
+                  onClick={() => set('pathKind', type as PathKind)}
                 >
                   {PATH_TYPE_LABELS[type]}
                 </Button>

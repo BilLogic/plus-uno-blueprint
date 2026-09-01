@@ -39,14 +39,14 @@ import type {
   IntegratedBlueprintStep,
   IntegratedBlueprintDependency,
 } from '@/types/integratedBlueprint'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 type ArrowLayer = 'forward' | 'wrap'
 
 type IntegratedPathRef = {
   id: string
   name: string
-  path_type: PathType
+  kind: PathKind
 }
 
 type IntegratedDependencyArrowsProps = {
@@ -118,7 +118,7 @@ function resolveSegmentStyle(
   }
 
   const input: PathColorInput = {
-    path_type: path.path_type,
+    kind: path.kind,
     name: path.name,
   }
 

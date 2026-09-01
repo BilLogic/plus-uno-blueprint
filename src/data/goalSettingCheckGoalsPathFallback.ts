@@ -487,7 +487,7 @@ export const GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK: BlueprintData = {
     name: 'Check Goals',
     summary: 'Goals already set, but deadline not reached.',
     note: getScenarioParallelNote(GOAL_SETTING_SCENARIO_ID),
-    path_type: 'variant',
+    kind: 'variant',
     status: 'live',
   },
   lanes: [...LAYERS],

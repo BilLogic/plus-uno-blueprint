@@ -1,5 +1,5 @@
 import type { Json } from '@/types/database'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 import type { EntityStatus } from '@/lib/entityStatus'
 import type { TouchpointProminenceValue } from '@/lib/touchpointProminence'
 
@@ -11,7 +11,11 @@ export type BlueprintPath = {
    *  which is the distinction plan 006 draws between the two. */
   summary: string | null
   note: string | null
-  path_type: PathType  /** How far along this route is. `live` unless somebody said otherwise. */
+  /** Which route this is: `happy`, `variant` or `exception`. Named `kind` for
+   *  the column it comes from; the arrow decorator calls it `pathKind`, where
+   *  a dependency's own `kind` already holds the word. */
+  kind: PathKind
+  /** How far along this route is. `live` unless somebody said otherwise. */
   status: EntityStatus
 }
 

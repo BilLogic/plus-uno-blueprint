@@ -548,7 +548,7 @@ export const WARM_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Engaged or partially engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],
@@ -652,7 +652,7 @@ export const WARM_UP_ALTERNATE_PATH_FALLBACK: BlueprintData = {
     name: 'No screen share',
     summary: 'Not engaged student warm-up.',
     note: getScenarioParallelNote(WARM_UP_SCENARIO_ID),
-    path_type: 'variant',
+    kind: 'variant',
     status: 'live',
   },
   lanes: LAYERS.map((lane) => ({
@@ -700,7 +700,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
     name: string
     summary: string | null
     note: string | null
-    path_type: BlueprintData['path']['path_type']
+    kind: BlueprintData['path']['kind']
   }>
 > = {
   [WARM_UP_SCENARIO_ID]: [
@@ -709,14 +709,14 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: WARM_UP_HAPPY_PATH_FALLBACK.path.name,
       summary: WARM_UP_HAPPY_PATH_FALLBACK.path.summary,
       note: WARM_UP_HAPPY_PATH_FALLBACK.path.note,
-      path_type: WARM_UP_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: WARM_UP_HAPPY_PATH_FALLBACK.path.kind,
     },
     {
       id: WARM_UP_ALTERNATE_PATH_FALLBACK.path.id,
       name: WARM_UP_ALTERNATE_PATH_FALLBACK.path.name,
       summary: WARM_UP_ALTERNATE_PATH_FALLBACK.path.summary,
       note: WARM_UP_ALTERNATE_PATH_FALLBACK.path.note,
-      path_type: WARM_UP_ALTERNATE_PATH_FALLBACK.path.path_type,
+      kind: WARM_UP_ALTERNATE_PATH_FALLBACK.path.kind,
     },
   ],
   [DISCOVERY_SCENARIO_ID]: [
@@ -725,7 +725,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: APPLICATION_HAPPY_PATH_FALLBACK.path.name,
       summary: APPLICATION_HAPPY_PATH_FALLBACK.path.summary,
       note: APPLICATION_HAPPY_PATH_FALLBACK.path.note,
-      path_type: APPLICATION_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: APPLICATION_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [INTERVIEW_SCENARIO_ID]: [
@@ -734,7 +734,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.name,
       summary: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.summary,
       note: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.note,
-      path_type: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [TECH_SETUP_SCENARIO_ID]: [
@@ -743,7 +743,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: TECH_SETUP_HAPPY_PATH_FALLBACK.path.name,
       summary: TECH_SETUP_HAPPY_PATH_FALLBACK.path.summary,
       note: TECH_SETUP_HAPPY_PATH_FALLBACK.path.note,
-      path_type: TECH_SETUP_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: TECH_SETUP_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [ONBOARDING_MODULES_SCENARIO_ID]: [
@@ -752,7 +752,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.name,
       summary: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.summary,
       note: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.note,
-      path_type: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: ONBOARDING_MODULES_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [LESSON_MODULES_SCENARIO_ID]: [
@@ -761,7 +761,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.name,
       summary: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.summary,
       note: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.note,
-      path_type: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: LESSON_MODULES_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [SESSION_SIGN_UP_SCENARIO_ID]: [
@@ -770,7 +770,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.name,
       summary: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.summary,
       note: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.note,
-      path_type: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: SESSION_SIGN_UP_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [STANDARD_SCHEDULING_SCENARIO_ID]: [
@@ -779,7 +779,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.name,
       summary: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.summary,
       note: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.note,
-      path_type: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [FILL_IN_REQUEST_SCENARIO_ID]: [
@@ -788,7 +788,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.name,
       summary: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.summary,
       note: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.note,
-      path_type: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: FILL_IN_REQUEST_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [CALL_OFF_REQUEST_SCENARIO_ID]: [
@@ -797,7 +797,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.name,
       summary: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.summary,
       note: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.note,
-      path_type: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: CALL_OFF_REQUEST_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [BEFORE_STUDENTS_JOIN_SCENARIO_ID]: [
@@ -806,7 +806,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.name,
       summary: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.summary,
       note: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.note,
-      path_type: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [STUDENTS_JUST_JOINED_SCENARIO_ID]: [
@@ -815,7 +815,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.name,
       summary: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.summary,
       note: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.note,
-      path_type: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: STUDENTS_JUST_JOINED_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [GOAL_SETTING_SCENARIO_ID]: [
@@ -824,28 +824,28 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.name,
       summary: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.note,
-      path_type: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: GOAL_SETTING_HAPPY_PATH_FALLBACK.path.kind,
     },
     {
       id: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.name,
       summary: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.note,
-      path_type: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.path_type,
+      kind: GOAL_SETTING_DETAILED_PATH_FALLBACK.path.kind,
     },
     {
       id: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.name,
       summary: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.note,
-      path_type: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.path_type,
+      kind: GOAL_SETTING_CHECK_GOALS_PATH_FALLBACK.path.kind,
     },
     {
       id: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.id,
       name: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.name,
       summary: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.note,
-      path_type: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.path_type,
+      kind: GOAL_SETTING_UPDATE_GOALS_PATH_FALLBACK.path.kind,
     },
     {
       id: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.id,
@@ -853,7 +853,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       summary:
         GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.note,
-      path_type: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.path_type,
+      kind: GOAL_SETTING_SET_GOALS_EDGE_CASE_PATH_FALLBACK.path.kind,
     },
     {
       id: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.id,
@@ -861,8 +861,8 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       summary:
         GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.summary,
       note: GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.note,
-      path_type:
-        GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.path_type,
+      kind:
+        GOAL_SETTING_UPDATED_GOALS_EDGE_CASE_PATH_FALLBACK.path.kind,
     },
   ],
   [HELP_REQUEST_SCENARIO_ID]: [
@@ -871,7 +871,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.name,
       summary: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.summary,
       note: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.note,
-      path_type: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: HELP_REQUEST_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [WRAP_UP_SCENARIO_ID]: [
@@ -880,7 +880,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: WRAP_UP_HAPPY_PATH_FALLBACK.path.name,
       summary: WRAP_UP_HAPPY_PATH_FALLBACK.path.summary,
       note: WRAP_UP_HAPPY_PATH_FALLBACK.path.note,
-      path_type: WRAP_UP_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: WRAP_UP_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [REPORTING_AN_ISSUE_SCENARIO_ID]: [
@@ -889,7 +889,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.name,
       summary: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.summary,
       note: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.note,
-      path_type: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: REPORTING_AN_ISSUE_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
   [REPORTING_HOURS_SCENARIO_ID]: [
@@ -898,7 +898,7 @@ const FALLBACK_PATHS_BY_SCENARIO: Record<
       name: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.name,
       summary: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.summary,
       note: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.note,
-      path_type: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.path_type,
+      kind: REPORTING_HOURS_HAPPY_PATH_FALLBACK.path.kind,
     },
   ],
 }
@@ -918,7 +918,7 @@ const EMPTY_FALLBACK_PATHS: Array<{
   name: string
   summary: string | null
   note: string | null
-  path_type: BlueprintData['path']['path_type']
+  kind: BlueprintData['path']['kind']
 }> = []
 
 export function hasBlueprintFallback(scenarioId: string | undefined): boolean {
@@ -953,7 +953,7 @@ export function mergePathsWithFallback<
     name: string
     summary: string | null
     note: string | null
-    path_type: BlueprintData['path']['path_type']
+    kind: BlueprintData['path']['kind']
   },
 >(scenarioId: string | undefined, paths: readonly T[]): T[] {
   const fallbackPaths = getFallbackPathsForScenario(scenarioId)
@@ -975,7 +975,7 @@ export function mergePathsWithFallback<
       })
     } else {
       const hasPathOfType = [...merged.values()].some(
-        (path) => path.path_type === fallbackPath.path_type,
+        (path) => path.kind === fallbackPath.kind,
       )
       if (!hasPathOfType) {
         merged.set(fallbackPath.id, fallbackPath as T)
@@ -1001,7 +1001,7 @@ export function getFallbackPathsForScenario(
   name: string
   summary: string | null
   note: string | null
-  path_type: BlueprintData['path']['path_type']
+  kind: BlueprintData['path']['kind']
 }> {
   if (!scenarioId) return EMPTY_FALLBACK_PATHS
   return filterPathsForScenarioUi(
@@ -1017,7 +1017,7 @@ function withPathIdentity(
     name: string
     summary?: string | null
     note?: string | null
-    path_type: BlueprintData['path']['path_type']
+    kind: BlueprintData['path']['kind']
   },
 ): BlueprintData {
   return {
@@ -1028,7 +1028,7 @@ function withPathIdentity(
       name: path.name,
       summary: path.summary ?? data.path.summary,
       note: path.note ?? data.path.note,
-      path_type: path.path_type,
+      kind: path.kind,
     },
   }
 }
@@ -1042,14 +1042,14 @@ export function hasRegisteredPathFallback(
 export function getRawBlueprintFallback(
   scenarioId: string | undefined,
   pathId?: string | null,
-  pathType?: BlueprintData['path']['path_type'],
+  pathKind?: BlueprintData['path']['kind'],
 ): BlueprintData | null {
   let data: BlueprintData | null = null
   if (pathId && FALLBACK_BY_PATH[pathId]) {
     data = FALLBACK_BY_PATH[pathId]
-  } else if (scenarioId && pathType) {
+  } else if (scenarioId && pathKind) {
     const match = (FALLBACK_PATHS_BY_SCENARIO[scenarioId] ?? []).find(
-      (path) => path.path_type === pathType,
+      (path) => path.kind === pathKind,
     )
     if (match) {
       data = FALLBACK_BY_PATH[match.id] ?? null
@@ -1063,8 +1063,8 @@ export function getRawBlueprintFallback(
   if (!data) return null
 
   const identity =
-    pathId && pathType
-      ? { id: pathId, name: data.path.name, path_type: pathType }
+    pathId && pathKind
+      ? { id: pathId, name: data.path.name, kind: pathKind }
       : null
 
   return identity ? withPathIdentity(data, identity) : data
@@ -1073,9 +1073,9 @@ export function getRawBlueprintFallback(
 export function getBlueprintFallback(
   scenarioId: string | undefined,
   pathId?: string | null,
-  pathType?: BlueprintData['path']['path_type'],
+  pathKind?: BlueprintData['path']['kind'],
 ): BlueprintData | null {
-  const data = getRawBlueprintFallback(scenarioId, pathId, pathType)
+  const data = getRawBlueprintFallback(scenarioId, pathId, pathKind)
   if (!data) return null
 
   const resolvedPathId = pathId ?? data.path.id

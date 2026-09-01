@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { PATH_TYPE_COLORS } from '@/lib/pathTypeTheme'
 import { getBlueprintFillStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 type ScenarioTitleBadgeProps = {
   name: string
@@ -14,7 +14,7 @@ type ScenarioTitleBadgeProps = {
   style?: CSSProperties
   side?: 'top' | 'bottom' | 'left' | 'right'
   /** When set, badge matches path-type outline color (e.g. happy path on overview). */
-  pathType?: PathType
+  pathKind?: PathKind
   /** Panel chrome badge — darker gray from label rail, not primary/black. */
   tone?: 'default' | 'panel' | 'phase'
   /**
@@ -46,13 +46,13 @@ export function ScenarioTitleBadge({
   className,
   style,
   side = 'top',
-  pathType,
+  pathKind,
   tone = 'default',
   note,
 }: ScenarioTitleBadgeProps) {
-  const pathAccent = pathType ? PATH_TYPE_COLORS[pathType] : undefined
-  const panelTone = tone === 'panel' && !pathType
-  const phaseTone = tone === 'phase' && !pathType
+  const pathAccent = pathKind ? PATH_TYPE_COLORS[pathKind] : undefined
+  const panelTone = tone === 'panel' && !pathKind
+  const phaseTone = tone === 'phase' && !pathKind
 
   return (
     <EntityDefinitionPopover
@@ -75,7 +75,7 @@ export function ScenarioTitleBadge({
         // `tabIndex`.
         className={cn(
           'h-auto max-w-full cursor-help gap-1 overflow-visible border-transparent',
-          pathType && 'font-semibold',
+          pathKind && 'font-semibold',
           (panelTone || phaseTone) && 'font-semibold',
           className,
         )}

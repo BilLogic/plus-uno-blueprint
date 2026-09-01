@@ -101,7 +101,7 @@ export function validateDraftBlueprint(draft: DraftBlueprint): string[] {
   if (!draft.pathName.trim()) {
     problems.push(
       // Not "Happy Path": a type is not a name, and the board stopped using
-      // one as a name in Aug 2026. `path_type` already carries the archetype.
+      // one as a name in Aug 2026. `kind` already carries the archetype.
       'The first version needs a name — say what the route is, e.g. "Signs up without conflicts".',
     )
   }

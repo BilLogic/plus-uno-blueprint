@@ -1,19 +1,22 @@
 /**
  * Supabase nested selects for the Service Blueprint schema.
  *
- * `path_type:kind` is a PostgREST column ALIAS, not a column. The column is
- * `paths.kind` as of 20260830190000; the app's own path shapes still call the
- * field `path_type`, and the alias is where the two meet. It is deliberate and
- * temporary: the app-side rename collides on `ColoredBlueprintDependency`,
- * which is a cell dependency (already carrying its own `kind`) decorated with
- * the path's, so finishing it means choosing a third word for that decorator.
- * That is interface work and belongs with the rest of #172's, not with the
- * migration. Until then the alias keeps the schema's word in one place instead
- * of scattering a mapping through every consumer.
+ * These strings carry no aliases. They used to: `kind:kind` renamed
+ * `paths.kind` back to the word `20260830190000` retired, for every consumer
+ * at once. The note here called that "deliberate and temporary" and said the
+ * app-side rename belonged with #172's interface work, because the collision
+ * on `ColoredBlueprintDependency` — a cell dependency, already carrying its
+ * own `kind`, decorated with the path's — meant choosing a third word.
+ *
+ * #172 closed on 2026-08-31 without it, which is how a temporary alias becomes
+ * a permanent one. The third word is `pathKind`, which is what the template
+ * chose for the same collision. A comment is what failed to stop this, so
+ * `scripts/tests/an-alias-is-a-rename-that-skips-the-migration.test.mjs` is
+ * the check that replaces this paragraph's promise.
  */
 
 export const PATH_LIST_SELECT =
-  'id, name, summary, note, path_type:kind, scenario_id, created_at, updated_at'
+  'id, name, summary, note, kind, scenario_id, created_at, updated_at'
 
 /** Blueprint grid: path with lanes, path_steps, and cells */
 /*
@@ -38,7 +41,7 @@ export const PATH_BLUEPRINT_SELECT = `
   name,
   summary,
   note,
-  path_type:kind,
+  kind,
   status,
   scenario_id,
   lanes (

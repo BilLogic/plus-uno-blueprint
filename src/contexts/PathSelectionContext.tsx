@@ -25,7 +25,7 @@ type PathSelectionState = {
 type PathSelectionContextValue = {
   /** Registered paths per scenario id (read-only; merged, pruned by scope). */
   catalog: PathCatalog
-  /** Selected path identities (`path_type:name`) — shared across overview/phase/scenario. */
+  /** Selected path identities (`kind:name`) — shared across overview/phase/scenario. */
   activePathKeys: string[]
   /**
    * The happy-path default derived from the catalog — the same derivation
@@ -70,7 +70,7 @@ function pathIdsKey(paths: PathListItem[]): string {
  *
  * This used to return the FIRST scenario's preferred key and stop, which
  * made one scenario's path name the global default. Path identity is
- * `path_type:name`, and nothing makes two scenarios name their happy paths
+ * `kind:name`, and nothing makes two scenarios name their happy paths
  * the same — so every scenario that named its own differently matched
  * nothing and rendered "No selected paths in this phase" on the overview,
  * with no error anywhere. Uno's content happens to reuse one name across

@@ -40,7 +40,7 @@ import type {
   BlueprintCellDependency,
   BlueprintData,
 } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 /** Application phase → Discovery scenario (UI fallback until DB seed). */
 export const APPLICATION_PHASE_ID = 'a0000000-0000-4000-8000-000000000101'
@@ -96,7 +96,7 @@ const DISCOVERY_SAD_FINAL_STEP = {
 
 function getDiscoveryPathSteps(config: ApplicationDiscoveryPathConfig) {
   const finalStep =
-    config.pathType === 'happy'
+    config.pathKind === 'happy'
       ? DISCOVERY_HAPPY_FINAL_STEP
       : DISCOVERY_SAD_FINAL_STEP
   return [...DISCOVERY_SHARED_STEPS, finalStep]
@@ -106,7 +106,7 @@ type ApplicationDiscoveryPathConfig = {
   pathId: string
   pathName: string
   pathDescription: string
-  pathType: PathType
+  pathKind: PathKind
   cellSlotPrefix: '07' | '72'
   dependencySlotPrefix: '078' | '728'
   finalRegularTutorContent: string
@@ -125,7 +125,7 @@ const HAPPY_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathId: APPLICATION_HAPPY_PATH_ID,
   pathName: 'Standard',
   pathDescription: 'Potential tutors discover and want to join PLUS.',
-  pathType: 'happy',
+  pathKind: 'happy',
   cellSlotPrefix: '07',
   dependencySlotPrefix: '078',
   finalRegularTutorContent: 'Interested in joining PLUS.',
@@ -145,7 +145,7 @@ const SAD_PATH_CONFIG: ApplicationDiscoveryPathConfig = {
   pathName: 'Sad Path',
   pathDescription:
     'Potential tutors discover and are not interested in joining PLUS.',
-  pathType: 'exception',
+  pathKind: 'exception',
   cellSlotPrefix: '72',
   dependencySlotPrefix: '728',
   finalRegularTutorContent: 'Not interested in joining PLUS.',
@@ -536,7 +536,7 @@ function buildApplicationDiscoveryFallback(
       name: config.pathName,
       summary: config.pathDescription,
       note: null,
-      path_type: config.pathType,
+      kind: config.pathKind,
       status: 'live',
     },
     lanes: [...lanes],

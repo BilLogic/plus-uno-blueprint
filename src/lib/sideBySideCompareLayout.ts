@@ -62,7 +62,7 @@ export function getComparePathArrowData(
       lane_id: cell.lane_id,
       step_id: cell.step_id,
       path_id: path.id,
-      path_type: path.path_type,
+      kind: path.kind,
       content: cell.content,
       frame: cell.frame,
       description: cell.summary,
@@ -73,7 +73,7 @@ export function getComparePathArrowData(
         source_cell_id: dependency.source_cell_id,
         target_cell_id: dependency.target_cell_id,
         path_id: path.id,
-        path_type: path.path_type,
+        kind: path.kind,
         opacity: 1,
       })),
   }

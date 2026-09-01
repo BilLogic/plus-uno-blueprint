@@ -152,7 +152,7 @@ export async function dispatchTool(
         granularity,
         phase: s(args, 'phase'),
         scenario: s(args, 'scenario'),
-        pathType: s(args, 'path_type'),
+        pathKind: s(args, 'kind'),
         laneRole: s(args, 'lane_role'),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
       })
@@ -168,7 +168,7 @@ export async function dispatchTool(
         granularity: granularity?.length ? granularity : undefined,
         phase: s(args, 'phase'),
         scenario: s(args, 'scenario'),
-        pathType: s(args, 'path_type'),
+        pathKind: s(args, 'kind'),
         laneRole: s(args, 'lane_role'),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
       })
@@ -595,7 +595,7 @@ export async function dispatchTool(
         const id = await createPath(client, {
           scenarioId: need(args, 'scenario_id'),
           name: need(args, 'name'),
-          pathType: s(args, 'path_type'),
+          pathKind: s(args, 'kind'),
           laneSourcePathId: s(args, 'lane_source_path_id') ?? null,
         })
         return `Created path (${id}).`
@@ -604,7 +604,7 @@ export async function dispatchTool(
         const id = await duplicatePath(client, {
           sourcePathId: need(args, 'source_path_id'),
           name: need(args, 'name'),
-          pathType: s(args, 'path_type'),
+          pathKind: s(args, 'kind'),
           copyCells: args.copy_cells !== false,
         })
         return `Duplicated path (${id}).`

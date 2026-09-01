@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 import {
   asEntityStatus,
   DEFAULT_ENTITY_STATUS,
@@ -10,7 +10,7 @@ import {
 export type ScenarioPathSpec = {
   id: string
   name: string
-  pathType: PathType
+  pathKind: PathKind
   /** When this route applies — the condition that puts someone on it. */
   summary: string
   /** The author's aside: open questions, provenance, working state. */
@@ -50,7 +50,7 @@ export function useScenarioSpec(
       const { data: scenario, error } = await client
         .from('scenarios')
         .select(
-          'id, name, summary, phases!inner(name), paths(id, name, path_type:kind, status, summary, note, created_at)',
+          'id, name, summary, phases!inner(name), paths(id, name, kind, status, summary, note, created_at)',
         )
         .eq('id', scenarioId)
         .abortSignal(signal)
@@ -61,7 +61,7 @@ export function useScenarioSpec(
       const paths = ((scenario.paths ?? []) as Array<{
         id: string
         name: string
-        path_type: PathType
+        kind: PathKind
         status: EntityStatus | null
         summary: string | null
         note: string | null
@@ -73,7 +73,7 @@ export function useScenarioSpec(
         .map((path) => ({
           id: path.id,
           name: path.name,
-          pathType: path.path_type,
+          pathKind: path.kind,
           summary: path.summary ?? '',
           note: path.note ?? '',
           status: asEntityStatus(path.status) ?? DEFAULT_ENTITY_STATUS,

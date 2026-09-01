@@ -49,13 +49,13 @@ function useLaneSources() {
       const { data, error } = await client
         .from('paths')
         .select(
-          'id,name,lanes(id),service_scenario:scenarios(name,phase:phases(name))',
+          'id,name,lanes(id),scenarios(name,phase:phases(name))',
         )
         .abortSignal(signal)
       if (error) throw new Error(error.message)
       return (data ?? [])
         .map((row) => {
-          const scenario = row.service_scenario as {
+          const scenario = row.scenarios as {
             name?: string
             phase?: { name?: string } | null
           } | null

@@ -1,10 +1,10 @@
 import { PATH_TYPE_COLORS, PATH_TYPE_LABELS } from '@/lib/pathTypeTheme'
 import { getPathColor } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 type PathTypeColorKeyProps = {
-  type: PathType
+  type: PathKind
   /** When set, uses the stable path identity color (type + name). */
   name?: string
   className?: string
@@ -22,7 +22,7 @@ export function PathTypeColorKey({
   size = 'sm',
 }: PathTypeColorKeyProps) {
   const backgroundColor = name
-    ? getPathColor({ path_type: type, name })
+    ? getPathColor({ kind: type, name })
     : PATH_TYPE_COLORS[type]
 
   return (

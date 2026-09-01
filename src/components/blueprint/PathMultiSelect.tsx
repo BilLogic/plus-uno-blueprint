@@ -1,7 +1,7 @@
 import { PathTypeColorKey } from '@/components/blueprint/PathTypeColorKey'
 import { filterToolbarButtonClass } from '@/lib/filterToolbarButton'
 import { cn } from '@/lib/utils'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 import type { EntityStatus } from '@/lib/entityStatus'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
 
@@ -9,13 +9,13 @@ export type PathOption = {
   /**
    * The *filter* key, not a row id. Overview filtering folds paths that share
    * a name and type across scenarios into one option, so this is
-   * `${path_type}:${name}` — never a uuid. Anything that writes to a path row
+   * `${kind}:${name}` — never a uuid. Anything that writes to a path row
    * wants `pathIds` instead.
    */
   id: string
   name: string
   summary: string | null
-  path_type: PathType
+  kind: PathKind
   /** How far along this route is. Omitted on options built before it existed. */
   status?: EntityStatus | null
   /**
@@ -28,12 +28,12 @@ export type PathOption = {
 
 const MAX_PATHS_PER_COLUMN = 2
 
-const PRIMARY_COLUMN_PATH_TYPES = new Set<PathType>([
+const PRIMARY_COLUMN_PATH_TYPES = new Set<PathKind>([
   'happy',
   'variant',
   'variant',
 ])
-const SECONDARY_COLUMN_PATH_TYPES = new Set<PathType>(['exception', 'exception'])
+const SECONDARY_COLUMN_PATH_TYPES = new Set<PathKind>(['exception', 'exception'])
 
 export function formatPathPickerLabel(name: string): string {
   return name.replace(/^Warm-Up\s+/i, '')
@@ -49,14 +49,14 @@ function chunkPaths<T>(items: T[], size: number): T[][] {
 
 /** Happy/alternate paths stack in the left column(s); sad/exception paths go to the right. */
 export function groupPathsIntoColumns(paths: PathOption[]): PathOption[][] {
-  const primary = paths.filter((path) => PRIMARY_COLUMN_PATH_TYPES.has(path.path_type))
+  const primary = paths.filter((path) => PRIMARY_COLUMN_PATH_TYPES.has(path.kind))
   const secondary = paths.filter((path) =>
-    SECONDARY_COLUMN_PATH_TYPES.has(path.path_type),
+    SECONDARY_COLUMN_PATH_TYPES.has(path.kind),
   )
   const other = paths.filter(
     (path) =>
-      !PRIMARY_COLUMN_PATH_TYPES.has(path.path_type) &&
-      !SECONDARY_COLUMN_PATH_TYPES.has(path.path_type),
+      !PRIMARY_COLUMN_PATH_TYPES.has(path.kind) &&
+      !SECONDARY_COLUMN_PATH_TYPES.has(path.kind),
   )
 
   return [
@@ -100,7 +100,7 @@ function PathNotionToggle({
       aria-pressed={checked}
       aria-label={pathLabel}
     >
-      <PathTypeColorKey type={path.path_type} name={path.name} />
+      <PathTypeColorKey type={path.kind} name={path.name} />
       <span>{pathLabel}</span>
       <StatusBadge status={path.status} />
     </button>
@@ -127,7 +127,7 @@ export function PathToolbarButton({
       aria-pressed={checked}
       aria-label={pathLabel}
     >
-      <PathTypeColorKey type={path.path_type} name={path.name} />
+      <PathTypeColorKey type={path.kind} name={path.name} />
       <span>{pathLabel}</span>
       <StatusBadge status={path.status} />
     </button>
@@ -180,7 +180,7 @@ function PathCheckbox({
         onClick={stopEvent}
         aria-label={pathLabel}
       />
-      <PathTypeColorKey type={path.path_type} name={path.name} />
+      <PathTypeColorKey type={path.kind} name={path.name} />
       <span className="min-w-0 cursor-default text-left">{pathLabel}</span>
       <StatusBadge status={path.status} />
     </label>

@@ -24,10 +24,10 @@ describe('path identity', () => {
     // takes the type colour, so within a scenario the dash is the ONLY channel
     // separating one exception from another.
     const paths = [
-      { path_type: 'happy', name: 'Signs up without conflicts' },
-      { path_type: 'exception', name: 'Missed hours' },
-      { path_type: 'exception', name: 'Escalation' },
-      { path_type: 'variant', name: 'No screen share' },
+      { kind: 'happy', name: 'Signs up without conflicts' },
+      { kind: 'exception', name: 'Missed hours' },
+      { kind: 'exception', name: 'Escalation' },
+      { kind: 'variant', name: 'No screen share' },
     ] as const
     const dashes = paths.map(getPathDashArray)
     expect(dashes[0]).toBeUndefined() // happy stays solid
@@ -40,8 +40,8 @@ describe('path identity', () => {
     // character-sum hash. They are the reason it was replaced, and they are
     // pinned here because a synthetic pair would not have caught it: the names
     // are neither anagrams nor near-misses, they simply summed alike.
-    const a = { path_type: 'variant', name: 'Lead works from a dashboard' } as const
-    const b = { path_type: 'variant', name: 'Redesigned reflection' } as const
+    const a = { kind: 'variant', name: 'Lead works from a dashboard' } as const
+    const b = { kind: 'variant', name: 'Redesigned reflection' } as const
     const identical =
       getPathColor(a) === getPathColor(b) &&
       getPathDashArray(a) === getPathDashArray(b)
@@ -53,25 +53,25 @@ describe('path identity', () => {
     // what dropped the five Goal Setting paths out of their pinned slots when
     // they moved off `custom` on 2026-08-21 — a re-type silently re-coloured
     // them, and the dash moved with it.
-    const here = { path_type: 'variant', name: 'Set Goals' } as const
-    const there = { path_type: 'variant', name: 'Set Goals' } as const
+    const here = { kind: 'variant', name: 'Set Goals' } as const
+    const there = { kind: 'variant', name: 'Set Goals' } as const
     expect(getPathColor(here)).toBe(getPathColor(there))
     expect(getPathDashArray(here)).toBe(getPathDashArray(there))
   })
 
   it('fixes green on happy and red on exception, whatever they are called', () => {
     // The two a reader should never have to decode.
-    expect(getPathColor({ path_type: 'happy', name: 'Anything at all' })).toBe(
-      getPathColor({ path_type: 'happy', name: 'Something else' }),
+    expect(getPathColor({ kind: 'happy', name: 'Anything at all' })).toBe(
+      getPathColor({ kind: 'happy', name: 'Something else' }),
     )
     expect(
-      getPathColor({ path_type: 'exception', name: 'Missed hours' }),
-    ).toBe(getPathColor({ path_type: 'exception', name: 'Escalation' }))
+      getPathColor({ kind: 'exception', name: 'Missed hours' }),
+    ).toBe(getPathColor({ kind: 'exception', name: 'Escalation' }))
   })
 
   it('separates two unregistered named paths', () => {
-    const a = { path_type: 'variant', name: 'Alpha' } as const
-    const b = { path_type: 'variant', name: 'Beta' } as const
+    const a = { kind: 'variant', name: 'Alpha' } as const
+    const b = { kind: 'variant', name: 'Beta' } as const
     // They may share a hue slot, but not both a hue and a dash.
     const same =
       getPathColor(a) === getPathColor(b) &&
@@ -85,8 +85,8 @@ describe('path identity', () => {
     // they are not hypothetical here: 'Check Goals' and 'Goals Check' are both
     // plausible names for sibling routes in one scenario, and under the old
     // sum they took the same colour AND the same dash.
-    const a = { path_type: 'variant', name: 'Check Goals' } as const
-    const b = { path_type: 'variant', name: 'Goals Check' } as const
+    const a = { kind: 'variant', name: 'Check Goals' } as const
+    const b = { kind: 'variant', name: 'Goals Check' } as const
     const same =
       getPathColor(a) === getPathColor(b) &&
       getPathDashArray(a) === getPathDashArray(b)
@@ -94,7 +94,7 @@ describe('path identity', () => {
   })
 
   it('reads the same dash from a colour key as from the path', () => {
-    const path = { path_type: 'exception', name: 'Sad Path' } as const
+    const path = { kind: 'exception', name: 'Sad Path' } as const
     expect(getPathDashArrayFromKey('exception:Sad Path')).toBe(
       getPathDashArray(path),
     )
@@ -104,11 +104,11 @@ describe('path identity', () => {
 
   it('dashes the section frame for every type except happy', () => {
     expect(
-      getPathSectionBorderStyle({ path_type: 'happy', name: 'Happy Path' })
+      getPathSectionBorderStyle({ kind: 'happy', name: 'Happy Path' })
         .borderStyle,
     ).toBe('solid')
     expect(
-      getPathSectionBorderStyle({ path_type: 'exception', name: 'Boom' })
+      getPathSectionBorderStyle({ kind: 'exception', name: 'Boom' })
         .borderStyle,
     ).toBe('dashed')
   })

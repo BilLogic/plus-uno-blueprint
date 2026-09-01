@@ -233,7 +233,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         },
         phase: str('Restrict to a phase by name, e.g. "In-session"'),
         scenario: str('Restrict to a scenario by name, e.g. "Warm-Up"'),
-        path_type: str('happy | variant | exception'),
+        kind: str('happy | variant | exception'),
         lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
@@ -264,7 +264,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         },
         phase: str('Restrict to a phase by name'),
         scenario: str('Restrict to a scenario by name'),
-        path_type: str('happy | variant | exception'),
+        kind: str('happy | variant | exception'),
         lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
@@ -605,7 +605,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       properties: {
         scenario_id: str('Scenario id'),
         name: str('Path name'),
-        path_type: {
+        kind: {
           type: 'string',
           enum: ['happy', 'variant', 'exception'],
           description: 'Default variant',
@@ -624,7 +624,7 @@ export const TOOL_SPECS: ToolSpec[] = [
       properties: {
         source_path_id: str('Path to copy'),
         name: str('New path name'),
-        path_type: { type: 'string', enum: ['happy', 'variant', 'exception'], description: "Defaults to 'variant'" },
+        kind: { type: 'string', enum: ['happy', 'variant', 'exception'], description: "Defaults to 'variant'" },
         copy_cells: { type: 'boolean', description: 'Default true' },
       },
       required: ['source_path_id', 'name'],

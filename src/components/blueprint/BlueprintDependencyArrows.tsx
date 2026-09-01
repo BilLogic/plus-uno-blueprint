@@ -28,7 +28,7 @@ import {
 import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
 import { cn } from '@/lib/utils'
 import type { BlueprintCellDependency } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 import {
   BlueprintArrowMarkerDefs,
   blueprintArrowPathProps,
@@ -37,7 +37,11 @@ import {
 type ArrowLayer = 'forward' | 'wrap'
 
 export type ColoredBlueprintDependency = BlueprintCellDependency & {
-  path_type: PathType
+  /** The PATH's kind. `kind` is taken: a cell dependency carries its own
+   *  (`leads_to` / `enables`), and intersecting the two collapses to `never`.
+   *  This is the third word `workflowQueries.ts` deferred, and the one the
+   *  template chose for the same collision. */
+  pathKind: PathKind
   opacity?: number
 }
 
@@ -47,9 +51,9 @@ type BlueprintDependencyArrowsProps = {
   scrollContainerRef: RefObject<HTMLElement | null>
   /** forward = in column gaps behind cells; wrap = loop overlay on top */
   lane: ArrowLayer
-  /** Used when dependencies do not include path_type (single-path grids). */
-  pathType?: PathType
-  /** When set with pathType, arrows use the stable path identity color. */
+  /** Used when dependencies do not include pathKind (single-path grids). */
+  pathKind?: PathKind
+  /** When set with pathKind, arrows use the stable path identity color. */
   pathName?: string
 }
 
@@ -76,7 +80,7 @@ function serializeSegments(segments: readonly ArrowSegment[]): string {
 function isColoredDependency(
   dependency: BlueprintCellDependency,
 ): dependency is ColoredBlueprintDependency {
-  return 'path_type' in dependency
+  return 'pathKind' in dependency
 }
 
 /**
@@ -89,7 +93,7 @@ export function BlueprintDependencyArrows({
   contentRef,
   scrollContainerRef,
   lane,
-  pathType = 'happy',
+  pathKind = 'happy',
   pathName,
 }: BlueprintDependencyArrowsProps) {
   const [segments, setSegments] = useState<ArrowSegment[]>([])
@@ -97,11 +101,11 @@ export function BlueprintDependencyArrows({
   const markerId = useId().replace(/:/g, '')
 
   const defaultColorKey = pathName
-    ? getPathColorKey({ path_type: pathType, name: pathName })
-    : pathType
+    ? getPathColorKey({ kind: pathKind, name: pathName })
+    : pathKind
   const defaultArrowColor = pathName
-    ? getPathArrowColor({ path_type: pathType, name: pathName })
-    : getPathTypeArrowColor(pathType)
+    ? getPathArrowColor({ kind: pathKind, name: pathName })
+    : getPathTypeArrowColor(pathKind)
 
   const updateArrows = useCallback(() => {
     const content = contentRef.current
