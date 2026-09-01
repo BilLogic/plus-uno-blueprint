@@ -67,6 +67,25 @@ export const BLUEPRINT_MENUBAR_TITLE_CLASS =
 export const BLUEPRINT_MENUBAR_DESCRIPTION_CLASS =
   'min-w-0 max-w-full truncate px-1.5 text-xs text-muted-foreground'
 
+/**
+ * The identity block's pinned height: the title line, then the summary line.
+ *
+ * Reserved, not sized to content, and that is the whole of #237. The summary
+ * is conditional at every call site — `service.summary ? <p> : null`, a
+ * scenario with no description — and on the service bar it arrives a
+ * round-trip after the bar does. A block that sizes to content therefore
+ * grows by a line under the reader's cursor when the query lands, and the
+ * canvas below it jumps. Two lines are held whether or not the second one has
+ * anything in it.
+ *
+ * A LENGTH and not a Tailwind class, so the bars agree on one value a test
+ * can read back off the box: the claim is that five different states measure
+ * the same, and a class name cannot be measured. 24px title row (a 20px
+ * `text-sm` line box inside `EntityTitleAffordance`'s `py-0.5`) + 2px for the
+ * block's `gap-0.5` + a 16px `text-xs` summary line.
+ */
+export const BLUEPRINT_MENUBAR_IDENTITY_HEIGHT = '2.625rem'
+
 /** The canvas title's own type. `EntityTitleAffordance` is its one consumer. */
 export const BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS =
   'min-w-0 truncate text-sm font-semibold tracking-tight text-foreground'
