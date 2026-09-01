@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { ScenarioTitleDefinition } from '@/components/blueprint/ScenarioTitleDefinition'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
 import {
   CompareControlsCluster,
@@ -86,9 +85,8 @@ function SlideHeaderContent({
             >
               <h1
                 className={cn(
-                  'w-fit cursor-help rounded-sm text-base font-semibold tracking-tight text-foreground outline-none',
+                  'w-fit rounded-sm text-base font-semibold tracking-tight text-foreground outline-none',
                   'focus-visible:ring-2 focus-visible:ring-ring/50',
-                  DEFINED_LABEL_CUE,
                 )}
               >
                 {label}

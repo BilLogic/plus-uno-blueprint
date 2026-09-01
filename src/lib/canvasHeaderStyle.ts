@@ -70,12 +70,17 @@ export const CANVAS_HEADER_HINT = [
 /**
  * The header's name: the word, and what that kind of thing IS.
  *
- * Focusable and cued on its own, separately from the box around it — the
- * definition is a fact about the word, so the word is where it hangs
+ * Focusable on its own, separately from the box around it — the definition is
+ * a fact about the word, so the word is where it hangs
  * (docs/reference/panel-affordances.md).
+ *
+ * Not CUED, since #243. The dotted rule and the `cursor-help` that used to sit
+ * here announced that the word carries a definition; nothing announces it now.
+ * The focus ring is not that announcement — it is how a keyboard reader gets
+ * to the definition at all.
  */
 export const CANVAS_HEADER_NAME = [
-  'relative z-10 w-fit cursor-help rounded-sm outline-none',
+  'relative z-10 w-fit rounded-sm outline-none',
   'focus-visible:ring-2 focus-visible:ring-ring/50',
 ].join(' ')
 

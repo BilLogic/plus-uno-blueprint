@@ -1,6 +1,4 @@
-import { Info } from 'lucide-react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS } from '@/components/editor/menubarHeaderLayout'
 import {
   useEntityDetail,
@@ -12,18 +10,18 @@ import { cn } from '@/lib/utils'
  * The canvas title, what that kind of thing IS, and the way into what is
  * behind it.
  *
- * The title and the ⓘ were ONE control until #140, with "View details" in
+ * The title and an ⓘ were ONE control until #140, with "View details" in
  * their shared hover slot. That slot is the only place a definition can hang
  * off the name of the thing the reader is looking at, and it was spending it
- * on a sentence the ⓘ already says. So the block now holds two targets: the
- * NAME explains what a service, a phase or a scenario is, and everything else
- * — an invisible opener filling the block, marked by the ⓘ — opens the panel.
+ * on a sentence the glyph already said. So the block now holds two targets:
+ * the NAME explains what a service, a phase or a scenario is, and everything
+ * else — an invisible opener filling the block — opens the panel.
  *
- * The block, not the glyph, is still the target for opening: a separate 24px
- * icon button would make the title look inert and hide the affordance in
- * twenty-four pixels, which is the failure the one-control version was written
- * against. What changed is that the word itself now answers a different
- * question, so it stops being part of that target.
+ * The block is the target for opening, and since #243 there is no glyph
+ * marking it. A separate 24px icon button would make the title look inert and
+ * hide the affordance in twenty-four pixels, which is the failure the
+ * one-control version was written against; the block is full-size on any
+ * input, so the mark was decoration on a target nobody could miss.
  *
  * A TITLE, not a badge. The filled badge made the name of the thing you are
  * looking at read as a tag on something else, and the slice header band —
@@ -68,29 +66,28 @@ export function EntityTitleAffordance({
           toggleEntity({ kind, id })
         }}
       />
+      {/* No dotted rule and no help cursor. The focus ring stays, because it
+          is the one of the three that a keyboard reader needs rather than a
+          mark announcing to everyone that this word is defined (#243). */}
       <EntityDefinitionPopover kind={kind} side="bottom">
         <h2
           className={cn(
             BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS,
-            'relative z-10 w-fit cursor-help rounded-sm outline-none',
+            'relative z-10 w-fit rounded-sm outline-none',
             'focus-visible:ring-2 focus-visible:ring-ring/50',
-            DEFINED_LABEL_CUE,
           )}
         >
           {label}
         </h2>
       </EntityDefinitionPopover>
-      {/* Always drawn, never a target of its own: it marks the block behind
-          it. Hidden until hover, it was a control no touch reader could see
-          (#140 Q11). */}
-      <Info
-        className={cn(
-          'pointer-events-none relative z-10 size-3.5 shrink-0 text-muted-foreground/60',
-          'transition-colors duration-(--motion-micro)',
-          'group-hover/entity-title:text-foreground',
-        )}
-        aria-hidden
-      />
+      {/* The ⓘ that marked the opener is GONE (#243).
+
+          It was introduced because a hover-only control is invisible to a
+          touch reader. That reasoning is void here: the opener is the block
+          itself, which is a full-size target on any input, and the definition
+          beside it is a Popover that opens on touch. The icon was never what
+          made either of them reachable, and a resting page carrying a glyph
+          beside every named thing is what the ticket set out to remove. */}
     </div>
   )
 }

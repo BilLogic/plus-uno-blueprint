@@ -1,6 +1,5 @@
 import { NotionPropertyRow } from '@/components/blueprint/NotionPropertyRow'
 import { ScenarioTitleDefinition } from '@/components/blueprint/ScenarioTitleDefinition'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { ScenarioSlideFilters } from '@/components/blueprint/ScenarioSlideFilters'
 import { PathMultiSelect, type PathOption } from '@/components/blueprint/PathMultiSelect'
 import { cn } from '@/lib/utils'
@@ -50,9 +49,8 @@ export function ScenarioSlideHeader({
           <ScenarioTitleDefinition slide={slide}>
             <h1
               className={cn(
-                'w-fit cursor-help rounded-sm text-5xl font-bold leading-[1.15] tracking-tight text-foreground outline-none',
+                'w-fit rounded-sm text-5xl font-bold leading-[1.15] tracking-tight text-foreground outline-none',
                 'focus-visible:ring-2 focus-visible:ring-ring/50',
-                DEFINED_LABEL_CUE,
               )}
             >
               {title}
@@ -112,10 +110,9 @@ export function ScenarioSlideHeader({
           <ScenarioTitleDefinition slide={slide}>
             <h1
               className={cn(
-                'w-fit cursor-help rounded-sm font-semibold tracking-tight text-foreground outline-none',
+                'w-fit rounded-sm font-semibold tracking-tight text-foreground outline-none',
                 'focus-visible:ring-2 focus-visible:ring-ring/50',
                 compact ? 'text-xl' : 'text-3xl md:text-4xl',
-                DEFINED_LABEL_CUE,
               )}
             >
               {title}
