@@ -90,7 +90,7 @@ export function LanePanel({
           <LanePanelBody key={lane.id} lane={lane} onDone={onClose} />
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
-            That lane could not be loaded.
+            That lane could not be loaded: {result.message}
           </p>
         ) : (
           <LanePanelLoading />

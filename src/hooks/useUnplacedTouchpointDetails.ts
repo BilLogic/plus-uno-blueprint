@@ -43,7 +43,7 @@ const UNPLACED_QUEUE_SELECT = `
   created_at,
   cells (
     content,
-    lanes ( name ),
+    lanes!cells_lane_id_fkey ( name ),
     steps ( name ),
     paths (
       name,
