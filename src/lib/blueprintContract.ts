@@ -71,6 +71,7 @@ export const BLUEPRINT_CONTRACT = {
     'lanes',
     'cells',
     'cell_dependencies',
+    'resources',
     'audit_findings',
     'slices',
     'slides',
@@ -79,6 +80,62 @@ export const BLUEPRINT_CONTRACT = {
 
   /** Tables the bot actively reads (probe list for /health/blueprint). */
   botReadTables: ['cells', 'cell_dependencies', 'audit_findings', 'slices'],
+
+  /**
+   * Columns the bot names in a DIRECT PostgREST select — the reads that do not
+   * go through `search_blueprint`.
+   *
+   * This section exists because the contract covered the RPC and the table
+   * NAMES and nothing else, and on 2026-09-01 six of the bot's direct reads
+   * were found asking for columns this app had renamed: `description` (now
+   * `summary`) on four tables, `order_position` (now `position`),
+   * `cell_dependencies.label` (now `name`), and `cells.links` and
+   * `cell_dependencies.note`, both dropped. The oldest had been broken since
+   * 2026-08-20. The bot's keyword fallback — its safety net for a search the
+   * RPC misses — had in practice been `steps` alone for eleven days.
+   *
+   * Nothing caught it because nothing could. `check:contract` compares two
+   * copies of this file, so a column this file never named could not drift.
+   * The bot's own /health/blueprint probes restated the selects rather than
+   * importing them, so they rotted alongside. And the failure is silent by
+   * construction: PostgREST answers a renamed column with 400, every one of
+   * those call sites logs a warning and returns an empty array, and Slack
+   * reports "the blueprint has nothing on that".
+   *
+   * Declaring the columns here puts them where the existing machinery already
+   * reaches: `check:contract:live` selects each one against the live database,
+   * and the bot's `--check` sync fails when this file moves and its vendored
+   * copy has not. The same header this file opens with names two earlier
+   * versions of exactly this bug; this is the third, and the first one the
+   * contract can see.
+   *
+   * A column belongs here when the bot names it in a select. Columns the RPC
+   * projects belong in `searchBlueprintColumns` — a projection alias and a
+   * table column are different promises, which is why `description` is correct
+   * there and wrong here.
+   */
+  botDirectReadColumns: {
+    phases: ['id', 'name', 'summary', 'position'],
+    scenarios: ['id', 'name', 'summary', 'position'],
+    steps: ['id', 'name'],
+    paths: ['id', 'name', 'summary'],
+    lanes: ['name', 'owner_team', 'kpis'],
+    cells: [
+      'id',
+      'content',
+      'summary',
+      'function',
+      'form',
+      'value_props',
+      'owner',
+      'perceived_owner',
+      'updated_at',
+    ],
+    cell_dependencies: ['source_cell_id', 'target_cell_id', 'kind', 'name'],
+    resources: ['name', 'url', 'kind'],
+    audit_findings: ['id', 'cell_ids', 'status'],
+    slices: ['id', 'title', 'actor'],
+  },
 
   /**
    * PostgREST embed-hint constraint names. These are the sharpest edge in the

@@ -455,6 +455,10 @@ const COVERAGE = {
     by: 'scripts/check-bot-contract-probe.mjs',
     how: 'each becomes a required table_* probe key on /health/blueprint',
   },
+  botDirectReadColumns: {
+    by: 'scripts/check-blueprint-contract.mjs',
+    how: 'every column is selected live, per table, and a refused select is bisected to name it',
+  },
   fkConstraints: {
     by: 'scripts/check-blueprint-contract.mjs',
     how: 'each is sent as a live PostgREST embed hint, which 400s if it does not resolve',

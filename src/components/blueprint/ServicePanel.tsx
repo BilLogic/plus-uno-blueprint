@@ -51,7 +51,7 @@ export function ServicePanel({ onClose }: { onClose: () => void }) {
           <ServicePanelBody key={service.id} service={service} onDone={onClose} />
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
-            The service could not be loaded.
+            The service could not be loaded: {result.message}
           </p>
         ) : result.status === 'ready' ? (
           // Resolved, and there is no service row. Without this branch the

@@ -51,7 +51,7 @@ export function PhasePanel({
           <PhasePanelBody key={phase.id} phase={phase} onDone={onClose} />
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
-            That phase could not be loaded.
+            That phase could not be loaded: {result.message}
           </p>
         ) : (
           <PhasePanelLoading />

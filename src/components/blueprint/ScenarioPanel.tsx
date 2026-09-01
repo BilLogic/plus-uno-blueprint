@@ -53,7 +53,7 @@ export function ScenarioPanel({
   return (
     <>
       <PanelHeader
-        crumbs={[scenario?.phaseName ?? 'Scenario']}
+        crumbs={[scenario?.phaseName ?? '']}
         title="Scenario properties"
         description="Summary, and the paths in this scenario"
         closeLabel="Close scenario properties"
@@ -68,7 +68,7 @@ export function ScenarioPanel({
           />
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
-            That scenario could not be loaded.
+            That scenario could not be loaded: {result.message}
           </p>
         ) : (
           <ScenarioPanelLoading />
