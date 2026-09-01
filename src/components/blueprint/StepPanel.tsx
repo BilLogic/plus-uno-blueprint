@@ -44,7 +44,7 @@ export function StepPanel({
   return (
     <>
       <PanelHeader
-        crumbs={[step?.phaseName ?? '', step?.scenarioName ?? 'Step']}
+        crumbs={[step?.phaseName ?? '', step?.scenarioName ?? '']}
         title="Step properties"
         description="What this moment is, across every lane"
         closeLabel="Close step properties"
@@ -55,7 +55,7 @@ export function StepPanel({
           <StepPanelBody key={step.id} step={step} onDone={onClose} />
         ) : result.status === 'error' ? (
           <p className="text-sm text-muted-foreground">
-            That step could not be loaded.
+            That step could not be loaded: {result.message}
           </p>
         ) : (
           <StepPanelLoading />

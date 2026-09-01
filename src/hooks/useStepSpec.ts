@@ -75,7 +75,15 @@ export function useStepSpec(stepId: string | null): QueryResult<StepSpec | null>
 
       const { data: framed, error: frameError } = await client
         .from('cells')
-        .select('frame, lanes!inner(name, position, lane_role)')
+        /*
+          THE HINT IS NOT OPTIONAL. Two foreign keys reach `lanes` from
+          `cells` — `cells_lane_id_fkey` on `(lane_id)`, and the composite
+          `cells_path_matches_lane_fkey` on `(lane_id, path_id)` that enforces
+          a cell's lane belonging to its path. PostgREST answers an ambiguous
+          embed with `PGRST201` and a 300 listing the candidates, which threw
+          here and took the whole panel down with it.
+        */
+        .select('frame, lanes!cells_lane_id_fkey!inner(name, position, lane_role)')
         .eq('step_id', stepId)
         .not('frame', 'is', null)
         .abortSignal(signal)
