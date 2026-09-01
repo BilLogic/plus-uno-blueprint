@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, ChevronDown, Pencil, X } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { PANEL_SELECT_TRIGGER_CLASS } from '@/components/blueprint/OptionSelect'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -116,14 +117,11 @@ export function OwnerTagSelect({
           <button
             type="button"
             aria-label={ariaLabel}
-            className={cn(
-              'flex h-8 w-full items-center justify-between gap-1 rounded-md border border-input bg-transparent px-2 text-left text-sm',
-              'outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
-              !value && 'text-muted-foreground',
-            )}
+            // The same trigger as every other select in the panel (#256).
+            className={cn(PANEL_SELECT_TRIGGER_CLASS, !value && 'text-muted-foreground')}
           >
             <span className="min-w-0 truncate">{value || placeholder}</span>
-            <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           </button>
         }
       />
