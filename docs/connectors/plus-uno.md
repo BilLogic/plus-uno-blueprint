@@ -134,7 +134,8 @@ recorded here rather than fixed because adding them to the contract is a
 change to what the contract is FOR, not a rename.
 
 The skills package is the third side of this. `agentic-service-blueprinting`
-writes `slice_type`, `check_name` and `slices.origin` from `slice_tools.py`
+still writes the retired `slice_type` and `check_name` spellings, and `origin`
+on slices, from its own `slice_tools.py`
 and documents them in `skills/audit/SKILL.md` and the playbooks. It is a
 git-URL dependency pinned to a tag, so the fix goes upstream and arrives here
 as a version bump — which has to happen in the same window.

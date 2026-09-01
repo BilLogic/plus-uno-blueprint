@@ -204,6 +204,136 @@ const postgrest = (body) =>
     ? `${body.code ?? 'error'}: ${body.message}${body.details ? ` — ${body.details}` : ''}`
     : JSON.stringify(body).slice(0, 300)
 
+/* ------------------------------------------------------- prose schema claims */
+
+/**
+ * Docs whose SCHEMA CLAIMS are verified against the live database.
+ *
+ * Prose does not 400. A doc that tells an agent to read a column renamed a
+ * fortnight ago produces a fruitless read and a confident wrong answer, and
+ * nothing anywhere fails. On 2026-09-01 uno-bot's harness was found naming
+ * `path_type`, `picture`, `links`, `order_position`, `slice_items`, `findings`
+ * and `column_position` — none of which had existed since August — and the
+ * instruction that cost the most told the bot to search for a path-name
+ * convention removed eleven days earlier.
+ *
+ * Checking them HERE rather than in the bot's repo is the same choice the
+ * contract makes: the side that owns the schema owns the claim about it.
+ */
+const SWEPT_DOCS = ['docs/connectors/plus-uno.md', 'docs/engineering/access-and-security.md']
+
+/**
+ * A schema claim is written QUALIFIED — `cells.summary`, never a bare
+ * `summary`.
+ *
+ * This is a rule about the prose, and it is what makes the check possible
+ * rather than merely desirable. Measured over the two files above: 27
+ * qualified tokens and 111 bare ones. The bare set is roles, policies,
+ * function names, RPC parameters, column VALUES and ordinary English — `open`,
+ * `content`, `live`, `main` — so probing bare tokens would need ~90
+ * exceptions, which is a blocklist wearing an allowlist's clothes.
+ * Qualification costs one word and buys a check with no false positives and
+ * nothing to maintain.
+ */
+const CLAIM = /`([a-z][a-z0-9_]*)\.([a-z][a-z0-9_]*)`/g
+
+/** Qualified pairs that are not table.column, and why each is not. */
+const NOT_A_CLAIM = new Set([
+  'app_metadata.role', // a JWT claim, not a relation
+  'breadcrumb.aliases', // a key of BLUEPRINT_CONTRACT, covered by its own test
+  'search_blueprint.title', // an OUT column of the RPC; the rpc checks cover it
+])
+
+/** A trailing file extension is a filename, not a column. */
+const FILE_EXTENSION = /^(ts|tsx|js|mjs|json|md|sql|py|yml|yaml|sh|toml|css|svg|mmd)$/
+
+/** Schemas this check cannot reach as anon, documented as out of reach above. */
+const UNREACHABLE_SCHEMA = new Set(['semantic_search'])
+
+const SENTENCE = /(?<=[.!?])\s+/
+
+/**
+ * A rename table is a deliberate list of dead names — the one place an old
+ * spelling belongs. Detected STRUCTURALLY, by a header row whose first cell is
+ * `Was`, rather than by wording: both swept files carry one, only one of them
+ * under a heading, and a heading-based rule would have missed the other.
+ */
+function renameTableState(line, inside) {
+  if (/^\|\s*Was\s*\|/i.test(line)) return { skip: true, inside: true }
+  if (inside && /^\s*\|/.test(line)) return { skip: true, inside: true }
+  return { skip: false, inside: false }
+}
+
+/**
+ * The sentence a claim sits in, reassembled across markdown's line wrapping and
+ * located by OFFSET.
+ *
+ * Two mistakes are designed out here. Scoping to a LINE reported a correction
+ * as the defect, because "It replaced" ends one line and the token begins the
+ * next. Then picking the first sentence that merely CONTAINS the name excused
+ * a second occurrence with the first one's reasoning — "`cells.links` was
+ * dropped in `2026…`. Always read `cells.links` first." is a correction
+ * followed by an instruction, and the instruction is the defect.
+ */
+function sentenceAround(lines, index, offset) {
+  const before = lines[index - 1] ?? ''
+  const window = [before, lines[index], lines[index + 1] ?? ''].join(' ')
+  const at = before.length + 1 + offset
+  let cursor = 0
+  for (const sentence of window.split(SENTENCE)) {
+    const start = window.indexOf(sentence, cursor)
+    const end = start + sentence.length
+    if (at >= start && at < end) return sentence
+    cursor = end
+  }
+  return window
+}
+
+/**
+ * A sentence may name a dead identifier when it is SAYING it is dead — and it
+ * proves that twice: a correction verb AND the migration that did it.
+ *
+ * One signal is not enough, and the second signal has to be the migration
+ * rather than merely another backticked name. A first attempt accepted any
+ * other identifier as proof, which a sentence listing three retired spellings
+ * satisfies without saying anything about any of them. Requiring the migration
+ * also asks of the prose what this repo asks of itself everywhere else: a
+ * rename claim cites the file that did it.
+ */
+const CORRECTION_VERB =
+  /\b(renamed|replaced|became|dropped|removed|retired|superseded|split into|moved to)\b/i
+const CORRECTION_PROOF = /\b202[0-9]{11}\b/
+
+function isCorrection(sentence) {
+  return CORRECTION_VERB.test(sentence) && CORRECTION_PROOF.test(sentence)
+}
+
+/** Every qualified schema claim in a doc, with the line it sits on. */
+export function schemaClaims(markdown, source) {
+  const body = markdown.replace(/```[\s\S]*?```/g, (m) => m.replace(/[^\n]/g, ' '))
+  const lines = body.split('\n')
+  const claims = []
+  let inRenameTable = false
+  lines.forEach((line, i) => {
+    const state = renameTableState(line, inRenameTable)
+    inRenameTable = state.inside
+    if (state.skip) return
+    for (const m of line.matchAll(CLAIM)) {
+      const [, left, right] = m
+      const token = `${left}.${right}`
+      if (NOT_A_CLAIM.has(token)) continue
+      if (left.length === 1) continue // `c.lane_id` — a SQL alias in an example
+      if (FILE_EXTENSION.test(right)) continue
+      if (UNREACHABLE_SCHEMA.has(left)) continue
+      if (isCorrection(sentenceAround(lines, i, m.index))) continue
+      // `public.lanes` names a RELATION, not a column of a table called public.
+      if (left === 'public') claims.push({ source, line: i + 1, table: right, column: null, token })
+      else claims.push({ source, line: i + 1, table: left, column: right, token })
+    }
+  })
+  return claims
+}
+
 /* ------------------------------------------------------------------- checks */
 
 async function run({ serviceRole }) {
@@ -311,6 +441,38 @@ async function run({ serviceRole }) {
     }
   }
   check('direct read columns', columns)
+
+  // 3c. Schema claims in the agent-facing docs. Same probe as 3b, different
+  //     subject: 3b checks what the bot SELECTS, this checks what the docs
+  //     TELL it to select. Both fail identically in production — a warning in
+  //     a log, an empty result in Slack — and only one of them was checked.
+  const prose = []
+  const claimed = new Map()
+  for (const relative of SWEPT_DOCS) {
+    const file = resolve(REPO_ROOT, relative)
+    if (!existsSync(file)) {
+      prose.push(`${relative} is swept for schema claims but does not exist`)
+      continue
+    }
+    for (const claim of schemaClaims(readFileSync(file, 'utf8'), relative)) {
+      // One probe per distinct name, first site reported. A name repeated
+      // eleven times is one defect, not eleven.
+      if (!claimed.has(claim.token)) claimed.set(claim.token, claim)
+    }
+  }
+  for (const claim of claimed.values()) {
+    const query = claim.column
+      ? `${claim.table}?select=${claim.column}&limit=0`
+      : `${claim.table}?select=*&limit=0`
+    const result = await rest(url, key, query)
+    if (result.ok) continue
+    prose.push(
+      `${claim.source}:${claim.line} names \`${claim.token}\`, which the database ` +
+        `refuses — ${postgrest(result.body)}. This doc is where an agent is told what ` +
+        `to read; a name it gets wrong reads as an empty blueprint, never as an error.`,
+    )
+  }
+  check('doc schema claims', prose)
 
   // 4-7. The search RPC: parameters, columns, kinds, breadcrumb.
   const params = Object.fromEntries(
