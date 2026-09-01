@@ -25,16 +25,22 @@ import { cn } from '@/lib/utils'
  *                       belong to a phase
  *
  * This is the one bar of the three that owns a query, which is why it is the
- * one that was broken.
+ * one that was broken. It used to `return null` while `useServiceSpec` was in
+ * flight, so it had no height at all and the canvas below it jumped when the
+ * data landed — while every other boot surface reserves its space first
+ * (`EditorShell`: "the aside takes its full width in the same commit the
+ * canvas mounts, so the frame is fixed from the first painted frame").
  *
- * Renders nothing until the service resolves. No skeleton on purpose: one
- * line above a canvas already drawing its own placeholder, and a bar that
- * flickers in over it would be the loudest thing on a loading screen.
+ * The bar is now always here. `EntityHeader` holds the height and picks the
+ * picture; this component's whole job is to hand it the four-state query as a
+ * resolved identity.
  */
 export function ServiceOverviewHeader() {
   const result = useServiceSpec()
+  // `useServiceSpec` is `QueryResult<ServiceSpec | null>`, so `ready` can
+  // carry null data — a deployment with no service recorded yet. That is a
+  // different fact from a failure, and the bar draws it differently.
   const service = result.status === 'ready' ? result.data : null
-  if (!service) return null
 
   return (
     <div
@@ -51,9 +57,11 @@ export function ServiceOverviewHeader() {
       >
         <EntityHeader
           kind="service"
-          id={service.id}
-          label={service.name}
-          summary={service.summary}
+          id={service?.id}
+          label={service?.name}
+          summary={service?.summary}
+          status={result.status}
+          message={result.status === 'error' ? result.message : null}
         />
       </div>
       {/* The phase header's right cluster holds compare controls, which
