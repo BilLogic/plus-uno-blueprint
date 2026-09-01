@@ -345,7 +345,7 @@ export function resolveBlueprintForScenario(
             summary:
               fallback.path.summary ?? rawPath.summary ?? null,
             note: fallback.path.note ?? rawPath.note ?? null,
-            path_type: rawPath.path_type,
+            kind: rawPath.kind,
             status:
               asEntityStatus(rawPath.status) ?? fallback.path.status,
           }
@@ -372,7 +372,7 @@ export function resolveBlueprintForScenario(
       const rawFallback = getRawBlueprintFallback(
         scenarioId,
         pathId,
-        merged.path.path_type,
+        merged.path.kind,
       )
       // DB-wins path metadata: fallback only fills empty name/description/note.
       const blueprint = rawFallback

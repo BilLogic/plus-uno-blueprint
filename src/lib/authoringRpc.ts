@@ -517,14 +517,14 @@ export function createPath(
   input: {
     scenarioId: string
     name: string
-    pathType?: string
+    pathKind?: string
     laneSourcePathId?: string | null
   },
 ): Promise<string> {
   return call<string>(client, 'create_path', {
     scenario_id: input.scenarioId,
     name: input.name,
-    kind: input.pathType ?? 'variant',
+    kind: input.pathKind ?? 'variant',
     lane_source_path_id: input.laneSourcePathId ?? null,
   })
 }
@@ -541,7 +541,7 @@ export function duplicatePath(
   input: {
     sourcePathId: string
     name: string
-    pathType?: string
+    pathKind?: string
     copyCells?: boolean
     copyDependencies?: boolean
   },
@@ -549,7 +549,7 @@ export function duplicatePath(
   return call<string>(client, 'duplicate_path', {
     source_path_id: input.sourcePathId,
     name: input.name,
-    kind: input.pathType ?? 'variant',
+    kind: input.pathKind ?? 'variant',
     copy_cells: input.copyCells ?? true,
     copy_dependencies: input.copyDependencies ?? true,
   })

@@ -7,9 +7,9 @@ import {
   ARROW_STROKE_WIDTH,
 } from '@/lib/blueprintArrowGeometry'
 import { getPathTypeArrowColor } from '@/lib/pathTypeTheme'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
-const PATH_TYPES: PathType[] = [
+const PATH_TYPES: PathKind[] = [
   'happy',
   'exception',
   'exception',

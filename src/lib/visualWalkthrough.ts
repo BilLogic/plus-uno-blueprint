@@ -2,7 +2,7 @@ import { buildCellLookup, getCellAt } from '@/lib/normalizeBlueprint'
 import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 import { pickPreferredPath } from '@/lib/pathSelection'
 import type { BlueprintData } from '@/types/blueprint'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 export const VISUAL_WALKTHROUGH_LAYER_NAMES = [
   'Teacher',
@@ -49,7 +49,7 @@ export type VisualWalkthroughSession = {
   pathId: string
   pathName: string
   pathDescription: string | null
-  pathType: PathType
+  pathKind: PathKind
   scenarioName?: string
   phaseName?: string
   steps: VisualWalkthroughStep[]
@@ -160,7 +160,7 @@ export function buildVisualWalkthroughSession(
     pathId: blueprint.path.id,
     pathName: blueprint.path.name,
     pathDescription: blueprint.path.summary,
-    pathType: blueprint.path.path_type,
+    pathKind: blueprint.path.kind,
     scenarioName: meta?.scenarioName?.trim() || undefined,
     phaseName: meta?.phaseName?.trim() || undefined,
     steps,

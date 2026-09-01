@@ -242,7 +242,7 @@ export const REPORTING_HOURS_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Reported on time',
     summary: 'Tutor reports hours after tutoring session.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

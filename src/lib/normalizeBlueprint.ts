@@ -11,7 +11,7 @@ import type {
   BlueprintLane,
   BlueprintStep,
 } from '@/types/blueprint'
-import type { PathType, Json } from '@/types/database'
+import type { PathKind, Json } from '@/types/database'
 import { normalizeCellLinks } from '@/lib/cellMetadata'
 import {
   cellTouchpointsFromLinks,
@@ -79,7 +79,7 @@ export type RawPath = {
   name: string
   summary?: string | null
   note?: string | null
-  path_type: PathType
+  kind: PathKind
   status?: string | null
   lanes?: RawLane[] | null
   /** @deprecated Legacy shape; use path_steps */
@@ -304,7 +304,7 @@ export function normalizeBlueprint(raw: RawPath): BlueprintData {
       name: raw.name,
       summary: raw.summary ?? null,
       note: raw.note ?? null,
-      path_type: raw.path_type,
+      kind: raw.kind,
       status: asEntityStatus(raw.status) ?? DEFAULT_ENTITY_STATUS,
     },
     lanes,

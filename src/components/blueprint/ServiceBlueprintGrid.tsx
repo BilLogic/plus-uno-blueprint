@@ -184,7 +184,7 @@ export function ServiceBlueprintGrid({
           <PathLabelBadge
             name={path.name}
             description={path.summary}
-            pathType={path.path_type}
+            pathKind={path.kind}
             className="text-base"
           />
         </div>
@@ -195,7 +195,7 @@ export function ServiceBlueprintGrid({
           <PathLabelBadge
             name={path.name}
             description={path.summary}
-            pathType={path.path_type}
+            pathKind={path.kind}
             compact
           />
         </div>
@@ -253,7 +253,7 @@ export function ServiceBlueprintGrid({
               dependencies={dependencies}
               contentRef={gridBodyRef}
               scrollContainerRef={scrollContainerRef}
-              pathType={path.path_type}
+              pathKind={path.kind}
               pathName={path.name}
             />
             {lanes.map((lane, layerIndex) => {
@@ -391,7 +391,7 @@ export function ServiceBlueprintGrid({
               dependencies={dependencies}
               contentRef={gridBodyRef}
               scrollContainerRef={scrollContainerRef}
-              pathType={path.path_type}
+              pathKind={path.kind}
               pathName={path.name}
             />
           </div>
@@ -623,7 +623,7 @@ function BlueprintSwimLane({
                         pathId: blueprint.path.id,
                         pathName: blueprint.path.name,
                         pathDescription: blueprint.path.summary,
-                        pathType: blueprint.path.path_type,
+                        pathKind: blueprint.path.kind,
                       }
                     : undefined
                 }

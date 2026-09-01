@@ -36,7 +36,7 @@ export function WalkthroughPathSelect({
       <PathLabelBadge
         name={selected.path.name}
         description={selected.path.summary}
-        pathType={selected.path.path_type}
+        pathKind={selected.path.kind}
         compact
         className={className}
       />
@@ -54,13 +54,13 @@ export function WalkthroughPathSelect({
           className,
         )}
         style={getPathBadgeStyle({
-          path_type: selected.path.path_type,
+          kind: selected.path.kind,
           name: selected.path.name,
         })}
         aria-label={`Path: ${selectedLabel}. Choose a different path.`}
       >
         <PathTypeColorKey
-          type={selected.path.path_type}
+          type={selected.path.kind}
           name={selected.path.name}
         />
         <span className="truncate leading-none tracking-tight">{selectedLabel}</span>
@@ -81,7 +81,7 @@ export function WalkthroughPathSelect({
                 value={blueprint.path.id}
               >
                 <PathTypeColorKey
-                  type={blueprint.path.path_type}
+                  type={blueprint.path.kind}
                   name={blueprint.path.name}
                 />
                 <span className="truncate">{label}</span>

@@ -418,7 +418,7 @@ export const BEFORE_STUDENTS_JOIN_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Setup goes to plan',
     summary: 'Teachers and tutors prepare the session before students join.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

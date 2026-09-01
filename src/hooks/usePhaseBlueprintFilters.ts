@@ -116,7 +116,7 @@ export function usePhaseBlueprintFilters({
    */
   const resolveHappyPathIds = useCallback(
     (_scenarioId: string, paths: PathListItem[]) => {
-      const happy = paths.find((path) => path.path_type === 'happy')
+      const happy = paths.find((path) => path.kind === 'happy')
       return happy ? [happy.id] : paths[0] ? [paths[0].id] : []
     },
     [],

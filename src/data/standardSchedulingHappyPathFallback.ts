@@ -186,7 +186,7 @@ export const STANDARD_SCHEDULING_HAPPY_PATH_FALLBACK: BlueprintData = {
     name: 'Schedule as issued',
     summary: 'Tutors receive semester schedule.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

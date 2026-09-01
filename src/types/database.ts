@@ -70,7 +70,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type PathType = 'happy' | 'variant' | 'exception'
+export type PathKind = 'happy' | 'variant' | 'exception'
 
 export type Database = {
   public: {
@@ -618,7 +618,7 @@ export type Database = {
           id: string
           name: string
           note: string | null
-          kind: PathType
+          kind: PathKind
           status: EntityStatus
           scenario_id: string
           updated_at: string
@@ -629,7 +629,7 @@ export type Database = {
           id?: string
           name: string
           note?: string | null
-          kind: PathType
+          kind: PathKind
           status?: EntityStatus
           scenario_id: string
           updated_at?: string
@@ -640,7 +640,7 @@ export type Database = {
           id?: string
           name?: string
           note?: string | null
-          kind?: PathType
+          kind?: PathKind
           status?: EntityStatus
           scenario_id?: string
           updated_at?: string

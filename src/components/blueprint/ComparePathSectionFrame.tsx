@@ -46,7 +46,7 @@ export function ComparePathSectionFrame({
   excludeLabelRail = false,
 }: ComparePathSectionFrameProps) {
   const { path } = blueprint
-  const pathBorder = getPathTypeSectionBorderStyle(path.path_type, path)
+  const pathBorder = getPathTypeSectionBorderStyle(path.kind, path)
   const { borderColor, borderStyle, borderWidth } = pathBorder
   const sectionFill = blueprintPanelSectionFillColor()
   const labelAxisOffset = excludeLabelRail
@@ -96,7 +96,7 @@ export function ComparePathSectionFrame({
         <PathLabelBadge
           name={path.name}
           description={path.summary}
-          pathType={path.path_type}
+          pathKind={path.kind}
           compact={compact}
           className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
           style={{

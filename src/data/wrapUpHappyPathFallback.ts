@@ -313,7 +313,7 @@ export const WRAP_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

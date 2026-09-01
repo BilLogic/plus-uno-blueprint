@@ -1,4 +1,4 @@
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 import type { EntityStatus } from '@/lib/entityStatus'
 
 export type PathListItem = {
@@ -6,7 +6,7 @@ export type PathListItem = {
   name: string
   summary: string | null
   note: string | null
-  path_type: PathType
+  kind: PathKind
   /** How far along this route is. Drives the status badge on every path row. */
   status?: EntityStatus | null
 }
@@ -20,11 +20,11 @@ export type PathListItem = {
  * type any more (2026-08-21), so that branch could never match again, and
  * every scenario holds exactly one `happy` path for it to have disambiguated.
  */
-export function pickPreferredPath<T extends { name: string; path_type: PathType }>(
+export function pickPreferredPath<T extends { name: string; kind: PathKind }>(
   paths: readonly T[],
 ): T | undefined {
   if (paths.length === 0) return undefined
-  return paths.find((path) => path.path_type === 'happy') ?? paths[0]
+  return paths.find((path) => path.kind === 'happy') ?? paths[0]
 }
 
 export function defaultSelectedPathIds(paths: PathListItem[]): string[] {

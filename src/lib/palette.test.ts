@@ -232,7 +232,7 @@ describe('path badges', () => {
     const open = [
       ...new Set(
         Array.from({ length: 40 }, (_, i) =>
-          getPathColor({ path_type: 'variant', name: `Path ${i}` }),
+          getPathColor({ kind: 'variant', name: `Path ${i}` }),
         ),
       ),
     ]
@@ -259,8 +259,8 @@ describe('path badges', () => {
     // something the system does not provide. (An `exception` is the opposite
     // case: it takes the type colour, so its dash must carry the whole load —
     // pinned in pathColorTheme.test.ts.)
-    const a = { path_type: 'variant', name: 'Alpha' } as const
-    const b = { path_type: 'variant', name: 'Beta' } as const
+    const a = { kind: 'variant', name: 'Alpha' } as const
+    const b = { kind: 'variant', name: 'Beta' } as const
     const identical =
       getPathColor(a) === getPathColor(b) &&
       getPathDashArray(a) === getPathDashArray(b)
@@ -273,11 +273,11 @@ describe('path badges', () => {
     // — which left colour as the only channel (SC 1.4.1).
     const variants = ['Set Goals', 'Check Goals', 'Update Goals']
     const dashes = variants.map((name) =>
-      getPathDashArray({ path_type: 'variant', name }),
+      getPathDashArray({ kind: 'variant', name }),
     )
     expect(new Set(dashes).size).toBe(variants.length)
     const colours = variants.map((name) =>
-      getPathColor({ path_type: 'variant', name }),
+      getPathColor({ kind: 'variant', name }),
     )
     expect(new Set(colours).size).toBe(variants.length)
   })
@@ -288,11 +288,11 @@ describe('path badges', () => {
     // the ONLY thing separating two of them, and it has to.
     const both = ['Set Goals Edge Case', 'Update Goals Edge Case']
     const colours = both.map((name) =>
-      getPathColor({ path_type: 'exception', name }),
+      getPathColor({ kind: 'exception', name }),
     )
     expect(new Set(colours).size).toBe(1) // both red, by design
     const dashes = both.map((name) =>
-      getPathDashArray({ path_type: 'exception', name }),
+      getPathDashArray({ kind: 'exception', name }),
     )
     expect(new Set(dashes).size).toBe(2)
   })
@@ -368,7 +368,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
     const lanes = familiesIn('lane')
     const pathFamilies = new Set(
       Array.from({ length: 40 }, (_, i) =>
-        getPathColor({ path_type: 'variant', name: `Path ${i}` }),
+        getPathColor({ kind: 'variant', name: `Path ${i}` }),
       ).map((token) => /--color-([a-z]+)-/.exec(token)![1]),
     )
     expect(pathFamilies.size).toBeGreaterThan(1)
@@ -379,7 +379,7 @@ describe('lane roles and touchpoint tones stay disjoint', () => {
    * The claim this file used to make, and the one it can actually hold.
    *
    * The test above titled itself "keeps NAMED paths off the lane families" and
-   * sampled 40 synthetic names all hard-coded to `path_type: 'variant'`.
+   * sampled 40 synthetic names all hard-coded to `kind: 'variant'`.
    * `getPathColor` short-circuits every other type, so the sample could only
    * ever produce the four open families — the one set that is disjoint by
    * construction. `happy` and `exception` were structurally unreachable, and

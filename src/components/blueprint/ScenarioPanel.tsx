@@ -232,7 +232,7 @@ function ScenarioPanelBody({
                   separate the hues (SC 1.4.1).
                 */}
                 <span className="flex min-w-0 flex-1 items-center gap-2">
-                  <PathTypeColorKey type={path.pathType} name={path.name} />
+                  <PathTypeColorKey type={path.pathKind} name={path.name} />
                   <span className="truncate text-sm font-medium text-foreground">
                     {path.name}
                   </span>

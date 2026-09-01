@@ -362,7 +362,7 @@ export const APPLICATION_INTERVIEW_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Tutor applies, interviews with the team, and receives an offer decision.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],

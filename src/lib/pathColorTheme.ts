@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react'
-import type { PathType } from '@/types/database'
+import type { PathKind } from '@/types/database'
 
 export type PathColorInput = {
-  path_type: PathType
+  kind: PathKind
   name: string
 }
 
@@ -27,7 +27,7 @@ export type PathColorInput = {
  * family would have had to be read at a different step from every other path
  * type.
  */
-export const PATH_TYPE_COLORS: Record<PathType, string> = {
+export const PATH_TYPE_COLORS: Record<PathKind, string> = {
   happy: 'var(--color-green-1100)',
   /** Fallback only — variant and exception paths read the open set below. */
   variant: 'var(--color-indigo-1100)',
@@ -39,7 +39,7 @@ export const PATH_TYPE_COLORS: Record<PathType, string> = {
  * the badge, so a stroke reads as related to the label it belongs to without
  * being the same value. Same family per path type as `PATH_TYPE_COLORS`.
  */
-export const PATH_TYPE_ARROW_COLORS: Record<PathType, string> = {
+export const PATH_TYPE_ARROW_COLORS: Record<PathKind, string> = {
   happy: 'var(--color-green-1000)',
   variant: 'var(--color-indigo-1000)',
   exception: 'var(--color-red-1000)',
@@ -47,7 +47,7 @@ export const PATH_TYPE_ARROW_COLORS: Record<PathType, string> = {
 
 /** Stable identity for path colors across scenarios (same type + name → same color). */
 export function getPathColorKey(path: PathColorInput): string {
-  return `${path.path_type}:${path.name}`
+  return `${path.kind}:${path.name}`
 }
 
 /**
@@ -128,7 +128,7 @@ const EXTENDED_ARROW_COLORS = PATH_OPEN_FAMILIES.map((f) =>
  * dotted blur at overview zoom, longer than ~12px stops repeating within a
  * short segment.
  */
-const PATH_TYPE_DASH: Record<PathType, string | undefined> = {
+const PATH_TYPE_DASH: Record<PathKind, string | undefined> = {
   happy: undefined,
   variant: '12 5',
   exception: '2 4',
@@ -182,7 +182,7 @@ export const PATH_IDENTITY_PERIOD =
  * SC 1.4.1.
  */
 export function getPathDashArray(path: PathColorInput): string | undefined {
-  if (path.path_type === 'happy') return PATH_TYPE_DASH.happy
+  if (path.kind === 'happy') return PATH_TYPE_DASH.happy
   return EXTENDED_PATH_DASHES[pathSlot(path) % EXTENDED_PATH_DASHES.length]
 }
 
@@ -193,10 +193,10 @@ export function getPathDashArray(path: PathColorInput): string | undefined {
 export function getPathDashArrayFromKey(colorKey: string): string | undefined {
   const separator = colorKey.indexOf(':')
   if (separator === -1) {
-    return PATH_TYPE_DASH[colorKey as PathType] ?? undefined
+    return PATH_TYPE_DASH[colorKey as PathKind] ?? undefined
   }
   return getPathDashArray({
-    path_type: colorKey.slice(0, separator) as PathType,
+    kind: colorKey.slice(0, separator) as PathKind,
     name: colorKey.slice(separator + 1),
   })
 }
@@ -248,12 +248,12 @@ function pathSlot(path: PathColorInput): number {
 }
 
 export function getPathColor(path: PathColorInput): string {
-  if (path.path_type !== 'variant') return PATH_TYPE_COLORS[path.path_type]
+  if (path.kind !== 'variant') return PATH_TYPE_COLORS[path.kind]
   return EXTENDED_PATH_COLORS[pathSlot(path) % EXTENDED_PATH_COLORS.length]
 }
 
 export function getPathArrowColor(path: PathColorInput): string {
-  if (path.path_type !== 'variant') return PATH_TYPE_ARROW_COLORS[path.path_type]
+  if (path.kind !== 'variant') return PATH_TYPE_ARROW_COLORS[path.kind]
   return EXTENDED_ARROW_COLORS[pathSlot(path) % EXTENDED_ARROW_COLORS.length]
 }
 

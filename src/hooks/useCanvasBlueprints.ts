@@ -112,7 +112,7 @@ function deriveFromRows(
             name: path.name,
             summary: path.summary ?? null,
             note: path.note ?? null,
-            path_type: path.path_type,
+            kind: path.kind,
             // Drives the status badge on every path row. Omitted here, it
             // arrives `undefined` and the badge silently never renders.
             status: asEntityStatus(path.status) ?? DEFAULT_ENTITY_STATUS,

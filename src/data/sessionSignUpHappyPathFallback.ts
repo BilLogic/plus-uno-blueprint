@@ -196,7 +196,7 @@ export const SESSION_SIGN_UP_HAPPY_PATH_FALLBACK: BlueprintData = {
     summary:
       'Tutor signs up for recurring sessions for the rest of the semester.',
     note: null,
-    path_type: 'happy',
+    kind: 'happy',
     status: 'live',
   },
   lanes: [...LAYERS],
