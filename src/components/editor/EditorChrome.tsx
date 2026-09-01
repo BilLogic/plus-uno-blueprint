@@ -130,10 +130,16 @@ export function WorkspaceBadges() {
 export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
   const { summary } = useSidebarCollapsedState()
   return (
+    // `pl-1 pr-3` is the mirror of what it was: the icon button carries its
+    // own padding, so the tight side is whichever end the toggle is on.
     <div
-      className="pointer-events-auto flex max-w-[min(36rem,calc(100vw-6rem))] items-center gap-1.5 rounded-lg border border-border bg-background/95 py-1 pl-3 pr-1 shadow-md backdrop-blur-sm"
+      className="pointer-events-auto flex max-w-[min(36rem,calc(100vw-6rem))] items-center gap-1.5 rounded-lg border border-border bg-background/95 py-1 pl-1 pr-3 shadow-md backdrop-blur-sm"
       data-editor-sidebar-navbar
     >
+      {/* First, not last. This is the control that brings the sidebar back,
+          and the sidebar comes back at the left edge — a toggle at the far
+          right sat as far from the thing it summons as this strip allows. */}
+      <SidebarCollapseButton collapsed onToggle={onExpand} size="icon-sm" />
       <p className="shrink-0 truncate text-xs font-medium text-foreground">
         {EDITOR_TITLE}
       </p>
@@ -161,7 +167,6 @@ export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
           ) : null}
         </>
       ) : null}
-      <SidebarCollapseButton collapsed onToggle={onExpand} size="icon-sm" />
     </div>
   )
 }

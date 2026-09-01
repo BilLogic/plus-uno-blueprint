@@ -26,10 +26,34 @@ export type CollapsedNavSummary = {
 
 type CollapsedState = {
   collapsed: boolean
+  /**
+   * How far the aside reaches across the canvas column, in pixels, while it
+   * OVERLAYS that column — and `0` at every width where it does not.
+   *
+   * Below `SIDEBAR_OVERLAY_BREAKPOINT` the aside goes `absolute inset-y-0
+   * left-0` at `z-20`, so it draws over the canvas rather than taking a
+   * column back from it. That posture is deliberate and #239 leaves it
+   * exactly as it is; what it never accounted for is the docked bar at the
+   * top of that column, which ends up with its left half underneath the
+   * panel and reads as half a title.
+   *
+   * Two fixes were on the table (#234). Starting the panel below the bar
+   * keeps the bar whole but stops the panel reaching the top of the column
+   * it belongs to. Insetting the BAR was chosen instead: the panel keeps the
+   * shape it has at every width, and the bar gives up only the space that is
+   * genuinely not its while the panel is open.
+   *
+   * It rides this store for the same reason the summary does — the bars live
+   * deep inside canvas content, several providers away from the shell that
+   * owns the aside's width. A number and not a CSS variable, because what a
+   * test must be able to read back is the bar's resolved left offset, and a
+   * variable name is not an offset.
+   */
+  overlayInset: number
   summary: CollapsedNavSummary | null
 }
 
-let state: CollapsedState = { collapsed: false, summary: null }
+let state: CollapsedState = { collapsed: false, overlayInset: 0, summary: null }
 /**
  * Who published the summary on screen.
  *
@@ -47,9 +71,18 @@ function emit(): void {
 }
 
 export function setSidebarCollapsedState(
-  next: Pick<CollapsedState, 'collapsed'>,
+  next: Pick<CollapsedState, 'collapsed' | 'overlayInset'>,
 ): void {
-  if (state.collapsed === next.collapsed) return
+  // Both facts come from the one publisher (`EditorShell`) in one effect, so
+  // the guard compares both rather than short-circuiting on `collapsed`:
+  // dragging the aside's edge changes only the inset, and a guard that asked
+  // about collapse alone would swallow every frame of that drag.
+  if (
+    state.collapsed === next.collapsed &&
+    state.overlayInset === next.overlayInset
+  ) {
+    return
+  }
   state = { ...state, ...next }
   emit()
 }

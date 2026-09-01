@@ -329,15 +329,6 @@ function DesktopEditorShell() {
     setCollapsedByUser(false)
   }, [sidebarCollapsed, setCollapsedByUser])
 
-  // Publish the collapsed state so canvas navbars can host the expand
-  // control themselves — see sidebarCollapsedContext for why the navbar is
-  // now the fallback rather than the default.
-  useEffect(() => {
-    setSidebarCollapsedState({
-      collapsed: collapsedByReader,
-    })
-  }, [collapsedByReader])
-
   // Hand the agent its navigation hands: open_phase / open_scenario tools
   // land on the same callbacks the sidebar rows use.
   useEffect(
@@ -516,6 +507,32 @@ function DesktopEditorShell() {
       return width
     })
   }
+
+  /*
+    Publish what the aside is doing to the canvas's own chrome, so canvas
+    navbars can answer it themselves — see sidebarCollapsedContext for why
+    the navbar is now the fallback rather than the default.
+
+    Two facts, one effect. COLLAPSED: host the expand control. INSET: how far
+    the aside reaches across the canvas column while it OVERLAYS it, which is
+    `asideWidth` in exactly the state the aside is both out of the flow and on
+    screen. `asideWidth` and not the panel's own width — the aside is the rail
+    plus the panel, and the rail is the half that reaches furthest left.
+
+    Below the resize handlers rather than up with `collapsedByReader`, because
+    `asideWidth` is declared here and a dependency array cannot name a binding
+    it sits above.
+
+    This is the shell's whole part in #239. When the overlay posture engages,
+    and the panel's own geometry inside it, are untouched; only what the bar
+    does about it is new.
+  */
+  useEffect(() => {
+    setSidebarCollapsedState({
+      collapsed: collapsedByReader,
+      overlayInset: overlay && !asideHidden ? asideWidth : 0,
+    })
+  }, [collapsedByReader, overlay, asideHidden, asideWidth])
 
   /**
    * Return: exit presentation onto that slice's focus tab, creating the tab

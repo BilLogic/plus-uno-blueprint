@@ -4,6 +4,10 @@ import {
   BLUEPRINT_MENUBAR_HEADER_CLASS,
   BLUEPRINT_NAVBAR_BAR_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
+import {
+  useCollapsedNavSummary,
+  useSidebarCollapsedState,
+} from '@/contexts/sidebarCollapsedContext'
 import { useServiceSpec } from '@/hooks/useServiceSpec'
 import { cn } from '@/lib/utils'
 
@@ -33,7 +37,8 @@ import { cn } from '@/lib/utils'
  *
  * The bar is now always here. `EntityHeader` holds the height and picks the
  * picture; this component's whole job is to hand it the four-state query as a
- * resolved identity.
+ * resolved identity — and, at the two widths where the sidebar takes the
+ * space back, to answer for it (#239).
  */
 export function ServiceOverviewHeader() {
   const result = useServiceSpec()
@@ -41,11 +46,48 @@ export function ServiceOverviewHeader() {
   // carry null data — a deployment with no service recorded yet. That is a
   // different fact from a failure, and the bar draws it differently.
   const service = result.status === 'ready' ? result.data : null
+  const { collapsed, overlayInset } = useSidebarCollapsedState()
+
+  /*
+    Collapsed: the floating navbar carries this bar's identity instead, and
+    this bar draws nothing — one chrome lane at any width, which is what
+    `SlideStickyHeader` and `SliceHeaderBand` already do and what the service
+    bar had no reference to at all, so its title was simply lost.
+
+    ONLY the name. The summary is deliberately not handed over: the collapsed
+    strip is sized for one line, and the summary is prose that would either
+    push it past the canvas or truncate the name it exists to carry.
+
+    Above the early return, and so is `useServiceSpec` — the query stays
+    subscribed for the whole collapse. Expanding therefore restores a bar
+    whose content is already in the cache, with no second skeleton (the
+    read policy behind that is `QUERY_DEFAULTS`, pinned by #237's remount
+    test).
+  */
+  useCollapsedNavSummary(collapsed && service ? { title: service.name } : null)
+  if (collapsed) return null
 
   return (
     <div
       data-editor-navbar
       className={cn('flex items-center gap-3', BLUEPRINT_NAVBAR_BAR_CLASS)}
+      /*
+        The overlay's share of the row, given up rather than drawn under.
+
+        On a narrow viewport the aside goes out of the flow and draws over
+        this column at `z-20`, which used to leave the left half of this bar
+        underneath the panel — a title that reads as half a title. The left
+        edge follows the aside's rendered width instead, so the panel keeps
+        the shape it has at every width and the bar surrenders only the space
+        that is genuinely not its while the panel is open.
+
+        A margin and not padding: the bar's own `px-4` gutter has to survive,
+        and what moves is where the bar STARTS, not where its content starts
+        inside it. Inline and in pixels because the width is a runtime number
+        the reader can drag — there is no class for "however wide the reader
+        left it".
+      */
+      style={overlayInset > 0 ? { marginLeft: overlayInset } : undefined}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <div
