@@ -29,6 +29,9 @@ import { FloatingSidebarNavbar } from '@/components/editor/EditorChrome'
 import { ServiceOverviewHeader } from '@/components/editor/ServiceOverviewHeader'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { setSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
+import { SlideStickyHeader } from '@/components/editor/SlideStickyHeader'
+import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
+import type { NavItem } from '@/types/nav'
 import { QUERY_DEFAULTS } from '@/lib/queryClient'
 
 const supabase = vi.hoisted(() => ({ client: null as unknown, calls: 0 }))
@@ -234,5 +237,82 @@ describe('the floating navbar', () => {
           Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy()
     }
+  })
+})
+
+/*
+  The phase and scenario bar takes the same inset, and needs saying separately
+  because it is a different file that happens to sit in the same column. The
+  overlay does not know which of the three kinds a bar names; the exposure is
+  the column, so every bar docked in it answers for the same pixels.
+
+  This was nearly missed. The service bar was fixed first and reads as the
+  whole job, because it is the one that owns a query and the one every other
+  defect in #234 was about — but `SlideStickyHeader` hides itself only when the
+  sidebar is COLLAPSED, and the overlay is the other width entirely: sidebar
+  open, drawing over the canvas, this bar rendering underneath it.
+*/
+const PHASE: NavItem = { id: 'phase-1', index: 0, label: 'Application' }
+const SCENARIO: NavItem = {
+  id: 'scenario-1',
+  index: 1,
+  label: 'Discovery',
+  parentId: 'phase-1',
+  description: 'Potential tutors discover PLUS.',
+}
+
+function mountSlideBar(slide: NavItem) {
+  return render(
+    <TooltipProvider>
+      <PathSelectionProvider>
+        <SlideStickyHeader
+          slide={slide}
+          slides={[PHASE, SCENARIO]}
+          paths={[]}
+          selectedPathIds={[]}
+        />
+      </PathSelectionProvider>
+    </TooltipProvider>,
+  )
+}
+
+describe('the phase and scenario bar, while the aside overlays it', () => {
+  it('sits flush left when the aside is in the flow', () => {
+    mountSlideBar(PHASE)
+    expect(bar()?.style.marginLeft).toBe('')
+  })
+
+  it('starts where the overlaying aside ends', () => {
+    mountSlideBar(PHASE)
+    sidebar({ overlayInset: 272 })
+
+    expect(bar()?.style.marginLeft).toBe('272px')
+  })
+
+  it('a scenario answers for the same pixels as a phase', () => {
+    // Same file, same column, and the kind is the only thing that differs —
+    // so the assertion is that the inset is not conditioned on it.
+    mountSlideBar(SCENARIO)
+    sidebar({ overlayInset: 272 })
+
+    expect(bar()?.style.marginLeft).toBe('272px')
+  })
+
+  it('gives the space back when the aside stops overlaying', () => {
+    mountSlideBar(PHASE)
+    sidebar({ overlayInset: 272 })
+    sidebar({ overlayInset: 0 })
+
+    expect(bar()?.style.marginLeft).toBe('')
+  })
+
+  it('still renders nothing at all when the sidebar is collapsed', () => {
+    // The inset must not resurrect a bar that collapse hides: an inset bar
+    // drawn beside the floating navbar is the two-headers-at-once bug that
+    // the hand-off exists to prevent.
+    mountSlideBar(PHASE)
+    sidebar({ collapsed: true, overlayInset: 272 })
+
+    expect(bar()).toBeNull()
   })
 })

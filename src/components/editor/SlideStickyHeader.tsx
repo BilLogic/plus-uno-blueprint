@@ -118,7 +118,7 @@ export function SlideStickyHeader({
   // Collapsed: the floating navbar carries this header's identity instead —
   // one chrome lane at any width. Path filters and the zoom readout are
   // deliberately not folded in; they come back when the sidebar does.
-  const { collapsed } = useSidebarCollapsedState()
+  const { collapsed, overlayInset } = useSidebarCollapsedState()
   useCollapsedNavSummary(
     collapsed
       ? {
@@ -136,6 +136,15 @@ export function SlideStickyHeader({
         BLUEPRINT_NAVBAR_BAR_CLASS,
         className,
       )}
+      /*
+        The same inset the service bar takes, for the same reason. This bar
+        sits in the same column and is covered by the same overlaying aside —
+        the only difference is which of the three kinds it happens to name, and
+        the overlay does not know the difference. `collapsed` above hides this
+        bar entirely, so this is the OTHER width: sidebar open, drawing over
+        the canvas, and this bar's left half underneath it.
+      */
+      style={overlayInset > 0 ? { marginLeft: overlayInset } : undefined}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <PhaseMenubarHeader
