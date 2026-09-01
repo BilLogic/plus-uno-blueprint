@@ -10,7 +10,6 @@ type PathLabelBadgeProps = {
   name: string
   description: string | null | undefined
   pathKind: PathKind
-  compact?: boolean
   className?: string
   style?: CSSProperties
   side?: 'top' | 'bottom' | 'left' | 'right'
@@ -38,7 +37,6 @@ export function PathLabelBadge({
   name,
   description,
   pathKind,
-  compact = false,
   className,
   style,
   side = 'top',
@@ -55,7 +53,6 @@ export function PathLabelBadge({
       className={cn(
         'max-w-full gap-1 border-transparent font-semibold',
         showTooltip ? 'cursor-help' : 'cursor-default',
-        compact ? 'h-5 px-2 py-0.5 text-xs' : 'h-auto px-2.5 py-1 text-sm',
         className,
       )}
       style={{

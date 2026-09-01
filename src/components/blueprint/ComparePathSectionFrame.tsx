@@ -24,7 +24,6 @@ export const SERVICE_PATH_SECTION_LEFT_INSET = 0
 
 type ComparePathSectionFrameProps = {
   blueprint: BlueprintData
-  compact?: boolean
   /** When false, only the colored path outline is rendered (service blueprint). */
   showTitle?: boolean
   /**
@@ -40,7 +39,6 @@ type ComparePathSectionFrameProps = {
 /** Figma-style section: path-type outline, grouped fill, optional title on the top edge. */
 export function ComparePathSectionFrame({
   blueprint,
-  compact,
   showTitle = true,
   variant = 'compare',
   excludeLabelRail = false,
@@ -97,7 +95,6 @@ export function ComparePathSectionFrame({
           name={path.name}
           description={path.summary}
           pathKind={path.kind}
-          compact={compact}
           className="pointer-events-auto absolute z-50 max-w-[calc(100%-12px)]"
           style={{
             top: titleTop,

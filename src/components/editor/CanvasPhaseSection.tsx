@@ -217,7 +217,7 @@ export function CanvasPhaseSection({
         // time the same way. The aria-label above keeps the plain title.
         // z-30: zoomed far out the badge counter-scales larger than its
         // inset and must not sink under a neighboring phase's panels.
-        className="pointer-events-auto absolute z-30 max-w-[min(100%,28rem)] border-transparent font-mono text-2xs uppercase tracking-wider"
+        className="pointer-events-auto absolute z-30 max-w-[min(100%,28rem)] border-transparent font-mono uppercase tracking-wider"
         style={{
           top: -sectionTopInset,
           // Flush with the phase FRAME's left edge (which sits at
