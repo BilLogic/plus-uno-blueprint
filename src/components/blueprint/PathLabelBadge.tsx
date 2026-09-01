@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { Badge } from '@/components/ui/badge'
 import { getPathBadgeStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
@@ -46,13 +45,13 @@ export function PathLabelBadge({
     <Badge
       // Fill AND its derived ink come from this one attribute (blueprint.css).
       data-blueprint-fill
-      // `cursor-help`, the dotted cue and the focus ring only where there is
-      // an explanation to reach: on overview chrome this badge explains
-      // nothing, and a help cursor over a word with no explanation is a
-      // promise it cannot keep. The popover trigger supplies `tabIndex`.
+      // One cursor whether or not there is an explanation behind it (#243).
+      // The help cursor used to be drawn only where the popover was shown,
+      // which was the right rule for a mark that promised something; with the
+      // mark gone there is nothing to withhold. The popover trigger still
+      // supplies `tabIndex`, so the explained case is reachable by keyboard.
       className={cn(
-        'max-w-full gap-1 border-transparent font-semibold',
-        showTooltip ? 'cursor-help' : 'cursor-default',
+        'max-w-full cursor-default gap-1 border-transparent font-semibold',
         className,
       )}
       style={{
@@ -60,14 +59,7 @@ export function PathLabelBadge({
         ...style,
       }}
     >
-      <span
-        className={cn(
-          'truncate leading-none tracking-tight',
-          showTooltip && DEFINED_LABEL_CUE,
-        )}
-      >
-        {name}
-      </span>
+      <span className="truncate leading-none tracking-tight">{name}</span>
     </Badge>
   )
 

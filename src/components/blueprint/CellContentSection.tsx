@@ -1,14 +1,8 @@
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
-import { DEFINED_LABEL_CUE, PANEL_TEXT } from '@/lib/panelText'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { useSupabase } from '@/contexts/SupabaseProvider'
-import { cn } from '@/lib/utils'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 
 /**
@@ -56,52 +50,20 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
   )
 }
 
-function OwnerCell({
-  label,
-  value,
-  hint,
-}: {
-  label: string
-  value: string
-  hint?: string
-}) {
-  const body = <span className={PANEL_TEXT.value}>{value}</span>
+/**
+ * A free-text owner, labelled.
+ *
+ * It carried an optional `hint` that opened a bare-sentence popover on the
+ * VALUE. Nothing ever passed one — both call sites below are label and value —
+ * so it was a dead third shape of definition, and #243 retired that shape. If
+ * an owner ever needs explaining, the explanation belongs on the label like
+ * every other one, through `PanelTermLabel`.
+ */
+function OwnerCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className={PANEL_TEXT.sectionLabel}>
-        {label}
-      </span>
-      {hint ? (
-        /* A popover, not a tooltip: this hint is a definition, and a tooltip
-           never opens on touch — see PanelTermLabel. */
-        <Popover>
-          <PopoverTrigger
-            nativeButton={false}
-            openOnHover
-            delay={200}
-            closeDelay={80}
-            render={
-              <span
-                className={cn(
-                  PANEL_TEXT.value,
-                  'w-fit cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-                  DEFINED_LABEL_CUE,
-                )}
-              >
-                {value}
-              </span>
-            }
-          />
-          <PopoverContent
-            side="bottom"
-            className="w-auto max-w-xs p-3 text-xs leading-relaxed"
-          >
-            {hint}
-          </PopoverContent>
-        </Popover>
-      ) : (
-        body
-      )}
+      <span className={PANEL_TEXT.sectionLabel}>{label}</span>
+      <span className={PANEL_TEXT.value}>{value}</span>
     </div>
   )
 }

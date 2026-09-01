@@ -18,10 +18,9 @@ import {
 } from '@/components/ui/drawer'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  DefinitionPopover,
+  type DefinitionSection,
+} from '@/components/blueprint/DefinitionCard'
 import {
   CELL_DETAIL_PANEL_BOTTOM_CLASS,
   CELL_DETAIL_PANEL_TOP_CLASS,
@@ -33,7 +32,7 @@ import {
   rememberedSheetSnap,
   rememberSheetSnap,
 } from '@/lib/panelSheetSnap'
-import { DEFINED_LABEL_CUE, PANEL_TEXT } from '@/lib/panelText'
+import { PANEL_TEXT } from '@/lib/panelText'
 import {
   blueprintLaneAttrs,
   blueprintToneAttrs,
@@ -275,10 +274,11 @@ export function Field({
       className={cn(
         'w-fit',
         PANEL_TEXT.sectionLabel,
-        // Only where there is something behind it. A help cursor and a dotted
-        // rule over a word that explains nothing is a promise it cannot keep.
+        // Only where there is something behind it — and, since #243, the
+        // focus ring alone. The help cursor and the dotted rule went with
+        // every other announcement that a word is defined.
         hint &&
-          `cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${DEFINED_LABEL_CUE}`,
+          'rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
       )}
     >
       {label}
@@ -288,24 +288,17 @@ export function Field({
   return (
     <div className="flex flex-col gap-1">
       {hint ? (
-        /* A popover, not a tooltip: a tooltip never opens on touch, and this
-           hint carries `PANEL_TERMS` entries — definitions — on a shell that
-           has a phone posture. See PanelTermLabel. */
-        <Popover>
-          <PopoverTrigger
-            nativeButton={false}
-            openOnHover
-            delay={200}
-            closeDelay={80}
-            render={labelText}
-          />
-          <PopoverContent
-            side="left"
-            className="w-auto max-w-64 p-3 text-xs leading-relaxed"
-          >
-            {hint}
-          </PopoverContent>
-        </Popover>
+        /* The definition CARD, not a bare sentence and not a tooltip. A
+           tooltip never opens on touch, and this hint carries `PANEL_TERMS`
+           entries — definitions — on a shell that has a phone posture. The
+           field's own label is the section's eyebrow, which is why the hint
+           itself no longer has to open by naming the field (#243). */
+        <DefinitionPopover
+          sections={[{ eyebrow: label, body: hint }]}
+          side="left"
+        >
+          {labelText}
+        </DefinitionPopover>
       ) : (
         labelText
       )}
@@ -451,6 +444,7 @@ export function PanelKindBadge({
   laneRole,
   tone,
   title,
+  category,
   description,
 }: {
   label: string
@@ -459,7 +453,17 @@ export function PanelKindBadge({
   tone?: TouchpointTone | null
   title?: string
   /**
-   * What this kind of row IS, shown on hover.
+   * The CATEGORY this badge's label is one of, and what that category means —
+   * the first section of the card, above the label's own.
+   *
+   * Only the stakeholder badge passes one: its label is a party's name, and
+   * the kind that party belongs to ("Staff") is a fact the reader has to learn
+   * separately. A lane-role badge already IS its category, so it passes none
+   * and the card is one section (#243).
+   */
+  category?: DefinitionSection | null
+  /**
+   * What this kind of row IS, shown on hover, under the label as its eyebrow.
    *
    * It used to hang off an ⓘ beside the badge — a second control for one fact,
    * when the badge is already the thing whose meaning is in question. Hovering
@@ -468,42 +472,34 @@ export function PanelKindBadge({
   description?: string | null
 }) {
   /*
+    A section per fact, and no section without a body: a heading over blank
+    space is a promise of content that never arrives.
+  */
+  const sections: DefinitionSection[] = []
+  if (category) sections.push(category)
+  if (description) sections.push({ eyebrow: label, body: description })
+
+  /*
     What an explained badge wears, and the one thing it must not.
 
-    `cursor-help` says a pointer will get something and it will not be a
-    click; the dotted underline says the same thing to a reader who has no
-    pointer at all, which is the half that was missing; the focus ring comes
-    from `badgeVariants` and the popover trigger supplies `tabIndex`, so the
-    definition is reachable without a pointer (docs/reference/panel-affordances.md
-    § Hover is never the only way in). What is deliberately absent is a hover
-    colour: this badge is not clickable, and a surface that repaints under the
-    pointer says it is.
+    The focus ring comes from `badgeVariants` and the popover trigger supplies
+    `tabIndex`, so the definition is reachable without a pointer
+    (docs/reference/panel-affordances.md § Hover is never the only way in).
+    #243 took away the `cursor-help` and the dotted rule that used to sit
+    beside them — nothing on the resting page announces a definition now. What
+    is deliberately absent, and always was, is a hover colour: this badge is
+    not clickable, and a surface that repaints under the pointer says it is.
   */
-  const explained = description
-    ? { className: `cursor-help ${DEFINED_LABEL_CUE}` }
-    : { className: undefined }
-
   const explain = (badge: ReactNode) =>
-    description ? (
+    sections.length > 0 ? (
       /* A POPOVER since #140, and the change is a bug fix rather than a
          preference: Base UI's tooltip never opens on touch, so every
          description this badge has ever carried — a lane's role, a
-         stakeholder's one-liner — was invisible on a phone. */
-      <Popover>
-        <PopoverTrigger
-          nativeButton={false}
-          openOnHover
-          delay={200}
-          closeDelay={80}
-          render={badge as never}
-        />
-        <PopoverContent
-          side="bottom"
-          className="w-auto max-w-xs p-3 text-xs leading-relaxed"
-        >
-          {description}
-        </PopoverContent>
-      </Popover>
+         stakeholder's one-liner — was invisible on a phone. The card shape
+         itself is #243. */
+      <DefinitionPopover sections={sections} side="bottom">
+        {badge as never}
+      </DefinitionPopover>
     ) : (
       badge
     )
@@ -513,7 +509,7 @@ export function PanelKindBadge({
       <Badge
         {...blueprintToneAttrs(tone)}
         title={title}
-        className={cn('max-w-full truncate border-transparent', explained.className)}
+        className="max-w-full truncate border-transparent"
         style={{
           backgroundColor: 'var(--background-blueprint-cell)',
           color: 'var(--foreground-blueprint-cell)',
@@ -530,10 +526,7 @@ export function PanelKindBadge({
     return explain(
       <Badge
         variant="secondary"
-        className={cn(
-          'max-w-full truncate border-muted bg-foreground/5 text-muted-foreground',
-          explained.className,
-        )}
+        className="max-w-full truncate border-muted bg-foreground/5 text-muted-foreground"
         title={title}
       >
         {label}
@@ -544,7 +537,7 @@ export function PanelKindBadge({
     <Badge
       {...blueprintLaneAttrs(laneRole)}
       title={title}
-      className={cn('max-w-full truncate border-transparent', explained.className)}
+      className="max-w-full truncate border-transparent"
       /*
         Inline, not a utility: the badge's own `variant` paints
         `bg-primary`, and a same-specificity arbitrary-property class lost to

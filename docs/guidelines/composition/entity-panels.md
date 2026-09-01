@@ -12,6 +12,7 @@ claims:
   - src/components/blueprint/CellOverviewSpec.tsx
   - src/components/blueprint/CellPanelEditor.tsx
   - src/components/blueprint/CellResourcesTab.tsx
+  - src/components/blueprint/DefinitionCard.tsx
   - src/components/blueprint/EntityDetailPanel.tsx
   - src/components/blueprint/EntityPropertiesButton.tsx
   - src/components/blueprint/EntityTitleAffordance.tsx
@@ -209,6 +210,13 @@ The same rule governs the cell panel's tabs, the lane kind badge, and
 `StatusBadge`. Definitions live once, in `src/lib/panelTerms.ts` — the same word
 appears in a tab, a section heading and a field label, and three copies of a
 definition are three chances to drift.
+
+**And one shape.** `PanelTermLabel`, `Field`'s `hint`, `PanelKindBadge`'s
+description and `StatusBadge` all render `DefinitionCard`: sections, each an
+eyebrow above a body, identically set. The label is the eyebrow, so the
+definition no longer opens by restating it. See
+[panel-affordances.md](../../reference/panel-affordances.md) § One definition
+card.
 
 `PanelTextareaField` is a bare `<textarea>` with the cell panel's treatment,
 deliberately not `input-group` (which the inventory reserves for the composer).

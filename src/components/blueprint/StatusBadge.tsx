@@ -1,9 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { DefinitionPopover } from '@/components/blueprint/DefinitionCard'
 import {
   ENTITY_STATUS_MEANING,
   ENTITY_STATUS_SHORT,
@@ -32,8 +28,15 @@ import { cn } from '@/lib/utils'
  * - **at_risk / deprecated** — the warning tint. These describe something live
  *   and going wrong, which is the one case worth a colour.
  *
- * The word is the whole control, so the definition hovers off the word itself
+ * The word is the whole control, so the definition hangs off the word itself
  * rather than an icon beside it (docs/reference/panel-affordances.md).
+ *
+ * A `DefinitionCard` since #243, and not the Tooltip it shipped with. The
+ * reason was already written down one file over, in `panelShell`: a tooltip
+ * never opens on touch. So `ENTITY_STATUS_MEANING` — the one authored line
+ * that separates "built" from "live" — was unreadable on a phone, on a shell
+ * that has a real phone posture. It was also the third shape of definition in
+ * the app, and there is now one.
  */
 export function StatusBadge({
   status,
@@ -45,32 +48,34 @@ export function StatusBadge({
   if (!status) return null
 
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Badge
-            variant="outline"
-            // Reachable without a pointer, and saying so with the cursor: the
-            // word IS the control, so the definition has to be gettable by
-            // keyboard too (docs/reference/panel-affordances.md § Hover is
-            // never the only way in). No hover colour — see `ui/badge.tsx`.
-            tabIndex={0}
-            className={cn(
-              'shrink-0 cursor-help gap-0 font-normal',
-              status === 'live' && 'text-foreground/80',
-              isUnbuilt(status) && 'border-dashed text-muted-foreground',
-              (status === 'at_risk' || status === 'deprecated') &&
-                'border-warning-400 bg-warning-200 text-foreground',
-              className,
-            )}
-          />
-        }
+    <DefinitionPopover
+      sections={[
+        {
+          eyebrow: ENTITY_STATUS_SHORT[status],
+          body: ENTITY_STATUS_MEANING[status],
+        },
+      ]}
+    >
+      <Badge
+        variant="outline"
+        // Reachable without a pointer: the word IS the control, so the
+        // definition has to be gettable by keyboard too
+        // (docs/reference/panel-affordances.md § Hover is never the only way
+        // in). No help cursor and no dotted rule — #243 took both away
+        // everywhere; the popover is what carries the definition to a reader
+        // with no pointer at all. No hover colour — see `ui/badge.tsx`.
+        tabIndex={0}
+        className={cn(
+          'shrink-0 gap-0 font-normal',
+          status === 'live' && 'text-foreground/80',
+          isUnbuilt(status) && 'border-dashed text-muted-foreground',
+          (status === 'at_risk' || status === 'deprecated') &&
+            'border-warning-400 bg-warning-200 text-foreground',
+          className,
+        )}
       >
         {ENTITY_STATUS_SHORT[status]}
-      </TooltipTrigger>
-      <TooltipContent className="max-w-64">
-        {ENTITY_STATUS_MEANING[status]}
-      </TooltipContent>
-    </Tooltip>
+      </Badge>
+    </DefinitionPopover>
   )
 }

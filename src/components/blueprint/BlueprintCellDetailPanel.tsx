@@ -1333,7 +1333,7 @@ function BlueprintCellDetailPanelBody() {
         {!editingCell &&
         detailDescriptionText.trim() &&
         !descriptionRepeatsTitle ? (
-          <Field label="Summary" hint="The tl;dr the detail fields add up to.">
+          <Field label="Summary" hint="What the detail fields add up to.">
             <p className={cn('whitespace-pre-wrap', PANEL_TEXT.value)}>
               {detailDescriptionText.trim()}
             </p>

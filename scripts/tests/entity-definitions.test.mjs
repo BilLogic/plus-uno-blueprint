@@ -44,19 +44,42 @@ export function stripComments(source) {
 function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return walk(path)
+    // A vanished entry is skipped — see `appSources` for whose file it is and
+    // why it vanishes mid-walk.
+    let directory
+    try {
+      directory = statSync(path).isDirectory()
+    } catch {
+      return []
+    }
+    if (directory) return walk(path)
     if (!/\.tsx?$/.test(entry)) return []
     return [path]
   })
 }
 
-/** Every TypeScript source under `src`, comments stripped. */
+/**
+ * Every TypeScript source under `src`, comments stripped.
+ *
+ * A file listed by the walk and gone by the time it is read is SKIPPED, not
+ * thrown on. `harness-claims.test.mjs` writes a probe component into
+ * `src/components/cover/` and deletes it again to prove the claim checker goes
+ * red, and vitest runs files in parallel — so this walk really does see a path
+ * that no longer exists. The subject is every file that IS there.
+ */
 export function appSources() {
   return walk(SRC)
-    .map((path) => ({
-      file: relative(ROOT, path).split('\\').join('/'),
-      code: stripComments(readFileSync(path, 'utf8')),
-    }))
+    .map((path) => {
+      try {
+        return {
+          file: relative(ROOT, path).split('\\').join('/'),
+          code: stripComments(readFileSync(path, 'utf8')),
+        }
+      } catch {
+        return null
+      }
+    })
+    .filter((one) => one !== null)
     .sort((a, b) => a.file.localeCompare(b.file))
 }
 
@@ -278,10 +301,26 @@ export function definitionsOnTooltips(blocks) {
 
 test('no definition is on a tooltip', () => {
   const blocks = tooltipBlocks(appSources())
-  // The extraction, asserted before its result is trusted.
+  /*
+    The extraction, asserted before its result is trusted — and asserted as an
+    INVARIANT rather than a count.
+
+    It was `blocks.length > 15`, which is a census: it says how many tooltips
+    the app happened to have on the day it was written, so retiring one is
+    indistinguishable from breaking the regex. #243 retired two — `StatusBadge`
+    and the divider rail label, both of which carried definitions — and the
+    floor failed for exactly the reason the ticket existed. What has to hold is
+    that the extraction still FINDS tooltips, in the file whose entire subject
+    is one and somewhere outside it.
+  */
+  const files = new Set(blocks.map((block) => block.file))
   assert.ok(
-    blocks.length > 15,
-    `only ${blocks.length} <Tooltip> blocks found — the extraction is reading the wrong shape`,
+    files.has('src/components/editor/IconTooltip.tsx'),
+    'the extraction found no <Tooltip> in IconTooltip.tsx, which is nothing but one — it is reading the wrong shape',
+  )
+  assert.ok(
+    files.size > 1,
+    'every <Tooltip> the extraction found is in one file — it is reading the wrong shape',
   )
   const found = definitionsOnTooltips(blocks)
   assert.deepEqual(

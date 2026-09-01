@@ -63,7 +63,11 @@ export function StakeholderSelect({
     }
     return (
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        <StakeholderBadge name={selected.name} summary={selected.summary} />
+        <StakeholderBadge
+          name={selected.name}
+          kind={selected.kind as StakeholderKind}
+          summary={selected.summary}
+        />
         <span className={PANEL_TEXT.meta}>
           {STAKEHOLDER_KIND_LABELS[selected.kind as StakeholderKind]}
         </span>

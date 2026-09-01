@@ -579,7 +579,9 @@ function CellPanelEditorForm({
       {/* The tl;dr that consolidates what the detailed fields (function,
           form, value) spell out. The column is `summary` too now — this used
           to carry a note explaining why the label and the column disagreed. */}
-      <Field label="Summary" hint="The tl;dr — what the detailed fields below add up to.">
+      {/* The hint no longer opens by naming the field: the card's eyebrow
+          prints "Summary" above it (#243). */}
+      <Field label="Summary" hint="What the detailed fields below add up to.">
         <textarea
           value={form.description}
           rows={3}
