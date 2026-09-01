@@ -39,7 +39,7 @@ results.
 
 Tracing consequences before committing: "what breaks if we automate
 check-in?" It builds a hypothetical variant (a local file — the shared
-database only ever describes reality), walks the trigger/needs dependency
+database only ever describes reality), walks the leads_to/enables dependency
 graph downstream, and reports what breaks, what improves, and where
 displaced work lands. Accepting an analysis emits a change request; the
 actual blueprint change happens through map, which refuses if the base

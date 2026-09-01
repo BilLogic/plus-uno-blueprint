@@ -56,7 +56,7 @@ the content the reader asked for with the density encoding.
 ## Path-type colors
 
 `PATH_TYPE_COLORS` (`src/lib/pathColorTheme.ts`) covers the three path types the
-schema allows (`path_type` is `happy | variant | exception`): happy = green,
+schema allows (`paths.kind` is `happy | variant | exception`): happy = green,
 variant = indigo, exception = red. Named paths draw stable per-name colors from
 a registry. Everything about it is deliberate and tested:
 

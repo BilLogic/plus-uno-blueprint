@@ -55,7 +55,7 @@ create table public.scenarios (
   position integer not null default 0,
   -- `merged` is a per-session display chosen in the compare control, never
   -- stored. create_scenario refuses it by name.
-  view_type text not null default 'single' check (view_type in ('single','stacked')),
+  layout text not null default 'single' check (layout in ('single','stacked')),
   origin text not null default 'import' check (origin in ('import','app')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -65,7 +65,7 @@ create table public.paths (
   id uuid primary key default gen_random_uuid(),
   scenario_id uuid not null references public.scenarios (id) on delete cascade,
   name text not null,
-  path_type text not null check (path_type in ('happy','variant','exception')),
+  kind text not null check (kind in ('happy','variant','exception')),
   summary text,   -- when this route applies
   note text,      -- the author's aside: open questions, provenance, working state
   origin text not null default 'import' check (origin in ('import','app')),
@@ -131,7 +131,7 @@ create table public.cells (
   value_props jsonb not null default '[]'::jsonb,
   owner text,            -- OVERRIDE of the lane's owner_team; empty = same as the lane
   perceived_owner text,  -- who the customer believes owns it; frontstage only
-  picture text,
+  frame text,
   position integer not null default 0,       -- order within one (lane, step) slot
   cell_key text,
   origin text not null default 'import' check (origin in ('import','app')),
@@ -217,12 +217,12 @@ create table public.evidence (
   updated_at timestamptz not null default now()
 );
 
-create table public.findings (
+create table public.audit_findings (
   id uuid primary key default gen_random_uuid(),
   service_id uuid not null references public.services (id) on delete cascade,
   run_id uuid not null,
   source text not null,
-  check_name text not null,
+  check_key text not null,
   severity text not null,
   cell_ids uuid[] not null default '{}',
   cell_keys text[] not null default '{}',
@@ -236,26 +236,26 @@ create table public.findings (
 create table public.slices (
   id uuid primary key default gen_random_uuid(),
   service_id uuid not null references public.services (id) on delete cascade,
-  slice_type text not null,
+  kind text not null,
   title text not null,
-  description text,
+  summary text,
   actor text,   -- display text; a trigger keeps it equal to the linked name
   stakeholder_id uuid references public.stakeholders (id),
   locale text not null default 'en',
   position integer not null default 0,
-  origin text not null default 'import' check (origin in ('import','app')),
+  authorship text not null default 'generated' check (authorship in ('generated','customized','human')),
   created_by uuid,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
-create table public.slice_items (
+create table public.slides (
   id uuid primary key default gen_random_uuid(),
   slice_id uuid not null references public.slices (id) on delete cascade,
   position integer not null,
   cell_ids uuid[] not null default '{}',
   cell_keys text[] not null default '{}',
-  caption text,
+  title text,
   narrative text,
   illustration jsonb,
   created_by uuid,

@@ -56,9 +56,9 @@
 %%        visual. Constrained by lanes_lane_role_check, NOT extensible; null =
 %%        generic swimlane, and permitted on purpose.
 %%
-%% Soft references: evidence.cell_id, audit_findings.cell_ids and slice_items.cell_ids
+%% Soft references: evidence.cell_id, audit_findings.cell_ids and slides.cell_ids
 %%        carry NO foreign key, deliberately. The importer's scenario-scoped
-%%        delete-and-reinsert must never cascade into analysis-tier rows that a
+%%        delete-and-reinsert must never cascade into the authored rows that a
 %%        person authored. The paired *_cell_keys columns are how those rows are
 %%        recovered when the uuids they pointed at are replaced.
 erDiagram
@@ -76,10 +76,11 @@ erDiagram
   cells              ||--o{ cell_dependencies : "source"
   cells              ||--o{ cell_dependencies : "target"
 
-  %% The analysis tier — records ABOUT the board rather than squares of it.
-  %% Shipped 2026-07-29 in f65efcf. Called the "derived layer" until 2026-08-26,
-  %% a name retired because four of these five tables are authored by a person,
-  %% not derived from anything.
+  %% Records ABOUT the board rather than squares of it. Shipped 2026-07-29 in
+  %% f65efcf. Called the "derived layer" until 2026-08-26 and the "analysis
+  %% tier" until 2026-08-31, then neither: no one word was true of all four, so
+  %% each has an OWNER instead (CONTEXT.md). Four of the five are authored by a
+  %% person, which is what both nouns got wrong.
   services           ||--o{ stakeholders : "the cast"
   stakeholders       |o--o| stakeholders : "parent_id, teams contain people"
   stakeholders       |o--o{ lanes : "lanes.stakeholder_id, NULLABLE"
@@ -89,7 +90,7 @@ erDiagram
   services           ||--o{ audit_findings : "has many"
   services           ||--o{ slices : "has many"
   services           ||--|| business_models : "one per service"
-  slices             ||--o{ slice_items : "has many"
+  slices             ||--o{ slides : "has many"
 
   %% Agent session ledger — unrelated to the blueprint tree.
   agent_sessions     ||--o{ agent_messages : "has many"
@@ -134,7 +135,7 @@ erDiagram
     uuid id PK
     uuid scenario_id FK
     text name
-    text summary "what this moment is, across every lane — the storyboard caption"
+    text summary "what this moment is, across every lane"
     text origin
   }
   path_steps {
@@ -221,15 +222,14 @@ erDiagram
     text authorship "generated | customized | human"
     uuid created_by
   }
-  slice_items {
+  slides {
     uuid id PK
     uuid slice_id FK
     int position
     uuid_array cell_ids "soft, no FK"
     text_array cell_keys "same cardinality as cell_ids, enforced"
-    text caption
+    text title
     text narrative
-    jsonb illustration
     uuid created_by
   }
   stakeholders {

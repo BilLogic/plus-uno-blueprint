@@ -484,11 +484,11 @@ async function dispatch(caseDef, name, args, trace, turn = 0) {
           : 'No evidence with those ids.'
         return record.result
       }
-      case 'get_proposition': {
+      case 'get_business_model': {
         // `business_model` until 2026-08-21 was `propositions`. This string named
         // the old table for five days after the rename and nothing could see it:
         // a PostgREST path is opaque to the compiler. check:database-names is what
-        // found it. The TOOL name stays `get_proposition` — that is on the wire to
+        // found it. The TOOL name stays `get_business_model` — that is on the wire to
         // the agent and renaming it is a contract change, not a repair.
         const rows = await rest('business_model?select=pricing,funding,partners,revenue_model,delivery_cost&limit=1')
         const row = rows?.[0]

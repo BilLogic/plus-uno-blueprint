@@ -77,7 +77,7 @@ import {
   getCompareDiff,
   getDeletionImpact,
   getEvidence,
-  getProposition,
+  getBusinessModel,
   getSession,
   listCellDependencies,
   listEvidence,
@@ -229,8 +229,8 @@ export async function dispatchTool(
         : []
       return getEvidence(client, ids)
     }
-    case 'get_proposition':
-      return getProposition(client)
+    case 'get_business_model':
+      return getBusinessModel(client)
     case 'list_sessions':
       return listSessions(agentSessionId)
     case 'get_session':

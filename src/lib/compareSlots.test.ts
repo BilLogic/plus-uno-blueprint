@@ -201,7 +201,7 @@ describe('buildCompareModel — alignment and verdicts', () => {
 })
 
 describe('buildCompareModel — fields and multisets', () => {
-  it('reports description-only differences as divergent with differingFields', () => {
+  it('reports summary-only differences as divergent with differingFields', () => {
     const a = makeBlueprint(
       'a',
       ['Pay'],
@@ -215,7 +215,7 @@ describe('buildCompareModel — fields and multisets', () => {
     const model = buildCompareModel(pair(a, b))
     const slot = model.slots[0]
     expect(slot.verdict).toBe('divergent')
-    expect(slot.differingFields).toEqual(['description'])
+    expect(slot.differingFields).toEqual(['summary'])
   })
 
   it('keeps detail-only divergence off the canvas: column shared, no fork (V7)', () => {

@@ -491,7 +491,7 @@ export async function getSession(sessionId: string): Promise<string> {
  * The service's business model — one row per service, so there is nothing
  * to list and no id to pass.
  */
-export async function getProposition(client: Client): Promise<string> {
+export async function getBusinessModel(client: Client): Promise<string> {
   const { data, error } = await client
     .from('business_models')
     .select('pricing, funding, partners, revenue_model, delivery_cost')
