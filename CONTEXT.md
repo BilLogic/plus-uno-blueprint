@@ -31,14 +31,14 @@ Table `phases`: `service_id`, `name`, `summary`, `position`, and
 
 **scenario** — a concrete situation inside a phase, worth mapping on its own:
 "a student's first session", "rescheduling". Each opens as its own board.
-Table `scenarios`: `phase_id`, `name`, `summary`, `position`, `view_type`.
+Table `scenarios`: `phase_id`, `name`, `summary`, `position`, `layout`.
 
 **path** — a variant route through one scenario: the happy path where everything
 works, plus the detours. A path is an **alternative, not a stage** — nothing
 connects across paths.
-Table `paths`: `scenario_id`, `name`, `path_type`, `summary` (the "applies when"
+Table `paths`: `scenario_id`, `name`, `kind`, `summary` (the "applies when"
 condition), `note`.
-`path_type` is exactly three values: `happy`, `variant`, `exception`.
+`kind` is exactly three values: `happy`, `variant`, `exception`.
 
 **step** — a column of the board: time, left to right. Step 1 happens before
 step 2.
@@ -147,14 +147,14 @@ at four levels, and it is the answer to "what is this phase, in fields?".
 
 | Level | Where the spec lives | Fields |
 |---|---|---|
-| service | table `business_model`, one row | `funding`, `pricing`, `delivery_cost`, `revenue_model`, `partners` |
+| service | table `business_models`, one row | `funding`, `pricing`, `delivery_cost`, `revenue_model`, `partners` |
 | phase | columns on `phases` | `business_impact`, `operational_requirements` |
 | lane | columns on `lanes` | `kpis`, `owner_team`, `tools` |
 | cell | columns on `cells` | `function`, `form`, `value_props`, `owner`, `perceived_owner` |
 
 **Scenario, step and path own no spec.** Scenario and step each open a detail
 panel and fill it entirely from structure and from their cells; path has
-`summary`, `note`, `path_type` and `status`. Whether that is the design or the
+`summary`, `note`, `kind` and `status`. Whether that is the design or the
 backlog is undecided; the table above states what exists.
 
 **The word is schema-and-code only.** `docs/plans/2026-07-30-003` D3b bans it
@@ -216,7 +216,7 @@ that has twice had to be replaced.
 `WRITE_TOOL_NAMES`: a tool that is renamed, removed, or added without an owner
 fails there rather than leaving this file quietly wrong.
 
-`business_model` is **not** among them, though it was once listed as though it
+`business_models` is **not** among them, though it was once listed as though it
 were. It is `service_id` plus `funding`, `pricing`, `delivery_cost`,
 `revenue_model` and `partners`: five fields describing the service, not a
 record about the board. It is the **service's spec row** — see *spec* above.
@@ -344,6 +344,7 @@ remember is #145's job, not this paragraph's.
 | `stakeholders.note` | `stakeholders.summary` | `20260830170000` |
 | `frontstage_tech`, `backstage_tech` | `frontstage_touchpoints`, `backstage_touchpoints` | `20260830150000` |
 | `tech_description` | `cell_touchpoints` | `20260830140000` |
+| `paths.description`, `cells.description`, `phases.description`, `scenarios.description`, `services.description` | `paths.summary`, `cells.summary`, `phases.summary`, `scenarios.summary`, `services.summary` | `20260820080000`, `20260820090000`, `20260820160000`, `20260821350000` |
 | `slices.description`, `findings.note`, `cell_dependencies.label` | `slices.summary`, `audit_findings.summary`, `cell_dependencies.name` | `20260830190000` |
 | `paths.path_type`, `slices.slice_type`, `scenarios.view_type` | `paths.kind`, `slices.kind`, `scenarios.layout` | `20260830190000` |
 | `findings`, `findings.check_name` | `audit_findings`, `audit_findings.check_key` | `20260830190000` |
@@ -622,7 +623,7 @@ lesson worth keeping: one is a fact about the language, the other was a queue
 that had stopped moving.
 
 **Permanent — `evidence.proposition_question_key`.** `propositions` became
-`business_model` on 2026-08-21, because that word already meant a *cell's*
+`business_model` (today `business_models`) on 2026-08-21, because that word already meant a *cell's*
 value proposition. This column is not that table. It records which of the three
 validation questions an evidence row answers — `understand`, `value`,
 `usability` — and those three are propositions in the ordinary sense: claims

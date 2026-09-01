@@ -22,7 +22,7 @@ export type IntegratedBlueprintCell = {
   kind: PathKind
   content: string
   frame: string | null
-  description: string | null
+  summary: string | null
   opacity: number
 }
 

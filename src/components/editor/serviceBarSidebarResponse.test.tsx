@@ -258,7 +258,7 @@ const SCENARIO: NavItem = {
   index: 1,
   label: 'Discovery',
   parentId: 'phase-1',
-  description: 'Potential tutors discover PLUS.',
+  summary: 'Potential tutors discover PLUS.',
 }
 
 function mountSlideBar(slide: NavItem) {

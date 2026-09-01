@@ -147,9 +147,9 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `src/types/database.ts`.
 
 **Core hierarchy** — `services` → `phases` (ordered, optional
-`loops_to_phase_id`) → `scenarios` (`layout`: single /
-side-by-side / integrated — integrated is merged at runtime, each path
-stored separately) → `paths` (`kind`: happy / variant / exception — the
+`loops_to_phase_id`) → `scenarios` (`layout`: single / stacked —
+merged is a session-only display, never stored; each path is stored
+separately) → `paths` (`kind`: happy / variant / exception — the
 CHECK allows exactly those three; `unhappy` became `exception` and
 `alternative`/`custom` became `variant` in
 `20260821220000_three_kinds_of_route.sql`). Steps are scenario-scoped (`steps`), joined to paths

@@ -32,7 +32,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
       id: phase.id,
       index: phaseIndex + 1,
       label: phase.name,
-      description: phase.summary,
+      summary: phase.summary,
       loopToId: phase.loops_to_phase_id ?? undefined,
     })
 
@@ -45,7 +45,7 @@ export function phasesToSlides(phases: PhaseRow[]): NavItem[] {
         id: scenario.id,
         index: scenarioIndex + 1,
         label: scenario.name,
-        description: scenario.summary,
+        summary: scenario.summary,
         parentId: phase.id,
         // One vocabulary. The column now holds client tokens
         // (`single | stacked`), so there is no seam to cross — but a row
