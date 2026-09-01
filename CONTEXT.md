@@ -280,6 +280,41 @@ plugin (the `agentic-service-blueprinting` repo), not from this repo. Note that
 **`slice` is overloaded**: `/sb:slice` is the skill that produces one, a *slice*
 is the artefact it produces.
 
+### Five words for arrival
+
+Five words for *not there yet*, naming five different things. Two belong to the
+shell, one to the canvas, one is a duration, and one is about the data rather
+than the screen. They are set out together because apart they read as spellings
+of one idea.
+
+**entrance** — the shell's from-state as it arrives: `idle`, `pending`, `shown`.
+`pending` lasts a single frame, and exists so that the fade which follows has
+somewhere to start. Nothing is waiting on data while it runs, which is what
+separates it from every other word here.
+
+**boot** — the sidebar's once-per-entry latch: `off`, `armed`, `skeletoning`. It
+answers whether this is the reader arriving or a surface they have already
+loaded coming back — a question no rung of the canvas's ladder can answer,
+because the canvas starts that ladder again every time it is uncovered.
+`skeletoning` was called *staging* until the collision with the rung below was
+named.
+
+**revealStage** — the canvas's ladder, six rungs from `CANVAS_REVEAL_STAGING` to
+`CANVAS_REVEAL_DONE`. It says how much of the board is painted and nothing about
+the shell around it. The canvas is the only thing that sets it; everything else
+reads it.
+
+**hold** — `SKELETON_HOLD_MS`, 250 ms: how long a surface may load before its
+skeleton is allowed to paint. **A duration, not a state** — the one word here
+measured in milliseconds rather than spelled as values, and the reason a fast
+load shows no placeholder at all instead of one that flashes.
+
+**status** — what a query returned: `loading`, `ready` or `error`. It is a fact
+about the data and not about the screen, so a bar can be `ready` while the
+sidebar is still `skeletoning` without the two contradicting each other. **Not
+the board's *status***, the six-value word for how far along a cell or a path
+is: that one is stored in a column, this one only ever describes a read.
+
 ---
 
 ## The rename map — fixed vocabulary
