@@ -90,7 +90,7 @@ export const MOBILE_READ_TOOL_NAMES = new Set([
   'list_cell_dependencies',
   'list_evidence',
   'get_evidence',
-  'get_proposition',
+  'get_business_model',
   'list_sessions',
   'get_session',
   'list_blueprint',
@@ -153,7 +153,7 @@ export const READ_TOOL_NAMES = new Set([
   'list_stakeholders',
   'list_evidence',
   'get_evidence',
-  'get_proposition',
+  'get_business_model',
   'list_sessions',
   'get_session',
   'get_ui_state',
@@ -430,7 +430,7 @@ export const TOOL_SPECS: ToolSpec[] = [
     },
   },
   {
-    name: 'get_proposition',
+    name: 'get_business_model',
     description:
       'The service\'s business model: pricing, revenue model, funding, partners, delivery cost. One row per service — no id to pass. Read before answering anything about how the service sustains itself.',
     parameters: { type: 'object', properties: {} },

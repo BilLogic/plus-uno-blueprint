@@ -149,7 +149,7 @@ describe('deriveCompareZones', () => {
     const detailOnly = getDetailOnlyCompareSlots(model)
     expect(detailOnly).toHaveLength(1)
     expect(detailOnly[0].columnLabel).toBe('Ship')
-    expect(detailOnly[0].differingFields).toEqual(['description'])
+    expect(detailOnly[0].differingFields).toEqual(['summary'])
   })
 })
 

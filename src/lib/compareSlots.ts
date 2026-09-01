@@ -23,7 +23,7 @@ import type { BlueprintData } from '@/types/blueprint'
  * whose names token-overlap strongly (2-path compare only).
  */
 
-export const COMPARE_FIELDS = ['content', 'description', 'resources'] as const
+export const COMPARE_FIELDS = ['content', 'summary', 'resources'] as const
 export type CompareField = (typeof COMPARE_FIELDS)[number]
 
 /** Moves here from types/integratedBlueprint (which re-exports during migration). */
@@ -318,7 +318,7 @@ export function buildCompareModel(blueprints: CompareBlueprints): CompareModel {
       ]
       const fieldSignatures: Record<CompareField, string> = {
         content: multisetSignature(cells.map((cell) => cell.content.trim())),
-        description: multisetSignature(
+        summary: multisetSignature(
           cells.map((cell) => (cell.summary ?? '').trim()),
         ),
         resources: multisetSignature(cells.map(resourceSignature)),
