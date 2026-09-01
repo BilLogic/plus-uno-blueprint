@@ -47,7 +47,12 @@ export type EntityHeaderProps = {
  * boot lane, so the bar, the sidebar and the board arrive on one beat instead
  * of the bar finishing first over a screen that is still loading.
  */
-const ENTITY_HEADER_HOLD_KEY = 'entity-header'
+/**
+ * Shared with `PathSelectorMenu` (#265): the path control sits in the same bar, so the
+ * two are one waterfall stage of one surface — the case ADR 0010 reserves a
+ * shared key for. One session, one beat, one fade.
+ */
+export const ENTITY_HEADER_HOLD_KEY = 'entity-header'
 
 /**
  * The two lines, as boxes rather than as text. `aria-hidden` because a

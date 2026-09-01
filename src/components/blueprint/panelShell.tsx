@@ -27,6 +27,7 @@ import {
 } from '@/components/editor/menubarHeaderLayout'
 import { Badge } from '@/components/ui/badge'
 import { useMobileShell } from '@/hooks/useMobileShell'
+import { useShellBooting } from '@/contexts/shellBootStore'
 import {
   PANEL_SHEET_SNAP_POINTS,
   rememberedSheetSnap,
@@ -159,6 +160,12 @@ export function PanelDrawerShell({
   // the AgentDock docked/floating precedent; the reconciliation guarantee
   // above (same tree position) holds in both postures.
   const mobile = useMobileShell()
+  // The shell's boot lane (#265). A panel opened by a deep link otherwise
+  // lands before the sidebar, the bar and the canvas it sits over. This is a
+  // hold on WHEN, never a second opinion on WHETHER: `open` keeps its single
+  // owner upstream, and a drawer that has not opened yet has nothing to
+  // close, so no `onClosed` ever fires for a hold.
+  const shellBooting = useShellBooting()
   /*
     PER SESSION, NOT PER CELL. A reader who dragged one cell tall is usually
     reading the next one the same way, so the stop persists across opens. Per
@@ -188,7 +195,7 @@ export function PanelDrawerShell({
         setSnapPoint(next)
         rememberSheetSnap(next)
       }}
-      open={open}
+      open={open && !shellBooting}
       onOpenChange={(next) => {
         // Only close *requests* (✕, Escape, swipe) arrive here, and with
         // `open` derived from panel state they can only fire while the panel
