@@ -11,7 +11,8 @@
  * Three links have to hold, and breaking any one of them restores the old
  * silence without breaking anything else:
  *
- *   1. the owner badge puts the definition on its tooltip,
+ *   1. the owner badge puts the kind's meaning and the definition on its
+ *      definition card,
  *   2. the stakeholder field renders that badge with the registry's own
  *      summary — and, where the badge is a picker instead, prints the same
  *      sentence,
@@ -60,13 +61,23 @@ const REAL: Sources = {
 export function readerFindings(sources: Sources): string[] {
   const findings: string[] = []
 
-  // 1. The badge carries the definition into a tooltip. `description` is the
-  //    prop PanelKindBadge turns into one; passing the summary as `title` or
-  //    `label` instead would render it and still not be the affordance
-  //    panel-affordances.md asks for.
+  // 1. The badge carries the definition into the card. `description` is the
+  //    prop PanelKindBadge turns into a section; passing the summary as
+  //    `title` or `label` instead would render it and still not be the
+  //    affordance panel-affordances.md asks for.
   if (!/description=\{summary\}/.test(sources.badge)) {
     findings.push(
-      'StakeholderBadge does not pass its summary to PanelKindBadge as `description`, so the definition never becomes a tooltip',
+      'StakeholderBadge does not pass its summary to PanelKindBadge as `description`, so the definition never reaches the card',
+    )
+  }
+
+  // 1b. And the CATEGORY half — the kind, and what that kind means. Added with
+  //     #243, which is what gave the card a section above the instance: a
+  //     reader who learns that `Regular Tutor` is staff and never learns what
+  //     staff commits a party to has half the card.
+  if (!/STAKEHOLDER_KIND_MEANING\[kind\]/.test(sources.badge)) {
+    findings.push(
+      'StakeholderBadge does not pass the kind meaning as its category, so the card opens on a party with no idea what sort of party it is',
     )
   }
 
@@ -107,13 +118,25 @@ describe('the registry definition reaches a reader', () => {
 })
 
 describe('and the check goes red on each link, severed on its own', () => {
-  it('red when the badge stops passing the summary to its tooltip', () => {
+  it('red when the badge stops passing the summary to its card', () => {
     const findings = readerFindings({
       ...REAL,
       badge: REAL.badge.replace('description={summary}', 'description={null}'),
     })
     expect(findings).toHaveLength(1)
-    expect(findings[0]).toMatch(/never becomes a tooltip/)
+    expect(findings[0]).toMatch(/never reaches the card/)
+  })
+
+  it('red when the badge stops saying what kind of party this is', () => {
+    const findings = readerFindings({
+      ...REAL,
+      badge: REAL.badge.replace(
+        'STAKEHOLDER_KIND_MEANING[kind]',
+        "'…'",
+      ),
+    })
+    expect(findings).toHaveLength(1)
+    expect(findings[0]).toMatch(/what sort of party it is/)
   })
 
   it('red when the field renders a badge with no definition behind it', () => {

@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
-import { DEFINED_LABEL_CUE } from '@/lib/panelText'
 import { Badge } from '@/components/ui/badge'
 import { PATH_TYPE_COLORS } from '@/lib/pathTypeTheme'
 import { getBlueprintFillStyle } from '@/lib/pathColorTheme'
@@ -59,7 +58,6 @@ export function ScenarioTitleBadge({
       kind={tone === 'phase' ? 'phase' : 'scenario'}
       description={description}
       name={name}
-      showName
       showDescription
       note={note}
       side={side}
@@ -69,12 +67,13 @@ export function ScenarioTitleBadge({
         data-scenario-panel-title-badge={panelTone ? '' : undefined}
         data-phase-title-badge={phaseTone ? '' : undefined}
         // The name carries its definition and its description on hover, on
-        // focus and on tap, so it wears the help cursor and the dotted cue and
-        // is reachable by keyboard. No hover colour: a badge that repaints
-        // under the pointer reads as clickable. The popover trigger supplies
-        // `tabIndex`.
+        // focus and on tap, and wears nothing that says so — #243 took the
+        // help cursor and the dotted cue away everywhere. It stays reachable
+        // by keyboard because the popover trigger supplies `tabIndex`. No
+        // hover colour: a badge that repaints under the pointer reads as
+        // clickable.
         className={cn(
-          'max-w-full cursor-help gap-1 overflow-visible border-transparent',
+          'max-w-full gap-1 overflow-visible border-transparent',
           pathKind && 'font-semibold',
           (panelTone || phaseTone) && 'font-semibold',
           className,
@@ -96,7 +95,6 @@ export function ScenarioTitleBadge({
             // LETTERSPACED. The span's own tracking would silently beat the
             // wrapper's `tracking-wider`, shipping the register tight.
             phaseTone ? 'tracking-wider' : 'tracking-tight',
-            DEFINED_LABEL_CUE,
           )}
         >
           {name}

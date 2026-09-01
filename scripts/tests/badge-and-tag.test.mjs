@@ -56,7 +56,15 @@ export function stripComments(source) {
 function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry)
-    if (statSync(path).isDirectory()) return walk(path)
+    // A vanished entry is skipped — see `designSystemSources` for whose file
+    // it is and why it vanishes mid-walk.
+    let directory
+    try {
+      directory = statSync(path).isDirectory()
+    } catch {
+      return []
+    }
+    if (directory) return walk(path)
     if (!/\.(tsx?|css)$/.test(entry)) return []
     return [path]
   })
@@ -72,10 +80,25 @@ function walk(dir) {
  */
 export function designSystemSources() {
   return walk(SRC)
-    .map((path) => ({
-      file: relative(ROOT, path).split('\\').join('/'),
-      code: stripComments(readFileSync(path, 'utf8')),
-    }))
+    .map((path) => {
+      /*
+        A file listed by the walk and gone by the time it is read is SKIPPED,
+        not thrown on. `harness-claims.test.mjs` writes a probe component into
+        `src/components/cover/` and deletes it again to prove the claim checker
+        goes red, and vitest runs files in parallel — so this walk really does
+        see a path that no longer exists, at a rate of roughly one run in four.
+        The subject is every file that IS there.
+      */
+      try {
+        return {
+          file: relative(ROOT, path).split('\\').join('/'),
+          code: stripComments(readFileSync(path, 'utf8')),
+        }
+      } catch {
+        return null
+      }
+    })
+    .filter((one) => one !== null)
     .sort((a, b) => a.file.localeCompare(b.file))
 }
 

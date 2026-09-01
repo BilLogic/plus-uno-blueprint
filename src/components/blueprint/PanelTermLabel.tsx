@@ -1,9 +1,5 @@
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { DEFINED_LABEL_CUE, PANEL_TEXT } from '@/lib/panelText'
+import { DefinitionPopover } from '@/components/blueprint/DefinitionCard'
+import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
 
 /**
@@ -15,24 +11,21 @@ import { cn } from '@/lib/utils'
  * people who most need a blueprint are the ones who do not.
  *
  * No ⓘ beside the label: the label IS the word whose meaning is in question,
- * and hovering the word you do not recognise is where anyone looks first. ⓘ
- * means one thing in this app and it is "opens the panel" (#140 Q11).
+ * and hovering the word you do not recognise is where anyone looks first.
  *
- * A POPOVER and not a `Tooltip`, since #140, and this was a live bug rather
- * than a preference. Base UI's tooltip opens on hover and on focus and on
- * nothing else — it is `mouseOnly` with no press to fall back on — so on the
- * phone posture this app actually has (`useMobileShell`, a full-width bottom
- * sheet) all six of these definitions were unreachable. `Popover` takes
- * `openOnHover` for the pointer and keeps its own press for everyone else.
+ * A `DefinitionCard` since #243, and not the bare sentence it opened with.
+ * The sentence had no heading, so it had to open by restating the label it
+ * hung from — "Storyboard — the frames for each step" — and it was a third
+ * shape beside the two-section card and `StatusBadge`'s tooltip. With the term
+ * as the section's eyebrow the definition can start with the definition, and
+ * every explained word in the app opens the same way.
  *
- * `cursor-help`, the dotted cue, the focus ring, the popover — what an
- * explained label wears. The dotted underline is the `<abbr>` idiom and it is
- * the only one of the four a touch reader can see. No hover colour: it is not
- * clickable, and a surface that repaints under the pointer says it is. The
- * trigger supplies `tabIndex` — a definition on a bare `<span>` cannot be
- * reached by keyboard at all, which is the same failure as touch with a
- * different cause (docs/reference/panel-affordances.md § Hover is never the
- * only way in).
+ * No dotted rule and no `cursor-help`. Both were marks announcing that this
+ * word is defined; #243 removed them everywhere, on the trade that discovery
+ * gets quieter in a tool used daily. What is NOT traded away is reach: the
+ * popover trigger supplies `tabIndex`, so the definition is gettable by
+ * keyboard, and a popover opens on touch where a tooltip does not
+ * (docs/reference/panel-affordances.md § Hover is never the only way in).
  */
 export function PanelTermLabel({
   term,
@@ -44,28 +37,19 @@ export function PanelTermLabel({
   className?: string
 }) {
   return (
-    <Popover>
-      <PopoverTrigger
-        nativeButton={false}
-        openOnHover
-        delay={200}
-        closeDelay={80}
-        render={
-          <span
-            className={cn(
-              PANEL_TEXT.sectionLabel,
-              'w-fit cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-              DEFINED_LABEL_CUE,
-              className,
-            )}
-          />
-        }
+    <DefinitionPopover
+      sections={[{ eyebrow: term, body: definition }]}
+      side="bottom"
+    >
+      <span
+        className={cn(
+          PANEL_TEXT.sectionLabel,
+          'w-fit rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+          className,
+        )}
       >
         {term}
-      </PopoverTrigger>
-      <PopoverContent className="w-auto max-w-64 p-3 text-xs leading-relaxed">
-        {definition}
-      </PopoverContent>
-    </Popover>
+      </span>
+    </DefinitionPopover>
   )
 }

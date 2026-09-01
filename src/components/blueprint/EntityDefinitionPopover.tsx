@@ -1,30 +1,23 @@
-import { useCallback, useState, type ReactElement } from 'react'
+import type { ReactElement } from 'react'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  DefinitionPopover,
+  type DefinitionSection,
+} from '@/components/blueprint/DefinitionCard'
 import {
   ENTITY_KIND_DEFINITIONS,
   instanceDescriptionText,
   type EntityKindTerm,
 } from '@/lib/panelTerms'
-import { cn } from '@/lib/utils'
-
-/** Below this on-screen height the label is treated as zoomed-out / too small to read. */
-const SMALL_LABEL_HEIGHT_PX = 18
 
 type EntityDefinitionPopoverProps = {
-  /** Which kind of thing the label names. Its definition is the first fact. */
+  /** Which kind of thing the label names. Its definition is the first section. */
   kind: EntityKindTerm
-  /** This instance's own description, if it has one. The second fact. */
+  /** This instance's own description, if it has one. The second section's body. */
   description?: string | null
-  /** This instance's name, printed above its description when it is worth repeating. */
+  /** This instance's name. It is the second section's eyebrow. */
   name?: string
-  /** When true, the name is always shown; otherwise only when the trigger truncates it. */
-  showName?: boolean
   /**
-   * Whether to print this instance's description under the rule.
+   * Whether to print this instance's description under the hairline.
    *
    * Off by default, and that default is the standing prohibition rather than
    * shyness: a menubar title and a slide header already print the description
@@ -38,7 +31,7 @@ type EntityDefinitionPopoverProps = {
   /**
    * A further note about THIS instance — the parallel-scenario aside is the
    * only one. It used to hang off an ⓘ inside the badge, which made ⓘ mean two
-   * things; it is a fact about the same label, so it rides in the same popover.
+   * things; it is a fact about the same label, so it rides in the same card.
    */
   note?: string | null
   children: ReactElement
@@ -48,23 +41,24 @@ type EntityDefinitionPopoverProps = {
   className?: string
 }
 
+/** The eyebrow an aside wears, so it is a section like every other one. */
+const NOTE_EYEBROW = 'Note'
+
 /**
  * What this kind of thing IS, hung off the label that names one of them.
  *
- * A POPOVER and not a `Tooltip`, and that is the bug this component was
- * extracted to fix rather than a preference. Base UI's `Tooltip` never opens
- * on touch — `useHoverReferenceInteraction` is `mouseOnly` there with no press
- * to fall back on — so every definition in this app was invisible on a phone,
- * on a shell that has a real phone posture. `Popover` takes `openOnHover` for
- * the pointer and keeps its own press for everyone else, which is one
- * mechanism reaching both readers rather than two mechanisms for one fact.
+ * It is a `DefinitionCard` and nothing else since #243: this component's only
+ * job is to turn a kind, an instance and an aside into SECTIONS. It used to
+ * own the card's markup, and owning it is how the instance half drifted into a
+ * plain medium-weight name while the category half wore a small-caps eyebrow —
+ * two heading treatments in one card, on the three surfaces that render both.
  *
- * Two facts in one popover, which is allowed: the KIND above a rule, THIS
- * INSTANCE below it. The standing prohibition is two mechanisms for one fact,
- * not one mechanism for two — and splitting them would put the definition of
+ * Several facts in one card, which is allowed: the KIND, then THIS INSTANCE,
+ * then an aside. The standing prohibition is two mechanisms for one fact, not
+ * one mechanism for several — and splitting them would put the definition of
  * "path" somewhere other than on the word "path".
  *
- * It was `PathDescriptionTooltip`. The name was already wrong before this
+ * It was `PathDescriptionTooltip`. The name was already wrong before that
  * change — `ScenarioTitleBadge` and `PathLabelBadge` both funnel through it,
  * so it served phases and scenarios as well as paths — and it is wrong twice
  * over now that it is not a tooltip.
@@ -73,7 +67,6 @@ export function EntityDefinitionPopover({
   kind,
   description,
   name,
-  showName = false,
   showDescription = false,
   note,
   children,
@@ -81,77 +74,40 @@ export function EntityDefinitionPopover({
   nativeButton = false,
   className,
 }: EntityDefinitionPopoverProps) {
-  const [includeName, setIncludeName] = useState(false)
   const term = ENTITY_KIND_DEFINITIONS[kind]
-  const text = instanceDescriptionText(description)
-  const hasDescription = Boolean(description?.trim())
+  const trimmedName = name?.trim()
   const noteText = note?.trim() || null
 
-  const updateIncludeName = useCallback(
-    (element: HTMLElement) => {
-      setIncludeName(
-        Boolean(name?.trim()) &&
-          element.getBoundingClientRect().height < SMALL_LABEL_HEIGHT_PX,
-      )
-    },
-    [name],
-  )
+  const sections: DefinitionSection[] = [
+    { eyebrow: term.label, body: term.definition },
+  ]
 
   /*
-    A rule under a sentence with blank space below it is a promise of content
-    that never arrives, so the instance half renders only where there is one.
+    The instance section needs a NAME, because its eyebrow IS the name. A
+    caller asking for a description with nothing to head it would get a
+    headless section, which is the second heading treatment this card was
+    flattened to remove — so it draws nothing instead.
   */
-  const showInstance = showDescription || noteText !== null
+  if (showDescription && trimmedName) {
+    sections.push({
+      eyebrow: trimmedName,
+      body: instanceDescriptionText(description),
+      unwritten: !description?.trim(),
+    })
+  }
+
+  if (noteText) {
+    sections.push({ eyebrow: NOTE_EYEBROW, body: noteText })
+  }
 
   return (
-    <Popover>
-      <PopoverTrigger
-        render={children}
-        nativeButton={nativeButton}
-        openOnHover
-        delay={200}
-        closeDelay={80}
-        onPointerEnter={(event) => updateIncludeName(event.currentTarget)}
-        onFocus={(event) => updateIncludeName(event.currentTarget)}
-      />
-      <PopoverContent
-        side={side}
-        sideOffset={6}
-        className={cn('w-auto max-w-xs gap-0 p-0 text-left', className)}
-      >
-        <div className="flex flex-col gap-1 px-3 py-2.5">
-          {/* Small caps, so the kind reads as a category and not as another
-              sentence competing with the one under it. */}
-          <span className="text-3xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {term.label}
-          </span>
-          <span className="text-xs leading-relaxed text-foreground">
-            {term.definition}
-          </span>
-        </div>
-        {showInstance ? (
-          <div className="flex flex-col gap-1 border-t border-border px-3 py-2.5">
-            {(includeName || showName) && name ? (
-              <span className="text-xs font-medium text-foreground">{name}</span>
-            ) : null}
-            {showDescription ? (
-              <span
-                className={cn(
-                  'text-xs leading-relaxed text-muted-foreground',
-                  !hasDescription && 'italic opacity-80',
-                )}
-              >
-                {text}
-              </span>
-            ) : null}
-            {noteText ? (
-              <span className="text-xs leading-relaxed text-muted-foreground">
-                {noteText}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </PopoverContent>
-    </Popover>
+    <DefinitionPopover
+      sections={sections}
+      side={side}
+      nativeButton={nativeButton}
+      className={className}
+    >
+      {children}
+    </DefinitionPopover>
   )
 }

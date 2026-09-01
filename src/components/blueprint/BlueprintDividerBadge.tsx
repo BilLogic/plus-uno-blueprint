@@ -1,9 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { DefinitionPopover } from '@/components/blueprint/DefinitionCard'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { getBlueprintFillStyle } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
@@ -20,9 +16,9 @@ type BlueprintDividerBadgeProps = {
  *
  * These three lines are the whole grammar of a service blueprint and the
  * canvas states them as three unexplained captions. A reader who does not
- * already know the convention has nowhere to find out, which is exactly the
- * kind of thing a tooltip is for — the label names it, the tooltip says what
- * it separates.
+ * already know the convention has nowhere to find out. The label names the
+ * line and the definition says what it separates — one term, one meaning,
+ * which is one section of a `DefinitionCard`.
  */
 const DIVIDER_MEANINGS: Record<string, string> = {
   'line of interaction':
@@ -45,19 +41,20 @@ export function BlueprintDividerRailLabel({
   const caption = (
     <span
       data-blueprint-row-header=""
-      // With a meaning behind it this is an explained label, and it wears the
-      // three things this design system gives one: the help cursor, a focus
-      // ring, and reachability by keyboard. A tooltip on a bare `<span>`
-      // cannot be reached at all — the same gap `PanelTermLabel` closes, for
-      // the reason docs/reference/panel-affordances.md § Hover is never the
-      // only way in states. What it does NOT gain is a hover colour, because
-      // that would read as clickable and it is not.
+      // With a meaning behind it this is an explained label, and since #243 it
+      // wears exactly one thing that says so to a reader: nothing. What it
+      // keeps is REACH — a focus ring and keyboard focus, because a definition
+      // on a bare `<span>` cannot be got at otherwise (the same gap
+      // `PanelTermLabel` closes; docs/reference/panel-affordances.md § Hover is
+      // never the only way in). The help cursor went with the dotted rule
+      // everywhere else in the app and had no reason to survive here. No hover
+      // colour either, because that would read as clickable and it is not.
       {...(meaning ? { tabIndex: 0 } : {})}
       className={cn(
         'relative shrink-0 font-medium uppercase leading-none tracking-[0.08em]',
         compact ? 'text-3xs' : 'text-2xs',
         meaning &&
-          'cursor-help rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+          'rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
       )}
       style={{ color: BLUEPRINT_THEME.dividerLabel }}
     >
@@ -65,13 +62,14 @@ export function BlueprintDividerRailLabel({
     </span>
   )
   if (!meaning) return caption
+  /* A definition card, not the tooltip this shipped with (#243). The three
+     divider lines are the whole grammar of a service blueprint, and a Base UI
+     tooltip is `mouseOnly` — so on the phone posture this app has, the reader
+     least likely to know the convention was the one who could not read it. */
   return (
-    <Tooltip>
-      <TooltipTrigger render={caption} />
-      <TooltipContent side="top" className="max-w-xs">
-        {meaning}
-      </TooltipContent>
-    </Tooltip>
+    <DefinitionPopover sections={[{ eyebrow: label, body: meaning }]}>
+      {caption}
+    </DefinitionPopover>
   )
 }
 

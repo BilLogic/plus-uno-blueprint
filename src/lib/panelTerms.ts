@@ -3,6 +3,11 @@
  *
  * One place, because the same word appears in a tab, a section heading and a
  * field label, and three copies of a definition is three chances to drift.
+ *
+ * Each of these is a card SECTION's body, under an eyebrow that already prints
+ * the term. So none of them opens by naming the term again: "Storyboard — the
+ * frames for each step" was written when there was no eyebrow to say
+ * "Storyboard", and with one it spends its first clause saying nothing (#243).
  */
 export const PANEL_TERMS = {
   dependencies:
@@ -14,7 +19,7 @@ export const PANEL_TERMS = {
   pathSummary:
     'The condition that puts someone on this route rather than one of its siblings.',
   authorNote:
-    "The author's aside — an open question, provenance, working state. Not a fact about the service.",
+    'An open question, provenance, working state. Not a fact about the service.',
   status:
     'How far along the thing this describes is, from proposed to live to on its way out.',
   touchpoint:
@@ -22,8 +27,8 @@ export const PANEL_TERMS = {
   paths: 'The routes through this scenario. Every scenario has one main route and may have variants and exceptions.',
   position:
     'Where this step sits in each route. A step can be third in one path and fifth in another.',
-  storyboard: 'This moment’s strip — the frames drawn for it, one per actor lane.',
-  summary: 'The tl;dr — what the detailed fields below add up to.',
+  storyboard: 'The frames drawn for this moment, one per actor lane.',
+  summary: 'What the detailed fields below add up to.',
 } as const
 
 /**
