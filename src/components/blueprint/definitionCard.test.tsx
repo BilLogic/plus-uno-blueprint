@@ -28,6 +28,8 @@ import {
 } from '@/components/blueprint/DefinitionCard'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
+import { BlueprintDividerRailLabel } from '@/components/blueprint/BlueprintDividerBadge'
+import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
 import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
@@ -280,6 +282,57 @@ describe('StatusBadge', () => {
     expect(badge.getAttribute('tabindex')).toBe('0')
     badge.focus()
     expect(document.activeElement).toBe(badge)
+  })
+})
+
+describe('a definition hangs off a badge that names a term', () => {
+  /*
+    The bug (#244): eleven panel labels carried a definition, and nine of them
+    were ordinary English on a form — `Status`, `Summary`, `Position`,
+    `Paths`, `Dependencies`, `Resources`. A definition on every label teaches a
+    reader that hovering is not worth doing, which costs the words that DO need
+    explaining the only affordance they have.
+
+    What is asserted is what a reader can reach: which words disclose something
+    on hover, and what shape the thing they hover is.
+  */
+  it('a term is a badge, and hovering it gives the definition', async () => {
+    render(
+      <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />,
+    )
+    const badge = screen.getByText('Touchpoint')
+    expect(badge.hasAttribute('data-panel-term-badge')).toBe(true)
+    hover(badge)
+    expect(await screen.findByText(PANEL_TERMS.touchpoint)).not.toBeNull()
+  })
+
+  it('an ordinary section label discloses nothing at all', async () => {
+    // `Status` names a field holding a status. A sentence saying so helped
+    // nobody, and there were eight more like it.
+    render(<PanelSectionLabel>Status</PanelSectionLabel>)
+    const label = screen.getByText('Status')
+    expect(label.hasAttribute('tabindex')).toBe(false)
+    hover(label)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(document.querySelector('[data-definition-card]')).toBeNull()
+  })
+
+  it('a divider is an outlined block, and says what its line separates', async () => {
+    // The three divider lines are the whole grammar of a service blueprint,
+    // and the rail stated them in the same register as every other row label.
+    render(<BlueprintDividerRailLabel label="line of interaction" />)
+    const block = screen.getByText('line of interaction')
+    expect(block.hasAttribute('data-blueprint-row-header')).toBe(true)
+    expect(block.className).toContain('uppercase')
+    hover(block)
+    expect(
+      await screen.findByText(/Above it, what the customer does/),
+    ).not.toBeNull()
+  })
+
+  it('the term map holds only the words a reader could not guess', () => {
+    // The check that keeps the pass from being undone one entry at a time.
+    expect(Object.keys(PANEL_TERMS).sort()).toEqual(['storyboard', 'touchpoint'])
   })
 })
 
