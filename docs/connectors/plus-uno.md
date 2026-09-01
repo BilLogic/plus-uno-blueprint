@@ -15,6 +15,12 @@ This is an **instance integration, not harness.** The
 
 ## The canonical home is here
 
+The CONSTANTS live in `src/lib/blueprintContract.ts`, below. The PROSE — what
+each entity means, what its values may be, and which retrieval mode answers
+which question — lives in `docs/agents/reading-the-blueprint.md`, is vendored
+by the bot the same way, and is swept by the same live check. Both moved here
+for one reason: the side that owns the schema owns the claim about it.
+
 `src/lib/blueprintContract.ts` is the canonical copy of every constant both
 sides must agree on, and the bot vendors it. Not the other way round: two
 coordination bugs shipped before that file existed — a renamed slices column and

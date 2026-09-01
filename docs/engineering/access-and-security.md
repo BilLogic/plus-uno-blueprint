@@ -146,10 +146,16 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `supabase/schema.reference.sql`; generated types are
 `src/types/database.ts`.
 
+What each thing MEANS, entity by entity, with the value vocabularies and how to
+retrieve it: `docs/agents/reading-the-blueprint.md`. That file is the account
+agents read and uno-bot vendors; this section is the engineering tour. Neither
+restates the other.
+
 **Core hierarchy** — `services` → `phases` (ordered, optional
-`loops_to_phase_id`) → `scenarios` (`layout`: single /
-side-by-side / integrated — integrated is merged at runtime, each path
-stored separately) → `paths` (`kind`: happy / variant / exception — the
+`loops_to_phase_id`) → `scenarios` (`layout`: single / stacked — `merged` is a
+display state the app computes and the CHECK will not store; an older
+`single | side-by-side | integrated` vocabulary was deleted rather than
+translated, and this line went on naming it) → `paths` (`kind`: happy / variant / exception — the
 CHECK allows exactly those three; `unhappy` became `exception` and
 `alternative`/`custom` became `variant` in
 `20260821220000_three_kinds_of_route.sql`). Steps are scenario-scoped (`steps`), joined to paths

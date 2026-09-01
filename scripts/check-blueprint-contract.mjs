@@ -220,7 +220,11 @@ const postgrest = (body) =>
  * Checking them HERE rather than in the bot's repo is the same choice the
  * contract makes: the side that owns the schema owns the claim about it.
  */
-const SWEPT_DOCS = ['docs/connectors/plus-uno.md', 'docs/engineering/access-and-security.md']
+const SWEPT_DOCS = [
+  'docs/agents/reading-the-blueprint.md',
+  'docs/connectors/plus-uno.md',
+  'docs/engineering/access-and-security.md',
+]
 
 /**
  * A schema claim is written QUALIFIED — `cells.summary`, never a bare
