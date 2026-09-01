@@ -72,6 +72,11 @@ export const ONE_SPELLING = Object.freeze([
     why: '`description` survives in the file series as a `create_phase` argument production does not have',
   },
   {
+    retired: 'cells.description',
+    current: 'cells.summary',
+    why: 'renamed by 20260820090000; asserted here so the roster and `a-form-key-is-a-column` name the same pair, which is what let the form key drift for twelve days (#261)',
+  },
+  {
     retired: 'slices.slice_type',
     current: 'slices.kind',
     why: 'enforced as a fragment too; asserted here so the four classifier renames read as one set',
@@ -151,6 +156,7 @@ test('the check goes red on a schema that never did the rename', () => {
       ['findings', { name: 'findings', columns: new Map([['note', {}], ['check_name', {}]]) }],
       ['business_model', { name: 'business_model', columns: new Map() }],
       ['slices', { name: 'slices', columns: new Map([['description', {}], ['slice_type', {}], ['origin', {}]]) }],
+      ['cells', { name: 'cells', columns: new Map([['description', {}]]) }],
       ['cell_dependencies', { name: 'cell_dependencies', columns: new Map([['label', {}], ['note', {}]]) }],
       ['paths', { name: 'paths', columns: new Map([['path_type', {}]]) }],
       ['scenarios', { name: 'scenarios', columns: new Map([['view_type', {}]]) }],
@@ -158,7 +164,7 @@ test('the check goes red on a schema that never did the rename', () => {
     ]),
   }
   const found = residue(before)
-  // Ten retirements, each failing both halves, plus the two dropped columns.
+  // Every retirement failing both halves, plus the dropped columns.
   assert.equal(found.length, ONE_SPELLING.length * 2 + DROPPED.length)
   assert.ok(found.some((one) => /^findings still exists/.test(one)))
   assert.ok(found.some((one) => /^audit_findings does not exist/.test(one)))

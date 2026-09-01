@@ -40,14 +40,14 @@ function resolveHeaderDescription(
   selectedPathIds: string[],
 ): string | null | undefined {
   if (isSubslide(slide)) {
-    if (slide.description?.trim()) return slide.description
+    if (slide.summary?.trim()) return slide.summary
 
     const selectedPath = paths.find((path) => selectedPathIds.includes(path.id))
     return selectedPath?.summary ?? paths[0]?.summary ?? null
   }
 
   return (
-    slide.description ?? 'Scenarios in this phase and how they connect.'
+    slide.summary ?? 'Scenarios in this phase and how they connect.'
   )
 }
 

@@ -198,6 +198,18 @@ export const RENAME_MAP = Object.freeze(
     // `scripts/tests/one-spelling-each.test.mjs` carries these four
     // retirements instead, as table-qualified names, which is a subject narrow
     // enough to say `description` without saying it about `create_phase`.
+    // The five `description → summary` renames of 2026-08-20/21. Recorded
+    // late (#261): the form key and two app types kept saying `description`
+    // for twelve days, and the roster this file IS had no row for the rename
+    // that any check could have read. Table-qualified for the same reason as
+    // the row below — `description` is a live argument name elsewhere.
+    {
+      was: ['paths.description', 'cells.description', 'phases.description', 'scenarios.description', 'services.description'],
+      is: ['paths.summary', 'cells.summary', 'phases.summary', 'scenarios.summary', 'services.summary'],
+      migrations: ['20260820080000', '20260820090000', '20260820160000', '20260821350000'],
+      retired: [],
+      copy: [],
+    },
     {
       was: ['slices.description', 'findings.note', 'cell_dependencies.label'],
       is: ['slices.summary', 'audit_findings.summary', 'cell_dependencies.name'],

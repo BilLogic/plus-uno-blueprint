@@ -190,7 +190,7 @@ function ServicePhaseSection({
 }: ServicePhaseSectionProps) {
   const label = getSlideDisplayLabel(phase, slides)
   const description =
-    phase.description ?? 'Scenarios in this phase and how they connect.'
+    phase.summary ?? 'Scenarios in this phase and how they connect.'
 
   return (
     <CanvasPhaseSection

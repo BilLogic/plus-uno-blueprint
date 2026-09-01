@@ -9,11 +9,11 @@ import {
 function mergeSlideFromFallback(slide: NavItem, fallback: NavItem | undefined): NavItem {
   if (!fallback) return slide
 
-  const description = fallback.description?.trim()
-    ? fallback.description
-    : slide.description?.trim()
-      ? slide.description
-      : fallback.description
+  const summary = fallback.summary?.trim()
+    ? fallback.summary
+    : slide.summary?.trim()
+      ? slide.summary
+      : fallback.summary
 
   const viewType =
     hasBlueprintFallback(slide.id) && fallback.viewType
@@ -23,14 +23,14 @@ function mergeSlideFromFallback(slide: NavItem, fallback: NavItem | undefined): 
   const loopToId = slide.loopToId ?? fallback?.loopToId
 
   if (
-    description === slide.description &&
+    summary === slide.summary &&
     viewType === slide.viewType &&
     loopToId === slide.loopToId
   ) {
     return slide
   }
 
-  return { ...slide, description, viewType, loopToId }
+  return { ...slide, summary, viewType, loopToId }
 }
 
 /**

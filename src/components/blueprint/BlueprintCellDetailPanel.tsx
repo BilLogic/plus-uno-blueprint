@@ -445,13 +445,13 @@ function BlueprintCellDetailPanelBody() {
     // fallbacks would be the last place in the app still joining by label.
     const fromEntry = (entry: {
       content: string
-      description?: string | null
+      summary?: string | null
       frame?: string | null
       links?: CellLink[] | null
       resources?: CellResource[] | null
     }) => ({
       content: entry.content,
-      summary: entry.description ?? null,
+      summary: entry.summary ?? null,
       frame: entry.frame ?? null,
       links: entry.links ?? [],
       touchpoints: cellTouchpointsFromLinks(entry.content, entry.links),
@@ -474,7 +474,7 @@ function BlueprintCellDetailPanelBody() {
 
     return fromEntry({
       content: pathEntry?.content ?? '',
-      description: pathEntry?.description ?? null,
+      summary: pathEntry?.summary ?? null,
       frame: pathEntry?.frame ?? null,
       links: pathEntry?.links ?? [],
       resources: pathEntry?.resources ?? null,

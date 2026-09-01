@@ -296,7 +296,7 @@ a colour. The definition hovers off the word itself — no ⓘ.
 The vocabulary is `src/lib/entityStatus.ts`, and its history is the argument
 against inventing a second one. It began as two values on cells, `planned` and
 `prototype`, and the boundary did not order: the one case labelled `planned` was
-a card already merged and sitting in QA. It was renamed off `maturity` because
+a card already merged and sitting in QA. It was renamed off `maturity` to `status` because
 that word promised a ladder — three rungs below shipped, two qualifying it, and
 shipped itself unrepresented, so `deprecated` was not "further along" than
 `at_risk`. `live` removes the double duty NULL was doing across 879 cells: "how

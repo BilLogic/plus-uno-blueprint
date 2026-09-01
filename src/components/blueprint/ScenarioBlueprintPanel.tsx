@@ -391,7 +391,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     compareModel?.columns.length ??
     visibleBlueprints.reduce((sum, blueprint) => sum + blueprint.steps.length, 0)
   const sectionTitleDescription = sectionTitleLabel
-    ? slide.description
+    ? slide.summary
     : undefined
   const sectionTitleInfoTooltip = sectionTitleLabel
     ? getScenarioParallelTooltip(slide)

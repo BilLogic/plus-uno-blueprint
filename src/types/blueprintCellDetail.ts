@@ -9,7 +9,7 @@ export type BlueprintCellPathEntry = {
   pathKind: PathKind
   content: string
   frame?: string | null
-  description?: string | null
+  summary?: string | null
   /** Fallback-only now: a database cell's resources arrive in `resources`,
    *  and `links` survives so a fallback cell's touchpoint detail still
    *  resolves through `cellTouchpointsFromLinks`. */

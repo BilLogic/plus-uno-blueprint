@@ -57,7 +57,7 @@ export type DraftCellTarget = {
 
 type FormState = {
   content: string
-  description: string
+  summary: string
   owner: string
   perceivedOwner: string
   functionText: string
@@ -185,7 +185,7 @@ export function CellPanelEditor({
       // fallback below, but diffs and reverts compare against this — an
       // owner-only edit must not smuggle the fallback prose into the
       // description column, and undo must restore what the DB actually held.
-      description: content.summary ?? '',
+      summary: content.summary ?? '',
       owner: content.owner ?? '',
       perceivedOwner: content.perceived_owner ?? '',
       functionText: spec?.function ?? '',
@@ -222,7 +222,7 @@ export function CellPanelEditor({
       laneName={laneName ?? draft.laneName}
       baseline={{
         content: '',
-        description: '',
+        summary: '',
         status: DEFAULT_ENTITY_STATUS,
         owner: '',
         perceivedOwner: '',
@@ -279,7 +279,7 @@ function CellPanelEditorForm({
   const [baseline] = useState(baselineProp)
   const [form, setForm] = useState<FormState>({
     ...baseline,
-    description: seededDescription,
+    summary: seededDescription,
   })
   // Only a deliberate edit persists the seeded fallback prose into the
   // description column; an untouched field keeps whatever the DB held.
@@ -330,12 +330,12 @@ function CellPanelEditorForm({
   const measuredLength = isTechCell ? longestTechItem : form.content.length
   const overContentWarning = measuredLength > contentWarning
 
-  const effectiveDescription = descriptionTouched
-    ? form.description
-    : baseline.description
+  const effectiveSummary = descriptionTouched
+    ? form.summary
+    : baseline.summary
   const contentChanged =
     form.content !== baseline.content ||
-    effectiveDescription !== baseline.description ||
+    effectiveSummary !== baseline.summary ||
     form.owner !== baseline.owner ||
     form.perceivedOwner !== baseline.perceivedOwner ||
     form.status !== baseline.status
@@ -371,7 +371,7 @@ function CellPanelEditorForm({
       const draftExtras =
         !cellId &&
         Boolean(
-          form.description.trim() ||
+          form.summary.trim() ||
             form.owner.trim() ||
             form.perceivedOwner.trim(),
         )
@@ -381,7 +381,7 @@ function CellPanelEditorForm({
           targetId,
           {
             content: form.content,
-            summary: cellId ? effectiveDescription : form.description,
+            summary: cellId ? effectiveSummary : form.summary,
             owner: form.owner,
             perceivedOwner: form.perceivedOwner,
             status: form.status,
@@ -389,7 +389,7 @@ function CellPanelEditorForm({
           cellId
             ? {
                 content: baseline.content,
-                summary: baseline.description,
+                summary: baseline.summary,
                 owner: baseline.owner,
                 perceivedOwner: baseline.perceivedOwner,
                 status: baseline.status,
@@ -583,11 +583,11 @@ function CellPanelEditorForm({
           prints "Summary" above it (#243). */}
       <Field label="Summary" hint="What the detailed fields below add up to.">
         <textarea
-          value={form.description}
+          value={form.summary}
           rows={3}
           onChange={(event) => {
             setDescriptionTouched(true)
-            set('description', event.target.value)
+            set('summary', event.target.value)
           }}
           className={PANEL_TEXTAREA_CLASS}
         />

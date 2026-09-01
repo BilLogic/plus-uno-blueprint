@@ -91,7 +91,7 @@ asserted at exactly four sub-teams, one level deep. Plan `2026-08-20-009` is
 | Team | Owns | Recognise it by |
 | --- | --- | --- |
 | **Design** | The screens and flows the tutor sees, the design system behind them, how the service is taught, and how it is presented to the outside world. Four sub-teams — see below. | Figma, branding, module content, the marketing site. |
-| **Dev** | The PLUS app itself — every servlet, job and integration behind a `frontstage_tech` or `backstage_tech` touchpoint. | A touchpoint that is software PLUS built. |
+| **Dev** | The PLUS app itself — every servlet, job and integration behind a `frontstage_touchpoints` or `backstage_touchpoints` touchpoint. | A touchpoint that is software PLUS built. |
 | **Product** | What gets built and in what order. Roadmap, requirements, the decision that a flow should exist. | Anything whose answer is a prioritisation rather than an artefact. |
 | **Research** | Study design and its inputs to the product — student ordering, session condition, engagement baseline, the reflection questions as a research instrument. | Anything whose reason for existing is a study rather than a service need. |
 | **Tutor Supervisors** | Recruiting, clearance chasing, session and roster administration, call-off decisions, hours approval, reflection follow-up. The default owner of `backstage_actions` in most scenarios. | Anything a named PLUS staff member does to a tutor's record, schedule or pay. |

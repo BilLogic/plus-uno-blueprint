@@ -46,8 +46,8 @@ export type NavItem = {
   loopToId?: string
   /** Scenario blueprint layout; defaults to single-path view. */
   viewType?: SlideViewType
-  /** Short scenario summary shown under the slide title. */
-  description?: string | null
+  /** The row's summary, shown under the slide title. */
+  summary?: string | null
 }
 
 const PRE_SESSION_ID = 'a0000000-0000-4000-8000-000000000103'
@@ -147,7 +147,7 @@ export const FALLBACK_NAV: NavItem[] = [
     id: 'a0000000-0000-4000-8000-000000000101',
     index: 1,
     label: 'Application',
-    description:
+    summary:
       'Potential tutors discover, interview and receive an offer to join the PLUS Team',
   },
   {
@@ -156,7 +156,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Discovery',
     parentId: 'a0000000-0000-4000-8000-000000000101',
     viewType: 'stacked',
-    description: 'Potential tutors discover plus',
+    summary: 'Potential tutors discover plus',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000122',
@@ -164,13 +164,13 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Interview & Offer',
     parentId: 'a0000000-0000-4000-8000-000000000101',
     viewType: 'stacked',
-    description: 'Potential Tutors Interview for role and receive an offer.',
+    summary: 'Potential Tutors Interview for role and receive an offer.',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000102',
     index: 2,
     label: 'Onboarding',
-    description:
+    summary:
       'The tutor goes through required onboarding before joining a tutoring session.',
   },
   {
@@ -179,7 +179,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Employment & Access',
     parentId: 'a0000000-0000-4000-8000-000000000102',
     viewType: 'stacked',
-    description:
+    summary:
       'The tutor sets up necessary tech and obtains required clearances.',
   },
   {
@@ -188,7 +188,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Onboarding Modules',
     parentId: 'a0000000-0000-4000-8000-000000000102',
     viewType: 'stacked',
-    description: 'The tutor completes required onboarding modules.',
+    summary: 'The tutor completes required onboarding modules.',
   },
   {
     id: 'a0000000-0000-4000-8000-000000000124',
@@ -196,7 +196,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Lesson Modules',
     parentId: 'a0000000-0000-4000-8000-000000000102',
     viewType: 'stacked',
-    description:
+    summary:
       'The tutor goes through required lessons before joining a tutoring session.',
   },
   {
@@ -205,10 +205,10 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Session Sign Up',
     parentId: 'a0000000-0000-4000-8000-000000000102',
     viewType: 'stacked',
-    description:
+    summary:
       'The tutor signs up for recurring sessions for the semester.',
   },
-  { id: PRE_SESSION_ID, index: 3, label: 'Pre-session', description: 'Preparation before a live tutoring session' },
+  { id: PRE_SESSION_ID, index: 3, label: 'Pre-session', summary: 'Preparation before a live tutoring session' },
   {
     id: 'a0000000-0000-4000-8000-000000000126',
     index: 1,
@@ -234,7 +234,7 @@ export const FALLBACK_NAV: NavItem[] = [
     id: IN_SESSION_ID,
     index: 4,
     label: 'In-session',
-    description:
+    summary:
       'Tutoring activities that occur during live sessions.',
   },
   {
@@ -243,7 +243,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Before Students Join',
     parentId: IN_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Teachers and tutors prepare the session before students join.',
   },
   {
@@ -252,7 +252,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Student Just Joined',
     parentId: IN_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Teachers and tutors welcome students as they join the session.',
   },
   {
@@ -261,7 +261,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Warm-Up',
     parentId: IN_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Tutors greet and move students to breakout rooms as the session begins.',
   },
   {
@@ -270,7 +270,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Goal Setting',
     parentId: IN_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Tutors guide students through goal setting in breakout sessions.',
   },
   {
@@ -279,7 +279,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Help Request',
     parentId: IN_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Tutors receive and resolve student help requests during the session.',
   },
   {
@@ -288,14 +288,14 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Wrap-Up',
     parentId: IN_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
   },
   {
     id: POST_SESSION_ID,
     index: 5,
     label: 'Post-session',
-    description: 'Wrap-up after session; may return to pre-session',
+    summary: 'Wrap-up after session; may return to pre-session',
     loopToId: PRE_SESSION_ID,
   },
   {
@@ -304,7 +304,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Reporting an Issue',
     parentId: POST_SESSION_ID,
     viewType: 'stacked',
-    description:
+    summary:
       'Tutors report session issues to the tutor supervisor team after the session.',
   },
   {
@@ -313,7 +313,7 @@ export const FALLBACK_NAV: NavItem[] = [
     label: 'Reporting Hours',
     parentId: POST_SESSION_ID,
     viewType: 'stacked',
-    description: 'Tutors log their tutoring hours after the session.',
+    summary: 'Tutors log their tutoring hours after the session.',
   },
 ]
 
