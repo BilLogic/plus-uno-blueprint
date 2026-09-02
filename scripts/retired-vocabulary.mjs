@@ -395,6 +395,19 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: ['applies when'],
     },
+    {
+      // #272. The panel used to pick ONE url to call "the design" — the
+      // placement's, else a cell link whose host was figma.com — and label
+      // the screenshot with it. A placement's link is a featured resource
+      // since 20260902130000, every featured link is a button named by its
+      // host, and the placement editor's field is plainly "Link" until #276
+      // moves the column. No identifier retires: the column is still `url`.
+      was: ['design link'],
+      is: ['Open link', 'resources.featured'],
+      migrations: [],
+      retired: [],
+      copy: ['design link'],
+    },
     /*
       THE DESIGN SYSTEM'S OWN VOCABULARY, which had four words for two ideas.
 

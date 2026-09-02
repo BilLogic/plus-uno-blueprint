@@ -393,10 +393,10 @@ export const LABEL_COLUMNS = Object.freeze(
     { label: 'Touchpoint', names: ['touchpoints'], because: '' },
     { label: 'Screenshot', names: ['cell_touchpoints.screenshot'], because: '' },
     {
-      label: 'Design link',
+      label: 'Link',
       names: ['cell_touchpoints.url'],
       because:
-        'A placement carries two URLs — this one and `screenshot` — so `url` alone cannot say which field a reader is standing in, and it is not a word a panel says out loud. The label names what this one is for.',
+        'A placement carries two URLs — this one and `screenshot` — and `url` is not a word a panel says out loud. It said *Design link* until #272: the panel no longer picks one url to call the design, it shows every featured link as a button named by its host, and the column itself leaves for `resources` in #276.',
     },
     { label: 'Role', names: ['cell_touchpoints.role'], because: '' },
     { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { registerAgentUiCommand } from '@/lib/agent/uiCommands'
 import {
-  ExternalLink,
   FileSearch,
   Link2,
   PanelRightClose,
@@ -83,9 +82,10 @@ import {
   TOUCHPOINT_ROLE_LABEL,
 } from '@/lib/touchpointRole'
 import {
-  designLinkLabel as describeDesignLink,
-  resolveDesignUrl,
-} from '@/lib/cellDesignLink'
+  FeaturedButtons,
+  FeaturedPreviewFrame,
+} from '@/components/blueprint/FeaturedResources'
+import { featuredPresentation } from '@/lib/resourcePresentation'
 import {
   buildTouchpointSelectionForItem,
   getBlueprintStepTechItems,
@@ -644,11 +644,24 @@ function BlueprintCellDetailPanelBody() {
     [selectedCell, selection?.techItem],
   )
 
-  const designUrl = useMemo(() => {
-    if (!selection) return null
-    return resolveDesignUrl(touchpointDetail?.url, cellResources)
-  }, [cellResources, selection, touchpointDetail])
-  const designLinkLabel = describeDesignLink(designUrl)
+  /*
+    What the placement leads with (#272): its featured attachment is the
+    preview, every featured link — the placement's, then the cell's own — is
+    a button named by its host. Nothing here elects one url as "the design"
+    any more; the placement's `url` column still counts as a link until #276
+    moves it into `resources`.
+  */
+  const featured = useMemo(
+    () =>
+      selection
+        ? featuredPresentation({
+            placementId: selectedPlacement?.id ?? null,
+            placementUrl: touchpointDetail?.url,
+            resources: cellResources,
+          })
+        : { preview: null, buttons: [] },
+    [cellResources, selection, selectedPlacement, touchpointDetail],
+  )
 
   // Lane row position of the selected cell — orients up/down direction
   // glyphs on same-step dependency rows.
@@ -988,7 +1001,7 @@ function BlueprintCellDetailPanelBody() {
     lane that does not draw touchpoints — four exist in production, the documents
     and the recording the import migration deliberately kept (`Branding
     Guidelines`, `Design System`, `Zoom Recording`), and they had their
-    summary, screenshot and design link rendered while the name they belong
+    summary, screenshot and link rendered while the name they belong
     to was suppressed.
 
     A row id is what tells the two apart: only a real `cell_touchpoints` row
@@ -1009,7 +1022,11 @@ function BlueprintCellDetailPanelBody() {
     techItem: touchpointDetail?.name ?? selection.techItem,
     cellFrame: selection.paths[0]?.frame,
   })
-  const showImages = Boolean(detailImages?.length && !isStoryboardLane)
+  // A featured attachment is a picture even when the `screenshot` column is
+  // empty — the column is on its way out (#276); the resource is not.
+  const showImages = Boolean(
+    (featured.preview || detailImages?.length) && !isStoryboardLane,
+  )
   // #188 widened this from "is a touchpoint lane" to "has a real placement row", so
   // the four placements on Support Actions cells show their touchpoint name.
   // The rename in #179 does not narrow it back.
@@ -1118,7 +1135,7 @@ function BlueprintCellDetailPanelBody() {
   const imageBlock = showImages ? (
     <div className="flex w-full flex-col items-center gap-3">
       {(() => {
-        const images = detailImages!
+        const images = detailImages ?? []
         const useSmallerTechLogo = [
           'social media',
           'on-campus booth',
@@ -1151,48 +1168,16 @@ function BlueprintCellDetailPanelBody() {
                 ))}
               </div>
             ) : null}
-            {screenshots.map((src) =>
-              designUrl ? (
-                <a
-                  key={src}
-                  href={designUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    CELL_DETAIL_PICTURE_FRAME_CLASS,
-                    'group block cursor-pointer',
-                  )}
-                  aria-label={designLinkLabel}
-                >
-                  <img
-                    src={src}
-                    alt=""
-                    className={cn(
-                      CELL_DETAIL_PICTURE_CLASS,
-                      'transition-[filter,opacity] duration-(--motion-fade)',
-                      'group-hover:opacity-80 group-hover:grayscale-[15%]',
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      'absolute inset-0 z-10 flex items-center justify-center',
-                      'bg-black/55 opacity-0 transition-opacity duration-(--motion-fade)',
-                      'group-hover:opacity-100',
-                    )}
-                    aria-hidden
-                  >
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1.5 text-2xs font-semibold text-white',
-                        'transition-opacity duration-(--motion-fade)',
-                      )}
-                    >
-                      {designLinkLabel}
-                      <ExternalLink className="size-2.5 text-white" />
-                    </span>
-                  </span>
-                </a>
-              ) : (
+            {featured.preview ? (
+              <FeaturedPreviewFrame
+                preview={featured.preview}
+                frameClassName={CELL_DETAIL_PICTURE_FRAME_CLASS}
+                mediaClassName={CELL_DETAIL_PICTURE_CLASS}
+              />
+            ) : (
+              // The `screenshot` column, until #276 — the same image the
+              // featured attachment carries once 20260902130000 has run.
+              screenshots.map((src) => (
                 <div key={src} className={CELL_DETAIL_PICTURE_FRAME_CLASS}>
                   <img
                     src={src}
@@ -1200,7 +1185,7 @@ function BlueprintCellDetailPanelBody() {
                     className={CELL_DETAIL_PICTURE_CLASS}
                   />
                 </div>
-              ),
+              ))
             )}
           </>
         )
@@ -1292,6 +1277,9 @@ function BlueprintCellDetailPanelBody() {
   const overviewContent = (
     <>
       {imageBlock}
+      {!editingCell && featured.buttons.length > 0 ? (
+        <FeaturedButtons buttons={featured.buttons} className="px-1" />
+      ) : null}
       <div className="flex min-w-0 flex-col gap-1.5">
         {/* In edit mode the form's CONTENT field *is* the title; repeating it
             above the field would be the same word twice on one screen. */}
@@ -1491,7 +1479,6 @@ function BlueprintCellDetailPanelBody() {
                     <CellResourcesTab
                       cellId={resolvedCellId}
                       resources={cellResources}
-                      designUrl={designUrl}
                     />
                   ) : null}
                 </div>

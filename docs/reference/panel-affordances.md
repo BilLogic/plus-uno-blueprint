@@ -371,7 +371,7 @@ things answer it.
 **It is not a scanning fact.** "Is this core here?" cannot be asked without
 already looking at *here*. The reader who clicked the touchpoint is exactly the
 reader the answer is for — and everything else the placement carries, its
-summary, its screenshot, its design link, is behind the same click. Promoting
+summary, its preview, its featured links, is behind the same click. Promoting
 one of the four to the board would say the role is the important one.
 
 **The touchpoint has no visual variable left.** A touchpoint cell already encodes

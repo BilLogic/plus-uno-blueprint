@@ -4,7 +4,7 @@
  * Two writes with one subject and two scopes. `renameTouchpoint` changes what
  * the tool is CALLED, everywhere it is used at once, because the catalog owns
  * the name. `updateTouchpointPlacement` changes what an author has to say
- * about it AT ONE CELL — its summary, its screenshot, its design link and
+ * about it AT ONE CELL — its summary, its screenshot, its link and
  * whether the moment happens through it — because the placement owns those,
  * and the same tool at the next step keeps its own.
  *

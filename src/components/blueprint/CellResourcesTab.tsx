@@ -10,6 +10,7 @@ import {
   updateCellResources,
   type ResourceDraft,
 } from '@/lib/cellContentMutations'
+import { linkPresentation } from '@/lib/resourcePresentation'
 import { validateResourceUrl } from '@/lib/resourceUrl'
 import { safeExternalHref } from '@/lib/sliceCells'
 import { errorMessage } from '@/lib/utils'
@@ -25,14 +26,6 @@ type CellResourcesTabProps = {
   /** Canonical cell id; null for fallback-only cells (read-only then). */
   cellId: string | null
   resources: CellResource[]
-  /**
-   * The design reference the panel resolved — the selected placement's own
-   * url first, then a Figma link among the cell's resources. Added to the
-   * list when it is not already in it, because a placement's url is a row of
-   * `cell_touchpoints`, not of `resources`, and would otherwise be reachable
-   * only through the screenshot overlay.
-   */
-  designUrl: string | null
 }
 
 /** The rows the cell's list edits: its own, with a url. A placement's are read here and edited from the touchpoint (#271, #273). */
@@ -63,7 +56,6 @@ function placementRows(resources: CellResource[]): CellResource[] {
 export function CellResourcesTab({
   cellId,
   resources,
-  designUrl,
 }: CellResourcesTabProps) {
   const { client, canWrite } = useSupabase()
   const mode = useCanvasModeValue()
@@ -79,24 +71,15 @@ export function CellResourcesTab({
     )
   }
 
+  // A placement's rows arrive in the same list since #271, so nothing is
+  // added here any more. A row nobody named is called by its host — read at
+  // render, never stored (#272).
   const rows: ResourceRow[] = resources.flatMap((resource, index) => {
     const url = resource.url?.trim()
     if (!url) return []
-    const label =
-      resource.name.trim() || (/figma\.com/i.test(url) ? 'Figma' : 'Link')
+    const label = resource.name.trim() || linkPresentation(url).host
     return [{ id: `resource-${index}`, label, url }]
   })
-
-  if (designUrl && !rows.some((row) => row.url === designUrl)) {
-    // Labelled by what it actually is. A placement's design link may point
-    // anywhere, and calling every one of them "Figma" is a row that lies
-    // about where the click lands.
-    rows.push({
-      id: 'resource-design',
-      label: /figma\.com/i.test(designUrl) ? 'Figma' : 'Design',
-      url: designUrl,
-    })
-  }
 
   if (rows.length === 0) {
     return (

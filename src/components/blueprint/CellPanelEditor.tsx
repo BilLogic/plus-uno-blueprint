@@ -562,8 +562,8 @@ function CellPanelEditorForm({
             />
           </Field>
           <Field
-            label="Design link"
-            hint="The design behind this moment. Preferred over any link on the cell at large, because two placements of one tool point at different screens."
+            label="Link"
+            hint="Where this touchpoint lives at this moment — the screen, the file, the page. Shown as a button named by its host."
           >
             <Input
               value={form.placement.url}

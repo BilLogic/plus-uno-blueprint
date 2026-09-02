@@ -16,6 +16,7 @@ claims:
   - src/components/blueprint/EntityDetailPanel.tsx
   - src/components/blueprint/EntityPropertiesButton.tsx
   - src/components/blueprint/EntityTitleAffordance.tsx
+  - src/components/blueprint/FeaturedResources.tsx
   - src/components/blueprint/LaneHeaderAffordance.tsx
   - src/components/blueprint/LanePanel.tsx
   - src/components/blueprint/NotionPropertyRow.tsx
@@ -173,7 +174,7 @@ row was written first and filled in later.
 
 **A clicked touchpoint brings its own four fields, under the same Save.** The
 panel is showing one cell *and* one of its placements, so `CellPanelEditor`
-takes the placement as a prop and its summary, screenshot, design link and
+takes the placement as a prop and its summary, screenshot, link and
 role join the form — enclosed and headed with the touchpoint's name,
 because two fields called Summary on one screen need a border to say whose is
 whose. They sit directly under Text, which is the list that names them, rather
