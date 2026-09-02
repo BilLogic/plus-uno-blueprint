@@ -390,7 +390,7 @@ Scenario within a phase
 ### `services`
 The service this board describes. One row. Renamed from service_lifecycles on 2026-08-21 — a service cannot contain several lifecycles, so the word named a level that does not exist.
 
-2 of 6 columns described.
+3 of 7 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -399,6 +399,7 @@ The service this board describes. One row. Renamed from service_lifecycles on 20
 | `id` | — |
 | `name` | — |
 | `origin` | Where this service came from: import (the pipeline) or app (created in the canvas). The same two values its six sibling tables carry. |
+| `entity_examples` | Per-service authored examples, one free-text value per core kind (service, phase, scenario, path, step, lane), shown under each kind's definition to ground it in this deployment. Blueprint data, not app config: it rides the service block so a re-map round-trips it. A jsonb object with no CHECK — the six-key shape is the app's, and an unwritten key simply does not render. |
 | `updated_at` | — |
 
 ### `slices`
