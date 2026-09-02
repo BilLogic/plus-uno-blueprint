@@ -1,9 +1,12 @@
+import { useEffect, useRef, useState } from 'react'
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
 import { useScenarioBoardInScope } from '@/contexts/scenarioBoardScopeContext'
 import { useEntityDetail } from '@/contexts/EntityDetailContext'
 import {
   CANVAS_HEADER_BOX,
+  CANVAS_HEADER_HOVER_DELAY,
+  CANVAS_HEADER_INFO,
   CANVAS_HEADER_NAME,
   CANVAS_HEADER_OPENER,
   CANVAS_HEADER_STATE,
@@ -12,39 +15,52 @@ import {
 import { cn } from '@/lib/utils'
 
 /**
+ * A hand-drawn information mark. Not `lucide-react`: these headers carry no
+ * icon-library glyph by rule (see `definitionCard.test.tsx`), and this is the
+ * single deliberate exception — a touch affordance, not decoration.
+ */
+function InfoGlyph() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+      className="size-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+    >
+      <circle cx="8" cy="8" r="6.4" />
+      <path d="M8 7.1v3.4" strokeLinecap="round" />
+      <circle cx="8" cy="5" r="0.7" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+/**
  * The lane's name, what a lane IS, and the way into this one's properties.
  *
- * TWO facts and therefore two targets, which is what #140 changed. The name
- * carries the definition — hovering, focusing or tapping the word you do not
- * recognise is where anyone looks first, and it is where `PanelTermLabel`
- * already puts the definition of every word inside a panel. Everything else in
- * the block opens the panel: the opener is an invisible button filling the
- * box, so the target is still the whole label block rather than a 24px icon,
- * and the ⓘ marks it.
+ * Three readers, three doors (#306). A pointer reader clicks anywhere on the
+ * block — the label included — to open the panel, and rests on it to learn
+ * what a lane is; the definition opens on a hover of the WHOLE block, not of
+ * one word. A keyboard reader tabs to the opener to open the panel and to the
+ * ⓘ to read the definition. A touch reader, who has no hover and whose tap is
+ * already the panel's, gets the ⓘ — invisible on a device that hovers, drawn
+ * only where hover is not.
  *
- * The block was one control until #140, with "View details" in its hover slot.
- * That slot was the only place a definition could live and it was spending it
- * on a sentence the ⓘ already said.
+ * The z-order bug the label used to hide: the name painted above the opener
+ * (`z-10`) and swallowed its own click. `pointer-events-none` on the name lets
+ * the click fall through to the opener; the block also carries the open so a
+ * click that reaches it (a keyboard activation, a test) opens the panel too.
+ * The name stops being a distinct target — it is just the word now.
  *
  * Top-left aligned, because a lane label reads down a tall row — the only
- * thing it does differently from the column header it shares a treatment
- * with.
+ * thing it does differently from the column header it shares a treatment with.
  *
- * The box IS the block the grid gives the lane — full width of the rail's
- * content column, full height of the row. A label sitting in a 192px row with
- * a target the height of one line of text is a target nobody finds, and the
- * selected state has to mark the row, not a badge inside it.
- *
- * What was actually wrong was never the size: it was that the ring drew
- * OUTSIDE the box, inside a rail that clips, so the wash and the ring came
- * back sheared along the edge they met. `ring-inset` in CANVAS_HEADER_STATE
- * fixes that at the source, for this header and the column header both.
- *
- * NOT used where the label already means something else. In the compare
- * rail's Design mode the label is a *selection* handle — clicking takes every
- * cell in the lane — and a second meaning on the same word would make both
- * ambiguous. There the ⓘ stays a button of its own, beside it
- * (`EntityPropertiesButton`).
+ * NOT used where the label already means something else. In the compare rail's
+ * Design mode the label is a *selection* handle — clicking takes every cell in
+ * the lane — and a second meaning on the same word would make both ambiguous.
+ * There the ⓘ stays a button of its own, beside it (`EntityPropertiesButton`).
  */
 export function LaneHeaderAffordance({
   laneId,
@@ -66,92 +82,139 @@ export function LaneHeaderAffordance({
 
     `detail.enabled` is the feature flag and the detail view — but it is ONE
     boolean on a provider mounted above the entire canvas, and every scenario
-    board stays mounted behind the focused one. So focusing any single
-    scenario turned this header live on all of them: 176 lane headers wearing
-    hover, a focus ring and a pointer, and a click on a band the reader had
-    never chosen opening a panel reading "Nothing recorded for this lane
-    yet." — an affordance offering emptiness on somebody else's board.
-
-    `boardInScope` is the missing half: this board is the focused/solo
-    scenario, not merely a mounted one. One board's worth of detail is not
-    addressable from a view that shows many, so everywhere else the label goes
-    back to being what it looks like from there: a word naming a row.
+    board stays mounted behind the focused one. So focusing any single scenario
+    turned this header live on all of them. `boardInScope` is the missing half:
+    this board is the focused/solo scenario, not merely a mounted one.
   */
   const isInteractive = Boolean(detail?.enabled) && boardInScope
   const open = selection?.kind === 'lane' && selection.id === laneId
 
   /*
-    The definition is on the word whether the panel is reachable or not.
-
-    Two different questions were being answered by one flag. "Can this board's
-    lane be opened?" depends on which scenario the reader is looking at; "what
-    is a lane?" does not, and a reader on the overview is if anything the one
-    more likely to be asking it.
+    The definition opens on a hover of the whole block, on a short delay, and
+    on a tap or keypress of the ⓘ. The block owns the hover (the ⓘ's own is
+    off), so the card centres on the block through `anchor` rather than on the
+    corner mark. The pointer type gates the timer: a touch "hover" is not one.
   */
-  const name = (
-    <EntityDefinitionPopover kind="lane" side="right">
-      <span
-        className={cn(
-          'min-w-0 flex-1 whitespace-normal break-words',
-          CANVAS_HEADER_TEXT,
-          CANVAS_HEADER_NAME,
-        )}
-        style={color ? { color } : undefined}
+  const blockRef = useRef<HTMLDivElement>(null)
+  const [defOpen, setDefOpen] = useState(false)
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(hoverTimer.current), [])
+
+  const armHover = (event: React.PointerEvent) => {
+    if (event.pointerType === 'touch') return
+    clearTimeout(hoverTimer.current)
+    hoverTimer.current = setTimeout(
+      () => setDefOpen(true),
+      CANVAS_HEADER_HOVER_DELAY,
+    )
+  }
+  const cancelHover = () => {
+    clearTimeout(hoverTimer.current)
+    setDefOpen(false)
+  }
+
+  const nameSpan = (
+    <span
+      className={cn(
+        'min-w-0 flex-1 whitespace-normal break-words',
+        CANVAS_HEADER_TEXT,
+        CANVAS_HEADER_NAME,
+      )}
+      style={color ? { color } : undefined}
+    >
+      {laneName}
+    </span>
+  )
+
+  // The definition's touch/keyboard door — see `InfoGlyph` and
+  // `CANVAS_HEADER_INFO`. Its tap opens the card and stops there: the panel is
+  // never opened from here, so a touch reader can read without also opening.
+  const info = (
+    <EntityDefinitionPopover
+      kind="lane"
+      side="right"
+      open={defOpen}
+      onOpenChange={setDefOpen}
+      anchor={blockRef}
+      openOnHover={false}
+      nativeButton
+    >
+      <button
+        type="button"
+        data-canvas-header-info=""
+        aria-label="What is a lane?"
+        onClick={(event) => event.stopPropagation()}
+        className={cn(CANVAS_HEADER_INFO, 'absolute right-1 top-1')}
       >
-        {laneName}
-      </span>
+        <InfoGlyph />
+      </button>
     </EntityDefinitionPopover>
   )
 
   // Inert prose, not a disabled button: there is nothing to enable here, so a
   // control that announces itself and refuses is worse than no control. The
-  // name still explains itself — that is not a control, it is the word.
+  // definition is still on the block, because "what is a lane?" is not a
+  // question about which board is in scope.
   if (!isInteractive) {
     return (
       <div
+        ref={blockRef}
         data-blueprint-row-header=""
+        onPointerEnter={armHover}
+        onPointerLeave={cancelHover}
         className={cn(
-          'group/lane-header flex min-w-0 flex-1 items-start self-stretch text-left',
+          'group/lane-header relative flex min-w-0 flex-1 items-start self-stretch text-left',
           CANVAS_HEADER_BOX,
           className,
         )}
       >
-        {name}
+        {nameSpan}
+        {info}
       </div>
     )
   }
 
+  const openPanel = (event: React.SyntheticEvent) => {
+    // The canvas pans on pointer-down anywhere it does not recognise; opening a
+    // panel is neither a pan nor a selection. Close any open definition so the
+    // click reads as one action.
+    event.stopPropagation()
+    setDefOpen(false)
+    toggleEntity({ kind: 'lane', id: laneId })
+  }
+
   return (
     <div
+      ref={blockRef}
       data-blueprint-row-header=""
       data-open={open ? '' : undefined}
+      onClick={openPanel}
+      onPointerEnter={armHover}
+      onPointerLeave={cancelHover}
       className={cn(
         // No negative margins. They pulled the ink block outside the rail,
-        // which clips (`overflow-hidden`) — so the hover surface came back
-        // cut off on one edge and left a hairline artefact where it met the
-        // clip. The rail's own padding gives the room.
+        // which clips (`overflow-hidden`) — so the hover surface came back cut
+        // off on one edge. The rail's own padding gives the room.
         'group/lane-header flex min-w-0 flex-1 items-start self-stretch text-left',
         CANVAS_HEADER_BOX,
         CANVAS_HEADER_STATE,
         className,
       )}
     >
-      {/* Under the name and the ⓘ, over everything else: the block is the
-          target, and the one word inside it that explains itself is not. */}
+      {/* The full-block opener. It fills the box, so any click that is not the
+          ⓘ opens the panel; the click bubbles to the block, which carries the
+          open — so a click that reaches the block (a keyboard activation, a
+          click on the label falling through) opens it too. */}
       <button
         type="button"
         data-lane-header-affordance=""
+        data-canvas-header-opener=""
         aria-label={`View details: ${laneName}`}
         aria-pressed={open}
-        onClick={(event) => {
-          // The canvas pans on pointer-down anywhere it does not recognise;
-          // opening a panel is neither a pan nor a selection.
-          event.stopPropagation()
-          toggleEntity({ kind: 'lane', id: laneId })
-        }}
         className={CANVAS_HEADER_OPENER}
       />
-      {name}
+      {nameSpan}
+      {info}
     </div>
   )
 }

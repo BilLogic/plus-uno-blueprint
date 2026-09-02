@@ -438,11 +438,13 @@ describe('nothing on the page announces that a word is defined', () => {
     expect(source).not.toMatch(/from 'lucide-react'/)
   })
 
-  it('nor do the grid headers, which had the same glyph for the same reason', () => {
-    // #140 Q11 drew it always-on so a touch reader could see that a header
-    // opens something. The opener is the whole block on any input and the
-    // definition is a popover, so the mark was never what made either
-    // reachable — and one per named thing is the clutter #243 removes.
+  it('and the grid headers reach for no icon library, touch ⓘ notwithstanding', () => {
+    // #306 brought a mark BACK to these headers, but only as the touch reader's
+    // door to the definition — invisible on a device that can hover, so the
+    // resting board a pointer reader sees is as clean as #243 left it. It is a
+    // hand-drawn glyph, deliberately, so the "no icon-library sprawl" rule the
+    // headers have held since #243 still stands: the exception is one touch
+    // affordance, not a licence to import a sheet of icons.
     for (const file of ['StepHeaderAffordance', 'LaneHeaderAffordance']) {
       const source = readFileSync(
         join(SRC, `components/blueprint/${file}.tsx`),

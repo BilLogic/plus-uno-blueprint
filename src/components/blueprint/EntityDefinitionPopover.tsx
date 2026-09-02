@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, RefObject } from 'react'
 import {
   DefinitionPopover,
   type DefinitionSection,
@@ -39,6 +39,15 @@ type EntityDefinitionPopoverProps = {
   /** False for a `<span>` or a `<Badge>` trigger — Base UI warns otherwise. */
   nativeButton?: boolean
   className?: string
+  /** Controlled open — for a header whose whole block owns the hover (#306). */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** Point the card at this element rather than the trigger. */
+  anchor?: RefObject<Element | null> | Element | null
+  /** Off when a surrounding block, not the trigger, opens on hover. */
+  openOnHover?: boolean
+  /** Hover open delay in ms. */
+  delay?: number
 }
 
 /** The eyebrow an aside wears, so it is a section like every other one. */
@@ -73,6 +82,11 @@ export function EntityDefinitionPopover({
   side = 'top',
   nativeButton = false,
   className,
+  open,
+  onOpenChange,
+  anchor,
+  openOnHover,
+  delay,
 }: EntityDefinitionPopoverProps) {
   const term = ENTITY_KIND_DEFINITIONS[kind]
   const trimmedName = name?.trim()
@@ -106,6 +120,11 @@ export function EntityDefinitionPopover({
       side={side}
       nativeButton={nativeButton}
       className={className}
+      open={open}
+      onOpenChange={onOpenChange}
+      anchor={anchor}
+      openOnHover={openOnHover}
+      delay={delay}
     >
       {children}
     </DefinitionPopover>
