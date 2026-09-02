@@ -18,6 +18,14 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * the next successful run should be a no-op — if it is not, the generator is
  * right and these are wrong.
  *
+ * HAND-EDITED, 2026-09-02 (#311). `services.entity_examples` (jsonb not null
+ * default `{}`) was added by hand under the same rules: `supabase gen types
+ * --db-url` still needs Docker, which is not installed, so the generator could
+ * not run. The `Json` type and the Row/Insert/Update placement mirror every
+ * other jsonb-not-null-default column the generator emits (`kpis`, `tools`,
+ * `value_props`), verified by replaying `20260902210000` into an empty
+ * Postgres 17 and reading `services` back from the catalogue.
+ *
  * HAND-EDITED, 2026-08-31 (#181). `resources` and `sync_cell_resources` were
  * added and `cells.links` removed, under the same rules — `20260830280000`
  * drops the column. `search_blueprint` KEEPS its `links` output column: the
@@ -770,6 +778,7 @@ export type Database = {
           id: string
           name: string
           origin: string
+          entity_examples: Json
           updated_at: string
         }
         Insert: {
@@ -778,6 +787,7 @@ export type Database = {
           id?: string
           name: string
           origin?: string
+          entity_examples?: Json
           updated_at?: string
         }
         Update: {
@@ -786,6 +796,7 @@ export type Database = {
           id?: string
           name?: string
           origin?: string
+          entity_examples?: Json
           updated_at?: string
         }
         Relationships: []

@@ -169,6 +169,17 @@ panel and fill it entirely from structure and from their cells; path has
 `summary`, `note`, `kind` and `status`. Whether that is the design or the
 backlog is undecided; the table above states what exists.
 
+**Examples are not spec.** Alongside its spec row in `business_models`, the
+`services` row carries `entity_examples` — a jsonb map of one authored,
+free-text example per core kind (service, phase, scenario, path, step, lane),
+shown under each kind's definition to ground it in this deployment (#302). It is
+authored blueprint data that rides the service block, not descriptive detail
+hanging off a board object, which is why it lives on `services` rather than in
+the spec table above. The editing surface — an "Examples" section on the Service
+panel — arrives with #312; until a panel says the label, it is deliberately
+absent from [the interface→schema map](#the-interfaceschema-map) below, which
+records only labels a panel puts in front of a reader.
+
 **The word is schema-and-code only.** `docs/plans/2026-07-30-003` D3b bans it
 from the interface — *"'Spec' is internal jargon that never appears anywhere
 else in the product"* — and that rule stands. It is defined here because a term
