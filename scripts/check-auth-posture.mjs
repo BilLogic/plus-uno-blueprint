@@ -92,6 +92,69 @@ export function findings(settings) {
   return found
 }
 
+/**
+ * #274 — can the anon key put a file in the attachments bucket?
+ *
+ * The bucket is public to READ on purpose (every board is), so the only
+ * question worth asking with the public key is whether it can WRITE. The
+ * probe is an upload of one byte under the key pattern the policy admits,
+ * so that a refusal is the policy's and not the pattern's. Anything but a
+ * 4xx is a finding: 2xx means anyone with the bundle can fill the bucket,
+ * and a 5xx means the bucket is not answering, which is not "safe".
+ *
+ * The other half — that the authoring session CAN write — needs a session
+ * this check does not hold, so it is proved where the policy is made:
+ * 20260902150000's proof asserts every write policy names
+ * `is_service_account()`, and `attachments-bucket.test.mjs` holds the
+ * replayed series to the same.
+ */
+export const ATTACHMENTS_BUCKET = 'cell-attachments'
+
+/** A key the write policy's pattern admits, so the answer is about the role. */
+export const PROBE_OBJECT_KEY =
+  'cells/00000000-0000-4000-8000-000000000000/00000000-0000-4000-8000-000000000001.txt'
+
+export function storageFindings(status) {
+  if (typeof status !== 'number') {
+    return [{ setting: 'storage', detail: 'the upload probe returned no status' }]
+  }
+  if (status >= 200 && status < 300) {
+    return [
+      {
+        setting: 'storage',
+        detail:
+          `the anon key uploaded to the ${ATTACHMENTS_BUCKET} bucket (HTTP ${status}) — ` +
+          'anyone holding the published key can fill it',
+      },
+    ]
+  }
+  if (status >= 400 && status < 500) return []
+  return [
+    {
+      setting: 'storage',
+      detail: `the upload probe answered HTTP ${status}, which is neither a refusal nor a pass`,
+    },
+  ]
+}
+
+export function uploadProbeUrl(supabaseUrl) {
+  return `${String(supabaseUrl).replace(/\/+$/, '')}/storage/v1/object/${ATTACHMENTS_BUCKET}/${PROBE_OBJECT_KEY}`
+}
+
+/** The status the bucket gives the anon key for a write. */
+export async function probeAnonUpload(supabaseUrl, anonKey, fetchImpl = fetch) {
+  const response = await fetchImpl(uploadProbeUrl(supabaseUrl), {
+    method: 'POST',
+    headers: {
+      apikey: anonKey,
+      authorization: `Bearer ${anonKey}`,
+      'content-type': 'text/plain',
+    },
+    body: 'probe',
+  })
+  return response.status
+}
+
 /** Where GoTrue publishes its configuration. */
 export function settingsUrl(supabaseUrl) {
   return `${String(supabaseUrl).replace(/\/+$/, '')}/auth/v1/settings`
@@ -123,7 +186,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 
   const settings = await readSettings(url, key)
-  const bad = findings(settings)
+  const bad = [...findings(settings), ...storageFindings(await probeAnonUpload(url, key))]
   if (bad.length > 0) {
     for (const { setting, detail } of bad) console.error(`${setting}: ${detail}`)
     console.error(
@@ -133,6 +196,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1)
   }
   console.log(
-    'ok — public sign-up is off, anonymous sign-in is off, and no external provider can mint a token',
+    'ok — public sign-up is off, anonymous sign-in is off, no external provider can mint a token, ' +
+      `and the anon key cannot write the ${ATTACHMENTS_BUCKET} bucket`,
   )
 }

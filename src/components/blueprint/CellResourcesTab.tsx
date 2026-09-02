@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { ExternalLink, Plus, X } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { ExternalLink, FileText, Plus, Upload, X } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { uploadAttachment } from '@/lib/attachmentUpload'
 import {
   updateCellResources,
   type ResourceDraft,
@@ -32,7 +33,12 @@ type CellResourcesTabProps = {
 function resourceDrafts(resources: CellResource[]): ResourceDraft[] {
   return resources
     .filter((resource) => !resource.placementId && resource.url?.trim())
-    .map((resource) => ({ id: resource.id, label: resource.name, url: resource.url ?? '' }))
+    .map((resource) => ({
+      id: resource.id,
+      kind: resource.kind === 'attachment' ? 'attachment' : 'link',
+      label: resource.name,
+      url: resource.url ?? '',
+    }))
 }
 
 /** A placement's resources, as the editor lists them without inputs. */
@@ -52,6 +58,10 @@ function placementRows(resources: CellResource[]): CellResource[] {
  * In Edit mode the tab *is* the editor — the rows render as inputs and new
  * resources are added right here. This is where resources live, so this is
  * where they are edited; the text editor above no longer carries them.
+ *
+ * A file goes to the bucket first and joins the list as an `attachment` row
+ * with the object's URL (#274) — a cell's own, with no placement, which is
+ * what a screenshot of the whole moment is.
  */
 export function CellResourcesTab({
   cellId,
@@ -125,6 +135,8 @@ function CellResourcesEditor({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInput = useRef<HTMLInputElement>(null)
 
   // Checked as they type rather than on save: a bad link is worth knowing
   // about while the cursor is still in the field that caused it.
@@ -161,6 +173,24 @@ function CellResourcesEditor({
       setError(errorMessage(saveError))
     } finally {
       setBusy(false)
+    }
+  }
+
+  const upload = async (file: File) => {
+    if (!client || uploading) return
+    setUploading(true)
+    setError(null)
+    try {
+      const uploaded = await uploadAttachment(client, { cellId, file })
+      setSaved(false)
+      setResources((current) => [
+        ...current,
+        { kind: 'attachment', label: uploaded.name, url: uploaded.url },
+      ])
+    } catch (uploadError) {
+      setError(errorMessage(uploadError))
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -202,15 +232,26 @@ function CellResourcesEditor({
                 setResource(index, { label: event.target.value })
               }
             />
-            <Input
-              value={resource.url}
-              placeholder="https://…"
-              className="h-7 flex-1 text-xs"
-              aria-invalid={urlProblems[index] || undefined}
-              onChange={(event) =>
-                setResource(index, { url: event.target.value })
-              }
-            />
+            {resource.kind === 'attachment' ? (
+              // An upload's URL is the object's: shown, never retyped.
+              <span
+                className="flex h-7 min-w-0 flex-1 items-center gap-1 truncate text-xs text-muted-foreground"
+                title={resource.url}
+              >
+                <FileText className="size-3 shrink-0" aria-hidden />
+                <span className="min-w-0 truncate">{resource.url.split('/').pop()}</span>
+              </span>
+            ) : (
+              <Input
+                value={resource.url}
+                placeholder="https://…"
+                className="h-7 flex-1 text-xs"
+                aria-invalid={urlProblems[index] || undefined}
+                onChange={(event) =>
+                  setResource(index, { url: event.target.value })
+                }
+              />
+            )}
             <IconTooltip label="Remove this resource">
               <Button
                 type="button"
@@ -245,11 +286,34 @@ function CellResourcesEditor({
         className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
         onClick={() => {
           setSaved(false)
-          setResources((current) => [...current, { label: '', url: '' }])
+          setResources((current) => [...current, { kind: 'link', label: '', url: '' }])
         }}
       >
         <Plus className="size-3" />
         Add resource
+      </Button>
+      <input
+        ref={fileInput}
+        type="file"
+        className="sr-only"
+        aria-label="Upload a file"
+        tabIndex={-1}
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          event.target.value = ''
+          if (file) void upload(file)
+        }}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
+        disabled={uploading || !client}
+        onClick={() => fileInput.current?.click()}
+      >
+        <Upload className="size-3" />
+        {uploading ? 'Uploading…' : 'Upload a file'}
       </Button>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
       {dirty || busy ? (

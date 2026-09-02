@@ -496,7 +496,9 @@ function applyStatement(schema, statement, source) {
     const table = bare(match[2])
     const name = bare(match[1])
     remember(schema, name)
-    schema.policies.set(`${table}.${name}`, { name, table, source })
+    // The statement itself, as functions and views keep theirs: a guard can
+    // then read a policy's roles and predicate instead of grepping the file.
+    schema.policies.set(`${table}.${name}`, { name, table, definition: sql, source })
     return true
   }
   if ((match = /^drop\s+policy\s+(?:if\s+exists\s+)?("?[\w ]+"?)\s+on\s+("?[\w."]+"?)/i.exec(sql))) {
