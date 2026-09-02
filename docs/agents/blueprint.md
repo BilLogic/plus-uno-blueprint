@@ -103,17 +103,17 @@ kinds the board defines for a reader who has never seen one.
 
 <!-- generated:vocabulary from src/lib/panelTerms.ts — edit the source, then npm run agent-account -->
 
-**Service** — The whole thing this blueprint maps. Every phase, scenario, lane and step below it describes one service.
+**Service** — The whole service this blueprint maps, end to end. Everything else on the board is part of it.
 
-**Phase** — A stretch of the service in time. The board runs left to right through the phases, and each one holds the scenarios that can happen while it lasts.
+**Phase** — A chapter of the service, in time order. Each phase holds the scenarios that can happen during it.
 
-**Scenario** — One situation the service has to handle inside a phase. A scenario has a board of its own: the same lanes, its own steps, and one or more paths through them.
+**Scenario** — A specific situation inside a phase, mapped on its own board.
 
-**Path** — One route through a scenario. Every scenario has a main route; variants and exceptions are the other ways the same stretch can go.
+**Path** — One route through a scenario: the main way, plus variants and exceptions. Paths are alternatives, not stages — nothing carries across them.
 
-**Step** — One column of the board: a single moment in the scenario, read down every lane at once. The same step can sit at a different position in each path.
+**Step** — A column of the board: one moment in time, read down every lane at once. Steps run left to right.
 
-**Lane** — One row of the board: a kind of participant, or a place the work happens — the customer, staff in front of them, staff out of sight, the tools each uses. A lane runs across every step, so reading one row tells you what that participant does from beginning to end.
+**Lane** — A row of the board, for one kind of participant — the customer, frontstage staff, backstage work, the tools. A row reads across every step.
 
 <!-- /generated:vocabulary -->
 
