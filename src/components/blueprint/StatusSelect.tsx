@@ -1,22 +1,22 @@
+import { OptionSelect } from '@/components/blueprint/OptionSelect'
 import {
   ENTITY_STATUS,
   ENTITY_STATUS_LABEL,
   type EntityStatus,
 } from '@/lib/entityStatus'
-import { cn } from '@/lib/utils'
+
+const OPTIONS = ENTITY_STATUS.map((status) => ({
+  value: status,
+  label: ENTITY_STATUS_LABEL[status],
+}))
 
 /**
  * Status, as an editable field.
  *
  * It shipped read-only: a `StatusBadge` in both View and Edit mode, so the
  * one governed vocabulary on the board was the one thing an author could not
- * set from the panel. A native `<select>` rather than a styled listbox — six
- * fixed options, no search, no multi-select, and it gets keyboard and touch
- * for free.
- *
- * The option text is the full label ("Live — in use today"), because a
- * dropdown is where a reader learns what the six words mean; the badge only
- * has room for one of them.
+ * set from the panel. Six fixed options, no search, no multi-select — the
+ * shape `OptionSelect` exists for (#256).
  */
 export function StatusSelect({
   value,
@@ -32,26 +32,13 @@ export function StatusSelect({
   id?: string
 }) {
   return (
-    <select
-      id={id}
+    <OptionSelect
       value={value}
+      onChange={onChange}
+      options={OPTIONS}
       disabled={disabled}
-      onChange={(event) => onChange(event.target.value as EntityStatus)}
-      className={cn(
-        'h-7 w-fit rounded-md border border-input bg-transparent px-2 text-xs',
-        'outline-none transition-colors hover:border-control-hover',
-        // Inset, so a panel that clips (the accordion animates its height
-        // with overflow-hidden) cannot shear the ring.
-        'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-    >
-      {ENTITY_STATUS.map((status) => (
-        <option key={status} value={status}>
-          {ENTITY_STATUS_LABEL[status]}
-        </option>
-      ))}
-    </select>
+      className={className}
+      id={id}
+    />
   )
 }
