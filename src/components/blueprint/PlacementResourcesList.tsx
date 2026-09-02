@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   ArrowDown,
   ArrowUp,
@@ -7,6 +7,7 @@ import {
   MoreHorizontal,
   Star,
   StarOff,
+  Upload,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
+import { uploadAttachment } from '@/lib/attachmentUpload'
 import { hostOf } from '@/lib/cellResources'
 import { PANEL_TEXT } from '@/lib/panelText'
 import {
@@ -71,6 +73,12 @@ function sent(rows: readonly Row[]): PlacementResourceDraft[] {
  * row's flag, the function clears the previous preview in the same
  * transaction, and waiting for a Save would leave the top of the list
  * showing a state the database does not hold.
+ *
+ * A file is a third way in (#274): it goes to the bucket at once — the
+ * object's URL is what the row carries, so there is no row to draft until
+ * the upload has answered — and then joins the list as an `attachment` row
+ * saved like any other. "Replace…" on the preview uploads the same way and
+ * swaps that row's URL; the old object stays in the bucket, deliberately.
  */
 export function PlacementResourcesList({
   placement,
@@ -88,6 +96,10 @@ export function PlacementResourcesList({
   const [rows, setRows] = useState<Row[]>(stored)
   const [pasted, setPasted] = useState('')
   const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInput = useRef<HTMLInputElement>(null)
+  /** Which row the next chosen file replaces; null means it joins the list. */
+  const replacing = useRef<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const dirty = JSON.stringify(sent(rows)) !== JSON.stringify(sent(stored))
@@ -119,6 +131,41 @@ export function PlacementResourcesList({
       },
     ])
     setPasted('')
+  }
+
+  const chooseFile = (replaceKey: string | null) => {
+    replacing.current = replaceKey
+    fileInput.current?.click()
+  }
+
+  const upload = async (file: File) => {
+    if (!client || !placement.cellId || uploading) return
+    setUploading(true)
+    setError(null)
+    try {
+      const uploaded = await uploadAttachment(client, { cellId: placement.cellId, file })
+      const target = replacing.current
+      replacing.current = null
+      setRows((current) =>
+        target !== null && current.some((row) => row.key === target)
+          ? current.map((row) => (row.key === target ? { ...row, url: uploaded.url } : row))
+          : [
+              ...current,
+              {
+                key: `new:${uploaded.objectKey}`,
+                id: null,
+                kind: 'attachment',
+                name: uploaded.name,
+                url: uploaded.url,
+                featured: false,
+              },
+            ],
+      )
+    } catch (uploadError) {
+      setError(errorMessage(uploadError))
+    } finally {
+      setUploading(false)
+    }
   }
 
   const move = (index: number, by: -1 | 1) => {
@@ -193,6 +240,18 @@ export function PlacementResourcesList({
                 {row.kind === 'attachment' ? 'Preview' : linkPresentation(row.url).label}
                 <span className="text-muted-foreground"> · {row.name}</span>
               </span>
+              {row.kind === 'attachment' && placement.cellId ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-1.5 text-2xs"
+                  disabled={busy || uploading}
+                  onClick={() => chooseFile(row.key)}
+                >
+                  Replace…
+                </Button>
+              ) : null}
               <IconTooltip label="Unset — keep it in the list, stop leading with it">
                 <Button
                   type="button"
@@ -318,6 +377,33 @@ export function PlacementResourcesList({
       </div>
       {pasteProblem && !pasteProblem.ok ? (
         <p className="text-xs text-destructive">{pasteProblem.problem}</p>
+      ) : null}
+      {placement.cellId ? (
+        <>
+          <input
+            ref={fileInput}
+            type="file"
+            className="sr-only"
+            aria-label="Upload a file"
+            tabIndex={-1}
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) void upload(file)
+            }}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-foreground"
+            disabled={uploading || !client}
+            onClick={() => chooseFile(null)}
+          >
+            <Upload className="size-3" />
+            {uploading ? 'Uploading…' : 'Upload a file'}
+          </Button>
+        </>
       ) : null}
 
       <div className="flex items-center gap-2">

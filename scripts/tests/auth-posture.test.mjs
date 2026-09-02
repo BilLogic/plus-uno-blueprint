@@ -13,7 +13,14 @@
  */
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { findings, readSettings, settingsUrl } from '../check-auth-posture.mjs'
+import {
+  findings,
+  probeAnonUpload,
+  readSettings,
+  settingsUrl,
+  storageFindings,
+  uploadProbeUrl,
+} from '../check-auth-posture.mjs'
 
 /** Production, as measured. Public sign-up on, everything else off. */
 const AS_MEASURED = {
@@ -98,4 +105,32 @@ test('the reader sends the key and refuses a bad response', async () => {
     () => readSettings('https://x.supabase.co', 'anon-key', refused),
     /returned 401/,
   )
+})
+
+/* ---------------------------------------------------- the bucket (#274) */
+
+test('an anon upload that lands is the finding', () => {
+  const found = storageFindings(200)
+  assert.equal(found.length, 1)
+  assert.match(found[0].detail, /anon key uploaded/)
+})
+
+test('a refusal is the pass, and only a refusal', () => {
+  assert.deepEqual(storageFindings(403), [])
+  assert.deepEqual(storageFindings(400), [])
+  assert.equal(storageFindings(500).length, 1)
+  assert.equal(storageFindings(undefined).length, 1)
+})
+
+test('the probe writes under the key pattern the policy admits, as anon', async () => {
+  const calls = []
+  const status = await probeAnonUpload('https://x.supabase.co/', 'anon-key', async (url, init) => {
+    calls.push({ url, init })
+    return { status: 403 }
+  })
+  assert.equal(status, 403)
+  assert.equal(calls[0].url, uploadProbeUrl('https://x.supabase.co'))
+  assert.match(calls[0].url, /\/storage\/v1\/object\/cell-attachments\/cells\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.txt$/)
+  assert.equal(calls[0].init.method, 'POST')
+  assert.equal(calls[0].init.headers.apikey, 'anon-key')
 })

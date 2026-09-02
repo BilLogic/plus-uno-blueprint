@@ -190,7 +190,13 @@ that only saved half of what was on screen.
 the buttons it leads with on top, each with an unset control; every resource
 under them in order, with a row menu that sets a preview (an attachment), a
 button (a link) or unsets one; a paste field that adds a link named by its
-host, nobody typing a name. The list saves on its own button because a reorder
+host, nobody typing a name; and an upload control that puts a file in the
+`cell-attachments` bucket first and then adds it as an attachment row carrying
+the object's public URL — "Replace…" on the preview uploads the same way and
+swaps that row's file (#274). The URL names the cell's id and a minted one, so
+renaming the placement or the cell moves nothing; the Resources tab takes a
+file the same way for a resource with no placement. The list saves on its own
+button because a reorder
 is a whole-list fact written in one transaction, and featuring is one row's
 flag the database settles at once — clearing the previous preview in the same
 transaction — so folding either into the four-field Save would make that

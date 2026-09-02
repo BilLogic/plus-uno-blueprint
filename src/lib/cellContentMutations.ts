@@ -163,8 +163,17 @@ export async function restoreCellTouchpoints(
   if (error) throw toAuthoringError(error)
 }
 
-/** A row as the editor holds it. `id` is the row it came from; absent on a row typed since the last save. */
-export type ResourceDraft = { id?: string | null; label: string; url: string }
+/**
+ * A row as the editor holds it. `id` is the row it came from; absent on a row
+ * typed since the last save. `kind` is `attachment` for an upload (#274) and
+ * `link` otherwise; the sync leaves a kept row's kind alone either way.
+ */
+export type ResourceDraft = {
+  id?: string | null
+  kind?: 'link' | 'attachment'
+  label: string
+  url: string
+}
 
 /** The rows `sync_cell_resources` takes, and the shape a revert carries. */
 export type ResourceRowInput = {
@@ -206,7 +215,7 @@ export async function updateCellResources(
     if (!checked.ok) throw new Error(checked.problem)
     rows.push({
       id: draft.id ?? null,
-      kind: 'link',
+      kind: draft.kind ?? 'link',
       name: draft.label.trim() || hostOf(checked.url),
       url: checked.url,
     })
