@@ -35,10 +35,18 @@ type CellResourcesTabProps = {
   designUrl: string | null
 }
 
+/** The rows the cell's list edits: its own, with a url. A placement's are read here and edited from the touchpoint (#271, #273). */
 function resourceDrafts(resources: CellResource[]): ResourceDraft[] {
   return resources
-    .filter((resource) => resource.url?.trim())
+    .filter((resource) => !resource.placementId && resource.url?.trim())
     .map((resource) => ({ id: resource.id, label: resource.name, url: resource.url ?? '' }))
+}
+
+/** A placement's resources, as the editor lists them without inputs. */
+function placementRows(resources: CellResource[]): CellResource[] {
+  return resources.filter(
+    (resource) => resource.placementId !== null && resource.url?.trim(),
+  )
 }
 
 /**
@@ -173,12 +181,32 @@ function CellResourcesEditor({
     }
   }
 
+  const fromPlacements = placementRows(stored)
+
   return (
     <div className="flex flex-col gap-1.5">
-      {resources.length === 0 ? (
+      {resources.length === 0 && fromPlacements.length === 0 ? (
         <p className="text-xs text-muted-foreground">
           No resources linked to this cell yet.
         </p>
+      ) : null}
+      {fromPlacements.length > 0 ? (
+        // Listed, not edited: these rows belong to a touchpoint placed here,
+        // and the touchpoint's own editor is where they change (#273).
+        <ul className="flex flex-col" aria-label="From this cell's touchpoints">
+          {fromPlacements.map((resource) => (
+            <li
+              key={resource.id ?? resource.url}
+              className="flex min-w-0 items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground"
+            >
+              <ExternalLink className="size-3 shrink-0 opacity-70" aria-hidden />
+              <span className="min-w-0 truncate">{resource.name}</span>
+              <span className="shrink-0 text-2xs opacity-70">
+                from a touchpoint
+              </span>
+            </li>
+          ))}
+        </ul>
       ) : null}
       {resources.map((resource, index) => (
         <div key={index} className="flex flex-col gap-1">

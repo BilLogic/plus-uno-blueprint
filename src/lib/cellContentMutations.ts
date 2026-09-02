@@ -219,11 +219,15 @@ export async function updateCellResources(
     // The captured list, written back as it stood. A resource carries nothing
     // that is not in this list, so restoring the list restores the state —
     // unlike a placement, whose per-moment writing a delete destroys.
+    //
+    // The cell's OWN rows only. A placement's resources sit in the same list
+    // to be read (#271) but are the touchpoint's to write, and the sync
+    // refuses their ids — so the inverse names none of them.
     {
       fn: 'update_cell_resources',
       args: {
         cell_id: cellId,
-        resources: existing.map((resource) => ({
+        resources: existing.filter((resource) => !resource.placementId).map((resource) => ({
           // By id, so the revert restores the rows themselves, not look-alikes.
           id: resource.id,
           kind: resource.kind,

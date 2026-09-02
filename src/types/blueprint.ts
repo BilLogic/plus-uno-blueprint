@@ -105,10 +105,18 @@ export type CellResource = {
    */
   id: string | null
   name: string
-  /** `link` for everything the migration carried; the column allows `other`. */
+  /** `link` or `attachment` — what the row is, decided when it is made. */
   kind: string
-  /** Null only for a kind that is not a link — the table refuses a link without one. */
+  /** The table refuses a row without one; null only on a fallback board. */
   url: string | null
+  /**
+   * The placement this resource belongs to, when it is a placement's — a
+   * design link or the image a touchpoint shows here. Still the cell's row
+   * (#271), so it renders in the cell's list; edited from the touchpoint.
+   */
+  placementId: string | null
+  /** The resource its owner leads with. */
+  featured: boolean
 }
 
 export type BlueprintCell = {

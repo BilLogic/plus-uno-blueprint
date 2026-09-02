@@ -7,7 +7,7 @@ import {
 import type { CellResource } from '@/types/blueprint'
 
 const figmaOnCell: CellResource[] = [
-  { id: null, kind: 'link', name: 'Figma', url: 'https://www.figma.com/file/cell-wide' },
+  { id: null, kind: 'link', name: 'Figma', url: 'https://www.figma.com/file/cell-wide', placementId: null, featured: false },
 ]
 
 describe('resolveDesignUrl', () => {
@@ -37,7 +37,7 @@ describe('resolveDesignUrl', () => {
   it('recognises a cell link labelled Figma whatever it points at', () => {
     expect(
       resolveDesignUrl(null, [
-        { id: null, kind: 'link', name: 'Figma prototype', url: 'https://p.dev/x' },
+        { id: null, kind: 'link', name: 'Figma prototype', url: 'https://p.dev/x', placementId: null, featured: false },
       ]),
     ).toBe('https://p.dev/x')
   })
@@ -48,7 +48,7 @@ describe('resolveDesignUrl', () => {
     // nothing to do with the picture.
     expect(
       resolveDesignUrl(null, [
-        { id: null, kind: 'link', name: 'Ticket', url: 'https://tracker.dev/1' },
+        { id: null, kind: 'link', name: 'Ticket', url: 'https://tracker.dev/1', placementId: null, featured: false },
       ]),
     ).toBeNull()
   })
@@ -61,7 +61,7 @@ describe('resolveDesignUrl', () => {
     // nowhere before #181 moved them to `evidence`.
     expect(
       resolveDesignUrl(null, [
-        { id: null, kind: 'other', name: 'Figma sweep 05', url: null },
+        { id: null, kind: 'attachment', name: 'Figma sweep 05', url: null, placementId: null, featured: false },
       ]),
     ).toBeNull()
   })

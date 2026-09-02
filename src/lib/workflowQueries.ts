@@ -90,7 +90,9 @@ export const PATH_BLUEPRINT_SELECT = `
       position,
       kind,
       name,
-      url
+      url,
+      cell_touchpoint_id,
+      featured
     ),
     outgoing:cell_dependencies!cell_dependencies_source_cell_id_fkey (
       id,
