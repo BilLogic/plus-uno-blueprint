@@ -60,8 +60,16 @@ type FormState = {
   summary: string
   owner: string
   perceivedOwner: string
+  /**
+   * `cells.function` and `cells.form`, under a suffix (#257). `function` is a
+   * keyword, so a key by that name cannot be destructured, and `form` is the
+   * name of this state object itself, so `form.form` would read as a typo.
+   * The suffix is the whole of the difference; `a-form-key-is-a-column`
+   * knows it and strips it before matching the key to its column.
+   */
   functionText: string
   formText: string
+  /** `cells.value_props`: one line per audience, see CONTEXT.md's label table. */
   valueProps: ValueProp[]
   status: EntityStatus
   /**
@@ -640,7 +648,10 @@ function CellPanelEditorForm({
         />
       </Field>
 
-      <Field label="Value proposition" hint="Who gets what from it.">
+      <Field
+        label="Value proposition"
+        hint="Who gets what from it — one line per audience."
+      >
         <div className="flex flex-col gap-1.5">
           {form.valueProps.map((entry, index) => (
             <div key={index} className="flex items-center gap-1.5">
