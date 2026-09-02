@@ -24,6 +24,7 @@ import type { CellLink, CellResource } from '@/types/blueprint'
 
 /** A `resources` row as the board query selects it. */
 export type RawCellResource = {
+  id?: string | null
   position: number
   kind?: string | null
   name?: string | null
@@ -44,6 +45,7 @@ export function cellResourcesFromRows(
     // whatever order the planner chose.
     .sort((a, b) => a.position - b.position)
     .map((row) => ({
+      id: row.id ?? null,
       name: row.name!.trim(),
       kind: row.kind?.trim() || 'link',
       url: row.url?.trim() || null,
@@ -62,6 +64,7 @@ export function cellResourcesFromLinks(
     if (!url) return []
     return [
       {
+        id: null,
         // A link with no label still has to say something. The host is what
         // the editor falls back to when an author leaves the field empty, so
         // the two sources answer this the same way.

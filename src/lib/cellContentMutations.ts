@@ -163,10 +163,17 @@ export async function restoreCellTouchpoints(
   if (error) throw toAuthoringError(error)
 }
 
-export type ResourceDraft = { label: string; url: string }
+/** A row as the editor holds it. `id` is the row it came from; absent on a row typed since the last save. */
+export type ResourceDraft = { id?: string | null; label: string; url: string }
 
 /** The rows `sync_cell_resources` takes, and the shape a revert carries. */
-export type ResourceRowInput = { kind: string; name: string; url: string | null }
+export type ResourceRowInput = {
+  /** Null for a row to insert; the row's own id for one to update in place (#270). */
+  id: string | null
+  kind: string
+  name: string
+  url: string | null
+}
 
 /**
  * Replace the cell's resources.
@@ -198,6 +205,7 @@ export async function updateCellResources(
     const checked = validateResourceUrl(draft.url)
     if (!checked.ok) throw new Error(checked.problem)
     rows.push({
+      id: draft.id ?? null,
       kind: 'link',
       name: draft.label.trim() || hostOf(checked.url),
       url: checked.url,
@@ -216,6 +224,8 @@ export async function updateCellResources(
       args: {
         cell_id: cellId,
         resources: existing.map((resource) => ({
+          // By id, so the revert restores the rows themselves, not look-alikes.
+          id: resource.id,
           kind: resource.kind,
           name: resource.name,
           url: resource.url,

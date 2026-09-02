@@ -103,3 +103,17 @@ test('both sources produce the same list for the same cell', () => {
 
   assert.deepEqual(fromRows, fromLinks)
 })
+
+test('a row carries its id, and a fallback link has none to carry', () => {
+  // The id is what lets a later write name the row it means (#270): a
+  // reorder that came back with fresh ids would have deleted and re-created
+  // every row, and anything hung off a row would have gone with it.
+  const [row] = cellResourcesFromRows([
+    { id: 'r-1', position: 0, kind: 'link', name: 'Spec', url: 'https://spec.example.com/' },
+  ])
+  assert.equal(row.id, 'r-1')
+  const [link] = cellResourcesFromLinks([
+    { type: 'url', label: 'Spec', url: 'https://spec.example.com/' },
+  ])
+  assert.equal(link.id, null)
+})
