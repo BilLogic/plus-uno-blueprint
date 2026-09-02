@@ -420,6 +420,12 @@ export const LABEL_COLUMNS = Object.freeze(
     { label: 'Delivery cost', names: ['business_models.delivery_cost'], because: '' },
     { label: 'Revenue model', names: ['business_models.revenue_model'], because: '' },
     { label: 'Partners', names: ['business_models.partners'], because: '' },
+    {
+      label: 'Examples',
+      names: ['services.entity_examples'],
+      because:
+        'The section heads a jsonb map, not a field, and the column carries an `entity_` qualifier the label drops: on the service panel the only examples in question are the board’s six entity kinds, so the qualifier is understood and the heading says the plain word. The six inputs beneath it name the kinds, not columns, so they carry no row of their own; this one row binds the whole map.',
+    },
     { label: 'Position', names: ['path_steps.position'], because: '' },
     {
       label: 'Storyboard',

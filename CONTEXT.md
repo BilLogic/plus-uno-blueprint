@@ -176,9 +176,9 @@ shown under each kind's definition to ground it in this deployment (#302). It is
 authored blueprint data that rides the service block, not descriptive detail
 hanging off a board object, which is why it lives on `services` rather than in
 the spec table above. The editing surface — an "Examples" section on the Service
-panel — arrives with #312; until a panel says the label, it is deliberately
-absent from [the interface→schema map](#the-interfaceschema-map) below, which
-records only labels a panel puts in front of a reader.
+panel — arrived with #312, which is when its **Examples** row joined
+[the interface→schema map](#the-interfaceschema-map) below: that map records
+only labels a panel puts in front of a reader, and now one does.
 
 **The word is schema-and-code only.** `docs/plans/2026-07-30-003` D3b bans it
 from the interface — *"'Spec' is internal jargon that never appears anywhere
@@ -608,10 +608,11 @@ column a reason.
 | **Delivery cost** | `business_models.delivery_cost` | — |
 | **Revenue model** | `business_models.revenue_model` | — |
 | **Partners** | `business_models.partners` | — |
+| **Examples** | `services.entity_examples` | The section heads a jsonb map, not a field, and the column carries an `entity_` qualifier the label drops: on the service panel the only examples in question are the board’s six entity kinds, so the qualifier is understood and the heading says the plain word. The six inputs beneath it name the kinds, not columns, so they carry no row of their own; this one row binds the whole map. |
 | **Position** | `path_steps.position` | — |
 | **Storyboard** | `lanes.lane_role` | The one row whose right-hand side is a VALUE rather than the name of a place to put one: `storyboard` is one of the eight `lane_role` admits, and this label heads the frames of the lane carrying it. The word is in the schema; it is simply not a column name. |
 
-Four rows out of twenty-seven, and each one a decision rather than an accident.
+Five rows out of twenty-seven, and each one a decision rather than an accident.
 That is the claim the table exists to make checkable, and
 [`scripts/tests/labels-name-their-columns.test.mjs`](scripts/tests/labels-name-their-columns.test.mjs)
 checks it four ways: every panel label has a row, every row is a label some

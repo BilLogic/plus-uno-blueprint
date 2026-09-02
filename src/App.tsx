@@ -6,6 +6,7 @@ import { ScenarioPathSelectionReset } from '@/components/editor/ScenarioPathSele
 import { WriteFailureNotices } from '@/components/editor/WriteFailureNotices'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { EditorProvider } from '@/contexts/EditorContext'
+import { EntityExamplesProvider } from '@/contexts/EntityExamplesContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import { SupabaseProvider } from '@/contexts/SupabaseProvider'
 import { ViewStateProvider } from '@/contexts/ViewStateContext'
@@ -28,9 +29,13 @@ function App() {
               <PathSelectionProvider>
                 <ScenarioPathSelectionReset />
                 <TooltipProvider delay={200}>
-                  <EditorErrorBoundary>
-                    <EditorShell />
-                  </EditorErrorBoundary>
+                  {/* One read of the service's six examples, shared by every
+                      definition popover under it (#302). */}
+                  <EntityExamplesProvider>
+                    <EditorErrorBoundary>
+                      <EditorShell />
+                    </EditorErrorBoundary>
+                  </EntityExamplesProvider>
                   {/* Outside the boundary: a write can fail as the shell
                       falls over, and the notice is what says so. */}
                   <WriteFailureNotices />

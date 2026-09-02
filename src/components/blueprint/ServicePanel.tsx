@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import {
+  Field,
+  PANEL_TEXTAREA_CLASS,
   PanelEmpty,
   PanelFooterControls,
   PanelFooterHost,
@@ -8,14 +10,23 @@ import {
   PanelKindBadge,
 } from '@/components/blueprint/panelShell'
 import { ServicePanelLoading } from '@/components/blueprint/panelLoading'
+import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
+import { cn } from '@/lib/utils'
 import { useServiceSpec, type ServiceSpec } from '@/hooks/useServiceSpec'
 import { usePanelFooterHost } from '@/hooks/usePanelFooterHost'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
 import {
+  ENTITY_KIND_DEFINITIONS,
+  ENTITY_KIND_ORDER,
+  type EntityExamples,
+  type EntityKindTerm,
+} from '@/lib/panelTerms'
+import {
   updateBusinessModel,
+  updateServiceEntityExamples,
   updateServiceSummary,
 } from '@/lib/serviceSpecMutations'
 
@@ -69,6 +80,9 @@ export function ServicePanel({ onClose }: { onClose: () => void }) {
   )
 }
 
+/** The six example inputs, one per kind, blank until a deployer writes one. */
+type ExamplesForm = Record<EntityKindTerm, string>
+
 type FormState = {
   summary: string
   funding: string
@@ -76,6 +90,16 @@ type FormState = {
   deliveryCost: string
   revenueModel: string
   partners: string
+  // Spells its column: `entity_examples` on `services`, one jsonb map. The
+  // per-kind inputs live inside it.
+  entityExamples: ExamplesForm
+}
+
+/** The stored map spread into all six inputs, blanks for the unwritten kinds. */
+function buildExamplesForm(examples: EntityExamples): ExamplesForm {
+  return Object.fromEntries(
+    ENTITY_KIND_ORDER.map((kind) => [kind, examples[kind] ?? '']),
+  ) as ExamplesForm
 }
 
 function buildBaseline(service: ServiceSpec): FormState {
@@ -86,12 +110,16 @@ function buildBaseline(service: ServiceSpec): FormState {
     deliveryCost: service.deliveryCost,
     revenueModel: service.revenueModel,
     partners: service.partners,
+    entityExamples: buildExamplesForm(service.entityExamples),
   }
 }
 
 /** Nothing an author has said about the service yet. */
 function isServiceEmpty(form: FormState): boolean {
-  return Object.values(form).every((value) => !value.trim())
+  const { entityExamples, ...fields } = form
+  return [...Object.values(fields), ...Object.values(entityExamples)].every(
+    (value) => !value.trim(),
+  )
 }
 
 function ServicePanelBody({
@@ -115,6 +143,12 @@ function ServicePanelBody({
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
+  const setExample = (kind: EntityKindTerm, value: string) =>
+    setForm((current) => ({
+      ...current,
+      entityExamples: { ...current.entityExamples, [kind]: value },
+    }))
+
   const summaryChanged = form.summary !== baseline.summary
   const modelChanged =
     form.funding !== baseline.funding ||
@@ -122,7 +156,10 @@ function ServicePanelBody({
     form.deliveryCost !== baseline.deliveryCost ||
     form.revenueModel !== baseline.revenueModel ||
     form.partners !== baseline.partners
-  const changed = summaryChanged || modelChanged
+  const examplesChanged = ENTITY_KIND_ORDER.some(
+    (kind) => form.entityExamples[kind] !== baseline.entityExamples[kind],
+  )
+  const changed = summaryChanged || modelChanged || examplesChanged
 
   if (isServiceEmpty(baseline) && !canEdit) {
     return <PanelEmpty subject="service" />
@@ -146,6 +183,16 @@ function ServicePanelBody({
       }
       if (modelChanged) {
         await updateBusinessModel(client, service.id, form, baseline)
+      }
+      // The six examples are one column, one ledger entry — a third row on the
+      // service, reverting on its own like the summary and the model do.
+      if (examplesChanged) {
+        await updateServiceEntityExamples(
+          client,
+          service.id,
+          form.entityExamples,
+          baseline.entityExamples,
+        )
       }
       invalidateQueries(`service-spec:first`)
       onDone()
@@ -220,6 +267,25 @@ function ServicePanelBody({
         onChange={(next) => set('partners', next)}
       />
 
+      {/*
+        The six examples, authored here and nowhere else (#302). Path has no
+        detail panel of its own, so a per-kind edit home would leave its
+        example homeless; one section on the service is where all six live. The
+        input labels are the KIND names — they name a kind, not a column, so
+        they carry no interface→schema row; the section heading "Examples" is
+        the one label bound to `services.entity_examples`.
+      */}
+      <PanelSectionLabel>Examples</PanelSectionLabel>
+      {ENTITY_KIND_ORDER.map((kind) => (
+        <ServiceExampleField
+          key={kind}
+          kind={kind}
+          value={form.entityExamples[kind]}
+          disabled={!canEdit}
+          onChange={(next) => setExample(kind, next)}
+        />
+      ))}
+
       {canEdit ? (
         <PanelFooterControls
           footerHost={footerHost}
@@ -231,5 +297,51 @@ function ServicePanelBody({
         />
       ) : null}
     </div>
+  )
+}
+
+/**
+ * One example input, labelled by its kind.
+ *
+ * A `Field` with the same textarea treatment `PanelTextareaField` gives every
+ * other field here — not `PanelTextareaField` itself, because its label would
+ * have to be the KIND name as a literal, and a literal label on a scanned
+ * component is read as a column binding by
+ * `scripts/tests/labels-name-their-columns.test.mjs`. The kind is not a column;
+ * the one label that names one is the "Examples" section heading. So the kind
+ * name arrives as an expression on a `Field` wrapping its own children, the
+ * shape that check reads as "not a column label".
+ */
+function ServiceExampleField({
+  kind,
+  value,
+  disabled,
+  onChange,
+}: {
+  kind: EntityKindTerm
+  value: string
+  disabled: boolean
+  onChange: (next: string) => void
+}) {
+  const term = ENTITY_KIND_DEFINITIONS[kind]
+
+  return (
+    <Field
+      label={term.label}
+      hint={`An example ${term.label.toLowerCase()} from this service, shown under its definition.`}
+    >
+      {disabled ? (
+        <p className="text-sm whitespace-pre-wrap text-foreground/80">
+          {value || <span className="text-muted-foreground">Not specified.</span>}
+        </p>
+      ) : (
+        <textarea
+          value={value}
+          rows={2}
+          onChange={(event) => onChange(event.target.value)}
+          className={cn(PANEL_TEXTAREA_CLASS, 'focus-visible:ring-inset')}
+        />
+      )}
+    </Field>
   )
 }
