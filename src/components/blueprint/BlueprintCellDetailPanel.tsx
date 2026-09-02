@@ -606,8 +606,8 @@ function BlueprintCellDetailPanelBody() {
     return entries
   }, [connections.incoming, connections.outgoing, linkedTechItems, stepTechItems])
 
-  // The placement, not a lookup by label. Its summary, screenshot and url
-  // belong to this touchpoint at this cell, which is the distinction the old
+  // The placement, not a lookup by label. Its summary and role belong to
+  // this touchpoint at this cell, which is the distinction the old
   // label join could not hold and the reason 57 authored details were
   // unreachable. Resolved once here because both the design reference below
   // and the detail body further down are answers it already carries.
@@ -647,20 +647,17 @@ function BlueprintCellDetailPanelBody() {
   /*
     What the placement leads with (#272): its featured attachment is the
     preview, every featured link — the placement's, then the cell's own — is
-    a button named by its host. Nothing here elects one url as "the design"
-    any more; the placement's `url` column still counts as a link until #276
-    moves it into `resources`.
+    a button named by its host. Nothing here elects one url as "the design".
   */
   const featured = useMemo(
     () =>
       selection
         ? featuredPresentation({
             placementId: selectedPlacement?.id ?? null,
-            placementUrl: touchpointDetail?.url,
             resources: cellResources,
           })
         : { preview: null, buttons: [] },
-    [cellResources, selection, selectedPlacement, touchpointDetail],
+    [cellResources, selection, selectedPlacement],
   )
 
   // Lane row position of the selected cell — orients up/down direction
@@ -1001,8 +998,7 @@ function BlueprintCellDetailPanelBody() {
     lane that does not draw touchpoints — four exist in production, the documents
     and the recording the import migration deliberately kept (`Branding
     Guidelines`, `Design System`, `Zoom Recording`), and they had their
-    summary, screenshot and link rendered while the name they belong
-    to was suppressed.
+    summary rendered while the name it belongs to was suppressed.
 
     A row id is what tells the two apart: only a real `cell_touchpoints` row
     has one. So the field appears wherever the placement is real, which is
@@ -1018,12 +1014,11 @@ function BlueprintCellDetailPanelBody() {
       ? ''
       : detailBodyText
   const detailImages = resolveCellDetailImages({
-    screenshot: touchpointDetail?.screenshot,
     techItem: touchpointDetail?.name ?? selection.techItem,
     cellFrame: selection.paths[0]?.frame,
   })
-  // A featured attachment is a picture even when the `screenshot` column is
-  // empty — the column is on its way out (#276); the resource is not.
+  // A featured attachment is the placement's picture (#272); the frame is
+  // the cell's.
   const showImages = Boolean(
     (featured.preview || detailImages?.length) && !isStoryboardLane,
   )
@@ -1175,8 +1170,7 @@ function BlueprintCellDetailPanelBody() {
                 mediaClassName={CELL_DETAIL_PICTURE_CLASS}
               />
             ) : (
-              // The `screenshot` column, until #276 — the same image the
-              // featured attachment carries once 20260902130000 has run.
+              // The cell's frame, for a placement with no featured attachment.
               screenshots.map((src) => (
                 <div key={src} className={CELL_DETAIL_PICTURE_FRAME_CLASS}>
                   <img

@@ -114,21 +114,28 @@ export async function executeRevert(
     }
     case 'restore_touchpoint_placement': {
       // Undo of "edited a touchpoint at this cell". The captured payload is
-      // the four detail COLUMNS as the database held them, written back
-      // verbatim rather than rebuilt through the input validator — an
-      // imported placement can carry a screenshot path or an http url the
-      // validator would refuse, and undo has to be able to reach data that
-      // was already there. Same rule, same reason, as update_cell_resources.
+      // the detail COLUMNS as the database held them, written back verbatim
+      // rather than rebuilt through the input validator — undo has to be
+      // able to reach data that was already there. Same rule, same reason,
+      // as update_cell_resources.
+      //
+      // Two columns since #276. An entry recorded before 20260902160000 also
+      // carries `screenshot` and `url`; those are not columns any more, so
+      // only summary and role are read — the entry still restores what it
+      // can name.
       //
       // Keyed on the placement id, so a revert after the touchpoint was reordered
       // or the catalog entry renamed still lands on the row the edit came
       // from rather than on whatever now spells the same.
       const placementId = stringArg(revert.args, 'placement_id')
-      const columns = revert.args.columns as PlacementDetailColumns | undefined
-      if (!columns || typeof columns !== 'object') {
+      const captured = revert.args.columns as Partial<PlacementDetailColumns> | undefined
+      if (!captured || typeof captured !== 'object') {
         throw new Error('This change’s captured placement detail is malformed.')
       }
-      await restoreTouchpointPlacement(client, placementId, columns)
+      await restoreTouchpointPlacement(client, placementId, {
+        summary: captured.summary ?? null,
+        role: captured.role ?? null,
+      })
       return
     }
     case 'update_cell_spec': {

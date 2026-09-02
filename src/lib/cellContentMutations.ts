@@ -104,13 +104,28 @@ export async function updateCellContent(
   }
 }
 
-/** A placement's per-moment writing, as the sync hands it back. */
+/** One resource a removed placement carried, as the sync hands it back (#276). */
+export type RemovedResource = {
+  kind: string
+  name: string
+  url: string | null
+  position: number
+  featured: boolean
+  origin: string
+}
+
+/**
+ * A placement's per-moment writing, as the sync hands it back: its summary
+ * and role, its resources in order (the revert re-creates them), and the
+ * featured link and attachment by url for the unplaced queue.
+ */
 export type RemovedPlacement = {
   name: string
   summary: string | null
-  screenshot: string | null
-  url: string | null
   role: string | null
+  resources?: RemovedResource[]
+  url?: string | null
+  screenshot?: string | null
 }
 
 /**
@@ -131,7 +146,7 @@ export type RemovedPlacement = {
  *
  * Returns the placements it removed, with their writing, so the caller can
  * put them in the inverse it records. Deleting a placement destroys the
- * per-moment summary and screenshot, and an inverse that restored only the
+ * per-moment summary and resources, and an inverse that restored only the
  * text would leave that gone for good.
  */
 export async function syncCellTouchpoints(

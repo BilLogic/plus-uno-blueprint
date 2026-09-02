@@ -408,6 +408,22 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: ['design link'],
     },
+    {
+      // #276. A placement is summary + role. Its two URL columns —
+      // `screenshot`, an image of the tool at this moment, and `url`, where
+      // it lives — became a featured attachment and a featured link in
+      // `resources` (20260902130000), and 20260902160000 dropped them. No
+      // identifier retires: `url` is a live column on `resources` and
+      // `touchpoints`, and `screenshot` stays on the unplaced queue until
+      // #277 folds it in. No copy retires either — the editor's "Screenshot"
+      // and "Link" fields went with the columns, and the placement list (#273)
+      // is where a file or a link is added now.
+      was: ['cell_touchpoints.url', 'cell_touchpoints.screenshot'],
+      is: ['resources.url', 'resources.kind'],
+      migrations: ['20260902160000'],
+      retired: [],
+      copy: [],
+    },
     /*
       THE DESIGN SYSTEM'S OWN VOCABULARY, which had four words for two ideas.
 

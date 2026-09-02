@@ -82,12 +82,14 @@ Table `touchpoints`: `service_id`, `name`, `kind`, `summary`, `url`,
 `stakeholder_id`, `origin`.
 
 **placement** — one touchpoint, used at one cell, this way. The catalog owns
-the name; the placement owns the per-moment `summary`, `screenshot` and `url`,
-because the same tool describes a different screen at a different step. It also
-carries a `role` (`core` or `peripheral`), which sits here rather than on
-the catalog because the same artifact is central at one moment and incidental
-at another.
-Table `cell_touchpoints`: `cell_id`, `touchpoint_id`, `position`, plus those.
+the name; the placement owns the per-moment `summary`, because the same tool
+describes a different screen at a different step. It also carries a `role`
+(`core` or `peripheral`), which sits here rather than on the catalog because
+the same artifact is central at one moment and incidental at another. That is
+all a placement says; what it points at — a screen, a file, a page — is a
+resource on it.
+Table `cell_touchpoints`: `cell_id`, `touchpoint_id`, `position`, `summary`,
+`role`, `origin`.
 
 **unplaced touchpoint detail** — a piece of writing about a touchpoint that
 names nothing its cell shows. It is **not a placement**: nothing draws it, and
@@ -368,6 +370,7 @@ remember is #145's job, not this paragraph's.
 | `columns` (label) | `Position` — `path_steps.position` | — |
 | `applies when` (label) | `Summary` — `paths.summary` | — |
 | `design link` (label) | `Open link` — `resources.featured` | — |
+| `cell_touchpoints.url`, `cell_touchpoints.screenshot` | `resources.url`, `resources.kind` | `20260902160000` |
 | `pill`, `chip` (design system) | `badge`, `tag` | — |
 
 The reasoning, where it is worth knowing: a "tech" lane never held only
@@ -573,8 +576,6 @@ column a reason.
 | **Form** | `cells.form` | — |
 | **Value proposition** | `cells.value_props` | `props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions. |
 | **Touchpoint** | `touchpoints` | — |
-| **Screenshot** | `cell_touchpoints.screenshot` | — |
-| **Link** | `cell_touchpoints.url` | A placement carries two URLs — this one and `screenshot` — and `url` is not a word a panel says out loud. It said *Design link* until #272: the panel no longer picks one url to call the design, it shows every featured link as a button named by its host, and the column itself leaves for `resources` in #276. |
 | **Role** | `cell_touchpoints.role` | — |
 | **Stakeholder** | `lanes.stakeholder_id` | — |
 | **Owner team** | `lanes.owner_team` | — |
@@ -603,14 +604,13 @@ diverged reads as a decision and settles nothing, and a reason column with
 decoration in it is a column readers learn to skip — taking the four real ones
 with it.
 
-Two of the four are the same shape, and it is the shape worth recognising when
-the fifth arrives. `url` and `note` are ordinary words several tables carry,
-naming what a value IS; **Link** and **Author note** name what this particular
-one is FOR. A column shared across tables cannot say which of them a reader is
-standing in, and renaming it to the label would make it wrong on the next table
-that needs it. (**Link** said *Design link* until #272, when the panel stopped
-electing one url as the design and started naming every featured link's button
-by its host.) The other two are one-offs: `value_props` abbreviates its label,
+One of the three is the shape worth recognising when the next arrives. `note`
+is an ordinary word several tables carry, naming what a value IS; **Author
+note** names what this particular one is FOR. A column shared across tables
+cannot say which of them a reader is standing in, and renaming it to the label
+would make it wrong on the next table that needs it. (**Link** was the same
+shape until #276: `cell_touchpoints.url` became a featured `resources.url` row,
+and the button it makes is named by its host.) The other two are one-offs: `value_props` abbreviates its label,
 and `lane_role` holds its label as a value.
 
 **The subject is panel labels, and that is narrower than "words on screen" on

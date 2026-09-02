@@ -537,13 +537,16 @@ const GRANT_MIGRATION = '20260830290000'
  * still stands under the new name — and the file is frozen text that must not
  * be edited to say so. Read it through the rename map instead: a `was` of the
  * form `table.column` in a row whose migration post-dates the grant becomes
- * its `is`. Anything else is returned as written.
+ * its `is`. A `was` whose `is` sits on ANOTHER table is a column that left —
+ * Postgres drops a column's grants with it — and comes back as null.
+ * Anything else is returned as written.
  */
 function renamedSince(entry) {
   for (const row of RENAME_MAP) {
     if (!row.migrations.some((version) => version > GRANT_MIGRATION)) continue
     const at = row.was.indexOf(entry)
-    if (at >= 0 && row.is[at]) return row.is[at]
+    if (at < 0 || !row.is[at]) continue
+    return row.is[at].split('.')[0] === entry.split('.')[0] ? row.is[at] : null
   }
   return entry
 }
@@ -563,7 +566,8 @@ test('the migration and the map agree about every column', () => {
   )
   const inMigration = new Set()
   for (const match of sql.matchAll(/^\s*\('([a-z_]+)', '([a-z_]+)'\),?$/gm)) {
-    inMigration.add(renamedSince(`${match[1]}.${match[2]}`))
+    const entry = renamedSince(`${match[1]}.${match[2]}`)
+    if (entry !== null) inMigration.add(entry)
   }
   assert.ok(
     inMigration.size > 40,

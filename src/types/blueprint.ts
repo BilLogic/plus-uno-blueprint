@@ -56,8 +56,9 @@ export type CellLink = {
  * One touchpoint, used at one cell.
  *
  * `name` and `kind` come from the catalog and are shared by every placement
- * of that touchpoint; `summary`, `screenshot`, `url` and `role` are
- * this moment's own. The same tool describes a different screen at a
+ * of that touchpoint; `summary` and `role` are this moment's own — what it
+ * points at is a resource on the placement (#271). The same tool describes a
+ * different screen at a
  * different step, which is the distinction the old label-keyed links could
  * not hold. Built by `cellTouchpoints.ts` from either source.
  */
@@ -77,8 +78,6 @@ export type CellTouchpoint = {
   /** Null from fallback data, which has nowhere to record one. */
   kind: string | null
   summary: string | null
-  screenshot: string | null
-  url: string | null
   /**
    * Core or peripheral AT THIS MOMENT, or null for the unmarked majority.
    * Null is a state of its own, not a quiet `peripheral` — see

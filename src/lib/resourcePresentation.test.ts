@@ -103,24 +103,6 @@ describe('featuredPresentation', () => {
     ])
   })
 
-  it('still buttons the placement’s url column until #276, without doubling a row that carries it', () => {
-    const { buttons } = featuredPresentation({
-      placementId: 'placement-1',
-      placementUrl: 'https://www.figma.com/design/W0/plus-app',
-      resources: rows,
-    })
-    expect(buttons.filter((b) => b.url.includes('W0/plus-app'))).toHaveLength(1)
-
-    const fallback = featuredPresentation({
-      placementId: null,
-      placementUrl: 'https://pencil.dev/doc/42',
-      resources: [],
-    })
-    expect(fallback.buttons).toEqual([
-      { url: 'https://pencil.dev/doc/42', name: 'pencil.dev', host: 'pencil.dev', label: 'Open link', glyph: 'open' },
-    ])
-  })
-
   it('ignores an unfeatured resource, whoever owns it', () => {
     const { preview, buttons } = featuredPresentation({
       placementId: 'placement-1',
