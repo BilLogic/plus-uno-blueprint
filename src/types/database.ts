@@ -1167,6 +1167,10 @@ export type Database = {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
       }
+      restore_featured_resources: {
+        Args: { p_rows: Json }
+        Returns: undefined
+      }
       restore_touchpoint_detail: {
         Args: { p_detail: Json; p_placement?: Json | null }
         Returns: Json
@@ -1204,6 +1208,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      set_featured_resource: {
+        Args: { p_resource_id: string; p_featured: boolean }
+        Returns: Json
+      }
       sync_cell_resources: {
         Args: { p_cell_id: string; p_rows: Json }
         Returns: undefined
@@ -1211,6 +1219,10 @@ export type Database = {
       sync_cell_touchpoints: {
         Args: { p_cell_id: string; p_names: string[] }
         Returns: Json
+      }
+      sync_placement_resources: {
+        Args: { p_placement_id: string; p_rows: Json }
+        Returns: undefined
       }
     }
     Enums: Record<string, never>

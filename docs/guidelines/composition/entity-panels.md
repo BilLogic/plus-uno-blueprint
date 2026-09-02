@@ -21,6 +21,7 @@ claims:
   - src/components/blueprint/LanePanel.tsx
   - src/components/blueprint/NotionPropertyRow.tsx
   - src/components/blueprint/PanelSectionLabel.tsx
+  - src/components/blueprint/PlacementResourcesList.tsx
   - src/components/blueprint/PanelTermLabel.tsx
   - src/components/blueprint/PanelTextareaField.tsx
   - src/components/blueprint/PhasePanel.tsx
@@ -183,6 +184,17 @@ making them scroll past six of the cell's fields to reach it is how an editor
 teaches people it is not for them. One Save, for the same reason there is one
 Save at all — the editor this replaced had four buttons for one cell and a Save
 that only saved half of what was on screen.
+
+**The placement's resources are the one list with its own Save** (#273).
+`PlacementResourcesList` sits inside the placement's group: the preview and
+the buttons it leads with on top, each with an unset control; every resource
+under them in order, with a row menu that sets a preview (an attachment), a
+button (a link) or unsets one; a paste field that adds a link named by its
+host, nobody typing a name. The list saves on its own button because a reorder
+is a whole-list fact written in one transaction, and featuring is one row's
+flag the database settles at once — clearing the previous preview in the same
+transaction — so folding either into the four-field Save would make that
+button write things it cannot show as unsaved.
 
 Two orderings inside that Save are load-bearing. The placement is written
 **after** the cell, because saving the cell's text runs

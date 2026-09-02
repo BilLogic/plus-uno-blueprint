@@ -84,6 +84,9 @@ const EVERY_WRITE = Object.keys({
   create_finding: true,
   update_finding: true,
   update_touchpoint_placement: true,
+  update_placement_resources: true,
+  set_featured_resource: true,
+  restore_featured_resources: true,
   place_touchpoint_detail: true,
   discard_touchpoint_detail: true,
 } satisfies Record<WriteFn, true>) as WriteFn[]
