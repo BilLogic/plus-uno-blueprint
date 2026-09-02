@@ -8,6 +8,7 @@ import { usePathSelectionContext } from '@/hooks/usePathSelection'
 import { getPathColor } from '@/lib/pathColorTheme'
 import { cn } from '@/lib/utils'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
+import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import { ENTITY_HEADER_HOLD_KEY } from '@/components/blueprint/EntityHeader'
@@ -92,6 +93,16 @@ export function PathSelectorMenu({ options }: { options: PathOption[] }) {
             />
           </IconTooltip>
           <PopoverContent align="end" className="w-72 p-1.5">
+            {/* What a PATH is, where the reader picks one (#307). The in-grid
+                path badge already carries this definition; the selector is the
+                other place a reader meets paths, so it heads the list with the
+                same word and the same explanation, reachable on hover, focus
+                and tap. */}
+            <EntityDefinitionPopover kind="path" side="left">
+              <span className="flex w-fit px-2 pb-1 pt-0.5 text-3xs font-semibold uppercase tracking-wider text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+                Path
+              </span>
+            </EntityDefinitionPopover>
             <ul className="flex flex-col gap-0.5">
               {options.map((option) => {
                 const checked = activePathKeys.includes(option.id)

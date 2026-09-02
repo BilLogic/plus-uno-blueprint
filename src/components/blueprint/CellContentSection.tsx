@@ -1,4 +1,4 @@
-import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
+import { Field } from '@/components/blueprint/panelShell'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { StatusBadge } from '@/components/blueprint/StatusBadge'
 import { useSupabase } from '@/contexts/SupabaseProvider'
@@ -33,15 +33,19 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
       {/* First, because it changes how everything under it should be read:
           a spec for something unbuilt is a proposal, not a description. */}
       {status ? (
-        <div className="flex flex-col gap-0.5">
-          {/* "Status", not "State" — one name for one property. The paths
-              picker calls it status, the column is called status, and a
-              second word for it is a second thing to learn. */}
-          <PanelSectionLabel>Status</PanelSectionLabel>
+        // Labelled like Summary, hint and all (#307): the Status field now
+        // explains itself the way its neighbour does, rather than carrying a
+        // bare label while Summary alone had a hint. "Status", not "State" —
+        // one name for one property, the same word the paths picker and the
+        // column use.
+        <Field
+          label="Status"
+          hint="How far along the thing this cell describes is."
+        >
           {/* A badge, not text: a governed six-value set the reader scans
               for. See docs/reference/panel-affordances.md § Badge or text. */}
           <StatusBadge status={status} />
-        </div>
+        </Field>
       ) : null}
       {owner ? <OwnerCell label="Owner" value={owner} /> : null}
       {perceived ? <OwnerCell label="Perceived owner" value={perceived} /> : null}
@@ -56,7 +60,7 @@ export function CellContentSection({ cellId }: { cellId: string | null }) {
  * VALUE. Nothing ever passed one — both call sites below are label and value —
  * so it was a dead third shape of definition, and #243 retired that shape. If
  * an owner ever needs explaining, the explanation belongs on the label like
- * every other one, through `PanelTermLabel`.
+ * every other one, through `Field`'s hint.
  */
 function OwnerCell({ label, value }: { label: string; value: string }) {
   return (

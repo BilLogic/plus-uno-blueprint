@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils'
  * a label is not worth doing — which cost the words that DO need explaining
  * the only affordance they have.
  *
- * The words that need it are badges now, and `PanelTermLabel` is where they
- * live. This is the shape for everything else, and it is deliberately inert:
- * no popover, no focus ring, nothing to reach, because there is nothing there.
+ * The two words that need it — `Touchpoint`, `Storyboard` — are `Field` labels
+ * now, carrying their definition on the label's hint popover (#307). This is
+ * the shape for everything else, and it is deliberately inert: no popover, no
+ * focus ring, nothing to reach, because there is nothing there.
  */
 export function PanelSectionLabel({
   children,

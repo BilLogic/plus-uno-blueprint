@@ -12,12 +12,13 @@
  * shell boots and present once it lifts. Which placeholder stood in for it
  * is a `data-` seam, not a class.
  */
-import { act, cleanup, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
 import { setShellBooting } from '@/contexts/shellBootStore'
+import { ENTITY_KIND_DEFINITIONS } from '@/lib/panelTerms'
 
 const HAPPY: PathOption = {
   id: 'happy:Happy Path',
@@ -29,6 +30,23 @@ const HAPPY: PathOption = {
 const control = () => screen.queryByRole('button', { name: /^Paths shown/ })
 const placeholder = () =>
   document.querySelector('[data-path-selector-skeleton]')
+
+/**
+ * Hover, as Base UI actually learns it — pointerover carrying `pointerType`,
+ * then mouseenter and mousemove. Same sequence `definitionCard.test.tsx` uses.
+ */
+function hover(element: Element) {
+  const trigger =
+    element.closest('[tabindex], [role="button"], button') ?? element
+  const pointerOver = new MouseEvent('pointerover', {
+    bubbles: true,
+    cancelable: true,
+  })
+  Object.defineProperty(pointerOver, 'pointerType', { value: 'mouse' })
+  trigger.dispatchEvent(pointerOver)
+  fireEvent.mouseEnter(trigger)
+  fireEvent.mouseMove(trigger)
+}
 
 function mount(options: PathOption[]) {
   return render(
@@ -70,5 +88,19 @@ describe('the path control, against the shell boot lane', () => {
     expect(control()).toBeNull()
     expect(placeholder()).toBeNull()
     expect(container.textContent).toBe('')
+  })
+})
+
+describe('the path control teaches what a path is where you pick one', () => {
+  it('heads the picker with the path definition, disclosed on hover (#307)', async () => {
+    mount([HAPPY])
+    // Open the selector — the definition lives where the reader picks a path.
+    fireEvent.click(control()!)
+    const heading = await screen.findByText('Path')
+    hover(heading)
+    // Verbatim from the one map that holds it, so a copy here cannot drift.
+    expect(
+      await screen.findByText(ENTITY_KIND_DEFINITIONS.path.definition),
+    ).not.toBeNull()
   })
 })

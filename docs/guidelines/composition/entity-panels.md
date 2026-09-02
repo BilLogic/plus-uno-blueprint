@@ -22,7 +22,6 @@ claims:
   - src/components/blueprint/NotionPropertyRow.tsx
   - src/components/blueprint/PanelSectionLabel.tsx
   - src/components/blueprint/PlacementResourcesList.tsx
-  - src/components/blueprint/PanelTermLabel.tsx
   - src/components/blueprint/PanelTextareaField.tsx
   - src/components/blueprint/PhasePanel.tsx
   - src/components/blueprint/ScenarioPanel.tsx
@@ -237,14 +236,22 @@ definition on every label teaches a reader that hovering is not worth doing
 about eleven times before it teaches anything, and the words that genuinely
 needed explaining were what got lost in it.
 
-**Two shapes now, and which one a word gets is decided by the word.**
-`PanelTermLabel` is a BADGE, and it carries a definition; `PanelSectionLabel`
-is plain text with nothing behind it, deliberately inert. `src/lib/panelTerms.ts`
-holds two entries, because a reader cannot guess what a storyboard or a
-touchpoint is and can guess the rest.
+#244 narrowed the definitions to two words a reader could not guess — a
+STORYBOARD is not a story, a TOUCHPOINT is not a point — and rendered each as an
+outline badge. **#307 reopened that for exactly these two.** Stacked among a
+cell's value badges, the caption read as a mystery tag rather than a field
+label, so both became plain `Field` labels beside Summary, Status and Owner, and
+`PanelTermLabel` was retired. The definition did not vanish: it moved onto the
+label's own hint popover — the touch/press affordance every other field label
+already uses. `src/lib/panelTerms.ts` still holds the two entries, now as that
+hint text.
 
-The badge is what makes the rule checkable rather than tasteful. "Is this word
-jargon" is a judgement that drifts on the next term somebody adds;
+**Two shapes now, and which one a word gets is decided by the word.** A word a
+reader could not guess is a `Field` label carrying its definition as a hint;
+`PanelSectionLabel` is plain text with nothing behind it, deliberately inert.
+
+The rule stays checkable rather than tasteful. "Is this word jargon" is a
+judgement that drifts on the next term somebody adds;
 `scripts/tests/a-definition-hangs-off-a-badge.test.mjs` asks what a definition
 is attached to, which does not. Its subject is the raw `DefinitionPopover`, and
 it exempts nothing by name: a component that composes caller-supplied children
@@ -252,14 +259,16 @@ is a container — it explains whatever it is handed rather than a word it knows
 and both `EntityDefinitionPopover` and `Field` reach that exemption by the same
 sentence.
 
-**`Field`'s `hint` is not a definition** and is not governed by this rule. It
-tells an author what to type — "an app image path starting with / or an https
-link" — which is a fact about the input, not about a word. It shares the
-`DefinitionCard` shape today; that the two look alike is known, and #244 left it
-alone rather than deleting fifteen pieces of authoring help to tidy a rule.
+**`Field`'s `hint` is exempt, and #307 leans on that exemption on purpose.**
+Most hints tell an author what to type — "an app image path starting with / or
+an https link" — a fact about the input, not about a word, which is why the
+check does not govern them. The two made-up words ride the same shape: the
+check sees a field explaining its own input, not a definition pinned to ordinary
+form English, so a definition may hang off these two labels where it may not off
+`Status` or `Summary`.
 
-**One card everywhere.** `PanelTermLabel`, `Field`'s `hint`, `PanelKindBadge`'s
-description, `StatusBadge` and the divider rail labels all render
+**One card everywhere.** `Field`'s `hint`, `PanelKindBadge`'s description,
+`StatusBadge`, `EntityDefinitionPopover` and the divider rail labels all render
 `DefinitionCard`: sections, each an eyebrow above a body, identically set. See
 [panel-affordances.md](../../reference/panel-affordances.md) § One definition
 card.

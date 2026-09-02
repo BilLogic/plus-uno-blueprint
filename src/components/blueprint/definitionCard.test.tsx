@@ -11,9 +11,9 @@
  *
  * What is rendered and what is read as text, and why:
  *
- *   - the card, the three two-section surfaces, `StatusBadge` and
- *     `PanelTermLabel` are RENDERED, because the claims are about what a
- *     reader sees and in what order;
+ *   - the card, the three two-section surfaces, `StatusBadge` and the two
+ *     made-up words' `Field` labels are RENDERED, because the claims are about
+ *     what a reader sees and in what order;
  *   - "no cue and no ⓘ survive" is read as TEXT, because it is a claim about
  *     the whole tree and no single render can observe an absence everywhere.
  *     Prior art for the source-reading half: `stakeholderDefinitionReader.test.ts`.
@@ -30,7 +30,7 @@ import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinition
 import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
 import { BlueprintDividerRailLabel } from '@/components/blueprint/BlueprintDividerBadge'
 import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
-import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
+import { Field } from '@/components/blueprint/panelShell'
 import { PathLabelBadge } from '@/components/blueprint/PathLabelBadge'
 import { ScenarioTitleBadge } from '@/components/blueprint/ScenarioTitleBadge'
 import { StakeholderBadge } from '@/components/blueprint/StakeholderBadge'
@@ -285,24 +285,28 @@ describe('StatusBadge', () => {
   })
 })
 
-describe('a definition hangs off a badge that names a term', () => {
+describe('a made-up word is a plain field label, and still explains itself', () => {
   /*
-    The bug (#244): eleven panel labels carried a definition, and nine of them
-    were ordinary English on a form — `Status`, `Summary`, `Position`,
-    `Paths`, `Dependencies`, `Resources`. A definition on every label teaches a
-    reader that hovering is not worth doing, which costs the words that DO need
-    explaining the only affordance they have.
+    #244 kept exactly two made-up words — `Touchpoint`, `Storyboard` — and
+    rendered each as an outline badge, on the reasoning that a badge is the
+    shape a vocabulary word wears. #307 reopens that for these two: stacked
+    among a cell's value badges, the caption read as a mystery tag rather than
+    a field label, so both become plain `Field` labels beside Summary and
+    Status. The definition does not vanish — it moves onto the label's own hint
+    popover, the touch/press affordance every other field label already uses.
 
-    What is asserted is what a reader can reach: which words disclose something
-    on hover, and what shape the thing they hover is.
+    What is asserted is what a reader can reach: the caption is a plain label,
+    not a badge, and hovering it still discloses the definition.
   */
-  it('a term is a badge, and hovering it gives the definition', async () => {
+  it('Touchpoint is a plain label, not a badge, and hovering it gives the definition', async () => {
     render(
-      <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />,
+      <Field label="Touchpoint" hint={PANEL_TERMS.touchpoint}>
+        <span>a value</span>
+      </Field>,
     )
-    const badge = screen.getByText('Touchpoint')
-    expect(badge.hasAttribute('data-panel-term-badge')).toBe(true)
-    hover(badge)
+    const label = screen.getByText('Touchpoint')
+    expect(label.hasAttribute('data-panel-term-badge')).toBe(false)
+    hover(label)
     expect(await screen.findByText(PANEL_TERMS.touchpoint)).not.toBeNull()
   })
 
@@ -334,13 +338,42 @@ describe('a definition hangs off a badge that names a term', () => {
     // The check that keeps the pass from being undone one entry at a time.
     expect(Object.keys(PANEL_TERMS).sort()).toEqual(['storyboard', 'touchpoint'])
   })
+
+  it('the six entity-kind definitions are the generic set, with no service-specific example', () => {
+    // #307/#301: the shared template ships these definitions, so they carry no
+    // service-specific example — the exact generic copy agreed during grilling.
+    const definitions = Object.fromEntries(
+      Object.entries(ENTITY_KIND_DEFINITIONS).map(([kind, term]) => [
+        kind,
+        term.definition,
+      ]),
+    )
+    expect(definitions).toEqual({
+      service:
+        'The whole service this blueprint maps, end to end. Everything else on the board is part of it.',
+      phase:
+        'A chapter of the service, in time order. Each phase holds the scenarios that can happen during it.',
+      scenario: 'A specific situation inside a phase, mapped on its own board.',
+      path: 'One route through a scenario: the main way, plus variants and exceptions. Paths are alternatives, not stages — nothing carries across them.',
+      step: 'A column of the board: one moment in time, read down every lane at once. Steps run left to right.',
+      lane: 'A row of the board, for one kind of participant — the customer, frontstage staff, backstage work, the tools. A row reads across every step.',
+    })
+    // No leftover PLUS example in the copy readers see.
+    for (const term of Object.values(ENTITY_KIND_DEFINITIONS)) {
+      expect(term.definition).not.toMatch(/PLUS/)
+    }
+  })
 })
 
 /* -------------------------------------- the bare sentence is retired */
 
 describe('the bare-sentence popover shape', () => {
-  it('is gone from a panel term label — the term heads its own definition', async () => {
-    render(<PanelTermLabel term="Storyboard" definition={PANEL_TERMS.storyboard} />)
+  it('is gone from a made-up word label — the term heads its own definition', async () => {
+    render(
+      <Field label="Storyboard" hint={PANEL_TERMS.storyboard}>
+        <span>frames</span>
+      </Field>,
+    )
     hover(screen.getByText('Storyboard'))
     const shown = await screen.findByText(PANEL_TERMS.storyboard)
     const card = shown.closest('[data-definition-card]')
