@@ -53,7 +53,13 @@ are server-side:
    grant is the whole of the write boundary between a panel and an RPC.
    `EXECUTE` is revoked from `public`/`anon` on every write RPC; storage
    is tiered for `slice-illustrations` (`20260730090000`,
-   `20260805170000`). `anon` holds no INSERT/UPDATE/DELETE/TRUNCATE
+   `20260805170000`) and for `cell-attachments` (`20260902150000`): that
+   bucket is public to READ, because every board is and a private bucket
+   would need a signed URL per image per reader, and written only by
+   `authenticated` under `is_service_account()`, under object keys of the
+   form `cells/<cell id>/<object id>.<ext>` — ids and nothing else, so no
+   rename moves a URL. `check:auth-posture` tries an anon upload under
+   that pattern and fails on anything but a refusal. `anon` holds no INSERT/UPDATE/DELETE/TRUNCATE
    anywhere in `public` since `20260828121000` — it had them on twelve
    tables, unreachable only because no permissive write policy named
    `anon`, which is the shape a one-word policy edit turns into an open

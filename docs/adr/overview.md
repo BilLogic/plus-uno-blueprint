@@ -40,3 +40,4 @@ deleted ADR is a decision nobody can find the reasoning for.
 | [0008](0008-large-component-splits-wait-for-an-end-to-end-round.md) | Large component splits wait for an end-to-end round |
 | [0009](0009-the-migration-series-is-a-narrative.md) | The migration series is a narrative; the board is imported data |
 | [0010](0010-the-canvas-and-the-shell-run-on-separate-clocks.md) | The canvas and the shell run on separate clocks |
+| [0011](0011-featured-is-one-column-two-verbs.md) | Featured is one column, two verbs |
