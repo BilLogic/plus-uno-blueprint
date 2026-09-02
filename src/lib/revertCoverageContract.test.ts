@@ -74,6 +74,9 @@ const RPC_BACKED = new Set([
   // and every bearing cell's text in one transaction, so it is a function and
   // the inverse is that same function pointed the other way.
   'rename_touchpoint',
+  // #280. Shipped with 20260902120000: the header toggle's write, self-inverse
+  // with the previous layout, so the default branch calls it back as is.
+  'update_scenario_layout',
 ])
 
 /** `fn: 'name'` inside a recorded RevertSpec. */

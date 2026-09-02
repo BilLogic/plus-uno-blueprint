@@ -9,6 +9,8 @@ import {
   type ReactNode,
 } from 'react'
 import { useServicePhases } from '@/hooks/useServicePhases'
+import { useSupabase } from '@/contexts/SupabaseProvider'
+import { persistScenarioLayout } from '@/lib/scenarioLayout'
 import { mergeSlidesWithFallback } from '@/lib/mergeSlidesWithFallback'
 import {
   FALLBACK_NAV,
@@ -335,40 +337,77 @@ export function EditorProvider({ children }: EditorProviderProps) {
 
   const nav = useNavSelectionState(slides)
 
+  const { client, canWrite } = useSupabase()
+
   /*
-    Per-scenario display override, session-local. Stacked is the default
-    reading view; 'merged' is the comparison lens (the header toggle calls
-    it Merged) — session-only, never persisted to the DB.
+    Per-scenario display override, layered over the stored `layout`.
+
+    `scenarios.layout` is `stacked | merged` and is what a scenario opens as.
+    An editor's toggle WRITES it — `persistScenarioLayout`, recorded with its
+    inverse — so a scenario left merged opens merged. Anon and view-only
+    sessions hold no write on the column, so their choice lives here and
+    only for the session.
+
+    An editor's choice lands here first too: the segment moves on the click,
+    not on the refetch. Each override remembers what the row said when it was
+    made, and it counts only while the row still says that. The moment the
+    refetched slide says something else — the write landed, or a revert from
+    the session sheet rewrote the row — the row wins, and no stale session
+    choice can shadow it. Derived, so nothing has to run after a fetch to
+    tidy up.
+
+    Absent means ABSENT, not 'stacked'. A reader that needs to know whether
+    THIS scenario chose gets the override, then the slide's own stored
+    layout, then `undefined` — never a default it has to treat as a sentinel.
   */
   const [viewTypeOverrides, setViewTypeOverrides] = useState<
-    Record<string, SlideViewType>
+    Record<string, { viewType: SlideViewType; over: SlideViewType | undefined }>
   >({})
 
-  /*
-    Absent means ABSENT, not 'stacked'.
-
-    Defaulting here made "this scenario is explicitly stacked" and "this
-    scenario has never been set" the same answer, and the one reader that
-    needs to tell them apart — PhaseScenarioOverview, deciding whether the
-    per-scenario choice beats the phase-wide one — had to treat 'stacked' as
-    the unset sentinel. That worked only because 'stacked' is also the
-    default; the day a phase is showing 'single', a scenario deliberately set
-    back to 'stacked' would silently lose. Each reader now applies its own
-    default, and there is exactly one value that means "unset".
-  */
   const getScenarioDisplayViewType = useCallback(
-    (slide: NavItem): SlideViewType | undefined => viewTypeOverrides[slide.id],
+    (slide: NavItem): SlideViewType | undefined => {
+      const override = viewTypeOverrides[slide.id]
+      if (!override || override.over !== slide.viewType) return slide.viewType
+      return override.viewType
+    },
     [viewTypeOverrides],
   )
 
+  const clearViewTypeOverride = useCallback((scenarioId: string) => {
+    setViewTypeOverrides((current) => {
+      if (!(scenarioId in current)) return current
+      const next = { ...current }
+      delete next[scenarioId]
+      return next
+    })
+  }, [])
+
   const setScenarioDisplayViewType = useCallback(
     (scenarioId: string, viewType: SlideViewType) => {
+      const slide = slides.find((item) => item.id === scenarioId)
+      const previous = slide ? getScenarioDisplayViewType(slide) : undefined
+      if (previous === viewType) return
       setViewTypeOverrides((current) => ({
         ...current,
-        [scenarioId]: viewType,
+        [scenarioId]: { viewType, over: slide?.viewType },
       }))
+      void persistScenarioLayout(client, canWrite, {
+        scenarioId,
+        layout: viewType,
+        previous,
+      }).catch((error: unknown) => {
+        // The row kept its old value, so the screen goes back to it.
+        console.error('[layout] update_scenario_layout failed:', error)
+        clearViewTypeOverride(scenarioId)
+      })
     },
-    [],
+    [
+      slides,
+      client,
+      canWrite,
+      getScenarioDisplayViewType,
+      clearViewTypeOverride,
+    ],
   )
 
   const slidesLoading = configured && loading && dbSlides.length === 0

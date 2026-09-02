@@ -1,7 +1,6 @@
 import { Fragment, memo, useCallback, useId, useMemo, useRef } from 'react'
 import {
   getScenarioBlueprintPanelHeight,
-  getScenarioSwimlaneBodyHeight,
   ScenarioBlueprintPanelBody,
 } from '@/components/blueprint/ScenarioBlueprintPanel'
 import { CanvasEmptyState } from '@/components/editor/CanvasEmptyState'
@@ -13,7 +12,6 @@ import type { PathListItem } from '@/lib/pathSelection'
 import { COMPARE_MIN_PANEL_HEIGHT } from '@/lib/sideBySideCompareLayout'
 import { BLUEPRINT_THEME } from '@/lib/blueprintTheme'
 import { OVERVIEW_SCENARIO_GAP } from '@/lib/overviewLayout'
-import { resolveScenarioPanelHeight } from '@/lib/phaseRowPanelHeight'
 import { SUBSLIDE_GAP } from '@/lib/slideLayout'
 import {
   getSlideDisplayLabel,
@@ -253,41 +251,6 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
     [scenarios, focusedScenarioId, focusedScenarioExpanded],
   )
 
-  const sharedSwimlaneBodyHeight = useMemo(() => {
-    if (!alignPanelHeights) return undefined
-
-    const heights = rowHeightScenarios.map((scenario) => {
-      const paths = pathsByScenario.get(scenario.id) ?? []
-      const selectedPathIds = getSelectedPathIdsProp
-        ? getSelectedPathIdsProp(scenario.id, paths)
-        : defaultSelectedPathIds(paths)
-      return getScenarioSwimlaneBodyHeight({
-        displayViewType: resolveViewType(scenario),
-        paths,
-        selectedPathIds,
-        blueprintsByPathId,
-      })
-    })
-
-    // Undefined, not 0 — and zero is reachable two ways, not one. The row
-    // can be empty (its only scenario is the focused one), and it can be
-    // non-empty but measure zero throughout, which happens when none of this
-    // phase's path keys match the global selection (see the cross-scenario
-    // naming note in PathSelectionContext). Either way a shared body height
-    // of zero would pin a panel flat rather than say "there is nothing to
-    // align to" — and `sharedPanelHeight` below has always guarded `> 0`, so
-    // anything less here makes the two memos disagree about what zero means.
-    const tallest = Math.max(0, ...heights)
-    return tallest > 0 ? tallest : undefined
-  }, [
-    alignPanelHeights,
-    rowHeightScenarios,
-    pathsByScenario,
-    blueprintsByPathId,
-    getSelectedPathIdsProp,
-    resolveViewType,
-  ])
-
   const sharedPanelHeight = useMemo(() => {
     if (!alignPanelHeights) return undefined
     const heights = rowHeightScenarios.map((scenario) => {
@@ -352,34 +315,6 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
       selectedPathIds,
       blueprintsByPathId,
       scrollChrome: { lockHeight: alignPanelHeights },
-    })
-    return height > 0 ? height : undefined
-  }, [
-    alignPanelHeights,
-    focusedScenarioId,
-    focusedScenarioExpanded,
-    scenarios,
-    pathsByScenario,
-    blueprintsByPathId,
-    getSelectedPathIdsProp,
-    resolveViewType,
-  ])
-
-  /** The same restoration for the single-view lane body. */
-  const focusedSwimlaneBodyFloor = useMemo(() => {
-    if (!alignPanelHeights || focusedScenarioId === null) return undefined
-    if (!focusedScenarioExpanded) return undefined
-    const scenario = scenarios.find((item) => item.id === focusedScenarioId)
-    if (!scenario) return undefined
-    const paths = pathsByScenario.get(scenario.id) ?? []
-    const selectedPathIds = getSelectedPathIdsProp
-      ? getSelectedPathIdsProp(scenario.id, paths)
-      : defaultSelectedPathIds(paths)
-    const height = getScenarioSwimlaneBodyHeight({
-      displayViewType: resolveViewType(scenario),
-      paths,
-      selectedPathIds,
-      blueprintsByPathId,
     })
     return height > 0 ? height : undefined
   }, [
@@ -586,15 +521,6 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
               blueprintsByPathId={blueprintsByPathId}
               sectionTitleLabel={label}
               lockedPanelHeight={panelHeightFor(scenario.id)}
-              fixedSwimlaneBodyHeight={
-                scenarioViewType === 'single'
-                  ? resolveScenarioPanelHeight({
-                      rowPanelHeight: sharedSwimlaneBodyHeight,
-                      ownHeightFloor: focusedSwimlaneBodyFloor,
-                      isFocused: isFocusedScenario,
-                    })
-                  : undefined
-              }
               lockPanelHeight={alignPanelHeights}
               displayViewType={scenarioViewType}
               onNavigate={navigateByScenario.get(scenario.id)}

@@ -16,25 +16,14 @@ export type EditorView = 'landing' | 'home' | 'detail'
  * all 22 rows held `side-by-side` and the other two were unused, so the
  * translation was deleted rather than maintained.
  *
- * `'merged'` is the exception and stays session-only: the CHECK constraint is
- * `single | stacked`, so merged cannot be persisted and a write path holding a
- * SlideViewType has to decide what it means rather than being coerced.
+ * `'merged'` used to be the exception, session-only behind a `single | stacked`
+ * CHECK. Since #280 it is stored like the other: `scenarios.layout` is
+ * `stacked | merged`, the header toggle writes it, and a scenario left merged
+ * opens merged. `single` went with that change — a one-path board was never a
+ * different board, only a different renderer for one band — so there is no
+ * third token anywhere for a write path to decide about.
  */
-export type SlideViewType = 'single' | 'stacked' | 'merged'
-
-/** Tokens the database is allowed to hold — merged is a display state. */
-export type StoredSlideViewType = Extract<SlideViewType, 'single' | 'stacked'>
-
-export const SLIDE_VIEW_TYPES: SlideViewType[] = ['single', 'stacked', 'merged']
-
-/** Options shown in the scenario view type control (merged is session-only). */
-export const SCENARIO_VIEW_TYPE_OPTIONS: SlideViewType[] = ['stacked']
-
-export const SLIDE_VIEW_TYPE_LABELS: Record<SlideViewType, string> = {
-  single: 'Single',
-  stacked: 'Stacked',
-  merged: 'Merged',
-}
+export type SlideViewType = 'stacked' | 'merged'
 
 export type NavItem = {
   id: string
@@ -44,7 +33,7 @@ export type NavItem = {
   parentId?: string
   /** Main-phase loop target (e.g. post-session → pre-session). Stored in DB; not drawn on canvas. */
   loopToId?: string
-  /** Scenario blueprint layout; defaults to single-path view. */
+  /** `scenarios.layout` — what this scenario's board opens as. */
   viewType?: SlideViewType
   /** The row's summary, shown under the slide title. */
   summary?: string | null
@@ -349,20 +338,18 @@ export function getBlueprintScenarioId(slide: NavItem): string | undefined {
  * A raw `scenarios.layout` as a SlideViewType.
  *
  * Not a translation — the stored tokens ARE these tokens. It is a guard: a row
- * outside the CHECK constraint falls back to the plain single view rather than
+ * outside the CHECK constraint falls back to the stacked view rather than
  * crashing a render, which is the behaviour the old vocabulary map provided and
- * the only part of it worth keeping.
+ * the only part of it worth keeping. `single`, which the column held until
+ * 20260902120000, lands here too: a one-path scenario is stacked with one band.
  */
 export function asSlideViewType(raw: string): SlideViewType {
-  return raw === 'stacked' || raw === 'single' ? raw : 'single'
+  return raw === 'merged' ? 'merged' : 'stacked'
 }
 
 export function getSlideViewType(slide: NavItem): SlideViewType {
   // Already the stored token — see asSlideViewType.
-  if (slide.viewType) return slide.viewType
-  if (isSubslide(slide)) return 'stacked'
-  if (hasBlueprintFallback(slide.id)) return 'stacked'
-  return 'single'
+  return slide.viewType ?? 'stacked'
 }
 
 export function showsBlueprintFilters(

@@ -457,12 +457,12 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'set_scenario_view',
-        description: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path\'s version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged — accepted from a caller, never stored (the column holds single | stacked).',
+        description: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path\'s version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged. For an editor this is a recorded write of scenarios.layout — the scenario opens that way next time; for a viewer it lasts the session.',
         run: (arg) =>
           // 'side-by-side'/'integrated' are the pre-v3 tokens. The column no
           // longer holds them, but they are kept as documented aliases so older
           // prompts and transcripts still resolve to a view rather than failing.
-          // This is a display switch — it writes nothing.
+          // The editor context decides whether this is a row or a session.
           commands.current.setScenarioView(
             arg === 'merged' || arg === 'integrated' ? 'merged' : 'stacked',
           ),

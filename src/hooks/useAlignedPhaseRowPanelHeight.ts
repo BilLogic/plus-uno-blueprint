@@ -77,7 +77,7 @@ export function useAlignedPhaseRowPanelHeight(
             otherwise reach every dimmed neighbour through the shared max,
             which is how six untouched panels once grew from 2218px to
             4250px each. It is bucketed rather than dropped, because
-            dropping it shrinks it — see `resolveScenarioPanelHeight`.
+            dropping it shrinks it — see `focusedPanelHeight` below.
 
             Plain focus marks nothing, so focusing a scenario leaves every
             number in its row exactly where it was.

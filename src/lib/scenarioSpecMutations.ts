@@ -11,9 +11,10 @@ type Client = SupabaseClient<Database>
  * Write a scenario's summary.
  *
  * One column, so one function. `layout` is deliberately not writable from
- * here: it is a view preference, set by using the compare control, and a
- * properties panel is the wrong place to change what you are looking at.
- * `name` is a structural rename with its own RPC.
+ * here: it is set by using the header toggle, which writes it through
+ * `update_scenario_layout` (#280), and a properties panel is the wrong place
+ * to change what you are looking at. `name` is a structural rename with its
+ * own RPC.
  */
 export async function updateScenarioSummary(
   client: Client,
