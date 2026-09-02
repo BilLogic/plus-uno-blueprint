@@ -1,0 +1,445 @@
+/**
+ * Documented value sets, held to the constraints that define them.
+ *
+ * `check-blueprint-contract` probes IDENTIFIERS: a doc that names
+ * `cells.links` fails when the column is gone. That catches a rename. It
+ * cannot catch a claim about which VALUES a column accepts, which is the class
+ * that cost the most in the 2026-09-01 audit — `scenarios.layout` taught as
+ * `single/side-by-side/integrated` against a CHECK of `single|stacked`; the
+ * `Planned:` / `Prototype:` convention taught eleven days after its deletion.
+ * Neither is an identifier. Prose does not 400.
+ *
+ * WHAT A CLAIM IS. A sentence that lists values and says whose they are:
+ *
+ *   `kind` is exactly three values: `happy`, `variant`, `exception`.
+ *   `paths.kind` is `happy | variant | exception`
+ *   the `entity_status` domain: `proposed`, `planned`, …
+ *   plus `kind` (`link` or `attachment`), `name`, `url`
+ *
+ * The LIST is a pipe span, or a run of code spans joined by commas, slashes,
+ * `or`, `and`. The SCOPE is a column or domain the same sentence names OUTSIDE
+ * the list — `kind` in the first example, not in "Table `paths`: `name`,
+ * `kind`, `summary`", where it is a member and the run is a column list. A
+ * parenthetical is its own sentence, scoped by the span before its bracket. A
+ * bare column name resolves to every column so named; the claim holds if any
+ * of them accepts exactly this set. A pipe span with no scope is still
+ * unmistakably a value set, so it must equal SOME live set whenever it shares
+ * a value with one — `loading | ready | error` is a state machine in a doc and
+ * shares nothing; `stacked | merged | split` shares two values and is wrong.
+ *
+ * A markdown claim is EQUALITY: "the vocabulary is these six" is false the day
+ * a seventh lands. A catalog comment is SUBSET: "staff/recipient/partner are
+ * actors" glosses part of `stakeholders.kind` and is true. Comments carry no
+ * backticks, so their lists are found by shape — bracketed, introduced by a
+ * colon or a dash, slashed, piped, or `key = gloss` pairs — and a plain
+ * comma run that shares no value with the column is English ("a shared step
+ * axis, or merged into one grid"). Piped and glossed lists are held strictly:
+ * `trigger = temporal; needs = functional` on a column that accepts
+ * `leads_to | enables` is stale even though it shares nothing.
+ *
+ * A RETIRED VALUE is a finding in either medium: the rename map records
+ * `scenarios.layout = 'single'` → `'stacked'`, and a list naming `single`
+ * is stale whatever else it says. A sentence that records the retirement —
+ * correction verb AND the migration that did it — is history, and the
+ * exemption is no wider than that sentence.
+ *
+ * Pure: reads text and a catalog snapshot, touches nothing. The catalog rows
+ * come from `public.value_sets()` (20260902200000); the comments from
+ * `public.schema_comments()`. `pg_catalog` is exposed to no PostgREST role,
+ * so those two functions are how a key reaches it.
+ */
+import { RENAME_MAP } from './retired-vocabulary.mjs'
+import { renameSectionLines } from './stale-prose.mjs'
+
+/* ------------------------------------------------------------ the catalog */
+
+/**
+ * The values a CHECK or domain constraint accepts, or null when it is not a
+ * value list. Postgres deparses `col in ('a','b')` as
+ * `col = ANY (ARRAY['a'::text, 'b'::text])`; a hand-written `IN (...)` is
+ * read too, for a definition captured before deparse.
+ */
+export function parseValueSet(definition) {
+  const list =
+    /= ANY \(ARRAY\[([^\]]*)\]\)/.exec(definition) ?? /\bIN \(([^)]*)\)/i.exec(definition)
+  if (!list) return null
+  const values = [...list[1].matchAll(/'((?:[^']|'')*)'/g)].map((m) => m[1].replaceAll("''", "'"))
+  return values.length > 0 ? values : null
+}
+
+/**
+ * The live value sets, indexed three ways: by `table.column`, by domain name,
+ * and by bare column name (every table's `kind` is a different set).
+ *
+ * `rows` is what `public.value_sets()` returns: `{ source, relation,
+ * column_name, name, definition }`, one row per single-column CHECK, one per
+ * domain, and one per column typed by a domain.
+ */
+export function catalogValueSets(rows) {
+  const columns = new Map()
+  const domains = new Map()
+  for (const row of rows) {
+    const values = parseValueSet(row.definition ?? '')
+    if (!values) continue
+    const label = row.source === 'domain' ? `domain ${row.name}` : `constraint ${row.name}`
+    const set = domains.get(row.name) ?? { name: label, values: new Set(values) }
+    if (row.source === 'domain') domains.set(row.name, set)
+    if (row.relation && row.column_name) columns.set(`${row.relation}.${row.column_name}`, set)
+  }
+  const byColumn = new Map()
+  for (const key of columns.keys()) {
+    const column = key.split('.')[1]
+    if (!byColumn.has(column)) byColumn.set(column, [])
+    byColumn.get(column).push(key)
+  }
+  return { columns, domains, byColumn }
+}
+
+/**
+ * Retired VALUES from the rename map: rows whose `was` is
+ * `table.column = 'value'`. Value → what replaced it and which migration.
+ */
+export function retiredValues(map = RENAME_MAP) {
+  const VALUE_RENAME = /^([a-z][a-z0-9_]*\.[a-z][a-z0-9_]*) = '([^']+)'$/
+  const retired = new Map()
+  for (const row of map) {
+    row.was.forEach((was, index) => {
+      const from = VALUE_RENAME.exec(was)
+      const to = VALUE_RENAME.exec(row.is[index] ?? row.is[0] ?? '')
+      if (!from || !to) return
+      retired.set(from[2], { column: from[1], is: to[2], migration: row.migrations[0] ?? null })
+    })
+  }
+  return retired
+}
+
+/* ------------------------------------------------------------- sentences */
+
+const CORRECTION_VERB =
+  /\b(renamed|replaced|became|dropped|removed|retired|superseded|split into|moved to)\b/i
+// A version cited as a filename — `20260821220000_three_kinds_of_route.sql` —
+// is still the migration; `_` is a word character and `\b` would refuse it.
+const CORRECTION_PROOF = /(?<!\w)202[0-9]{11}(?![0-9])/
+
+/**
+ * A sentence may name a dead identifier or value when it is SAYING it is dead
+ * — and it proves that twice: a correction verb AND the migration that did it.
+ *
+ * One signal is not enough, and the second signal has to be the migration
+ * rather than merely another backticked name. A first attempt accepted any
+ * other identifier as proof, which a sentence listing three retired spellings
+ * satisfies without saying anything about any of them. Requiring the migration
+ * also asks of the prose what this repo asks of itself everywhere else: a
+ * rename claim cites the file that did it.
+ */
+export function isCorrection(sentence) {
+  return CORRECTION_VERB.test(sentence) && CORRECTION_PROOF.test(sentence)
+}
+
+/**
+ * A rename table is a deliberate list of dead names — the one place an old
+ * spelling belongs. Detected STRUCTURALLY, by a header row whose first cell is
+ * `Was`, rather than by wording: both of the bot-facing docs carry one, only
+ * one of them under a heading, and a heading-based rule would have missed the
+ * other.
+ */
+export function renameTableState(line, inside) {
+  if (/^\|\s*Was\s*\|/i.test(line)) return { skip: true, inside: true }
+  if (inside && /^\s*\|/.test(line)) return { skip: true, inside: true }
+  return { skip: false, inside: false }
+}
+
+const SENTENCE = /(?<=[.!?])\s+/
+
+/**
+ * The sentences of a text with the line each starts on. Fenced code is
+ * blanked, rename-table rows are dropped, and a paragraph is joined before
+ * it is split because Markdown reflows: a list that wraps is one sentence.
+ */
+export function sentencesOf(text) {
+  const body = text.replace(/```[\s\S]*?```/g, (m) => m.replace(/[^\n]/g, ' '))
+  const lines = body.split('\n')
+  // The rename section is where a retired word is at home: its commentary
+  // explains why each name went, by naming it. Found by structure, as
+  // `a-doc-names` finds it.
+  const history = renameSectionLines(lines)
+  const sentences = []
+  let inTable = false
+  let start = 0
+  while (start < lines.length) {
+    let end = start
+    while (end < lines.length && lines[end].trim() !== '') end += 1
+    const block = lines.slice(start, end).map((line, offset) => {
+      const state = renameTableState(line, inTable)
+      inTable = state.inside
+      return state.skip || history.has(start + offset) ? '' : line
+    })
+    const joined = block.join('\n')
+    let cursor = 0
+    for (const sentence of joined.split(SENTENCE)) {
+      const at = joined.indexOf(sentence, cursor)
+      cursor = at + sentence.length
+      if (sentence.trim() === '') continue
+      const line = start + 1 + (joined.slice(0, at).match(/\n/g) ?? []).length
+      sentences.push({ text: sentence.replaceAll('\n', ' '), line })
+    }
+    start = end + 1
+  }
+  return sentences
+}
+
+/** Innermost parentheticals out, each with the text that preceded its bracket. */
+function splitParentheticals(sentence) {
+  const inner = []
+  let outer = sentence
+  let match
+  while ((match = /\(([^()]*)\)/.exec(outer))) {
+    const before = outer.slice(0, match.index)
+    inner.push({ text: match[1], before })
+    outer = `${before} ${outer.slice(match.index + match[0].length)}`
+  }
+  return { outer, inner }
+}
+
+/* ----------------------------------------------------------------- lists */
+
+const TOKEN = /^[a-z][a-z0-9_-]*$/
+const QUALIFIED = /^([a-z][a-z0-9_]*)\.([a-z][a-z0-9_]*)$/
+const PIPE_SPAN = /^[a-z][a-z0-9_-]*(?:\s*\|\s*[a-z][a-z0-9_-]*)+$/
+const SPAN = /`([^`\n]+)`/g
+const CONNECTOR = /^\s*(?:,|\/|(?:,\s*)?(?:or|and))\s*$/
+
+const ARROW = /→|->/
+const PREDICATE = /^\s*(?:is|are|was|were|=|:|accepts?|takes?|allows?|in|one of)\b|^\s*[=:]/
+
+/**
+ * Lists and scope candidates of a markdown fragment. Code spans only; prose
+ * is English. A span on either side of an arrow is half of a rename pair
+ * (`label` → `name`) and neither a value nor a scope. A bare column name
+ * scopes only when a predicate follows it — "`kind` is", "`kind`:", "`kind` ="
+ * — because "`name`, `kind`, `summary`" is a column list and `kind` is a
+ * member of it.
+ */
+function markdownLists(fragment) {
+  const spans = [...fragment.matchAll(SPAN)].map((m) => ({
+    text: m[1].trim(),
+    start: m.index,
+    end: m.index + m[0].length,
+  }))
+  spans.forEach((span, i) => {
+    const next = spans[i + 1]
+    if (next && ARROW.test(fragment.slice(span.end, next.start))) span.paired = next.paired = true
+  })
+  const lists = []
+  let run = []
+  const flush = () => {
+    if (run.length >= 2) lists.push({ values: run.map((s) => s.text), strict: true, form: 'run' })
+    run = []
+  }
+  for (const span of spans) {
+    if (span.paired) {
+      flush()
+      continue
+    }
+    if (PIPE_SPAN.test(span.text)) {
+      flush()
+      lists.push({ values: span.text.split(/\s*\|\s*/), strict: true, form: 'pipe' })
+      continue
+    }
+    if (!TOKEN.test(span.text)) {
+      flush()
+      continue
+    }
+    if (run.length > 0 && !CONNECTOR.test(fragment.slice(run.at(-1).end, span.start))) flush()
+    run.push(span)
+  }
+  flush()
+  const scopes = spans
+    .filter((span) => !span.paired)
+    .map((span) => ({ text: span.text, predicated: PREDICATE.test(fragment.slice(span.end)) }))
+  return { lists, scopes, tokens: spans.filter((s) => !s.paired).map((s) => s.text) }
+}
+
+const ITEM = '(?!(?:or|and|null)\\b)[a-z][a-z0-9_-]*'
+const COMMENT_RUN = new RegExp(
+  `(?<![\\w.-])${ITEM}(?:(?:,?\\s+(?:or|and)\\s+|\\s*(?:,|\\/|\\|)\\s*)${ITEM})+`,
+  'gi',
+)
+const COMMENT_SPLIT = /,?\s+(?:or|and)\s+|\s*(?:,|\/|\|)\s*/i
+const GLOSSED_KEY = /(?:^|[:;]\s*)([a-z][a-z0-9_-]*)\s*=\s*\S/gi
+const COMMENT_WORD = /[A-Za-z][A-Za-z0-9_.-]*/g
+
+/**
+ * Lists of a catalog comment, found by shape. A bracket is a list when the
+ * run is the whole of it — "(happy, unhappy, exception, alternative)", not
+ * "(pill cells, storyboard rows, divider anchoring)". A colon or a dash
+ * introduces a list that then runs to the end of its sentence. Slashes and
+ * pipes are lists wherever they are; `key = gloss; key = gloss` is one too.
+ * Anything else with commas in it is a sentence — "a shared step axis, or
+ * merged into one grid" — and is read only for a retired value.
+ */
+function commentLists(fragment, { bracketed }) {
+  const lists = []
+  for (const m of fragment.matchAll(COMMENT_RUN)) {
+    const text = m[0]
+    const before = fragment.slice(0, m.index)
+    const after = fragment.slice(m.index + text.length)
+    const whole = /^\s*$/.test(before) && /^\s*[.;:]?\s*$/.test(after)
+    const piped = text.includes('|')
+    const introduced =
+      (bracketed && whole) ||
+      piped ||
+      text.includes('/') ||
+      (/[:—-]\s*$/.test(before) && /^\s*[.;]?\s*$/.test(after))
+    lists.push({
+      values: text.split(COMMENT_SPLIT).map((v) => v.toLowerCase()),
+      strict: piped,
+      form: piped ? 'pipe' : 'run',
+      prose: !introduced,
+    })
+  }
+  const keys = [...fragment.matchAll(GLOSSED_KEY)].map((m) => m[1].toLowerCase())
+  if (keys.length >= 2) lists.push({ values: keys, strict: true, form: 'glossed' })
+  const tokens = (fragment.match(COMMENT_WORD) ?? []).map((w) => w.toLowerCase().replace(/\.$/, ''))
+  return { lists, scopes: tokens.map((text) => ({ text, predicated: true })), tokens }
+}
+
+/* ------------------------------------------------------------- resolving */
+
+/**
+ * The live sets a scope names: a qualified column, a domain, or — through a
+ * predicate — every column so named.
+ */
+function setsNamedBy({ text: token, predicated }, catalog, host) {
+  const qualified = QUALIFIED.exec(token)
+  if (qualified) {
+    const set = catalog.columns.get(token)
+    return set ? [{ label: token, set }] : []
+  }
+  if (!TOKEN.test(token)) return []
+  const domain = catalog.domains.get(token)
+  if (domain) return [{ label: `domain ${token}`, set: domain }]
+  if (!predicated) return []
+  if (host?.relation) {
+    const own = catalog.columns.get(`${host.relation}.${token}`)
+    return own ? [{ label: `${host.relation}.${token}`, set: own }] : []
+  }
+  return (catalog.byColumn.get(token) ?? []).map((key) => ({ label: key, set: catalog.columns.get(key) }))
+}
+
+/** What a comment is on, as sets: the column's own, or every constrained column of the table. */
+function hostSets(host, catalog) {
+  if (!host?.relation) return []
+  if (host.column) {
+    const set = catalog.columns.get(`${host.relation}.${host.column}`)
+    return set ? [{ label: `${host.relation}.${host.column}`, set }] : []
+  }
+  return [...catalog.columns]
+    .filter(([key]) => key.startsWith(`${host.relation}.`))
+    .map(([key, set]) => ({ label: key, set }))
+}
+
+const show = (values) => `{${[...values].join(', ')}}`
+const equalSets = (a, b) => a.size === b.size && [...a].every((v) => b.has(v))
+const subset = (a, b) => [...a].every((v) => b.has(v))
+const overlaps = (a, b) => [...a].some((v) => b.has(v))
+
+/**
+ * Every disagreement between a text's value-set claims and the catalog.
+ *
+ *   medium: 'markdown' — code spans are the tokens; a claim is equality
+ *           'comment'  — plain words; a claim is subset; `host` is what the
+ *                        comment is on: { relation, column | null }
+ *
+ * Returns strings that name the site, the claim and the set that refutes it.
+ */
+export function valueSetFindings({ text, source, medium, host = null }, catalog, retired = retiredValues()) {
+  const findings = []
+  const where = (line) => (medium === 'markdown' ? `${source}:${line}` : source)
+  const listsOf = (fragment, bracketed) =>
+    medium === 'markdown' ? markdownLists(fragment) : commentLists(fragment, { bracketed })
+
+  for (const sentence of sentencesOf(text)) {
+    if (isCorrection(sentence.text)) continue
+    const { outer, inner } = splitParentheticals(sentence.text)
+    const outerParsed = listsOf(outer, false)
+    const outerRefs = outerParsed.scopes.flatMap((token) => setsNamedBy(token, catalog, host))
+
+    const fragments = [
+      { parsed: outerParsed, refs: outerRefs, tokens: outerParsed.tokens },
+      ...inner.map(({ text: innerText, before }) => {
+        const parsed = listsOf(innerText, true)
+        const preceding =
+          medium === 'markdown'
+            ? /`([^`\n]+)`\s*$/.exec(before)?.[1]
+            : /([A-Za-z][A-Za-z0-9_.-]*)\s*$/.exec(before)?.[1]?.toLowerCase()
+        const scoped = preceding ? setsNamedBy({ text: preceding, predicated: true }, catalog, host) : []
+        const own = parsed.scopes.flatMap((token) => setsNamedBy(token, catalog, host))
+        return {
+          parsed,
+          refs: scoped.length > 0 ? scoped : [...own, ...outerRefs],
+          tokens: [...parsed.tokens, ...(preceding ? [preceding] : [])],
+        }
+      }),
+    ]
+
+    for (const { parsed, refs } of fragments) {
+      for (const list of parsed.lists) {
+        const values = new Set(list.values)
+        // Scope is a name OUTSIDE the list: `kind` in "`kind` is `a`, `b`",
+        // not in "`name`, `kind`, `summary`", where it is a member.
+        let candidates = refs.filter(
+          (ref) => !list.values.includes(ref.label.replace(/^domain /, '').split('.').at(-1)),
+        )
+        if (candidates.length === 0 && medium === 'comment') candidates = hostSets(host, catalog)
+        // A retired value is stale in any list about its column. Without a
+        // scope it is stale only if no column accepts it today: `custom` left
+        // `paths.kind` and still lives on `slices.kind`, so `journey | … |
+        // custom` is not about paths.
+        const stale = list.values.find((v) => {
+          const gone = retired.get(v)
+          if (!gone) return false
+          if (candidates.some((ref) => ref.set.values.has(v))) return false
+          if (candidates.length > 0) return candidates.some((ref) => ref.label === gone.column)
+          return ![...catalog.columns.values()].some((set) => set.values.has(v))
+        })
+        if (stale) {
+          const { column, is, migration } = retired.get(stale)
+          findings.push(
+            `${where(sentence.line)} names \`${stale}\`, which \`${column}\` retired for ` +
+              `\`${is}\` in ${migration ?? 'the rename map'}`,
+          )
+          continue
+        }
+        if (list.prose) continue
+        if (candidates.length === 0) {
+          if (list.form !== 'pipe') continue
+          // An unscoped pipe span: whichever live set it touches, it must be.
+          const all = [...new Set([...catalog.columns.values(), ...catalog.domains.values()])]
+          const touched = all.filter((set) => overlaps(values, set.values))
+          if (touched.length === 0 || touched.some((set) => equalSets(values, set.values))) continue
+          findings.push(
+            `${where(sentence.line)} lists ${show(values)}; no constraint accepts that set — ` +
+              touched.map((set) => `${set.name} accepts ${show(set.values)}`).join('; '),
+          )
+          continue
+        }
+        const holds =
+          medium === 'markdown'
+            ? candidates.some((ref) => equalSets(values, ref.set.values))
+            : list.strict
+              ? candidates.some((ref) => subset(values, ref.set.values))
+              : candidates.every((ref) => !overlaps(values, ref.set.values)) ||
+                candidates.some((ref) => subset(values, ref.set.values))
+        if (holds) continue
+        const unique = [...new Map(candidates.map((ref) => [ref.label, ref])).values()]
+        findings.push(
+          `${where(sentence.line)} documents ${unique.map((ref) => `\`${ref.label}\``).join(' / ')} as ` +
+            `${show(values)}; ` +
+            unique.map((ref) => `${ref.set.name} accepts ${show(ref.set.values)}`).join('; '),
+        )
+      }
+    }
+  }
+  return findings
+}

@@ -333,6 +333,37 @@ export const RENAME_MAP = Object.freeze(
       copy: ['single'],
     },
     /*
+      VALUE ROWS. `was` is `table.column = 'value'`, and the retired word is a
+      value the CHECK no longer accepts, not an identifier: `retired` is empty
+      because `unhappy` is not a substring of any database name, and the sweep
+      that reads these is `value-set-claims`, which holds a documented value
+      list to the constraint — a list naming `unhappy` is stale whatever else
+      it says. The migration is the one that rewrote the rows. `custom` is
+      still a value of `slices.kind`, which is why that sweep asks WHICH
+      column a list is about before it calls a word retired.
+    */
+    {
+      was: ["paths.kind = 'unhappy'"],
+      is: ["paths.kind = 'exception'"],
+      migrations: ['20260821220000'],
+      retired: [],
+      copy: [],
+    },
+    {
+      was: ["paths.kind = 'alternative'", "paths.kind = 'custom'"],
+      is: ["paths.kind = 'variant'", "paths.kind = 'variant'"],
+      migrations: ['20260821220000'],
+      retired: [],
+      copy: [],
+    },
+    {
+      was: ["cell_dependencies.kind = 'trigger'", "cell_dependencies.kind = 'needs'"],
+      is: ["cell_dependencies.kind = 'leads_to'", "cell_dependencies.kind = 'enables'"],
+      migrations: ['20260820110000', '20260820180000'],
+      retired: [],
+      copy: [],
+    },
+    /*
       #182'S FIVE ROWS, AND THEY ARE A DIFFERENT KIND OF ROW — the first in
       this map whose left column is a WORD ON SCREEN rather than an identifier,
       and the first with no migration.

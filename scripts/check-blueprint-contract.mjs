@@ -35,6 +35,15 @@
  *     cell granularity and at every structural rung
  *   - the breadcrumb the database actually emits parses into the declared
  *     labels, in order, on the declared separator
+ *   - every VALUE SET a swept document states — "`kind` is `happy`,
+ *     `variant`, `exception`" — equals the CHECK or domain that defines it,
+ *     read off the catalog through `value_sets()` (#259). Identifiers were
+ *     the first half of the 2026-09-01 audit; this is the second: a doc that
+ *     taught three layouts the CHECK never had was not naming anything
+ *   - every table and column COMMENT is swept as the prose it is — retired
+ *     spellings, qualified names, value lists — because #260 renders the
+ *     agent-facing schema section from `pg_description`, so a stale comment
+ *     ships exactly as a stale doc does
  *
  * WHAT IT CANNOT REACH, and why:
  *
@@ -60,6 +69,16 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { BLUEPRINT_CONTRACT } from './blueprintContract.mjs'
+import { RETIRED_IDENTIFIER_EXEMPTIONS } from './check-retired-identifiers.mjs'
+import { retiredSpans, staleSpans } from './stale-prose.mjs'
+import { sweptDocs } from './swept-docs.mjs'
+import {
+  catalogValueSets,
+  isCorrection,
+  renameTableState,
+  sentencesOf,
+  valueSetFindings,
+} from './value-set-claims.mjs'
 
 const REPO_ROOT = resolve(new URL('..', import.meta.url).pathname)
 const TIMEOUT_MS = 30_000
@@ -242,6 +261,7 @@ const NOT_A_CLAIM = new Set([
   'app_metadata.role', // a JWT claim, not a relation
   'breadcrumb.aliases', // a key of BLUEPRINT_CONTRACT, covered by its own test
   'search_blueprint.title', // an OUT column of the RPC; the rpc checks cover it
+  'auth.uid', // a function of the auth schema, named in column comments
 ])
 
 /** A trailing file extension is a filename, not a column. */
@@ -251,18 +271,6 @@ const FILE_EXTENSION = /^(ts|tsx|js|mjs|json|md|sql|py|yml|yaml|sh|toml|css|svg|
 const UNREACHABLE_SCHEMA = new Set(['semantic_search'])
 
 const SENTENCE = /(?<=[.!?])\s+/
-
-/**
- * A rename table is a deliberate list of dead names — the one place an old
- * spelling belongs. Detected STRUCTURALLY, by a header row whose first cell is
- * `Was`, rather than by wording: both swept files carry one, only one of them
- * under a heading, and a heading-based rule would have missed the other.
- */
-function renameTableState(line, inside) {
-  if (/^\|\s*Was\s*\|/i.test(line)) return { skip: true, inside: true }
-  if (inside && /^\s*\|/.test(line)) return { skip: true, inside: true }
-  return { skip: false, inside: false }
-}
 
 /**
  * The sentence a claim sits in, reassembled across markdown's line wrapping and
@@ -289,25 +297,6 @@ function sentenceAround(lines, index, offset) {
   return window
 }
 
-/**
- * A sentence may name a dead identifier when it is SAYING it is dead — and it
- * proves that twice: a correction verb AND the migration that did it.
- *
- * One signal is not enough, and the second signal has to be the migration
- * rather than merely another backticked name. A first attempt accepted any
- * other identifier as proof, which a sentence listing three retired spellings
- * satisfies without saying anything about any of them. Requiring the migration
- * also asks of the prose what this repo asks of itself everywhere else: a
- * rename claim cites the file that did it.
- */
-const CORRECTION_VERB =
-  /\b(renamed|replaced|became|dropped|removed|retired|superseded|split into|moved to)\b/i
-const CORRECTION_PROOF = /\b202[0-9]{11}\b/
-
-function isCorrection(sentence) {
-  return CORRECTION_VERB.test(sentence) && CORRECTION_PROOF.test(sentence)
-}
-
 /** Every qualified schema claim in a doc, with the line it sits on. */
 export function schemaClaims(markdown, source) {
   const body = markdown.replace(/```[\s\S]*?```/g, (m) => m.replace(/[^\n]/g, ' '))
@@ -332,6 +321,39 @@ export function schemaClaims(markdown, source) {
     }
   })
   return claims
+}
+
+/**
+ * The same claims, read off a catalog comment. A comment has no backticks, so
+ * a qualified name is any `table.column` word; `public.x` may name a function
+ * as easily as a table, and the caller resolves it against what PostgREST
+ * lists rather than by a select.
+ */
+export function commentClaims(comment, source) {
+  const claims = []
+  for (const sentence of sentencesOf(comment)) {
+    if (isCorrection(sentence.text)) continue
+    for (const m of sentence.text.matchAll(/(?<![\w.])([a-z][a-z0-9_]*)\.([a-z][a-z0-9_]*)(?![\w.])/g)) {
+      const [, left, right] = m
+      const token = `${left}.${right}`
+      if (NOT_A_CLAIM.has(token)) continue
+      if (left.length === 1) continue // `e.g.`
+      if (FILE_EXTENSION.test(right)) continue
+      if (UNREACHABLE_SCHEMA.has(left)) continue
+      if (left === 'public') claims.push({ source, line: sentence.line, table: right, column: null, token })
+      else claims.push({ source, line: sentence.line, table: left, column: right, token })
+    }
+  }
+  return claims
+}
+
+/** What a comment's spans are: backticked text, and any word spelled like an identifier. */
+export function commentSpans(line) {
+  const spans = [...line.matchAll(/`([^`\n]+)`/g)].map((m) => m[1].trim())
+  for (const word of line.replace(/`[^`\n]+`/g, ' ').match(/[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)?/g) ?? []) {
+    if (word.includes('_') || word.includes('.')) spans.push(word.toLowerCase())
+  }
+  return spans
 }
 
 /* ------------------------------------------------------------------- checks */
@@ -473,6 +495,96 @@ async function run({ serviceRole }) {
     )
   }
   check('doc schema claims', prose)
+
+  // 3d. Documented VALUE SETS, held to the constraints that define them.
+  //     3c asks whether a name exists; this asks whether the values a doc
+  //     lists for it are the values the CHECK accepts — the other half of the
+  //     2026-09-01 audit, where `scenarios.layout` was taught as three values
+  //     the constraint never had. `value_sets()` is how the catalog is
+  //     reached: PostgREST exposes pg_catalog to no role, under any key.
+  const sets = await rest(url, key, 'rpc/value_sets', { method: 'POST', body: '{}' })
+  const catalog = sets.ok && Array.isArray(sets.body) ? catalogValueSets(sets.body) : null
+  if (!catalog || catalog.columns.size === 0) {
+    check('documented value sets', [
+      sets.ok
+        ? 'value_sets() returned no value list at all. Not a pass — a schema with no CHECK is not this schema.'
+        : `could not read the catalog's value lists — ${postgrest(sets.body)}. ` +
+          `public.value_sets() (20260902200000) is the one route to pg_catalog through PostgREST; ` +
+          `apply it, or grant anon execute on it.`,
+    ])
+    check('catalog comments', ['not observed: the value lists above could not be read'])
+  } else {
+    const values = []
+    for (const relative of sweptDocs(REPO_ROOT)) {
+      const file = resolve(REPO_ROOT, relative)
+      if (!existsSync(file)) continue
+      values.push(
+        ...valueSetFindings({ text: readFileSync(file, 'utf8'), source: relative, medium: 'markdown' }, catalog),
+      )
+    }
+    check('documented value sets', values)
+
+    // 3e. The catalog's own comments, swept as the prose they are. #260
+    //     renders the agent-facing schema section from pg_description, so a
+    //     table comment still listing "happy, unhappy, exception, alternative"
+    //     ships to every agent exactly as a stale doc does. Three sweeps, the
+    //     same three markdown gets: retired spellings with no replacement
+    //     beside them, qualified names that no longer resolve, value lists
+    //     the constraint refutes.
+    const comments = await rest(url, key, 'rpc/schema_comments', { method: 'POST', body: '{}' })
+    if (!comments.ok || !Array.isArray(comments.body) || comments.body.length === 0) {
+      check('catalog comments', [
+        comments.ok
+          ? 'schema_comments() returned no comment at all. Not a pass — this schema describes itself.'
+          : `could not read the catalog's comments — ${postgrest(comments.body)}. ` +
+            `public.schema_comments() (20260902200000) is the route; apply it, or grant anon execute on it.`,
+      ])
+    } else {
+      // PostgREST's root lists every relation and every function it exposes;
+      // a comment's `public.x` may name either, and a select cannot tell.
+      const root = await rest(url, key, '')
+      const exposed = new Set(
+        Object.keys(root.ok && root.body && typeof root.body === 'object' ? (root.body.paths ?? {}) : {}).map((path) =>
+          path.replace(/^\/(?:rpc\/)?/, ''),
+        ),
+      )
+      const problems = []
+      const excused = retiredSpans()
+      const named = new Map()
+      for (const row of comments.body) {
+        const host = { relation: row.relation, column: row.column_name }
+        const source = row.column_name
+          ? `comment on column ${row.relation}.${row.column_name}`
+          : `comment on table ${row.relation}`
+        if (!RETIRED_IDENTIFIER_EXEMPTIONS.some((entry) => entry.identifier === source)) {
+          const context = [row.relation, row.column_name].filter(Boolean)
+          for (const stale of staleSpans(row.comment, excused, { spansOf: commentSpans, context })) {
+            problems.push(
+              `${source} names \`${stale.span}\`, a retired spelling, with no replacement beside it — ` +
+                `it is what an agent reads as the schema (#260)`,
+            )
+          }
+        }
+        problems.push(...valueSetFindings({ text: row.comment, source, medium: 'comment', host }, catalog))
+        for (const claim of commentClaims(row.comment, source)) {
+          if (!named.has(claim.token)) named.set(claim.token, claim)
+        }
+      }
+      for (const claim of named.values()) {
+        if (claim.column === null) {
+          if (exposed.size === 0 || exposed.has(claim.table)) continue
+          problems.push(`${claim.source} names \`${claim.token}\`, which PostgREST does not expose as a relation or a function`)
+          continue
+        }
+        const result = await rest(url, key, `${claim.table}?select=${claim.column}&limit=0`)
+        if (result.ok) continue
+        problems.push(
+          `${claim.source} names \`${claim.token}\`, which the database does not have — ${postgrest(result.body)}`,
+        )
+      }
+      check('catalog comments', problems)
+    }
+  }
 
   // 4-7. The search RPC: parameters, columns, kinds, breadcrumb.
   const params = Object.fromEntries(

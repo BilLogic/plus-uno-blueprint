@@ -153,12 +153,12 @@ This section supersedes `supabase/DATABASE.md`. The ERD is
 `src/types/database.ts`.
 
 **Core hierarchy** — `services` → `phases` (ordered, optional
-`loops_to_phase_id`) → `scenarios` (`layout`: stacked / merged —
+`loops_to_phase_id`) → `scenarios` (`layout`: `stacked` / `merged` —
 what the board opens as, written by the header toggle; each path is stored
-separately) → `paths` (`kind`: happy / variant / exception — the
-CHECK allows exactly those three; `unhappy` became `exception` and
+separately) → `paths` (`kind`: `happy` / `variant` / `exception`, the
+CHECK allows exactly those three. `unhappy` became `exception` and
 `alternative`/`custom` became `variant` in
-`20260821220000_three_kinds_of_route.sql`). Steps are scenario-scoped (`steps`), joined to paths
+`20260821220000_three_kinds_of_route.sql`.) Steps are scenario-scoped (`steps`), joined to paths
 with per-path column order via `path_steps`. `lanes` are a path's rows;
 `cells` sit at lane × step per path, with a trigger
 (`cells_validate_path_match`) enforcing path integrity.
