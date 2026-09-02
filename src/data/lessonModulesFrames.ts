@@ -5,29 +5,29 @@ export const LESSON_MODULES_NOTION_LOGO = NOTION_TECH_LOGO
 
 /** Lesson Modules — Regular Tutor step 1 (Open lesson). */
 export const LESSON_MODULES_REGULAR_TUTOR_STEP_01_FRAME =
-  '/blueprint-images/lesson-modules/happy-path/regular-tutor/step-01-opens-lesson.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120103/694078eb-62d4-8564-8b5b-55e18bd1b3ef.png'
 
 /** Lesson Modules — Regular Tutor step 2 (Work through questions). */
 export const LESSON_MODULES_REGULAR_TUTOR_STEP_02_FRAME =
-  '/blueprint-images/lesson-modules/happy-path/regular-tutor/step-02-works-through-questions.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120203/7acdcf35-f515-41d7-01ec-25b58e69e157.png'
 
 /** Lesson Modules — Regular Tutor step 3 (Finish lesson). */
 export const LESSON_MODULES_REGULAR_TUTOR_STEP_03_FRAME =
-  '/blueprint-images/lesson-modules/happy-path/regular-tutor/step-03-finishes-lesson.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120303/f1324962-c3b1-ff41-1f61-a87a15eee2bd.png'
 
 /** Lesson Modules — Front Stage Tech step 1 (Open lesson). */
 export const LESSON_MODULES_PLUS_APP_STEP_01_DESCRIPTION =
   'The tutor starts the next uncompleted assigned lesson in the PLUS app.'
 
 export const LESSON_MODULES_PLUS_APP_STEP_01_FRAME =
-  '/blueprint-images/lesson-modules/happy-path/plus-app/step-01-lessons.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120106/84c0e05b-894a-0b1f-e04c-632fd5ab1142.png'
 
 /** Lesson Modules — Front Stage Tech step 2 (Work through questions). */
 export const LESSON_MODULES_PLUS_APP_STEP_02_DESCRIPTION =
   'The tutor works through the lesson questions in the PLUS app.'
 
 export const LESSON_MODULES_PLUS_APP_STEP_02_FRAME =
-  '/blueprint-images/lesson-modules/happy-path/plus-app/step-02-lesson-questions.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120206/a8133957-06e8-50b6-4bf5-5a1c79fa6b64.png'
 
 /** Lesson Modules — Back Stage Tech step 2 (Work through questions). */
 export const LESSON_MODULES_NOTION_STEP_02_DESCRIPTION =
@@ -38,7 +38,7 @@ export const LESSON_MODULES_PLUS_APP_STEP_03_DESCRIPTION =
   'The tutor finishes the lesson in the PLUS app and receives their score.'
 
 export const LESSON_MODULES_PLUS_APP_STEP_03_FRAME =
-  '/blueprint-images/lesson-modules/happy-path/plus-app/step-03-lesson-complete.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000120306/63c8b284-c01c-41df-836e-80174722f0ca.png'
 
 /** Lesson Modules — Back Stage Tech step 3 (Finish lesson). */
 export const LESSON_MODULES_NOTION_STEP_03_DESCRIPTION =

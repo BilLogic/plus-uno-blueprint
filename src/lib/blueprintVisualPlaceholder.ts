@@ -1,6 +1,6 @@
 /** Shown in the Visual swimlane when a step has no partner/lead/regular tutor frames yet. */
 export const BLUEPRINT_STEP_VISUAL_PLACEHOLDER =
-  '/blueprint-images/shared/step-visual-placeholder.svg'
+  '/step-visual-placeholder.svg'
 
 export function isBlueprintStepVisualPlaceholder(
   frame: string | null | undefined,

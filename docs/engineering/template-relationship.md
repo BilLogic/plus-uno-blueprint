@@ -104,7 +104,7 @@ would have re-asserted fixes as defects. Still true:
 | `src/lib/touchpointColors.ts` and the touchpoint description/frame tables | PLUS-branded tech vocabulary: `PLUS App`, `Zoom`, `Zoom Recording`. |
 | `src/config.ts` | `ORG_NAME = 'PLUS'`. Quarantined — owned here by design, not a defect. |
 | `package.json` | `"name": "plus-service-hub"`. |
-| `public/blueprint-images/` | 18 PLUS product screenshots. |
+| `public/touchpoint-logos/` | Stock logos for well-known tools. The PLUS product screenshots that used to sit beside them moved into the `cell-attachments` bucket (#278). |
 | `scripts/apply_pending_goal_setting_migrations.mjs` | A hardcoded Supabase project ref. |
 
 Nothing in this repo guards that list — no check fails when it grows. Shrinking

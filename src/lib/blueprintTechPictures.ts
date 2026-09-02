@@ -1,25 +1,28 @@
 import { isBlueprintStepVisualPlaceholder } from '@/lib/blueprintVisualPlaceholder'
 
+// Stock logos are template assets, shipped under `public/touchpoint-logos`.
+// Authored screenshots are not: they live in the bucket since #278.
+
 export const ZOOM_TECH_LOGO =
-  '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png'
+  '/touchpoint-logos/zoom-logo.png'
 
 export const SLACK_TECH_LOGO =
-  '/blueprint-images/shared/front-stage-tech/slack-logo.png'
+  '/touchpoint-logos/slack-logo.png'
 
 export const EMAIL_TECH_LOGO =
-  '/blueprint-images/shared/front-stage-tech/email-logo.png'
+  '/touchpoint-logos/email-logo.png'
 
 export const WORKDAY_TECH_LOGO =
-  '/blueprint-images/shared/front-stage-tech/workday-logo.png'
+  '/touchpoint-logos/workday-logo.png'
 
 export const GOOGLE_FORM_TECH_LOGO =
-  '/blueprint-images/shared/front-stage-tech/google-form-logo.png'
+  '/touchpoint-logos/google-form-logo.png'
 
 export const NOTION_TECH_LOGO =
-  '/blueprint-images/shared/back-stage-tech/notion-logo.png'
+  '/touchpoint-logos/notion-logo.png'
 
 export const FIGMA_TECH_LOGO =
-  '/blueprint-images/shared/back-stage-tech/figma-logo.png'
+  '/touchpoint-logos/figma-logo.png'
 
 const TECH_ITEM_DETAIL_PICTURES: Record<string, readonly string[]> = {
   Zoom: [ZOOM_TECH_LOGO],
