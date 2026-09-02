@@ -46,7 +46,8 @@
  * Pure: reads text and a catalog snapshot, touches nothing. The catalog rows
  * come from `public.value_sets()` (20260902200000); the comments from
  * `public.schema_comments()`. `pg_catalog` is exposed to no PostgREST role,
- * so those two functions are how a key reaches it.
+ * so those two functions are how a key reaches it. The kit carries the same
+ * file with its catalog read off a schema dump; keep the two in step.
  */
 import { RENAME_MAP } from './retired-vocabulary.mjs'
 import { renameSectionLines } from './stale-prose.mjs'
@@ -116,10 +117,15 @@ export function retiredValues(map = RENAME_MAP) {
 /* ------------------------------------------------------------- sentences */
 
 const CORRECTION_VERB =
-  /\b(renamed|replaced|became|dropped|removed|retired|superseded|split into|moved to)\b/i
+  /\b(renamed|replaced|became|dropped|removed|retired|superseded|deleted|folded|moved|split into)\b/i
+// `\`layers\` → \`lanes\`` is the rename statement itself, verb or no verb.
+const CORRECTION_ARROW = /→|->/
 // A version cited as a filename — `20260821220000_three_kinds_of_route.sql` —
 // is still the migration; `_` is a word character and `\b` would refuse it.
-const CORRECTION_PROOF = /(?<!\w)202[0-9]{11}(?![0-9])/
+// Fourteen digits: this repo stamps the wall clock (2026…), the kit allocates
+// from its reserved band (2100…), and a version cited as a filename —
+// `20260821220000_three_kinds_of_route.sql` — is still the migration.
+const CORRECTION_PROOF = /(?<!\w)2[01][0-9]{12}(?![0-9])/
 
 /**
  * A sentence may name a dead identifier or value when it is SAYING it is dead
@@ -133,7 +139,7 @@ const CORRECTION_PROOF = /(?<!\w)202[0-9]{11}(?![0-9])/
  * rename claim cites the file that did it.
  */
 export function isCorrection(sentence) {
-  return CORRECTION_VERB.test(sentence) && CORRECTION_PROOF.test(sentence)
+  return (CORRECTION_VERB.test(sentence) || CORRECTION_ARROW.test(sentence)) && CORRECTION_PROOF.test(sentence)
 }
 
 /**
@@ -174,7 +180,21 @@ export function sentencesOf(text) {
       inTable = state.inside
       return state.skip || history.has(start + offset) ? '' : line
     })
-    const joined = block.join('\n')
+    // A table row is one statement whose cells are separated by borders,
+    // not by list connectors: the row that cites a migration in its first
+    // cell and records a rename in its third is one correction. So a row is
+    // its own sentence, and a pipe becomes a semicolon, which no run crosses.
+    const prose = []
+    block.forEach((line, offset) => {
+      if (/^\s*\|/.test(line)) {
+        const cells = line.split('|').map((cell) => cell.trim()).filter((cell) => cell !== '')
+        if (!cells.every((cell) => /^:?-+:?$/.test(cell))) {
+          sentences.push({ text: cells.join(' ; '), line: start + offset + 1 })
+        }
+        prose.push('')
+      } else prose.push(line)
+    })
+    const joined = prose.join('\n')
     let cursor = 0
     for (const sentence of joined.split(SENTENCE)) {
       const at = joined.indexOf(sentence, cursor)
@@ -183,6 +203,7 @@ export function sentencesOf(text) {
       const line = start + 1 + (joined.slice(0, at).match(/\n/g) ?? []).length
       sentences.push({ text: sentence.replaceAll('\n', ' '), line })
     }
+    sentences.sort((a, b) => a.line - b.line)
     start = end + 1
   }
   return sentences
@@ -207,7 +228,8 @@ const TOKEN = /^[a-z][a-z0-9_-]*$/
 const QUALIFIED = /^([a-z][a-z0-9_]*)\.([a-z][a-z0-9_]*)$/
 const PIPE_SPAN = /^[a-z][a-z0-9_-]*(?:\s*\|\s*[a-z][a-z0-9_-]*)+$/
 const SPAN = /`([^`\n]+)`/g
-const CONNECTOR = /^\s*(?:,|\/|(?:,\s*)?(?:or|and))\s*$/
+// `` `single` | `stacked` `` — a pipe between spans is a list as much as one inside a span.
+const CONNECTOR = /^\s*(?:,|\/|\||(?:,\s*)?(?:or|and))\s*$/
 
 const ARROW = /→|->/
 const PREDICATE = /^\s*(?:is|are|was|were|=|:|accepts?|takes?|allows?|in|one of)\b|^\s*[=:]/
@@ -233,7 +255,7 @@ function markdownLists(fragment) {
   const lists = []
   let run = []
   const flush = () => {
-    if (run.length >= 2) lists.push({ values: run.map((s) => s.text), strict: true, form: 'run' })
+    if (run.length >= 2) lists.push({ values: run.map((s) => s.text), strict: true, form: 'run', at: run[0].start })
     run = []
   }
   for (const span of spans) {
@@ -243,7 +265,7 @@ function markdownLists(fragment) {
     }
     if (PIPE_SPAN.test(span.text)) {
       flush()
-      lists.push({ values: span.text.split(/\s*\|\s*/), strict: true, form: 'pipe' })
+      lists.push({ values: span.text.split(/\s*\|\s*/), strict: true, form: 'pipe', at: span.start })
       continue
     }
     if (!TOKEN.test(span.text)) {
@@ -254,9 +276,13 @@ function markdownLists(fragment) {
     run.push(span)
   }
   flush()
+  // A scope PRECEDES its list — "`kind` is `a`, `b`", "`paths.kind` is
+  // `a | b`" — so a qualified name trailing an enumeration of other things
+  // ("`slices`, `slides`, `evidence`, … and `cell_dependencies.kind`") is
+  // one more thing enumerated, not the subject of the list before it.
   const scopes = spans
     .filter((span) => !span.paired)
-    .map((span) => ({ text: span.text, predicated: PREDICATE.test(fragment.slice(span.end)) }))
+    .map((span) => ({ text: span.text, predicated: PREDICATE.test(fragment.slice(span.end)), at: span.start }))
   return { lists, scopes, tokens: spans.filter((s) => !s.paired).map((s) => s.text) }
 }
 
@@ -296,12 +322,20 @@ function commentLists(fragment, { bracketed }) {
       strict: piped,
       form: piped ? 'pipe' : 'run',
       prose: !introduced,
+      at: m.index,
     })
   }
-  const keys = [...fragment.matchAll(GLOSSED_KEY)].map((m) => m[1].toLowerCase())
-  if (keys.length >= 2) lists.push({ values: keys, strict: true, form: 'glossed' })
-  const tokens = (fragment.match(COMMENT_WORD) ?? []).map((w) => w.toLowerCase().replace(/\.$/, ''))
-  return { lists, scopes: tokens.map((text) => ({ text, predicated: true })), tokens }
+  const keys = [...fragment.matchAll(GLOSSED_KEY)]
+  if (keys.length >= 2) {
+    lists.push({ values: keys.map((m) => m[1].toLowerCase()), strict: true, form: 'glossed', at: keys[0].index })
+  }
+  const words = [...fragment.matchAll(COMMENT_WORD)]
+  const tokens = words.map((m) => m[0].toLowerCase().replace(/\.$/, ''))
+  return {
+    lists,
+    scopes: words.map((m) => ({ text: m[0].toLowerCase().replace(/\.$/, ''), predicated: true, at: m.index })),
+    tokens,
+  }
 }
 
 /* ------------------------------------------------------------- resolving */
@@ -310,21 +344,21 @@ function commentLists(fragment, { bracketed }) {
  * The live sets a scope names: a qualified column, a domain, or — through a
  * predicate — every column so named.
  */
-function setsNamedBy({ text: token, predicated }, catalog, host) {
+function setsNamedBy({ text: token, predicated, at = -1 }, catalog, host) {
   const qualified = QUALIFIED.exec(token)
   if (qualified) {
     const set = catalog.columns.get(token)
-    return set ? [{ label: token, set }] : []
+    return set ? [{ label: token, set, at }] : []
   }
   if (!TOKEN.test(token)) return []
   const domain = catalog.domains.get(token)
-  if (domain) return [{ label: `domain ${token}`, set: domain }]
+  if (domain) return [{ label: `domain ${token}`, set: domain, at }]
   if (!predicated) return []
   if (host?.relation) {
     const own = catalog.columns.get(`${host.relation}.${token}`)
-    return own ? [{ label: `${host.relation}.${token}`, set: own }] : []
+    return own ? [{ label: `${host.relation}.${token}`, set: own, at }] : []
   }
-  return (catalog.byColumn.get(token) ?? []).map((key) => ({ label: key, set: catalog.columns.get(key) }))
+  return (catalog.byColumn.get(token) ?? []).map((key) => ({ label: key, set: catalog.columns.get(key), at }))
 }
 
 /** What a comment is on, as sets: the column's own, or every constrained column of the table. */
@@ -375,13 +409,36 @@ export function valueSetFindings({ text, source, medium, host = null }, catalog,
             : /([A-Za-z][A-Za-z0-9_.-]*)\s*$/.exec(before)?.[1]?.toLowerCase()
         const scoped = preceding ? setsNamedBy({ text: preceding, predicated: true }, catalog, host) : []
         const own = parsed.scopes.flatMap((token) => setsNamedBy(token, catalog, host))
+        // Inherited outer scope precedes everything inside the bracket.
         return {
           parsed,
-          refs: scoped.length > 0 ? scoped : [...own, ...outerRefs],
+          refs: scoped.length > 0 ? scoped : [...own, ...outerRefs.map((ref) => ({ ...ref, at: -1 }))],
           tokens: [...parsed.tokens, ...(preceding ? [preceding] : [])],
         }
       }),
     ]
+
+    // A lone span is not a list, but `integrated` on its own is still a
+    // value nothing accepts any more — an agent told to "confirm the
+    // `integrated` grid renders" will look for one. Judged only when no
+    // column accepts the word today, so `single` stays English until it goes.
+    if (medium === 'markdown') {
+      const listed = new Set(fragments.flatMap(({ parsed }) => parsed.lists.flatMap((list) => list.values)))
+      for (const { tokens } of fragments) {
+        const lone = tokens.find((token) => {
+          if (listed.has(token)) return false // judged as a list member below
+          const gone = retired.get(token)
+          return gone && ![...catalog.columns.values()].some((set) => set.values.has(token))
+        })
+        if (!lone) continue
+        const { column, is, migration } = retired.get(lone)
+        findings.push(
+          `${where(sentence.line)} names \`${lone}\`, which \`${column}\` retired for ` +
+            `\`${is}\` in ${migration ?? 'the rename map'}`,
+        )
+        break
+      }
+    }
 
     for (const { parsed, refs } of fragments) {
       for (const list of parsed.lists) {
@@ -389,7 +446,8 @@ export function valueSetFindings({ text, source, medium, host = null }, catalog,
         // Scope is a name OUTSIDE the list: `kind` in "`kind` is `a`, `b`",
         // not in "`name`, `kind`, `summary`", where it is a member.
         let candidates = refs.filter(
-          (ref) => !list.values.includes(ref.label.replace(/^domain /, '').split('.').at(-1)),
+          (ref) =>
+            ref.at < list.at && !list.values.includes(ref.label.replace(/^domain /, '').split('.').at(-1)),
         )
         if (candidates.length === 0 && medium === 'comment') candidates = hostSets(host, catalog)
         // A retired value is stale in any list about its column. Without a

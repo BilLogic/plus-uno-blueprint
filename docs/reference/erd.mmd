@@ -32,8 +32,8 @@
 %%   slices.kind              ∈ (journey | step | lane | cell | custom)
 %%   slices.authorship        ∈ (generated | customized | human)
 %%   services.origin          ∈ (import | app)
-%%   slices.origin            ∈ (generated | customized | human)   NOT import|app
-%%   deleted_structure.kind   ∈ (scenario | path | lane | step | cell)
+%%   authoring_changes.deleted_kind ∈ (scenario | path | lane | step | cell)
+%%   authoring_changes.author ∈ (human | agent)
 %%   agent_messages.kind      ∈ (user | assistant | tool | status)
 %%   origin (cells | lanes | paths | phases | scenarios | steps) ∈ (import | app)
 %%
@@ -250,11 +250,16 @@ erDiagram
     text partners
     uuid created_by
   }
-  deleted_structure {
+  authoring_changes {
     uuid id PK
-    timestamptz deleted_at
-    uuid deleted_by
-    text kind "scenario | path | lane | step | cell"
+    timestamptz at
+    text author "human | agent"
+    uuid author_id
+    uuid agent_session_id "no FK on purpose; the record outlives the session"
+    text fn "the authoring RPC, or a direct-table mutation name"
+    jsonb args "exactly what was sent — ids, never names"
+    jsonb revert "the captured inverse, {fn, args}"
+    text deleted_kind "scenario | path | lane | step | cell"
     text label
     jsonb payload "the row as it was, for the identity-keyed inverse"
     jsonb affected_slices
