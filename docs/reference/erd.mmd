@@ -19,8 +19,8 @@
 %% supabase/schema.reference.sql from their output.
 %%
 %% Enums (CHECK constraints, live 2026-08-26):
-%%   scenarios.layout         ∈ (single | stacked)  merged is session-only,
-%%                                                  never stored
+%%   scenarios.layout         ∈ (stacked | merged)  what the board opens as;
+%%                                                  written by the header toggle
 %%   paths.kind               ∈ (happy | variant | exception)
 %%   cell_dependencies.kind   ∈ (leads_to | enables)
 %%   stakeholders.kind        ∈ (recipient | staff | partner | provider | team)
@@ -118,7 +118,7 @@ erDiagram
     text name
     text summary "the situation this blueprint covers"
     int position
-    text layout "single | stacked"
+    text layout "stacked | merged"
     text origin
   }
   paths {

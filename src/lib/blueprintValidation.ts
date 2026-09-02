@@ -9,7 +9,7 @@ import type { LaneSetEntry, ViewType } from '@/lib/authoringRpc'
  * type; the database's copy stays as the authority.
  */
 
-export const VIEW_TYPES: ViewType[] = ['single', 'stacked']
+export const VIEW_TYPES: ViewType[] = ['stacked', 'merged']
 
 /**
  * Display names.
@@ -19,21 +19,15 @@ export const VIEW_TYPES: ViewType[] = ['single', 'stacked']
  * vocabulary collapsed. The stored token is now the token the UI names.
  */
 export const VIEW_TYPE_LABELS: Record<ViewType, string> = {
-  single: 'Single',
   stacked: 'Stacked',
+  merged: 'Merged',
 }
 
 /** What each view type is for, in the words someone choosing one would use. */
 export const VIEW_TYPE_HINTS: Record<ViewType, string> = {
-  single: 'One version at a time',
-  stacked: 'Paths compared step by step',
+  stacked: 'Each path as its own band',
+  merged: 'The paths merged into one grid',
 }
-
-/**
- * `merged` is deliberately absent: it is a per-session display chosen in the
- * compare control, not a property of the scenario. The CHECK constraint
- * rejects it, so offering it here would present a choice the write refuses.
- */
 
 /**
  * The lanes a scenario starts with when nothing is copied.

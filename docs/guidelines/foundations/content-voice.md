@@ -67,9 +67,10 @@ the same everywhere:
 - **Stacked / Merged** — the compare view names shown in UI. `stacked` is now
   also the STORED token: the database used to keep `side-by-side` /
   `integrated` behind a translation module, and that module was deleted once
-  the data showed all 22 rows holding one value. `merged` stays session-only —
-  the CHECK constraint is `single | stacked` — so it names a display, never a
-  stored state.
+  the data showed all 22 rows holding one value. `merged` is stored too since
+  #280 — the CHECK constraint is `stacked | merged` — so a scenario left
+  merged opens merged; `single` went with it, a one-path board being stacked
+  with one band.
 - **Line of visibility** — always spelled out, in full, lowercase. Never
   "LoV", "the line", or "visibility rule". It is the blueprint discipline's
   most load-bearing term and abbreviation erodes it.

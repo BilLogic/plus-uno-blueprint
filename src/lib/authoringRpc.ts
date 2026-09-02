@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 import { toAuthoringError } from '@/lib/authoringErrors'
+import type { SlideViewType } from '@/types/nav'
 import {
   recordChange,
   type RevertSpec,
@@ -71,9 +72,9 @@ export type LaneSetEntry = {
 
 export type DependencyKind = 'leads_to' | 'enables'
 
-/** What `scenarios.layout` may hold. `merged` is a display state and
- *  the CHECK constraint rejects it — see StoredSlideViewType in types/nav.ts. */
-export type ViewType = 'single' | 'stacked'
+/** What `scenarios.layout` may hold — the same two tokens the header toggle
+ *  offers, because since #280 the toggle writes the column. */
+export type ViewType = SlideViewType
 
 // ---------------------------------------------------------------------------
 // The call seam.
@@ -272,7 +273,7 @@ export function createScenario(
   return call<CreatedScenario>(client, 'create_scenario', {
     phase_id: input.phaseId,
     name: input.name,
-    layout: input.viewType ?? 'single',
+    layout: input.viewType ?? 'stacked',
     lane_source_path_id: input.laneSourcePathId ?? null,
     lane_set: input.laneSet ?? [],
     step_count: input.stepCount ?? 5,
@@ -333,6 +334,34 @@ export function renameScenario(
       ? {
           fn: 'rename_scenario',
           args: { scenario_id: input.scenarioId, new_name: input.previousName },
+        }
+      : undefined,
+  )
+}
+
+/**
+ * How a scenario's board is drawn, written by the header toggle.
+ *
+ * Its inverse is itself with the previous value, which the caller knows and
+ * this seam does not: the previous layout is what the reader was looking at,
+ * override included, not what the row said.
+ */
+export function updateScenarioLayout(
+  client: Client,
+  input: {
+    scenarioId: string
+    layout: ViewType
+    previousLayout?: ViewType
+  },
+): Promise<void> {
+  return call<void>(
+    client,
+    'update_scenario_layout',
+    { scenario_id: input.scenarioId, layout: input.layout },
+    input.previousLayout
+      ? {
+          fn: 'update_scenario_layout',
+          args: { scenario_id: input.scenarioId, layout: input.previousLayout },
         }
       : undefined,
   )

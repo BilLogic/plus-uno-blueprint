@@ -325,6 +325,13 @@ export const RENAME_MAP = Object.freeze(
       retired: ['prominence'],
       copy: ['prominence'],
     },
+    {
+      was: ["scenarios.layout = 'single'"],
+      is: ["scenarios.layout = 'stacked'"],
+      migrations: ['20260902120000'],
+      retired: [],
+      copy: ['single'],
+    },
     /*
       #182'S FIVE ROWS, AND THEY ARE A DIFFERENT KIND OF ROW — the first in
       this map whose left column is a WORD ON SCREEN rather than an identifier,

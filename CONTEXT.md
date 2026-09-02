@@ -31,6 +31,10 @@ Table `phases`: `service_id`, `name`, `summary`, `position`, and
 
 **scenario** — a concrete situation inside a phase, worth mapping on its own:
 "a student's first session", "rescheduling". Each opens as its own board.
+Its `layout` is how that board is drawn — `stacked`, each path its own band
+on a shared step axis, or `merged`, the paths in one grid that splits where
+they diverge — and it is remembered: a scenario left merged opens merged. A
+one-path scenario is stacked with one band; there is no separate single view.
 Table `scenarios`: `phase_id`, `name`, `summary`, `position`, `layout`.
 
 **path** — a variant route through one scenario: the happy path where everything
@@ -354,6 +358,7 @@ remember is #145's job, not this paragraph's.
 | `slice_items`, `slice_items.caption` | `slides`, `slides.title` | `20260830270000` |
 | `cells.links` | `resources`, `evidence` | `20260830280000` |
 | `cell_touchpoints.prominence`, `unplaced_touchpoint_details.prominence` | `cell_touchpoints.role`, `unplaced_touchpoint_details.role` | `20260902110000` |
+| `scenarios.layout = 'single'` | `scenarios.layout = 'stacked'` | `20260902120000` |
 | `text` (label) | `Content` — `cells.content` | — |
 | `value` (label) | `Value proposition` — `cells.value_props` | — |
 | `columns` (label) | `Position` — `path_steps.position` | — |
@@ -392,7 +397,9 @@ reads** — which is why `slices.title` and `evidence.title` are not in the
 table. **`summary` is the entity's own one-liner** — not an aside about it, so
 `findings.note` was misnamed and `paths.note`, which genuinely is an aside, was
 not. Classifiers settle on `kind`; `scenarios.view_type` is not a kind but a
-display setting, so it is `layout`. `slices.origin` is renamed rather than
+display setting, so it is `layout` — and since `20260902120000` a setting that
+is stored, `stacked` or `merged`, its old `single` value folded into `stacked`
+because a one-path board was never a different board. `slices.origin` is renamed rather than
 aligned because its vocabulary (`generated`, `customized`, `human`) answers a
 different question from every other `origin` (`import`, `app`) — that word is
 now free for `services`, which gained it in the same migration.

@@ -69,11 +69,15 @@ describe('stable blueprint cell frame contract', () => {
     expect(scenarioPanel).not.toContain('isOverviewConstrained')
     expect(scenarioPanel).not.toContain('focusActive ?')
     expect(phaseOverview).toContain('displayViewType={scenarioViewType}')
-    // Focus may not branch the panel's geometry props — it goes through
-    // `resolveScenarioPanelHeight`, whose whole contract is that the number
-    // it returns for a focused panel equals the one it had at overview.
-    // (The arithmetic itself is pinned in phaseRowPanelHeight.test.ts.)
-    expect(phaseOverview).toContain('resolveScenarioPanelHeight({')
+    // Focus may not branch the panel's geometry props. The one height a
+    // panel takes is `panelHeightFor`, and the focused panel's number comes
+    // from `useAlignedPhaseRowPanelHeight` with its own estimate handed back
+    // as the floor — so the number it has focused equals the one it had at
+    // overview. The single-view swimlane height, which branched on focus,
+    // went with the single view (#280).
+    expect(phaseOverview).toContain('lockedPanelHeight={panelHeightFor(scenario.id)}')
+    expect(phaseOverview).toContain('focusedPanelHeightFloor,')
+    expect(phaseOverview).not.toContain('fixedSwimlaneBodyHeight')
     expect(pathFrame).not.toContain('extraTopInset')
   })
 

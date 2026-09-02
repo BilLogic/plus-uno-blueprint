@@ -135,21 +135,14 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   const useSideBySideLayout =
     (displayViewType === 'stacked' || displayViewType === 'merged') &&
     selectedPathIds.length > 0
-  const useSinglePathLayout =
-    displayViewType === 'single' && selectedPathIds.length > 0
   const visibleBlueprints = useMemo(
     () =>
-      useSideBySideLayout || useSinglePathLayout
+      useSideBySideLayout
         ? itemsInSelectionOrder(selectedPathIds, (id) =>
             blueprintsByPathId.get(id),
           )
         : [],
-    [
-      blueprintsByPathId,
-      selectedPathIds,
-      useSideBySideLayout,
-      useSinglePathLayout,
-    ],
+    [blueprintsByPathId, selectedPathIds, useSideBySideLayout],
   )
 
   /*
@@ -517,11 +510,11 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   }
 
   return (
-    /* Same scope for the single-path board — see the compare branch above. */
+    /* No path selected: the same scope, an empty board — see the compare branch above. */
     <ScenarioBoardScopeContext.Provider value={boardInDetailScope}>
     <ResizableComparePanel
       {...comparePanelProps}
-      fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}:single`}
+      fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}:none`}
     >
       <div className="flex flex-row items-start gap-6">
         {visibleBlueprints.map((data) => (

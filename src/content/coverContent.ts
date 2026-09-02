@@ -155,14 +155,14 @@ export const coverContent: CoverContent = {
         {
           kind: 'prose',
           id: 'blueprints-path',
-          heading: 'Inside a single path',
+          heading: 'Inside one path',
           paragraphs: [
             'Lanes are rows, one actor each. Steps are columns, time running left to right. A **cell** is the intersection — what that actor does at that moment. Arrows are **dependencies**: one cell setting another in motion.',
             "The divider lines — **line of interaction**, **line of visibility**, **line of internal interaction** — are derived from the lanes' roles rather than drawn on top of them, so they cannot drift out of agreement with the lanes they separate. Steps are canonical per scenario and each path includes a subset in its own order, which is what makes comparing two paths exact rather than approximate.",
           ],
           figure: {
             src: '/cover/blueprint-anatomy.svg',
-            alt: 'Inside a single path — lanes, steps, cells, dependencies, and the derived divider lines',
+            alt: 'Inside one path — lanes, steps, cells, dependencies, and the derived divider lines',
             width: 880,
             height: 544,
           },
@@ -170,7 +170,7 @@ export const coverContent: CoverContent = {
         {
           kind: 'prose',
           id: 'blueprints-cell',
-          heading: 'Inside a single cell',
+          heading: 'Inside one cell',
           paragraphs: [
             "A cell is one actor's action at one step, plus the record around it. It carries where it sits in the hierarchy, what it does, what form it takes, and what it is worth. It carries who **owns** it and who the customer *thinks* owns it — two fields, because the interesting case is when they differ.",
             'It also carries the **evidence** it rests on, the resources it points at, its **dependencies** — what sets it off, what it sets off, what it needs to exist — and the slices that quote it.',
@@ -178,7 +178,7 @@ export const coverContent: CoverContent = {
           ],
           figure: {
             src: '/cover/cell-anatomy.svg',
-            alt: 'Inside a single cell — placement, ownership, function, evidence, dependencies, and the slices that quote it',
+            alt: 'Inside one cell — placement, ownership, function, evidence, dependencies, and the slices that quote it',
             width: 880,
             height: 730,
           },

@@ -56,6 +56,7 @@ const EVERY_WRITE = Object.keys({
   update_lane_spec: true,
   update_phase_spec: true,
   update_scenario_spec: true,
+  update_scenario_layout: true,
   update_path_spec: true,
   update_step_spec: true,
   update_service_summary: true,
