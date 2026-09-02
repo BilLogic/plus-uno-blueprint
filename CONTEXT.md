@@ -558,7 +558,7 @@ column a reason.
 | **Perceived owner** | `cells.perceived_owner` | — |
 | **Function** | `cells.function` | — |
 | **Form** | `cells.form` | — |
-| **Value proposition** | `cells.value_props` | `props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. |
+| **Value proposition** | `cells.value_props` | `props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions. |
 | **Touchpoint** | `touchpoints` | — |
 | **Screenshot** | `cell_touchpoints.screenshot` | — |
 | **Design link** | `cell_touchpoints.url` | A placement carries two URLs — this one and `screenshot` — so `url` alone cannot say which field a reader is standing in, and it is not a word a panel says out loud. The label names what this one is for. |

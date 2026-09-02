@@ -388,7 +388,7 @@ export const LABEL_COLUMNS = Object.freeze(
       label: 'Value proposition',
       names: ['cells.value_props'],
       because:
-        '`props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens.',
+        '`props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions.',
     },
     { label: 'Touchpoint', names: ['touchpoints'], because: '' },
     { label: 'Screenshot', names: ['cell_touchpoints.screenshot'], because: '' },
