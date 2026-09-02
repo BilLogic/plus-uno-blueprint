@@ -1,5 +1,13 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
+import type { EntityKindTerm } from '@/lib/panelTerms'
+
+/**
+ * One authored, free-text example per core kind, grounding each definition in
+ * this deployment (#302). Keyed by the six `EntityKindTerm`s; a kind nobody has
+ * written an example for simply has no entry, so the reader sees no empty slot.
+ */
+export type EntityExamples = Partial<Record<EntityKindTerm, string>>
 
 export type ServiceSpec = {
   id: string
@@ -11,6 +19,8 @@ export type ServiceSpec = {
   deliveryCost: string
   revenueModel: string
   partners: string
+  /** The six per-kind examples, `{}` until a deployer authors any. */
+  entityExamples: EntityExamples
   /** What the panel says under the title: how much board there is. */
   phaseCount: number
   scenarioCount: number
@@ -38,7 +48,7 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
     async (client, signal) => {
       const { data: service, error } = await client
         .from('services')
-        .select('id, name, summary, business_models(funding, pricing, delivery_cost, revenue_model, partners)')
+        .select('id, name, summary, entity_examples, business_models(funding, pricing, delivery_cost, revenue_model, partners)')
         .order('created_at')
         .limit(1)
         .abortSignal(signal)
@@ -76,6 +86,9 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
         deliveryCost: model?.delivery_cost ?? '',
         revenueModel: model?.revenue_model ?? '',
         partners: model?.partners ?? '',
+        // A jsonb object the app owns the shape of; `{}` when nothing is
+        // authored, and never null (the column defaults to `{}`).
+        entityExamples: (service.entity_examples as EntityExamples | null) ?? {},
         phaseCount: rows.length,
         scenarioCount: rows.reduce(
           (total, row) =>
