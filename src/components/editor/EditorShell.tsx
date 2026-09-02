@@ -3,10 +3,6 @@ import { useEditor } from '@/contexts/EditorContext'
 import { MobileShell } from '@/components/mobile/MobileShell'
 import { useMobileShell } from '@/hooks/useMobileShell'
 import {
-
-  useSidebarCollapse,
-} from '@/hooks/useSidebarOverlay'
-import {
   RAIL_WIDTH,
   SIDEBAR_DEFAULT_WIDTH,
   SIDEBAR_MAX_WIDTH,
@@ -127,28 +123,21 @@ function DesktopEditorShell() {
   // navigation and the boot URL state, and both live at this level.
   useCellDeepLink()
   /*
-    Collapse, and which of the two parties asked for it.
+    Collapse, and only ever because the reader asked.
 
-    Below `SIDEBAR_OVERLAY_BREAKPOINT` the sidebar and the canvas cannot both
-    have the width, so the gate collapses the sidebar and reopening it draws
-    OVER the canvas rather than taking the column back. The state carries the
-    reason with it, so widening again gives back only the collapses the gate
-    itself made — `useSidebarOverlay` has the argument for why a bare boolean
-    cannot tell the two apart.
+    The sidebar is in flow at every width now (#305): collapse and expand push
+    the canvas the same way whether the window is wide or narrow, and there is
+    no viewport gate that shuts the aside on the reader's behalf. So this is a
+    plain boolean — no `auto`/`narrow` bookkeeping to tell a gate's collapse
+    from a reader's, because the gate is gone.
   */
-  const {
-    overlay,
-    collapsed: sidebarCollapsed,
-    setCollapsedByUser,
-  } = useSidebarCollapse()
-  useEffect(() => {
-    // A crossing wipes the aside open or shut, which resizes the canvas
-    // container — chrome moving, not the reader navigating. This also runs
-    // once on mount, where nothing crossed; suppressing a refit the reader
-    // never triggered is the same answer, so it is left unguarded rather
-    // than carrying a ref to tell the first run apart.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const setCollapsedByUser = useCallback((collapsed: boolean) => {
+    // The width ease resizes the canvas container. Chrome moving, not the
+    // reader navigating — the camera holds still.
     suppressCanvasResizeRefit()
-  }, [overlay])
+    setSidebarCollapsed(collapsed)
+  }, [])
   const isLanding = view === 'landing'
 
   const activeTabKind = activeTab?.kind ?? null
@@ -362,7 +351,13 @@ function DesktopEditorShell() {
     activeTab
       ? `Active tab: ${activeTab.kind} for slice ${activeTab.sliceId}`
       : 'Active tab: base blueprint view (no slice tab)',
-    describeSidebar({ panel, collapsed: collapsedByReader, overlay, presenting }),
+    describeSidebar({
+      panel,
+      collapsed: collapsedByReader,
+      // No overlay posture any more: the sidebar is always in flow (#305).
+      overlay: false,
+      presenting,
+    }),
     `Agent chat: ${agentPlacement.open ? `${agentPlacement.mode} (visible)` : 'hidden'}`,
   ].join('\n')
   const shellContextRef = useRef(shellContext)
@@ -510,30 +505,16 @@ function DesktopEditorShell() {
   }
 
   /*
-    Publish what the aside is doing to the canvas's own chrome, so canvas
-    navbars can answer it themselves — see sidebarCollapsedContext for why
-    the navbar is now the fallback rather than the default.
-
-    Two facts, one effect. COLLAPSED: host the expand control. INSET: how far
-    the aside reaches across the canvas column while it OVERLAYS it, which is
-    `asideWidth` in exactly the state the aside is both out of the flow and on
-    screen. `asideWidth` and not the panel's own width — the aside is the rail
-    plus the panel, and the rail is the half that reaches furthest left.
-
-    Below the resize handlers rather than up with `collapsedByReader`, because
-    `asideWidth` is declared here and a dependency array cannot name a binding
-    it sits above.
-
-    This is the shell's whole part in #239. When the overlay posture engages,
-    and the panel's own geometry inside it, are untouched; only what the bar
-    does about it is new.
+    Publish whether the aside is collapsed BY THE READER to the canvas's own
+    chrome, so canvas navbars can answer it themselves — see
+    sidebarCollapsedContext for why the navbar is now the fallback rather than
+    the default. One fact now: collapsed, host the expand control. The overlay
+    inset that used to ride along is gone with the overlay posture (#305) — the
+    aside is in flow at every width, so no bar surrenders a margin to it.
   */
   useEffect(() => {
-    setSidebarCollapsedState({
-      collapsed: collapsedByReader,
-      overlayInset: overlay && !asideHidden ? asideWidth : 0,
-    })
-  }, [collapsedByReader, overlay, asideHidden, asideWidth])
+    setSidebarCollapsedState({ collapsed: collapsedByReader })
+  }, [collapsedByReader])
 
   /*
     The identity bars above the canvas hold their own skeletons while this
@@ -711,37 +692,12 @@ function DesktopEditorShell() {
         <div className="relative flex min-h-0 min-w-0 flex-1">
           <aside
             className={cn(
-              'z-20 shrink-0 overflow-hidden bg-sidebar',
+              // In flow at every width (#305): collapse and expand push the
+              // canvas the same way whether the window is wide or narrow.
+              // There is no overlay posture, no gate, and no floating column —
+              // the aside is a plain relative shell column.
+              'relative z-20 shrink-0 overflow-hidden bg-sidebar',
               !asideHidden && 'border-r border-border',
-              /*
-                The overlay posture, below the gate. Out of the flow
-                entirely, so reopening draws over the canvas instead of
-                taking back a column the canvas cannot spare — reopening
-                in flow down here only recreates the squeeze the collapse
-                was for. Still `z-20`: this is the same shell column in the
-                same band (foundations/elevation.md), merely floating, and
-                `shadow-floating` is the token that says floating.
-
-                No scrim — but NOT on `CreateSliceSheet`'s reasoning, which
-                is conditioned on a sheet that "sits beside" a canvas left
-                lit. This panel is `absolute inset-y-0 left-0`; it occludes
-                the strip it covers, so the thing that doctrine protects is
-                already hidden and citing it here would be borrowing an
-                argument that does not reach.
-
-                The reason that does reach is narrower: a scrim announces a
-                mode the reader must leave, and this is a column that came
-                back, not a dialog. What a scrim usually buys — somewhere to
-                click to get out — is bought here instead by the rail's own
-                collapse toggle, which stays on screen the whole time, and by
-                Escape below. Outside-click is deliberately NOT wired: the
-                surface it would swallow clicks from is the canvas, where a
-                click selects a cell, and losing that first click to a
-                dismissal is worse than one extra keystroke.
-              */
-              overlay
-                ? cn('absolute inset-y-0 left-0', !asideHidden && 'shadow-floating')
-                : 'relative',
             )}
             style={{
               width: asideHidden ? 0 : asideWidth,

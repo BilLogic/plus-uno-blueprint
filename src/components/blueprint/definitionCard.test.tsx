@@ -460,13 +460,15 @@ describe('nothing on the page announces that a word is defined', () => {
 })
 
 describe('a definition hangs off a badge, never off a label', () => {
-  it('the canvas title is a name and nothing more', () => {
+  it('the canvas title carries the panel, not a definition', () => {
     // Both the title and the kind badge beside it carried the same
     // definition for one commit, because #240 landed after this branch
-    // started. The badge is the one #235 keeps.
+    // started. The badge is the one #235 keeps. The title opens the entity
+    // PANEL (#305), so it IS interactive now — but no definition popover
+    // hangs off it: no `aria-haspopup`, which is what marks a definition
+    // trigger elsewhere in this file.
     render(<EntityTitleAffordance kind="scenario" id="s-1" label="Warm-Up" />)
-    const title = screen.getByRole('heading', { name: 'Warm-Up' })
-    expect(title.hasAttribute('tabindex')).toBe(false)
+    const title = screen.getByRole('button', { name: 'View details: Warm-Up' })
     expect(title.hasAttribute('aria-haspopup')).toBe(false)
   })
 

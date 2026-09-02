@@ -114,13 +114,15 @@ export function SlideStickyHeader({
   ...contentProps
 }: SlideStickyHeaderProps) {
   // Collapsed: the floating navbar carries this header's identity instead —
-  // one chrome lane at any width. Path filters and the zoom readout are
-  // deliberately not folded in; they come back when the sidebar does.
-  const { collapsed, overlayInset } = useSidebarCollapsedState()
+  // one chrome lane at any width. The path selector rides along on a SCENARIO
+  // (#305), handed over as `paths`; a phase passes an empty list and the
+  // selector self-hides there. The zoom readout is still not folded in.
+  const { collapsed } = useSidebarCollapsedState()
   useCollapsedNavSummary(
     collapsed
       ? {
           title: getSlideDisplayLabel(contentProps.slide, contentProps.slides),
+          paths: contentProps.paths,
         }
       : null,
   )
@@ -129,20 +131,13 @@ export function SlideStickyHeader({
   return (
     <div
       data-editor-navbar
+      // Flush left at every width: the sidebar is in flow now and never draws
+      // over this column, so there is no overlay to surrender a margin to (#305).
       className={cn(
         'relative flex items-center gap-3',
         BLUEPRINT_NAVBAR_BAR_CLASS,
         className,
       )}
-      /*
-        The same inset the service bar takes, for the same reason. This bar
-        sits in the same column and is covered by the same overlaying aside —
-        the only difference is which of the three kinds it happens to name, and
-        the overlay does not know the difference. `collapsed` above hides this
-        bar entirely, so this is the OTHER width: sidebar open, drawing over
-        the canvas, and this bar's left half underneath it.
-      */
-      style={overlayInset > 0 ? { marginLeft: overlayInset } : undefined}
       onPointerDown={(e) => e.stopPropagation()}
     >
       <PhaseMenubarHeader
