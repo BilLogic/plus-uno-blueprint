@@ -44,6 +44,7 @@ const MUTATION_MODULES = [
   'stakeholderMutations.ts',
   'stepSpecMutations.ts',
   'touchpointMutations.ts',
+  'placementResourceMutations.ts',
 ] as const
 
 /**
@@ -77,6 +78,11 @@ const RPC_BACKED = new Set([
   // #280. Shipped with 20260902120000: the header toggle's write, self-inverse
   // with the previous layout, so the default branch calls it back as is.
   'update_scenario_layout',
+  // #273. Shipped with 20260902140000: the inverse of featuring a resource
+  // writes the captured {id, featured} pairs back, and is a function reached
+  // through the default branch. (`set_featured_resource` itself is never a
+  // revert target — its inverse is this one — so it is not listed here.)
+  'restore_featured_resources',
 ])
 
 /** `fn: 'name'` inside a recorded RevertSpec. */

@@ -27,13 +27,14 @@ import { parseCellContentItems } from '@/lib/parseCellContent'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { updateCellContent } from '@/lib/cellContentMutations'
 import { RoleSelect } from '@/components/blueprint/RoleSelect'
+import { PlacementResourcesList } from '@/components/blueprint/PlacementResourcesList'
 import {
   placementSurvivesContent,
   updateTouchpointPlacement,
   type PlacementDetailColumns,
   type PlacementDetailDraft,
 } from '@/lib/touchpointMutations'
-import type { CellTouchpoint } from '@/types/blueprint'
+import type { CellResource, CellTouchpoint } from '@/types/blueprint'
 import {
   DEFAULT_ENTITY_STATUS,
   type EntityStatus,
@@ -148,6 +149,7 @@ export function CellPanelEditor({
   draft,
   laneName,
   placement = null,
+  placementResources = [],
   fallbackDescription = '',
   onDone,
 }: {
@@ -165,6 +167,12 @@ export function CellPanelEditor({
    * links and there is no row to write into.
    */
   placement?: CellTouchpoint | null
+  /**
+   * The cell's resources, from which the placement's list keeps its own
+   * (#273). Read here, written by `PlacementResourcesList` on its own
+   * button — see the note at the list.
+   */
+  placementResources?: readonly CellResource[]
   /**
    * What the panel displays as this cell's description when the column is
    * empty (a touchpoint cell's prose is its placement's summary). Seeded into
@@ -214,6 +222,7 @@ export function CellPanelEditor({
         draft={undefined}
         laneName={laneName}
         placement={editable}
+        placementResources={placementResources}
         baseline={baseline}
         seededDescription={content.summary ?? fallbackDescription}
         onDone={onDone}
@@ -243,6 +252,7 @@ export function CellPanelEditor({
       }}
       seededDescription=""
       placement={null}
+      placementResources={[]}
       onDone={onDone}
     />
   )
@@ -253,6 +263,7 @@ function CellPanelEditorForm({
   draft,
   laneName,
   placement,
+  placementResources,
   baseline: baselineProp,
   seededDescription,
   onDone,
@@ -262,6 +273,7 @@ function CellPanelEditorForm({
   laneName: string | undefined
   /** Non-null only when it carries a row id — see CellPanelEditor. */
   placement: CellTouchpoint | null
+  placementResources: readonly CellResource[]
   baseline: FormState
   seededDescription: string
   onDone: () => void
@@ -581,6 +593,23 @@ function CellPanelEditorForm({
               onChange={(next) => setPlacement('role', next)}
             />
           </Field>
+          {/*
+            The one exception to "one Save": the list has its own. A reorder
+            is a whole-list fact and featuring is one row's flag that the
+            database settles in its own transaction (#273) — folding either
+            into the four-field Save would make that button write things it
+            cannot show as unsaved. The list says so on its own button.
+          */}
+          {placement.id && cellId ? (
+            <PlacementResourcesList
+              placement={{
+                id: placement.id,
+                cellId,
+                name: placement.name,
+              }}
+              resources={placementResources}
+            />
+          ) : null}
         </div>
       ) : null}
 

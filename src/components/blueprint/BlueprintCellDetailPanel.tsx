@@ -1321,6 +1321,7 @@ function BlueprintCellDetailPanelBody() {
           // the cell's form under one Save rather than arriving as a second
           // editor with a second Save button.
           placement={selectedPlacement}
+          placementResources={cellResources}
           // Never seed the field with the title wearing a description's
           // clothes — only prose that actually says more than the cell text.
           fallbackDescription={

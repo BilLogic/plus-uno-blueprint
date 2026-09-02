@@ -42,6 +42,10 @@ import {
   type RestoredPlacement,
 } from '@/lib/unplacedTouchpointMutations'
 import {
+  writePlacementResources,
+  type PlacementResourceRowInput,
+} from '@/lib/placementResourceMutations'
+import {
   restoreTouchpointPlacement,
   type PlacementDetailColumns,
 } from '@/lib/touchpointMutations'
@@ -217,6 +221,15 @@ export async function executeRevert(
       const cellId = stringArg(revert.args, 'cell_id')
       const resources = revert.args.resources as ResourceRowInput[]
       await writeCellResources(client, cellId, resources ?? [])
+      return
+    }
+    case 'update_placement_resources': {
+      // The same shape as update_cell_resources, for the touchpoint's list at
+      // one cell (#273): the captured rows, by id, written back as they stood.
+      // The RPC raises when the placement is gone.
+      const placementId = stringArg(revert.args, 'placement_id')
+      const resources = revert.args.resources as PlacementResourceRowInput[]
+      await writePlacementResources(client, placementId, resources ?? [])
       return
     }
     case 'delete_evidence': {

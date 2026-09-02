@@ -66,6 +66,9 @@ export type WriteFn =
   | 'update_cell_resources'
   | 'update_cell_spec'
   | 'update_touchpoint_placement'
+  | 'update_placement_resources'
+  | 'set_featured_resource'
+  | 'restore_featured_resources'
   | 'update_lane_spec'
   | 'update_phase_spec'
   | 'update_scenario_spec'
@@ -300,6 +303,12 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
   upsert_cell: () => 'Added a cell',
   update_cell_content: () => 'Edited a cell’s text',
   update_cell_resources: () => 'Edited a cell’s resources',
+  update_placement_resources: () => 'Edited a touchpoint’s resources at this cell',
+  set_featured_resource: (entry) =>
+    entry.args.featured === false
+      ? 'Unfeatured a resource'
+      : 'Featured a resource',
+  restore_featured_resources: () => 'Put back which resources were featured',
   update_cell_spec: () => 'Specified function & form',
   // Named by the touchpoint, because a cell can hold several and "edited a
   // touchpoint" beside a run of them tells nobody which. The words belong to
