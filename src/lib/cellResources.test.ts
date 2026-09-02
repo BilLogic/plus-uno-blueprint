@@ -117,3 +117,27 @@ test('a row carries its id, and a fallback link has none to carry', () => {
   ])
   assert.equal(link.id, null)
 })
+
+test('a placement\u2019s row says whose it is, and whether it leads', () => {
+  // #271: a placement's resources are the cell's too, so they arrive in the
+  // same embed. The tab needs to know which are its own to edit and which a
+  // touchpoint's, and which one the placement leads with.
+  const resources = cellResourcesFromRows([
+    { position: 0, kind: 'link', name: 'Spec', url: 'https://example.com/spec' },
+    {
+      position: 1,
+      kind: 'attachment',
+      name: 'PLUS App',
+      url: '/blueprint-images/x.png',
+      cell_touchpoint_id: 'placement-1',
+      featured: true,
+    },
+  ])
+  assert.deepEqual(
+    resources.map((entry) => [entry.placementId, entry.featured]),
+    [
+      [null, false],
+      ['placement-1', true],
+    ],
+  )
+})

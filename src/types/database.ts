@@ -711,9 +711,10 @@ export type Database = {
       }
       resources: {
         Row: {
-          cell_id: string | null
+          cell_id: string
           cell_touchpoint_id: string | null
           created_at: string
+          featured: boolean
           id: string
           kind: string
           name: string
@@ -723,9 +724,10 @@ export type Database = {
           url: string | null
         }
         Insert: {
-          cell_id?: string | null
+          cell_id: string
           cell_touchpoint_id?: string | null
           created_at?: string
+          featured?: boolean
           id?: string
           kind?: string
           name: string
@@ -735,9 +737,10 @@ export type Database = {
           url?: string | null
         }
         Update: {
-          cell_id?: string | null
+          cell_id?: string
           cell_touchpoint_id?: string | null
           created_at?: string
+          featured?: boolean
           id?: string
           kind?: string
           name?: string
@@ -755,11 +758,11 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'resources_cell_touchpoint_id_fkey'
-            columns: ['cell_touchpoint_id']
+            foreignKeyName: 'resources_placement_in_cell_fkey'
+            columns: ['cell_touchpoint_id', 'cell_id']
             isOneToOne: false
             referencedRelation: 'cell_touchpoints'
-            referencedColumns: ['id']
+            referencedColumns: ['id', 'cell_id']
           },
         ]
       }

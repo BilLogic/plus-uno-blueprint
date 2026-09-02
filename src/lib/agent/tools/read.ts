@@ -670,7 +670,7 @@ export async function getCell(client: Client, cellId: string): Promise<string> {
   const { data, error } = await client
     .from('cells')
     .select(
-      'id, content, summary, owner, perceived_owner, function, form, value_props, lane_id, step_id, position, resources!resources_cell_id_fkey (id, position, kind, name, url)',
+      'id, content, summary, owner, perceived_owner, function, form, value_props, lane_id, step_id, position, resources!resources_cell_id_fkey (id, position, kind, name, url, cell_touchpoint_id, featured)',
     )
     .eq('id', cellId)
     .maybeSingle()

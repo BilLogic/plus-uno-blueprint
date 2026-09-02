@@ -400,8 +400,10 @@ export const PANEL_COLUMNS = Object.freeze({
   // Written only through SECURITY DEFINER RPCs, or only inserted and deleted.
   // Declared with an empty set rather than omitted, because omission would
   // read as "nobody has looked at this table yet" and these have been looked
-  // at: `sync_cell_resources` and the two unplaced-detail functions are
-  // SECURITY INVOKER and SET nothing, and `path_steps`, `cell_dependencies`,
+  // at: the two unplaced-detail functions are SECURITY INVOKER and SET
+  // nothing, `sync_cell_resources` is SECURITY DEFINER behind
+  // `is_service_account()` since 20260902130000 (it updates rows in place and
+  // the table has no UPDATE surface), and `path_steps`, `cell_dependencies`,
   // `slides` and `authoring_changes` are RPC-only.
   path_steps: [],
   cell_dependencies: [],

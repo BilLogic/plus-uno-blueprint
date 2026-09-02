@@ -29,6 +29,8 @@ export type RawCellResource = {
   kind?: string | null
   name?: string | null
   url?: string | null
+  cell_touchpoint_id?: string | null
+  featured?: boolean | null
 }
 
 /** Resources from database rows, in the order the author put them. */
@@ -49,6 +51,8 @@ export function cellResourcesFromRows(
       name: row.name!.trim(),
       kind: row.kind?.trim() || 'link',
       url: row.url?.trim() || null,
+      placementId: row.cell_touchpoint_id ?? null,
+      featured: row.featured ?? false,
     }))
 }
 
@@ -71,6 +75,8 @@ export function cellResourcesFromLinks(
         name: link.label?.trim() || hostOf(url),
         kind: 'link',
         url,
+        placementId: null,
+        featured: false,
       },
     ]
   })

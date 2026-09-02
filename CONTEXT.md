@@ -116,10 +116,14 @@ cells, which is why a strip and the frames it is made of cannot disagree. A
 **resource** — something a cell points at: a spec, a Figma node, a Notion
 module, a file in the repository. A **link** is one kind of resource, which is
 why the table is named for the parent and `kind` carries the subtype.
-Table `resources`: `cell_id` **or** `cell_touchpoint_id` — never both, and
-never neither — plus `kind`, `name`, `url`, `position`, `origin`. Attaching one
-to a placement rather than to the cell is how a design link belongs to the tool
-it documents rather than to the moment at large.
+Table `resources`: `cell_id` — always — plus `kind` (`link` or `attachment`),
+`name`, `url`, `position`, `origin`, `featured`, and `cell_touchpoint_id` when
+the resource is a placement's. A placement's resources are that cell's too:
+they answer "what does this cell point at?" through the touchpoint, and the
+pair of columns names one placement row, never a placement in another cell.
+An **attachment** is a file the cell points at; a **featured** resource is the
+one its owner leads with — one featured attachment per owner, any number of
+featured links.
 
 **dependency** — a relationship between two cells. One table, two kinds, both
 read **source-first**:
