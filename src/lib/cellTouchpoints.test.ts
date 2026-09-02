@@ -37,7 +37,7 @@ test('a placement row keeps its name, order and per-moment detail', () => {
       summary: 'The tutor opens the session detail page.',
       screenshot: '/shots/step-01.png',
       url: 'https://figma.example/node-1687',
-      prominence: 'core',
+      role: 'core',
       touchpoints: { name: 'PLUS App', kind: 'app', url: 'https://plus.example' },
     },
     {
@@ -45,7 +45,7 @@ test('a placement row keeps its name, order and per-moment detail', () => {
       summary: null,
       screenshot: null,
       url: null,
-      prominence: null,
+      role: null,
       touchpoints: { name: 'Zoom', kind: 'app', url: null },
     },
   ])
@@ -58,7 +58,7 @@ test('a placement row keeps its name, order and per-moment detail', () => {
   assert.equal(touchpoints[1]!.summary, 'The tutor opens the session detail page.')
   assert.equal(touchpoints[1]!.screenshot, '/shots/step-01.png')
   assert.equal(touchpoints[1]!.url, 'https://figma.example/node-1687')
-  assert.equal(touchpoints[1]!.prominence, 'core')
+  assert.equal(touchpoints[1]!.role, 'core')
   assert.equal(touchpoints[0]!.summary, null)
 })
 
@@ -128,7 +128,7 @@ test('both sources agree on everything but the one field fallback cannot know', 
       summary: 'Opens the dashboard.',
       screenshot: '/a.png',
       url: 'https://figma.example/a',
-      prominence: null,
+      role: null,
       touchpoints: { name: 'PLUS App', kind: 'other', url: null },
     },
     {
@@ -136,7 +136,7 @@ test('both sources agree on everything but the one field fallback cannot know', 
       summary: null,
       screenshot: null,
       url: null,
-      prominence: null,
+      role: null,
       touchpoints: { name: 'Email', kind: 'other', url: null },
     },
   ])
@@ -243,7 +243,7 @@ test('a placement carries the row id an editor writes through', () => {
       summary: null,
       screenshot: null,
       url: null,
-      prominence: null,
+      role: null,
       touchpoints: { name: 'Zoom' },
     },
   ])
@@ -285,7 +285,7 @@ test('findCellPlacement and resolveTouchpointDetail agree on WHICH placement', (
   assert.equal(findCellPlacement(several, 'PLUS App'), null)
 })
 
-test('a prominence outside the vocabulary reads as unmarked', () => {
+test('a role outside the vocabulary reads as unmarked', () => {
   // The state that asserts the least. A value the CHECK constraint does not
   // admit can still arrive through a seed, and rendering it as a badge would
   // put a word on screen that nothing defines.
@@ -296,9 +296,9 @@ test('a prominence outside the vocabulary reads as unmarked', () => {
       summary: null,
       screenshot: null,
       url: null,
-      prominence: 'important',
+      role: 'important',
       touchpoints: { name: 'Zoom' },
     },
   ])
-  assert.equal(placement!.prominence, null)
+  assert.equal(placement!.role, null)
 })

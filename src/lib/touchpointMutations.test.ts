@@ -80,7 +80,7 @@ const placement = () => [
     summary: 'The tutor fills in the reflection here.',
     screenshot: '/blueprint-images/shared/front-stage-tech/plus-app.png',
     url: 'https://www.figma.com/file/abc',
-    prominence: null,
+    role: null,
   },
 ]
 
@@ -88,7 +88,7 @@ const draft = (over: Partial<PlacementDetailDraft> = {}): PlacementDetailDraft =
   summary: '',
   screenshot: '',
   url: '',
-  prominence: null,
+  role: null,
   ...over,
 })
 
@@ -134,29 +134,29 @@ describe('normalizePlacementDetail', () => {
     const result = normalizePlacementDetail(draft({ summary: '  ' }))
     expect(result).toEqual({
       ok: true,
-      columns: { summary: null, screenshot: null, url: null, prominence: null },
+      columns: { summary: null, screenshot: null, url: null, role: null },
     })
   })
 
-  it('leaves an unmarked prominence unmarked', () => {
+  it('leaves an unmarked role unmarked', () => {
     // The failure this exists for is a `?? 'peripheral'` somewhere in the
     // chain: most placements are unmarked, and defaulting them would put a
     // judgement nobody made on 300 rows at once.
-    const result = normalizePlacementDetail(draft({ prominence: null }))
-    expect(result.ok && result.columns.prominence).toBeNull()
+    const result = normalizePlacementDetail(draft({ role: null }))
+    expect(result.ok && result.columns.role).toBeNull()
   })
 
   it('keeps both marks it is given', () => {
     for (const mark of ['core', 'peripheral'] as const) {
-      const result = normalizePlacementDetail(draft({ prominence: mark }))
-      expect(result.ok && result.columns.prominence).toBe(mark)
+      const result = normalizePlacementDetail(draft({ role: mark }))
+      expect(result.ok && result.columns.role).toBe(mark)
     }
   })
 
-  it('refuses a prominence outside the two the constraint admits', () => {
+  it('refuses a role outside the two the constraint admits', () => {
     const result = normalizePlacementDetail(
       // The shape an untyped edge could hand it — a seed, a persisted form.
-      draft({ prominence: 'important' as never }),
+      draft({ role: 'important' as never }),
     )
     expect(result.ok).toBe(false)
   })
@@ -190,7 +190,7 @@ describe('updateTouchpointPlacement', () => {
     await updateTouchpointPlacement(
       client,
       { id: 'ct-1', cellId: 'cell-1', name: 'PLUS App' },
-      draft({ summary: 'Fill-In tab.', prominence: 'core' }),
+      draft({ summary: 'Fill-In tab.', role: 'core' }),
     )
 
     expect(updates).toHaveLength(1)
@@ -199,7 +199,7 @@ describe('updateTouchpointPlacement', () => {
     // placement IS, and moving one is how an editor would route around the
     // touchpoint-bearing gate in `sync_cell_touchpoints`.
     expect(Object.keys(updates[0].patch).sort()).toEqual([
-      'prominence',
+      'role',
       'screenshot',
       'summary',
       'url',
@@ -213,12 +213,12 @@ describe('updateTouchpointPlacement', () => {
     await updateTouchpointPlacement(
       client,
       { id: 'ct-1', cellId: 'cell-1', name: 'PLUS App' },
-      draft({ summary: 'New words.', prominence: 'peripheral' }),
+      draft({ summary: 'New words.', role: 'peripheral' }),
       {
         summary: 'The tutor fills in the reflection here.',
         screenshot: '/blueprint-images/shared/front-stage-tech/plus-app.png',
         url: 'https://www.figma.com/file/abc',
-        prominence: null,
+        role: null,
       },
     )
 
@@ -238,7 +238,7 @@ describe('updateTouchpointPlacement', () => {
           summary: 'The tutor fills in the reflection here.',
           screenshot: '/blueprint-images/shared/front-stage-tech/plus-app.png',
           url: 'https://www.figma.com/file/abc',
-          prominence: null,
+          role: null,
         },
       },
     })
@@ -292,14 +292,14 @@ describe('restoreTouchpointPlacement', () => {
       summary: 'Imported words.',
       screenshot: 'http://legacy.example/shot.png',
       url: 'http://legacy.example/design',
-      prominence: 'core',
+      role: 'core',
     })
 
     expect(rows[0]).toMatchObject({
       summary: 'Imported words.',
       screenshot: 'http://legacy.example/shot.png',
       url: 'http://legacy.example/design',
-      prominence: 'core',
+      role: 'core',
     })
   })
 
@@ -309,7 +309,7 @@ describe('restoreTouchpointPlacement', () => {
       summary: null,
       screenshot: null,
       url: null,
-      prominence: null,
+      role: null,
     })
     expect(sessionSnapshot()).toEqual([])
   })
@@ -321,7 +321,7 @@ describe('restoreTouchpointPlacement', () => {
         summary: null,
         screenshot: null,
         url: null,
-        prominence: null,
+        role: null,
       }),
     ).rejects.toThrow(/no longer exists/)
   })

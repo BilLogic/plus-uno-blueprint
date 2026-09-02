@@ -32,7 +32,7 @@ export type PlacedDetail = {
     summary: string | null
     screenshot: string | null
     url: string | null
-    prominence: string | null
+    role: string | null
   }
 }
 
@@ -94,7 +94,7 @@ export async function placeTouchpointDetail(
       summary: answer.previous?.summary ?? null,
       screenshot: answer.previous?.screenshot ?? null,
       url: answer.previous?.url ?? null,
-      prominence: answer.previous?.prominence ?? null,
+      role: answer.previous?.role ?? null,
     },
   }
 
@@ -162,7 +162,7 @@ export type RestoredPlacement = {
   summary: string | null
   screenshot: string | null
   url: string | null
-  prominence: string | null
+  role: string | null
 }
 
 /**

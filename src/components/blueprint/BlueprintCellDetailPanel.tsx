@@ -79,9 +79,9 @@ import {
   resolveTouchpointDetail,
 } from '@/lib/cellTouchpoints'
 import {
-  TOUCHPOINT_PROMINENCE_DEFINITION,
-  TOUCHPOINT_PROMINENCE_LABEL,
-} from '@/lib/touchpointProminence'
+  TOUCHPOINT_ROLE_DEFINITION,
+  TOUCHPOINT_ROLE_LABEL,
+} from '@/lib/touchpointRole'
 import {
   designLinkLabel as describeDesignLink,
   resolveDesignUrl,
@@ -993,7 +993,7 @@ function BlueprintCellDetailPanelBody() {
 
     A row id is what tells the two apart: only a real `cell_touchpoints` row
     has one. So the field appears wherever the placement is real, which is
-    also what gives the prominence badge below a reader on those cells — a
+    also what gives the role badge below a reader on those cells — a
     control an author can set and no one can see is the shape #172 exists to
     stop, and it would have been reintroduced here.
   */
@@ -1258,7 +1258,7 @@ function BlueprintCellDetailPanelBody() {
           title={techDetailLabel!}
         />
         {/*
-          PROMINENCE, beside the name it qualifies, and ONLY when somebody
+          ROLE, beside the name it qualifies, and ONLY when somebody
           set it.
 
           Nothing renders for the unmarked case — no badge, no dash, no
@@ -1273,15 +1273,15 @@ function BlueprintCellDetailPanelBody() {
           for one fact.
 
           NOT on the grid either. docs/reference/panel-affordances.md
-          § Where prominence is shown carries the reasoning, the standing
+          § Where a role is shown carries the reasoning, the standing
           two-mechanism prohibition, and what was rejected.
         */}
-        {!editingCell && touchpointDetail?.prominence ? (
+        {!editingCell && touchpointDetail?.role ? (
           <PanelKindBadge
-            label={TOUCHPOINT_PROMINENCE_LABEL[touchpointDetail.prominence]}
-            title={TOUCHPOINT_PROMINENCE_LABEL[touchpointDetail.prominence]}
+            label={TOUCHPOINT_ROLE_LABEL[touchpointDetail.role]}
+            title={TOUCHPOINT_ROLE_LABEL[touchpointDetail.role]}
             description={
-              TOUCHPOINT_PROMINENCE_DEFINITION[touchpointDetail.prominence]
+              TOUCHPOINT_ROLE_DEFINITION[touchpointDetail.role]
             }
           />
         ) : null}

@@ -5,7 +5,7 @@
  * The bug: the cell panel's Status row was a native `<select>` between two
  * designed ones — the browser's own chevron and line box, `h-7` clipping
  * "Live — in use today" along the bottom, `w-fit` re-sizing the row every
- * time the value changed. `ProminenceSelect` was a second copy of the same
+ * time the value changed. `RoleSelect` was a second copy of the same
  * element with the same clipping.
  *
  * jsdom performs no layout, so "nothing is clipped" and "the width does not
@@ -17,10 +17,10 @@
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ProminenceSelect } from '@/components/blueprint/ProminenceSelect'
+import { RoleSelect } from '@/components/blueprint/RoleSelect'
 import { StatusSelect } from '@/components/blueprint/StatusSelect'
 import { ENTITY_STATUS, ENTITY_STATUS_LABEL } from '@/lib/entityStatus'
-import { TOUCHPOINT_PROMINENCE_OPTIONS } from '@/lib/touchpointProminence'
+import { TOUCHPOINT_ROLE_OPTIONS } from '@/lib/touchpointRole'
 
 const triggers = () =>
   [...document.querySelectorAll<HTMLElement>('[data-slot="select-trigger"]')]
@@ -63,34 +63,34 @@ describe('the status select', () => {
   })
 })
 
-describe('the prominence select', () => {
+describe('the role select', () => {
   it('names the unmarked state as a choice, and hands back null for it', async () => {
     const onChange = vi.fn()
-    render(<ProminenceSelect value="core" onChange={onChange} />)
+    render(<RoleSelect value="core" onChange={onChange} />)
     open(trigger())
     await waitFor(() =>
-      expect(options()).toHaveLength(TOUCHPOINT_PROMINENCE_OPTIONS.length),
+      expect(options()).toHaveLength(TOUCHPOINT_ROLE_OPTIONS.length),
     )
     choose('Unmarked — nobody has judged this')
     await waitFor(() => expect(onChange).toHaveBeenCalledWith(null))
   })
 
   it('shows the unmarked label when nothing has been judged', () => {
-    render(<ProminenceSelect value={null} onChange={() => {}} />)
+    render(<RoleSelect value={null} onChange={() => {}} />)
     expect(trigger().textContent).toContain('Unmarked — nobody has judged this')
   })
 })
 
-describe('status and prominence together', () => {
+describe('status and role together', () => {
   it('are one control: the same trigger, identically drawn', () => {
     render(
       <>
         <StatusSelect value="live" onChange={() => {}} />
-        <ProminenceSelect value={null} onChange={() => {}} />
+        <RoleSelect value={null} onChange={() => {}} />
       </>,
     )
-    const [status, prominence] = triggers()
-    expect(status.tagName).toBe(prominence.tagName)
-    expect(status.className).toBe(prominence.className)
+    const [status, role] = triggers()
+    expect(status.tagName).toBe(role.tagName)
+    expect(status.className).toBe(role.className)
   })
 })

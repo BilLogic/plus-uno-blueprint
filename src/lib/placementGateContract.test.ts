@@ -99,7 +99,7 @@ test('both guards can fail', () => {
   const deleting = `await client.from('cell_touchpoints').delete().eq('id', x)`
   const moving = `client.from('cell_touchpoints').update({ cell_id: other }).eq('id', x)`
   const reordering = `client.from('cell_touchpoints').update({ position: 2 }).eq('id', x)`
-  const detail = `client.from('cell_touchpoints').update({ summary: s, prominence: p }).eq('id', x)`
+  const detail = `client.from('cell_touchpoints').update({ summary: s, role: p }).eq('id', x)`
   const anotherTable = `client.from('cells').insert({ cell_id: id })`
 
   expect(inserting.match(PLACEMENT_CREATE)).not.toBeNull()

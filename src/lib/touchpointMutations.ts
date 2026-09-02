@@ -46,7 +46,7 @@ import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { validateResourceUrl } from '@/lib/resourceUrl'
-import type { TouchpointProminenceValue } from '@/lib/touchpointProminence'
+import type { TouchpointRoleValue } from '@/lib/touchpointRole'
 import type { Database } from '@/types/database'
 
 type Client = SupabaseClient<Database>
@@ -188,7 +188,7 @@ export type PlacementDetailDraft = {
   screenshot: string
   /** The design reference for this moment specifically. */
   url: string
-  prominence: TouchpointProminenceValue
+  role: TouchpointRoleValue
 }
 
 /**
@@ -202,7 +202,7 @@ export type PlacementDetailColumns = {
   summary: string | null
   screenshot: string | null
   url: string | null
-  prominence: TouchpointProminenceValue
+  role: TouchpointRoleValue
 }
 
 export type PlacementNormalizeResult =
@@ -253,7 +253,7 @@ export function validateScreenshotReference(
  *
  * Pure, so the rules are testable without a database — which matters most for
  * the two that are easy to get subtly wrong: that an emptied field clears the
- * column rather than storing a blank, and that an unmarked prominence stays
+ * column rather than storing a blank, and that an unmarked role stays
  * unmarked instead of being defaulted into a judgement.
  */
 export function normalizePlacementDetail(
@@ -271,9 +271,9 @@ export function normalizePlacementDetail(
   }
 
   if (
-    draft.prominence !== null &&
-    draft.prominence !== 'core' &&
-    draft.prominence !== 'peripheral'
+    draft.role !== null &&
+    draft.role !== 'core' &&
+    draft.role !== 'peripheral'
   ) {
     return {
       ok: false,
@@ -287,7 +287,7 @@ export function normalizePlacementDetail(
       summary: draft.summary.trim() || null,
       screenshot: screenshot.value,
       url,
-      prominence: draft.prominence,
+      role: draft.role,
     },
   }
 }
@@ -383,7 +383,7 @@ async function writePlacementDetail(
       summary: columns.summary,
       screenshot: columns.screenshot,
       url: columns.url,
-      prominence: columns.prominence,
+      role: columns.role,
     })
     .eq('id', placementId)
     .select('id')

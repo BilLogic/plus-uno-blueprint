@@ -398,7 +398,7 @@ export const LABEL_COLUMNS = Object.freeze(
       because:
         'A placement carries two URLs — this one and `screenshot` — so `url` alone cannot say which field a reader is standing in, and it is not a word a panel says out loud. The label names what this one is for.',
     },
-    { label: 'Prominence', names: ['cell_touchpoints.prominence'], because: '' },
+    { label: 'Role', names: ['cell_touchpoints.role'], because: '' },
     { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },
     { label: 'Owner team', names: ['lanes.owner_team'], because: '' },
     { label: 'KPIs', names: ['lanes.kpis'], because: '' },

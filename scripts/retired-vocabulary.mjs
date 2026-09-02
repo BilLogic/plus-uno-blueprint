@@ -318,6 +318,13 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: [],
     },
+    {
+      was: ['cell_touchpoints.prominence', 'unplaced_touchpoint_details.prominence'],
+      is: ['cell_touchpoints.role', 'unplaced_touchpoint_details.role'],
+      migrations: ['20260902110000'],
+      retired: ['prominence'],
+      copy: ['prominence'],
+    },
     /*
       #182'S FIVE ROWS, AND THEY ARE A DIFFERENT KIND OF ROW — the first in
       this map whose left column is a WORD ON SCREEN rather than an identifier,

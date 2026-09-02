@@ -60,7 +60,7 @@ const ROW_ACTION_SLOT_CLASS =
  *
  * **No fill of its own.** The row it sits in already lights up on hover, and a
  * second surface inside that one is the box-in-a-box the composer taught us to
- * stop drawing. Prominence comes from the *glyph*: quiet
+ * stop drawing. Emphasis comes from the *glyph*: quiet
  * `--sidebar-foreground/50` at rest, `--sidebar-selected-rail` — the brand hue
  * the sidebar already uses for "this one" on the selection rail — on hover and
  * on keyboard focus. It is the only saturated ink in the sidebar, so it reads

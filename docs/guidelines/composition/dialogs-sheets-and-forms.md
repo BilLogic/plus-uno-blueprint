@@ -1,12 +1,12 @@
 ---
 audience: designers, developers
 summary: The drawer/sheet posture contract (single owner), the create and delete dialogs, the slice sheet, the session-changes sheet, and the field primitives that keep a vocabulary from becoming free text.
-sources: src/components/blueprint/panelShell.tsx, src/components/editor/DeleteStructureDialog.tsx, src/components/editor/SessionChangesSheet.tsx, src/lib/deletionSafety.ts, src/lib/writeFailures.ts, src/lib/entityStatus.ts, src/lib/touchpointProminence.ts
+sources: src/components/blueprint/panelShell.tsx, src/components/editor/DeleteStructureDialog.tsx, src/components/editor/SessionChangesSheet.tsx, src/lib/deletionSafety.ts, src/lib/writeFailures.ts, src/lib/entityStatus.ts, src/lib/touchpointRole.ts
 claims:
   - src/components/blueprint/OptionSelect.tsx
   - src/components/blueprint/OwnerTagSelect.tsx
   - src/components/blueprint/PathMultiSelect.tsx
-  - src/components/blueprint/ProminenceSelect.tsx
+  - src/components/blueprint/RoleSelect.tsx
   - src/components/blueprint/StakeholderBadge.tsx
   - src/components/blueprint/StakeholderSelect.tsx
   - src/components/blueprint/StatusBadge.tsx
@@ -282,7 +282,7 @@ The relatives differ on purpose:
 | `StakeholderBadge` | not a picker — the **owner badge**, one line of `PanelKindBadge` | it is the value, not the control. `StakeholderSelect` renders it wherever the field is read-only, and it carries `stakeholders.summary` on its hover so the registry's definition of that party has somewhere to arrive. Where the field IS editable there is no badge to hover, so the same sentence is printed under the picker instead — the two never appear together, which is what keeps it from being two mechanisms for one fact. |
 | `OptionSelect` | a Base UI `Select` over a **fixed vocabulary**, wearing `PANEL_SELECT_TRIGGER_CLASS` — the one trigger `OwnerTagSelect` wears too | no filter and no create row: the options *are* the constraint. Keyboard, touch and typeahead come from the primitive. The trigger is column-width and names its value in full, so a reader does not open the list to learn what the current word means, and the row does not re-size under the pointer that just changed it. Three selects in one column read as one design because they share one class, in one place. |
 | `StatusSelect` | `OptionSelect` over the six statuses | six fixed options, no search, no multi-select. Options carry the full label, because a dropdown is where a reader learns what the six words mean. |
-| `ProminenceSelect` | `OptionSelect`, three options for a two-value column | the column is nullable and the null is the common case, so the control has one more option than the constraint has values. Unmarked is FIRST and is a real choice, not an unselectable prompt: a placement that nobody has judged is not a placement missing a value, and an author who marks one by mistake has to be able to get back. Its label says "nobody has judged this" so choosing it is not choosing a third degree of importance. |
+| `RoleSelect` | `OptionSelect`, three options for a two-value column | the column is nullable and the null is the common case, so the control has one more option than the constraint has values. Unmarked is FIRST and is a real choice, not an unselectable prompt: a placement that nobody has judged is not a placement missing a value, and an author who marks one by mistake has to be able to get back. Its label says "nobody has judged this" so choosing it is not choosing a third degree of importance. |
 | `PathMultiSelect` | a multi-select **filter**, five layouts | not a picker at all. Its `id` is a filter key (`type:name`), never a uuid — anything that writes to a path row wants `pathIds`. |
 | `WalkthroughPathSelect` | a radio menu | degenerates to a static badge when there is one path. Shares its label formatter with `PathMultiSelect`. |
 

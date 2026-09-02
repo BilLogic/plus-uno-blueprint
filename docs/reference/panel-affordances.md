@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
-summary: Which mechanism explains what — definition card, kind badge, hint, alert — why a definition is never a tooltip, why nothing announces one, the one card shape and its identically-set sections, where an entity kind's definition hangs, what ⓘ means, the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's prominence is shown.
-sources: src/components/blueprint/DefinitionCard.tsx, src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/PanelTermLabel.tsx, src/components/blueprint/StatusBadge.tsx, src/lib/panelTerms.ts, src/hooks/useStakeholders.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointProminence.ts, src/components/blueprint/ProminenceSelect.tsx
+summary: Which mechanism explains what — definition card, kind badge, hint, alert — why a definition is never a tooltip, why nothing announces one, the one card shape and its identically-set sections, where an entity kind's definition hangs, what ⓘ means, the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's role is shown.
+sources: src/components/blueprint/DefinitionCard.tsx, src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/PanelTermLabel.tsx, src/components/blueprint/StatusBadge.tsx, src/lib/panelTerms.ts, src/hooks/useStakeholders.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointRole.ts, src/components/blueprint/RoleSelect.tsx
 last-reviewed: 2026-09-01
 ---
 
@@ -349,12 +349,12 @@ free-text overrides.
 
 ---
 
-## Where prominence is shown
+## Where a role is shown
 
 *Decided 2026-08-30 with #189, which asked for the answer rather than the
 implementation.*
 
-`cell_touchpoints.prominence` marks a touchpoint as **core** or **peripheral at
+`cell_touchpoints.role` marks a touchpoint as **core** or **peripheral at
 one moment**. It sits on the placement and not on the catalog on purpose: a
 poster is core at recruitment and incidental three phases later, so the same
 artifact is both depending on where the reader is standing.
@@ -372,7 +372,7 @@ things answer it.
 already looking at *here*. The reader who clicked the touchpoint is exactly the
 reader the answer is for — and everything else the placement carries, its
 summary, its screenshot, its design link, is behind the same click. Promoting
-one of the four to the board would say prominence is the important one.
+one of the four to the board would say the role is the important one.
 
 **The touchpoint has no visual variable left.** A touchpoint cell already encodes
 three vocabularies — tone by touchpoint name, a dashed edge and drained fill
@@ -403,13 +403,13 @@ though somebody had. Absence is what tells it apart from a deliberate
 which is exactly correct.
 
 Only the **editor** names the state, because a control has to offer it: the
-`ProminenceSelect` option reads *"Unmarked — nobody has judged this"* and is
+`RoleSelect` option reads *"Unmarked — nobody has judged this"* and is
 first in the list, so an author who marked a placement by mistake can get back.
 While the editor is open the badge is not rendered — a badge beside a select
 for one value is two mechanisms for one fact, which the standing prohibition
 above forbids.
 
-The vocabulary and its labels live in `src/lib/touchpointProminence.ts`. The
+The vocabulary and its labels live in `src/lib/touchpointRole.ts`. The
 badge says "Core at this step" rather than "Core": the bare word is the
 misreading this column exists to avoid.
 

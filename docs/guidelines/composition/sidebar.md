@@ -76,7 +76,7 @@ the wrong box.
 
 `NavRowAction` is the hover-revealed `+` / `⋯` at a row's right edge. It has **no
 fill of its own** — a second surface inside a row is the box-in-a-box the
-composer taught us to stop drawing — so prominence comes from the glyph, which
+composer taught us to stop drawing — so emphasis comes from the glyph, which
 brightens to the rail-bar colour on hover, the only saturated ink in the
 sidebar. Its target is deliberately bigger than its mark.
 

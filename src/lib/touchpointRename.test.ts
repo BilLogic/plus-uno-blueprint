@@ -49,7 +49,7 @@ type PlacementRow = {
   summary: string | null
   screenshot: string | null
   url: string | null
-  prominence: string | null
+  role: string | null
 }
 type CellRow = { id: string; lane_role: string; content: string }
 
@@ -121,7 +121,7 @@ function syncCellTouchpoints(db: Db, cellId: string, names: string[]) {
       summary: row.summary,
       screenshot: row.screenshot,
       url: row.url,
-      prominence: row.prominence,
+      role: row.role,
     }))
   db.placements = db.placements.filter(
     (row) => row.cell_id !== cellId || wanted.has(nameOf(row)),
@@ -149,7 +149,7 @@ function syncCellTouchpoints(db: Db, cellId: string, names: string[]) {
       summary: null,
       screenshot: null,
       url: null,
-      prominence: null,
+      role: null,
     })
   }
 
@@ -309,7 +309,7 @@ function fixture() {
         summary: 'The tutor opens the room from the session card',
         screenshot: 'https://example.invalid/zoom.png',
         url: null,
-        prominence: 'core',
+        role: 'core',
       },
       {
         id: 'ct-recording',
@@ -319,7 +319,7 @@ function fixture() {
         summary: 'Reviewed afterwards by the lead',
         screenshot: 'https://example.invalid/recording.png',
         url: null,
-        prominence: 'peripheral',
+        role: 'peripheral',
       },
     ],
     cells: [
@@ -422,7 +422,7 @@ test('editing an affected cell after a rename keeps its summary and screenshot',
   expect(placement!.id).toBe('ct-zoom')
   expect(placement!.summary).toBe('The tutor opens the room from the session card')
   expect(placement!.screenshot).toBe('https://example.invalid/zoom.png')
-  expect(placement!.prominence).toBe('core')
+  expect(placement!.role).toBe('core')
   // And the neighbour, whose name merely contains the renamed one.
   expect(placementOf(db, 'tp-recording')!.screenshot).toBe(
     'https://example.invalid/recording.png',
