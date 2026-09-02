@@ -40,7 +40,9 @@
     "apply:pending": "node scripts/apply-pending.mjs",
     "replay:migrations": "node scripts/replay-migrations.mjs",
     "check:write-surface": "node scripts/check-write-surface.mjs",
-    "check:copy": "vitest run scripts/tests/retired-copy.test.mjs"
+    "check:copy": "vitest run scripts/tests/retired-copy.test.mjs",
+    "agent-account": "node scripts/generate-agent-account.mjs",
+    "check:agent-account": "node scripts/generate-agent-account.mjs --check"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

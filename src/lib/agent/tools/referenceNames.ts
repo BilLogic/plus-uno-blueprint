@@ -10,6 +10,7 @@
  */
 export const REFERENCE_NAMES: readonly string[] = [
   'canvas-adapter',
+  'blueprint',
   'lane-roles',
   'lane-vocabulary',
   'elicitation-protocol',

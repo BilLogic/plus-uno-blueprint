@@ -252,6 +252,17 @@ rows with shorter chunks — five breadcrumb segments collapsed to four, and eve
 chunk missing the fields that carry ownership and value. Embeddings built on top
 of that would be wrong with nothing to announce it.
 
+## What the bot reads about the blueprint
+
+`docs/agents/blueprint.md` is the blueprint's account of itself for every
+agent (#260): a hand-written core — retrieval, absence, what a status
+licenses, how paths relate to the main route — and two rendered sections, the
+entity vocabulary from `src/lib/panelTerms.ts` and the schema from
+`pg_description`. It is the file to vendor beside the contract; the harness
+should read it rather than carry its own description of the tables.
+`npm run check:agent-account` holds it to its sources in the same live job as
+the contract check.
+
 ## When you change the schema
 
 A full re-embed is required when `blueprint_chunks_src` changes, because that
