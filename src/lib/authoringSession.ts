@@ -75,6 +75,7 @@ export type WriteFn =
   | 'update_scenario_layout'
   | 'update_service_summary'
   | 'update_business_model'
+  | 'update_service_entity_examples'
   | 'update_path_spec'
   | 'update_step_spec'
   | 'create_stakeholder'
@@ -326,6 +327,7 @@ const DESCRIBERS: Record<WriteFn, (entry: ChangeEntry) => string> = {
     `Showed a scenario ${entry.args.layout === 'merged' ? 'merged' : 'stacked'}`,
   update_service_summary: () => 'Edited the service’s summary',
   update_business_model: () => 'Edited the business model',
+  update_service_entity_examples: () => 'Edited the entity examples',
   update_path_spec: () => 'Edited a path’s summary & note',
   update_step_spec: () => 'Edited a step’s summary',
   create_stakeholder: (entry) => `Added stakeholder${named(entry)}`,

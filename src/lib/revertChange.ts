@@ -22,8 +22,10 @@ import {
 } from '@/lib/scenarioSpecMutations'
 import {
   updateBusinessModel,
+  updateServiceEntityExamples,
   updateServiceSummary,
   type BusinessModelUpdate,
+  type EntityExamplesUpdate,
 } from '@/lib/serviceSpecMutations'
 import { updateStepSummary } from '@/lib/stepSpecMutations'
 import {
@@ -387,6 +389,17 @@ export async function executeRevert(
       const serviceId = stringArg(revert.args, 'service_id')
       const update = revert.args.update as BusinessModelUpdate
       await updateBusinessModel(client, serviceId, update, undefined, {
+        record: false,
+      })
+      return
+    }
+    case 'update_service_entity_examples': {
+      // Self-inverse, exactly like update_service_summary above: a direct
+      // `services` update, so the previous map is handed straight back rather
+      // than dispatched to an RPC that does not exist.
+      const serviceId = stringArg(revert.args, 'service_id')
+      const update = revert.args.update as EntityExamplesUpdate
+      await updateServiceEntityExamples(client, serviceId, update, undefined, {
         record: false,
       })
       return

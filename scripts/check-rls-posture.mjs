@@ -387,7 +387,9 @@ export const PANEL_COLUMNS = Object.freeze({
   scenarios: ['summary'],
   paths: ['summary', 'note', 'status'],
   steps: ['summary'],
-  services: ['summary'],
+  // `entity_examples` granted by 20260902220000, a new column since the sweep
+  // (#312) — the panel authors the six per-kind examples in place.
+  services: ['summary', 'entity_examples'],
   business_models: ['funding', 'pricing', 'delivery_cost', 'revenue_model', 'partners'],
   stakeholders: ['name', 'kind', 'summary', 'aliases'],
   evidence: ['kind', 'title', 'ref', 'excerpt'],

@@ -3,7 +3,10 @@ import {
   DefinitionPopover,
   type DefinitionSection,
 } from '@/components/blueprint/DefinitionCard'
+import { useCanvasModeValue } from '@/contexts/canvasModeContext'
+import { useEntityExamples } from '@/contexts/EntityExamplesContext'
 import {
+  ENTITY_EXAMPLE_PLACEHOLDER,
   ENTITY_KIND_DEFINITIONS,
   instanceDescriptionText,
   type EntityKindTerm,
@@ -53,6 +56,9 @@ type EntityDefinitionPopoverProps = {
 /** The eyebrow an aside wears, so it is a section like every other one. */
 const NOTE_EYEBROW = 'Note'
 
+/** The eyebrow the deployment's own example wears, under the generic rule. */
+const EXAMPLE_EYEBROW = 'Example'
+
 /**
  * What this kind of thing IS, hung off the label that names one of them.
  *
@@ -92,6 +98,12 @@ export function EntityDefinitionPopover({
   const trimmedName = name?.trim()
   const noteText = note?.trim() || null
 
+  // This deployment's own example for this kind, read from the service once and
+  // picked by kind (#302). Absent outside a provider — a test, the path menu —
+  // where the map is empty.
+  const exampleText = useEntityExamples()[kind]?.trim() || null
+  const editing = useCanvasModeValue() === 'design'
+
   const sections: DefinitionSection[] = [
     { eyebrow: term.label, body: term.definition },
   ]
@@ -107,6 +119,23 @@ export function EntityDefinitionPopover({
       eyebrow: trimmedName,
       body: instanceDescriptionText(description),
       unwritten: !description?.trim(),
+    })
+  }
+
+  /*
+    The example grounds the generic rule in something on THIS reader's board
+    (#302). A written one shows to everyone; a blank one renders nothing for a
+    reader and, only in design mode, the same unwritten placeholder the
+    instance section uses — the prompt goes to the deployer who can act on it,
+    never to a viewer who cannot.
+  */
+  if (exampleText) {
+    sections.push({ eyebrow: EXAMPLE_EYEBROW, body: exampleText })
+  } else if (editing) {
+    sections.push({
+      eyebrow: EXAMPLE_EYEBROW,
+      body: ENTITY_EXAMPLE_PLACEHOLDER,
+      unwritten: true,
     })
   }
 

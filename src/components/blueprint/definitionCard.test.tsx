@@ -18,6 +18,7 @@
  *     the whole tree and no single render can observe an absence everywhere.
  *     Prior art for the source-reading half: `stakeholderDefinitionReader.test.ts`.
  */
+import type { ReactElement } from 'react'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
@@ -41,7 +42,13 @@ import {
   STAKEHOLDER_KIND_MEANING,
   type StakeholderKind,
 } from '@/hooks/useStakeholders'
-import { ENTITY_KIND_DEFINITIONS, PANEL_TERMS } from '@/lib/panelTerms'
+import {
+  ENTITY_EXAMPLE_PLACEHOLDER,
+  ENTITY_KIND_DEFINITIONS,
+  PANEL_TERMS,
+} from '@/lib/panelTerms'
+import { CanvasModeContext } from '@/contexts/canvasModeContext'
+import { EntityExamplesContext } from '@/contexts/EntityExamplesContext'
 
 afterEach(cleanup)
 
@@ -546,5 +553,93 @@ describe('an entity definition', () => {
     // The placeholder changes the BODY only. The heading is the heading.
     expect(body(instance).className).toContain('italic')
     expect(eyebrow(instance).className).toBe(eyebrow(sections(card)[0]).className)
+  })
+})
+
+/* --------------------------------------- the deployment's own example (#302) */
+
+/** Design mode, injected the way a test reaches the shared canvas mode. */
+function designMode(children: ReactElement) {
+  return (
+    <CanvasModeContext.Provider
+      value={{ mode: 'design', setMode: () => {}, available: true }}
+    >
+      {children}
+    </CanvasModeContext.Provider>
+  )
+}
+
+describe('the example grounds the generic definition in this deployment', () => {
+  it('shows the authored example under the kind, set like every other section', async () => {
+    render(
+      <EntityExamplesContext.Provider
+        value={{ lane: 'The tutor row on the PLUS board' }}
+      >
+        <EntityDefinitionPopover kind="lane">
+          <span>Front stage</span>
+        </EntityDefinitionPopover>
+      </EntityExamplesContext.Provider>,
+    )
+    hover(screen.getByText('Front stage'))
+    const card = (
+      await screen.findByText('The tutor row on the PLUS board')
+    ).closest('[data-definition-card]') as HTMLElement
+    const [kind, example] = sections(card)
+    expect(sections(card)).toHaveLength(2)
+    expect(eyebrow(example).textContent).toBe('Example')
+    // Identically typeset — the card's one-shape rule holds for this section too.
+    expect(eyebrow(example).className).toBe(eyebrow(kind).className)
+    expect(body(example).className).toBe(body(kind).className)
+  })
+
+  it('is picked by kind — a phase popover shows the phase example, not another', async () => {
+    render(
+      <EntityExamplesContext.Provider
+        value={{ phase: 'Warm-up', lane: 'The tutor row' }}
+      >
+        <EntityDefinitionPopover kind="phase">
+          <span>A phase</span>
+        </EntityDefinitionPopover>
+      </EntityExamplesContext.Provider>,
+    )
+    hover(screen.getByText('A phase'))
+    await screen.findByText('Warm-up')
+    expect(screen.queryByText('The tutor row')).toBeNull()
+  })
+
+  it('renders nothing for a reader when the example is blank', async () => {
+    render(
+      <EntityExamplesContext.Provider value={{}}>
+        <EntityDefinitionPopover kind="lane">
+          <span>Front stage</span>
+        </EntityDefinitionPopover>
+      </EntityExamplesContext.Provider>,
+    )
+    hover(screen.getByText('Front stage'))
+    const card = (
+      await screen.findByText(ENTITY_KIND_DEFINITIONS.lane.definition)
+    ).closest('[data-definition-card]') as HTMLElement
+    // Just the kind — no empty Example slot for the reader to puzzle over.
+    expect(sections(card)).toHaveLength(1)
+    expect(screen.queryByText('Example', { selector: '[data-definition-eyebrow]' })).toBeNull()
+  })
+
+  it('shows the unwritten placeholder to an editor when the example is blank', async () => {
+    render(
+      designMode(
+        <EntityDefinitionPopover kind="lane">
+          <span>Front stage</span>
+        </EntityDefinitionPopover>,
+      ),
+    )
+    hover(screen.getByText('Front stage'))
+    const card = (
+      await screen.findByText(ENTITY_EXAMPLE_PLACEHOLDER)
+    ).closest('[data-definition-card]') as HTMLElement
+    const [kind, example] = sections(card)
+    expect(eyebrow(example).textContent).toBe('Example')
+    // The unwritten treatment: the BODY italicises, the heading does not.
+    expect(body(example).className).toContain('italic')
+    expect(eyebrow(example).className).toBe(eyebrow(kind).className)
   })
 })

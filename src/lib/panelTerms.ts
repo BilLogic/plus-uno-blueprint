@@ -88,9 +88,36 @@ export const ENTITY_KIND_DEFINITIONS = {
 /** The six kinds that carry a definition. `path` is the one that is not a panel. */
 export type EntityKindTerm = keyof typeof ENTITY_KIND_DEFINITIONS
 
+/** The six kinds in the order a deployer authors and a reader meets them. */
+export const ENTITY_KIND_ORDER = Object.keys(
+  ENTITY_KIND_DEFINITIONS,
+) as EntityKindTerm[]
+
+/**
+ * One authored, free-text example per core kind, grounding each definition in
+ * this deployment (#302). Keyed by the six `EntityKindTerm`s; a kind nobody has
+ * written an example for simply has no entry, so the reader sees no empty slot.
+ *
+ * The type lives here — beside the kinds it is keyed by — so the read hook, the
+ * write mutation and the popover that render it all name one shape rather than
+ * three.
+ */
+export type EntityExamples = Partial<Record<EntityKindTerm, string>>
+
 /** What a description slot says when nobody has written one yet. */
 export const INSTANCE_DESCRIPTION_PLACEHOLDER =
   'Description needs to be added to database.'
+
+/**
+ * What an example slot says to an EDITOR when nobody has written one yet.
+ *
+ * Reader-invisible by design (#302, story 6): a blank example renders nothing
+ * for a reader, and this prompt only where the canvas is in design mode — the
+ * same "the app admits a field is empty" nudge `INSTANCE_DESCRIPTION_PLACEHOLDER`
+ * is, aimed at the deployer who can act on it.
+ */
+export const ENTITY_EXAMPLE_PLACEHOLDER =
+  'Example needs to be added to database.'
 
 /**
  * An instance's own description, or the prompt to write one.

@@ -1,13 +1,11 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
-import type { EntityKindTerm } from '@/lib/panelTerms'
+import type { EntityExamples } from '@/lib/panelTerms'
 
-/**
- * One authored, free-text example per core kind, grounding each definition in
- * this deployment (#302). Keyed by the six `EntityKindTerm`s; a kind nobody has
- * written an example for simply has no entry, so the reader sees no empty slot.
- */
-export type EntityExamples = Partial<Record<EntityKindTerm, string>>
+// Re-exported from its canonical home in `panelTerms`, beside the kinds it is
+// keyed by, so a caller that already reads the service spec need not learn a
+// second import path for the shape it carries.
+export type { EntityExamples }
 
 export type ServiceSpec = {
   id: string

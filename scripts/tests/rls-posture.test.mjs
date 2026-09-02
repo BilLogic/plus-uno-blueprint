@@ -528,8 +528,23 @@ test('every panel declaration and identity exemption is well formed', () => {
   )
 })
 
-/** The version of the migration whose VALUES list the map mirrors. */
+/** The version of the sweep whose VALUES list the map mirrors. */
 const GRANT_MIGRATION = '20260830290000'
+
+/**
+ * The migrations whose VALUES lists, taken together, ARE the panel-writes
+ * surface.
+ *
+ * The sweep froze the surface as it stood; a column added afterwards — one the
+ * sweep could not have named, because it did not exist yet — lands its grant in
+ * its own additive file (`20260902220000` for `services.entity_examples`, #312).
+ * `PANEL_COLUMNS` mirrors the UNION of them, so the map is checked against every
+ * file that actually grants, not against the sweep alone.
+ */
+const GRANT_MIGRATION_FILES = [
+  `${GRANT_MIGRATION}_a_panel_writes_its_own_columns`,
+  '20260902220000_the_service_panel_writes_its_examples_column',
+]
 
 /**
  * A column the grant migration named under a spelling a LATER migration
@@ -557,21 +572,20 @@ test('the migration and the map agree about every column', () => {
   // column added to one and not the other leaves the check describing a
   // schema nobody applied. `check:rls-posture:live` reads the DATABASE, which
   // is the arbiter — this only catches the two drifting before anyone runs it.
-  const sql = readFileSync(
-    resolve(
-      import.meta.dirname,
-      `../../supabase/migrations/${GRANT_MIGRATION}_a_panel_writes_its_own_columns.sql`,
-    ),
-    'utf8',
-  )
   const inMigration = new Set()
-  for (const match of sql.matchAll(/^\s*\('([a-z_]+)', '([a-z_]+)'\),?$/gm)) {
-    const entry = renamedSince(`${match[1]}.${match[2]}`)
-    if (entry !== null) inMigration.add(entry)
+  for (const file of GRANT_MIGRATION_FILES) {
+    const sql = readFileSync(
+      resolve(import.meta.dirname, `../../supabase/migrations/${file}.sql`),
+      'utf8',
+    )
+    for (const match of sql.matchAll(/^\s*\('([a-z_]+)', '([a-z_]+)'\),?$/gm)) {
+      const entry = renamedSince(`${match[1]}.${match[2]}`)
+      if (entry !== null) inMigration.add(entry)
+    }
   }
   assert.ok(
     inMigration.size > 40,
-    'the migration’s VALUES list did not parse, so this comparison is vacuous',
+    'the migrations’ VALUES lists did not parse, so this comparison is vacuous',
   )
 
   const inMap = new Set(
