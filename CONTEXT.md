@@ -87,20 +87,18 @@ describes a different screen at a different step. It also carries a `role`
 (`core` or `peripheral`), which sits here rather than on the catalog because
 the same artifact is central at one moment and incidental at another. That is
 all a placement says; what it points at — a screen, a file, a page — is a
-resource on it.
-Table `cell_touchpoints`: `cell_id`, `touchpoint_id`, `position`, `summary`,
-`role`, `origin`.
+resource on it. A placement names its touchpoint one of two ways, and exactly
+one: by `touchpoint_id` into the registry, or by `name` alone when the
+registry lacks it.
+Table `cell_touchpoints`: `cell_id`, `touchpoint_id` or `name`, `position`,
+`summary`, `role`, `origin`.
 
-**unplaced touchpoint detail** — a piece of writing about a touchpoint that
-names nothing its cell shows. It is **not a placement**: nothing draws it, and
-it has no touchpoint to point at, which is the whole reason it is waiting. A
-work queue, resolved one row at a time by a person deciding which of the cell's
-touchpoints the writing was about, or that it is not worth keeping. **Nothing
-here is ever placed automatically** — assigning a detail to the touchpoint its
-name resembles is what made 57 of them unreachable.
-Table `unplaced_touchpoint_details`: `cell_id`, `name` (the name the detail
-claims, and the one thing that must never decide anything), `summary`,
-`screenshot`, `url`, `role`, `origin`.
+**name-only placement** — a placement whose touchpoint the registry lacks: it
+carries a `name` and no `touchpoint_id`. Drawn on the board with a dashed face,
+it opens the same panel as any placement and offers to be linked to a registry
+entry — a decision a person makes, never a match on the name. The 57 details
+that used to wait in a side table became these (or linked placements, where
+the registry already had the name) in `20260902170000`.
 **storyboard** — the lane that draws the service rather than describing it.
 `lane_role = 'storyboard'`, one of the eight the `lanes_lane_role_check`
 constraint admits. Its own cells are empty: a storyboard cell's face is the
@@ -371,6 +369,7 @@ remember is #145's job, not this paragraph's.
 | `applies when` (label) | `Summary` — `paths.summary` | — |
 | `design link` (label) | `Open link` — `resources.featured` | — |
 | `cell_touchpoints.url`, `cell_touchpoints.screenshot` | `resources.url`, `resources.kind` | `20260902160000` |
+| `unplaced_touchpoint_details`, `unplaced touchpoint detail`, `place_touchpoint_detail`, `discard_touchpoint_detail`, `restore_touchpoint_detail`, `unplaced` (label) | `cell_touchpoints.name`, `name-only placement`, `set_placement_touchpoint`, `remove_placement`, `restore_placement`, `name-only` | `20260902170000` |
 | `pill`, `chip` (design system) | `badge`, `tag` | — |
 
 The reasoning, where it is worth knowing: a "tech" lane never held only
@@ -577,6 +576,7 @@ column a reason.
 | **Value proposition** | `cells.value_props` | `props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions. |
 | **Touchpoint** | `touchpoints` | — |
 | **Role** | `cell_touchpoints.role` | — |
+| **Registry** | `cell_touchpoints.touchpoint_id` | The column is a foreign key into `touchpoints`, and the field is where a name-only placement is linked to the registry entry it was about (#277). A reader is choosing from the registry; the panel says so rather than naming the key. |
 | **Stakeholder** | `lanes.stakeholder_id` | — |
 | **Owner team** | `lanes.owner_team` | — |
 | **KPIs** | `lanes.kpis` | — |

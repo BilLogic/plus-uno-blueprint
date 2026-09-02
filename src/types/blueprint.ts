@@ -74,6 +74,12 @@ export type CellTouchpoint = {
    * which is correct: there is nothing there to save into.
    */
   id: string | null
+  /**
+   * The registry entry this placement names, or null for a NAME-ONLY
+   * placement — one whose touchpoint the registry lacks (#277). Drawn dashed
+   * on the board, offered a "Link to registry" action in the panel.
+   */
+  touchpointId: string | null
   name: string
   /** Null from fallback data, which has nowhere to record one. */
   kind: string | null

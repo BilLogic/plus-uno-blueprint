@@ -185,6 +185,15 @@ teaches people it is not for them. One Save, for the same reason there is one
 Save at all — the editor this replaced had four buttons for one cell and a Save
 that only saved half of what was on screen.
 
+**A name-only placement carries its own way out** (#277). A placement whose
+touchpoint the registry lacks — the seven the queue held, or one whose name
+left the cell's text while it still carried writing — is drawn dashed on the
+board and opens this same panel; its group shows a dashed `RegistryLink` block
+under Role with a **Registry** select and "Link to registry", and "Remove from
+this cell". Both write at once with an inverse in the ledger, and neither is a
+field of the placement, so neither waits for Save. Nothing here matches the
+name to the entry it resembles: the choice is the author's.
+
 **The placement's resources are the one list with its own Save** (#273).
 `PlacementResourcesList` sits inside the placement's group: the preview and
 the buttons it leads with on top, each with an unset control; every resource

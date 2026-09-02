@@ -15,7 +15,6 @@ import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useBlueprintCell } from '@/hooks/useBlueprintCell'
 import { useValueAudiences } from '@/hooks/useValueAudiences'
 import { invalidateQueries } from '@/hooks/useSupabaseQuery'
-import { invalidateUnplacedQueue } from '@/hooks/useUnplacedTouchpointDetails'
 import { upsertCell } from '@/lib/authoringRpc'
 import {
   CELL_CONTENT_TARGET,
@@ -27,6 +26,9 @@ import { parseCellContentItems } from '@/lib/parseCellContent'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { updateCellContent } from '@/lib/cellContentMutations'
 import { RoleSelect } from '@/components/blueprint/RoleSelect'
+import { OptionSelect } from '@/components/blueprint/OptionSelect'
+import { useRegistryTouchpoints } from '@/hooks/useRegistryTouchpoints'
+import { removePlacement, setPlacementTouchpoint } from '@/lib/placementLinkMutations'
 import { PlacementResourcesList } from '@/components/blueprint/PlacementResourcesList'
 import {
   placementSurvivesContent,
@@ -471,12 +473,9 @@ function CellPanelEditorForm({
       // A save can introduce a new value audience; the autocomplete list
       // caches under its own key and never refetches on its own.
       invalidateQueries('value-audiences')
-      // Taking a touchpoint out of the text deletes its placement, and if that
-      // placement carried a summary or a featured resource the database parks the
-      // writing in the unplaced queue rather than destroying it. The queue is
-      // cached under its own key, so without this the new row is invisible
-      // until a reload — which is the disappearance this ticket is about.
-      invalidateUnplacedQueue()
+      // Taking a touchpoint out of the text keeps its placement as a
+      // name-only row when it carried anything (#277); the board re-reads
+      // through the structural invalidation above and draws it dashed.
       if (aliveRef.current) onDone()
     } catch (saveError) {
       if (aliveRef.current) {
@@ -563,6 +562,19 @@ function CellPanelEditorForm({
               onChange={(next) => setPlacement('role', next)}
             />
           </Field>
+          {placement.id && cellId && placement.touchpointId === null ? (
+            <RegistryLink
+              placement={{ id: placement.id, name: placement.name }}
+              cellId={cellId}
+              shown={techItems}
+              onWritten={(gone) => {
+                invalidateQueries('service-phases')
+                invalidateQueries(`cell-content:${cellId}`)
+                if (draft) invalidateCanvasBlueprintsForPath(draft.pathId)
+                if (gone) onDone()
+              }}
+            />
+          ) : null}
           {/*
             The one exception to "one Save": the list has its own. A reorder
             is a whole-list fact and featuring is one row's flag that the
@@ -761,6 +773,119 @@ function CellPanelEditorForm({
         // for everything on the panel. Inline only as a fallback.
         return footerHost ? createPortal(controls, footerHost) : controls
       })()}
+    </div>
+  )
+}
+
+/**
+ * A placement whose touchpoint the registry lacks (#277): the author's name,
+ * kept, with two ways out. Link it to the registry entry it was about — a
+ * choice made here, never a match on the name, which is what left 57 of
+ * these unreachable — or remove it from the cell. Both are immediate and
+ * both go in the ledger with their inverse; neither waits for the form's
+ * Save, because neither is a field of the placement.
+ */
+function RegistryLink({
+  placement,
+  cellId,
+  shown,
+  onWritten,
+}: {
+  placement: { id: string; name: string }
+  cellId: string
+  /** The names the cell's text already shows — already linked, so not offered. */
+  shown: readonly string[]
+  onWritten: (gone: boolean) => void
+}) {
+  const { client } = useSupabase()
+  const registry = useRegistryTouchpoints(cellId)
+  const [choice, setChoice] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const entries = registry.status === 'ready' ? registry.data : []
+  const options = [
+    { value: '', label: 'Choose a registry entry…' },
+    ...entries
+      .filter((entry) => !shown.includes(entry.name))
+      .map((entry) => ({ value: entry.id, label: entry.name })),
+  ]
+
+  const link = async () => {
+    const target = entries.find((entry) => entry.id === choice)
+    if (!client || !target || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await setPlacementTouchpoint(
+        client,
+        { id: placement.id, cellId, name: placement.name },
+        { touchpointId: target.id, touchpointName: target.name },
+      )
+      onWritten(false)
+    } catch (linkError) {
+      setError(errorMessage(linkError))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async () => {
+    if (!client || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await removePlacement(client, { id: placement.id, cellId, name: placement.name })
+      onWritten(true)
+    } catch (removeError) {
+      setError(errorMessage(removeError))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div
+      className="flex flex-col gap-2 rounded-md border border-dashed border-border p-2"
+      data-registry-link=""
+    >
+      <p className="text-3xs text-muted-foreground">
+        The registry has no “{placement.name}”. Link it to the entry it was
+        about, or take it off this cell.
+      </p>
+      <Field label="Registry" hint="The registry entry this placement was really about.">
+        <div className="flex items-center gap-1.5">
+          <OptionSelect
+            value={choice}
+            onChange={setChoice}
+            options={options}
+            disabled={busy || registry.status !== 'ready'}
+            aria-label="Registry"
+            className="min-w-0 flex-1"
+          />
+          <Button
+            type="button"
+            size="sm"
+            className="h-7"
+            disabled={!choice || busy}
+            onClick={() => void link()}
+          >
+            Link to registry
+          </Button>
+        </div>
+      </Field>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-7 self-start px-2 text-xs text-muted-foreground hover:text-destructive"
+        disabled={busy}
+        onClick={() => void remove()}
+      >
+        <X className="size-3" />
+        Remove from this cell
+      </Button>
+      {error ? <p className="text-xs text-destructive">{error}</p> : null}
     </div>
   )
 }

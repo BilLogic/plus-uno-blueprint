@@ -82,8 +82,8 @@ are server-side:
    Two grants are load-bearing in a way that is easy to mistake for
    dead weight. `update (updated_at)` on `touchpoints` and
    `cell_touchpoints` exists because `sync_cell_touchpoints`,
-   `restore_cell_touchpoints`, `place_touchpoint_detail`,
-   `restore_touchpoint_detail` and `sync_cell_resources` are **SECURITY
+   `restore_cell_touchpoints`, `set_placement_touchpoint`,
+   `restore_placement` and `sync_cell_resources` are **SECURITY
    INVOKER** — they write under the caller's grants, and a column
    privilege is checked against the statement's SET LIST rather than
    against what it changes. The `updated_at = now()` stamps in those
@@ -267,9 +267,10 @@ never a raw table write from a component, a context or a hook:
   columns via column-level grants; optimistic, the exception), `sliceMutations`
   (slices and frames), `evidenceMutations`, `findingMutations`,
   `stakeholderMutations`, `touchpointMutations` (a catalog rename, which is one
-  RPC because both halves have to move together), `unplacedTouchpointMutations`
-  (placing or discarding a detail that names nothing its cell shows, both RPCs
-  for the same reason), and the five spec modules `serviceSpecMutations`,
+  RPC because both halves have to move together), `placementLinkMutations`
+  (naming a placement's touchpoint — a registry link or a name alone — and
+  removing one, each an RPC that hands back its inverse), and the five spec
+  modules `serviceSpecMutations`,
   `scenarioSpecMutations`, `phaseSpecMutations`, `laneSpecMutations`,
   `stepSpecMutations`. All share one shape: a write under row grants — direct
   or through one RPC — recorded in the session ledger with a captured inverse.

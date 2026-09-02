@@ -20,8 +20,10 @@ const ROOT = resolve(new URL('../..', import.meta.url).pathname)
 const PLACEMENT_FUNCTIONS = [
   'sync_cell_touchpoints',
   'restore_cell_touchpoints',
-  'place_touchpoint_detail',
-  'restore_touchpoint_detail',
+  // #277 replaced the queue's place/restore pair with these.
+  'set_placement_touchpoint',
+  'remove_placement',
+  'restore_placement',
 ]
 
 /** What is wrong with a replayed series' placements, as sentences. */
@@ -87,9 +89,11 @@ end
 $function$;
 create or replace function public.restore_cell_touchpoints(p_cell_id uuid, p_rows jsonb)
 returns void language plpgsql as $function$ begin end $function$;
-create or replace function public.place_touchpoint_detail(p_detail_id uuid, p_touchpoint_id uuid)
+create or replace function public.set_placement_touchpoint(p_placement_id uuid, p_touchpoint_id uuid default null, p_name text default null)
 returns jsonb language plpgsql as $function$ begin return '{}'::jsonb; end $function$;
-create or replace function public.restore_touchpoint_detail(p_detail jsonb, p_placement jsonb default null)
+create or replace function public.remove_placement(p_placement_id uuid)
+returns jsonb language plpgsql as $function$ begin return '{}'::jsonb; end $function$;
+create or replace function public.restore_placement(p_row jsonb, p_resources jsonb default '[]'::jsonb)
 returns jsonb language plpgsql as $function$ begin return '{}'::jsonb; end $function$;
 `
 

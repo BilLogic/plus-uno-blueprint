@@ -33,6 +33,9 @@ export type RawCellTouchpoint = {
   position: number
   summary?: string | null
   role?: string | null
+  /** The registry entry, or null with `name` set — a name-only placement (#277). */
+  touchpoint_id?: string | null
+  name?: string | null
   /** The joined catalog row. PostgREST names the embed after the table. */
   touchpoints: { name: string; kind?: string | null; url?: string | null } | null
 }
@@ -44,7 +47,7 @@ export function cellTouchpointsFromRows(
   if (!rows || rows.length === 0) return []
 
   return rows
-    .filter((row) => row.touchpoints?.name)
+    .filter((row) => row.touchpoints?.name || row.name?.trim())
     .slice()
     // Sorted here rather than trusted: PostgREST does not promise an order
     // for an embedded resource, and the touchpoints would otherwise come back in
@@ -52,8 +55,11 @@ export function cellTouchpointsFromRows(
     .sort((a, b) => a.position - b.position)
     .map((row) => ({
       id: row.id ?? null,
-      name: row.touchpoints!.name,
-      kind: row.touchpoints!.kind ?? null,
+      touchpointId: row.touchpoints ? (row.touchpoint_id ?? null) : null,
+      // The registry's spelling where there is a registry row; the
+      // placement's own name where the registry lacks it.
+      name: row.touchpoints?.name ?? row.name!.trim(),
+      kind: row.touchpoints?.kind ?? null,
       summary: row.summary ?? null,
       role: normalizeRole(row.role),
     }))
@@ -86,6 +92,7 @@ export function cellTouchpointsFromLinks(
       // nowhere to save a placement's words into, and offering the form
       // there would be offering a Save that writes nothing.
       id: null,
+      touchpointId: null,
       name,
       // The fallback shape has nowhere to record a kind or a role, and
       // inventing either would make this source disagree with the database

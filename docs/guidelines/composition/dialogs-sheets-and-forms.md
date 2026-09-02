@@ -18,7 +18,6 @@ claims:
   - src/components/editor/CreateVersionDialog.tsx
   - src/components/editor/DeleteStructureDialog.tsx
   - src/components/editor/SessionChangesSheet.tsx
-  - src/components/editor/UnplacedDetailsSheet.tsx
   - src/components/editor/WriteFailureNotices.tsx
 last-reviewed: 2026-08-25
 ---
@@ -213,31 +212,6 @@ a change was taken back that is still there.
 ⌘Z is scoped away from text fields (inside an input, the browser's own undo is
 the one people mean) and skips entries with no inverse rather than silently
 doing nothing forever.
-
-## `UnplacedDetailsSheet` — a queue that says its own size
-
-The touchpoint details nobody has placed. Each names a touchpoint its own cell
-does not show, which is why it was unreachable; 57 of the 117 authored details
-were in that state and nothing anywhere reported it.
-
-**It renders at zero, and that is the one way it differs from the sheet above.**
-`SessionChangesSheet` disappears when its list empties, which is right for a
-list of things you just did. Here, "everything is placed" and "the queue never
-loaded" would be the same picture — being indistinguishable from silence is how
-half the authored content went missing — so the count sits on the bar always and
-an empty queue says so in words.
-
-- **Nothing is placed automatically.** The buttons on a row are the touchpoints
-  that row's cell actually displays, read from its placements and never from the
-  detail's own name. Matching the name to the catalog entry it resembles is what
-  produced these 57, and the database refuses it too: `place_touchpoint_detail`
-  raises rather than creating a placement on a cell whose text does not name it.
-- **A row with no target says so** rather than offering to invent one. The cell
-  shows no touchpoint, so the honest answer is that there is nowhere to put this
-  until somebody edits the cell.
-- Both operations are destructive and both are in the session ledger with an
-  inverse that restores the queue row under its own id — and, for a place, the
-  words the placement was carrying before.
 
 ## `CreateSliceSheet`
 

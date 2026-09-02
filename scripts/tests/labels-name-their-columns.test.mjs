@@ -392,6 +392,12 @@ export const LABEL_COLUMNS = Object.freeze(
     },
     { label: 'Touchpoint', names: ['touchpoints'], because: '' },
     { label: 'Role', names: ['cell_touchpoints.role'], because: '' },
+    {
+      label: 'Registry',
+      names: ['cell_touchpoints.touchpoint_id'],
+      because:
+        'The column is a foreign key into `touchpoints`, and the field is where a name-only placement is linked to the registry entry it was about (#277). A reader is choosing from the registry; the panel says so rather than naming the key.',
+    },
     { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },
     { label: 'Owner team', names: ['lanes.owner_team'], because: '' },
     { label: 'KPIs', names: ['lanes.kpis'], because: '' },

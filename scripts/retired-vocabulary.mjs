@@ -424,6 +424,33 @@ export const RENAME_MAP = Object.freeze(
       retired: [],
       copy: [],
     },
+    {
+      // #277. The queue for details that named a touchpoint their cell did
+      // not show. A placement can name its touchpoint by `name` alone now,
+      // so the 57 folded into `cell_touchpoints` (linked where the registry
+      // had the name, name-only where it did not), the table and its three
+      // functions went, and the "Unplaced" count left the bar — a name-only
+      // placement is drawn on the board with a dashed face, where the writing belongs.
+      was: [
+        'unplaced_touchpoint_details',
+        'unplaced touchpoint detail',
+        'place_touchpoint_detail',
+        'discard_touchpoint_detail',
+        'restore_touchpoint_detail',
+        'unplaced',
+      ],
+      is: [
+        'cell_touchpoints.name',
+        'name-only placement',
+        'set_placement_touchpoint',
+        'remove_placement',
+        'restore_placement',
+        'name-only',
+      ],
+      migrations: ['20260902170000'],
+      retired: ['unplaced_touchpoint_details', 'touchpoint_detail'],
+      copy: ['unplaced'],
+    },
     /*
       THE DESIGN SYSTEM'S OWN VOCABULARY, which had four words for two ideas.
 

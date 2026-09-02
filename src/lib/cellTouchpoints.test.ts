@@ -282,3 +282,30 @@ test('a role outside the vocabulary reads as unmarked', () => {
   ])
   assert.equal(placement!.role, null)
 })
+
+test('a placement the registry lacks keeps its own name and no registry id (#277)', () => {
+  const touchpoints = cellTouchpointsFromRows([
+    {
+      id: 'ct-1',
+      position: 0,
+      touchpoint_id: 'tp-1',
+      name: null,
+      touchpoints: { name: 'Handshake', kind: 'app', url: null },
+    },
+    {
+      id: 'ct-2',
+      position: 1,
+      touchpoint_id: null,
+      name: 'Handshake Employer Profile',
+      touchpoints: null,
+    },
+  ])
+  assert.deepEqual(
+    touchpoints.map((entry) => [entry.name, entry.touchpointId]),
+    [
+      ['Handshake', 'tp-1'],
+      ['Handshake Employer Profile', null],
+    ],
+  )
+})
+
