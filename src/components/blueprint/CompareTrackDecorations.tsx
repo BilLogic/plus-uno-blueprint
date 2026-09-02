@@ -1,10 +1,4 @@
 import { StepHeaderAffordance } from '@/components/blueprint/StepHeaderAffordance'
-import {
-  LAYER_COLUMN_WIDTH,
-  STEP_COLUMN_GAP,
-  STEP_COLUMN_WIDTH,
-} from '@/lib/blueprintLayout'
-import { COMPARE_STEP_HEADER_HEIGHT } from '@/lib/sideBySideCompareLayout'
 import type { CompareGridTrack } from '@/lib/compareGridTracks'
 
 /**
@@ -45,41 +39,3 @@ export function CompareStepHeaderRow({
   )
 }
 
-/** Single-path equivalent of the compare step axis; geometry never depends on focus. */
-export function ServiceStepHeaderRow({
-  steps,
-  playGutter = 0,
-}: {
-  steps: readonly { id: string; name: string }[]
-  playGutter?: number
-}) {
-  return (
-    <div
-      className="flex shrink-0 items-stretch"
-      style={{ height: COMPARE_STEP_HEADER_HEIGHT }}
-      data-blueprint-column-header-row=""
-    >
-      <div
-        aria-hidden
-        className="shrink-0"
-        style={{ width: LAYER_COLUMN_WIDTH + playGutter }}
-      />
-      {steps.map((step, index) => (
-        <div key={step.id} className="flex shrink-0 items-stretch justify-center">
-          <StepHeaderAffordance
-            stepId={step.id}
-            name={step.name}
-            style={{ width: STEP_COLUMN_WIDTH }}
-          />
-          {index < steps.length - 1 ? (
-            <div
-              aria-hidden
-              className="shrink-0"
-              style={{ width: STEP_COLUMN_GAP }}
-            />
-          ) : null}
-        </div>
-      ))}
-    </div>
-  )
-}

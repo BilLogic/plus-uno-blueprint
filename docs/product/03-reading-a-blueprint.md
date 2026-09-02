@@ -1,7 +1,7 @@
 ---
 audience: everyone
 summary: How to read a board — where to look first, what the layout is telling you, and the three questions the shapes answer.
-sources: CONTEXT.md, src/components/blueprint/ServiceBlueprintGrid.tsx
+sources: CONTEXT.md, src/components/blueprint/StackedCompareGrid.tsx, src/components/blueprint/BlueprintPathBand.tsx
 last-reviewed: 2026-08-25
 ---
 

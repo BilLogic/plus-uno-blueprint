@@ -1,6 +1,5 @@
 import { memo, useEffect, useMemo, useRef, type RefObject } from 'react'
 import { ResizableComparePanel } from '@/components/blueprint/ResizableComparePanel'
-import { ServiceBlueprintGrid } from '@/components/blueprint/ServiceBlueprintGrid'
 import { MergedCompareGrid } from '@/components/blueprint/MergedCompareGrid'
 import { StackedCompareGrid } from '@/components/blueprint/StackedCompareGrid'
 import { useBlueprintCellDetailOptional } from '@/contexts/BlueprintCellDetailContext'
@@ -30,7 +29,6 @@ import {
   getComparePanelHeight,
   getComparePanelWidth,
   getMergedComparePanelHeight,
-  getPanelHeightFromSwimlaneBody,
   getStackedComparePanelHeight,
   getStackedComparePanelWidth,
 } from '@/lib/sideBySideCompareLayout'
@@ -62,8 +60,6 @@ export type ScenarioBlueprintPanelProps = {
   sectionTitleLabel?: string
   /** Fixed panel height (phase overview uses the max across scenarios). */
   lockedPanelHeight?: number
-  /** Fixed white swimlane board height shared across a phase row. */
-  fixedSwimlaneBodyHeight?: number
   /** When true, panel height does not grow with measured content. */
   lockPanelHeight?: boolean
   /** When set, clicking the panel opens this scenario. */
@@ -106,7 +102,6 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   scrollContainerRef: scrollContainerRefProp,
   sectionTitleLabel,
   lockedPanelHeight,
-  fixedSwimlaneBodyHeight,
   lockPanelHeight = false,
   onNavigate,
   displayViewType: displayViewTypeProp,
@@ -395,17 +390,13 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
   const scrollChrome = { lockHeight: lockPanelHeight }
   const panelHeight =
     lockedPanelHeight ??
-    (fixedSwimlaneBodyHeight !== undefined
-      ? getPanelHeightFromSwimlaneBody(fixedSwimlaneBodyHeight, scrollChrome)
-      : mergedModel !== null
-        ? // Merged is about one band tall; the swell over divergent slots
-          // comes from the panel's measurement, not from this floor.
-          getMergedComparePanelHeight(visibleBlueprints, false, scrollChrome)
-        : useSideBySideLayout
-          ? getStackedComparePanelHeight(visibleBlueprints, false, scrollChrome)
-          : getComparePanelHeight(visibleBlueprints, false, scrollChrome))
-
-  const fillSwimlaneHeight = fixedSwimlaneBodyHeight !== undefined
+    (mergedModel !== null
+      ? // Merged is about one band tall; the swell over divergent slots
+        // comes from the panel's measurement, not from this floor.
+        getMergedComparePanelHeight(visibleBlueprints, false, scrollChrome)
+      : useSideBySideLayout
+        ? getStackedComparePanelHeight(visibleBlueprints, false, scrollChrome)
+        : getComparePanelHeight(visibleBlueprints, false, scrollChrome))
 
   const comparePanelProps = {
     // Compare-grid estimates run hot (the height one predates
@@ -516,21 +507,14 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
       {...comparePanelProps}
       fitContentKey={`${compareFitContentKey}:${visibleBlueprints.map((b) => b.path.id).join(',')}:none`}
     >
-      <div className="flex flex-row items-start gap-6">
-        {visibleBlueprints.map((data) => (
-          <ServiceBlueprintGrid
-            key={data.path.id}
-            data={data}
-            className="shrink-0"
-            scenarioName={scenarioName}
-            phaseName={phaseName}
-            headerTitleLabel={sectionTitleLabel}
-            headerTitleDescription={sectionTitleDescription}
-            fixedSwimlaneBodyHeight={fixedSwimlaneBodyHeight}
-            fillSwimlaneHeight={fillSwimlaneHeight}
-          />
-        ))}
-      </div>
+      {/*
+        Nothing, on purpose. This branch is reached only with no visible
+        blueprint, and until #285 it mapped that empty list over the classic
+        single-path grid — a renderer no path could reach once #280 made a
+        one-path scenario a stacked board with one band. The empty state is
+        the same empty state; the renderer that drew it is gone.
+      */}
+      <div className="flex flex-row items-start gap-6" />
     </ResizableComparePanel>
     </ScenarioBoardScopeContext.Provider>
   )

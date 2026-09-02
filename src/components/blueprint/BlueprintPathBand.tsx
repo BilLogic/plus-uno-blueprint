@@ -72,7 +72,6 @@ type BlueprintPathBandProps = {
   scrollContainerRef?: RefObject<HTMLDivElement | null>
   scenarioName?: string
   phaseName?: string
-  fillSwimlaneHeight?: boolean
 }
 
 /**
@@ -90,7 +89,6 @@ export function BlueprintPathBand({
   scrollContainerRef,
   scenarioName,
   phaseName,
-  fillSwimlaneHeight = false,
 }: BlueprintPathBandProps) {
   const bandRef = useRef<HTMLDivElement>(null)
   const fallbackScrollRef = useRef<HTMLDivElement>(null)
@@ -216,7 +214,6 @@ export function BlueprintPathBand({
           compact={compact}
           scenarioName={scenarioName}
           phaseName={phaseName}
-          fillSwimlaneHeight={fillSwimlaneHeight}
           playGutter={playGutter}
           showPlay={showPlay}
           stackedTracks={
@@ -245,7 +242,6 @@ function CompareCardRow({
   compact,
   scenarioName,
   phaseName,
-  fillSwimlaneHeight = false,
   playGutter = 0,
   showPlay = false,
   stackedTracks,
@@ -257,7 +253,6 @@ function CompareCardRow({
   compact?: boolean
   scenarioName?: string
   phaseName?: string
-  fillSwimlaneHeight?: boolean
   playGutter?: number
   showPlay?: boolean
   stackedTracks?: readonly CompareGridTrack[]
@@ -276,7 +271,6 @@ function CompareCardRow({
           compact={compact}
           scenarioName={scenarioName}
           phaseName={phaseName}
-          fillSwimlaneHeight={fillSwimlaneHeight}
           playGutter={playGutter}
           showPlay={showPlay}
           stackedTracks={stackedTracks}
@@ -293,7 +287,6 @@ function CompareLayerRow({
   compact,
   scenarioName,
   phaseName,
-  fillSwimlaneHeight = false,
   playGutter = 0,
   showPlay = false,
   stackedTracks,
@@ -304,7 +297,6 @@ function CompareLayerRow({
   compact?: boolean
   scenarioName?: string
   phaseName?: string
-  fillSwimlaneHeight?: boolean
   playGutter?: number
   showPlay?: boolean
   stackedTracks?: readonly CompareGridTrack[]
@@ -436,8 +428,7 @@ function CompareLayerRow({
     return (
       <div
         className={cn(
-          'relative flex items-stretch rounded-sm',
-          fillSwimlaneHeight ? 'h-full min-h-0 w-full' : 'shrink-0',
+          'relative flex items-stretch rounded-sm shrink-0',
         )}
         style={{ backgroundColor: 'transparent' }}
       >
@@ -487,8 +478,7 @@ function CompareLayerRow({
   return (
     <div
       className={cn(
-        'relative flex items-stretch rounded-sm',
-        fillSwimlaneHeight ? 'h-full min-h-0 w-full' : 'shrink-0',
+        'relative flex items-stretch rounded-sm shrink-0',
       )}
       style={{
         backgroundColor: 'transparent',

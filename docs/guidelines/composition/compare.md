@@ -10,7 +10,6 @@ claims:
   - src/components/blueprint/CompareTrackDecorations.tsx
   - src/components/blueprint/MergedCompareGrid.tsx
   - src/components/blueprint/ResizableComparePanel.tsx
-  - src/components/blueprint/SideBySideCompareGrid.tsx
   - src/components/blueprint/StackedCompareGrid.tsx
 last-reviewed: 2026-08-25
 ---

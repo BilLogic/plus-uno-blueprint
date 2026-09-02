@@ -6,8 +6,8 @@
  * that region, not to the camera (an overflowing grid, a text editor).
  * The touch path answered the opposite question by never asking it — every
  * `touchmove` in the subtree was prevented, on the stated grounds that the
- * board holds no scrollable region. It does: `ServiceBlueprintGrid` renders
- * one a few levels inside the viewport, so a finger could not reach rows the
+ * board holds no scrollable region. It does: an overflowing band
+ * (`BlueprintPathBand`) is one a few levels inside the viewport, so a finger could not reach rows the
  * same wheel reached happily.
  *
  * Both paths now walk this one function, which is why they cannot drift apart
