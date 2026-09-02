@@ -77,11 +77,12 @@ const SRC = resolve(ROOT, 'src')
 /**
  * The components that put a field's name in front of a reader.
  *
- * `Field` and `PanelTextareaField` label an editable field; `PanelTermLabel`
- * labels a read-only section and hangs the term's definition off it;
- * `SpecSection` heads one of the three spec blocks in the panel's overview;
- * `StringListField` labels a field a reader adds rows to.
- * Nothing else in the app labels a column.
+ * `Field` and `PanelTextareaField` label an editable field — and, since #307,
+ * a read-only one too: the two made-up words `Touchpoint` and `Storyboard`
+ * hang their definition off a `Field` hint rather than a badge. `SpecSection`
+ * heads one of the three spec blocks in the panel's overview; `StringListField`
+ * labels a field a reader adds rows to; `PanelSectionLabel` names a section
+ * with nothing behind it. Nothing else in the app labels a column.
  *
  * `StringListField` joined the list on #171, and the two labels it was hiding
  * are the argument for keeping this subject element-shaped rather than
@@ -93,7 +94,6 @@ const SRC = resolve(ROOT, 'src')
 const LABEL_COMPONENTS = [
   'Field',
   'PanelTextareaField',
-  'PanelTermLabel',
   'PanelSectionLabel',
   'SpecSection',
   'StringListField',
@@ -198,7 +198,7 @@ test('the label check goes red on each of the four, and leaves their neighbours 
       code: [
         '<Field label="Text" hint="What this cell says on the grid." />',
         '<Field label="Value" hint="Who gets what from it." />',
-        '<PanelTermLabel term="Columns" definition={PANEL_TERMS.columns} />',
+        '<PanelSectionLabel>Columns</PanelSectionLabel>',
         '<PanelTextareaField label="Applies when" />',
         // Correct uses of the same words, which must survive: a whole-label
         // match is the difference between a rule and a word ban.
@@ -503,7 +503,7 @@ test('the unmapped-label check goes red on a label nobody bound', () => {
         // Already mapped, and must not be reported: the check is about words
         // with no row, not about words it dislikes.
         '<Field label="Content" />',
-        '<PanelTermLabel term="Storyboard" />',
+        '<Field label="Storyboard" />',
         // Case and spacing are the label's business, not the map's.
         '<Field label="perceived owner" />',
       ].join('\n'),

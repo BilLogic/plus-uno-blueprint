@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   STEP_PANEL_FOOTER_ID,
+  Field,
   PanelFooterControls,
   PanelFooterHost,
   PanelHeader,
@@ -10,7 +11,6 @@ import {
 import { StepPanelLoading } from '@/components/blueprint/panelLoading'
 import { PanelTextareaField } from '@/components/blueprint/PanelTextareaField'
 import { PanelSectionLabel } from '@/components/blueprint/PanelSectionLabel'
-import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
@@ -147,8 +147,10 @@ function StepPanelBody({
       />
 
       {step.frames.length > 0 ? (
-        <div className="flex flex-col gap-1">
-          <PanelTermLabel term="Storyboard" definition={PANEL_TERMS.storyboard} />
+        // A LABELLED field: "Storyboard" reads as plain text beside Summary,
+        // not an outline badge (#307). Its definition rides the label's hint
+        // popover, the touch/press affordance every other field label uses.
+        <Field label="Storyboard" hint={PANEL_TERMS.storyboard}>
           {/*
             A ROW of frames, not a stack of full-width ones. A step is drawn
             once per actor lane, so three frames stacked at 4:3 pushed the
@@ -179,7 +181,7 @@ function StepPanelBody({
               </figure>
             ))}
           </div>
-        </div>
+        </Field>
       ) : null}
 
       {distinct.size > 1 ? (
