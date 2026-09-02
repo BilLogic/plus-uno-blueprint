@@ -42,3 +42,4 @@ deleted ADR is a decision nobody can find the reasoning for.
 | [0010](0010-the-canvas-and-the-shell-run-on-separate-clocks.md) | The canvas and the shell run on separate clocks |
 | [0011](0011-featured-is-one-column-two-verbs.md) | Featured is one column, two verbs |
 | [0012](0012-uno-is-a-deployment-of-the-template.md) | uno is a deployment of the template, not a fork of it |
+| [0013](0013-the-deployment-imports-the-template.md) | The deployment imports the template as a pinned git-dep and mounts it with a config |
