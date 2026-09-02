@@ -1,0 +1,93 @@
+/**
+ * The agent account's renderers and ratchet, on fixtures and on the real
+ * sources. `check:agent-account` needs the database; what it renders and
+ * what it holds are decided here without one.
+ */
+import { test } from 'vitest'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import {
+  coverage,
+  entityKinds,
+  handWritten,
+  prohibitionCount,
+  ratchetFailures,
+  renderSchema,
+  renderVocabulary,
+  splice,
+  tableColumns,
+} from '../agent-account.mjs'
+
+const ROOT = new URL('../..', import.meta.url).pathname
+
+test('the six entity kinds are read off panelTerms.ts as written', () => {
+  const kinds = entityKinds(readFileSync(`${ROOT}src/lib/panelTerms.ts`, 'utf8'))
+  assert.deepEqual(
+    kinds.map((k) => k.kind),
+    ['service', 'phase', 'scenario', 'path', 'step', 'lane'],
+  )
+  assert.equal(kinds[0].label, 'Service')
+  assert.match(kinds[5].definition, /^One row of the board/)
+})
+
+test('every relation with a Row type is a column inventory', () => {
+  const columns = tableColumns(readFileSync(`${ROOT}src/types/database.ts`, 'utf8'))
+  assert.ok(columns.get('paths').includes('kind'))
+  assert.ok(columns.get('evidence_counts'), 'views carry a Row too')
+  assert.equal(columns.has('search_blueprint'), false, 'a function has no Row')
+})
+
+test('the vocabulary is one line per kind, definition verbatim', () => {
+  const out = renderVocabulary([{ kind: 'lane', label: 'Lane', definition: 'One row of the board.' }])
+  assert.equal(out, '**Lane** — One row of the board.')
+})
+
+const columns = new Map([
+  ['paths', ['id', 'kind', 'status']],
+  ['evidence', ['id', 'excerpt']],
+])
+const comments = [
+  { relation: 'paths', column_name: null, comment: 'One route through a scenario.' },
+  { relation: 'paths', column_name: 'kind', comment: 'happy | variant | exception' },
+  { relation: 'evidence', column_name: null, comment: 'Provenance rows.' },
+]
+const readable = new Set(['paths'])
+
+test('the schema section lays comments over the inventory and keeps sealed relations visible', () => {
+  const out = renderSchema({ columns, comments, readable })
+  assert.match(out, /### `paths`\nOne route through a scenario\.\n\n1 of 3 columns described\./)
+  assert.match(out, /\| `kind` \| happy \\\| variant \\\| exception \|/, 'a pipe in a comment is escaped in a cell')
+  assert.match(out, /\| `status` \| — \|/, 'an undescribed column is a visible gap')
+  assert.match(out, /### Not readable with the anon key[\s\S]*- `evidence` — Provenance rows\./)
+})
+
+test('coverage counts only relations an agent can read', () => {
+  assert.deepEqual(coverage({ columns, comments, readable }), { described: 1, of: 3 })
+})
+
+test('a generated section is replaced between its markers and nothing else moves', () => {
+  const doc = 'before\n\n<!-- generated:x from y -->\n\nold\n\n<!-- /generated:x -->\n\nafter\n'
+  assert.equal(splice(doc, 'x', 'new'), 'before\n\n<!-- generated:x from y -->\n\nnew\n\n<!-- /generated:x -->\n\nafter\n')
+  assert.throws(() => splice('no markers', 'x', 'new'), /no <!-- generated:x -->/)
+})
+
+test('the hand-written core excludes frontmatter and generated sections, and its prohibitions are counted', () => {
+  const doc = '---\nsummary: never mind\n---\n\nDo this. <!-- generated:x -->\nnever that\n<!-- /generated:x -->\nDo not skip; the staff they do not see may never notice.'
+  assert.equal(handWritten(doc).trim(), 'Do this. \nDo not skip; the staff they do not see may never notice.')
+  // An instruction at the head of a sentence, not a description inside one.
+  assert.equal(prohibitionCount(handWritten(doc)), 1)
+})
+
+test('the ratchet: coverage may only rise, prohibitions may only fall, and an unrecorded gain is stale', () => {
+  const baseline = { columnComments: { described: 40, of: 100 }, prohibitions: 2 }
+  assert.deepEqual(ratchetFailures({ columnComments: { described: 40, of: 100 }, prohibitions: 2 }, baseline), [])
+  assert.match(ratchetFailures({ columnComments: { described: 40, of: 101 }, prohibitions: 2 }, baseline)[0], /coverage fell/)
+  assert.match(ratchetFailures({ columnComments: { described: 40, of: 100 }, prohibitions: 3 }, baseline)[0], /3 prohibition/)
+  assert.match(ratchetFailures({ columnComments: { described: 41, of: 100 }, prohibitions: 2 }, baseline)[0], /stale/)
+  assert.match(ratchetFailures({ columnComments: { described: 40, of: 100 }, prohibitions: 1 }, baseline)[0], /stale/)
+})
+
+test('the committed core has no prohibitions', () => {
+  const doc = readFileSync(`${ROOT}docs/agents/blueprint.md`, 'utf8')
+  assert.equal(prohibitionCount(handWritten(doc)), 0)
+})

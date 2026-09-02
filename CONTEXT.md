@@ -14,6 +14,9 @@ the layout is telling you — is
 [`docs/product/03-reading-a-blueprint.md`](docs/product/03-reading-a-blueprint.md).
 Where the schema and access model are described in full is
 [`docs/engineering/access-and-security.md`](docs/engineering/access-and-security.md).
+What the blueprint tells an agent about itself — retrieval, absence, what a
+status licenses, the schema as the catalog describes it — is
+[`docs/agents/blueprint.md`](docs/agents/blueprint.md).
 
 ---
 

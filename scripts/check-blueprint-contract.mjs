@@ -70,6 +70,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { BLUEPRINT_CONTRACT } from './blueprintContract.mjs'
 import { RETIRED_IDENTIFIER_EXEMPTIONS } from './check-retired-identifiers.mjs'
+import { replayMigrations } from './migration-replay.mjs'
 import { retiredSpans, staleSpans } from './stale-prose.mjs'
 import { sweptDocs } from './swept-docs.mjs'
 import {
@@ -173,7 +174,7 @@ function loadEnvFiles() {
   }
 }
 
-function credentials({ serviceRole }) {
+export function credentials({ serviceRole }) {
   loadEnvFiles()
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
   const key = serviceRole
@@ -197,7 +198,7 @@ function credentials({ serviceRole }) {
 
 /* ---------------------------------------------------------------- transport */
 
-async function rest(url, key, path, init = {}) {
+export async function rest(url, key, path, init = {}) {
   const response = await fetch(`${url}/rest/v1/${path}`, {
     ...init,
     signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -218,7 +219,7 @@ async function rest(url, key, path, init = {}) {
   return { status: response.status, ok: response.ok, body }
 }
 
-const postgrest = (body) =>
+export const postgrest = (body) =>
   body && typeof body === 'object' && body.message
     ? `${body.code ?? 'error'}: ${body.message}${body.details ? ` — ${body.details}` : ''}`
     : JSON.stringify(body).slice(0, 300)
@@ -239,7 +240,12 @@ const postgrest = (body) =>
  * Checking them HERE rather than in the bot's repo is the same choice the
  * contract makes: the side that owns the schema owns the claim about it.
  */
-const SWEPT_DOCS = ['docs/connectors/plus-uno.md', 'docs/engineering/access-and-security.md']
+const SWEPT_DOCS = [
+  'docs/connectors/plus-uno.md',
+  'docs/engineering/access-and-security.md',
+  'docs/agents/blueprint.md',
+  'docs/agents/blueprint-direct-access.md',
+]
 
 /**
  * A schema claim is written QUALIFIED — `cells.summary`, never a bare
@@ -540,14 +546,14 @@ async function run({ serviceRole }) {
             `public.schema_comments() (20260902200000) is the route; apply it, or grant anon execute on it.`,
       ])
     } else {
-      // PostgREST's root lists every relation and every function it exposes;
-      // a comment's `public.x` may name either, and a select cannot tell.
-      const root = await rest(url, key, '')
-      const exposed = new Set(
-        Object.keys(root.ok && root.body && typeof root.body === 'object' ? (root.body.paths ?? {}) : {}).map((path) =>
-          path.replace(/^\/(?:rpc\/)?/, ''),
-        ),
-      )
+      // A comment's `public.x` may name a view (`public.trash`) or a function
+      // (`public.search_blueprint`), and a select cannot tell the two apart —
+      // nor can `rpc/x`: PostgREST answers PGRST202 both for a function that
+      // does not exist and for one called without its arguments. Supabase
+      // refuses the OpenAPI root to the anon key. So a name that is not a
+      // relation is resolved against the functions the migration series
+      // defines, which the contract test already holds the live ones to.
+      const defined = replayMigrations(resolve(REPO_ROOT, 'supabase/migrations')).functions
       const problems = []
       const excused = retiredSpans()
       const named = new Map()
@@ -572,8 +578,12 @@ async function run({ serviceRole }) {
       }
       for (const claim of named.values()) {
         if (claim.column === null) {
-          if (exposed.size === 0 || exposed.has(claim.table)) continue
-          problems.push(`${claim.source} names \`${claim.token}\`, which PostgREST does not expose as a relation or a function`)
+          const relation = await rest(url, key, `${claim.table}?select=*&limit=0`)
+          if (relation.ok || defined.has(`public.${claim.table}`)) continue
+          problems.push(
+            `${claim.source} names \`${claim.token}\`, which is neither a relation anon can select ` +
+              `(${postgrest(relation.body)}) nor a function the migration series defines`,
+          )
           continue
         }
         const result = await rest(url, key, `${claim.table}?select=${claim.column}&limit=0`)

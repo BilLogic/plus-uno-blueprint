@@ -211,7 +211,7 @@ export const WRITE_TOOL_NAMES = new Set([
 export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'get_reference',
-    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read lane-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
+    description: `Read a rulebook reference before acting on its topic. Available: ${REFERENCE_NAMES.filter((n) => n !== 'canvas-adapter').join(', ')}. Read blueprint first for what this blueprint is, what a status licenses you to say and what absence means; lane-roles and lane-vocabulary before any lane/role work; cocreate-playbook and elicitation-protocol before co-creating a scenario from conversation or notes.`,
     parameters: {
       type: 'object',
       properties: { name: str('Reference name, e.g. "lane-roles"') },

@@ -23,6 +23,9 @@ import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
 // The instance override, not the package's copy — see the REFERENCES note
 // below and `src/lib/agent/canvas-adapter.md`'s own header (#115).
 import canvasAdapter from '@/lib/agent/canvas-adapter.md?raw'
+// The blueprint's own account of itself (#260): one file, read here, by the
+// bot and by IDE sessions. Its schema section is rendered from the catalog.
+import blueprintAccount from '../../../../docs/agents/blueprint.md?raw'
 import dataModel from 'agentic-service-blueprinting/references/data-model.md?raw'
 import elicitationProtocol from 'agentic-service-blueprinting/skills/map/references/elicitation-protocol.md?raw'
 import cocreatePlaybook from 'agentic-service-blueprinting/skills/map/references/cocreate-playbook.md?raw'
@@ -75,6 +78,7 @@ const UUID =
  */
 const REFERENCES: Record<string, string> = {
   'canvas-adapter': canvasAdapter,
+  blueprint: blueprintAccount,
   'lane-roles': laneRoles,
   'lane-vocabulary': laneVocabulary,
   'elicitation-protocol': elicitationProtocol,

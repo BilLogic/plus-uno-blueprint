@@ -132,6 +132,13 @@ jobs:
         env:
           SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+      # The agent-facing account renders its schema section from
+      # pg_description on the same database, so it is held here, in the
+      # same job, with the same key (#260).
+      - run: npm run check:agent-account
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
 
       # The served-rulebook guard (#115). The canvas adapter is spliced into
       # every system prompt, and the pinned package's copy names a registry
