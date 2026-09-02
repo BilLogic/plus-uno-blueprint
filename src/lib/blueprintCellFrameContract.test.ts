@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
@@ -17,7 +17,10 @@ function source(relativePath: string): string {
 }
 
 const visual = source('../components/blueprint/BlueprintStepVisual.tsx')
-const serviceGrid = source('../components/blueprint/ServiceBlueprintGrid.tsx')
+// The one-path board is a stacked board with one band since #280; the
+// classic single-path grid that used to sit here is gone (#285).
+const labelRail = source('../components/blueprint/BlueprintLabelRail.tsx')
+const compareCell = source('../components/blueprint/CompareCellBlock.tsx')
 const scenarioPanel = source(
   '../components/blueprint/ScenarioBlueprintPanel.tsx',
 )
@@ -65,6 +68,11 @@ describe('stable blueprint cell frame contract', () => {
   })
 
   it('keeps one grid arrangement and geometry across overview and focus', () => {
+    // #285: the single-path grid and the side-by-side grid are gone, not
+    // merely unreached — a renderer nothing draws is a contract nothing holds.
+    expect(existsSync(new URL('../components/blueprint/ServiceBlueprintGrid.tsx', import.meta.url))).toBe(false)
+    expect(existsSync(new URL('../components/blueprint/SideBySideCompareGrid.tsx', import.meta.url))).toBe(false)
+    expect(scenarioPanel).not.toContain('ServiceBlueprintGrid')
     expect(scenarioPanel).not.toContain('SideBySideCompareGrid')
     expect(scenarioPanel).not.toContain('isOverviewConstrained')
     expect(scenarioPanel).not.toContain('focusActive ?')
@@ -86,12 +94,11 @@ describe('stable blueprint cell frame contract', () => {
     // the one blueprint.css skeletonizes at the blocks tier.
     expect(compareDecorations).toContain('<StepHeaderAffordance')
     expect(stepHeader).toContain('data-blueprint-column-header=""')
-    expect(serviceGrid).toContain('<ServiceStepHeaderRow')
     // The row-header axis moved into the lane affordance when the label
     // block became the control; the attribute is what blueprint.css
     // skeletonizes at the blocks tier, so it is the attribute under test —
     // not the file it happens to live in.
-    expect(serviceGrid).toContain('<LaneHeaderAffordance')
+    expect(labelRail).toContain('<LaneHeaderAffordance')
     expect(laneHeader).toContain('data-blueprint-row-header=""')
     expect(css).toContain("[data-semantic-tier='blocks']")
     expect(css).toMatch(/\[data-blueprint-column-header\]\s*>\s*span/)
@@ -119,8 +126,8 @@ describe('stable blueprint cell frame contract', () => {
   })
 
   it('clamps only the narrative preview while retaining its full text node', () => {
-    expect(serviceGrid).toContain(
-      '<p className="m-auto line-clamp-4 w-full whitespace-pre-wrap">{content}</p>',
+    expect(compareCell).toContain(
+      '<p className="line-clamp-4 w-full whitespace-pre-wrap">{content}</p>',
     )
   })
 

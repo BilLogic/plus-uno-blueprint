@@ -161,7 +161,7 @@ Top to bottom: `ZoomPanViewport` (`src/components/editor/ZoomPanViewport.tsx`,
 wraps annotation + selection providers) → the transform layer
 (`src/hooks/useZoomPanViewport.ts`) → artboards
 (`[data-blueprint-artboard]`) → the blueprint grid
-(`ServiceBlueprintGrid`) → cells.
+(`StackedCompareGrid`, one `BlueprintPathBand` per path) → cells.
 
 - **Transforms bypass React.** A pan or pinch is sixty events a second;
   `applyTransformToElement` writes `translate3d(...) scale(...)` straight

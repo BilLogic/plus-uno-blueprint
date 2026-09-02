@@ -664,7 +664,7 @@ export function getBlueprintGridMinWidth(stepCount: number): number {
   return LAYER_COLUMN_WIDTH + getStepColumnsWidth(stepCount)
 }
 
-/** Pixel width of a compact ServiceBlueprintGrid (excluding artboard wrapper padding). */
+/** Pixel width of a compact one-path board (excluding artboard wrapper padding). */
 export function getBlueprintCompactGridWidth(stepCount: number): number {
   return (
     getBlueprintGridMinWidth(stepCount) +
@@ -673,7 +673,7 @@ export function getBlueprintCompactGridWidth(stepCount: number): number {
   )
 }
 
-/** Pixel height of a compact ServiceBlueprintGrid (excluding artboard wrapper padding). */
+/** Pixel height of a compact one-path board (excluding artboard wrapper padding). */
 export function getBlueprintCompactGridHeight(data: BlueprintData): number {
   const header = BLUEPRINT_HEADER_HEIGHT_COMPACT + BLUEPRINT_COMPACT_HEADER_GAP
   const gridBody = getBlueprintGridMinHeight(data, {

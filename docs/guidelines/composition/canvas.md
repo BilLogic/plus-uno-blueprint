@@ -25,7 +25,6 @@ claims:
   - src/components/blueprint/ScenarioBlueprintPanel.tsx
   - src/components/blueprint/ScenarioTitleDefinition.tsx
   - src/components/blueprint/ScenarioTitleBadge.tsx
-  - src/components/blueprint/ServiceBlueprintGrid.tsx
   - src/components/blueprint/VisualStepDetailStack.tsx
   - src/components/blueprint/VisualWalkthroughModal.tsx
   - src/components/blueprint/VisualWalkthroughShell.tsx
@@ -240,7 +239,7 @@ canvas on any touch screen; on a phone the canvas is the whole surface:
 - **A drag's trailing click is swallowed** — the synthetic click browsers
   fire after a pan must not also open a cell.
 - **A finger inside a scrolling region scrolls it, not the board.** The board
-  does contain scrollable regions (an overflowing `ServiceBlueprintGrid`), and
+  does contain scrollable regions (an overflowing band), and
   the wheel path has always handed them their deltas; touch does the same, off
   the same determination (`canvasScrollRegions.ts`). Two fingers are still a
   pinch wherever they land — a region gets `touch-action: pan-x pan-y`, never

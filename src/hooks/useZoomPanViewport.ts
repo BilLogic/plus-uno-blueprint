@@ -1636,7 +1636,7 @@ export function useZoomPanViewport(options: UseZoomPanViewportOptions = {}) {
    *
    * And `touchmove` is NOT claimed inside a genuinely scrollable region.
    * The claim used to be unconditional, justified by "the board holds no
-   * scrollable region" — but `ServiceBlueprintGrid` renders one, so a finger
+   * scrollable region" — but an overflowing board (`BlueprintPathBand`) is one, so a finger
    * could not reach rows a trackpad reached happily. One finger over a
    * scrolling region is that region's; two fingers are always the canvas's
    * pinch, wherever they land. `hasScrollableRegion` is the same

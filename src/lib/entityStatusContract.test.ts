@@ -148,7 +148,7 @@ describe('cell status survives the move off the label', () => {
   it('is passed by every component that draws a cell', () => {
     for (const path of [
       'components/blueprint/CompareCellBlock.tsx',
-      'components/blueprint/ServiceBlueprintGrid.tsx',
+      'components/blueprint/BlueprintPathBand.tsx',
       'components/blueprint/BlueprintTouchpointCell.tsx',
     ]) {
       expect(src(path), path).toContain('status={')

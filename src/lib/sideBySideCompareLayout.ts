@@ -248,26 +248,6 @@ export function getSwimlaneBodyHeightFromRowSpecs(
   )
 }
 
-/** Grow lane row heights so the swimlane board matches a shared phase height. */
-export function expandRowSpecsToSwimlaneBodyHeight<T extends CompareRowHeightSpec>(
-  rows: T[],
-  targetBodyHeight: number,
-): T[] {
-  const surplus = targetBodyHeight - getSwimlaneBodyHeightFromRowSpecs(rows)
-  if (surplus <= 0) return rows
-
-  const layerRowCount = rows.filter(
-    (row) => row.kind === 'lane' && !row.collapsed,
-  ).length
-  if (layerRowCount === 0) return rows
-
-  const addPerLayer = surplus / layerRowCount
-  return rows.map((row) => {
-    if (row.kind !== 'lane' || row.collapsed) return row
-    return { ...row, height: row.height + addPerLayer }
-  })
-}
-
 export function getPanelHeightFromSwimlaneBody(
   swimlaneBodyHeight: number,
   options?: ComparePanelScrollChromeOptions,
