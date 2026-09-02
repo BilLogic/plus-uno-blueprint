@@ -189,6 +189,24 @@ embedding, cell rows sort ahead of structural ones and there are eight hundred o
 them, so asking for both returns `match_count` cells and no rung at all — the
 cell kind is covered by the call above it.
 
+Since #259 it also reads the constraints themselves. `public.value_sets()`
+returns every single-column CHECK and every domain as the catalog deparses it,
+and the check holds each value set a swept document states — "`kind` is
+`happy`, `variant`, `exception`"; "the `entity_status` domain: …" — to the set
+the constraint accepts, by equality, because "these three" is false the day a
+fourth lands. A list naming a value the rename map retired — `single`,
+say — fails wherever it stands, unless the sentence records the retirement
+and cites the migration. And `public.schema_comments()` returns
+every table and column comment, which get the same three sweeps markdown gets
+— retired spellings, qualified names, value lists — because the agent-facing
+schema section is rendered from them (#260): a `paths` comment still reading
+"happy, unhappy, exception, alternative" ships to an agent exactly as a stale
+doc does. `pg_catalog` is exposed to no PostgREST role, which is why both are
+functions and why both are granted to `anon`: a constraint's definition is not
+a secret, and the CI job runs under the anon key. `scripts/value-set-claims.mjs`
+holds the grammar; `scripts/tests/value-set-claims.test.mjs` holds it to the
+shapes that are claims and the four that are not.
+
 It never passes without seeing its subject. Missing credentials, an unreachable
 host, a wrong key and an empty result set are each a non-zero exit — a guard
 that exits clean when it cannot see what it guards is the failure this replaces.

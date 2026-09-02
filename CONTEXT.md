@@ -144,7 +144,8 @@ another cell's outcome to be in place.
 > that was an `enables`.
 
 **status** — how far along a cell or a path is, on one shared six-value
-vocabulary: `proposed`, `planned`, `built`, `live`, `at_risk`, `deprecated`.
+vocabulary, the `entity_status` domain: `proposed`, `planned`, `built`,
+`live`, `at_risk`, `deprecated`.
 Default `live`. Paths share it deliberately; a second vocabulary for the same
 question drifts from the first within a month.
 
@@ -363,6 +364,9 @@ remember is #145's job, not this paragraph's.
 | `cells.links` | `resources`, `evidence` | `20260830280000` |
 | `cell_touchpoints.prominence`, `unplaced_touchpoint_details.prominence` | `cell_touchpoints.role`, `unplaced_touchpoint_details.role` | `20260902110000` |
 | `scenarios.layout = 'single'` | `scenarios.layout = 'stacked'` | `20260902120000` |
+| `paths.kind = 'unhappy'` | `paths.kind = 'exception'` | `20260821220000` |
+| `paths.kind = 'alternative'`, `paths.kind = 'custom'` | `paths.kind = 'variant'`, `paths.kind = 'variant'` | `20260821220000` |
+| `cell_dependencies.kind = 'trigger'`, `cell_dependencies.kind = 'needs'` | `cell_dependencies.kind = 'leads_to'`, `cell_dependencies.kind = 'enables'` | `20260820110000`, `20260820180000` |
 | `text` (label) | `Content` — `cells.content` | — |
 | `value` (label) | `Value proposition` — `cells.value_props` | — |
 | `columns` (label) | `Position` — `path_steps.position` | — |

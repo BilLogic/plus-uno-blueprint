@@ -175,8 +175,9 @@ least one of them. The pinned copy named twelve tools this app lacks
 `gates`) is what keeps that true: the two rows against `WRITE_TOOL_NAMES`
 and `READ_TOOL_NAMES` in both directions, the enum against the live
 constraint, and — the assertion the rest depend on — that `loop.ts` still
-serves the override. Five INSTALLED references still teach the retired
-`trigger`/`needs` pair and cannot be edited from here, so the override
+serves the override. Five INSTALLED references still teach the
+`trigger`/`needs` pair this database retired in `20260820110000`, and cannot
+be edited from here, so the override
 names them in a "Superseded package references" block and the check holds
 that list to what the package actually says, both ways. Do not fix any of
 this by re-vendoring the package.
