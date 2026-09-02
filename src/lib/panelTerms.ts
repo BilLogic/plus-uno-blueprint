@@ -9,9 +9,16 @@
  * in it.
  *
  * What survives is what a reader could not guess from English: a STORYBOARD is
- * not a story, and a TOUCHPOINT is not a point. Both render as badges — the
- * shape this app gives a word drawn from a vocabulary rather than typed by an
- * author — which is what makes the rule checkable rather than tasteful
+ * not a story, and a TOUCHPOINT is not a point. Both once rendered as outline
+ * badges; #307 demotes them to plain field labels, so each reads beside
+ * Summary, Status and Owner rather than as a mystery tag stacked among value
+ * badges. The definition rides the label's own hint popover — the touch/press
+ * affordance every other field label already uses.
+ *
+ * That deliberately reopens #244 for exactly these two invented words: a
+ * definition may hang off a label here because the label names a word this app
+ * made up, not ordinary English on a form. The shape they take now is `Field`,
+ * which the badge-rule check exempts as a field explaining its own input
  * (`scripts/tests/a-definition-hangs-off-a-badge.test.mjs`).
  *
  * `evidence` was listed to survive too (#244), on the belief that it was
@@ -50,32 +57,31 @@ export const ENTITY_KIND_DEFINITIONS = {
   service: {
     label: 'Service',
     definition:
-      'The whole thing this blueprint maps. Every phase, scenario, lane and step below it describes one service.',
+      'The whole service this blueprint maps, end to end. Everything else on the board is part of it.',
   },
   phase: {
     label: 'Phase',
     definition:
-      'A stretch of the service in time. The board runs left to right through the phases, and each one holds the scenarios that can happen while it lasts.',
+      'A chapter of the service, in time order. Each phase holds the scenarios that can happen during it.',
   },
   scenario: {
     label: 'Scenario',
-    definition:
-      'One situation the service has to handle inside a phase. A scenario has a board of its own: the same lanes, its own steps, and one or more paths through them.',
+    definition: 'A specific situation inside a phase, mapped on its own board.',
   },
   path: {
     label: 'Path',
     definition:
-      'One route through a scenario. Every scenario has a main route; variants and exceptions are the other ways the same stretch can go.',
+      'One route through a scenario: the main way, plus variants and exceptions. Paths are alternatives, not stages — nothing carries across them.',
   },
   step: {
     label: 'Step',
     definition:
-      'One column of the board: a single moment in the scenario, read down every lane at once. The same step can sit at a different position in each path.',
+      'A column of the board: one moment in time, read down every lane at once. Steps run left to right.',
   },
   lane: {
     label: 'Lane',
     definition:
-      'One row of the board: a kind of participant, or a place the work happens — the customer, staff in front of them, staff out of sight, the tools each uses. A lane runs across every step, so reading one row tells you what that participant does from beginning to end.',
+      'A row of the board, for one kind of participant — the customer, frontstage staff, backstage work, the tools. A row reads across every step.',
   },
 } as const
 

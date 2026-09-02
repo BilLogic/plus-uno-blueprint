@@ -336,7 +336,7 @@ test('no definition is on a tooltip', () => {
     'A definition is behind a tooltip. Base UI tooltips never open on touch — ' +
       'they are hover and focus only — and this app has a phone posture, so a ' +
       'definition put there is invisible to exactly the reader who most needs it. ' +
-      'Use a Popover with `openOnHover` (see PanelTermLabel, ' +
+      "Use a Popover with `openOnHover` (see Field's hint, " +
       `EntityDefinitionPopover):\n${found.join('\n')}`,
   )
 })

@@ -1,7 +1,7 @@
 ---
 audience: designers, developers
 summary: Which mechanism explains what — definition card, kind badge, hint, alert — why a definition is never a tooltip, why nothing announces one, the one card shape and its identically-set sections, where an entity kind's definition hangs, what ⓘ means, the two-word badge/tag vocabulary and what a badge may never do, the badge-or-text rule that turns on whether a value's set is governed, and where a touchpoint's role is shown.
-sources: src/components/blueprint/DefinitionCard.tsx, src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/PanelTermLabel.tsx, src/components/blueprint/StatusBadge.tsx, src/lib/panelTerms.ts, src/hooks/useStakeholders.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointRole.ts, src/components/blueprint/RoleSelect.tsx
+sources: src/components/blueprint/DefinitionCard.tsx, src/components/blueprint/panelShell.tsx, src/components/blueprint/EntityDefinitionPopover.tsx, src/components/blueprint/StatusBadge.tsx, src/lib/panelTerms.ts, src/hooks/useStakeholders.ts, src/components/blueprint/LanePanel.tsx, src/components/ui/alert.tsx, src/components/ui/badge.tsx, src/lib/touchpointRole.ts, src/components/blueprint/RoleSelect.tsx
 last-reviewed: 2026-09-01
 ---
 
@@ -108,10 +108,10 @@ preference.*
 Base UI's `Tooltip` opens on hover and on focus and on nothing else — its hover
 interaction is `mouseOnly` and there is no press behind it. This app has a real
 phone posture (`useMobileShell`, a full-width bottom sheet). So every
-definition it owned was **invisible on a phone**: all six `PanelTermLabel`
-sites, every `PanelKindBadge description=` (a lane's role, a stakeholder's
-one-liner), the owner hint, and every path, phase and scenario description on
-the board. Nothing said so, and nothing failed.
+definition it owned was **invisible on a phone**: all six panel-term-label
+sites of the day, every `PanelKindBadge description=` (a lane's role, a
+stakeholder's one-liner), the owner hint, and every path, phase and scenario
+description on the board. Nothing said so, and nothing failed.
 
 > **A definition uses `Popover` with `openOnHover` on the trigger.** Hover for
 > the pointer, the popover's own press for everyone else. No new component:
@@ -133,7 +133,7 @@ one wherever it is written.
 
 *Decided 2026-08-31 with #140.*
 
-The entity kinds were the one vocabulary the app never defined. `PanelTermLabel`
+The entity kinds were the one vocabulary the app never defined. `PANEL_TERMS`
 explains the words *inside* a panel on the assumption that a reader who opened
 it knows what kind of thing they opened it on; #140 is that assumption failing.
 
@@ -190,7 +190,7 @@ shipped before this and all three are gone:
 | Was | Now |
 | --- | --- |
 | The two-section card, whose category wore a small-caps eyebrow and whose instance wore a plain medium-weight name | Both are eyebrows. Two heading treatments inside one card is why it read as a one-off rather than a pattern — and three surfaces render it: `PathLabelBadge`, `ScenarioTitleBadge`, `StakeholderBadge`. |
-| The bare sentence with no heading — `PanelTermLabel`, `Field`'s `hint`, `PanelKindBadge description=`, the divider rail label | One section, with the term as its eyebrow. |
+| The bare sentence with no heading — `Field`'s `hint`, `PanelKindBadge description=`, the divider rail label | One section, with the term as its eyebrow. |
 | `StatusBadge`'s `Tooltip` | One section: the status, and its line from `ENTITY_STATUS_MEANING`. A tooltip never opens on touch, which this file said in writing while that badge used one. |
 
 An eyebrow is what let the words get shorter. `PANEL_TERMS` entries used to
@@ -257,7 +257,7 @@ label carrying a definition must be focusable and must announce itself.
 same words from one source. Two strings for one label is how they drift.
 
 Practical consequence: **prefer a component over a raw `<Tooltip>`.**
-`IconTooltip`, `DefinitionPopover`, `PanelTermLabel`, `PanelKindBadge`,
+`IconTooltip`, `DefinitionPopover`, `Field`, `PanelKindBadge`,
 `StatusBadge` and `EntityDefinitionPopover` already handle focus and labelling.
 A raw tooltip dropped on a `<span>` almost never does — and if what it carries
 is a definition, it is also unreachable on touch.
@@ -273,7 +273,7 @@ is a definition, it is also unreachable on touch.
 | Lane role, path type | `PanelKindBadge description=` on the badge, which is a one-section definition card |
 | Cell or path `status` | `StatusBadge`, which is a one-section card over `ENTITY_STATUS_MEANING` |
 | Who a lane's owner IS — the kind, and the definition on `stakeholders.summary` | `StakeholderBadge`, which is `PanelKindBadge` with a `category` and a `description`: two sections, the kind above the party. Where the field is editable there is no badge to hover, so the same sentence is printed under the picker; the two never appear together. |
-| Section label naming a concept — `Dependencies`, `Evidence`, `Resources`, `Summary` | `PanelTermLabel` — a one-section card on the label; the label must be focusable |
+| A made-up word a reader could not guess — `Touchpoint`, `Storyboard` | `Field` with a `hint` — the definition rides the label's hint popover on a plain, focusable label, not a badge (#307). Ordinary concept labels — `Dependencies`, `Evidence`, `Resources` — are `PanelSectionLabel`, inert |
 | Form field guidance | `hint` prop, always visible |
 | A consequence of saving | `Alert variant="warning"`, inline |
 | A load or write failure | `Alert variant="destructive"`, inline |

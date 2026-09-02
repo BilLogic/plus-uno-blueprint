@@ -1,26 +1,25 @@
 // @vitest-environment jsdom
 /**
- * How the service identity bar answers the sidebar (#239).
+ * How the service identity bar answers the sidebar.
  *
- * Three separate failures, one subject. At COLLAPSED width the bar had no
- * reference to collapse at all, so the service title was simply lost — while
- * `SlideStickyHeader` and `SliceHeaderBand` had been handing theirs to the
- * floating navbar all along. On a NARROW viewport the aside goes out of the
- * flow at `z-20` and drew over the bar's left half, so a title read as half a
- * title. And the floating navbar's expand toggle sat at its right end,
- * furthest from the edge the sidebar returns to.
+ * The collapse hand-off stands: at COLLAPSED width the bar renders nothing and
+ * gives its identity to the floating navbar instead, so there is one chrome
+ * lane at any width — the failure this file was first written against was a
+ * service title simply lost when the sidebar collapsed, while
+ * `SlideStickyHeader` and `SliceHeaderBand` had been handing theirs over all
+ * along.
+ *
+ * The overlay posture is GONE (#305). The sidebar is in flow at every width;
+ * it no longer draws over the canvas on a narrow viewport, so the bar no
+ * longer surrenders a left margin to it. What this file now pins is the
+ * inverse of the old inset claim: the bar sits flush left at every width, and
+ * nothing the store can publish makes it inset. The floating navbar's expand
+ * toggle stays at the left end, where the sidebar returns from.
  *
  * The seam is the bar rendered beside the navbar that answers it, with the
  * module store in between driven the way `EditorShell` drives it — the two
  * components are the two ends of the hand-off, and asserting on both is what
  * makes "the name arrived" an observation rather than a claim about a hook.
- * Prior art: `mobileTopBar.test.tsx` renders one bar across its states and
- * asserts on labels; `entityHeader.test.tsx` drives this same bar over the
- * app's real query defaults.
- *
- * The inset is asserted as the bar's resolved left offset in pixels, never as
- * a class name: the aside's width is a number the reader can drag, so the
- * claim is that the bar tracks whatever that number currently is.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, render, screen } from '@testing-library/react'
@@ -113,12 +112,9 @@ function mountShell(client: QueryClient) {
 }
 
 /** What `EditorShell` publishes, from a test's hands. */
-function sidebar(next: { collapsed?: boolean; overlayInset?: number }) {
+function sidebar(next: { collapsed?: boolean }) {
   act(() => {
-    setSidebarCollapsedState({
-      collapsed: next.collapsed ?? false,
-      overlayInset: next.overlayInset ?? 0,
-    })
+    setSidebarCollapsedState({ collapsed: next.collapsed ?? false })
   })
 }
 
@@ -137,7 +133,7 @@ afterEach(() => {
   cleanup()
   // The store is a module singleton — leaving it collapsed would hand the
   // next test a bar that renders nothing for a reason it never set.
-  setSidebarCollapsedState({ collapsed: false, overlayInset: 0 })
+  setSidebarCollapsedState({ collapsed: false })
 })
 
 describe('the service bar, collapsed', () => {
@@ -190,32 +186,20 @@ describe('the service bar, collapsed', () => {
   })
 })
 
-describe('the service bar, while the aside overlays it', () => {
-  it('sits flush left when the aside is in the flow', async () => {
+describe('the service bar takes no inset, at any width', () => {
+  it('sits flush left — the sidebar is in flow and never overlays it', async () => {
     await mountWithService()
     expect(bar()?.style.marginLeft).toBe('')
   })
 
-  it('starts where the overlaying aside ends', async () => {
+  it('stays flush left whatever the store publishes about the collapse', async () => {
     await mountWithService()
-    sidebar({ overlayInset: 272 })
-
-    expect(bar()?.style.marginLeft).toBe('272px')
-  })
-
-  it('follows the aside as the reader drags it wider', async () => {
-    await mountWithService()
-    sidebar({ overlayInset: 272 })
-    sidebar({ overlayInset: 340 })
-
-    expect(bar()?.style.marginLeft).toBe('340px')
-  })
-
-  it('gives the space back when the aside stops overlaying', async () => {
-    await mountWithService()
-    sidebar({ overlayInset: 272 })
-    sidebar({ overlayInset: 0 })
-
+    // Expanded, then collapsed-and-back: no width the sidebar takes moves
+    // where this bar starts. The overlay posture that once did is gone.
+    sidebar({ collapsed: false })
+    expect(bar()?.style.marginLeft).toBe('')
+    sidebar({ collapsed: true })
+    sidebar({ collapsed: false })
     expect(bar()?.style.marginLeft).toBe('')
   })
 })
@@ -241,16 +225,10 @@ describe('the floating navbar', () => {
 })
 
 /*
-  The phase and scenario bar takes the same inset, and needs saying separately
-  because it is a different file that happens to sit in the same column. The
-  overlay does not know which of the three kinds a bar names; the exposure is
-  the column, so every bar docked in it answers for the same pixels.
-
-  This was nearly missed. The service bar was fixed first and reads as the
-  whole job, because it is the one that owns a query and the one every other
-  defect in #234 was about — but `SlideStickyHeader` hides itself only when the
-  sidebar is COLLAPSED, and the overlay is the other width entirely: sidebar
-  open, drawing over the canvas, this bar rendering underneath it.
+  The phase and scenario bar takes no inset either, and needs saying separately
+  because it is a different file that happens to sit in the same column. There
+  is no overlay to answer to at any width; the only posture it still hides for
+  is COLLAPSED, where the floating navbar carries its identity instead.
 */
 const PHASE: NavItem = { id: 'phase-1', index: 0, label: 'Application' }
 const SCENARIO: NavItem = {
@@ -258,7 +236,7 @@ const SCENARIO: NavItem = {
   index: 1,
   label: 'Discovery',
   parentId: 'phase-1',
-  summary: 'Potential tutors discover PLUS.',
+  summary: 'Potential tutors discover the service.',
 }
 
 function mountSlideBar(slide: NavItem) {
@@ -276,42 +254,23 @@ function mountSlideBar(slide: NavItem) {
   )
 }
 
-describe('the phase and scenario bar, while the aside overlays it', () => {
-  it('sits flush left when the aside is in the flow', () => {
+describe('the phase and scenario bar takes no inset, at any width', () => {
+  it('sits flush left on a phase', () => {
     mountSlideBar(PHASE)
     expect(bar()?.style.marginLeft).toBe('')
   })
 
-  it('starts where the overlaying aside ends', () => {
-    mountSlideBar(PHASE)
-    sidebar({ overlayInset: 272 })
-
-    expect(bar()?.style.marginLeft).toBe('272px')
-  })
-
-  it('a scenario answers for the same pixels as a phase', () => {
-    // Same file, same column, and the kind is the only thing that differs —
-    // so the assertion is that the inset is not conditioned on it.
+  it('sits flush left on a scenario, the same as a phase', () => {
     mountSlideBar(SCENARIO)
-    sidebar({ overlayInset: 272 })
-
-    expect(bar()?.style.marginLeft).toBe('272px')
-  })
-
-  it('gives the space back when the aside stops overlaying', () => {
-    mountSlideBar(PHASE)
-    sidebar({ overlayInset: 272 })
-    sidebar({ overlayInset: 0 })
-
     expect(bar()?.style.marginLeft).toBe('')
   })
 
   it('still renders nothing at all when the sidebar is collapsed', () => {
-    // The inset must not resurrect a bar that collapse hides: an inset bar
-    // drawn beside the floating navbar is the two-headers-at-once bug that
-    // the hand-off exists to prevent.
+    // Collapse hands this bar's identity to the floating navbar; an inset bar
+    // drawn beside it would be the two-headers-at-once bug the hand-off
+    // exists to prevent.
     mountSlideBar(PHASE)
-    sidebar({ collapsed: true, overlayInset: 272 })
+    sidebar({ collapsed: true })
 
     expect(bar()).toBeNull()
   })

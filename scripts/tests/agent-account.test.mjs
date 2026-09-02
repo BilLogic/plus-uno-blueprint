@@ -27,7 +27,7 @@ test('the six entity kinds are read off panelTerms.ts as written', () => {
     ['service', 'phase', 'scenario', 'path', 'step', 'lane'],
   )
   assert.equal(kinds[0].label, 'Service')
-  assert.match(kinds[5].definition, /^One row of the board/)
+  assert.match(kinds[5].definition, /^A row of the board/)
 })
 
 test('every relation with a Row type is a column inventory', () => {

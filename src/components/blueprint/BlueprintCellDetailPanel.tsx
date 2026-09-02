@@ -101,7 +101,6 @@ import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import { cellResourcesFromLinks } from '@/lib/cellResources'
 import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
 import { getTouchpointTone } from '@/lib/touchpointColors'
-import { PanelTermLabel } from '@/components/blueprint/PanelTermLabel'
 import { PANEL_TERMS } from '@/lib/panelTerms'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { cn } from '@/lib/utils'
@@ -115,8 +114,8 @@ import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
  * Where a cell sits, said so that two cells never say the same thing.
  *
  * Step names are not unique — a blueprint may run several columns all called
- * "Discovers PLUS" — so the column number leads. Without it the arrow picker
- * offers three identical rows and choosing between them is a coin flip.
+ * "Discovers the service" — so the column number leads. Without it the arrow
+ * picker offers three identical rows and choosing between them is a coin flip.
  */
 function cellPositionLabel(
   stepIndex: number,
@@ -678,8 +677,8 @@ function BlueprintCellDetailPanelBody() {
    * refusal. Versions are alternatives, not stages.
    *
    * Labels lead with the column number because step *names* repeat: Discovery
-   * holds several columns all named "Discovers PLUS", so name-and-lane alone
-   * names three different cells and the picker becomes a guess. The column
+   * holds several columns all named "Discovers the service", so name-and-lane
+   * alone names three different cells and the picker becomes a guess. The column
    * number is the only part of a cell's position that is always unique, and
    * ordering by it puts the list in the reading order of the grid.
    */
@@ -1228,8 +1227,11 @@ function BlueprintCellDetailPanelBody() {
     present a governed value: label above, badge below.
   */
   const touchpointField = showTouchpoint ? (
-    <div className="flex flex-col gap-0.5">
-      <PanelTermLabel term="Touchpoint" definition={PANEL_TERMS.touchpoint} />
+    // A LABELLED field, matching Summary, Status and Owner. "Touchpoint" reads
+    // as plain text now, not an outline badge stacked among value badges (#307);
+    // the definition it used to carry rides the label's hint popover, which is
+    // the same touch/press affordance every other field label uses.
+    <Field label="Touchpoint" hint={PANEL_TERMS.touchpoint}>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <PanelKindBadge
           label={techDetailLabel!}
@@ -1265,7 +1267,7 @@ function BlueprintCellDetailPanelBody() {
           />
         ) : null}
       </div>
-    </div>
+    </Field>
   ) : null
 
   const overviewContent = (

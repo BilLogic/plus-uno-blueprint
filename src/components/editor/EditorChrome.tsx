@@ -1,12 +1,17 @@
 import { Home, PanelLeft, Play } from 'lucide-react'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { PathSelectorMenu } from '@/components/editor/PathSelectorMenu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { coverContent } from '@/content/coverContent'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { useSidebarCollapsedState } from '@/contexts/sidebarCollapsedContext'
 import { cn } from '@/lib/utils'
 
-const EDITOR_TITLE = 'Uno Blueprint'
+// The workspace's name comes from the cover content — the one module a
+// deployment defines itself in (#305). A hardcoded 'Uno Blueprint' here made
+// the floating navbar name PLUS's workspace on every other service's board.
+const EDITOR_TITLE = coverContent.title
 
 type SidebarCollapseButtonProps = {
   collapsed: boolean
@@ -128,6 +133,11 @@ export function WorkspaceBadges() {
  */
 export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
   const { summary } = useSidebarCollapsedState()
+  // On a scenario the collapsed bar carries the path selector as a trailing
+  // control (#305), so paths can be switched without expanding the sidebar. A
+  // phase hands over an empty list and this stays hidden — the same control,
+  // mounted only where it applies.
+  const paths = summary?.paths
   return (
     // `pl-1 pr-3` is the mirror of what it was: the icon button carries its
     // own padding, so the tight side is whichever end the toggle is on.
@@ -165,6 +175,13 @@ export function FloatingSidebarNavbar({ onExpand }: { onExpand: () => void }) {
             </Button>
           ) : null}
         </>
+      ) : null}
+      {/* The path selector, mounted only when a scenario handed its paths
+          over. `PathSelectorMenu` itself returns nothing for an empty list, so
+          the gate here keeps it off the DOM entirely on a phase rather than
+          mounting a control that renders nothing. */}
+      {paths && paths.length > 0 ? (
+        <PathSelectorMenu options={paths} />
       ) : null}
     </div>
   )

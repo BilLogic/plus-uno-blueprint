@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useSyncExternalStore } from 'react'
+import type { PathOption } from '@/components/blueprint/PathMultiSelect'
 
 /**
  * What the collapsed sidebar's floating navbar says, and who told it.
@@ -22,38 +23,22 @@ export type CollapsedNavSummary = {
   glyph?: string
   /** The band's primary action, kept reachable while collapsed. */
   action?: { label: string; onClick: () => void }
+  /**
+   * The scenario's paths, so the collapsed navbar can carry the path selector
+   * without the sidebar being expanded (#305). Present only when a SCENARIO is
+   * the surface being described — a phase publishes none, which is exactly why
+   * the selector self-hides there. The floating navbar mounts `PathSelectorMenu`
+   * with these, and that control returns nothing when the list is empty.
+   */
+  paths?: PathOption[]
 }
 
 type CollapsedState = {
   collapsed: boolean
-  /**
-   * How far the aside reaches across the canvas column, in pixels, while it
-   * OVERLAYS that column — and `0` at every width where it does not.
-   *
-   * Below `SIDEBAR_OVERLAY_BREAKPOINT` the aside goes `absolute inset-y-0
-   * left-0` at `z-20`, so it draws over the canvas rather than taking a
-   * column back from it. That posture is deliberate and #239 leaves it
-   * exactly as it is; what it never accounted for is the docked bar at the
-   * top of that column, which ends up with its left half underneath the
-   * panel and reads as half a title.
-   *
-   * Two fixes were on the table (#234). Starting the panel below the bar
-   * keeps the bar whole but stops the panel reaching the top of the column
-   * it belongs to. Insetting the BAR was chosen instead: the panel keeps the
-   * shape it has at every width, and the bar gives up only the space that is
-   * genuinely not its while the panel is open.
-   *
-   * It rides this store for the same reason the summary does — the bars live
-   * deep inside canvas content, several providers away from the shell that
-   * owns the aside's width. A number and not a CSS variable, because what a
-   * test must be able to read back is the bar's resolved left offset, and a
-   * variable name is not an offset.
-   */
-  overlayInset: number
   summary: CollapsedNavSummary | null
 }
 
-let state: CollapsedState = { collapsed: false, overlayInset: 0, summary: null }
+let state: CollapsedState = { collapsed: false, summary: null }
 /**
  * Who published the summary on screen.
  *
@@ -71,18 +56,9 @@ function emit(): void {
 }
 
 export function setSidebarCollapsedState(
-  next: Pick<CollapsedState, 'collapsed' | 'overlayInset'>,
+  next: Pick<CollapsedState, 'collapsed'>,
 ): void {
-  // Both facts come from the one publisher (`EditorShell`) in one effect, so
-  // the guard compares both rather than short-circuiting on `collapsed`:
-  // dragging the aside's edge changes only the inset, and a guard that asked
-  // about collapse alone would swallow every frame of that drag.
-  if (
-    state.collapsed === next.collapsed &&
-    state.overlayInset === next.overlayInset
-  ) {
-    return
-  }
+  if (state.collapsed === next.collapsed) return
   state = { ...state, ...next }
   emit()
 }
@@ -97,7 +73,12 @@ function sameSummary(
     a.title === b.title &&
     a.glyph === b.glyph &&
     a.action?.label === b.action?.label &&
-    a.action?.onClick === b.action?.onClick
+    a.action?.onClick === b.action?.onClick &&
+    // Identity, not element-wise: the publisher memoizes the option list, so a
+    // fresh array is a real change (paths loaded, a rename landed) and an equal
+    // one is the same array. Comparing contents here would only re-walk what
+    // the memo already settled.
+    a.paths === b.paths
   )
 }
 
@@ -133,6 +114,9 @@ export function useCollapsedNavSummary(summary: CollapsedNavSummary | null): voi
   const glyph = summary?.glyph ?? null
   const actionLabel = summary?.action?.label ?? null
   const onClick = summary?.action?.onClick
+  // Depended on by identity, matching how the store compares it — the caller
+  // memoizes the option list, so a stable array does not re-publish.
+  const paths = summary?.paths
   useEffect(() => {
     if (title === null) return
     const by = self.current
@@ -142,9 +126,10 @@ export function useCollapsedNavSummary(summary: CollapsedNavSummary | null): voi
       ...(actionLabel && onClick
         ? { action: { label: actionLabel, onClick } }
         : {}),
+      ...(paths ? { paths } : {}),
     })
     return () => setCollapsedNavSummary(by, null)
-  }, [title, glyph, actionLabel, onClick])
+  }, [title, glyph, actionLabel, onClick, paths])
 }
 
 export function useSidebarCollapsedState(): CollapsedState {

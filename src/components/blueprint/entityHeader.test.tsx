@@ -51,6 +51,7 @@ import type { ReactNode } from 'react'
 import { EntityHeader } from '@/components/blueprint/EntityHeader'
 import { ServiceOverviewHeader } from '@/components/editor/ServiceOverviewHeader'
 import { BLUEPRINT_MENUBAR_IDENTITY_HEIGHT } from '@/components/editor/menubarHeaderLayout'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { EntityDetailProvider } from '@/contexts/EntityDetailContext'
 import { ENTITY_KIND_DEFINITIONS } from '@/lib/panelTerms'
 import { QUERY_DEFAULTS } from '@/lib/queryClient'
@@ -260,6 +261,12 @@ const OPEN_DELAY_BUDGET = { timeout: 3000 }
 const definitionFor = (kind: 'phase' | 'scenario') =>
   screen.queryByText(ENTITY_KIND_DEFINITIONS[kind].definition)
 
+/** The tooltip popup carrying exactly this text, wherever the portal put it. */
+const tooltipSaying = (text: string) =>
+  [...document.querySelectorAll('[data-slot="tooltip-content"]')].find(
+    (node) => node.textContent?.trim() === text,
+  ) ?? null
+
 describe('the bar arrives with the shell around it', () => {
   /*
     The bug (#253): the service query is the fastest thing on the screen, so
@@ -415,6 +422,70 @@ describe('the kind badge', () => {
       () => expect(definitionFor('scenario')).not.toBeNull(),
       OPEN_DELAY_BUDGET,
     )
+  })
+})
+
+/* ----------------------------------------------- the title is the opener */
+
+/**
+ * The z-order dead-click, from the reader's side (#301/#305).
+ *
+ * The name used to paint above its own invisible opener, so a click on the
+ * word — the natural target — was swallowed and never reached the button.
+ * The fix makes the title TEXT the opener, so the assertions here click the
+ * visible word rather than a block hidden behind it.
+ */
+describe('the title text is the opener', () => {
+  it('opens the entity panel when the title text itself is clicked', () => {
+    render(
+      <EntityDetailProvider>
+        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
+      </EntityDetailProvider>,
+    )
+    // The visible word, found by its text — not `panelOpener()`, which is the
+    // control we are proving the word reaches.
+    fireEvent.click(screen.getByText('Ecoeled'))
+    expect(panelOpener()?.getAttribute('aria-pressed')).toBe('true')
+    expect(titleSlot()?.hasAttribute('data-open')).toBe(true)
+  })
+
+  it('toggles the panel shut on a second click of the text', () => {
+    render(
+      <EntityDetailProvider>
+        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
+      </EntityDetailProvider>,
+    )
+    fireEvent.click(screen.getByText('Ecoeled'))
+    fireEvent.click(screen.getByText('Ecoeled'))
+    expect(panelOpener()?.getAttribute('aria-pressed')).toBe('false')
+    expect(titleSlot()?.hasAttribute('data-open')).toBe(false)
+  })
+
+  it('names the action on hover', async () => {
+    render(
+      <TooltipProvider>
+        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
+      </TooltipProvider>,
+    )
+    hover(panelOpener()!)
+    await waitFor(
+      () => expect(tooltipSaying('View details')).not.toBeNull(),
+      OPEN_DELAY_BUDGET,
+    )
+  })
+
+  it('is a focusable button, so the keyboard can operate it', () => {
+    render(
+      <EntityDetailProvider>
+        <EntityHeader kind="scenario" id="scn-1" label="Ecoeled" />
+      </EntityDetailProvider>,
+    )
+    const opener = panelOpener()!
+    // A native button carries Enter/Space activation by contract; the claim a
+    // test can make in jsdom is that the opener IS one and takes focus.
+    expect(opener.tagName).toBe('BUTTON')
+    opener.focus()
+    expect(document.activeElement).toBe(opener)
   })
 })
 
