@@ -21,9 +21,9 @@
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { TECH_DESCRIPTION_LINK_TYPE } from '@/lib/blueprintTechDescriptions'
 import {
-  normalizeProminence,
-  type TouchpointProminenceValue,
-} from '@/lib/touchpointProminence'
+  normalizeRole,
+  type TouchpointRoleValue,
+} from '@/lib/touchpointRole'
 import type { CellLink, CellTouchpoint } from '@/types/blueprint'
 
 /** A `cell_touchpoints` row as the board query selects it. */
@@ -34,7 +34,7 @@ export type RawCellTouchpoint = {
   summary?: string | null
   screenshot?: string | null
   url?: string | null
-  prominence?: string | null
+  role?: string | null
   /** The joined catalog row. PostgREST names the embed after the table. */
   touchpoints: { name: string; kind?: string | null; url?: string | null } | null
 }
@@ -59,7 +59,7 @@ export function cellTouchpointsFromRows(
       summary: row.summary ?? null,
       screenshot: row.screenshot ?? null,
       url: row.url ?? null,
-      prominence: normalizeProminence(row.prominence),
+      role: normalizeRole(row.role),
     }))
 }
 
@@ -91,14 +91,14 @@ export function cellTouchpointsFromLinks(
       // there would be offering a Save that writes nothing.
       id: null,
       name,
-      // The fallback shape has nowhere to record a kind or a prominence, and
+      // The fallback shape has nowhere to record a kind or a role, and
       // inventing either would make this source disagree with the database
       // for the same board.
       kind: null,
       summary: link?.description ?? null,
       screenshot: link?.picture ?? null,
       url: link?.url ?? null,
-      prominence: null,
+      role: null,
     }
   })
 }
@@ -118,7 +118,7 @@ export type TouchpointDetail = {
   url: string | null
   screenshot: string | null
   kind: string | null
-  prominence: TouchpointProminenceValue
+  role: TouchpointRoleValue
 }
 
 /**
@@ -174,6 +174,6 @@ export function resolveTouchpointDetail(
     url: placement.url,
     screenshot: placement.screenshot,
     kind: placement.kind,
-    prominence: placement.prominence,
+    role: placement.role,
   }
 }

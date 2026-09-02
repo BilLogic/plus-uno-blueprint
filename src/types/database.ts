@@ -331,7 +331,7 @@ export type Database = {
           id: string
           origin: string
           position: number
-          prominence: string | null
+          role: string | null
           screenshot: string | null
           summary: string | null
           touchpoint_id: string
@@ -344,7 +344,7 @@ export type Database = {
           id?: string
           origin: string
           position: number
-          prominence?: string | null
+          role?: string | null
           screenshot?: string | null
           summary?: string | null
           touchpoint_id: string
@@ -357,7 +357,7 @@ export type Database = {
           id?: string
           origin?: string
           position?: number
-          prominence?: string | null
+          role?: string | null
           screenshot?: string | null
           summary?: string | null
           touchpoint_id?: string
@@ -1036,7 +1036,7 @@ export type Database = {
           id: string
           name: string
           origin: string
-          prominence: string | null
+          role: string | null
           screenshot: string | null
           summary: string | null
           updated_at: string
@@ -1048,7 +1048,7 @@ export type Database = {
           id?: string
           name: string
           origin: string
-          prominence?: string | null
+          role?: string | null
           screenshot?: string | null
           summary?: string | null
           updated_at?: string
@@ -1060,7 +1060,7 @@ export type Database = {
           id?: string
           name?: string
           origin?: string
-          prominence?: string | null
+          role?: string | null
           screenshot?: string | null
           summary?: string | null
           updated_at?: string

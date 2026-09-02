@@ -174,7 +174,7 @@ row was written first and filled in later.
 **A clicked touchpoint brings its own four fields, under the same Save.** The
 panel is showing one cell *and* one of its placements, so `CellPanelEditor`
 takes the placement as a prop and its summary, screenshot, design link and
-prominence join the form — enclosed and headed with the touchpoint's name,
+role join the form — enclosed and headed with the touchpoint's name,
 because two fields called Summary on one screen need a border to say whose is
 whose. They sit directly under Text, which is the list that names them, rather
 than at the bottom: an author reached this panel by clicking that touchpoint, and

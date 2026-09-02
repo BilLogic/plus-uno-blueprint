@@ -394,7 +394,7 @@ export const PANEL_COLUMNS = Object.freeze({
   audit_findings: ['status', 'severity', 'summary', 'run_id', 'cell_ids', 'cell_keys', 'source'],
   slices: ['title', 'summary', 'kind', 'actor', 'authorship'],
   touchpoints: ['name', 'updated_at'],
-  cell_touchpoints: ['summary', 'screenshot', 'url', 'prominence', 'position', 'updated_at'],
+  cell_touchpoints: ['summary', 'screenshot', 'url', 'role', 'position', 'updated_at'],
   agent_sessions: ['id', 'title', 'created_at', 'updated_at'],
   agent_messages: ['session_id', 'seq', 'kind', 'payload'],
   // Written only through SECURITY DEFINER RPCs, or only inserted and deleted.

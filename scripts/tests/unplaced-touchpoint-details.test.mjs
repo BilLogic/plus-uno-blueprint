@@ -37,7 +37,7 @@ const QUEUE_COLUMNS = [
   'summary',
   'screenshot',
   'url',
-  'prominence',
+  'role',
   'origin',
 ]
 
@@ -109,7 +109,7 @@ create table public.unplaced_touchpoint_details (
   summary text,
   screenshot text,
   url text,
-  prominence text,
+  role text,
   origin text not null
 );
 `

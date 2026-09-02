@@ -80,7 +80,7 @@ Table `touchpoints`: `service_id`, `name`, `kind`, `summary`, `url`,
 **placement** — one touchpoint, used at one cell, this way. The catalog owns
 the name; the placement owns the per-moment `summary`, `screenshot` and `url`,
 because the same tool describes a different screen at a different step. It also
-carries `prominence` (`core` or `peripheral`), which sits here rather than on
+carries a `role` (`core` or `peripheral`), which sits here rather than on
 the catalog because the same artifact is central at one moment and incidental
 at another.
 Table `cell_touchpoints`: `cell_id`, `touchpoint_id`, `position`, plus those.
@@ -94,7 +94,7 @@ here is ever placed automatically** — assigning a detail to the touchpoint its
 name resembles is what made 57 of them unreachable.
 Table `unplaced_touchpoint_details`: `cell_id`, `name` (the name the detail
 claims, and the one thing that must never decide anything), `summary`,
-`screenshot`, `url`, `prominence`, `origin`.
+`screenshot`, `url`, `role`, `origin`.
 **storyboard** — the lane that draws the service rather than describing it.
 `lane_role = 'storyboard'`, one of the eight the `lanes_lane_role_check`
 constraint admits. Its own cells are empty: a storyboard cell's face is the
@@ -353,6 +353,7 @@ remember is #145's job, not this paragraph's.
 | `cells.picture` | `cells.frame` | `20260830270000` |
 | `slice_items`, `slice_items.caption` | `slides`, `slides.title` | `20260830270000` |
 | `cells.links` | `resources`, `evidence` | `20260830280000` |
+| `cell_touchpoints.prominence`, `unplaced_touchpoint_details.prominence` | `cell_touchpoints.role`, `unplaced_touchpoint_details.role` | `20260902110000` |
 | `text` (label) | `Content` — `cells.content` | — |
 | `value` (label) | `Value proposition` — `cells.value_props` | — |
 | `columns` (label) | `Position` — `path_steps.position` | — |
@@ -562,7 +563,7 @@ column a reason.
 | **Touchpoint** | `touchpoints` | — |
 | **Screenshot** | `cell_touchpoints.screenshot` | — |
 | **Design link** | `cell_touchpoints.url` | A placement carries two URLs — this one and `screenshot` — so `url` alone cannot say which field a reader is standing in, and it is not a word a panel says out loud. The label names what this one is for. |
-| **Prominence** | `cell_touchpoints.prominence` | — |
+| **Role** | `cell_touchpoints.role` | — |
 | **Stakeholder** | `lanes.stakeholder_id` | — |
 | **Owner team** | `lanes.owner_team` | — |
 | **KPIs** | `lanes.kpis` | — |

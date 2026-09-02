@@ -26,7 +26,7 @@ import {
 import { parseCellContentItems } from '@/lib/parseCellContent'
 import { PANEL_TEXT } from '@/lib/panelText'
 import { updateCellContent } from '@/lib/cellContentMutations'
-import { ProminenceSelect } from '@/components/blueprint/ProminenceSelect'
+import { RoleSelect } from '@/components/blueprint/RoleSelect'
 import {
   placementSurvivesContent,
   updateTouchpointPlacement,
@@ -87,7 +87,7 @@ const EMPTY_PLACEMENT: PlacementDetailDraft = {
   summary: '',
   screenshot: '',
   url: '',
-  prominence: null,
+  role: null,
 }
 
 /**
@@ -108,7 +108,7 @@ function placementColumns(draft: PlacementDetailDraft): PlacementDetailColumns {
     summary: draft.summary || null,
     screenshot: draft.screenshot || null,
     url: draft.url || null,
-    prominence: draft.prominence,
+    role: draft.role,
   }
 }
 
@@ -126,7 +126,7 @@ function placementDraft(placement: CellTouchpoint): PlacementDetailDraft {
     summary: placement.summary ?? '',
     screenshot: placement.screenshot ?? '',
     url: placement.url ?? '',
-    prominence: placement.prominence,
+    role: placement.role,
   }
 }
 
@@ -356,7 +356,7 @@ function CellPanelEditorForm({
     (form.placement.summary !== baseline.placement.summary ||
       form.placement.screenshot !== baseline.placement.screenshot ||
       form.placement.url !== baseline.placement.url ||
-      form.placement.prominence !== baseline.placement.prominence)
+      form.placement.role !== baseline.placement.role)
 
   const handleSave = async () => {
     if (!client || busy || blocked) return
@@ -572,13 +572,13 @@ function CellPanelEditorForm({
             />
           </Field>
           <Field
-            label="Prominence"
+            label="Role"
             hint="Whether the moment happens through this touchpoint or merely alongside it. Most placements are never marked, and leaving it unmarked is not the same as calling it peripheral."
           >
-            <ProminenceSelect
-              value={form.placement.prominence}
-              aria-label="Prominence"
-              onChange={(next) => setPlacement('prominence', next)}
+            <RoleSelect
+              value={form.placement.role}
+              aria-label="Role"
+              onChange={(next) => setPlacement('role', next)}
             />
           </Field>
         </div>

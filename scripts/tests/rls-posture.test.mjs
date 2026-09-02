@@ -19,6 +19,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { RENAME_MAP } from '../retired-vocabulary.mjs'
 import {
   CATALOG_SQL,
   IDENTITY_GRANTS,
@@ -527,6 +528,26 @@ test('every panel declaration and identity exemption is well formed', () => {
   )
 })
 
+/** The version of the migration whose VALUES list the map mirrors. */
+const GRANT_MIGRATION = '20260830290000'
+
+/**
+ * A column the grant migration named under a spelling a LATER migration
+ * retired. Postgres moves a column's grants with the column, so the grant
+ * still stands under the new name — and the file is frozen text that must not
+ * be edited to say so. Read it through the rename map instead: a `was` of the
+ * form `table.column` in a row whose migration post-dates the grant becomes
+ * its `is`. Anything else is returned as written.
+ */
+function renamedSince(entry) {
+  for (const row of RENAME_MAP) {
+    if (!row.migrations.some((version) => version > GRANT_MIGRATION)) continue
+    const at = row.was.indexOf(entry)
+    if (at >= 0 && row.is[at]) return row.is[at]
+  }
+  return entry
+}
+
 test('the migration and the map agree about every column', () => {
   // Two sources of truth for one fact, and the drift would be silent: the
   // migration fixes the database once, this map is what holds it there, and a
@@ -536,13 +557,13 @@ test('the migration and the map agree about every column', () => {
   const sql = readFileSync(
     resolve(
       import.meta.dirname,
-      '../../supabase/migrations/20260830290000_a_panel_writes_its_own_columns.sql',
+      `../../supabase/migrations/${GRANT_MIGRATION}_a_panel_writes_its_own_columns.sql`,
     ),
     'utf8',
   )
   const inMigration = new Set()
   for (const match of sql.matchAll(/^\s*\('([a-z_]+)', '([a-z_]+)'\),?$/gm)) {
-    inMigration.add(`${match[1]}.${match[2]}`)
+    inMigration.add(renamedSince(`${match[1]}.${match[2]}`))
   }
   assert.ok(
     inMigration.size > 40,

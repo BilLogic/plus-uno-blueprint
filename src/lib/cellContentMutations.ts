@@ -110,7 +110,7 @@ export type RemovedPlacement = {
   summary: string | null
   screenshot: string | null
   url: string | null
-  prominence: string | null
+  role: string | null
 }
 
 /**

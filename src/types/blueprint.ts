@@ -1,7 +1,7 @@
 import type { Json } from '@/types/database'
 import type { PathKind } from '@/types/database'
 import type { EntityStatus } from '@/lib/entityStatus'
-import type { TouchpointProminenceValue } from '@/lib/touchpointProminence'
+import type { TouchpointRoleValue } from '@/lib/touchpointRole'
 
 export type BlueprintPath = {
   id: string
@@ -56,7 +56,7 @@ export type CellLink = {
  * One touchpoint, used at one cell.
  *
  * `name` and `kind` come from the catalog and are shared by every placement
- * of that touchpoint; `summary`, `screenshot`, `url` and `prominence` are
+ * of that touchpoint; `summary`, `screenshot`, `url` and `role` are
  * this moment's own. The same tool describes a different screen at a
  * different step, which is the distinction the old label-keyed links could
  * not hold. Built by `cellTouchpoints.ts` from either source.
@@ -82,9 +82,9 @@ export type CellTouchpoint = {
   /**
    * Core or peripheral AT THIS MOMENT, or null for the unmarked majority.
    * Null is a state of its own, not a quiet `peripheral` — see
-   * `src/lib/touchpointProminence.ts`.
+   * `src/lib/touchpointRole.ts`.
    */
-  prominence: TouchpointProminenceValue
+  role: TouchpointRoleValue
 }
 
 /**

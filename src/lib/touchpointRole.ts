@@ -1,7 +1,7 @@
 /**
  * Whether a touchpoint is the point of this moment, or merely present at it.
  *
- * `cell_touchpoints.prominence` sits on the PLACEMENT and not on the catalog
+ * `cell_touchpoints.role` sits on the PLACEMENT and not on the catalog
  * entry, and that is the whole idea: a poster is core at recruitment and
  * incidental three phases later, so the same artifact is both depending on
  * where you are standing. A column on `touchpoints` could only ever answer
@@ -23,10 +23,10 @@
  * the thing that stops the next reader from adding a third badge.
  */
 
-/** The two values `cell_touchpoints_prominence_check` admits. */
-export const TOUCHPOINT_PROMINENCE = ['core', 'peripheral'] as const
+/** The two values `cell_touchpoints_role_check` admits. */
+export const TOUCHPOINT_ROLE = ['core', 'peripheral'] as const
 
-export type TouchpointProminence = (typeof TOUCHPOINT_PROMINENCE)[number]
+export type TouchpointRole = (typeof TOUCHPOINT_ROLE)[number]
 
 /**
  * What a placement carries, unmarked included.
@@ -35,7 +35,7 @@ export type TouchpointProminence = (typeof TOUCHPOINT_PROMINENCE)[number]
  * away — every read of the column has to answer for the unmarked case, and a
  * type that hid it would let a `?? 'peripheral'` slip in somewhere.
  */
-export type TouchpointProminenceValue = TouchpointProminence | null
+export type TouchpointRoleValue = TouchpointRole | null
 
 /**
  * The badge's words.
@@ -45,15 +45,15 @@ export type TouchpointProminenceValue = TouchpointProminence | null
  * reads "PLUS App is a core tool", which is a claim about the catalog. The
  * phrase puts the judgement back where the column put it.
  */
-export const TOUCHPOINT_PROMINENCE_LABEL: Record<TouchpointProminence, string> =
+export const TOUCHPOINT_ROLE_LABEL: Record<TouchpointRole, string> =
   {
     core: 'Core at this step',
     peripheral: 'Peripheral at this step',
   }
 
 /** What each value means, for the badge's hover and the field's guidance. */
-export const TOUCHPOINT_PROMINENCE_DEFINITION: Record<
-  TouchpointProminence,
+export const TOUCHPOINT_ROLE_DEFINITION: Record<
+  TouchpointRole,
   string
 > = {
   core: 'The moment happens through this touchpoint. Take it away and the step does not work.',
@@ -69,13 +69,13 @@ export const TOUCHPOINT_PROMINENCE_DEFINITION: Record<
  * something. Its label says "not judged" rather than naming a middle value,
  * so choosing it is not choosing a third degree of importance.
  */
-export const TOUCHPOINT_PROMINENCE_OPTIONS: ReadonlyArray<{
-  value: TouchpointProminenceValue
+export const TOUCHPOINT_ROLE_OPTIONS: ReadonlyArray<{
+  value: TouchpointRoleValue
   label: string
 }> = [
   { value: null, label: 'Unmarked — nobody has judged this' },
-  { value: 'core', label: TOUCHPOINT_PROMINENCE_LABEL.core },
-  { value: 'peripheral', label: TOUCHPOINT_PROMINENCE_LABEL.peripheral },
+  { value: 'core', label: TOUCHPOINT_ROLE_LABEL.core },
+  { value: 'peripheral', label: TOUCHPOINT_ROLE_LABEL.peripheral },
 ]
 
 /**
@@ -85,8 +85,8 @@ export const TOUCHPOINT_PROMINENCE_OPTIONS: ReadonlyArray<{
  * or arrives through a seed is possible in principle; anything unrecognised
  * reads as unmarked, which is the state that asserts the least.
  */
-export function normalizeProminence(
+export function normalizeRole(
   value: string | null | undefined,
-): TouchpointProminenceValue {
+): TouchpointRoleValue {
   return value === 'core' || value === 'peripheral' ? value : null
 }

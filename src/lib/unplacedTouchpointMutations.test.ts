@@ -28,7 +28,7 @@ const DETAIL: UnplacedTouchpointDetail = {
   summary: 'Where a new hire confirms their start date.',
   screenshot: 'https://example.invalid/shot.png',
   url: null,
-  prominence: null,
+  role: null,
   origin: 'import',
   created_at: '2026-08-31T00:00:00Z',
   updated_at: '2026-08-31T00:00:00Z',
@@ -58,7 +58,7 @@ const PLACED = {
     summary: 'The employer view of the same tool.',
     screenshot: null,
     url: null,
-    prominence: 'core',
+    role: 'core',
   },
 }
 
@@ -100,7 +100,7 @@ describe('placeTouchpointDetail', () => {
       summary: 'The employer view of the same tool.',
       screenshot: null,
       url: null,
-      prominence: 'core',
+      role: 'core',
     })
   })
 

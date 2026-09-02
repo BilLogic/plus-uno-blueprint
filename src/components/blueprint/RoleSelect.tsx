@@ -1,15 +1,15 @@
 import { OptionSelect } from '@/components/blueprint/OptionSelect'
 import {
-  TOUCHPOINT_PROMINENCE_OPTIONS,
-  type TouchpointProminenceValue,
-} from '@/lib/touchpointProminence'
+  TOUCHPOINT_ROLE_OPTIONS,
+  type TouchpointRoleValue,
+} from '@/lib/touchpointRole'
 
 /** The sentinel the select uses for "no value" — `null` is not a string. */
 const UNMARKED = ''
 
-type Marked = Exclude<TouchpointProminenceValue, null>
+type Marked = Exclude<TouchpointRoleValue, null>
 
-const OPTIONS = TOUCHPOINT_PROMINENCE_OPTIONS.map((option) => ({
+const OPTIONS = TOUCHPOINT_ROLE_OPTIONS.map((option) => ({
   value: option.value ?? UNMARKED,
   label: option.label,
 }))
@@ -26,7 +26,7 @@ const OPTIONS = TOUCHPOINT_PROMINENCE_OPTIONS.map((option) => ({
  * marking one by mistake. Its label says "nobody has judged this" so that
  * choosing it is not choosing a third degree of importance.
  */
-export function ProminenceSelect({
+export function RoleSelect({
   value,
   onChange,
   disabled,
@@ -34,8 +34,8 @@ export function ProminenceSelect({
   id,
   'aria-label': ariaLabel,
 }: {
-  value: TouchpointProminenceValue
-  onChange: (next: TouchpointProminenceValue) => void
+  value: TouchpointRoleValue
+  onChange: (next: TouchpointRoleValue) => void
   disabled?: boolean
   className?: string
   id?: string

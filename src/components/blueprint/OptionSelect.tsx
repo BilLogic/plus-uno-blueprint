@@ -30,7 +30,7 @@ export type SelectOption<V extends string> = {
 /**
  * A fixed vocabulary, as a select.
  *
- * `StatusSelect` and `ProminenceSelect` were two copies of one native
+ * `StatusSelect` and `RoleSelect` were two copies of one native
  * `<select>`; this is the control they were both trying to be. Base UI's
  * `Select` keeps what the native element gave for free — keyboard, touch,
  * typeahead, a real listbox — and draws the trigger the way the panel's
