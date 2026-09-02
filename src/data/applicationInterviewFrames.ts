@@ -2,23 +2,23 @@
 
 /** Interview & Offer — Regular Tutor step 1 (applies). */
 export const INTERVIEW_REGULAR_TUTOR_STEP_1_FRAME =
-  '/blueprint-images/application-interview/happy-path/regular-tutor/step-01-applies.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090103/4649423b-ffc7-682f-2e4f-d7c902cfa656.png'
 
 /** Interview & Offer — Regular Tutor step 2 (group interview invitation). */
 export const INTERVIEW_REGULAR_TUTOR_STEP_2_FRAME =
-  '/blueprint-images/application-interview/happy-path/regular-tutor/step-02-group-interview-invitation.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090203/51215f55-0094-4c51-0bf3-7578ba0c0916.png'
 
 /** Interview & Offer — Regular Tutor step 3 (group interviews). */
 export const INTERVIEW_REGULAR_TUTOR_STEP_3_FRAME =
-  '/blueprint-images/application-interview/happy-path/regular-tutor/step-03-group-interviews.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090303/c769335d-b957-cee3-1373-b1797554c2be.png'
 
 /** Interview & Offer — Regular Tutor step 4 (waits for offer decision). */
 export const INTERVIEW_REGULAR_TUTOR_STEP_4_FRAME =
-  '/blueprint-images/application-interview/happy-path/regular-tutor/step-04-waits-for-offer-decision.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090403/b83929a1-f68b-5f35-8c1c-63501b99af8b.png'
 
 /** Interview & Offer — Regular Tutor step 5 (receives offer decision). */
 export const INTERVIEW_REGULAR_TUTOR_STEP_5_FRAME =
-  '/blueprint-images/application-interview/happy-path/regular-tutor/step-05-receives-offer-decision.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090503/00275e93-abfb-5a89-bcd9-5fb4045393e6.png'
 
 export const INTERVIEW_GOOGLE_FORM_STEP_01_DESCRIPTION =
   'The applicant completes and submits the tutor application through the Google Form created and managed by the tutor supervisor team.'

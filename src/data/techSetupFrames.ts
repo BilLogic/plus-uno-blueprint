@@ -5,35 +5,35 @@ export const TECH_SETUP_WORKDAY_LOGO = WORKDAY_TECH_LOGO
 
 /** Tech Setup — Regular Tutor step 1 (Clearance email). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_01_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-01-receives-clearance-email.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100103/35fcb27f-db93-9f5f-a1af-d8f5e287760b.png'
 
 /** Tech Setup — Regular Tutor step 2 (Obtain clearances). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_02_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-02-obtains-clearances.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100203/1de0bb49-b5b8-4e7f-e92e-8378253c9ebb.png'
 
 /** Tech Setup — Regular Tutor step 3 (Send clearances). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_03_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-03-sends-clearances.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100303/d86e812b-5f8c-6e22-5d1e-24777a6e8bb3.png'
 
 /** Tech Setup — Regular Tutor step 4 (I-9 meeting). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_04_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-04-sets-up-i9-meeting.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100403/4c689247-b2f5-e7b7-a93a-2f65b5db3a29.png'
 
 /** Tech Setup — Regular Tutor step 5 (Attend I-9 meeting). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_05_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-05-attends-i9-meeting.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100503/89022fb4-b2f7-7463-e50b-4632ad7ae9ad.png'
 
 /** Tech Setup — Regular Tutor step 6 (Payroll setup). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_06_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-06-sets-up-payroll.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100603/a9a399d1-c556-4914-aeff-8caa69991503.png'
 
 /** Tech Setup — Regular Tutor step 7 (Join Slack). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_07_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-07-joins-slack.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100703/7e40c264-168c-ec70-bb7c-362536345d1b.png'
 
 /** Tech Setup — Regular Tutor step 8 (PLUS app login). */
 export const TECH_SETUP_REGULAR_TUTOR_STEP_08_FRAME =
-  '/blueprint-images/tech-setup/happy-path/regular-tutor/step-08-obtains-plus-app-login.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100803/176ee9b6-01cc-21cc-dfaf-9096c1bcbe80.png'
 
 /** Tech Setup — Front Stage Tech step 1 (Clearance email). */
 export const TECH_SETUP_EMAIL_STEP_01_DESCRIPTION =
@@ -74,7 +74,7 @@ export const TECH_SETUP_PLUS_APP_STEP_08_DESCRIPTION =
   'The tutor uses the provided credentials to log in to the PLUS app for the first time.'
 
 export const TECH_SETUP_PLUS_APP_STEP_08_FRAME =
-  '/blueprint-images/tech-setup/happy-path/plus-app/step-08-login.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100806/732027ac-5ce3-a015-517d-3d4732f8e85d.png'
 
 /** Tech Setup — Support Actions steps 1–3 (clearance steps). */
 export const TECH_SETUP_CHILD_PROTECTION_LAWS_DESCRIPTION =

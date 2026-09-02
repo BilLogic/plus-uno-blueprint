@@ -2,15 +2,15 @@
 
 /** Fill-in Request — Regular Tutor step 2. */
 export const FILL_IN_REQUEST_REGULAR_TUTOR_STEP_02_FRAME =
-  '/blueprint-images/fill-in-request/happy-path/regular-tutor/step-02-receives-request.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150203/61bcd12e-990a-329f-2625-66526fc78e12.png'
 
 /** Fill-in Request — Regular Tutor step 3. */
 export const FILL_IN_REQUEST_REGULAR_TUTOR_STEP_03_FRAME =
-  '/blueprint-images/fill-in-request/happy-path/regular-tutor/step-03-confirms-or-denies.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150303/3bb87f92-7081-6589-8c70-161e48511bf7.png'
 
 /** Fill-in Request — Regular Tutor step 4. */
 export const FILL_IN_REQUEST_REGULAR_TUTOR_STEP_04_FRAME =
-  '/blueprint-images/fill-in-request/happy-path/regular-tutor/step-04-accesses-session.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150403/51c26b0e-965e-df2e-0151-4b6d6c7fe9e7.png'
 
 /** Step 1 — Front Stage Tech. */
 export const FILL_IN_REQUEST_SHIFT_SWAP_FORM_STEP_01_DESCRIPTION =
@@ -21,7 +21,7 @@ export const FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_DESCRIPTION =
   "The tutor's session scheduling information is stored in a Google Spreadsheet."
 
 export const FILL_IN_REQUEST_GOOGLE_SPREADSHEET_STEP_01_FRAME =
-  '/blueprint-images/shared/back-stage-tech/google-sheets-logo.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150108/737f7fb4-8397-708e-f575-02a91f4ba361.png'
 
 /** Step 1 — Support Actions (Dev Team). */
 export const FILL_IN_REQUEST_SUPPORT_STEP_01_DESCRIPTION =
@@ -46,7 +46,7 @@ export const FILL_IN_REQUEST_PLUS_APP_STEP_04_DESCRIPTION =
   'The tutor supervisor team adds that tutor to the session in the PLUS app. Once added, the tutor accesses the session details in the PLUS app.'
 
 export const FILL_IN_REQUEST_PLUS_APP_STEP_04_FRAME =
-  '/blueprint-images/fill-in-request/happy-path/plus-app/step-04-confirm-fill-in.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150406/5aaa0787-ee1b-6f5e-10ec-f0e1386d5a58.png'
 
 /** Step 4 — Support Actions (Dev Team / Design Team). */
 export const FILL_IN_REQUEST_SUPPORT_STEP_04_DESCRIPTION =

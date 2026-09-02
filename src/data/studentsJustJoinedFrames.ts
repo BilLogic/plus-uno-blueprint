@@ -1,29 +1,29 @@
 /** Students Just Joined Happy Path — Partner Action visuals. */
 
 export const STUDENTS_JUST_JOINED_PARTNER_STEP_01_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/partner/step-01-remind-wait-time.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190101/b2c048eb-8c1b-1e90-b650-91c83f61bff0.png'
 
 export const STUDENTS_JUST_JOINED_PARTNER_STEP_02_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/partner/step-02-share-screen-math-software.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190201/971ff267-83a9-bbc1-aa8d-b1d9566c723e.png'
 
 export const STUDENTS_JUST_JOINED_PARTNER_STEP_03_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/partner/step-03-raise-hand-emoji.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190301/c2a5af30-6c33-aaf8-66e0-f782fca767f4.png'
 
 /** Students Just Joined Happy Path — Lead Tutor visuals. */
 
 export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_01_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/lead-tutor/step-01-greet-students.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190102/218c9cbc-f78d-ce67-c06f-2a719dfe355c.png'
 
 export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_02_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/lead-tutor/step-02-mute-students.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190202/a1fd75a0-1fb0-10cf-b45a-c9d6f5ad1adc.png'
 
 export const STUDENTS_JUST_JOINED_LEAD_TUTOR_STEP_03_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/lead-tutor/step-03-ping-tutor-late-joiners.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190302/24a8b06c-a3d5-905b-f0c2-8183ccfc30af.png'
 
 /** Students Just Joined Happy Path — Regular Tutor visuals. */
 
 export const STUDENTS_JUST_JOINED_REGULAR_TUTOR_STEP_03_FRAME =
-  '/blueprint-images/students-just-joined/happy-path/regular-tutor/step-03-move-breakout-room.png'
+  'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190303/8dc54203-5cb3-6128-a60d-6ff39b848e54.png'
 
 /** Students Just Joined Happy Path — Zoom Front Stage Tech. */
 
