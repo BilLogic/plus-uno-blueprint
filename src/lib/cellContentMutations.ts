@@ -116,16 +116,14 @@ export type RemovedResource = {
 
 /**
  * A placement's per-moment writing, as the sync hands it back: its summary
- * and role, its resources in order (the revert re-creates them), and the
- * featured link and attachment by url for the unplaced queue.
+ * and role, and its resources in order (the revert re-creates them). Since
+ * #277 the row itself stays, name-only, when it carried any of these.
  */
 export type RemovedPlacement = {
   name: string
   summary: string | null
   role: string | null
   resources?: RemovedResource[]
-  url?: string | null
-  screenshot?: string | null
 }
 
 /**

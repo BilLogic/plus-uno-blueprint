@@ -10,10 +10,10 @@
  * The diff is pure and lives here so it can be tested without a database.
  * Three separate operations, and they are separate on purpose:
  *
- * - REMOVED names are deleted. Their per-moment summary and screenshot go
- *   with them, which is correct: the author took the touchpoint off this
- *   cell, and a placement for a touchpoint the cell no longer shows is
- *   precisely the orphan this work exists to end.
+ * - REMOVED names lose their registry link. A placement that carried
+ *   anything — words, a role, resources — stays as a name-only row, drawn
+ *   dashed, so the author's writing is never destroyed by an edit to the
+ *   text (#277); one that carried nothing is deleted.
  * - ADDED names are inserted at their position.
  * - KEPT names may have MOVED. Their detail must survive the move, so they
  *   are repositioned rather than deleted and re-added — which would silently

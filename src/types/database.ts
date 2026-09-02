@@ -24,9 +24,9 @@ import type { EntityStatus } from '@/lib/entityStatus'
  * RPC now builds that jsonb from `resources`, and the name on the wire is
  * uno-bot's to change rather than a schema rename's to make.
  *
- * HAND-EDITED, 2026-08-31 (#180). `unplaced_touchpoint_details` and the three
- * queue RPCs (`place_touchpoint_detail`, `discard_touchpoint_detail`,
- * `restore_touchpoint_detail`) were added by hand under the same rules.
+ * HAND-EDITED, 2026-08-31 (#180) and 2026-09-02 (#277): the queue table and
+ * its three RPCs came and went by hand under the same rules; `cell_touchpoints.name`,
+ * `set_placement_touchpoint`, `remove_placement` and `restore_placement` too.
  * HAND-EDITED, 2026-08-30 (#179). `cells.picture` became `cells.frame`, and
  * the slide table took its own name, with `caption` → `title` and `illustration`
  * dropped. Renamed IN PLACE rather than resorted, which is this file's
@@ -329,33 +329,36 @@ export type Database = {
           cell_id: string
           created_at: string
           id: string
+          name: string | null
           origin: string
           position: number
           role: string | null
           summary: string | null
-          touchpoint_id: string
+          touchpoint_id: string | null
           updated_at: string
         }
         Insert: {
           cell_id: string
           created_at?: string
           id?: string
+          name?: string | null
           origin: string
           position: number
           role?: string | null
           summary?: string | null
-          touchpoint_id: string
+          touchpoint_id?: string | null
           updated_at?: string
         }
         Update: {
           cell_id?: string
           created_at?: string
           id?: string
+          name?: string | null
           origin?: string
           position?: number
           role?: string | null
           summary?: string | null
-          touchpoint_id?: string
+          touchpoint_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1026,53 +1029,6 @@ export type Database = {
           },
         ]
       }
-      unplaced_touchpoint_details: {
-        Row: {
-          cell_id: string
-          created_at: string
-          id: string
-          name: string
-          origin: string
-          role: string | null
-          screenshot: string | null
-          summary: string | null
-          updated_at: string
-          url: string | null
-        }
-        Insert: {
-          cell_id: string
-          created_at?: string
-          id?: string
-          name: string
-          origin: string
-          role?: string | null
-          screenshot?: string | null
-          summary?: string | null
-          updated_at?: string
-          url?: string | null
-        }
-        Update: {
-          cell_id?: string
-          created_at?: string
-          id?: string
-          name?: string
-          origin?: string
-          role?: string | null
-          screenshot?: string | null
-          summary?: string | null
-          updated_at?: string
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'unplaced_touchpoint_details_cell_id_fkey'
-            columns: ['cell_id']
-            isOneToOne: false
-            referencedRelation: 'cells'
-            referencedColumns: ['id']
-          },
-        ]
-      }
       steps: {
         Row: {
           created_at: string
@@ -1141,12 +1097,8 @@ export type Database = {
         }
         Returns: string
       }
-      discard_touchpoint_detail: {
-        Args: { p_detail_id: string }
-        Returns: Json
-      }
-      place_touchpoint_detail: {
-        Args: { p_detail_id: string; p_touchpoint_id: string }
+      remove_placement: {
+        Args: { p_placement_id: string }
         Returns: Json
       }
       rename_content_item: {
@@ -1165,8 +1117,8 @@ export type Database = {
         Args: { p_rows: Json }
         Returns: undefined
       }
-      restore_touchpoint_detail: {
-        Args: { p_detail: Json; p_placement?: Json | null }
+      restore_placement: {
+        Args: { p_row: Json; p_resources?: Json }
         Returns: Json
       }
       search_blueprint: {
@@ -1201,6 +1153,10 @@ export type Database = {
           total_matched: number
           updated_at: string
         }[]
+      }
+      set_placement_touchpoint: {
+        Args: { p_placement_id: string; p_touchpoint_id?: string | null; p_name?: string | null }
+        Returns: Json
       }
       set_featured_resource: {
         Args: { p_resource_id: string; p_featured: boolean }
@@ -1246,5 +1202,3 @@ export type EvidenceCount = Database['public']['Views']['evidence_counts']['Row'
 export type AuthoringChange =
   Database['public']['Tables']['authoring_changes']['Row']
 export type TrashEntry = Database['public']['Views']['trash']['Row']
-export type UnplacedTouchpointDetail =
-  Database['public']['Tables']['unplaced_touchpoint_details']['Row']

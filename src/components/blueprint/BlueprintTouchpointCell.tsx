@@ -35,6 +35,11 @@ type BlueprintTouchpointCellProps = {
   /** Passed through so an unbuilt touchpoint does not read as a live one. */
   status?: EntityStatus | null
   /**
+   * A placement whose touchpoint the registry lacks (#277): the same face,
+   * dashed, so a reader sees the name is the author's and not the catalog's.
+   */
+  nameOnly?: boolean
+  /**
    * Render a `<span>` rather than a button, for a surface that supplies its
    * own control around it (the panel's dependency lists) or has none at all
    * (print). Only meaningful without a `selectionContext`.
@@ -68,6 +73,7 @@ export function BlueprintTouchpointCell({
   className,
   sliceSequenceBadge = false,
   status,
+  nameOnly = false,
   asSpan = false,
   inline = false,
   'aria-describedby': ariaDescribedBy,
@@ -90,8 +96,10 @@ export function BlueprintTouchpointCell({
           buttonVariants({ variant: 'blueprint' }),
           blueprintCellButtonClassName({ compact, variant: 'touchpoint' }),
           'pointer-events-none min-w-0 shrink-0 cursor-default break-words',
+          nameOnly && 'border-dashed',
           className,
         )}
+        {...(nameOnly ? { 'data-name-only': '' } : {})}
         style={{
           ...(opacity != null && opacity < 1 ? { opacity } : undefined),
           ...sizedStyle,
@@ -125,8 +133,9 @@ export function BlueprintTouchpointCell({
       aria-label={item}
       aria-describedby={ariaDescribedBy}
       sliceSequenceBadge={sliceSequenceBadge}
-      className={cn('min-w-0 shrink-0 break-words', className)}
+      className={cn('min-w-0 shrink-0 break-words', nameOnly && 'border-dashed', className)}
       data-blueprint-touchpoint={item}
+      {...(nameOnly ? { 'data-name-only': '' } : {})}
     >
       <span className="line-clamp-2 break-words" title={item}>
         {item}

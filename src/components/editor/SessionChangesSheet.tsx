@@ -25,7 +25,6 @@ import { scrollBlueprintCellIntoView } from '@/lib/blueprintCellConnections'
 import { executeRevert } from '@/lib/revertChange'
 import { reportWriteFailure } from '@/lib/writeFailures'
 import { invalidateQueries, invalidateStructure } from '@/hooks/useSupabaseQuery'
-import { UNPLACED_QUEUE_KEY } from '@/hooks/useUnplacedTouchpointDetails'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { cn, errorMessage } from '@/lib/utils'
 
@@ -123,16 +122,6 @@ async function revertEntry(
     if (sliceId) {
       invalidateQueries('slices')
       invalidateQueries(`slice:${sliceId}`)
-    }
-    // The unplaced queue caches under its own key too, and both of its
-    // operations REMOVE a row. Undoing one puts the row back in the database
-    // and, without this, nowhere on screen — so the count would say the work
-    // was done while the ledger said it had been taken back.
-    if (
-      entry.fn === 'place_touchpoint_detail' ||
-      entry.fn === 'discard_touchpoint_detail'
-    ) {
-      invalidateQueries(UNPLACED_QUEUE_KEY)
     }
     return 'reverted'
   } finally {

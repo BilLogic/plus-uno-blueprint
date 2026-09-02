@@ -92,8 +92,25 @@ export function getTouchpointNames(cell: {
   content?: string | null
   touchpoints?: readonly { name: string }[]
 }): string[] {
-  if (cell.touchpoints?.length) return cell.touchpoints.map((entry) => entry.name)
-  return parseCellContentItems(cell.content ?? '')
+  return getTouchpointEntries(cell).map((entry) => entry.name)
+}
+
+/**
+ * The same list, each name saying whether the registry has it. A name-only
+ * placement (#277) is drawn dashed; a name split from the text is not a
+ * placement at all and is drawn plainly.
+ */
+export function getTouchpointEntries(cell: {
+  content?: string | null
+  touchpoints?: readonly { name: string; touchpointId?: string | null }[]
+}): Array<{ name: string; nameOnly: boolean }> {
+  if (cell.touchpoints?.length) {
+    return cell.touchpoints.map((entry) => ({
+      name: entry.name,
+      nameOnly: entry.touchpointId === null,
+    }))
+  }
+  return parseCellContentItems(cell.content ?? '').map((name) => ({ name, nameOnly: false }))
 }
 
 export function isSameBlueprintCellSelection(

@@ -45,6 +45,7 @@ const MUTATION_MODULES = [
   'stepSpecMutations.ts',
   'touchpointMutations.ts',
   'placementResourceMutations.ts',
+  'placementLinkMutations.ts',
 ] as const
 
 /**
@@ -83,6 +84,10 @@ const RPC_BACKED = new Set([
   // through the default branch. (`set_featured_resource` itself is never a
   // revert target — its inverse is this one — so it is not listed here.)
   'restore_featured_resources',
+  // #277. A placement's identity and its removal are both one function with
+  // a returned inverse; the inverse of each is itself an RPC.
+  'set_placement_touchpoint',
+  'restore_placement',
 ])
 
 /** `fn: 'name'` inside a recorded RevertSpec. */

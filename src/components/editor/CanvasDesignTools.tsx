@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/tooltip'
 import { CreateSliceSheet } from '@/components/editor/CreateSliceSheet'
 import { SessionChangesSheet } from '@/components/editor/SessionChangesSheet'
-import { UnplacedDetailsSheet } from '@/components/editor/UnplacedDetailsSheet'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 import { cn } from '@/lib/utils'
@@ -197,15 +196,6 @@ export function CanvasDesignTools() {
           </TooltipContent>
         </Tooltip>
       ) : null}
-
-      {/*
-        Beside the changes sheet because it is the same kind of thing — a body
-        of authoring work with a count — and unlike that one it stays on the
-        bar at zero. An empty queue has to be readable as empty; disappearing
-        would make it indistinguishable from a queue that never loaded, which
-        is the silence this whole ticket is about.
-      */}
-      <UnplacedDetailsSheet />
 
       <SessionChangesSheet />
 

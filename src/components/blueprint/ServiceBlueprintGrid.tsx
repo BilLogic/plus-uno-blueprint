@@ -76,7 +76,7 @@ import {
 import { cn } from '@/lib/utils'
 import {
   buildBlueprintCellSelection,
-  getTouchpointNames,
+  getTouchpointEntries,
   type BlueprintCellSelectionContext,
 } from '@/lib/blueprintCellSelection'
 import { resolveStoryboardStripEntries } from '@/lib/visualWalkthrough'
@@ -724,8 +724,9 @@ function BlueprintCellBlock({
             ? [{ id: cellId, content, frame: null, summary: null, status, links: [], resources: [] }]
             : []
         ).flatMap((slotCell) =>
-          getTouchpointNames(slotCell).map((item) => ({
-            item,
+          getTouchpointEntries(slotCell).map((entry) => ({
+            item: entry.name,
+            nameOnly: entry.nameOnly,
             cell: slotCell,
           })),
         )
@@ -778,11 +779,12 @@ function BlueprintCellBlock({
           !fitVertically && 'min-h-[80px] justify-center',
         )}
       >
-        {touchpointEntries.map(({ item, cell: slotCell }, index) =>
+        {touchpointEntries.map(({ item, nameOnly, cell: slotCell }, index) =>
           selectionContext ? (
             <BlueprintTouchpointCell
               key={`${slotCell.id ?? 'anon'}-${item}-${index}`}
               item={item}
+              nameOnly={nameOnly}
               // Each touchpoint speaks for its own cell: identity is the whole
               // point of the split, and the selection context must carry the
               // touchpoint's id, not the slot's first.
@@ -807,6 +809,7 @@ function BlueprintCellBlock({
             <BlueprintTouchpointCell
               key={`${item}-${index}`}
               item={item}
+              nameOnly={nameOnly}
               compact={compact}
             />
           ),

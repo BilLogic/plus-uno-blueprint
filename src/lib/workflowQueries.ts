@@ -74,6 +74,8 @@ export const PATH_BLUEPRINT_SELECT = `
     perceived_owner,
     cell_touchpoints (
       id,
+      touchpoint_id,
+      name,
       position,
       summary,
       role,
