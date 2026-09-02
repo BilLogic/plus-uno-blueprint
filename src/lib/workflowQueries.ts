@@ -86,6 +86,7 @@ export const PATH_BLUEPRINT_SELECT = `
       )
     ),
     resources!resources_cell_id_fkey (
+      id,
       position,
       kind,
       name,

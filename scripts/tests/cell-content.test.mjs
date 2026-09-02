@@ -127,6 +127,29 @@ test('a resources save sends the whole list, for this cell, in one call', async 
   assert.equal(client.captured.values, undefined)
 })
 
+test('a saved row names itself by id, and a new row has none yet', async () => {
+  // `sync_cell_resources` upserts by id (#270): a row that arrives with its
+  // id is updated in place, a row without one is inserted, and a row the
+  // list no longer names is deleted. The editor therefore has to send the
+  // id it read, or every save is a delete-and-reinsert and the ids churn.
+  const client = fakeClient()
+
+  await updateCellResources(
+    client,
+    'cell-1',
+    [{ id: 'r-1', kind: 'link', name: 'Spec', url: 'https://spec.example.com/' }],
+    [
+      { id: 'r-1', label: 'Spec', url: 'https://spec.example.com' },
+      { label: 'Figma', url: 'https://figma.com/file/abc' },
+    ],
+  )
+
+  assert.deepEqual(
+    client.captured.rpc.args.p_rows.map((row) => row.id),
+    ['r-1', null],
+  )
+})
+
 test('a resource with no label falls back to its host', async () => {
   const client = fakeClient()
   await updateCellResources(client, 'cell-1', [], [

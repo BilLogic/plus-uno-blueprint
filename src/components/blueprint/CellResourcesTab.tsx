@@ -38,7 +38,7 @@ type CellResourcesTabProps = {
 function resourceDrafts(resources: CellResource[]): ResourceDraft[] {
   return resources
     .filter((resource) => resource.url?.trim())
-    .map((resource) => ({ label: resource.name, url: resource.url ?? '' }))
+    .map((resource) => ({ id: resource.id, label: resource.name, url: resource.url ?? '' }))
 }
 
 /**

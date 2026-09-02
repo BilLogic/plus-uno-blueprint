@@ -99,6 +99,11 @@ export type CellTouchpoint = {
  * database, or the `url`-typed entries of a fallback blueprint's `links`.
  */
 export type CellResource = {
+  /**
+   * The row's id, so a later write can name the row it means (#270). Null on
+   * a fallback board, which has no rows to name.
+   */
+  id: string | null
   name: string
   /** `link` for everything the migration carried; the column allows `other`. */
   kind: string
