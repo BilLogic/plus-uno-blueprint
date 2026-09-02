@@ -194,18 +194,23 @@ returns every single-column CHECK and every domain as the catalog deparses it,
 and the check holds each value set a swept document states — "`kind` is
 `happy`, `variant`, `exception`"; "the `entity_status` domain: …" — to the set
 the constraint accepts, by equality, because "these three" is false the day a
-fourth lands. A list naming a value the rename map retired — `single`,
-say — fails wherever it stands, unless the sentence records the retirement
-and cites the migration. And `public.schema_comments()` returns
+fourth lands. A list naming a value the rename map retired fails
+wherever it stands, and so does the value on its own, unless the sentence
+records the retirement and cites the migration. And `public.schema_comments()` returns
 every table and column comment, which get the same three sweeps markdown gets
 — retired spellings, qualified names, value lists — because the agent-facing
 schema section is rendered from them (#260): a `paths` comment still reading
 "happy, unhappy, exception, alternative" ships to an agent exactly as a stale
 doc does. `pg_catalog` is exposed to no PostgREST role, which is why both are
 functions and why both are granted to `anon`: a constraint's definition is not
-a secret, and the CI job runs under the anon key. `scripts/value-set-claims.mjs`
-holds the grammar; `scripts/tests/value-set-claims.test.mjs` holds it to the
-shapes that are claims and the four that are not.
+a secret, and the CI job runs under the anon key. `docs/reference/erd.mmd` gets the same
+treatment: its `%% Enums` block and its attribute enums are held to the
+catalog set for set, because the file is regenerated from the live schema by
+hand and its own header records the six days it asserted tables that had
+been renamed. `scripts/value-set-claims.mjs` and `scripts/erd-value-sets.mjs`
+hold the grammar — the kit carries the same two files, read against its
+schema dump — and `scripts/tests/value-set-claims.test.mjs` holds it to the
+shapes that are claims and the ones that are not.
 
 It never passes without seeing its subject. Missing credentials, an unreachable
 host, a wrong key and an empty result set are each a non-zero exit — a guard

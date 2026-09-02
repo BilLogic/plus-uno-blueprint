@@ -40,6 +40,10 @@
  *     read off the catalog through `value_sets()` (#259). Identifiers were
  *     the first half of the 2026-09-01 audit; this is the second: a doc that
  *     taught three layouts the CHECK never had was not naming anything
+ *   - the ERD's `%% Enums` block and attribute enums equal the catalog's
+ *     sets — the file is regenerated from the live schema by hand, and its
+ *     own header records the six days it asserted tables that had been
+ *     renamed
  *   - every table and column COMMENT is swept as the prose it is — retired
  *     spellings, qualified names, value lists — because #260 renders the
  *     agent-facing schema section from `pg_description`, so a stale comment
@@ -71,6 +75,7 @@ import { resolve } from 'node:path'
 import { BLUEPRINT_CONTRACT } from './blueprintContract.mjs'
 import { RETIRED_IDENTIFIER_EXEMPTIONS } from './check-retired-identifiers.mjs'
 import { replayMigrations } from './migration-replay.mjs'
+import { erdFindings, erdValueSets } from './erd-value-sets.mjs'
 import { retiredSpans, staleSpans } from './stale-prose.mjs'
 import { sweptDocs } from './swept-docs.mjs'
 import {
@@ -518,6 +523,7 @@ async function run({ serviceRole }) {
           `public.value_sets() (20260902200000) is the one route to pg_catalog through PostgREST; ` +
           `apply it, or grant anon execute on it.`,
     ])
+    check('erd value sets', ['not observed: the value lists above could not be read'])
     check('catalog comments', ['not observed: the value lists above could not be read'])
   } else {
     const values = []
@@ -529,6 +535,19 @@ async function run({ serviceRole }) {
       )
     }
     check('documented value sets', values)
+
+    // 3d′. The ERD, the same way. docs/reference/erd.mmd is regenerated from
+    //      the live schema by hand and says so in its own header — the
+    //      previous copy spent six days asserting tables the database had
+    //      renamed. Its `%% Enums` block and its attribute lines are held to
+    //      the catalog, set for set.
+    const erd = resolve(REPO_ROOT, 'docs/reference/erd.mmd')
+    check(
+      'erd value sets',
+      existsSync(erd)
+        ? erdFindings(erdValueSets(readFileSync(erd, 'utf8'), 'docs/reference/erd.mmd'), catalog)
+        : ['docs/reference/erd.mmd does not exist'],
+    )
 
     // 3e. The catalog's own comments, swept as the prose they are. #260
     //     renders the agent-facing schema section from pg_description, so a
