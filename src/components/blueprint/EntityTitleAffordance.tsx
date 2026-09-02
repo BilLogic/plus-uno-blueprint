@@ -1,4 +1,5 @@
 import { BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS } from '@/components/editor/menubarHeaderLayout'
+import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   useEntityDetail,
   type EntityDetailKind,
@@ -16,11 +17,14 @@ import { cn } from '@/lib/utils'
  * #235 puts a definition — so the block is back to one job, opening the
  * panel.
  *
- * The block is the target for opening, and since #243 there is no glyph
- * marking it. A separate 24px icon button would make the title look inert and
- * hide the affordance in twenty-four pixels, which is the failure the
- * one-control version was written against; the block is full-size on any
- * input, so the mark was decoration on a target nobody could miss.
+ * The opener IS the title text (#305). An invisible full-block button painted
+ * BEHIND the name captured nothing: the name's own layer sat above it, so a
+ * click on the word — the natural target — was swallowed and never reached the
+ * button, and all three title levels (service, phase, scenario) were dead at
+ * once because they are this one component. Making the text itself the button
+ * puts the click where the reader already aims it, and a native `<button>`
+ * carries Enter/Space and focus for free. "View details" is the hover slot,
+ * spent on what the plain word does not say — that it opens something.
  *
  * A TITLE, not a badge. The filled badge made the name of the thing you are
  * looking at read as a tag on something else, and the slice header band —
@@ -53,33 +57,31 @@ export function EntityTitleAffordance({
         className,
       )}
     >
-      <button
-        type="button"
-        // Says what it does, and which — several of these exist per screen.
-        aria-label={`View details: ${label}`}
-        aria-pressed={open}
-        data-entity-title-affordance=""
-        className="absolute inset-0 rounded-md outline-none"
-        onClick={(event) => {
-          event.stopPropagation()
-          toggleEntity({ kind, id })
-        }}
-      />
-      {/* The NAME, and nothing hanging off it. What a service, a phase or a
-          scenario IS belongs to the kind badge beside it (#240), because a
-          definition hangs off a badge and never off a label (#235). Both
-          carried it for one commit and the row said the same thing twice. */}
-      <h2 className={cn(BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS, 'relative z-10 w-fit')}>
-        {label}
-      </h2>
-      {/* The ⓘ that marked the opener is GONE (#243).
-
-          It was introduced because a hover-only control is invisible to a
-          touch reader. That reasoning is void here: the opener is the block
-          itself, which is a full-size target on any input, and the definition
-          beside it is a Popover that opens on touch. The icon was never what
-          made either of them reachable, and a resting page carrying a glyph
-          beside every named thing is what the ticket set out to remove. */}
+      {/* The NAME, and it is the opener. Nothing hangs off it: what a service,
+          a phase or a scenario IS belongs to the kind badge beside it (#240),
+          because a definition hangs off a badge and never off a label (#235).
+          A `<button>` rather than an `<h2>`, because this word is the control
+          — the block behind it that used to be the button caught no clicks at
+          all (#305). */}
+      <IconTooltip label="View details" side="bottom">
+        <button
+          type="button"
+          // Says what it does, and which — several of these exist per screen.
+          aria-label={`View details: ${label}`}
+          aria-pressed={open}
+          data-entity-title-affordance=""
+          className={cn(
+            BLUEPRINT_MENUBAR_TITLE_TEXT_CLASS,
+            'w-fit max-w-full cursor-pointer rounded-sm text-left outline-none',
+          )}
+          onClick={(event) => {
+            event.stopPropagation()
+            toggleEntity({ kind, id })
+          }}
+        >
+          {label}
+        </button>
+      </IconTooltip>
     </div>
   )
 }
