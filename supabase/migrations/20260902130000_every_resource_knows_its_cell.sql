@@ -47,6 +47,20 @@
 -- because the function deleted and re-inserted. Rather than open a column
 -- surface, the function carries the privilege and the guard.
 --
+-- ── The position rule, found at apply time ────────────────────────────────
+--
+-- `resources_cell_position_unique` was `unique (cell_id, position)`, written
+-- when every row with a `cell_id` was one of the cell's own list. Once a
+-- placement's rows carry the cell too, the first production placement's
+-- featured link — position 0, in a cell whose own list already had a
+-- position 0 — collided, and the apply rolled back. The rule was never about
+-- placement rows: their order is `(cell_touchpoint_id, position)`, which
+-- stays. So the cell's rule is re-issued as an EXCLUDE constraint over the
+-- same pair, restricted to the cell's own rows, and still DEFERRABLE — a
+-- unique index could carry the predicate but not the deferral, and the
+-- deferral is what lets `sync_cell_resources` write a reorder in one
+-- statement without colliding with itself halfway through.
+--
 -- ── Replaying against an empty database ───────────────────────────────────
 --
 -- Every statement here is a schema change or an UPDATE/INSERT that touches
@@ -81,6 +95,13 @@ alter table public.resources
   foreign key (cell_touchpoint_id, cell_id)
   references public.cell_touchpoints (id, cell_id)
   on delete cascade;
+
+alter table public.resources drop constraint resources_cell_position_unique;
+alter table public.resources
+  add constraint resources_cell_position_unique
+  exclude using btree (cell_id with =, position with =)
+  where (cell_touchpoint_id is null)
+  deferrable initially deferred;
 
 alter table public.resources drop constraint resources_kind_check;
 alter table public.resources
@@ -263,6 +284,11 @@ begin
          and indexname in ('resources_one_featured_attachment_per_placement',
                            'resources_one_featured_attachment_per_cell')) <> 2 then
     raise exception 'the featured-attachment indexes are missing';
+  end if;
+  if not exists (select 1 from pg_constraint
+                  where conname = 'resources_cell_position_unique'
+                    and contype = 'x' and condeferrable) then
+    raise exception 'the cell position rule is not a deferrable exclusion over the cell''s own rows';
   end if;
 
   -- 3. EVERY PLACEMENT URL IS EXACTLY ONE FEATURED LINK; EVERY SCREENSHOT
