@@ -101,6 +101,16 @@ export const ONE_SPELLING = Object.freeze([
     current: 'scenarios.layout',
     why: 'enforced as a fragment too; asserted here so the four classifier renames read as one set',
   },
+  {
+    retired: 'cell_touchpoints.url',
+    current: 'resources.url',
+    why: 'a placement\'s link is a featured resource since 20260902130000; 20260902160000 dropped the column (#276). `url` stays live on `resources` and `touchpoints`',
+  },
+  {
+    retired: 'cell_touchpoints.screenshot',
+    current: 'resources.kind',
+    why: 'a placement\'s screenshot is a featured attachment — a resource whose kind says so — since 20260902130000; the column went with #276. `screenshot` stays on the unplaced queue until #277',
+  },
 ])
 
 /** The two columns this ticket drops outright, with nothing taking their place. */
@@ -161,6 +171,7 @@ test('the check goes red on a schema that never did the rename', () => {
       ['paths', { name: 'paths', columns: new Map([['path_type', {}]]) }],
       ['scenarios', { name: 'scenarios', columns: new Map([['view_type', {}]]) }],
       ['evidence', { name: 'evidence', columns: new Map([['note', {}]]) }],
+      ['cell_touchpoints', { name: 'cell_touchpoints', columns: new Map([['screenshot', {}], ['url', {}]]) }],
     ]),
   }
   const found = residue(before)

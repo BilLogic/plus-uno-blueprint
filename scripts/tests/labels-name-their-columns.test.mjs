@@ -391,13 +391,6 @@ export const LABEL_COLUMNS = Object.freeze(
         '`props` abbreviates this exact phrase and no other. A label is read once and a name is typed daily, so the panel spells out what the schema shortens. Singular on purpose: a cell has one value proposition, stated once per audience — each row is a `for` and a `value` — and the plural on the column counts those statements, not separate propositions.',
     },
     { label: 'Touchpoint', names: ['touchpoints'], because: '' },
-    { label: 'Screenshot', names: ['cell_touchpoints.screenshot'], because: '' },
-    {
-      label: 'Link',
-      names: ['cell_touchpoints.url'],
-      because:
-        'A placement carries two URLs — this one and `screenshot` — and `url` is not a word a panel says out loud. It said *Design link* until #272: the panel no longer picks one url to call the design, it shows every featured link as a button named by its host, and the column itself leaves for `resources` in #276.',
-    },
     { label: 'Role', names: ['cell_touchpoints.role'], because: '' },
     { label: 'Stakeholder', names: ['lanes.stakeholder_id'], because: '' },
     { label: 'Owner team', names: ['lanes.owner_team'], because: '' },

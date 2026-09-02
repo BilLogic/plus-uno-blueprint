@@ -2,7 +2,7 @@
  * A cell's touchpoints, resolved from whichever source the board came from.
  *
  * The database stores placements: one `cell_touchpoints` row per touchpoint
- * used at a cell, carrying its own summary, screenshot and url, joined to a
+ * used at a cell, carrying its own summary and role, joined to a
  * catalog entry that owns the name. Nothing has to match a string.
  *
  * The hand-written fallback blueprints in `src/data` predate all of that.
@@ -32,8 +32,6 @@ export type RawCellTouchpoint = {
   id?: string | null
   position: number
   summary?: string | null
-  screenshot?: string | null
-  url?: string | null
   role?: string | null
   /** The joined catalog row. PostgREST names the embed after the table. */
   touchpoints: { name: string; kind?: string | null; url?: string | null } | null
@@ -57,8 +55,6 @@ export function cellTouchpointsFromRows(
       name: row.touchpoints!.name,
       kind: row.touchpoints!.kind ?? null,
       summary: row.summary ?? null,
-      screenshot: row.screenshot ?? null,
-      url: row.url ?? null,
       role: normalizeRole(row.role),
     }))
 }
@@ -96,8 +92,6 @@ export function cellTouchpointsFromLinks(
       // for the same board.
       kind: null,
       summary: link?.description ?? null,
-      screenshot: link?.picture ?? null,
-      url: link?.url ?? null,
       role: null,
     }
   })
@@ -115,8 +109,6 @@ export type TouchpointDetail = {
   name: string
   /** The placement's own words, else the cell's, else the name. */
   text: string
-  url: string | null
-  screenshot: string | null
   kind: string | null
   role: TouchpointRoleValue
 }
@@ -171,8 +163,6 @@ export function resolveTouchpointDetail(
     id: placement.id,
     name: placement.name,
     text: placement.summary?.trim() || cell.summary?.trim() || placement.name,
-    url: placement.url,
-    screenshot: placement.screenshot,
     kind: placement.kind,
     role: placement.role,
   }

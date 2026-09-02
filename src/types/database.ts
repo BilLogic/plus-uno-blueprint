@@ -332,11 +332,9 @@ export type Database = {
           origin: string
           position: number
           role: string | null
-          screenshot: string | null
           summary: string | null
           touchpoint_id: string
           updated_at: string
-          url: string | null
         }
         Insert: {
           cell_id: string
@@ -345,11 +343,9 @@ export type Database = {
           origin: string
           position: number
           role?: string | null
-          screenshot?: string | null
           summary?: string | null
           touchpoint_id: string
           updated_at?: string
-          url?: string | null
         }
         Update: {
           cell_id?: string
@@ -358,11 +354,9 @@ export type Database = {
           origin?: string
           position?: number
           role?: string | null
-          screenshot?: string | null
           summary?: string | null
           touchpoint_id?: string
           updated_at?: string
-          url?: string | null
         }
         Relationships: [
           {

@@ -99,14 +99,12 @@ export type FeaturedPresentation = {
  * What the panel leads with for one placement at one cell.
  *
  * The placement's featured attachment is the preview; every featured link,
- * the placement's and then the cell's own, is a button. `placementUrl` is
- * the placement's `url` column, which 20260902130000 copied into a featured
- * link and #276 drops — until then a board that still carries only the
- * column (a fallback board) gets its button from it, deduplicated by url.
+ * the placement's and then the cell's own, is a button. The placement's own
+ * `url` column used to count as a link here too; #276 dropped it, and the
+ * featured link 20260902130000 made from it is the one this reads.
  */
 export function featuredPresentation(input: {
   placementId: string | null
-  placementUrl?: string | null
   resources: readonly CellResource[]
 }): FeaturedPresentation {
   const featured = input.resources.filter(
@@ -137,8 +135,6 @@ export function featuredPresentation(input: {
   for (const resource of [...ofPlacement, ...ofCell]) {
     if (resource.kind === 'link') add(resource.url!.trim(), resource.name)
   }
-  const column = input.placementUrl?.trim()
-  if (column) add(column, linkPresentation(column).host)
 
   return { preview, buttons }
 }

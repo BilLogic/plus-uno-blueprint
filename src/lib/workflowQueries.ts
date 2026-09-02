@@ -76,8 +76,6 @@ export const PATH_BLUEPRINT_SELECT = `
       id,
       position,
       summary,
-      screenshot,
-      url,
       role,
       touchpoints (
         name,

@@ -30,9 +30,9 @@ export type PlacedDetail = {
   /** What the placement was carrying before, so a revert restores it. */
   previous: {
     summary: string | null
-    screenshot: string | null
-    url: string | null
     role: string | null
+    /** The resources the place created, for its inverse to remove (#276). */
+    added_resources: string[]
   }
 }
 
@@ -82,7 +82,7 @@ export async function placeTouchpointDetail(
   const detail = readDetail(data)
   const answer = data as {
     touchpoint_name?: unknown
-    previous?: Record<string, string | null>
+    previous?: Record<string, unknown>
   }
   const placed: PlacedDetail = {
     detail,
@@ -91,10 +91,13 @@ export async function placeTouchpointDetail(
     touchpointName:
       typeof answer.touchpoint_name === 'string' ? answer.touchpoint_name : '',
     previous: {
-      summary: answer.previous?.summary ?? null,
-      screenshot: answer.previous?.screenshot ?? null,
-      url: answer.previous?.url ?? null,
-      role: answer.previous?.role ?? null,
+      summary: (answer.previous?.summary as string | null | undefined) ?? null,
+      role: (answer.previous?.role as string | null | undefined) ?? null,
+      added_resources: Array.isArray(answer.previous?.added_resources)
+        ? (answer.previous.added_resources as unknown[]).filter(
+            (id): id is string => typeof id === 'string',
+          )
+        : [],
     },
   }
 
@@ -160,9 +163,9 @@ export type RestoredPlacement = {
   cell_id: string
   touchpoint_id: string
   summary: string | null
-  screenshot: string | null
-  url: string | null
   role: string | null
+  /** The resources the place created; the restore deletes exactly these. */
+  added_resources?: string[]
 }
 
 /**

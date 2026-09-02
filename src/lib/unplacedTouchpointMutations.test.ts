@@ -56,9 +56,8 @@ const PLACED = {
   touchpoint_name: 'Workday',
   previous: {
     summary: 'The employer view of the same tool.',
-    screenshot: null,
-    url: null,
     role: 'core',
+    added_resources: ['res-9'],
   },
 }
 
@@ -94,13 +93,14 @@ describe('placeTouchpointDetail', () => {
     expect((entry.revert?.args.detail as UnplacedTouchpointDetail).id).toBe(
       'detail-1',
     )
+    // Summary and role, and the resources the place created (#276) — the
+    // restore deletes exactly those, and nothing the placement had before.
     expect(entry.revert?.args.placement).toEqual({
       cell_id: 'cell-1',
       touchpoint_id: 'tp-workday',
       summary: 'The employer view of the same tool.',
-      screenshot: null,
-      url: null,
       role: 'core',
+      added_resources: ['res-9'],
     })
   })
 

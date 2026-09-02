@@ -86,8 +86,6 @@ type FormState = {
 /** An unmarked, unwritten placement — the state a cell with no touchpoint selected sits in. */
 const EMPTY_PLACEMENT: PlacementDetailDraft = {
   summary: '',
-  screenshot: '',
-  url: '',
   role: null,
 }
 
@@ -107,8 +105,6 @@ const EMPTY_PLACEMENT: PlacementDetailDraft = {
 function placementColumns(draft: PlacementDetailDraft): PlacementDetailColumns {
   return {
     summary: draft.summary || null,
-    screenshot: draft.screenshot || null,
-    url: draft.url || null,
     role: draft.role,
   }
 }
@@ -125,8 +121,6 @@ function placementColumns(draft: PlacementDetailDraft): PlacementDetailColumns {
 function placementDraft(placement: CellTouchpoint): PlacementDetailDraft {
   return {
     summary: placement.summary ?? '',
-    screenshot: placement.screenshot ?? '',
-    url: placement.url ?? '',
     role: placement.role,
   }
 }
@@ -366,8 +360,6 @@ function CellPanelEditorForm({
   const placementChanged =
     Boolean(placement) &&
     (form.placement.summary !== baseline.placement.summary ||
-      form.placement.screenshot !== baseline.placement.screenshot ||
-      form.placement.url !== baseline.placement.url ||
       form.placement.role !== baseline.placement.role)
 
   const handleSave = async () => {
@@ -480,7 +472,7 @@ function CellPanelEditorForm({
       // caches under its own key and never refetches on its own.
       invalidateQueries('value-audiences')
       // Taking a touchpoint out of the text deletes its placement, and if that
-      // placement carried a summary or a screenshot the database parks the
+      // placement carried a summary or a featured resource the database parks the
       // writing in the unplaced queue rather than destroying it. The queue is
       // cached under its own key, so without this the new row is invisible
       // until a reload — which is the disappearance this ticket is about.
@@ -559,28 +551,6 @@ function CellPanelEditorForm({
                 setPlacement('summary', event.target.value)
               }
               className={PANEL_TEXTAREA_CLASS}
-            />
-          </Field>
-          <Field
-            label="Screenshot"
-            hint="An image of it here — an app image path starting with / or an https link."
-          >
-            <Input
-              value={form.placement.screenshot}
-              placeholder="/blueprint-images/…"
-              onChange={(event) =>
-                setPlacement('screenshot', event.target.value)
-              }
-            />
-          </Field>
-          <Field
-            label="Link"
-            hint="Where this touchpoint lives at this moment — the screen, the file, the page. Shown as a button named by its host."
-          >
-            <Input
-              value={form.placement.url}
-              placeholder="https://www.figma.com/…"
-              onChange={(event) => setPlacement('url', event.target.value)}
             />
           </Field>
           <Field

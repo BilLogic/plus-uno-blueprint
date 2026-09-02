@@ -41,8 +41,10 @@ export function getTechItemDetailPictures(
 }
 
 /**
- * The images for a detail panel: the placement's own screenshot first, then
- * the tool's stock logo, then the cell's frame.
+ * The images for a detail panel: the tool's stock logo, then the cell's
+ * frame. A placement's own picture is its featured attachment (#272), which
+ * the panel draws ahead of these — the `screenshot` column that used to come
+ * first left for `resources` in #276.
  *
  * This used to take the cell's raw content and links and pick through them,
  * with nine `content === '<tool>'` branches written out by hand — Zoom, PLUS
@@ -57,12 +59,9 @@ export function getTechItemDetailPictures(
  * one in order to show it.
  */
 export function resolveCellDetailImages(input: {
-  screenshot?: string | null
   techItem?: string | null
   cellFrame?: string | null
 }): readonly string[] | null {
-  if (input.screenshot?.trim()) return [input.screenshot.trim()]
-
   if (input.techItem) {
     const techPictures = getTechItemDetailPictures(input.techItem)
     if (techPictures) return techPictures

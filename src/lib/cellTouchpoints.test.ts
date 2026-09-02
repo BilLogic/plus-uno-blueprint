@@ -35,16 +35,12 @@ test('a placement row keeps its name, order and per-moment detail', () => {
     {
       position: 2,
       summary: 'The tutor opens the session detail page.',
-      screenshot: '/shots/step-01.png',
-      url: 'https://figma.example/node-1687',
       role: 'core',
       touchpoints: { name: 'PLUS App', kind: 'app', url: 'https://plus.example' },
     },
     {
       position: 1,
       summary: null,
-      screenshot: null,
-      url: null,
       role: null,
       touchpoints: { name: 'Zoom', kind: 'app', url: null },
     },
@@ -56,8 +52,6 @@ test('a placement row keeps its name, order and per-moment detail', () => {
     ['Zoom', 'PLUS App'],
   )
   assert.equal(touchpoints[1]!.summary, 'The tutor opens the session detail page.')
-  assert.equal(touchpoints[1]!.screenshot, '/shots/step-01.png')
-  assert.equal(touchpoints[1]!.url, 'https://figma.example/node-1687')
   assert.equal(touchpoints[1]!.role, 'core')
   assert.equal(touchpoints[0]!.summary, null)
 })
@@ -69,7 +63,6 @@ test('fallback content and links produce the same placements', () => {
       label: 'PLUS App',
       description: 'The tutor opens the session detail page.',
       picture: '/shots/step-01.png',
-      url: 'https://figma.example/node-1687',
     },
   ])
 
@@ -78,8 +71,6 @@ test('fallback content and links produce the same placements', () => {
     ['Zoom', 'PLUS App'],
   )
   assert.equal(touchpoints[1]!.summary, 'The tutor opens the session detail page.')
-  assert.equal(touchpoints[1]!.screenshot, '/shots/step-01.png')
-  assert.equal(touchpoints[1]!.url, 'https://figma.example/node-1687')
   assert.equal(touchpoints[0]!.summary, null)
 })
 
@@ -105,7 +96,6 @@ test('non-touchpoint links are ignored', () => {
 
   assert.equal(touchpoints.length, 1)
   assert.equal(touchpoints[0]!.summary, null)
-  assert.equal(touchpoints[0]!.url, null)
 })
 
 test('blank content yields no placements', () => {
@@ -126,16 +116,12 @@ test('both sources agree on everything but the one field fallback cannot know', 
     {
       position: 1,
       summary: 'Opens the dashboard.',
-      screenshot: '/a.png',
-      url: 'https://figma.example/a',
       role: null,
       touchpoints: { name: 'PLUS App', kind: 'other', url: null },
     },
     {
       position: 2,
       summary: null,
-      screenshot: null,
-      url: null,
       role: null,
       touchpoints: { name: 'Email', kind: 'other', url: null },
     },
@@ -189,8 +175,6 @@ test('a named placement supplies its own detail', () => {
   const detail = resolveTouchpointDetail(cell, 'PLUS App')
   assert.equal(detail!.name, 'PLUS App')
   assert.equal(detail!.text, 'Opens the session detail page.')
-  assert.equal(detail!.url, 'https://figma.example/a')
-  assert.equal(detail!.screenshot, '/a.png')
 })
 
 test('a placement with no summary of its own falls back to the cell', () => {
@@ -241,8 +225,6 @@ test('a placement carries the row id an editor writes through', () => {
       id: 'ct-1',
       position: 1,
       summary: null,
-      screenshot: null,
-      url: null,
       role: null,
       touchpoints: { name: 'Zoom' },
     },
@@ -294,8 +276,6 @@ test('a role outside the vocabulary reads as unmarked', () => {
       id: 'ct-9',
       position: 1,
       summary: null,
-      screenshot: null,
-      url: null,
       role: 'important',
       touchpoints: { name: 'Zoom' },
     },

@@ -7,7 +7,6 @@ import {
   placementSurvivesContent,
   restoreTouchpointPlacement,
   updateTouchpointPlacement,
-  validateScreenshotReference,
   type PlacementDetailDraft,
 } from '@/lib/touchpointMutations'
 import type { Database } from '@/types/database'
@@ -78,63 +77,24 @@ const placement = () => [
     id: 'ct-1',
     cell_id: 'cell-1',
     summary: 'The tutor fills in the reflection here.',
-    screenshot: '/blueprint-images/shared/front-stage-tech/plus-app.png',
-    url: 'https://www.figma.com/file/abc',
     role: null,
   },
 ]
 
 const draft = (over: Partial<PlacementDetailDraft> = {}): PlacementDetailDraft => ({
   summary: '',
-  screenshot: '',
-  url: '',
   role: null,
   ...over,
 })
 
 beforeEach(() => clearSession())
 
-describe('validateScreenshotReference', () => {
-  it('keeps a root-relative app asset path', () => {
-    // Every one of the 52 imported screenshots is one of these. Refusing them
-    // would make the editor unable to re-save a placement it can display.
-    expect(validateScreenshotReference('/blueprint-images/a/b.png')).toEqual({
-      ok: true,
-      value: '/blueprint-images/a/b.png',
-    })
-  })
-
-  it('reads empty as “no screenshot” rather than as a mistake', () => {
-    expect(validateScreenshotReference('   ')).toEqual({ ok: true, value: null })
-  })
-
-  it('upgrades a bare host to https, like every other link field', () => {
-    expect(validateScreenshotReference('example.com/a.png')).toEqual({
-      ok: true,
-      value: 'https://example.com/a.png',
-    })
-  })
-
-  it('refuses a protocol-relative reference instead of guessing', () => {
-    const result = validateScreenshotReference('//example.com/a.png')
-    expect(result.ok).toBe(false)
-  })
-
-  it('refuses a path that climbs out of the asset tree', () => {
-    expect(validateScreenshotReference('/a/../../etc/passwd').ok).toBe(false)
-  })
-
-  it('refuses http, because this guards new data', () => {
-    expect(validateScreenshotReference('http://example.com/a.png').ok).toBe(false)
-  })
-})
-
 describe('normalizePlacementDetail', () => {
   it('stores an emptied field as null, not as a blank string', () => {
     const result = normalizePlacementDetail(draft({ summary: '  ' }))
     expect(result).toEqual({
       ok: true,
-      columns: { summary: null, screenshot: null, url: null, role: null },
+      columns: { summary: null, role: null },
     })
   })
 
@@ -158,11 +118,6 @@ describe('normalizePlacementDetail', () => {
       // The shape an untyped edge could hand it — a seed, a persisted form.
       draft({ role: 'important' as never }),
     )
-    expect(result.ok).toBe(false)
-  })
-
-  it('refuses a placement link that is not a link', () => {
-    const result = normalizePlacementDetail(draft({ url: 'not a link' }))
     expect(result.ok).toBe(false)
   })
 })
@@ -198,12 +153,8 @@ describe('updateTouchpointPlacement', () => {
     // Not `cell_id`, not `touchpoint_id`, not `position`. Those are where a
     // placement IS, and moving one is how an editor would route around the
     // touchpoint-bearing gate in `sync_cell_touchpoints`.
-    expect(Object.keys(updates[0].patch).sort()).toEqual([
-      'role',
-      'screenshot',
-      'summary',
-      'url',
-    ])
+    // And not `screenshot` or `url`: those left for `resources` (#276).
+    expect(Object.keys(updates[0].patch).sort()).toEqual(['role', 'summary'])
     // Identity-keyed, so a rename or a reorder cannot move the write.
     expect(updates[0].filters).toEqual({ id: 'ct-1' })
   })
@@ -214,12 +165,7 @@ describe('updateTouchpointPlacement', () => {
       client,
       { id: 'ct-1', cellId: 'cell-1', name: 'PLUS App' },
       draft({ summary: 'New words.', role: 'peripheral' }),
-      {
-        summary: 'The tutor fills in the reflection here.',
-        screenshot: '/blueprint-images/shared/front-stage-tech/plus-app.png',
-        url: 'https://www.figma.com/file/abc',
-        role: null,
-      },
+      { summary: 'The tutor fills in the reflection here.', role: null },
     )
 
     const [entry, ...rest] = sessionSnapshot()
@@ -234,12 +180,7 @@ describe('updateTouchpointPlacement', () => {
       fn: 'restore_touchpoint_placement',
       args: {
         placement_id: 'ct-1',
-        columns: {
-          summary: 'The tutor fills in the reflection here.',
-          screenshot: '/blueprint-images/shared/front-stage-tech/plus-app.png',
-          url: 'https://www.figma.com/file/abc',
-          role: null,
-        },
+        columns: { summary: 'The tutor fills in the reflection here.', role: null },
       },
     })
   })
@@ -264,8 +205,8 @@ describe('updateTouchpointPlacement', () => {
   it('refuses the write before it starts when the draft is invalid', async () => {
     const { client, updates } = fakeClient(placement())
     await expect(
-      updateTouchpointPlacement(client, { id: 'ct-1' }, draft({ url: 'http://x.dev' })),
-    ).rejects.toThrow(/https/)
+      updateTouchpointPlacement(client, { id: 'ct-1' }, draft({ role: 'important' as never })),
+    ).rejects.toThrow(/core, peripheral/)
     expect(updates).toEqual([])
   })
 
@@ -289,40 +230,26 @@ describe('restoreTouchpointPlacement', () => {
     // validator would refuse. Undo has to be able to reach data that was
     // already there — the same rule `update_cell_resources` restores under.
     await restoreTouchpointPlacement(client, 'ct-1', {
-      summary: 'Imported words.',
-      screenshot: 'http://legacy.example/shot.png',
-      url: 'http://legacy.example/design',
+      summary: '  Imported words, spaces and all.  ',
       role: 'core',
     })
 
     expect(rows[0]).toMatchObject({
-      summary: 'Imported words.',
-      screenshot: 'http://legacy.example/shot.png',
-      url: 'http://legacy.example/design',
+      summary: '  Imported words, spaces and all.  ',
       role: 'core',
     })
   })
 
   it('records nothing — undoing an edit is not an edit', async () => {
     const { client } = fakeClient(placement())
-    await restoreTouchpointPlacement(client, 'ct-1', {
-      summary: null,
-      screenshot: null,
-      url: null,
-      role: null,
-    })
+    await restoreTouchpointPlacement(client, 'ct-1', { summary: null, role: null })
     expect(sessionSnapshot()).toEqual([])
   })
 
   it('fails rather than reporting a restore onto a placement that is gone', async () => {
     const { client } = fakeClient([])
     await expect(
-      restoreTouchpointPlacement(client, 'gone', {
-        summary: null,
-        screenshot: null,
-        url: null,
-        role: null,
-      }),
+      restoreTouchpointPlacement(client, 'gone', { summary: null, role: null }),
     ).rejects.toThrow(/no longer exists/)
   })
 })

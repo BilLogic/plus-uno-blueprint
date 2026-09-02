@@ -45,7 +45,6 @@ import { recordChange } from '@/lib/authoringSession'
 import { toAuthoringError } from '@/lib/authoringErrors'
 import { requireRowsWritten } from '@/lib/optimisticConcurrency'
 import { parseCellContentItems } from '@/lib/parseCellContent'
-import { validateResourceUrl } from '@/lib/resourceUrl'
 import type { TouchpointRoleValue } from '@/lib/touchpointRole'
 import type { Database } from '@/types/database'
 
@@ -184,69 +183,28 @@ function readRename(data: unknown): TouchpointRename {
 export type PlacementDetailDraft = {
   /** This touchpoint's own words about this moment. */
   summary: string
-  /** An image of it here — an app asset path or an https URL. */
-  screenshot: string
-  /** The design reference for this moment specifically. */
-  url: string
   role: TouchpointRoleValue
 }
 
 /**
- * The four columns as the table holds them.
+ * The two columns as the table holds them.
  *
  * Empty is `null`, never `''`: the read path already treats null as "not
  * specified", and two spellings of empty is how a field ends up rendering an
  * empty frame instead of nothing at all.
+ *
+ * Two, since #276. A placement's screenshot and link were columns here until
+ * 20260902160000; they are a featured attachment and a featured link in
+ * `resources` now, edited from the placement's own list (#273).
  */
 export type PlacementDetailColumns = {
   summary: string | null
-  screenshot: string | null
-  url: string | null
   role: TouchpointRoleValue
 }
 
 export type PlacementNormalizeResult =
   | { ok: true; columns: PlacementDetailColumns }
   | { ok: false; problem: string }
-
-/**
- * A screenshot reference, checked before it is stored.
- *
- * Two shapes are legitimate and the difference is not cosmetic. Every one of
- * the 52 imported screenshots is a root-relative path into this app's own
- * `public/` tree (`/blueprint-images/...`), and refusing those would make the
- * editor unable to re-save a placement it can already display. An https URL is
- * the other shape, for an image that lives somewhere else.
- *
- * A protocol-relative `//host/x` is refused rather than upgraded: it looks
- * like a path and behaves like a URL, and guessing which one was meant is the
- * kind of silent coercion `validateResourceUrl` deliberately does not do for
- * `http:`.
- */
-export function validateScreenshotReference(
-  raw: string,
-): { ok: true; value: string | null } | { ok: false; problem: string } {
-  const trimmed = raw.trim()
-  if (!trimmed) return { ok: true, value: null }
-
-  if (trimmed.startsWith('//')) {
-    return {
-      ok: false,
-      problem:
-        'Write the whole link — “//” leaves the scheme to whatever page it is opened from.',
-    }
-  }
-  if (trimmed.startsWith('/')) {
-    if (trimmed.includes('..')) {
-      return { ok: false, problem: 'An image path cannot climb out with “..”.' }
-    }
-    return { ok: true, value: trimmed }
-  }
-
-  const checked = validateResourceUrl(trimmed)
-  if (!checked.ok) return { ok: false, problem: checked.problem }
-  return { ok: true, value: checked.url }
-}
 
 /**
  * The draft as columns, or the one sentence explaining why it cannot be.
@@ -259,17 +217,6 @@ export function validateScreenshotReference(
 export function normalizePlacementDetail(
   draft: PlacementDetailDraft,
 ): PlacementNormalizeResult {
-  const screenshot = validateScreenshotReference(draft.screenshot)
-  if (!screenshot.ok) return { ok: false, problem: screenshot.problem }
-
-  let url: string | null = null
-  const rawUrl = draft.url.trim()
-  if (rawUrl) {
-    const checked = validateResourceUrl(rawUrl)
-    if (!checked.ok) return { ok: false, problem: checked.problem }
-    url = checked.url
-  }
-
   if (
     draft.role !== null &&
     draft.role !== 'core' &&
@@ -285,8 +232,6 @@ export function normalizePlacementDetail(
     ok: true,
     columns: {
       summary: draft.summary.trim() || null,
-      screenshot: screenshot.value,
-      url,
       role: draft.role,
     },
   }
@@ -357,7 +302,7 @@ export async function updateTouchpointPlacement(
 }
 
 /**
- * Put a placement's four columns back exactly as they were.
+ * Put a placement's two columns back exactly as they were.
  *
  * No validation and no log entry. Both are the point: the captured values
  * came out of the database and go back into it unchanged, and undoing an edit
@@ -381,8 +326,6 @@ async function writePlacementDetail(
     .from('cell_touchpoints')
     .update({
       summary: columns.summary,
-      screenshot: columns.screenshot,
-      url: columns.url,
       role: columns.role,
     })
     .eq('id', placementId)
