@@ -161,7 +161,7 @@ describe('normalizePlacementDetail', () => {
     expect(result.ok).toBe(false)
   })
 
-  it('refuses a design link that is not a link', () => {
+  it('refuses a placement link that is not a link', () => {
     const result = normalizePlacementDetail(draft({ url: 'not a link' }))
     expect(result.ok).toBe(false)
   })

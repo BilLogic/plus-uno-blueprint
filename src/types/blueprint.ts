@@ -111,7 +111,7 @@ export type CellResource = {
   url: string | null
   /**
    * The placement this resource belongs to, when it is a placement's — a
-   * design link or the image a touchpoint shows here. Still the cell's row
+   * link or the image a touchpoint shows here. Still the cell's row
    * (#271), so it renders in the cell's list; edited from the touchpoint.
    */
   placementId: string | null
