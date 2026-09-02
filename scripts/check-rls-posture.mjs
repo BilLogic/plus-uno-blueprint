@@ -395,6 +395,8 @@ export const PANEL_COLUMNS = Object.freeze({
   slices: ['title', 'summary', 'kind', 'actor', 'authorship'],
   touchpoints: ['name', 'updated_at'],
   // `screenshot` and `url` left for `resources` in 20260902160000 (#276).
+  // `touchpoint_id` and `name` are never a panel's to write: naming a
+  // placement's touchpoint is a SECURITY DEFINER RPC (20260902190000).
   cell_touchpoints: ['summary', 'role', 'position', 'updated_at'],
   agent_sessions: ['id', 'title', 'created_at', 'updated_at'],
   agent_messages: ['session_id', 'seq', 'kind', 'payload'],

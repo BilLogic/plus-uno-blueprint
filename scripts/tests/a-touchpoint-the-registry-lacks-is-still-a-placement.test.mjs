@@ -49,7 +49,23 @@ export function findings(schema) {
     }
   }
   for (const fn of PLACEMENT_FUNCTIONS) {
-    if (!schema.functions.has(`public.${fn}`)) out.push(`the series never leaves a ${fn} function`)
+    const found = schema.functions.get(`public.${fn}`)
+    if (!found) {
+      out.push(`the series never leaves a ${fn} function`)
+      continue
+    }
+    // Naming a placement's touchpoint — linking, unlinking, keeping a removed
+    // row name-only, putting one back — writes `touchpoint_id` and `name`,
+    // which no panel may write directly: `authenticated` holds column grants
+    // on summary, role and position only. So each of these is a structural
+    // write, SECURITY DEFINER behind `is_service_account()`, like every
+    // other; as SECURITY INVOKER it fails for the very session it exists for.
+    if (!/security\s+definer/i.test(found.definition)) {
+      out.push(`${fn} runs as the caller, whose grants do not reach touchpoint_id or name`)
+    }
+    if (!/is_service_account\(\)/.test(found.definition)) {
+      out.push(`${fn} is not behind is_service_account()`)
+    }
   }
   const sync = schema.functions.get('public.sync_cell_touchpoints')
   if (sync && /unplaced_touchpoint_details/.test(sync.definition)) {
@@ -94,6 +110,7 @@ test('RED on the series as it stood before #277', () => {
   assert.ok(found.some((f) => /has no name column/.test(f)), found.join(' / '))
   assert.ok(found.some((f) => /no one-identity check/.test(f)), found.join(' / '))
   assert.ok(found.some((f) => /still parks writing in the queue/.test(f)), found.join(' / '))
+  assert.ok(found.some((f) => /runs as the caller/.test(f)), found.join(' / '))
 })
 
 test('the real series folds the queue into placements', () => {
