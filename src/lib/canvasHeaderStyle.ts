@@ -50,43 +50,75 @@ export const CANVAS_HEADER_STATE = [
   // they label. Ink at 30% says "this one" without competing.
   'data-open:bg-foreground/[0.07] data-open:ring-2 data-open:ring-inset',
   'data-open:ring-foreground/30',
-  'has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-inset',
-  'has-[button:focus-visible]:ring-ring/50',
+  // The OPENER's focus, specifically — not any button in the block. Since #306
+  // the block also holds the touch ⓘ, a second button; ringing the whole
+  // header when the tiny ⓘ takes focus would say "this header" when the reader
+  // only reached for its definition. The ⓘ wears its own ring instead.
+  'has-[[data-canvas-header-opener]:focus-visible]:ring-2',
+  'has-[[data-canvas-header-opener]:focus-visible]:ring-inset',
+  'has-[[data-canvas-header-opener]:focus-visible]:ring-ring/50',
 ].join(' ')
 
-/*
-  THE ⓘ IS GONE, and the argument for it is worth keeping because it was a
-  good one that stopped applying.
+/**
+ * How long the pointer rests on a header block before its definition opens.
+ *
+ * The whole block is the hover target now, not the one word (#306) — a reader
+ * learns the board by sweeping it rather than by aiming — so the definition
+ * needs a beat of intent before it appears, or every pass across the axis pops
+ * a card. Short, because it is a rest, not a wait.
+ */
+export const CANVAS_HEADER_HOVER_DELAY = 500
 
-  #140 Q11 made the glyph always visible rather than hover-only: on touch,
-  where nothing is ever hovered, it was the single drawn signal that a header
-  opens anything, and an affordance a touch reader cannot see is not one. What
-  #243 changed is the rest of the header. The opener is the whole block — a
-  full-size target on any input — and the definition beside it is a popover
-  that opens on touch. Neither needed a mark, and a board drawing one beside
-  every named thing is the resting-state clutter the ticket set out to remove.
+/*
+  THE ⓘ CAME BACK, but only for the reader who has no other way in.
+
+  #140 Q11 drew it always-on; #243 removed it, because by then the opener was
+  the whole block (a full-size target on any input) and the definition opened
+  on hover — so the mark was decoration, and one beside every named thing was
+  resting-state clutter. #306 keeps that judgement for the pointer reader: the
+  definition still opens on hover of the block, and nothing is drawn at rest.
+
+  What #243 could not answer is the reader who cannot hover and whose tap is
+  spent opening the panel. For them the definition had no door. The ⓘ is that
+  door and no more: it is INVISIBLE on a fine pointer, and appears only where
+  hover cannot reach it — under keyboard focus, and on a coarse pointer. So the
+  resting board a pointer reader sees is exactly as clean as #243 left it, and
+  the touch reader is no longer locked out. See `CANVAS_HEADER_INFO`.
 */
 
 /**
- * The header's name: the word, and what that kind of thing IS.
+ * The header's name: the word this axis is called.
  *
- * Focusable on its own, separately from the box around it — the definition is
- * a fact about the word, so the word is where it hangs
+ * Plain prose since #306, not a control. The definition it used to carry moved
+ * to the block's own hover and to the touch ⓘ, so the word is no longer a
+ * focus stop or a hover trigger of its own — and `pointer-events-none` lets a
+ * click on it fall straight through to the opener beneath, which is the whole
+ * fix for the label that used to eat its own click
  * (docs/reference/panel-affordances.md).
- *
- * Not CUED, since #243. The dotted rule and the `cursor-help` that used to sit
- * here announced that the word carries a definition; nothing announces it now.
- * The focus ring is not that announcement — it is how a keyboard reader gets
- * to the definition at all.
  */
-export const CANVAS_HEADER_NAME = [
-  'relative z-10 w-fit rounded-sm outline-none',
-  'focus-visible:ring-2 focus-visible:ring-ring/50',
-].join(' ')
+export const CANVAS_HEADER_NAME = 'relative z-10 w-fit pointer-events-none'
 
 /** The invisible full-block target that opens the panel. */
 export const CANVAS_HEADER_OPENER =
   'absolute inset-0 rounded-md outline-none'
+
+/**
+ * The touch ⓘ: the definition's door for a reader who cannot hover.
+ *
+ * Invisible at rest — `opacity-0` on a fine pointer, so a pointer reader's
+ * board stays as clean as #243 left it. It fades in only where hover is not
+ * there to open the definition: under keyboard focus (`focus-visible`), and on
+ * a coarse-pointer device (`@media (pointer: coarse)`), which are exactly the
+ * two readers the block-hover never reaches. Same touch-reveal idiom as the
+ * sidebar's row actions (`SidebarNav`). It carries its own focus ring, since
+ * the block's ring is the opener's alone.
+ */
+export const CANVAS_HEADER_INFO = [
+  'z-10 inline-grid size-4 place-items-center rounded-full text-muted-foreground',
+  'opacity-0 outline-none transition-opacity duration-(--motion-micro)',
+  'focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring/50',
+  '[@media(pointer:coarse)]:opacity-100',
+].join(' ')
 
 /**
  * The horizontal inset of one column of the board — the lane label and the

@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react'
+import type { ReactElement, RefObject } from 'react'
 import {
   Popover,
   PopoverContent,
@@ -91,6 +91,13 @@ export function DefinitionCard({ sections }: { sections: DefinitionSection[] }) 
  * The trigger supplies `tabIndex`, so every definition is reachable by
  * keyboard focus. That is what makes the ⓘ removable: the icon was never what
  * made a definition reachable (#243).
+ *
+ * Uncontrolled and hover-driven by default, which is every caller but the grid
+ * headers. Those own the hover themselves — the definition surfaces from a
+ * hover ANYWHERE on the header block, not just over the trigger — so they drive
+ * `open` and point the card at the block through `anchor` while turning the
+ * trigger's own hover off. The touch ⓘ stays the trigger, so a tap and a
+ * keyboard press still open the card the ordinary way (#306).
  */
 export function DefinitionPopover({
   sections,
@@ -98,6 +105,11 @@ export function DefinitionPopover({
   side = 'top',
   nativeButton = false,
   className,
+  open,
+  onOpenChange,
+  anchor,
+  openOnHover = true,
+  delay = 200,
 }: {
   sections: DefinitionSection[]
   children: ReactElement
@@ -105,19 +117,33 @@ export function DefinitionPopover({
   /** False for a `<span>` or a `<Badge>` trigger — Base UI warns otherwise. */
   nativeButton?: boolean
   className?: string
+  /** Controlled open state. Omit for the default uncontrolled popover. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /**
+   * Position the card against this element instead of the trigger — for a
+   * definition a surrounding block owns the hover of, so the card centres on
+   * the block rather than on a corner ⓘ.
+   */
+  anchor?: RefObject<Element | null> | Element | null
+  /** Whether the trigger opens on its own hover. Off when a block owns it. */
+  openOnHover?: boolean
+  /** Hover open delay in ms. */
+  delay?: number
 }) {
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger
         render={children}
         nativeButton={nativeButton}
-        openOnHover
-        delay={200}
+        openOnHover={openOnHover}
+        delay={delay}
         closeDelay={80}
       />
       <PopoverContent
         side={side}
         sideOffset={6}
+        anchor={anchor ?? undefined}
         className={cn('w-auto max-w-xs gap-0 p-0 text-left', className)}
       >
         <DefinitionCard sections={sections} />
