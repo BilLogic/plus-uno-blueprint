@@ -390,7 +390,7 @@ Scenario within a phase
 ### `services`
 The service this board describes. One row. Renamed from service_lifecycles on 2026-08-21 — a service cannot contain several lifecycles, so the word named a level that does not exist.
 
-3 of 7 columns described.
+4 of 8 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -398,6 +398,7 @@ The service this board describes. One row. Renamed from service_lifecycles on 20
 | `summary` | What this service is, in the words a newcomer needs. The one field above the business model in the service panel. |
 | `id` | — |
 | `name` | — |
+| `slug` | A service's stable route slug: `/<slug>` opens it (#303/#341). Its own identity, not derived from the name — a rename does not move the URL, and the unique constraint stops two services colliding. Backfilled from the name-derived slug (public.key_slug) when re-added; nullable so a cleared slug falls back to the name-derived route in the app. Editable by the deployer through a later panel write, which adds the UPDATE grant then. |
 | `origin` | Where this service came from: import (the pipeline) or app (created in the canvas). The same two values its six sibling tables carry. |
 | `entity_examples` | Per-service authored examples, one free-text value per core kind (service, phase, scenario, path, step, lane), shown under each kind's definition to ground it in this deployment. Blueprint data, not app config: it rides the service block so a re-map round-trips it. A jsonb object with no CHECK — the six-key shape is the app's, and an unwritten key simply does not render. |
 | `updated_at` | — |

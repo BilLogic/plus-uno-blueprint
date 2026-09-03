@@ -777,6 +777,7 @@ export type Database = {
           summary: string | null
           id: string
           name: string
+          slug: string | null
           origin: string
           entity_examples: Json
           updated_at: string
@@ -786,6 +787,7 @@ export type Database = {
           summary?: string | null
           id?: string
           name: string
+          slug?: string | null
           origin?: string
           entity_examples?: Json
           updated_at?: string
@@ -795,6 +797,7 @@ export type Database = {
           summary?: string | null
           id?: string
           name?: string
+          slug?: string | null
           origin?: string
           entity_examples?: Json
           updated_at?: string

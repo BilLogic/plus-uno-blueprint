@@ -12,12 +12,14 @@ import { setActiveServiceSlug } from '@/contexts/activeServiceStore'
  */
 
 const TWO_SERVICES = [
-  { id: 'svc-support', name: 'Support Desk' },
-  { id: 'svc-sales', name: 'Sales Pipeline' },
+  { id: 'svc-support', name: 'Support Desk', slug: 'support-desk' },
+  { id: 'svc-sales', name: 'Sales Pipeline', slug: 'sales-pipeline' },
 ]
 
-/** A client stub that answers `from('services').select('id, name')`. */
-function fakeClient(rows: { id: string; name: string }[]): SupabaseClient<Database> {
+/** A client stub that answers `from('services').select('id, name, slug')`. */
+function fakeClient(
+  rows: { id: string; name: string; slug?: string | null }[],
+): SupabaseClient<Database> {
   return {
     from() {
       return {
@@ -54,5 +56,13 @@ describe('findActiveServiceId', () => {
   it('resolves null when no service carries the slug', async () => {
     setActiveServiceSlug('billing')
     await expect(findActiveServiceId(fakeClient(TWO_SERVICES))).resolves.toBeNull()
+  })
+
+  it('resolves by the slug column, so a rename does not move the deep link', async () => {
+    // The service kept its `sales-pipeline` slug through a rename; the URL
+    // still resolves it, and the new name's derivation does not.
+    const renamed = [{ id: 'svc-sales', name: 'Revenue Ops', slug: 'sales-pipeline' }]
+    setActiveServiceSlug('sales-pipeline')
+    await expect(findActiveServiceId(fakeClient(renamed))).resolves.toBe('svc-sales')
   })
 })

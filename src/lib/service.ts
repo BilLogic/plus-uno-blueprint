@@ -65,9 +65,9 @@ export function __resetActiveServiceIdCache(): void {
  *
  * With no slug — the bare-root, single-service case — this is exactly
  * `findFirstServiceId`, so single-service resolution is byte-for-byte today's.
- * When a slug names a service, its id is resolved by matching the slug derived
- * from the name (production has no `slug` column — see `serviceSlug`), cached
- * per slug and sharing one in-flight query.
+ * When a slug names a service, its id is resolved by matching the service's
+ * `slug` column (with a name-derived fallback for a null column — see
+ * `serviceSlug`), cached per slug and sharing one in-flight query.
  *
  * Signal-less on purpose (see `findFirstServiceId`); wrap the wait in
  * `awaitOrAbort` so a caller leaving its view stops waiting without cancelling
@@ -80,7 +80,7 @@ export function findActiveServiceId(client: Client): Promise<string | null> {
   let pending = activeServiceIdBySlug.get(slug)
   if (!pending) {
     pending = (async () => {
-      const { data, error } = await client.from('services').select('id, name')
+      const { data, error } = await client.from('services').select('id, name, slug')
       if (error) throw new Error(error.message)
       return resolveServiceBySlug(data ?? [], slug)?.id ?? null
     })().catch((error: unknown) => {
