@@ -40,7 +40,7 @@ import { parseCellContentItems } from '@/lib/parseCellContent'
 // The model
 // ---------------------------------------------------------------------------
 
-type TouchpointRow = { id: string; service_id: string; name: string }
+type TouchpointRow = { id: string; name: string }
 type PlacementRow = {
   id: string
   cell_id: string
@@ -105,7 +105,8 @@ function syncCellTouchpoints(db: Db, cellId: string, names: string[]) {
 
   for (const name of wanted.keys()) {
     if (!db.touchpoints.some((row) => row.name === name)) {
-      db.touchpoints.push({ id: id('tp'), service_id: 'service-1', name })
+      // Minted by name alone: the catalog is the deployment's (ADR 0014).
+      db.touchpoints.push({ id: id('tp'), name })
     }
   }
 
@@ -165,10 +166,7 @@ function renameTouchpointRpc(db: Db, touchpointId: string, name: string) {
   if (!touchpoint) throw new Error(`touchpoint ${touchpointId} does not exist`)
   if (
     db.touchpoints.some(
-      (row) =>
-        row.id !== touchpointId &&
-        row.service_id === touchpoint.service_id &&
-        row.name === wanted,
+      (row) => row.id !== touchpointId && row.name === wanted,
     )
   ) {
     throw new Error('duplicate key value violates unique constraint')
@@ -297,8 +295,8 @@ function fixture() {
   nextId = 0
   const db: Db = {
     touchpoints: [
-      { id: 'tp-zoom', service_id: 'service-1', name: 'Zoom' },
-      { id: 'tp-recording', service_id: 'service-1', name: 'Zoom Recording' },
+      { id: 'tp-zoom', name: 'Zoom' },
+      { id: 'tp-recording', name: 'Zoom Recording' },
     ],
     placements: [
       {

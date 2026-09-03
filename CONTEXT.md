@@ -79,9 +79,10 @@ distinguished by `position`.
 
 **touchpoint** — a thing the service uses that a customer or a member of staff
 meets at a moment: an app, a document, a physical artifact, a channel, another
-service. It belongs to the **service**, not to a cell, so renaming it once
-moves every place it appears.
-Table `touchpoints`: `service_id`, `name`, `kind`, `summary`, `url`,
+service. It belongs to the **deployment**, shared across its services and not
+owned by any one of them, so renaming it once moves every place it appears. Its
+`name` is its identity, unique deployment-wide (ADR 0014).
+Table `touchpoints`: `name`, `kind`, `summary`, `url`,
 `stakeholder_id`, `origin`.
 
 **placement** — one touchpoint, used at one cell, this way. The catalog owns

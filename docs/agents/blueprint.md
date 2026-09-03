@@ -442,9 +442,9 @@ One slide of a slice. It shows the FRAMES of the cells it references — that st
 | `updated_at` | — |
 
 ### `stakeholders`
-—
+Deployment-level cast list: one pool of actors a lane picks from, unique by name across the deployment. A lane references a stakeholder; no service owns one (ADR 0014). The unscoped read this registry always did is now correct.
 
-2 of 8 columns described.
+3 of 7 columns described.
 
 | Column | Meaning |
 |---|---|
@@ -452,8 +452,7 @@ One slide of a slice. It shows the FRAMES of the cells it references — that st
 | `created_at` | — |
 | `id` | — |
 | `kind` | What sort of party this is. staff/recipient/partner/provider are ACTORS — they can be a lane's stakeholder. team is an accountable group — it can be a lane's owner_team and never its stakeholder. |
-| `name` | — |
-| `service_id` | — |
+| `name` | The identity: unique across the deployment, so the same actor recurs across services by name rather than as one row per service. |
 | `summary` | What this party IS, in one line — a definition, not an aside. The lane panel and the owner badge read it; a lane never copies it, because one stakeholder owns many lanes and 37 copies is 37 chances to disagree. |
 | `updated_at` | — |
 
@@ -472,18 +471,17 @@ Blueprint column (journey step) scoped to a service scenario
 | `updated_at` | — |
 
 ### `touchpoints`
-Catalog of the tools, documents, channels and artifacts a service uses. One row per real thing; the grid renders this name, so a rename here moves every placement at once.
+Deployment-level catalog of the tools, documents, channels and artifacts the services use. One row per real thing, unique by name across the deployment; a service references it, no service owns it (ADR 0014).
 
-0 of 10 columns described.
+1 of 9 columns described.
 
 | Column | Meaning |
 |---|---|
 | `created_at` | — |
 | `id` | — |
 | `kind` | — |
-| `name` | — |
+| `name` | The identity: unique across the deployment, so a second service reuses an entry by naming the same tool the same way rather than minting its own. |
 | `origin` | — |
-| `service_id` | — |
 | `stakeholder_id` | — |
 | `summary` | — |
 | `updated_at` | — |
