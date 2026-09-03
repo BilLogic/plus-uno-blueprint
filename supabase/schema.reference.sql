@@ -268,7 +268,6 @@ create table public.slides (
 -- structural one and would have warned six times per scenario.
 create table public.stakeholders (
   id uuid primary key default gen_random_uuid(),
-  service_id uuid not null references public.services (id) on delete cascade,
   parent_id uuid references public.stakeholders (id) on delete set null,
   name text not null,
   -- `team` is a container, not a person: a team holds its people via parent_id.
@@ -277,7 +276,9 @@ create table public.stakeholders (
   aliases text[] not null default '{}',   -- other spellings seen in THIS blueprint
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (service_id, name)
+  -- Deployment-level catalog: the name is the identity, unique across the whole
+  -- deployment and owned by no one service (ADR 0014).
+  unique (name)
 );
 
 -- One business-model record per service. The three validation questions live as

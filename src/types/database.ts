@@ -952,7 +952,6 @@ export type Database = {
           id: string
           kind: string
           name: string
-          service_id: string
           summary: string | null
           updated_at: string
         }
@@ -962,7 +961,6 @@ export type Database = {
           id?: string
           kind: string
           name: string
-          service_id: string
           summary?: string | null
           updated_at?: string
         }
@@ -972,19 +970,10 @@ export type Database = {
           id?: string
           kind?: string
           name?: string
-          service_id?: string
           summary?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: 'stakeholders_service_id_fkey'
-            columns: ['service_id']
-            isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       touchpoints: {
         Row: {
@@ -993,7 +982,6 @@ export type Database = {
           kind: string
           name: string
           origin: string
-          service_id: string
           stakeholder_id: string | null
           summary: string | null
           updated_at: string
@@ -1005,7 +993,6 @@ export type Database = {
           kind?: string
           name: string
           origin: string
-          service_id: string
           stakeholder_id?: string | null
           summary?: string | null
           updated_at?: string
@@ -1017,20 +1004,12 @@ export type Database = {
           kind?: string
           name?: string
           origin?: string
-          service_id?: string
           stakeholder_id?: string | null
           summary?: string | null
           updated_at?: string
           url?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: 'touchpoints_service_id_fkey'
-            columns: ['service_id']
-            isOneToOne: false
-            referencedRelation: 'services'
-            referencedColumns: ['id']
-          },
           {
             foreignKeyName: 'touchpoints_stakeholder_id_fkey'
             columns: ['stakeholder_id']
