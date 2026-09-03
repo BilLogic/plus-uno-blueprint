@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 import { useSupabaseQuery, type QueryResult } from '@/hooks/useSupabaseQuery'
+import { getActiveServiceSlug } from '@/contexts/activeServiceStore'
+import { resolveServiceBySlug } from '@/lib/serviceSlug'
 import type { EntityExamples } from '@/lib/panelTerms'
 
 // Re-exported from its canonical home in `panelTerms`, beside the kinds it is
@@ -34,24 +36,29 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
   const fallback = useCallback(() => null, [])
 
   return useSupabaseQuery<ServiceSpec | null>(
-    // One service per deployment, so the query takes the first by `created_at`
-    // and the key is a constant. It used to accept a `serviceId` it never read
-    // while still baking it into the cache key — so a real id would have
-    // cached the FIRST service's data under that id's key, and ServicePanel's
-    // hardcoded invalidation of `service-spec:first` would then have missed
-    // it. Both callers passed null, so the lie never cost anything; the
-    // parameter is gone rather than honoured because multi-service is plan
-    // 004 and pinned.
+    // The key stays constant: there is exactly one active service per page load
+    // (the switcher is a later ticket), and `ServicePanel` invalidates this
+    // literal key. The READ, below, now scopes to the active service the URL
+    // slug names rather than always taking the first row.
     'service-spec:first',
     async (client, signal) => {
-      const { data: service, error } = await client
+      const { data: serviceRows, error } = await client
         .from('services')
-        .select('id, name, summary, entity_examples, business_models(funding, pricing, delivery_cost, revenue_model, partners)')
+        .select(
+          'id, name, summary, entity_examples, business_models(funding, pricing, delivery_cost, revenue_model, partners)',
+        )
         .order('created_at')
-        .limit(1)
         .abortSignal(signal)
-        .maybeSingle()
       if (error) throw new Error(error.message)
+
+      // The active service is the one the URL slug names; production has no
+      // `slug` column, so it is matched by the slug derived from the name (see
+      // `serviceSlug`). At the bare root — the single-service case — no slug is
+      // set and this is the first row by `created_at`, as before.
+      const slug = getActiveServiceSlug()
+      const service = slug
+        ? resolveServiceBySlug(serviceRows ?? [], slug)
+        : (serviceRows?.[0] ?? null)
       if (!service) return null
 
       const model = (Array.isArray(service.business_models)
