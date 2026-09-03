@@ -27,6 +27,10 @@ export const coverContent: CoverContent = {
     {
       value: 'the-service',
       label: 'The service',
+      // The services tab: when the deployment holds more than one service this
+      // tab shows the service selector and reads "Services"; with PLUS's single
+      // service it stays "The service" with no selector (#336).
+      services: { pluralLabel: 'Services' },
       sections: [
         {
           kind: 'portrait',

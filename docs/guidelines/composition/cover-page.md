@@ -7,6 +7,7 @@ claims:
   - src/components/cover/CoverFigure.tsx
   - src/components/cover/CoverPage.tsx
   - src/components/cover/CoverSections.tsx
+  - src/components/cover/CoverServicesSelector.tsx
   - src/components/cover/CoverTabStrip.tsx
   - src/components/cover/coverInline.tsx
   - src/components/cover/coverMeasure.ts
@@ -152,3 +153,14 @@ rather than a continuation of the page's.
   the two overflow axes together, reopening the phantom vertical scroll region
   this structure exists to remove; and overscroll containment is x-only, because
   the page's own vertical scroll must still chain.
+- **`CoverServicesSelector`** — the front door to a multi-service deployment
+  (#336, #303). The tab a deployment marks `services:` in its content heads its
+  panel with a selector — one segmented control on a recessed track, a tab per
+  service, the active one lifted onto the background (the Skills tab's pattern,
+  applied to the roster). Picking one makes that service active, which drives
+  the URL and re-scopes the board. **It appears only when a second service
+  exists:** with one service the tab keeps its singular label and shows no
+  selector, so a single-service deployment is unchanged. The roster and the
+  active slug are read once at `CoverPage` (from `ActiveServiceContext`) and
+  handed to the provider-free `CoverPageView` as props, so the surface stays
+  testable without a provider.
