@@ -1,9 +1,10 @@
 /**
  * Dev-only situation catalog page (#346) — the visual half of the parity net.
  *
- * Renders every S1–S10 situation across the three view modes, drawing the
- * arrows the CURRENT engine produces so each case can be eyeballed before any
- * Direction-B slice touches the router. It shares its fixtures and its geometry
+ * Renders every situation (S1–S10 from the plan, plus S11's co-traveller
+ * corridor) across the three view modes, drawing the arrows the engine
+ * produces so each case can be eyeballed as Direction-B slices land. It shares
+ * its fixtures and its geometry
  * with the golden-snapshot test (`arrowSituationCatalog.ts`), so what you see
  * here is exactly what the parity gate freezes.
  *
@@ -246,10 +247,10 @@ export function ArrowSituationCatalogPage() {
           Arrow routing — situation catalog
         </h1>
         <p style={{ fontSize: 13, color: '#475569', margin: 0, maxWidth: 820 }}>
-          The S1–S10 catalog from the trigger-line plan, drawn with the current
-          arrow engine. This is the &ldquo;before&rdquo; record the Direction-B
-          parity gate diffs against (#346). Dev-only route — it ships nothing to
-          production.
+          The trigger-line plan&rsquo;s S1–S10 catalog, plus S11&rsquo;s
+          co-traveller corridor (#349), drawn with the current arrow engine.
+          This is the record the Direction-B parity gate diffs against (#346).
+          Dev-only route — it ships nothing to production.
         </p>
       </header>
       {ARROW_SITUATIONS.map((situation) => (

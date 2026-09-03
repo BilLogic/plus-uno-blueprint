@@ -13,11 +13,13 @@ import {
   buildBidirectionalArrowPath,
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   clearAnchorSlotPlan,
+  clearArrowCorridorPlan,
   findBidirectionalDependencyPairs,
   isWrapDependency,
   partitionReportingAnIssueFsaStep1ToResolveDependencies,
   planAnchorSlots,
   planArrowConfluences,
+  planArrowCorridors,
   runArrowMeasurementPass,
 } from '@/lib/blueprintArrowGeometry'
 import {
@@ -237,6 +239,14 @@ export function IntegratedDependencyArrows({
         disabled: !mergeConfluences,
       })
 
+      // Co-traveller offsets over the runs this lane routes (a merged trunk is
+      // not a corridor run): two arrows sharing one detour corridor fan onto
+      // adjacent lanes instead of overdrawing one line.
+      planArrowCorridors(
+        content,
+        unpaired.filter((dependency) => !merge.consumed.has(dependency.id)),
+      )
+
       const dependencyById = new Map(
         dependencies.map((dependency) => [dependency.id, dependency]),
       )
@@ -349,6 +359,7 @@ export function IntegratedDependencyArrows({
       }
 
       clearAnchorSlotPlan()
+      clearArrowCorridorPlan()
       return segments
     })
 

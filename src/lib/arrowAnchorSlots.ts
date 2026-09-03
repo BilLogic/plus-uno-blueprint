@@ -238,3 +238,154 @@ export function planConfluences(
   // Deterministic across runs regardless of Map insertion.
   return out.sort((a, b) => (a.id < b.id ? -1 : 1))
 }
+
+/* ------------------------------------------------ corridor scoring (#349)
+
+  When an arrow's straight route is blocked, it detours through a corridor.
+  Which corridor was, until now, hand-pinned per builder (the horizontal-skip
+  detour always went overhead, above the obstruction). This is the generic
+  replacement: enumerate the candidate corridors a blocked run could take —
+  the overhead lane, the underneath lane, the column gutter — and pick the one
+  with the most room, so a run rides the widest gap instead of squeezing into
+  whichever lane the code was pinned to. Plan §3's priority order (gap first,
+  behind-cell tuck last) falls out of scoring each candidate by its clear gap.
+
+  Pure — corridors in, one choice out — so the router's DOM half measures the
+  gaps and this half only decides. Determinism is load-bearing exactly as it is
+  for slots: ties break on the shorter detour then the corridor id, never on
+  Map or measurement order.
+*/
+
+/** A corridor a blocked run could detour through. */
+export type CorridorCandidate = {
+  /** Stable lane identifier, e.g. `'overhead'` / `'underneath'` / `'gutter'`. */
+  id: string
+  /** The axis coordinate the detour run would ride along (a Y for a
+   *  horizontal lane, an X for a vertical gutter). */
+  line: number
+  /** Clear room the corridor affords around that line — the available gap.
+   *  Bigger is roomier; a corridor a card leans into reports a small one. */
+  room: number
+}
+
+/**
+ * Pick the corridor with the most available room.
+ *
+ * A corridor with less than `minRoom` is too cramped to hold the run without
+ * grazing a card, so any corridor that clears `minRoom` beats every one that
+ * does not; among those that clear it, the roomiest wins. `baseline` is the
+ * straight route's line — it only breaks a room tie, so a run never trades a
+ * roomier corridor for a shorter detour, but two equally roomy corridors take
+ * the nearer one. Returns null only when handed no candidates.
+ */
+export function chooseCorridor(
+  candidates: readonly CorridorCandidate[],
+  baseline: number,
+  minRoom: number,
+): CorridorCandidate | null {
+  if (candidates.length === 0) return null
+  const ranked = [...candidates].sort((a, b) => {
+    const aClears = a.room >= minRoom
+    const bClears = b.room >= minRoom
+    if (aClears !== bClears) return aClears ? -1 : 1
+    return (
+      b.room - a.room ||
+      Math.abs(a.line - baseline) - Math.abs(b.line - baseline) ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+    )
+  })
+  return ranked[0] ?? null
+}
+
+/* ------------------------------------------------ co-traveller offset (#349)
+
+  Two arrows can pick the SAME corridor and, riding the same line over an
+  overlapping stretch, draw as one doubled line the reader cannot resolve into
+  two. The offset pass sees every run on a corridor at once — the same
+  see-it-all-at-once shape as the anchor-slot allocator — and pushes co-
+  travellers onto adjacent lanes so each is legible.
+
+  A run that shares its corridor with nothing keeps lane 0 (count 1), so a
+  board with no co-travellers draws exactly as it did before the pass.
+*/
+
+/** One run's claim on a corridor: the lane it rides and the stretch it spans. */
+export type CorridorRun = {
+  /** Unique per run (the dependency id). */
+  id: string
+  /** Which corridor lane the run travels — only same-lane runs co-travel. */
+  lane: string
+  /** The line the run rides before any offset (same-line runs can collide). */
+  line: number
+  /** The stretch of the corridor axis the run occupies. */
+  start: number
+  end: number
+  /** Caller order; a shared lane breaks ties on it, then on `id`. */
+  sortKey: number
+}
+
+export type CorridorLaneAssignment = {
+  id: string
+  /** 0 for the run that keeps the base line; 1.. for each co-traveller pushed
+   *  onto an adjacent lane, in caller order. */
+  index: number
+  /** How many runs share this run's corridor stretch, including this one. */
+  count: number
+}
+
+const CO_TRAVELLER_EPSILON = 0.5
+
+/** Do two runs ride the same lane at the same line over an overlapping span? */
+function coTravel(a: CorridorRun, b: CorridorRun): boolean {
+  return (
+    a.lane === b.lane &&
+    Math.abs(a.line - b.line) <= CO_TRAVELLER_EPSILON &&
+    a.start < b.end &&
+    b.start < a.end
+  )
+}
+
+/**
+ * Allocate a lane index to every run.
+ *
+ * Runs that co-travel (same lane, same line, overlapping spans) form a group;
+ * overlap is transitive, so a chain of runs that each overlap the next share
+ * one group and fan across successive lanes. Within a group the caller's order
+ * (`sortKey`, then `id`) fixes who keeps the base line and who steps aside, so
+ * the same board always offsets the same way.
+ */
+export function allocateCorridorLanes(
+  runs: readonly CorridorRun[],
+): Map<string, CorridorLaneAssignment> {
+  const ordered = [...runs].sort(
+    (a, b) => a.sortKey - b.sortKey || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+  )
+
+  // Union overlapping co-travellers into groups (transitive closure).
+  const groupOf = new Map<string, number>()
+  const groups: CorridorRun[][] = []
+  for (const run of ordered) {
+    let joined = -1
+    for (let g = 0; g < groups.length; g++) {
+      if (groups[g]!.some((member) => coTravel(member, run))) {
+        joined = g
+        break
+      }
+    }
+    if (joined === -1) {
+      groupOf.set(run.id, groups.length)
+      groups.push([run])
+    } else {
+      groupOf.set(run.id, joined)
+      groups[joined]!.push(run)
+    }
+  }
+
+  const out = new Map<string, CorridorLaneAssignment>()
+  for (const group of groups) {
+    group.forEach((run, index) => {
+      out.set(run.id, { id: run.id, index, count: group.length })
+    })
+  }
+  return out
+}

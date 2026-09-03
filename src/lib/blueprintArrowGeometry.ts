@@ -12,9 +12,13 @@ import {
 } from '@/data/parallelSessionPartnerLead'
 import {
   allocateAnchorSlots,
+  allocateCorridorLanes,
   anchorPointFor,
+  chooseCorridor,
   planConfluences,
   type Confluence,
+  type CorridorLaneAssignment,
+  type CorridorRun,
   type Direction,
   type Side,
   type SlotAssignment,
@@ -55,6 +59,9 @@ export type CellAnchor = {
 
 /** One endpoint's slot on a cell, or absent when the band was not planned. */
 let activeAnchorPlan: Map<string, SlotAssignment> | null = null
+
+/** One run's corridor lane on the band, or absent when it was not planned. */
+let activeCorridorPlan: Map<string, CorridorLaneAssignment> | null = null
 
 /** A minimal source/target-cell shape a slot plan can be built from. */
 export type AnchorSlotDependency = {
@@ -1254,41 +1261,199 @@ export function buildVerticalGutterDetourPath(
   )
 }
 
-/** Horizontal connector detours above skipped cells via column gutters. */
-export function buildHorizontalGutterDetourPath(
+/* --------------------------------------------------- gap-first corridors (#349)
+
+  A same-row forward run that a column blocks has to detour. The lane it
+  detours through used to be hand-pinned — always overhead, above the
+  obstruction — which squeezes into whatever room sits between the cards and
+  the band edge even when the underneath lane is wide open. `chooseCorridor`
+  (pure, in `arrowAnchorSlots`) replaces the pin: this half measures the clear
+  gap each lane affords within the run's own x-span and hands both candidates
+  to the scorer, which picks the roomier. Plan §3's gap-first order falls out
+  of that — the widest gap wins, and the behind-cell tuck only when neither
+  lane clears the run.
+*/
+
+/** Adjacent co-traveller lanes sit this far apart in the detour corridor. */
+export const ARROW_CORRIDOR_LANE_PITCH = 14
+
+/** A corridor narrower than this cannot hold the run clear of the cards. */
+const HORIZONTAL_DETOUR_MIN_ROOM = ARROW_DETOUR_CLEARANCE * 2
+
+type HorizontalDetourCorridor = {
+  routeY: number
+  sourceRight: number
+  exitGapX: number
+  riseX: number
+  entryX: number
+  lane: 'overhead' | 'underneath'
+  /** The detour line before any co-traveller offset. */
+  baseDetourY: number
+  /** The stretch of the corridor the run occupies (for co-traveller overlap). */
+  spanLeft: number
+  spanRight: number
+}
+
+/**
+ * The corridor a same-row obstructed forward run detours through, scored gap-
+ * first, or null when the run is not that shape. Pure geometry over the DOM —
+ * `planArrowCorridors` and `buildHorizontalGutterDetourPath` both call it, so
+ * the plan that assigns lanes and the builder that draws them agree on which
+ * corridor each run rides.
+ */
+function computeHorizontalDetourCorridor(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
-): string {
+): HorizontalDetourCorridor | null {
+  const obstructing = getSameRowObstructingCells(sourceEl, targetEl)
+  if (obstructing.length === 0) return null
+
+  const sourceStep = parseStepIndex(sourceEl)
+  if (sourceStep === null) return null
+
   const sourceBox = getCellContentBox(sourceEl, root)
   const targetBox = getCellContentBox(targetEl, root)
   const routeY = getArrowCenterY(sourceEl, targetEl, root)
   const entryX = targetBox.left - ARROW_CHEVRON_SIZE
-  const sourceStep = parseStepIndex(sourceEl)
-  if (sourceStep === null) return ''
-
-  const obstructing = getSameRowObstructingCells(sourceEl, targetEl)
-  let detourY = routeY
-  for (const el of obstructing) {
-    const box = getCellContentBox(el, root)
-    detourY = Math.min(detourY, box.top - ARROW_DETOUR_CLEARANCE)
-  }
-
   const exitGapX =
-    getStepGapCenterX(root, sourceStep) ??
-    sourceBox.right + STEP_COLUMN_GAP / 2
+    getStepGapCenterX(root, sourceStep) ?? sourceBox.right + STEP_COLUMN_GAP / 2
   const riseX =
     getPreTargetGapCenterX(root, sourceEl, targetEl) ??
     entryX - Math.max(28, ARROW_CORNER_RADIUS * 2.5)
 
+  const spanLeft = Math.min(exitGapX, riseX)
+  const spanRight = Math.max(exitGapX, riseX)
+
+  let obsTop = Infinity
+  let obsBottom = -Infinity
+  for (const el of obstructing) {
+    const box = getCellContentBox(el, root)
+    obsTop = Math.min(obsTop, box.top)
+    obsBottom = Math.max(obsBottom, box.top + box.height)
+  }
+
+  // The corridor's room is the clear gap between the obstruction band and the
+  // nearest card the run would meet in that direction, within its own x-span —
+  // so a lane a neighbouring card leans into reports a small gap and loses.
+  const rootBox = getElementLayoutBox(root, root)
+  let ceiling = rootBox.top
+  let floor = rootBox.top + rootBox.height
+  for (const el of queryBlueprintCells(root, root)) {
+    if (el === sourceEl || el === targetEl) continue
+    const box = getCellContentBox(el, root)
+    if (box.right <= spanLeft || box.left >= spanRight) continue
+    const cellBottom = box.top + box.height
+    if (cellBottom <= obsTop) ceiling = Math.max(ceiling, cellBottom)
+    else if (box.top >= obsBottom) floor = Math.min(floor, box.top)
+  }
+
+  const chosen = chooseCorridor(
+    [
+      { id: 'overhead', line: obsTop - ARROW_DETOUR_CLEARANCE, room: obsTop - ceiling },
+      { id: 'underneath', line: obsBottom + ARROW_DETOUR_CLEARANCE, room: floor - obsBottom },
+    ],
+    routeY,
+    HORIZONTAL_DETOUR_MIN_ROOM,
+  )
+  if (!chosen) return null
+
+  return {
+    routeY,
+    sourceRight: sourceBox.right,
+    exitGapX,
+    riseX,
+    entryX,
+    lane: chosen.id === 'underneath' ? 'underneath' : 'overhead',
+    baseDetourY: chosen.line,
+    spanLeft,
+    spanRight,
+  }
+}
+
+/**
+ * Plan the co-traveller offsets for one band's corridor detours.
+ *
+ * Collects every dependency that would take a horizontal gutter detour, scores
+ * the corridor each rides, and hands the runs to `allocateCorridorLanes` so two
+ * that share one lane fan onto adjacent lanes instead of drawing one doubled
+ * line. Call over the dependencies the band will actually route (confluence
+ * members excluded — a merged trunk is not a corridor run). The result replaces
+ * the active plan, which `buildHorizontalGutterDetourPath` then consults.
+ */
+export function planArrowCorridors(
+  root: HTMLElement,
+  dependencies: readonly AnchorSlotDependency[],
+): void {
+  const runs: CorridorRun[] = []
+  dependencies.forEach((dependency, index) => {
+    const sourceEl = root.querySelector<HTMLElement>(
+      `[data-blueprint-cell="${dependency.source_cell_id}"]`,
+    )
+    const targetEl = root.querySelector<HTMLElement>(
+      `[data-blueprint-cell="${dependency.target_cell_id}"]`,
+    )
+    if (!sourceEl || !targetEl) return
+
+    const corridor = computeHorizontalDetourCorridor(sourceEl, targetEl, root)
+    if (!corridor) return
+
+    runs.push({
+      id: dependency.id,
+      lane: corridor.lane,
+      line: corridor.baseDetourY,
+      start: corridor.spanLeft,
+      end: corridor.spanRight,
+      sortKey: index,
+    })
+  })
+
+  activeCorridorPlan = allocateCorridorLanes(runs)
+}
+
+/** Forget the active corridor plan, so an unplanned build reads no stale lane. */
+export function clearArrowCorridorPlan(): void {
+  activeCorridorPlan = null
+}
+
+/** The lane a run was assigned, or absent when its corridor was uncontested. */
+function corridorLaneFor(
+  dependencyId: string | undefined,
+): CorridorLaneAssignment | undefined {
+  if (!activeCorridorPlan || dependencyId === undefined) return undefined
+  return activeCorridorPlan.get(dependencyId)
+}
+
+/**
+ * Horizontal connector that detours around skipped cells, riding the gap-first
+ * corridor `computeHorizontalDetourCorridor` scored. When it shares that
+ * corridor with another run, the corridor plan nudges it onto an adjacent lane
+ * (`dependencyId` looks up its offset); a run sharing its corridor with nothing
+ * keeps lane 0 and draws exactly on the scored line.
+ */
+export function buildHorizontalGutterDetourPath(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+  dependencyId?: string,
+): string {
+  const corridor = computeHorizontalDetourCorridor(sourceEl, targetEl, root)
+  if (!corridor) return ''
+
+  const lane = corridorLaneFor(dependencyId)
+  const laneDirection = corridor.lane === 'underneath' ? 1 : -1
+  const detourY =
+    corridor.baseDetourY +
+    (lane ? lane.index * ARROW_CORRIDOR_LANE_PITCH * laneDirection : 0)
+
   return buildRoundedPolylinePath(
     [
-      { x: sourceBox.right, y: routeY },
-      { x: exitGapX, y: routeY },
-      { x: exitGapX, y: detourY },
-      { x: riseX, y: detourY },
-      { x: riseX, y: routeY },
-      { x: entryX, y: routeY },
+      { x: corridor.sourceRight, y: corridor.routeY },
+      { x: corridor.exitGapX, y: corridor.routeY },
+      { x: corridor.exitGapX, y: detourY },
+      { x: corridor.riseX, y: detourY },
+      { x: corridor.riseX, y: corridor.routeY },
+      { x: corridor.entryX, y: corridor.routeY },
     ],
     ARROW_CORNER_RADIUS,
   )
@@ -3543,7 +3708,12 @@ export function buildArrowPath(
   }
 
   if (getSameRowObstructingCells(sourceEl, targetEl).length > 0) {
-    return buildHorizontalGutterDetourPath(sourceEl, targetEl, root)
+    return buildHorizontalGutterDetourPath(
+      sourceEl,
+      targetEl,
+      root,
+      dependencyId,
+    )
   }
 
   const anchors = getHorizontalCellAnchors(sourceEl, targetEl, root)
