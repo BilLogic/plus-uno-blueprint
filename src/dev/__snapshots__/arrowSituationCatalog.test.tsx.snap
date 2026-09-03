@@ -214,12 +214,19 @@ exports[`arrow situation catalog — golden geometry > S7 — N sources → one 
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 217.33333333333331 Q 224 221.33333333333331 228 221.33333333333331 L 232 221.33333333333331",
-      "id": "s7-a-dep",
+      "d": "M 224 90 L 224 234 Q 224 238 228 238 L 232 238",
+      "id": "s7-target-confluence-left",
+      "showMarker": true,
     },
     {
-      "d": "M 200 238 L 218 238 Q 224 238 224 244 L 224 250.66666666666666 Q 224 254.66666666666666 228 254.66666666666666 L 232 254.66666666666666",
+      "d": "M 200 90 L 224 90",
+      "id": "s7-a-dep",
+      "showMarker": false,
+    },
+    {
+      "d": "M 200 238 L 224 238",
       "id": "s7-b-dep",
+      "showMarker": false,
     },
   ],
 }
@@ -229,12 +236,19 @@ exports[`arrow situation catalog — golden geometry > S7 — N sources → one 
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 217.33333333333331 Q 224 221.33333333333331 228 221.33333333333331 L 232 221.33333333333331",
-      "id": "s7-a-dep",
+      "d": "M 224 90 L 224 234 Q 224 238 228 238 L 232 238",
+      "id": "s7-target-confluence-left",
+      "showMarker": true,
     },
     {
-      "d": "M 200 238 L 218 238 Q 224 238 224 244 L 224 250.66666666666666 Q 224 254.66666666666666 228 254.66666666666666 L 232 254.66666666666666",
+      "d": "M 200 90 L 224 90",
+      "id": "s7-a-dep",
+      "showMarker": false,
+    },
+    {
+      "d": "M 200 238 L 224 238",
       "id": "s7-b-dep",
+      "showMarker": false,
     },
   ],
 }
@@ -244,12 +258,19 @@ exports[`arrow situation catalog — golden geometry > S7 — N sources → one 
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 217.33333333333331 Q 224 221.33333333333331 228 221.33333333333331 L 232 221.33333333333331",
-      "id": "s7-a-dep",
+      "d": "M 224 90 L 224 234 Q 224 238 228 238 L 232 238",
+      "id": "s7-target-confluence-left",
+      "showMarker": true,
     },
     {
-      "d": "M 200 238 L 218 238 Q 224 238 224 244 L 224 250.66666666666666 Q 224 254.66666666666666 228 254.66666666666666 L 232 254.66666666666666",
+      "d": "M 200 90 L 224 90",
+      "id": "s7-a-dep",
+      "showMarker": false,
+    },
+    {
+      "d": "M 200 238 L 224 238",
       "id": "s7-b-dep",
+      "showMarker": false,
     },
   ],
 }
@@ -259,12 +280,19 @@ exports[`arrow situation catalog — golden geometry > S8 — One source → N t
 {
   "segments": [
     {
-      "d": "M 200 73.33333333333333 L 218 73.33333333333333 Q 224 73.33333333333333 224 79.33333333333333 L 224 86 Q 224 90 228 90 L 232 90",
-      "id": "s8-t1-dep",
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 238",
+      "id": "s8-source-fan-out-right",
+      "showMarker": false,
     },
     {
-      "d": "M 200 106.66666666666666 L 218 106.66666666666666 Q 224 106.66666666666666 224 112.66666666666666 L 224 234 Q 224 238 228 238 L 232 238",
+      "d": "M 224 90 L 232 90",
+      "id": "s8-t1-dep",
+      "showMarker": true,
+    },
+    {
+      "d": "M 224 238 L 232 238",
       "id": "s8-t2-dep",
+      "showMarker": true,
     },
   ],
 }
@@ -274,12 +302,19 @@ exports[`arrow situation catalog — golden geometry > S8 — One source → N t
 {
   "segments": [
     {
-      "d": "M 200 73.33333333333333 L 218 73.33333333333333 Q 224 73.33333333333333 224 79.33333333333333 L 224 86 Q 224 90 228 90 L 232 90",
-      "id": "s8-t1-dep",
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 238",
+      "id": "s8-source-fan-out-right",
+      "showMarker": false,
     },
     {
-      "d": "M 200 106.66666666666666 L 218 106.66666666666666 Q 224 106.66666666666666 224 112.66666666666666 L 224 234 Q 224 238 228 238 L 232 238",
+      "d": "M 224 90 L 232 90",
+      "id": "s8-t1-dep",
+      "showMarker": true,
+    },
+    {
+      "d": "M 224 238 L 232 238",
       "id": "s8-t2-dep",
+      "showMarker": true,
     },
   ],
 }
@@ -289,12 +324,19 @@ exports[`arrow situation catalog — golden geometry > S8 — One source → N t
 {
   "segments": [
     {
-      "d": "M 200 73.33333333333333 L 218 73.33333333333333 Q 224 73.33333333333333 224 79.33333333333333 L 224 86 Q 224 90 228 90 L 232 90",
-      "id": "s8-t1-dep",
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 238",
+      "id": "s8-source-fan-out-right",
+      "showMarker": false,
     },
     {
-      "d": "M 200 106.66666666666666 L 218 106.66666666666666 Q 224 106.66666666666666 224 112.66666666666666 L 224 234 Q 224 238 228 238 L 232 238",
+      "d": "M 224 90 L 232 90",
+      "id": "s8-t1-dep",
+      "showMarker": true,
+    },
+    {
+      "d": "M 224 238 L 232 238",
       "id": "s8-t2-dep",
+      "showMarker": true,
     },
   ],
 }
@@ -304,12 +346,19 @@ exports[`arrow situation catalog — golden geometry > S9 — Merged view: alias
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 217.33333333333331 Q 224 221.33333333333331 228 221.33333333333331 L 232 221.33333333333331",
-      "id": "s9-a-dep",
+      "d": "M 224 90 L 224 234 Q 224 238 228 238 L 232 238",
+      "id": "s9-target-confluence-left",
+      "showMarker": true,
     },
     {
-      "d": "M 200 238 L 218 238 Q 224 238 224 244 L 224 250.66666666666666 Q 224 254.66666666666666 228 254.66666666666666 L 232 254.66666666666666",
+      "d": "M 200 90 L 224 90",
+      "id": "s9-a-dep",
+      "showMarker": false,
+    },
+    {
+      "d": "M 200 238 L 224 238",
       "id": "s9-b-dep",
+      "showMarker": false,
     },
   ],
 }

@@ -131,7 +131,9 @@ function SituationBoard({
             strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
-            markerEnd={`url(#${markerId})`}
+            markerEnd={
+              segment.showMarker === false ? undefined : `url(#${markerId})`
+            }
           />
         ))}
       </svg>

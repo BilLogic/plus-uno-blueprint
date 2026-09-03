@@ -8,18 +8,15 @@ import {
 } from 'react'
 import {
   ARROW_VIEWPORT_PAD,
-  buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
   buildBidirectionalArrowPath,
-  buildOverheadRailFanOutDropPath,
-  buildOverheadRailFanOutTrunkPath,
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   clearAnchorSlotPlan,
   findBidirectionalDependencyPairs,
-  groupDiscoveryRailDependencies,
   isWrapDependency,
   partitionReportingAnIssueFsaStep1ToResolveDependencies,
   planAnchorSlots,
+  planArrowConfluences,
 } from '@/lib/blueprintArrowGeometry'
 import {
   getPathArrowColor,
@@ -57,6 +54,11 @@ type BlueprintDependencyArrowsProps = {
   pathKind?: PathKind
   /** When set with pathKind, arrows use the stable path identity color. */
   pathName?: string
+  /**
+   * Per-scenario off-switch for the confluence/fan-out merge — on by default.
+   * False makes every same-side arrival keep its own head again.
+   */
+  mergeConfluences?: boolean
 }
 
 type ArrowSegment = {
@@ -97,6 +99,7 @@ export function BlueprintDependencyArrows({
   lane,
   pathKind = 'happy',
   pathName,
+  mergeConfluences = true,
 }: BlueprintDependencyArrowsProps) {
   const [segments, setSegments] = useState<ArrowSegment[]>([])
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -157,71 +160,44 @@ export function BlueprintDependencyArrows({
       })
     }
 
-    const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailDependencies(
-      railInputDependencies,
-      content,
-    )
-
-    for (const group of fanOutGroups) {
-      const targetEls = group.branches.map((branch) => branch.targetEl)
-      const trunk = buildOverheadRailFanOutTrunkPath(
-        group.sourceEl,
-        targetEls,
-        content,
-      )
-      if (trunk) {
-        next.push({
-          id: `${group.sourceCellId}-trunk`,
-          d: trunk,
-          colorKey: defaultColorKey,
-          arrowColor: defaultArrowColor,
-          opacity: 1,
-          showMarker: false,
-        })
-      }
-
-      for (const branch of group.branches) {
-        const d = buildOverheadRailFanOutDropPath(
-          group.sourceEl,
-          branch.targetEl,
-          content,
-        )
-        if (!d) continue
-
-        next.push({
-          id: branch.dependencyId,
-          d,
-          colorKey: defaultColorKey,
-          arrowColor: defaultArrowColor,
-          opacity: 1,
-        })
-      }
-    }
-
-    for (const group of busGroups) {
-      const d = buildApplicationRegularTutorRailBusPath(
-        group.sourceEls,
-        group.targetEl,
-        content,
-      )
-      if (!d) continue
-
-      next.push({
-        id: group.dependencyIds.join('-'),
-        d,
-        colorKey: defaultColorKey,
-        arrowColor: defaultArrowColor,
-        opacity: 1,
-      })
-    }
-
     const { pairs, remaining: unpaired } =
-      findBidirectionalDependencyPairs(remaining)
+      findBidirectionalDependencyPairs(railInputDependencies)
 
     // Allocate anchor slots over the endpoints `buildArrowPath` will draw, so
     // a contested cell side fans its arrows instead of stacking them. Both
     // overlay lanes plan the same full set, so the slots agree across them.
     planAnchorSlots(content, unpaired)
+
+    // Confluence + fan-out: ≥2 same-side arrivals (or departures) merge into
+    // one trunk with a single head — the generic mechanism that replaced the
+    // overhead-rail bus. The trunk rides the z-0 forward layer, so it is drawn
+    // only in the forward lane; the wrap lane drops the consumed forward deps
+    // through its own filter. `disabled` is the per-scenario off-switch.
+    const merge = planArrowConfluences(content, unpaired, {
+      disabled: !mergeConfluences,
+    })
+    const dependencyOpacity = (id: string): number => {
+      const dependency = unpaired.find((entry) => entry.id === id)
+      return dependency && isColoredDependency(dependency)
+        ? (dependency.opacity ?? 1)
+        : 1
+    }
+
+    if (lane === 'forward') {
+      for (const segment of merge.segments) {
+        const opacity = segment.memberDependencyIds.length
+          ? Math.max(...segment.memberDependencyIds.map(dependencyOpacity))
+          : 1
+        next.push({
+          id: segment.id,
+          d: segment.d,
+          colorKey: defaultColorKey,
+          arrowColor: defaultArrowColor,
+          opacity,
+          showMarker: segment.showMarker,
+        })
+      }
+    }
 
     for (const pair of pairs) {
       const cellAEl = content.querySelector<HTMLElement>(
@@ -257,6 +233,9 @@ export function BlueprintDependencyArrows({
     }
 
     for (const dependency of unpaired) {
+      // A dependency a trunk already gathered must not also draw on its own.
+      if (merge.consumed.has(dependency.id)) continue
+
       const sourceEl = content.querySelector<HTMLElement>(
         `[data-blueprint-cell="${dependency.source_cell_id}"]`,
       )
@@ -315,6 +294,7 @@ export function BlueprintDependencyArrows({
     defaultArrowColor,
     defaultColorKey,
     lane,
+    mergeConfluences,
     dependencies,
   ])
 
