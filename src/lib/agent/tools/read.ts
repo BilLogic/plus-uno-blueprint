@@ -20,6 +20,12 @@ import type { BlueprintData } from '@/types/blueprint'
 import { agentSessionsSnapshot } from '@/lib/agent/sessions'
 import { loadPersistedEvents } from '@/lib/agent/persistence'
 import { REFERENCE_NAMES } from '@/lib/agent/tools/referenceNames'
+import {
+  SCOPE_ALL,
+  serviceStakeholderIds,
+  servicePhaseNames,
+  type ServiceScope,
+} from '@/lib/agent/tools/serviceScope'
 // The instance override, not the package's copy — see the REFERENCES note
 // below and `src/lib/agent/canvas-adapter.md`'s own header (#115).
 import canvasAdapter from '@/lib/agent/canvas-adapter.md?raw'
@@ -154,6 +160,7 @@ export async function listBlueprint(
     pathKind?: string
     laneRole?: string
     limit?: number
+    scope?: ServiceScope
   },
 ): Promise<string> {
   const bad = options.granularity.filter(
@@ -174,11 +181,36 @@ export async function listBlueprint(
     filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
+  const rows = await scopeJourneyRows(client, data ?? [], options.scope ?? SCOPE_ALL)
   return renderPortalRows(
-    data ?? [],
+    rows,
     'Nothing at that granularity within those filters.',
     false,
   )
+}
+
+/**
+ * Keep only the rows under the scoped service's phases.
+ *
+ * The journey is a hard per-service boundary, so a service's rows are exactly
+ * those whose phase breadcrumb belongs to it. `search_blueprint` cannot scope
+ * server-side (no service filter, and no migration here), so this narrows its
+ * output. `all` — including every single-service deployment — passes straight
+ * through, so nothing changes off the multi-service path. `total_matched` is
+ * rewritten to the kept count so the rendered header stays honest within the
+ * scope rather than quoting a deployment-wide total.
+ */
+async function scopeJourneyRows(
+  client: Client,
+  rows: PortalRow[],
+  scope: ServiceScope,
+): Promise<PortalRow[]> {
+  if (scope.kind === 'all') return rows
+  const phaseNames = await servicePhaseNames(client, scope.serviceId)
+  const kept = rows.filter(
+    (row) => row.phase != null && phaseNames.has(row.phase.toLowerCase()),
+  )
+  return kept.map((row) => ({ ...row, total_matched: kept.length }))
 }
 
 /** A row as `public.search_blueprint` returns it. */
@@ -257,6 +289,7 @@ export async function searchBlueprint(
     pathKind?: string
     laneRole?: string
     limit?: number
+    scope?: ServiceScope
   },
 ): Promise<string> {
   const { data, error } = await client.rpc('search_blueprint', {
@@ -269,8 +302,9 @@ export async function searchBlueprint(
     filter_lane_role: options.laneRole,
   })
   if (error) throw new Error(error.message)
+  const rows = await scopeJourneyRows(client, data ?? [], options.scope ?? SCOPE_ALL)
   return renderPortalRows(
-    data ?? [],
+    rows,
     `Nothing matches the words "${options.query}". That means no row USES those words — it does not mean the blueprint has no such moment. Try the board's own vocabulary, or list_blueprint to see what exists.`,
     true,
   )
@@ -314,22 +348,39 @@ export async function listLanes(client: Client): Promise<string> {
 }
 
 /**
- * The service's cast list.
+ * The cast list.
  *
  * The registry is the answer to "who is this lane for?" and "who receives
  * this value?" — one list, with the other spellings each name has been
  * written as. Read it before inventing an audience: `tutor` and `Regular
  * Tutor` are one person, and the aliases column is where that is recorded.
+ *
+ * The cast is a DEPLOYMENT-LEVEL catalog now (ADR 0014) — stakeholders lost
+ * their `service_id`. Scoped to one service, membership is IMPLICIT and derived
+ * by JOIN: the actors that service's lanes actually pick
+ * (`serviceStakeholderIds`), not a `service_id` lookup that no longer exists.
+ * `all` — every single-service deployment included — returns the whole catalog,
+ * which under the shared model is the correct unscoped read.
  */
-export async function listStakeholders(client: Client): Promise<string> {
+export async function listStakeholders(
+  client: Client,
+  scope: ServiceScope = SCOPE_ALL,
+): Promise<string> {
   const { data, error } = await client
     .from('stakeholders')
     .select('id, name, kind, summary, aliases')
     .order('kind')
     .order('name')
   if (error) throw new Error(error.message)
-  if (!data || data.length === 0) return 'No stakeholders registered yet.'
-  return data
+  let rows = data ?? []
+  if (scope.kind === 'service') {
+    const memberIds = await serviceStakeholderIds(client, scope.serviceId)
+    rows = rows.filter((row) => memberIds.has(row.id))
+    if (rows.length === 0)
+      return `No stakeholders are referenced by ${scope.serviceName}'s journey yet. Pass service:"all" for the whole deployment's cast.`
+  }
+  if (rows.length === 0) return 'No stakeholders registered yet.'
+  return rows
     .map((row) => {
       const aliases = (row.aliases ?? []).length
         ? ` — also written ${(row.aliases ?? []).join(', ')}`
