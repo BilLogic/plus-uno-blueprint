@@ -58,7 +58,11 @@ import {
   updateEvidence,
   type EvidenceKind,
 } from '@/lib/evidenceMutations'
-import { resolveFirstServiceId } from '@/lib/service'
+import {
+  resolveActiveServiceId,
+  resolveServiceScope,
+} from '@/lib/agent/tools/serviceScope'
+import { getAgentServiceScopeMode } from '@/lib/agent/settings'
 
 /** Mirrors the DB CHECK constraint so a bad kind fails before the insert. */
 const EVIDENCE_KINDS = new Set<string>([
@@ -96,21 +100,10 @@ type Client = SupabaseClient<Database>
 
 // Tool specs and rosters live in `specs.ts` (imported directly by their
 // consumers — one canonical path); this module owns only dispatch.
-
-// One service per deployment today; cached after the first ask.
-let cachedServiceId: string | null = null
-async function serviceId(client: Client): Promise<string> {
-  if (cachedServiceId) return cachedServiceId
-  const { data, error } = await client
-    .from('services')
-    .select('id')
-    .limit(1)
-    .maybeSingle()
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error('No service exists yet.')
-  cachedServiceId = data.id
-  return data.id
-}
+//
+// There is no global single-service cache any more: a deployment can hold more
+// than one service (#303), so a read scopes to the ACTIVE service by default
+// and a write lands on it. `serviceScope.ts` owns both resolutions.
 
 function s(args: Record<string, unknown>, key: string): string | undefined {
   const value = args[key]
@@ -155,6 +148,10 @@ export async function dispatchTool(
         pathKind: s(args, 'kind'),
         laneRole: s(args, 'lane_role'),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
+        scope: await resolveServiceScope(client, {
+          serviceArg: s(args, 'service'),
+          defaultMode: getAgentServiceScopeMode(),
+        }),
       })
     }
     case 'search_blueprint': {
@@ -171,6 +168,10 @@ export async function dispatchTool(
         pathKind: s(args, 'kind'),
         laneRole: s(args, 'lane_role'),
         limit: typeof args.limit === 'number' ? args.limit : undefined,
+        scope: await resolveServiceScope(client, {
+          serviceArg: s(args, 'service'),
+          defaultMode: getAgentServiceScopeMode(),
+        }),
       })
     }
     case 'get_blueprint':
@@ -212,7 +213,13 @@ export async function dispatchTool(
     case 'list_owner_tags':
       return listOwnerTags(client)
     case 'list_stakeholders':
-      return listStakeholders(client)
+      return listStakeholders(
+        client,
+        await resolveServiceScope(client, {
+          serviceArg: s(args, 'service'),
+          defaultMode: getAgentServiceScopeMode(),
+        }),
+      )
     case 'list_lanes':
       return listLanes(client)
     case 'list_references':
@@ -574,7 +581,7 @@ export async function dispatchTool(
       }
       case 'create_phase': {
         const id = await createPhase(client, {
-          serviceId: await serviceId(client),
+          serviceId: await resolveActiveServiceId(client),
           name: need(args, 'name'),
           summary: s(args, 'summary') ?? null,
         })
@@ -625,7 +632,7 @@ export async function dispatchTool(
         if (cellIds.length === 0)
           throw new Error('cell_ids must be a non-empty array of existing cell ids.')
         const slice = await createSlice(client, {
-          serviceId: await serviceId(client),
+          serviceId: await resolveActiveServiceId(client),
           title: need(args, 'title'),
           summary: s(args, 'description') ?? '',
           sliceType: need(args, 'slice_type') as SliceType,
@@ -687,7 +694,7 @@ export async function dispatchTool(
         // so an agent-added source lands in the session ledger and can be
         // reverted exactly like a human-added one.
         const id = await addEvidence(client, {
-          serviceId: await resolveFirstServiceId(client),
+          serviceId: await resolveActiveServiceId(client),
           cellId,
           cellKey: cellId,
           kind: kind as EvidenceKind,
@@ -732,7 +739,7 @@ export async function dispatchTool(
         // `cell_keys` are the ids themselves in the canvas dialect — see
         // findingFingerprint, which hashes them the same way.
         const outcome = await recordFinding(client, {
-          serviceId: await serviceId(client),
+          serviceId: await resolveActiveServiceId(client),
           runId,
           source,
           checkKey,

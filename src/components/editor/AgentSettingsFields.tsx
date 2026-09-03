@@ -1,5 +1,6 @@
 import { AdminSessionFields } from '@/components/editor/AdminSessionFields'
 import { AgentProviderFields } from '@/components/editor/AgentProviderFields'
+import { AgentScopeField } from '@/components/editor/AgentScopeField'
 import { useSupabase } from '@/contexts/SupabaseProvider'
 
 /**
@@ -36,6 +37,7 @@ export function AgentSettingsFields({ active = true }: { active?: boolean }) {
           <div className="my-0.5 border-t border-muted" />
           <p className="text-xs font-medium text-foreground">Agent</p>
           <AgentProviderFields active={active} />
+          <AgentScopeField />
         </>
       ) : null}
     </div>

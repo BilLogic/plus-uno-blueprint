@@ -8,6 +8,7 @@ claims:
   - src/components/editor/AgentPanel.tsx
   - src/components/editor/AdminSessionFields.tsx
   - src/components/editor/AgentProviderFields.tsx
+  - src/components/editor/AgentScopeField.tsx
   - src/components/editor/AgentSettingsFields.tsx
   - src/components/mobile/MobileAgentFab.tsx
   - src/components/mobile/MobileAgentSheet.tsx
@@ -149,12 +150,16 @@ drawer's settings surface both use it. It lives apart from both because the
 phone had no way to sign in at all before, and a second copy of an auth form is
 how two sign-in flows drift apart.
 
-Behind that one entry point are **two components, because the two jobs share
+Behind that one entry point are **three components, because the jobs share
 nothing**: `AdminSessionFields` is the sign-in/sign-out form and every piece of
 state it needs, `AgentProviderFields` is provider, model and key — one job, not
 three, since the key is stored per provider and the model list is fetched with
-it. `AgentSettingsFields` keeps only what genuinely spans both: the column, the
-two headings, the rule between them, and the `canAgent` gate.
+it, and `AgentScopeField` is the creator's default search scope — which
+service(s) the agent holds in scope when a question names none (active service,
+or the whole deployment), so a multi-service deployment does not search
+everything on every question (#337). `AgentSettingsFields` keeps only what
+genuinely spans them: the column, the two headings, the rule between them, and
+the `canAgent` gate that decides whether the agent half exists at all.
 
 **Keys live in localStorage and nowhere else** — not the repo, not the bundle,
 not a server env. A browser-held key is readable by anyone with devtools on the
