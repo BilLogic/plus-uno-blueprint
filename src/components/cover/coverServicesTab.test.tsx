@@ -1,17 +1,23 @@
 // @vitest-environment jsdom
 /**
- * The cover's Services tab (#336, #303).
+ * The cover's Services tab (#336, #303, #338).
  *
- * Two services turn the singular "The service" tab into a "Services" tab that
- * heads its panel with the service selector; picking one makes that service
- * active. One service (or none) leaves the tab exactly as it was — singular
- * label, no selector row. Driven through `CoverPageView`, the provider-free
+ * The services tab's body is one page per service. Two services turn the
+ * singular "The service" tab into a "Services" tab that heads its panel with
+ * the service selector, and the ACTIVE service's own page renders below —
+ * switch the active service and the page switches with it. One service (or
+ * none) leaves the tab exactly as it was — singular label, no selector row —
+ * rendering that sole page. Driven through `CoverPageView`, the provider-free
  * surface the cover's other tests drive, with the roster handed in as props.
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { CoverPageView } from '@/components/cover/CoverPage'
-import type { CoverContent } from '@/components/cover/coverModel'
+import type {
+  CoverContent,
+  CoverSection,
+  CoverServicePage,
+} from '@/components/cover/coverModel'
 import type { ActiveService } from '@/contexts/ActiveServiceContext'
 
 beforeAll(() => {
@@ -28,7 +34,15 @@ beforeAll(() => {
 
 afterEach(cleanup)
 
-const content: CoverContent = {
+const prose = (id: string, heading: string, body: string): CoverSection => ({
+  kind: 'prose',
+  id,
+  heading,
+  paragraphs: [body],
+})
+
+/** A deployment whose services tab holds exactly the pages handed in. */
+const servicesContent = (pages: CoverServicePage[]): CoverContent => ({
   title: 'Test Workspace',
   lede: 'A lede.',
   primaryCtaLabel: 'Open the blueprint',
@@ -38,24 +52,25 @@ const content: CoverContent = {
     {
       value: 'the-service',
       label: 'The service',
-      services: { pluralLabel: 'Services' },
-      sections: [
-        {
-          kind: 'prose',
-          id: 's1',
-          heading: 'A service',
-          paragraphs: ['Body.'],
-        },
-      ],
+      services: { pluralLabel: 'Services', pages },
     },
     {
       value: 'overview',
       label: 'Overview',
-      sections: [
-        { kind: 'prose', id: 's2', heading: 'Overview', paragraphs: ['Body.'] },
-      ],
+      sections: [prose('s2', 'Overview', 'Overview body.')],
     },
   ],
+})
+
+// Each page carries a unique body sentinel — distinct from the service NAMES
+// the selector renders, so a `getByText` on the copy never collides with a tab.
+const PLUS_PAGE: CoverServicePage = {
+  slug: 'plus-tutoring',
+  sections: [prose('p-a', 'PLUS Tutoring', 'PLUS page copy.')],
+}
+const SUPPORT_PAGE: CoverServicePage = {
+  slug: 'support-desk',
+  sections: [prose('p-b', 'Support Desk', 'Support page copy.')],
 }
 
 const TWO: ActiveService[] = [
@@ -67,10 +82,10 @@ const TWO: ActiveService[] = [
 const selectorRow = () => screen.queryByRole('tablist', { name: 'Services' })
 
 describe('with one service, the tab is its singular self', () => {
-  it('reads "The service" and shows no selector row', () => {
+  it('reads "The service", shows no selector row, and renders the sole page', () => {
     render(
       <CoverPageView
-        content={content}
+        content={servicesContent([PLUS_PAGE])}
         onOpenCanvas={() => {}}
         services={[TWO[0]]}
         activeServiceSlug="plus-tutoring"
@@ -79,20 +94,30 @@ describe('with one service, the tab is its singular self', () => {
     expect(screen.getByRole('tab', { name: 'The service' })).toBeDefined()
     expect(screen.queryByRole('tab', { name: 'Services' })).toBeNull()
     expect(selectorRow()).toBeNull()
+    expect(screen.getByText('PLUS page copy.')).toBeDefined()
   })
 
-  it('is unchanged with no roster handed in at all', () => {
-    render(<CoverPageView content={content} onOpenCanvas={() => {}} />)
+  it('is unchanged with no roster handed in at all — the sole page still shows', () => {
+    render(
+      <CoverPageView
+        content={servicesContent([PLUS_PAGE])}
+        onOpenCanvas={() => {}}
+      />,
+    )
     expect(screen.getByRole('tab', { name: 'The service' })).toBeDefined()
     expect(selectorRow()).toBeNull()
+    // No roster, no active slug: the render falls back to the one page.
+    expect(screen.getByText('PLUS page copy.')).toBeDefined()
   })
 })
 
 describe('with two services, the tab becomes the Services selector', () => {
+  const twoPages = () => servicesContent([PLUS_PAGE, SUPPORT_PAGE])
+
   it('pluralizes the tab label', () => {
     render(
       <CoverPageView
-        content={content}
+        content={twoPages()}
         onOpenCanvas={() => {}}
         services={TWO}
         activeServiceSlug="plus-tutoring"
@@ -105,7 +130,7 @@ describe('with two services, the tab becomes the Services selector', () => {
   it('heads the panel with a tab per service, the active one selected', () => {
     render(
       <CoverPageView
-        content={content}
+        content={twoPages()}
         onOpenCanvas={() => {}}
         services={TWO}
         activeServiceSlug="plus-tutoring"
@@ -126,7 +151,7 @@ describe('with two services, the tab becomes the Services selector', () => {
     const onSelectService = vi.fn<(slug: string) => void>()
     render(
       <CoverPageView
-        content={content}
+        content={twoPages()}
         onOpenCanvas={() => {}}
         services={TWO}
         activeServiceSlug="plus-tutoring"
@@ -137,5 +162,53 @@ describe('with two services, the tab becomes the Services selector', () => {
       within(selectorRow()!).getByRole('tab', { name: 'Support Desk' }),
     )
     expect(onSelectService).toHaveBeenCalledWith('support-desk')
+  })
+
+  it('renders the active service’s own page, not the other one', () => {
+    render(
+      <CoverPageView
+        content={twoPages()}
+        onOpenCanvas={() => {}}
+        services={TWO}
+        activeServiceSlug="plus-tutoring"
+      />,
+    )
+    expect(screen.getByText('PLUS page copy.')).toBeDefined()
+    expect(screen.queryByText('Support page copy.')).toBeNull()
+  })
+
+  it('renders the OTHER service’s page when it is the active one', () => {
+    render(
+      <CoverPageView
+        content={twoPages()}
+        onOpenCanvas={() => {}}
+        services={TWO}
+        activeServiceSlug="support-desk"
+      />,
+    )
+    expect(screen.getByText('Support page copy.')).toBeDefined()
+    expect(screen.queryByText('PLUS page copy.')).toBeNull()
+  })
+
+  it('swaps the page when the active service changes', () => {
+    const { rerender } = render(
+      <CoverPageView
+        content={twoPages()}
+        onOpenCanvas={() => {}}
+        services={TWO}
+        activeServiceSlug="plus-tutoring"
+      />,
+    )
+    expect(screen.getByText('PLUS page copy.')).toBeDefined()
+    rerender(
+      <CoverPageView
+        content={twoPages()}
+        onOpenCanvas={() => {}}
+        services={TWO}
+        activeServiceSlug="support-desk"
+      />,
+    )
+    expect(screen.getByText('Support page copy.')).toBeDefined()
+    expect(screen.queryByText('PLUS page copy.')).toBeNull()
   })
 })
