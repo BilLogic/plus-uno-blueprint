@@ -27,39 +27,52 @@ export const coverContent: CoverContent = {
     {
       value: 'the-service',
       label: 'The service',
-      // The services tab: when the deployment holds more than one service this
-      // tab shows the service selector and reads "Services"; with PLUS's single
-      // service it stays "The service" with no selector (#336).
-      services: { pluralLabel: 'Services' },
-      sections: [
-        {
-          kind: 'portrait',
-          id: 'service-plus',
-          heading: 'PLUS Tutoring',
-          paragraphs: [
-            'PLUS Tutoring is a hybrid human-AI tutoring platform with 500+ tutors, used across 13+ schools, supporting 5,000+ middle school students through real-time, in-class math tutoring sessions.',
-          ],
-          image: {
-            src: '/homepage/plus-icon.png',
-            alt: 'The PLUS logomark, a plus sign in a gradient tile',
-            size: 'badge',
+      // The services tab: its body is one page per service (#303/#338). When the
+      // deployment holds more than one, the tab shows the selector and reads
+      // "Services", and the selected service's page renders; with PLUS's single
+      // service it stays "The service" with no selector, rendering the one page
+      // below — byte-for-byte what it was before (#336).
+      services: {
+        pluralLabel: 'Services',
+        pages: [
+          {
+            // PLUS's own page. Keyed to its route slug (`PLUS Tutoring` ->
+            // `plus-tutoring`, the production row's slug); the single-service
+            // render falls back to this sole page regardless, so the page shows
+            // even before the slug resolves.
+            slug: 'plus-tutoring',
+            sections: [
+              {
+                kind: 'portrait',
+                id: 'service-plus',
+                heading: 'PLUS Tutoring',
+                paragraphs: [
+                  'PLUS Tutoring is a hybrid human-AI tutoring platform with 500+ tutors, used across 13+ schools, supporting 5,000+ middle school students through real-time, in-class math tutoring sessions.',
+                ],
+                image: {
+                  src: '/homepage/plus-icon.png',
+                  alt: 'The PLUS logomark, a plus sign in a gradient tile',
+                  size: 'badge',
+                },
+              },
+              {
+                kind: 'portrait',
+                id: 'service-tutors',
+                heading: 'Tutors',
+                paragraphs: [
+                  'Tutors at PLUS are university students working part time. Before they run sessions, they complete onboarding and lesson modules. In each tutoring session they typically support about 5–6 students, guided by the PLUS app built by the PLUS team.',
+                  'The blueprints in here follow that arc — Discovery through Post-Session — so a tutor journey and the staff work behind it are read from one map.',
+                ],
+                image: {
+                  src: '/homepage/tutor-illustration.png',
+                  alt: 'Illustration of a PLUS tutor',
+                  size: 'framed',
+                },
+              },
+            ],
           },
-        },
-        {
-          kind: 'portrait',
-          id: 'service-tutors',
-          heading: 'Tutors',
-          paragraphs: [
-            'Tutors at PLUS are university students working part time. Before they run sessions, they complete onboarding and lesson modules. In each tutoring session they typically support about 5–6 students, guided by the PLUS app built by the PLUS team.',
-            'The blueprints in here follow that arc — Discovery through Post-Session — so a tutor journey and the staff work behind it are read from one map.',
-          ],
-          image: {
-            src: '/homepage/tutor-illustration.png',
-            alt: 'Illustration of a PLUS tutor',
-            size: 'framed',
-          },
-        },
-      ],
+        ],
+      },
     },
     {
       value: 'overview',

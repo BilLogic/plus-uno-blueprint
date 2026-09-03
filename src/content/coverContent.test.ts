@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { coverFigures } from '@/components/cover/coverModel'
+import { coverFigures, coverTabSections } from '@/components/cover/coverModel'
 import { coverContent } from '@/content/coverContent'
 
 /*
@@ -50,8 +50,10 @@ describe('coverContent', () => {
   it('every wide diagram figure carries its viewBox dimensions', () => {
     // Portrait images (the-service tab) are fixed-size by CSS, not by their
     // own dimensions, so this is scoped to sections with a `figure` slot.
+    // `coverTabSections` flattens both a content tab's sections and the
+    // services tab's per-service pages, so a figure on any page is still checked.
     const figures = coverContent.tabs
-      .flatMap((tab) => tab.sections)
+      .flatMap((tab) => coverTabSections(tab))
       .flatMap((section) => ('figure' in section && section.figure ? [section.figure] : []))
     expect(figures.length).toBeGreaterThan(0)
     for (const figure of figures) {

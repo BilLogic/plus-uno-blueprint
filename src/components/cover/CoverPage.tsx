@@ -8,7 +8,10 @@ import { CoverSections } from '@/components/cover/CoverSections'
 import { CoverServicesSelector } from '@/components/cover/CoverServicesSelector'
 import { renderInline } from '@/components/cover/coverInline'
 import { CoverTabStrip } from '@/components/cover/CoverTabStrip'
-import type { CoverContent } from '@/components/cover/coverModel'
+import type {
+  CoverContent,
+  CoverServicePage,
+} from '@/components/cover/coverModel'
 import type { ActiveService } from '@/contexts/ActiveServiceContext'
 import { useActiveService } from '@/contexts/ActiveServiceContext'
 import { useEditor } from '@/contexts/EditorContext'
@@ -43,13 +46,33 @@ export function CoverPage({ content }: { content: CoverContent }) {
 }
 
 /**
+ * Pick the cover page the active service shows: the one whose slug the active
+ * service names (case-insensitive, the way routing resolves a slug), falling
+ * back to the first page. The fallback is what keeps the single-service render
+ * byte-for-byte — the sole page shows even before the slug resolves, and even
+ * if the deployment's authored slug differs from the row's.
+ */
+function pickServicePage(
+  pages: CoverServicePage[],
+  activeSlug: string | null,
+): CoverServicePage | undefined {
+  if (activeSlug) {
+    const target = activeSlug.toLowerCase()
+    const match = pages.find((page) => page.slug.toLowerCase() === target)
+    if (match) return match
+  }
+  return pages[0]
+}
+
+/**
  * The provider-free surface — tests hand it a plain callback.
  *
  * `services` is the deployment's roster (#336). With more than one, the tab
- * marked `services` in the content heads its panel with the service selector
- * and its strip label reads the plural. With one or none, the props default to
- * the single-service shape and the page is byte-for-byte what it was before the
- * switcher — no selector, singular label.
+ * whose body is the services index heads its panel with the service selector,
+ * its strip label reads the plural, and the ACTIVE service's own page renders
+ * (#338). With one or none, the props default to the single-service shape and
+ * the page is byte-for-byte what it was before the switcher — no selector,
+ * singular label, the sole page below.
  */
 export function CoverPageView({
   content,
@@ -72,7 +95,7 @@ export function CoverPageView({
   const stripTabs = content.tabs.map((tab) => ({
     value: tab.value,
     label:
-      multiService && tab.services ? tab.services.pluralLabel : tab.label,
+      multiService && 'services' in tab ? tab.services.pluralLabel : tab.label,
   }))
 
   return (
@@ -143,10 +166,18 @@ export function CoverPageView({
         >
           <CoverTabStrip tabs={stripTabs} activeTab={activeTab} />
           {content.tabs.map((tab, index) => {
+            // The services tab renders the active service's own page; every
+            // other tab renders its fixed sections. A single-service (or
+            // roster-less) deployment falls back to the sole page, unchanged.
+            const tabSections =
+              'services' in tab
+                ? pickServicePage(tab.services.pages, activeServiceSlug)
+                    ?.sections ?? []
+                : tab.sections
             const sections = (
               <CoverSections
                 intro={tab.intro}
-                sections={tab.sections}
+                sections={tabSections}
                 link={tab.link}
                 repoUrl={content.repoUrl}
                 commandCopy={content.commandCopy}
@@ -156,7 +187,7 @@ export function CoverPageView({
             // The services tab heads its panel with the selector, but only when
             // a second service makes it a choice. Otherwise the panel is its
             // sections alone — the single-service page is unchanged.
-            const showSelector = multiService && tab.services
+            const showSelector = multiService && 'services' in tab
             return (
               <TabsContent key={tab.value} value={tab.value} className="mt-0">
                 {showSelector ? (
