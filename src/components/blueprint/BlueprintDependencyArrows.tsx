@@ -14,10 +14,12 @@ import {
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
+  clearAnchorSlotPlan,
   findBidirectionalDependencyPairs,
   groupDiscoveryRailDependencies,
   isWrapDependency,
   partitionReportingAnIssueFsaStep1ToResolveDependencies,
+  planAnchorSlots,
 } from '@/lib/blueprintArrowGeometry'
 import {
   getPathArrowColor,
@@ -216,6 +218,11 @@ export function BlueprintDependencyArrows({
     const { pairs, remaining: unpaired } =
       findBidirectionalDependencyPairs(remaining)
 
+    // Allocate anchor slots over the endpoints `buildArrowPath` will draw, so
+    // a contested cell side fans its arrows instead of stacking them. Both
+    // overlay lanes plan the same full set, so the slots agree across them.
+    planAnchorSlots(content, unpaired)
+
     for (const pair of pairs) {
       const cellAEl = content.querySelector<HTMLElement>(
         `[data-blueprint-cell="${pair.cellAId}"]`,
@@ -285,6 +292,8 @@ export function BlueprintDependencyArrows({
         opacity: isColoredDependency(dependency) ? (dependency.opacity ?? 1) : 1,
       })
     }
+
+    clearAnchorSlotPlan()
 
     // Equality-guarded: a ResizeObserver burst during camera-fit relayout
     // fires many notifications for identical geometry; fresh object

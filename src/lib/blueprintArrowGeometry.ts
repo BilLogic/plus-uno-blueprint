@@ -10,6 +10,14 @@ import {
   isParallelSessionLeadBottomWrapDependency,
   isParallelSessionOverheadWrapDependency,
 } from '@/data/parallelSessionPartnerLead'
+import {
+  allocateAnchorSlots,
+  anchorPointFor,
+  type Direction,
+  type Side,
+  type SlotAssignment,
+  type SlotRequest,
+} from '@/lib/arrowAnchorSlots'
 
 export type Point = { x: number; y: number }
 
@@ -23,6 +31,190 @@ export type LayoutBox = {
 export type CellAnchor = {
   source: Point
   target: Point
+}
+
+/* ---------------------------------------------------- anchor slots (#347)
+
+  A contested cell side hands out one ordered slot per endpoint instead of
+  stacking every arrow on the edge midpoint. The allocation itself lives in
+  the pure `arrowAnchorSlots` module (allocateAnchorSlots / anchorPointFor);
+  this file owns the wiring: classifying each endpoint's natural side,
+  planning the slots for a whole band, and translating an assignment back
+  into the point a builder anchors on.
+
+  Determinism is load-bearing — slots come from the caller's ordered trigger
+  list (`sortKey` = list index), never from Map or DOM order, so the same
+  data always draws the same picture across single, side-by-side, and merged.
+
+  A lone or uncontested endpoint keeps `count === 1` and stays on its
+  preferred side, so `anchorPointFor` lands it on the exact edge midpoint the
+  engine drew before — byte-for-byte. Only a contested side moves anything.
+*/
+
+/** One endpoint's slot on a cell, or absent when the band was not planned. */
+let activeAnchorPlan: Map<string, SlotAssignment> | null = null
+
+/** A minimal source/target-cell shape a slot plan can be built from. */
+export type AnchorSlotDependency = {
+  id: string
+  source_cell_id: string
+  target_cell_id: string
+}
+
+function anchorPlanKey(dependencyId: string, direction: Direction): string {
+  return `${dependencyId}:${direction}`
+}
+
+/** The side each end of a dependency naturally anchors on, today. */
+function endpointSides(
+  sourceEl: HTMLElement,
+  targetEl: HTMLElement,
+  root: HTMLElement,
+  sourceCellId?: string,
+  targetCellId?: string,
+): { sourceSide: Side; targetSide: Side } {
+  if (isWrapDependency(sourceEl, targetEl, sourceCellId, targetCellId)) {
+    // A backward loop drops out of the source's bottom and rises into the
+    // target's bottom — both ends live on the bottom edge.
+    return { sourceSide: 'bottom', targetSide: 'bottom' }
+  }
+
+  const sourceStep = parseStepIndex(sourceEl)
+  const targetStep = parseStepIndex(targetEl)
+  if (sourceStep !== null && targetStep !== null && sourceStep === targetStep) {
+    const sourceBox = getCellContentBox(sourceEl, root)
+    const targetBox = getCellContentBox(targetEl, root)
+    const targetBelow =
+      targetBox.top + targetBox.height / 2 > sourceBox.top + sourceBox.height / 2
+    return targetBelow
+      ? { sourceSide: 'bottom', targetSide: 'top' }
+      : { sourceSide: 'top', targetSide: 'bottom' }
+  }
+
+  // Forward (adjacent, spanning, or cross-lane): out leaves the right face
+  // toward the later column, in arrives on the left face from the earlier one.
+  return { sourceSide: 'right', targetSide: 'left' }
+}
+
+/**
+ * Plan the anchor slots for one band's dependencies.
+ *
+ * Registers two endpoints per dependency (its out at the source, its in at
+ * the target), each on the side it anchors on today, ordered by list index.
+ * The result replaces the active plan, which `buildArrowPath` then consults.
+ * Pass the same list the arrow loop iterates, in the same order.
+ */
+export function planAnchorSlots(
+  root: HTMLElement,
+  dependencies: readonly AnchorSlotDependency[],
+): void {
+  const requests: SlotRequest[] = []
+  dependencies.forEach((dependency, index) => {
+    const sourceEl = root.querySelector<HTMLElement>(
+      `[data-blueprint-cell="${dependency.source_cell_id}"]`,
+    )
+    const targetEl = root.querySelector<HTMLElement>(
+      `[data-blueprint-cell="${dependency.target_cell_id}"]`,
+    )
+    if (!sourceEl || !targetEl) return
+
+    const { sourceSide, targetSide } = endpointSides(
+      sourceEl,
+      targetEl,
+      root,
+      dependency.source_cell_id,
+      dependency.target_cell_id,
+    )
+    requests.push({
+      id: anchorPlanKey(dependency.id, 'out'),
+      cellId: dependency.source_cell_id,
+      direction: 'out',
+      preferredSide: sourceSide,
+      sortKey: index,
+    })
+    requests.push({
+      id: anchorPlanKey(dependency.id, 'in'),
+      cellId: dependency.target_cell_id,
+      direction: 'in',
+      preferredSide: targetSide,
+      sortKey: index,
+    })
+  })
+
+  activeAnchorPlan = allocateAnchorSlots(requests)
+}
+
+/** Forget the active plan, so an unplanned build reads no stale slots. */
+export function clearAnchorSlotPlan(): void {
+  activeAnchorPlan = null
+}
+
+function endpointSlot(
+  dependencyId: string | undefined,
+  direction: Direction,
+): SlotAssignment | undefined {
+  if (!activeAnchorPlan || dependencyId === undefined) return undefined
+  return activeAnchorPlan.get(anchorPlanKey(dependencyId, direction))
+}
+
+/** True once an endpoint's side is genuinely contested — the only time it moves. */
+function slotMoves(slot: SlotAssignment | undefined): slot is SlotAssignment {
+  return slot !== undefined && (slot.count > 1 || slot.displaced)
+}
+
+function anchorBoxFor(box: LayoutBox): {
+  left: number
+  right: number
+  top: number
+  bottom: number
+} {
+  return {
+    left: box.left,
+    right: box.right,
+    top: box.top,
+    bottom: box.top + box.height,
+  }
+}
+
+/**
+ * The Y an endpoint anchors on for a left/right (vertical) edge, or undefined
+ * when nothing moves it off the midpoint. Forward endpoints never displace —
+ * an out only ever shares a side with other outs — so the assignment's own
+ * side is honoured directly.
+ */
+function verticalEdgeSlotY(
+  box: LayoutBox,
+  slot: SlotAssignment | undefined,
+  naturalSide: Side,
+): number | undefined {
+  if (!slotMoves(slot)) return undefined
+  const side = slot.side === naturalSide ? slot.side : naturalSide
+  return anchorPointFor(anchorBoxFor(box), {
+    side,
+    index: slot.side === naturalSide ? slot.index : 1,
+    count: slot.side === naturalSide ? slot.count : 2,
+  }).y
+}
+
+/** How a wrap endpoint leaves/enters the bottom edge when its side is contested. */
+type WrapSlotLeg = { centerX?: number; forceSide?: 'right' }
+
+function wrapSlotLeg(
+  box: LayoutBox,
+  slot: SlotAssignment | undefined,
+): WrapSlotLeg {
+  if (!slotMoves(slot)) return {}
+  // The out yields when it contests an in on the bottom (a head keeps its
+  // side); the allocator slides it to the fallback side, which the leg
+  // renders as a side-gutter departure.
+  if (slot.displaced) return { forceSide: 'right' }
+  return {
+    centerX: anchorPointFor(anchorBoxFor(box), {
+      side: 'bottom',
+      index: slot.index,
+      count: slot.count,
+    }).x,
+  }
 }
 
 /** Regular Tutor step 8 → step 1 loop (stable IDs). */
@@ -77,11 +269,13 @@ export function buildCrossLayerForwardArrowPath(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
+  sourceSlotY?: number,
+  targetSlotY?: number,
 ): string {
   const sourceBox = getCellContentBox(sourceEl, root)
   const targetBox = getCellContentBox(targetEl, root)
-  const sourceY = sourceBox.top + sourceBox.height / 2
-  const targetY = targetBox.top + targetBox.height / 2
+  const sourceY = sourceSlotY ?? sourceBox.top + sourceBox.height / 2
+  const targetY = targetSlotY ?? targetBox.top + targetBox.height / 2
   const lineEndX = targetBox.left - ARROW_CHEVRON_SIZE
 
   const sourceStep = parseStepIndex(sourceEl)
@@ -2598,6 +2792,8 @@ export function buildAdjacentColumnGapArrowPath(
   sourceEl: HTMLElement,
   targetEl: HTMLElement,
   root: HTMLElement,
+  sourceSlotY?: number,
+  targetSlotY?: number,
 ): string {
   const sourceBox = getCellContentBox(sourceEl, root)
   const targetBox = getCellContentBox(targetEl, root)
@@ -2610,11 +2806,28 @@ export function buildAdjacentColumnGapArrowPath(
 
   if (entryX <= sourceBox.right) return ''
 
+  const sourceY = sourceSlotY ?? y
+  const targetY = targetSlotY ?? y
+
+  // Uncontested: one straight run at a single Y, byte-identical to before.
+  if (sourceY === targetY) {
+    return buildRoundedPolylinePath(
+      [
+        { x: sourceBox.right, y: sourceY },
+        { x: gapX, y: sourceY },
+        { x: entryX, y: sourceY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+  }
+
+  // A contested end sits on its own slot, so the run jogs across in the gap.
   return buildRoundedPolylinePath(
     [
-      { x: sourceBox.right, y },
-      { x: gapX, y },
-      { x: entryX, y },
+      { x: sourceBox.right, y: sourceY },
+      { x: gapX, y: sourceY },
+      { x: gapX, y: targetY },
+      { x: entryX, y: targetY },
     ],
     ARROW_CORNER_RADIUS,
   )
@@ -2743,6 +2956,8 @@ export function buildWrapArrowPath(
   root: HTMLElement,
   sourceCellId?: string,
   targetCellId?: string,
+  sourceSlot?: SlotAssignment,
+  targetSlot?: SlotAssignment,
 ): string {
   if (
     sourceCellId &&
@@ -2777,6 +2992,9 @@ export function buildWrapArrowPath(
     return ''
   }
 
+  const exitSlot = wrapSlotLeg(getCellContentBox(sourceEl, root), sourceSlot)
+  const enterSlot = wrapSlotLeg(getCellContentBox(targetEl, root), targetSlot)
+
   /*
     The drop to the corridor and the rise back out both travel INSIDE a step
     column, which the merged canvas no longer guarantees is empty below a
@@ -2785,8 +3003,22 @@ export function buildWrapArrowPath(
     Where that happens the vertical leg moves into the column's gutter and
     meets the card side-on instead.
   */
-  const exitLeg = buildWrapColumnLeg(sourceEl, root, corridorY, 'exit')
-  const enterLeg = buildWrapColumnLeg(targetEl, root, corridorY, 'enter')
+  const exitLeg = buildWrapColumnLeg(
+    sourceEl,
+    root,
+    corridorY,
+    'exit',
+    'below',
+    exitSlot,
+  )
+  const enterLeg = buildWrapColumnLeg(
+    targetEl,
+    root,
+    corridorY,
+    'enter',
+    'below',
+    enterSlot,
+  )
   // No clear leg on one side (a blocked column with no usable gutter — an
   // edge column of a one-column board). Drawing the straight leg anyway
   // would strike through the sub-cell under the card, so drop the arrow.
@@ -2814,10 +3046,28 @@ export function buildWrapColumnLeg(
   corridorY: number,
   end: 'exit' | 'enter',
   side: 'below' | 'above' = 'below',
+  slot: WrapSlotLeg = {},
 ): Point[] | null {
   const box = getCellContentBox(cellEl, root)
-  const centerX = (box.left + box.right) / 2
+  const centerX = slot.centerX ?? (box.left + box.right) / 2
   const edgeY = side === 'below' ? box.top + box.height : box.top
+
+  // A contested out yielded the bottom to an in and slid to the fallback
+  // side: leave through the card's right face and down the right gutter,
+  // mirroring the side-on arrival a blocked column already uses.
+  if (end === 'exit' && slot.forceSide === 'right') {
+    const stepIndex = parseStepIndex(cellEl) ?? 0
+    const midY = box.top + box.height / 2
+    const gutterX = getVerticalRouteRightGutterX(root, stepIndex, cellEl)
+    const entryX = box.right + ARROW_CHEVRON_SIZE
+    if (gutterX <= entryX) return null
+    return [
+      { x: entryX, y: midY },
+      { x: gutterX, y: midY },
+      { x: gutterX, y: corridorY },
+    ]
+  }
+
   const blocked =
     getCellsOverlappingRect(
       root,
@@ -2911,6 +3161,12 @@ export function buildArrowPath(
 
   const sourceStep = parseStepIndex(sourceEl)
   const targetStep = parseStepIndex(targetEl)
+
+  // Anchor slots for this arrow's two endpoints, if the band was planned.
+  // Absent or uncontested (`count === 1`, not displaced) leaves every anchor
+  // on today's midpoint; only a contested side hands out a distinct slot.
+  const sourceSlot = endpointSlot(dependencyId, 'out')
+  const targetSlot = endpointSlot(dependencyId, 'in')
 
   if (
     sourceStep !== null &&
@@ -3054,6 +3310,8 @@ export function buildArrowPath(
       root,
       sourceCellId,
       targetCellId,
+      sourceSlot,
+      targetSlot,
     )
   }
 
@@ -3084,7 +3342,13 @@ export function buildArrowPath(
       targetCellId,
     )
   ) {
-    return buildAdjacentColumnGapArrowPath(sourceEl, targetEl, root)
+    return buildAdjacentColumnGapArrowPath(
+      sourceEl,
+      targetEl,
+      root,
+      verticalEdgeSlotY(getCellContentBox(sourceEl, root), sourceSlot, 'right'),
+      verticalEdgeSlotY(getCellContentBox(targetEl, root), targetSlot, 'left'),
+    )
   }
 
   if (
@@ -3142,6 +3406,8 @@ export function buildArrowPath(
       sourceEl,
       targetEl,
       root,
+      verticalEdgeSlotY(getCellContentBox(sourceEl, root), sourceSlot, 'right'),
+      verticalEdgeSlotY(getCellContentBox(targetEl, root), targetSlot, 'left'),
     )
     return crossLayerPath
   }

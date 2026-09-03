@@ -15,10 +15,12 @@ import {
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   buildOverheadRailFanOutDropPath,
   buildOverheadRailFanOutTrunkPath,
+  clearAnchorSlotPlan,
   findBidirectionalDependencyPairs,
   groupDiscoveryRailDependencies,
   isWrapDependency,
   partitionReportingAnIssueFsaStep1ToResolveDependencies,
+  planAnchorSlots,
   runArrowMeasurementPass,
 } from '@/lib/blueprintArrowGeometry'
 import {
@@ -322,6 +324,11 @@ export function IntegratedDependencyArrows({
       const { pairs, remaining: unpaired } =
         findBidirectionalDependencyPairs(remaining)
 
+      // Allocate anchor slots over the endpoints `buildArrowPath` will draw:
+      // a merged slot stacks a sub-cell per path, so a contested target fans
+      // its arrivals instead of stacking heads at one edge point.
+      planAnchorSlots(content, unpaired)
+
       for (const pair of pairs) {
         const cellAEl = cellElById.get(pair.cellAId)
         const cellBEl = cellElById.get(pair.cellBId)
@@ -384,6 +391,7 @@ export function IntegratedDependencyArrows({
         })
       }
 
+      clearAnchorSlotPlan()
       return segments
     })
 
