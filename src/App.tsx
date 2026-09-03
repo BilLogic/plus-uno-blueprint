@@ -5,6 +5,7 @@ import { EditorShell } from '@/components/editor/EditorShell'
 import { ScenarioPathSelectionReset } from '@/components/editor/ScenarioPathSelectionReset'
 import { WriteFailureNotices } from '@/components/editor/WriteFailureNotices'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ActiveServiceProvider } from '@/contexts/ActiveServiceContext'
 import { EditorProvider } from '@/contexts/EditorContext'
 import { EntityExamplesProvider } from '@/contexts/EntityExamplesContext'
 import { PathSelectionProvider } from '@/contexts/PathSelectionContext'
@@ -24,25 +25,30 @@ function App() {
        */}
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <SupabaseProvider>
-          <EditorProvider>
-            <ViewStateProvider>
-              <PathSelectionProvider>
-                <ScenarioPathSelectionReset />
-                <TooltipProvider delay={200}>
-                  {/* One read of the service's six examples, shared by every
-                      definition popover under it (#302). */}
-                  <EntityExamplesProvider>
-                    <EditorErrorBoundary>
-                      <EditorShell />
-                    </EditorErrorBoundary>
-                  </EntityExamplesProvider>
-                  {/* Outside the boundary: a write can fail as the shell
-                      falls over, and the notice is what says so. */}
-                  <WriteFailureNotices />
-                </TooltipProvider>
-              </PathSelectionProvider>
-            </ViewStateProvider>
-          </EditorProvider>
+          {/* Resolves the URL slug to the active service and canonicalizes the
+              slug into the address bar (#335). Above the shell so every read
+              under it sees the active service. */}
+          <ActiveServiceProvider>
+            <EditorProvider>
+              <ViewStateProvider>
+                <PathSelectionProvider>
+                  <ScenarioPathSelectionReset />
+                  <TooltipProvider delay={200}>
+                    {/* One read of the service's six examples, shared by every
+                        definition popover under it (#302). */}
+                    <EntityExamplesProvider>
+                      <EditorErrorBoundary>
+                        <EditorShell />
+                      </EditorErrorBoundary>
+                    </EntityExamplesProvider>
+                    {/* Outside the boundary: a write can fail as the shell
+                        falls over, and the notice is what says so. */}
+                    <WriteFailureNotices />
+                  </TooltipProvider>
+                </PathSelectionProvider>
+              </ViewStateProvider>
+            </EditorProvider>
+          </ActiveServiceProvider>
         </SupabaseProvider>
       </ThemeProvider>
     </QueryClientProvider>
