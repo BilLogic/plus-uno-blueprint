@@ -523,7 +523,7 @@ export async function dispatchTool(
         const kind = need(args, 'kind')
         if (!['recipient', 'staff', 'partner', 'provider'].includes(kind))
           throw new Error('kind must be recipient, staff, partner, or provider.')
-        const id = await createStakeholder(client, await serviceId(client), {
+        const id = await createStakeholder(client, {
           name: need(args, 'name'),
           kind,
           summary: s(args, 'summary') ?? null,

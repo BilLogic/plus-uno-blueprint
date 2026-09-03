@@ -20,21 +20,21 @@ export type StakeholderInput = {
 }
 
 /**
- * Add someone to the service's cast.
+ * Add someone to the deployment's cast.
  *
  * Deliberately rare: the registry is reference data, and the seed already
- * holds everyone this blueprint names. A new row means a new actor in the
- * service, not a new spelling of an existing one — those go in `aliases`.
+ * holds everyone this blueprint names. A new row means a new actor, not a new
+ * spelling of an existing one — those go in `aliases`. The cast is the
+ * deployment's, not a service's (ADR 0014), so no service is named on insert;
+ * `name` is unique across the whole deployment.
  */
 export async function createStakeholder(
   client: Client,
-  serviceId: string,
   input: StakeholderInput,
 ): Promise<string> {
   const { data, error } = await client
     .from('stakeholders')
     .insert({
-      service_id: serviceId,
       name: input.name.trim(),
       kind: input.kind,
       summary: input.summary?.trim() || null,

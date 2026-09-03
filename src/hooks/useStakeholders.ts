@@ -51,13 +51,17 @@ export const STAKEHOLDER_KIND_MEANING: Record<StakeholderKind, string> = {
 }
 
 /**
- * The service's cast list.
+ * The deployment's cast list.
  *
  * One registry replaces four free-text fields that named the same people and
  * agreed with none of them — `lanes.name`, `cells.value_props[].for`,
  * `slices.actor` and the business model's partners. Every surface that used to
  * suggest from whatever strings happened to be in the data reads this instead,
  * so "tutor" and "Regular Tutor" stop being two people.
+ *
+ * The read is deliberately unscoped, and under the shared catalog (ADR 0014)
+ * that is now CORRECT rather than a latent bug: the stakeholder pool is the
+ * deployment's, so a lane in any service picks from one cast.
  */
 export function useStakeholders(): QueryResult<Stakeholder[]> {
   const fallback = useCallback(() => [], [])
