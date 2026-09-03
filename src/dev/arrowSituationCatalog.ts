@@ -37,8 +37,10 @@
 import {
   buildArrowPath,
   buildBidirectionalArrowPath,
+  clearAnchorSlotPlan,
   clearRememberedSameColumnSideRoutes,
   findBidirectionalDependencyPairs,
+  planAnchorSlots,
   runArrowMeasurementPass,
   type BidirectionalDependencyLink,
 } from '@/lib/blueprintArrowGeometry'
@@ -411,6 +413,10 @@ export function computeArrowSegments(
       dependencies.slice(),
     )
 
+    // Slots are allocated over exactly the endpoints `buildArrowPath` draws,
+    // in the caller's order — the two overlay consumers do the same.
+    planAnchorSlots(root, remaining)
+
     for (const pair of pairs) {
       const cellAEl = cellById.get(pair.cellAId)
       const cellBEl = cellById.get(pair.cellBId)
@@ -436,6 +442,7 @@ export function computeArrowSegments(
       segments.push({ id: dependency.id, d })
     }
 
+    clearAnchorSlotPlan()
     return segments
   })
 }
