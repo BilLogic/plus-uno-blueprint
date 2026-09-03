@@ -108,6 +108,55 @@ describe('arrow situation catalog — golden geometry', () => {
     expect(paths.length).toBeGreaterThan(0)
   })
 
+  it('merges same-side arrivals and departures into one trunk (auto-detected)', () => {
+    // S7 (confluence) and S8 (fan-out) are the two situations that share a
+    // target/source side; both must gain a merge trunk with no cell-id gate.
+    for (const id of ['S7', 'S8']) {
+      const situation = ARROW_SITUATIONS.find((s) => s.id === id)!
+      for (const mode of ARROW_VIEW_MODES) {
+        if (situation.unsupported?.[mode]) continue
+        const segments = computeSituationSegments(boardForMode(situation.base(), mode))
+        const trunks = segments.filter((segment) =>
+          /confluence|fan-out/.test(segment.id),
+        )
+        expect(trunks, `${id}/${mode} drew no trunk`).toHaveLength(1)
+        // A confluence trunk carries the single head; a fan-out trunk gathers
+        // with no head (its drops carry the heads).
+        expect(trunks[0]!.showMarker).toBe(id === 'S7')
+      }
+    }
+  })
+
+  it('the per-scenario off-switch disables the merge, restoring individual arrows', () => {
+    for (const id of ['S7', 'S8', 'S9']) {
+      const situation = ARROW_SITUATIONS.find((s) => s.id === id)!
+      for (const mode of ARROW_VIEW_MODES) {
+        if (situation.unsupported?.[mode]) continue
+        const board = boardForMode(situation.base(), mode)
+
+        const merged = computeSituationSegments(board)
+        expect(
+          merged.some((segment) => /confluence|fan-out/.test(segment.id)),
+          `${id}/${mode} expected a trunk with the switch on`,
+        ).toBe(true)
+
+        const off = computeSituationSegments(board, { mergeConfluences: false })
+        expect(
+          off.some((segment) => /confluence|fan-out/.test(segment.id)),
+          `${id}/${mode} still merged with the switch off`,
+        ).toBe(false)
+        // Off reproduces exactly one individual arrow per dependency — the
+        // pre-confluence behaviour.
+        expect(off.map((segment) => segment.id).sort()).toEqual(
+          board.dependencies.map((dependency) => dependency.id).sort(),
+        )
+        for (const segment of off) {
+          expect(segment.showMarker).toBeUndefined()
+        }
+      }
+    }
+  })
+
   it('side-by-side never perturbs a route a single band already drew', () => {
     // A neighbour band is exactly what must NOT change a route. Any situation
     // whose single and side-by-side geometry diverge would be reading across

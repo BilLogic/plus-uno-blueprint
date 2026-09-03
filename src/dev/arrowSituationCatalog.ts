@@ -41,6 +41,7 @@ import {
   clearRememberedSameColumnSideRoutes,
   findBidirectionalDependencyPairs,
   planAnchorSlots,
+  planArrowConfluences,
   runArrowMeasurementPass,
   type BidirectionalDependencyLink,
 } from '@/lib/blueprintArrowGeometry'
@@ -98,7 +99,16 @@ export type SituationSpec = {
   base: () => BoardSpec
 }
 
-export type ArrowSegment = { id: string; d: string }
+export type ArrowSegment = {
+  id: string
+  d: string
+  /** Absent for an ordinary arrow (it carries a head); a merge trunk/tap sets
+   *  it false so the page draws no head where a run only gathers. */
+  showMarker?: boolean
+}
+
+/** Toggle for the confluence/fan-out merge — the per-scenario off-switch. */
+export type ArrowComputeOptions = { mergeConfluences?: boolean }
 
 /* ------------------------------------------------------------------ layout */
 
@@ -398,7 +408,9 @@ function sizeOf(box: Box): { width: number; height: number } {
 export function computeArrowSegments(
   root: HTMLElement,
   dependencies: readonly FixtureDependency[],
+  options: ArrowComputeOptions = {},
 ): ArrowSegment[] {
+  const mergeConfluences = options.mergeConfluences ?? true
   return runArrowMeasurementPass(() => {
     clearRememberedSameColumnSideRoutes()
 
@@ -417,6 +429,13 @@ export function computeArrowSegments(
     // in the caller's order — the two overlay consumers do the same.
     planAnchorSlots(root, remaining)
 
+    // Confluence + fan-out: same-side arrivals/departures merge into a trunk
+    // before the rest route individually. `disabled` is the off-switch — with
+    // it, every member routes on its own and the board draws as it did before.
+    const merge = planArrowConfluences(root, remaining, {
+      disabled: !mergeConfluences,
+    })
+
     for (const pair of pairs) {
       const cellAEl = cellById.get(pair.cellAId)
       const cellBEl = cellById.get(pair.cellBId)
@@ -426,7 +445,16 @@ export function computeArrowSegments(
       segments.push({ id: `${pair.first.id}-${pair.second.id}`, d })
     }
 
+    for (const segment of merge.segments) {
+      segments.push({
+        id: segment.id,
+        d: segment.d,
+        showMarker: segment.showMarker,
+      })
+    }
+
     for (const dependency of remaining) {
+      if (merge.consumed.has(dependency.id)) continue
       const sourceEl = cellById.get(dependency.source_cell_id)
       const targetEl = cellById.get(dependency.target_cell_id)
       if (!sourceEl || !targetEl) continue
@@ -448,11 +476,14 @@ export function computeArrowSegments(
 }
 
 /** The full path from a board to its arrow segments, DOM built and torn down. */
-export function computeSituationSegments(board: BoardSpec): ArrowSegment[] {
+export function computeSituationSegments(
+  board: BoardSpec,
+  options: ArrowComputeOptions = {},
+): ArrowSegment[] {
   const mat = materialize(board)
   const { root, cleanup } = buildMeasurementDom(mat)
   try {
-    return computeArrowSegments(root, board.dependencies)
+    return computeArrowSegments(root, board.dependencies, options)
   } finally {
     cleanup()
   }
@@ -574,7 +605,7 @@ export const ARROW_SITUATIONS: readonly SituationSpec[] = [
     title: 'N sources → one target, same side',
     today: 'N stacked heads',
     contract: 'confluence (§2)',
-    note: 'Two sources arrive on the target’s left edge (one same-lane forward, one cross-lane forward). Today draws two separate heads; confluence will merge them.',
+    note: 'Two sources arrive on the target’s left edge (one same-lane forward, one cross-lane forward). Auto-detected confluence (#348): they merge into one path-coloured trunk with a single head, each source tapping in.',
     base: () => ({
       rootBox: { left: 0, top: 0, width: 700, height: 420 },
       rows: [
@@ -596,7 +627,7 @@ export const ARROW_SITUATIONS: readonly SituationSpec[] = [
     title: 'One source → N targets',
     today: 'N separate lines',
     contract: 'shared trunk that fans (§2 mirrored)',
-    note: 'One source fans out to two targets (one same-lane forward, one cross-lane forward). Today draws two independent lines; the mirrored confluence will share a trunk.',
+    note: 'One source fans out to two targets (one same-lane forward, one cross-lane forward). Auto-detected fan-out (#348): a single headless trunk leaves the source and fans into a headed drop per target.',
     base: () => ({
       rootBox: { left: 0, top: 0, width: 700, height: 420 },
       rows: [
@@ -615,7 +646,7 @@ export const ARROW_SITUATIONS: readonly SituationSpec[] = [
     title: 'Merged view: aliased endpoints',
     today: 'dedupe of identical edges',
     contract: 'unchanged + confluence for non-identical',
-    note: 'Aliasing only exists once paths share a slot, so this is fixtured in the merged geometry only: two distinct sources reach one shared target sub-cell.',
+    note: 'Aliasing only exists once paths share a slot, so this is fixtured in the merged geometry only: two distinct sources reach one shared target sub-cell. Non-identical edges, so the confluence merge (#348) applies — one trunk, one head.',
     unsupported: {
       single:
         'aliased endpoints exist only in the merged view — a single band has one cell per slot, so there is nothing to alias.',

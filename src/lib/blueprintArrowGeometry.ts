@@ -13,6 +13,8 @@ import {
 import {
   allocateAnchorSlots,
   anchorPointFor,
+  planConfluences,
+  type Confluence,
   type Direction,
   type Side,
   type SlotAssignment,
@@ -215,6 +217,432 @@ function wrapSlotLeg(
       count: slot.count,
     }).x,
   }
+}
+
+/* ------------------------------------------------ confluence + fan-out (#348)
+
+  When ≥2 triggers arrive at ONE target cell from the SAME side, their last
+  segments should merge into one path-coloured trunk with a single head — the
+  reader is told "these all cause that", which is one fact, not N. Fan-out is
+  the mirror: one source departing to ≥2 targets on one side shares a trunk that
+  fans into separate heads.
+
+  Auto-detected, no cell-id gate. `planConfluences` (arrivals) and its mirror
+  `groupFanOutDepartures` (departures) read the anchor plan the band already
+  allocated and report every cell+side that ≥2 endpoints share. This is the
+  geometry the retired overhead-rail bus special-cased for the Regular Tutor
+  row; it is now one instance of the generic mechanism.
+
+  Only forward (horizontal) arrivals/departures merge: a forward arrival lands
+  on the target's LEFT, a forward departure leaves the source's RIGHT, and a
+  horizontal trunk can only gather those. Backward loops (bottom) and same-
+  column connectors (top/bottom) keep their own heads — merging them would
+  invent a route that does not exist — so every non-forward situation draws
+  exactly as before.
+
+  Merging is applied ONLY when it reduces overlap: a lone arrival is never a
+  confluence (`planConfluences` already drops size-1 groups), and a group whose
+  gather cannot sit clear between its members and the shared edge declines the
+  merge and lets those members route individually.
+*/
+
+/** One drawn piece of a merged group — a shared trunk, or a member's leg. */
+export type ArrowMergeSegment = {
+  /** Stable, deterministic id (target/source-derived for a trunk, the member's
+   *  dependency id for a leg). */
+  id: string
+  d: string
+  /** A confluence trunk and a fan-out drop carry the head; a fan-out trunk and
+   *  a confluence tap do not. */
+  showMarker: boolean
+  /** Dependency ids whose colour/opacity this segment follows. A trunk lists
+   *  every member (shared colour when unanimous, else neutral; opacity = max);
+   *  a leg lists its one member. */
+  memberDependencyIds: string[]
+}
+
+export type ArrowMergePlan = {
+  segments: ArrowMergeSegment[]
+  /** Every member dependency id across all merged groups. The caller must NOT
+   *  also route these through `buildArrowPath`: the merge already draws them. */
+  consumed: Set<string>
+}
+
+const EMPTY_ARROW_MERGE_PLAN: ArrowMergePlan = {
+  segments: [],
+  consumed: new Set(),
+}
+
+/** The dependency id an endpoint id (`${dependencyId}:${direction}`) belongs to. */
+function dependencyIdOfEndpoint(endpointId: string): string {
+  const at = endpointId.lastIndexOf(':')
+  return at === -1 ? endpointId : endpointId.slice(0, at)
+}
+
+/** A cell's own card centre Y (not target-adjusted — the trunk is its own run). */
+function cellCardCenterY(box: LayoutBox): number {
+  return box.top + box.height / 2
+}
+
+/**
+ * Departures that share a source side — the mirror of `planConfluences`, which
+ * groups arrivals. Same contract: ≥2 endpoints on one cell+side, size-1 groups
+ * dropped, deterministic order independent of Map insertion.
+ */
+function groupFanOutDepartures(
+  assignments: Iterable<SlotAssignment>,
+): Confluence[] {
+  const groups = new Map<string, SlotAssignment[]>()
+  for (const assignment of assignments) {
+    if (assignment.direction !== 'out') continue
+    const key = `${assignment.cellId}:${assignment.side}`
+    const list = groups.get(key)
+    if (list) list.push(assignment)
+    else groups.set(key, [assignment])
+  }
+
+  const out: Confluence[] = []
+  for (const [key, members] of groups) {
+    if (members.length < 2) continue
+    const sorted = members.sort((a, b) => a.index - b.index)
+    out.push({
+      id: `fan-out:${key}`,
+      targetCellId: sorted[0].cellId,
+      side: sorted[0].side,
+      memberIds: sorted.map((member) => member.id),
+    })
+  }
+  return out.sort((a, b) => (a.id < b.id ? -1 : 1))
+}
+
+/** Fallback junction offset when no column gap is measurable (call-time so it
+ *  reads `ARROW_CORNER_RADIUS` after the module's consts have initialised). */
+function mergeJunctionMinOffset(): number {
+  return Math.max(28, ARROW_CORNER_RADIUS * 2.5)
+}
+
+type ConfluenceMember = {
+  dependencyId: string
+  sourceRight: number
+  sourceY: number
+}
+
+/**
+ * The merged trunk + per-source taps for one same-side confluence, or null when
+ * the gather cannot sit clear (in which case the members route individually and
+ * nothing is consumed).
+ */
+function buildConfluenceSegments(
+  group: Confluence,
+  root: HTMLElement,
+  cellById: (id: string) => HTMLElement | null,
+  depById: Map<string, AnchorSlotDependency>,
+): ArrowMergeSegment[] | null {
+  const targetEl = cellById(group.targetCellId)
+  if (!targetEl) return null
+  const targetBox = getCellContentBox(targetEl, root)
+  const entryX = targetBox.left - ARROW_CHEVRON_SIZE
+  const targetY = cellCardCenterY(targetBox)
+
+  const members: ConfluenceMember[] = []
+  let firstSourceEl: HTMLElement | null = null
+  for (const endpointId of group.memberIds) {
+    const dependencyId = dependencyIdOfEndpoint(endpointId)
+    const dependency = depById.get(dependencyId)
+    if (!dependency) return null
+    const sourceEl = cellById(dependency.source_cell_id)
+    if (!sourceEl) return null
+    firstSourceEl ??= sourceEl
+    const box = getCellContentBox(sourceEl, root)
+    members.push({
+      dependencyId,
+      sourceRight: box.right,
+      sourceY: cellCardCenterY(box),
+    })
+  }
+  if (members.length < 2 || !firstSourceEl) return null
+
+  const junctionX =
+    getPreTargetGapCenterX(root, firstSourceEl, targetEl) ??
+    entryX - mergeJunctionMinOffset()
+
+  // The trunk only reduces overlap when it can sit clear to the left of the
+  // target edge and to the right of every source; otherwise decline the merge.
+  if (entryX <= junctionX) return null
+  for (const member of members) {
+    if (junctionX <= member.sourceRight) return null
+  }
+
+  const memberIds = members.map((member) => member.dependencyId)
+  const segments: ArrowMergeSegment[] = []
+
+  // The trunk gathers along a vertical at the junction, then turns into the
+  // target with the single head. When the target Y is an extreme of the gather
+  // it is one rounded stroke; when it sits between members (both sides), the
+  // spine and the headed approach are two pieces.
+  const ys = members.map((member) => member.sourceY)
+  const spineTop = Math.min(...ys, targetY)
+  const spineBottom = Math.max(...ys, targetY)
+  const trunkId = `${group.targetCellId}-confluence-${group.side}`
+
+  if (spineTop < targetY && targetY < spineBottom) {
+    const spine = buildRoundedPolylinePath(
+      [
+        { x: junctionX, y: spineTop },
+        { x: junctionX, y: spineBottom },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    const approach = buildRoundedPolylinePath(
+      [
+        { x: junctionX, y: targetY },
+        { x: entryX, y: targetY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    if (!spine || !approach) return null
+    segments.push({
+      id: `${trunkId}-spine`,
+      d: spine,
+      showMarker: false,
+      memberDependencyIds: memberIds,
+    })
+    segments.push({
+      id: trunkId,
+      d: approach,
+      showMarker: true,
+      memberDependencyIds: memberIds,
+    })
+  } else {
+    const farEnd = spineTop === targetY ? spineBottom : spineTop
+    const trunk = buildRoundedPolylinePath(
+      [
+        { x: junctionX, y: farEnd },
+        { x: junctionX, y: targetY },
+        { x: entryX, y: targetY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    if (!trunk) return null
+    segments.push({
+      id: trunkId,
+      d: trunk,
+      showMarker: true,
+      memberDependencyIds: memberIds,
+    })
+  }
+
+  for (const member of members) {
+    const tap = buildRoundedPolylinePath(
+      [
+        { x: member.sourceRight, y: member.sourceY },
+        { x: junctionX, y: member.sourceY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    if (!tap) return null
+    segments.push({
+      id: member.dependencyId,
+      d: tap,
+      showMarker: false,
+      memberDependencyIds: [member.dependencyId],
+    })
+  }
+
+  return segments
+}
+
+type FanOutMember = {
+  dependencyId: string
+  entryX: number
+  targetY: number
+}
+
+/**
+ * The mirror of `buildConfluenceSegments`: one source's shared trunk (no head)
+ * plus a headed drop per target. Null when the gather cannot sit clear.
+ */
+function buildFanOutSegments(
+  group: Confluence,
+  root: HTMLElement,
+  cellById: (id: string) => HTMLElement | null,
+  depById: Map<string, AnchorSlotDependency>,
+): ArrowMergeSegment[] | null {
+  const sourceCellId = group.targetCellId
+  const sourceEl = cellById(sourceCellId)
+  if (!sourceEl) return null
+  const sourceBox = getCellContentBox(sourceEl, root)
+  const sourceRight = sourceBox.right
+  const sourceY = cellCardCenterY(sourceBox)
+
+  const members: FanOutMember[] = []
+  let firstTargetEl: HTMLElement | null = null
+  for (const endpointId of group.memberIds) {
+    const dependencyId = dependencyIdOfEndpoint(endpointId)
+    const dependency = depById.get(dependencyId)
+    if (!dependency) return null
+    const targetEl = cellById(dependency.target_cell_id)
+    if (!targetEl) return null
+    firstTargetEl ??= targetEl
+    const box = getCellContentBox(targetEl, root)
+    members.push({
+      dependencyId,
+      entryX: box.left - ARROW_CHEVRON_SIZE,
+      targetY: cellCardCenterY(box),
+    })
+  }
+  if (members.length < 2 || !firstTargetEl) return null
+
+  const junctionX =
+    getPreTargetGapCenterX(root, sourceEl, firstTargetEl) ??
+    sourceRight + mergeJunctionMinOffset()
+
+  if (junctionX <= sourceRight) return null
+  for (const member of members) {
+    if (member.entryX <= junctionX) return null
+  }
+
+  const memberIds = members.map((member) => member.dependencyId)
+  const segments: ArrowMergeSegment[] = []
+
+  const ys = members.map((member) => member.targetY)
+  const spineTop = Math.min(...ys, sourceY)
+  const spineBottom = Math.max(...ys, sourceY)
+  const trunkId = `${sourceCellId}-fan-out-${group.side}`
+
+  if (spineTop < sourceY && sourceY < spineBottom) {
+    const stub = buildRoundedPolylinePath(
+      [
+        { x: sourceRight, y: sourceY },
+        { x: junctionX, y: sourceY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    const spine = buildRoundedPolylinePath(
+      [
+        { x: junctionX, y: spineTop },
+        { x: junctionX, y: spineBottom },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    if (!stub || !spine) return null
+    segments.push({
+      id: `${trunkId}-stub`,
+      d: stub,
+      showMarker: false,
+      memberDependencyIds: memberIds,
+    })
+    segments.push({
+      id: trunkId,
+      d: spine,
+      showMarker: false,
+      memberDependencyIds: memberIds,
+    })
+  } else {
+    const farEnd = sourceY === spineTop ? spineBottom : spineTop
+    const trunk = buildRoundedPolylinePath(
+      [
+        { x: sourceRight, y: sourceY },
+        { x: junctionX, y: sourceY },
+        { x: junctionX, y: farEnd },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    if (!trunk) return null
+    segments.push({
+      id: trunkId,
+      d: trunk,
+      showMarker: false,
+      memberDependencyIds: memberIds,
+    })
+  }
+
+  for (const member of members) {
+    const drop = buildRoundedPolylinePath(
+      [
+        { x: junctionX, y: member.targetY },
+        { x: member.entryX, y: member.targetY },
+      ],
+      ARROW_CORNER_RADIUS,
+    )
+    if (!drop) return null
+    segments.push({
+      id: member.dependencyId,
+      d: drop,
+      showMarker: true,
+      memberDependencyIds: [member.dependencyId],
+    })
+  }
+
+  return segments
+}
+
+/**
+ * Plan every same-side confluence and fan-out over the band's active anchor
+ * plan. Call AFTER `planAnchorSlots`, over the SAME dependency list — the merge
+ * reads the slots that pass allocated. `disabled` is the per-scenario
+ * off-switch: it returns an empty plan, so every member routes individually and
+ * the band draws exactly as it did before confluence.
+ *
+ * The result's `consumed` set names every dependency a trunk already draws; a
+ * caller iterating `buildArrowPath` must skip those.
+ */
+export function planArrowConfluences(
+  root: HTMLElement,
+  dependencies: readonly AnchorSlotDependency[],
+  options: { disabled?: boolean } = {},
+): ArrowMergePlan {
+  if (options.disabled || !activeAnchorPlan) return EMPTY_ARROW_MERGE_PLAN
+
+  const depById = new Map<string, AnchorSlotDependency>()
+  for (const dependency of dependencies) depById.set(dependency.id, dependency)
+
+  const cellCache = new Map<string, HTMLElement | null>()
+  const cellById = (id: string): HTMLElement | null => {
+    const cached = cellCache.get(id)
+    if (cached !== undefined) return cached
+    const el = root.querySelector<HTMLElement>(`[data-blueprint-cell="${id}"]`)
+    cellCache.set(id, el)
+    return el
+  }
+
+  const segments: ArrowMergeSegment[] = []
+  const consumed = new Set<string>()
+
+  // Confluence: forward arrivals land on 'left', the only side a horizontal
+  // trunk can gather.
+  for (const group of planConfluences(activeAnchorPlan.values())) {
+    if (group.side !== 'left') continue
+    const built = buildConfluenceSegments(group, root, cellById, depById)
+    if (!built) continue
+    segments.push(...built)
+    for (const endpointId of group.memberIds) {
+      consumed.add(dependencyIdOfEndpoint(endpointId))
+    }
+  }
+
+  // Fan-out: the mirror — forward departures leave on 'right'. A dependency the
+  // confluence already merged never merges twice.
+  for (const group of groupFanOutDepartures(activeAnchorPlan.values())) {
+    if (group.side !== 'right') continue
+    const liveMemberIds = group.memberIds.filter(
+      (endpointId) => !consumed.has(dependencyIdOfEndpoint(endpointId)),
+    )
+    if (liveMemberIds.length < 2) continue
+    const built = buildFanOutSegments(
+      { ...group, memberIds: liveMemberIds },
+      root,
+      cellById,
+      depById,
+    )
+    if (!built) continue
+    segments.push(...built)
+    for (const endpointId of liveMemberIds) {
+      consumed.add(dependencyIdOfEndpoint(endpointId))
+    }
+  }
+
+  return { segments, consumed }
 }
 
 /** Regular Tutor step 8 → step 1 loop (stable IDs). */
@@ -2329,15 +2757,6 @@ function isRegularTutorRailCell(cellId: string | undefined): boolean {
   )
 }
 
-function parseRegularTutorStepFromCellId(cellId: string): number | null {
-  const match = OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.exec(
-    resolveArrowLogicCellId(cellId),
-  )
-  if (!match) return null
-  const step = Number.parseInt(match[1], 10)
-  return Number.isFinite(step) ? step : null
-}
-
 /** Horizontal discovery rail above the Regular Tutor row. */
 export const DISCOVERY_RAIL_CLEARANCE = 10
 
@@ -2437,295 +2856,6 @@ export function buildApplicationRegularTutorRailPath(
     ],
     ARROW_CORNER_RADIUS,
   )
-}
-
-/**
- * Merged bus for multiple Regular Tutor forward dependencies that share a target:
- * the leftmost source rises to the rail, the trunk runs to the target column,
- * intermediate sources get vertical taps, and the path ends with a downward
- * arrow into the target.
- */
-export function buildApplicationRegularTutorRailBusPath(
-  sourceEls: HTMLElement[],
-  targetEl: HTMLElement,
-  root: HTMLElement,
-): string {
-  if (sourceEls.length === 0) return ''
-
-  const sorted = [...sourceEls].sort(
-    (a, b) => (parseStepIndex(a) ?? 0) - (parseStepIndex(b) ?? 0),
-  )
-  const firstEl = sorted[0]
-  const first = getCellTopCenter(firstEl, root)
-  const target = getCellTopCenter(targetEl, root)
-  const railY = getDiscoveryRailY(firstEl, targetEl, root)
-  const lineEndY = target.y - ARROW_CHEVRON_SIZE
-
-  if (lineEndY <= railY) return ''
-
-  const mainPath = buildRoundedPolylinePath(
-    [
-      first,
-      { x: first.x, y: railY },
-      { x: target.x, y: railY },
-      { x: target.x, y: lineEndY },
-    ],
-    ARROW_CORNER_RADIUS,
-  )
-
-  const tapPaths = sorted.slice(1).map((el) => {
-    const cell = getCellTopCenter(el, root)
-    return `M ${cell.x} ${railY} L ${cell.x} ${cell.y}`
-  })
-
-  // Taps first so markerEnd lands on the main trunk's downward segment at step 6.
-  return [...tapPaths, mainPath].filter(Boolean).join(' ')
-}
-
-export type OverheadRailFanOutGroup = {
-  sourceCellId: string
-  sourceEl: HTMLElement
-  branches: Array<{ dependencyId: string; targetEl: HTMLElement }>
-}
-
-/** Shared trunk: up from the source, then across above all branch targets. */
-export function buildOverheadRailFanOutTrunkPath(
-  sourceEl: HTMLElement,
-  targetEls: HTMLElement[],
-  root: HTMLElement,
-): string {
-  if (targetEls.length === 0) return ''
-
-  const source = getCellTopCenter(sourceEl, root)
-  const sortedTargets = [...targetEls].sort(
-    (a, b) => (parseStepIndex(a) ?? 0) - (parseStepIndex(b) ?? 0),
-  )
-  const lastTarget = sortedTargets[sortedTargets.length - 1]!
-  const railY = getDiscoveryRailY(sourceEl, lastTarget, root)
-  const rightX = Math.max(
-    ...sortedTargets.map((el) => getCellTopCenter(el, root).x),
-  )
-
-  return buildRoundedPolylinePath(
-    [source, { x: source.x, y: railY }, { x: rightX, y: railY }],
-    ARROW_CORNER_RADIUS,
-  )
-}
-
-/** Vertical drop from the overhead rail into a branch target. */
-export function buildOverheadRailFanOutDropPath(
-  sourceEl: HTMLElement,
-  targetEl: HTMLElement,
-  root: HTMLElement,
-): string {
-  const target = getCellTopCenter(targetEl, root)
-  const railY = getDiscoveryRailY(sourceEl, targetEl, root)
-  const lineEndY = target.y - ARROW_CHEVRON_SIZE
-  if (lineEndY <= railY) return ''
-  return `M ${target.x} ${railY} L ${target.x} ${lineEndY}`
-}
-
-/** Dependency ids that share a source and fan out to multiple overhead-rail targets. */
-export function collectOverheadRailFanOutDependencyIds<
-  T extends DiscoveryRailDependency,
->(dependencies: readonly T[]): Set<string> {
-  const bySource = new Map<string, T[]>()
-
-  for (const dependency of dependencies) {
-    if (
-      !isRegularTutorRailDependencyByCellId(
-        dependency.source_cell_id,
-        dependency.target_cell_id,
-      )
-    ) {
-      continue
-    }
-
-    const list = bySource.get(dependency.source_cell_id) ?? []
-    list.push(dependency)
-    bySource.set(dependency.source_cell_id, list)
-  }
-
-  const fanOutIds = new Set<string>()
-  for (const list of bySource.values()) {
-    const targetIds = new Set(list.map((dependency) => dependency.target_cell_id))
-    if (targetIds.size < 2) continue
-    for (const dependency of list) {
-      fanOutIds.add(dependency.id)
-    }
-  }
-
-  return fanOutIds
-}
-
-export type DiscoveryRailDependency = {
-  id: string
-  source_cell_id: string
-  target_cell_id: string
-}
-
-/** Group overhead-rail dependencies into merge buses and source fan-outs. */
-export function groupDiscoveryRailDependencies<T extends DiscoveryRailDependency>(
-  dependencies: T[],
-  content: HTMLElement,
-): {
-  busGroups: {
-    targetCellId: string
-    dependencyIds: string[]
-    sourceEls: HTMLElement[]
-    targetEl: HTMLElement
-  }[]
-  fanOutGroups: OverheadRailFanOutGroup[]
-  remaining: T[]
-} {
-  const remaining: T[] = []
-  const railEntries: Array<{
-    dependency: T
-    sourceEl: HTMLElement
-    targetEl: HTMLElement
-  }> = []
-
-  for (const dependency of dependencies) {
-    if (
-      !isRegularTutorRailDependencyByCellId(
-        dependency.source_cell_id,
-        dependency.target_cell_id,
-      )
-    ) {
-      remaining.push(dependency)
-      continue
-    }
-
-    const sourceEl = content.querySelector<HTMLElement>(
-      `[data-blueprint-cell="${dependency.source_cell_id}"]`,
-    )
-    const targetEl = content.querySelector<HTMLElement>(
-      `[data-blueprint-cell="${dependency.target_cell_id}"]`,
-    )
-    if (!sourceEl || !targetEl) continue
-
-    railEntries.push({ dependency, sourceEl, targetEl })
-  }
-
-  const fanOutDependencyIds = collectOverheadRailFanOutDependencyIds(
-    railEntries.map((entry) => entry.dependency),
-  )
-  const fanOutGroups: OverheadRailFanOutGroup[] = []
-  const bySource = new Map<
-    string,
-    {
-      sourceEl: HTMLElement
-      branches: Array<{ dependencyId: string; targetEl: HTMLElement }>
-      targetIds: Set<string>
-    }
-  >()
-
-  for (const entry of railEntries) {
-    if (!fanOutDependencyIds.has(entry.dependency.id)) continue
-
-    const existing = bySource.get(entry.dependency.source_cell_id)
-    if (existing) {
-      if (!existing.targetIds.has(entry.dependency.target_cell_id)) {
-        existing.targetIds.add(entry.dependency.target_cell_id)
-        existing.branches.push({
-          dependencyId: entry.dependency.id,
-          targetEl: entry.targetEl,
-        })
-      }
-    } else {
-      bySource.set(entry.dependency.source_cell_id, {
-        sourceEl: entry.sourceEl,
-        branches: [
-          { dependencyId: entry.dependency.id, targetEl: entry.targetEl },
-        ],
-        targetIds: new Set([entry.dependency.target_cell_id]),
-      })
-    }
-  }
-
-  for (const [sourceCellId, group] of bySource) {
-    fanOutGroups.push({
-      sourceCellId,
-      sourceEl: group.sourceEl,
-      branches: [...group.branches].sort(
-        (a, b) =>
-          (parseStepIndex(a.targetEl) ?? 0) - (parseStepIndex(b.targetEl) ?? 0),
-      ),
-    })
-  }
-
-  const byTarget = new Map<
-    string,
-    { dependencyIds: string[]; sourceEls: HTMLElement[]; targetEl: HTMLElement }
-  >()
-
-  for (const entry of railEntries) {
-    if (fanOutDependencyIds.has(entry.dependency.id)) continue
-
-    const existing = byTarget.get(entry.dependency.target_cell_id)
-    if (existing) {
-      existing.dependencyIds.push(entry.dependency.id)
-      existing.sourceEls.push(entry.sourceEl)
-    } else {
-      byTarget.set(entry.dependency.target_cell_id, {
-        dependencyIds: [entry.dependency.id],
-        sourceEls: [entry.sourceEl],
-        targetEl: entry.targetEl,
-      })
-    }
-  }
-
-  const busGroups = [...byTarget.entries()]
-    .filter(([, group]) => group.sourceEls.length >= 2)
-    .map(([targetCellId, group]) => ({
-      targetCellId,
-      dependencyIds: group.dependencyIds,
-      sourceEls: group.sourceEls,
-      targetEl: group.targetEl,
-    }))
-
-  for (const entry of railEntries) {
-    if (fanOutDependencyIds.has(entry.dependency.id)) continue
-
-    const busGroup = busGroups.find((group) =>
-      group.dependencyIds.includes(entry.dependency.id),
-    )
-    if (busGroup) continue
-
-    remaining.push(entry.dependency)
-  }
-
-  return {
-    busGroups,
-    fanOutGroups,
-    remaining,
-  }
-}
-
-function isRegularTutorRailDependencyByCellId(
-  sourceCellId: string,
-  targetCellId: string,
-): boolean {
-  if (
-    isBeforeStudentsJoinColumnGapCell(sourceCellId) ||
-    isBeforeStudentsJoinColumnGapCell(targetCellId)
-  ) {
-    return false
-  }
-
-  if (!isRegularTutorRailCell(sourceCellId) || !isRegularTutorRailCell(targetCellId)) {
-    return false
-  }
-
-  const sourceStep = parseRegularTutorStepFromCellId(sourceCellId)
-  const targetStep = parseRegularTutorStepFromCellId(targetCellId)
-  if (sourceStep === null || targetStep === null) return false
-  if (targetStep <= sourceStep) return false
-  if (targetStep === sourceStep + 1) {
-    if (sourceStep === 1 || sourceStep === 5) return true
-    return false
-  }
-  return true
 }
 
 /** Top-edge rail above the row for Application Regular Tutor forward connectors. */

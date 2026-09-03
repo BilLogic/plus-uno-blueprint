@@ -9,18 +9,15 @@ import {
 } from 'react'
 import {
   ARROW_VIEWPORT_PAD,
-  buildApplicationRegularTutorRailBusPath,
   buildArrowPath,
   buildBidirectionalArrowPath,
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
-  buildOverheadRailFanOutDropPath,
-  buildOverheadRailFanOutTrunkPath,
   clearAnchorSlotPlan,
   findBidirectionalDependencyPairs,
-  groupDiscoveryRailDependencies,
   isWrapDependency,
   partitionReportingAnIssueFsaStep1ToResolveDependencies,
   planAnchorSlots,
+  planArrowConfluences,
   runArrowMeasurementPass,
 } from '@/lib/blueprintArrowGeometry'
 import {
@@ -60,6 +57,12 @@ type IntegratedDependencyArrowsProps = {
   contentRef: RefObject<HTMLElement | null>
   scrollContainerRef: RefObject<HTMLElement | null>
   lane: ArrowLayer
+  /**
+   * Per-scenario off-switch for the confluence/fan-out merge. On by default
+   * (auto-detected); a scenario that wants every arrival to keep its own head
+   * passes false, and same-side arrivals draw individually again.
+   */
+  mergeConfluences?: boolean
 }
 
 type SimpleSegment = {
@@ -141,6 +144,7 @@ export function IntegratedDependencyArrows({
   contentRef,
   scrollContainerRef,
   lane,
+  mergeConfluences = true,
 }: IntegratedDependencyArrowsProps) {
   const [simpleSegments, setSimpleSegments] = useState<SimpleSegment[]>([])
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -217,117 +221,67 @@ export function IntegratedDependencyArrows({
         })
       }
 
-      const { busGroups, fanOutGroups, remaining } = groupDiscoveryRailDependencies(
-        railInputDependencies,
-        content,
-      )
-
-      for (const group of fanOutGroups) {
-        const sampleDependency = dependencies.find((entry) =>
-          group.branches.some((branch) => branch.dependencyId === entry.id),
-        )
-        const trunkStyle = resolveSegmentStyle(
-          sampleDependency?.path_id ?? '',
-          pathById,
-        )
-        const targetEls = group.branches.map((branch) => branch.targetEl)
-        const trunk = buildOverheadRailFanOutTrunkPath(
-          group.sourceEl,
-          targetEls,
-          content,
-        )
-        if (trunk) {
-          segments.push({
-            id: `${group.sourceCellId}-trunk`,
-            d: trunk,
-            colorKey: trunkStyle.colorKey,
-            arrowColor: trunkStyle.arrowColor,
-            opacity: 1,
-            showMarker: false,
-          })
-        }
-
-        for (const branch of group.branches) {
-          const dependency = dependencies.find(
-            (entry) => entry.id === branch.dependencyId,
-          )
-          const branchStyle = resolveSegmentStyle(dependency?.path_id ?? '', pathById)
-          const d = buildOverheadRailFanOutDropPath(
-            group.sourceEl,
-            branch.targetEl,
-            content,
-          )
-          if (!d) continue
-
-          segments.push({
-            id: branch.dependencyId,
-            d,
-            colorKey: branchStyle.colorKey,
-            arrowColor: branchStyle.arrowColor,
-            opacity: dependency?.opacity ?? 1,
-          })
-        }
-      }
-
-      for (const group of busGroups) {
-        const dependenciesInGroup = dependencies.filter((dependency) =>
-          group.dependencyIds.includes(dependency.id),
-        )
-        const byPathId = new Map<
-          string,
-          { sourceEls: HTMLElement[]; opacity: number; dependencyIds: string[] }
-        >()
-
-        for (const dependency of dependenciesInGroup) {
-          const sourceEl = cellElById.get(dependency.source_cell_id)
-          if (!sourceEl) continue
-
-          const existing = byPathId.get(dependency.path_id)
-          if (existing) {
-            existing.sourceEls.push(sourceEl)
-            existing.dependencyIds.push(dependency.id)
-            existing.opacity = Math.max(existing.opacity, dependency.opacity)
-          } else {
-            byPathId.set(dependency.path_id, {
-              sourceEls: [sourceEl],
-              opacity: dependency.opacity,
-              dependencyIds: [dependency.id],
-            })
-          }
-        }
-
-        for (const [pathId, pathGroup] of byPathId) {
-          const style = resolveSegmentStyle(pathId, pathById)
-          const targetEl =
-            dependenciesInGroup
-              .filter((dependency) => dependency.path_id === pathId)
-              .map((dependency) => cellElById.get(dependency.target_cell_id))
-              .find((el): el is HTMLElement => el !== undefined) ?? group.targetEl
-
-          const d = buildApplicationRegularTutorRailBusPath(
-            pathGroup.sourceEls,
-            targetEl,
-            content,
-          )
-          if (!d) continue
-
-          segments.push({
-            id: `${group.targetCellId}-${pathId}`,
-            d,
-            colorKey: style.colorKey,
-            arrowColor: style.arrowColor,
-            opacity: pathGroup.opacity,
-          })
-        }
-      }
-
       const { pairs, remaining: unpaired } =
-        findBidirectionalDependencyPairs(remaining)
+        findBidirectionalDependencyPairs(railInputDependencies)
 
       // Allocate anchor slots over the endpoints `buildArrowPath` will draw:
       // a merged slot stacks a sub-cell per path, so a contested target fans
       // its arrivals instead of stacking heads at one edge point.
       planAnchorSlots(content, unpaired)
+
+      // Confluence + fan-out: ≥2 same-side arrivals (or departures) merge into
+      // one path-coloured trunk with a single head — this is the generic
+      // mechanism that replaced the hand-tuned overhead-rail bus. `disabled`
+      // is the per-scenario off-switch.
+      const merge = planArrowConfluences(content, unpaired, {
+        disabled: !mergeConfluences,
+      })
+
+      const dependencyById = new Map(
+        dependencies.map((dependency) => [dependency.id, dependency]),
+      )
+      const styleForMembers = (memberIds: readonly string[]) => {
+        const colorKeys = new Set<string>()
+        let arrowColor = ''
+        let opacity = 0
+        for (const memberId of memberIds) {
+          const dependency = dependencyById.get(memberId)
+          if (!dependency) continue
+          const style = resolveSegmentStyle(dependency.path_id, pathById)
+          colorKeys.add(style.colorKey)
+          arrowColor = style.arrowColor
+          opacity = Math.max(opacity, dependency.opacity)
+        }
+        // A trunk wears the shared colour only when every member agrees; a
+        // mixed-path trunk falls back to the neutral stroke.
+        if (colorKeys.size === 1) {
+          return { colorKey: [...colorKeys][0]!, arrowColor, opacity: opacity || 1 }
+        }
+        const neutral = resolveSegmentStyle('', pathById)
+        return {
+          colorKey: neutral.colorKey,
+          arrowColor: neutral.arrowColor,
+          opacity: opacity || 1,
+        }
+      }
+
+      // Confluence/fan-out members are forward arrows (left/right sides), so
+      // the trunk rides the z-0 forward layer; drawing it in the wrap lane too
+      // would double it. The consumed forward deps are dropped from the wrap
+      // lane by its own wrap filter below.
+      if (lane === 'forward') {
+        for (const segment of merge.segments) {
+          const style = styleForMembers(segment.memberDependencyIds)
+          segments.push({
+            id: segment.id,
+            d: segment.d,
+            colorKey: style.colorKey,
+            arrowColor: style.arrowColor,
+            opacity: style.opacity,
+            showMarker: segment.showMarker,
+          })
+        }
+      }
 
       for (const pair of pairs) {
         const cellAEl = cellElById.get(pair.cellAId)
@@ -358,6 +312,9 @@ export function IntegratedDependencyArrows({
       }
 
       for (const dependency of unpaired) {
+        // A dependency a trunk already gathered must not also draw on its own.
+        if (merge.consumed.has(dependency.id)) continue
+
         const sourceEl = cellElById.get(dependency.source_cell_id)
         const targetEl = cellElById.get(dependency.target_cell_id)
         if (!sourceEl || !targetEl) continue
@@ -400,7 +357,7 @@ export function IntegratedDependencyArrows({
       serializeSegments(prev) === nextKey ? prev : nextSimple,
     )
     measureSize()
-  }, [contentRef, lane, measureSize, pathById, dependencies])
+  }, [contentRef, lane, measureSize, mergeConfluences, pathById, dependencies])
 
   // Split from the subscription effect below, and BEFORE paint. Every input
   // this reads — cell boxes, the band's extent — is laid out by the same
