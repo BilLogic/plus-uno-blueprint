@@ -6,8 +6,10 @@ import {
 } from '@/lib/serviceSlug'
 
 /*
- * The route slug is derived from the service name (production has no `slug`
- * column), mirroring the database's `key_slug`. These pin that derivation and
+ * The route slug is a service's own `slug` column (#341), with a name-derived
+ * fallback (mirroring the database's `key_slug`) for a row whose column is
+ * null. These pin that the column wins over the name — so a rename does not
+ * move the URL — that the fallback still derives when the column is absent, and
  * the slug -> service resolution the router turns a `/<slug>` deep link into.
  */
 
@@ -30,22 +32,40 @@ describe('slugifyServiceName', () => {
 })
 
 describe('serviceSlug', () => {
-  it('is the slugified name for an ordinary service', () => {
+  it('is the stored slug column when set', () => {
+    expect(serviceSlug({ id: 'svc-1', name: 'PLUS Tutoring', slug: 'plus-tutoring' })).toBe(
+      'plus-tutoring',
+    )
+  })
+
+  it('is the stored slug, not a derivation of a renamed name', () => {
+    // The whole point of the column (#341): the URL is the slug's own identity,
+    // so renaming the service does NOT move its route.
+    expect(serviceSlug({ id: 'svc-1', name: 'Renamed Service', slug: 'plus-tutoring' })).toBe(
+      'plus-tutoring',
+    )
+  })
+
+  it('falls back to the slugified name when the column is null', () => {
+    expect(serviceSlug({ id: 'svc-1', name: 'PLUS Tutoring', slug: null })).toBe('plus-tutoring')
+  })
+
+  it('falls back to the slugified name when the column is absent', () => {
     expect(serviceSlug({ id: 'svc-1', name: 'PLUS Tutoring' })).toBe('plus-tutoring')
   })
 
-  it('falls back to the id when the name slugifies to nothing', () => {
+  it('falls back to the id when the name slugifies to nothing and no column', () => {
     expect(serviceSlug({ id: 'svc-9', name: '运营协调' })).toBe('svc-9')
   })
 })
 
 describe('resolveServiceBySlug', () => {
   const services = [
-    { id: 'a', name: 'Support Desk' },
-    { id: 'b', name: 'Sales Pipeline' },
+    { id: 'a', name: 'Support Desk', slug: 'support-desk' },
+    { id: 'b', name: 'Sales Pipeline', slug: 'sales-pipeline' },
   ]
 
-  it('resolves a service from its slug', () => {
+  it('resolves a service from its slug column', () => {
     expect(resolveServiceBySlug(services, 'sales-pipeline')?.id).toBe('b')
   })
 
@@ -54,6 +74,14 @@ describe('resolveServiceBySlug', () => {
     // support service.
     expect(resolveServiceBySlug(services, 'support-desk')?.id).toBe('a')
     expect(resolveServiceBySlug(services, 'support-desk')?.id).not.toBe('b')
+  })
+
+  it('resolves by the slug column even when the name would derive differently', () => {
+    // A renamed service keeps its route: its column slug still resolves, and
+    // the new name's derivation does not.
+    const renamed = [{ id: 'b', name: 'Renamed Pipeline', slug: 'sales-pipeline' }]
+    expect(resolveServiceBySlug(renamed, 'sales-pipeline')?.id).toBe('b')
+    expect(resolveServiceBySlug(renamed, 'renamed-pipeline')).toBeNull()
   })
 
   it('is case-insensitive', () => {

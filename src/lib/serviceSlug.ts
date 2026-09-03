@@ -1,23 +1,24 @@
 /**
- * A service's route slug — derived from its name, not read from a column.
+ * A service's route slug — its own `slug` column, with a name-derived fallback.
  *
  * A deployment routes by service slug (#303/#335): `/<slug>` opens that
- * service. The obvious source would be a `services.slug` column, but production
- * dropped that column long ago (the initial schema had it; the empty-replay
- * baseline still does, production does not — see migration
- * `20260830180000_the_two_gaps_that_were_actually_open`). Selecting it would
- * error, so the slug is COMPUTED from the name the same way the database's
- * `key_slug` computes a cell key's service segment: lowercase, every run of
- * non-alphanumerics becomes a single hyphen, ends trimmed. That keeps the app's
- * route slug in step with the identity the import pipeline already slugifies,
- * with no schema change.
+ * service. #335 shipped this by DERIVING the slug from the name, because
+ * production had dropped the `slug` column (the initial schema had it; it was
+ * dropped out of band). #341 re-added the column
+ * (`20260902230000_a_service_slug_is_a_column_again`), so the slug is now the
+ * service's OWN identity: stable across renames, unique by constraint. This
+ * module reads that column.
  *
- * A name that slugifies to nothing (all non-ASCII — `key_slug` has its own
- * md5 fallback there) falls back to the row id, so every service still has a
- * stable, unique, resolvable slug.
+ * The name-derivation stays as a DEFENSIVE fallback, for a row whose slug is
+ * somehow null — the column is nullable, so a deployer who clears the slug gets
+ * the name-derived route rather than a broken one. The derivation mirrors the
+ * database's `key_slug`: lowercase, every run of non-alphanumerics becomes a
+ * single hyphen, ends trimmed; a name that slugifies to nothing (all non-ASCII)
+ * falls back to the row id, so every service still has a stable, unique,
+ * resolvable slug even with no column value.
  */
 
-export type ServiceIdentity = { id: string; name: string }
+export type ServiceIdentity = { id: string; name: string; slug?: string | null }
 
 /**
  * Slugify a service name the way `public.key_slug` does for ASCII input:
@@ -31,8 +32,17 @@ export function slugifyServiceName(name: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-/** The route slug for a service: its slugified name, or its id when that empties. */
+/**
+ * The route slug for a service: its own `slug` column when set, otherwise the
+ * name-derived fallback (slugified name, or the id when that empties).
+ *
+ * The column is the normal path — reading it is what keeps a URL stable across
+ * a rename. Deriving from the name is only the defensive branch for a null (or
+ * empty) column value.
+ */
 export function serviceSlug(service: ServiceIdentity): string {
+  const stored = service.slug
+  if (stored != null && stored !== '') return stored
   return slugifyServiceName(service.name) || service.id
 }
 

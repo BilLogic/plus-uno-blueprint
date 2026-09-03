@@ -60,7 +60,7 @@ export function ActiveServiceProvider({ children }: { children: ReactNode }) {
     async (client, signal) => {
       const { data, error } = await client
         .from('services')
-        .select('id, name')
+        .select('id, name, slug')
         .order('created_at')
         .abortSignal(signal)
       if (error) throw new Error(error.message)

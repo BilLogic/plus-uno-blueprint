@@ -45,16 +45,16 @@ export function useServiceSpec(): QueryResult<ServiceSpec | null> {
       const { data: serviceRows, error } = await client
         .from('services')
         .select(
-          'id, name, summary, entity_examples, business_models(funding, pricing, delivery_cost, revenue_model, partners)',
+          'id, name, slug, summary, entity_examples, business_models(funding, pricing, delivery_cost, revenue_model, partners)',
         )
         .order('created_at')
         .abortSignal(signal)
       if (error) throw new Error(error.message)
 
-      // The active service is the one the URL slug names; production has no
-      // `slug` column, so it is matched by the slug derived from the name (see
-      // `serviceSlug`). At the bare root — the single-service case — no slug is
-      // set and this is the first row by `created_at`, as before.
+      // The active service is the one the URL slug names, matched by its `slug`
+      // column (see `serviceSlug` — a name-derived fallback covers a null
+      // column). At the bare root — the single-service case — no slug is set
+      // and this is the first row by `created_at`, as before.
       const slug = getActiveServiceSlug()
       const service = slug
         ? resolveServiceBySlug(serviceRows ?? [], slug)
