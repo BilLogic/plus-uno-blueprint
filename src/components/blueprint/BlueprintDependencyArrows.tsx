@@ -10,12 +10,10 @@ import {
   ARROW_VIEWPORT_PAD,
   buildArrowPath,
   buildBidirectionalArrowPath,
-  buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   clearAnchorSlotPlan,
   clearArrowCorridorPlan,
   findBidirectionalDependencyPairs,
   isWrapDependency,
-  partitionReportingAnIssueFsaStep1ToResolveDependencies,
   planAnchorSlots,
   planArrowConfluences,
   planArrowCorridors,
@@ -125,45 +123,8 @@ export function BlueprintDependencyArrows({
     }
 
     const next: ArrowSegment[] = []
-    const { resolveDependencies, otherDependencies: railInputDependencies } =
-      partitionReportingAnIssueFsaStep1ToResolveDependencies(arrowDependencies)
-
-    for (const dependency of resolveDependencies) {
-      const sourceEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${dependency.source_cell_id}"]`,
-      )
-      const targetEl = content.querySelector<HTMLElement>(
-        `[data-blueprint-cell="${dependency.target_cell_id}"]`,
-      )
-      if (!sourceEl || !targetEl) continue
-
-      const wrap = isWrapDependency(
-        sourceEl,
-        targetEl,
-        dependency.source_cell_id,
-        dependency.target_cell_id,
-      )
-      if (lane === 'forward' && wrap) continue
-      if (lane === 'wrap' && !wrap) continue
-
-      const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
-        sourceEl,
-        targetEl,
-        content,
-      )
-      if (!d) continue
-
-      next.push({
-        id: dependency.id,
-        d,
-        colorKey: defaultColorKey,
-        arrowColor: defaultArrowColor,
-        opacity: isColoredDependency(dependency) ? (dependency.opacity ?? 1) : 1,
-      })
-    }
-
     const { pairs, remaining: unpaired } =
-      findBidirectionalDependencyPairs(railInputDependencies)
+      findBidirectionalDependencyPairs(arrowDependencies)
 
     // Allocate anchor slots over the endpoints `buildArrowPath` will draw, so
     // a contested cell side fans its arrows instead of stacking them. Both
@@ -218,12 +179,7 @@ export function BlueprintDependencyArrows({
       )
       if (!cellAEl || !cellBEl) continue
 
-      const wrap = isWrapDependency(
-        cellAEl,
-        cellBEl,
-        pair.cellAId,
-        pair.cellBId,
-      )
+      const wrap = isWrapDependency(cellAEl, cellBEl)
       if (lane === 'forward' && wrap) continue
       if (lane === 'wrap' && !wrap) continue
 
@@ -254,12 +210,7 @@ export function BlueprintDependencyArrows({
       )
       if (!sourceEl || !targetEl) continue
 
-      const wrap = isWrapDependency(
-        sourceEl,
-        targetEl,
-        dependency.source_cell_id,
-        dependency.target_cell_id,
-      )
+      const wrap = isWrapDependency(sourceEl, targetEl)
       if (lane === 'forward' && wrap) continue
       if (lane === 'wrap' && !wrap) continue
 

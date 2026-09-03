@@ -11,12 +11,10 @@ import {
   ARROW_VIEWPORT_PAD,
   buildArrowPath,
   buildBidirectionalArrowPath,
-  buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   clearAnchorSlotPlan,
   clearArrowCorridorPlan,
   findBidirectionalDependencyPairs,
   isWrapDependency,
-  partitionReportingAnIssueFsaStep1ToResolveDependencies,
   planAnchorSlots,
   planArrowConfluences,
   planArrowCorridors,
@@ -189,42 +187,9 @@ export function IntegratedDependencyArrows({
       // band, so without the frame cache a geometry change cost 2×paths
       // full-DOM sweeps of the same unchanged tree.
       const cellElById = sharedCellIndex(content)
-      const { resolveDependencies, otherDependencies: railInputDependencies } =
-        partitionReportingAnIssueFsaStep1ToResolveDependencies(dependencies)
-
-      for (const dependency of resolveDependencies) {
-        const sourceEl = cellElById.get(dependency.source_cell_id)
-        const targetEl = cellElById.get(dependency.target_cell_id)
-        if (!sourceEl || !targetEl) continue
-
-        const wrap = isWrapDependency(
-          sourceEl,
-          targetEl,
-          dependency.source_cell_id,
-          dependency.target_cell_id,
-        )
-        if (lane === 'forward' && wrap) continue
-        if (lane === 'wrap' && !wrap) continue
-
-        const d = buildReportingAnIssueFrontStageActionStep1ToResolvePath(
-          sourceEl,
-          targetEl,
-          content,
-        )
-        if (!d) continue
-
-        const style = resolveSegmentStyle(dependency.path_id, pathById)
-        segments.push({
-          id: dependency.id,
-          d,
-          colorKey: style.colorKey,
-          arrowColor: style.arrowColor,
-          opacity: dependency.opacity,
-        })
-      }
 
       const { pairs, remaining: unpaired } =
-        findBidirectionalDependencyPairs(railInputDependencies)
+        findBidirectionalDependencyPairs(dependencies)
 
       // Allocate anchor slots over the endpoints `buildArrowPath` will draw:
       // a merged slot stacks a sub-cell per path, so a contested target fans
@@ -298,12 +263,7 @@ export function IntegratedDependencyArrows({
         const cellBEl = cellElById.get(pair.cellBId)
         if (!cellAEl || !cellBEl) continue
 
-        const wrap = isWrapDependency(
-          cellAEl,
-          cellBEl,
-          pair.cellAId,
-          pair.cellBId,
-        )
+        const wrap = isWrapDependency(cellAEl, cellBEl)
         if (lane === 'forward' && wrap) continue
         if (lane === 'wrap' && !wrap) continue
 
@@ -329,12 +289,7 @@ export function IntegratedDependencyArrows({
         const targetEl = cellElById.get(dependency.target_cell_id)
         if (!sourceEl || !targetEl) continue
 
-        const wrap = isWrapDependency(
-          sourceEl,
-          targetEl,
-          dependency.source_cell_id,
-          dependency.target_cell_id,
-        )
+        const wrap = isWrapDependency(sourceEl, targetEl)
         if (lane === 'forward' && wrap) continue
         if (lane === 'wrap' && !wrap) continue
 
