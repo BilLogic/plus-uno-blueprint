@@ -12,6 +12,7 @@ import {
   setActiveServiceSlug,
   useActiveServiceSlug,
 } from '@/contexts/activeServiceStore'
+import { invalidateQueries, invalidateStructure } from '@/lib/queryClient'
 import { resolveServiceBySlug, serviceSlug } from '@/lib/serviceSlug'
 
 /**
@@ -28,8 +29,9 @@ import { resolveServiceBySlug, serviceSlug } from '@/lib/serviceSlug'
  *
  * Journey reads do not consume this context — they resolve the id inside their
  * fetchers via `lib/service.ts` so their two reads still go out in the same
- * tick. This context is for surfaces that need the service's identity (the
- * cover, a future switcher) and for the canonicalization effect below.
+ * tick. This context is for surfaces that need the service's identity or the
+ * whole roster — the cover's Services tab and the top-strip switcher (#336) —
+ * and for the canonicalization effect below.
  */
 
 export type ActiveService = { id: string; name: string; slug: string }
@@ -37,15 +39,29 @@ export type ActiveService = { id: string; name: string; slug: string }
 type ActiveServiceContextValue = {
   /** The resolved active service, or `null` while loading / when none matches. */
   service: ActiveService | null
+  /** Every service in the deployment, in `created_at` order. `[]` until loaded. */
+  services: ActiveService[]
   /** The slug currently in the URL (may trail the resolved slug for a frame). */
   slug: string | null
   loading: boolean
+  /**
+   * Make another service active: write its slug (and the URL, via the store)
+   * and drop the caches the new service must repopulate. A no-op switch to the
+   * service already active still refetches nothing new, since the slug guard in
+   * the store short-circuits.
+   */
+  switchService: (slug: string) => void
 }
+
+/** A stable empty roster so consumers do not resubscribe each render. */
+const NO_SERVICES: ActiveService[] = []
 
 const ActiveServiceContext = createContext<ActiveServiceContextValue>({
   service: null,
+  services: NO_SERVICES,
   slug: null,
   loading: true,
+  switchService: () => {},
 })
 
 export function ActiveServiceProvider({ children }: { children: ReactNode }) {
@@ -53,9 +69,10 @@ export function ActiveServiceProvider({ children }: { children: ReactNode }) {
   const routeSlug = useActiveServiceSlug()
   const fallback = useCallback(() => null, [])
 
-  const result = useSupabaseQuery<ActiveService | null>(
-    // One active service per page load (no switcher yet), so the key is
-    // constant; the fetcher reads the current slug from the store.
+  const result = useSupabaseQuery<ActiveService[]>(
+    // The roster is one read per page load; the ACTIVE one is derived from it
+    // and the URL slug below, so a switch re-picks without refetching. The key
+    // is constant — `switchService` invalidates the board caches, not this one.
     'active-service',
     async (client, signal) => {
       const { data, error } = await client
@@ -65,19 +82,27 @@ export function ActiveServiceProvider({ children }: { children: ReactNode }) {
         .abortSignal(signal)
       if (error) throw new Error(error.message)
 
-      const services = data ?? []
-      const slug = getActiveServiceSlug()
-      const picked = slug
-        ? resolveServiceBySlug(services, slug)
-        : (services[0] ?? null)
-      return picked
-        ? { id: picked.id, name: picked.name, slug: serviceSlug(picked) }
-        : null
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: serviceSlug(row),
+      }))
     },
     fallback,
   )
 
-  const service = result.status === 'ready' ? result.data : null
+  const services = result.status === 'ready' ? result.data : NO_SERVICES
+
+  // The active service is the one the URL slug names, or the first at the bare
+  // root (the single-service case). Derived from the roster + the reactive
+  // slug, so a switch re-picks the moment the store changes — no refetch.
+  const service = useMemo<ActiveService | null>(() => {
+    if (services.length === 0) return null
+    const picked = routeSlug
+      ? resolveServiceBySlug(services, routeSlug)
+      : services[0]
+    return picked ?? null
+  }, [services, routeSlug])
 
   // Canonicalize: write the resolved service's own slug into the URL. This is
   // what puts the single service's slug in the address bar and keeps a reload
@@ -87,9 +112,26 @@ export function ActiveServiceProvider({ children }: { children: ReactNode }) {
     if (getActiveServiceSlug() !== service.slug) setActiveServiceSlug(service.slug)
   }, [service])
 
+  const switchService = useCallback((slug: string) => {
+    setActiveServiceSlug(slug)
+    // The board and the service surfaces read under constant keys (ADR 0006):
+    // changing the slug alone would not refetch them, so drop the caches the
+    // newly-active service must repopulate — the journey (`invalidateStructure`)
+    // and the service identity/overview (`service-spec`, which the entity
+    // examples ride).
+    invalidateStructure()
+    invalidateQueries('service-spec')
+  }, [])
+
   const value = useMemo<ActiveServiceContextValue>(
-    () => ({ service, slug: routeSlug, loading: result.status === 'loading' }),
-    [service, routeSlug, result.status],
+    () => ({
+      service,
+      services,
+      slug: routeSlug,
+      loading: result.status === 'loading',
+      switchService,
+    }),
+    [service, services, routeSlug, result.status, switchService],
   )
 
   return (
@@ -99,7 +141,7 @@ export function ActiveServiceProvider({ children }: { children: ReactNode }) {
   )
 }
 
-/** The active service and the slug in the URL. `null` service until resolved. */
+/** The active service, the whole roster, and the slug in the URL. */
 export function useActiveService(): ActiveServiceContextValue {
   return useContext(ActiveServiceContext)
 }

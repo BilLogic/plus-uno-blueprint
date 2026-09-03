@@ -111,6 +111,15 @@ export type CoverTab = {
   sections: CoverSection[]
   /** Appended after the last section, when `repoUrl` is set. */
   link?: CoverGuideLink
+  /**
+   * Marks the deployment's services tab (#336). When more than one service
+   * exists, this tab heads its content with a selector for switching the active
+   * service and its label reads `pluralLabel` ("Services") instead of the
+   * singular `label` ("The service"). With exactly one service neither appears
+   * — the tab is its singular self, byte-for-byte. Left unset on every other
+   * tab, so only the deployment's own service tab carries the selector.
+   */
+  services?: { pluralLabel: string }
 }
 
 export type CoverContent = {

@@ -59,6 +59,7 @@ claims:
   - src/components/editor/TabStrip.tsx
   - src/components/editor/ThemeToggle.tsx
   - src/components/editor/ToolFamilyMenu.tsx
+  - src/components/editor/WorkspaceServiceSwitcher.tsx
   - src/components/editor/ZoomPanViewport.tsx
   - src/components/editor/canvasPhaseSectionLayout.ts
   - src/components/editor/menubarHeaderLayout.ts

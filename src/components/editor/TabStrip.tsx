@@ -9,6 +9,7 @@ import { Info, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { HomeNavButton, WorkspaceBadges } from '@/components/editor/EditorChrome'
 import { IconTooltip } from '@/components/editor/IconTooltip'
+import { WorkspaceServiceSwitcher } from '@/components/editor/WorkspaceServiceSwitcher'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -337,34 +338,20 @@ export function TabStrip({
               Not active on the cover page, even though no tab covers that
               either: Home owns the cover now, and two lit controls for two
               different screens is the bug this whole strip exists to avoid.
-              Clicking it from the cover enters the workspace. */}
-          <div
-            className={cn(
-              'flex shrink-0 items-center rounded-md border text-xs',
-              workspaceActive
-                ? 'border-border bg-background shadow-sm'
-                : 'border-transparent hover:bg-accent',
-            )}
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={workspaceActive}
-              // Tabbable on `activeKey`, not on `workspaceActive`. A roving
-              // tablist needs exactly one stop, and on the cover page NO tab
-              // is active — so keying focus to the visual state left the whole
-              // strip unreachable by keyboard (and its arrow-key handler with
-              // it). Selection and focusability are different questions.
-              tabIndex={activeKey === null ? 0 : -1}
-              onClick={onBase}
-              className={cn(
-                'max-w-56 truncate px-2.5 py-1 font-medium',
-                workspaceActive ? 'text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              Uno Blueprint
-            </button>
-          </div>
+              Clicking it from the cover enters the workspace.
+
+              The name is ALSO the service switcher (#336): with more than one
+              service it becomes a dropdown; with one it is exactly this tab.
+              `WorkspaceServiceSwitcher` owns both states. Tabbable on
+              `activeKey`, not on `workspaceActive` — a roving tablist needs
+              exactly one stop, and on the cover page NO tab is active, so
+              keying focus to the visual state left the whole strip unreachable
+              by keyboard. Selection and focusability are different questions. */}
+          <WorkspaceServiceSwitcher
+            active={workspaceActive}
+            tabIndex={activeKey === null ? 0 : -1}
+            onActivate={onBase}
+          />
       {tabs.map((tab) => {
         const key = tabKey(tab)
         const active = key === activeKey

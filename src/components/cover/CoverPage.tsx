@@ -5,9 +5,12 @@ import { ORG_NAME } from '@/config'
 import { cn } from '@/lib/utils'
 import { COVER_MEASURE } from '@/components/cover/coverMeasure'
 import { CoverSections } from '@/components/cover/CoverSections'
+import { CoverServicesSelector } from '@/components/cover/CoverServicesSelector'
 import { renderInline } from '@/components/cover/coverInline'
 import { CoverTabStrip } from '@/components/cover/CoverTabStrip'
 import type { CoverContent } from '@/components/cover/coverModel'
+import type { ActiveService } from '@/contexts/ActiveServiceContext'
+import { useActiveService } from '@/contexts/ActiveServiceContext'
 import { useEditor } from '@/contexts/EditorContext'
 
 /**
@@ -27,18 +30,50 @@ import { useEditor } from '@/contexts/EditorContext'
  */
 export function CoverPage({ content }: { content: CoverContent }) {
   const { enterCanvas } = useEditor()
-  return <CoverPageView content={content} onOpenCanvas={enterCanvas} />
+  const { services, service, switchService } = useActiveService()
+  return (
+    <CoverPageView
+      content={content}
+      onOpenCanvas={enterCanvas}
+      services={services}
+      activeServiceSlug={service?.slug ?? null}
+      onSelectService={switchService}
+    />
+  )
 }
 
-/** The provider-free surface — tests hand it a plain callback. */
+/**
+ * The provider-free surface — tests hand it a plain callback.
+ *
+ * `services` is the deployment's roster (#336). With more than one, the tab
+ * marked `services` in the content heads its panel with the service selector
+ * and its strip label reads the plural. With one or none, the props default to
+ * the single-service shape and the page is byte-for-byte what it was before the
+ * switcher — no selector, singular label.
+ */
 export function CoverPageView({
   content,
   onOpenCanvas,
+  services = [],
+  activeServiceSlug = null,
+  onSelectService,
 }: {
   content: CoverContent
   onOpenCanvas: () => void
+  services?: ActiveService[]
+  activeServiceSlug?: string | null
+  onSelectService?: (slug: string) => void
 }) {
   const [activeTab, setActiveTab] = useState(content.tabs[0]?.value ?? '')
+  const multiService = services.length > 1
+
+  // The strip's labels: the services tab pluralizes only when a second service
+  // exists; every other tab, and the single-service case, is its content label.
+  const stripTabs = content.tabs.map((tab) => ({
+    value: tab.value,
+    label:
+      multiService && tab.services ? tab.services.pluralLabel : tab.label,
+  }))
 
   return (
     <div
@@ -106,9 +141,9 @@ export function CoverPageView({
           }}
           className="gap-8"
         >
-          <CoverTabStrip tabs={content.tabs} activeTab={activeTab} />
-          {content.tabs.map((tab, index) => (
-            <TabsContent key={tab.value} value={tab.value} className="mt-0">
+          <CoverTabStrip tabs={stripTabs} activeTab={activeTab} />
+          {content.tabs.map((tab, index) => {
+            const sections = (
               <CoverSections
                 intro={tab.intro}
                 sections={tab.sections}
@@ -117,8 +152,28 @@ export function CoverPageView({
                 commandCopy={content.commandCopy}
                 eagerFigures={index === 0}
               />
-            </TabsContent>
-          ))}
+            )
+            // The services tab heads its panel with the selector, but only when
+            // a second service makes it a choice. Otherwise the panel is its
+            // sections alone — the single-service page is unchanged.
+            const showSelector = multiService && tab.services
+            return (
+              <TabsContent key={tab.value} value={tab.value} className="mt-0">
+                {showSelector ? (
+                  <div className="flex flex-col gap-8">
+                    <CoverServicesSelector
+                      services={services}
+                      activeSlug={activeServiceSlug}
+                      onSelect={onSelectService ?? (() => {})}
+                    />
+                    {sections}
+                  </div>
+                ) : (
+                  sections
+                )}
+              </TabsContent>
+            )
+          })}
         </Tabs>
       </div>
     </div>
