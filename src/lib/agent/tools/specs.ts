@@ -73,6 +73,17 @@ export { REFERENCE_NAMES }
 const str = (description: string) => ({ type: 'string', description })
 
 /**
+ * The service-scope filter shared by the reads that take one. It is a FILTER,
+ * not a navigation mode: omit it to stay within the active service (the one on
+ * screen), name a service to narrow to it, or pass "all" to reach across every
+ * service in the deployment. Inert on a single-service deployment, where every
+ * value names the same one service.
+ */
+const SERVICE_SCOPE_PARAM = str(
+  'Optional. Which service to search: a service name, or "all" for every service in the deployment. Omit to use the active service (the one on screen). Ignored when the deployment has only one service.',
+)
+
+/**
  * The mobile reading roster — the ONLY tools offered while the mobile shell
  * is up, for every tier including service accounts. Mobile is view-only by
  * decision (2026-08-08 plan): navigation, reading, and Q&A; no writes, no
@@ -237,6 +248,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
+        service: SERVICE_SCOPE_PARAM,
         limit: {
           type: 'number',
           description: 'Max rows (default 200, max 500). The true total is reported either way.',
@@ -268,6 +280,7 @@ export const TOOL_SPECS: ToolSpec[] = [
         lane_role: str(
           'frontstage_actions | frontstage_tech | backstage_actions | backstage_tech | visual',
         ),
+        service: SERVICE_SCOPE_PARAM,
         limit: {
           type: 'number',
           description: 'Max rows (default 15, max 100). The true total is reported either way.',
@@ -337,8 +350,11 @@ export const TOOL_SPECS: ToolSpec[] = [
   {
     name: 'list_stakeholders',
     description:
-      "The service's cast: who the blueprint is for, who staffs it, who partners on it, and the provider itself — with the other spellings each name has been written as. ALWAYS read before writing a value_props audience or linking a lane: `tutor` and `Regular Tutor` are one person, and the aliases are where that is recorded.",
-    parameters: { type: 'object', properties: {} },
+      "The cast: who the blueprint is for, who staffs it, who partners on it, and the provider itself — with the other spellings each name has been written as. ALWAYS read before writing a value_props audience or linking a lane: `tutor` and `Regular Tutor` are one person, and the aliases are where that is recorded. The cast is a shared deployment-level catalog; by default this shows the actors the active service's lanes actually pick, service:\"all\" the whole roster.",
+    parameters: {
+      type: 'object',
+      properties: { service: SERVICE_SCOPE_PARAM },
+    },
   },
   {
     name: 'create_stakeholder',
