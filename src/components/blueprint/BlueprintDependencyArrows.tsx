@@ -12,11 +12,13 @@ import {
   buildBidirectionalArrowPath,
   buildReportingAnIssueFrontStageActionStep1ToResolvePath,
   clearAnchorSlotPlan,
+  clearArrowCorridorPlan,
   findBidirectionalDependencyPairs,
   isWrapDependency,
   partitionReportingAnIssueFsaStep1ToResolveDependencies,
   planAnchorSlots,
   planArrowConfluences,
+  planArrowCorridors,
 } from '@/lib/blueprintArrowGeometry'
 import {
   getPathArrowColor,
@@ -176,6 +178,14 @@ export function BlueprintDependencyArrows({
     const merge = planArrowConfluences(content, unpaired, {
       disabled: !mergeConfluences,
     })
+
+    // Co-traveller offsets over the runs this lane actually routes (the merged
+    // trunk is not a corridor run): two arrows sharing one detour corridor fan
+    // onto adjacent lanes instead of overdrawing one line.
+    planArrowCorridors(
+      content,
+      unpaired.filter((dependency) => !merge.consumed.has(dependency.id)),
+    )
     const dependencyOpacity = (id: string): number => {
       const dependency = unpaired.find((entry) => entry.id === id)
       return dependency && isColoredDependency(dependency)
@@ -273,6 +283,7 @@ export function BlueprintDependencyArrows({
     }
 
     clearAnchorSlotPlan()
+    clearArrowCorridorPlan()
 
     // Equality-guarded: a ResizeObserver burst during camera-fit relayout
     // fires many notifications for identical geometry; fresh object

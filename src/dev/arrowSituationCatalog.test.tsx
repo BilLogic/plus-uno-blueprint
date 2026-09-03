@@ -41,7 +41,7 @@ function segmentsFor(situation: SituationSpec, mode: ArrowViewMode) {
 }
 
 describe('arrow situation catalog — golden geometry', () => {
-  it('covers the full S1–S10 catalog from the trigger-line plan', () => {
+  it('covers the S1–S10 catalog from the trigger-line plan, plus the S11 co-traveller', () => {
     expect(ARROW_SITUATIONS.map((s) => s.id)).toEqual([
       'S1',
       'S2',
@@ -53,6 +53,7 @@ describe('arrow situation catalog — golden geometry', () => {
       'S8',
       'S9',
       'S10',
+      'S11',
     ])
   })
 
@@ -174,4 +175,61 @@ describe('arrow situation catalog — golden geometry', () => {
       )
     }
   })
+
+  it('scores the obstructed forward skip into the roomier corridor (gap-first)', () => {
+    // S2's cells span y 40..140 in a 260-tall board: the underneath lane is far
+    // roomier than the cramped strip above the cards, so the gap-first scorer
+    // routes the detour beneath the obstruction rather than over it.
+    const situation = ARROW_SITUATIONS.find((s) => s.id === 'S2')!
+    for (const mode of ARROW_VIEW_MODES) {
+      const [segment] = computeSituationSegments(boardForMode(situation.base(), mode))
+      expect(segment, `S2/${mode} drew no run`).toBeDefined()
+      // The obstruction's bottom edge is y=140; a run that dips past it is riding
+      // the underneath corridor, not the overhead one it used to be pinned to.
+      expect(
+        Math.max(...pathCoordinateYs(segment!.d)),
+        `S2/${mode} did not detour underneath`,
+      ).toBeGreaterThan(140)
+    }
+  })
+
+  it('offsets co-travellers sharing one corridor onto adjacent lanes', () => {
+    // S11's two forward skips ride the same detour corridor over an overlapping
+    // stretch. Without the offset pass they would share one line; with it, the
+    // second is nudged one lane clear.
+    const situation = ARROW_SITUATIONS.find((s) => s.id === 'S11')!
+    for (const mode of ARROW_VIEW_MODES) {
+      const segments = computeSituationSegments(boardForMode(situation.base(), mode))
+      expect(segments, `S11/${mode} did not draw both runs`).toHaveLength(2)
+      const detourLines = segments.map((segment) => {
+        const ys = pathCoordinateYs(segment.d)
+        // Every run's endpoints share the lane centre (y=90); the detour line is
+        // the coordinate furthest from it.
+        return ys.reduce((far, y) => (Math.abs(y - 90) > Math.abs(far - 90) ? y : far), 90)
+      })
+      expect(
+        detourLines[0],
+        `S11/${mode} left both runs on one lane`,
+      ).not.toBe(detourLines[1])
+    }
+  })
 })
+
+/** Every Y coordinate a path visits (M/L endpoints and Q control + end). */
+function pathCoordinateYs(d: string): number[] {
+  const tokens = d.trim().split(/\s+/)
+  const ys: number[] = []
+  for (let i = 0; i < tokens.length; ) {
+    const command = tokens[i]
+    if (command === 'M' || command === 'L') {
+      ys.push(Number(tokens[i + 2]))
+      i += 3
+    } else if (command === 'Q') {
+      ys.push(Number(tokens[i + 2]), Number(tokens[i + 4]))
+      i += 5
+    } else {
+      i += 1
+    }
+  }
+  return ys.filter((n) => Number.isFinite(n))
+}

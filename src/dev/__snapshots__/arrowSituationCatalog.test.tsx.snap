@@ -37,7 +37,7 @@ exports[`arrow situation catalog — golden geometry > S2 — Forward, skip ≥1
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 84 L 224 38 Q 224 32 230 32 L 426 32 Q 432 32 432 38 L 432 86 Q 432 90 436 90 L 440 90",
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 142 Q 224 148 230 148 L 426 148 Q 432 148 432 142 L 432 94 Q 432 90 436 90 L 440 90",
       "id": "s2-dep",
     },
   ],
@@ -48,7 +48,7 @@ exports[`arrow situation catalog — golden geometry > S2 — Forward, skip ≥1
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 84 L 224 38 Q 224 32 230 32 L 426 32 Q 432 32 432 38 L 432 86 Q 432 90 436 90 L 440 90",
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 142 Q 224 148 230 148 L 426 148 Q 432 148 432 142 L 432 94 Q 432 90 436 90 L 440 90",
       "id": "s2-dep",
     },
   ],
@@ -59,7 +59,7 @@ exports[`arrow situation catalog — golden geometry > S2 — Forward, skip ≥1
 {
   "segments": [
     {
-      "d": "M 200 90 L 218 90 Q 224 90 224 84 L 224 38 Q 224 32 230 32 L 426 32 Q 432 32 432 38 L 432 86 Q 432 90 436 90 L 440 90",
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 142 Q 224 148 230 148 L 426 148 Q 432 148 432 142 L 432 94 Q 432 90 436 90 L 440 90",
       "id": "s2-dep",
     },
   ],
@@ -416,6 +416,51 @@ exports[`arrow situation catalog — golden geometry > S10 — Chain A→B→C w
     {
       "d": "M 120 288 L 120 320",
       "id": "s10-bc",
+    },
+  ],
+}
+`;
+
+exports[`arrow situation catalog — golden geometry > S11 — Co-travellers share one detour corridor > integrated 1`] = `
+{
+  "segments": [
+    {
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 212 Q 224 218 230 218 L 634 218 Q 640 218 640 212 L 640 94 Q 640 90 644 90 L 648 90",
+      "id": "s11-dep1",
+    },
+    {
+      "d": "M 408 90 L 426 90 Q 432 90 432 96 L 432 226 Q 432 232 438 232 L 842 232 Q 848 232 848 226 L 848 94 Q 848 90 852 90 L 856 90",
+      "id": "s11-dep2",
+    },
+  ],
+}
+`;
+
+exports[`arrow situation catalog — golden geometry > S11 — Co-travellers share one detour corridor > side-by-side 1`] = `
+{
+  "segments": [
+    {
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 142 Q 224 148 230 148 L 634 148 Q 640 148 640 142 L 640 94 Q 640 90 644 90 L 648 90",
+      "id": "s11-dep1",
+    },
+    {
+      "d": "M 408 90 L 426 90 Q 432 90 432 96 L 432 156 Q 432 162 438 162 L 842 162 Q 848 162 848 156 L 848 94 Q 848 90 852 90 L 856 90",
+      "id": "s11-dep2",
+    },
+  ],
+}
+`;
+
+exports[`arrow situation catalog — golden geometry > S11 — Co-travellers share one detour corridor > single 1`] = `
+{
+  "segments": [
+    {
+      "d": "M 200 90 L 218 90 Q 224 90 224 96 L 224 142 Q 224 148 230 148 L 634 148 Q 640 148 640 142 L 640 94 Q 640 90 644 90 L 648 90",
+      "id": "s11-dep1",
+    },
+    {
+      "d": "M 408 90 L 426 90 Q 432 90 432 96 L 432 156 Q 432 162 438 162 L 842 162 Q 848 162 848 156 L 848 94 Q 848 90 852 90 L 856 90",
+      "id": "s11-dep2",
     },
   ],
 }

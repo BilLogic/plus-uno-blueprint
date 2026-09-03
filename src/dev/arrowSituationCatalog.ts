@@ -38,10 +38,12 @@ import {
   buildArrowPath,
   buildBidirectionalArrowPath,
   clearAnchorSlotPlan,
+  clearArrowCorridorPlan,
   clearRememberedSameColumnSideRoutes,
   findBidirectionalDependencyPairs,
   planAnchorSlots,
   planArrowConfluences,
+  planArrowCorridors,
   runArrowMeasurementPass,
   type BidirectionalDependencyLink,
 } from '@/lib/blueprintArrowGeometry'
@@ -436,6 +438,14 @@ export function computeArrowSegments(
       disabled: !mergeConfluences,
     })
 
+    // Co-traveller offsets over the runs the band actually routes (a merged
+    // trunk is not a corridor run): two arrows sharing one detour corridor fan
+    // onto adjacent lanes instead of drawing one doubled line.
+    planArrowCorridors(
+      root,
+      remaining.filter((dependency) => !merge.consumed.has(dependency.id)),
+    )
+
     for (const pair of pairs) {
       const cellAEl = cellById.get(pair.cellAId)
       const cellBEl = cellById.get(pair.cellBId)
@@ -471,6 +481,7 @@ export function computeArrowSegments(
     }
 
     clearAnchorSlotPlan()
+    clearArrowCorridorPlan()
     return segments
   })
 }
@@ -510,7 +521,7 @@ export const ARROW_SITUATIONS: readonly SituationSpec[] = [
     title: 'Forward, skip ≥1 column',
     today: 'strikes through cells',
     contract: 'route via column gaps',
-    note: 'Same lane, source → two columns on, with an occupied middle column. The obstruction forces the horizontal gutter detour (buildHorizontalGutterDetourPath).',
+    note: 'Same lane, source → two columns on, with an occupied middle column. The obstruction forces the horizontal gutter detour (buildHorizontalGutterDetourPath); the gap-first scorer (#349) sends it through the roomier underneath lane rather than the cramped strip overhead.',
     base: () => ({
       rootBox: { left: 0, top: 0, width: 900, height: 260 },
       rows: [
@@ -688,6 +699,33 @@ export const ARROW_SITUATIONS: readonly SituationSpec[] = [
       dependencies: [
         dep('s10-ab', 's10-a', 's10-b'),
         dep('s10-bc', 's10-b', 's10-c'),
+      ],
+    }),
+  },
+  {
+    id: 'S11',
+    title: 'Co-travellers share one detour corridor',
+    today: 'two runs draw as one doubled line',
+    contract: 'offset onto adjacent lanes (§3, gap-first)',
+    note: 'Two forward skips in one lane detour through the same gap-first corridor over an overlapping stretch. The scorer routes both through the roomier (underneath) lane, and the offset pass nudges the second onto an adjacent lane so neither is a doubled line. In the merged view the stacked sub-cells crowd the underneath lane, so the scorer sends both overhead instead — the same offset, one gap up.',
+    base: () => ({
+      rootBox: { left: 0, top: 0, width: 1120, height: 320 },
+      rows: [
+        {
+          key: 'lane',
+          cells: [
+            cell('s11-a', 0, 0),
+            cell('s11-b', 1, 0),
+            cell('s11-c', 2, 0),
+            cell('s11-d', 3, 0),
+            cell('s11-e', 4, 0),
+          ],
+        },
+      ],
+      gaps: gapsUpTo(4),
+      dependencies: [
+        dep('s11-dep1', 's11-a', 's11-d'),
+        dep('s11-dep2', 's11-b', 's11-e'),
       ],
     }),
   },
