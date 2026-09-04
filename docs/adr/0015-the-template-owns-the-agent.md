@@ -1,71 +1,77 @@
 ---
 status: accepted
 audience: developers
-summary: The template (asb) owns the whole agent — its loop, its tools, and its canvas doctrine — and a deployment configures it through the typed `DeploymentConfig` alone, never by shipping an agent or authoring its own doctrine; uno's canvas-adapter override is canvas-app doctrine misfiled in the deployment, and it is deleted at the flip rather than carried as config.
+summary: The template (asb) owns the agent's canonical baseline — its loop, its tools, and a default doctrine — and a deployment tunes it through the typed `DeploymentConfig` the same way it tunes the UI, never by editing template code; uno, being the prototype that defines the product, contributes its agent into the canonical default rather than carrying a per-deployment override, so uno's canvas-adapter override folds into the default and disappears at the flip.
 ---
 
-# The template owns the agent, and a deployment configures it
+# The template owns the agent, and a deployment configures it like the UI
 
 [ADR 0013](0013-the-deployment-imports-the-template.md) settled that asb exports a
 mountable application — "root, routing, data layer, **agent**, auth wiring" — and that
-uno mounts it through a typed `DeploymentConfig`. It did not settle what the deployment
-may say to that agent. This is that record: the agent is the template's, whole, and a
-deployment reaches it only through the config. Five choices, each downstream of the last.
+uno mounts it through a typed `DeploymentConfig`. It did not settle what a deployment may
+say to that agent. This is that record. The agent is the template's, and a deployment
+reaches it only through the config — but the agent is a **configurable** surface, the same
+as the UI, because asb is meant to be published and run by deployments other than uno.
+Five choices, each downstream of the last.
 
-1. **The agent is the template's, whole.** asb's `App` carries the one canonical agent —
-   the loop, the tool registry, and the canvas doctrine (the adapter). A deployment ships
-   no agent. asb already has this agent today (`src/lib/agent/`), so the convergence is a
-   reconcile, not a new build.
+1. **The agent is the template's, whole.** asb's `App` owns the canonical agent — the
+   loop, the tool registry, and a **default doctrine** (the canvas adapter). A deployment
+   ships no agent code. asb already has this agent today (`src/lib/agent/`), so the
+   convergence is a reconcile, not a new build.
 
-2. **The doctrine is canonical, not deployment content.** uno's
-   `src/lib/agent/canvas-adapter.md` override exists for one reason: the pre-flip package
-   adapter was IDE-oriented and enumerated the wrong tool registry
-   ([#115](https://github.com/BilLogic/plus-uno-blueprint/issues/115)). Its content —
-   the surface mapping, the canvas audit/whatif runs, the session tiers, the app-only
-   invariants, the etiquette — is **canvas-app doctrine true of every deployment**, not
-   PLUS's. It reads as deployment-specific only because uno was the sole canvas app while
-   the template still spoke to an IDE. At the flip the override **file is deleted**, and
-   its doctrine is asb's canonical adapter.
+2. **A deployment configures its agent the way it configures its UI.** The agent's
+   doctrine and config — which tools are enabled, guidance a deployment adds, the display
+   words for a concept — are a **first-class part of `DeploymentConfig`**, peer to brand
+   and content. A published deployment *tunes* its agent through typed, reviewable config;
+   it does not fork it and it does not edit template code
+   ([ADR 0013](0013-the-deployment-imports-the-template.md)'s import-not-overlay stands).
+   The agent is not a closed surface — it is a configured one.
 
-3. **The tool surface is the generalized superset.** The tools a deployment's agent may
-   call are asb-canonical capabilities. uno's larger set — stakeholders, evidence,
-   sessions — are asb domain concepts ([CONTEXT.md](../../CONTEXT.md),
+3. **The canonical default is what the prototype defines.** uno is the **prototype** that
+   defines the product, so its agent features — its tool surface, its canvas doctrine, its
+   vocabulary — bake into asb as the **canonical default** every deployment starts from.
+   uno's `src/lib/agent/canvas-adapter.md` override is therefore not a deployment's
+   per-instance config: it is the prototype authoring the default, and it only *reads* as
+   a deployment override because uno was the sole canvas app while the package still spoke
+   to an IDE ([#115](https://github.com/BilLogic/plus-uno-blueprint/issues/115)). It folds
+   into asb's canonical doctrine, and uno then runs on that default with **no agent-config
+   delta of its own**. The override **file is deleted at the flip** because its content
+   *became the default*, not because configuring an agent is forbidden.
+
+4. **The tool surface is the generalized superset — available, and configurable.** The
+   canonical tools are asb concepts: uno's larger set (stakeholders, evidence, sessions)
+   are asb domain concepts ([CONTEXT.md](../../CONTEXT.md),
    [ADR 0014](0014-a-service-owns-its-journey-and-shares-the-catalog.md)), so asb carries
-   them for **every** deployment. A deployment narrows what its agent can do through its
-   session and role model — the live tool list is the truth — never by omitting tools from
-   a hand-written roster that can drift from the code.
+   them for every deployment. A deployment enables or narrows them through config and its
+   session/role model — never by omitting tools from a hand-written roster that drifts from
+   the code, which is the failure [#115](https://github.com/BilLogic/plus-uno-blueprint/issues/115)
+   was.
 
-4. **The vocabulary is one canonical word.** `cell_dependencies.kind` is `leads_to` /
-   `enables` in both databases, and the agent speaks that one vocabulary. Internal code
-   names that still read *trigger* (`BlueprintCellTrigger`, `BlueprintTriggerArrows`, the
-   adapter's `trigger-vs-needs` prose) are **unconverged naming**, inconsistent with the
-   template's own enum, and are reconciled to the canonical word — not preserved as a
-   per-deployment dialect.
-
-5. **`DeploymentConfig` carries content and brand, never doctrine.** The typed config
-   (ADR 0013 §4) carries the deployment's content (cover copy, workspace title) and a
-   minimal brand block (name, logo, accent), plus — where a deployment's **data model**
-   genuinely differs, such as per-slot cell stacking (`position`) — a declared dialect
-   flag the canonical code reads. It does **not** carry agent instructions, prompt text,
-   or vocabulary. There is deliberately **no free-text agent-doctrine slot**.
+5. **The data model is canonical; its words travel with the config.**
+   `cell_dependencies.kind` is `leads_to` / `enables` in every deployment's database — one
+   canonical model. What the agent and the UI *call* it — display copy, prompt phrasing —
+   is deployment-configurable, the same as any UI label. asb's internal names that still
+   read *trigger* (`BlueprintCellTrigger`, `BlueprintTriggerArrows`, the adapter's
+   `trigger-vs-needs` prose) are **unconverged naming**, inconsistent with the template's
+   own enum, and are reconciled to the canonical word — the default the config starts from,
+   not a per-deployment dialect baked into code.
 
 ## Consequences
 
-This closes #115's shape permanently. No deployment restates the tool roster or the
-doctrine in prose that can drift from the code, because there is nowhere to write such
-prose: a genuinely deployment-specific agent need is met by a **canonical capability** or
-a **typed config field**, or it is not met — it is never met by a hand-authored override.
+**For uno, now:** no override and no agent-config delta — it runs the canonical default it
+authored as the prototype. The two guards that exist only to hold uno's prototype override
+honest against the package — `scripts/check-write-surface.mjs` and the `#319`
+reconciled-files drift gate over the shared agent files — retire at the flip
+([#333](https://github.com/BilLogic/plus-uno-blueprint/issues/333)), because once uno's
+doctrine *is* the canonical default there is nothing left to hold honest.
 
-Two guards exist only to hold uno's override honest against the package —
-`scripts/check-write-surface.mjs` (the served adapter against the tool rosters) and the
-`#319` reconciled-files drift gate over the shared agent files. Both are retired at the
-flip ([#333](https://github.com/BilLogic/plus-uno-blueprint/issues/333)), because the
-thing they guard — a second, hand-maintained statement of what the code already says —
-is gone once the deployment mounts the template's agent directly.
+**For a published asb, later:** a deployment customizes its agent — its doctrine additions,
+its enabled tools, its display words — through `DeploymentConfig`, typed and reviewed like
+the rest of the config, exactly as it customizes brand and content. The configurable seam
+is the config; the code stays the template's.
 
-**What this gives up, chosen deliberately:** a deployment can no longer tell its own agent
-something no other deployment says without that guidance becoming a canonical asb
-capability or a typed config field first. A controlled "addendum" slot was weighed and
-declined in favour of maximal convergence and zero drift surface — the direct expression
-of [ADR 0012](0012-uno-is-a-deployment-of-the-template.md)'s "asb is canonical" for the
-one surface, the agent prompt, where a deployment is most tempted to keep authoring.
+**The line this draws:** baking a feature into the canonical default (what uno, the
+prototype, does) and configuring it per deployment (what a published deployment does) are
+two different acts on the same surface. uno's agent arrives as canonical because uno is
+defining the product; a later deployment's arrives as config because it is adopting one.
+What neither does is edit the template's agent code in place.

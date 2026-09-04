@@ -44,4 +44,4 @@ deleted ADR is a decision nobody can find the reasoning for.
 | [0012](0012-uno-is-a-deployment-of-the-template.md) | uno is a deployment of the template, not a fork of it |
 | [0013](0013-the-deployment-imports-the-template.md) | The deployment imports the template as a pinned git-dep and mounts it with a config |
 | [0014](0014-a-service-owns-its-journey-and-shares-the-catalog.md) | A service owns its journey and shares the catalog (touchpoints + stakeholders, deployment-level) |
-| [0015](0015-the-template-owns-the-agent.md) | The template owns the agent; a deployment configures it through DeploymentConfig, never authors it |
+| [0015](0015-the-template-owns-the-agent.md) | The template owns the agent; a deployment configures it like the UI (uno, the prototype, bakes its agent into the canonical default) |
