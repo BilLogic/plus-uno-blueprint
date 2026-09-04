@@ -7,7 +7,8 @@
  * `auditReconciled` is exercised against in-memory readers rather than a real
  * asb checkout, so the outcomes are pinned to byte-equality alone and not to
  * whatever the pinned package happens to ship. The one test that does touch
- * the shipped list asserts it is still empty — the state #319 lands in.
+ * the shipped list asserts the enrolled set — first populated by #351, the
+ * shared arrow-routing engine.
  *
  * Run: npm test
  */
@@ -25,10 +26,14 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist is empty, so the gate lands green', () => {
-  // #319 ships the gate EMPTY. This trips the day the first path is enrolled,
-  // which is the reminder that enrolment belongs in a reconciliation ticket.
-  assert.deepEqual(RECONCILED_FILES, [])
+test('the shipped allowlist holds the reconciled arrow engine (#351)', () => {
+  // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
+  // arrow-routing geometry, held byte-identical to asb. A stray add or removal
+  // trips here, so enrolment stays a deliberate act in a reconciliation ticket.
+  assert.deepEqual(RECONCILED_FILES, [
+    'src/lib/blueprintArrowGeometry.ts',
+    'src/lib/arrowAnchorSlots.ts',
+  ])
 })
 
 test('an enrolled file byte-identical to asb passes', () => {

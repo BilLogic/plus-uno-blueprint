@@ -2,7 +2,7 @@
 
 > **This file OVERRIDES a pinned package document.** It replaces
 > `references/canvas-adapter.md` from `agentic-service-blueprinting`,
-> pinned at `v0.5.0` (lockfile commit `695c7302`). It is spliced into
+> pinned at `v1.0.0` (lockfile commit `16414a61`). It is spliced into
 > every system prompt by `src/lib/agent/loop.ts` and served under the
 > bare name `canvas-adapter` by `src/lib/agent/tools/read.ts`; the
 > package's own copy reaches neither.
@@ -38,18 +38,15 @@ nothing here relaxes one.
 Where an installed package reference contradicts THIS file, this file
 wins — it is the instance's rulebook and the package's is a template's.
 
-These installed documents still teach the retired dependency vocabulary
-(trigger / needs, which this database's CHECK constraint refuses). They
-live in `node_modules/` and cannot be edited from this repository, so read
-past that one point and use `leads_to` / `enables` as defined below:
-
-- `references/data-model.md`
-- `skills/whatif/references/whatif-playbook.md`
-- `skills/audit/references/check-gap-sweep.md`
-- `skills/slice/references/slice-playbook.md`
-- `skills/slice/references/slice-templates.md`
-
-Nothing else in them is superseded. The rest of each is still binding.
+No installed reference now teaches the retired dependency vocabulary.
+`agentic-service-blueprinting` v1.0.0 converged its data-model and
+playbooks on `leads_to` / `enables`, so the documents this app serves
+agree with the enum below; the list that once named the offenders
+(`references/data-model.md` and four others) is empty as of that pin.
+This heading stays because `scripts/check-write-surface.mjs` uses it to
+bound the retired-spelling scan of the rest of this file — and because a
+later package doc could reintroduce the pair. Re-list any that does here,
+so the agent reads past that one point.
 
 ## Surface mapping
 
@@ -123,8 +120,7 @@ tool descriptions — trust them at call time. Adapter-only additions:
   enables B, so the precondition is the SOURCE. They are NOT inverses: a
   precondition causes nothing, so never record one as `leads_to`. The
   database CHECK constraint accepts these two values and refuses every
-  other, including the spellings the package references above still
-  teach.
+  other.
 - **`position`** (canvas dialect: tech lanes hold several cells per
   (lane, step), ordered by `position`; other deployments may not
   have the column — see data-model.md). The tools manage slots for you;

@@ -37,10 +37,11 @@
  *      `leads_to` and `enables` here; the pinned package still teaches
  *      `trigger` / `needs`, an enum this database refuses. The override
  *      must state the enforced pair, and must not carry a retired
- *      spelling. Five INSTALLED references still do and cannot be edited
- *      from this repository — so the override names them, and this holds
- *      that list to what the installed package actually says, in both
- *      directions. See SUPERSESSION below.
+ *      spelling. An INSTALLED reference that does cannot be edited from
+ *      this repository, so the override names it; this holds that list to
+ *      what the installed package actually says, in both directions —
+ *      the empty list included, once the package agrees (asb v1.0.0 did).
+ *      See SUPERSESSION below.
  *
  * Deliberately text-parsed, like upstream and like
  * `scripts/tests/toolParity.test.mjs`: specs.ts is TypeScript behind a
@@ -302,12 +303,13 @@ export function retiredMentions(lines) {
 }
 
 // ---------------------------------------------------------------------------
-// SUPERSESSION — the five documents this repo cannot fix
+// SUPERSESSION — the installed documents this repo cannot fix
 // ---------------------------------------------------------------------------
 
 /**
  * `SUPERSESSION_HEADING` (declared above) heads the list of installed
- * references that still teach the retired vocabulary.
+ * references that teach the retired vocabulary — empty once the package
+ * agrees, as asb v1.0.0 does.
  *
  * They live in `node_modules/` and this repository cannot edit them, so the
  * only honest remedy is for the served rulebook to say so where the agent
