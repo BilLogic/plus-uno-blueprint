@@ -221,7 +221,7 @@ function wrapSlotLeg(
   Auto-detected, no cell-id gate. `planConfluences` (arrivals) and its mirror
   `groupFanOutDepartures` (departures) read the anchor plan the band already
   allocated and report every cell+side that ≥2 endpoints share. This is the
-  geometry the retired overhead-rail bus special-cased for the Regular Tutor
+  geometry the retired overhead-rail bus special-cased for a heavily-crossed
   row; it is now one instance of the generic mechanism.
 
   Only forward (horizontal) arrivals/departures merge: a forward arrival lands
@@ -1988,7 +1988,7 @@ export function buildHorizontalArrowPath(
 
 /**
  * Forward connector between adjacent step columns on the same row, routed
- * through the center of the column gap (e.g. Regular Tutor step 3 → 4).
+ * through the center of the column gap (e.g. step 3 → 4 on one lane).
  */
 export function buildAdjacentColumnGapArrowPath(
   sourceEl: HTMLElement,

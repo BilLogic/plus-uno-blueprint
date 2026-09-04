@@ -22,5 +22,10 @@
  * true.
  */
 export const RECONCILED_FILES = [
-  // Append reconciled paths here, one per line, e.g. 'src/lib/blueprintContract.ts',
+  // The arrow-routing engine (#351): the same data-driven geometry in both
+  // repos — anchor slots, confluence/fan-out, gap-first corridors, offset.
+  // The renderers stay per-repo (uno's dependency vocab, asb's trigger vocab);
+  // only these two pure files are held byte-identical.
+  'src/lib/blueprintArrowGeometry.ts',
+  'src/lib/arrowAnchorSlots.ts',
 ]

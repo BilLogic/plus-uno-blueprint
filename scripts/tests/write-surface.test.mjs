@@ -339,11 +339,25 @@ test('the override is the file the app serves, and the package copy still differ
   // deleted rather than maintained. Until then, this is the proof that the
   // override is doing work — a pin bump that converges upstream fails here and
   // asks for that decision instead of leaving a redundant file behind.
+  //
+  // The anchor was `add_step` — a phantom write tool the package adapter named
+  // and this app lacked (#115). asb v1.0.0 retired it, converged the package
+  // adapter's structure onto this one, and moved its served references to
+  // `leads_to` / `enables` (which emptied the supersession list). What still
+  // diverges, and why the override stays, is the surface rows: this app's write
+  // surface carries stakeholder and evidence tools the template's does not. So
+  // the anchor moves to one of those — it trips when the package write surface
+  // grows to include them, the real signal to recheck whether the override
+  // still earns its keep.
   const ours = read(ADAPTER)
   const theirs = read(join(PACKAGE, 'references/canvas-adapter.md'))
   assert.notEqual(ours, theirs)
   assert.match(ours, /OVERRIDES a pinned package document/)
-  assert.match(theirs, /`add_step`/, 'the package adapter no longer names add_step — recheck #115')
+  assert.doesNotMatch(
+    theirs,
+    /`create_stakeholder`/,
+    'the package adapter now lists create_stakeholder — the #115 surface divergence is closing; recheck whether the override still earns its keep',
+  )
 })
 
 test('every declared tool is on exactly one surface', () => {
