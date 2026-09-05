@@ -490,10 +490,9 @@ export function PanelKindBadge({
     What an explained badge wears, and the one thing it must not.
 
     The focus ring comes from `badgeVariants` and the popover trigger supplies
-    `tabIndex`, so the definition is reachable without a pointer
-    (docs/reference/panel-affordances.md § Hover is never the only way in).
-    #243 took away the `cursor-help` and the dotted rule that used to sit
-    beside them — nothing on the resting page announces a definition now. What
+    `tabIndex`, so the definition is reachable without a pointer — hover is
+    never the only way in. #243 took away the `cursor-help` and the dotted
+    rule that used to sit beside them — nothing on the resting page announces a definition now. What
     is deliberately absent, and always was, is a hover colour: this badge is
     not clickable, and a surface that repaints under the pointer says it is.
   */

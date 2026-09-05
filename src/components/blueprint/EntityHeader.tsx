@@ -1,8 +1,8 @@
 import { EntityDefinitionPopover } from '@/components/blueprint/EntityDefinitionPopover'
 import { EntityTitleAffordance } from '@/components/blueprint/EntityTitleAffordance'
 import {
-  BLUEPRINT_MENUBAR_DESCRIPTION_CLASS,
   BLUEPRINT_MENUBAR_IDENTITY_HEIGHT,
+  BLUEPRINT_MENUBAR_SUMMARY_CLASS,
   BLUEPRINT_MENUBAR_TITLE_CLASS,
 } from '@/components/editor/menubarHeaderLayout'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +40,8 @@ export type EntityHeaderProps = {
  * Deliberately NOT `EDITOR_BOOT_HOLD_KEY`. That key is the shell's boot lane,
  * and a shared hold key is ONE session with one fade — the right tool for
  * stages of a waterfall that hand off to each other, which this bar is not a
- * stage of. It draws its own skeleton in its own session (ADR 0010).
+ * stage of. It draws its own skeleton in its own session — the hold-key rule
+ * `DeferredSkeleton` states.
  *
  * That is a different question from WHEN the session may end, and the two were
  * answered as one until #253. This bar waits on its query AND on the shell's
@@ -49,8 +50,8 @@ export type EntityHeaderProps = {
  */
 /**
  * Shared with `PathSelectorMenu` (#265): the path control sits in the same bar, so the
- * two are one waterfall stage of one surface — the case ADR 0010 reserves a
- * shared key for. One session, one beat, one fade.
+ * two are one waterfall stage of one surface — the case a shared key is
+ * reserved for. One session, one beat, one fade.
  */
 export const ENTITY_HEADER_HOLD_KEY = 'entity-header'
 
@@ -225,7 +226,7 @@ export function EntityHeader({
         {caption ? (
           <p
             data-entity-header-summary=""
-            className={BLUEPRINT_MENUBAR_DESCRIPTION_CLASS}
+            className={BLUEPRINT_MENUBAR_SUMMARY_CLASS}
             title={caption}
           >
             {caption}

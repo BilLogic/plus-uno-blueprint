@@ -54,7 +54,7 @@ export type PathSpecUpdate = {
 /**
  * Write a path's summary and note.
  *
- * The two are a pair by design (plan 006): `summary` answers *when does this
+ * The two are a pair by design: `summary` answers *when does this
  * route apply* and is a fact about the service; `note` is the author's aside
  * and is not. They are written together because they are edited together, in
  * the one place a path can be edited at all.

@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils'
  *   and going wrong, which is the one case worth a colour.
  *
  * The word is the whole control, so the definition hangs off the word itself
- * rather than an icon beside it (docs/reference/panel-affordances.md).
+ * rather than an icon beside it.
  *
  * A `DefinitionCard` since #243, and not the Tooltip it shipped with. The
  * reason was already written down one file over, in `panelShell`: a tooltip
@@ -59,11 +59,11 @@ export function StatusBadge({
       <Badge
         variant="outline"
         // Reachable without a pointer: the word IS the control, so the
-        // definition has to be gettable by keyboard too
-        // (docs/reference/panel-affordances.md § Hover is never the only way
-        // in). No help cursor and no dotted rule — #243 took both away
-        // everywhere; the popover is what carries the definition to a reader
-        // with no pointer at all. No hover colour — see `ui/badge.tsx`.
+        // definition has to be gettable by keyboard too — hover is never the
+        // only way in. No help cursor and no dotted rule — #243 took both
+        // away everywhere; the popover is what carries the definition to a
+        // reader with no pointer at all. No hover colour — see
+        // `ui/badge.tsx`.
         tabIndex={0}
         className={cn(
           'shrink-0 gap-0 font-normal',

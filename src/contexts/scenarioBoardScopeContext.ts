@@ -15,7 +15,7 @@ import { createContext, useContext } from 'react'
  *
  * So the gate is two facts, not one: the feature is on and we are in the detail
  * view (`detail.enabled`), AND this board is the one in scope (this context).
- * `ScenarioBlueprintPanelBody` — the component that owns exactly one scenario —
+ * `ScenarioBlueprintPanel` — the component that owns exactly one scenario —
  * is the only producer; the two axis-header affordances are the consumers.
  *
  * Not `focusActive`, which is the camera's notion of focus and is false on the

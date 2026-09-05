@@ -12,10 +12,10 @@ import { useSyncExternalStore } from 'react'
  * several providers away from the shell that owns the state, and this is one
  * boolean rather than something worth threading through every surface.
  *
- * SEPARATE FROM THE HOLD KEY, deliberately. ADR 0010 rejects giving the bar
- * `EDITOR_BOOT_HOLD_KEY`, and that rejection stands: a shared hold key is ONE
- * session with one fade, meant for stages of a waterfall that hand off to each
- * other. The bar keeps its own session and draws its own skeleton. What it
+ * SEPARATE FROM THE HOLD KEY, deliberately. Giving the bar
+ * `EDITOR_BOOT_HOLD_KEY` was rejected, and that rejection stands: a shared
+ * hold key is ONE session with one fade, meant for stages of a waterfall that
+ * hand off to each other. The bar keeps its own session and draws its own skeleton. What it
  * reads here is only WHEN it may stop — which is the same one-directional read
  * the shell already makes of the canvas's reveal rung, one link further along
  * the same chain and still not a cycle.
