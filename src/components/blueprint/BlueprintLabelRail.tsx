@@ -7,8 +7,8 @@ import { LaneCollapseToggle } from '@/components/blueprint/LaneCollapseToggle'
 import { IconTooltip } from '@/components/editor/IconTooltip'
 import {
   BLUEPRINT_DIVIDER_ROW_HEIGHT,
-  BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
-  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
+  BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
 } from '@/lib/blueprintLayout'
 import {
@@ -260,13 +260,13 @@ export function BlueprintLabelRow({
   if (isDivider) return null
 
   const corridorAbove = row.wrapCorridorAbove
-    ? BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
+    ? BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN
     : 0
   const corridorBelow = row.wrapCorridorBelow
     ? BLUEPRINT_WRAP_CORRIDOR_MARGIN
     : 0
   const inLaneLoopCorridorAbove = row.inLaneLoopCorridorAbove
-    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+    ? BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN
     : 0
 
   const labelColor =

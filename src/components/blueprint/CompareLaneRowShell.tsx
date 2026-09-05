@@ -1,6 +1,6 @@
 import {
-  BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
-  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
+  BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
 } from '@/lib/blueprintLayout'
 import type { BlueprintLabelRowSpec } from '@/lib/sideBySideCompareLayout'
@@ -35,13 +35,13 @@ export function CompareLaneRowShell({
     row.kind === 'internalInteraction'
   const isLaneRow = row.kind === 'lane'
   const corridorAbove = row.wrapCorridorAbove
-    ? BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
+    ? BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN
     : 0
   const corridorBelow = row.wrapCorridorBelow
     ? BLUEPRINT_WRAP_CORRIDOR_MARGIN
     : 0
   const inLaneLoopCorridorAbove = row.inLaneLoopCorridorAbove
-    ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+    ? BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN
     : 0
 
   return (
@@ -75,7 +75,12 @@ export function CompareLaneRowShell({
       {...(isDivider ? { role: 'separator' as const } : {})}
     >
       {corridorAbove > 0 && (
-        <div aria-hidden className="shrink-0" style={{ height: corridorAbove }} />
+        <div
+          aria-hidden
+          data-blueprint-rail-corridor="above"
+          className="shrink-0"
+          style={{ height: corridorAbove }}
+        />
       )}
       <div
         className={cn(
