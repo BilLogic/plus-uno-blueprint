@@ -3,11 +3,11 @@
 
 update public.scenarios
 set
-  description = 'Tutors receive and resolve student help requests during the session.',
-  view_type = 'side-by-side'
+  summary = 'Tutors receive and resolve student help requests during the session.',
+  layout = 'stacked'
 where id = 'a0000000-0000-4000-8000-000000000205';
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-00000000080d',
   'a0000000-0000-4000-8000-000000000205',
@@ -18,8 +18,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -88,63 +88,53 @@ or target_cell_id in (
 delete from public.cells
 where path_id = 'a0000000-0000-4000-8000-00000000080d';
 
-insert into public.cells (id, path_id, lane_id, step_id, content, links, description)
+insert into public.cells (id, path_id, lane_id, step_id, content, summary)
 values
-  ('a0000000-0000-4000-8000-0000001b0110', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000975', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0210', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000976', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0310', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000977', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0410', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000978', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0510', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-00000000097a', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0610', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000979', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0710', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000987', '', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0101', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000975', 'Circulate and quietly observe the students.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0201', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000976', 'Remind students to keep working while waiting.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0301', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000977', 'Checks if all students are in the correct breakout room.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0401', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000978', 'Receives information that student is absent from session.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0501', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-00000000097a', 'Alerts lead tutor about unassigned or miss-assigned students using the "ask for help" alert.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0601', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000979', 'Handles student tech problems as they arise.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0701', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000987', 'Escalates unresolved issues to tutors@tutor.plus promptly.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0102', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000975', 'Rename students to match roster name.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0202', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000976', 'Add any un-rostered students to attendance list.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0302', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000977', 'Manually assign unpaired students to available tutors.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0402', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000978', 'Inform classroom teacher about students that are absent.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0502', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-00000000097a', 'Respond to classroom teachers "ask for help" request.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0103', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000975', 'Tutor receives help request.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0203', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000976', 'Finish current conversation in 1-2 minutes.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0303', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000977', 'Visit student requesting help.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0403', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000978', 'Resolve issue.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0503', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-00000000097a', 'Leave breakout room.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0603', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000979', 'Return to the next student in sorted order set by researchers.', '[]'::jsonb, null),
-  ('a0000000-0000-4000-8000-0000001b0106', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000975', 'Zoom/Pencil', '[]'::jsonb, 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
-  ('a0000000-0000-4000-8000-0000001b0206', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000976', 'Zoom/Pencil', '[]'::jsonb, 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
-  ('a0000000-0000-4000-8000-0000001b0306', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000977', 'Zoom/Pencil', '[]'::jsonb, 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
-  ('a0000000-0000-4000-8000-0000001b0406', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000978', 'Zoom/Pencil', '[]'::jsonb, 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
-  ('a0000000-0000-4000-8000-0000001b0506', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-00000000097a', 'Zoom/Pencil', '[]'::jsonb, 'The tutor leaves the student''s Zoom/Pencil breakout room.'),
+  ('a0000000-0000-4000-8000-0000001b0110', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000975', '', null),
+  ('a0000000-0000-4000-8000-0000001b0210', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000976', '', null),
+  ('a0000000-0000-4000-8000-0000001b0310', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000977', '', null),
+  ('a0000000-0000-4000-8000-0000001b0410', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000978', '', null),
+  ('a0000000-0000-4000-8000-0000001b0510', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-00000000097a', '', null),
+  ('a0000000-0000-4000-8000-0000001b0610', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000979', '', null),
+  ('a0000000-0000-4000-8000-0000001b0710', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000860', 'a0000000-0000-4000-8000-000000000987', '', null),
+  ('a0000000-0000-4000-8000-0000001b0101', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000975', 'Circulate and quietly observe the students.', null),
+  ('a0000000-0000-4000-8000-0000001b0201', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000976', 'Remind students to keep working while waiting.', null),
+  ('a0000000-0000-4000-8000-0000001b0301', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000977', 'Checks if all students are in the correct breakout room.', null),
+  ('a0000000-0000-4000-8000-0000001b0401', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000978', 'Receives information that student is absent from session.', null),
+  ('a0000000-0000-4000-8000-0000001b0501', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-00000000097a', 'Alerts lead tutor about unassigned or miss-assigned students using the "ask for help" alert.', null),
+  ('a0000000-0000-4000-8000-0000001b0601', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000979', 'Handles student tech problems as they arise.', null),
+  ('a0000000-0000-4000-8000-0000001b0701', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000867', 'a0000000-0000-4000-8000-000000000987', 'Escalates unresolved issues to tutors@tutor.plus promptly.', null),
+  ('a0000000-0000-4000-8000-0000001b0102', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000975', 'Rename students to match roster name.', null),
+  ('a0000000-0000-4000-8000-0000001b0202', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000976', 'Add any un-rostered students to attendance list.', null),
+  ('a0000000-0000-4000-8000-0000001b0302', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000977', 'Manually assign unpaired students to available tutors.', null),
+  ('a0000000-0000-4000-8000-0000001b0402', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-000000000978', 'Inform classroom teacher about students that are absent.', null),
+  ('a0000000-0000-4000-8000-0000001b0502', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000868', 'a0000000-0000-4000-8000-00000000097a', 'Respond to classroom teachers "ask for help" request.', null),
+  ('a0000000-0000-4000-8000-0000001b0103', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000975', 'Tutor receives help request.', null),
+  ('a0000000-0000-4000-8000-0000001b0203', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000976', 'Finish current conversation in 1-2 minutes.', null),
+  ('a0000000-0000-4000-8000-0000001b0303', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000977', 'Visit student requesting help.', null),
+  ('a0000000-0000-4000-8000-0000001b0403', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000978', 'Resolve issue.', null),
+  ('a0000000-0000-4000-8000-0000001b0503', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-00000000097a', 'Leave breakout room.', null),
+  ('a0000000-0000-4000-8000-0000001b0603', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000861', 'a0000000-0000-4000-8000-000000000979', 'Return to the next student in sorted order set by researchers.', null),
+  ('a0000000-0000-4000-8000-0000001b0106', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000975', 'Zoom/Pencil', 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
+  ('a0000000-0000-4000-8000-0000001b0206', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000976', 'Zoom/Pencil', 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
+  ('a0000000-0000-4000-8000-0000001b0306', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000977', 'Zoom/Pencil', 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
+  ('a0000000-0000-4000-8000-0000001b0406', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-000000000978', 'Zoom/Pencil', 'The tutor connects with student via Zoom/Pencil in individual breakout room.'),
+  ('a0000000-0000-4000-8000-0000001b0506', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000863', 'a0000000-0000-4000-8000-00000000097a', 'Zoom/Pencil', 'The tutor leaves the student''s Zoom/Pencil breakout room.'),
   (
     'a0000000-0000-4000-8000-0000001b0606',
     'a0000000-0000-4000-8000-00000000080d',
     'a0000000-0000-4000-8000-000000000863',
     'a0000000-0000-4000-8000-000000000979',
     'PLUS App',
-    jsonb_build_array(
-      jsonb_build_object(
-        'type', 'tech_description',
-        'label', 'PLUS App',
-        'description', 'The tutor navigates back to the Student Dashboard screen to move on to the student on the researcher sorted list.',
-        'picture', '/blueprint-images/help-request/happy-path/plus-app/step-05-your-students.png',
-        'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
-      )
-    ),
     null
   ),
-  ('a0000000-0000-4000-8000-0000001b0607', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000864', 'a0000000-0000-4000-8000-000000000979', 'Researchers set student order.', '[]'::jsonb, null),
+  ('a0000000-0000-4000-8000-0000001b0607', 'a0000000-0000-4000-8000-00000000080d', 'a0000000-0000-4000-8000-000000000864', 'a0000000-0000-4000-8000-000000000979', 'Researchers set student order.', null),
   (
     'a0000000-0000-4000-8000-0000001b0609',
     'a0000000-0000-4000-8000-00000000080d',
     'a0000000-0000-4000-8000-000000000866',
     'a0000000-0000-4000-8000-000000000979',
     E'Dev Team\nDesign Team',
-    '[]'::jsonb,
     'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
   )
 on conflict (id) do update set
@@ -152,24 +142,23 @@ on conflict (id) do update set
   lane_id = excluded.lane_id,
   step_id = excluded.step_id,
   content = excluded.content,
-  links = excluded.links,
-  description = excluded.description;
+  summary = excluded.summary;
 
 -- Partner / lead pictures (same assets as warm-up and goal setting)
 update public.cells
-set picture = case id
-  when 'a0000000-0000-4000-8000-0000001b0102' then '/blueprint-images/goal-setting/happy-path/lead-tutor/step-01-rename-students.png'
-  when 'a0000000-0000-4000-8000-0000001b0202' then '/blueprint-images/goal-setting/happy-path/lead-tutor/step-02-add-unrostered-students.png'
-  when 'a0000000-0000-4000-8000-0000001b0302' then '/blueprint-images/goal-setting/happy-path/lead-tutor/step-03-assign-unpaired-students.png'
-  when 'a0000000-0000-4000-8000-0000001b0402' then '/blueprint-images/goal-setting/happy-path/lead-tutor/step-04-inform-absent-students.png'
-  when 'a0000000-0000-4000-8000-0000001b0502' then '/blueprint-images/goal-setting/happy-path/lead-tutor/step-05-respond-ask-for-help.png'
-  when 'a0000000-0000-4000-8000-0000001b0101' then '/blueprint-images/goal-setting/shared/partner-action/step-01-circulate-observe.png'
-  when 'a0000000-0000-4000-8000-0000001b0201' then '/blueprint-images/goal-setting/shared/partner-action/step-02-remind-students-working.png'
-  when 'a0000000-0000-4000-8000-0000001b0301' then '/blueprint-images/goal-setting/shared/partner-action/step-03-check-breakout-rooms.png'
-  when 'a0000000-0000-4000-8000-0000001b0401' then '/blueprint-images/goal-setting/shared/partner-action/step-04-student-absent.png'
-  when 'a0000000-0000-4000-8000-0000001b0501' then '/blueprint-images/goal-setting/shared/partner-action/step-05-ask-for-help-alert.png'
-  when 'a0000000-0000-4000-8000-0000001b0601' then '/blueprint-images/goal-setting/shared/partner-action/step-06-handle-tech-problems.png'
-  when 'a0000000-0000-4000-8000-0000001b0701' then '/blueprint-images/goal-setting/shared/partner-action/step-07-escalate-to-tutors-plus.png'
+set frame = case id
+  when 'a0000000-0000-4000-8000-0000001b0102' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040102/74a1e3b0-2b4f-1510-f169-2efd835d2d4b.png'
+  when 'a0000000-0000-4000-8000-0000001b0202' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0202/0911e936-fd5a-3171-9338-9e57d694b158.png'
+  when 'a0000000-0000-4000-8000-0000001b0302' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0302/d451bb96-0858-37e8-9e3c-588df38cfb2b.png'
+  when 'a0000000-0000-4000-8000-0000001b0402' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0402/db5f36b0-90a1-dbfe-92eb-07af60fb4bc0.png'
+  when 'a0000000-0000-4000-8000-0000001b0502' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0502/63b222f0-1142-8cd8-0979-aa8e4ba2bcc2.png'
+  when 'a0000000-0000-4000-8000-0000001b0101' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040101/9d01ca1e-57fd-c8f4-c9db-eb5260ec32ee.png'
+  when 'a0000000-0000-4000-8000-0000001b0201' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040201/45a51cb4-1ae3-d2c2-5f15-49fd1b4c00f2.png'
+  when 'a0000000-0000-4000-8000-0000001b0301' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040301/0c96ea1a-4331-9912-e78a-3cca3a3f8c53.png'
+  when 'a0000000-0000-4000-8000-0000001b0401' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0401/df4eeba7-5747-4aa2-1d62-dde366548029.png'
+  when 'a0000000-0000-4000-8000-0000001b0501' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0501/610fd0d7-ee32-6f6e-8d3c-7d56c796381e.png'
+  when 'a0000000-0000-4000-8000-0000001b0601' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0601/70caf55e-72b8-3f2e-73e3-c419a60a501c.png'
+  when 'a0000000-0000-4000-8000-0000001b0701' then 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0701/3a876ff6-fdbe-77c5-7a7f-1c7d1c305198.png'
 end
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id in (
@@ -188,32 +177,32 @@ where path_id = 'a0000000-0000-4000-8000-00000000080d'
   );
 
 update public.cells
-set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-01-receive-help-request.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0103/b384d6a1-b925-2461-44f8-e86b9767182e.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0103';
 
 update public.cells
-set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-02-finish-conversation.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0203/a1f7af4c-06ea-8501-f761-b9549b103c1b.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0203';
 
 update public.cells
-set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-03-visit-student.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0303/0722d7e1-731f-72fb-2f9e-0e6935bc81c5.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0303';
 
 update public.cells
-set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-04-resolve-issue.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0403/77701c96-4c6a-5dc5-add5-2dc8d32f43cf.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0403';
 
 update public.cells
-set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-05-leave-breakout-room.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0503/afbf47d8-1b65-e5d7-ff2c-a25891d9faa6.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0503';
 
 update public.cells
-set picture = '/blueprint-images/help-request/happy-path/regular-tutor/step-06-next-student.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0603/a77b7e61-52c1-8b90-64ce-2b58698fda76.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080d'
   and id = 'a0000000-0000-4000-8000-0000001b0603';
 
@@ -250,3 +239,28 @@ values
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
   target_cell_id = excluded.target_cell_id;
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('4d7e6830-6438-9a25-c5f3-75c10d12f13f', 'a0000000-0000-4000-8000-0000001b0606', 'PLUS App', 0, 'The tutor navigates back to the Student Dashboard screen to move on to the student on the researcher sorted list.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('4dd65cc8-373b-5ef1-b37f-2cc7e89a17bd', 'a0000000-0000-4000-8000-0000001b0606', '4d7e6830-6438-9a25-c5f3-75c10d12f13f', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1', 0, true, 'import'),
+  ('ed57f19e-14ce-f987-6e62-4c6a15bd6562', 'a0000000-0000-4000-8000-0000001b0606', '4d7e6830-6438-9a25-c5f3-75c10d12f13f', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001b0606/051ff918-8ad5-3da0-03c3-5b1f3a25728b.png', 1, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

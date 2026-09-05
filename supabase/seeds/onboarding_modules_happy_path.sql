@@ -1,7 +1,7 @@
 -- Onboarding → Onboarding Modules scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/onboardingModulesHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000007201',
   'a0000000-0000-4000-8000-000000000123',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -210,118 +210,8 @@ values
   ('a0000000-0000-4000-8000-000000089064', 'a0000000-0000-4000-8000-000000110608', 'a0000000-0000-4000-8000-000000110606')
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
-  target_cell_id = excluded.target_cell_id;
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor opens the PLUS app and starts the next uncompleted onboarding module.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/plus-app/step-01-module-opening.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292709&t=Fyqmb2RX2B0cj9sv-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110106';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor finds the link to the onboarding module content that exists on Notion on the individual module page in the PLUS app.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/plus-app/step-02-accessing-content.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292712&t=Fyqmb2RX2B0cj9sv-1'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Notion',
-    'description', 'The tutor follows the Notion link from the PLUS app to begin reading the onboarding module content.',
-    'picture', '/blueprint-images/shared/back-stage-tech/notion-logo.png',
-    'pictures', jsonb_build_array(
-      '/blueprint-images/shared/back-stage-tech/notion-logo.png',
-      '/blueprint-images/onboarding-modules/happy-path/notion/step-02-open-module-button.png'
-    )
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110206';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Notion',
-    'description', 'The tutor reads through the onboarding module content in Notion.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/notion/step-03-reading-lesson.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110306';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Notion',
-    'description', 'The tutor reviews supplementary materials linked from the Notion module content.',
-    'picture', '/blueprint-images/shared/back-stage-tech/notion-logo.png'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Google Docs/ Slides',
-    'description', 'The tutor opens any Google Docs or Slides linked as supplementary materials for the module content.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/google-docs/step-04-supplementary-materials.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110406';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Google Quiz',
-    'description', 'The tutor completes the Google Quiz embedded in the Notion module to check their understanding.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/google-quiz/step-05-module-quiz.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110506';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor fills out the module reflection questions in the PLUS app.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/plus-app/step-06-reflection.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292711&t=Fyqmb2RX2B0cj9sv-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110606';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Notion',
-    'description', 'The instructional design team uses Notion to design and maintain the reflection questions for the module.',
-    'picture', '/blueprint-images/shared/back-stage-tech/notion-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110608';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor submits the reflection questions and completes the onboarding module in the PLUS app.',
-    'picture', '/blueprint-images/onboarding-modules/happy-path/plus-app/step-07-module-completion.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292713&t=Fyqmb2RX2B0cj9sv-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000110706';
-
-update public.cells
-set description = 'The Dev Team builds the PLUS app features onboarding modules, and the Design Team creates the screens and flows for that experience.'
+  target_cell_id = excluded.target_cell_id;update public.cells
+set summary = 'The Dev Team builds the PLUS app features onboarding modules, and the Design Team creates the screens and flows for that experience.'
 where id in (
   'a0000000-0000-4000-8000-000000110109',
   'a0000000-0000-4000-8000-000000110209',
@@ -329,43 +219,82 @@ where id in (
 );
 
 update public.cells
-set description = 'Researchers help guide how onboarding content is designed and delivered so tutors learn effectively.'
+set summary = 'Researchers help guide how onboarding content is designed and delivered so tutors learn effectively.'
 where id in (
   'a0000000-0000-4000-8000-000000110309',
   'a0000000-0000-4000-8000-000000110409',
   'a0000000-0000-4000-8000-000000110509'
 );
-
 update public.cells
-set
-  links = '[]'::jsonb,
-  description = E'Researchers help guide how onboarding content is designed and delivered so tutors learn effectively.\n\nThe Dev Team builds the PLUS app features for onboarding modules, and the Design Team creates the screens and flows for that experience.'
-where id = 'a0000000-0000-4000-8000-000000110609';
-
-update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-01-opens-module.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110103/70be7129-ac14-a5c6-da11-8488a76783e5.png'
 where id = 'a0000000-0000-4000-8000-000000110103';
 
 update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-02-follows-notion-link.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110203/ff8f7e2f-50dc-9949-100e-ce0dc132e5dd.png'
 where id = 'a0000000-0000-4000-8000-000000110203';
 
 update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-03-reads-lesson.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110303/a36aa40e-bb34-930b-4472-1d5535924807.png'
 where id = 'a0000000-0000-4000-8000-000000110303';
 
 update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-04-supplementary-materials.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110403/f93d9c6c-bfb6-3fa8-87e9-26344427e906.png'
 where id = 'a0000000-0000-4000-8000-000000110403';
 
 update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-05-completes-quiz.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110503/b65ea20e-a8b0-486b-dc62-f0bdb374ff54.png'
 where id = 'a0000000-0000-4000-8000-000000110503';
 
 update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-06-reflection.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110603/a580f058-1615-c1c6-bd2c-70abbc512b92.png'
 where id = 'a0000000-0000-4000-8000-000000110603';
 
 update public.cells
-set picture = '/blueprint-images/onboarding-modules/happy-path/regular-tutor/step-07-module-completion.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110703/c3328beb-2077-72f1-cece-59ff454b1354.png'
 where id = 'a0000000-0000-4000-8000-000000110703';
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('2a35edd7-c5fb-1956-c86e-c0512b729bda', 'a0000000-0000-4000-8000-000000110106', 'PLUS App', 0, 'The tutor opens the PLUS app and starts the next uncompleted onboarding module.', 'import'),
+  ('141e71dc-8f20-61f4-938d-a4520c858824', 'a0000000-0000-4000-8000-000000110206', 'Notion', 0, 'The tutor follows the Notion link from the PLUS app to begin reading the onboarding module content.', 'import'),
+  ('922a3101-995b-6b2b-1675-c4384d1c6180', 'a0000000-0000-4000-8000-000000110206', 'PLUS App', 1, 'The tutor finds the link to the onboarding module content that exists on Notion on the individual module page in the PLUS app.', 'import'),
+  ('1978fa7a-88eb-cf15-7548-c25a9d769419', 'a0000000-0000-4000-8000-000000110306', 'Notion', 0, 'The tutor reads through the onboarding module content in Notion.', 'import'),
+  ('b6cc13a6-4e56-d114-28a6-24ba21371fe8', 'a0000000-0000-4000-8000-000000110406', 'Google Docs/ Slides', 0, 'The tutor opens any Google Docs or Slides linked as supplementary materials for the module content.', 'import'),
+  ('bbb5a092-f1ed-f16f-2aff-6f7bf43cc687', 'a0000000-0000-4000-8000-000000110406', 'Notion', 1, 'The tutor reviews supplementary materials linked from the Notion module content.', 'import'),
+  ('846984d3-0bae-c9da-458d-6fca370fad8b', 'a0000000-0000-4000-8000-000000110506', 'Google Quiz', 0, 'The tutor completes the Google Quiz embedded in the Notion module to check their understanding.', 'import'),
+  ('eef88201-449e-3e75-4173-8b48a273be15', 'a0000000-0000-4000-8000-000000110606', 'PLUS App', 0, 'The tutor fills out the module reflection questions in the PLUS app.', 'import'),
+  ('0163131a-57be-97e0-8a57-b7dbb450f7fd', 'a0000000-0000-4000-8000-000000110608', 'Notion', 0, 'The instructional design team uses Notion to design and maintain the reflection questions for the module.', 'import'),
+  ('020e0bc7-4316-9ec4-4bda-0b5ab5930cc3', 'a0000000-0000-4000-8000-000000110706', 'PLUS App', 0, 'The tutor submits the reflection questions and completes the onboarding module in the PLUS app.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('1c7401f7-920a-8f80-9b75-1e03c7869cab', 'a0000000-0000-4000-8000-000000110106', '2a35edd7-c5fb-1956-c86e-c0512b729bda', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292709&t=Fyqmb2RX2B0cj9sv-1', 0, true, 'import'),
+  ('359efc89-b60d-19a3-6439-3b0a4930efcf', 'a0000000-0000-4000-8000-000000110106', '2a35edd7-c5fb-1956-c86e-c0512b729bda', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110106/11c72402-75f9-23ff-a0ce-38027cf264b7.png', 1, true, 'import'),
+  ('71f2f75d-7ce0-de28-77e9-0632e2b51a3b', 'a0000000-0000-4000-8000-000000110206', '141e71dc-8f20-61f4-938d-a4520c858824', 'attachment', 'Notion', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090308/19e60568-ae56-7fb2-6711-afba55dc45ea.png', 0, true, 'import'),
+  ('44e5279e-2df6-9d0f-c914-c2105163bf46', 'a0000000-0000-4000-8000-000000110206', '922a3101-995b-6b2b-1675-c4384d1c6180', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292712&t=Fyqmb2RX2B0cj9sv-1', 0, true, 'import'),
+  ('07ace53a-c0c3-2da1-efed-200d85845c3f', 'a0000000-0000-4000-8000-000000110206', '922a3101-995b-6b2b-1675-c4384d1c6180', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110206/ef1c69f4-8505-828e-b402-e1d70fe354cd.png', 1, true, 'import'),
+  ('b054609f-f785-e1b3-9ae6-f3b9f5190972', 'a0000000-0000-4000-8000-000000110306', '1978fa7a-88eb-cf15-7548-c25a9d769419', 'attachment', 'Notion', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110306/b44cb29b-705b-a4ec-826b-4784e28d4a2b.png', 0, true, 'import'),
+  ('8c93187f-0abe-6e64-0000-64bcfcc9274a', 'a0000000-0000-4000-8000-000000110406', 'b6cc13a6-4e56-d114-28a6-24ba21371fe8', 'attachment', 'Google Docs/ Slides', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110406/a91b69ee-cb2e-f398-b648-d219470c966d.png', 0, true, 'import'),
+  ('21b88aa9-f67f-a4a1-4f6c-780bdbb7f833', 'a0000000-0000-4000-8000-000000110406', 'bbb5a092-f1ed-f16f-2aff-6f7bf43cc687', 'attachment', 'Notion', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090308/19e60568-ae56-7fb2-6711-afba55dc45ea.png', 0, true, 'import'),
+  ('e1b1d9c5-a2d6-1299-1c40-179fbce07912', 'a0000000-0000-4000-8000-000000110506', '846984d3-0bae-c9da-458d-6fca370fad8b', 'attachment', 'Google Quiz', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110506/86701f56-ceeb-b330-91ab-61eede87c867.png', 0, true, 'import'),
+  ('45f98579-a8c8-5a6d-7f3c-f7df1506f712', 'a0000000-0000-4000-8000-000000110606', 'eef88201-449e-3e75-4173-8b48a273be15', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292711&t=Fyqmb2RX2B0cj9sv-1', 0, true, 'import'),
+  ('ecb91afe-ca65-67ff-eb53-bd770dffd872', 'a0000000-0000-4000-8000-000000110606', 'eef88201-449e-3e75-4173-8b48a273be15', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110606/dbb3f8b9-2c6e-f2fd-ea08-64a075ad2b3a.png', 1, true, 'import'),
+  ('dfec4d24-0f3a-54e3-916c-41fb370dd489', 'a0000000-0000-4000-8000-000000110608', '0163131a-57be-97e0-8a57-b7dbb450f7fd', 'attachment', 'Notion', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090308/19e60568-ae56-7fb2-6711-afba55dc45ea.png', 0, true, 'import'),
+  ('4e3b17df-d6b7-31f8-0c0a-5aaac45e51b8', 'a0000000-0000-4000-8000-000000110706', '020e0bc7-4316-9ec4-4bda-0b5ab5930cc3', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3385-292713&t=Fyqmb2RX2B0cj9sv-1', 0, true, 'import'),
+  ('adaf2c24-5d96-b9d7-e319-391e11b530f9', 'a0000000-0000-4000-8000-000000110706', '020e0bc7-4316-9ec4-4bda-0b5ab5930cc3', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000110706/f2bfdf0a-1340-5252-5af8-cf85c3b76275.png', 1, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

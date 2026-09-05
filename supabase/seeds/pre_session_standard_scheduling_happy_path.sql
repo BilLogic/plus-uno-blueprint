@@ -1,7 +1,7 @@
 -- Pre-session → Standard Scheduling scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/standardSchedulingHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000806',
   'a0000000-0000-4000-8000-000000000126',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -157,39 +157,49 @@ on conflict (id) do update set
 
 update public.cells
 set
-  description = 'The tutor''s session scheduling information is stored in a Google Spreadsheet.',
-  links = jsonb_build_array(
-    jsonb_build_object(
-      'type', 'tech_description',
-      'label', 'Google Spreadsheet',
-      'description', 'The tutor''s session scheduling information is stored in a Google Spreadsheet.',
-      'picture', '/blueprint-images/shared/back-stage-tech/google-sheets-logo.png'
-    )
-  )
+  summary = 'The tutor''s session scheduling information is stored in a Google Spreadsheet.'
 where id = 'a0000000-0000-4000-8000-000000140108';
 
 update public.cells
 set
-  description = 'The tutor supervisor team sends the semester schedule to tutors through the PLUS app.',
-  links = jsonb_build_array(
-    jsonb_build_object(
-      'type', 'tech_description',
-      'label', 'PLUS App',
-      'description', 'The tutor supervisor team sends the semester schedule to tutors through the PLUS app.'
-    )
-  )
+  summary = 'The tutor supervisor team sends the semester schedule to tutors through the PLUS app.'
 where id = 'a0000000-0000-4000-8000-000000140206';
 
 update public.cells
-set description =
+set summary =
   'The Dev Team stores tutor schedules in a Google Spreadsheet for the tutor supervisor team to review.'
 where id = 'a0000000-0000-4000-8000-000000140109';
 
 update public.cells
-set description =
+set summary =
   'The Dev Team builds the PLUS app features for sending semester schedules, and the Design Team creates the screens and flows for that experience.'
 where id = 'a0000000-0000-4000-8000-000000140209';
 
 update public.cells
-set picture = '/blueprint-images/standard-scheduling/happy-path/regular-tutor/step-02-receives-schedule.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000140203/1c4f0033-cf8e-8dba-0257-a590fbdf9aa0.png'
 where id = 'a0000000-0000-4000-8000-000000140203';
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('b9f83e94-6484-daac-4041-51a7e9ce1e12', 'a0000000-0000-4000-8000-000000140108', 'Google Spreadsheet', 0, 'The tutor''s session scheduling information is stored in a Google Spreadsheet.', 'import'),
+  ('7a7a8da2-2734-1e66-d486-426c90e4fb64', 'a0000000-0000-4000-8000-000000140206', 'PLUS App', 0, 'The tutor supervisor team sends the semester schedule to tutors through the PLUS app.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('a86bc132-9809-7d29-9fa4-1efbe469e168', 'a0000000-0000-4000-8000-000000140108', 'b9f83e94-6484-daac-4041-51a7e9ce1e12', 'attachment', 'Google Spreadsheet', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150108/737f7fb4-8397-708e-f575-02a91f4ba361.png', 0, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

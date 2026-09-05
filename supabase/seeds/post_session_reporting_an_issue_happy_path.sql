@@ -1,7 +1,7 @@
 -- Post-session → Reporting an Issue scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/reportingAnIssueHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-00000000080f',
   'a0000000-0000-4000-8000-000000000207',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -102,70 +102,50 @@ on conflict (id) do update set
   target_cell_id = excluded.target_cell_id;
 
 update public.cells
-set picture = '/blueprint-images/reporting-an-issue/happy-path/lead-tutor/step-01-reach-out.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0102/fa633b95-45ae-d609-fbc9-06eb3f5e1291.png'
 where id = 'a0000000-0000-4000-8000-0000001d0102';
 
 update public.cells
-set picture = '/blueprint-images/reporting-an-issue/happy-path/lead-tutor/step-03-follow-up.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0402/84f6ca4e-161e-e7ec-583d-551862ff771a.png'
 where id = 'a0000000-0000-4000-8000-0000001d0402';
 
 update public.cells
-set picture = '/blueprint-images/reporting-an-issue/happy-path/regular-tutor/step-01-reach-out.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0103/ab13b929-6608-ac2b-5268-c16927040a3f.png'
 where id = 'a0000000-0000-4000-8000-0000001d0103';
 
 update public.cells
-set picture = '/blueprint-images/reporting-an-issue/happy-path/regular-tutor/step-03-follow-up.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001d0403/f864d4ca-a48a-e179-32a0-2d9a84fe0f8c.png'
 where id = 'a0000000-0000-4000-8000-0000001d0403';
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('279450f8-b661-51f3-38a3-b19a0e497893', 'a0000000-0000-4000-8000-0000001d0106', 'Email', 0, 'The tutor uses email to reach out to PLUS staff and report any session concerns after tutoring.', 'import'),
+  ('5cbe376f-60bf-56e8-4d03-f611d67845eb', 'a0000000-0000-4000-8000-0000001d0106', 'Slack', 1, 'The tutor uses Slack to reach out to PLUS staff and share any session concerns after tutoring.', 'import'),
+  ('7c870e64-5a66-684d-e07f-61a4c98520f6', 'a0000000-0000-4000-8000-0000001d0406', 'Email', 0, 'The tutor might receive email from PLUS staff following up on the reported issue.', 'import'),
+  ('49eccf36-7f35-49de-a2f9-93dd8e59b98c', 'a0000000-0000-4000-8000-0000001d0406', 'Slack', 1, 'The tutor might receive Slack message from PLUS staff following up on the reported issue.', 'import'),
+  ('ef6f792a-2808-67b3-9514-6bcbaa01ef8b', 'a0000000-0000-4000-8000-0000001d0406', 'Zoom', 2, 'PLUS staff might request for tutor to join a Zoom meeting to discuss the reported issue.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
 
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Slack',
-    'description', 'The tutor uses Slack to reach out to PLUS staff and share any session concerns after tutoring.',
-    'picture', '/blueprint-images/shared/front-stage-tech/slack-logo.png'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor uses email to reach out to PLUS staff and report any session concerns after tutoring.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-0000001d0106';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Slack',
-    'description', 'The tutor might receive Slack message from PLUS staff following up on the reported issue.',
-    'picture', '/blueprint-images/shared/front-stage-tech/slack-logo.png'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor might receive email from PLUS staff following up on the reported issue.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Zoom',
-    'description', 'PLUS staff might request for tutor to join a Zoom meeting to discuss the reported issue.',
-    'picture', '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-0000001d0406';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'url',
-    'label', 'Onboarding Module 2',
-    'url', 'https://plus-tutors.notion.site/Module-2-Your-Role-at-PLUS-26fb7cca498280daac2fd7efc191708d'
-  )
-)
-where id in (
-  'a0000000-0000-4000-8000-0000001d0102',
-  'a0000000-0000-4000-8000-0000001d0402'
-);
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('086a1b33-1615-4ac5-c619-db387743e4cc', 'a0000000-0000-4000-8000-0000001d0102', null, 'link', 'Onboarding Module 2', 'https://plus-tutors.notion.site/Module-2-Your-Role-at-PLUS-26fb7cca498280daac2fd7efc191708d', 1, false, 'import'),
+  ('0e5d0cd1-1e57-8b76-dfc1-bfc888d78fac', 'a0000000-0000-4000-8000-0000001d0106', '279450f8-b661-51f3-38a3-b19a0e497893', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import'),
+  ('6b4f9289-f1f6-69f9-ef2c-722fa83aeb52', 'a0000000-0000-4000-8000-0000001d0106', '5cbe376f-60bf-56e8-4d03-f611d67845eb', 'attachment', 'Slack', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100706/21a81bb9-8af4-9dc8-5879-b4fa64946bd7.png', 0, true, 'import'),
+  ('b98e7d03-8b45-6c86-ce8c-fb0785f788c5', 'a0000000-0000-4000-8000-0000001d0402', null, 'link', 'Onboarding Module 2', 'https://plus-tutors.notion.site/Module-2-Your-Role-at-PLUS-26fb7cca498280daac2fd7efc191708d', 1, false, 'import'),
+  ('ff8d4fe4-89be-bda8-dbed-3aba9e974acb', 'a0000000-0000-4000-8000-0000001d0406', '49eccf36-7f35-49de-a2f9-93dd8e59b98c', 'attachment', 'Slack', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100706/21a81bb9-8af4-9dc8-5879-b4fa64946bd7.png', 0, true, 'import'),
+  ('28e06e83-e554-479c-cbaf-4e1fc76a2ab9', 'a0000000-0000-4000-8000-0000001d0406', '7c870e64-5a66-684d-e07f-61a4c98520f6', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import'),
+  ('44df46e8-7c5b-4d42-dd95-a80e448a26fd', 'a0000000-0000-4000-8000-0000001d0406', 'ef6f792a-2808-67b3-9514-6bcbaa01ef8b', 'attachment', 'Zoom', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png', 0, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

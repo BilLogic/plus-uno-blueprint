@@ -3,11 +3,11 @@
 
 update public.scenarios
 set
-  description = 'Tutors guide students through goal setting in breakout sessions.',
-  view_type = 'side-by-side'
+  summary = 'Tutors guide students through goal setting in breakout sessions.',
+  layout = 'stacked'
 where id = 'a0000000-0000-4000-8000-000000000204';
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-00000000080c',
   'a0000000-0000-4000-8000-000000000204',
@@ -18,8 +18,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -128,17 +128,17 @@ on conflict (id) do update set
   content = excluded.content;
 
 update public.cells as c
-set picture = v.picture
+set frame = v.frame
 from (
   values
-    ('a0000000-0000-4000-8000-0000001a0103'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-01-join-breakout-session.png'),
-    ('a0000000-0000-4000-8000-0000001a0203'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-02-share-screen.png'),
-    ('a0000000-0000-4000-8000-0000001a0303'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-03-goal-activity.png'),
-    ('a0000000-0000-4000-8000-0000001a0403'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-04-goal-strategy.png'),
-    ('a0000000-0000-4000-8000-0000001a0503'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-05-finalize-goals.png'),
-    ('a0000000-0000-4000-8000-0000001a0603'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-06-leave-breakout-room.png'),
-    ('a0000000-0000-4000-8000-0000001a0703'::uuid, '/blueprint-images/goal-setting/happy-path/regular-tutor/step-07-next-student.png')
-) as v(id, picture)
+    ('a0000000-0000-4000-8000-0000001a0103'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0103/be4cfc3e-7a89-76ce-29d6-80596e951e79.png'),
+    ('a0000000-0000-4000-8000-0000001a0203'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0203/9229c9ed-fcd9-aa0c-ffc4-cf04f7713d21.png'),
+    ('a0000000-0000-4000-8000-0000001a0303'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0303/1f53ee5b-0bed-6892-0ef0-8abd25ca164a.png'),
+    ('a0000000-0000-4000-8000-0000001a0403'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0403/b39f6673-d26d-f03c-8a6a-aa7116747998.png'),
+    ('a0000000-0000-4000-8000-0000001a0503'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0503/28ef7aa2-119a-a45e-859d-cae5f659a8ec.png'),
+    ('a0000000-0000-4000-8000-0000001a0603'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0603/00f29568-5e40-1bae-5204-c1818f2b4c74.png'),
+    ('a0000000-0000-4000-8000-0000001a0703'::uuid, 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001a0703/be8def91-8d20-9d98-9286-7d8e0a4c8abd.png')
+) as v(id, frame)
 where c.id = v.id;
 
 insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
@@ -175,49 +175,9 @@ values
   ('a0000000-0000-4000-8000-000000098067', 'a0000000-0000-4000-8000-0000001a0703', 'a0000000-0000-4000-8000-0000001a0706')
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
-  target_cell_id = excluded.target_cell_id;
-
-update public.cells
-set links = (
-  select coalesce(
-    jsonb_agg(
-      case
-        when link->>'label' = 'PLUS App' then
-          link || jsonb_build_object(
-            'description',
-            'The tutor fills out the update, check, or set goals modal in the PLUS app with the student.'
-          )
-        else link
-      end
-    ),
-    '[]'::jsonb
-  )
-  from jsonb_array_elements(coalesce(links, '[]'::jsonb)) as link
-)
-where id = 'a0000000-0000-4000-8000-0000001a0306';
-
-update public.cells
-set links = (
-  select coalesce(
-    jsonb_agg(
-      case
-        when link->>'label' = 'PLUS App' then
-          link || jsonb_build_object(
-            'description',
-            'If prompted, the tutor fills out the goal achievement strategy form in the PLUS app with the student.'
-          )
-        else link
-      end
-    ),
-    '[]'::jsonb
-  )
-  from jsonb_array_elements(coalesce(links, '[]'::jsonb)) as link
-)
-where id = 'a0000000-0000-4000-8000-0000001a0406';
-
-update public.cells
+  target_cell_id = excluded.target_cell_id;update public.cells
 set content = E'Dev Team\nDesign Team',
-    description =
+    summary =
       'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
 where id in (
   'a0000000-0000-4000-8000-0000001a0209',

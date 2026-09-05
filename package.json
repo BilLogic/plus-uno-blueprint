@@ -45,6 +45,7 @@
     "check:migration-ledger:live": "node scripts/check-migration-ledger.mjs",
     "apply:pending": "node scripts/apply-pending.mjs",
     "replay:migrations": "node scripts/replay-migrations.mjs",
+    "check:seed-load": "node scripts/check-seed-loads.mjs",
     "check:write-surface": "node scripts/check-write-surface.mjs",
     "check:reconciled": "node scripts/check-reconciled-files.mjs",
     "check:copy": "vitest run scripts/tests/retired-copy.test.mjs",
