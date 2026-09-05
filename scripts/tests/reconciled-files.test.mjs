@@ -234,6 +234,7 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/lib/comparisonCameraContract.test.ts',
     'src/contexts/BlueprintCellDetailContext.tsx',
     'src/components/blueprint/TouchpointCellFace.tsx',
+    'src/components/blueprint/BlueprintCellButton.tsx',
   ])
 })
 
