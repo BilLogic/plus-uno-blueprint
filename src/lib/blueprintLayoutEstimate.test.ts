@@ -9,7 +9,8 @@ import {
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 // A plain act lane: text content, no storyboard/touchpoint treatment.
-const ACT_LANE = { id: 'l1', name: 'Regular Tutor', role: null } as BlueprintLane
+// Named for nothing in particular — the estimate reads content, never a label.
+const ACT_LANE = { id: 'l1', name: 'Whoever acts here', role: null } as BlueprintLane
 
 // Pins the stable-preview contract. Complete prose remains in the DOM/detail
 // surface, but it may never resize the canvas face or the surrounding lane.

@@ -9,10 +9,6 @@ import {
   SUPPORT_ACTIONS_ROLE,
   STORYBOARD_ROLE,
 } from '@/lib/laneRoles'
-import {
-  isParallelSessionLeadBottomWrapDependency,
-  isParallelSessionPartnerWrapDependency,
-} from '@/data/parallelSessionPartnerLead'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
 
 /** Minimal lane shape for role-driven layout checks. */
@@ -166,268 +162,140 @@ export const VISIBILITY_LINE_LABEL = 'LINE OF VISIBILITY'
 export const INTERNAL_INTERACTION_LINE_LABEL = 'LINE OF INTERNAL INTERACTION'
 
 export const BLUEPRINT_DIVIDER_ROW_HEIGHT = 28
-/** Transparent margin above the interaction line for the Regular Tutor loop arrow. */
+/** Right inset so interaction / visibility lines stop before the board edge. */
+export const BLUEPRINT_DIVIDER_LINE_END_INSET = 16
+/** Transparent margin above the interaction line for loop-back arrows. */
 export const BLUEPRINT_WRAP_CORRIDOR_MARGIN = 36
-/** Space above the Regular Tutor row for overhead-rail arrows (Discovery, Call-off, etc.). */
-export const BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN = 36
-/** Space at the top of the Regular Tutor row for in-lane loop-back arrows. */
-export const BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN = 32
+/** Space above a lane row for overhead-rail arrows that skip columns in it. */
+export const BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN = 36
+/** Space at the top of a lane row for in-lane loop-back arrows. */
+export const BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN = 32
 
-/** Regular Tutor cell ids that route forward connectors on the overhead rail. */
-export const OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN =
-  /000000(?:07|72|17)(\d{2})03$/
+/**
+ * Step column each cell in one lane sits in, keyed by cell id.
+ *
+ * Both lane corridors are decided by comparing the columns a dependency's two
+ * ends occupy, so the shape of that question is the same either way: restrict
+ * to the lane, then resolve `step_id` through `steps.position`. Reading
+ * the data this way (rather than parsing anything out of an id) is what keeps
+ * the rule true for any blueprint.
+ */
+function getLaneCellColumns(
+  data: BlueprintData,
+  laneId: string,
+): Map<string, number> {
+  const columnByStepId = new Map<string, number>()
+  for (const step of data.steps) {
+    columnByStepId.set(step.id, step.position)
+  }
 
-/** Application discovery dependencies that span forward across Regular Tutor columns. */
-export function dependenciesIncludeDiscoveryRail(
-  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
+  const columnByCellId = new Map<string, number>()
+  for (const cell of data.cells) {
+    if (cell.lane_id !== laneId) continue
+    const column = columnByStepId.get(cell.step_id)
+    if (column === undefined) continue
+    columnByCellId.set(cell.id, column)
+  }
+  return columnByCellId
+}
+
+/**
+ * Does this blueprint hold a dependency that stays inside `laneId` and whose
+ * two step columns satisfy `matches`? Dependencies that leave the lane at
+ * either end are not the lane's business — they are routed between rows, not
+ * around one.
+ */
+function blueprintHasInLaneDependency(
+  data: BlueprintData,
+  laneId: string,
+  matches: (sourceColumn: number, targetColumn: number) => boolean,
 ): boolean {
-  return dependencies.some((dependency) => {
-    const { source_cell_id: src, target_cell_id: tgt } = dependency
-    return (
-      OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(src) &&
-      OVERHEAD_RAIL_REGULAR_TUTOR_CELL_PATTERN.test(tgt) &&
-      src !== tgt
-    )
+  const columnByCellId = getLaneCellColumns(data, laneId)
+  if (columnByCellId.size === 0) return false
+
+  return data.dependencies.some((dependency) => {
+    const sourceColumn = columnByCellId.get(dependency.source_cell_id)
+    const targetColumn = columnByCellId.get(dependency.target_cell_id)
+    if (sourceColumn === undefined || targetColumn === undefined) return false
+    return matches(sourceColumn, targetColumn)
   })
 }
 
-export function blueprintHasDiscoveryRailDependencies(
-  data: BlueprintData,
-): boolean {
-  return dependenciesIncludeDiscoveryRail(data.dependencies)
-}
-
-export function laneHasDiscoveryRailCorridor(
+function anyBlueprintHasInLaneDependency(
   lane: BlueprintLane,
-  data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
+  data: BlueprintData | readonly BlueprintData[] | undefined,
+  matches: (sourceColumn: number, targetColumn: number) => boolean,
 ): boolean {
-  if (lane.name !== 'Regular Tutor') return false
-  if (data) {
-    const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasDiscoveryRailDependencies)) return true
-  }
-  if (extraDependencies && dependenciesIncludeDiscoveryRail(extraDependencies)) {
-    return true
-  }
-  return false
-}
-
-/*
-  The teacher's lane, by name.
-
-  It was called `Partner Action: Teacher` until 2026-08-20 — the lane's ROLE
-  bolted onto the front of the person in it. `lane_role` and the stakeholder
-  registry both hold the role now, so the label is just the person, and the
-  helper that existed only to abbreviate the long form went with it.
-*/
-export const TEACHER_LANE_NAME = 'Teacher'
-
-export function dependenciesIncludePartnerActionOverheadWrap(
-  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
-): boolean {
-  return dependencies.some((dependency) =>
-    isParallelSessionPartnerWrapDependency(
-      dependency.source_cell_id,
-      dependency.target_cell_id,
-    ),
+  if (!data) return false
+  const blueprints = Array.isArray(data) ? data : [data]
+  return blueprints.some((blueprint) =>
+    blueprintHasInLaneDependency(blueprint, lane.id, matches),
   )
 }
 
-export function blueprintHasPartnerActionOverheadWrapDependencies(
-  data: BlueprintData,
-): boolean {
-  return dependenciesIncludePartnerActionOverheadWrap(data.dependencies)
-}
-
-export function laneHasPartnerActionOverheadWrapCorridor(
+/**
+ * A lane needs the overhead rail when one of its own dependencies runs FORWARD
+ * and clears at least one column on the way (target column >= source + 2).
+ * Such a connector cannot travel along the row — the cells it skips are in the
+ * way — so it climbs into a strip above the row, runs across, and drops back
+ * in.
+ *
+ * The arrow engine asks the same question of the rendered grid when it picks a
+ * detour lane; the two must agree or the rail would be drawn where no space
+ * was reserved.
+ */
+export function laneHasOverheadArrowCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
 ): boolean {
-  if (lane.name !== TEACHER_LANE_NAME) return false
-  if (data) {
-    const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasPartnerActionOverheadWrapDependencies)) {
-      return true
-    }
-  }
-  if (extraDependencies && dependenciesIncludePartnerActionOverheadWrap(extraDependencies)) {
-    return true
-  }
-  return false
-}
-
-export const LEAD_TUTOR_LANE_NAME = 'Lead Tutor'
-
-export function dependenciesIncludeLeadTutorBottomWrap(
-  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
-): boolean {
-  return dependencies.some((dependency) =>
-    isParallelSessionLeadBottomWrapDependency(
-      dependency.source_cell_id,
-      dependency.target_cell_id,
-    ),
+  return anyBlueprintHasInLaneDependency(
+    lane,
+    data,
+    (sourceColumn, targetColumn) => targetColumn >= sourceColumn + 2,
   )
 }
 
-export function blueprintHasLeadTutorBottomWrapDependencies(
-  data: BlueprintData,
-): boolean {
-  return dependenciesIncludeLeadTutorBottomWrap(data.dependencies)
-}
-
-export function laneHasLeadTutorBottomWrapCorridor(
+/**
+ * A lane needs the in-lane loop corridor when one of its own dependencies runs
+ * BACKWARD — its target sits in an earlier column than its source. That arrow
+ * loops back over the row it started on, so the row reserves a thin strip
+ * above itself for the horizontal leg.
+ */
+export function laneHasInLaneLoopCorridor(
   lane: BlueprintLane,
   data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
 ): boolean {
-  if (lane.name !== LEAD_TUTOR_LANE_NAME) return false
-  if (data) {
-    const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasLeadTutorBottomWrapDependencies)) {
-      return true
-    }
-  }
-  if (extraDependencies && dependenciesIncludeLeadTutorBottomWrap(extraDependencies)) {
-    return true
-  }
-  return false
-}
-
-/** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function dependenciesIncludeLeadTutorOverheadWrap(
-  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
-): boolean {
-  return dependenciesIncludeLeadTutorBottomWrap(dependencies)
-}
-
-/** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function blueprintHasLeadTutorOverheadWrapDependencies(
-  data: BlueprintData,
-): boolean {
-  return blueprintHasLeadTutorBottomWrapDependencies(data)
-}
-
-/** @deprecated Lead Tutor loops route below the row, not overhead. */
-export function laneHasLeadTutorOverheadWrapCorridor(
-  lane: BlueprintLane,
-  data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
-): boolean {
-  return laneHasLeadTutorBottomWrapCorridor(lane, data, extraDependencies)
-}
-
-export function laneHasWrapCorridorBelow(
-  lane: BlueprintLane,
-  data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
-): boolean {
-  return (
-    shouldShowInteractionLineAfter(lane) ||
-    laneHasLeadTutorBottomWrapCorridor(lane, data, extraDependencies)
+  return anyBlueprintHasInLaneDependency(
+    lane,
+    data,
+    (sourceColumn, targetColumn) => targetColumn < sourceColumn,
   )
 }
 
-const REGULAR_TUTOR_LANE_CELL_ID_PATTERN = /(\d{2})03$/
-
-export function isRegularTutorInLaneLoopDependency(
-  sourceCellId: string,
-  targetCellId: string,
-): boolean {
-  const sourceMatch = sourceCellId.match(REGULAR_TUTOR_LANE_CELL_ID_PATTERN)
-  const targetMatch = targetCellId.match(REGULAR_TUTOR_LANE_CELL_ID_PATTERN)
-  if (!sourceMatch || !targetMatch) return false
-
-  const sourceStep = Number.parseInt(sourceMatch[1]!, 10)
-  const targetStep = Number.parseInt(targetMatch[1]!, 10)
-  return targetStep < sourceStep
-}
-
-export function dependenciesIncludeRegularTutorInLaneLoop(
-  dependencies: ReadonlyArray<{ source_cell_id: string; target_cell_id: string }>,
-): boolean {
-  return dependencies.some((dependency) =>
-    isRegularTutorInLaneLoopDependency(
-      dependency.source_cell_id,
-      dependency.target_cell_id,
-    ),
-  )
-}
-
-export function blueprintHasRegularTutorInLaneLoopDependencies(
-  data: BlueprintData,
-): boolean {
-  return dependenciesIncludeRegularTutorInLaneLoop(data.dependencies)
-}
-
-export function laneHasRegularTutorInLaneLoopCorridor(
-  lane: BlueprintLane,
-  data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
-): boolean {
-  if (lane.name !== 'Regular Tutor') return false
-  if (data) {
-    const blueprints = Array.isArray(data) ? data : [data]
-    if (blueprints.some(blueprintHasRegularTutorInLaneLoopDependencies)) {
-      return true
-    }
-  }
-  if (extraDependencies && dependenciesIncludeRegularTutorInLaneLoop(extraDependencies)) {
-    return true
-  }
-  return false
-}
-
-export function countRegularTutorInLaneLoopCorridorMargins(
+export function countInLaneLoopCorridorMargins(
   lanes: BlueprintLane[],
   data?: BlueprintData,
 ): number {
   if (!data) return 0
-  return lanes.filter((lane) =>
-    laneHasRegularTutorInLaneLoopCorridor(lane, data),
-  ).length
+  return lanes.filter((lane) => laneHasInLaneLoopCorridor(lane, data)).length
 }
 
-export function laneHasOverheadArrowCorridor(
-  lane: BlueprintLane,
-  data?: BlueprintData | readonly BlueprintData[],
-  extraDependencies?: ReadonlyArray<{
-    source_cell_id: string
-    target_cell_id: string
-  }>,
-): boolean {
-  return (
-    laneHasDiscoveryRailCorridor(lane, data, extraDependencies) ||
-    laneHasPartnerActionOverheadWrapCorridor(lane, data, extraDependencies)
-  )
-}
-
-export function countDiscoveryRailCorridorMargins(
+export function countOverheadRailCorridorMargins(
   lanes: BlueprintLane[],
   data: BlueprintData,
 ): number {
-  return lanes.filter((lane) =>
-    laneHasDiscoveryRailCorridor(lane, data),
-  ).length
+  return lanes.filter((lane) => laneHasOverheadArrowCorridor(lane, data))
+    .length
+}
+
+/**
+ * Does a corridor open UNDER this lane row? Only the spine actor's row has
+ * one: the standard blueprint already leaves a band between it and the line of
+ * interaction, and backward loops on that row are routed through it rather
+ * than over the cells.
+ */
+export function laneHasWrapCorridorBelow(lane: BlueprintLane): boolean {
+  return shouldShowInteractionLineAfter(lane)
 }
 
 export function countBlueprintDividerRows(lanes: BlueprintLane[]): number {
@@ -441,14 +309,8 @@ export function countBlueprintDividerRows(lanes: BlueprintLane[]): number {
 
 export function countBlueprintWrapCorridorMargins(
   lanes: BlueprintLane[],
-  data?: BlueprintData,
 ): number {
-  return lanes.filter(
-    (lane) =>
-      shouldShowInteractionLineAfter(lane) ||
-      (data !== undefined &&
-        laneHasLeadTutorBottomWrapCorridor(lane, data)),
-  ).length
+  return lanes.filter(laneHasWrapCorridorBelow).length
 }
 
 export const LANE_COLUMN_WIDTH = 220
@@ -493,7 +355,6 @@ export const BLUEPRINT_ARTBOARD_HEIGHT_BUFFER = 32
 /** Safety margin for horizontal grid bleed on canvas artboards. */
 export const BLUEPRINT_ARTBOARD_WIDTH_BUFFER = 32
 
-/** Outer gutter around each cell (Tailwind p-3 ≈ 12px per side). */
 /**
  * Half the hit target for an insert affordance, on BOTH axes.
  *
@@ -503,7 +364,11 @@ export const BLUEPRINT_ARTBOARD_WIDTH_BUFFER = 32
  */
 export const BLUEPRINT_INSERT_HIT_HALF = 8
 
+/** Outer gutter around each cell (Tailwind p-3 ≈ 12px per side). */
 export const BLUEPRINT_CELL_GUTTER = 12
+/** Default cell inner content padding (px-4 py-3). */
+export const BLUEPRINT_CELL_INNER_X = 16
+export const BLUEPRINT_CELL_INNER_Y = 12
 
 /** Stable canvas face for narrative cells; complete prose lives in detail. */
 export const NARRATIVE_CELL_HEIGHT = 128
@@ -513,6 +378,90 @@ export const TOUCHPOINT_ITEM_HEIGHT = 52
 export const TOUCHPOINT_ITEM_HEIGHT_COMPACT = 42
 const TOUCHPOINT_STACK_GAP = 10
 const TOUCHPOINT_CELL_PADDING = BLUEPRINT_CELL_GUTTER * 2
+
+/** Compare / service grid cell inner width — the box TEXT actually wraps
+ * in: column minus the shell's padding AND the cell button's own chrome
+ * (its `px-4` + borders). Counting only the shell (todo 026) overstated
+ * the text box by ~34px, so the line-count estimate undershot and tall
+ * cells overflowed their fixed row tracks. */
+export function getBlueprintCellInnerWidth(compact = false): number {
+  const shellPadX = compact ? 24 : 28
+  const buttonChromeX = compact ? 26 : 34
+  return STEP_COLUMN_WIDTH - shellPadX - buttonChromeX
+}
+
+/** East-Asian full-width codepoints render ~2× the width of a Latin glyph.
+ * Counting them as 1 char makes the line-count estimate undershoot for CJK
+ * content, so tall cells overflow their fixed row track and collide with the
+ * divider line below. */
+function isWideCodePoint(cp: number): boolean {
+  return (
+    (cp >= 0x1100 && cp <= 0x115f) || // Hangul Jamo
+    (cp >= 0x2e80 && cp <= 0x303e) || // CJK radicals, Kangxi, CJK punctuation
+    (cp >= 0x3041 && cp <= 0x33ff) || // Hiragana, Katakana, CJK symbols
+    (cp >= 0x3400 && cp <= 0x4dbf) || // CJK Ext A
+    (cp >= 0x4e00 && cp <= 0x9fff) || // CJK Unified
+    (cp >= 0xa000 && cp <= 0xa4cf) || // Yi
+    (cp >= 0xac00 && cp <= 0xd7a3) || // Hangul Syllables
+    (cp >= 0xf900 && cp <= 0xfaff) || // CJK Compatibility Ideographs
+    (cp >= 0xfe30 && cp <= 0xfe4f) || // CJK Compatibility Forms
+    (cp >= 0xff00 && cp <= 0xff60) || // Fullwidth Forms
+    (cp >= 0xffe0 && cp <= 0xffe6) ||
+    (cp >= 0x20000 && cp <= 0x3fffd) // CJK Ext B+
+  )
+}
+
+/** Display width of a line in half-width units (CJK glyphs count as 2). */
+function lineDisplayWidth(line: string): number {
+  let width = 0
+  for (const ch of line) {
+    width += isWideCodePoint(ch.codePointAt(0) ?? 0) ? 2 : 1
+  }
+  return width
+}
+
+/** Greedy word-wrap simulation: words move to the next line whole, so a
+ * paragraph costs 15-20% more lines than `chars ÷ chars-per-line` claims —
+ * the naive division was one of the three undershoots that let tall cells
+ * cross their lane band (todo 026). Words longer than a line fill whole
+ * lines, matching the browser's overflow-wrap behaviour. */
+function countWrappedLines(line: string, charsPerLine: number): number {
+  const words = line.split(/\s+/).filter(Boolean)
+  if (words.length === 0) return 1
+  let lines = 1
+  let used = 0
+  for (const word of words) {
+    let width = lineDisplayWidth(word)
+    const separator = used > 0 ? 1 : 0
+    if (used + separator + width <= charsPerLine) {
+      used += separator + width
+      continue
+    }
+    lines += 1
+    while (width > charsPerLine) {
+      width -= charsPerLine
+      lines += 1
+    }
+    used = width
+  }
+  return lines
+}
+
+/** Line count including soft-wrap at the blueprint column width. */
+export function getEffectiveLineCount(content: string, compact = false): number {
+  const innerWidth = getBlueprintCellInnerWidth(compact)
+  // 8px average glyph (space included) for text-sm — deliberately a shade
+  // conservative: the estimate is a FLOOR under overflow-visible rows, and
+  // an undershoot bleeds into the lane below while an overshoot just airs
+  // the row out (todo 026, measured against the real 257-char worst case).
+  const charWidth = compact ? 6.5 : 8
+  const charsPerLine = Math.max(6, Math.floor(innerWidth / charWidth))
+
+  return content.split('\n').reduce((total, line) => {
+    if (line.length === 0) return total + 1
+    return total + countWrappedLines(line, charsPerLine)
+  }, 0)
+}
 
 export function getMaxTouchpointCountInLane(
   data: BlueprintData,
@@ -621,14 +570,14 @@ export function getBlueprintGridMinHeight(
   const dividers =
     countBlueprintDividerRows(data.lanes) * BLUEPRINT_DIVIDER_ROW_HEIGHT
   const wrapCorridorMargins =
-    countBlueprintWrapCorridorMargins(data.lanes, data) *
+    countBlueprintWrapCorridorMargins(data.lanes) *
     BLUEPRINT_WRAP_CORRIDOR_MARGIN
-  const discoveryRailCorridorMargins =
-    countDiscoveryRailCorridorMargins(data.lanes, data) *
-    BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN
-  const regularTutorLoopCorridorMargins =
-    countRegularTutorInLaneLoopCorridorMargins(data.lanes, data) *
-    BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+  const overheadRailCorridorMargins =
+    countOverheadRailCorridorMargins(data.lanes, data) *
+    BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN
+  const inLaneLoopCorridorMargins =
+    countInLaneLoopCorridorMargins(data.lanes, data) *
+    BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN
   const laneRows = data.lanes.reduce(
     (sum, lane) => sum + getLaneRowMinHeight(lane, data, compact),
     0,
@@ -641,8 +590,8 @@ export function getBlueprintGridMinHeight(
     laneRows +
     dividers +
     wrapCorridorMargins +
-    discoveryRailCorridorMargins +
-    regularTutorLoopCorridorMargins +
+    overheadRailCorridorMargins +
+    inLaneLoopCorridorMargins +
     rowGaps
   )
 }

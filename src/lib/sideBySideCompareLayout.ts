@@ -7,15 +7,14 @@ import {
   BLUEPRINT_ROW_MIN_HEIGHT,
   BLUEPRINT_ROW_MIN_HEIGHT_COMPACT,
   BLUEPRINT_WRAP_CORRIDOR_MARGIN,
-  BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN,
-  BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN,
+  BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN,
+  BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN,
   INTERACTION_LINE_LABEL,
   INTERNAL_INTERACTION_LINE_LABEL,
   VISIBILITY_LINE_LABEL,
   getLaneRowMinHeight,
   getStepColumnsWidth,
   STEP_COLUMN_GAP,
-  laneHasOverheadArrowCorridor,
   laneHasWrapCorridorBelow,
   shouldShowInteractionLineAfter,
   shouldShowInternalInteractionLineAfter,
@@ -26,10 +25,6 @@ import {
   COMPARE_LANE_COLLAPSED_HEIGHT,
   isBlueprintLaneCollapsed,
 } from '@/lib/blueprintLaneCollapse'
-import {
-  isParallelSessionLeadBottomWrapDependency,
-  isParallelSessionPartnerWrapDependency,
-} from '@/data/parallelSessionPartnerLead'
 import type { PathListItem } from '@/lib/pathSelection'
 import { itemsInSelectionOrder } from '@/lib/pathSelection'
 import type { BlueprintData, BlueprintLane } from '@/types/blueprint'
@@ -300,10 +295,8 @@ export function buildSideBySideLabelRowSpecs(
         ? COMPARE_LANE_COLLAPSED_HEIGHT
         : getSharedLaneRowHeight(lane, blueprints, compact),
       wrapCorridorAbove:
-        !collapsed && laneHasOverheadArrowCorridor(lane, blueprints),
-      wrapCorridorBelow:
-        !collapsed &&
-        laneHasWrapCorridorBelow(lane, blueprints),
+        !collapsed && laneHasOverheadRailCorridorAbove(lane, blueprints),
+      wrapCorridorBelow: !collapsed && laneHasWrapCorridorBelow(lane),
       inLaneLoopCorridorAbove:
         !collapsed && laneHasInLaneLoopCorridor(lane, blueprints),
       showDividerBelow: shouldShowLaneDividerAfter(lane, laneIndex, lanes),
@@ -461,24 +454,19 @@ type InLaneLoopLayoutSource = {
 }
 
 /**
- * Generic in-lane loop-corridor rule: a lane needs loop headroom at the top
- * of its lane when it contains a dependency whose source and target cells are
- * BOTH in that lane with the source at a later column than the target — a
- * backward in-lane loop. Derived purely from blueprint data (cell lane
- * membership + step column positions), with no scenario or lane identity;
- * this replaces the side-by-side layout's dependence on the PLUS
- * `laneHasRegularTutorInLaneLoopCorridor` cell-ID shim (which arrow
- * rendering still uses for route styling).
+ * Does one compared blueprint route a dependency that both starts and ends in
+ * this lane, with its two step columns satisfying `matches`?
  *
- * Backward loops already claimed by the PLUS legacy wrap shims are skipped:
- * Partner Action loops ride the overhead corridor and Lead Tutor loops ride
- * the below-row wrap corridor, so those lanes must not also reserve an
- * in-lane corridor. Generic (non-PLUS) content never matches those ID
- * patterns and gets the pure data-driven rule.
+ * The rule is read straight off the data — which lane a cell belongs to, and
+ * which column its step sits in — so it holds for any content. The canonical
+ * row is resolved into each blueprint first: compared variants describe the
+ * same lane, but they need not agree on its id, and a lane matched by identity
+ * alone would silently report "no corridor" for every variant but one.
  */
-export function blueprintLaneHasBackwardInLaneLoop(
+function blueprintLaneHasCorridorDependency(
   canonicalLane: BlueprintLane,
   source: InLaneLoopLayoutSource,
+  matches: (sourceColumn: number, targetColumn: number) => boolean,
 ): boolean {
   const lane = resolveBlueprintLane(canonicalLane, source)
   const cellById = new Map(source.cells.map((cell) => [cell.id, cell]))
@@ -487,19 +475,6 @@ export function blueprintLaneHasBackwardInLaneLoop(
   )
 
   return source.dependencies.some((dependency) => {
-    if (
-      isParallelSessionPartnerWrapDependency(
-        dependency.source_cell_id,
-        dependency.target_cell_id,
-      ) ||
-      isParallelSessionLeadBottomWrapDependency(
-        dependency.source_cell_id,
-        dependency.target_cell_id,
-      )
-    ) {
-      return false
-    }
-
     const sourceCell = cellById.get(dependency.source_cell_id)
     const targetCell = cellById.get(dependency.target_cell_id)
     if (!sourceCell || !targetCell) return false
@@ -512,12 +487,21 @@ export function blueprintLaneHasBackwardInLaneLoop(
 
     const sourceColumn = columnByStepId.get(sourceCell.step_id)
     const targetColumn = columnByStepId.get(targetCell.step_id)
-    return (
-      sourceColumn !== undefined &&
-      targetColumn !== undefined &&
-      targetColumn < sourceColumn
-    )
+    if (sourceColumn === undefined || targetColumn === undefined) return false
+    return matches(sourceColumn, targetColumn)
   })
+}
+
+/** A backward loop that stays inside the lane, needing headroom at its top. */
+export function blueprintLaneHasBackwardInLaneLoop(
+  canonicalLane: BlueprintLane,
+  source: InLaneLoopLayoutSource,
+): boolean {
+  return blueprintLaneHasCorridorDependency(
+    canonicalLane,
+    source,
+    (sourceColumn, targetColumn) => targetColumn < sourceColumn,
+  )
 }
 
 /** Canonical row needs an in-lane loop corridor when any compared variant has one. */
@@ -527,6 +511,26 @@ export function laneHasInLaneLoopCorridor(
 ): boolean {
   return sources.some((source) =>
     blueprintLaneHasBackwardInLaneLoop(canonicalLane, source),
+  )
+}
+
+/**
+ * Canonical row needs the overhead rail when any compared variant routes a
+ * forward in-lane dependency that clears at least one column — the arrow
+ * cannot run along the row, so it climbs into the strip above it. Mirrors
+ * `laneHasOverheadArrowCorridor`, which decides the same thing for a single
+ * board.
+ */
+export function laneHasOverheadRailCorridorAbove(
+  canonicalLane: BlueprintLane,
+  sources: readonly InLaneLoopLayoutSource[],
+): boolean {
+  return sources.some((source) =>
+    blueprintLaneHasCorridorDependency(
+      canonicalLane,
+      source,
+      (sourceColumn, targetColumn) => targetColumn >= sourceColumn + 2,
+    ),
   )
 }
 
@@ -548,10 +552,10 @@ export function getCompareRowTrackHeight(row: {
 }): number {
   return (
     row.height +
-    (row.wrapCorridorAbove ? BLUEPRINT_DISCOVERY_RAIL_CORRIDOR_MARGIN : 0) +
+    (row.wrapCorridorAbove ? BLUEPRINT_OVERHEAD_RAIL_CORRIDOR_MARGIN : 0) +
     (row.wrapCorridorBelow ? BLUEPRINT_WRAP_CORRIDOR_MARGIN : 0) +
     (row.inLaneLoopCorridorAbove
-      ? BLUEPRINT_REGULAR_TUTOR_LOOP_CORRIDOR_MARGIN
+      ? BLUEPRINT_IN_LANE_LOOP_CORRIDOR_MARGIN
       : 0)
   )
 }
@@ -820,13 +824,6 @@ export function getMergedComparePanelHeight(
     getMergedCompareGridHeight(blueprints, compact) +
     getComparePanelScrollPaddingY(scrollChrome)
   )
-}
-
-export function laneHasDiscoveryRailCorridorAbove(
-  lane: BlueprintLane,
-  blueprints: BlueprintData[],
-): boolean {
-  return laneHasOverheadArrowCorridor(lane, blueprints)
 }
 
 export function laneHasInteractionLine(lane: BlueprintLane): boolean {
