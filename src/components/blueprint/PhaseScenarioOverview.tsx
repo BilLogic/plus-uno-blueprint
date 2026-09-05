@@ -367,7 +367,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   // the row measures over — the measurement skips the focused one, so focus
   // moving is a re-measure even when every estimate above is unchanged.
   const rowMeasureKey = `${phase.id}:${sharedPanelHeight ?? 0}:${scenarios.length}:${loading}:${viewTypesMeasureKey}:${selectedPathsMeasureKey}:${focusedScenarioId ?? 'none'}:${focusedScenarioExpanded}`
-  const { rowPanelHeight, focusedPanelHeight } = useAlignedPhaseRowPanelHeight(
+  const { rowPanelHeight, excludedPanelHeight } = useAlignedPhaseRowPanelHeight(
     rowRef,
     sharedPanelHeight,
     focusedPanelHeightFloor,
@@ -377,7 +377,7 @@ export const PhaseScenarioOverviewBody = memo(function PhaseScenarioOverviewBody
   /** The height a given scenario's panel takes. */
   const panelHeightFor = (scenarioId: string) =>
     focusedScenarioExpanded && focusedScenarioId === scenarioId
-      ? focusedPanelHeight
+      ? excludedPanelHeight
       : rowPanelHeight
 
   if (scenarios.length === 0) {

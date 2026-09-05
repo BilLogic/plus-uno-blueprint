@@ -272,4 +272,19 @@ export const RECONCILED_FILES = [
   'src/components/blueprint/PathSummaryTooltip.tsx',
   'src/components/blueprint/ScenarioTitleBadge.tsx',
   'src/components/blueprint/BlueprintDividerBadge.tsx',
+
+  // #323 slice S5a/S5c: the compare grid's tracks and lane collapse, and the
+  // aligned phase-row height. S5a is enrolment alone — the four paths were
+  // already byte-identical (one carried a trailing blank line). S5c takes
+  // asb's split of the row-height rule into `resolveScenarioPanelHeight`,
+  // which is the `Math.max(rowPanelHeight ?? 0, floor)` uno already had
+  // inline; the hook's `focusedPanelHeight` is `excludedPanelHeight` in asb's
+  // spelling, and `PhaseScenarioOverview` (still forked) was re-pointed.
+  'src/lib/compareGridTracks.ts',
+  'src/hooks/useCollapsedBlueprintLanes.ts',
+  'src/lib/blueprintLaneCollapse.ts',
+  'src/components/blueprint/CompareTrackDecorations.tsx',
+  'src/lib/phaseRowPanelHeight.ts',
+  'src/lib/phaseRowPanelHeight.test.ts',
+  'src/hooks/useAlignedPhaseRowPanelHeight.ts',
 ]
