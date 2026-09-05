@@ -9,7 +9,14 @@ last-reviewed: 2026-08-25
 
 The do-not-reinvent contract: every agent-surface need maps to an
 existing `src/components/ui/` primitive (shadcn, base-ui flavor —
-triggers take `render={...}`). Verified against the directory 2026-08-04.
+triggers take `render={...}`, not `asChild`). Verified against the directory
+2026-08-04.
+
+Everything under `src/components/ui/` **is** the design system: compose those
+primitives rather than hand-rolling one that already exists. A primitive that is
+genuinely missing is added through the shadcn CLI, which keeps it vendored and
+pristine ([ADR 0003](../adr/0003-vendored-primitives-stay-pristine.md)) — a
+lookalike written by hand is the one shape that never converges back.
 
 | Need                                 | Primitive                                                                       | Note                                                                                                                                                                                                                                                                                                                                                                       |
 | ------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

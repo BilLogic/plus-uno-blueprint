@@ -77,6 +77,22 @@ jobs:
       - run: npm run check:identifiers
       - run: npm run check:database-names
 
+      # The router's three checks (#366). `AGENTS.md` is the whole always-loaded
+      # tier — the one file every session is handed before it decides anything —
+      # so the properties that keep it a router are held here rather than left
+      # to a reviewer: it stays under a stated char budget that ratchets DOWN as
+      # well as up, its prohibition count only falls, and every pointer in it
+      # resolves, leads with its trigger word and carries a document at all.
+      #
+      # They sit in `gates` rather than in `docs-harness` because they gate the
+      # file that binds every session's behaviour, including the sessions that
+      # touch no doc; and they are cheap and static — three file reads, no
+      # database, no network — so they can be required checks like the vocabulary
+      # guards above.
+      - run: npm run check:budget
+      - run: npm run check:negation
+      - run: npm run check:pointers
+
       # The parse gate (#148). `supabase/migrations/` is not the apply path —
       # the schema went in over MCP `apply_migration` and the files were written
       # afterwards — so until this ran, no Postgres had ever read them. Three did

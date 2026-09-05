@@ -1,131 +1,89 @@
 # Working in uno-blueprint
 
-Short by design — pointers over prose. If a rule here fights the code,
-the code is newer; say so and follow the code.
+Short by design. This file is the whole always-loaded tier, and every routing
+item in it is a **pointer** — a trigger word, then the document that carries the
+body — or a **security line**, which stays inline by rule because it binds
+before any pointer could fire. Three checks hold that shape:
+`scripts/check-router-budget.mjs`, `scripts/check-negation-ratchet.mjs`,
+`scripts/check-pointers.mjs`. Where a rule here fights the code, the code is
+newer; say so and follow the code.
 
 ## Boot protocol (read this order, load on demand)
 
-1. This file is your only guaranteed context — everything below stays in
-   force for the whole session.
-2. `CONTEXT.md` fixes the vocabulary: scenario, path, phase, step, cell,
-   lane, line of visibility, dependency, need, slice, finding, plus the
-   rename map and its two do-not-sweep exceptions. Definitions only, so it
-   is cheap. Never invent a synonym for a term it already fixes.
-3. `INDEX.md` (root, GENERATED) is the map: a task-routing table plus every
-   living doc's one-line summary, taken from that doc's own frontmatter.
-   Route by TASK row, not by browsing folders.
-4. Any task that writes data reads
-   `docs/engineering/access-and-security.md` first — which user type this
-   session runs as decides which tools and paths are even legitimate. The
-   plain-language capability table is `docs/product/01-overview.md`.
-5. Unsure where a task belongs → `docs/engineering/codebase-guide.md`
-   first. Anything crossing a repo boundary → `docs/connectors/`.
-6. `docs/plans/`, `docs/ideation/` and `docs/brainstorms/` are HISTORY —
-   decision-era snapshots, not current truth. Check frontmatter `status` /
-   `distilled-into` before acting on one.
+1. **Vocabulary** — the words this codebase fixes, and what each is bound to in
+   the schema: `CONTEXT.md`. Definitions only, so it is cheap; a term it fixes
+   keeps the spelling it has there.
+2. **Routing** — `INDEX.md` (root, GENERATED) is the map: a task-routing table
+   plus every living doc's one-line summary. Route by TASK row.
+3. **Writes** of any kind read `docs/engineering/access-and-security.md` first —
+   which user type this session runs as decides which tools and paths are even
+   legitimate. The plain-language capability table is
+   `docs/product/01-overview.md`.
+4. **Placement** — where a task belongs, when nothing above answers it:
+   `docs/engineering/codebase-guide.md`.
+5. **History** — `docs/plans/`, `docs/ideation/` and `docs/brainstorms/` are
+   decision-era snapshots; read frontmatter `status` / `distilled-into` before
+   acting on one.
 
-## Where the skills come from (not this repo)
+## Security lines (non-negotiable — inline by rule, so they bind before any pointer fires)
 
-`/sb:map`, `/sb:audit`, `/sb:whatif` and `/sb:slice` are **domain skills
-from the installed `sb` plugin**, authored in the
-`agentic-service-blueprinting` repo. Do not go looking for them here, and
-do not add one here.
-
-The in-app assistant executes the same text, read straight out of the
-installed `agentic-service-blueprinting` package — a git-URL dependency
-pinned to a tagged release. There is no copy of it in this repo to edit,
-so a fix goes upstream and arrives here as a version bump. Details:
-`docs/engineering/agent-system.md`.
-
-## Security lines (non-negotiable — never behind a pointer)
-
-- Keys/secrets: only in gitignored `.env`/`.env.local` or browser
-  localStorage. Never in committable files, chat, or Netlify env.
+- Keys and secrets live only in gitignored `.env` / `.env.local` or browser
+  localStorage. Anywhere else is a leak — a committable file, chat, the Netlify
+  environment, a literal value written into a doc:
+  `docs/engineering/access-and-security.md` § Environments.
 - Never widen RLS or write policies; the deployed site stays read-only.
-- Never widen a column grant. RLS decides *who* writes and is silent on
-  *which columns*, so the grant is the whole of the boundary between what a
-  panel writes and what an RPC records. `authenticated` holds no table-level
-  UPDATE anywhere and no key column outside three named ones
-  (`20260830290000`); a new panel column means a line in `PANEL_COLUMNS`
+- Never widen a column grant. RLS decides *who* writes and is silent on *which
+  columns*, so the grant is the whole of the boundary between what a panel
+  writes and what an RPC records. `authenticated` holds no table-level UPDATE
+  anywhere and no key column outside three named ones (`20260830290000`); a new
+  panel column means a line in `PANEL_COLUMNS`
   (`scripts/check-rls-posture.mjs`) and a migration, never a table grant.
 - Local writes authenticate as the dev auth user (auto sign-in from
-  `.env.local`); **never the service-role key**.
-- Every blueprint-content write goes through `authoringRpc.ts` or a
+  `.env.local`); **never the service-role key**, which bypasses policy and
+  belongs in no browser bundle.
+- Every blueprint-content write goes through `src/lib/authoringRpc.ts` or a
   `src/lib/*Mutations.ts` module, so it lands in the session ledger with a
-  captured revert. Nothing else writes to a table — not a component, not a
-  context, not a hook, not the agent's tool dispatcher. That boundary is
-  enforced by `writeBoundaryContract.test.ts`, not by convention — it was prose
-  for months and was false for some of them, and then the guard itself scanned
-  three named roots and missed `src/lib` for months more. It walks all of
-  `src/` now and names its two exemptions inline;
-  `engineering/access-and-security.md` says why each is deliberate. In a
-  mutation module: capture the previous value as the inverse **before** the
-  write, write with `.select()` so a zero-row update fails loudly, then
-  `recordChange`. Deletes are human-only.
-- Watch for literal NUL bytes in generated source (breaks git diffing);
-  write the six-character backslash-u0000 escape, never the raw byte.
+  captured revert. Nothing else writes to a table, and
+  `src/lib/writeBoundaryContract.test.ts` walks all of `src/` to hold that
+  rather than leaving it to convention. In a mutation module: capture the
+  previous value as the inverse **before** the write, write with `.select()` so
+  a zero-row update fails loudly, then `recordChange`. Deletes are human-only.
+  The two exemptions, and why each is deliberate:
+  `docs/engineering/access-and-security.md` § Authoring writes.
 
-## Components: DS-native only
+## Progressive loading
 
-Everything under `src/components/ui/` is the design system (shadcn,
-base-ui flavor — triggers take a `render={...}` prop, not `asChild`).
-Compose these; never hand-roll a primitive that already exists. Missing
-primitive? Add it via the shadcn CLI, not a lookalike. The
-need→primitive map for agent-UX work: `docs/reference/ui-inventory.md`.
-
-Before inventing any pattern, check how the nearest feature solved it:
-`OwnerTagSelect` (filter-as-you-type picker), `SessionChangesSheet`
-(review-then-commit list), `SlicesSidebarSection` (context menus +
-accordion groups), `SidebarNav` (the sidebar's one disclosure
-vocabulary). Deeper: `docs/engineering/codebase-guide.md`.
-
-## Codebase idioms (reviewers keep re-teaching these)
-
-- Derived state over synced state; compute in render, don't mirror into
-  `useState` + effects.
-- Freeze a prop snapshot with `useState(initializer)` — refs during
-  render are lint-blocked.
-- Render-phase guarded setState (`if (last !== next) { setLast(next); … }`)
-  is the house pattern for reacting to prop changes; not an effect.
-- Cross-surface shared state = module-level store + `useSyncExternalStore`
-  (see `CanvasModeProvider`, `src/lib/agent/settings.ts`).
-- Panel-level actions portal to a footer host (`CELL_PANEL_FOOTER_ID`
-  pattern).
-
-## Commands & tooling traps
-
-- `npm test` — vitest; collects `src/**/*.test.ts`, `src/**/*.test.tsx` and
-  `scripts/tests/**/*.test.mjs` automatically (no registration list).
-- `npm run lint` — baseline is ZERO problems and must stay zero; any
-  problem you introduce is yours to fix before merging.
-- `npm run typecheck` — the type-check. `npm run build` runs it and bundles.
-  Bare `npx tsc --noEmit` checks NOTHING: `npx tsc` is not this repo's compiler
-  (it resolves to an unrelated npm package), and `tsconfig.json` is a solution
-  file with `"files": []`.
-- Quote globs in shell commands (`--include="*.tsx"`) — zsh eats bare ones.
-- `npm run check:harness` — every file under `blueprint/`, `editor/`,
-  `cover/` and `mobile/` is claimed by exactly one composition doc. A new
-  surface nobody documented fails it.
-- After moving, renaming or adding any doc: `npm run docs:index`. A doc
-  with no frontmatter `summary` fails that build, not silently.
+| Trigger | Load |
+|---------|------|
+| Composing a surface, or reaching for a primitive | `docs/reference/ui-inventory.md` — the need→primitive map, and the rule that `src/components/ui/` is the design system to compose rather than re-hand-roll |
+| React state, effects, or state shared across surfaces | `docs/engineering/codebase-guide.md` § State idioms |
+| Patterns worth copying — picker, review-then-commit list, sidebar menus, panel postures | `docs/engineering/codebase-guide.md` § Patterns to copy, by problem shape |
+| Styling anything — colour, spacing, motion, elevation, any raw value | `docs/engineering/standards.md` § The Supabase benchmark, concretely |
+| Running the gates — test, lint, typecheck, docs index, composition claims | `docs/engineering/standards.md` § Testing |
+| Commands behaving oddly — `tsc`, shell globs, generated files, canvas assets | `docs/engineering/standards.md` § Tooling traps |
+| Skills — `/sb:map`, `/sb:audit`, `/sb:whatif`, `/sb:slice` are the installed `sb` plugin's, authored upstream and absent from this repo | `docs/engineering/agent-system.md` § Skills and the pinned-package contract |
+| Blueprint reads — retrieval, absence, what a status licenses, the schema as the catalog describes it | `docs/agents/blueprint.md` |
+| Migrations, applying or replaying one | `docs/engineering/access-and-security.md` § Migrations workflow |
+| Deploying, rolling back, monitoring, inviting someone | `docs/engineering/operations.md` |
+| Crossing a repo boundary — the template, the pinned package, the bot, Netlify | `docs/connectors/` |
 
 ## Agent skills
 
-Config for the `mattpocock-skills` engineering skills. Read the pointed-at
-file when a skill asks for it; don't preload.
+Config the `mattpocock-skills` engineering skills read. Open the file a skill
+names when it asks for it, rather than preloading all three.
 
 ### Issue tracker
 
-GitHub Issues on `BilLogic/plus-uno-blueprint`, via the `gh` CLI.
-See `docs/agents/issue-tracker.md`.
+- **Issues** are GitHub Issues on `BilLogic/plus-uno-blueprint`, via the `gh`
+  CLI: `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-The five canonical roles, label strings unchanged (`needs-triage`,
-`needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
-See `docs/agents/triage-labels.md`.
+- **Labels** are the five canonical roles, strings unchanged (`needs-triage`,
+  `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`):
+  `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Single-context: one root `CONTEXT.md` plus `docs/adr/`, both created lazily
-by `/domain-modeling`. See `docs/agents/domain.md`.
+- **Domain** is single-context: one root `CONTEXT.md` plus `docs/adr/`, both
+  created lazily by `/domain-modeling`: `docs/agents/domain.md`.
