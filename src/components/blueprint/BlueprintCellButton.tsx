@@ -20,10 +20,10 @@ import {
   type BlueprintLaneRole,
 } from '@/lib/blueprintCellStyle'
 import { isSameBlueprintCellSelection } from '@/lib/blueprintCellSelection'
+import { isUnbuilt, type EntityStatus } from '@/lib/entityStatus'
 import { resolveBlueprintCellId } from '@/lib/resolveBlueprintCellId'
 import type { BlueprintCellSelection } from '@/types/blueprintCellDetail'
 import { cn } from '@/lib/utils'
-import { isUnbuilt, type EntityStatus } from '@/lib/entityStatus'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 type BlueprintCellButtonProps = {
@@ -45,33 +45,24 @@ type BlueprintCellButtonProps = {
   /**
    * Whether this button may carry the slice sequence badge. Touchpoints share
    * their cell's id, so touchpoint call sites pass `index === 0` to badge the
-   * first one only; plain cell faces leave the default (true).
+   * first touchpoint only; plain cell faces leave the default (true).
    */
   sliceSequenceBadge?: boolean
   /**
-   * What a plain click OPENS, when the answer is not "this cell's panel".
-   *
-   * The storyboard cell is the one case: its face is the step's frames and
-   * its caption is `steps.summary`, so the thing behind it is the STEP. Every
-   * other gesture — picking, the emphasis ring, the close-on-second-click
-   * grammar — is unchanged; only the open verb is swapped.
-   */
-  onOpen?: () => void
-  /**
    * Unbuilt cells have to LOOK unbuilt.
    *
-   * When the status lived in the label, the canvas said it for free — every
-   * such touchpoint began "Planned — ". Moving it to its own column would have made
-   * fifty design explorations read as shipped surfaces, which is the single
-   * most expensive thing this blueprint can get wrong. A dashed edge and a
-   * drained fill carry it instead.
+   * A status that lives in a column and nothing renders is strictly worse than
+   * the `Planned — ` prefix it replaced, which at least said it on every cell
+   * that carried it: design explorations then read as shipped surfaces, which
+   * is the single most expensive thing a blueprint can get wrong. A dashed
+   * edge and a drained fill carry it instead.
    */
   status?: EntityStatus | null
   children: ReactNode
   'aria-label'?: string
   'aria-describedby'?: string
   'data-blueprint-touchpoint'?: string
-  /** A name-only placement (#277): the registry lacks this touchpoint. */
+  /** A name-only placement (#112): the registry lacks this touchpoint. */
   nameOnly?: boolean
 }
 
@@ -94,12 +85,11 @@ export function BlueprintCellButton({
   variant = 'cell',
   opacity,
   sliceSequenceBadge = true,
-  onOpen,
+  status,
   children,
   'aria-label': ariaLabel,
   'aria-describedby': ariaDescribedBy,
   'data-blueprint-touchpoint': touchpointLabel,
-  status,
   nameOnly = false,
 }: BlueprintCellButtonProps) {
   const detail = useBlueprintCellDetailOptional()
@@ -218,10 +208,6 @@ export function BlueprintCellButton({
       the discoverable route to the same place.
     */
     if (clickOpensDetail(event)) {
-      if (onOpen) {
-        onOpen()
-        return
-      }
       detail!.selectCell(selection!)
       return
     }
@@ -255,14 +241,6 @@ export function BlueprintCellButton({
       })
     ) {
       detail!.closePanel()
-      return
-    }
-    // Both open paths route through `onOpen` when there is one — the modifier
-    // above and the bare click here. Hooking only the modifier is how the
-    // storyboard kept opening a cell panel on an ordinary click while the
-    // ⌘-click opened its step: one gesture, two answers.
-    if (onOpen) {
-      onOpen()
       return
     }
     detail!.selectCell(selection!)

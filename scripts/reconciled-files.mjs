@@ -354,4 +354,11 @@ export const RECONCILED_FILES = [
   // heights the face reads are uno's, because `blueprintLayout.ts` stays
   // forked at 52/42 against the template's 44/34 pending Q10.
   'src/components/blueprint/TouchpointCellFace.tsx',
+
+  // The cell button. Its one remaining hunk was an `onOpen` prop nobody
+  // passed: the storyboard call site went when a frame became a cell with
+  // its own id, and the step is one click away on its column header. Dead
+  // code does not cross into the template; uno drops the prop and takes the
+  // template's file, comment citations included.
+  'src/components/blueprint/BlueprintCellButton.tsx',
 ]
