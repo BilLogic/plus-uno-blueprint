@@ -149,7 +149,7 @@ export function CanvasAnnotationProvider({
     const unregister = [
       registerAgentUiCommand({
         name: 'clear_annotations',
-        description: 'Erase every annotation mark from the canvas scratch layer.',
+        summary: 'Erase every annotation mark from the canvas scratch layer.',
         run: () => {
           clearAnnotations()
           return 'Annotations cleared.'
@@ -157,7 +157,7 @@ export function CanvasAnnotationProvider({
       }),
       registerAgentUiCommand({
         name: 'set_canvas_tool',
-        description:
+        summary:
           'Choose the active canvas tool. arg: select | hand | pen | rect | ellipse | text | sticky | eraser',
         run: (arg) => {
           if (!tools.includes(arg as CanvasAnnotationTool))

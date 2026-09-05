@@ -26,7 +26,7 @@ test('an empty allowlist has nothing to fail on, and reads nothing', () => {
   assert.deepEqual(auditReconciled({ files: [], readInstance: refuse, readAsb: refuse }), [])
 })
 
-test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slice S0)', () => {
+test('the shipped allowlist holds the arrow engine (#351), the panel editors (#357), and the viewport/layout convergence (#323 slices S0–S1)', () => {
   // #319 shipped the gate EMPTY; #351 enrolled the first files — the shared
   // arrow-routing geometry — #357 enrolled the entity panel editors asb
   // ported back out of uno, and #323's slice S0 swept every remaining
@@ -180,6 +180,19 @@ test('the shipped allowlist holds the arrow engine (#351), the panel editors (#3
     'src/assets/react.svg',
     'src/assets/vite.svg',
     'src/vite-env.d.ts',
+    'src/components/editor/ZoomPanViewport.tsx',
+    'src/components/editor/MarqueeSelection.tsx',
+    'src/components/editor/CanvasPenCursor.tsx',
+    'src/components/editor/CanvasAnnotationToolbar.tsx',
+    'src/contexts/CanvasAnnotationProvider.tsx',
+    'src/contexts/canvasAnnotationContext.ts',
+    'src/contexts/canvasAnnotationSubscription.test.tsx',
+    'src/lib/agent/uiBridge.ts',
+    'src/lib/agent/uiBridge.camera.test.ts',
+    'src/lib/agent/uiCommands.ts',
+    'src/lib/canvasFocusCells.ts',
+    'src/lib/canvasFocus.ts',
+    'src/lib/canvasTouchContract.test.tsx',
   ])
 })
 

@@ -261,7 +261,7 @@ function BlueprintCellDetailPanelBody() {
     const unregister = [
       registerAgentUiCommand({
         name: 'cell_panel_tab',
-        description: "Switch the open cell panel's tab. arg: dependencies | evidence | resources",
+        summary: "Switch the open cell panel's tab. arg: dependencies | evidence | resources",
         run: (arg) => {
           const tab = arg === 'evidence' || arg === 'resources' ? arg : 'dependencies'
           setActiveTab(tab)
@@ -270,7 +270,7 @@ function BlueprintCellDetailPanelBody() {
       }),
       registerAgentUiCommand({
         name: 'cell_panel_expand',
-        description: 'Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
+        summary: 'Widen or shrink the open cell panel. arg: true (wide) | false (normal)',
         run: (arg) => {
           const wide = arg !== 'false'
           setExpanded(wide)
@@ -279,7 +279,7 @@ function BlueprintCellDetailPanelBody() {
       }),
       registerAgentUiCommand({
         name: 'cell_panel_close',
-        description: 'Close the open cell detail panel.',
+        summary: 'Close the open cell detail panel.',
         run: () => {
           clearSelection()
           return 'Cell panel closed.'

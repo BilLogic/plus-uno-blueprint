@@ -415,7 +415,7 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
     const unregister = [
       registerAgentUiCommand({
         name: 'toggle_path_filter',
-        description:
+        summary:
           'Toggle a path variant\'s visibility (the PATHS checkboxes). arg: the path key (type:name, e.g. "happy:Happy Path") or a path name.',
         run: (arg) => {
           if (!arg) throw new Error('arg required: path key or name')
@@ -436,7 +436,7 @@ export function PathSelectionProvider({ children }: { children: ReactNode }) {
       }),
       registerAgentUiCommand({
         name: 'restore_default_paths',
-        description: 'Reset the path filter to its defaults.',
+        summary: 'Reset the path filter to its defaults.',
         run: () => {
           restoreDefaultPathKeys()
           return 'Path filter restored to defaults.'

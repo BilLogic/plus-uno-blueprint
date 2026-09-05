@@ -9,12 +9,12 @@ describe('agent UI command lifecycle', () => {
   it('does not let stale cleanup delete a replacement owner', async () => {
     const removeOld = registerAgentUiCommand({
       name: 'test_camera_owner',
-      description: 'old',
+      summary: 'old',
       run: () => 'old',
     })
     const removeCurrent = registerAgentUiCommand({
       name: 'test_camera_owner',
-      description: 'current',
+      summary: 'current',
       run: () => 'current',
     })
 

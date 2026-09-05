@@ -237,7 +237,7 @@ export function BlueprintCellDetailProvider({
     const unregister: Array<() => void> = [
       registerAgentUiCommand({
         name: 'panel_surface',
-        description:
+        summary:
           "Switch the open floating panel's surface. arg: details | differences",
         run: (arg) => {
           const { panelState: current, selection: liveSelection } =
@@ -261,7 +261,7 @@ export function BlueprintCellDetailProvider({
       unregister.push(
         registerAgentUiCommand({
           name: 'differences_open',
-          description:
+          summary:
             'Open the difference ledger (the Differences surface of the floating panel) enumerating every difference between the compared paths.',
           run: () => {
             setPanelState({ surface: 'differences' })
@@ -270,7 +270,7 @@ export function BlueprintCellDetailProvider({
         }),
         registerAgentUiCommand({
           name: 'differences_close',
-          description:
+          summary:
             'Close the difference ledger — falls back to cell details when a cell is selected, otherwise closes the panel.',
           run: () => {
             const { panelState: current, selection: liveSelection } =
