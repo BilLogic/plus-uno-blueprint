@@ -15,11 +15,14 @@ export type PhaseSpecUpdate = {
 /**
  * Write a phase's spec columns.
  *
- * `business_impact` and `operational_requirements` have carried a column grant
- * since `20260729120000` shipped; `summary` got one in
- * `20260820160000_phases_scenarios_description_to_summary.sql`, which is the
- * migration that made this panel possible at all — before it, the column the
- * panel labels Summary was not writable by anyone but the service key.
+ * All three columns carry a column grant for the signed-in author.
+ * `business_impact` and `operational_requirements` have since
+ * `20260729120000_derived_layer.sql` narrowed `phases` to exactly those two;
+ * `summary` since `21000127000000_a_phase_may_say_what_it_is.sql` — the rename
+ * that turned `description` into `summary` moved the column and not a grant
+ * that had never existed, which this panel was the first thing to notice. A
+ * deployment that narrows the table again gets the refusal back as the
+ * sentence `toAuthoringError` makes of it.
  *
  * `name` is not here: renaming a phase is a structural edit with its own RPC
  * and its own ledger entry.

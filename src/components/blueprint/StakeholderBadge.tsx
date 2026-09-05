@@ -25,9 +25,9 @@ import {
  * The definition hangs off the badge itself rather than an ⓘ beside it, for
  * the reason `PanelKindBadge` was built: the badge IS the name whose meaning
  * is in question, and hovering the word you do not recognise is where you
- * would look for it. `docs/reference/panel-affordances.md` states that as the
- * rule and its standing prohibition — nothing carries two mechanisms for one
- * fact — is why no caller of this component also prints the same sentence.
+ * would look for it. The standing prohibition that goes with it — nothing
+ * carries two mechanisms for one fact — is why no caller of this component
+ * also prints the same sentence.
  *
  * A stakeholder with no summary still opens: the kind and its meaning are
  * authored constants and are always there, so the card is never empty. Only
