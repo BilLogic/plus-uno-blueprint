@@ -1,51 +1,35 @@
-import { BEFORE_STUDENTS_JOIN_SCENARIO_ID } from '@/data/beforeStudentsJoinHappyPathFallback'
-import { GOAL_SETTING_SCENARIO_ID } from '@/data/goalSettingHappyPathFallback'
-import { HELP_REQUEST_SCENARIO_ID } from '@/data/helpRequestHappyPathFallback'
-import { WRAP_UP_SCENARIO_ID } from '@/data/wrapUpHappyPathFallback'
+/**
+ * Iteration flags for canvas surfaces that ship behind a switch.
+ *
+ * Each is a single boolean the whole app reads, so a surface is on or off
+ * everywhere rather than per scenario — an earlier per-scenario allowlist
+ * keyed on hardcoded UUIDs is exactly the kind of instance coupling a
+ * template cannot carry.
+ */
 
-/** Warm-Up scenario — keep in sync with blueprintFallbacks WARM_UP_SCENARIO_ID */
-const WARM_UP_SCENARIO_ID = 'a0000000-0000-4000-8000-000000000203'
-
-/** Iteration flags — flip when Visual rows and cell detail are ready to ship globally. */
+/** Visual swimlane rows on the blueprint grid. */
 export const BLUEPRINT_VISUAL_LANE_UI_ENABLED = true
+
+/** Cell click → detail side panel. */
 export const BLUEPRINT_CELL_DETAIL_UI_ENABLED = true
-/** Visual walkthrough / presentation mode (play button + modal). */
+
+/** Presentation mode (play button + modal). */
 // Off: the ▶ sat inside the Visual lane of every blueprint looking like part
 // of the diagram, and the walkthrough it opened duplicated what presentation
 // mode already does better. The machinery stays for a future surface that
 // earns it; the flag is the single switch every grid reads.
 export const BLUEPRINT_VISUAL_WALKTHROUGH_ENABLED = false
 
-/** Scenarios where the Visual row is shown before global rollout. */
-const BLUEPRINT_VISUAL_LANE_SCENARIO_IDS = new Set<string>([
-  GOAL_SETTING_SCENARIO_ID,
-  WARM_UP_SCENARIO_ID,
-  HELP_REQUEST_SCENARIO_ID,
-])
-
-/** Scenarios where cell click → side panel is enabled before global rollout. */
-const BLUEPRINT_CELL_DETAIL_SCENARIO_IDS = new Set<string>([
-  BEFORE_STUDENTS_JOIN_SCENARIO_ID,
-  GOAL_SETTING_SCENARIO_ID,
-  WARM_UP_SCENARIO_ID,
-  HELP_REQUEST_SCENARIO_ID,
-  WRAP_UP_SCENARIO_ID,
-])
-
 export function isBlueprintVisualLaneEnabled(
-  scenarioId?: string | null,
+  _scenarioId?: string | null,
 ): boolean {
-  if (BLUEPRINT_VISUAL_LANE_UI_ENABLED) return true
-  if (!scenarioId) return false
-  return BLUEPRINT_VISUAL_LANE_SCENARIO_IDS.has(scenarioId)
+  return BLUEPRINT_VISUAL_LANE_UI_ENABLED
 }
 
 export function isBlueprintCellDetailEnabled(
-  scenarioId?: string | null,
+  _scenarioId?: string | null,
 ): boolean {
-  if (BLUEPRINT_CELL_DETAIL_UI_ENABLED) return true
-  if (!scenarioId) return false
-  return BLUEPRINT_CELL_DETAIL_SCENARIO_IDS.has(scenarioId)
+  return BLUEPRINT_CELL_DETAIL_UI_ENABLED
 }
 
 export function isBlueprintVisualWalkthroughEnabled(): boolean {
