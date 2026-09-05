@@ -427,8 +427,17 @@ async function run({ serviceRole }) {
   //    fetchEdges logs a warning and returns [], and Slack says "no
   //    dependencies" for cells that have them.
   const hints = []
+  // Each hint is probed from the table the bot embeds FROM, into the table it
+  // embeds. The two dependency hints go cell_dependencies → cells; `cellLane`
+  // goes cells → lanes, where the unhinted embed is ambiguous (two FKs).
+  const embedOf = {
+    cellDependencySource: ['cell_dependencies', 'cells'],
+    cellDependencyTarget: ['cell_dependencies', 'cells'],
+    cellLane: ['cells', 'lanes'],
+  }
   for (const [field, constraint] of Object.entries(contract.fkConstraints)) {
-    const result = await rest(url, key, `cell_dependencies?select=cells!${constraint}(id)&limit=1`)
+    const [from, to] = embedOf[field] ?? ['cell_dependencies', 'cells']
+    const result = await rest(url, key, `${from}?select=${to}!${constraint}(id)&limit=1`)
     if (!result.ok) {
       hints.push(
         `fkConstraints.${field} = "${constraint}" does not resolve as an embed hint — ` +
