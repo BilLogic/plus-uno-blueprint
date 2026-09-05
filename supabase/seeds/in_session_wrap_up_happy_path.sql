@@ -3,11 +3,11 @@
 
 update public.scenarios
 set
-  description = 'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
-  view_type = 'side-by-side'
+  summary = 'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
+  layout = 'stacked'
 where id = 'a0000000-0000-4000-8000-000000000206';
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-00000000080e',
   'a0000000-0000-4000-8000-000000000206',
@@ -18,8 +18,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -43,7 +43,7 @@ values
   ('a0000000-0000-4000-8000-000000000875', 'a0000000-0000-4000-8000-00000000080e', 'Front Stage Actions', 5),
   ('a0000000-0000-4000-8000-000000000877', 'a0000000-0000-4000-8000-00000000080e', 'Back Stage Tech', 6),
   ('a0000000-0000-4000-8000-000000000876', 'a0000000-0000-4000-8000-00000000080e', 'Back Stage Actions', 7),
-  ('a0000000-0000-4000-8000-000000000878', 'a0000000-0000-4000-8000-00000000080e', 'Support Actions', 8)
+  ('a0000000-0000-4000-8000-00000000087a', 'a0000000-0000-4000-8000-00000000080e', 'Support Actions', 8)
 on conflict (id) do update set
   name = excluded.name,
   position = excluded.position,
@@ -93,7 +93,7 @@ values
   ('a0000000-0000-4000-8000-0000001c0206', 'a0000000-0000-4000-8000-00000000080e', 'a0000000-0000-4000-8000-000000000875', 'a0000000-0000-4000-8000-000000000981', 'Zoom/Pencil'),
   ('a0000000-0000-4000-8000-0000001c0306', 'a0000000-0000-4000-8000-00000000080e', 'a0000000-0000-4000-8000-000000000875', 'a0000000-0000-4000-8000-000000000982', 'Zoom/Pencil'),
   ('a0000000-0000-4000-8000-0000001c0406', 'a0000000-0000-4000-8000-00000000080e', 'a0000000-0000-4000-8000-000000000875', 'a0000000-0000-4000-8000-000000000983', 'PLUS App'),
-  ('a0000000-0000-4000-8000-0000001c0409', 'a0000000-0000-4000-8000-00000000080e', 'a0000000-0000-4000-8000-000000000878', 'a0000000-0000-4000-8000-000000000983', E'Dev Team\nDesign Team')
+  ('a0000000-0000-4000-8000-0000001c0409', 'a0000000-0000-4000-8000-00000000080e', 'a0000000-0000-4000-8000-00000000087a', 'a0000000-0000-4000-8000-000000000983', E'Dev Team\nDesign Team')
 on conflict (id) do update set
   path_id = excluded.path_id,
   lane_id = excluded.lane_id,
@@ -101,7 +101,7 @@ on conflict (id) do update set
   content = excluded.content;
 
 update public.cells
-set picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id in (
     'a0000000-0000-4000-8000-0000001c0106',
@@ -110,102 +110,88 @@ where path_id = 'a0000000-0000-4000-8000-00000000080e'
   );
 
 update public.cells
-set description =
+set summary =
   'Tutor connects with the other tutors and students via Zoom/Pencil.'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0106';
 
 update public.cells
-set description =
+set summary =
   'Tutors connect with the students via Zoom/Pencil.'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0206';
 
 update public.cells
-set description =
+set summary =
   'Tutors connect with lead tutors via Zoom/Pencil.'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0306';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/partner/step-01-help-students-log-out-zoom.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0101/30b4be58-bca7-4766-292f-f97f76fd7b4c.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0101';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/partner/step-02-remind-save-work.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0201/0b4fd703-3198-d047-39a9-9e91fb557c22.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0201';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/partner/step-03-encourage-reflect.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0301/074e38ef-3305-5d21-da9f-bd664b33736c.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0301';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/partner/step-04-reminders-next-time.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0401/7c034094-330b-860b-595b-ce195c753c3f.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0401';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/lead-tutor/step-01-close-breakout-rooms.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0102/122c0e83-cb94-5202-a7d8-8e363263fc4c.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0102';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/lead-tutor/step-02-thank-students.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0202/ab7c18a0-caad-0e09-7d09-53b1b2d1be1a.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0202';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/lead-tutor/step-03-debrief-with-tutors.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0302/885bbe2d-fd9c-2f53-40f4-8f924968a1d4.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0302';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/lead-tutor/step-04-remind-upload-reflection.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0402/5872cc3d-d7be-ef82-190d-50f78abe0e99.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0402';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/regular-tutor/step-01-return-to-main-room.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0103/37f0c948-30bf-3c0c-e731-c2a48f45b3b1.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0103';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/regular-tutor/step-02-thank-students.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0203/bbe4265b-798d-5e7d-7b02-fd7a9850412a.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0203';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/regular-tutor/step-03-debrief-with-lead-tutor.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0303/38d1d044-268d-972d-2655-e947af1e0ec3.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0303';
 
 update public.cells
-set picture = '/blueprint-images/wrap-up/happy-path/regular-tutor/step-04-reflection-upload-recording.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0403/a5041dc6-f107-619c-8d84-53d086006a30.png'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0403';
 
 update public.cells
-set description =
+set summary =
   'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
 where path_id = 'a0000000-0000-4000-8000-00000000080e'
   and id = 'a0000000-0000-4000-8000-0000001c0409';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor completes the reflection form in the PLUS app after the session.',
-    'picture', '/blueprint-images/wrap-up/happy-path/plus-app/step-04-reflection-form.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=563-296430&t=XKhgzk0ZQ9Na4Nqs-1'
-  )
-)
-where path_id = 'a0000000-0000-4000-8000-00000000080e'
-  and id = 'a0000000-0000-4000-8000-0000001c0406';
-
 insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
   ('a0000000-0000-4000-8000-00000009a001', 'a0000000-0000-4000-8000-0000001c0101', 'a0000000-0000-4000-8000-0000001c0201'),
@@ -226,3 +212,28 @@ values
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
   target_cell_id = excluded.target_cell_id;
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('fd53a99d-0944-86d7-f8be-58d7f44b8c2e', 'a0000000-0000-4000-8000-0000001c0406', 'PLUS App', 0, 'The tutor completes the reflection form in the PLUS app after the session.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('1697cf05-9245-a56c-7229-e4726ac58f4e', 'a0000000-0000-4000-8000-0000001c0406', 'fd53a99d-0944-86d7-f8be-58d7f44b8c2e', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=563-296430&t=XKhgzk0ZQ9Na4Nqs-1', 0, true, 'import'),
+  ('69aa434c-ba12-214c-c98e-b6feb4d317ea', 'a0000000-0000-4000-8000-0000001c0406', 'fd53a99d-0944-86d7-f8be-58d7f44b8c2e', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001c0406/658db114-bc17-14fe-b7e6-e573d02ab360.png', 1, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

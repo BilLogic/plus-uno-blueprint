@@ -1,7 +1,7 @@
 -- Pre-session → Call-off Request scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/callOffRequestHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000808',
   'a0000000-0000-4000-8000-000000000128',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -180,84 +180,58 @@ values
   ('a0000000-0000-4000-8000-000000095016', 'a0000000-0000-4000-8000-000000170603', 'a0000000-0000-4000-8000-000000170606')
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
-  target_cell_id = excluded.target_cell_id;
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Shift Swap Google Form',
-    'description', 'The tutor initiates a call off request via the Shift Swap Google Form when there is more than 12 hours before the session.',
-    'picture', '/blueprint-images/shared/front-stage-tech/google-form-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000170206';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor requests off via email when there is less than 12 hours before the session.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000170306';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Slack',
-    'description', 'The tutor posts in the #shift-swap Slack channel to ask if another tutor can cover their session.',
-    'picture', '/blueprint-images/shared/front-stage-tech/slack-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000170406';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Google Spreadsheet',
-    'description', 'The tutor supervisor team reviews tutor availabilities in a Google Spreadsheet to identify who can fill in.',
-    'picture', '/blueprint-images/shared/back-stage-tech/google-sheets-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000170508';
-
-update public.cells
-set description =
+  target_cell_id = excluded.target_cell_id;update public.cells
+set summary =
   'The Dev Team stores tutor schedules in a Google Spreadsheet for the tutor supervisor team to review.'
 where id = 'a0000000-0000-4000-8000-000000170509';
-
 update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor supervisor team sends official excused/unexcused decision via Email to the tutor.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000170606';
-
-update public.cells
-set picture = '/blueprint-images/call-off-request/happy-path/regular-tutor/step-01-needs-to-call-off.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000170103/d93b0311-6518-cb4f-19df-4f6c3b0f1f88.png'
 where id = 'a0000000-0000-4000-8000-000000170103';
 
 update public.cells
-set picture = '/blueprint-images/call-off-request/happy-path/regular-tutor/step-02-shift-swap-form.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000170203/91c98e6b-be75-68b0-3d51-09e428e940a3.png'
 where id = 'a0000000-0000-4000-8000-000000170203';
 
 update public.cells
-set picture = '/blueprint-images/call-off-request/happy-path/regular-tutor/step-03-emails-supervisor.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/00000000-0000-4000-8000-000000000000/456e2936-08f4-5150-1027-9e763987ab2f.png'
 where id = 'a0000000-0000-4000-8000-000000170303';
 
 update public.cells
-set picture = '/blueprint-images/call-off-request/happy-path/regular-tutor/step-04-shift-swap-message.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000170403/819f17e8-2535-f8d2-721a-345d582b37d5.png'
 where id = 'a0000000-0000-4000-8000-000000170403';
 
 update public.cells
-set picture = '/blueprint-images/call-off-request/happy-path/regular-tutor/step-06-receives-decision.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000170603/3a774bba-9867-9b05-2c45-7897ce20e400.png'
 where id = 'a0000000-0000-4000-8000-000000170603';
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('1f67342e-244f-e20e-71f8-bf91640fa0d0', 'a0000000-0000-4000-8000-000000170206', 'Shift Swap Google Form', 0, 'The tutor initiates a call off request via the Shift Swap Google Form when there is more than 12 hours before the session.', 'import'),
+  ('a7761fa4-5850-ac8d-0835-899e0031623c', 'a0000000-0000-4000-8000-000000170306', 'Email', 0, 'The tutor requests off via email when there is less than 12 hours before the session.', 'import'),
+  ('62d69839-747b-f916-d6c3-2c310d06481e', 'a0000000-0000-4000-8000-000000170406', 'Slack', 0, 'The tutor posts in the #shift-swap Slack channel to ask if another tutor can cover their session.', 'import'),
+  ('be00d35e-e53f-28cb-6144-7d0b4c8ec57d', 'a0000000-0000-4000-8000-000000170508', 'Google Spreadsheet', 0, 'The tutor supervisor team reviews tutor availabilities in a Google Spreadsheet to identify who can fill in.', 'import'),
+  ('39bdb5bb-6a79-f985-5dbd-d3ca469613e7', 'a0000000-0000-4000-8000-000000170606', 'Email', 0, 'The tutor supervisor team sends official excused/unexcused decision via Email to the tutor.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('d39b61ea-e6ee-66f2-ff6c-387db3ca27d9', 'a0000000-0000-4000-8000-000000170206', '1f67342e-244f-e20e-71f8-bf91640fa0d0', 'attachment', 'Shift Swap Google Form', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090106/0a4b724b-c24e-000d-192f-2a07089472aa.png', 0, true, 'import'),
+  ('39839785-7962-73b5-7a8d-d874b6ca48bd', 'a0000000-0000-4000-8000-000000170306', 'a7761fa4-5850-ac8d-0835-899e0031623c', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import'),
+  ('708b720e-fa08-f64e-20cc-2bb8521a3f8c', 'a0000000-0000-4000-8000-000000170406', '62d69839-747b-f916-d6c3-2c310d06481e', 'attachment', 'Slack', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100706/21a81bb9-8af4-9dc8-5879-b4fa64946bd7.png', 0, true, 'import'),
+  ('24390bb1-2037-c2ce-a7ae-6a9181bcf528', 'a0000000-0000-4000-8000-000000170508', 'be00d35e-e53f-28cb-6144-7d0b4c8ec57d', 'attachment', 'Google Spreadsheet', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150108/737f7fb4-8397-708e-f575-02a91f4ba361.png', 0, true, 'import'),
+  ('088dc718-8350-bde4-571c-eeba8b93c9d4', 'a0000000-0000-4000-8000-000000170606', '39bdb5bb-6a79-f985-5dbd-d3ca469613e7', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

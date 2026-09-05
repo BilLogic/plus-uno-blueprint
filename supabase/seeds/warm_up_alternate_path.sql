@@ -1,18 +1,18 @@
 -- Warm-Up Alternate Path: omits step 3 (Ask Student to Share Screen); eight steps.
 -- Reuses scenario steps from warm_up_happy_path.sql via path_steps.
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000350',
   'a0000000-0000-4000-8000-000000000203',
   'Alternate Path',
   'Not engaged student warm-up.',
-  'alternative'
+  'variant'
 )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 -- Drop step 3 membership and any legacy cells/triggers from earlier seeds
 delete from public.path_steps
@@ -184,7 +184,7 @@ values
 on conflict (id) do update set source_cell_id = excluded.source_cell_id, target_cell_id = excluded.target_cell_id;
 
 update public.cells
-set description = 'The tutor connects with student via Zoom/Pencil in individual breakout room.'
+set summary = 'The tutor connects with student via Zoom/Pencil in individual breakout room.'
 where id in (
   'a0000000-0000-4000-8000-000000060106',
   'a0000000-0000-4000-8000-000000060206',
@@ -195,47 +195,9 @@ where id in (
 );
 
 update public.cells
-set description = 'The tutor leaves the student''s Zoom/Pencil breakout room.'
-where id = 'a0000000-0000-4000-8000-000000060806';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor marks the student as present in the Student Dashboard screen in the PLUS app.',
-    'picture', '/blueprint-images/warm-up/shared/plus-app/step-05-your-students.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3377-227498&t=LvyyxUtQVUCLMMc2-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000060506';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor marks the student''s engagement level in the Student Dashboard screen in the PLUS app.',
-    'picture', '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000060606';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor marks the student as helped in the Student Dashboard screen in the PLUS app.',
-    'picture', '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000060706';
-
-update public.cells
-set description =
+set summary = 'The tutor leaves the student''s Zoom/Pencil breakout room.'
+where id = 'a0000000-0000-4000-8000-000000060806';update public.cells
+set summary =
   'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
 where id in (
   'a0000000-0000-4000-8000-000000060509',
@@ -243,15 +205,36 @@ where id in (
   'a0000000-0000-4000-8000-000000060709',
   'a0000000-0000-4000-8000-000000060909'
 );
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('898ab167-3238-006f-2d4e-0356b1d81938', 'a0000000-0000-4000-8000-000000060506', 'PLUS App', 0, 'The tutor marks the student as present in the Student Dashboard screen in the PLUS app.', 'import'),
+  ('4efbbe29-9e78-a463-b513-43fbe7b6375f', 'a0000000-0000-4000-8000-000000060606', 'PLUS App', 0, 'The tutor marks the student''s engagement level in the Student Dashboard screen in the PLUS app.', 'import'),
+  ('937b4cb2-ef51-632f-497a-2a9ee09a5832', 'a0000000-0000-4000-8000-000000060706', 'PLUS App', 0, 'The tutor marks the student as helped in the Student Dashboard screen in the PLUS app.', 'import'),
+  ('acf3b236-80bb-73a1-44f3-440ebdb36f98', 'a0000000-0000-4000-8000-000000060906', 'PLUS App', 0, 'The tutor moves on to the next student on the researcher sorted list in the Student Dashboard screen of the PLUS app.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
 
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor moves on to the next student on the researcher sorted list in the Student Dashboard screen of the PLUS app.',
-    'picture', '/blueprint-images/warm-up/shared/plus-app/step-06-your-students-attendance-engagement.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000060906';
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('f3a7a7d1-2e74-9201-561f-0d7cacf8d8c0', 'a0000000-0000-4000-8000-000000060506', '898ab167-3238-006f-2d4e-0356b1d81938', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=3377-227498&t=LvyyxUtQVUCLMMc2-1', 0, true, 'import'),
+  ('f214e908-1944-5f18-4ca2-6705f6c83781', 'a0000000-0000-4000-8000-000000060506', '898ab167-3238-006f-2d4e-0356b1d81938', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040506/21919e2b-0c59-4240-4225-e2f739083815.png', 1, true, 'import'),
+  ('219b4239-9a4d-b52a-4cb0-ce83e145ab0a', 'a0000000-0000-4000-8000-000000060606', '4efbbe29-9e78-a463-b513-43fbe7b6375f', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1', 0, true, 'import'),
+  ('81325e30-7255-b5f4-24c3-1c71d8ad880a', 'a0000000-0000-4000-8000-000000060606', '4efbbe29-9e78-a463-b513-43fbe7b6375f', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040606/423cec65-6d3f-4499-ce18-fdf9872dc479.png', 1, true, 'import'),
+  ('b5f2c458-40d1-12dc-b897-061ffe38c2fa', 'a0000000-0000-4000-8000-000000060706', '937b4cb2-ef51-632f-497a-2a9ee09a5832', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1', 0, true, 'import'),
+  ('ac95f0fd-673c-6929-b401-480ddb4b75e8', 'a0000000-0000-4000-8000-000000060706', '937b4cb2-ef51-632f-497a-2a9ee09a5832', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040606/423cec65-6d3f-4499-ce18-fdf9872dc479.png', 1, true, 'import'),
+  ('ec5245c6-497c-bc36-24e8-21a997736e11', 'a0000000-0000-4000-8000-000000060906', 'acf3b236-80bb-73a1-44f3-440ebdb36f98', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=5699-69300&t=LvyyxUtQVUCLMMc2-1', 0, true, 'import'),
+  ('4517534b-25d7-4480-d996-cc226f51da7b', 'a0000000-0000-4000-8000-000000060906', 'acf3b236-80bb-73a1-44f3-440ebdb36f98', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040606/423cec65-6d3f-4499-ce18-fdf9872dc479.png', 1, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

@@ -1,7 +1,7 @@
 -- Onboarding → Tech Setup scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/techSetupHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000800',
   'a0000000-0000-4000-8000-000000000120',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -192,8 +192,8 @@ where source_cell_id in (
   select id from public.cells
   where path_id = 'a0000000-0000-4000-8000-000000000800'
 )
-or id like 'a0000000-0000-4000-8000-000000088%'
-or id like 'a0000000-0000-4000-8000-000000086%';
+or id::text like 'a0000000-0000-4000-8000-000000088%'
+or id::text like 'a0000000-0000-4000-8000-000000086%';
 
 insert into public.cell_dependencies (id, source_cell_id, target_cell_id)
 values
@@ -221,110 +221,8 @@ values
   ('a0000000-0000-4000-8000-000000088062', 'a0000000-0000-4000-8000-000000100806', 'a0000000-0000-4000-8000-000000100803')
 on conflict (id) do update set
   source_cell_id = excluded.source_cell_id,
-  target_cell_id = excluded.target_cell_id;
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor receives an email from the tutor supervisor team with instructions and links for completing required tutor clearances.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100106';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Clearance obtainment guide',
-    'description', 'The tutor follows the clearance obtainment guide to complete required background checks and certifications through CMU HR.'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100206';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor emails completed clearance documents to the tutor supervisor team for review.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100306';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Workday',
-    'description', 'The tutor schedules an I-9 meeting with CMU HR through Workday.',
-    'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100406';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Workday (Employee View)',
-    'description', 'The tutor completes payroll onboarding tasks in Workday, including entering personal and employment information.',
-    'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100606';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Workday (Employer View)',
-    'description', 'The PLUS Supervisor Team completes corresponding student employment paperwork in Workday on the employer side.',
-    'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100608';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor receives an email invitation to join the PLUS tutor Slack workspace.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Slack',
-    'description', 'The tutor accepts the Slack invite and joins the PLUS tutor channel to connect with the tutoring team.',
-    'picture', '/blueprint-images/shared/front-stage-tech/slack-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100706';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Email',
-    'description', 'The tutor receives an email from the PLUS supervisor team with PLUS app login credentials and setup instructions.',
-    'picture', '/blueprint-images/shared/front-stage-tech/email-logo.png'
-  ),
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'PLUS App',
-    'description', 'The tutor uses the provided credentials to log in to the PLUS app for the first time.',
-    'picture', '/blueprint-images/tech-setup/happy-path/plus-app/step-08-login.png',
-    'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=115-5206&t=Fyqmb2RX2B0cj9sv-1'
-  )
-)
-where id = 'a0000000-0000-4000-8000-000000100806';
-
-update public.cells
-set description = 'Child protection laws require PLUS tutors to complete mandated background checks and clearances before working with students.'
+  target_cell_id = excluded.target_cell_id;update public.cells
+set summary = 'Child protection laws require PLUS tutors to complete mandated background checks and clearances before working with students.'
 where id in (
   'a0000000-0000-4000-8000-000000100109',
   'a0000000-0000-4000-8000-000000100209',
@@ -332,40 +230,82 @@ where id in (
 );
 
 update public.cells
-set description = 'Employment laws identity and employment eligibility verification upon hiring.'
+set summary = 'Employment laws identity and employment eligibility verification upon hiring.'
 where id in (
   'a0000000-0000-4000-8000-000000100409',
   'a0000000-0000-4000-8000-000000100509'
 );
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-01-receives-clearance-email.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100103/35fcb27f-db93-9f5f-a1af-d8f5e287760b.png'
 where id = 'a0000000-0000-4000-8000-000000100103';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-02-obtains-clearances.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100203/1de0bb49-b5b8-4e7f-e92e-8378253c9ebb.png'
 where id = 'a0000000-0000-4000-8000-000000100203';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-03-sends-clearances.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100303/d86e812b-5f8c-6e22-5d1e-24777a6e8bb3.png'
 where id = 'a0000000-0000-4000-8000-000000100303';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-04-sets-up-i9-meeting.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100403/4c689247-b2f5-e7b7-a93a-2f65b5db3a29.png'
 where id = 'a0000000-0000-4000-8000-000000100403';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-05-attends-i9-meeting.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100503/89022fb4-b2f7-7463-e50b-4632ad7ae9ad.png'
 where id = 'a0000000-0000-4000-8000-000000100503';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-06-sets-up-payroll.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100603/a9a399d1-c556-4914-aeff-8caa69991503.png'
 where id = 'a0000000-0000-4000-8000-000000100603';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-07-joins-slack.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100703/7e40c264-168c-ec70-bb7c-362536345d1b.png'
 where id = 'a0000000-0000-4000-8000-000000100703';
 
 update public.cells
-set picture = '/blueprint-images/tech-setup/happy-path/regular-tutor/step-08-obtains-plus-app-login.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100803/176ee9b6-01cc-21cc-dfaf-9096c1bcbe80.png'
 where id = 'a0000000-0000-4000-8000-000000100803';
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('5a4f7b9e-1c70-3a3a-9269-2fa02a48939e', 'a0000000-0000-4000-8000-000000100106', 'Email', 0, 'The tutor receives an email from the tutor supervisor team with instructions and links for completing required tutor clearances.', 'import'),
+  ('482f745a-f5c7-aa32-f3d4-fa898ab7443e', 'a0000000-0000-4000-8000-000000100206', 'Clearance obtainment guide', 0, 'The tutor follows the clearance obtainment guide to complete required background checks and certifications through CMU HR.', 'import'),
+  ('4a2092d2-3853-bddc-51ee-a26ff6cbe436', 'a0000000-0000-4000-8000-000000100306', 'Email', 0, 'The tutor emails completed clearance documents to the tutor supervisor team for review.', 'import'),
+  ('d2832ebf-1782-6e0f-db59-d94d4015a75c', 'a0000000-0000-4000-8000-000000100406', 'Workday', 0, 'The tutor schedules an I-9 meeting with CMU HR through Workday.', 'import'),
+  ('cde9d4a4-e394-711f-f897-c7b335380bb3', 'a0000000-0000-4000-8000-000000100606', 'Workday (Employee View)', 0, 'The tutor completes payroll onboarding tasks in Workday, including entering personal and employment information.', 'import'),
+  ('eea4c5ea-68cb-4bad-5aa9-b7431df62333', 'a0000000-0000-4000-8000-000000100608', 'Workday (Employer View)', 0, 'The PLUS Supervisor Team completes corresponding student employment paperwork in Workday on the employer side.', 'import'),
+  ('9415c5f6-0e5c-9866-4b8e-c02db4046d3f', 'a0000000-0000-4000-8000-000000100706', 'Email', 0, 'The tutor receives an email invitation to join the PLUS tutor Slack workspace.', 'import'),
+  ('4f2df017-b13c-ae91-cb3a-29c40d7061be', 'a0000000-0000-4000-8000-000000100706', 'Slack', 1, 'The tutor accepts the Slack invite and joins the PLUS tutor channel to connect with the tutoring team.', 'import'),
+  ('dd97cd47-9f48-3927-de9e-d061334b60cd', 'a0000000-0000-4000-8000-000000100806', 'Email', 0, 'The tutor receives an email from the PLUS supervisor team with PLUS app login credentials and setup instructions.', 'import'),
+  ('ced966ea-63b7-662e-50a1-4f4a2058abd8', 'a0000000-0000-4000-8000-000000100806', 'PLUS App', 1, 'The tutor uses the provided credentials to log in to the PLUS app for the first time.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('d8c9e8c9-d530-7af8-6892-1f4d255d6ab1', 'a0000000-0000-4000-8000-000000100106', '5a4f7b9e-1c70-3a3a-9269-2fa02a48939e', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import'),
+  ('0d7fc7b1-746e-ffbb-a25f-1ed0b47dc6f0', 'a0000000-0000-4000-8000-000000100306', '4a2092d2-3853-bddc-51ee-a26ff6cbe436', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import'),
+  ('072d78a5-4e1e-1b02-4e8f-a99deb86d094', 'a0000000-0000-4000-8000-000000100406', 'd2832ebf-1782-6e0f-db59-d94d4015a75c', 'attachment', 'Workday', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100406/f0133eb7-e0c4-7e7d-bedf-a3ac37b455be.png', 0, true, 'import'),
+  ('fe971b88-b34a-a26a-caa5-0fc6536e82fc', 'a0000000-0000-4000-8000-000000100606', 'cde9d4a4-e394-711f-f897-c7b335380bb3', 'attachment', 'Workday (Employee View)', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100406/f0133eb7-e0c4-7e7d-bedf-a3ac37b455be.png', 0, true, 'import'),
+  ('dd300bb9-8b40-365e-a980-c4c14dcb858f', 'a0000000-0000-4000-8000-000000100608', 'eea4c5ea-68cb-4bad-5aa9-b7431df62333', 'attachment', 'Workday (Employer View)', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100406/f0133eb7-e0c4-7e7d-bedf-a3ac37b455be.png', 0, true, 'import'),
+  ('6ed45d4c-1ce1-0a97-9fda-5671864b46b3', 'a0000000-0000-4000-8000-000000100706', '4f2df017-b13c-ae91-cb3a-29c40d7061be', 'attachment', 'Slack', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100706/21a81bb9-8af4-9dc8-5879-b4fa64946bd7.png', 0, true, 'import'),
+  ('e43934b6-ac67-d203-271a-a56544f02c07', 'a0000000-0000-4000-8000-000000100706', '9415c5f6-0e5c-9866-4b8e-c02db4046d3f', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import'),
+  ('b4017750-91dc-b78f-5316-6459743fe782', 'a0000000-0000-4000-8000-000000100806', 'ced966ea-63b7-662e-50a1-4f4a2058abd8', 'link', 'PLUS App', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=115-5206&t=Fyqmb2RX2B0cj9sv-1', 0, true, 'import'),
+  ('8b59a118-2e44-8c49-8b2e-ab9c871323f4', 'a0000000-0000-4000-8000-000000100806', 'ced966ea-63b7-662e-50a1-4f4a2058abd8', 'attachment', 'PLUS App', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100806/732027ac-5ce3-a015-517d-3d4732f8e85d.png', 1, true, 'import'),
+  ('0bc29e03-49ee-391f-f5d8-484e0123f6bc', 'a0000000-0000-4000-8000-000000100806', 'dd97cd47-9f48-3927-de9e-d061334b60cd', 'attachment', 'Email', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000090206/b69f74c2-1a83-e916-497a-a2aed9f14eb4.png', 0, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

@@ -82,6 +82,20 @@ column, and on a section that defines no term. `npm run check:interface-map`
 holds `docs/reference/interface-schema-map.md` to what its sources render —
 run `npm run interface-map` after changing a panel label's binding.
 
+**The two local guards**, both of which need a Postgres 17 server and neither
+of which is in CI for that reason — no workflow stands one up.
+`npm run replay:migrations` builds an empty database from
+`scripts/replay-prelude.sql` plus the whole migration series and fails when a
+file joins the recorded unable-to-replay set (ADR 0009).
+`npm run check:seed-load` builds the same substrate and then loads the seed
+`supabase/config.toml` `[db.seed]` names — all 23 files, in its order — with
+zero failing statements, and reads the result back AS ANON: every table the
+seed writes non-empty, and the four joins the board's own selects compile to
+returning rows. Run it whenever you touch the seed or the schema under it. It
+exists because nothing else asks: a rename that lands in a migration and not
+in the seed passes every static check, which is how the seed once fell a month
+behind the schema it loads onto (#379).
+
 ## Tooling traps
 
 - Bare `npx tsc --noEmit` still checks **nothing**, but not for the reason this

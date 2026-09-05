@@ -2,9 +2,9 @@
 -- Stable keys map to src/data/goalSettingSetGoalsEdgeCasePathFallback.ts
 
 -- Set Goals Edge Case
-insert into public.paths (id, scenario_id, name, description, path_type)
-values ('a0000000-0000-4000-8000-000000000816', 'a0000000-0000-4000-8000-000000000204', 'Set Goals Edge Case', 'Goal cycle began and deadline not reached, but student did not set goals last session and student has no prior goals.', 'named')
-on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+insert into public.paths (id, scenario_id, name, summary, kind)
+values ('a0000000-0000-4000-8000-000000000816', 'a0000000-0000-4000-8000-000000000204', 'Set Goals Edge Case', 'Goal cycle began and deadline not reached, but student did not set goals last session and student has no prior goals.', 'exception')
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, summary = excluded.summary, kind = excluded.kind;
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000816');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000816';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000816';

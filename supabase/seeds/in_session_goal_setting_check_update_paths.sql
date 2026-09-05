@@ -2,9 +2,9 @@
 -- Stable keys map to src/data/goalSettingCheckGoalsPathFallback.ts and goalSettingUpdateGoalsPathFallback.ts
 
 -- Check Goals
-insert into public.paths (id, scenario_id, name, description, path_type)
-values ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000000204', 'Check Goals', 'Goals already set, but deadline not reached.', 'named')
-on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+insert into public.paths (id, scenario_id, name, summary, kind)
+values ('a0000000-0000-4000-8000-000000000814', 'a0000000-0000-4000-8000-000000000204', 'Check Goals', 'Goals already set, but deadline not reached.', 'variant')
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, summary = excluded.summary, kind = excluded.kind;
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000814';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000814';
@@ -129,9 +129,9 @@ values
 on conflict (id) do update set source_cell_id = excluded.source_cell_id, target_cell_id = excluded.target_cell_id;
 
 -- Update Goals
-insert into public.paths (id, scenario_id, name, description, path_type)
-values ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000000204', 'Update Goals', 'First tutoring day of a new goal cycle after personalized goals have been set.', 'named')
-on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, description = excluded.description, path_type = excluded.path_type;
+insert into public.paths (id, scenario_id, name, summary, kind)
+values ('a0000000-0000-4000-8000-000000000815', 'a0000000-0000-4000-8000-000000000204', 'Update Goals', 'First tutoring day of a new goal cycle after personalized goals have been set.', 'variant')
+on conflict (id) do update set scenario_id = excluded.scenario_id, name = excluded.name, summary = excluded.summary, kind = excluded.kind;
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000815';
 delete from public.lanes where path_id = 'a0000000-0000-4000-8000-000000000815';

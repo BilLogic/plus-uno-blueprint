@@ -3,11 +3,11 @@
 
 update public.scenarios
 set
-  description = 'Teachers and tutors welcome students as they join the session.',
-  view_type = 'side-by-side'
+  summary = 'Teachers and tutors welcome students as they join the session.',
+  layout = 'stacked'
 where id = 'a0000000-0000-4000-8000-000000000202';
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-00000000080b',
   'a0000000-0000-4000-8000-000000000202',
@@ -18,8 +18,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -91,51 +91,51 @@ on conflict (id) do update set
   content = excluded.content;
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/partner/step-01-remind-wait-time.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190101/b2c048eb-8c1b-1e90-b650-91c83f61bff0.png'
 where id = 'a0000000-0000-4000-8000-000000190101';
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/partner/step-02-share-screen-math-software.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190201/971ff267-83a9-bbc1-aa8d-b1d9566c723e.png'
 where id = 'a0000000-0000-4000-8000-000000190201';
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/partner/step-03-raise-hand-emoji.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190301/c2a5af30-6c33-aaf8-66e0-f782fca767f4.png'
 where id = 'a0000000-0000-4000-8000-000000190301';
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/lead-tutor/step-01-greet-students.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190102/218c9cbc-f78d-ce67-c06f-2a719dfe355c.png'
 where id = 'a0000000-0000-4000-8000-000000190102';
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/lead-tutor/step-02-mute-students.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190202/a1fd75a0-1fb0-10cf-b45a-c9d6f5ad1adc.png'
 where id = 'a0000000-0000-4000-8000-000000190202';
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/lead-tutor/step-03-ping-tutor-late-joiners.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190302/24a8b06c-a3d5-905b-f0c2-8183ccfc30af.png'
 where id = 'a0000000-0000-4000-8000-000000190302';
 
 update public.cells
-set picture = '/blueprint-images/students-just-joined/happy-path/regular-tutor/step-03-move-breakout-room.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000190303/8dc54203-5cb3-6128-a60d-6ff39b848e54.png'
 where id = 'a0000000-0000-4000-8000-000000190303';
 
 update public.cells
 set
-  picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png',
-  description = 'The lead tutor greets students on Zoom/Pencil as they join the session.'
+  frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png',
+  summary = 'The lead tutor greets students on Zoom/Pencil as they join the session.'
 where path_id = 'a0000000-0000-4000-8000-00000000080b'
   and id = 'a0000000-0000-4000-8000-000000190106';
 
 update public.cells
 set
-  picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png',
-  description = 'Lead tutors utilize the mute function on Zoom/Pencil if necessary.'
+  frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png',
+  summary = 'Lead tutors utilize the mute function on Zoom/Pencil if necessary.'
 where path_id = 'a0000000-0000-4000-8000-00000000080b'
   and id = 'a0000000-0000-4000-8000-000000190206';
 
 update public.cells
 set
-  picture = '/blueprint-images/goal-setting/shared/front-stage-tech/zoom-logo.png',
-  description = 'Regular tutors move their students to their corresponding breakout room on Zoom/Pencil.'
+  frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000040106/36ccc1f1-b3bb-3314-2647-5e481ccd1845.png',
+  summary = 'Regular tutors move their students to their corresponding breakout room on Zoom/Pencil.'
 where path_id = 'a0000000-0000-4000-8000-00000000080b'
   and id = 'a0000000-0000-4000-8000-000000190306';
 

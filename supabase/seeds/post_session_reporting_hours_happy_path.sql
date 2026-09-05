@@ -1,7 +1,7 @@
 -- Post-session → Reporting Hours scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/reportingHoursHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000812',
   'a0000000-0000-4000-8000-000000000208',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -95,62 +95,45 @@ on conflict (id) do update set
   target_cell_id = excluded.target_cell_id;
 
 update public.cells
-set picture = '/blueprint-images/reporting-hours/happy-path/lead-tutor/step-01-report-hours.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001e0102/c7eef24c-d9af-c0ba-2217-9ad183056e3d.png'
 where id = 'a0000000-0000-4000-8000-0000001e0102';
 
 update public.cells
-set picture = '/blueprint-images/reporting-hours/happy-path/lead-tutor/step-03-receive-paycheck.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001e0202/dccfd262-c9f0-de23-7868-848457c0e68d.png'
 where id = 'a0000000-0000-4000-8000-0000001e0202';
 
 update public.cells
-set picture = '/blueprint-images/reporting-hours/happy-path/regular-tutor/step-01-report-hours.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001e0103/7033cb5d-4202-711e-c9bb-7a9f6d382ccd.png'
 where id = 'a0000000-0000-4000-8000-0000001e0103';
 
 update public.cells
-set picture = '/blueprint-images/reporting-hours/happy-path/regular-tutor/step-03-receive-paycheck.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-0000001e0203/8962757f-86b3-ff83-f801-a7de491fb841.png'
 where id = 'a0000000-0000-4000-8000-0000001e0203';
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('cb555474-af5e-558e-40bb-c20aa1af4a2c', 'a0000000-0000-4000-8000-0000001e0106', 'Workday', 0, 'The tutor logs and submits tutoring hours in Workday by the deadline.', 'import'),
+  ('2cd27fcf-15c5-ce1e-5eeb-64a9c2f83663', 'a0000000-0000-4000-8000-0000001e0206', 'Bank', 0, 'The tutor receives their biweekly paycheck via direct deposit to their bank account.', 'import'),
+  ('05c83da4-1116-b1cf-44c8-ff1069b39887', 'a0000000-0000-4000-8000-0000001e0308', 'Workday', 0, 'The PLUS supervisor team reviews submitted hours and approves them in Workday.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
 
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Workday',
-    'description', 'The tutor logs and submits tutoring hours in Workday by the deadline.',
-    'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-0000001e0106';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Workday',
-    'description', 'The PLUS supervisor team reviews submitted hours and approves them in Workday.',
-    'picture', '/blueprint-images/shared/front-stage-tech/workday-logo.png'
-  )
-)
-where id = 'a0000000-0000-4000-8000-0000001e0308';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'tech_description',
-    'label', 'Bank',
-    'description', 'The tutor receives their biweekly paycheck via direct deposit to their bank account.'
-  )
-)
-where id = 'a0000000-0000-4000-8000-0000001e0206';
-
-update public.cells
-set links = jsonb_build_array(
-  jsonb_build_object(
-    'type', 'url',
-    'label', 'Onboarding Module 8',
-    'url', 'https://plus-tutors.notion.site/Module-8-Day-to-Day-Protocols-26fb7cca49828064a32cdde194e36bbd'
-  )
-)
-where id in (
-  'a0000000-0000-4000-8000-0000001e0102',
-  'a0000000-0000-4000-8000-0000001e0202'
-);
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('f4c01d2b-254a-87cf-2cc5-f787018940fb', 'a0000000-0000-4000-8000-0000001e0102', null, 'link', 'Onboarding Module 8', 'https://plus-tutors.notion.site/Module-8-Day-to-Day-Protocols-26fb7cca49828064a32cdde194e36bbd', 1, false, 'import'),
+  ('7772e4f5-ec29-701e-8143-4ad50bc5d3a7', 'a0000000-0000-4000-8000-0000001e0106', 'cb555474-af5e-558e-40bb-c20aa1af4a2c', 'attachment', 'Workday', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100406/f0133eb7-e0c4-7e7d-bedf-a3ac37b455be.png', 0, true, 'import'),
+  ('0f903ecb-a4db-0b8e-37e4-0db6b72503d8', 'a0000000-0000-4000-8000-0000001e0202', null, 'link', 'Onboarding Module 8', 'https://plus-tutors.notion.site/Module-8-Day-to-Day-Protocols-26fb7cca49828064a32cdde194e36bbd', 1, false, 'import'),
+  ('f394b128-8c75-2d21-6c6d-2ca4b9d6138a', 'a0000000-0000-4000-8000-0000001e0308', '05c83da4-1116-b1cf-44c8-ff1069b39887', 'attachment', 'Workday', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000100406/f0133eb7-e0c4-7e7d-bedf-a3ac37b455be.png', 0, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

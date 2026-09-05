@@ -359,6 +359,13 @@ schema change edit `src/types/database.ts` to match and refresh
 pinned `search_path`, `EXECUTE` revoked from `public`/`anon`, and the
 `is_service_account()` guard first in the body.
 
+The seed under `supabase/seeds/` is held to the same schema by
+`npm run check:seed-load`, which replays the series into a scratch database and
+loads the seed onto it. A rename that lands in a migration and not in the seed
+is invisible to every static check — that is how the seed came to be a month
+behind the schema it loads onto (#379). It needs a local Postgres 17 and is not
+in CI; run it in the same sitting as the migration.
+
 ## Environments
 
 Single owner of environment facts — operations links back here.

@@ -1,7 +1,7 @@
 -- Onboarding → Session Sign Up scenario — Happy Path
 -- Stable keys map to fixed UUIDs in src/data/sessionSignUpHappyPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000805',
   'a0000000-0000-4000-8000-000000000125',
@@ -12,8 +12,8 @@ values (
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies
 where source_cell_id in (
@@ -119,35 +119,18 @@ on conflict (id) do update set
   content = excluded.content;
 
 update public.cells
-set description =
+set summary =
   'The Dev Team builds the PLUS app features for session sign up, and the Design Team creates the screens and flows for that experience.'
 where id = 'a0000000-0000-4000-8000-000000130109';
 
 update public.cells
 set
-  description = 'The tutor signs up for recurring sessions for the rest of the semester in the PLUS app.',
-  links = jsonb_build_array(
-    jsonb_build_object(
-      'type', 'tech_description',
-      'label', 'PLUS app',
-      'description', 'The tutor signs up for recurring sessions for the rest of the semester in the PLUS app.',
-      'picture', '/blueprint-images/session-sign-up/happy-path/plus-app/step-01-sign-up-success.png',
-      'url', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=1751-119990&t=rLMzaNhqBUszclus-1'
-    )
-  )
+  summary = 'The tutor signs up for recurring sessions for the rest of the semester in the PLUS app.'
 where id = 'a0000000-0000-4000-8000-000000130106';
 
 update public.cells
 set
-  description = 'The tutor''s session scheduling information is stored in a Google Spreadsheet.',
-  links = jsonb_build_array(
-    jsonb_build_object(
-      'type', 'tech_description',
-      'label', 'Google Spreadsheet',
-      'description', 'The tutor''s session scheduling information is stored in a Google Spreadsheet.',
-      'picture', '/blueprint-images/shared/back-stage-tech/google-sheets-logo.png'
-    )
-  )
+  summary = 'The tutor''s session scheduling information is stored in a Google Spreadsheet.'
 where id = 'a0000000-0000-4000-8000-000000130108';
 
 delete from public.cell_dependencies
@@ -170,5 +153,32 @@ on conflict (id) do update set
   target_cell_id = excluded.target_cell_id;
 
 update public.cells
-set picture = '/blueprint-images/session-sign-up/happy-path/regular-tutor/step-01-signs-up.png'
+set frame = 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000130103/6e09d0d6-ef24-243c-0b5a-4cfb2c43a6ea.png'
 where id = 'a0000000-0000-4000-8000-000000130103';
+
+-- Touchpoint placements — see the note at the foot of supabase/seed.sql.
+insert into public.cell_touchpoints (id, cell_id, name, position, summary, origin)
+values
+  ('8fd0ab0b-0010-aa57-beb2-ea09565c151a', 'a0000000-0000-4000-8000-000000130106', 'PLUS app', 0, 'The tutor signs up for recurring sessions for the rest of the semester in the PLUS app.', 'import'),
+  ('fd561f49-6411-fb3a-bc45-348c87e2288c', 'a0000000-0000-4000-8000-000000130108', 'Google Spreadsheet', 0, 'The tutor''s session scheduling information is stored in a Google Spreadsheet.', 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  name = excluded.name,
+  position = excluded.position,
+  summary = excluded.summary;
+
+-- Resources — see the note at the foot of supabase/seed.sql.
+insert into public.resources
+  (id, cell_id, cell_touchpoint_id, kind, name, url, position, featured, origin)
+values
+  ('f77638d5-70e5-3794-0910-caa92a7cb57f', 'a0000000-0000-4000-8000-000000130106', '8fd0ab0b-0010-aa57-beb2-ea09565c151a', 'link', 'PLUS app', 'https://www.figma.com/design/W0qzhXWxFsMwSJzkdV2yal/Design-System---Web-App-Specs?node-id=1751-119990&t=rLMzaNhqBUszclus-1', 0, true, 'import'),
+  ('d8b701ac-df50-3117-5db2-59785a23d3f7', 'a0000000-0000-4000-8000-000000130106', '8fd0ab0b-0010-aa57-beb2-ea09565c151a', 'attachment', 'PLUS app', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000130106/ceb61317-6d1e-512e-8d1f-ab0d2e917ea5.png', 1, true, 'import'),
+  ('f9760c23-86b9-0667-e7ee-66f3a11c5e55', 'a0000000-0000-4000-8000-000000130108', 'fd561f49-6411-fb3a-bc45-348c87e2288c', 'attachment', 'Google Spreadsheet', 'https://osybxeojvsqcwxkgnalm.supabase.co/storage/v1/object/public/cell-attachments/cells/a0000000-0000-4000-8000-000000150108/737f7fb4-8397-708e-f575-02a91f4ba361.png', 0, true, 'import')
+on conflict (id) do update set
+  cell_id = excluded.cell_id,
+  cell_touchpoint_id = excluded.cell_touchpoint_id,
+  kind = excluded.kind,
+  name = excluded.name,
+  url = excluded.url,
+  position = excluded.position,
+  featured = excluded.featured;

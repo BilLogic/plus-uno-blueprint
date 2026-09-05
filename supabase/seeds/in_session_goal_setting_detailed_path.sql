@@ -1,19 +1,19 @@
 -- In-session → Goal Setting scenario — Detailed Path
 -- Stable keys map to fixed UUIDs in src/data/goalSettingDetailedPathFallback.ts
 
-insert into public.paths (id, scenario_id, name, description, path_type)
+insert into public.paths (id, scenario_id, name, summary, kind)
 values (
   'a0000000-0000-4000-8000-000000000811',
   'a0000000-0000-4000-8000-000000000204',
   'Set Goals',
   'No prior personalized goals set and start of a new goal cycle.',
-  'named'
+  'variant'
 )
 on conflict (id) do update set
   scenario_id = excluded.scenario_id,
   name = excluded.name,
-  description = excluded.description,
-  path_type = excluded.path_type;
+  summary = excluded.summary,
+  kind = excluded.kind;
 
 delete from public.cell_dependencies where source_cell_id in (select id from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811');
 delete from public.cells where path_id = 'a0000000-0000-4000-8000-000000000811';
@@ -171,7 +171,7 @@ on conflict (id) do update set source_cell_id = excluded.source_cell_id, target_
 
 update public.cells
 set content = E'Dev Team\nDesign Team',
-    description =
+    summary =
       'Dev Team builds the app and the Design Team creates the screens and flows relevant to this step. Both implement the findings from the research team into the app in their respective role.'
 where id in (
   'a0000000-0000-4000-8000-0000001f0209',

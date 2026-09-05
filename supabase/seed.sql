@@ -1,6 +1,6 @@
 -- Development seed: service lifecycle with phases and in-session scenarios
 
-insert into public.service_lifecycles (id, name, description)
+insert into public.services (id, name, summary)
 values (
   'a0000000-0000-4000-8000-000000000001',
   'PLUS Application',
@@ -8,18 +8,18 @@ values (
 )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description;
+  summary = excluded.summary;
 
 -- Replace any prior demo phases/scenarios for this lifecycle
 delete from public.phases
-where service_lifecycle_id = 'a0000000-0000-4000-8000-000000000001';
+where service_id = 'a0000000-0000-4000-8000-000000000001';
 
 insert into public.phases (
   id,
-  service_lifecycle_id,
+  service_id,
   name,
-  description,
-  order_position,
+  summary,
+  position,
   loops_to_phase_id
 )
 values
@@ -65,15 +65,15 @@ values
   )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  order_position = excluded.order_position,
+  summary = excluded.summary,
+  position = excluded.position,
   loops_to_phase_id = excluded.loops_to_phase_id;
 
 -- Application phase scenarios
-delete from public.service_scenarios
+delete from public.scenarios
 where phase_id = 'a0000000-0000-4000-8000-000000000101';
 
-insert into public.service_scenarios (id, phase_id, name, description, order_position, view_type)
+insert into public.scenarios (id, phase_id, name, summary, position, layout)
 values
   (
     'a0000000-0000-4000-8000-000000000121',
@@ -81,7 +81,7 @@ values
     'Discovery',
     'Potential tutors discover plus',
     1,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000122',
@@ -89,19 +89,19 @@ values
     'Interview & Offer',
     'Potential Tutors Interview for role and receive an offer.',
     2,
-    'side-by-side'
+    'stacked'
   )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  order_position = excluded.order_position,
-  view_type = excluded.view_type;
+  summary = excluded.summary,
+  position = excluded.position,
+  layout = excluded.layout;
 
 -- Onboarding phase scenarios
-delete from public.service_scenarios
+delete from public.scenarios
 where phase_id = 'a0000000-0000-4000-8000-000000000102';
 
-insert into public.service_scenarios (id, phase_id, name, description, order_position, view_type)
+insert into public.scenarios (id, phase_id, name, summary, position, layout)
 values
   (
     'a0000000-0000-4000-8000-000000000120',
@@ -109,7 +109,7 @@ values
     'Tech Setup',
     'The tutor sets up necessary tech and obtains required clearances.',
     1,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000123',
@@ -117,7 +117,7 @@ values
     'Onboarding Modules',
     'The tutor completes required onboarding modules.',
     2,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000124',
@@ -125,7 +125,7 @@ values
     'Lesson Modules',
     'The tutor goes through required lessons before joining a tutoring session.',
     3,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000125',
@@ -133,19 +133,19 @@ values
     'Session Sign Up',
     'The tutor signs up for recurring sessions for the semester.',
     4,
-    'side-by-side'
+    'stacked'
   )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  order_position = excluded.order_position,
-  view_type = excluded.view_type;
+  summary = excluded.summary,
+  position = excluded.position,
+  layout = excluded.layout;
 
 -- Pre-session scenarios
-delete from public.service_scenarios
+delete from public.scenarios
 where phase_id = 'a0000000-0000-4000-8000-000000000103';
 
-insert into public.service_scenarios (id, phase_id, name, description, order_position, view_type)
+insert into public.scenarios (id, phase_id, name, summary, position, layout)
 values
   (
     'a0000000-0000-4000-8000-000000000126',
@@ -153,7 +153,7 @@ values
     'Standard Scheduling',
     null,
     1,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000127',
@@ -161,7 +161,7 @@ values
     'Fill-in Request',
     null,
     2,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000128',
@@ -169,19 +169,19 @@ values
     'Call-off Request',
     null,
     3,
-    'side-by-side'
+    'stacked'
   )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  order_position = excluded.order_position,
-  view_type = excluded.view_type;
+  summary = excluded.summary,
+  position = excluded.position,
+  layout = excluded.layout;
 
 -- In-session scenarios
-delete from public.service_scenarios
+delete from public.scenarios
 where phase_id = 'a0000000-0000-4000-8000-000000000104';
 
-insert into public.service_scenarios (id, phase_id, name, description, order_position, view_type)
+insert into public.scenarios (id, phase_id, name, summary, position, layout)
 values
   (
     'a0000000-0000-4000-8000-000000000201',
@@ -189,7 +189,7 @@ values
     'Before Students Join',
     'Teachers and tutors prepare the session before students join.',
     1,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000202',
@@ -197,7 +197,7 @@ values
     'Student Just Joined',
     'Teachers and tutors welcome students as they join the session.',
     2,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000203',
@@ -205,7 +205,7 @@ values
     'Warm-Up',
     'Tutors greet and move students to breakout rooms as the session begins.',
     3,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000204',
@@ -213,7 +213,7 @@ values
     'Goal Setting',
     'Tutors guide students through goal setting in breakout sessions.',
     4,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000205',
@@ -221,7 +221,7 @@ values
     'Help Request',
     'Tutors receive and resolve student help requests during the session.',
     5,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000206',
@@ -229,19 +229,19 @@ values
     'Wrap-Up',
     'Teachers and tutors close breakout sessions, debrief, and complete wrap-up tasks.',
     6,
-    'side-by-side'
+    'stacked'
   )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  order_position = excluded.order_position,
-  view_type = excluded.view_type;
+  summary = excluded.summary,
+  position = excluded.position,
+  layout = excluded.layout;
 
 -- Post-session scenarios
-delete from public.service_scenarios
+delete from public.scenarios
 where phase_id = 'a0000000-0000-4000-8000-000000000105';
 
-insert into public.service_scenarios (id, phase_id, name, description, order_position, view_type)
+insert into public.scenarios (id, phase_id, name, summary, position, layout)
 values
   (
     'a0000000-0000-4000-8000-000000000207',
@@ -249,7 +249,7 @@ values
     'Reporting an Issue',
     'Tutors report session issues to the tutor supervisor team after the session.',
     1,
-    'side-by-side'
+    'stacked'
   ),
   (
     'a0000000-0000-4000-8000-000000000208',
@@ -257,13 +257,13 @@ values
     'Reporting Hours',
     'Tutors log their tutoring hours after the session.',
     2,
-    'side-by-side'
+    'stacked'
   )
 on conflict (id) do update set
   name = excluded.name,
-  description = excluded.description,
-  order_position = excluded.order_position,
-  view_type = excluded.view_type;
+  summary = excluded.summary,
+  position = excluded.position,
+  layout = excluded.layout;
 
 -- Warm-Up Happy Path blueprint (see supabase/seeds/warm_up_happy_path.sql)
 -- Application Discovery paths (see supabase/seeds/application_discovery_happy_path.sql and application_discovery_sad_path.sql)
@@ -281,8 +281,34 @@ on conflict (id) do update set
 -- Post-session Reporting an Issue path (see supabase/seeds/post_session_reporting_an_issue_happy_path.sql)
 -- Post-session Reporting Hours path (see supabase/seeds/post_session_reporting_hours_happy_path.sql)
 
--- Legacy catalog row
-insert into public.services (name, description, slug)
-values
-  ('Example API', 'Placeholder service entry for local development', 'example-api')
-on conflict (slug) do nothing;
+-- ── What each scenario file's last two statements are ─────────────────────
+--
+-- Every scenario file ends in an `insert into public.cell_touchpoints` and an
+-- `insert into public.resources`, and both are content this seed used to write
+-- into one jsonb column on `cells`.
+--
+-- `cells.links` held three unrelated things under a name describing one of
+-- them. A `type = 'tech_description'` entry was a TOUCHPOINT PLACEMENT — the
+-- tool a cell shows, with a sentence about what it does at that moment.
+-- 20260830260000 parked every one the registry could not name and
+-- 20260902170000 folded that queue back in, so each is a placement now,
+-- name-only: this seed stands up no `touchpoints` registry, and a name-only
+-- placement is a first-class one. A `type = 'url'` entry was a RESOURCE, and
+-- 20260830280000 moved those to their own table. What a placement carried
+-- beside its sentence — a link, and a screenshot — became a featured resource
+-- of its own, hanging off the placement rather than the cell (20260902170000).
+-- Then 20260830280000 dropped the column.
+--
+-- Two more things about those rows read oddly until you know where they came
+-- from. The ids are derived rather than authored, so a re-run of this seed
+-- upserts the same rows instead of duplicating them. And every image url is
+-- the `cell-attachments` bucket's, because 20260902180000 moved the shipped
+-- images there and then forbade a url that points inside whatever site
+-- deployed this template.
+
+-- The "Example API" placeholder row that used to sit here is gone with the
+-- table it belonged to. `services` was a separate legacy catalog holding that
+-- one reader-less row until 20260821340000 dropped it outright and renamed
+-- `service_lifecycles` to `services` — so the same statement now inserts a
+-- SECOND, phase-less service into the hierarchy this file just built, which
+-- the service switcher would offer and no board would answer for.
