@@ -266,7 +266,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     })
     const unregisterJump = registerAgentUiCommand({
       name: 'jump_divergence',
-      description:
+      summary:
         "Fly the camera to a divergent STEP of the compared paths and mark it active (the ledger opens that step's group). arg: next | prev | <step number> — the canonical step number the ledger shows as \"Step N\".",
       run: async (arg) => {
         const state = getCompareReviewState()
@@ -310,7 +310,7 @@ export const ScenarioBlueprintPanelBody = memo(function ScenarioBlueprintPanelBo
     })
     const unregisterFilter = registerAgentUiCommand({
       name: 'differences_filter',
-      description:
+      summary:
         'Filter the difference ledger. arg grammar: lane:"Front Stage" verdict:divergent step:"Pay" — space-separated, multi-select per key; verdicts: divergent | only; steps are matched by step name; empty arg clears the filter.',
       run: (arg) => {
         const input = arg?.trim() ?? ''

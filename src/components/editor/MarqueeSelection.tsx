@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useCanvasAnnotationTool } from '@/contexts/canvasAnnotationContext'
 import { useCellPick } from '@/contexts/cellPickContext'
 import { useCanvasModeValue } from '@/contexts/canvasModeContext'
-import { pickModeForMarquee } from '@/lib/cellPickGrammar'
 import { getCanvasSpaceHeld } from '@/lib/canvasKeyboardState'
+import { pickModeForMarquee } from '@/lib/cellPickGrammar'
 
 /** Chrome a marquee must never start on — these own their own drags. */
 const IGNORE = [
@@ -61,8 +61,7 @@ export function MarqueeSelection() {
     const onPointerDown = (event: PointerEvent) => {
       // Middle-button and Space temporarily belong to the camera even in
       // Design + Select. The selected tool is not mutated.
-      if (event.button === 1 || getCanvasSpaceHeld()) return
-      if (event.button !== 0) return
+      if (event.button !== 0 || getCanvasSpaceHeld()) return
       const target = event.target
       if (target instanceof Element && target.closest(IGNORE)) return
 
@@ -111,7 +110,7 @@ export function MarqueeSelection() {
       }
 
       // Recomputed from the gesture rather than read back out of state — the
-      // rendered rectangle is a picture of this, not the source of truth.
+      // rendered rectangle is a frame of this, not the source of truth.
       const marquee: Rect = {
         left: Math.min(start.x, event.clientX),
         top: Math.min(start.y, event.clientY),

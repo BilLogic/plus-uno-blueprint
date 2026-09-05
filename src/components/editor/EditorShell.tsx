@@ -395,7 +395,7 @@ function DesktopEditorShell() {
     const unregister = [
       registerAgentUiCommand({
         name: 'go_overview',
-        description: 'Back to the zoomed-out overview of all phases (Home).',
+        summary: 'Back to the zoomed-out overview of all phases (Home).',
         run: () => {
           commands.current.goOverview()
           return 'On the overview.'
@@ -403,7 +403,7 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'activate_base_tab',
-        description: 'Return to the base blueprint tab and its zoomed-out overview.',
+        summary: 'Return to the base blueprint tab and its zoomed-out overview.',
         run: () => {
           commands.current.activateBase()
           return 'Base blueprint overview is active.'
@@ -411,7 +411,7 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'open_slice_tab',
-        description: 'Open a slice in a tab. arg: slice id (list_slices).',
+        summary: 'Open a slice in a tab. arg: slice id (list_slices).',
         run: (arg) => {
           if (!arg) throw new Error('arg required: slice id')
           commands.current.openSliceTab(arg, false)
@@ -420,7 +420,7 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'present_slice',
-        description: 'Start presenting a slice full-bleed. arg: slice id.',
+        summary: 'Start presenting a slice full-bleed. arg: slice id.',
         run: (arg) => {
           if (!arg) throw new Error('arg required: slice id')
           commands.current.openSliceTab(arg, true)
@@ -429,12 +429,12 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'exit_presentation',
-        description: 'Leave the running presentation back onto its slice tab.',
+        summary: 'Leave the running presentation back onto its slice tab.',
         run: () => commands.current.exitPresent(),
       }),
       registerAgentUiCommand({
         name: 'close_slice_tab',
-        description: 'Close a slice\'s open tab(s). arg: slice id.',
+        summary: 'Close a slice\'s open tab(s). arg: slice id.',
         run: (arg) => {
           if (!arg) throw new Error('arg required: slice id')
           commands.current.closeSliceTab(arg)
@@ -443,7 +443,7 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'toggle_phase_expanded',
-        description: "Expand/collapse a phase's accordion in the sidebar. arg: phase id.",
+        summary: "Expand/collapse a phase's accordion in the sidebar. arg: phase id.",
         run: (arg) => {
           if (!arg) throw new Error('arg required: phase id')
           commands.current.togglePhase(arg)
@@ -452,7 +452,7 @@ function DesktopEditorShell() {
       }),
       registerAgentUiCommand({
         name: 'set_scenario_view',
-        description: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path\'s version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged. For an editor this is a recorded write of scenarios.layout — the scenario opens that way next time; for a viewer it lasts the session.',
+        summary: 'Switch the SELECTED scenario between its two displays. arg: stacked | merged (needs 2+ visible paths). stacked = one full band per path on a shared step axis. merged = the paths combined into ONE blueprint: one lane rail, one step axis, cells the paths agree on drawn once, divergent slots stacking each path\'s version. Entering merged also applies the reading preset — shared steps fold and the difference ledger opens; returning to stacked unfolds. Legacy aliases accepted: side-by-side = stacked, integrated = merged. For an editor this is a recorded write of scenarios.layout — the scenario opens that way next time; for a viewer it lasts the session.',
         run: (arg) =>
           // 'side-by-side'/'integrated' are the pre-v3 tokens. The column no
           // longer holds them, but they are kept as documented aliases so older

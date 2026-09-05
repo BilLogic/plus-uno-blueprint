@@ -236,4 +236,22 @@ export const RECONCILED_FILES = [
   'src/assets/react.svg',
   'src/assets/vite.svg',
   'src/vite-env.d.ts',
+
+  // #323 slice S1: the agent drives the canvas camera, and the annotation
+  // state is two contexts. asb generalized to uno's superset (verified focus,
+  // canvas_camera command, tool/marks split, set_canvas_tool); uno took asb's
+  // spellings (`summary` on a UI command, "intake scenario").
+  'src/components/editor/ZoomPanViewport.tsx',
+  'src/components/editor/MarqueeSelection.tsx',
+  'src/components/editor/CanvasPenCursor.tsx',
+  'src/components/editor/CanvasAnnotationToolbar.tsx',
+  'src/contexts/CanvasAnnotationProvider.tsx',
+  'src/contexts/canvasAnnotationContext.ts',
+  'src/contexts/canvasAnnotationSubscription.test.tsx',
+  'src/lib/agent/uiBridge.ts',
+  'src/lib/agent/uiBridge.camera.test.ts',
+  'src/lib/agent/uiCommands.ts',
+  'src/lib/canvasFocusCells.ts',
+  'src/lib/canvasFocus.ts',
+  'src/lib/canvasTouchContract.test.tsx',
 ]

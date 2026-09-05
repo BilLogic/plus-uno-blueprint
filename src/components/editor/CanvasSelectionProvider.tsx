@@ -188,7 +188,7 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
     const unregister = [
       registerAgentUiCommand({
         name: 'select_cells',
-        description:
+        summary:
           'Gather cells into the Design-mode selection (for Make slice etc.). arg: comma-separated cell ids, or "all". Replaces the current selection. Needs design mode.',
         run: (arg) => {
           if (getSharedCanvasMode() !== 'design')
@@ -205,7 +205,7 @@ export function CanvasSelectionProvider({ children }: { children: ReactNode }) {
       }),
       registerAgentUiCommand({
         name: 'clear_cell_selection',
-        description: 'Clear the Design-mode cell selection.',
+        summary: 'Clear the Design-mode cell selection.',
         run: () => {
           clear()
           return 'Selection cleared.'
